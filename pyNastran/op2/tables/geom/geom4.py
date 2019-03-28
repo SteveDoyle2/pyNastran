@@ -565,7 +565,7 @@ class GEOM4(GeomCommon):
                     self.binary_debug.write('  RBE2=%s\n' % str(out))
                 #print('  RBE2=%s\n' % str(out))
                 elem = RBE2.add_op2_data(out)
-                self._add_rigid_element_object(elem)
+                self._add_op2_rigid_element(elem)
         else:
             alpha = 0.0
             for ii, jj in zip(i, j):
@@ -582,7 +582,7 @@ class GEOM4(GeomCommon):
                     self.binary_debug.write('  RBE2=%s\n' % str(out))
                 #print('  RBE2=%s\n' % str(out))
                 elem = RBE2.add_op2_data(out)
-                self._add_rigid_element_object(elem)
+                self._add_op2_rigid_element(elem)
         self.card_count['RBE2'] = nelements
         return n
 
@@ -608,7 +608,7 @@ class GEOM4(GeomCommon):
             #print('  RBE2=%s\n' % str(out))
             #out = (eid, gn, cm, Gmi, alpha)
             #elem = RBE2.add_op2_data(out)
-            #self._add_rigid_element_object(elem)
+            #self._add_op2_rigid_element(elem)
             #nelements += 1
         #self.card_count['RBE2'] = nelements
         #return n
@@ -640,7 +640,7 @@ class GEOM4(GeomCommon):
     def _read_rrod(self, data, n):
         """common method for reading RROD"""
         n = self._read_dual_card(data, n, self._read_rrod_nx, self._read_rrod_msc,
-                                 'RROD', self._add_rigid_element_object)
+                                 'RROD', self._add_op2_rigid_element)
         return n
 
     def _read_rrod_nx(self, data, n):
@@ -1342,7 +1342,7 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
         rbe3 = RBE3.add_op2_data(in_data)
         #print(rbe3.rstrip())
 
-        self._add_rigid_element_object(rbe3)
+        self._add_op2_rigid_element(rbe3)
         rbe3s.append(rbe3)
         #print('--------------------------------------')
     #aaa

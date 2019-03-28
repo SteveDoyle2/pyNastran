@@ -211,6 +211,7 @@ class OP2_F06_Common(object):
         self.labels = {}
         self.expected_times = {}
         self.params = {}
+        self.table_names = []
 
         self.make_geom = False
 

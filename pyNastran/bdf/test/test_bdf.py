@@ -647,7 +647,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
 
     if hdf5:
         hdf5_filename = out_model + '.h5'
-        fem1.export_to_hdf5_filename(hdf5_filename)
+        fem1.export_hdf5_filename(hdf5_filename)
         fem1a = BDF(log=fem1.log)
         fem1a.load_hdf5_filename(hdf5_filename)
         fem1a.validate()
@@ -1948,12 +1948,12 @@ def get_test_bdf_data():
     options = '[-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] [--hdf5] '
     msg = (
         "Usage:\n"
-        '  test_bdf [-x | --safe] [-p] [-c] [-L]      BDF_FILENAME\n' +
-        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-d] BDF_FILENAME\n' +
-        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-l] BDF_FILENAME\n' +
-        '  test_bdf               [-p]                BDF_FILENAME\n' +
-        '  test_bdf [-x | --safe] [-p] [-s]           BDF_FILENAME\n' +
-        '  [options] = %s\n' % options +
+        '  test_bdf [-x | --safe] [-p] [-c] [-L]      BDF_FILENAME%s\n' % options +
+        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-d] BDF_FILENAME%s\n' % options +
+        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-l] BDF_FILENAME%s\n' % options +
+        '  test_bdf               [-p]                BDF_FILENAME%s\n' % options +
+        '  test_bdf [-x | --safe] [-p] [-s]           BDF_FILENAME%s\n' % options +
+        #'  [options] = %s\n' % options +
 
         #"  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n"
         '  test_bdf -h | --help\n'

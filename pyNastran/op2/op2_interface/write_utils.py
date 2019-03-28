@@ -1,5 +1,5 @@
 """
-Defines methods for the op2 writer
+Defines methods for the op2 & hdf5 writer
 """
 from __future__ import print_function, unicode_literals
 from struct import Struct, pack
@@ -12,17 +12,38 @@ def set_table3_field(str_fields, ifield, value):
     """
     return str_fields[:ifield-1] + value + str_fields[ifield:]
 
-def _write_markers(f, fascii, markers):
+def _write_markers(op2_file, fascii, markers):
+    """
+    writes pairs of markers
+
+    Parameters
+    ----------
+    op2_file : file
+        the op2 file object
+    markers : List[int]
+        a set of 3 markers such as [-3, 1, 0] will write as
+        [4, -3, 4, 4, 1, 4, 4, 0, 4]
+    """
     out = []
     n = 0
     for marker in markers:
         out += [4, marker, 4]
         n += 3
         fascii.write('marker = [4, %i, 4]\n' % marker)
-    f.write(pack(b'<%ii' % n, *out))
+    op2_file.write(pack(b'<%ii' % n, *out))
 
 
-def write_table_header(f, fascii, table_name):
+def write_table_header(op2_file, fascii, table_name):
+    """
+    Writes the beginning of an op2 table
+
+    Parameters
+    ----------
+    op2_file : file
+        the op2 file object
+    table_name : str
+        the table name to write
+    """
     table0 = [
         4, 2, 4,
         8, table_name.encode('ascii'), 8,
@@ -31,7 +52,7 @@ def write_table_header(f, fascii, table_name):
     assert len(table_name) == 8, table_name
     table0_format = '<4i 8s i'
     st = Struct(table0_format)
-    f.write(st.pack(*table0))
+    op2_file.write(st.pack(*table0))
     fascii.write('%s header0 = %s\n' % (table_name, table0))
 
 def export_to_hdf5(self, group, log):
@@ -39,6 +60,10 @@ def export_to_hdf5(self, group, log):
     #headers = self.get_headers()
 
     names = self.object_attributes()
+    dynamic_string = [
+        'headers', 'data_names', 'words', 'gridtype_str', 'element_data_type', 'location',
+    ]
+
     for name in names:
         if name in ['data_code', 'dataframe', 'data_frame', 'element_mapper', 'h5_file']:
             continue
@@ -67,7 +92,7 @@ def export_to_hdf5(self, group, log):
         # on the subtitle/label being actual unicode.
         if name in ['element_names']:  # grid point forces
             value = np.asarray(value, dtype='|S8').tolist()
-        elif name in ['headers', 'data_names', 'words', 'gridtype_str', 'element_data_type', 'location']:
+        elif name in dynamic_string:
             svalue = [str(valuei) for valuei in value]
 
             # the size of the array is the |S8 or |S12 or whatever
@@ -95,4 +120,3 @@ def export_to_hdf5(self, group, log):
             raise
             #continue
         #print('done')
-

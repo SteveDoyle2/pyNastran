@@ -81,6 +81,12 @@ class SEBNDRY(BaseCard):
     def cross_reference(self, model):
         pass
 
+    def safe_cross_reference(self, model, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self):
+        pass
+
     def raw_fields(self):
         list_fields = ['SEBNDRY', self.seid_a, self.seid_b] + self.ids
         return list_fields
@@ -289,6 +295,12 @@ class SEEXCLD(BaseCard):
         return SEEXCLD(seid_a, seid_b, nodes, comment=comment)
 
     def cross_reference(self, model):
+        pass
+
+    def safe_cross_reference(self, model, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self):
         pass
 
     @property

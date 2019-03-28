@@ -1105,10 +1105,10 @@ def export_matrices(hdf5_file, op2_model):
             if hasattr(matrix, 'export_to_hdf5'):
                 matrix.export_to_hdf5(matrixi_group, op2_model.log)
             else:
-                hmsg = 'HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix)))
+                msg = 'HDF5: key=%r type=%s cannot be exported' % (key, str(type(matrix)))
                 op2_model.log.warning(msg)
                 raise NotImplementedError(msg)
-                continue
+                #continue
 
 def _export_subcases(hdf5_file, op2_model):
     """exports the subcases to HDF5"""
@@ -1116,7 +1116,7 @@ def _export_subcases(hdf5_file, op2_model):
     result_types = op2_model.get_table_types()
     for result_type in result_types:
         if result_type in ['params', 'gpdt', 'eqexin']:
-            op2_model.log.debug('skipping %s' % result_type)
+            #op2_model.log.debug('skipping %s' % result_type)
             continue
 
         result = op2_model.get_result(result_type)

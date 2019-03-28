@@ -160,7 +160,7 @@ dict_attrs = [
     #'_type_to_slot_map',
 ]
 
-def export_to_hdf5_file(hdf5_file, model, exporter=None):
+def export_bdf_to_hdf5_file(hdf5_file, model, exporter=None):
     """
     Converts the BDF objects into hdf5 object
 
@@ -355,6 +355,22 @@ def _export_scalar_group(hdf5_file, model, encoding):
             reject_group.create_dataset(str(i), data=list_bytes)
 
 def _export_minor_attributes(hdf5_file, model, encoding):
+    """
+    Minor atributes include:
+     - encoding
+     - include_dir
+     - is_enddata
+     - is_msc
+     - is_nx
+     - punch
+     - read_includes
+     - active_filenames
+     - bdf_filename
+     - executive_control_lines
+     - case_control_lines
+     - sol
+     - sol_iline
+    """
     scalar_group = None
     scalars_keys_to_analyze = []
     for key in scalar_keys:
@@ -722,6 +738,8 @@ def _hdf5_export_elements(hdf5_file, model, encoding):
     TODO: not done
     """
     etypes_actual = []
+    if len(model.elements) == 0:
+        return
     etypes = model._slot_to_type_map['elements']
     for card_name in model.card_count:
         #CTRIA3, CQUAD4
@@ -752,9 +770,15 @@ def _hdf5_export_elements(hdf5_file, model, encoding):
                 save_solids(card_name, slot_name)
                 etypes_actual.remove(card_name)
 
-        for card_type in etypes_actual:
+        for card_type in sorted(etypes_actual):
             element_group = elements_group.create_group(card_type)
             eids = model._type_to_id_map[card_type]
+            #print(card_type, eids)
+            if len(eids) == 0:
+                continue
+            #for eid in eids:
+                #elem = model.elements[eid]
+                #print(elem)
             class_obj = CARD_MAP[card_type]
 
             if hasattr(class_obj, 'export_to_hdf5'):
@@ -857,7 +881,7 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
 # exporter
 #-------------------------------------------------------------------------------------
 # importer
-def load_hdf5_file(h5_file, model):
+def load_bdf_from_hdf5_file(h5_file, model):
     """
     Loads an h5 file object into an OP2 object
 
@@ -964,7 +988,7 @@ def load_hdf5_file(h5_file, model):
 
         elif key in ['info', 'matrices'] or key.startswith('Subcase'): # op2
             continue
-        elif key in ['cards_to_read']: # handled separaaately
+        elif key in ['cards_to_read']: # handled separately
             continue
         elif key == 'params':
             keys = list(group.keys())
@@ -1457,7 +1481,6 @@ def hdf5_load_loads(model, group, encoding):
     """loads the loads"""
     keys = list(group.keys())
     keys.remove('keys')
-    #spc_ids = _cast(group['keys'])
     for load_id in keys:
         iload_id = int(load_id)
         cards_group = group[load_id]
@@ -1497,7 +1520,6 @@ def hdf5_load_load_combinations(model, group, encoding):
     """loads the load_combinations"""
     keys = list(group.keys())
     keys.remove('keys')
-    #spc_ids = _cast(group['keys'])
     for load_id in keys:
         iload_id = int(load_id)
         cards_group = group[load_id]
@@ -1518,7 +1540,6 @@ def hdf5_load_nsms(model, group, encoding):
     """loads the nsms"""
     keys = list(group.keys())
     keys.remove('keys')
-    #spc_ids = _cast(group['keys'])
     for nsm_id in keys:
         insm_id = int(nsm_id)
         cards_group = group[nsm_id]
@@ -1537,7 +1558,6 @@ def hdf5_load_nsmadds(model, group, encoding):
     """loads the nsmadds"""
     keys = list(group.keys())
     keys.remove('keys')
-    #spc_ids = _cast(group['keys'])
     for nsm_id in keys:
         insm_id = int(nsm_id)
         cards_group = group[nsm_id]
@@ -1556,7 +1576,6 @@ def hdf5_load_frequencies(model, group, encoding):
     """loads the frequencies"""
     keys = list(group.keys())
     keys.remove('keys')
-    #spc_ids = _cast(group['keys'])
     for freq_id in keys:
         ifreq_id = int(freq_id)
         cards_group = group[freq_id]
@@ -1595,7 +1614,6 @@ def hdf5_load_dloads(model, group, encoding):
     """loads the dloads"""
     keys = list(group.keys())
     keys.remove('keys')
-    #dload_ids = _cast(group['keys'])
     for dload_id in keys:
         idload_id = int(dload_id)
         cards_group = group[dload_id]
@@ -1614,7 +1632,6 @@ def hdf5_load_dload_entries(model, group, encoding):
     """loads the dload_entries"""
     keys = list(group.keys())
     keys.remove('keys')
-    #dload_ids = _cast(group['keys'])
     for dload_id in keys:
         idload_id = int(dload_id)
         cards_group = group[dload_id]
@@ -1633,7 +1650,6 @@ def hdf5_load_bcs(model, group, encoding):
     """loads the bcs"""
     keys = list(group.keys())
     keys.remove('keys')
-    #dload_ids = _cast(group['keys'])
     for bc_id in keys:
         ibc_id = int(bc_id)
         cards_group = group[bc_id]
@@ -1652,7 +1668,6 @@ def hdf5_load_transfer_functions(model, group, encoding):
     """loads the transfer_functions"""
     keys = list(group.keys())
     keys.remove('keys')
-    #dload_ids = _cast(group['keys'])
     for tf_id in keys:
         itf_id = int(tf_id)
         cards_group = group[tf_id]
@@ -1671,7 +1686,6 @@ def hdf5_load_dvgrids(model, group, encoding):
     """loads the dvgrids"""
     keys = list(group.keys())
     keys.remove('keys')
-    #dload_ids = _cast(group['keys'])
     for opt_id in keys:
         iopt_id = int(opt_id)
         cards_group = group[opt_id]
@@ -1803,7 +1817,6 @@ def hdf5_load_dconstrs(model, group, encoding):
         elif card_type == 'DCONADD':
             keys = sub_group.keys()
             #print('keys_group', keys_group)
-
             #debug = False
             unused_name = 'dconstrs/%s' % card_type
 
@@ -2273,6 +2286,7 @@ def _get_casted_value(value, key_to_cast, encoding):
     return valuei
 
 def _load_from_class(value, card_type, encoding):
+    """generic loader that only requires an ``_init_from_empty`` method"""
     keys_to_read = list(value.keys())
     class_obj = CARD_MAP[card_type]
     if hasattr(class_obj, '_init_from_empty'):

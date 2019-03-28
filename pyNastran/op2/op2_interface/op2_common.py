@@ -471,8 +471,6 @@ class OP2Common(Op2Codes, F06Writer):
             self.isubtable_old = self.isubtable
             return n
 
-        if self.read_mode == 1:
-            return n
         #print('is_start_of_subtable=%s' % self.is_start_of_subtable)
         #print('self.istream = %s' % self.istream)
         #if hasattr(self, 'isubtable_old'):

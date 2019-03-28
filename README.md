@@ -2,14 +2,14 @@
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
 |  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](http://pynastran.m4-engineering.com/1.1.0/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.1.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
-|   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) | 
+|   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) |
 
 
 
 <!---
 [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
 
-[![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran) 
+[![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
 
 [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
 --->
@@ -59,16 +59,18 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!--- ## pyNastran v0.8.0 has NOT been released (8/21/2016)   --->
 <!--- [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)  --->
 
-<!--- 
+<!---
 ### pyNastran v1.2.0 has not been released (x/xx/2019)
 
 I keep saying to myself there's not much to add, but I keep surprising myself.  Beyond HDF5
 support in the BDF, I'm a huge fan of the new ability to keep track of which include file a
-card came from and write it as a separate file.  
+card came from and write it as a separate file.  It's limited in usefulness, but very handy
+in certain cases.
 
 The OP2 reader also now supports SORT2 along with much improved random results reading.
 If you're using 60+ GB OP2s, you also might have had issues with RAM usage in the past.
-With the new ability to dump the OP2 directly to HDF5, this should not be an issue.
+With the new ability to dump the OP2 directly to HDF5, this should not be an as much of
+an issue.  It's not entirely done, so let me know if you need it for another result.
 
 Finally, Python 2.7 is end of life.  Numpy, scipy, and matplotlib have all dropped Python 2.7 support.  It's time for pyNastran to as well.  The OP2 reader is 30% faster in Python 3.6+ than Python 2.7, so it's not all bad!
 
@@ -79,42 +81,73 @@ Programmatics:
  - GUI is compatible with PyQt4/PyQt5 as well as PySide/PySide2
 
 BDF:
- - xxx cards supported (up from 343)
- - support for writing to separate BDFs
- - HDF5 import/export
+ - 373 cards supported (up from 343)
  - superelement support
+     ```python
+     >>> model.read_bdf(bdf_filename)
+     >>> model.superelement_models[1].nodes
+     ```
+
  - added abiltity to write models to separate include files
+     ```python
+     >>> model = BDF()
+     >>> model.read_bdf(bdf_filename, save_file_structure=True)
+     >>> model.write_bdfs(out_filenames, relative_dirname=None, is_windows=None)
+     >>> ifile = model.grids[1].ifile
+     ```
+
+ - HDF5 import/export
+      ```python
+     >>> model = read_bdf(bdf_filename)
+     >>> model.export_hdf5_filename(hdf5_filename)
+     >>> model_new = OP2()
+     >>> model_new.load_hdf5_filename(hdf5_filename)
+     ```
 
 OP2:
- - OP2 write support
  - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
- - reorganization of op2 class to reduce number of functions in the object.  This affects any custom op2 table reading, but is simple to upgrade
- - SORT2 support
+ - reorganization of op2 class to reduce number of functions in the object.  This affects any custom table reading.
  - improved optimzation response reading
+ - limited SORT2 support
  - fixed CD transformation bug for BOUGV1 and BOPHIG1 tables
  - Improved HDF5 export/import support (e.g., matrices, random results)
+
  - Can optionally save directly to HDF5 instead of numpy (limited).
+ - Loading OP2s to an HDF5 file to decrease memory usage
+      ```python
+     >>> op2_model = OP2()
+     >>> op2_model.load_as_h5 = True
+     >>> op2_model.read_op2(op2_filename)
+     ```
  - TODO: CD transforms for cylindrical/spherical displacement, velocity, acceleration, forces.  This shouldn't be terrible.
- - TODO: stress transforms.  This is probably a bit of work.
 
 OP2Geom:
  - HDF5 support
- - reading EQEXIN/S, GPT, GPDT, CSTM/S tables
- - recovery of nodes & coordinate with OP2Geom
+ - reading EQEXIN/S, GPT, GPDT, CSTM/S tables (recovery of nodes & coordinate with OP2Geom)
  - fixed theta/mcid reading for CTRIA3/CQUAD4
  - fixed CQUAD8 bug
- 
+
 GUI:
  - sped up HTML logging
+ - pyNastran BDF pickle reading
+ - pyNastran OP2 HDF5 reading (not MSC's format)
  - options for Nastran in preferences menu to speed up loading/limit memory usage
  - visualization when pickling nodes/elements
  - custom force vectors
+ - AVL support
  - TODO: highlight menu
+
 
 Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
  - CD transforms
 This should be hidden...
+
+
+### pyNastran v1.2 has not been released (x/xx/xx)
+OP2:
+ - OP2 write support
+ - TODO: stress transforms.  This is probably a bit of work.
 
 ### pyNastran v1.1.1 has not been released (x/xx/xx)
 This should be hidden...
@@ -132,16 +165,16 @@ ready yet, but it offers the possibility of major speedups for large models.
 
 
 Probably the most best thing is the documentation actually builds again.  It was too big
-and took too long, so readthedocs failed.  I'm pleased to announce that the continuing 
-problems of up-to-date documentation will hopefully be a thing of the past.  [M4 Engineering](http://www.m4-engineering.com) 
-has offered to host the documentation on http://www.pynastran.m4-engineering.com.  
+and took too long, so readthedocs failed.  I'm pleased to announce that the continuing
+problems of up-to-date documentation will hopefully be a thing of the past.  [M4 Engineering](http://www.m4-engineering.com)
+has offered to host the documentation on http://www.pynastran.m4-engineering.com.
 There's still some work to do regarding hosting documentation for older versions and the master,
-but that's hopefully coming soon.  Outside of that, it's the same open-source project 
+but that's hopefully coming soon.  Outside of that, it's the same open-source project
 and will still be on Github.
 
 Regarding features, the focus has again been on robustness and testing.  There has been
-a 10% increase in the testing coverage (the same as v0.8 to v1.0).  There are a few 
-changes (mainly in the BDF) though.  The GUI now also supports PyQt4, PyQt5, and Pyside 
+a 10% increase in the testing coverage (the same as v0.8 to v1.0).  There are a few
+changes (mainly in the BDF) though.  The GUI now also supports PyQt4, PyQt5, and Pyside
 with the same API, so it's a bit easier to install from source as simplifying licensing
 issues as PyQt is GPL.
 
@@ -162,6 +195,12 @@ BDF:
 
 OP2:
  - HDF5 export/import support
+      ```python
+     >>> op2_model = read_op2(op2_filename)
+     >>> op2_model.export_hdf5_filename(hdf5_filename)
+     >>> op2_model_new = OP2()
+     >>> op2_model_new.load_hdf5_filename(hdf5_filename, combine=True)
+     ```
  - pandas support for matrices
  - couple more results vectorized (e.g., complex strain energy, DMIG strain energy, some forces)
  - grid_point_stressses supported (disabled since v0.7)
@@ -182,7 +221,7 @@ GUI:
 Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
    this is probably pretty easy to fix.
-  
+
 ### pyNastran v1.0.0 has been released (5/25/2017)
 This is a major release.  The focus this time has been on robustness and testing.
 Hopefully, it shows.  The software has also been relicensed to be **BSD-3**, which

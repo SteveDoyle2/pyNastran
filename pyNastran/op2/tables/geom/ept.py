@@ -101,10 +101,17 @@ class EPT(GeomCommon):
         }
 
     def _add_op2_property(self, prop):
+        """helper method for op2"""
         #if prop.pid > 100000000:
             #raise RuntimeError('bad parsing; pid > 100000000...%s' % str(prop))
-        self._add_property_object(prop, allow_overwrites=False)
         #print(str(prop)[:-1])
+        ntables = self.table_names.count('EPT') + self.table_names.count('EPTS')
+        pid = prop.pid
+        allow_overwrites = (
+            ntables > 1 and
+            pid in self.properties and
+            self.properties[pid].type == prop.type)
+        self._add_property_object(prop, allow_overwrites=allow_overwrites)
 
     def _add_pconv(self, prop):
         if prop.pconid > 100000000:

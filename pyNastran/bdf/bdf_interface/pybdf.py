@@ -66,40 +66,6 @@ class BDFInputPy(object):
         self.debug = debug
         self.log = get_logger2(log, debug)
 
-    def _check_pynastran_encoding(self, bdf_filename, encoding):
-        """updates the $pyNastran: key=value variables"""
-        line = '$pyNastran: punch=False'
-        #line_temp = u'é à è ê'.encode('utf8').decode('ascii')
-
-
-
-        with open(bdf_filename, 'rb') as bdf_file:
-            line = bdf_file.readline()
-            line_str = line.decode('ascii')
-            while '$' in line_str:
-                #if not line.startswith('$'):
-                    #break
-
-                key, value = _parse_pynastran_header(line_str)
-                if not key:
-                    break
-
-                skip_keys = [
-                    'version', 'punch', 'nnodes', 'nelements', 'dumplines',
-                    'is_superelements', 'skip_cards', 'units']
-
-                # key/value are lowercase
-                if key == 'encoding':
-                    encoding = value
-                    break
-                elif key in skip_keys or 'skip ' in key:
-                    pass
-                else:
-                    raise NotImplementedError(key)
-                line = bdf_file.readline()
-                line_str = line.decode('ascii')
-        return encoding
-
     def get_lines(self, bdf_filename, punch=False, make_ilines=True):
         # type: (Union[str, StringIO], bool) -> List[str]
         """
@@ -325,7 +291,7 @@ class BDFInputPy(object):
                 #try:
                 bdf_file.seek(0)
                 try:
-                    encoding2 = self._check_pynastran_encoding(bdf_filename2, encoding=self.encoding)
+                    encoding2 = _check_pynastran_encoding(bdf_filename2, encoding=self.encoding)
                 except UnicodeDecodeError:
                     encoding2 = self.encoding
 
@@ -338,7 +304,8 @@ class BDFInputPy(object):
                         '  1.  try a different encoding (e.g., latin1, cp1252, utf8)\n'
                         "  2.  call read_bdf(...) with `encoding`'\n"
                         "  3.  Add '$ pyNastran : encoding=latin1"
-                        ' (or other encoding) to the top of the main/INCLUDE file\n' % self.encoding)
+                        ' (or other encoding) to the top of the main/INCLUDE file\n' % (
+                            self.encoding))
                     raise RuntimeError(msg)
 
         if read_again:
@@ -609,6 +576,40 @@ class BDFInputPy(object):
             elif not os.path.isfile(_filename(bdf_filename)):
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
 
+
+def _check_pynastran_encoding(bdf_filename, encoding):
+    """updates the $pyNastran: key=value variables"""
+    line = '$pyNastran: punch=False'
+    #line_temp = u'é à è ê'.encode('utf8').decode('ascii')
+
+    skip_keys = [
+        'version', 'punch', 'nnodes', 'nelements', 'dumplines',
+        'is_superelements', 'skip_cards', 'units']
+
+    with open(bdf_filename, 'rb') as bdf_file:
+        line = bdf_file.readline()
+        line_str = line.decode('ascii')
+        while '$' in line_str:
+            #if not line.startswith('$'):
+                #break
+
+            key, value = _parse_pynastran_header(line_str)
+            if not key:
+                break
+
+            # key/value are lowercase
+            if key == 'encoding':
+                encoding = value
+                break
+            elif key in skip_keys or 'skip ' in key:
+                pass
+            else:
+                raise NotImplementedError(key)
+            line = bdf_file.readline()
+            line_str = line.decode('ascii')
+    return encoding
+
+
 IGNORE_COMMENTS = (
     '$EXECUTIVE CONTROL DECK',
     '$CASE CONTROL DECK',
@@ -691,6 +692,12 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
     bulk_data_ilines : None / (nlines, 2) int ndarray
         None : the old behavior
         narray : the [ifile, iline] pair for each line in the file
+    superelement_lines : List[str]
+        ???
+    superelement_ilines : List[str]
+        ???
+    auxmodel_lines : List[str]
+        ???
     """
     if punch:
         system_lines = []
@@ -712,7 +719,7 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
     (executive_control_lines, case_control_lines,
      bulk_data_lines, bulk_data_ilines,
      superelement_lines, superelement_ilines,
-     auxmodel_lines) = out
+     auxmodel_lines, afpm_lines) = out
 
 
     # break out system commands
@@ -730,6 +737,10 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
         log.warning('skipping auxmodel=%i' % auxmodel_id)
         assert len(_lines) > 0, 'auxmodel %i lines=[]' % (auxmodel_id)
 
+    for afpm_id, _lines in afpm_lines.items():
+        log.warning('skipping AFPM=%i' % afpm_id)
+        assert len(_lines) > 0, 'AFPM %i lines=[]' % (afpm_id)
+
     # clean comments
     system_lines = [_clean_comment(line) for line in system_lines
                     if _clean_comment(line) is not None]
@@ -743,6 +754,46 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
         superelement_lines, superelement_ilines)
 
 def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelements=False):
+    """
+    Splits the BDF lines into:
+     - system lines
+     - executive control deck
+     - case control deck
+     - bulk data deck
+
+    Parameters
+    ----------
+    lines : List[str]
+        all the active lines in the deck
+    ilines : None / (nlines, 2) int ndarray
+        None : the old behavior
+        narray : the [iline, ifile] pair for each line in the file
+    keep_enddata : bool; default=True
+        True : don't throw away the enddata card
+        False : throw away the enddata card
+    consider_superelements : bool; default=True
+        parse 'begin super=2'
+
+    Returns
+    -------
+    system_executive_control_lines : List[str]
+        the system control lines (typically empty; used for alters)
+        and the executive control lines (stores SOL 101)
+    case_control_lines : List[str]
+        the case control lines (stores subcases)
+    bulk_data_lines : List[str]
+        the bulk data lines (stores geometry, boundary conditions, loads, etc.)
+    bulk_data_ilines : None / (nlines, 2) int ndarray
+        None : the old behavior
+        narray : the [ifile, iline] pair for each line in the file
+    superelement_lines : List[str]
+        ???
+    superelement_ilines : List[str]
+        ???
+    auxmodel_lines : List[str]
+        ???
+
+    """
     make_ilines = ilines is not None
 
     executive_control_lines = []
@@ -751,12 +802,18 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
     superelement_lines = defaultdict(list)
     superelement_ilines = defaultdict(list)
     auxmodel_lines = defaultdict(list)
+    afpm_lines = defaultdict(list)
     auxmodels_found = set([])
+    afpms_found = set([])
     auxmodels_to_find = []
+    afpms_to_find = []
     is_auxmodel = False
+    is_afpm = False
     is_superelement = False
     is_auxmodel_active = False
+    is_afpm_active = False
     auxmodel_id = None
+    afpm_id = None
     #---------------------------------------------
     current_lines = executive_control_lines
 
@@ -815,7 +872,8 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
                     current_ilines = bulk_data_ilines
 
                     #or not keep_enddata
-                    is_extra_bulk = is_auxmodel or is_superelement or consider_superelements
+                    is_extra_bulk = (is_auxmodel or is_afpm or
+                                     is_superelement or consider_superelements)
 
                     if not is_extra_bulk:
                         #print('breaking begin bulk...')
@@ -838,15 +896,21 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
                     current_lines = superelement_lines[super_id]
                     current_ilines = superelement_ilines[super_id]
 
-                elif 'AUXMODEL' in uline and '=' in uline:
+                elif ('AUXMODEL' in uline or 'AFPM' in uline) and '=' in uline:
                     out = _read_bulk_for_auxmodel(
                         ifile_iline, line, flag, bulk_data_lines,
                         current_lines, current_ilines,
                         old_flags,
                         is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
+                        is_afpm, afpm_lines, afpms_to_find, afpms_found,
                         superelement_lines, superelement_ilines,
-                        is_auxmodel_active, auxmodel_id, bulk_data_ilines)
-                    is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines = out
+                        is_auxmodel_active, auxmodel_id,
+                        is_afpm_active, afpm_id,
+                        bulk_data_ilines)
+                    (is_broken,
+                     auxmodel_id, is_auxmodel_active,
+                     afpm_id, is_afpm_active,
+                     flag, current_lines) = out
                     if is_broken:
                         break
                 else:
@@ -889,9 +953,15 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
                 current_lines, current_ilines,
                 old_flags,
                 is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
+                is_afpm, afpm_lines, afpms_to_find, afpms_found,
                 superelement_lines, superelement_ilines,
-                is_auxmodel_active, auxmodel_id, bulk_data_ilines)
-            is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines = out
+                is_auxmodel_active, auxmodel_id,
+                is_afpm_active, afpm_id,
+                bulk_data_ilines)
+            (is_broken,
+             auxmodel_id, is_auxmodel_active,
+             afpm_id, is_afpm_active,
+             flag, current_lines) = out
             if is_broken:
                 #print('breaking...')
                 break
@@ -901,7 +971,8 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
     _check_valid_deck(flag, old_flags)
 
     assert len(bulk_data_lines) > 0, bulk_data_lines
-    #print('nbulk=%s nilines=%s' % (len(bulk_data_lines), len(bulk_data_ilines)), bulk_data_ilines.shape)
+    #print('nbulk=%s nilines=%s' % (len(bulk_data_lines),
+                                   #len(bulk_data_ilines)), bulk_data_ilines.shape)
 
     #if bulk_data_ilines is not None and len(bulk_data_lines) != len(bulk_data_ilines):
         #raise RuntimeError('nbulk=%s nilines=%s' % (len(bulk_data_lines), len(bulk_data_ilines)))
@@ -914,7 +985,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
         executive_control_lines, case_control_lines,
         bulk_data_lines, bulk_data_ilines,
         superelement_lines, superelement_ilines,
-        auxmodel_lines,
+        auxmodel_lines, afpm_lines,
     )
     return out
 
@@ -951,8 +1022,11 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
                             current_lines, current_ilines,
                             old_flags,
                             unused_is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
+                            unused_is_afpm, afpm_lines, afpm_to_find, afpm_found,
                             superelement_lines, superelement_ilines,
-                            is_auxmodel_active, auxmodel_id, bulk_data_ilines):
+                            is_auxmodel_active, auxmodel_id,
+                            is_afpm_active, afpm_id,
+                            bulk_data_ilines):
     """
     Reads a BEGIN BULK section searching for 'BEGIN AUXMODEL=1' and BEGIN SUPER=1'
     """
@@ -988,6 +1062,18 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
             flag = -super_id
             current_lines = superelement_lines[super_id]
             current_ilines = superelement_ilines[super_id]
+        elif 'AFPM' in uline:
+            is_afpm_active = True
+            afpm_id = _get_afpm_id(line, uline)
+            old_flags.append(flag)
+            flag = -afpm_id
+            current_lines = afpm_lines[afpm_id]
+            current_ilines = []
+            afpm_found.add(afpm_id)
+            if len(afpm_found) == len(afpm_to_find):
+                #print('broken...final', len(bulk_data_lines), len(bulk_data_ilines))
+                is_broken = True
+                return is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines
         else:
             msg = 'expected "BEGIN AUXMODEL=1" or "BEGIN SUPER=1"\nline = %s' % line
             raise RuntimeError(msg)
@@ -998,7 +1084,12 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
         current_lines.append(rline)
         current_ilines.append(ifile_iline)
 
-    return is_broken, auxmodel_id, is_auxmodel_active, flag, current_lines
+    out = (
+        is_broken,
+        auxmodel_id, is_auxmodel_active,
+        afpm_id, is_afpm_active,
+        flag, current_lines)
+    return out
 
 def _break_system_lines(executive_control_lines):
     """
@@ -1173,6 +1264,26 @@ def _get_auxmodel_id(line, uline):
         raise SyntaxError('auxmodel_id=%i must be greater than 0; line=%s' % (
             auxmodel_id, line))
     return auxmodel_id
+
+def _get_afpm_id(line, uline):
+    """
+    parses the superelement header::
+
+        BEGIN AFPM=2
+        BEGIN BULK AFPM=2
+        BEGIN BULK AFPM = 2
+    """
+    sline = uline.split('=')
+    try:
+        afpm_id = int(sline[1])
+    except (IndexError, ValueError):
+        msg = 'expected "BEGIN AFPM=1"\nline = %s' % line
+        raise SyntaxError(msg)
+
+    if afpm_id < 0:
+        raise SyntaxError('afpm_id=%i must be greater than 0; line=%s' % (
+            afpm_id, line))
+    return afpm_id
 
 def _get_super_id(line, uline):
     """

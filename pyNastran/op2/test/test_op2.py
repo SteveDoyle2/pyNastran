@@ -132,8 +132,8 @@ def parse_table_names_from_f06(f06_filename):
 
 
 def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
-                      delete_f06=True, skip_dataframe=False, write_op2=False,
-                      export_hdf5=True, debug=True, skip_files=None,
+                      delete_f06=True, build_pandas=True, write_op2=False,
+                      write_hdf5=True, debug=True, skip_files=None,
                       stop_on_failure=False, nstart=0, nstop=1000000000,
                       short_stats=False, binary_debug=False,
                       compare=True, quiet=False, dev=True, xref_safe=False):
@@ -145,6 +145,8 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     assert write_bdf in [True, False]
     assert write_f06 in [True, False]
     assert write_op2 in [True, False]
+    assert write_hdf5 in [True, False]
+    assert build_pandas in [True, False]
     if binary_debug in [True, False]:
         binary_debug = [binary_debug]
 
@@ -171,8 +173,8 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
                                      write_f06=write_f06, write_op2=write_op2,
                                      is_mag_phase=False,
                                      delete_f06=delete_f06,
-                                     skip_dataframe=skip_dataframe,
-                                     export_hdf5=export_hdf5,
+                                     build_pandas=build_pandas,
+                                     write_hdf5=write_hdf5,
                                      short_stats=short_stats,
                                      subcases=subcases, debug=debug,
                                      stop_on_failure=stop_on_failure,
@@ -194,9 +196,9 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
 
 def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             write_f06=True, write_op2=False,
-            export_hdf5=True,
+            write_hdf5=True,
             is_mag_phase=False, is_sort2=False, is_nx=None,
-            delete_f06=False, skip_dataframe=False,
+            delete_f06=False, build_pandas=True,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, log=None, binary_debug=False,
             quiet=False, check_memory=False, stop_on_failure=True,
@@ -261,6 +263,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
     is_passed : bool
         did the test pass
     """
+    assert build_pandas in [True, False]
+
     if read_bdf is None:
         read_bdf = write_bdf
     op2 = None
@@ -394,10 +398,10 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             mb = kb / 1024.
             print("Memory usage     end: %s (KB); %.2f (MB)" % (kb, mb))
 
-        if IS_HDF5 and export_hdf5:
+        if IS_HDF5 and write_hdf5:
             from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_filename
             h5_filename = model + '.test_op2.h5'
-            op2.export_to_hdf5_filename(h5_filename)
+            op2.export_hdf5_filename(h5_filename)
             load_op2_from_hdf5_filename(h5_filename, log=op2.log)
         if write_f06:
             for is_sort2 in sort_methods:
@@ -411,7 +415,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
                     pass
 
         # we put it down here so we don't blame the dataframe for real errors
-        if IS_PANDAS and not skip_dataframe:
+        if IS_PANDAS and build_pandas:
             op2.build_dataframe()
         #if compare:
             #op2_nv.build_dataframe()
@@ -570,11 +574,11 @@ def get_test_op2_data():
 
     msg = "Usage:\n"
     #is_release = True
-    options = '[--skip_dataframe] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe] [--post POST] [--load_hdf5] [--memory]'
+    options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe] [--post POST] [--load_hdf5] [--memory]'
     if is_release:
         line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] %s OP2_FILENAME\n" % options
     else:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [-p] %s OP2_FILENAME\n" % options
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] %s OP2_FILENAME\n" % options
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
@@ -597,10 +601,11 @@ def get_test_op2_data():
     # n is for NAS
     msg += "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
+    msg += "  -d, --write_hdf5       Writes the h5 to fem.test_op2.h5\n"
     msg += "  -z, --is_mag_phase     F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                         Real/Imaginary (still stores Real/Imag); [default: False]\n"
     msg += "  --load_hdf5            Load as HDF5 (default=False)\n"
-    msg += "  --skip_dataframe       Disables pandas dataframe building; [default: False]\n"
+    msg += "  -p, --pandas           Enables pandas dataframe building; [default: False]\n"
     msg += "  -s <sub>, --subcase    Specify one or more subcases to parse; (e.g. 2_5)\n"
     msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
@@ -613,7 +618,7 @@ def get_test_op2_data():
         msg += "\n"
         msg += "Developer:\n"
         msg += "  -o, --write_op2   Writes the op2 to fem.test_op2.op2\n"
-        msg += '  -p, --profile     Profiles the code (default=False)\n'
+        msg += '  --profile         Profiles the code (default=False)\n'
         msg += '  --memory          Run the memory profiler (default=False)\n'
 
     msg += "\n"
@@ -663,8 +668,9 @@ def main():
             write_bdf=data['--write_bdf'],
             write_f06=data['--write_f06'],
             write_op2=data['--write_op2'],
+            write_hdf5=data['--write_hdf5'],
             is_mag_phase=data['--is_mag_phase'],
-            skip_dataframe=data['--skip_dataframe'],
+            build_pandas=data['--pandas'],
             subcases=data['--subcase'],
             exclude=data['--exclude'],
             debug=not data['--quiet'],
@@ -692,8 +698,9 @@ def main():
             write_bdf=data['--write_bdf'],
             write_f06=data['--write_f06'],
             write_op2=data['--write_op2'],
+            write_hdf5=data['--write_hdf5'],
             is_mag_phase=data['--is_mag_phase'],
-            skip_dataframe=data['--skip_dataframe'],
+            build_pandas=data['--pandas'],
             subcases=data['--subcase'],
             exclude=data['--exclude'],
             short_stats=data['--short_stats'],

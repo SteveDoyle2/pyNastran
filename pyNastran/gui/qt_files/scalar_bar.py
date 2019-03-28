@@ -3,7 +3,7 @@ import numpy as np
 from six import string_types
 import vtk
 
-from pyNastran.gui.utils.colormaps import colormap_dict
+from pyNastran.gui.utils.colormaps import colormap_dict, RGB_MAPS, HSV_MAPS
 
 
 class ScalarBar(object):
@@ -133,10 +133,10 @@ class ScalarBar(object):
         # magma   - not HSV, RGB
         # inferno - not HSV, RGB
         if colormap_order is None:
-            if colormap in ['jet', 'jet2', 'blend', None]:
+            if colormap in ['jet', 'jet2', 'blend', None] or colormap in HSV_MAPS:
                 colormap_order = 'hsv'
                 colormap = 'jet'
-            elif colormap in ['plasma', 'viridis', 'magma', 'inferno']:  # #2
+            elif colormap in RGB_MAPS:
                 colormap_order = 'rgb'
             else:
                 raise NotImplementedError(colormap)

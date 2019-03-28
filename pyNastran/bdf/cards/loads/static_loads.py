@@ -2449,7 +2449,7 @@ class PLOAD4(Load):
         TODO: fix the way "pressures" works
         """
         if nvector is None:
-            nvector = np.full((3, ), np.nan, dtype='float64')
+            nvector = np.zeros(3, dtype='float64')
         else:
             nvector = np.asarray(nvector, dtype='float64')
 
@@ -2549,23 +2549,9 @@ class PLOAD4(Load):
         # If both (CID, N1, n2, N3) and LDIR are blank, then the default is
         # LDIR=NORM.
         cid = integer_or_blank(card, 9, 'cid')
-        n1 = double_or_blank(card, 10, 'N1')
-        n2 = double_or_blank(card, 11, 'N2')
-        n3 = double_or_blank(card, 12, 'N3')
-        is_not_none = [value for value in [cid, n1, n2, n3]
-                       if value is not None]
-
-        # set the nvector defaults only if one of them have a value
-        # otherwise, they're all None
-        if is_not_none:
-            if cid is None:
-                cid = 0
-            if n1 is None:
-                n1 = 0.
-            if n2 is None:
-                n2 = 0.
-            if n3 is None:
-                n3 = 0.
+        n1 = double_or_blank(card, 10, 'N1', 0.)
+        n2 = double_or_blank(card, 11, 'N2', 0.)
+        n3 = double_or_blank(card, 12, 'N3', 0.)
         nvector = array([n1, n2, n3])
 
         surf_or_line = string_or_blank(card, 13, 'sorl', 'SURF')
@@ -2600,6 +2586,7 @@ class PLOAD4(Load):
         nvector = data[6]
         if cid == 0 and nvector == [0., 0., 0.]:
             # these are apparently the secret defaults
+            # it just means to use the normal vector
             cid = None
             nvector = None
 
@@ -2757,7 +2744,7 @@ class PLOAD4(Load):
         #|        | CID | N1  | N2 | N3 | SORL | LDIR |      |       |
         #+--------+-----+-----+----+----+------+------+------+-------+
         cid = self.Cid()
-        if cid is not None or not np.all(np.isnan(self.nvector)):
+        if cid is not None or np.abs(self.nvector).max() > 0.:
             n1, n2, n3 = self.nvector
             list_fields.append(cid)
             list_fields += [n1, n2, n3]
@@ -2834,11 +2821,11 @@ class PLOAD4(Load):
 
 def update_pload4_vector_for_surf(pload4, normal, cid):
     """helper method"""
-    if cid is None and np.all(np.isnan(pload4.nvector)):
+    if cid in [0, None] and np.abs(pload4.nvector).max() == 0.:
         # element surface normal
         pass
     else:
-        if norm(pload4.nvector) != 0.0 and cid == 0:
+        if np.abs(pload4.nvector).max() != 0.0 and cid in [0, None]:
             normal = pload4.nvector / np.linalg.norm(pload4.nvector)
         else:
             raise NotImplementedError('cid=%r nvector=%s on a PLOAD4 is not supported\n%s' % (

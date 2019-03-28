@@ -629,7 +629,6 @@ class OP2Reader(object):
         T is transformation from local to basic for the coordinate system.
         """
         op2 = self.op2
-
         is_geometry = op2.is_geometry
         unused_table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -673,7 +672,7 @@ class OP2Reader(object):
             itable -= 1
         markers = self.get_nmarkers(1, rewind=False)
 
-        if not is_geometry or self.read_mode == 1:
+        if not is_geometry or self.read_mode == 1 or b'GEOM1' in self.op2.table_names:
             return
         nblocks = len(blocks)
         if nblocks == 1:

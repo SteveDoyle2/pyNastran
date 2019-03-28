@@ -220,6 +220,7 @@ GEOM_TABLES = [
 
     # aero?
     #b'MONITOR',
+    b'CASEXX',
 ]
 
 NX_RESULT_TABLES = [
@@ -1296,14 +1297,19 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
             b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
             b'OUNIT2K', b'OUNIT2M', b'RESCOMP', b'PDRMSG', b'LMODES', b'USETPRT',
-            b'NOCOMPS', ]
+            b'NOCOMPS', b'OPTEXIT',]
         float_words_1 = [
             b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
-            b'SIGMA', b'TABS', b'EPPRT']
+            b'SIGMA', b'TABS', b'EPPRT', b'AUNITS']
         str_words_1 = [
             b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
             b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
             b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
+            b'CDIF', b'SUPAERO',
+
+            # part of param, checkout
+            b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',
+            b'PRTGPL', b'PRTGPTT', b'PRTMGG', b'PRTPG',
 
             # TODO: remove these as they're in the matrix test and are user
             #       defined PARAMs
@@ -1567,7 +1573,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #self._endian = b(self._endian)
         else:
             self.op2_reader._goto(self.n)
-
 
         if self.read_mode == 1:
             self._set_structs()

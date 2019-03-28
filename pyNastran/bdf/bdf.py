@@ -738,7 +738,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #attrs.remove('log')
         return attrs
 
-    def export_to_hdf5_filename(self, hdf5_filename):
+    def export_hdf5_filename(self, hdf5_filename):
         """
         Converts the BDF objects into hdf5 object
 
@@ -753,10 +753,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         import h5py
         with h5py.File(hdf5_filename, 'w') as hdf5_file:
-            #self.log.info('starting export_op2_to_hdf5_file of %r' % hdf5_filename)
-            self.export_to_hdf5_file(hdf5_file)
+            #self.log.info('starting export_to_hdf5_file of %r' % hdf5_filename)
+            self.export_hdf5_file(hdf5_file)
 
-    def export_to_hdf5_file(self, hdf5_file, exporter=None):
+    def export_hdf5_file(self, hdf5_file, exporter=None):
         """
         Converts the BDF objects into hdf5 object
 
@@ -768,8 +768,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             unused
 
         """
-        from pyNastran.bdf.bdf_interface.hdf5_loader import export_to_hdf5_file
-        export_to_hdf5_file(hdf5_file, self)
+        from pyNastran.bdf.bdf_interface.hdf5_loader import export_bdf_to_hdf5_file
+        export_bdf_to_hdf5_file(hdf5_file, self)
 
     def load_hdf5_filename(self, hdf5_filename):
         """
@@ -798,8 +798,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             unused
 
         """
-        from pyNastran.bdf.bdf_interface.hdf5_loader import load_hdf5_file
-        load_hdf5_file(h5_file, self)
+        from pyNastran.bdf.bdf_interface.hdf5_loader import load_bdf_from_hdf5_file
+        load_bdf_from_hdf5_file(h5_file, self)
 
     def saves(self, unxref=True):
         """Saves a pickled string"""
@@ -1117,6 +1117,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         try:
             self._parse_all_cards(bulk_data_lines, bulk_data_ilines)
         except SuperelementFlagError:
+            if self.is_superelements:
+                raise
+
             self.clear_attributes()
             self.log.error('Attempting to use is_superelements=True.')
             self.is_superelements = True
@@ -4361,8 +4364,11 @@ def _check_for_spaces(card_name, card_lines, comment, log):
                     'Misindentified Superelement section.  Use:\n'
                     '$ pyNastran: is_superelements=True\n')
             else:
-                msg = 'Is there a second BEGIN BULK in your deck?\n'
-            msg += '%s' % card_lines
+                msg = (
+                    'Is there a second BEGIN BULK in your deck?\n'
+                    'Another possibility is that punch=True and there is a '
+                    'BEGIN BULK in your deck.\n')
+            msg += '%s\n' % card_lines
             log.error(msg)
             raise SuperelementFlagError(msg)
         else:

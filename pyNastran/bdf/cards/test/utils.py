@@ -62,7 +62,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         model3 = model2
 
     if run_save_load_hdf5 and IS_H5PY:
-        model2.export_to_hdf5_filename('test.h5')
+        model2.export_hdf5_filename('test.h5')
         model4 = BDF(log=model2.log)
         model4.load_hdf5_filename('test.h5')
         model4.validate()

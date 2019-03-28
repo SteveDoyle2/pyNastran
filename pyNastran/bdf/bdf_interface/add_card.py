@@ -40,7 +40,7 @@ from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
-    CPLSTS3, #CPLSTS4,
+    CPLSTS3, #CPLSTS4, CPLSTS6, CPLSTS8,
     SNORM,
 )
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE

@@ -619,8 +619,9 @@ class OP2(OP2_Scalar):
 
         try:
             # get GUI object names, build objects, but don't read data
-            OP2_Scalar.read_op2(self, op2_filename=op2_filename,
-                                load_as_h5=load_as_h5, mode=mode)
+            table_names = OP2_Scalar.read_op2(self, op2_filename=op2_filename,
+                                              load_as_h5=load_as_h5, mode=mode)
+            self.table_names = table_names
 
             # TODO: stuff to figure out objects
             # TODO: stuff to show gui of table names
@@ -795,12 +796,12 @@ class OP2(OP2_Scalar):
         load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
         self.combine_results(combine=combine)
 
-    def export_to_hdf5(self, hdf5_filename):
+    def export_hdf5(self, hdf5_filename):
         """Converts the OP2 objects into hdf5 object"""
-        self.deprecated('export_to_hdf5', 'export_to_hdf5_filename', '1.2')
-        return self.export_to_hdf5_filename(hdf5_filename)
+        self.deprecated('export_hdf5', 'export_hdf5_filename', '1.2')
+        return self.export_hdf5_filename(hdf5_filename)
 
-    def export_to_hdf5_filename(self, hdf5_filename):
+    def export_hdf5_filename(self, hdf5_filename):
         """
         Converts the OP2 objects into hdf5 object
 
@@ -811,7 +812,7 @@ class OP2(OP2_Scalar):
         from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_filename
         export_op2_to_hdf5_filename(hdf5_filename, self)
 
-    def export_to_hdf5_file(self, hdf5_file, exporter=None):
+    def export_hdf5_file(self, hdf5_file, exporter=None):
         """
         Converts the OP2 objects into hdf5 object
 

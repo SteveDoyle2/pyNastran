@@ -20,6 +20,46 @@ import numpy as np
 
 __all__ = ['jet2', 'blend', 'magma', 'inferno', 'plasma', 'viridis']
 
+RGB_MAPS = set(['plasma', 'viridis', 'magma', 'inferno', 'patran_pink_rgb', 'patran_jet_rgb'])
+HSV_MAPS = set(['jet', 'jet2', 'blend', 'patran_pink_hsv', 'patran_jet_hsv'])
+
+# had to add a dummy color, so red shows up
+patran_jet = np.array([ # 11 colors
+    [160, 0, 0, 0, 0, 0], # black
+    # hsv, rgb
+    [0, 240, 120, 255, 0, 0], # red
+    [19, 240, 120, 255, 120, 0], # dark orange
+    [32, 240, 120, 255, 204, 0], # light orange
+    [40, 240, 120, 255, 255, 0], # yellow
+    [80, 240, 120, 0, 255, 0], # light green
+    [80, 240, 90, 0, 191, 0], # mid green
+    [80, 240, 60, 0, 127, 0], # dark green
+    [120, 240, 120, 0, 255, 255], # cyan
+    [136, 240, 120, 0, 153, 255], # light blue
+    [160, 240, 120, 0, 0, 255], # blue
+    [160, 240, 80, 0, 0, 171], # dark blue
+], dtype='float32') / 255.
+
+# had to add a dummy color, so red shows up
+patran_pink = np.array([ # 14 colors
+    [160, 0, 0, 0, 0, 0], # black
+    # hsv, rgb
+    [0, 240, 120, 255, 0, 0], # red
+    [19, 240, 120, 255, 120, 0], # dark orange
+    [32, 240, 120, 255, 204, 0], # light orange
+    [40, 240, 120, 255, 255, 0], # yellow
+    [200, 240, 120, 255, 0, 255], # hot pink
+    [200, 240, 168, 255, 102, 255], # pink
+    [200, 240, 210, 255, 191, 255], # light pink
+    [80, 240, 60, 0, 127, 0], # dark green
+    [80, 240, 90, 0, 191, 0], # mid green
+    [80, 240, 120, 0, 255, 0], # light green
+    [160, 240, 80, 0, 0, 171], # dark blue
+    [160, 240, 120, 0, 0, 255], # blue
+    [136, 240, 120, 0, 153, 255], # light blue
+    [120, 240, 120, 0, 255, 255], # cyan
+], dtype='float32') / 255.
+
 _jet2_data = np.array([
     (255, 0, 0),
     (255, 120, 0),
@@ -1085,24 +1125,46 @@ colormap_dict = {
     'inferno' : _inferno_data,
     'plasma' : _plasma_data,
     'viridis' : _viridis_data,
+    'patran_jet_hsv' : patran_jet[:, :3],
+    'patran_jet_rgb' : patran_jet[:, 3:],
+    'patran_pink_hsv' : patran_pink[:, :3],
+    'patran_pink_rgb' : patran_pink[:, 3:],
 }
 colormap_keys = ['jet', #'jet2', 'blend',
-                 'magma', 'inferno', 'plasma', 'viridis']
+                 'magma', 'inferno', 'plasma', 'viridis',
+                 'patran_jet_rgb', 'patran_jet_hsv',
+                 'patran_pink_rgb', 'patran_pink_hsv']
 
 if __name__ == '__main__':  # pragma: no cover
     from matplotlib.colors import ListedColormap
 
     cmaps = {}
-    for (name, data) in (('jet2', _jet2_data),
-                         ('magma', _magma_data),
-                         ('inferno', _inferno_data),
-                         ('plasma', _plasma_data),
-                         ('viridis', _viridis_data)):
+    for name in colormap_keys:
+        if name in ['jet']:
+            continue
+        data = colormap_dict[name]
+    #for (name, data) in (('jet2', _jet2_data),
+                         #('magma', _magma_data),
+                         #('inferno', _inferno_data),
+                         #('plasma', _plasma_data),
+                         #('viridis', _viridis_data)):
 
         cmaps[name] = ListedColormap(data, name=name)
 
-    jet2 = cmaps['jet2']
+    #jet2 = cmaps['jet2']
     magma = cmaps['magma']
     inferno = cmaps['inferno']
     plasma = cmaps['plasma']
     viridis = cmaps['viridis']
+
+    x = np.linspace(-3,3)
+    X,Y = np.meshgrid(x,x)
+    Z = 1.1 * np.exp(-(X**2+Y**2))
+    import matplotlib.pyplot as plt
+
+    fig, (ax1, ax2) = plt.subplots(1, ncols=2)
+    contour1 = ax1.contourf(X,Y,Z, cmap=cmaps['patran_pink_rgb'])
+    contour2 = ax2.contourf(X,Y,Z, cmap=cmaps['patran_jet_rgb'])
+    fig.colorbar(contour1)
+
+    plt.show()

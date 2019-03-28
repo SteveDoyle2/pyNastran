@@ -122,7 +122,7 @@ NO_THETA = [
     'CBAR', 'CBEAM', 'CBEAM3',
     'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC',
     'CONROD', 'CROD', 'PLOTEL',
-    'CHBDYP',
+    'CHBDYP', 'GENEL',
 ]
 
 DESIRED_RESULTS = [
@@ -3653,6 +3653,24 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     msg += 'nodes = %s\n' % nodes
                     #msg += 'side_nodes = %s\n' % side_nodes
                     raise NotImplementedError(msg)
+            elif etype == 'GENEL':
+                nids = []
+                if len(elem.ul_nodes):
+                    nids.append(elem.ul_nodes)
+                if len(elem.ud_nodes):
+                    nids.append(elem.ud_nodes)
+                nids = np.unique(np.hstack(nids))
+                #print(elem.get_stats())
+                nids = nids[:2]
+
+                areai = np.nan
+                pid = 0
+                cell_type = cell_type_line
+                inids = np.searchsorted(all_nids, nids)
+                p1, p2 = xyz_cid0[inids, :]
+                min_edge_lengthi = norm(p2 - p1)
+                nnodes = len(nids)
+                dim = 1
             else:
                 #raise NotImplementedError(elem)
                 skipped_etypes.add(etype)
@@ -5793,7 +5811,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # 2 points
                 #min_edge_lengthi = norm(element.nodes_ref[0].get_position() -
                                         #element.nodes_ref[1].get_position())
-                n1, n2 = np.searchsorted(nids, element.nodes)
+                try:
+                    n1, n2 = np.searchsorted(nids, element.nodes)
+                except:
+                    print(element.get_stats())
+                    n1i, n2i =element.nodes
+                    print('nids =', nids)
+                    assert n1i in nids, 'n1=%s could not be found' % n1i
+                    assert n2i in nids, 'n2=%s could not be found' % n2i
+                    raise
                 xyz1 = xyz_cid0[n1, :]
                 xyz2 = xyz_cid0[n2, :]
                 min_edge_lengthi = norm(xyz2 - xyz1)
@@ -5985,6 +6011,38 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #msg += 'side_nodes = %s\n' % side_nodes
                     raise NotImplementedError(msg)
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+            elif etype == 'GENEL':
+                genel_nids = []
+                if len(element.ul_nodes):
+                    genel_nids.append(element.ul_nodes)
+                if len(element.ud_nodes):
+                    genel_nids.append(element.ud_nodes)
+                node_ids = np.unique(np.hstack(genel_nids))
+                node_ids = node_ids[:2]
+                del genel_nids
+
+                elem = vtk.vtkLine()
+                try:
+                    n1, n2 = [nid_map[nid] for nid in node_ids]
+                except KeyError:  # pragma: no cover
+                    print("node_ids =", node_ids)
+                    print(str(element))
+                    print('nid_map = %s' % nid_map)
+                    raise
+                point_ids = elem.GetPointIds()
+                point_ids.SetId(0, n1)
+                point_ids.SetId(1, n2)
+                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+                #areai = np.nan
+                pid = 0
+                #cell_type = cell_type_line
+                #inids = np.searchsorted(all_nids, nids)
+                #p1, p2 = xyz_cid0[inids, :]
+                #min_edge_lengthi = norm(p2 - p1)
+                #nnodes = len(nids)
+                #dim = 1
             else:
                 self.log.warning('removing\n%s' % (element))
                 self.log.warning('removing eid=%s; %s' % (eid, element.type))

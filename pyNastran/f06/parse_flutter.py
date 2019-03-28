@@ -82,7 +82,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, log=None
                 sline = line.strip().split()
                 isubcase = sline.index('SUBCASE')
                 new_subcase = int(sline[isubcase + 1])
-                #print('subcasei = %r' % new_subcase)
+                #print('subcasei=%r iline=%s' % (new_subcase, iline))
                 if new_subcase > subcase:
                     log.debug('subcase=%s -> new_subcase=%s' % (subcase, new_subcase))
                     log.debug('modes1 = %s' % modes)
@@ -105,6 +105,9 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, log=None
                 line = f06_file.readline()
                 #log.debug('i=%s %s' % (iline, line.strip().replace('   ', ' ')))
 
+                if '* * * END OF JOB * * *' in line:
+                    last_line = None
+                    break
                 iline += 1
                 if not line:
                     nblank += 1
@@ -112,6 +115,9 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, log=None
                     print(line.strip())
                     log.warning('breaking on nblank=100 a')
                     break
+
+            if '* * * END OF JOB * * *' in line:
+                break
             if nblank == 100:
                 log.warning('breaking on nblank=100 b')
                 break

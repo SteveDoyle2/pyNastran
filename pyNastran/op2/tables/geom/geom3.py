@@ -20,6 +20,16 @@ from pyNastran.op2.tables.geom.geom_common import GeomCommon
 class GEOM3(GeomCommon):
     """defines methods for reading op2 loads"""
 
+    def _add_op2_rigid_element(self, elem):
+        """helper method for op2"""
+        ntables = self.table_names.count('GEOM4') + self.table_names.count('GEOM4S')
+        eid = elem.eid
+        allow_overwrites = (
+            ntables > 1 and
+            eid in self.rigid_elements and
+            self.rigid_elements[eid].type == elem.type)
+        self._add_rigid_element_object(elem, allow_overwrites=allow_overwrites)
+
     def _read_geom3_4(self, data, ndata):
         return self._read_geom_4(self._geom3_map, data, ndata)
 
@@ -421,7 +431,7 @@ class GEOM3(GeomCommon):
     def _read_rbar(self, data, n):
         """RBAR(6601,66,292) - Record 22"""
         n = self._read_dual_card(data, n, self._read_rbar_nx, self._read_rbar_msc,
-                                 'RBAR', self._add_rigid_element_object)
+                                 'RBAR', self._add_op2_rigid_element)
         return n
 
     def _read_pload4(self, data, n):
