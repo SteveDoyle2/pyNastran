@@ -146,11 +146,11 @@ class HDF5Exporter(object):
             self._add_list_tuple(hdf5_file, key, value, 'list')
         elif isinstance(value, set):
             self._add_list_tuple(hdf5_file, key, value, 'set')
-        elif hasattr(value, 'export_to_hdf5_file'):
-            print('export_to_hdf5_file', key)
+        elif hasattr(value, 'export_hdf5_file'):
+            print('export_hdf5_file', key)
             sub_group = hdf5_file.create_group(key)
             sub_group.attrs['type'] = value.__class__.__name__
-            value.export_to_hdf5_file(sub_group, exporter=self)
+            value.export_hdf5_file(sub_group, exporter=self)
         elif hasattr(value, 'get_h5attrs'):
             h5attrs = value.get_h5attrs()
             sub_group = hdf5_file.create_group(key)
@@ -181,7 +181,7 @@ class HDF5Exporter(object):
             print('value =', value)
             msg = (
                 'key=%r Type=%r is not in custom_types=%s and does not have:\n'
-                ' - export_to_hdf5_file(h5_file)\n'
+                ' - export_hdf5_file(h5_file)\n'
                 ' - object_attributes()\n'
                 ' - get_h5attrs(self)' % (
                 key, class_name, custom_types_list))

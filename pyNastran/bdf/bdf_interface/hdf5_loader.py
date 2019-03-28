@@ -1080,7 +1080,7 @@ def _load_minor_attributes(unused_key, group, model, encoding):
     keys_attrs = group.keys()
     for keyi in keys_attrs:
         sub_group = group[keyi]
-        model.log.debug('  %s' % keyi)
+        #model.log.debug('  %s' % keyi)
 
         if keyi in ['case_control_lines', 'executive_control_lines',
                     'system_command_lines', 'active_filenames']:

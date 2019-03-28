@@ -981,7 +981,7 @@ class GENEL(BaseCard):
     """
     type = 'GENEL'
     #pid = 0
-    _properties = ['node_ids', 'ul_nodes', 'ud_nodes']
+    _properties = ['node_ids', 'ul_nodes', 'ud_nodes', 'nodes']
     @classmethod
     def _init_from_empty(self):
         eid = 1
@@ -1022,6 +1022,7 @@ class GENEL(BaseCard):
 
     def _finalize_hdf5(self, encoding):
         #print(len(self.ul), self.ul)
+        #if self.ul is not None:
         self.ul = np.array(self.ul, dtype='int32')#.reshape(len(self.ul) // 2, 2)
         self.ud = np.array(self.ud, dtype='int32')#.reshape(len(self.ud) // 2, 2)
         #print(self.s, self.s.shape, self.s.dtype, len(self.s.shape))
@@ -1049,64 +1050,75 @@ class GENEL(BaseCard):
     def add_card(cls, card, comment=''):
         eid = integer(card, 1, 'eid')
         card_fields = card.fields()
+        ucard_fields = [field.upper() if field is not None else None
+                        for field in card_fields]
         nfields = card.nfields
 
-        _ul_fields, istop = _read_genel_fields_until_char_blank(card_fields, 3)
         ul = []
+        ud = []
+        n_ud = ucard_fields.count('UD')
+
+        nk = ucard_fields.count('K')
+        nz = ucard_fields.count('Z')
+        ns = ucard_fields.count('S')
+        assert n_ud in [0, 1], 'n_UD=%s fields=%s' % (n_ud, card_fields)
+
+        assert nk in [0, 1], 'n_K=%s fields=%s' % (nz, card_fields)
+        assert nz in [0, 1], 'n_Z=%s fields=%s' % (nk, card_fields)
+        assert ns in [0, 1], 'n_S=%s fields=%s' % (ns, card_fields)
+
+        i_ul = 3
+        _ul_fields, unused_istop = _read_genel_fields_until_char_blank(ucard_fields, i_ul)
         for i, _ul in enumerate(_ul_fields):
-            uli = integer(card, i + 3, 'UL_%i' % (i + 1))
+            uli = integer(card, i + i_ul, 'UL_%i' % (i + 1))
             ul.append(uli)
 
-        n_ul = len(ul) + 2
-        n_blanks = _get_genel_offset(n_ul)
-        i_start = istop + n_blanks
+        if n_ud:
+            i_ud = ucard_fields.index('UD')
+            if i_ud < nfields and ucard_fields[i_ud] == 'UD':
+                assert ucard_fields[i_ud] == 'UD', fields
+                _ud_fields, unused_istop = _read_genel_fields_until_char_blank(ucard_fields, i_ud+2)
+                for i, _ud in enumerate(_ud_fields):
+                    udi = integer(card, i + i_ud+2, 'UD_%i' % (i + 1))
+                    ud.append(udi)
 
-        #---------------------------------
-        ud = []
-        if i_start < nfields and card_fields[i_start] == 'UD':
-            assert card_fields[i_start] == 'UD', fields
-
-            _ud_fields, istop = _read_genel_fields_until_char_blank(card_fields, i_start+2)
-            for i, _ud in enumerate(_ud_fields):
-                udi = integer(card, i + i_start+2, 'UD_%i' % (i + 1))
-                ud.append(udi)
-
-            n_ud = len(ud) + 2
-            n_blanks = _get_genel_offset(n_ud)
-            i_start = istop + n_blanks
-
-        #---------------------------------
-        kz_char = card_fields[i_start].upper()
-        if kz_char == 'K':
+        k = None
+        z = None
+        s = None
+        if nk:
             k = []
-            z = None
-            kz = k
-        elif kz_char == 'Z':
-            k = None
+            ik = ucard_fields.index('K')
+            assert ucard_fields[ik] == 'K', card_fields
+            _k_fields, unused_istop = _read_genel_fields_until_char_blank(ucard_fields, ik+1)
+            for i, _k in enumerate(_k_fields):
+                ki = double(card, i + ik+1, 'K_%i' % (i + 1))
+                k.append(ki)
+            unused_nblanks = _get_genel_offset(nk)
+            #kz = k
+
+        if nz:
             z = []
-            kz = z
-        else:
-            raise RuntimeError(kz_char)
+            assert k is None, k
+            iz = card_fields.index('Z')
+            assert card_fields[iz] == 'Z', card_fields
+            _k_fields, unused_istop = _read_genel_fields_until_char_blank(ucard_fields, iz+1)
+            for i, _k in enumerate(_k_fields):
+                ki = double(card, i + iz+1, 'K_%i' % (i + 1))
+                k.append(ki)
+            unused_nblanks = _get_genel_offset(nz)
+            #kz = z
 
-        _kz_fields, istop = _read_genel_fields_until_char_blank(card_fields, i_start+1)
-        for i, _kz in enumerate(_kz_fields):
-            kzi = double(card, i + i_start+1, '%s_%i' % (kz_char, i + 1))
-            kz.append(kzi)
-
-        n_kz = len(kz) + 1
-        n_blanks = _get_genel_offset(n_kz)
+        if ns:
+            s = []
+            i_s = ucard_fields.index('S')
+            assert ucard_fields[i_s] == 'S', card_fields
+            _s_fields, unused_istop = _read_genel_fields_until_char_blank(ucard_fields, i_s+1)
+            for i, _s in enumerate(_k_fields):
+                si = double(card, i + i_s+1, 'S_%i' % (i + 1))
+                s.append(si)
+            unused_nblanks = _get_genel_offset(ns)
 
         #---------------------------------
-        i_start = istop + n_blanks
-        s = []
-        if i_start < nfields and card_fields[i_start] == 'S':
-            assert card_fields[i_start] == 'S', card_fields
-
-            _s_fields, istop = _read_genel_fields_until_char_blank(card_fields, i_start+1)
-            for i, _s in enumerate(_s_fields):
-                si = double(card, i + i_start+1, 'S_%i' % (i + 1))
-                s.append(si)
-
         ul = np.array(ul).reshape(len(ul) // 2, 2)
         ud = np.array(ud).reshape(len(ud) // 2, 2)
         return GENEL(eid, ul, ud, k, z, s, comment=comment)
@@ -1149,7 +1161,7 @@ class GENEL(BaseCard):
         #return 0.0
 
     def raw_fields(self):
-        # we add to to represent the GENEL,eid fields
+        # we add 2 to represent the GENEL,eid fields
         n_ul = self.ul.shape[0] * 2 + 2
         ul_nones = _get_genel_offset(n_ul) * [None]
 
@@ -1192,14 +1204,19 @@ class GENEL(BaseCard):
             ul_nodes_dofs = []
             for ul_node, ul_dof in zip(ul_nodes, ul_dofs):
                 ul_nodes_dofs.extend([ul_node, ul_dof])
+        ul_line = ul_nodes_dofs + ul_nones
 
         list_fields = ['GENEL', self.eid, None] + (
-            ul_nodes_dofs + ul_nones +
+            ul_line +
             ud_line +
             [kz_char] + kz.tolist() + kz_nones +
             s_line
         )
         return list_fields
+
+    @property
+    def nodes(self):
+        return self.node_ids
 
     @property
     def node_ids(self):

@@ -753,7 +753,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         import h5py
         with h5py.File(hdf5_filename, 'w') as hdf5_file:
-            #self.log.info('starting export_to_hdf5_file of %r' % hdf5_filename)
+            #self.log.info('starting export_hdf5_file of %r' % hdf5_filename)
             self.export_hdf5_file(hdf5_file)
 
     def export_hdf5_file(self, hdf5_file, exporter=None):

@@ -422,7 +422,7 @@ class GuiResult(GuiResultCommon):
 
     #------------
     # getters
-    #def export_to_hdf5_file(self, hdf5_file, exporter):
+    #def export_hdf5_file(self, hdf5_file, exporter):
         #asd
     def get_data_type(self, i, name):
         #print('Aname=%r data_type=%s fmt=%s' % (self.title, self.data_type, self.data_format))

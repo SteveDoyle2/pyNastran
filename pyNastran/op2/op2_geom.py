@@ -353,7 +353,7 @@ class OP2Geom(BDF, OP2GeomCommon):
             #i += 1
         return state
 
-    def export_to_hdf5_file(self, hdf5_file, exporter=None):
+    def export_hdf5_file(self, hdf5_file, exporter=None):
         """
         Converts the OP2 objects into hdf5 object
 
@@ -370,5 +370,5 @@ class OP2Geom(BDF, OP2GeomCommon):
         """
         #from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
         #op2_model = self
-        OP2GeomCommon.export_to_hdf5_file(self, hdf5_file)
-        BDF.export_to_hdf5_file(self, hdf5_file)
+        OP2GeomCommon.export_hdf5_file(self, hdf5_file)
+        BDF.export_hdf5_file(self, hdf5_file)

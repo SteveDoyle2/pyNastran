@@ -280,7 +280,7 @@ class TestElements(unittest.TestCase):
         #model.cross_reference()
         save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
 
-    def test_genel(self):
+    def test_genel_1(self):
         """tests a GENEL element"""
         model = BDF(debug=None)
         eid = 1
@@ -334,6 +334,23 @@ class TestElements(unittest.TestCase):
         elemi = model.elements[21]
         str(elemi)
 
+    def test_genel_2(self):
+        """tests a GENEL element"""
+        model = BDF(debug=None)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+
+        card_lines = [
+            'genel,12001,,1,1,,,,,',
+            ',ud,,2,1,,,,,',
+            ',k,1.0+8,,,,,,,',
+            ',s,-1.0+8',
+        ]
+        model.add_card(card_lines, 'GENEL', comment='', is_list=False, has_none=True)
+        genel = model.elements[12001]
+        genel.raw_fields()
+        str(genel)
+        assert len(genel.ul.ravel()) == 2, genel.ul
         save_load_deck(model, xref='standard', punch=True,
                        run_mirror=False)
 
