@@ -1100,14 +1100,19 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
     #---------------------------------------------------------------------
     def post_group_by_name(self, name):
         """posts a group with a specific name"""
+        assert isinstance(name, string_types), name
         group = self.groups[name]
-        self.post_group(group)
-        self.group_active = name
+        self.post_group(group, update_groups=False)
 
-    def post_group(self, group):
+    def post_group(self, group, update_groups=False):
         """posts a group object"""
+        name = group.name
+        if update_groups and name not in self.groups:
+            self.groups[name] = group
         eids = group.element_ids
         self.show_eids(eids)
+        assert isinstance(name, string_types), name
+        self.group_active = name
 
     def get_all_eids(self):
         """get the list of all the element IDs"""

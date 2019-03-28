@@ -56,7 +56,7 @@ class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
         self.callback = callback
         #self._pick_visible = False
         self.model_name = name
-        assert model_name is not None
+        assert self.model_name is not None
 
     def _left_button_press_event(self, obj, event):
         """

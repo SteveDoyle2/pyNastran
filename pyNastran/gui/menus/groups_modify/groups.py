@@ -49,6 +49,41 @@ class Group(object):
         return msg
 
 
+class NodeGroup(object):
+    def __init__(self, name, node_str, nodes_pound, editable=True):
+        if len(name):
+            assert len(name) > 0, name
+            assert name[-1] != ' ', name
+            assert '\n' not in name, name
+            assert '\r' not in name, name
+            assert '\t' not in name, name
+        self.name = name
+        #self.cids = [0]
+        if isinstance(node_str, list):
+            node_str = ' '.join(str(s) for s in node_str)
+        else:
+            assert isinstance(node_str, string_types), 'node_str=%r type=%s' % (node_str, type(node_str))
+        self.node_str = node_str
+        self.nodes_pound = nodes_pound
+        self.editable = editable
+
+    @property
+    def node_ids(self):
+        return parse_patran_syntax(self.node_str, pound=self.nodes_pound)
+
+    @node_ids.setter
+    def node_ids(self, nids):
+        assert isinstance(nids, ndarray), nids
+        self.node_str = _get_collapsed_text(nids).strip()
+
+    def __repr__(self):
+        msg = 'NodeGroup:\n'
+        msg += '  name: %s\n' % self.name
+        msg += '  editable: %s\n' % self.editable
+        msg += '  node_str: [%s]\n' % self.node_str
+        msg += '  nodes_pound: %s\n' % self.nodes_pound
+        return msg
+
 def _get_collapsed_text(values):
     singles, doubles = collapse_colon_packs(values)
     text = ' '.join([str(s) for s in singles]) + ' '

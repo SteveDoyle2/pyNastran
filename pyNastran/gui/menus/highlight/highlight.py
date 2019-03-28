@@ -20,6 +20,7 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
 
+from pyNastran.gui.qt_files.mouse_actions import create_highlighted_actor
 from pyNastran.gui.styles.highlight_style import (
     create_vtk_selection_node_by_cell_ids,
     #create_vtk_selection_node_by_point_ids,
@@ -28,6 +29,8 @@ from pyNastran.gui.styles.highlight_style import (
 )
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_unstructured_point_grid, numpy_to_vtk_points)
+from pyNastran.gui.utils.vtk.gui_utils import add_actors, remove_actors
+
 
 class HighlightWindow(PyDialog):
     """
@@ -242,52 +245,71 @@ class HighlightWindow(PyDialog):
             nelements = len(elements_filtered)
             if nnodes == 0 and nelements == 0:
                 return False
-            self.on_clear_actors()
+            self.on_remove_actors()
 
-            actors = []
-            mouse_actions = self.parent().mouse_actions
+
+            gui = self.parent()
+            mouse_actions = gui.mouse_actions
             grid = mouse_actions.get_grid_selected(self.model_name)
 
-            if nnodes:
-                point_ids = np.searchsorted(self.nodes, nodes_filtered)
-                output_data = grid.GetPoints().GetData()
-                points_array = vtk_to_numpy(output_data)  # yeah!
-
-                point_array2 = points_array[point_ids, :]
-                points2 = numpy_to_vtk_points(point_array2)
-
-                ugrid = create_unstructured_point_grid(points2, nnodes)
-                actor = mouse_actions.create_highlighted_actor(ugrid, representation='points')
-                actors.append(actor)
-
-            if nelements:
-                cell_ids = np.searchsorted(self.elements, elements_filtered)
-
-                selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
-                ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
-                actor = mouse_actions.create_highlighted_actor(ugrid, representation='wire')
-                actors.append(actor)
+            actors = create_highlighted_actors(
+                gui, grid,
+                all_nodes=self.nodes, nodes=nodes_filtered,
+                all_elements=self.elements, elements=elements_filtered)
 
             if actors:
+                add_actors(gui, actors, render=True)
                 self.actors = actors
-                renderer = self.parent().rend
-                for actor in actors:
-                    renderer.AddActor(actor)
-                renderer.Render()
         return passed
 
-    def on_clear_actors(self):
-        renderer = self.parent().rend
-        for actor in self.actors:
-            renderer.RemoveActor(actor)
+    def on_remove_actors(self):
+        """removes multiple vtk actors"""
+        gui = self.parent()
+        remove_actors(gui, self.actors, render=True)
         self.actors = []
-        renderer.Render()
 
     def on_close(self):
-        self.on_clear_actors()
+        self.on_remove_actors()
         self.out_data['close'] = True
         self.close()
 
+
+def create_highlighted_actors(gui, grid,
+                              all_nodes=None, nodes=None,
+                              all_elements=None, elements=None):
+    """creates nodes & element highlighted objects"""
+    actors = []
+    nnodes = 0
+    nelements = 0
+    if nodes is not None:
+        nnodes = len(nodes)
+        assert len(all_nodes) >= nnodes
+
+    if elements is not None:
+        nelements = len(elements)
+        assert len(all_elements) >= nelements
+    assert nnodes + nelements > 0
+
+    if nnodes:
+        point_ids = np.searchsorted(all_nodes, nodes)
+        output_data = grid.GetPoints().GetData()
+        points_array = vtk_to_numpy(output_data)  # yeah!
+
+        point_array2 = points_array[point_ids, :]
+        points2 = numpy_to_vtk_points(point_array2)
+
+        ugrid = create_unstructured_point_grid(points2, nnodes)
+        actor = create_highlighted_actor(gui, ugrid, representation='points')
+        actors.append(actor)
+
+    if nelements:
+        cell_ids = np.searchsorted(all_elements, elements)
+
+        selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
+        ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
+        actor = create_highlighted_actor(gui, ugrid, representation='wire')
+        actors.append(actor)
+    return actors
 
 def check_float(cell):
     text = cell.text()
