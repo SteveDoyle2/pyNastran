@@ -91,6 +91,7 @@ class WriteMeshs(WriteMesh):
         ifile_out_filenames = _map_filenames_to_ifile_filname_dict(
             out_filenames, self.active_filenames)
         ifile0 = list(sorted(ifile_out_filenames))[0]
+        print('ifile_out_filenames =', ifile_out_filenames)
 
         out_filename0 = ifile_out_filenames[ifile0]
         #print("out_filename0 =", out_filename0)
@@ -112,7 +113,7 @@ class WriteMeshs(WriteMesh):
         if bdf_file0 is not None:
             self._write_header(bdf_file0, encoding)
 
-        self._write_bdf_includes(bdf_files, relative_dirname=relative_dirname,
+        self._write_bdf_includes(out_filenames, bdf_files, relative_dirname=relative_dirname,
                                  is_windows=is_windows)
 
         self._write_params_file(bdf_files, size, is_double, is_long_ids=is_long_ids)
@@ -136,11 +137,18 @@ class WriteMeshs(WriteMesh):
                     bdf_file.close()
         del bdf_files
 
-    def _write_bdf_includes(self, bdf_files, relative_dirname=None, is_windows=True):
+    def _write_bdf_includes(self, out_filenames, bdf_files, relative_dirname=None, is_windows=True):
         """writes the INCLUDE files"""
         if relative_dirname is None:
             relative_dirname = os.curdir
+        elif relative_dirname == '':
+            out_filename0 = list(out_filenames.keys())[0]
+            relative_dirname = os.path.dirname(os.path.abspath(out_filename0))
+            self.log.debug('relative_dirname = %s' % relative_dirname)
+
+        self.log.debug('include_filenames:')
         for ifile, include_filenames in self.include_filenames.items():
+            self.log.debug('ifile=%i %s' % (ifile, include_filenames))
             assert len(include_filenames) > 0, include_filenames
             bdf_file = bdf_files[ifile]
             if bdf_file is None:
@@ -148,11 +156,16 @@ class WriteMeshs(WriteMesh):
             for include_filename in include_filenames:
                 assert len(include_filename) > 0, include_filename
                 #print('***', include_filename, '***')
+
+                mapped_include_filename = include_filename
+                if include_filename in out_filenames:
+                    mapped_include_filename = out_filenames[include_filename]
+
                 if relative_dirname == '':
                     # absolute path
-                    rel_include_filename = include_filename
+                    rel_include_filename = mapped_include_filename
                 else:
-                    rel_include_filename = os.path.relpath(include_filename, relative_dirname)
+                    rel_include_filename = os.path.relpath(mapped_include_filename, relative_dirname)
                 bdf_file.write(write_include(rel_include_filename, is_windows=is_windows))
                 #print('* %r *' % (include_filename))
                 #print('** %r **' % (relative_dirname))
@@ -754,7 +767,6 @@ def _open_bdf_files(ifile_out_filenames, active_filenames, encoding):
     """opens N bdf files"""
     bdf_files = {i : None for i in range(len(active_filenames))}
     for ifile, out_filename in ifile_out_filenames.items():
-        print(out_filename)
         if hasattr(out_filename, 'read') and hasattr(out_filename, 'write'):
             bdf_file = out_filename
         else:
@@ -766,5 +778,5 @@ def _open_bdf_files(ifile_out_filenames, active_filenames, encoding):
 def write_xpoints_file(bdf_files, cardtype, points, comment=''):
     """writes SPOINTs/EPOINTs"""
     assert isinstance(points, dict), points
-    for point in points:
+    for point_id, point in points.items():
         bdf_files[point.ifile].write(point.write_card())

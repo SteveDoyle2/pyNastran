@@ -491,7 +491,11 @@ class SPOINTs(XPoints):
         """
         spoints = []
         for nid in self.points:
-            spoints.append(SPOINT(nid))
+            spoint = SPOINT(nid)
+            spoints.append(spoint)
+        if hasattr(self, 'ifile'):
+            for spoint in spoints:
+                spoint.ifile = self.ifile
         return spoints
 
 

@@ -562,6 +562,25 @@ class TestBDF(Tester):
         fem1.pop_xref_errors()
         compare_mass_cg_inertia(fem1)
 
+    def test_isat(self):
+        """read/writes the isat model with the file structure"""
+        bdf_filename = os.path.join(MODEL_PATH, 'iSat', 'iSat_launch_100Hz.dat')
+        model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
+                         save_file_structure=True, skip_cards=None, read_cards=None,
+                         encoding=None, log=None, debug=True, mode='msc')
+        out_filenames = {}
+        out_filenames2 = {}
+        for i, fname in enumerate(model.active_filenames):
+            dirname = os.path.dirname(fname)
+            basename = os.path.basename(fname)
+            out_filenames[fname] = os.path.join(dirname, 'out_' + basename)
+            if 'antenna_pressure' not in fname:
+                out_filenames2[fname] = os.path.join(dirname, 'out2_' + basename)
+            #print(bdf_filename2)
+        #print('out_filenames =', out_filenames)
+        model.write_bdfs(out_filenames, relative_dirname='')
+        model.write_bdfs(out_filenames2, relative_dirname='')
+
     def test_bdf_superelement_1(self):
         """checks resvec23.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'resvec23.bdf')

@@ -2962,6 +2962,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             card_class, add_card_function = self._card_parser[card_name]
             try:
                 class_instance = card_class.add_card(card_obj, comment=comment)
+                class_instance.ifile = ifile
                 add_card_function(class_instance)
             except TypeError:
                 # this should never be turned on, but is useful for testing
@@ -2975,7 +2976,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 self._stored_parse_errors.append((card, var))
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
-            class_instance.ifile = ifile
 
         elif card_name in self._card_parser_prepare:
             add_card_function = self._card_parser_prepare[card_name]

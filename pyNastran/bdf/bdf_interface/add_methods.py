@@ -148,12 +148,22 @@ class AddMethods(BDFAttributes):
         # type: (Any) -> None
         """adds an SPOINT card"""
         comment = spoints.comment
-        for nid in spoints.points:
-            if nid in self.spoints:
-                continue
-            spoint = SPOINT(nid, comment=comment)
-            comment = ''
-            self.spoints[nid] = spoint
+        if hasattr(spoints, 'ifile'):
+            ifile = spoints.ifile
+            for nid in spoints.points:
+                if nid in self.spoints:
+                    continue
+                spoint = SPOINT(nid, comment=comment)
+                spoint.ifile = ifile
+                comment = ''
+                self.spoints[nid] = spoint
+        else:
+            for nid in spoints.points:
+                if nid in self.spoints:
+                    continue
+                spoint = SPOINT(nid, comment=comment)
+                comment = ''
+                self.spoints[nid] = spoint
 
     def _add_epoint_object(self, epoints):
         # type: (Any) -> None
