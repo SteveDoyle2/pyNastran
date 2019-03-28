@@ -79,9 +79,143 @@ from pyNastran.gui.formats import CLASS_MAP
                                             #iren=iren, rw=render_window)
         #self.Highlight
 
+class GuiVTKCommon(GuiQtCommon):
+    """this class has VTK functionality, but no interactive/menu capability"""
+    def __init__(self, **kwds):
+        if qt_version == 'pyqt4':
+            GuiQtCommon.__init__(self, **kwds)
+        elif qt_version == 'pyqt5':
+            super(GuiVTKCommon, self).__init__(**kwds)
+        elif qt_version in ['pyside', 'pyside2']:
+            GuiQtCommon.__init__(self, **kwds)
+        else:  #: pragma: no cover
+            raise NotImplementedError(qt_version)
+
+    #---------------------------------------------------------------------------
+    # properties
+
+    @property
+    def legend_shown(self):
+        """determines if the legend is shown"""
+        return self.scalar_bar.is_shown
+
+    @property
+    def scalar_bar_actor(self):
+        """gets the scalar bar actor"""
+        return self.scalar_bar.scalar_bar
+
+    @property
+    def color_function(self):
+        """gets the scalar bar's color function"""
+        return self.scalar_bar.color_function
+
+    #---------------------------------------------------------------------------
+    def Render(self):
+        #self.vtk_interactor.Render()
+        self.vtk_interactor.GetRenderWindow().Render()
+
+    def cell_centroid(self, cell_id):
+        """gets the cell centroid"""
+        cell = self.grid_selected.GetCell(cell_id)
+        nnodes = cell.GetNumberOfPoints()
+        points = cell.GetPoints()
+        centroid = np.zeros(3, dtype='float32')
+        for ipoint in range(nnodes):
+            point = np.array(points.GetPoint(ipoint), dtype='float32')
+            centroid += point
+        centroid /= nnodes
+        return centroid
+
+    def build_lookup_table(self):
+        """build the nominal lookup table for the scalar bar"""
+        scalar_range = self.grid_selected.GetScalarRange()
+        self.grid_mapper.SetScalarRange(scalar_range)
+        self.grid_mapper.SetLookupTable(self.color_function)
+        self.rend.AddActor(self.scalar_bar_actor)
+
+    def hide_axes(self, cids=None):
+        """
+        Show a set of coordinate systems
+
+        ..todo :: support cids
+        ..todo :: fix the coords
+        """
+        if cids is None:
+            cids = self.axes.keys()
+        for unused_key in self.axes:
+            axis = self.axes[cid]
+            axis.VisibilityOff()
+        self.corner_axis.EnabledOff()
+
+    def show_axes(self, cids=None):
+        """
+        Show a set of coordinate systems
+
+        ..todo :: support cids
+        ..todo :: fix the coords
+        """
+        if cids is None:
+            cids = self.axes.keys()
+        for unused_key in self.axes:
+            axis = self.axes[cid]
+            axis.VisibilityOn()
+        self.corner_axis.EnabledOn()
+
+    def delete_actor(self, name):
+        """deletes an actor and associated properties"""
+        if name != 'main':
+            if name in self.geometry_actors:
+                actor = self.geometry_actors[name]
+                self.rend.RemoveActor(actor)
+                del self.geometry_actors[name]
+
+            if name in self.geometry_properties:
+                unused_prop = self.geometry_properties[name]
+                del self.geometry_properties[name]
+            self.Render()
+
+    def _set_results(self, form, cases):
+        assert len(cases) > 0, cases
+        if isinstance(cases, OrderedDict):
+            self.case_keys = list(cases.keys())
+        else:
+            self.case_keys = sorted(cases.keys())
+            assert isinstance(cases, dict), type(cases)
+
+        self.result_cases = cases
+
+        if len(self.case_keys) > 1:
+            self.icase = -1
+            self.ncases = len(self.result_cases)  # number of keys in dictionary
+        elif len(self.case_keys) == 1:
+            self.icase = -1
+            self.ncases = 1
+        else:
+            self.icase = -1
+            self.ncases = 0
+        self.icase_disp = None
+        self.icase_vector = None
+        self.icase_fringe = None
+        self.set_form(form)
+
+
+    #---------------------------------------------------------------------------
+    # groups
+    def create_group_with_name(self, name, eids):
+        elements_pound = self.groups['main'].elements_pound
+        element_str = ''
+        group = Group(
+            name, element_str, elements_pound,
+            editable=True)
+
+        # TODO: make sure all the eids exist
+        group.element_ids = eids
+        self.log_command('create_group_with_name(%r, %r)' % (name, eids))
+        self.groups[name] = group
+
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
-class GuiCommon2(QMainWindow, GuiQtCommon):
+class GuiCommon2(QMainWindow, GuiVTKCommon):
     def __init__(self, **kwds):
         """
         fmt_order, html_logging, inputs, parent=None,
@@ -90,24 +224,13 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
         #super(QMainWindow, self).__init__(self)
         if qt_version == 'pyqt4':
             QMainWindow.__init__(self)
-            GuiQtCommon.__init__(self, **kwds)
+            GuiVTKCommon.__init__(self, **kwds)
         elif qt_version == 'pyqt5':
             super(GuiCommon2, self).__init__(**kwds)
         elif qt_version in ['pyside', 'pyside2']:
-            #super(GuiCommon2, self).__init__(**kwds) # fails
-
-            # fails
-            #QMainWindow.__init__(self)
-            #GuiQtCommon.__init__(self, **kwds)
-
-            #super(GuiCommon2, self).__init__(**kwds)
-            #super(GuiCommon2, self).__init__(**kwds)
-
-            #super(GuiCommon2, self).__init__(**kwds)
-
             QMainWindow.__init__(self)
-            GuiQtCommon.__init__(self, **kwds)
-        else:
+            GuiVTKCommon.__init__(self, **kwds)
+        else:  #: pragma: no cover
             raise NotImplementedError(qt_version)
 
         self.format_class_map = CLASS_MAP
@@ -116,7 +239,6 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
 
         #self.app = inputs['app']
         #del inputs['app']
-
 
         if inputs['log'] is not None:
             html_logging = False
@@ -160,35 +282,6 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
     #def dropEvent(self, e):
         #print(e)
         #print('drop event')
-
-    def Render(self):
-        #self.vtk_interactor.Render()
-        self.vtk_interactor.GetRenderWindow().Render()
-
-    @property
-    def legend_shown(self):
-        """determines if the legend is shown"""
-        return self.scalar_bar.is_shown
-
-    #@legend_shown.setter
-    #def legend_shown(self):
-        #"""show/hide the legend shown"""
-        #return self.scalar_bar.is_shown
-
-    @property
-    def scalarBar(self):
-        raise RuntimeError('scalarBar has been removed; use scalar_bar_actor')
-        return self.scalar_bar.scalar_bar
-
-    @property
-    def scalar_bar_actor(self):
-        """gets the scalar bar actor"""
-        return self.scalar_bar.scalar_bar
-
-    @property
-    def color_function(self):
-        """gets the scalar bar's color function"""
-        return self.scalar_bar.color_function
 
     @property
     def logo(self):
@@ -1161,18 +1254,6 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
         ishow = np.searchsorted(all_eids, eids)
         self.show_ids_mask(ishow)
 
-    def create_group_with_name(self, name, eids):
-        elements_pound = self.groups['main'].elements_pound
-        element_str = ''
-        group = Group(
-            name, element_str, elements_pound,
-            editable=True)
-
-        # TODO: make sure all the eids exist
-        group.element_ids = eids
-        self.log_command('create_group_with_name(%r, %r)' % (name, eids))
-        self.groups[name] = group
-
     def find_result_by_name(self, desired_name):
         for icase in range(self.ncases):
             name, result = self.get_name_result_data(icase)
@@ -1472,12 +1553,6 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
         self.selection_node.GetProperties().Set(vtk.vtkSelectionNode.INVERSE(), 1)
         self.extract_selection.Update()
 
-    def build_lookup_table(self):
-        scalar_range = self.grid_selected.GetScalarRange()
-        self.grid_mapper.SetScalarRange(scalar_range)
-        self.grid_mapper.SetLookupTable(self.color_function)
-        self.rend.AddActor(self.scalar_bar_actor)
-
     def start_logging(self):
         if self.log is not None:
             return
@@ -1730,30 +1805,6 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
         self.hide_axes()
         self.hide_legend()
         #self.settings.set_background_color_to_white()
-
-    def hide_axes(self, cids=None):
-        """
-        ..todo :: support cids
-        ..todo :: fix the coords
-        """
-        if cids is None:
-            cids = self.axes.keys()
-        for unused_key in self.axes:
-            axis = self.axes[cid]
-            axis.VisibilityOff()
-        self.corner_axis.EnabledOff()
-
-    def show_axes(self, cids=None):
-        """
-        ..todo :: support cids
-        ..todo :: fix the coords
-        """
-        if cids is None:
-            cids = self.axes.keys()
-        for unused_key in self.axes:
-            axis = self.axes[cid]
-            axis.VisibilityOn()
-        self.corner_axis.EnabledOn()
 
     def make_gif(self, gif_filename, scale, istep=None,
                  min_value=None, max_value=None,
@@ -2404,30 +2455,6 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
         #if key in ['y', 'z', 'X', 'Y', 'Z']:
             #self.update_camera(key)
 
-    def _set_results(self, form, cases):
-        assert len(cases) > 0, cases
-        if isinstance(cases, OrderedDict):
-            self.case_keys = list(cases.keys())
-        else:
-            self.case_keys = sorted(cases.keys())
-            assert isinstance(cases, dict), type(cases)
-
-        self.result_cases = cases
-
-        if len(self.case_keys) > 1:
-            self.icase = -1
-            self.ncases = len(self.result_cases)  # number of keys in dictionary
-        elif len(self.case_keys) == 1:
-            self.icase = -1
-            self.ncases = 1
-        else:
-            self.icase = -1
-            self.ncases = 0
-        self.icase_disp = None
-        self.icase_vector = None
-        self.icase_fringe = None
-        self.set_form(form)
-
     def _finish_results_io2(self, model_name, form, cases, reset_labels=True):
         """
         Adds results to the Sidebar
@@ -2545,18 +2572,6 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
         for unused_module_name, module in self.modules.items():
             module.post_load_geometry()
 
-    def cell_centroid(self, cell_id):
-        """gets the cell centroid"""
-        cell = self.grid_selected.GetCell(cell_id)
-        nnodes = cell.GetNumberOfPoints()
-        points = cell.GetPoints()
-        centroid = np.zeros(3, dtype='float32')
-        for ipoint in range(nnodes):
-            point = np.array(points.GetPoint(ipoint), dtype='float32')
-            centroid += point
-        centroid /= nnodes
-        return centroid
-
     @property
     def result_name(self):
         """
@@ -2590,19 +2605,6 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
             if result == QMessageBox.Yes:
                 self.log_widget.clear()
                 self.log_command('clear_application_log(force=%s)' % force)
-
-    def delete_actor(self, name):
-        """deletes an actor and associated properties"""
-        if name != 'main':
-            if name in self.geometry_actors:
-                actor = self.geometry_actors[name]
-                self.rend.RemoveActor(actor)
-                del self.geometry_actors[name]
-
-            if name in self.geometry_properties:
-                unused_prop = self.geometry_properties[name]
-                del self.geometry_properties[name]
-            self.Render()
 
     #---------------------------------------------------------------------------------------
     # PICKER

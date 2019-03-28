@@ -2656,7 +2656,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             text = str(note)
             #slot = self.gui.label_actors[-1]
             slot = self.gui.geometry_properties[name].label_actors
-            self.gui.create_annotation(text, slot, x, y, z)
+            annotation = self.gui.create_annotation(text, x, y, z)
+            slot.append(annotation)
 
         self.gui.alt_grids[name].SetPoints(points)
         return stored_msg

@@ -3,6 +3,7 @@ from __future__ import print_function
 from collections import OrderedDict
 
 from six import integer_types
+import numpy as np
 from cpylog import get_logger
 
 from pyNastran.gui.qt_version import qt_version
@@ -30,7 +31,8 @@ from pyNastran.gui.test.mock_vtk import (
 #)
 import vtk
 
-from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
+from pyNastran.gui.gui_common import GuiVTKCommon
+#from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 #from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.formats import CLASS_MAP
@@ -75,7 +77,7 @@ class MockResWidget(object):
         """fake method"""
         pass
 
-class FakeGUIMethods(GuiQtCommon):
+class FakeGUIMethods(GuiVTKCommon):
     """all the methods in here are faked"""
     def __init__(self, inputs=None):
         if inputs is None:
@@ -93,7 +95,7 @@ class FakeGUIMethods(GuiQtCommon):
             'res_widget' : res_widget
         }
         #GuiAttributes.__init__(self, **kwds)
-        GuiQtCommon.__init__(self, **kwds)
+        GuiVTKCommon.__init__(self, **kwds)
         self.res_widget = res_widget
         self.vtk_interactor = VTKInteractor()
         self.debug = False
@@ -136,6 +138,9 @@ class FakeGUIMethods(GuiQtCommon):
         self.text_actors[2] = vtkTextActor()
         self.text_actors[3] = vtkTextActor()
         self.format_class_map = CLASS_MAP
+
+    def cell_centroid(self, cell_id):
+        return np.zeros(3)
 
     def setup_fake_text_actors(self):
         for icase in self.result_cases:

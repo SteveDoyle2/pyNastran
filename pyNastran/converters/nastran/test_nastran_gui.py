@@ -127,7 +127,7 @@ class TestNastranGUI(unittest.TestCase):
         labels_list = []
         text = 'text'
         x, y, z = 0., 0., 0.
-        test.create_annotation(text, labels_list, x, y, z)
+        labels_list.append(test.create_annotation(text, x, y, z))
 
         cell_id = 1
         world_position = [0., 0., 1.]
