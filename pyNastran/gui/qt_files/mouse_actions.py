@@ -656,7 +656,7 @@ class MouseActions(object):
             text = '(%.3g, %.3g, %.3g); %s' % (x, y, z, result_value)
             text = str(result_value)
             assert icase in self.gui.label_actors, icase
-            self.gui.create_annotation(text, self.gui.label_actors[icase], x, y, z)
+            self.gui.label_actors[icase].append(self.gui.create_annotation(text, x, y, z))
             self.vtk_interactor.Render()
         if self.revert:
             self.setup_mouse_buttons(mode='default')

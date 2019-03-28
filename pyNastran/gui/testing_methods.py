@@ -267,9 +267,9 @@ class FakeGUIMethods(GuiQtCommon):
         #"""fake method"""
         #pass
 
-    #def create_annotation(self, label, slot, x, y, z):
+    #def create_annotation(self, label, x, y, z):
         #"""fake method"""
-        #pass
+        #return None
 
     def update_axes_length(self, value):
         self.settings.dim_max = value

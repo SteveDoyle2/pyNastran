@@ -20,6 +20,7 @@ from qtpy import QtCore, QtGui #, API
 from qtpy.QtWidgets import (
     QMessageBox, QWidget,
     QMainWindow, QDockWidget, QFrame, QHBoxLayout, QAction, QToolBar, QMenu, QToolButton)
+from pyNastran.gui.qt_files.mark_actions import create_annotation
 
 import vtk
 
@@ -418,6 +419,8 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
                 ('caero', 'Show/Hide CAERO Panels', '', None, 'Show/Hide CAERO Panel Outlines', self.toggle_caero_panels),
                 ('caero_subpanels', 'Toggle CAERO Subpanels', '', None, 'Show/Hide CAERO Subanel Outlines', self.toggle_caero_sub_panels),
                 ('conm2', 'Toggle CONM2s', '', None, 'Show/Hide CONM2s', self.toggle_conms),
+                ('min', 'Min', '', None, 'Show/Hide Min Label', self.show_hide_min_actor),
+                ('max', 'Max', '', None, 'Show/Hide Max Label', self.show_hide_max_actor),
             ]
         self.tools = tools
         self.checkables = checkables
@@ -517,7 +520,7 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
                          'area_pick', 'highlight_nodes_elements',
 
                          'wireframe', 'surface', 'edges']
-        toolbar_tools += ['camera_reset', 'view', 'screenshot', '', 'exit']
+        toolbar_tools += ['camera_reset', 'view', 'screenshot', 'min', 'max', '', 'exit']
         hidden_tools = ('cycle_results', 'rcycle_results',
                         'font_size_increase', 'font_size_decrease', 'highlight')
 
@@ -841,6 +844,12 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
 
         #self._camera_event_name = 'LeftButtonPressEvent'
         self.mouse_actions.setup_mouse_buttons(mode='default')
+
+        xyz = [0., 0., 0.]
+        self.min_max_actors.append(create_annotation(self, 'Min', *xyz))
+        self.min_max_actors.append(create_annotation(self, 'Max', *xyz))
+        #for actor in self.min_max_actors:
+            #actor.SetVisibility(False)
 
     def on_escape_null(self):
         """
@@ -2062,6 +2071,7 @@ class GuiCommon2(QMainWindow, GuiQtCommon):
                 unused_icase, result_type, unused_location, min_value, max_value, norm_value,
                 data_format, unused_scale, unused_methods,
                 nlabels, labelsize, ncolors, colormap,
+                unused_imin, unused_imax,
             ) = data
             is_legend_shown = self.scalar_bar.is_shown
             self.update_scalar_bar(result_type, min_value, max_value, norm_value,

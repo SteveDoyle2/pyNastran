@@ -565,14 +565,22 @@ class NastranGuiResults(NastranGuiAttributes):
             eidsi2 = case.element[itime, :itotal]
             i = np.searchsorted(eids, eidsi2)
             if len(i) != len(np.unique(i)):
-                msg = 'irod=%s is not unique\n' % str(i)
+                msg = 'i%s=%s is not unique' % (case.element_name, str(i))
                 #print('eids = %s\n' % str(list(eids)))
                 #print('eidsi = %s\n' % str(list(eidsi)))
-                raise RuntimeError(msg)
-            ese[i] = case.data[itime, :itotal, 0]
-            percent[i] = case.data[itime, :itotal, 1]
-            strain_energy_density[i] = case.data[itime, :itotal, 2]
+                model.log.warning(msg)
+                continue
+                #raise RuntimeError(msg)
 
+            # verifies the try-except is what we think it is (missing elements)
+            esei = case.data[itime, :itotal, 0]
+            try:
+                ese[i] = esei
+                percent[i] = case.data[itime, :itotal, 1]
+                strain_energy_density[i] = case.data[itime, :itotal, 2]
+            except IndexError:
+                model.log.warning('error reading Strain Energy')
+                continue
 
         #ese
 

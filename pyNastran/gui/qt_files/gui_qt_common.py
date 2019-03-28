@@ -14,7 +14,7 @@ from numpy import full, issubdtype
 from numpy.linalg import norm  # type: ignore
 import vtk
 
-import pyNastran
+#import pyNastran
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 
@@ -262,6 +262,8 @@ class GuiQtCommon(GuiAttributes):
 
         #normi = _get_normalized_data(self.result_cases[icase])
         normi = _get_normalized_data(case)
+        imin = np.nanargmin(normi)
+        imax = np.nanargmax(normi)
 
         #if min_value is None and max_value is None:
             #max_value = normi.max()
@@ -288,6 +290,7 @@ class GuiQtCommon(GuiAttributes):
             icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, methods,
             nlabels, labelsize, ncolors, colormap,
+            imin, imax,
         )
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
@@ -419,6 +422,7 @@ class GuiQtCommon(GuiAttributes):
             icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, methods,
             nlabels, labelsize, ncolors, colormap,
+            imin, imax,
         ) = data
 
         #is_legend_shown = True
@@ -460,10 +464,59 @@ class GuiQtCommon(GuiAttributes):
         self.icase_fringe = icase
         self.grid.Modified()
         self.grid_selected.Modified()
+        self._update_min_max_actors(location, icase_fringe,
+                                    imin, min_value,
+                                    imax, max_value)
         self.vtk_interactor.Render()
         self.res_widget.result_case_window.treeView.fringe.setChecked(True)
         is_valid = True
         return is_valid
+
+    def show_hide_min_actor(self, render=True):
+        """flips the status of the min label actor"""
+        actor = self.min_max_actors[0]
+        show_hide_actor(actor)
+        if render:
+            self.Render()
+
+    def show_hide_max_actor(self, render=True):
+        """flips the status of the max label actor"""
+        actor = self.min_max_actors[1]
+        show_hide_actor(actor)
+        if render:
+            self.Render()
+
+    def _update_min_max_actors(self, location, icase_fringe,
+                               imin, min_value, imax, max_value):
+        """updates the values for the min and max actors"""
+        settings = self.settings
+        self.is_min_actor = True
+        self.is_max_actor = True
+
+        if location == 'node':
+            xyzs = [
+                self.xyz_cid0[imin, :], # min
+                self.xyz_cid0[imax, :], # max
+            ]
+        elif location == 'centroid':
+            xyzs = [
+                self.cell_centroid(imin),
+                self.cell_centroid(imax),
+            ]
+        else:  # pragma: no cover
+            raise NotImplementedError(location)
+
+        min_maxs = [
+            (imin, min_value, xyzs[0]),
+            (imax, max_value, xyzs[1]),
+        ]
+
+        for (imin_max, value, xyz), text_actor in zip(min_maxs, self.min_max_actors):
+            text_actor.SetPosition(*xyz)
+            text_prop = text_actor.GetTextProperty()
+            text_prop.SetFontSize(settings.annotation_size)
+            text_prop.SetColor(settings.annotation_color)
+            text_actor.Modified()
 
     def _update_vtk_fringe(self, icase, scale=None):
         """helper method for ``on_fringe``"""
@@ -475,6 +528,7 @@ class GuiQtCommon(GuiAttributes):
             icase, unused_result_type, location, unused_min_value, unused_max_value, unused_norm_value,
             unused_data_format, unused_scale, unused_methods,
             unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
+            unused_imin, unused_imax,
         ) = data
 
         #-----------------------------------
@@ -531,7 +585,7 @@ class GuiQtCommon(GuiAttributes):
             None : defaults to self.icase+1
         """
         self.icase = icase
-        is_valid, (grid_result, unused_name, unused_name_str, data) = self._get_disp_data(
+        is_valid, (unused_grid_result, unused_name, unused_name_str, data) = self._get_disp_data(
             icase, is_disp)
 
         if not is_valid:
@@ -744,7 +798,7 @@ class GuiQtCommon(GuiAttributes):
         case = obj.get_result(i, name)
         result_type = obj.get_title(i, name)
         vector_size = obj.get_vector_size(i, name)
-        #location = obj.get_location(i, name)
+        location = obj.get_location(i, name)
         methods = obj.get_methods(i)
         data_format = obj.get_data_format(i, name)
         scale = obj.get_scale(i, name)
@@ -783,6 +837,8 @@ class GuiQtCommon(GuiAttributes):
             normi = case
         else:
             normi = norm(case, axis=1)
+        imin = np.nanargmin(normi)
+        imax = np.nanargmax(normi)
 
         #if min_value is None and max_value is None:
             #max_value = normi.max()
@@ -818,6 +874,7 @@ class GuiQtCommon(GuiAttributes):
 
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
+
         self.update_scalar_bar(result_type, min_value, max_value, norm_value,
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
@@ -827,6 +884,10 @@ class GuiQtCommon(GuiAttributes):
         icase_fringe = icase
         icase_disp = self.icase_disp
         icase_vector = self.icase_vector
+
+        self._update_min_max_actors(location, icase_fringe,
+                                    imin, min_value,
+                                    imax, max_value)
 
         arrow_scale = 0.0
         self.legend_obj.update_legend(
@@ -1521,7 +1582,7 @@ class GuiQtCommon(GuiAttributes):
         return plane_actor
 
     def _create_point_actor_from_points(self, points, point_size=8,
-                                        actor_name='plane_poinnts'):  # pragma: no cover
+                                        actor_name='plane_points'):  # pragma: no cover
         """
         This is used by the shear/moment/torque tool.
 
@@ -1549,6 +1610,7 @@ class GuiQtCommon(GuiAttributes):
             self.point_actor = point_actor
             self.rend.AddActor(point_actor)
 
+        ## TODO: buggy...
         nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
         color = RED
         self.set_quad_grid(actor_name, nodes, elements, color,
@@ -1562,18 +1624,18 @@ class GuiQtCommon(GuiAttributes):
 
         self.contour_filter = vtk.vtkContourFilter()
 
-        if 0:
+        #if 0:
             # doesn't work...in progress
-            geometry_filter = vtk.vtkGeometryFilter()
-            geometry_filter.SetInputData(self.grid_selected)
-            geometry_filter.Update()
-            poly_data = geometry_filter.GetOutput()
+            #geometry_filter = vtk.vtkGeometryFilter()
+            #geometry_filter.SetInputData(self.grid_selected)
+            #geometry_filter.Update()
+            #poly_data = geometry_filter.GetOutput()
 
-            self.contour_filter.SetInputData(poly_data)
-        elif 0:  # pragma: no cover
+            #self.contour_filter.SetInputData(poly_data)
+        #elif 0:  # pragma: no cover
             # doesn't work
-            self.contour_filter.SetInputData(self.grid_selected)
-        elif 1:
+            #self.contour_filter.SetInputData(self.grid_selected)
+        if 1:
             # https://blog.kitware.com/cell-set-as-unstructured-grid/
             self.contour_filter.SetInputData(self.grid)
         else:
@@ -1596,9 +1658,9 @@ class GuiQtCommon(GuiAttributes):
 
         include_labels = False
         if include_labels:
-            points = contour_stripper.GetOutput().GetPoints()
-            cells = contour_stripper.GetOutput().GetLines()
-            scalars = contour_stripper.GetOutput().GetPointData().GetScalars()
+            label_points = contour_stripper.GetOutput().GetPoints()
+            unused_cells = contour_stripper.GetOutput().GetLines()
+            label_scalars = contour_stripper.GetOutput().GetPointData().GetScalars()
 
             label_poly_data.SetPoints(label_points)
             label_poly_data.GetPointData().SetScalars(label_scalars)
@@ -1712,3 +1774,10 @@ def normalize_forces(forces_array):
     #print('new_forces =', new_forces[inonzero])
     #print('mag =', mag[inonzero])
     return new_forces, mag
+
+def show_hide_actor(actor):
+    """flips the visibility for an actor"""
+    is_visible = actor.GetVisibility()
+    actor.SetVisibility(not is_visible)
+    actor.Modified()
+

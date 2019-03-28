@@ -367,6 +367,11 @@ class Settings(object):
             return
         self.annotation_size = size
 
+        # min/max
+        for actor in self.parent.min_max_actors:
+            actor.GetTextProperty().SetFontSize(size)
+            actor.Modified()
+
         # case attached annotations (typical)
         for follower_actors in self.parent.label_actors.values():
             for follower_actor in follower_actors:
@@ -447,6 +452,11 @@ class Settings(object):
         if np.allclose(self.annotation_color, color):
             return
         self.annotation_color = color
+
+        # min/max
+        for actor in self.parent.min_max_actors:
+            prop = actor.GetProperty()
+            prop.SetColor(*color)
 
         # case attached annotations (typical)
         for follower_actors in self.parent.label_actors.values():

@@ -348,12 +348,19 @@ def get_rod_stress_strain(model, key, is_stress, vm_word, itime,
         eidsi = case.element
         i = np.searchsorted(eids, eidsi)
         if len(i) != len(np.unique(i)):
-            msg = 'irod=%s is not unique\n' % str(i)
-            print('eids = %s\n' % str(list(eids)))
-            print('eidsi = %s\n' % str(list(eidsi)))
-            raise RuntimeError(msg)
+            msg = 'i%s (rod)=%s is not unique' % (case.element_name, str(i))
+            print('  eids = %s\n' % str(list(eids)))
+            print('  eidsi = %s\n' % str(list(eidsi)))
+            model.log.warning(msg)
+            continue
+            #raise RuntimeError(msg)
 
-        is_element_on[i] = 1
+        try:
+            is_element_on[i] = 1
+        except IndexError:
+            model.log.warning('missing %ss' % case.element_name)
+            continue
+
         dt = case._times[itime]
         header = _get_nastran_header(case, dt, itime)
         header_dict[(key, itime)] = header
@@ -432,7 +439,7 @@ def get_bar_stress_strain(model, key, is_stress, vm_word, itime,
             i = np.searchsorted(eids, eidsi)
             if len(i) != len(np.unique(i)):
                 print('ibar = %s' % i)
-                print('eids = %s' % eids)
+                print('  eids = %s' % eids)
                 msg = 'ibar=%s is not unique' % str(i)
                 raise RuntimeError(msg)
 
@@ -512,7 +519,7 @@ def get_bar100_stress_strain(model, key, is_stress, vm_word, itime,
             i = np.searchsorted(eids, eidsi)
             if len(i) != len(np.unique(i)):
                 print('ibar = %s' % i)
-                print('eids = %s' % eids)
+                print('  eids = %s' % eids)
                 msg = 'ibar=%s is not unique' % str(i)
                 raise RuntimeError(msg)
 
@@ -569,7 +576,12 @@ def get_beam_stress_strain(model, key, is_stress, vm_word, itime,
                 oxxi = 0.
                 smaxi = 0.
                 smini = 0.
-                eid2 = eid_map[eid]
+                try:
+                    eid2 = eid_map[eid]
+                except KeyError:
+                    model.log.warning('eid=%s is missing' % eid)
+                    continue
+
                 is_element_on[eid2] = 1.
                 oxxi = max(
                     sxc[imini:imaxi].max(),
@@ -584,7 +596,7 @@ def get_beam_stress_strain(model, key, is_stress, vm_word, itime,
                 max_principal[eid2] = smaxi
                 min_principal[eid2] = smini
                 ovm[eid2] = ovmi
-            del eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini, ovmi
+            del eidsi, ueids, sxc, sxd, sxe, sxf, smax, smin, oxxi, smaxi, smini
     del beams
     return vm_word
 
@@ -626,22 +638,29 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
             print(case.element_node)
             print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
             print('iplate = %s' % i)
-            print('eids = %s' % eids)
-            print('eidsiA = %s' % case.element_node[:, 0])
-            print('eidsiB = %s' % eidsi)
-            msg = 'iplate=%s is not unique' % str(i)
-            raise RuntimeError(msg)
+            print('  eids = %s' % eids)
+            print('  eidsiA = %s' % case.element_node[:, 0])
+            print('  eidsiB = %s' % eidsi)
+
+            msg = 'i%s (plate)=%s is not unique' % (case.element_name, str(i))
+            #msg = 'iplate=%s is not unique' % str(i)
+            model.log.warning(msg)
+            continue
+            #raise RuntimeError(msg)
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
         #                                         txy, angle,
         #                                         majorP, minorP, ovm]
+        #print('iplate = ', i)
+        #print('  is_element_on = ', is_element_on)
         try:
             is_element_on[i] = 1
         except IndexError:
-            print(case.element_node)
-            print('i = %s' % i)
-            print('eids = %s' % eids)
-            print('eidsi = %s' % eidsi)
-            raise
+            #print(case.element_node)
+            print('iplate = %s' % i)
+            print('  eids = %s' % eids)
+            print('  eidsi = %s' % eidsi)
+            continue
+            #raise
 
         ntotal = case.data.shape[1]  # (ndt, ntotal, nresults)
         if nlayers_per_element == 1:
@@ -720,9 +739,13 @@ def get_solid_stress_strain(model, key, is_stress, vm_word, itime,
         i = np.searchsorted(eids, eidsi)
         if len(i) != len(np.unique(i)):
             print('isolid = %s' % str(i))
-            print('eids = %s' % eids)
-            print('eidsi = %s' % eidsi)
-            assert len(i) == len(np.unique(i)), 'isolid=%s is not unique' % str(i)
+            print('  eids = %s' % eids)
+            print('  eidsi = %s' % eidsi)
+            if len(i) != len(np.unique(i)):
+                msg = 'i%s (solid)=%s is not unique' % (case.element_name, str(i))
+                #msg = 'isolid=%s is not unique' % str(i)
+                model.log.warning(msg)
+                continue
 
         is_element_on[i] = 1
         #self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz,

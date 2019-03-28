@@ -317,6 +317,26 @@ class TestNastranGUI(unittest.TestCase):
         test.on_disp(icase=48) # disp
         test.on_fringe(icase=37, update_legend_window=True, show_msg=True)  # normal
 
+    def test_gui_elements_01b(self):
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
+        from pyNastran.bdf.bdf import read_bdf, BDF
+        #model = read_bdf(bdf_filename)
+        model = BDF()
+        model.disable_cards(['CHEXA', 'CTETRA', 'CPENTA',
+                             'CROD', 'PLOTEL', 'CBAR', 'CBEAM', 'CTRIA3', 'CQUAD4', 'CQUADR', 'CTRIAR',
+                             'CQUAD8', 'CTRIA6', 'CSHEAR', 'CTUBE',
+                             'CONM2', 'CVISC', #'CONROD',
+                             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
+
+                             'PLOAD1', 'PLOAD2', 'PLOAD4',
+                             ])
+        model.read_bdf(bdf_filename)
+        #print(model.elements)
+        test2 = NastranGUI()
+        test2.load_nastran_geometry(model)
+        test2.load_nastran_results(op2_filename)
+
     def test_gui_elements_02(self):
         """tests a large number of elements and results in SOL 101"""
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')

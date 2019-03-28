@@ -23,7 +23,7 @@ from pyNastran.gui.utils.vtk.gui_utils import add_actors, remove_actors
 from pyNastran.gui.menus.highlight.highlight import create_highlighted_actors
 
 import pyNastran
-from flutter_explorer.utils.paths import PYNASTRAN_ICON_PATH
+from pyNastran.gui import ICON_PATH
 
 
 class GroupsModify(PyDialog):
@@ -78,8 +78,8 @@ class GroupsModify(PyDialog):
 
     def create_widgets(self):
         """creates the menu objects"""
-        #icon = QtGui.QPixmap(os.path.join(PYNASTRAN_ICON_PATH, 'node.png'))
-        #icon = QtGui.QPixmap(os.path.join(PYNASTRAN_ICON_PATH, 'element.png'))
+        #icon = QtGui.QPixmap(os.path.join(ICON_PATH, 'node.png'))
+        #icon = QtGui.QPixmap(os.path.join(ICON_PATH, 'element.png'))
         # Name
         self.pick_style_label = QLabel('Pick Style:')
         #self.pick_node_button = QPushButton('Node')

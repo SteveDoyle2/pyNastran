@@ -17,7 +17,7 @@ class MarkActions(object):
         """creates MarkActions"""
         self.gui = gui
 
-    def create_annotation(self, text, slot, x, y, z):
+    def create_annotation(self, text, x, y, z):
         """
         Creates the actual annotation and appends it to slot
 
@@ -25,51 +25,16 @@ class MarkActions(object):
         ----------
         text : str
             the text to display
-        label_actors[icase] : List[annotation]
-            where to place the annotation
-            icase : int
-                the key in label_actors to slot the result into
-            annotation : vtkBillboardTextActor3D
-                the annotation object
         x, y, z : float
             the position of the label
+
+        Returns
+        -------
+        annotation : vtkBillboardTextActor3D
+            the annotation object
         """
-        if not isinstance(slot, list):
-            msg = 'slot=%r type=%s' % (slot, type(slot))
-            raise TypeError(msg)
-        # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
-
-        #self.convert_units(icase, result_value, x, y, z)
-
-        text_actor = vtk.vtkBillboardTextActor3D()
-        text_actor.SetPosition(x, y, z)
-        text_actor.SetInput(text)
-        text_actor.PickableOff()
-        text_actor.DragableOff()
-        #text_actor.SetPickable(False)
-
-        #text_actor.SetPosition(actor.GetPosition())
-        text_prop = text_actor.GetTextProperty()
-        text_prop.SetFontSize(self.gui.settings.annotation_size)
-        text_prop.SetFontFamilyToArial()
-        text_prop.BoldOn()
-        text_prop.ShadowOn()
-        text_prop.SetColor(self.gui.settings.annotation_color)
-        text_prop.SetJustificationToCentered()
-
-        # finish adding the actor
-        self.gui.rend.AddActor(text_actor)
-
-        #self.label_actors[icase].append(text_actor)
-        slot.append(text_actor)
-
-        #print('added label actor %r; icase=%s' % (text, icase))
-        #print(self.label_actors)
-
-        #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
-        #camera.GetPosition()
-        #camera.GetClippingRange()
-        #camera.GetFocalPoint()
+        annotation = create_annotation(self.gui, text, x, y, z)
+        return annotation
 
     def get_result_by_xyz_cell_id(self, node_xyz, cell_id):
         """won't handle multiple cell_ids/node_xyz"""
@@ -159,7 +124,7 @@ class MarkActions(object):
                 cell_id, centroid, icase_result)
             texti = '%s' % result_values
             xi, yi, zi = centroid
-            self.create_annotation(texti, self.gui.label_actors[icase_to_apply], xi, yi, zi)
+            self.gui.label_actors[icase_to_apply].append(self.create_annotation(texti, xi, yi, zi))
         self.gui.log_command('mark_elements_by_different_case(%s, %s, %s)' % (
             eids, icase_result, icase_to_apply))
         self.gui.vtk_interactor.Render()
@@ -373,15 +338,8 @@ class MarkActions(object):
                 icase, ', '.join(self.gui.label_actors))
             self.gui.log_error(msg)
             return
-        i = np.searchsorted(self.gui.node_ids, nids)
-        if isinstance(text, string_types):
-            text = [text] * len(i)
-        else:
-            assert len(text) == len(i)
-
-        xyz = self.gui.xyz_cid0[i, :]
-        for (xi, yi, zi), texti in zip(xyz, text):
-            self.create_annotation(texti, self.gui.label_actors[icase], xi, yi, zi)
+        slot = self.gui.label_actors[icase]
+        create_marked_node_actors(self.gui.node_ids, nids, text, self.gui.xyz_cid0, slot)
         self.gui.vtk_interactor.Render()
 
     #def __mark_nodes_by_result(self, nids, icases):
@@ -413,5 +371,90 @@ class MarkActions(object):
                 #_result_name, unused_result_value, node_id, node_xyz = out
                 #xi, yi, zi = node_xyz
                 #texti = 'test'
-                #self.create_annotation(texti, self.gui.label_actors[icase], xi, yi, zi)
+                #self.gui.label_actors[icase].append(self.create_annotation(texti, xi, yi, zi))
         #self.gui.vtk_interactor.Render()
+
+def create_marked_node_actors(gui, node_ids, nids, text, xyz_cid0, slot):
+    """
+    Marks a series of nodes with custom text labels
+
+    Parameters
+    ----------
+    nids : int, List[int]
+        the nodes to apply a message to
+    icase : int
+        the key in label_actors to slot the result into
+    text : str, List[str]
+        the text to display
+
+    0 corresponds to the NodeID result
+    self.mark_nodes(1, 0, 'max')
+    self.mark_nodes(6, 0, 'min')
+    self.mark_nodes([1, 6], 0, 'max')
+    self.mark_nodes([1, 6], 0, ['max', 'min'])
+    """
+    i = np.searchsorted(node_ids, nids)
+    if isinstance(text, string_types):
+        text = [text] * len(i)
+    else:
+        assert len(text) == len(i)
+
+    xyz = xyz_cid0[i, :]
+    for (xi, yi, zi), texti in zip(xyz, text):
+        slot.append(create_annotation(gui, texti, xi, yi, zi))
+
+
+def create_annotation(gui, text, x, y, z):
+    """
+    Creates the actual annotation and appends it to slot
+
+    Parameters
+    ----------
+    gui : MainWindow
+       has access to the settings
+    text : str
+        the text to display
+    x, y, z : float
+        the position of the label
+
+    Returns
+    -------
+    annotation : vtkBillboardTextActor3D
+        the annotation object
+    """
+    # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
+
+    #self.convert_units(icase, result_value, x, y, z)
+
+    settings = gui.settings
+    text_actor = vtk.vtkBillboardTextActor3D()
+    text_actor.SetPosition(x, y, z)
+    text_actor.SetInput(text)
+    text_actor.PickableOff()
+    text_actor.DragableOff()
+    #text_actor.SetPickable(False)
+
+    #text_actor.SetPosition(actor.GetPosition())
+    text_prop = text_actor.GetTextProperty()
+    text_prop.SetFontSize(settings.annotation_size)
+    text_prop.SetFontFamilyToArial()
+    text_prop.BoldOn()
+    text_prop.ShadowOn()
+    text_prop.SetColor(settings.annotation_color)
+    text_prop.SetJustificationToCentered()
+
+    # finish adding the actor
+    gui.rend.AddActor(text_actor)
+
+    #self.label_actors[icase].append(text_actor)
+
+    #print('added label actor %r; icase=%s' % (text, icase))
+    #print(self.label_actors)
+
+    #self.picker_textMapper.SetInput("(%.6f, %.6f, %.6f)"% pickPos)
+    #camera.GetPosition()
+    #camera.GetClippingRange()
+    #camera.GetFocalPoint()
+    return text_actor
+
+

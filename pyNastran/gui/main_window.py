@@ -30,14 +30,8 @@ from pyNastran.gui.plugins import plugin_name_to_path
 from pyNastran.gui.formats import NastranIO
 from pyNastran.gui.gui_common import GuiCommon2
 
-try:
-    PKG_PATH = sys._MEIPASS #@UndefinedVariable
-    SCRIPT_PATH = os.path.join(PKG_PATH, 'scripts')
-    ICON_PATH = os.path.join(PKG_PATH, 'icons')
-except:
-    PKG_PATH = pyNastran.__path__[0]
-    SCRIPT_PATH = os.path.join(PKG_PATH, 'gui', 'scripts')
-    ICON_PATH = os.path.join(PKG_PATH, 'gui', 'icons')
+from pyNastran.gui import SCRIPT_PATH, ICON_PATH
+
 
 #print('SCRIPT_PATH = %s' % SCRIPT_PATH)
 #print('ICON_PATH = %s' % ICON_PATH)

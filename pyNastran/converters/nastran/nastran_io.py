@@ -680,6 +680,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         ext = '.bdf'
         if isinstance(bdf_filename, string_types):
             ext = os.path.splitext(bdf_filename)[1].lower()
+        elif isinstance(bdf_filename, BDF):
+            model = bdf_filename
+            xref_nodes = True
+            return model, xref_nodes
 
         punch = False
         if ext == '.pch':
@@ -732,8 +736,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         Parameters
         ----------
-        bdf_filename : str
-            the Nastran filename to load
+        bdf_filename : varies
+            str: the Nastran filename to load
+            model : the BDF object
         name : str
             the name of the "main" actor for the GUI
         plot : bool; default=True

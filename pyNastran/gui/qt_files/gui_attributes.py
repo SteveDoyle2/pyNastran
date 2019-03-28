@@ -35,6 +35,7 @@ from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_objec
 from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
 
+from pyNastran.gui.utils.vtk.gui_utils import remove_actors
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
 
@@ -78,6 +79,8 @@ class GuiAttributes(object):
         self.cutting_plane_obj = CuttingPlaneObject(self)
         self.shear_moment_torque_obj = ShearMomentTorqueObject(self)
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
+
+        self.min_max_actors = []
 
         self.glyph_scale_factor = 1.0
         self.html_logging = False
@@ -667,9 +670,7 @@ class GuiAttributes(object):
             return
 
         actors = self.label_actors[icase]
-        for actor in actors:
-            self.rend.RemoveActor(actor)
-            del actor
+        remove_actors(self, actors, render=True)
         self.label_actors[icase] = []
         self.label_ids[icase] = set([])
 
@@ -1229,24 +1230,25 @@ class GuiAttributes(object):
         """
         self.mark_actions.mark_nodes(nids, icase, text)
 
-    def create_annotation(self, text, slot, x, y, z):
+    def create_annotation(self, text, x, y, z):
         """
-        Creates the actual annotation and appends it to slot
+        Creates the actual annotation
 
         Parameters
         ----------
         text : str
             the text to display
-        label_actors[icase] : List[annotation]
-            where to place the annotation
-            icase : int
-                the key in label_actors to slot the result into
-            annotation : vtkBillboardTextActor3D
                 the annotation object
         x, y, z : float
             the position of the label
+
+        Returns
+        -------
+        annotation : vtkBillboardTextActor3D
+            the annotation object
         """
-        self.mark_actions.create_annotation(text, slot, x, y, z)
+        annotation = self.mark_actions.create_annotation(text, x, y, z)
+        return annotation
 
     #---------------------------------------------------------------------------
     def on_update_geometry_properties_window(self, geometry_properties):
