@@ -944,11 +944,11 @@ class GetCard(GetMethods):
 
                         if load.surf_or_line == 'SURF':
                             cid = load.Cid()
-                            if cid is None and np.all(np.isnan(load.nvector)):
+                            if cid in [0, None] and np.abs(load.nvector).max() == 0.0:
                                 # element surface normal
                                 pass
                             else:
-                                if norm(load.nvector) != 0.0 and cid == 0:
+                                if np.linalg.norm(load.nvector) != 0.0 and cid in [0, None]:
                                     normal = load.nvector / np.linalg.norm(load.nvector)
                                 else:
                                     raise NotImplementedError('cid=%r nvector=%s on a PLOAD4 is not supported\n%s' % (
