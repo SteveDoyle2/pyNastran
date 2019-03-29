@@ -138,6 +138,29 @@ class TestNastranGUI(unittest.TestCase):
         assert result_values == 2, 'result_values=%r' % result_values
         assert isinstance(xyz, list), xyz
 
+        node_xyz = None
+        cell_id = 5
+        #out = test.mark_actions.get_result_by_xyz_cell_id(node_xyz, cell_id)
+        #result_name, result_values, node_id, xyz = out
+
+        eids = [1, 2]
+        icase_result = 2
+        icase_to_apply = 3
+        test.label_actors[2] = []
+        test.label_actors[3] = []
+        test.mark_actions.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
+
+        #eids = [1, 2]
+        with self.assertRaises(NotImplementedError):
+            test.mark_actions.highlight_elements(eids, model_name='main')
+
+        nids = [1, 2]
+        icase = 1
+        test.label_actors[1] = []
+        text = 'cat'
+        test.mark_actions.mark_nodes(nids, icase, text)
+
+
     def test_solid_shell_bar_02b(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
 

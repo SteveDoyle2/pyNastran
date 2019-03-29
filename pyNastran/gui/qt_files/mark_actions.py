@@ -339,7 +339,8 @@ class MarkActions(object):
             self.gui.log_error(msg)
             return
         slot = self.gui.label_actors[icase]
-        create_marked_node_actors(self.gui.node_ids, nids, text, self.gui.xyz_cid0, slot)
+        create_marked_node_actors(self.gui, self.gui.node_ids, nids, text,
+                                  self.gui.xyz_cid0, slot)
         self.gui.vtk_interactor.Render()
 
     #def __mark_nodes_by_result(self, nids, icases):
@@ -374,7 +375,8 @@ class MarkActions(object):
                 #self.gui.label_actors[icase].append(self.create_annotation(texti, xi, yi, zi))
         #self.gui.vtk_interactor.Render()
 
-def create_marked_node_actors(gui, node_ids, nids, text, xyz_cid0, slot):
+def create_marked_node_actors(gui, node_ids, nids, text,
+                              xyz_cid0, slot):
     """
     Marks a series of nodes with custom text labels
 

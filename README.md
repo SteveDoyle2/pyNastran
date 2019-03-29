@@ -62,15 +62,20 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!---
 ### pyNastran v1.2.0 has not been released (x/xx/2019)
 
-I keep saying to myself there's not much to add, but I keep surprising myself.  Beyond HDF5
+I keep saying to myself there's not much to add, but Nastran is huge.  Beyond HDF5
 support in the BDF, I'm a huge fan of the new ability to keep track of which include file a
 card came from and write it as a separate file.  It's limited in usefulness, but very handy
-in certain cases.
+in certain cases.  There's a new (still preliminary) superelement capability.  I'm far
+from a superelement expert, but it's probably useful.
 
-The OP2 reader also now supports SORT2 along with much improved random results reading.
+The OP2 reader now supports SORT2 along with much improved random results reading.
 If you're using 60+ GB OP2s, you also might have had issues with RAM usage in the past.
 With the new ability to dump the OP2 directly to HDF5, this should not be an as much of
-an issue.  It's not entirely done, so let me know if you need it for another result.
+an issue.  It's not 100% implemented, so let me know if you need it for another result.
+
+Regarding the GUI, there are also some neat new features.  Groups finally work right.
+Logging has been dramatically sped up so the GUI loads faster and you can load Nastran
+models even faster if you disable additional results (e.g., element quality).
 
 Finally, Python 2.7 is end of life.  Numpy, scipy, and matplotlib have all dropped Python 2.7 support.  It's time for pyNastran to as well.  The OP2 reader is 30% faster in Python 3.6+ than Python 2.7, so it's not all bad!
 
@@ -82,12 +87,6 @@ Programmatics:
 
 BDF:
  - 373 cards supported (up from 343)
- - superelement support
-     ```python
-     >>> model.read_bdf(bdf_filename)
-     >>> model.superelement_models[1].nodes
-     ```
-
  - added abiltity to write models to separate include files
      ```python
      >>> model = BDF()
@@ -103,6 +102,13 @@ BDF:
      >>> model_new = OP2()
      >>> model_new.load_hdf5_filename(hdf5_filename)
      ```
+
+ - preliminary superelement support
+     ```python
+     >>> model.read_bdf(bdf_filename)
+     >>> model.superelement_models[1].nodes
+     ```
+
 
 OP2:
  - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
@@ -129,13 +135,16 @@ OP2Geom:
 
 GUI:
  - sped up HTML logging
+ - much improved groups menu
+ - options for Nastran in preferences menu to speed up loading/limit memory usage
  - pyNastran BDF pickle reading
  - pyNastran OP2 HDF5 reading (not MSC's format)
- - options for Nastran in preferences menu to speed up loading/limit memory usage
  - visualization when pickling nodes/elements
+ - min/max labels
+ - highlight menu
+ - Patran-style colors
  - custom force vectors
  - AVL support
- - TODO: highlight menu
 
 
 Known issues:
@@ -144,7 +153,7 @@ Known issues:
 This should be hidden...
 
 
-### pyNastran v1.2 has not been released (x/xx/xx)
+### pyNastran v1.2 has not been released (2019/4/15xx)
 OP2:
  - OP2 write support
  - TODO: stress transforms.  This is probably a bit of work.
@@ -222,7 +231,7 @@ Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
    this is probably pretty easy to fix.
 
-### pyNastran v1.0.0 has been released (5/25/2017)
+### pyNastran v1.0.0 has been released (2017/5/25)
 This is a major release.  The focus this time has been on robustness and testing.
 Hopefully, it shows.  The software has also been relicensed to be **BSD-3**, which
 is a more permissive license and is the same one that numpy, scipy, and
@@ -298,7 +307,7 @@ However, you may distribute an unmodified binary.
 - [Matlab](http://pynastran-git.readthedocs.io/en/latest/quick_start/matlab.html) integration
    - pyNastran works with Matlab 2014a+
 
-### pyNastran v0.8.0 has been released (8/21/2016)
+### pyNastran v0.8.0 has been released (2016/8/21)
 
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
@@ -316,7 +325,7 @@ However, you may distribute an unmodified binary.
 
 See [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) for information regarding enhancements.
 
-### pyNastran v0.7.2 has been Released (4/25/2015)
+### pyNastran v0.7.2 has been Released (2015/4/25)
 
 |  Version  | Docs  |
 | :--- 	  | :--- 	  |
@@ -324,7 +333,7 @@ See [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) for i
 
 See [v0.7.2](https://github.com/SteveDoyle2/pyNastran/releases) for information regarding enhancements.
 
-### Version 0.6.1 has been released (6/2013)
+### Version 0.6.1 has been released (2013/6)
 **Version 0.6** improves BDF reading.  The reader is more robust and also requires proper BDF field formatting (e.g. a integer field can't be a float).  Additionally, cards also have a comment() method.
 
 Marcin Gąsiorek participated in the latest pyNastran under the European Space Agency's (ESA) "Summer of Code In Space" [SOCIS](http://sophia.estec.esa.int/socis2012/?q=node/13) program.  The program provides a stipend to students to work on open-source projects.

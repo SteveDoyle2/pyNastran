@@ -86,7 +86,7 @@ def get_inputs(print_inputs=False, argv=None):
     post_script = None
     user_points = None
     user_geom = None
-    is_groups = False
+    is_groups = True
     log = None
     test = False
 
@@ -153,7 +153,7 @@ def run_argparse(argv):
     usage += (
         '  [options] = [-g GSCRIPT] [-p PSCRIPT]\n'
         '              [-u POINTS_FNAME...] [--user_geom GEOM_FNAME...]\n'
-        '              [-q] [--groups] [--log LOG]%s\n' % (dev)
+        '              [-q] [--nogroups] [--log LOG]%s\n' % (dev)
     )
     arg_msg = ''
     arg_msg += '\n'
@@ -168,7 +168,7 @@ def run_argparse(argv):
     arg_msg += '\n'
 
     arg_msg += 'Secondary Options:\n'
-    arg_msg += '  --groups                        enables groups\n'
+    arg_msg += '  --nogroups                      disables groups\n'
     arg_msg += '  -g GSCRIPT, --geomscript        path to geometry script file (runs before load geometry)\n'
     arg_msg += '  -p PSCRIPT, --postscript        path to post script file (runs after load geometry)\n'
     arg_msg += '  --user_geom GEOM_FNAME          add user specified geometry (repeatable)\n'
@@ -262,7 +262,7 @@ def run_argparse(argv):
         parent_parser.add_argument('--qt', type=str, help='{pyqt4, pyqt5, pyside, pyside2} msg')
         parent_parser.add_argument('--test', help='test msg', action='store_true')
         parent_parser.add_argument('--noupdate', help='noupdate msg', action='store_true')
-    parent_parser.add_argument('--groups', help='enables groups', action='store_true')
+    parent_parser.add_argument('--nogroups', help='disables groups', action='store_false')
     parent_parser.add_argument('--plugin', help='disables the format check', action='store_true')
 
     parent_parser.add_argument('-q', '--quiet',
@@ -336,7 +336,7 @@ def _update_argparse_argdict(argdict):
     argdict['debug'] = not argdict['quiet']
     del argdict['quiet']
 
-    swap_key(argdict, 'groups', 'is_groups')
+    swap_key(argdict, 'nogroups', 'is_groups')
     swap_key(argdict, 'points_fname', 'user_points')
 
     input_filenames = _add_inputs_outputs(argdict['INPUT'], argdict['input'], word='input')
@@ -440,9 +440,12 @@ def _update_argparse_argdict(argdict):
             raise RuntimeError(msg)
     return argdict
 
-def swap_key(mydict, key_orig, key_new):
+def swap_key(mydict, key_orig, key_new, flip=False):
     """replaces a key in a dictionary"""
-    mydict[key_new] = mydict[key_orig]
+    if flip:
+        mydict[key_new] = not mydict[key_orig]
+    else:
+        mydict[key_new] = mydict[key_orig]
     del mydict[key_orig]
 
 def argparse_to_dict(args):
