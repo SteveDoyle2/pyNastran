@@ -88,7 +88,7 @@ class FakeGUIMethods(GuiVTKCommon):
         self.rend = vtkRenderer()
         #GuiCommon.__init__(self, inputs=inputs)
         GuiVTKCommon.__init__(self, inputs=inputs)
-        self.fake_init()
+        #self.fake_init()
 
         res_widget = MockResWidget()
         kwds = {
