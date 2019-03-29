@@ -30,6 +30,8 @@ import pyNastran
 if qt_version in ['pyside', 'pyqt4']:
     from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 else:
+    # vtk makes poor choices regarding the selection of a backend and has no way
+    # to work around it
     #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
     from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
@@ -91,8 +93,91 @@ class GuiVTKCommon(GuiQtCommon):
         else:  #: pragma: no cover
             raise NotImplementedError(qt_version)
 
+    def fake_init(self):
+        """vtk setup"""
+        self.create_vtk_actors()
+        #self._create_vtk_objects()
+        #self.build_vtk_frame()
+    #---------------------------------------------------------------------------
+    # basic init
+    def create_vtk_actors(self):
+        """creates the vtk actors used by the GUI"""
+        xyz = [0., 0., 0.]
+        self.min_max_actors.append(create_annotation(self, 'Min', *xyz))
+        self.min_max_actors.append(create_annotation(self, 'Max', *xyz))
+        for actor in self.min_max_actors:
+            actor.SetVisibility(False)
+
+        self.rend = vtk.vtkRenderer()
+
+        # vtk actors
+        self.grid = vtk.vtkUnstructuredGrid()
+
+        # edges
+        self.edge_actor = vtk.vtkLODActor()
+        self.edge_actor.DragableOff()
+        self.edge_mapper = vtk.vtkPolyDataMapper()
+
+        self.create_cell_picker()
+
+    def create_cell_picker(self):
+        """creates the vtk picker objects"""
+        self.cell_picker = vtk.vtkCellPicker()
+        self.node_picker = vtk.vtkPointPicker()
+
+        self.area_picker = vtk.vtkAreaPicker()  # vtkRenderedAreaPicker?
+        self.rubber_band_style = vtk.vtkInteractorStyleRubberBandPick()
+        #vtk.vtkInteractorStyleRubberBand2D
+        #vtk.vtkInteractorStyleRubberBand3D
+        #vtk.vtkInteractorStyleRubberBandZoom
+        #vtk.vtkInteractorStyleAreaSelectHover
+        #vtk.vtkInteractorStyleDrawPolygon
+
+        #vtk.vtkAngleWidget
+        #vtk.vtkAngleRepresentation2D
+        #vtk.vtkAngleRepresentation3D
+        #vtk.vtkAnnotation
+        #vtk.vtkArrowSource
+        #vtk.vtkGlyph2D
+        #vtk.vtkGlyph3D
+        #vtk.vtkHedgeHog
+        #vtk.vtkLegendBoxActor
+        #vtk.vtkLegendScaleActor
+        #vtk.vtkLabelPlacer
+
+        self.cell_picker.SetTolerance(0.001)
+        self.node_picker.SetTolerance(0.001)
+
+    def _build_vtk_frame_post(self):
+        self.build_lookup_table()
+
+        text_size = self.settings.set_text_size # was 14
+        dtext_size = text_size + 1
+        self.create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size)  # text actor 0
+        self.create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size)  # text actor 1
+        self.create_text([5, 5 + 1 * dtext_size], 'Word1', text_size)  # text actor 2
+        self.create_text([5, 5], 'Word2', text_size)  # text actor 3
+
+        self.get_edges()
+        if self.is_edges:
+            prop = self.edge_actor.GetProperty()
+            prop.EdgeVisibilityOn()
+        else:
+            prop = self.edge_actor.GetProperty()
+            prop.EdgeVisibilityOff()
+
     #---------------------------------------------------------------------------
     # properties
+
+    @property
+    def logo(self):
+        """Gets the pyNastran icon path, which can be overwritten"""
+        return self._logo
+
+    @logo.setter
+    def logo(self, logo):
+        """Sets the pyNastran icon path, which can be overwritten"""
+        self._logo = logo
 
     @property
     def legend_shown(self):
@@ -109,8 +194,119 @@ class GuiVTKCommon(GuiQtCommon):
         """gets the scalar bar's color function"""
         return self.scalar_bar.color_function
 
+    @property
+    def result_name(self):
+        """
+        creates the self.result_name variable
+        """
+        # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
+        case_key = self.case_keys[self.icase]
+        assert isinstance(case_key, integer_types), case_key
+        unused_obj, (unused_i, res_name) = self.result_cases[case_key]
+        return res_name
+
+    #---------------------------------------------------------------------------
+    # basic interaction
+    def on_show_debug(self):
+        """sets a flag for showing/hiding DEBUG messages"""
+        self.settings.show_debug = not self.settings.show_debug
+
+    def on_show_info(self):
+        """sets a flag for showing/hiding INFO messages"""
+        self.settings.show_info = not self.settings.show_info
+
+    def on_show_command(self):
+        """sets a flag for showing/hiding COMMAND messages"""
+        self.settings.show_command = not self.settings.show_command
+
+    def on_show_warning(self):
+        """sets a flag for showing/hiding WARNING messages"""
+        self.settings.show_warning = not self.settings.show_warning
+
+    def on_show_error(self):
+        """sets a flag for showing/hiding ERROR messages"""
+        self.settings.show_error = not self.settings.show_error
+
+    def hide_axes(self, cids=None):
+        """
+        Show a set of coordinate systems
+
+        ..todo :: fix the coords
+        """
+        if cids is None:
+            cids = self.axes.keys()
+        for cid in cids:
+            axis = self.axes[cid]
+            axis.VisibilityOff()
+        self.corner_axis.EnabledOff()
+
+    def show_axes(self, cids=None):
+        """
+        Show a set of coordinate systems
+
+        ..todo :: fix the coords
+        """
+        if cids is None:
+            cids = self.axes.keys()
+        for cid in cids:
+            axis = self.axes[cid]
+            axis.VisibilityOn()
+        self.corner_axis.EnabledOn()
+
+    def delete_actor(self, name):
+        """deletes an actor and associated properties"""
+        if name != 'main':
+            if name in self.geometry_actors:
+                actor = self.geometry_actors[name]
+                self.rend.RemoveActor(actor)
+                del self.geometry_actors[name]
+
+            if name in self.geometry_properties:
+                unused_prop = self.geometry_properties[name]
+                del self.geometry_properties[name]
+            self.Render()
+
+    def show_only(self, names):
+        """
+        Show these actors only
+
+        names : str, List[str]
+            names to show
+            If they're hidden, show them.
+            If they're shown and shouldn't be, hide them.
+
+        ..todo :: update the GeomeryProperties
+        """
+        raise NotImplementedError('show_only')
+
+    def hide_actors(self, except_names=None):
+        """
+        Hide all the actors
+
+        except_names : str, List[str], None
+            list of names to exclude
+            None : hide all
+
+        ..note :: If an actor is hidden and in the except_names, it will still be hidden.
+        ..todo :: update the GeomeryProperties
+        """
+        if except_names is None:
+            except_names = []
+        elif isinstance(except_names, string_types):
+            except_names = [except_names]
+
+        # hide everything but the main grid
+        for key, actor in self.geometry_actors.items():
+            if key not in except_names:
+                actor.VisibilityOff()
+
+        self.hide_axes()
+        self.hide_legend()
+        #self.settings.set_background_color_to_white()
+
     #---------------------------------------------------------------------------
     def Render(self):
+        """Renders the GUI"""
         #self.vtk_interactor.Render()
         self.vtk_interactor.GetRenderWindow().Render()
 
@@ -132,47 +328,6 @@ class GuiVTKCommon(GuiQtCommon):
         self.grid_mapper.SetScalarRange(scalar_range)
         self.grid_mapper.SetLookupTable(self.color_function)
         self.rend.AddActor(self.scalar_bar_actor)
-
-    def hide_axes(self, cids=None):
-        """
-        Show a set of coordinate systems
-
-        ..todo :: support cids
-        ..todo :: fix the coords
-        """
-        if cids is None:
-            cids = self.axes.keys()
-        for unused_key in self.axes:
-            axis = self.axes[cid]
-            axis.VisibilityOff()
-        self.corner_axis.EnabledOff()
-
-    def show_axes(self, cids=None):
-        """
-        Show a set of coordinate systems
-
-        ..todo :: support cids
-        ..todo :: fix the coords
-        """
-        if cids is None:
-            cids = self.axes.keys()
-        for unused_key in self.axes:
-            axis = self.axes[cid]
-            axis.VisibilityOn()
-        self.corner_axis.EnabledOn()
-
-    def delete_actor(self, name):
-        """deletes an actor and associated properties"""
-        if name != 'main':
-            if name in self.geometry_actors:
-                actor = self.geometry_actors[name]
-                self.rend.RemoveActor(actor)
-                del self.geometry_actors[name]
-
-            if name in self.geometry_properties:
-                unused_prop = self.geometry_properties[name]
-                del self.geometry_properties[name]
-            self.Render()
 
     def _set_results(self, form, cases):
         assert len(cases) > 0, cases
@@ -198,11 +353,22 @@ class GuiVTKCommon(GuiQtCommon):
         self.icase_fringe = None
         self.set_form(form)
 
-
     #---------------------------------------------------------------------------
     # groups
-    def create_group_with_name(self, name, eids):
-        elements_pound = self.groups['main'].elements_pound
+    def create_group_with_name(self, name, eids, model_name='main'):
+        """
+        Creates a group from the root model (model_name)
+
+        Parameters
+        ----------
+        name : str
+            the name of the group
+        eids : (neids, ) int ndarray
+            the elements in the group
+        model_name : str; default='main'
+            the name of the parent model
+        """
+        elements_pound = self.groups[model_name].elements_pound
         element_str = ''
         group = Group(
             name, element_str, elements_pound,
@@ -215,7 +381,8 @@ class GuiVTKCommon(GuiQtCommon):
 
 
 # http://pyqt.sourceforge.net/Docs/PyQt5/multiinheritance.html
-class GuiCommon2(QMainWindow, GuiVTKCommon):
+class GuiCommon(QMainWindow, GuiVTKCommon):
+    """this class adds in interactive/menu capability into the GUI"""
     def __init__(self, **kwds):
         """
         fmt_order, html_logging, inputs, parent=None,
@@ -226,7 +393,7 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
             QMainWindow.__init__(self)
             GuiVTKCommon.__init__(self, **kwds)
         elif qt_version == 'pyqt5':
-            super(GuiCommon2, self).__init__(**kwds)
+            super(GuiCommon, self).__init__(**kwds)
         elif qt_version in ['pyside', 'pyside2']:
             QMainWindow.__init__(self)
             GuiVTKCommon.__init__(self, **kwds)
@@ -282,16 +449,6 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
     #def dropEvent(self, e):
         #print(e)
         #print('drop event')
-
-    @property
-    def logo(self):
-        """Gets the pyNastran icon path, which can be overwritten"""
-        return self._logo
-
-    @logo.setter
-    def logo(self, logo):
-        """Sets the pyNastran icon path, which can be overwritten"""
-        self._logo = logo
 
     def init_ui(self):
         """
@@ -520,7 +677,7 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
 
     def keyPressEvent(self, qkey_event):
         #print('qkey_event =', qkey_event.key())
-        super(GuiCommon2, self).keyPressEvent(qkey_event)
+        super(GuiCommon, self).keyPressEvent(qkey_event)
 
     def _create_menu_bar(self, menu_bar_order=None):
         self.menu_bar_oder = menu_bar_order
@@ -675,7 +832,7 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
                     menu.addSeparator()
                 else:
                     if isinstance(item, list):
-                        sub_menu_name = item[0]
+                        unused_sub_menu_name = item[0]
 
                         if isinstance(menu, QToolBar):
                             populate_sub_qtoolbar(menu, item, actions)
@@ -882,67 +1039,35 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
-        self.log.simple_msg(msg, 'GUI INFO')
+        return self.log.simple_msg(msg, 'GUI INFO')
 
     def log_debug(self, msg):
         """ Helper funtion: log a message msg with a 'DEBUG:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
-        self.log.simple_msg(msg, 'GUI DEBUG')
+        return self.log.simple_msg(msg, 'GUI DEBUG')
 
     def log_command(self, msg):
         """ Helper funtion: log a message msg with a 'COMMAND:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
-        self.log.simple_msg(msg, 'GUI COMMAND')
+        return self.log.simple_msg(msg, 'GUI COMMAND')
 
     def log_error(self, msg):
         """ Helper funtion: log a message msg with a 'GUI ERROR:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
-        self.log.simple_msg(msg, 'GUI ERROR')
+        return self.log.simple_msg(msg, 'GUI ERROR')
 
     def log_warning(self, msg):
         """ Helper funtion: log a message msg with a 'WARNING:' prefix """
         if msg is None:
             msg = 'msg is None; must be a string'
             return self.log.simple_msg(msg, 'GUI ERROR')
-        self.log.simple_msg(msg, 'GUI WARNING')
-
-    def create_vtk_actors(self):
-        self.rend = vtk.vtkRenderer()
-
-        # vtk actors
-        self.grid = vtk.vtkUnstructuredGrid()
-
-        # edges
-        self.edge_actor = vtk.vtkLODActor()
-        self.edge_actor.DragableOff()
-        self.edge_mapper = vtk.vtkPolyDataMapper()
-
-        self.create_cell_picker()
-
-    def _create_vtk_objects(self):
-        """creates some of the vtk objects"""
-        #Frame that VTK will render on
-        self.vtk_frame = QFrame()
-
-        #Qt VTK QVTKRenderWindowInteractor
-        self.vtk_interactor = QVTKRenderWindowInteractor(parent=self.vtk_frame)
-        #self.vtk_interactor = PyNastranRenderWindowInteractor(parent=self.vtk_frame)
-        #self.set_anti_aliasing(2)
-
-        #self._camera_event_name = 'LeftButtonPressEvent'
-        self.mouse_actions.setup_mouse_buttons(mode='default')
-
-        xyz = [0., 0., 0.]
-        self.min_max_actors.append(create_annotation(self, 'Min', *xyz))
-        self.min_max_actors.append(create_annotation(self, 'Max', *xyz))
-        #for actor in self.min_max_actors:
-            #actor.SetVisibility(False)
+        return self.log.simple_msg(msg, 'GUI WARNING')
 
     def on_escape_null(self):
         """
@@ -1040,16 +1165,30 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
         camera = self.background_rend.GetActiveCamera()
         camera.ParallelProjectionOn()
 
-        xc = origin[0] + 0.5*(extent[0] + extent[1]) * spacing[0]
-        yc = origin[1] + 0.5*(extent[2] + extent[3]) * spacing[1]
+        xcentroid = origin[0] + 0.5 * (extent[0] + extent[1]) * spacing[0]
+        ycentroid = origin[1] + 0.5 * (extent[2] + extent[3]) * spacing[1]
         #xd = (extent[1] - extent[0] + 1) * spacing[0]
         yd = (extent[3] - extent[2] + 1) * spacing[1]
-        d = camera.GetDistance()
+        distance = camera.GetDistance()
         camera.SetParallelScale(0.5 * yd)
-        camera.SetFocalPoint(xc, yc, 0.0)
-        camera.SetPosition(xc, yc, d)
+        camera.SetFocalPoint(xcentroid, ycentroid, 0.0)
+        camera.SetPosition(xcentroid, ycentroid, distance)
+
+    def _create_vtk_objects(self):
+        """creates some of the vtk objects"""
+        #Frame that VTK will render on
+        self.vtk_frame = QFrame()
+
+        # can't build an interactor without a GUI (for testing)
+        self.vtk_interactor = QVTKRenderWindowInteractor(parent=self.vtk_frame)
+        #self.vtk_interactor = PyNastranRenderWindowInteractor(parent=self.vtk_frame)
+        #self.set_anti_aliasing(2)
+
+        #self._camera_event_name = 'LeftButtonPressEvent'
+        self.mouse_actions.setup_mouse_buttons(mode='default')
 
     def build_vtk_frame(self):
+        """uses the vtk objects to set up the window (frame)"""
         vtk_hbox = QHBoxLayout()
         vtk_hbox.setContentsMargins(2, 2, 2, 2)
 
@@ -1109,42 +1248,7 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
 
         self.rend.ResetCamera()
         self.mouse_actions.set_style_as_trackball()
-        self.build_lookup_table()
-
-        text_size = 14
-        dtext_size = text_size + 1
-        self.create_text([5, 5 + 3 * dtext_size], 'Max  ', text_size)  # text actor 0
-        self.create_text([5, 5 + 2 * dtext_size], 'Min  ', text_size)  # text actor 1
-        self.create_text([5, 5 + 1 * dtext_size], 'Word1', text_size)  # text actor 2
-        self.create_text([5, 5], 'Word2', text_size)  # text actor 3
-
-        self.get_edges()
-        if self.is_edges:
-            prop = self.edge_actor.GetProperty()
-            prop.EdgeVisibilityOn()
-        else:
-            prop = self.edge_actor.GetProperty()
-            prop.EdgeVisibilityOff()
-
-    def on_show_info(self):
-        """sets a flag for showing/hiding INFO messages"""
-        self.settings.show_info = not self.settings.show_info
-
-    def on_show_debug(self):
-        """sets a flag for showing/hiding DEBUG messages"""
-        self.settings.show_debug = not self.settings.show_debug
-
-    def on_show_command(self):
-        """sets a flag for showing/hiding COMMAND messages"""
-        self.settings.show_command = not self.settings.show_command
-
-    def on_show_warning(self):
-        """sets a flag for showing/hiding WARNING messages"""
-        self.settings.show_warning = not self.settings.show_warning
-
-    def on_show_error(self):
-        """sets a flag for showing/hiding ERROR messages"""
-        self.settings.show_error = not self.settings.show_error
+        self._build_vtk_frame_post()
 
     def on_reset_camera(self):
         self.log_command('on_reset_camera()')
@@ -1200,6 +1304,7 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
         self.rend.AddActor(edge_actor)
 
     #---------------------------------------------------------------------
+    # groups
     def post_group_by_name(self, name):
         """posts a group with a specific name"""
         assert isinstance(name, string_types), name
@@ -1666,34 +1771,6 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
                 self.on_load_user_geom(fname)
         #self.set_anti_aliasing(16)
 
-    def create_cell_picker(self):
-        """creates the vtk picker objects"""
-        self.cell_picker = vtk.vtkCellPicker()
-        self.node_picker = vtk.vtkPointPicker()
-
-        self.area_picker = vtk.vtkAreaPicker()  # vtkRenderedAreaPicker?
-        self.rubber_band_style = vtk.vtkInteractorStyleRubberBandPick()
-        #vtk.vtkInteractorStyleRubberBand2D
-        #vtk.vtkInteractorStyleRubberBand3D
-        #vtk.vtkInteractorStyleRubberBandZoom
-        #vtk.vtkInteractorStyleAreaSelectHover
-        #vtk.vtkInteractorStyleDrawPolygon
-
-        #vtk.vtkAngleWidget
-        #vtk.vtkAngleRepresentation2D
-        #vtk.vtkAngleRepresentation3D
-        #vtk.vtkAnnotation
-        #vtk.vtkArrowSource
-        #vtk.vtkGlyph2D
-        #vtk.vtkGlyph3D
-        #vtk.vtkHedgeHog
-        #vtk.vtkLegendBoxActor
-        #vtk.vtkLegendScaleActor
-        #vtk.vtkLabelPlacer
-
-        self.cell_picker.SetTolerance(0.001)
-        self.node_picker.SetTolerance(0.001)
-
     def init_cell_picker(self):
         self.is_pick = False
         if not self.run_vtk:
@@ -1767,44 +1844,6 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
         #view_projection_inverse = inverse(projection_matrix * view_vatrix)
         #point3d = Point3D(x, y, 0)
         #return view_projection_inverse.multiply(point3d)
-
-    def show_only(self, names):
-        """
-        Show these actors only
-
-        names : str, List[str]
-            names to show
-            If they're hidden, show them.
-            If they're shown and shouldn't be, hide them.
-
-        ..todo :: update the GeomeryProperties
-        """
-        raise NotImplementedError('show_only')
-
-    def hide_actors(self, except_names=None):
-        """
-        Hide all the actors
-
-        except_names : str, List[str], None
-            list of names to exclude
-            None : hide all
-
-        ..note :: If an actor is hidden and in the except_names, it will still be hidden.
-        ..todo :: update the GeomeryProperties
-        """
-        if except_names is None:
-            except_names = []
-        elif isinstance(except_names, string_types):
-            except_names = [except_names]
-
-        # hide everything but the main grid
-        for key, actor in self.geometry_actors.items():
-            if key not in except_names:
-                actor.VisibilityOff()
-
-        self.hide_axes()
-        self.hide_legend()
-        #self.settings.set_background_color_to_white()
 
     def make_gif(self, gif_filename, scale, istep=None,
                  min_value=None, max_value=None,
@@ -2080,7 +2119,7 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
             is_valid = self.on_fringe(icase_fringe,
                                       update_legend_window=False, show_msg=False)
             if is_legend_shown:
-                # TODO: sort of a hack for the animatation
+                # TODO: sort of a hack for the animation
                 # the fringe always shows the legend, but we may not want that
                 # just use whatever is active
                 self.show_legend()
@@ -2234,7 +2273,7 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
         if make_images:
             scale_max = max(abs(scales.max()), abs(scales.min()))
             for istep, icase_fringe, icase_disp, icase_vector, scale, phase in zip(
-                isteps, icases_fringe, icases_disp, icases_vector, scales, phases):
+                    isteps, icases_fringe, icases_disp, icases_vector, scales, phases):
 
                 normalized_frings_scale = scale / scale_max
                 is_valid = self.animation_update(
@@ -2361,45 +2400,8 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
 
     def build_glyph(self):
         """builds the glyph actor"""
-        grid = self.grid
-        glyphs = vtk.vtkGlyph3D()
-        #if filter_small_forces:
-            #glyphs.SetRange(0.5, 1.)
-
-        glyphs.SetVectorModeToUseVector()
-        #apply_color_to_glyph = False
-        #if apply_color_to_glyph:
-        #glyphs.SetScaleModeToScaleByScalar()
-        glyphs.SetScaleModeToScaleByVector()
-        glyphs.SetColorModeToColorByScale()
-        #glyphs.SetColorModeToColorByScalar()  # super tiny
-        #glyphs.SetColorModeToColorByVector()  # super tiny
-
-        glyphs.ScalingOn()
-        glyphs.ClampingOn()
-        #glyphs.Update()
-
-        glyph_source = vtk.vtkArrowSource()
-        #glyph_source.InvertOn()  # flip this arrow direction
-        glyphs.SetInputData(grid)
-
-
-        glyphs.SetSourceConnection(glyph_source.GetOutputPort())
-        #glyphs.SetScaleModeToDataScalingOff()
-        #glyphs.SetScaleFactor(10.0)  # bwb
-        #glyphs.SetScaleFactor(1.0)  # solid-bending
-        glyph_mapper = vtk.vtkPolyDataMapper()
-        glyph_mapper.SetInputConnection(glyphs.GetOutputPort())
-        glyph_mapper.ScalarVisibilityOff()
-
-        arrow_actor = vtk.vtkLODActor()
-        arrow_actor.SetMapper(glyph_mapper)
-
-        prop = arrow_actor.GetProperty()
-        prop.SetColor(1., 0., 0.)
+        glyph_source, glyphs, glyph_mapper, arrow_actor = build_glyph(self.grid)
         self.rend.AddActor(arrow_actor)
-        #self.grid.GetPointData().SetActiveVectors(None)
-        arrow_actor.SetVisibility(False)
 
         self.glyph_source = glyph_source
         self.glyphs = glyphs
@@ -2444,7 +2446,7 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
         key : str
             a key that VTK should be informed about, e.g. 't'
         """
-        print("key_press = ", key)
+        #print("key_press = ", key)
         if key == 'f':  # change focal point
             #print('focal_point!')
             return
@@ -2462,7 +2464,7 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
         Parameters
         ----------
         model_name : str
-            the name of the model
+            the name of the model; unused
         form : List[pairs]
             There are two types of pairs
             header_pair : (str, None, List[pair])
@@ -2571,17 +2573,6 @@ class GuiCommon2(QMainWindow, GuiVTKCommon):
 
         for unused_module_name, module in self.modules.items():
             module.post_load_geometry()
-
-    @property
-    def result_name(self):
-        """
-        creates the self.result_name variable
-        """
-        # case_key = (1, 'ElementID', 1, 'centroid', '%.0f')
-        case_key = self.case_keys[self.icase]
-        assert isinstance(case_key, integer_types), case_key
-        unused_obj, (unused_i, res_name) = self.result_cases[case_key]
-        return res_name
 
     def clear_application_log(self, force=False):
         """
@@ -2751,6 +2742,47 @@ def get_html_msg(color, tim, log_type, filename, lineno, msg):
         color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
     return html_msg
 
+def build_glyph(grid):
+    """builds the glyph actor"""
+    glyphs = vtk.vtkGlyph3D()
+    #if filter_small_forces:
+        #glyphs.SetRange(0.5, 1.)
+
+    glyphs.SetVectorModeToUseVector()
+    #apply_color_to_glyph = False
+    #if apply_color_to_glyph:
+    #glyphs.SetScaleModeToScaleByScalar()
+    glyphs.SetScaleModeToScaleByVector()
+    glyphs.SetColorModeToColorByScale()
+    #glyphs.SetColorModeToColorByScalar()  # super tiny
+    #glyphs.SetColorModeToColorByVector()  # super tiny
+
+    glyphs.ScalingOn()
+    glyphs.ClampingOn()
+    #glyphs.Update()
+
+    glyph_source = vtk.vtkArrowSource()
+    #glyph_source.InvertOn()  # flip this arrow direction
+    glyphs.SetInputData(grid)
+
+
+    glyphs.SetSourceConnection(glyph_source.GetOutputPort())
+    #glyphs.SetScaleModeToDataScalingOff()
+    #glyphs.SetScaleFactor(10.0)  # bwb
+    #glyphs.SetScaleFactor(1.0)  # solid-bending
+    glyph_mapper = vtk.vtkPolyDataMapper()
+    glyph_mapper.SetInputConnection(glyphs.GetOutputPort())
+    glyph_mapper.ScalarVisibilityOff()
+
+    arrow_actor = vtk.vtkLODActor()
+    arrow_actor.SetMapper(glyph_mapper)
+
+    prop = arrow_actor.GetProperty()
+    prop.SetColor(1., 0., 0.)
+    #self.grid.GetPointData().SetActiveVectors(None)
+    arrow_actor.SetVisibility(False)
+    return glyph_source, glyphs, glyph_mapper, arrow_actor
+
 def populate_sub_qmenu(menu, items, actions):
     sub_menu_name = items[0]
     sub_menu = menu.addMenu(sub_menu_name)
@@ -2780,7 +2812,7 @@ def populate_sub_qtoolbar(toolbar, items, actions):
 
     toolbar.addWidget(custom_button)
 
-    for ii_count, itemi in enumerate(items[1:]):
+    for unused_ii_count, itemi in enumerate(items[1:]):
         if not isinstance(itemi, string_types):
             raise RuntimeError('what is this...action ii() = %r' % itemi())
         action = actions[itemi]

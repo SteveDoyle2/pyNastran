@@ -40,9 +40,10 @@ class ShearMomentTorqueObject(object):
 
         #camera = self.gui.GetCamera()
         #min_clip, max_clip = camera.GetClippingRange()
-        settings = self.gui.settings
-        model_name = self.gui.name
-        model = self.gui.models[model_name]
+        gui = self.gui
+        settings = gui.settings
+        model_name = gui.name
+        model = gui.models[model_name]
         if hasattr(model, 'coords'):
             cids = list(model.coords.keys())
             cids.sort()
@@ -50,10 +51,11 @@ class ShearMomentTorqueObject(object):
             cids = [0]
 
         icase = self.gui.icase
-        (obj, (unused_i, unused_name)) = self.gui.result_cases[icase]
+        (obj, (unused_i, unused_name)) = gui.result_cases[icase]
         if not hasattr(obj, 'gpforce_array'):
-            self.log.error('Select a Grid Point Forces ressult.')
+            gui.log.error('Select a Grid Point Forces result.')
             return
+
         gpforce = obj.gpforce_array
         data = {
             'font_size' : settings.font_size,
@@ -67,7 +69,7 @@ class ShearMomentTorqueObject(object):
             'close' : False,
         }
         if not self._smt_window_shown:
-            self._smt_window = ShearMomentTorqueWindow(data, win_parent=self.gui)
+            self._smt_window = ShearMomentTorqueWindow(data, win_parent=gui)
             self._smt_window.show()
             self._smt_window_shown = True
             self._smt_window.exec_()
@@ -78,9 +80,9 @@ class ShearMomentTorqueObject(object):
             #if not self._smte_window._updated_preference:
             #    settings.on_set_font_size(data['font_size'])
             del self._smt_window
-            if hasattr(self.gui, 'plane_actor'):
-                del self.gui.plane_actor
-            self.gui.clear_actor('smt_plane')
+            if hasattr(gui, 'plane_actor'):
+                del gui.plane_actor
+            gui.clear_actor('smt_plane')
             self._smt_window_shown = False
         else:
             self._smt_window.activateWindow()

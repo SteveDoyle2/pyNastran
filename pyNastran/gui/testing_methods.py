@@ -1,5 +1,4 @@
 from __future__ import print_function
-#import os
 from collections import OrderedDict
 
 from six import integer_types
@@ -32,7 +31,6 @@ from pyNastran.gui.test.mock_vtk import (
 import vtk
 
 from pyNastran.gui.gui_common import GuiVTKCommon
-#from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
 from pyNastran.gui.qt_files.scalar_bar import ScalarBar
 #from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.formats import CLASS_MAP
@@ -87,7 +85,10 @@ class FakeGUIMethods(GuiVTKCommon):
                 'console' : True,
                 'is_groups' : False,
             }
+        self.rend = vtkRenderer()
         #GuiCommon.__init__(self, inputs=inputs)
+        GuiVTKCommon.__init__(self, inputs=inputs)
+        self.fake_init()
 
         res_widget = MockResWidget()
         kwds = {
@@ -131,7 +132,6 @@ class FakeGUIMethods(GuiVTKCommon):
 
         level = 'debug' if self.debug else 'info'
         self.log = get_logger(log=None, level=level)
-        self.rend = vtkRenderer()
 
         self.text_actors[0] = vtkTextActor()
         self.text_actors[1] = vtkTextActor()
@@ -232,7 +232,6 @@ class FakeGUIMethods(GuiVTKCommon):
                 unused_xyz, unused_deflected_xyz = obj.get_vector_result(i, name)
             else:
                 unused_scalar_result = obj.get_scalar(i, name)
-
 
             unused_default_data_format = obj.get_default_data_format(i, name)
             default_min, unused_default_max = obj.get_default_min_max(i, name)

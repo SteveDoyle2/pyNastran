@@ -21,20 +21,13 @@ from qtpy.QtWidgets import QMessageBox, qApp
 # 3rd party
 import vtk  # if this crashes, make sure you ran setup.py
 
-import pyNastran
-from pyNastran.gui.utils.version import check_for_newer_version
-
-
 # pyNastran
+import pyNastran
+from pyNastran.gui import SCRIPT_PATH, ICON_PATH
+from pyNastran.gui.utils.version import check_for_newer_version
 from pyNastran.gui.plugins import plugin_name_to_path
 from pyNastran.gui.formats import NastranIO
-from pyNastran.gui.gui_common import GuiCommon2
-
-from pyNastran.gui import SCRIPT_PATH, ICON_PATH
-
-
-#print('SCRIPT_PATH = %s' % SCRIPT_PATH)
-#print('ICON_PATH = %s' % ICON_PATH)
+from pyNastran.gui.gui_common import GuiCommon
 
 # tcolorpick.png and tabout.png trefresh.png icons on LGPL license, see
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/color-picker-grey.png
@@ -42,9 +35,13 @@ from pyNastran.gui import SCRIPT_PATH, ICON_PATH
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
 
-class MainWindow(GuiCommon2, NastranIO):
+class MainWindow(GuiCommon, NastranIO):
     """
-    MainWindow -> GuiCommon2 -> GuiQtCommon
+    The MainWindow class combines the base GuiCommon class with all the functionality
+    with the remaining format holdout (Nastran).  It also defines which formats
+    will be supported in the exe.
+
+    MainWindow -> GuiCommon -> GuiQtCommon
     gui.py     -> gui_common -> gui_qt_common
 
     warp vector might finally work
@@ -113,13 +110,12 @@ class MainWindow(GuiCommon2, NastranIO):
 
         if qt_version in ['pyqt4', 'pyqt5', 'pyside', 'pyside2']:
             NastranIO.__init__(self)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('qt_version=%r is not supported' % qt_version)
 
         self.build_fmts(fmt_order, stop_on_failure=False)
 
-        logo = os.path.join(ICON_PATH, 'logo.png')
-        self.logo = logo
+        self.logo = os.path.join(ICON_PATH, 'logo.png')
         self.set_script_path(SCRIPT_PATH)
         self.set_icon_path(ICON_PATH)
 
@@ -132,7 +128,8 @@ class MainWindow(GuiCommon2, NastranIO):
     def _load_plugins(self):
         """loads the plugins from pyNastran/gui/plugins.py"""
         for module_name, plugin_file, class_name in plugin_name_to_path:  # list
-            assert module_name not in self.modules, 'module_name=%r is already defined' % module_name
+            if module_name in self.modules:
+                raise RuntimeError('module_name=%r is already defined' % module_name)
 
             if not os.path.exists(plugin_file):
                 # auto_wireframe is a test module and is not intended to
@@ -200,7 +197,13 @@ class MainWindow(GuiCommon2, NastranIO):
     def open_docs(self):
         """loads the pyNastran docs website"""
         import webbrowser
+
         url = pyNastran.__docs__
+        import urllib2
+        try:
+            urllib2.urlopen(url)
+        except (urllib2.HTTPError, urllib2.URLError):
+            url = pyNastran.__docs_rtd__
         webbrowser.open(url)
 
     def open_issue(self):
@@ -216,7 +219,7 @@ class MainWindow(GuiCommon2, NastranIO):
         webbrowser.open(url)
 
     def about_dialog(self):
-        """ Display about dialog """
+        """Display about dialog"""
         copyright = pyNastran.__copyright__
         if qt_version in ['pyside', 'pyside2']:
             word = 'PySide'

@@ -13,6 +13,20 @@ from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 
 class Group(object):
     def __init__(self, name, element_str, elements_pound, editable=True):
+        """
+        Creates an element group
+
+        Parameters
+        ----------
+        name : str
+            the name of the group
+        element_str : str
+            a shortened form for storing element ids
+        elements_pound : int
+            the max id
+        editable : bool; default=True
+            not sure what this is used for
+        """
         if len(name):
             assert len(name) > 0, name
             assert name[-1] != ' ', name
@@ -51,6 +65,20 @@ class Group(object):
 
 class NodeGroup(object):
     def __init__(self, name, node_str, nodes_pound, editable=True):
+        """
+        Creates a node group
+
+        Parameters
+        ----------
+        name : str
+            the name of the group
+        node_str : str
+            a shortened form for storing node ids
+        nodes_pound : int
+            the max id
+        editable : bool; default=True
+            not sure what this is used for
+        """
         if len(name):
             assert len(name) > 0, name
             assert name[-1] != ' ', name
@@ -85,6 +113,7 @@ class NodeGroup(object):
         return msg
 
 def _get_collapsed_text(values):
+    """writes the collapsed text for ``Group`` and ``NodeGroup``"""
     singles, doubles = collapse_colon_packs(values)
     text = ' '.join([str(s) for s in singles]) + ' '
     text += ' '.join([''.join([str(doublei) for doublei in double]) for double in doubles])

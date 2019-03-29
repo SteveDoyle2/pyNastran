@@ -40,7 +40,12 @@ __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
 #__docs__ = 'http://pynastran.m4-engineering.com/master'  # still not setup...
-__docs__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
+__docs_rtd__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
+
+__docs__ = 'http://pynastran.m4-engineering.com/%s' % __version__
+if 'dev' in __version__:
+    __docs__ = __docs_rtd__
+
 __issue__ = 'https://github.com/SteveDoyle2/pyNastran/issues'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'
 
