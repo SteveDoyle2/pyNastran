@@ -110,6 +110,7 @@ class ChangeBCs(QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
         self.connect(self.coords_button, QtCore.SIGNAL('clicked()'), self.on_default_coords)
         self.connect(self.elements_button, QtCore.SIGNAL('clicked()'), self.on_default_elements)

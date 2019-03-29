@@ -468,7 +468,7 @@ class AnimationWindow(PyDialog):
             self.on_animate_scale(force=True)
 
     def set_connections(self):
-        """creates button actions"""
+        """creates the actions for the menu"""
         self.checkbox_vector.clicked.connect(self.on_checkbox_vector)
 
         self.scale_button.clicked.connect(self.on_default_scale)
@@ -795,7 +795,6 @@ class AnimationWindow(PyDialog):
 
     def create_layout(self):
         """displays the menu objects"""
-
         grid = QGridLayout()
         irow = 0
         grid.addWidget(self.icase_fringe_label, irow, 0)

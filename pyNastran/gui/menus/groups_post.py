@@ -176,6 +176,7 @@ class GroupsPostView(QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         self.set_as_main_button.clicked.connect(self.on_set_as_main)
         self.delete_groups_button.clicked.connect(self.on_delete_groups)
         self.revert_groups_button.clicked.connect(self.on_revert_groups)

@@ -332,6 +332,7 @@ class EditNodeProperties(QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         if qt_version == 4:
             self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
             self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)

@@ -232,6 +232,7 @@ class EditBoundaryConditions(QtGui.QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         self.connect(self.opacity_edit, QtCore.SIGNAL('clicked()'), self.on_opacity)
         self.connect(self.line_width, QtCore.SIGNAL('clicked()'), self.on_line_width)
         self.connect(self.point_size, QtCore.SIGNAL('clicked()'), self.on_point_size)

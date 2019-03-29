@@ -416,6 +416,7 @@ class PreferencesWindow(PyDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         self.font_size_button.clicked.connect(self.on_default_font_size)
         self.font_size_edit.valueChanged.connect(self.on_font)
 

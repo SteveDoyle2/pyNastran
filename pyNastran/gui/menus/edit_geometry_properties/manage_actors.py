@@ -697,6 +697,7 @@ class EditGeometryProperties(PyDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         self.opacity_edit.valueChanged.connect(self.on_opacity)
         self.line_width_edit.valueChanged.connect(self.on_line_width)
         self.point_size_edit.valueChanged.connect(self.on_point_size)

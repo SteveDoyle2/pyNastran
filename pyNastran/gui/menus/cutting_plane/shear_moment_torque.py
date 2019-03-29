@@ -435,7 +435,7 @@ class ShearMomentTorqueWindow(PyDialog):
         return grid
 
     def set_connections(self):
-        """hooks up the gui actions"""
+        """creates the actions for the menu"""
         self.method_pulldown.currentIndexChanged.connect(self.on_method)
         self.zaxis_method_pulldown.currentIndexChanged.connect(self.on_zaxis_method)
         self.plane_color_edit.clicked.connect(self.on_plane_color)

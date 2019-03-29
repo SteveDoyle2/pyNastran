@@ -95,6 +95,7 @@ class DownloadWindow(QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         if qt_version == 4:
             self.connect(self.link, QtCore.SIGNAL('clicked()'), self.on_download)
             self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)

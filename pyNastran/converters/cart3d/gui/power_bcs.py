@@ -293,6 +293,7 @@ class BreakSurfaceMenu(QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         self.opacity_edit.clicked.connect(self.on_opacity)
         self.point_size.clicked.connect(self.on_point_size)
         self.color_edit.clicked.connect(self.on_color)

@@ -180,6 +180,7 @@ class BCMap(QtGui.QDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         self.connect(self.name_button, QtCore.SIGNAL('clicked()'), self.on_default_name)
         #combo.activated[str].connect(self.onActivated)
         self.combo_axis.activated[str].connect(self.on_axis)

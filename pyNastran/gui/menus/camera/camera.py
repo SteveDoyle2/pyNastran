@@ -106,6 +106,7 @@ class CameraWindow(PyDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         #if qt_version == 4:
             #self.connect(self.ok_button, QtCore.SIGNAL('clicked()'), self.on_ok)
         self.set_button.clicked.connect(self.on_set)

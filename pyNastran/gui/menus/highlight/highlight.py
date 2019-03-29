@@ -17,7 +17,7 @@ from vtk.util.numpy_support import vtk_to_numpy
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
 #from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
-from pyNastran.gui.menus.menu_utils import eval_float_from_string
+#from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
 
 from pyNastran.gui.qt_files.mouse_actions import create_highlighted_actor
@@ -117,6 +117,7 @@ class HighlightWindow(PyDialog):
         self.close_button = QPushButton("Close")
 
     def create_layout(self):
+        """displays the menu objects"""
         grid = QGridLayout()
 
         irow = 0
@@ -153,12 +154,13 @@ class HighlightWindow(PyDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         #self.highlight_color_edit.clicked.connect(self.on_highlight_color)
         #self.highlight_opacity_edit.valueChanged.connect(self.on_highlight_opacity)
         self.nodes_edit.textChanged.connect(self.on_validate)
         self.elements_edit.textChanged.connect(self.on_validate)
         self.show_button.clicked.connect(self.on_show)
-        self.clear_button.clicked.connect(self.on_clear_actors)
+        self.clear_button.clicked.connect(self.on_remove_actors)
         self.close_button.clicked.connect(self.on_close)
         # closeEvent
 
@@ -171,7 +173,11 @@ class HighlightWindow(PyDialog):
         self.setFont(font)
 
     def on_highlight_color(self):
-        """ Choose a highlight color"""
+        """
+        Choose a highlight color
+
+        TODO: not implemented
+        """
         title = "Choose a highlight color"
         rgb_color_ints = self.highlight_color_int
         color_edit = self.highlight_color_edit
@@ -183,6 +189,11 @@ class HighlightWindow(PyDialog):
             self.highlight_color_float = rgb_color_floats
 
     def on_highlight_opacity(self, value=None):
+        """
+        update the highlight opacity
+
+        TODO: not implemented
+        """
         if value is None:
             value = self.highlight_opacity_edit.value()
         self._highlight_opacity = value
@@ -222,6 +233,7 @@ class HighlightWindow(PyDialog):
     #---------------------------------------------------------------------------
 
     def on_validate(self):
+        """makes sure that all attributes are valid before doing any actions"""
         unused_nodes, flag1 = check_patran_syntax(self.nodes_edit, pound=self._nodes_pound)
         unused_elements, flag2 = check_patran_syntax(self.elements_edit, pound=self._elements_pound)
         if all([flag1, flag2]):
@@ -230,6 +242,7 @@ class HighlightWindow(PyDialog):
         return False
 
     def on_show(self):
+        """show the highlight"""
         passed = self.on_validate()
         self.parent().mouse_actions.get_grid_selected(self.model_name)
 
@@ -269,6 +282,7 @@ class HighlightWindow(PyDialog):
         self.actors = []
 
     def on_close(self):
+        """close the window"""
         self.on_remove_actors()
         self.out_data['close'] = True
         self.close()
@@ -312,19 +326,20 @@ def create_highlighted_actors(gui, grid,
     return actors
 
 def check_float(cell):
+    """validate the value is floatable"""
     text = cell.text()
     value = float(text)
     return value, True
 
-def check_label_float(cell):
-    text = cell.text()
-    try:
-        value = eval_float_from_string(text)
-        cell.setStyleSheet("QLineEdit{background: white;}")
-        return value, True
-    except ValueError:
-        cell.setStyleSheet("QLineEdit{background: red;}")
-        return None, False
+#def check_label_float(cell):
+    #text = cell.text()
+    #try:
+        #value = eval_float_from_string(text)
+        #cell.setStyleSheet("QLineEdit{background: white;}")
+        #return value, True
+    #except ValueError:
+        #cell.setStyleSheet("QLineEdit{background: red;}")
+        #return None, False
 
 def _check_color(color_float):
     assert len(color_float) == 3, color_float
@@ -333,6 +348,7 @@ def _check_color(color_float):
     return color_float, color_int
 
 def main():  # pragma: no cover
+    """basic testing"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal

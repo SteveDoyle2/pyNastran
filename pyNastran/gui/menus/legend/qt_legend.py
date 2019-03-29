@@ -619,7 +619,7 @@ class LegendPropertiesWindow(PyDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
-        """creates the actions for the buttons"""
+        """creates the actions for the menu"""
         self.title_button.clicked.connect(self.on_default_title)
         self.min_button.clicked.connect(self.on_default_min)
         self.max_button.clicked.connect(self.on_default_max)

@@ -73,6 +73,7 @@ class ClippingPropertiesWindow(PyDialog):
         self.setLayout(vbox)
 
     def set_connections(self):
+        """creates the actions for the menu"""
         if qt_version == 4:
             self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
         #else:
