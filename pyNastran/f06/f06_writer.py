@@ -189,8 +189,6 @@ class F06Writer(OP2_F06_Common):
         OP2_F06_Common.__init__(self)
         self.card_count = {}
         self.additional_matrices = {}
-        self.matrices = {}
-        self.matdicts = {}
         self.subcase_key = defaultdict(list)
         self.end_options = {}
 

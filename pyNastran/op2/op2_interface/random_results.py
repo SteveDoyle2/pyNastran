@@ -147,26 +147,32 @@ class RandomObjects(object):
         return [self.prefix + table + self.postfix for table in tables]
 
 class AutoCorrelationObjects(RandomObjects):
+    """storage class for the ATO objects"""
     prefix = 'ato.'
     #postfix = ''
 
 class PowerSpectralDensityObjects(RandomObjects):
+    """storage class for the PSD objects"""
     prefix = 'psd.'
     #postfix = ''
 
 class RootMeansSquareObjects(RandomObjects):
+    """storage class for the RMS objects"""
     prefix = 'rms.'
     #postfix = ''
 
 class CumulativeRootMeansSquareObjects(RandomObjects):
+    """storage class for the CRMS objects"""
     prefix = 'crm.'
     #postfix = ''
 
 class NumberOfCrossingsObjects(RandomObjects):
+    """storage class for the NO objects"""
     prefix = 'no.'
     #postfix = ''
 
 class RAECONS(object):
+    """storage class for the RAECONS objects"""
     def __init__(self):
         self.ctria3_strain = {}
         self.cquad4_strain = {}
@@ -180,6 +186,7 @@ class RAECONS(object):
         return ['RAECONS.' + table for table in tables]
 
 class RASCONS(object):
+    """storage class for the RASCONS objects"""
     def __init__(self):
         self.ctetra_stress = {}
         self.cpenta_stress = {}
@@ -219,6 +226,7 @@ class RASCONS(object):
         return ['RASCONS.' + table for table in tables]
 
 class RAPCONS(object):
+    """storage class for the RAPCONS objects"""
     def __init__(self):
         self.cquad4_composite_stress = {}
         self.cquad8_composite_stress = {}
@@ -245,6 +253,7 @@ class RAPCONS(object):
         return ['RAPCONS.' + table for table in tables]
 
 class RAPEATC(object):
+    """storage class for the RAPEATC objects"""
     def __init__(self):
         self.cquad4_composite_stress = {}
         self.cquad8_composite_stress = {}
@@ -272,6 +281,7 @@ class RAPEATC(object):
         return ['RAPEATC.' + table for table in tables]
 
 class RAFCONS(object):
+    """storage class for the RAFCONS objects"""
     def __init__(self):
         self.cbar_force = {}
         self.cquad4_force = {}
@@ -286,6 +296,7 @@ class RAFCONS(object):
         return ['RAFCONS.' + table for table in tables]
 
 class RAGCONS(object):
+    """storage class for the RAGCONS objects"""
     def __init__(self):
         self.grid_point_forces = {}
     def get_table_types(self):
@@ -295,21 +306,26 @@ class RAGCONS(object):
         return ['RAGCONS.' + table for table in tables]
 
 class RAGEATC(object):
+    """storage class for the RAGEATC objects"""
     def __init__(self):
         self.grid_point_forces = {}
+
     def get_table_types(self):
         tables = [
             'grid_point_forces',
         ]
         return ['RAGEATC.' + table for table in tables]
 
+
 class RANCONS(object):
+    """storage class for the RANCONS objects"""
     def __init__(self):
         self.cbar_strain_energy = {}
         self.cbush_strain_energy = {}
         self.chexa_strain_energy = {}
         self.ctria3_strain_energy = {}
         self.cquad4_strain_energy = {}
+
     def get_table_types(self):
         tables = [
             'cbar_strain_energy', 'cbush_strain_energy',
@@ -319,6 +335,7 @@ class RANCONS(object):
         return ['RANCONS.' + table for table in tables]
 
 class RADEFFM(object):
+    """storage class for the RADEFFM objects"""
     def __init__(self):
         self.eigenvectors = {}
     def get_table_types(self):
@@ -327,31 +344,39 @@ class RADEFFM(object):
         ]
         return ['RADEFFM.' + table for table in tables]
 
+
 class RADCONS(object):
     def __init__(self):
         self.eigenvectors = {}
+
     def get_table_types(self):
         tables = [
             'eigenvectors',
         ]
         return ['RADCONS.' + table for table in tables]
 
+
 class RADEATC(object):
+    """storage class for the RADEATC objects"""
     def __init__(self):
         self.eigenvectors = {}
+
     def get_table_types(self):
         tables = [
             'eigenvectors',
         ]
         return ['RADEATC.' + table for table in tables]
 
+
 class RANEATC(object):
+    """storage class for the RANEATC objects"""
     def __init__(self):
         self.cbar_strain_energy = {}
         self.cbush_strain_energy = {}
         self.chexa_strain_energy = {}
         self.ctria3_strain_energy = {}
         self.cquad4_strain_energy = {}
+
     def get_table_types(self):
         tables = [
             'cbar_strain_energy', 'cbush_strain_energy',
@@ -362,6 +387,7 @@ class RANEATC(object):
 
 
 class ROUGV1(object):
+    """storage class for the ROUGV1 objects"""
     def __init__(self):
         self.displacements = {}
         self.velocities = {}
@@ -375,6 +401,7 @@ class ROUGV1(object):
         return ['ROUGV1.' + table for table in tables]
 
 class RAFEATC(object):
+    """storage class for the RAFEATC objects"""
     def __init__(self):
         self.cbar_force = {}
         self.cquad4_force = {}
@@ -390,6 +417,7 @@ class RAFEATC(object):
 
 
 class RASEATC(object):
+    """storage class for the RASEATC objects"""
     def __init__(self):
         self.chexa_stress = {}
         self.cquad4_stress = {}
@@ -402,6 +430,7 @@ class RASEATC(object):
         return ['RASEATC.' + table for table in tables]
 
 class RAEEATC(object):
+    """storage class for the RAEEATC objects"""
     def __init__(self):
         self.chexa_strain = {}
         self.ctria3_strain = {}
