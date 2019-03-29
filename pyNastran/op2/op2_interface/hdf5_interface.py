@@ -113,7 +113,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
 )
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
 from pyNastran.utils import check_path
-from pyNastran.op2.tables.matrix import Matrix
+from pyNastran.op2.result_objects.matrix import Matrix
 
 
 def _cast(h5_result_attr):
