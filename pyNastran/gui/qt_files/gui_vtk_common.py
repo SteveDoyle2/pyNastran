@@ -52,11 +52,12 @@ class GuiVTKCommon(GuiQtCommon):
 
     def fake_init(self):
         """vtk setup"""
+        pass
         self.create_vtk_actors(create_rend=False)
         #self._create_vtk_objects()
 
         #self.build_vtk_frame()
-        self.add_geometry()
+        #self.add_geometry()
         self._build_vtk_frame_post(build_lookup_table=False)
     #---------------------------------------------------------------------------
     # basic init

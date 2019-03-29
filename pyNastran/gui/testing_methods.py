@@ -86,7 +86,6 @@ class FakeGUIMethods(GuiVTKCommon):
                 'is_groups' : False,
             }
         self.rend = vtkRenderer()
-        #GuiCommon.__init__(self, inputs=inputs)
         GuiVTKCommon.__init__(self, inputs=inputs)
         self.fake_init()
 
@@ -96,7 +95,7 @@ class FakeGUIMethods(GuiVTKCommon):
             'res_widget' : res_widget
         }
         #GuiAttributes.__init__(self, **kwds)
-        GuiVTKCommon.__init__(self, **kwds)
+        #GuiVTKCommon.__init__(self, **kwds)
         self.res_widget = res_widget
         self.vtk_interactor = VTKInteractor()
         self.debug = False
@@ -107,9 +106,9 @@ class FakeGUIMethods(GuiVTKCommon):
         #}
         self.scalar_bar = ScalarBar()
         self.grid = vtk.vtkUnstructuredGrid()
-        self.main_grid_mappers = {'main' : GridMapper()} # works
-        #self.main_grid_mappers = {} # fails...
-        if 0:  # pragma: no cover
+        self.main_grid_mappers = {'main' : GridMapper()}
+        if 1:  # pragma: no cover
+            #self.scalar_bar_actor = ScalarBar()
             self.alt_geometry_actor = ScalarBar()
             self.alt_grids = {
                 'main' : self.grid,
@@ -151,9 +150,9 @@ class FakeGUIMethods(GuiVTKCommon):
     #def scalar_bar_actor(self):
         #return self.scalar_bar.scalar_bar
 
-    #@property
-    #def grid_selected(self):
-        #return self.grid
+    @property
+    def grid_selected(self):
+        return self.grid
 
     #def hide_legend(self):
         #pass

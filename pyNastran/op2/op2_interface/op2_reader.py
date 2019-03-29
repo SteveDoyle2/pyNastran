@@ -51,10 +51,13 @@ import scipy  # type: ignore
 
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
-from pyNastran.op2.tables.design_response import (
+from pyNastran.op2.result_objects.gpdt import GPDT
+from pyNastran.op2.result_objects.eqexin import EQEXIN
+from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
+
+from pyNastran.op2.result_objects.design_response import (
     WeightResponse, StressResponse, StrainResponse, ForceResponse,
     FlutterResponse, Convergence)
-from pyNastran.op2.tables.matrix import Matrix, MatrixDict
 
 #class MinorTables(object):
     #def __init__(self, op2_reader):
@@ -3693,33 +3696,3 @@ def get_table_size_from_ncolumns(table_name, nvalues, ncolumns):
             table_name, nvalues, ncolumns, nrows, nvalues / ncolumns)
         raise RuntimeError(msg)
     return nrows
-
-class EQEXIN(object):
-    def __init__(self, nid, dof, doftype):
-        self.nid = nid
-        self.dof = dof
-        self.doftype = doftype
-
-    def write_csv(self, file_obj):
-        file_obj.write('# nnodes=%s\n' % len(self.nid))
-        file_obj.write('# nid, dof, dof_type\n')
-        for nid, dof, dof_type in zip(self.nid, self.dof, self.doftype):
-            file_obj.write('%s, %s, %s\n' % (nid, dof, dof_type))
-
-    def get_stats(self, short=True):
-        return str(self)
-
-    def __repr__(self):
-        return 'EQEXIN(nid, ndof, doftype); nnodes=%s\n' % len(self.nid)
-
-
-class GPDT(object):
-    def __init__(self, nid_cp_cd_ps, xyz):
-        self.nid_cp_cd_ps = nid_cp_cd_ps
-        self.xyz = xyz
-
-    def get_stats(self, short=True):
-        return str(self)
-
-    def __repr__(self):
-        return 'GPDT(nid_cp_cd_ps, xyz); nnodes=%s\n' % (self.xyz.shape[0])

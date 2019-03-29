@@ -34,7 +34,7 @@ import pyNastran
 from pyNastran.utils import (
     object_attributes, object_methods, ipython_info)
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.tables.monpnt import MONPNT1, MONPNT3
+from pyNastran.op2.result_objects.monpnt import MONPNT1, MONPNT3
 
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError

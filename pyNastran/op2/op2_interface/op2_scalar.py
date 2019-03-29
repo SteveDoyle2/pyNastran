@@ -56,7 +56,7 @@ from cpylog import get_logger
 
 from pyNastran import is_release
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.tables.grid_point_weight import GridPointWeight
+from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 from pyNastran.op2.op2_interface.op2_reader import OP2Reader
 from pyNastran.bdf.cards.params import PARAM
 

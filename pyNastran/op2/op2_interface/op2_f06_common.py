@@ -10,7 +10,9 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
-from pyNastran.op2.tables.design_response import Responses
+from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
+from pyNastran.op2.result_objects.design_response import Responses
+
 from pyNastran.op2.op2_interface.random_results import (
     RADCONS, RAECONS, RASCONS, RAPCONS, RAFCONS, RAGCONS, RANCONS,
     RADEATC, RAEEATC, RASEATC, RAPEATC, RAFEATC, RAGEATC, RANEATC,
@@ -18,7 +20,6 @@ from pyNastran.op2.op2_interface.random_results import (
     AutoCorrelationObjects, PowerSpectralDensityObjects, RootMeansSquareObjects,
     CumulativeRootMeansSquareObjects, NumberOfCrossingsObjects,
 )
-from pyNastran.op2.tables.grid_point_weight import GridPointWeight
 
 class Results(object):
     def __init__(self):
