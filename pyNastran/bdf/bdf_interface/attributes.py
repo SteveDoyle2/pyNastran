@@ -882,6 +882,13 @@ class BDFAttributes(object):
         self._type_to_slot_map = self.get_rslot_map()
 
     @property
+    def type_slot_str(self):
+        html_msg = ['| Card Group | Cards |']
+        for card_group, card_types in sorted(self._slot_to_type_map.items()):
+            html_msg.append('| %s | %s |' % (card_group, ', '.join(card_types)))
+        return '\n'.join(html_msg)
+
+    @property
     def nastran_format(self):
         return self._nastran_format
 

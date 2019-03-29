@@ -90,4 +90,5 @@ Subpackages
 
    pyNastran.op2.op2_interface
    pyNastran.op2.result_objects
+   pyNastran.op2.result_objects2
    pyNastran.op2.tables

@@ -1,36 +1,6 @@
 tables Package
 ==============
 
-:mod:`design_response` Module
------------------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.design_response
-
-.. automodule:: pyNastran.op2.tables.design_response
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`grid_point_weight` Module
--------------------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.grid_point_weight
-
-.. automodule:: pyNastran.op2.tables.grid_point_weight
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`matrix` Module
---------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.matrix
-
-.. automodule:: pyNastran.op2.tables.matrix
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`minor_tables` Module
 --------------------------
 
@@ -41,32 +11,12 @@ tables Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`monpnt` Module
---------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.monpnt
-
-.. automodule:: pyNastran.op2.tables.monpnt
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`ogpwg` Module
 -------------------
 
 .. inheritance-diagram:: pyNastran.op2.tables.ogpwg
 
 .. automodule:: pyNastran.op2.tables.ogpwg
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`ogs` Module
------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.ogs
-
-.. automodule:: pyNastran.op2.tables.ogs
     :members:
     :undoc-members:
     :show-inheritance:

@@ -32,7 +32,7 @@ included for use.
 
 
 .. toctree::
-
+   features
    quick_start/index
    how_to/index
    reference/pyNastran

@@ -40,25 +40,15 @@ This is the pyNastran.utils.rst file.
     :undoc-members:
     :show-inheritance:
 
-:mod:`gui_io` Module
---------------------
-
-.. inheritance-diagram:: pyNastran.utils.gui_io
-
-.. automodule:: pyNastran.utils.gui_io
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`log` Module
------------------
-
-.. inheritance-diagram:: pyNastran.utils.log
-
-.. automodule:: pyNastran.utils.log
-    :members:
-    :undoc-members:
-    :show-inheritance:
+#:mod:`gui_io` Module
+#--------------------
+#
+#.. inheritance-diagram:: pyNastran.utils.gui_io
+#
+#.. automodule:: pyNastran.utils.gui_io
+#    :members:
+#    :undoc-members:
+#    :show-inheritance:
 
 :mod:`mathematics` Module
 -------------------------

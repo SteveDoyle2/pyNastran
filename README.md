@@ -165,7 +165,7 @@ This should be hidden...
 
 # News
 
-### pyNastran v1.1.0 has been released (6/26/2018)
+### pyNastran v1.1.0 has been released (2018/6/26)
 
 It's been roughly a year and ~100 tickets closed since the last version, so it's probably
 time for another release!   I want to thank everybody who helped with this release, especially
@@ -307,11 +307,13 @@ However, you may distribute an unmodified binary.
 - [Matlab](http://pynastran-git.readthedocs.io/en/latest/quick_start/matlab.html) integration
    - pyNastran works with Matlab 2014a+
 
+See [v1.0.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0) for information regarding enhancements.
+
 ### pyNastran v0.8.0 has been released (2016/8/21)
 
-|  Version  | Docs  | Status |
-| :--- 	  | :--- 	  | :--- 	  |
-|  [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.8)](http://pynastran-git.readthedocs.io/en/v0.8.0/?badge=v0.8.0) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v0.8.svg)](https://travis-ci.org/SteveDoyle2/pyNastran)  |
+|  Version  | Docs  |
+| :--- 	  | :--- 	  |
+|  [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.8)](http://pynastran-git.readthedocs.io/en/v0.8.0/?badge=v0.8.0) |
 
 <!---
 
