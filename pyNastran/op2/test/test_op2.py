@@ -546,7 +546,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
 
     return op2, is_passed
 
-def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev, xref_safe=False):
+def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev,
+                     xref_safe=False):
     if write_bdf:
         assert make_geom, 'make_geom=%s' % make_geom
         op2._nastran_format = 'msc'

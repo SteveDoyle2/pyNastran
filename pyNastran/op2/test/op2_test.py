@@ -21,6 +21,10 @@ def get_failed_files(filename):
 
 
 def parse_skipped_cards(fname):
+    """
+    An outdated method to read the log file created by this script to
+    determine what was skipped.
+    """
     with open(fname, 'r') as skip_file:
         lines = skip_file.readlines()
 
@@ -28,13 +32,13 @@ def parse_skipped_cards(fname):
     for line in lines:
         if 'OES' in line[0:3]:
             (fore, aft) = line.strip().split('->')
-            (oes, form, element_type_num) = fore.strip().split(' ')
-            (element_type, etype) = element_type_num.strip().split('=')
+            (unused_oes, form, element_type_num) = fore.strip().split(' ')
+            (unused_element_type, etype) = element_type_num.strip().split('=')
             (msg, fpath) = aft.strip().split('-')
             #print("fpath=%r" % fpath)
             fpath = fpath.lstrip()[6:]
             ename = msg.split(' ')[0]
-            #print "eName=%s eType=%s form=%s fpath=|%s|" %(ename, etype, form, fpath)
+            #print "eName=%s eType=%s form=%s fpath=%r" % (ename, etype, form, fpath)
             key = (ename, etype, form)
             if key not in results:
                 results[key] = fpath
@@ -43,9 +47,9 @@ def parse_skipped_cards(fname):
     for key, value in sorted(results.items()):
         files_to_analyze.append(value)
 
-    with open('new_elements.in', 'wb') as new_elements_file:
-        for fname in files_to_analyze:
-            new_elements_file.write(fname + '\n')
+    with open('new_elements.in', 'w') as new_elements_file:
+        for file_to_analyze in files_to_analyze:
+            new_elements_file.write(file_to_analyze + '\n')
     return files_to_analyze
 
 
@@ -65,8 +69,8 @@ def get_all_files(folders_file, file_type):
     filenames : List[str]
         a series of filenames that were found
     """
-    with open(folders_file, 'r') as f:
-        lines = f.readlines()
+    with open(folders_file, 'r') as file_obj:
+        lines = file_obj.readlines()
 
     files2 = []
     for line in lines:
@@ -77,7 +81,7 @@ def get_all_files(folders_file, file_type):
             # "C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\nast"
             line = line.strip('"')
             pthi = line.split('\\')
-            pth = os.path.join(*pthi)
+            unused_pth = os.path.join(*pthi)
             move_dir = os.path.join(line)
         else:
             # C:\MSC.Software\MSC.Nastran\msc20051\nast\doc
@@ -95,16 +99,16 @@ def get_all_files(folders_file, file_type):
     #print('nfiles = %s' % len(files2))
     return files2
 
-def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
+def run(regenerate=True, make_geom=False, write_bdf=False, build_pandas=True,
         xref_safe=False,
         save_cases=True, debug=False, write_f06=True, write_op2=False,
-        compare=True, short_stats=False, export_hdf5=True):
+        compare=True, short_stats=False, write_hdf5=True):
     # works
     files = get_files_of_type('tests', '.op2')
 
     folders_file = os.path.join(PKG_PATH, 'bdf', 'test', 'tests', 'foldersRead.txt')
 
-    isubcases = []
+    unused_isubcases = []
     binary_debug = [True, False]  # catch any errors
     quiet = True
 
@@ -146,9 +150,8 @@ def run(regenerate=True, make_geom=False, write_bdf=False, skip_dataframe=False,
     failed_files = run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                                      xref_safe=xref_safe,
                                      write_f06=write_f06, delete_f06=delete_f06,
-                                     write_op2=write_op2,
-                                     skip_dataframe=skip_dataframe,
-                                     export_hdf5=export_hdf5,
+                                     write_op2=write_op2, write_hdf5=write_hdf5,
+                                     build_pandas=build_pandas,
                                      debug=debug,
                                      skip_files=skip_files, stop_on_failure=stop_on_failure,
                                      nstart=nstart, nstop=nstop, binary_debug=binary_debug,
@@ -218,23 +221,23 @@ def main():
 
     data = docopt(msg, version=ver)
     debug = data['--debug']
-    binary_debug = data['--binary_debug']
+    #binary_debug = data['--binary_debug']
     regenerate = data['--regenerate']
     make_geom = data['--geometry']
     write_bdf = data['--write_bdf']
     write_f06 = data['--write_f06']
     write_op2 = data['--write_op2']
-    export_hdf5 = data['--write_hdf5']
+    write_hdf5 = data['--write_hdf5']
     save_cases = not data['--save_cases']
     short_stats = data['--short_stats']
     compare = not data['--disablecompare']
-    skip_dataframe = data['--skip_dataframe']
+    build_pandas = not data['--skip_dataframe']
     xref_safe = data['--safe']
     run(regenerate=regenerate, make_geom=make_geom, write_bdf=write_bdf,
         xref_safe=xref_safe,
         save_cases=save_cases, write_f06=write_f06, write_op2=write_op2,
-        export_hdf5=export_hdf5, short_stats=short_stats,
-        skip_dataframe=skip_dataframe, compare=compare, debug=debug)
+        write_hdf5=write_hdf5, short_stats=short_stats,
+        build_pandas=build_pandas, compare=compare, debug=debug)
 
 if __name__ == '__main__':
     main()
