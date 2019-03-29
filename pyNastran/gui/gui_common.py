@@ -916,7 +916,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         geom_props = AltGeometry(
             self, 'main', color=white, line_width=1, opacity=1.0, point_size=1,
             bar_scale=0.0, representation='main', is_visible=True)
-
         self.geometry_properties['main'] = geom_props
 
         #self.addAltGeometry()
@@ -961,25 +960,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         prop.Modified()
         self.vtk_interactor.Render()
         self.log_command('on_set_edge_visibility()')
-
-    def get_edges(self):
-        """Create the edge actor"""
-        edges = vtk.vtkExtractEdges()
-        edge_mapper = self.edge_mapper
-        edge_actor = self.edge_actor
-
-        edges.SetInputData(self.grid_selected)
-        edge_mapper.SetInputConnection(edges.GetOutputPort())
-
-        edge_actor.SetMapper(edge_mapper)
-        edge_actor.GetProperty().SetColor(0., 0., 0.)
-        edge_mapper.SetLookupTable(self.color_function)
-        edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
-
-        prop = edge_actor.GetProperty()
-        prop.SetColor(0., 0., 0.)
-        edge_actor.SetVisibility(self.is_edges)
-        self.rend.AddActor(edge_actor)
 
     #---------------------------------------------------------------------
     # groups
@@ -1981,130 +1961,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 make_gif=make_gif)
         return is_failed
 
-    def add_geometry(self):
-        """
-        #(N,)  for stress, x-disp
-        #(N,3) for warp vectors/glyphs
-        grid_result = vtk.vtkFloatArray()
-
-        point_data = self.grid.GetPointData()
-        cell_data = self.grid.GetCellData()
-
-        self.grid.GetCellData().SetScalars(grid_result)
-        self.grid.GetPointData().SetScalars(grid_result)
-
-
-        self.grid_mapper   <-input-> self.grid
-        vtkDataSetMapper() <-input-> vtkUnstructuredGrid()
-
-        self.grid_mapper   <--map--> self.geom_actor <-add-> self.rend
-        vtkDataSetMapper() <--map--> vtkActor()      <-add-> vtkRenderer()
-        """
-        if self.is_groups:
-            # solid_bending: eids 1-182
-            self._setup_element_mask()
-            #eids = np.arange(172)
-            #eids = arange(172)
-            #self.update_element_mask(eids)
-        else:
-            self.grid_selected = self.grid
-        #print('grid_selected =', self.grid_selected)
-
-        self.grid_mapper = vtk.vtkDataSetMapper()
-        self.grid_mapper.SetInputData(self.grid_selected)
-
-        self._make_contour_filter()
-
-        #if 0:
-            #self.warp_filter = vtk.vtkWarpVector()
-            #self.warp_filter.SetScaleFactor(50.0)
-            #self.warp_filter.SetInput(self.grid_mapper.GetUnstructuredGridOutput())
-
-            #self.geom_filter = vtk.vtkGeometryFilter()
-            #self.geom_filter.SetInput(self.warp_filter.GetUnstructuredGridOutput())
-
-            #self.geom_mapper = vtk.vtkPolyDataMapper()
-            #self.geom_actor.setMapper(self.geom_mapper)
-
-        #if 0:
-            #from vtk.numpy_interface import algorithms
-            #arrow = vtk.vtkArrowSource()
-            #arrow.PickableOff()
-
-            #self.glyph_transform = vtk.vtkTransform()
-            #self.glyph_transform_filter = vtk.vtkTransformPolyDataFilter()
-            #self.glyph_transform_filter.SetInputConnection(arrow.GetOutputPort())
-            #self.glyph_transform_filter.SetTransform(self.glyph_transform)
-
-            #self.glyph = vtk.vtkGlyph3D()
-            #self.glyph.setInput(xxx)
-            #self.glyph.SetSource(self.glyph_transform_filter.GetOutput())
-
-            #self.glyph.SetVectorModeToUseVector()
-            #self.glyph.SetColorModeToColorByVector()
-            #self.glyph.SetScaleModeToScaleByVector()
-            #self.glyph.SetScaleFactor(1.0)
-
-            #self.append_filter = vtk.vtkAppendFilter()
-            #self.append_filter.AddInputConnection(self.grid.GetOutput())
-
-
-        #self.warpVector = vtk.vtkWarpVector()
-        #self.warpVector.SetInput(self.grid_mapper.GetUnstructuredGridOutput())
-        #grid_mapper.SetInput(Filter.GetOutput())
-
-        self.geom_actor = vtk.vtkLODActor()
-        self.geom_actor.DragableOff()
-        self.geom_actor.SetMapper(self.grid_mapper)
-        #geometryActor.AddPosition(2, 0, 2)
-        #geometryActor.GetProperty().SetDiffuseColor(0, 0, 1) # blue
-        #self.geom_actor.GetProperty().SetDiffuseColor(1, 0, 0)  # red
-
-        #if 0:
-            #id_filter = vtk.vtkIdFilter()
-
-            #ids = np.array([1, 2, 3], dtype='int32')
-            #id_array = numpy_to_vtk(
-                #num_array=ids,
-                #deep=True,
-                #array_type=vtk.VTK_INT,
-            #)
-
-            #id_filter.SetCellIds(id_array.GetOutputPort())
-            #id_filter.CellIdsOff()
-            #self.grid_mapper.SetInputConnection(id_filter.GetOutputPort())
-        self.rend.AddActor(self.geom_actor)
-        self.build_glyph()
-
-    def build_glyph(self):
-        """builds the glyph actor"""
-        glyph_source, glyphs, glyph_mapper, arrow_actor = build_glyph(self.grid)
-        self.rend.AddActor(arrow_actor)
-
-        self.glyph_source = glyph_source
-        self.glyphs = glyphs
-        self.glyph_mapper = glyph_mapper
-        self.arrow_actor = arrow_actor
-        #-----------------------------------------
-        glyphs_centroid = vtk.vtkGlyph3D()
-        glyphs_centroid.SetVectorModeToUseVector()
-        glyphs_centroid.SetScaleModeToScaleByVector()
-        glyphs_centroid.SetColorModeToColorByScale()
-        glyphs_centroid.ScalingOn()
-        glyphs_centroid.ClampingOn()
-        glyphs_centroid.SetSourceConnection(glyph_source.GetOutputPort())
-
-        glyph_mapper_centroid = vtk.vtkPolyDataMapper()
-        glyph_mapper_centroid.SetInputConnection(glyphs_centroid.GetOutputPort())
-        glyph_mapper_centroid.ScalarVisibilityOff()
-
-        arrow_actor_centroid = vtk.vtkLODActor()
-        arrow_actor_centroid.SetMapper(glyph_mapper_centroid)
-
-        self.glyphs_centroid = glyphs_centroid
-        self.glyph_mapper_centroid = glyph_mapper_centroid
-        self.arrow_actor_centroid = arrow_actor_centroid
-
     def ResetCamera(self):
         self.GetCamera().ResetCamera()
 
@@ -2419,47 +2275,6 @@ def get_html_msg(color, tim, log_type, filename, lineno, msg):
     html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
         color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
     return html_msg
-
-def build_glyph(grid):
-    """builds the glyph actor"""
-    glyphs = vtk.vtkGlyph3D()
-    #if filter_small_forces:
-        #glyphs.SetRange(0.5, 1.)
-
-    glyphs.SetVectorModeToUseVector()
-    #apply_color_to_glyph = False
-    #if apply_color_to_glyph:
-    #glyphs.SetScaleModeToScaleByScalar()
-    glyphs.SetScaleModeToScaleByVector()
-    glyphs.SetColorModeToColorByScale()
-    #glyphs.SetColorModeToColorByScalar()  # super tiny
-    #glyphs.SetColorModeToColorByVector()  # super tiny
-
-    glyphs.ScalingOn()
-    glyphs.ClampingOn()
-    #glyphs.Update()
-
-    glyph_source = vtk.vtkArrowSource()
-    #glyph_source.InvertOn()  # flip this arrow direction
-    glyphs.SetInputData(grid)
-
-
-    glyphs.SetSourceConnection(glyph_source.GetOutputPort())
-    #glyphs.SetScaleModeToDataScalingOff()
-    #glyphs.SetScaleFactor(10.0)  # bwb
-    #glyphs.SetScaleFactor(1.0)  # solid-bending
-    glyph_mapper = vtk.vtkPolyDataMapper()
-    glyph_mapper.SetInputConnection(glyphs.GetOutputPort())
-    glyph_mapper.ScalarVisibilityOff()
-
-    arrow_actor = vtk.vtkLODActor()
-    arrow_actor.SetMapper(glyph_mapper)
-
-    prop = arrow_actor.GetProperty()
-    prop.SetColor(1., 0., 0.)
-    #self.grid.GetPointData().SetActiveVectors(None)
-    arrow_actor.SetVisibility(False)
-    return glyph_source, glyphs, glyph_mapper, arrow_actor
 
 def populate_sub_qmenu(menu, items, actions):
     sub_menu_name = items[0]

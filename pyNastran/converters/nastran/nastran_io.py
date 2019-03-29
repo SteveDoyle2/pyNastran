@@ -1587,7 +1587,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             nnodesi = 2
             elem = model_obj
             elem.make_current()
-            self.log.info('%s; nelem=%s nnodes=%s' % (
+            self.log.debug('%s; nelem=%s nnodes=%s' % (
                 model_obj.card_name, nelems, model_obj.nids.shape[1]))
 
             ieid = np.arange(ieid0, ieid0 + nelems)
@@ -1670,7 +1670,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     model_obj.card_name, nelems))
                 raise
 
-            self.log.info('%s; nelem=%s nnodes=%s' % (
+            self.log.debug('%s; nelem=%s nnodes=%s' % (
                 model_obj.card_name, nelems, nnodes))
             eid = elem.eid
             ieid = np.arange(ieid0, ieid0 + nelems)

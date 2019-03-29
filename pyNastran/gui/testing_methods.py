@@ -105,23 +105,24 @@ class FakeGUIMethods(GuiVTKCommon):
         #self.geometry_actors = {
             #'main' : vtkActor(),
         #}
-        self.main_grid_mappers = {'main' : GridMapper()}
-        self.grid = vtk.vtkUnstructuredGrid()
-        #self.scalar_bar_actor = ScalarBar()
         self.scalar_bar = ScalarBar()
-        self.alt_geometry_actor = ScalarBar()
-        self.alt_grids = {
-            'main' : self.grid,
-        }
-        self.main_geometry_actors = {
-            'main' :  vtkActor(),
-        }
+        self.grid = vtk.vtkUnstructuredGrid()
+        self.main_grid_mappers = {'main' : GridMapper()} # works
+        #self.main_grid_mappers = {} # fails...
+        if 0:  # pragma: no cover
+            self.alt_geometry_actor = ScalarBar()
+            self.alt_grids = {
+                'main' : self.grid,
+            }
+            self.main_geometry_actors = {
+                'main' :  vtkActor(),
+            }
 
-        self.glyph_source = vtkArrowSource()
-        self.glyphs = vtkGlyph3D()
-        self.glyph_mapper = vtkPolyDataMapper()
-        self.arrow_actor = vtkLODActor()
-        self.arrow_actor_centroid = vtkLODActor()
+            self.glyph_source = vtkArrowSource()
+            self.glyphs = vtkGlyph3D()
+            self.glyph_mapper = vtkPolyDataMapper()
+            self.arrow_actor = vtkLODActor()
+            self.arrow_actor_centroid = vtkLODActor()
 
         #self.geometry_properties = {
             #'main' : None,
@@ -146,13 +147,13 @@ class FakeGUIMethods(GuiVTKCommon):
         for icase in self.result_cases:
             self.label_actors[icase] = []
 
-    @property
-    def scalar_bar_actor(self):
-        return self.scalar_bar.scalar_bar
+    #@property
+    #def scalar_bar_actor(self):
+        #return self.scalar_bar.scalar_bar
 
-    @property
-    def grid_selected(self):
-        return self.grid
+    #@property
+    #def grid_selected(self):
+        #return self.grid
 
     #def hide_legend(self):
         #pass
