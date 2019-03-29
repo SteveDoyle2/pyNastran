@@ -11,12 +11,12 @@ import numpy as np
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QColorDialog)
+    QDoubleSpinBox, QColorDialog)
 #import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog, check_patran_syntax
-#from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
+from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 #from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit#, QNodeElementEdit
 
@@ -51,6 +51,15 @@ class HighlightWindow(PyDialog):
         PyDialog.__init__(self, data, win_parent)
         gui = win_parent
 
+        if gui is None:  # pragma: no cover
+            self.highlight_color_float = [0., 0., 0.]
+            self.highlight_color_int = [0, 0, 0]
+            self._highlight_opacity = 0.9
+        else:
+            self.highlight_color_float = gui.settings.highlight_color
+            self.highlight_color_int = [int(val) for val in self.highlight_color_float]
+            #self.highlight_color_int = gui.settings.highlight_color_int
+            self._highlight_opacity = gui.settings.highlight_opacity
         self._updated_highlight = False
 
         self.actors = []
@@ -98,18 +107,17 @@ class HighlightWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         # Highlight Color
-        #self.highlight_opacity_label = QLabel("Highlight Opacity:")
-        #self.highlight_opacity_edit = QDoubleSpinBox(self)
-        #self.highlight_opacity_edit.setValue(self._highlight_opacity)
-        #self.highlight_opacity_edit.setRange(0.1, 1.0)
-        #self.highlight_opacity_edit.setDecimals(1)
-        #self.highlight_opacity_edit.setSingleStep(0.1)
-        #self.highlight_opacity_button = QPushButton("Default")
+        self.highlight_opacity_label = QLabel("Highlight Opacity:")
+        self.highlight_opacity_edit = QDoubleSpinBox(self)
+        self.highlight_opacity_edit.setValue(self._highlight_opacity)
+        self.highlight_opacity_edit.setRange(0.1, 1.0)
+        self.highlight_opacity_edit.setDecimals(1)
+        self.highlight_opacity_edit.setSingleStep(0.1)
+        self.highlight_opacity_button = QPushButton("Default")
 
         # Text Color
-        #self.highlight_color_label = QLabel("Highlight Color:")
-        #self.highlight_color_edit = QPushButtonColor(self.highlight_color_int)
-
+        self.highlight_color_label = QLabel("Highlight Color:")
+        self.highlight_color_edit = QPushButtonColor(self.highlight_color_int)
         #-----------------------------------------------------------------------
         # closing
         self.show_button = QPushButton("Show")
@@ -129,13 +137,17 @@ class HighlightWindow(PyDialog):
         grid.addWidget(self.elements_edit, irow, 1)
         irow += 1
 
-        #grid.addWidget(self.highlight_color_label, irow, 0)
-        #grid.addWidget(self.highlight_color_edit, irow, 1)
-        #irow += 1
+        grid.addWidget(self.highlight_color_label, irow, 0)
+        grid.addWidget(self.highlight_color_edit, irow, 1)
+        self.highlight_color_label.setVisible(False)
+        self.highlight_color_edit.setVisible(False)
+        irow += 1
 
-        #grid.addWidget(self.highlight_opacity_label, irow, 0)
-        #grid.addWidget(self.highlight_opacity_edit, irow, 1)
-        #irow += 1
+        grid.addWidget(self.highlight_opacity_label, irow, 0)
+        grid.addWidget(self.highlight_opacity_edit, irow, 1)
+        self.highlight_opacity_label.setVisible(False)
+        self.highlight_opacity_edit.setVisible(False)
+        irow += 1
 
         #self.create_legend_widgets()
         #grid2 = self.create_legend_layout()
@@ -155,8 +167,8 @@ class HighlightWindow(PyDialog):
 
     def set_connections(self):
         """creates the actions for the menu"""
-        #self.highlight_color_edit.clicked.connect(self.on_highlight_color)
-        #self.highlight_opacity_edit.valueChanged.connect(self.on_highlight_opacity)
+        self.highlight_color_edit.clicked.connect(self.on_highlight_color)
+        self.highlight_opacity_edit.valueChanged.connect(self.on_highlight_opacity)
         self.nodes_edit.textChanged.connect(self.on_validate)
         self.elements_edit.textChanged.connect(self.on_validate)
         self.show_button.clicked.connect(self.on_show)
@@ -278,7 +290,8 @@ class HighlightWindow(PyDialog):
     def on_remove_actors(self):
         """removes multiple vtk actors"""
         gui = self.parent()
-        remove_actors(gui, self.actors, render=True)
+        if gui is not None:
+            remove_actors(gui, self.actors, render=True)
         self.actors = []
 
     def on_close(self):
