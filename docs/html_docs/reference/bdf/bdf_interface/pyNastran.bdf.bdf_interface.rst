@@ -65,17 +65,6 @@ bdf_interface Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`dev_utils` Module
------------------------
-
-.. inheritance-diagram:: pyNastran.bdf.bdf_interface.dev_utils
-
-.. automodule:: pyNastran.bdf.bdf_interface.dev_utils
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`get_card` Module
 ----------------------
 
@@ -205,6 +194,17 @@ bdf_interface Package
 .. inheritance-diagram:: pyNastran.bdf.bdf_interface.write_mesh
 
 .. automodule:: pyNastran.bdf.bdf_interface.write_mesh
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`write_mesh_files` Module
+------------------------------
+
+.. inheritance-diagram:: pyNastran.bdf.bdf_interface.write_mesh_file
+
+.. automodule:: pyNastran.bdf.bdf_interface.write_mesh_file
     :members:
     :private-members:
     :undoc-members:

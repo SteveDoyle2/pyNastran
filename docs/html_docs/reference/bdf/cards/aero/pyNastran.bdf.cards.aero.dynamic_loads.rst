@@ -3,7 +3,7 @@
 
 .. inheritance-diagram:: pyNastran.bdf.cards.aero.dynamic_loads
 
-.. automodule:: pyNastran.bdf.cards.dynamic_loads
+.. automodule:: pyNastran.bdf.cards.aero.dynamic_loads
     :members:
     :private-members:
     :undoc-members:

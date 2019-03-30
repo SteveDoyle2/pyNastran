@@ -41,16 +41,6 @@ oug Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`oug_objects` Module
--------------------------
-
-.. inheritance-diagram:: pyNastran.op2.tables.oug.oug_objects
-
-.. automodule:: pyNastran.op2.tables.oug.oug_objects
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`oug_temperatures` Module
 ------------------------------
 
@@ -70,4 +60,3 @@ oug Package
     :members:
     :undoc-members:
     :show-inheritance:
-

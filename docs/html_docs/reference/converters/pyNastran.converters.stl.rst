@@ -62,4 +62,3 @@ stl Package
     :members:
     :undoc-members:
     :show-inheritance:
-

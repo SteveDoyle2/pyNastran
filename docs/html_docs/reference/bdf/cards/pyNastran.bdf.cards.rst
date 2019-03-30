@@ -228,7 +228,20 @@ elements Package
 ----------------
 .. toctree::
 
-   elements/pyNastran.bdf.cards.elements
+   elements/pyNastran.bdf.cards.elements.axisymmetric_shells
+   elements/pyNastran.bdf.cards.elements.bars
+   elements/pyNastran.bdf.cards.elements.beam
+   elements/pyNastran.bdf.cards.elements.beam_connectivity
+   elements/pyNastran.bdf.cards.elements.beam_line_connectivity
+   elements/pyNastran.bdf.cards.elements.bush
+   elements/pyNastran.bdf.cards.elements.damper
+   elements/pyNastran.bdf.cards.elements.elements
+   elements/pyNastran.bdf.cards.elements.mass
+   elements/pyNastran.bdf.cards.elements.rigid
+   elements/pyNastran.bdf.cards.elements.rods
+   elements/pyNastran.bdf.cards.elements.shell
+   elements/pyNastran.bdf.cards.elements.solid
+   elements/pyNastran.bdf.cards.elements.springs
 
 properties Package
 ------------------
