@@ -24,12 +24,12 @@ from pyNastran.gui.qt_files.mouse_actions import create_highlighted_actor
 from pyNastran.gui.styles.highlight_style import (
     create_vtk_selection_node_by_cell_ids,
     #create_vtk_selection_node_by_point_ids,
-    extract_selection_node_from_grid_to_ugrid,
     #create_surface_actor_from_grid_and_cell_ids,
 )
 from pyNastran.gui.utils.vtk.vtk_utils import (
-    create_unstructured_point_grid, numpy_to_vtk_points)
-from pyNastran.gui.utils.vtk.gui_utils import add_actors, remove_actors
+    extract_selection_node_from_grid_to_ugrid,
+    create_unstructured_point_grid, numpy_to_vtk_points, )
+from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui, remove_actors_from_gui
 
 
 class HighlightWindow(PyDialog):
@@ -283,7 +283,7 @@ class HighlightWindow(PyDialog):
                 all_elements=self.elements, elements=elements_filtered)
 
             if actors:
-                add_actors(gui, actors, render=True)
+                add_actors_to_gui(gui, actors, render=True)
                 self.actors = actors
         return passed
 
@@ -291,7 +291,7 @@ class HighlightWindow(PyDialog):
         """removes multiple vtk actors"""
         gui = self.parent()
         if gui is not None:
-            remove_actors(gui, self.actors, render=True)
+            remove_actors_from_gui(gui, self.actors, render=True)
         self.actors = []
 
     def on_close(self):
@@ -326,7 +326,7 @@ def create_highlighted_actors(gui, grid,
         points2 = numpy_to_vtk_points(point_array2)
 
         ugrid = create_unstructured_point_grid(points2, nnodes)
-        actor = create_highlighted_actor(gui, ugrid, representation='points', add_actor=False)
+        actor = create_highlighted_actor(gui, ugrid, representation='points', add_actor=add_actors)
         actors.append(actor)
 
     if nelements:

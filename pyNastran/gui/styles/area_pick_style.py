@@ -19,7 +19,7 @@ import vtk
 from vtk.util.numpy_support import vtk_to_numpy
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_unstructured_point_grid, numpy_to_vtk_points)
-
+from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui
 
 #class AreaPickStyle(vtk.vtkInteractorStyleRubberBandPick):
     #"""Custom Rubber Band Picker"""
@@ -116,7 +116,6 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         area_picker.AreaPick(xmin, ymin, xmax, ymax, self.parent.rend)
         #area_picker.Pick()
 
-
     def _pick_depth_ids(self, xmin, ymin, xmax, ymax):
         """
         Does an area pick of all the ids inside the box, even the ones
@@ -126,37 +125,14 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         #area_picker.Pick()  # double pick?
 
         area_picker.AreaPick(xmin, ymin, xmax, ymax, self.parent.rend)
-        frustum = area_picker.GetFrustum() # vtkPlanes
 
-        grid = self.parent.get_grid(self.name)
-
-        #extract_ids = vtk.vtkExtractSelectedIds()
-        #extract_ids.AddInputData(grid)
-
-        ids = get_ids_filter(
-            grid, idsname='Ids',
-            is_nids=self.is_nids, is_eids=self.is_eids)
-        ugrid, ugrid_flipped = grid_ids_frustum_to_ugrid_ugrid_flipped(
-            grid, ids, frustum)
-
-        eids = None
-        if self.is_eids:
-            cells = ugrid.GetCellData()
-            if cells is not None:
-                ids = cells.GetArray('Ids')
-                if ids is not None:
-                    cell_ids = vtk_to_numpy(ids)
-                    assert len(cell_ids) == len(np.unique(cell_ids))
-                    eids = self.parent.get_element_ids(self.name, cell_ids)
-
-        nids = None
-        if self.is_nids:
-            ugrid_points, nids = self.get_inside_point_ids(ugrid, ugrid_flipped)
-            ugrid = ugrid_points
-
-        actor = self.parent.create_highlighted_actor(
-            ugrid, representation=self.representation, add_actor=True)
-        self.actor = actor
+        gui = self.parent
+        actors, eids, nids = get_actors_by_area_picker(
+            gui, area_picker, self.name,
+            is_nids=self.is_nids, is_eids=self.is_eids,
+            representation='points', add_actors=False)
+        self.actor = actors[0]
+        add_actors(gui, actors, render=False)
 
         if self.callback is not None:
             self.callback(eids, nids, self.name)
@@ -175,75 +151,132 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
         self.parent.vtk_interactor.RemoveObserver(self.cleanup_observer)
         cleanup_observer = None
 
-    def get_inside_point_ids(self, ugrid, ugrid_flipped):
-        """
-        The points that are returned from the frustum, despite being
-        defined as inside are not all inside.  The cells are correct
-        though.  If you determine the cells outside the volume and the
-        points associated with that, and boolean the two, you can find
-        the points that are actually inside.
-
-        In other words, ``points`` corresponds to the points inside the
-        volume and barely outside.  ``point_ids_flipped`` corresponds to
-        the points entirely outside the volume.
-
-        Parameters
-        ==========
-        ugrid : vtk.vtkUnstructuredGrid()
-            the "inside" grid
-        ugrid_flipped : vtk.vtkUnstructuredGrid()
-            the outside grid
-
-        Returns
-        =======
-        ugrid : vtk.vtkUnstructuredGrid()
-            an updated grid that has the correct points
-        nids : (n, ) int ndarray
-            the node_ids
-        """
-        nids = None
-        points = ugrid.GetPointData()
-        if points is None:
-            return ugrid, nids
-
-        ids = points.GetArray('Ids')
-        if ids is None:
-            return  ugrid, nids
-
-        # all points associated with the correctly selected cells are returned
-        # but we get extra points for the cells that are inside and out
-        point_ids = vtk_to_numpy(ids)
-        nids = self.parent.get_node_ids(self.name, point_ids)
-
-        # these are the points outside the box/frustum (and also include the bad point)
-        points_flipped = ugrid_flipped.GetPointData()
-        ids_flipped = points_flipped.GetArray('Ids')
-        point_ids_flipped = vtk_to_numpy(ids_flipped)
-        nids_flipped = self.parent.get_node_ids(self.name, point_ids_flipped)
-        #nids = self.parent.gui.get_reverse_node_ids(self.name, point_ids_flipped)
-
-        # setA - setB
-        nids2 = np.setdiff1d(nids, nids_flipped, assume_unique=True)
-
-        #narrays = points.GetNumberOfArrays()
-        #for iarray in range(narrays):
-            #name = points.GetArrayName(iarray)
-            #print('iarray=%s name=%r' % (iarray, name))
-
-        #------------------
-        if self.representation == 'points':
-            # we need to filter the nodes that were filtered by the
-            # numpy setdiff1d, so we don't show extra points
-            ugrid = create_filtered_point_ugrid(ugrid, nids, nids2)
-
-        nids = nids2
-        return ugrid, nids
-
     def right_button_press_event(self, obj, event):
         """cancels the button"""
         self.area_pick_button.setChecked(False)
         self.parent.setup_mouse_buttons(mode='default')
         self.parent.vtk_interactor.Render()
+
+
+
+def get_actors_by_area_picker(gui, area_picker, model_name, is_nids=True, is_eids=True,
+                              representation='points', add_actors=False):
+    """doesn't handle multiple actors yet..."""
+    frustum = area_picker.GetFrustum() # vtkPlanes
+
+    ugrid, eids, nids = get_depth_ids(
+        gui, frustum, model_name=model_name,
+        is_nids=is_nids, is_eids=is_eids,
+        representation=representation)
+
+    actor = gui.create_highlighted_actor(
+        ugrid, representation=representation, add_actor=add_actors)
+    actors = [actor]
+    return actors, eids, nids
+
+
+def get_depth_ids(gui, frustum, model_name='main',
+                  is_nids=True, is_eids=True, representation='points'):
+    """
+    Picks the nodes and/or elements.  Only one grid (e.g., the elements)
+    is currently returned.
+    """
+    grid = gui.get_grid(model_name)
+
+    #extract_ids = vtk.vtkExtractSelectedIds()
+    #extract_ids.AddInputData(grid)
+
+    ids = get_ids_filter(
+        grid, idsname='Ids',
+        is_nids=is_nids, is_eids=is_eids)
+    ugrid, ugrid_flipped = grid_ids_frustum_to_ugrid_ugrid_flipped(
+        grid, ids, frustum)
+
+    eids = None
+    if is_eids:
+        cells = ugrid.GetCellData()
+        if cells is not None:
+            ids = cells.GetArray('Ids')
+            if ids is not None:
+                cell_ids = vtk_to_numpy(ids)
+                assert len(cell_ids) == len(np.unique(cell_ids))
+                eids = gui.get_element_ids(model_name, cell_ids)
+
+    nids = None
+    if is_nids:
+        ugrid_points, nids = get_inside_point_ids(
+            gui, ugrid, ugrid_flipped, model_name,
+            representation=representation)
+        ugrid = ugrid_points
+
+    return ugrid, eids, nids
+
+
+def get_inside_point_ids(gui, ugrid, ugrid_flipped, model_name,
+                         representation='points'):
+    """
+    The points that are returned from the frustum, despite being
+    defined as inside are not all inside.  The cells are correct
+    though.  If you determine the cells outside the volume and the
+    points associated with that, and boolean the two, you can find
+    the points that are actually inside.
+
+    In other words, ``points`` corresponds to the points inside the
+    volume and barely outside.  ``point_ids_flipped`` corresponds to
+    the points entirely outside the volume.
+
+    Parameters
+    ==========
+    ugrid : vtk.vtkUnstructuredGrid()
+        the "inside" grid
+    ugrid_flipped : vtk.vtkUnstructuredGrid()
+        the outside grid
+
+    Returns
+    =======
+    ugrid : vtk.vtkUnstructuredGrid()
+        an updated grid that has the correct points
+    nids : (n, ) int ndarray
+        the node_ids
+
+    """
+    nids = None
+    points = ugrid.GetPointData()
+    if points is None:
+        return ugrid, nids
+
+    ids = points.GetArray('Ids')
+    if ids is None:
+        return  ugrid, nids
+
+    # all points associated with the correctly selected cells are returned
+    # but we get extra points for the cells that are inside and out
+    point_ids = vtk_to_numpy(ids)
+    nids = gui.get_node_ids(model_name, point_ids)
+
+    # these are the points outside the box/frustum (and also include the bad point)
+    points_flipped = ugrid_flipped.GetPointData()
+    ids_flipped = points_flipped.GetArray('Ids')
+    point_ids_flipped = vtk_to_numpy(ids_flipped)
+    nids_flipped = gui.get_node_ids(model_name, point_ids_flipped)
+    #nids = gui.gui.get_reverse_node_ids(model_name, point_ids_flipped)
+
+    # setA - setB
+    nids2 = np.setdiff1d(nids, nids_flipped, assume_unique=True)
+
+    #narrays = points.GetNumberOfArrays()
+    #for iarray in range(narrays):
+        #name = points.GetArrayName(iarray)
+        #print('iarray=%s name=%r' % (iarray, name))
+
+    #------------------
+    if representation == 'points':
+        # we need to filter the nodes that were filtered by the
+        # numpy setdiff1d, so we don't show extra points
+        ugrid = create_filtered_point_ugrid(ugrid, nids, nids2)
+
+    nids = nids2
+    return ugrid, nids
 
 
 def get_ids_filter(grid, idsname='Ids', is_nids=True, is_eids=True):

@@ -18,8 +18,11 @@ import vtk
 #from vtk.util.numpy_support import vtk_to_numpy
 #from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.gui.utils.vtk.vtk_utils import find_point_id_closest_to_xyz
-
+from pyNastran.gui.utils.vtk.vtk_utils import (
+    extract_selection_node_from_grid_to_ugrid,
+    find_point_id_closest_to_xyz,
+    create_vtk_selection_node_by_point_ids,
+    create_vtk_selection_node_by_cell_ids)
 
 #vtkInteractorStyleRubberBandPick # sucks?
 #class AreaPickStyle(vtk.vtkInteractorStyleDrawPolygon):  # not sure how to use this one...
@@ -142,59 +145,3 @@ def map_cell_point_to_model(gui, cell_ids, point_ids, model_name=None):
         point_array = np.asarray(point_ids, dtype='int32')
         nids = gui.get_node_ids(model_name, point_array)
     return eids, nids
-
-
-def create_vtk_selection_node_by_cell_ids(cell_ids):
-    if isinstance(cell_ids, integer_types):
-        cell_ids = [cell_ids]
-    else:
-        for cell_id in cell_ids:
-            assert isinstance(cell_id, integer_types), type(cell_id)
-
-    ids = vtk.vtkIdTypeArray()
-    ids.SetNumberOfComponents(1)
-    for cell_id in cell_ids:
-        ids.InsertNextValue(cell_id)
-
-    selection_node = vtk.vtkSelectionNode()
-    selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-    selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
-    selection_node.SetSelectionList(ids)
-    return selection_node
-
-def create_vtk_selection_node_by_point_ids(point_ids):
-    if isinstance(point_ids, integer_types):
-        point_ids = [point_ids]
-    else:
-        for point_id in point_ids:
-            assert isinstance(point_id, integer_types), type(point_id)
-
-    ids = vtk.vtkIdTypeArray()
-    ids.SetNumberOfComponents(1)
-    for point_id in point_ids:
-        ids.InsertNextValue(point_id)
-
-    selection_node = vtk.vtkSelectionNode()
-    #selection_node.SetContainingCellsOn()
-    #selection_node.Initialize()
-    selection_node.SetFieldType(vtk.vtkSelectionNode.POINT)
-    selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
-    selection_node.SetSelectionList(ids)
-    return selection_node
-
-def extract_selection_node_from_grid_to_ugrid(grid, selection_node):
-    """
-    Creates a sub-UGRID from a UGRID and a vtkSelectionNode.  In other
-    words, we use a selection criteria (a definition of a subset of
-    points or cells) and we create a reduced model.
-    """
-    selection = vtk.vtkSelection()
-    selection.AddNode(selection_node)
-
-    extract_selection = vtk.vtkExtractSelection()
-    extract_selection.SetInputData(0, grid)
-    extract_selection.SetInputData(1, selection)
-    extract_selection.Update()
-
-    ugrid = extract_selection.GetOutput()
-    return ugrid

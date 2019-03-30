@@ -11,7 +11,9 @@ from pyNastran.gui.styles.zoom_style import ZoomStyle
 #from pyNastran.gui.styles.probe_style import ProbeResultStyle
 from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
-from pyNastran.gui.utils.vtk.vtk_utils import find_point_id_closest_to_xyz
+from pyNastran.gui.utils.vtk.vtk_utils import (
+        find_point_id_closest_to_xyz, create_vtk_selection_node_by_cell_ids)
+
 
 class MouseActions(object):
     def __init__(self, gui):
@@ -481,17 +483,7 @@ class MouseActions(object):
 
     def _highlight_picker_cell(self, cell_ids, grid):
         """won't handle multiple cell_ids/node_xyz"""
-        if isinstance(cell_ids, integer_types):
-            cell_ids = [cell_ids]
-        ids = vtk.vtkIdTypeArray()
-        ids.SetNumberOfComponents(1)
-        for cell_id in cell_ids:
-            ids.InsertNextValue(cell_id)
-
-        selection_node = vtk.vtkSelectionNode()
-        selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-        selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
-        selection_node.SetSelectionList(ids)
+        selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
         actor = self._highlight_picker_by_selection_node(
             grid, selection_node, representation='surface')
         return actor
@@ -507,7 +499,8 @@ class MouseActions(object):
         extract_selection.Update()
 
         ugrid = extract_selection.GetOutput()
-        actor = self.create_highlighted_actor(ugrid, representation=representation, add_actor=add_actor)
+        actor = self.create_highlighted_actor(
+            ugrid, representation=representation, add_actor=add_actor)
         return actor
 
         #-----------------------------------------------

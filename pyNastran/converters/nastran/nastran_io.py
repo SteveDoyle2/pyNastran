@@ -781,6 +781,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #load_geom = True
         if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
+            # if we're running test_pynastrangui or we have the --test flag on the command line
+            # this has (technically) nothing to do with if we're running the tests or not
             if IS_TESTING or self.gui.is_testing_flag:
                 try:
                     self.load_nastran_geometry_vectorized(bdf_filename, plot=plot)

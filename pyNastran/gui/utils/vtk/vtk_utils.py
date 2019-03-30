@@ -2,6 +2,7 @@
 defines:
  - create_vtk_cells_of_constant_element_type(grid, elements, etype)
 """
+from six import integer_types
 import numpy as np
 import vtk
 from pyNastran.gui.utils.vtk.base_utils import (
@@ -172,6 +173,56 @@ def create_unstructured_point_grid(points, npoints):
     ugrid.SetPoints(points)
     ugrid.Modified()
     return ugrid
+
+
+def extract_selection_node_from_grid_to_ugrid(grid, selection_node):
+    """
+    Creates a sub-UGRID from a UGRID and a vtkSelectionNode.  In other
+    words, we use a selection criteria (a definition of a subset of
+    points or cells) and we create a reduced model.
+    """
+    selection = vtk.vtkSelection()
+    selection.AddNode(selection_node)
+
+    extract_selection = vtk.vtkExtractSelection()
+    extract_selection.SetInputData(0, grid)
+    extract_selection.SetInputData(1, selection)
+    extract_selection.Update()
+
+    ugrid = extract_selection.GetOutput()
+    return ugrid
+
+
+def create_vtk_selection_node_by_point_ids(point_ids):
+    id_type_array = _convert_ids_to_vtk_idtypearray(point_ids)
+    selection_node = vtk.vtkSelectionNode()
+    #selection_node.SetContainingCellsOn()
+    #selection_node.Initialize()
+    selection_node.SetFieldType(vtk.vtkSelectionNode.POINT)
+    selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+    selection_node.SetSelectionList(id_type_array)
+    return selection_node
+
+def create_vtk_selection_node_by_cell_ids(cell_ids):
+    id_type_array = _convert_ids_to_vtk_idtypearray(cell_ids)
+    selection_node = vtk.vtkSelectionNode()
+    selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+    selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+    selection_node.SetSelectionList(id_type_array)
+    return selection_node
+
+def _convert_ids_to_vtk_idtypearray(ids):
+    if isinstance(ids, integer_types):
+        ids = [ids]
+    #else:
+        #for idi in ids:
+            #assert isinstance(idi, integer_types), type(idi)
+
+    id_type_array = vtk.vtkIdTypeArray()
+    id_type_array.SetNumberOfComponents(1)
+    for idi in ids:
+        id_type_array.InsertNextValue(idi)
+    return id_type_array
 
 def find_point_id_closest_to_xyz(grid, cell_id, node_xyz):
     cell = grid.GetCell(cell_id)

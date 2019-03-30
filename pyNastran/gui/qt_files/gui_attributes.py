@@ -34,7 +34,7 @@ from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_objec
     EditGeometryPropertiesObject)
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
 
-from pyNastran.gui.utils.vtk.gui_utils import remove_actors
+from pyNastran.gui.utils.vtk.gui_utils import remove_actors_from_gui
 from pyNastran.gui.utils.vtk.vtk_utils import (
     numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
 
@@ -676,7 +676,7 @@ class GuiAttributes(object):
             return
 
         actors = self.label_actors[icase]
-        remove_actors(self, actors, render=True)
+        remove_actors_from_gui(self, actors, render=True)
         self.label_actors[icase] = []
         self.label_ids[icase] = set([])
 

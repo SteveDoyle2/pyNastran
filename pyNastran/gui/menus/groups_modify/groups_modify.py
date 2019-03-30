@@ -19,10 +19,10 @@ from pyNastran.gui.utils.qt.qelement_edit import QElementEdit
 
 from pyNastran.gui.menus.groups_modify.groups import Group, _get_collapsed_text
 #from .groups_modify.color_display import ColorDisplay
-from pyNastran.gui.utils.vtk.gui_utils import add_actors, remove_actors
+from pyNastran.gui.utils.vtk.gui_utils import add_actors_to_gui, remove_actors_from_gui
 from pyNastran.gui.menus.highlight.highlight import create_highlighted_actors
 
-import pyNastran
+#import pyNastran
 from pyNastran.gui import ICON_PATH
 
 
@@ -364,7 +364,7 @@ class GroupsModify(PyDialog):
     def remove_highlight_actor(self):
         """removes the highlighted actor"""
         gui = self.win_parent
-        remove_actors(gui, self.actors, render=True)
+        remove_actors_from_gui(gui, self.actors, render=True)
         self.actors = []
 
     def on_highlight(self, nids=None, eids=None):
@@ -385,7 +385,7 @@ class GroupsModify(PyDialog):
                                                all_elements=all_elements, elements=eids,
                                                add_actors=False)
             if actors:
-                add_actors(gui, actors, render=True)
+                add_actors_to_gui(gui, actors, render=True)
                 self.actors = actors
 
     def on_highlight_elements(self):
