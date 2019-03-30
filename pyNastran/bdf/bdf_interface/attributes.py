@@ -883,6 +883,7 @@ class BDFAttributes(object):
 
     @property
     def type_slot_str(self):
+        """helper method for printing supported cards"""
         html_msg = ['| Card Group | Cards |']
         for card_group, card_types in sorted(self._slot_to_type_map.items()):
             html_msg.append('| %s | %s |' % (card_group, ', '.join(card_types)))

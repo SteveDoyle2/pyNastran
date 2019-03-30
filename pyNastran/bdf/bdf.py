@@ -4264,7 +4264,7 @@ class BDF(BDF_):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
-    _properties = ['is_bdf_vectorized', 'nid_map', 'wtmass']
+    _properties = ['is_bdf_vectorized', 'nid_map', 'wtmass', 'type_slot_str']
     def __init__(self, debug=True, log=None, mode='msc'):
         # type: (Optional[bool], SimpleLogger, str) -> None
         """
