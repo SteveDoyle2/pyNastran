@@ -500,8 +500,8 @@ class GuiQtCommon(GuiAttributes):
             ]
         elif location == 'centroid':
             xyzs = [
-                self.cell_centroid(imin),
-                self.cell_centroid(imax),
+                self.cell_centroid_grid(self.grid, imin),
+                self.cell_centroid_grid(self.grid, imax),
             ]
         else:  # pragma: no cover
             raise NotImplementedError(location)

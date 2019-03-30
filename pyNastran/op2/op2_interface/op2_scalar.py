@@ -54,7 +54,7 @@ from numpy import array
 import numpy as np
 from cpylog import get_logger
 
-from pyNastran import is_release
+from pyNastran import is_release, __version__
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 from pyNastran.op2.op2_interface.op2_reader import OP2Reader
@@ -580,6 +580,31 @@ AUTODESK_MATRIX_TABLES = [
 RESULT_TABLES = NX_RESULT_TABLES + MSC_RESULT_TABLES
 MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + [b'MEFF',]
 
+# TODO: these are weird...
+#   RPOSTS1, MAXRATI, RESCOMP, PDRMSG
+INT_PARAMS_1 = [
+    b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
+    b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
+    b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
+    b'OUNIT2K', b'OUNIT2M', b'RESCOMP', b'PDRMSG', b'LMODES', b'USETPRT',
+    b'NOCOMPS', b'OPTEXIT', b'RSOPT']
+FLOAT_PARAMS_1 = [
+    b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
+    b'SIGMA', b'TABS', b'EPPRT', b'AUNITS']
+STR_PARAMS_1 = [
+    b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
+    b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
+    b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
+    b'CDIF', b'SUPAERO', b'RSCON',
+
+    # part of param, checkout
+    b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',
+    b'PRTGPL', b'PRTGPTT', b'PRTMGG', b'PRTPG',
+
+    # TODO: remove these as they're in the matrix test and are user
+    #       defined PARAMs
+    # TODO: add an option for custom PARAMs
+    b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', ]
 
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
@@ -1273,7 +1298,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             ndata2 = self._read_pvto_4_helper(data, ndata)
         except Exception as e:
             self.log.error(str(e))
-            raise  # only for testing
+            if 'dev' in __version__:
+                raise  # only for testing
             self.f.seek(iloc)
             ndata2 = ndata
         return ndata2
@@ -1290,31 +1316,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         struct2f = Struct(b'ff')
         i = 0
 
-        # TODO: these are weird...
-        #   RPOSTS1, MAXRATI, RESCOMP, PDRMSG
-        int_words_1 = [
-            b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
-            b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
-            b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
-            b'OUNIT2K', b'OUNIT2M', b'RESCOMP', b'PDRMSG', b'LMODES', b'USETPRT',
-            b'NOCOMPS', b'OPTEXIT', b'RSOPT']
-        float_words_1 = [
-            b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
-            b'SIGMA', b'TABS', b'EPPRT', b'AUNITS']
-        str_words_1 = [
-            b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
-            b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
-            b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
-            b'CDIF', b'SUPAERO', b'RSCON',
-
-            # part of param, checkout
-            b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',
-            b'PRTGPL', b'PRTGPTT', b'PRTMGG', b'PRTPG',
-
-            # TODO: remove these as they're in the matrix test and are user
-            #       defined PARAMs
-            # TODO: add an option for custom PARAMs
-            b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', ]
         #print('---------------------------')
         while i < nvalues:
             #print('*i=%s nvalues=%s' % (i, nvalues))
@@ -1322,17 +1323,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #print('word=%r' % word)
             #word = s8.unpack(word)[0]#.decode(self._encoding)
 
-            if word in int_words_1:
+            if word in INT_PARAMS_1:
                 slot = data[(i+2)*4:(i+4)*4]
                 value = struct2i.unpack(slot)[1]
                 i += 4
                 #print(word, value)
-            elif word in float_words_1:
+            elif word in FLOAT_PARAMS_1:
                 slot = data[(i+2)*4:(i+4)*4]
                 value = struct2f.unpack(slot)[1]
                 #print(word, value)
                 i += 4
-            elif word in str_words_1:
+            elif word in STR_PARAMS_1:
                 #print('--------')
                 #self.show_data(data[i*4:])
                 i += 3

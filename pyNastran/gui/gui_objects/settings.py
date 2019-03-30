@@ -261,6 +261,8 @@ class Settings(object):
             #self.parent.setGeometry(x_pos, y_pos, width, height)
         #except TypeError:
             #self.resize(1100, 700)
+        is_loaded = True
+        return is_loaded
 
     def _set_setting(self, settings, setting_keys, setting_names, default,
                      save=True, auto_type=None):
@@ -274,10 +276,11 @@ class Settings(object):
             setattr(self, set_name, value)
         return value
 
-    def save(self, settings):
+    def save(self, settings, is_testing=False):
         """saves the settings"""
-        settings.setValue('main_window_geometry', self.parent.saveGeometry())
-        settings.setValue('mainWindowState', self.parent.saveState())
+        if not is_testing:
+            settings.setValue('main_window_geometry', self.parent.saveGeometry())
+            settings.setValue('mainWindowState', self.parent.saveState())
 
         # rgb tuple
         settings.setValue('use_gradient_background', self.use_gradient_background)
@@ -317,14 +320,15 @@ class Settings(object):
 
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()
-        main_window = self.parent.window()
-        width = main_window.frameGeometry().width()
-        height = main_window.frameGeometry().height()
-        settings.setValue('screen_shape', (width, height))
+        if not is_testing:
+            main_window = self.parent.window()
+            width = main_window.frameGeometry().width()
+            height = main_window.frameGeometry().height()
+            settings.setValue('screen_shape', (width, height))
 
-        qpos = self.parent.pos()
-        pos = qpos.x(), qpos.y()
-        settings.setValue('pos', pos)
+            qpos = self.parent.pos()
+            pos = qpos.x(), qpos.y()
+            settings.setValue('pos', pos)
 
     #---------------------------------------------------------------------------
     # FONT SIZE
@@ -454,8 +458,9 @@ class Settings(object):
         self.annotation_color = color
 
         # min/max
-        for actor in self.parent.min_max_actors:
-            prop = actor.GetProperty()
+        for min_max_actor in self.parent.min_max_actors:
+            #print(dir(min_max_actor))
+            prop = min_max_actor.GetProperty()
             prop.SetColor(*color)
 
         # case attached annotations (typical)

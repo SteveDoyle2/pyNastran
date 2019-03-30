@@ -416,9 +416,9 @@ class GuiVTKCommon(GuiQtCommon):
         #self.vtk_interactor.Render()
         self.vtk_interactor.GetRenderWindow().Render()
 
-    def cell_centroid(self, cell_id):
+    def cell_centroid_grid(self, grid, cell_id):
         """gets the cell centroid"""
-        cell = self.grid_selected.GetCell(cell_id)
+        cell = grid.GetCell(cell_id)
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
         centroid = np.zeros(3, dtype='float32')
@@ -427,6 +427,10 @@ class GuiVTKCommon(GuiQtCommon):
             centroid += point
         centroid /= nnodes
         return centroid
+
+    def cell_centroid(self, cell_id):
+        """gets the cell centroid"""
+        return cell_centroid_grid(self.grid_selected, cell_id)
 
     def build_lookup_table(self):
         """build the nominal lookup table for the scalar bar"""

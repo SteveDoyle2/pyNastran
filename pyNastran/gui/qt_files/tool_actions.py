@@ -442,7 +442,11 @@ class ToolActions(object):
             csv_filename, name, str(color)))
 
     def _add_user_geometry(self, csv_filename, name, color):
-        """helper method for ``on_load_user_geom``"""
+        """
+        helper method for ``on_load_user_geom``
+
+        A custom geometry can be the pyNastran custom form or an STL
+        """
         if name in self.gui.geometry_actors:
             msg = 'Name: %s is already in geometry_actors\nChoose a different name.' % name
             raise ValueError(msg)
@@ -453,7 +457,8 @@ class ToolActions(object):
         point_name = name + '_point'
         geom_name = name + '_geom'
 
-        grid_ids, xyz, bars, tris, quads = load_user_geom(csv_filename)
+        grid_ids, xyz, bars, tris, quads = load_user_geom(csv_filename, self.gui.log,
+                                                          encoding='latin1')
         nbars = len(bars)
         ntris = len(tris)
         nquads = len(quads)

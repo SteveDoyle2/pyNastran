@@ -571,7 +571,8 @@ class GuiAttributes(object):
             self.log_error(msg)
             return is_passed
 
-        txt = open(python_file, 'r').read()
+        with open(python_file, 'r') as python_file_obj:
+            txt = python_file_obj.read()
         is_passed = self._execute_python_code(txt, show_msg=False)
         if not is_passed:
             return is_passed

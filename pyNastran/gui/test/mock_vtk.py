@@ -189,6 +189,12 @@ class vtkRenderer(object):
         pass
     def Render(self):
         pass
+    def SetBackground(self, a, b, c):
+        pass
+    def SetBackground2(self, a, b, c):
+        pass
+    def SetGradientBackground(self, a):
+        pass
 
 class vtkLODActor(object):
     def __init__(self):

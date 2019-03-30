@@ -22,10 +22,42 @@ class NastranGUI(NastranIO, FakeGUIMethods):
         self.build_fmts(['nastran'], stop_on_failure=True)
 
 PKG_PATH = pyNastran.__path__[0]
+STL_PATH = os.path.join(PKG_PATH, 'converters', 'stl')
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 
 class TestNastranGUI(unittest.TestCase):
+
+    def test_settings(self):
+        from qtpy import QtCore
+        settings = QtCore.QSettings()
+        test = NastranGUI()
+        is_loaded = test.settings.load(settings)
+        assert is_loaded is True
+        test.settings.save(settings, is_testing=True)
+        is_loaded = test.settings.load(settings)
+        assert is_loaded is True
+
+        RED = (1., 0., 0.)
+        test.settings.set_annotation_size_color(size=10, color=None)
+        test.settings.set_annotation_size_color(size=10, color=RED)
+
+        test.settings.set_coord_scale(2.0, render=True)
+        test.settings.set_coord_text_scale(10, render=True)
+
+        test.settings.update_coord_scale(coord_scale=None, render=True)
+        test.settings.set_background_color_to_white(render=True)
+
+        color = RED
+        opacity = 0.4
+        test.settings.set_background_color(color, render=True)
+        test.settings.set_background_color2(color, render=True)
+        test.settings.set_highlight_color(color)
+        test.settings.set_highlight_opacity(opacity)
+        test.settings.set_text_color(color, render=True)
+        test.settings.set_text_size(10)
+        test.settings.set_magnify(magnify=4)
+        #self.settings.s
 
     def test_solid_shell_bar_obj(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')
@@ -533,6 +565,9 @@ class TestNastranGUI(unittest.TestCase):
 
         csv_filename = os.path.join(MODEL_PATH, 'custom_geom.csv')
         test.on_load_user_geom(csv_filename=csv_filename, name=None, color=None)
+
+        stl_filename = os.path.join(STL_PATH, 'sphere.stl')
+        test.on_load_user_geom(csv_filename=stl_filename, name=None, color=None)
         test.clear_labels()
         test.reset_labels()
 
@@ -613,6 +648,15 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t1.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        str(test.geometry_properties)
+
+        T1z = deepcopy(test.geometry_properties['T1_z'])
+        T1z.line_width = 4
+        T1z.color = (255, 0, 0)
+        T1z.opacity = 0.6
+        T1z.bar_scale = 0.20
+        test.edit_geometry_properties_obj.on_update_geometry_properties({'T1_z' : T1z}, name=None, write_log=True)
+        test.edit_geometry_properties_obj.on_update_geometry_properties({'T1_z' : T1z}, name='T1_z', write_log=True)
 
     def test_gui_bar_t2(self):
         """tests a PBARL/T2"""

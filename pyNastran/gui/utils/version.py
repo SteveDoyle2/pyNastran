@@ -28,7 +28,7 @@ def check_for_newer_version():
         # import urllib2
         # data = urllib.request.urlopen(target_url)
         data = urllib.request.urlopen(target_url)
-    except: #  urllib2.URLError
+    except (urllib2.HTTPError, urllib2.URLError):
         #print(help(urllib))
         #raise
         return None, None, False

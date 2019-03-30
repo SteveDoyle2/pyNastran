@@ -131,7 +131,7 @@ def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
         vector_size = 1
     elif dimension == 2:
         vector_size = datai.shape[1]
-    else:
+    else:  # pramga: no cover
         raise RuntimeError('dimension=%s' % (dimension))
 
     if vector_size == 1:
@@ -169,9 +169,9 @@ def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
                 nlabels=None, labelsize=None, ncolors=None,
                 colormap=colormap,
                 set_max_min=True)
-        else:
+        else:  # pramga: no cover
             raise RuntimeError('is_deflection=%s is_force=%s' % (is_deflection, is_force))
-    else:
+    else:  # pramga: no cover
         raise RuntimeError('vector_size=%s' % (vector_size))
     return res_obj, title
 
@@ -355,7 +355,7 @@ def _load_format_header(file_obj, ext, force_float=False):
     }
     return names, fmt_dict, dtype, delimiter
 
-def load_user_geom(fname, encoding='latin1'):
+def load_user_geom(fname, log=None, encoding='latin1'):
     """
     Loads a file of the form:
 
@@ -394,7 +394,7 @@ def load_user_geom(fname, encoding='latin1'):
     """
     if fname.lower().endswith('.stl'):
         stl_filename = fname
-        stl = read_stl(stl_filename)
+        stl = read_stl(stl_filename, log=log)
         nnodes = stl.nodes.shape[0]
         ntris = stl.elements.shape[0]
         grid_ids = np.arange(1, nnodes+1, dtype='int32')

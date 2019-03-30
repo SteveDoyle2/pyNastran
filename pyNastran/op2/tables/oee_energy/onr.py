@@ -690,21 +690,21 @@ class ONR(OP2Common):
                     obj.add_sort1(dt, word, energy, percent, density)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 4:
-            """
-                  FREQUENCY =  1.000000E+01
-                                           E L E M E N T   S T R A I N   E N E R G I E S   ( A V E R A G E )
-
-                            ELEMENT-TYPE = QUADR               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   3.662188E+06
-                            SUBCASE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET       9 =   1.853189E+05
-            0
-                                                ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY
-                                                         9          8.723258E+03                 0.2382              5.815505E+00
-                                                        10          7.815898E+03                 0.2134              5.210599E+00
-                                                        11          8.512115E+04                 2.3243              5.674743E+01
-                                                        12          5.200864E+04                 1.4202              3.467243E+01
-
-                                    TYPE = QUADR    SUBTOTAL        1.536690E+05                 4.1961
-            """
+            #
+            #  FREQUENCY =  1.000000E+01
+            #                           E L E M E N T   S T R A I N   E N E R G I E S   ( A V E R A G E )
+            #
+            #            ELEMENT-TYPE = QUADR               * TOTAL ENERGY OF ALL ELEMENTS IN PROBLEM     =   3.662188E+06
+            #            SUBCASE               1            * TOTAL ENERGY OF ALL ELEMENTS IN SET       9 =   1.853189E+05
+            #
+            #                                ELEMENT-ID          STRAIN-ENERGY           PERCENT OF TOTAL    STRAIN-ENERGY-DENSITY
+            #                                         9          8.723258E+03                 0.2382              5.815505E+00
+            #                                        10          7.815898E+03                 0.2134              5.210599E+00
+            #                                        11          8.512115E+04                 2.3243              5.674743E+01
+            #                                        12          5.200864E+04                 1.4202              3.467243E+01
+            #
+            #                    TYPE = QUADR    SUBTOTAL        1.536690E+05                 4.1961
+            #
             #device_code   = 1   Print
             #analysis_code = 5   Frequency
             #table_code    = 18  ONRGY1-OEE - Element strain energy
