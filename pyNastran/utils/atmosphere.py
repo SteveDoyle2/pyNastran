@@ -21,6 +21,7 @@ Contains the following atmospheric functions:
 
 All the default units are in English units because the source equations
 are in English units.
+
 """
 from __future__ import print_function, absolute_import
 import sys
@@ -50,6 +51,7 @@ def get_alt_for_density(density, density_units='slug/ft^3', alt_units='ft', nmax
     -------
     alt : float
         the altitude in feet
+
     """
     tol = convert_altitude(tol, alt_units, 'ft')
     dalt = 500. # ft
@@ -99,6 +101,7 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed, mach,
     -------
     alt : float
         the altitude in alt units
+
     """
     equivalent_airspeed = convert_velocity(equivalent_airspeed, velocity_units, 'ft/s')
     tol = convert_altitude(tol, alt_units, 'ft')
@@ -161,6 +164,7 @@ def get_alt_for_q_with_constant_mach(q, mach, pressure_units='psf', alt_units='f
     -------
     alt : float
         the altitude in alt_units
+
     """
     pressure = 2 * q / (1.4 * mach ** 2) # gamma = 1.4
     alt = get_alt_for_pressure(
@@ -189,6 +193,7 @@ def get_alt_for_pressure(pressure, pressure_units='psf', alt_units='ft', nmax=20
     -------
     alt : float
         the altitude in alt_units
+
     """
     pressure = convert_pressure(pressure, pressure_units, 'psf')
     tol = convert_altitude(tol, alt_units, 'ft')
@@ -421,6 +426,7 @@ def atm_temperature(alt, alt_units='ft', temperature_units='R'):
         page ~236 - Table C.1\n
         These equations were used because they are valid to 300k ft.\n
         Extrapolation is performed above that.
+
     """
     z = alt * _altitude_factor(alt_units, 'ft')
     if z < 36151.725:
@@ -474,6 +480,7 @@ def atm_pressure(alt, alt_units='ft', pressure_units='psf'):
         page ~236 - Table C.1\n
         These equations were used b/c they are valid to 300k ft.\n
         Extrapolation is performed above that.\n
+
     """
     z = convert_altitude(alt, alt_units, 'ft')
     if z < 36151.725:
@@ -525,6 +532,7 @@ def atm_dynamic_pressure(alt, mach, alt_units='ft', pressure_units='psf'):
     \f[  \large a = \sqrt{\gamma R T}  \f]
     so...
     \f[  \large q = \frac{\gamma}{2} p M^2  \f]
+
     """
     z = alt * _altitude_factor(alt_units, 'ft')
     p = atm_pressure(z)
@@ -588,6 +596,7 @@ def atm_velocity(alt, mach, alt_units='ft', velocity_units='ft/s'):
         Returns velocity in velocity_units
 
     \f[ \large V = M a \f]
+
     """
     a = atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
     V = mach * a # units=ft/s or m/s
@@ -660,6 +669,7 @@ def atm_mach(alt, V, alt_units='ft', velocity_units='ft/s'):
         Mach Number \f$ M \f$
 
     \f[ \large M = \frac{V}{a} \f]
+
     """
     a = atm_speed_of_sound(alt, alt_units=alt_units, velocity_units=velocity_units)
     mach = V / a
@@ -688,6 +698,7 @@ def atm_density(alt, R=1716., alt_units='ft', density_units='slug/ft^3'):
 
     Based on the formula P=pRT
     \f[ \large \rho=\frac{p}{R T} \f]
+
     """
     z = convert_altitude(alt, alt_units, 'ft')
     #z = alt * _altitude_factor(alt_units, 'ft')
@@ -721,6 +732,7 @@ def atm_kinematic_viscosity_nu(alt, alt_units='ft', visc_units='ft^2/s'):
 
     .. seealso::  sutherland_viscoscity
     .. todo:: better debug
+
     """
     z = alt * _altitude_factor(alt_units, 'ft')
     rho = atm_density(z)
@@ -755,6 +767,7 @@ def atm_dynamic_viscosity_mu(alt, alt_units='ft', visc_units='(lbf*s)/ft^2'):
         dynamic viscosity  \f$ \mu_{\infty} \f$ in (lbf*s)/ft^2 or (N*s)/m^2 (SI)
 
     .. seealso::  sutherland_viscoscity
+
     """
     z = alt * _altitude_factor(alt_units, 'ft')
     T = atm_temperature(z)
@@ -795,6 +808,7 @@ def atm_unit_reynolds_number2(alt, mach, alt_units='ft', reynolds_units='1/ft'):
     .. note ::
         this version of Reynolds number directly caculates the base quantities, so multiple
         calls to atm_press and atm_temp are not made
+
     """
     z = alt * _altitude_factor(alt_units, 'ft')
     gamma = 1.4
@@ -832,6 +846,7 @@ def atm_unit_reynolds_number(alt, mach, alt_units='ft', reynolds_units='1/ft'):
 
     \f[ \large Re   = \frac{ \rho V L}{\mu} \f]
     \f[ \large Re_L = \frac{ \rho V  }{\mu} \f]
+
     """
     z = alt * _altitude_factor(alt_units, 'ft')
     rho = atm_density(z)
@@ -866,6 +881,7 @@ def sutherland_viscoscity(T):
     From Aerodynamics for Engineers 4th Edition\n
     John J. Bertin 2002\n
     page 6 eq 1.5b\n
+
     """
     if T < 225.: # Rankine
         viscosity = 8.0382436E-10 * T
@@ -898,6 +914,7 @@ def make_flfacts_alt_sweep(mach, alts, eas_limit=1000.,
         the density units; slug/ft^3, slinch/in^3, kg/m^3
     eas_units : str; default='m/s'
         the equivalent airspeed units; ft/s, m/s, in/s, knots
+
     """
     rho = np.array([atm_density(alt, R=1716., alt_units=alt_units,
                                 density_units=density_units)
@@ -936,6 +953,7 @@ def make_flfacts_mach_sweep(alt, machs, eas_limit=1000.,
         the density units; slug/ft^3, slinch/in^3, kg/m^3
     eas_units : str; default='m/s'
         the equivalent airspeed units; ft/s, m/s, in/s, knots
+
     """
     machs = np.asarray(machs)
     rho = np.ones(len(machs)) * atm_density(alt, R=1716., alt_units=alt_units,
@@ -969,6 +987,7 @@ def make_flfacts_eas_sweep(alt, eass, alt_units='m', velocity_units='m/s', densi
         the density units; slug/ft^3, slinch/in^3, kg/m^3
     eas_units : str; default='m/s'
         the equivalent airspeed units; ft/s, m/s, in/s, knots
+
     """
     # convert eas to output units
     eass = np.atleast_1d(eass) * _velocity_factor(eas_units, velocity_units)

@@ -5,55 +5,6 @@ pyNastran/op2
 This is the pyNastran.op2.rst file.
 
 
-:mod:`op2` Module
------------------
-
-.. inheritance-diagram:: pyNastran.op2.op2
-
-.. automodule:: pyNastran.op2.op2
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`fortran_format` Module
-----------------------------
-
-.. inheritance-diagram:: pyNastran.op2.fortran_format
-
-.. automodule:: pyNastran.op2.fortran_format
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`op2_geom` Module
-----------------------
-
-.. inheritance-diagram:: pyNastran.op2.op2_geom
-
-.. automodule:: pyNastran.op2.op2_geom
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`op2_helper` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.op2.op2_helper
-
-.. automodule:: pyNastran.op2.op2_helper
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`op2_results` Module
--------------------------
-
-.. automodule:: pyNastran.op2.op2_results
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
 :mod:`errors` Module
 --------------------
 
@@ -65,30 +16,33 @@ This is the pyNastran.op2.rst file.
     :show-inheritance:
 
 
-:mod:`data_in_material_coord` Module
-------------------------------------
+pyNastran/op2
+-------------
+.. toctree::
 
-.. automodule:: pyNastran.op2.data_in_material_coord
-    :members:
-    :undoc-members:
-    :show-inheritance:
+   pyNastran.op2.op2
+   pyNastran.op2.op2_geom
+   pyNastran.op2.data_in_material_coord
+   pyNastran.op2.errors
+   pyNastran.op2.export_to_vtk
+   pyNastran.op2.fortran_format
+   pyNastran.op2.op2_helper
+   pyNastran.op2.op2_results
+   pyNastran.op2.vector_utils
 
-:mod:`vector_utils` Module
---------------------------
-
-.. automodule:: pyNastran.op2.vector_utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-
-Subpackages
------------
-
+pyNastran/op2/op2_interface
+---------------------------
 .. toctree::
 
    pyNastran.op2.op2_interface
+   pyNastran.op2.op2_interface.op2_common
+   pyNastran.op2.op2_interface.op2_reader
+   pyNastran.op2.op2_interface.op2_scalar
    pyNastran.op2.result_objects
    pyNastran.op2.result_objects2
+
+pyNastran/op2/tables
+--------------------
+.. toctree::
+
    pyNastran.op2.tables

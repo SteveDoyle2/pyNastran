@@ -719,6 +719,7 @@ class RealGridPointForcesArray(GridPointForcesObject):
         Create stations from this point.
 
         .. todo:: Not Tested...Does 3b work?  Can 3a give the right answer?
+
         """
         nstations = len(stations)
         assert coord_out.type in ['CORD2R', 'CORD1R'], coord_out.type

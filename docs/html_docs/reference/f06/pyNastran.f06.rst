@@ -6,7 +6,7 @@ This is the pyNastran.f06.rst file.
 
 
 :mod:`f06_writer` Module
------------------------
+------------------------
 
 .. inheritance-diagram:: pyNastran.f06.f06_writer
 
@@ -35,9 +35,3 @@ This is the pyNastran.f06.rst file.
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-.. toctree::
-
-   pyNastran.f06.test
-

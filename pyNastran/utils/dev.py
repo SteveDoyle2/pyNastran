@@ -29,6 +29,7 @@ def get_files_of_type(dirname, extension='.txt', max_size=100., limit_file='no_d
     -------
     files : List[str]
         list of all the files with a given extension in the specified directory
+
     """
     if not os.path.exists(dirname):
         return []

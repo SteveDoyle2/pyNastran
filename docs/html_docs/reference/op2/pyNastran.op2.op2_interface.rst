@@ -11,32 +11,12 @@ op2_interface Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`op2_common` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.op2.op2_interface.op2_common
-
-.. automodule:: pyNastran.op2.op2_interface.op2_common
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 :mod:`op2_f06_common` Module
 ----------------------------
 
 .. inheritance-diagram:: pyNastran.op2.op2_interface.op2_f06_common
 
 .. automodule:: pyNastran.op2.op2_interface.op2_f06_common
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-:mod:`op2_scalar` Module
-------------------------
-
-.. inheritance-diagram:: pyNastran.op2.op2_interface.op2_scalar
-
-.. automodule:: pyNastran.op2.op2_interface.op2_scalar
     :members:
     :undoc-members:
     :show-inheritance:

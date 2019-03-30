@@ -82,7 +82,6 @@ class OP2Reader(object):
         self.h5_file = None
 
         self.op2 = op2
-        #self.minor_tables = MinorTables(self)
 
         self.mapped_tables = {
             b'GPL' : self.read_gpl,
@@ -521,6 +520,7 @@ class OP2Reader(object):
         r"""
         fails if a streaming block???:
          - nx_spike\mnf16_0.op2
+
         """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
@@ -630,6 +630,7 @@ class OP2Reader(object):
           ]
 
         T is transformation from local to basic for the coordinate system.
+
         """
         op2 = self.op2
         is_geometry = op2.is_geometry
@@ -864,6 +865,7 @@ class OP2Reader(object):
         r"""
         fails if a streaming block:
          - nx_spike\extse04c_0.op2
+
         """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
@@ -926,6 +928,7 @@ class OP2Reader(object):
         +------+----------+------+-----------------------------+
         |  4   | UNDEF(3) | None | Not used                    |
         +------+----------+------+-----------------------------+
+
         """
         op2 = self.op2
         op2.log.debug("table_name = %r" % op2.table_name)
@@ -963,6 +966,7 @@ class OP2Reader(object):
         reads the FRL (Frequency Response List) table
 
         tested by TestOP2.test_op2_good_sine_01
+
         """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
@@ -1017,6 +1021,7 @@ class OP2Reader(object):
         reads the GPL table (grid point list?)
 
         tested by TestOP2.test_beam_modes
+
         """
         if self.read_mode == 1:
             read_record = self._skip_record
@@ -1084,6 +1089,7 @@ class OP2Reader(object):
         reads the GPDT table
 
         tested by ???
+
         """
         #if self.read_mode == 1:
             #read_record = self._skip_record
@@ -1201,6 +1207,7 @@ class OP2Reader(object):
         reads the BGPDT, BGPDTS, BGPDTOLD tables
 
         tested by TestOP2Matrix.test_gpspc
+
         """
         #if self.read_mode == 1:
             #read_record = self._skip_record
@@ -1354,6 +1361,7 @@ class OP2Reader(object):
 
         read_mode = 1 (array sizing)
         read_mode = 1 (reading)
+
         """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
@@ -1410,6 +1418,7 @@ class OP2Reader(object):
         """
         Reads the PCOMPTS table (poorly).
         The PCOMPTS table stores information about the PCOMP cards???
+
         """
         self._skip_pcompts()
         return
@@ -1449,6 +1458,7 @@ class OP2Reader(object):
         """
         Reads the PCOMPTS table (poorly).
         The PCOMPTS table stores information about the PCOMP cards???
+
         """
         op2 = self.op2
         op2.log.debug("table_name = %r" % op2.table_name)
@@ -1579,6 +1589,7 @@ class OP2Reader(object):
         reads the INTMOD table
 
         tested by TestNastranGUI.test_femap_rougv1_01
+
         """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
@@ -1623,6 +1634,7 @@ class OP2Reader(object):
           - Stress
           - Strain
           - Displacement
+
         """
         op2 = self.op2
         responses = op2.responses
@@ -1877,6 +1889,7 @@ class OP2Reader(object):
         |  3   | Complex, single precision |
         |  4   | Complex, double precision |
         +------+---------------------------+
+
         """
         if tout == 1:
             nfloats = nvalues
@@ -1956,6 +1969,7 @@ class OP2Reader(object):
         |  3   | Complex, single precision |
         |  4   | Complex, double precision |
         +------+---------------------------+
+
         """
         op2 = self.op2
         allowed_forms = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 13, 15]
@@ -2168,6 +2182,7 @@ class OP2Reader(object):
         See also
         --------
         read_matrix_mat
+
         """
         unused_table_name = self._read_table_name(rewind=False, stop_on_failure=True)
         self.read_markers([-1])
@@ -2211,6 +2226,7 @@ class OP2Reader(object):
         Matrices are read on read_mode = 1
 
         .. todo:: Doesn't support checking matrices vs. MATPOOLs
+
         """
         read_mode_to_read_matrix = 1
         op2 = self.op2
@@ -2256,6 +2272,7 @@ class OP2Reader(object):
         |  6   | Symmetric       |
         |  9   | Pseudo identity |
         +------+-----------------+
+
         """
         #print('-------------------------------------')
 
@@ -2822,6 +2839,7 @@ class OP2Reader(object):
         -------
         table_name : bytes
             the table name
+
         """
         op2 = self.op2
         table_name = None
@@ -2880,8 +2898,7 @@ class OP2Reader(object):
 
         See also
         --------
-        read_3_blocks - reds 3 blocks
-        ??? - reads multi-blocks
+        read_3_blocks
 
         """
         op2 = self.op2
@@ -3184,6 +3201,7 @@ class OP2Reader(object):
         -------
         data :  since data can never be None, a None value
                 indicates something bad happened.
+
         """
         return self._skip_block_ndata()[0]
 
@@ -3501,6 +3519,7 @@ class OP2Reader(object):
             the data types to show
         endian : str; default=None -> active endian
             the data endian
+
         """
         op2 = self.op2
         assert op2.n == op2.f.tell()
@@ -3608,9 +3627,7 @@ class OP2Reader(object):
         return self._write_ndata(sys.stdout, n, types=types)
 
     def _write_ndata(self, f, n, types='ifs'):  # pragma: no cover
-        """
-        Useful function for seeing what's going on locally when debugging.
-        """
+        """Useful function for seeing what's going on locally when debugging."""
         op2 = self.op2
         nold = op2.n
         data = op2.f.read(n)
