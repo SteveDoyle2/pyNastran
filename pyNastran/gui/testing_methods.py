@@ -20,6 +20,7 @@ from pyNastran.gui.test.mock_vtk import (
     GridMapper,
     VTKInteractor, vtkRenderer,
 )
+from pyNastran.gui.menus.groups_modify.groups_modify import Group
 
 #from pyNastran.gui.test.mock_vtk_bkp import (
     #Grid,
@@ -83,7 +84,7 @@ class FakeGUIMethods(GuiVTKCommon):
                 'magnify' : 1,
                 'debug' : False,
                 'console' : True,
-                'is_groups' : False,
+                'is_groups' : True,
             }
         self.rend = vtkRenderer()
         GuiVTKCommon.__init__(self, inputs=inputs)
@@ -190,6 +191,7 @@ class FakeGUIMethods(GuiVTKCommon):
             raise RuntimeError('implement self.node_ids for this format')
         if self.element_ids is None:  # pragma: no cover
             raise RuntimeError('implement self.element_ids for this format')
+
         #assert hasattr(self, 'gui'), 'gui does not exist for this format'
         assert hasattr(self, 'isubcase_name_map'), 'isubcase_name_map does not exist for this format'
         assert isinstance(self.nnodes, integer_types), 'nnodes=%r must be an integer' % self.nnodes
@@ -207,7 +209,7 @@ class FakeGUIMethods(GuiVTKCommon):
             assert isinstance(key, integer_types), key
             obj, (i, name) = cases[key]
             value = cases[key]
-            if isinstance(value[0], int):
+            if isinstance(value[0], integer_types):
                 raise RuntimeError('old style key is being used.\n key=%s\n type=%s value=%s' % (
                     key, type(value[0]), value))
             #assert len(value) == 2, 'value=%s; len=%s' % (str(value), len(value))
@@ -266,6 +268,22 @@ class FakeGUIMethods(GuiVTKCommon):
         else:
             self.icase = -1
             self.ncases = 0
+
+        if self.is_groups:
+            #eids = np.arange(172)
+            #eids = []
+            #self.hide_elements_mask(eids)
+            elements_pound = self.element_ids[-1]
+            main_group = Group(
+                'main', '', elements_pound,
+                editable=False)
+            main_group.element_ids = self.element_ids
+            self.groups['main'] = main_group
+            self.post_group(main_group)
+            #self.show_elements_mask(np.arange(self.nelements))
+
+        for unused_module_name, module in self.modules.items():
+            module.post_load_geometry()
 
     #def cycle_results(self, icase=None, show_msg=True):
         #"""fake method"""

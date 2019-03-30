@@ -466,8 +466,38 @@ class GuiVTKCommon(GuiQtCommon):
         self.icase_fringe = None
         self.set_form(form)
 
-    #---------------------------------------------------------------------------
+    #===========================================================================
     # groups
+    # fake functions
+    def show_eids(self, eids):
+        pass
+
+    # fake functions
+    #---------------
+    # real functions
+    def find_result_by_name(self, desired_name):
+        for icase in range(self.ncases):
+            name, result = self.get_name_result_data(icase)
+            if name == desired_name:
+                return result
+        raise RuntimeError('cannot find name=%r' % desired_name)
+
+    def post_group_by_name(self, name):
+        """posts a group with a specific name"""
+        assert isinstance(name, string_types), name
+        group = self.groups[name]
+        self.post_group(group, update_groups=False)
+
+    def post_group(self, group, update_groups=False):
+        """posts a group object"""
+        name = group.name
+        if update_groups and name not in self.groups:
+            self.groups[name] = group
+        eids = group.element_ids
+        self.show_eids(eids)
+        assert isinstance(name, string_types), name
+        self.group_active = name
+
     def create_group_with_name(self, name, eids, model_name='main'):
         """
         Creates a group from the root model (model_name)

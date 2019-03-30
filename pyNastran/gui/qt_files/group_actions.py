@@ -42,16 +42,16 @@ class GroupActions(object):
                 raise
         return ngroups
 
-    def create_groups_by_property_id(self):
+    def create_groups_by_property_id(self, nlimit=500):
         """
         Creates a group for each Property ID.
 
         As this is somewhat Nastran specific, create_groups_by_visible_result exists as well.
         """
-        self._create_groups_by_name('PropertyID', 'property', nlimit=500)
+        self._create_groups_by_name('PropertyID', 'property', nlimit=nlimit)
         self.gui.log_command('create_groups_by_property_id()')
 
-    def _create_groups_by_name(self, name, prefix, nlimit=50):
+    def _create_groups_by_name(self, name, prefix, nlimit=500):
         """
         Helper method for `create_groups_by_visible_result` and `create_groups_by_property_id`
         """

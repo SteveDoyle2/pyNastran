@@ -964,21 +964,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
     #---------------------------------------------------------------------
     # groups
-    def post_group_by_name(self, name):
-        """posts a group with a specific name"""
-        assert isinstance(name, string_types), name
-        group = self.groups[name]
-        self.post_group(group, update_groups=False)
-
-    def post_group(self, group, update_groups=False):
-        """posts a group object"""
-        name = group.name
-        if update_groups and name not in self.groups:
-            self.groups[name] = group
-        eids = group.element_ids
-        self.show_eids(eids)
-        assert isinstance(name, string_types), name
-        self.group_active = name
 
     def get_all_eids(self):
         """get the list of all the element IDs"""
@@ -1017,13 +1002,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         # update for indices
         ishow = np.searchsorted(all_eids, eids)
         self.show_ids_mask(ishow)
-
-    def find_result_by_name(self, desired_name):
-        for icase in range(self.ncases):
-            name, result = self.get_name_result_data(icase)
-            if name == desired_name:
-                return result
-        raise RuntimeError('cannot find name=%r' % desired_name)
 
     def show_ids_mask(self, ids_to_show):
         """masks the specific 0-based element ids"""
