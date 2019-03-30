@@ -303,7 +303,7 @@ class HighlightWindow(PyDialog):
 
 def create_highlighted_actors(gui, grid,
                               all_nodes=None, nodes=None,
-                              all_elements=None, elements=None):
+                              all_elements=None, elements=None, add_actors=False):
     """creates nodes & element highlighted objects"""
     actors = []
     nnodes = 0
@@ -326,7 +326,7 @@ def create_highlighted_actors(gui, grid,
         points2 = numpy_to_vtk_points(point_array2)
 
         ugrid = create_unstructured_point_grid(points2, nnodes)
-        actor = create_highlighted_actor(gui, ugrid, representation='points')
+        actor = create_highlighted_actor(gui, ugrid, representation='points', add_actor=False)
         actors.append(actor)
 
     if nelements:
@@ -334,7 +334,7 @@ def create_highlighted_actors(gui, grid,
 
         selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
         ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
-        actor = create_highlighted_actor(gui, ugrid, representation='wire')
+        actor = create_highlighted_actor(gui, ugrid, representation='wire', add_actor=False)
         actors.append(actor)
     return actors
 

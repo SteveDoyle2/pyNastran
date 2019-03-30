@@ -40,7 +40,7 @@ class TestNastranGUI(unittest.TestCase):
 
         RED = (1., 0., 0.)
         test.settings.set_annotation_size_color(size=10, color=None)
-        test.settings.set_annotation_size_color(size=10, color=RED)
+        #test.settings.set_annotation_size_color(size=10, color=RED)
 
         test.settings.set_coord_scale(2.0, render=True)
         test.settings.set_coord_text_scale(10, render=True)
@@ -123,6 +123,8 @@ class TestNastranGUI(unittest.TestCase):
         test.legend_obj.set_legend_menu()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
+        assert len(test.models['main'].elements) > 0
+
         test.on_rcycle_results()
         test.on_update_legend(
             title='Title', min_value=0., max_value=1.,

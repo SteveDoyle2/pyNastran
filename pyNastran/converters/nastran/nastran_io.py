@@ -6,9 +6,12 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from collections import defaultdict, OrderedDict
 import traceback
+from itertools import chain
+from collections import defaultdict, OrderedDict
+
 from six import iteritems, StringIO, string_types
+from pyNastran import __version__
 from pyNastran.op2.result_objects.stress_object import StressObject
 from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
 
@@ -73,10 +76,9 @@ from pyNastran.bdf.cards.elements.solid import (
 from pyNastran.bdf.mesh_utils.delete_bad_elements import (
     tri_quality, quad_quality, get_min_max_theta)
 
+from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.utils.vtk.vtk_utils import (
-    get_numpy_idtype_for_vtk, numpy_to_vtk_points,
-    create_vtk_cells_of_constant_element_type,
-    numpy_to_vtk, numpy_to_vtkIdTypeArray)
+    get_numpy_idtype_for_vtk, numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.converters.nastran.geometry_helper import (
@@ -207,7 +209,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         bdf_h5 = ''
         if IS_H5PY:
             bdf_h5 = '*.h5; '
-        geom_methods_bdf = 'Nastran Geometry - BDF (*.bdf; *.dat; *.nas; *.ecd; *.op2; *.pch; %s*.obj)' % bdf_h5
+        geom_methods_bdf = ('Nastran Geometry - BDF (*.bdf; *.dat; *.nas; *.ecd; '
+                            '*.op2; *.pch; %s*.obj)' % bdf_h5)
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
         combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.op2)'
 
@@ -299,6 +302,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def create_nastran_tools_menu(self, gui):
         nastran_tools_menu = gui.menubar.addMenu('Tools')
         gui.nastran_tools_menu = nastran_tools_menu
+        if 'dev' not in __version__ and 0:
+            return
 
         tools = [
             #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
@@ -306,7 +311,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
              'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu),
             ('create_coord', 'Create Coordinate System...', 'coord.png', None, 'Creates a Coordinate System', self.on_create_coord),
         ]
-        items = ('shear_moment_torque', 'create_coord')
+        items = (
+            'shear_moment_torque',
+            'create_coord',
+        )
         menu_items = {
             'nastran_tools' : (nastran_tools_menu, items),
         }
@@ -1919,7 +1927,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         centroid = element.offset(xyz_nid)
                         points.SetPoint(j2, *centroid)
 
-                    elif element.type in ['CMASS1', 'CMASS2']:
+                    elif element.type in ('CMASS1', 'CMASS2'):
                         n1, n2 = element.nodes
                         factor = 0.
                         if element.nodes[0] is not None:
@@ -2313,7 +2321,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if model.caeros:
             caero_points = []
             for unused_eid, caero in sorted(model.caeros.items()):
-                if caero.type in ['CAERO1', 'CAERO4', 'CAERO7']:
+                if caero.type in ('CAERO1', 'CAERO4', 'CAERO7'):
                     box_ids = caero.box_ids
                     nboxes = len(box_ids.ravel())
                     if nboxes > 1000:
@@ -2699,7 +2707,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 alt_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 j += 1
-            elif element.type in ['CMASS1', 'CMASS2']:
+            elif element.type in ('CMASS1', 'CMASS2'):
                 centroid = element.Centroid()
                 #n1 = element.G1()
                 #n2 = element.G2()
@@ -2760,8 +2768,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                     if nmpcs:
                         mpc_to_subcase[mpc_id].append(subcase_id)
-
-        from itertools import chain
 
         for spc_id in chain(model.spcs, model.spcadds):
             spc_name = 'SPC=%i' % (spc_id)
@@ -5736,10 +5742,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi = get_min_max_theta(
                     _cpyram_faces, node_ids[:5], nid_map, xyz_cid0)
 
-            elif etype in ['CBUSH', 'CBUSH1D', 'CFAST',
+            elif etype in ('CBUSH', 'CBUSH1D', 'CFAST',
                            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                           'CVISC', 'CGAP']:
+                           'CVISC', 'CGAP'):
 
                 # TODO: verify
                 # CBUSH, CBUSH1D, CFAST, CELAS1, CELAS3
@@ -5821,7 +5827,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     n1, n2 = np.searchsorted(nids, element.nodes)
                 except:
                     print(element.get_stats())
-                    n1i, n2i =element.nodes
+                    n1i, n2i = element.nodes
                     print('nids =', nids)
                     assert n1i in nids, 'n1=%s could not be found' % n1i
                     assert n2i in nids, 'n2=%s could not be found' % n2i
@@ -5877,7 +5883,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
 
-                if element.surface_type in ['AREA4', 'AREA8']:
+                if element.surface_type in ('AREA4', 'AREA8'):
                     eid_to_nid_map[eid] = node_ids[:4]
 
                     n1, n2, n3, n4 = [nid_map[nid] for nid in node_ids[:4]]
@@ -6411,12 +6417,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if not isfinite_and_greater_than(pids, 0):
             return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
 
-        prop_types_with_mid = [
+        prop_types_with_mid = (
             'PSOLID',
             'PROD', 'PTUBE', 'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
             'PBEND',
-        ]
-        prop_types_without_mid = ['PVISC', 'PELAS', 'PBUSH', 'PDAMP', 'PDAMPT']
+        )
+        prop_types_without_mid = ('PVISC', 'PELAS', 'PBUSH', 'PDAMP', 'PDAMPT')
 
         pid_res = GuiResult(0, header='PropertyID', title='PropertyID',
                             location='centroid', scalar=pids, mask_value=0)
@@ -7629,8 +7635,10 @@ def _build_map_centroidal_result(model, nid_map):
     etypes_all_nodes = set([
         'CBEAM', 'CBAR', 'CROD', 'CONROD', 'CTUBE', 'CBEND',
         'CTRIA3', 'CQUAD4', 'CQUADR', 'CTRIAR', 'CSHEAR',
-        'CGAP',  'CFAST', 'CVISC', 'CBUSH', 'CBUSH1D', 'CBUSH2D'])
+        'CGAP', 'CFAST', 'CVISC', 'CBUSH', 'CBUSH1D', 'CBUSH2D'])
 
+    springs_dampers = ('CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4')
     nnodes_map = {
         'CTRIA6' : (3, 6),
         'CQUAD8' : (4, 8),
@@ -7665,10 +7673,10 @@ def _build_map_centroidal_result(model, nid_map):
                 assert len(node_ids) == nnodes_min, 'nnodes=%s min=%s\n%s' % (len(node_ids), nnodes_min, elem)
             else:
                 assert nnodesi == nnodes_max, 'nnodes=%s max=%s\n%s' % (nnodesi, nnodes_max, elem)
-        elif elem.type in ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4']:
+        elif elem.type in springs_dampers:
             node_ids = [nid_map[nid] for nid in elem.nodes
                         if nid is not None]
-        elif elem.type in ['CHBDYP', 'CHBDYG']:
+        elif elem.type in ('CHBDYP', 'CHBDYG'):
             node_ids = [nid_map[nid] for nid in elem.nodes
                         if nid not in [0, None]]
         else:

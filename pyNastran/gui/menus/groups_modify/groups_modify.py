@@ -382,7 +382,8 @@ class GroupsModify(PyDialog):
 
             actors = create_highlighted_actors(gui, grid,
                                                all_nodes=None, nodes=nids,
-                                               all_elements=all_elements, elements=eids)
+                                               all_elements=all_elements, elements=eids,
+                                               add_actors=False)
             if actors:
                 add_actors(gui, actors, render=True)
                 self.actors = actors

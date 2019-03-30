@@ -89,6 +89,10 @@ class FakeGUIMethods(GuiVTKCommon):
         GuiVTKCommon.__init__(self, inputs=inputs)
         self.fake_init()
 
+        # the gui is not actually running
+        self.is_gui = False
+
+
         res_widget = MockResWidget()
         kwds = {
             'inputs' : inputs,

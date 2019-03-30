@@ -32,7 +32,6 @@ from pyNastran.gui.menus.clipping.clipping_object import ClippingObject
 from pyNastran.gui.menus.camera.camera_object import CameraObject
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
     EditGeometryPropertiesObject)
-from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
 
 from pyNastran.gui.utils.vtk.gui_utils import remove_actors
@@ -96,6 +95,12 @@ class GuiAttributes(object):
         self._show_flag = True
         self.observers = {}
 
+        # the gui is actually running
+        # we set this to False when testing
+        self.is_gui = True
+
+        # testing enables additional checks
+        # it's different than if we're just running tests
         if 'test' in inputs:
             self.is_testing_flag = inputs['test']
         else:
@@ -1160,13 +1165,13 @@ class GuiAttributes(object):
 
     def make_cutting_plane(self, data):
         model_name = data['model_name']
-        model = self.models[model_name]
+        unused_model = self.models[model_name]
         cid_p1, p1 = data['p1']
         cid_p2, p2 = data['p2']
-        method, cid_zaxis, zaxis = data['zaxis']
-        xyz1 = self.model.coords[cid_p1].transform_node_to_global(p1)
-        xyz2 = self.model.coords[cid_p2].transform_node_to_global(p2)
-        zaxis_xyz = self.model.coords[cid_zaxis].transform_node_to_global(zaxis)
+        unused_method, cid_zaxis, zaxis = data['zaxis']
+        unused_xyz1 = self.model.coords[cid_p1].transform_node_to_global(p1)
+        unused_xyz2 = self.model.coords[cid_p2].transform_node_to_global(p2)
+        unused_zaxis_xyz = self.model.coords[cid_zaxis].transform_node_to_global(zaxis)
 
     #---------------------------------------------------------------------------
     def get_result_by_xyz_cell_id(self, node_xyz, cell_id):

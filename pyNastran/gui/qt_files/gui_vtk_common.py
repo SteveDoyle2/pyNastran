@@ -52,7 +52,6 @@ class GuiVTKCommon(GuiQtCommon):
 
     def fake_init(self):
         """vtk setup"""
-        pass
         self.create_vtk_actors(create_rend=False)
         #self._create_vtk_objects()
 
@@ -416,21 +415,25 @@ class GuiVTKCommon(GuiQtCommon):
         #self.vtk_interactor.Render()
         self.vtk_interactor.GetRenderWindow().Render()
 
-    def cell_centroid_grid(self, grid, cell_id):
+    def cell_centroid_grid(self, grid, cell_id, dtype='float32'):
         """gets the cell centroid"""
+        if not self.is_gui:
+            centroid = np.zeros(3, dtype=dtype)
+            return centroid
         cell = grid.GetCell(cell_id)
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
-        centroid = np.zeros(3, dtype='float32')
+        assert nnodes > 0, 'nnodes=%s cell_id=%s cell=%s' % (nnodes, cell_id, cell)
+        centroid = np.zeros(3, dtype=dtype)
         for ipoint in range(nnodes):
-            point = np.array(points.GetPoint(ipoint), dtype='float32')
+            point = np.array(points.GetPoint(ipoint), dtype=dtype)
             centroid += point
         centroid /= nnodes
         return centroid
 
-    def cell_centroid(self, cell_id):
+    def cell_centroid(self, cell_id, dtype='float32'):
         """gets the cell centroid"""
-        return cell_centroid_grid(self.grid_selected, cell_id)
+        return self.cell_centroid_grid(self.grid_selected, cell_id, dtype=dtype)
 
     def build_lookup_table(self):
         """build the nominal lookup table for the scalar bar"""
@@ -530,4 +533,3 @@ def build_glyph(grid):
     #self.grid.GetPointData().SetActiveVectors(None)
     arrow_actor.SetVisibility(False)
     return glyph_source, glyphs, glyph_mapper, arrow_actor
-

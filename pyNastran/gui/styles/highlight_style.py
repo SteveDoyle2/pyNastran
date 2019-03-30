@@ -18,6 +18,7 @@ import vtk
 #from vtk.util.numpy_support import vtk_to_numpy
 #from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.gui.utils.vtk.vtk_utils import find_point_id_closest_to_xyz
 
 
 #vtkInteractorStyleRubberBandPick # sucks?
@@ -113,38 +114,21 @@ class HighlightStyle(vtk.vtkInteractorStyleTrackballCamera):  # works
         self.parent.vtk_interactor.RemoveObserver(self.cleanup_observer)
         cleanup_observer = None
 
-    def _highlight_picker_node(self, cell_id, grid, node_xyz):
+    def _highlight_picker_node(self, cell_id, grid, node_xyz, add_actor=True):
         """won't handle multiple cell_ids/node_xyz"""
-        cell = grid.GetCell(cell_id)
-        nnodes = cell.GetNumberOfPoints()
-        points = cell.GetPoints()
-
-        point0 = points.GetPoint(0)
-        dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
-
-        imin = 0
-        #point_min = point0
-        for ipoint in range(1, nnodes):
-            #point = array(points.GetPoint(ipoint), dtype='float32')
-            #dist = norm(point - node_xyz)
-            point = points.GetPoint(ipoint)
-            dist = vtk.vtkMath.Distance2BetweenPoints(point, node_xyz)
-            if dist < dist_min:
-                dist_min = dist
-                imin = ipoint
-                #point_min = point
-        point_id = cell.GetPointId(imin)
-
+        point_id = find_point_id_closest_to_xyz(grid, cell_id, node_xyz)
         selection_node = create_vtk_selection_node_by_point_ids([point_id])
         ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
-        actor = self.parent.create_highlighted_actor(ugrid, representation='points')
+        actor = self.parent.create_highlighted_actor(
+            ugrid, representation='points', add_actor=add_actor)
         return actor, [point_id]
 
-    def _highlight_picker_cell(self, cell_ids, grid):
+    def _highlight_picker_cell(self, cell_ids, grid, add_actor=True):
         """won't handle multiple cell_ids/node_xyz"""
         selection_node = create_vtk_selection_node_by_cell_ids(cell_ids)
         ugrid = extract_selection_node_from_grid_to_ugrid(grid, selection_node)
-        actor = self.parent.create_highlighted_actor(ugrid, representation='surface')
+        actor = self.parent.create_highlighted_actor(
+            ugrid, representation='surface', add_actor=add_actor)
         return actor
 
 def map_cell_point_to_model(gui, cell_ids, point_ids, model_name=None):
@@ -199,6 +183,11 @@ def create_vtk_selection_node_by_point_ids(point_ids):
     return selection_node
 
 def extract_selection_node_from_grid_to_ugrid(grid, selection_node):
+    """
+    Creates a sub-UGRID from a UGRID and a vtkSelectionNode.  In other
+    words, we use a selection criteria (a definition of a subset of
+    points or cells) and we create a reduced model.
+    """
     selection = vtk.vtkSelection()
     selection.AddNode(selection_node)
 

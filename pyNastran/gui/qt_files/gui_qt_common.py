@@ -21,7 +21,8 @@ from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points
 from pyNastran.gui.gui_objects.names_storage import NamesStorage
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk, numpy_to_vtk_points, VTK_VERSION
+from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
 
@@ -328,7 +329,7 @@ class GuiQtCommon(GuiAttributes):
             return is_valid, failed_data
 
         label2 = ''
-        (obj, (i, name)) = self.result_cases[icase]
+        (obj, (i, name)) = case
         subcase_id = obj.subcase_id
         #case = obj.get_result(i, name)  # TODO: remove
         #if case is None:
@@ -499,6 +500,8 @@ class GuiQtCommon(GuiAttributes):
                 self.xyz_cid0[imax, :], # max
             ]
         elif location == 'centroid':
+            #print(self.models['main'].elements)
+            #print('neids', len(self.models['main'].elements))
             xyzs = [
                 self.cell_centroid_grid(self.grid, imin),
                 self.cell_centroid_grid(self.grid, imax),
@@ -511,7 +514,7 @@ class GuiQtCommon(GuiAttributes):
             (imax, max_value, xyzs[1]),
         ]
 
-        for (imin_max, value, xyz), text_actor in zip(min_maxs, self.min_max_actors):
+        for (unused_imin_max, unused_value, xyz), text_actor in zip(min_maxs, self.min_max_actors):
             text_actor.SetPosition(*xyz)
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(settings.annotation_size)
@@ -783,7 +786,10 @@ class GuiQtCommon(GuiAttributes):
         except (KeyError, TypeError):
             print('icase=%r case_keys=%s' % (icase, str(self.case_keys)))
             raise
+        icase = key
         self.icase = icase
+        #assert self.icase >= 0, 'icase=%i key=%s case_keys=%s' % (icase, key, self.case_keys)
+
 
         # these will be fixed later in this function
         self.icase_fringe = None
@@ -837,8 +843,11 @@ class GuiQtCommon(GuiAttributes):
             normi = case
         else:
             normi = norm(case, axis=1)
+
+        #print(case, len(case))
         imin = np.nanargmin(normi)
         imax = np.nanargmax(normi)
+        #print(imin, imax, normi[imin], normi[imax])
 
         #if min_value is None and max_value is None:
             #max_value = normi.max()
@@ -885,6 +894,7 @@ class GuiQtCommon(GuiAttributes):
         icase_disp = self.icase_disp
         icase_vector = self.icase_vector
 
+        #print('norm =', normi, location)
         self._update_min_max_actors(location, icase_fringe,
                                     imin, min_value,
                                     imax, max_value)
@@ -1127,6 +1137,7 @@ class GuiQtCommon(GuiAttributes):
                            revert_displaced=True, show_msg=True):
         if name is None:
             return
+        assert icase >= 0
 
         # the result type being currently shown
         # for a Nastran NodeID/displacement, this is 'node'
@@ -1406,6 +1417,7 @@ class GuiQtCommon(GuiAttributes):
 
         count = 0
         for icase in case_keys:
+            assert icase >= 0, case_keys
             try:
                 actors = self.label_actors[icase]
             except KeyError:
@@ -1610,11 +1622,11 @@ class GuiQtCommon(GuiAttributes):
             self.point_actor = point_actor
             self.rend.AddActor(point_actor)
 
-        ## TODO: buggy...
-        nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
-        color = RED
-        self.set_quad_grid(actor_name, nodes, elements, color,
-                           line_width=1, opacity=1., add=False)
+        ## TODO: not done...
+        #nodes, elements = points_elements_from_quad_points(n1, n2, n3, n4, x, y)
+        #color = RED
+        #self.set_quad_grid(actor_name, nodes, elements, color,
+                           #line_width=1, opacity=1., add=False)
         return point_actor
 
     def _make_contour_filter(self):  # pragma: no cover
@@ -1706,6 +1718,7 @@ class GuiQtCommon(GuiAttributes):
             return
         if nlabels is None:
             nlabels = 11
+
         if location == 'centroid': # node/centroid
             self.contour_lines_actor.VisibilityOff()
             #self.contour_mapper.SetScalarModeToUseCellData()
@@ -1780,4 +1793,3 @@ def show_hide_actor(actor):
     is_visible = actor.GetVisibility()
     actor.SetVisibility(not is_visible)
     actor.Modified()
-

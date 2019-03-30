@@ -32,6 +32,7 @@ class MarkActions(object):
         -------
         annotation : vtkBillboardTextActor3D
             the annotation object
+
         """
         annotation = create_annotation(self.gui, text, x, y, z)
         return annotation
@@ -41,7 +42,8 @@ class MarkActions(object):
         case_key = self.gui.case_keys[self.gui.icase_fringe]
         result_name = self.gui.result_name
 
-        cell = self.gui.grid_selected.GetCell(cell_id)
+        grid = self.gui.grid_selected
+        cell = grid.GetCell(cell_id)
         nnodes = cell.GetNumberOfPoints()
         points = cell.GetPoints()
 
@@ -100,6 +102,7 @@ class MarkActions(object):
           icase_result = 22
           icase_to_apply = 25
           self.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
+
         """
         if icase_result not in self.gui.label_actors:
             msg = 'icase_result=%r not in label_actors=[%s]' % (
@@ -231,14 +234,14 @@ class MarkActions(object):
         """
         actors = []
         if eids and representation in ['wire', 'surface']:
-            actor = highlight_elements(self, eids, model_name=model_name)
+            actor = self.highlight_elements(self, eids, model_name=model_name)
             actors.append(actor)
         if nids and representation in ['points']:
-            actor = highlight_nodes(self, nids, model_name=model_name)
+            actor = self.highlight_nodes(self, nids, model_name=model_name)
             actors.append(actor)
         return actors
 
-    def highlight_nodes(self, nids, model_name=''):
+    def highlight_nodes(self, nids, model_name='', add_actor=True):
         """
         Highlights a series of nodes
 
@@ -259,11 +262,12 @@ class MarkActions(object):
         #ugrid = vtk.vtkUnstrucuturedGrid()
         points = numpy_to_vtk_points(xyz, points=None, dtype='<f', deep=1)
         ugrid = create_unstructured_point_grid(points, npoints)
-        actor = self.gui.mouse_actions.create_highlighted_actor(ugrid, representation='points')
+        actor = self.gui.mouse_actions.create_highlighted_actor(
+            ugrid, representation='points', add_actor=add_actor)
         self.gui.vtk_interactor.Render()
         return actor
 
-    def highlight_elements(self, eids, model_name=''):
+    def highlight_elements(self, eids, model_name='', add_actor=True):
         """
         Highlights a series of elements
 
@@ -276,30 +280,31 @@ class MarkActions(object):
 
         """
         raise NotImplementedError('need to define active_ugrid')
-        grid = active_ugrid
-        all_eids = self.gui.get_element_ids(model_name=model_name, ids=None)
-        cell_ids = np.searchsorted(all_eids, eids)
+        #grid = active_ugrid
+        #all_eids = self.gui.get_element_ids(model_name=model_name, ids=None)
+        #cell_ids = np.searchsorted(all_eids, eids)
 
-        ids = vtk.vtkIdTypeArray()
-        ids.SetNumberOfComponents(1)
-        for cell_id in cell_ids:
-            ids.InsertNextValue(cell_id)
+        #ids = vtk.vtkIdTypeArray()
+        #ids.SetNumberOfComponents(1)
+        #for cell_id in cell_ids:
+            #ids.InsertNextValue(cell_id)
 
-        selection_node = vtk.vtkSelectionNode()
-        selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
-        selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
-        selection_node.SetSelectionList(ids)
+        #selection_node = vtk.vtkSelectionNode()
+        #selection_node.SetFieldType(vtk.vtkSelectionNode.CELL)
+        #selection_node.SetContentType(vtk.vtkSelectionNode.INDICES)
+        #selection_node.SetSelectionList(ids)
 
-        actor = self._highlight_picker_by_selection_node(
-            grid, selection_node, representation='surface')
-        return actor
+        #actor = self._highlight_picker_by_selection_node(
+            #grid, selection_node, representation='surface', add_actor=add_actor)
+        #return actor
 
     def _highlight_picker_by_selection_node(self, grid, selection_node,
-                                            representation='surface'):
+                                            representation='surface', add_actor=True):
         """
         helper method for:
             - _highlight_picker_cell
             #- _highlight_picker_node
+
         """
         selection = vtk.vtkSelection()
         selection.AddNode(selection_node)
@@ -311,7 +316,7 @@ class MarkActions(object):
 
         ugrid = extract_selection.GetOutput()
         actor = self.gui.mouse_actions.create_highlighted_actor(
-            ugrid, representation=representation)
+            ugrid, representation=representation, add_actor=add_actor)
         return actor
 
     def mark_nodes(self, nids, icase, text):
@@ -332,6 +337,7 @@ class MarkActions(object):
         self.mark_nodes(6, 0, 'min')
         self.mark_nodes([1, 6], 0, 'max')
         self.mark_nodes([1, 6], 0, ['max', 'min'])
+
         """
         if icase not in self.gui.label_actors:
             msg = 'icase=%r not in label_actors=[%s]' % (
@@ -339,8 +345,9 @@ class MarkActions(object):
             self.gui.log_error(msg)
             return
         slot = self.gui.label_actors[icase]
-        create_marked_node_actors(self.gui, self.gui.node_ids, nids, text,
-                                  self.gui.xyz_cid0, slot)
+        slot.extend(
+            create_marked_node_actors(self.gui, self.gui.node_ids, nids, text,
+                                      self.gui.xyz_cid0))
         self.gui.vtk_interactor.Render()
 
     #def __mark_nodes_by_result(self, nids, icases):
@@ -375,25 +382,29 @@ class MarkActions(object):
                 #self.gui.label_actors[icase].append(self.create_annotation(texti, xi, yi, zi))
         #self.gui.vtk_interactor.Render()
 
-def create_marked_node_actors(gui, node_ids, nids, text,
-                              xyz_cid0, slot):
+def create_marked_node_actors(gui, node_ids, nids, text, xyz_cid0):
     """
     Marks a series of nodes with custom text labels
 
     Parameters
     ----------
+    gui : MainWindow
+        ???
+    node_ids : (nnodes, ) int ndarray
+        all the nodes
     nids : int, List[int]
         the nodes to apply a message to
-    icase : int
-        the key in label_actors to slot the result into
     text : str, List[str]
         the text to display
+    xyz_cid0 : (nnodes, 3) float ndarray
+        the xyz locations of node_ids
 
     0 corresponds to the NodeID result
     self.mark_nodes(1, 0, 'max')
     self.mark_nodes(6, 0, 'min')
     self.mark_nodes([1, 6], 0, 'max')
     self.mark_nodes([1, 6], 0, ['max', 'min'])
+
     """
     i = np.searchsorted(node_ids, nids)
     if isinstance(text, string_types):
@@ -402,9 +413,10 @@ def create_marked_node_actors(gui, node_ids, nids, text,
         assert len(text) == len(i)
 
     xyz = xyz_cid0[i, :]
+    slot = []
     for (xi, yi, zi), texti in zip(xyz, text):
         slot.append(create_annotation(gui, texti, xi, yi, zi))
-
+    return slot
 
 def create_annotation(gui, text, x, y, z):
     """
@@ -423,6 +435,7 @@ def create_annotation(gui, text, x, y, z):
     -------
     annotation : vtkBillboardTextActor3D
         the annotation object
+
     """
     # http://nullege.com/codes/show/src%40p%40y%40pymatgen-2.9.6%40pymatgen%40vis%40structure_vtk.py/395/vtk.vtkVectorText/python
 
@@ -458,5 +471,3 @@ def create_annotation(gui, text, x, y, z):
     #camera.GetClippingRange()
     #camera.GetFocalPoint()
     return text_actor
-
-

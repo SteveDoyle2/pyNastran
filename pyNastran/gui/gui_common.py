@@ -2,15 +2,18 @@
 # pylint: disable=W0201,C0301
 from __future__ import division, unicode_literals, print_function
 
-# standard library
-#import sys
 import os.path
 import datetime
 from collections import OrderedDict
 from math import ceil
-import cgi #  html lib
 
-from six import string_types
+from six import string_types, PY2
+if PY2:
+    import cgi as html
+else:
+    import html
+
+
 import numpy as np
 from cpylog import SimpleLogger
 
@@ -51,7 +54,7 @@ from pyNastran.gui.menus.menus import (
 
 from pyNastran.gui.menus.legend.write_gif import (
     setup_animation, update_animation_inputs, write_gif, make_two_sided)
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_idtype
+from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk_idtype
 
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
@@ -388,11 +391,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if create_menu_bar:
             self._create_menu_bar(menu_bar_order=menu_bar_order)
 
+        scripts = []
         if self._script_path is not None and os.path.exists(self._script_path):
             scripts = [script for script in os.listdir(self._script_path) if '.py' in script]
-        else:
-            scripts = []
-
         scripts = tuple(scripts)
 
         #if 0:
@@ -545,8 +546,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
         #dx = max(x_limits) - min(x_limits)
         #dy = max(y_limits) - min(y_limits)
-        ##dx = 1.
-        ##dy = 3.
+        #dx = 1.
+        #dy = 3.
 
         ## we need to offset the origin of the plane because the "origin"
         ## is at the lower left corner of the plane and not the centroid
@@ -680,7 +681,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             #print('lineno = %s' % lineno)
             #print('msg = %s' % msg)
             #assert isinstance(msg, string_types), msg
-            msg = cgi.escape(msg)
+            msg = html.escape(msg)
 
             #message colors
             dark_orange = '#EB9100'
@@ -804,8 +805,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #elif fmt == '.ps': # doesn't exist?
             #self.image_reader = vtk.vtkPostScriptReader()
         else:
-            msg = 'invalid image type=%r; filename=%r' % (fmt, image_filename)
-            raise NotImplementedError(msg)
+            raise NotImplementedError('invalid image type=%r; filename=%r' % (
+                fmt, image_filename))
 
         if not self.image_reader.CanReadFile(image_filename):
             print("Error reading file %s" % image_filename)
@@ -2238,7 +2239,7 @@ def str_to_html(log_type, filename, lineno, msg):
         the HTML message
     """
     tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
-    msg = cgi.escape(msg)
+    msg = html.escape(msg)
 
     #message colors
     msg = msg.rstrip().replace('\n', '<br>')

@@ -11,6 +11,7 @@ from pyNastran.gui.styles.zoom_style import ZoomStyle
 #from pyNastran.gui.styles.probe_style import ProbeResultStyle
 from pyNastran.gui.styles.rotation_center_style import RotationCenterStyle
 from pyNastran.gui.styles.trackball_style_camera import TrackballStyleCamera
+from pyNastran.gui.utils.vtk.vtk_utils import find_point_id_closest_to_xyz
 
 class MouseActions(object):
     def __init__(self, gui):
@@ -462,29 +463,11 @@ class MouseActions(object):
 
     def _highlight_picker_node(self, cell_id, grid, node_xyz):
         """won't handle multiple cell_ids/node_xyz"""
-        cell = grid.GetCell(cell_id)
-        nnodes = cell.GetNumberOfPoints()
-        points = cell.GetPoints()
-
-        point0 = points.GetPoint(0)
-        dist_min = vtk.vtkMath.Distance2BetweenPoints(point0, node_xyz)
-
-        imin = 0
-        point_min = point0
-        for ipoint in range(1, nnodes):
-            #point = array(points.GetPoint(ipoint), dtype='float32')
-            #dist = norm(point - node_xyz)
-            point = points.GetPoint(ipoint)
-            dist = vtk.vtkMath.Distance2BetweenPoints(point, node_xyz)
-            if dist < dist_min:
-                dist_min = dist
-                imin = ipoint
-                point_min = point
-        node_id = cell.GetPointId(imin)
+        point_id = find_point_id_closest_to_xyz(grid, cell_id, node_xyz)
 
         ids = vtk.vtkIdTypeArray()
         ids.SetNumberOfComponents(1)
-        ids.InsertNextValue(node_id)
+        ids.InsertNextValue(point_id)
 
         selection_node = vtk.vtkSelectionNode()
         #selection_node.SetContainingCellsOn()
@@ -514,7 +497,7 @@ class MouseActions(object):
         return actor
 
     def _highlight_picker_by_selection_node(self, grid, selection_node,
-                                            representation='surface'):
+                                            representation='surface', add_actor=True):
         selection = vtk.vtkSelection()
         selection.AddNode(selection_node)
 
@@ -524,13 +507,15 @@ class MouseActions(object):
         extract_selection.Update()
 
         ugrid = extract_selection.GetOutput()
-        return self.create_highlighted_actor(ugrid, representation=representation)
+        actor = self.create_highlighted_actor(ugrid, representation=representation, add_actor=add_actor)
+        return actor
 
         #-----------------------------------------------
 
-    def create_highlighted_actor(self, ugrid, representation='wire'):
+    def create_highlighted_actor(self, ugrid, representation='wire', add_actor=True):
         """creates a highlighted actor given a vtkUnstructuredGrid"""
-        actor = create_highlighted_actor(self.gui, ugrid, representation=representation)
+        actor = create_highlighted_actor(
+            self.gui, ugrid, representation=representation, add_actor=add_actor)
         return actor
 
     def _highlight_picker(self, unused_obj, unused_event):
@@ -803,7 +788,7 @@ class MouseActions(object):
         return self.gui.get_element_ids(model_name, ids)
 
 
-def create_highlighted_actor(gui, ugrid, representation='wire'):
+def create_highlighted_actor(gui, ugrid, representation='wire', add_actor=True):
     """creates a highlighted actor given a vtkUnstructuredGrid"""
     actor = vtk.vtkLODActor()
     mapper = vtk.vtkDataSetMapper()
@@ -828,5 +813,6 @@ def create_highlighted_actor(gui, ugrid, representation='wire'):
         raise NotImplementedError('representation=%r and must be [surface, points, wire]' % (
             representation))
 
-    gui.rend.AddActor(actor)
+    if add_actor:
+        gui.rend.AddActor(actor)
     return actor
