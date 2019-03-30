@@ -1244,6 +1244,7 @@ class OEF(OP2Common):
         if self._results.is_not_saved('element_forces'):
             return ndata
         prefix, postfix = self.get_oef_prefix_postfix()
+        #print('prefix=%r postfix=%s element_name=%s' % (prefix, postfix, self.element_name))
         unused_flag = 'element_id'
         (num_wide_real, num_wide_imag) = self._oef_force_code()
         if self.is_debug_file:

@@ -327,7 +327,22 @@ class Cart3dIO(object):
                 n3 = int(data.pop(0))
                 elements[ieid] = [n1, n2, n3]
                 ieid += 1
-        assert elements.min() == 1, elements.min()
+
+        nid_min = elements.min()
+        if nid_min != 1:
+            nid_max = elements.max()
+            nnodes = self.nodes.shape[0]
+            if nid_max == nnodes:
+                msg = (
+                    'Possible Cart3d error due to unused nodes\n'
+                    'min(nids)=%s; expected 1; nid_max=%s nnodes=%s' % (
+                        nid_min, nid_max, nnodes))
+                self.log.warning(msg)
+            else:
+                msg = 'elements:\n%s\nmin(nids)=%s; expected 1; nid_max=%s nnodes=%s' % (
+                    elements, nid_min, nid_max, nnodes, )
+                raise RuntimeError(msg)
+            #assert elements.min() == 1, elements.min()
         return elements - 1
 
     def _read_regions_ascii(self, nelements):

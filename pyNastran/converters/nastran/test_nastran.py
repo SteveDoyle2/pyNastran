@@ -6,12 +6,13 @@ from cpylog import get_logger
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
 
-from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d
+from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d, nastran_to_cart3d_filename
 from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
 from pyNastran.converters.nastran.nastran_to_surf import nastran_to_surf, clear_out_solids
-from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot
+from pyNastran.converters.nastran.nastran_to_tecplot import nastran_to_tecplot, nastran_to_tecplot_filename
 from pyNastran.converters.nastran.nastran_to_ugrid import nastran_to_ugrid
 from pyNastran.converters.aflr.ugrid.ugrid_reader import read_ugrid
+from pyNastran.converters.cart3d.cart3d import read_cart3d
 
 import pyNastran.converters.nastran.nastran_to_ugrid3d
 
@@ -19,6 +20,16 @@ PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '../', 'models')
 
 class TestNastran(unittest.TestCase):
+
+    def test_nastran_to_tecplot(self):
+        """tests a large number of elements and results in SOL 101"""
+        bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
+        tecplot_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.plt')
+        log = get_logger(log=None, level='warning', encoding='utf-8')
+        model = read_bdf(bdf_filename, log=log)
+        with self.assertRaises(RuntimeError):
+            nastran_to_tecplot(model)
+        nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=log)
 
     def test_nastran_to_ugrid_01(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
@@ -42,10 +53,21 @@ class TestNastran(unittest.TestCase):
                            debug=debug)
 
         skin_bdf_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_skin2.bdf')
+        skin_cart3d_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_skin2.tri')
         ugrid.write_bdf(skin_bdf_filename2, include_shells=True, include_solids=True,
                         convert_pyram_to_penta=True, encoding=None,
                         size=size, is_double=False)
         read_bdf(skin_bdf_filename2, log=log, debug=debug)
+
+        with self.assertRaises(AssertionError):
+            nastran_to_cart3d_filename(skin_bdf_filename2, skin_cart3d_filename)
+
+        ugrid.write_bdf(skin_bdf_filename2, include_shells=True, include_solids=False,
+                        convert_pyram_to_penta=True, encoding=None,
+                        size=size, is_double=False)
+
+        nastran_to_cart3d_filename(skin_bdf_filename2, skin_cart3d_filename)
+        read_cart3d(skin_cart3d_filename, log=log)
 
         os.remove(ugrid_filename_out)
         os.remove(skin_bdf_filename)
@@ -92,11 +114,12 @@ class TestNastran(unittest.TestCase):
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(deck)
 
-        model = read_bdf(bdf_filename, xref=False)
+        log = get_logger(log=None, level='warning', encoding='utf-8')
+        model = read_bdf(bdf_filename, xref=False, log=log)
         clear_out_solids(model, bdf_clean_filename, renumber=True,
                          equivalence=False, equivalence_tol=0.01)
 
-        model = read_bdf(bdf_clean_filename)
+        model = read_bdf(bdf_clean_filename, log=log)
         assert len(model.nodes) == 4, len(model.nodes)
         assert len(model.elements) == 1, len(model.elements)
         os.remove(bdf_filename)

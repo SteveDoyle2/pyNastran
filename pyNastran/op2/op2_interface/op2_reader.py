@@ -762,7 +762,7 @@ class OP2Reader(object):
 
                 origin = valuesi[:3]
                 i = valuesi[3:6]
-                j = valuesi[6:9]
+                unused_j = valuesi[6:9]
                 k = valuesi[9:12]
                 zaxis = origin + k
                 xzplane = origin + i
@@ -2995,10 +2995,6 @@ class OP2Reader(object):
                 self.binary_debug.write(msg)
         return marker
 
-    def _read_subtables(self):
-        """interface to the op2 object"""
-        return self.op2._read_subtables()
-
     #------------------------------------------------------------------
     @property
     def is_debug_file(self):
@@ -3323,6 +3319,7 @@ class OP2Reader(object):
         """Reads a geometry table"""
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
+
         if self.is_debug_file:
             self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
@@ -3358,7 +3355,11 @@ class OP2Reader(object):
         if self.is_debug_file:
             self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
             self.binary_debug.write('---markers = [-3, 1, 0]---\n')
-        table_mapper = op2._get_table_mapper()
+
+        markers = self.get_nmarkers(1, rewind=True)
+        if markers[0] == 0:
+            self.log.debug('    returning early')
+            return
 
         # get the parsing functions (table3_parser, table4_parser)
         # or find out we're going to be skipping the tables
@@ -3370,6 +3371,7 @@ class OP2Reader(object):
         # down (yes down) to 4 to indicate table4.  If we count down again, we end up
         # back at table 3 (with isubtable=-5), which will occur in the case of multiple
         # times/element types/results in a single macro table (e.g. OUG, OES).
+        table_mapper = op2._get_table_mapper()
         if op2.table_name in table_mapper:
             #if self.read_mode == 2:
                 #self.log.debug("table_name = %r" % op2.table_name)
@@ -3386,7 +3388,6 @@ class OP2Reader(object):
 
         # we need to check the marker, so we read it and rewind, so we don't
         # screw up our positioning in the file
-        markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
 
