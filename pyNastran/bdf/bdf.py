@@ -845,7 +845,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'npoints', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros', 'nid_map',
-            'is_bdf_vectorized',
+            'is_bdf_vectorized', 'type_slot_str',
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
@@ -861,12 +861,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #continue
             try:
                 setattr(self, key, val)
-            except AttributeError:
-                print('key=%r val=%s' % (key, val))
-                raise
+            except AttributeError:  # pragma: no cover
+                raise AttributeError('key=%r val=%s\nupdate ~line 860 of bdf.py and '
+                                     'add the new key (%s)' % (key, val, key))
 
         self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
-        self.log.debug('done loading!')
+        #self.log.debug('done loading!')
         for model in self.superelement_models.values():
             model.log = self.log
 

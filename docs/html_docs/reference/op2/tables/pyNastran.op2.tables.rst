@@ -23,7 +23,7 @@ pyNastran/op2/tables/geom
 -------------------------
 .. toctree::
 
-   pyNastran.op2.tables.geom
+   geom/pyNastran.op2.tables.geom
 
 pyNastran/op2/tables/lama_eigenvalues
 -------------------------------------
@@ -43,11 +43,11 @@ pyNastran/op2/tables/oef_forces
 
    pyNastran.op2.tables.oef_forces
 
-pyNastran/op2/tables/oes_stressStrain
--------------------------------------
+pyNastran/op2/tables/oes_stress_strain
+--------------------------------------
 .. toctree::
 
-   pyNastran.op2.tables.oes_stressStrain
+   oes_stress_strain/pyNastran.op2.tables.oes_stress_strain
 
 pyNastran/op2/tables/ogf_gridPointForces
 ----------------------------------------

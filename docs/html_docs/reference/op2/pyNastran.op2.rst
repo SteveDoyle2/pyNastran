@@ -39,8 +39,8 @@ pyNastran/op2/op2_interface
    op2_interface/pyNastran.op2.op2_interface.op2_reader
    op2_interface/pyNastran.op2.op2_interface.op2_scalar
 
-pyNastran/op2/op2_interface
----------------------------
+pyNastran/op2/result_objects
+----------------------------
 .. toctree::
 
    result_objects/pyNastran.op2.result_objects

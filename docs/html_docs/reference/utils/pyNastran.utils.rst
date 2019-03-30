@@ -2,13 +2,6 @@ utils Package
 =============
 This is the pyNastran.utils.rst file.
 
-:mod:`atmosphere` Module
-------------------------
-
-.. automodule:: pyNastran.utils.atmosphere
-    :members:
-    :undoc-members:
-
 :mod:`dev` Module
 -----------------
 
@@ -20,13 +13,6 @@ This is the pyNastran.utils.rst file.
 --------------------------
 
 .. automodule:: pyNastran.utils.docopt_types
-    :members:
-    :undoc-members:
-
-:mod:`gui_choices` Module
--------------------------
-
-.. automodule:: pyNastran.utils.gui_choices
     :members:
     :undoc-members:
 
@@ -70,3 +56,6 @@ This is the pyNastran.utils.rst file.
 
 
 .. toctree::
+
+  pyNastran.utils.atmosphere
+  pyNastran.utils.dict_to_h5py
