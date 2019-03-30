@@ -41,7 +41,7 @@ pyNastran/op2/tables/oef_forces
 -------------------------------
 .. toctree::
 
-   pyNastran.op2.tables.oef_forces
+   oef_forces/pyNastran.op2.tables.oef_forces
 
 pyNastran/op2/tables/oes_stress_strain
 --------------------------------------
