@@ -201,14 +201,49 @@ cards Package
     :undoc-members:
     :show-inheritance:
 
-Subpackages
------------
 
+:mod:`base_card` Module
+-----------------------
+
+.. inheritance-diagram:: pyNastran.bdf.cards.base_card
+
+.. automodule:: pyNastran.bdf.cards.base_card
+    :members:
+    :private-members:
+    :undoc-members:
+    :show-inheritance:
+
+
+aero Package
+------------
 .. toctree::
 
-   pyNastran.bdf.cards.base_card
-   pyNastran.bdf.cards.aero
-   pyNastran.bdf.cards.elements
-   pyNastran.bdf.cards.loads
-   pyNastran.bdf.cards.properties
-   pyNastran.bdf.cards.thermal
+   aero/pyNastran.bdf.cards.aero.aero
+   aero/pyNastran.bdf.cards.aero.static_loads
+   aero/pyNastran.bdf.cards.aero.dynamic_loads
+   aero/pyNastran.bdf.cards.aero.utils
+   aero/pyNastran.bdf.cards.aero.zona
+
+elements Package
+----------------
+.. toctree::
+
+   elements/pyNastran.bdf.cards.elements
+
+properties Package
+------------------
+.. toctree::
+
+   properties/pyNastran.bdf.cards.properties
+
+loads Package
+-------------
+.. toctree::
+
+   loads/pyNastran.bdf.cards.loads
+
+thermal Package
+---------------
+.. toctree::
+
+   loads/pyNastran.bdf.cards.thermal
