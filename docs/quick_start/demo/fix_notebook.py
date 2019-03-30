@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 This code is designed to help you find what's wrong with an .ipynb
 file, so you can hand fix it.  The issue with encoding errors is
@@ -16,9 +17,13 @@ import sys
 import codecs
 with codecs.open(sys.argv[1], 'r', encoding='latin1') as f:
     lines = f.readlines()
+
+text = ''
 for line in lines:
-    print(line.decode().rstrip())
-#text = text.encode('utf8')
+    print(line.rstrip())
+    text += line.rstrip() + '\n'
+
+text = text.encode('utf8')
 new_file_path = 'new/path'
 with open(sys.argv[1] + '.new', 'wb') as f:
     f.write(text)
