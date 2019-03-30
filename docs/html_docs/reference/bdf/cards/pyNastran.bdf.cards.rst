@@ -247,16 +247,29 @@ properties Package
 ------------------
 .. toctree::
 
-   properties/pyNastran.bdf.cards.properties
+   properties/pyNastran.bdf.cards.properties.bars
+   properties/pyNastran.bdf.cards.properties.beam
+   properties/pyNastran.bdf.cards.properties.bush
+   properties/pyNastran.bdf.cards.properties.damper
+   properties/pyNastran.bdf.cards.properties.mass
+   properties/pyNastran.bdf.cards.properties.properties
+   properties/pyNastran.bdf.cards.properties.rods
+   properties/pyNastran.bdf.cards.properties.shell
+   properties/pyNastran.bdf.cards.properties.solid
+   properties/pyNastran.bdf.cards.properties.springs
+
 
 loads Package
 -------------
 .. toctree::
 
-   loads/pyNastran.bdf.cards.loads
+   loads/pyNastran.bdf.cards.loads.dloads
+   loads/pyNastran.bdf.cards.loads.loads
+   loads/pyNastran.bdf.cards.loads.random_loads
+   loads/pyNastran.bdf.cards.loads.static_loads
 
 thermal Package
 ---------------
 .. toctree::
 
-   loads/pyNastran.bdf.cards.thermal
+   thermal/pyNastran.bdf.cards.thermal
