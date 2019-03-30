@@ -6,5 +6,5 @@ if qt_compat.QT_API in ['PyQt4', 'PySide']:
 elif qt_compat.QT_API == 'PyQt5':
     import matplotlib.backends.backend_qt5agg as matplotlib_backend
     #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-else:
+else: # pragma: no cover
     raise NotImplementedError(qt_compat.QT_API)

@@ -1297,7 +1297,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
             b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
             b'OUNIT2K', b'OUNIT2M', b'RESCOMP', b'PDRMSG', b'LMODES', b'USETPRT',
-            b'NOCOMPS', b'OPTEXIT',]
+            b'NOCOMPS', b'OPTEXIT', b'RSOPT']
         float_words_1 = [
             b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
             b'SIGMA', b'TABS', b'EPPRT', b'AUNITS']
@@ -1305,7 +1305,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
             b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
             b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
-            b'CDIF', b'SUPAERO',
+            b'CDIF', b'SUPAERO', b'RSCON',
 
             # part of param, checkout
             b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',

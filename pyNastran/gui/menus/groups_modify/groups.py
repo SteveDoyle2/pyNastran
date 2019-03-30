@@ -5,6 +5,7 @@ defines:
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
 
+from six import string_types
 from numpy import ndarray
 
 from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
@@ -38,7 +39,7 @@ class Group(object):
         if isinstance(element_str, list):
             element_str = ' '.join(str(s) for s in element_str)
         else:
-            assert isinstance(element_str, (str, unicode)), 'element_str=%r type=%s' % (element_str, type(element_str))
+            assert isinstance(element_str, string_types), 'element_str=%r type=%s' % (element_str, type(element_str))
         self.element_str = element_str
         self.elements_pound = elements_pound
         self.editable = editable

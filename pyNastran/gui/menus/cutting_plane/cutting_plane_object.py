@@ -5,6 +5,16 @@ defines:
 from __future__ import print_function
 import numpy as np
 
+import matplotlib
+from pyNastran.gui.qt_version import qt_version
+if qt_version == 'pyside2':
+    matplotlib.rcParams["backend"] = 'Qt5Agg'
+#else:
+    #valid strings are ['GTK3Agg', 'GTK3Cairo', 'MacOSX', 'nbAgg', 'Qt4Agg', 'Qt4Cairo', 'Qt5Agg', 'Qt5Cairo',
+                       #'TkAgg', 'TkCairo', 'WebAgg', 'WX', 'WXAgg', 'WXCairo', 'agg', 'cairo', 'pdf', 'pgf',
+                       #'ps', 'svg', 'template']
+    #raise NotImplementedError(qt_version)
+
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import _p1_p2_zaxis_to_cord2r
 from pyNastran.bdf.mesh_utils.cutting_plane_plotter import cut_and_plot_model
