@@ -12,13 +12,3 @@ This is the pyNastran.op2_interface.op2_reader.rst file.
     :members:
     :undoc-members:
 
-Subpackages
------------
-
-.. toctree::
-
-   pyNastran.op2.op2_interface.op2_reader
-   pyNastran.op2.op2_interface
-   pyNastran.op2.result_objects
-   pyNastran.op2.result_objects2
-   pyNastran.op2.tables

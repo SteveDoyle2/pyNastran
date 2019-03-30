@@ -29,7 +29,7 @@ pyNastran/op2/tables/lama_eigenvalues
 -------------------------------------
 .. toctree::
 
-   pyNastran.op2.tables.lama_eigenvalues
+   lama_eigenvalues/pyNastran.op2.tables.lama_eigenvalues
 
 pyNastran/op2/tables/oee_energy
 -------------------------------

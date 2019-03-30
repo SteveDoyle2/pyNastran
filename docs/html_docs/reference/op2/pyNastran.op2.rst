@@ -34,15 +34,20 @@ pyNastran/op2/op2_interface
 ---------------------------
 .. toctree::
 
-   pyNastran.op2.op2_interface
-   pyNastran.op2.op2_interface.op2_common
-   pyNastran.op2.op2_interface.op2_reader
-   pyNastran.op2.op2_interface.op2_scalar
-   pyNastran.op2.result_objects
-   pyNastran.op2.result_objects2
+   op2_interface/pyNastran.op2.op2_interface
+   op2_interface/pyNastran.op2.op2_interface.op2_common
+   op2_interface/pyNastran.op2.op2_interface.op2_reader
+   op2_interface/pyNastran.op2.op2_interface.op2_scalar
+
+pyNastran/op2/op2_interface
+---------------------------
+.. toctree::
+
+   result_objects/pyNastran.op2.result_objects
+   result_objects/pyNastran.op2.result_objects2
 
 pyNastran/op2/tables
 --------------------
 .. toctree::
 
-   pyNastran.op2.tables
+   tables/pyNastran.op2.tables
