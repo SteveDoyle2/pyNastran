@@ -93,7 +93,7 @@ class BaseScalarObject(Op2Codes):
         if hasattr(self, 'element_node') and not np.array_equal(self.element_node, table.element_node):
             if self.element_node.shape != table.element_node.shape:
                 msg = 'self.element_node.shape=%s table.element_node.shape=%s' % (
-                self.element_node.shape, table.element_node.shape)
+                    self.element_node.shape, table.element_node.shape)
 
                 print(self.element_node.tolist())
                 print(table.element_node.tolist())
@@ -110,39 +110,6 @@ class BaseScalarObject(Op2Codes):
     def class_name(self):
         return self.__class__.__name__
 
-    def __getstate__(self):
-        """we need to remove the saved functions"""
-        state = self.__dict__.copy()
-        if 'add' in state:
-            del state['add']
-        if 'add_new_eid' in state:
-            del state['add_new_eid']
-        if 'class_name' in state:
-            del state['class_name']
-        if 'nnodes_per_element' in state:
-            del state['nnodes_per_element']
-        if 'add_node' in state:
-            del state['add_node']
-        if 'add_eid' in state:
-            del state['add_eid']
-        if '_add' in state:
-            del state['_add']
-        #if '_add_new_eid_sort1' in state:
-            #del state['_add_new_eid_sort1']
-        #if '_add_new_node_sort1' in state:
-            #del state['_add_new_node_sort1']
-        if '_add_new_eid' in state:
-            del state['_add_new_eid']
-        if '_add_new_node' in state:
-            del state['_add_new_node']
-
-        #for key, value in state.items():
-            #if isinstance(value, (int, float, str, np.ndarray, list)) or value is None:
-                #continue
-            #print(' %s = %s' % (key, value))
-        #print(state)
-        return state
-
     def get_headers(self):
         raise RuntimeError()
 
@@ -150,124 +117,13 @@ class BaseScalarObject(Op2Codes):
         msg = []
         class_name = self.__class__.__name__
         if hasattr(self, 'data'):
-            data = self.data
+            unused_data = self.data
             shape = [int(i) for i in self.data.shape]
             headers = self.get_headers()
             headers_str = str(', '.join(headers))
             msg.append('%s[%s]; %s; [%s]\n' % (
-            class_name, self.isubcase, shape, headers_str))
+                class_name, self.isubcase, shape, headers_str))
         return msg
-
-    def _build_dataframe_transient_header(self):
-        """builds the header for the Pandas DataFrame/table"""
-        assert isinstance(self.name, (text_type, binary_type)), 'name=%s type=%s' % (self.name, type(self.name))
-        #print('self.name = %r' % self.name)
-        #name = self.name #data_code['name']
-        times = self._times
-        utimes = np.unique(times)
-        if not len(times) == len(utimes):
-            msg = 'WARNING : %s - times=%s unique_times=%s...assuming new values...new_times=%s' % (
-            self.__class__.__name__, times, utimes, np.arange(len(times)))
-            print(msg)
-            #raise RuntimeError(msg)
-            times = np.arange(len(times))
-        column_names = []
-        column_values = []
-
-        data_names = self.data_code['data_names']
-        for name in data_names:
-            #if name == primary_name:
-            #times = self.da
-            times = np.array(getattr(self, name + 's'))
-            if name == 'mode':
-                column_names.append('Mode')
-                column_values.append(times)
-
-                #if freq not in data_names:
-                #if name == 'freq':
-                ##if hasattr(self, 'freqs'):
-                    #column_names.append('Freq')
-                    #column_values.append(self.freqs)
-                #elif name == 'eigr':
-                    #column_names.append('eigenvalue_real')
-                    #column_values.append(self.eigrs)
-                #elif hasattr(self, 'eigrs') and 0:
-                    #try:
-                        #abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
-                    #except FloatingPointError:
-                        #msg = 'Cant analyze freq = sqrt(eig)/(2*pi)\neigr=%s\n' % (self.eigrs)
-                        #abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
-                        #msg += 'freq = sqrt(abs(self.eigrs)) / (2 * np.pi)=%s' % abs_freqs
-                        #raise FloatingPointError(msg)
-                    #column_names.append('Freq')
-                    #column_values.append(abs_freqs)
-                #else:
-                    #pass
-
-                # Convert eigenvalues to frequencies
-                # TODO: add damping header
-            elif name in ['eign']:
-                abs_freqs = np.sqrt(np.abs(self.eigns)) / (2 * np.pi)
-                column_names.append('Freq')
-                column_values.append(abs_freqs)
-                column_names.append('Eigenvalue')
-                column_values.append(times)
-                column_names.append('Radians')
-                column_values.append(abs_freqs * 2 * np.pi)
-
-            elif name in ['eigr']:
-                column_names.append('EigenvalueReal')
-                column_values.append(times)
-
-            elif name in ['eigi']:
-                column_names.append('EigenvalueImag')
-                column_values.append(times)
-                eigr = np.array(self.eigrs)
-                eigi = np.array(self.eigis)
-                denom = np.sqrt(eigr ** 2 + eigi ** 2)
-                damping = np.zeros(len(eigr), dtype=eigr.dtype)
-                inonzero = np.where(denom != 0)[0]
-                if len(inonzero):
-                    damping[inonzero] = -eigr[inonzero] / denom[inonzero]
-                column_names.append('Damping')
-                column_values.append(damping)
-                #calculate_damping
-            elif name in ['mode_cycle']:
-                continue
-                #column_names.append('mode_cycle(Freq?)')
-                #column_values.append(times)
-            elif name in ['mode2']:
-                continue
-                #column_names.append('mode2(Freq?)')
-                #column_values.append(times)
-            elif name in ['cycle']:
-                continue
-                #column_names.append('Freq (Cycles/s)')
-                #column_values.append(times)
-
-            elif name in ['freq', 'freq2']:
-                column_names.append('Freq')
-                column_values.append(times)
-            elif name in ['dt','time']:
-                column_names.append('Time')
-                column_values.append(times)
-            elif name in ['lftsfq', 'lsdvmn', 'load_step', 'loadID', 'loadFactor', 'loadIDs']:
-                column_names.append('LoadStep')
-                column_values.append(times)
-            elif name == 'node_id':
-                column_names.append('NodeID')
-                column_values.append(times)
-            elif name == 'element_id':
-                column_names.append('EleemntID')
-                column_values.append(times)
-            else:
-                msg = 'build_dataframe; name=%r' % name
-                print(msg)
-                raise NotImplementedError(msg)
-        assert len(column_names) > 0, column_names
-        assert len(column_names) == len(column_values), 'names=%s values=%s' % (column_names, column_values)
-        assert len(self.get_headers()) == self.data.shape[-1], 'headers=%s; n=%s\ndata.headers=%s' % (self.get_headers(), len(self.get_headers()), self.data.shape[-1])
-        return column_names, column_values
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -351,6 +207,42 @@ class ScalarObject(BaseScalarObject):
     #def isImaginary(self):
         #return bool(self.sort_bits[1])
 
+
+    def __getstate__(self):
+        """we need to remove the saved functions"""
+        state = self.__dict__.copy()
+        if 'add' in state:
+            del state['add']
+        if 'add_new_eid' in state:
+            del state['add_new_eid']
+        if 'class_name' in state:
+            del state['class_name']
+        if 'nnodes_per_element' in state:
+            del state['nnodes_per_element']
+        if 'add_node' in state:
+            del state['add_node']
+        if 'add_eid' in state:
+            del state['add_eid']
+        if '_add' in state:
+            del state['_add']
+        #if '_add_new_eid_sort1' in state:
+            #del state['_add_new_eid_sort1']
+        #if '_add_new_node_sort1' in state:
+            #del state['_add_new_node_sort1']
+        if '_add_new_eid' in state:
+            del state['_add_new_eid']
+        if '_add_new_node' in state:
+            del state['_add_new_node']
+        if 'dataframe' in state:
+            del state['dataframe']
+
+        #for key, value in state.items():
+            #if isinstance(value, (int, float, str, np.ndarray, list)) or value is None:
+                #continue
+            #print(' %s = %s' % (key, value))
+        #print(state)
+        return state
+
     def _get_result_group(self):
         """gets the h5 result group"""
         code = self._get_code()
@@ -383,7 +275,7 @@ class ScalarObject(BaseScalarObject):
     #@property
     def _sort_method(self):
         try:
-            sort_method, is_real, is_random = self._table_specs()
+            sort_method, unused_is_real, unused_is_random = self._table_specs()
         except:
             sort_method = get_sort_method_from_table_name(self.table_name)
         #is_sort1 = self.table_name.endswith('1')
@@ -395,12 +287,6 @@ class ScalarObject(BaseScalarObject):
     def dataframe(self):
         """alternate way to get the dataframe"""
         return self.data_frame
-
-    def __getstate__(self):
-        state = BaseScalarObject.__getstate__(self)
-        if 'dataframe' in state:
-            del state['dataframe']
-        return state
 
     def apply_data_code(self):
         if self.table_name is not None and self.table_name != self.data_code['table_name']:
@@ -559,7 +445,7 @@ class ScalarObject(BaseScalarObject):
             raise RuntimeError('grid_type=%r' % grid_type_str)
         return grid_type
 
-    def update_dt(self, data_code, dt):
+    def update_dt(self, data_code, unused_dt):
         """
         This method is called if the object already exits and a new
         time/freq/load step is found
@@ -573,6 +459,117 @@ class ScalarObject(BaseScalarObject):
         #if dt is not None:
             #self.dt = dt
             #self.add_new_transient()
+
+    def _build_dataframe_transient_header(self):
+        """builds the header for the Pandas DataFrame/table"""
+        assert isinstance(self.name, (text_type, binary_type)), 'name=%s type=%s' % (self.name, type(self.name))
+        #print('self.name = %r' % self.name)
+        #name = self.name #data_code['name']
+        times = self._times
+        utimes = np.unique(times)
+        if not len(times) == len(utimes):
+            msg = 'WARNING : %s - times=%s unique_times=%s...assuming new values...new_times=%s' % (
+                self.__class__.__name__, times, utimes, np.arange(len(times)))
+            print(msg)
+            #raise RuntimeError(msg)
+            times = np.arange(len(times))
+        column_names = []
+        column_values = []
+
+        data_names = self.data_code['data_names']
+        for name in data_names:
+            #if name == primary_name:
+            #times = self.da
+            times = np.array(getattr(self, name + 's'))
+            if name == 'mode':
+                column_names.append('Mode')
+                column_values.append(times)
+
+                #if freq not in data_names:
+                #if name == 'freq':
+                ##if hasattr(self, 'freqs'):
+                    #column_names.append('Freq')
+                    #column_values.append(self.freqs)
+                #elif name == 'eigr':
+                    #column_names.append('eigenvalue_real')
+                    #column_values.append(self.eigrs)
+                #elif hasattr(self, 'eigrs') and 0:
+                    #try:
+                        #abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                    #except FloatingPointError:
+                        #msg = 'Cant analyze freq = sqrt(eig)/(2*pi)\neigr=%s\n' % (self.eigrs)
+                        #abs_freqs = np.sqrt(np.abs(self.eigrs)) / (2 * np.pi)
+                        #msg += 'freq = sqrt(abs(self.eigrs)) / (2 * np.pi)=%s' % abs_freqs
+                        #raise FloatingPointError(msg)
+                    #column_names.append('Freq')
+                    #column_values.append(abs_freqs)
+                #else:
+                    #pass
+
+                # Convert eigenvalues to frequencies
+                # TODO: add damping header
+            elif name in ['eign']:
+                abs_freqs = np.sqrt(np.abs(self.eigns)) / (2 * np.pi)
+                column_names.append('Freq')
+                column_values.append(abs_freqs)
+                column_names.append('Eigenvalue')
+                column_values.append(times)
+                column_names.append('Radians')
+                column_values.append(abs_freqs * 2 * np.pi)
+
+            elif name in ['eigr']:
+                column_names.append('EigenvalueReal')
+                column_values.append(times)
+
+            elif name in ['eigi']:
+                column_names.append('EigenvalueImag')
+                column_values.append(times)
+                eigr = np.array(self.eigrs)
+                eigi = np.array(self.eigis)
+                denom = np.sqrt(eigr ** 2 + eigi ** 2)
+                damping = np.zeros(len(eigr), dtype=eigr.dtype)
+                inonzero = np.where(denom != 0)[0]
+                if len(inonzero):
+                    damping[inonzero] = -eigr[inonzero] / denom[inonzero]
+                column_names.append('Damping')
+                column_values.append(damping)
+                #calculate_damping
+            elif name in ['mode_cycle']:
+                continue
+                #column_names.append('mode_cycle(Freq?)')
+                #column_values.append(times)
+            elif name in ['mode2']:
+                continue
+                #column_names.append('mode2(Freq?)')
+                #column_values.append(times)
+            elif name in ['cycle']:
+                continue
+                #column_names.append('Freq (Cycles/s)')
+                #column_values.append(times)
+
+            elif name in ['freq', 'freq2']:
+                column_names.append('Freq')
+                column_values.append(times)
+            elif name in ['dt', 'time']:
+                column_names.append('Time')
+                column_values.append(times)
+            elif name in ['lftsfq', 'lsdvmn', 'load_step', 'loadID', 'loadFactor', 'loadIDs']:
+                column_names.append('LoadStep')
+                column_values.append(times)
+            elif name == 'node_id':
+                column_names.append('NodeID')
+                column_values.append(times)
+            elif name == 'element_id':
+                column_names.append('EleemntID')
+                column_values.append(times)
+            else:
+                msg = 'build_dataframe; name=%r' % name
+                print(msg)
+                raise NotImplementedError(msg)
+        assert len(column_names) > 0, column_names
+        assert len(column_names) == len(column_values), 'names=%s values=%s' % (column_names, column_values)
+        assert len(self.get_headers()) == self.data.shape[-1], 'headers=%s; n=%s\ndata.headers=%s' % (self.get_headers(), len(self.get_headers()), self.data.shape[-1])
+        return column_names, column_values
 
     def _write_table_header(self, op2_file, fascii, date):
         table_name = '%-8s' % self.table_name # 'BOUGV1  '
@@ -622,7 +619,7 @@ class ScalarObject(BaseScalarObject):
 
         month, day, year = date
         try:
-            subtable_name = self.subtable_name
+            unused_subtable_name = self.subtable_name
         except AttributeError:
             #print('attrs =', self.object_attributes())
             #raise

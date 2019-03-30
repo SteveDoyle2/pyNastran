@@ -20,11 +20,10 @@ Subpackages
    pyNastran.bdf.cards.base_card
    pyNastran.bdf.cards.bdf_sets
    pyNastran.bdf.cards.bdf_tables
-   pyNastran.bdf.cards.collpase_card
+   pyNastran.bdf.cards.collapse_card
    pyNastran.bdf.cards.constraints
    pyNastran.bdf.cards.contact
    pyNastran.bdf.cards.coordinate_systems
-   pyNastran.bdf.cards.deqatn
    pyNastran.bdf.cards.dmig
    pyNastran.bdf.cards.dynamic
    pyNastran.bdf.cards.materials
@@ -34,6 +33,7 @@ Subpackages
    pyNastran.bdf.cards.nodes
    pyNastran.bdf.cards.params
    pyNastran.bdf.cards.utils
+#   pyNastran.bdf.cards.deqatn
 
 aero Package
 ------------
