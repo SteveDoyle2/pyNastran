@@ -70,7 +70,6 @@ Random
    random/pyNastran.op2.tables.oes_stress_strain.random.oes_bend
    random/pyNastran.op2.tables.oes_stress_strain.random.oes_beams
    random/pyNastran.op2.tables.oes_stress_strain.random.oes_composite_plates
-   random/pyNastran.op2.tables.oes_stress_strain.random.oes_gap
    random/pyNastran.op2.tables.oes_stress_strain.random.oes_plates
    random/pyNastran.op2.tables.oes_stress_strain.random.oes_rods
    random/pyNastran.op2.tables.oes_stress_strain.random.oes_shear

@@ -4,30 +4,6 @@ pyNastran/bdf
 
 This is the pyNastran.bdf.rst file.
 
-*****************
-:mod:`bdf` Module
-*****************
-
-.. inheritance-diagram:: pyNastran.bdf.bdf
-
-.. automodule:: pyNastran.bdf.bdf
-    :inherited-members:
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-*******************************
-:mod:`case_control_deck` Module
-*******************************
-
-.. inheritance-diagram:: pyNastran.bdf.case_control_deck
-
-.. automodule:: pyNastran.bdf.case_control_deck
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
 *******************************
 :mod:`errors` Module
 *******************************
@@ -40,99 +16,19 @@ This is the pyNastran.bdf.rst file.
     :undoc-members:
     :show-inheritance:
 
-*******************************
-:mod:`field_writer` Module
-*******************************
-
-.. inheritance-diagram:: pyNastran.bdf.field_writer
-
-.. automodule:: pyNastran.bdf.field_writer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-*******************************
-:mod:`field_writer_16` Module
-*******************************
-.. inheritance-diagram:: pyNastran.bdf.field_writer_16
-
-.. automodule:: pyNastran.bdf.field_writer_16
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-*******************************
-:mod:`field_writer_8` Module
-*******************************
-
-.. inheritance-diagram:: pyNastran.bdf.field_writer_8
-
-.. automodule:: pyNastran.bdf.field_writer_8
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-*********************************
-:mod:`field_writer_double` Module
-*********************************
-.. inheritance-diagram:: pyNastran.bdf.field_writer_double
-
-.. automodule:: pyNastran.bdf.field_writer_double
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-*******************************
-:mod:`patran_rpt` Module
-*******************************
-.. inheritance-diagram:: pyNastran.bdf.patran_utils.patran_rpt
-
-.. automodule:: pyNastran.bdf.patran_utils.patran_rpt
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-*********************
-:mod:`subcase` Module
-*********************
-
-.. inheritance-diagram:: pyNastran.bdf.subcase
-
-.. automodule:: pyNastran.bdf.subcase
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-*******************
-:mod:`utils` Module
-*******************
-
-.. inheritance-diagram:: pyNastran.bdf.utils
-
-.. automodule:: pyNastran.bdf.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-************************
-:mod:`write_path` Module
-************************
-
-.. inheritance-diagram:: pyNastran.bdf.write_path
-
-.. automodule:: pyNastran.bdf.write_path
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 ***********
 Subpackages
 ***********
 
 .. toctree::
 
-   utils
-   write_path
+   pyNastran.bdf.bdf
+   pyNastran.bdf.case_control_deck
+   pyNastran.bdf.subcase
+   pyNastran.bdf.field_writer
+   pyNastran.bdf.patran_rpt
+   pyNastran.bdf.utils
+   pyNastran.bdf.write_path
    bdf_interface/pyNastran.bdf.bdf_interface
    cards/pyNastran.bdf.cards
 

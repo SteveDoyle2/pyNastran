@@ -1,7 +1,7 @@
 bdf/field_writer Package
 ========================
 
-This is the pyNastran.bdf.rst file.
+This is the pyNastran.bdf.field_writer.rst file.
 
 :mod:`field_writer` Module
 --------------------------
