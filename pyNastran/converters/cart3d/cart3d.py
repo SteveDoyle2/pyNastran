@@ -63,6 +63,7 @@ def comp2tri(in_filenames, out_filename,
     Notes
     -----
     assumes loads is None
+
     """
     points = []
     elements = []
@@ -80,8 +81,8 @@ def comp2tri(in_filenames, out_filename,
         #region += nregions
 
         points.append(model.nodes)
-        elements.append(model.elements)
-        regions.append(model.regions)
+        elements.append(model.elements + npoints)
+        regions.append(model.regions + nregions)
         npoints += npointsi
         nregions += nregionsi
 
@@ -93,7 +94,7 @@ def comp2tri(in_filenames, out_filename,
     model.regions = regions
 
     model.write_cart3d(out_filename, is_binary=is_binary, float_fmt=float_fmt)
-
+    return model
 
 class Cart3dIO(object):
     """
@@ -283,6 +284,7 @@ class Cart3dIO(object):
     def _read_points_ascii(self, npoints):
         """
         A point is defined by x,y,z and the ID is the location in points.
+
         """
         p = 0
         data = []
@@ -313,6 +315,7 @@ class Cart3dIO(object):
     def _read_elements_ascii(self, nelements):
         """
         An element is defined by n1,n2,n3 and the ID is the location in elements.
+
         """
         assert nelements > 0, 'npoints=%s nelements=%s' % (self.npoints, nelements)
         elements = np.zeros((nelements, 3), dtype='int32')
@@ -455,6 +458,7 @@ class Cart3dIO(object):
     def _write_data(self, outfile, data, types='ifs', endian=None):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
+
         """
         n = len(data)
         nints = n // 4
@@ -497,6 +501,7 @@ class Cart3dIO(object):
     def _write_ndata(self, outfile, n, types='ifs'):  # pragma: no cover
         """
         Useful function for seeing what's going on locally when debugging.
+
         """
         nold = self.n
         data = self.infile.read(n)
@@ -545,6 +550,7 @@ class Cart3D(Cart3dIO):
             a string of the axis
         tol : float; default=0.000001
             the tolerance for the centerline points
+
         """
         raise NotImplementedError()
         #self.log.info('---starting make_mirror_model---')
@@ -640,6 +646,7 @@ class Cart3D(Cart3dIO):
         Notes
         -----
         Cp is really loads['Cp'] and was meant for loads analysis only
+
         """
         nodes = self.nodes
         elements = self.elements
@@ -732,6 +739,7 @@ class Cart3D(Cart3dIO):
         -------
         free edges : (nedges, 2) int ndarray
             the free edge node ids
+
         """
         edge_to_eid_map = defaultdict(list)
         for i, element in enumerate(elements):
@@ -787,6 +795,7 @@ class Cart3D(Cart3dIO):
     def write_cart3d(self, outfilename, is_binary=False, float_fmt='%6.7f'):
         """
         writes a cart3d file
+
         """
         assert len(self.points) > 0, 'len(self.points)=%s' % len(self.points)
 
@@ -843,6 +852,7 @@ class Cart3D(Cart3dIO):
         result_names : List[str]; default=None (All)
             result_names = ['Cp', 'rho', 'rhoU', 'rhoV', 'rhoW', 'rhoE',
                             'Mach', 'U', 'V', 'W', 'E']
+
         """
         if nresults == 0:
             return
@@ -903,6 +913,7 @@ class Cart3D(Cart3dIO):
         loads : dict; default=None -> {}
             key : ???
             value : ???
+
         """
         if loads is None:
             loads = {}
@@ -1027,6 +1038,7 @@ class Cart3D(Cart3dIO):
         -------
         normals : (n, 3) ndarray
             unnormalized centroidal normal vectors
+
         """
         elements = self.elements
         nodes = self.nodes
@@ -1051,6 +1063,7 @@ class Cart3D(Cart3dIO):
         area : (n, 3) ndarray
             the element areas
         """
+
         ne = self.elements.shape[0]
         n = self._get_area_vector()
         ni = np.linalg.norm(n, axis=1)
@@ -1065,6 +1078,7 @@ class Cart3D(Cart3dIO):
         -------
         cnormals : (n, 3) ndarray
             normalized centroidal normal vectors
+
         """
         ne = self.elements.shape[0]
         n = self._get_area_vector()
@@ -1088,6 +1102,7 @@ class Cart3D(Cart3dIO):
         -------
         nnormals : (n, 3) ndarray
             normalized nodal normal vectors
+
         """
         elements = self.elements
         #nodes = self.nodes

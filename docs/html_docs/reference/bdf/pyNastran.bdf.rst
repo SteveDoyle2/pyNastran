@@ -29,8 +29,33 @@ Subpackages
    pyNastran.bdf.patran_rpt
    pyNastran.bdf.utils
    pyNastran.bdf.write_path
-   bdf_interface/pyNastran.bdf.bdf_interface
    cards/pyNastran.bdf.cards
+
+bdf_interface
+-------------
+.. toctree::
+
+   bdf_interface/pyNastran.bdf.bdf_interface.add_card
+   bdf_interface/pyNastran.bdf.bdf_interface.add_methods
+   bdf_interface/pyNastran.bdf.bdf_interface.assign_type
+   bdf_interface/pyNastran.bdf.bdf_interface.attributes
+   bdf_interface/pyNastran.bdf.bdf_interface.bdf_card
+   bdf_interface/pyNastran.bdf.bdf_interface.cross_reference
+   bdf_interface/pyNastran.bdf.bdf_interface.safe_cross_reference
+   bdf_interface/pyNastran.bdf.bdf_interface.get_card
+   bdf_interface/pyNastran.bdf.bdf_interface.get_methods
+   bdf_interface/pyNastran.bdf.bdf_interface.include_file
+   bdf_interface/pyNastran.bdf.bdf_interface.pybdf
+   bdf_interface/pyNastran.bdf.bdf_interface.replication
+   bdf_interface/pyNastran.bdf.bdf_interface.stats
+   bdf_interface/pyNastran.bdf.bdf_interface.subcase_cards
+   bdf_interface/pyNastran.bdf.bdf_interface.subcase_utils
+   bdf_interface/pyNastran.bdf.bdf_interface.verify_validate
+   bdf_interface/pyNastran.bdf.bdf_interface.utils
+   bdf_interface/pyNastran.bdf.bdf_interface.uncross_reference
+   bdf_interface/pyNastran.bdf.bdf_interface.write_mesh
+   bdf_interface/pyNastran.bdf.bdf_interface.write_mesh_files
+
 
 mesh_utils
 ----------

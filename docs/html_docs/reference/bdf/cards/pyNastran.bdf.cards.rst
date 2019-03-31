@@ -1,20 +1,5 @@
 cards Package
 =============
-
-**************************
-:mod:`optimization` Module
-**************************
-
-.. inheritance-diagram:: pyNastran.bdf.cards.optimization
-
-.. automodule:: pyNastran.bdf.cards.optimization
-    :members:
-    :private-members:
-    :undoc-members:
-    :show-inheritance:
-
-Subpackages
------------
 .. toctree::
 
    pyNastran.bdf.cards.base_card
@@ -31,7 +16,9 @@ Subpackages
    pyNastran.bdf.cards.methods
    pyNastran.bdf.cards.msgmesh
    pyNastran.bdf.cards.nodes
+   pyNastran.bdf.cards.optimization
    pyNastran.bdf.cards.params
+   pyNastran.bdf.cards.superelements
    pyNastran.bdf.cards.utils
 #   pyNastran.bdf.cards.deqatn
 
@@ -49,6 +36,7 @@ elements Package
 ----------------
 .. toctree::
 
+   pyNastran.bdf.cards.axisymmetric.axisymmetric
    elements/pyNastran.bdf.cards.elements.axisymmetric_shells
    elements/pyNastran.bdf.cards.elements.bars
    elements/pyNastran.bdf.cards.elements.beam
@@ -93,4 +81,6 @@ thermal Package
 ---------------
 .. toctree::
 
-   thermal/pyNastran.bdf.cards.thermal
+   thermal/pyNastran.bdf.cards.thermal.loads
+   thermal/pyNastran.bdf.cards.thermal.radiation
+   thermal/pyNastran.bdf.cards.thermal.thermal
