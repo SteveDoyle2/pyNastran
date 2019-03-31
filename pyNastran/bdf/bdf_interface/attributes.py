@@ -884,10 +884,62 @@ class BDFAttributes(object):
     @property
     def type_slot_str(self):
         """helper method for printing supported cards"""
-        html_msg = ['| Card Group | Cards |']
+        nchars = len('Card Group')
+
+        nchars_cards = 0
+        for card_group in self._slot_to_type_map:
+            nchars = max(nchars, len(card_group))
+
+        nline = 58
+        fmt =     '| %%-%ss | %%-%ss |\n' % (nchars, nline)
+        fmt_plus = '+%%-%ss+%%-%ss+\n' % (nchars + 2, nline + 2)
+
+        dash1 = '-' * (nchars + 2)
+        dash2 = '-' * (nline + 2)
+        dash_plus = fmt_plus % (dash1, dash2)
+        html_msg = [
+            dash_plus,
+            fmt % ('Card Group', 'Cards'),
+        ]
         for card_group, card_types in sorted(self._slot_to_type_map.items()):
-            html_msg.append('| %s | %s |' % (card_group, ', '.join(card_types)))
-        return '\n'.join(html_msg)
+            valid_cards = [card_type for card_type in card_types
+                           if card_type in self.cards_to_read]
+            valid_cards.sort()
+            if len(valid_cards) == 0:
+                continue
+
+            i = 0
+            sublines = []
+            subline = ''
+            while valid_cards:
+                card_type = valid_cards.pop(0)
+
+                # the +2 is for the comma and space
+                len_card_type = len(card_type) + 2
+                nline_new = len(subline) + len_card_type
+                if nline_new > nline:
+                    sublines.append(subline.rstrip(' '))
+                    subline = ''
+                subline += '%s, ' % card_type
+
+            if subline:
+                sublines.append(subline.rstrip(', '))
+
+            html_msg.append(dash_plus)
+            for subline in sublines:
+                html_msg.append(fmt % (card_group, subline))
+                card_group = ''
+
+        html_msg.append(dash_plus)
+
+        #for card_group, card_types in sorted(self._slot_to_type_map.items()):
+            #html_msg.append('| %s | %s |' % (card_group, ', '.join(card_types)))
+
+        #html_msg.append(
+            #fmt_plus % ('-'*(nchars + 2), '-'*(nline + 2))
+        #)
+        msg = ''.join(html_msg)
+        return msg
 
     @property
     def nastran_format(self):
