@@ -587,10 +587,13 @@ INT_PARAMS_1 = [
     b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
     b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
     b'OUNIT2K', b'OUNIT2M', b'RESCOMP', b'PDRMSG', b'LMODES', b'USETPRT',
-    b'NOCOMPS', b'OPTEXIT', b'RSOPT']
+    b'NOCOMPS', b'OPTEXIT', b'RSOPT', b'GUSTAERO', b'MPTUNIT']
 FLOAT_PARAMS_1 = [
     b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
-    b'SIGMA', b'TABS', b'EPPRT', b'AUNITS']
+    b'SIGMA', b'TABS', b'EPPRT', b'AUNITS',
+    #b'Q'
+]
+DOUBLE_PARAMS_1 = [b'Q']
 STR_PARAMS_1 = [
     b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
     b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
@@ -1314,6 +1317,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         struct2s8 = Struct(b'4s8s')
         struct2i = Struct(b'ii')
         struct2f = Struct(b'ff')
+        struct2d = Struct(b'dd')
         i = 0
 
         #print('---------------------------')
@@ -1333,6 +1337,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 value = struct2f.unpack(slot)[1]
                 #print(word, value)
                 i += 4
+            elif word in DOUBLE_PARAMS_1:
+                slot = data[(i+1)*4:(i+8)*4]
+                value = struct2d.unpack(slot)[1]
+                #print(word, value)
+                i += 8
             elif word in STR_PARAMS_1:
                 #print('--------')
                 #self.show_data(data[i*4:])
@@ -1343,7 +1352,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 i += 2
             else:
                 #self.show_data(data[i*4:])
-                self.show_data(data[i*4:(i+4)*4])
+                self.show_data(data[i*4:(i+4)*4], types='ifsd')
+                self.show_data(data[i*4+4:], types='ifsd')
                 raise NotImplementedError('%r is not a supported PARAM' % word)
 
             key = word.decode('latin1')

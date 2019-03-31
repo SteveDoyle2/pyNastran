@@ -3356,11 +3356,6 @@ class OP2Reader(object):
             self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
             self.binary_debug.write('---markers = [-3, 1, 0]---\n')
 
-        markers = self.get_nmarkers(1, rewind=True)
-        if markers[0] == 0:
-            self.log.debug('    returning early')
-            return
-
         # get the parsing functions (table3_parser, table4_parser)
         # or find out we're going to be skipping the tables
         #
@@ -3388,6 +3383,11 @@ class OP2Reader(object):
 
         # we need to check the marker, so we read it and rewind, so we don't
         # screw up our positioning in the file
+        markers = self.get_nmarkers(1, rewind=True)
+        #if markers[0] == 0:
+            #self.log.debug('    returning early')
+            #return
+
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
 
@@ -3426,8 +3426,8 @@ class OP2Reader(object):
                     #self.show(200)
                     #break
                 raise
-
             markers = self.get_nmarkers(1, rewind=True)
+
         if self.is_debug_file:
             self.binary_debug.write('breaking on marker=%r\n' % str(markers))
 
