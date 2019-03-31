@@ -12,14 +12,22 @@ Overview
  - limited package requirements for BDF/OP2/F06
   - additional features available with more packages
     - BDF/OP2:
+
        - h5py for HDF5 input/output support
        - PyQt4/PyQt5/PySide/PySide2/wxpython for file loading popup
-    - OP2: pandas for results/matrices for use in the Jupyter Notebook
-    - F06: matplotlib support for plotting
-    - GUI: range of packages
-      - PyQt4/PyQt5/PySide/PySide2 for GUI frontend
+    - OP2:
+
+      - pandas for results/matrices for use in the Jupyter Notebook
+    - F06:
+
+      - matplotlib support for plotting
+    - GUI: range of choices
+
+      - PyQt4/PyQt5/PySide/PySide2
       - VTK 7/8
+
     - logging using **cpylog**
+
       - colorama for console logging
       - HTML logging for Jupyter Notebook
       - no markup when piping output to a file
@@ -28,11 +36,13 @@ Overview
 BDF Reader/Writer
 =================
  - Input/Output:
+
    - 473 cards supported including:
      - optimization
      - aero
      - thermal
      - superelements
+
    - small, large, double precision file reading/writing
    - pickling
    - HDF5 reading/writing
@@ -48,10 +58,12 @@ BDF Reader/Writer
      ```
 
  - methods:
+
    - loads summation
    - mass properties (including NSM)
    - nodal equivalencing
    - mesh quality
+
      - aspect ratio, taper ratio, skew, min/max interior angle
      - quad collapsing
      - element deletion
@@ -63,6 +75,7 @@ BDF Reader/Writer
    - mirroring
    - solid skinning
    - length, area, volume, mass breakdowns
+
 - list of cards supported...
 
 | Card Group | Cards |
@@ -247,6 +260,7 @@ OP4 Reader
 ==========
  - For matrices, the OP2 is preffered.  It's simply faster.
  - Types:
+
    - ASCII/binary
    - SMALL/BIG MAT format
    - Real/Complex
@@ -254,18 +268,21 @@ OP4 Reader
    - Single/Double Precision
  - ASCII writer
 
-OP2 Reader
-==========
+OP2 Reader / F06 Writer
+=======================
 - Supported Nastran versions:
+
   - MSC Nastran
   - NX Nastran
   - Optistruct
   - Radioss
   - IMAT
   - Autodesk Nastran/Nastran-in-CAD
+
     - geometry not supported
 
 - Input/Output:
+
   - Very fast OP2 reader (up to 500 MB/sec with an SSD)
   - Memory efficient
   - support directly loading into HDF5 for very large models
@@ -276,79 +293,98 @@ OP2 Reader
   - geometry can be read directly from op2 (it's not perfect, but it's much faster)
 
 - Operations:
+
   - transform displacement/eigenvectors/spc/mpc/applied loads to global coordinate system
   - transform stresses/forces to material coordinate system
 
 - Supports:
+
   - superelements
   - optimization
   - mesh adaptivity
   - preload
   - shape optimization
 
-- Results:
-  - This is probably an incomplete list.  **Most** results are supported.
-  - **Basic Tables**
-    - Types:
-       - Displacment
-       - Velocity
-       - Acceleration
-       - Eigenvectors
-       - SPC/MPC Forces
-       - Applied Loads
-       - Load Vectors
-       - Temperature
-    - Real
-    - Complex
-    - Random; no NO (Number of Crossings) or RMS results
-  - **Stress/Strain**
-    - Types:
-       - Spring, Rod, Bar, Beam, Bushing, Gap, Shell, Solid
-    - Real
-    - Complex
-    - Random; no NO (Number of Crossings) or RMS results
-  - **Forces**
-    - Types:
-       - Loads: Spring, Rod, Bar, Beam, Bushing, Gap, Shell (Isotropic/Composite), Solid
-       - Thermal Gradient/Flux: 1D, 2D, 3D
-    - Real
-    - Complex
-  - **Grid Point Forces**
-    - Real
-    - Complex
-  - **Strain Energy**
-    - Types:
-      - Spring, Rod, Bar, Beam, Bushing, Gap, Shell (Isotropic/Composite), Solid, Rigid, DMIG
-    - Real
-    - Complex
-  - **Matrices**
-    - Basic
-      - Real/Complex
-      - Sparse/Dense
-      - Single/Double Precision
-    - MATPOOL
-      - Real/Complex
-      - Sparse/Dense
-      - Single/Double Precision
-  - Other
-    - Eigenvalues
-      - Modal, Buckling, Complex
-    - Grid Point Weight
-    - Monitor Points
-    - Design Optimization:
-      - Convergence History
-      - **Limited** Design Responses
-        - Weight
-        - Stress (Isotropic/Composite)
-        - Strain (Isotropic/Composite)
-        - Force
-        - Flutter
+OP2 Results
+------------
+- This is probably an incomplete list.  **Most** results are supported.
+- **Basic Tables**
+
+  - Types:
+     - Displacment
+     - Velocity
+     - Acceleration
+     - Eigenvectors
+     - SPC/MPC Forces
+     - Applied Loads
+     - Load Vectors
+     - Temperature
+  - Real/Complex
+  - Random; no NO (Number of Crossings) or RMS results
+
+- **Stress/Strain**
+
+  - Real/Complex
+  - Random; no NO (Number of Crossings) or RMS results
+  - Types:
+     - Spring, Rod, Bar, Beam, Bushing, Gap, Shell, Solid
+
+- **Forces**
+
+  - Real/Complex
+  - Types:
+     - Loads: Spring, Rod, Bar, Beam, Bushing, Gap, Shell (Isotropic/Composite), Solid
+     - Thermal Gradient/Flux: 1D, 2D, 3D
+
+- **Grid Point Forces**
+
+  - Real/Complex
+
+- **Strain Energy**
+
+  - Real/Complex
+  - Types:
+    - Spring, Rod, Bar, Beam, Bushing, Gap, Shell (Isotropic/Composite), Solid, Rigid, DMIG
+
+- **Matrices**
+
+  - Basic:
+    - Real/Complex
+    - Sparse/Dense
+    - Single/Double Precision
+
+  - MATPOOL:
+    - Real/Complex
+    - Sparse/Dense
+    - Single/Double Precision
+
+- Other
+
+  - Eigenvalues
+
+    - Modal, Buckling, Complex
+
+  - Grid Point Weight
+  - Monitor Points
+  - Design Optimization:
+
+    - Convergence History
+    - **Limited** Design Responses:
+
+      - Weight
+      - Stress (Isotropic/Composite)
+      - Strain (Isotropic/Composite)
+      - Force
+      - Flutter
 
 F06 Plotter
 ===========
 - flutter (SOL 145) parser
-  - supports multiple subcases
-  - PK and PKNL methods supported
+
+  - Supports:
+     - multiple subcases
+     - PK and PKNL methods
+
   - `plot_Vg_Vf(...)`, `plot_Vg(...)`, `plot_root_locus(...)`
   - input/output units
 
@@ -357,27 +393,34 @@ GUI
    [GUI](http://pynastran-git.readthedocs.io/en/latest/quick_start/gui.html)
  - buttons for picking, rotation center, distance, min/max
  - GUI Features:
+
    - Packages:
+
      - PyQt4/PyQt5
      - PySide/PySide2
      - QScintilla & pygments support for scripting code editor
    - color coded logging
 
    - legend menu
+
      - min/max control
      - number of labels/colors
      - additional color maps
      - legend position
+
    - animation menu
+
       - mix and match fringe/displacement/vector results (e.g., stress shown on a displaced model)
-      - Real/Complex Resultse
+      - Real/Complex Results
           - Scale factor
           - Phase
           - Time
       - Multiple Animation Profiles
       - Where:
+
         - in GUI
         - exported gif
+
    - node/element highlighting
    - element groups
    - high resolution screenshots
@@ -385,98 +428,125 @@ GUI
    - coordinate systems
    - results sidebar
    - custom user results
+
      - nodal fringe
      - centroidal fringe
      - deflection
      - nodal vector results (e.g., SPC forces)
    - preferences menu
 
- - Nastran specific features:
-   - multiple OP2s
-   - deflection plots
-   - SOL 200 support
-   - geometry
-     - all elements supported in BDF
-   - bar profile visualzation
-     - 3D
-     - dimensional vectors
-   - aero models
-     - CAERO panels & subpanels
-     - sideslip coordinate systems support
-   - mass elements
-   - plotting elements (e.g., PLOTEL)
-   - nominal geometry (useful for deflection plots)
+Nastran Specific Features
+-------------------------
+- multiple OP2s
+- deflection plots
+- SOL 200 support
 
-   - geometry results:
-     - element id
-     - property id
-       - PSHELL breakdown
-         - thickness, ts/t, 12I/t^3
-         - for each material:
-           - material id
-           - stiffnesses
-           - is_isotropic
-       - PCOMP breakdown
-         - total thickness
-         - for each layer:
-           - thickness
-           - material id
-           - stiffnesses
-           - is_isotropic
-       - PSOLID breakdown
-         - material id
-         - stiffnesses
-         - is_isotropic
-      - loads
-      - optimization
-        - design regions
-        - current value
-        - lower/upper bounds
-      - mesh quality:
-        - area, min/max interior angle, skew angle, aspect ratio, taper ratio results
+- geometry
 
-   - OP2 results:
-     - solution types:
-       - analysis types:
-         - static
-         - modal
-         - frequency response
-         - load step
-       - additional model complexity
-         - optimization
-         - preload
-     - result quantities:
-       - displacement, velocity, acceleration, eigenvectors
-       - SPC/MPC forces
-       - applied loads
-       - temperature
-       - stress/strain
-       - strain energy
-       - limited element forces
-       - thermal gradient/flux
+  - all elements supported in BDF
+
+- bar profile visualzation
+
+  - 3D
+  - dimensional vectors
+
+- aero models
+
+  - CAERO panels & subpanels
+  - sideslip coordinate systems support
+
+- mass elements
+- plotting elements (e.g., PLOTEL)
+- nominal geometry (useful for deflection plots)
+
+Nastran Geometry Results
+^^^^^^^^^^^^^^^^^^^^^^^^
+- node id
+- element id
+- property id
+
+  - PSHELL breakdown
+
+    - thickness, ts/t, 12I/t^3
+    - for each material:
+
+      - material id
+      - stiffnesses
+      - is_isotropic
+
+  - PCOMP breakdown
+
+    - total thickness
+    - for each layer:
+
+      - thickness
+      - material id
+      - stiffnesses
+      - is_isotropic
+
+  - PSOLID breakdown
+
+    - material id
+    - stiffnesses
+    - is_isotropic
+
+ - loads
+ - optimization
+
+   - design regions
+   - current value
+   - lower/upper bounds
+
+ - mesh quality:
+
+   - area, min/max interior angle, skew angle, aspect ratio, taper ratio results
+
+Nastran OP2 Results
+^^^^^^^^^^^^^^^^^^^
+- solution types:
+
+  - analysis types:
+
+    - static
+    - modal
+    - frequency response
+    - load step
+
+  - additional model complexity
+
+    - optimization
+    - preload
+
+- result quantities:
+
+  - displacement, velocity, acceleration, eigenvectors
+  - SPC/MPC forces
+  - applied loads
+  - temperature
+  - stress/strain
+  - strain energy
+  - limited element forces
+  - thermal gradient/flux
 
 Converters / Additional GUI Options
 -----------------------------------
-- pyNastran's code base makes it easy to develop other useful tools
-  that make use of common code.  As such, additional formats are supported
-  in terms of readers/writers/converters/viewing, but are not a main focus.
-  These include:
-  - "Official":
-   - AFLR
-   - AVL
-   - Cart3d
-   - Panair
-   - OpenFOAM
-   - S/HABP
-   - LAWGS
-   - FAST
-   - STL
-   - SU2
-   - Tetgen
-   - Tecplot
-   - Usm3d
-   - Abaqus
-  - Dev Only:
-    - AVUS
-    - OBJ
-    - OpenVSP
+pyNastran's code base makes it easy to develop other useful tools
+that make use of common code.  As such, additional formats are supported
+in terms of readers/writers/converters/viewing, but are not a main focus.
+
+These include:
+
+- AFLR
+- AVL
+- Cart3d
+- Panair
+- OpenFOAM
+- S/HABP
+- LAWGS
+- FAST
+- STL
+- SU2
+- Tetgen
+- Tecplot
+- Usm3d
+- Abaqus
