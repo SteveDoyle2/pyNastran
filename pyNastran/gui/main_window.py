@@ -17,6 +17,7 @@ import imp
 from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore
 from qtpy.QtWidgets import QMessageBox, qApp
+from six.moves import urllib
 
 # 3rd party
 import vtk  # if this crashes, make sure you ran setup.py
@@ -190,33 +191,30 @@ class MainWindow(GuiCommon, NastranIO):
 
     def open_website(self):
         """loads the pyNastran main website"""
-        import webbrowser
-        url = pyNastran.__website__
-        webbrowser.open(url)
+        self._urlopen(pyNastran.__website__)
 
     def open_docs(self):
         """loads the pyNastran docs website"""
-        import webbrowser
-
         url = pyNastran.__docs__
-        import urllib2
         try:
-            urllib2.urlopen(url)
-        except (urllib2.HTTPError, urllib2.URLError):
+            urllib.request.urlopen(url)
+        except (urllib.error.HTTPError, urllib.error.URLError):
             url = pyNastran.__docs_rtd__
-        webbrowser.open(url)
+        self._urlopen(url)
 
     def open_issue(self):
         """loads the pyNastran issue tracker"""
-        import webbrowser
-        url = pyNastran.__issue__
-        webbrowser.open(url)
+        self._urlopen(pyNastran.__issue__)
 
     def open_discussion_forum(self):
         """loads the pyNastran discussion forum website"""
+        self._urlopen(pyNastran.__discussion_forum__)
+
+    def _urlopen(self, url):
+        """opens a URL"""
         import webbrowser
-        url = pyNastran.__discussion_forum__
-        webbrowser.open(url)
+        if self.is_gui:
+            webbrowser.open(url)
 
     def about_dialog(self):
         """Display about dialog"""

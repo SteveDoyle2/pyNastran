@@ -50,6 +50,17 @@ class GuiQtCommon(GuiAttributes):
         if self.vtk_version[0] < 7 and not IS_DEV:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
 
+    def _cycle_results(self, icase=0):
+        """used for testing"""
+        self.icase = icase
+        self.on_cycle_results(show_msg=True)
+        i = 0
+        while self.icase != 0:
+            self.on_cycle_results(show_msg=False)
+            if i > 10000:   # pragma: no cover
+                raise RuntimeError('max cycle count; i=%s' % i)
+            i += 1
+
     def on_rcycle_results(self):
         """the reverse of on_cycle_results"""
         if len(self.case_keys) <= 1:
