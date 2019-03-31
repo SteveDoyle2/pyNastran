@@ -1,12 +1,9 @@
 ==============================
-Graphical User Interface (GUI)
+Features
 ==============================
 
-********
 Overview
-********
-
-## Overall
+========
  - Python 2.7, 3.6-3.7
  - BSD-3 license
  - unicode support
@@ -28,7 +25,8 @@ Overview
       - no markup when piping output to a file
       - supports overwriting logger object with user-defined logger
 
-## BDF
+BDF Reader/Writer
+=================
  - Input/Output:
    - 473 cards supported including:
      - optimization
@@ -245,7 +243,8 @@ Overview
 
 
 
-## OP4
+OP4 Reader
+==========
  - For matrices, the OP2 is preffered.  It's simply faster.
  - Types:
    - ASCII/binary
@@ -255,7 +254,8 @@ Overview
    - Single/Double Precision
  - ASCII writer
 
-## OP2
+OP2 Reader
+==========
 - Supported Nastran versions:
   - MSC Nastran
   - NX Nastran
@@ -344,14 +344,16 @@ Overview
         - Force
         - Flutter
 
-## F06
+F06 Plotter
+===========
 - flutter (SOL 145) parser
   - supports multiple subcases
   - PK and PKNL methods supported
   - `plot_Vg_Vf(...)`, `plot_Vg(...)`, `plot_root_locus(...)`
   - input/output units
 
-## GUI
+GUI
+========
    [GUI](http://pynastran-git.readthedocs.io/en/latest/quick_start/gui.html)
  - buttons for picking, rotation center, distance, min/max
  - GUI Features:
@@ -453,7 +455,8 @@ Overview
        - limited element forces
        - thermal gradient/flux
 
-## Converters / Additional GUI Options
+Converters / Additional GUI Options
+-----------------------------------
 - pyNastran's code base makes it easy to develop other useful tools
   that make use of common code.  As such, additional formats are supported
   in terms of readers/writers/converters/viewing, but are not a main focus.

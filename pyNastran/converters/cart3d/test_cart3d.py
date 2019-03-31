@@ -43,19 +43,23 @@ class TestCart3d(unittest.TestCase):
             "4\n"
             "6\n"
         )
+        log = get_logger(level='warning', encoding='utf-8')
         infile_name = os.path.join(TEST_PATH, 'flat_full.tri')
+        out_name = os.path.join(TEST_PATH, 'combined.tri')
         with open(infile_name, 'w') as f:
             f.write(lines)
 
-        model = comp2tri(infile_name, infile_name, is_binary=False, float_fmt='%6.7f')
+        model = comp2tri([infile_name, infile_name], out_name, is_binary=False, float_fmt='%6.7f',
+                         log=log)
+        read_cart3d(out_name, log=log, debug=False)
 
-        log = get_logger(level='warning', encoding='utf-8')
         cart3d = read_cart3d(infile_name, log=log, debug=False)
         assert len(cart3d.points) == 7, 'npoints=%s' % len(cart3d.points)
         assert len(cart3d.elements) == 6, 'nelements=%s' % len(cart3d.elements)
         assert len(cart3d.regions) == 6, 'nregions=%s' % len(cart3d.regions)
         assert len(cart3d.loads) == 0, 'nloads=%s' % len(cart3d.loads)
         os.remove(infile_name)
+        os.remove(out_name)
 
     def test_cart3d_io_02(self):
         """geometry + results"""

@@ -45,7 +45,8 @@ def read_cart3d(cart3d_filename, log=None, debug=False, result_names=None):
 
 
 def comp2tri(in_filenames, out_filename,
-             is_binary=False, float_fmt='%6.7f'):
+             is_binary=False, float_fmt='%6.7f',
+             log=None, debug=False):
     """
     Combines multiple Cart3d files (binary or ascii) into a single file.
 
@@ -72,7 +73,7 @@ def comp2tri(in_filenames, out_filename,
     #ne = 0
     npoints = 0
     nregions = 0
-    model = Cart3D()
+    model = Cart3D(log=log, debug=debug)
     for infilename in in_filenames:
         model.read_cart3d(infilename)
         npointsi = model.nodes.shape[0]
@@ -235,6 +236,7 @@ class Cart3dIO(object):
 
           npoints nelements          # geometry
           npoints nelements nresults # results
+
         """
         line = self.infile.readline()
         sline = line.strip().split()
@@ -366,6 +368,7 @@ class Cart3dIO(object):
 
           npoints nelements          # geometry
           npoints nelements nresults # results
+
         """
         data = self.infile.read(4)
         size_little, = unpack(b'<i', data)
