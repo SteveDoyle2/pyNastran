@@ -1358,7 +1358,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #"""loads a deflection file"""
         #self._load_deflection_force(out_filename, is_deflection=True, is_force=False)
 
-    def setup_gui(self):
+    def setup_gui(self, is_gui=True):
         """
         Setup the gui
 
@@ -1393,7 +1393,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         self.create_corner_axis()
         #-------------
         # loading
-        self.show()
+        if is_gui:
+            self.show()
 
     def setup_post(self, inputs):
         """interface for user defined post-scripts"""

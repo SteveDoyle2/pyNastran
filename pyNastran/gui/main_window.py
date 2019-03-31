@@ -120,9 +120,13 @@ class MainWindow(GuiCommon, NastranIO):
         self.set_script_path(SCRIPT_PATH)
         self.set_icon_path(ICON_PATH)
 
+        is_gui = True
+        if 'is_gui' in inputs:
+            is_gui = inputs['is_gui']
+            assert isinstance(is_gui, bool), is_gui
         self.start_logging()
         self._load_plugins()
-        self.setup_gui()
+        self.setup_gui(is_gui)
         self.setup_post(inputs)
         self._check_for_latest_version()
 

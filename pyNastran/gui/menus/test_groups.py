@@ -25,6 +25,7 @@ class TestGUI(UsesQApplication):
         inputs = {
             'debug' : True,
             'is_groups' : True,
+            'is_gui' : False,
             #'log' : 'debug',
             'log' : None,
             'geomscript' : None,

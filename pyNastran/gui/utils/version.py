@@ -25,10 +25,8 @@ def check_for_newer_version():
     target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/README.md'
     try:
         # it's a file like object and works just like a file
-        # import urllib2
-        # data = urllib.request.urlopen(target_url)
         data = urllib.request.urlopen(target_url)
-    except (urllib2.HTTPError, urllib2.URLError):
+    except (urllib.error.HTTPError, urllib.error.URLError):
         #print(help(urllib))
         #raise
         return None, None, False

@@ -1,3 +1,15 @@
+"""
+defines:
+ - version_latest, version_current, is_newer = check_for_newer_version(version_current=None)
+ - res_obj, title = create_res_obj(
+       islot, headers, header, A, fmt_dict, result_type,
+       is_deflection=False, is_force=False,
+       dim_max=None, xyz_cid0=None, colormap='jet')
+ - B, fmt_dict_without_index, names_without_index = load_deflection_csv(
+       out_filename, encoding='latin1')
+ - A, fmt_dict, names = load_csv(out_filename, encoding='latin1')
+ - grid_ids, xyz, bars, tris, quads = load_user_geom(fname, log=None, encoding='latin1')
+"""
 from __future__ import print_function
 import os
 #import re
@@ -37,10 +49,9 @@ def check_for_newer_version(version_current=None):
     target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/README.md'
     try:
         # it's a file like object and works just like a file
-        # import urllib2
-        # data = urllib.request.urlopen(target_url)
         data = urllib.request.urlopen(target_url)
-    except: #  urllib2.URLError
+    except (urllib.error.HTTPError, urllib.error.URLError):
+    #except: #  urllib2.URLError
         #print(help(urllib))
         #raise
         return None, None, is_newer
@@ -434,7 +445,7 @@ def load_user_geom(fname, log=None, encoding='latin1'):
                 assert len(sline) == 6, sline
                 quads.append(sline[1:])
             else:
-                self.log.warning(sline)
+                log.warning(sline)
 
     grid_ids = np.array(grid_ids, dtype='int32')
     xyz = np.array(xyz, dtype='float32')
@@ -462,4 +473,3 @@ def load_user_geom(fname, log=None, encoding='latin1'):
 
 if __name__ == '__main__':  # pragma: no cover
     check_for_newer_version()
-
