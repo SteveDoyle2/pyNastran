@@ -24,6 +24,7 @@ class GetMethods(BDFAttributes):
             0, None : indicate blank
         msg : str; default=''
             a debugging message
+
         """
         if nid == 0 or nid is None:
             return None
@@ -55,6 +56,7 @@ class GetMethods(BDFAttributes):
             the node id
         msg : str; default=''
             a debugging message
+
         """
         #assert isinstance(nid, integer_types), 'nid=%s' % str(nid)
         if nid in self.nodes:
@@ -77,6 +79,7 @@ class GetMethods(BDFAttributes):
     def EmptyNodes(self, nids, msg=''):
         """
         Returns a series of node objects given a list of IDs
+
         """
         nodes = []
         bad_nids = []
@@ -101,6 +104,7 @@ class GetMethods(BDFAttributes):
     def Nodes(self, nids, msg=''):
         """
         Returns a series of node objects given a list of IDs
+
         """
         nodes = []
         #self.axic
@@ -156,6 +160,7 @@ class GetMethods(BDFAttributes):
 
         Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE, RSSCON)
         or mass (CMASS1, CONM2)
+
         """
         elements = []
         bad_eids = []
@@ -193,6 +198,7 @@ class GetMethods(BDFAttributes):
         """
         gets an elemental property (e.g. PSOLID, PLSOLID, PCOMP, PSHELL, PSHEAR);
         not mass property (PMASS)
+
         """
         try:
             return self.properties[pid]
@@ -204,6 +210,7 @@ class GetMethods(BDFAttributes):
         """
         gets one or more elemental property (e.g. PSOLID, PLSOLID,
         PCOMP, PSHELL, PSHEAR); not mass property (PMASS)
+
         """
         properties = []
         for pid in pids:
@@ -306,7 +313,7 @@ class GetMethods(BDFAttributes):
         Gets an LOAD or FORCE/PLOAD4/etc.
 
         Parameters
-        ---------
+        ----------
         sid : int
             the LOAD id
         consider_load_combinations : bool; default=True
@@ -314,6 +321,7 @@ class GetMethods(BDFAttributes):
             from a case control, True should be used.
         msg : str
             additional message to print when failing
+
         """
         assert isinstance(sid, integer_types), 'sid=%s is not an integer; type=%s\n' % (sid, type(sid))
         if consider_load_combinations and sid in self.load_combinations:
@@ -331,6 +339,7 @@ class GetMethods(BDFAttributes):
         """
         Gets a DLOAD, TLOAD1, TLOAD2, etc. associcated with the
         Case Control DLOAD entry
+
         """
         assert isinstance(sid, integer_types), 'sid=%s is not an integer\n' % sid
 
@@ -388,7 +397,7 @@ class GetMethods(BDFAttributes):
         Gets an MPCADD or MPC
 
         Parameters
-        ---------
+        ----------
         mpc_id : int
             the MPC id
         consider_mpcadd : bool; default=True
@@ -396,6 +405,7 @@ class GetMethods(BDFAttributes):
             from a case control, True should be used.
         msg : str
             additional message to print when failing
+
         """
         assert isinstance(mpc_id, integer_types), 'mpc_id=%s is not an integer\n' % mpc_id
         if consider_mpcadd and mpc_id in self.mpcadds:
@@ -414,7 +424,7 @@ class GetMethods(BDFAttributes):
         Gets an SPCADD or SPC
 
         Parameters
-        ---------
+        ----------
         spc_id : int
             the SPC id
         consider_spcadd : bool; default=True
@@ -422,6 +432,7 @@ class GetMethods(BDFAttributes):
             from a case control, True should be used.
         msg : str
             additional message to print when failing
+
         """
         assert isinstance(spc_id, integer_types), 'spc_id=%s is not an integer\n' % spc_id
         if consider_spcadd and spc_id in self.spcadds:
@@ -440,7 +451,7 @@ class GetMethods(BDFAttributes):
         Gets an LOAD or FORCE/PLOAD4/etc.
 
         Parameters
-        ---------
+        ----------
         nsm_id : int
             the LOAD id
         consider_nsmadd : bool; default=True
@@ -448,6 +459,7 @@ class GetMethods(BDFAttributes):
             from a case control, True should be used.
         msg : str
             additional message to print when failing
+
         """
         assert isinstance(nsm_id, integer_types), 'nsm_id=%s is not an integer\n' % nsm_id
         if consider_nsmadd and nsm_id in self.nsmadds:

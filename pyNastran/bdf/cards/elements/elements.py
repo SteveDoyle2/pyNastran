@@ -10,6 +10,7 @@ All ungrouped elements are defined in this file.  This includes:
  * GENEL
 
 All ungrouped elements are Element objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -94,6 +95,7 @@ class CFAST(Element):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -119,6 +121,7 @@ class CFAST(Element):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CFAST eid=%s' % self.eid
         self.pid_ref = model.Property(self.Pid(), msg=msg)
@@ -204,6 +207,7 @@ class CFAST(Element):
         ----------
         xref : bool
             has this model been cross referenced
+
         """
         pass
 
@@ -239,6 +243,7 @@ class CGAP(Element):
     +------+-----+-----+-----+-----+-----+-----+------+-----+
     | CGAP | 17  |  2  | 110 | 112 | 13  |     |      |     |
     +------+-----+-----+-----+-----+-----+-----+------+-----+
+
     """
     type = 'CGAP'
     _field_map = {
@@ -292,6 +297,7 @@ class CGAP(Element):
             (distance from GA to GB < 10^-4)
         comment : str; default=''
             a comment for the card
+
         """
         Element.__init__(self)
         if comment:
@@ -412,6 +418,7 @@ class CGAP(Element):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -435,6 +442,7 @@ class CGAP(Element):
         ----------
         xref : bool
             has this model been cross referenced
+
         """
         cid = self.Cid()
         eid = self.eid
@@ -462,6 +470,7 @@ class CGAP(Element):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CGAP eid=%s' % self.eid
         self.ga_ref = model.Node(self.ga, msg=msg)
@@ -481,6 +490,7 @@ class CGAP(Element):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CGAP eid=%s' % self.eid
         self.ga_ref = model.Node(self.ga, msg=msg)
@@ -636,6 +646,7 @@ class CRAC2D(CrackElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -668,6 +679,7 @@ class CRAC2D(CrackElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -743,6 +755,7 @@ class CRAC3D(CrackElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -808,6 +821,7 @@ class PLOTEL(BaseCard):
     +========+=====+=====+=====+
     | PLOTEL | EID | G1  | G2  |
     +--------+-----+-----+-----+
+
     """
     type = 'PLOTEL'
     _field_map = {
@@ -845,6 +859,7 @@ class PLOTEL(BaseCard):
             Element ID
         nodes : List[int, int]
             Unique GRID point IDs
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -864,6 +879,7 @@ class PLOTEL(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         nodes = [
@@ -884,6 +900,7 @@ class PLOTEL(BaseCard):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         nodes = [data[1], data[2]]
@@ -900,6 +917,7 @@ class PLOTEL(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by PLOTEL eid=%s' % self.eid
         self.nodes_ref = [
@@ -915,6 +933,7 @@ class PLOTEL(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
         self.cross_reference(model)
 
@@ -978,6 +997,7 @@ class GENEL(BaseCard):
     +-------+------+-----+------+------+------+------+-------+------+
     |       |  8.5 |     |      |      |      |      |       |      |
     +-------+------+-----+------+------+------+------+-------+------+
+
     """
     type = 'GENEL'
     #pid = 0
@@ -1021,13 +1041,8 @@ class GENEL(BaseCard):
         self.ud_nodes_ref = None
 
     def _finalize_hdf5(self, encoding):
-        #print(len(self.ul), self.ul)
-        #if self.ul is not None:
         self.ul = np.array(self.ul, dtype='int32')#.reshape(len(self.ul) // 2, 2)
         self.ud = np.array(self.ud, dtype='int32')#.reshape(len(self.ud) // 2, 2)
-        #print(self.s, self.s.shape, self.s.dtype, len(self.s.shape))
-        #print(self.s)
-        #print(self.ul)
 
         if self.k is None or (isinstance(self.k, list) and len(self.k) == 0):
             self.k = None
@@ -1039,10 +1054,8 @@ class GENEL(BaseCard):
         else:
             self.z = np.array(self.z)
 
-        #if self.s is None or len(self.s.shape) == 0:
         if self.s is None or (isinstance(self.s, list) and len(self.s) == 0):
             self.s = None
-        #elif self.s is not None:
         else:
             self.s = np.array(self.s)
 

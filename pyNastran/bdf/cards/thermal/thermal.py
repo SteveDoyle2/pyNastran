@@ -6,21 +6,20 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.base_card import (BaseCard, expand_thru_by,
-                                           _node_ids)
-from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+from pyNastran.bdf.cards.base_card import BaseCard, _node_ids
+#from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
-    fields, integer, double, integer_or_blank, double_or_blank,
-    integer_or_string, string, blank, string_or_blank)
+    integer, double, integer_or_blank, double_or_blank,
+    string, blank, string_or_blank)
 
 
 class ThermalCard(BaseCard):
     def __init__(self):
-        pass
+        BaseCard.__init__(self)
 
     def cross_reference(self, model):
         raise NotImplementedError('%s has not defined the cross_reference '
-                                  'method' % self.type)
+                                  'method' % self.__class__.__name__)
 
 
 class ThermalBC(ThermalCard):
@@ -57,6 +56,7 @@ class CHBDYE(ThermalElement):
     +========+=====+======+======+========+========+=========+=========+
     | CHBDYE | EID | EID2 | SIDE | IVIEWF | IVIEWB | RADMIDF | RADMIDB |
     +--------+-----+------+------+--------+--------+---------+---------+
+
     """
     type = 'CHBDYE'
     _properties = ['hex_map', 'pent_map', 'tet_map', 'side_maps']
@@ -293,6 +293,7 @@ class CHBDYG(ThermalElement):
     +--------+-----+----+------+--------+--------+---------+---------+-----+
     |        | G1  | G2 |  G3  |   G4   |   G5   |   G6    |   G7    |  G8 |
     +--------+-----+----+------+--------+--------+---------+---------+-----+
+
     """
     type = 'CHBDYG'
     _properties = ['node_ids']
@@ -528,6 +529,7 @@ class CHBDYP(ThermalElement):
     +--------+---------+---------+------+--------+--------+----+----+----+
     |        | RADMIDF | RADMIDB | GMID |   CE   |   E1   | E2 | E3 |    |
     +--------+---------+---------+------+--------+--------+----+----+----+
+
     """
     type = 'CHBDYP'
     _properties = ['node_ids']
@@ -886,6 +888,7 @@ class PCONV(ThermalProperty):
     +-------+--------+-------+-------+-------+-------+-----+----+----+
 
     .. todo:: alternate format is not supported; NX not checked
+
     """
     type = 'PCONV'
 
@@ -1085,6 +1088,7 @@ class PCONVM(ThermalProperty):
     +--------+--------+-----+------+------+-------+------+-------+-------+
     | PCONVM |    3   |  2  |   1  |   1  | 0.023 | 0.80 | 0.40  | 0.30  |
     +--------+--------+-----+------+------+-------+------+-------+-------+
+
     """
     type = 'PCONVM'
 
@@ -1234,6 +1238,7 @@ class PHBDY(ThermalProperty):
     +-------+-----+------+-----+-----+
     | PHBDY |  2  | 0.02 | 1.0 | 1.0 |
     +-------+-----+------+-----+-----+
+
     """
     type = 'PHBDY'
 
@@ -1365,13 +1370,14 @@ class CONV(ThermalBC):
     """
     Specifies a free convection boundary condition for heat transfer analysis
     through connection to a surface element (CHBDYi entry).
+
     """
     type = 'CONV'
 
     @classmethod
     def _init_from_empty(cls):
         eid = 1
-        nodamb = 1
+        #nodamb = 1
         pconid = 2
         ta = 1.0
         return CONV(eid, pconid, ta, film_node=0, cntrlnd=0, comment='')
@@ -1632,6 +1638,7 @@ class CONVM(ThermalBC):
     +-------+-----+--------+-------+---------+-----+-----+------+
     | CONVM | 101 |    1   |  201  |   301   |  20 |  21 |      |
     +-------+-----+--------+-------+---------+-----+-----+------+
+
     """
     type = 'CONVM'
     _properties = ['film_node_id', 'pconvm_id']

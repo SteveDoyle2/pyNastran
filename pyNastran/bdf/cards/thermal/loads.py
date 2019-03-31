@@ -16,14 +16,14 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_double_or_blank, string, fields)
 
 
-class ThermalLoadDefault(ThermalCard):
-    def __init__(self, card, data):
-        pass
+#class ThermalLoadDefault(ThermalCard):
+    #def __init__(self, card, data):
+        #ThermalCard.__init__(self)
 
 
 class ThermalLoad(ThermalCard):
     def __init__(self):
-        pass
+        ThermalCard.__init__(self)
 
 class QVOL(ThermalLoad):
     """
@@ -36,6 +36,7 @@ class QVOL(ThermalLoad):
     +------+------+------+---------+------+------+------+------+------+
     |      | EID6 | etc. |         |      |      |      |      |      |
     +------+------+------+---------+------+------+------+------+------+
+
     """
     type = 'QVOL'
     _properties = ['element_ids']
@@ -43,7 +44,7 @@ class QVOL(ThermalLoad):
     @classmethod
     def _init_from_empty(cls):
         sid = 1
-        flag = 'LINE'
+        #flag = 'LINE'
         qvol = 1.0
         control_point = 10
         elements = [1, 2]
@@ -73,6 +74,7 @@ class QVOL(ThermalLoad):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         qvol = double(card, 2, 'qvol')
@@ -98,6 +100,7 @@ class QVOL(ThermalLoad):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid, qvol, control_point, eid = data
         return QVOL(sid, qvol, control_point, eid, comment=comment)
@@ -113,6 +116,7 @@ class QVOL(ThermalLoad):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by QVOL sid=%s' % self.sid
         self.elements_ref = model.Elements(self.elements, msg=msg)
@@ -171,6 +175,7 @@ class QVECT(ThermalLoad):
     +-------+------+------+-------+-----+---------+---------+---------+---------+
     |       | EID1 | EID2 |  etc. |     |         |         |         |         |
     +-------+------+------+-------+-----+---------+---------+---------+---------+
+
     """
     type = 'QVECT'
     _properties = ['element_ids']
@@ -213,6 +218,7 @@ class QVECT(ThermalLoad):
             CHBDYP entry
         comment : str; default=''
             a comment for the card
+
         """
         ThermalLoad.__init__(self)
         if comment:
@@ -245,6 +251,7 @@ class QVECT(ThermalLoad):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
@@ -280,6 +287,7 @@ class QVECT(ThermalLoad):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by QVECT sid=%s' % self.sid
         self.eids_ref = model.Elements(self.eids, msg=msg)
@@ -331,6 +339,7 @@ class QVECT(ThermalLoad):
 class QBDY1(ThermalLoad):
     """
     Defines a uniform heat flux into CHBDYj elements.
+
     """
     type = 'QBDY1'
     _properties = ['element_ids']
@@ -367,6 +376,7 @@ class QBDY1(ThermalLoad):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         qflux = double(card, 2, 'qflux')
@@ -389,6 +399,7 @@ class QBDY1(ThermalLoad):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid = data[0]
         qflux = data[1]
@@ -406,6 +417,7 @@ class QBDY1(ThermalLoad):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by QBDY1 sid=%s' % self.sid
         self.eids_ref = model.Elements(self.eids, msg=msg)
@@ -456,6 +468,7 @@ class QBDY1(ThermalLoad):
 class QBDY2(ThermalLoad):  # not tested
     """
     Defines a uniform heat flux load for a boundary surface.
+
     """
     type = 'QBDY2'
 
@@ -493,6 +506,7 @@ class QBDY2(ThermalLoad):  # not tested
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
@@ -519,6 +533,7 @@ class QBDY2(ThermalLoad):  # not tested
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid = data[0]
         eid = data[1]
@@ -536,6 +551,7 @@ class QBDY2(ThermalLoad):  # not tested
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by QBDY2 sid=%s' % self.sid
         self.eid_ref = model.Element(self.eid, msg=msg)
@@ -577,6 +593,7 @@ class QBDY2(ThermalLoad):  # not tested
 class QBDY3(ThermalLoad):
     """
     Defines a uniform heat flux load for a boundary surface.
+
     """
     type = 'QBDY3'
     _properties = ['element_ids']
@@ -606,6 +623,7 @@ class QBDY3(ThermalLoad):
             CHBDYP entry
         comment : str; default=''
             a comment for the card
+
         """
         ThermalLoad.__init__(self)
         if comment:
@@ -635,6 +653,7 @@ class QBDY3(ThermalLoad):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         q0 = double(card, 2, 'q0')
@@ -655,6 +674,7 @@ class QBDY3(ThermalLoad):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid = data[0]
         q0 = data[1]
@@ -670,6 +690,7 @@ class QBDY3(ThermalLoad):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by QBDY3 sid=%s' % self.sid
         eids = []
@@ -728,6 +749,7 @@ class QBDY3(ThermalLoad):
 class QHBDY(ThermalLoad):
     """
     Defines a uniform heat flux into a set of grid points.
+
     """
     type = 'QHBDY'
     _properties = ['flag_to_nnodes']
@@ -768,6 +790,7 @@ class QHBDY(ThermalLoad):
             Grid point identification of connected grid points
         comment : str; default=''
             a comment for the card
+
         """
         ThermalLoad.__init__(self)
         if comment:
@@ -801,6 +824,7 @@ class QHBDY(ThermalLoad):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'eid')
         flag = string(card, 2, 'flag')
@@ -837,6 +861,7 @@ class QHBDY(ThermalLoad):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid = data[0]
         flag = data[1]
@@ -888,6 +913,7 @@ class TEMP(ThermalLoad):
     +------+-----+----+-------+----+-------+----+----+
     | TEMP |  3  | 94 | 316.2 | 49 | 219.8 |    |    |
     +------+-----+----+-------+----+-------+----+----+
+
     """
     type = 'TEMP'
 
@@ -902,7 +928,7 @@ class TEMP(ThermalLoad):
         """exports the loads in a vectorized way"""
         #encoding = model._encoding
         #comments = []
-        sid = loads[0].sid
+        unused_sid = loads[0].sid
         #h5_file.create_dataset('sid', data=sid)
         for i, load in enumerate(loads):
             sub_group = h5_file.create_group(str(i))
@@ -932,6 +958,7 @@ class TEMP(ThermalLoad):
                 the nodal temperature
         comment : str; default=''
             a comment for the card
+
         """
         ThermalLoad.__init__(self)
         if comment:
@@ -954,6 +981,7 @@ class TEMP(ThermalLoad):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
 
@@ -983,6 +1011,7 @@ class TEMP(ThermalLoad):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid = data[0]
         temperatures = {data[1]: data[2]}
@@ -1050,6 +1079,7 @@ class TEMPP1(BaseCard):
     +--------+------+------+------+--------+------+------+------+
     |        |  1   | THRU |  10  |   30   | THRU |  61  |      |
     +--------+------+------+------+--------+------+------+------+
+
     """
     type = 'TEMPP1'
 
@@ -1063,6 +1093,7 @@ class TEMPP1(BaseCard):
         return TEMPP1(sid, eid, tbar, tprime, t_stress, comment='')
 
     def __init__(self, sid, eid, tbar, tprime, t_stress, comment=''):
+        BaseCard.__init__(self)
         self.comment = comment
         self.sid = sid
         self.eid = eid
@@ -1109,6 +1140,7 @@ class TEMPD(BaseCard):
     +=======+======+====+======+====+======+====+======+====+
     | TEMPD | SID1 | T1 | SID2 | T2 | SID3 | T3 | SID4 | T4 |
     +-------+------+----+------+----+------+----+------+----+
+
     """
     type = 'TEMPD'
 
@@ -1130,6 +1162,7 @@ class TEMPD(BaseCard):
             default temperature
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -1150,6 +1183,7 @@ class TEMPD(BaseCard):
             sid to be parsed
         comment : str; default=''
             a comment for the card
+
         """
         nfields = len(card) - 1
         assert nfields % 2 == 0, 'card=%s' % card
@@ -1169,6 +1203,7 @@ class TEMPD(BaseCard):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         sid = data[0]
         temperature = data[1]

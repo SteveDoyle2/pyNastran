@@ -31,6 +31,7 @@ defines various methods to access high level BDF data:
    - get_reduced_spcs(self, spc_id)
    - get_spcs(self, spc_id, consider_nodes=False)
    - get_mpcs(self, mpc_id)
+
 """
 # pylint: disable=C0103
 from __future__ import (nested_scopes, generators, division, absolute_import,
@@ -96,6 +97,7 @@ class GetCard(GetMethods):
           >>> out_dict = {
               [1, 2, 3, 4, 5],
           }
+
         """
         if card_types is None:
             card_types = list(self.cards_to_read)
@@ -205,6 +207,7 @@ class GetCard(GetMethods):
         ..note ::  GRIDs, SPOINTs, & EPOINTs are stored in separate slots,
                    so they are unorganized.
         ..note :: see ``self.get_nid_map(sort_ids=False)`` for the unsorted version
+
         """
         return self.get_nid_map(sort_ids=True)
 
@@ -227,6 +230,7 @@ class GetCard(GetMethods):
 
         ..note ::  GRIDs, SPOINTs, & EPOINTs are stored in separate slots,
                    so they are unorganized.
+
         """
         nids = []
         index_nids = []
@@ -271,6 +275,7 @@ class GetCard(GetMethods):
         -------
         out_dict : dict[str] = List[BDFCard()]
             the key=card_type, value=the card object
+
         """
         if not isinstance(card_types, (list, tuple)):
             raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
@@ -351,6 +356,7 @@ class GetCard(GetMethods):
         -------
         node_ids : List[int]
             the constrained associated node ids
+
         """
         spcs = self.get_reduced_spcs(spc_id, stop_on_failure=stop_on_failure)
 
@@ -390,6 +396,7 @@ class GetCard(GetMethods):
                 the DOF to constrain
             node_ids : List[int]
                 the constrained node ids
+
         """
         spcs = self.get_reduced_spcs(spc_id, stop_on_failure=stop_on_failure)
 
@@ -441,6 +448,7 @@ class GetCard(GetMethods):
         I      I
           \   /
         I---D---I
+
         """
         lines = []
         mpcs = self.get_reduced_mpcs(mpc_id, stop_on_failure=stop_on_failure)
@@ -492,6 +500,7 @@ class GetCard(GetMethods):
         I      I
           \   /
         I---D---I
+
         """
         if not isinstance(mpc_id, integer_types):
             msg = 'mpc_id must be an integer; type=%s, mpc_id=\n%r' % (type(mpc_id), mpc_id)
@@ -563,6 +572,7 @@ class GetCard(GetMethods):
                 the pressure
             spcd : (nnodes, 3) float ndarray
                 the SPCD load application
+
         """
         if nid_map is None:
             nid_map = self.nid_map
@@ -624,7 +634,7 @@ class GetCard(GetMethods):
 
     def _get_dvprel_ndarrays(self, nelements, pids, fdtype='float32', idtype='int32'):
         """
-        creates arrays for dvprel results
+        Creates arrays for dvprel results
 
         Parameters
         ----------
@@ -649,6 +659,7 @@ class GetCard(GetMethods):
                 the min values of the variable
             dvprel_max : (nelements,)float ndarray
                 the max values of the variable
+
         """
         dvprel_dict = {}
         def get_dvprel_data(key):
@@ -789,6 +800,7 @@ class GetCard(GetMethods):
                  CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR
                  CTETRA, CPENTA, CHEXA
         SPCD
+
         """
         if nid_map is None:
             nid_map = self.nid_map
@@ -1113,6 +1125,7 @@ class GetCard(GetMethods):
         pressures : (nelements, 1) float ndarray / None
             ndarray : the centroidal pressures
             None : corresponds to is_pressure=False
+
         """
         if not any(['PLOAD' in self.card_count, 'PLOAD2' in self.card_count,
                     'PLOAD4' in self.card_count]):
@@ -1220,6 +1233,7 @@ class GetCard(GetMethods):
             is there temperature data
         temperatures : (nnodes, ) float ndarray
             the temperatures
+
         """
         if 'TEMP' not in self.card_count:
             return False, None
@@ -1258,6 +1272,7 @@ class GetCard(GetMethods):
 
         dependent = (lines[:, 0])
         independent = np.unique(lines[:, 1])
+
         """
         lines_rigid = []
         for eid, elem in self.rigid_elements.items():
@@ -1355,6 +1370,7 @@ class GetCard(GetMethods):
             is there a gravity card
 
         .. warning:: assumes xref=True
+
         """
         if not isinstance(load_case_id, integer_types):
             msg = 'load_case_id must be an integer; type=%s, load_case_id:\n%r' % (
@@ -1447,6 +1463,7 @@ class GetCard(GetMethods):
             the associated scale factors
 
         .. warning:: assumes xref=True
+
         """
         dload_case = self.DLoad(
             dload_id,
@@ -1483,6 +1500,7 @@ class GetCard(GetMethods):
             a series of dload objects
         scale_factors : List[float]
             the associated scale factors
+
         """
         scale_factors_out = []
         dloads_out = []
@@ -1532,6 +1550,7 @@ class GetCard(GetMethods):
         -------
         rbes : List[int]
             the set of self.rigid_elements
+
         """
         try:
             nids = set(node_ids)
@@ -1579,6 +1598,7 @@ class GetCard(GetMethods):
         specific DOFs.
           - independent nodes : loads/motions may be defined
           - dependent nodes : loads/motions may not be defined
+
         """
         dependent_nid_to_components = {}
 
@@ -1681,6 +1701,7 @@ class GetCard(GetMethods):
 
         .. todo:: consider_0d support
         .. todo:: consider_0d_rigid support
+
         """
         allowed_maps = [
             'edge_to_eid_map',
@@ -1797,6 +1818,7 @@ class GetCard(GetMethods):
           eids = [1, 2, 3]  # list of elements with pid=1
           msg = ' which are required for pid=1'
           node_ids = bdf.get_node_ids_with_elements(eids, msg=msg)
+
         """
         if isinstance(eids, integer_types):
             eids = [eids]
@@ -1845,6 +1867,7 @@ class GetCard(GetMethods):
                 CONRODS have a pid of 0
             nids : (neids, nnodes/element) int ndarray
                 the nodes corresponding to the element
+
         """
         etype_to_eids_pids_nids = self.get_elements_properties_nodes_by_element_type(dtype=dtype)
         output = {}
@@ -1900,6 +1923,7 @@ class GetCard(GetMethods):
                 CONRODS have a pid of 0
             nids : (neids, nnodes/element) int ndarray
                 the nodes corresponding to the element
+
         """
         etypes_no_pids = [
             'CELAS4', 'CDAMP4', 'CHBDYG', 'GENEL',
@@ -2037,6 +2061,7 @@ class GetCard(GetMethods):
           model.read_bdf(bdf_filename)
           pids = [1, 2, 3]
           eids_list = model.get_element_ids_list_with_pids(pids)
+
         """
         etypes_no_pids = [
             'CELAS4', 'CDAMP4', 'CHBDYG', 'GENEL',
@@ -2082,6 +2107,7 @@ class GetCard(GetMethods):
                 the number of elements in the property type
             nnodes : int
                 varies based on the element type
+
         """
         if pids is None:
             pids = list(self.properties)
@@ -2215,6 +2241,7 @@ class GetCard(GetMethods):
         Notes
         -----
         What happens with CONRODs?
+
         """
         if pids is None:
             pids = list(self.properties)
@@ -2263,6 +2290,7 @@ class GetCard(GetMethods):
         .. todo:: support 0d or 1d elements
         .. todo:: support elements with missing nodes
                   (e.g. CQUAD8 with missing nodes)
+
         """
         nid_to_eids_map = {}
         for nid in self.nodes:  # initalize the mapper
@@ -2297,6 +2325,7 @@ class GetCard(GetMethods):
         .. todo:: support 0d or 1d elements
         .. todo:: support elements with missing nodes
                   (e.g. CQUAD8 with missing nodes)
+
         """
         nid_to_elements_map = {}
         for nid in self.nodes:  # initalize the mapper
@@ -2379,6 +2408,7 @@ class GetCard(GetMethods):
 
           .. note:: all properties require an mid to be counted (except for
                   PCOMP, which has multiple mids)
+
         """
         mid_to_pids_map = {}
         mids = self.get_material_ids()
@@ -2441,6 +2471,7 @@ class GetCard(GetMethods):
         -------
         mpcs : List[NSM]
             the various NSMs
+
         """
         if not isinstance(nsm_id, integer_types):
             msg = 'nsm_id must be an integer; type=%s, nsm_id=\n%r' % (type(nsm_id), nsm_id)
@@ -2497,6 +2528,7 @@ class GetCard(GetMethods):
         -------
         mpcs : List[MPC]
             the various MPCs
+
         """
         if not isinstance(mpc_id, integer_types):
             msg = 'mpc_id must be an integer; type=%s, mpc_id=\n%r' % (type(mpc_id), mpc_id)
@@ -2553,6 +2585,7 @@ class GetCard(GetMethods):
         -------
         spcs : List[SPC]
             the various SPCs
+
         """
         if not isinstance(spc_id, integer_types):
             msg = 'spc_id must be an integer; type=%s, spc_id=\n%r' % (type(spc_id), spc_id)
@@ -2619,6 +2652,7 @@ class GetCard(GetMethods):
         Doesn't consider:
           - non-zero enforced value on SPC
           - GMSPC
+
         """
         warnings = ''
         spcs = self.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=stop_on_failure)
@@ -2668,6 +2702,7 @@ class GetCard(GetMethods):
         Considers:
           - MPC
           - MPCADD
+
         """
         mpcs = self.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=stop_on_failure)
         nids = []

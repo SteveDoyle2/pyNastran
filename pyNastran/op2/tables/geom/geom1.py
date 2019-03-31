@@ -390,8 +390,11 @@ class GEOM1(GeomCommon):
             edata = data[n:n + 32]  # 4*8
             out = structi.unpack(edata)
             (seid, superelement_type, rseid, method, tol, loc, media, unit) = out
-            if superelement_type == 6:
+            if superelement_type == 1:
+                superelement_type = 'PRIMARY'
+            elif superelement_type == 6:
                 superelement_type = 'MIRROR'
+
             if loc == 1:
                 loc = 'YES'
             elif loc == 2:

@@ -5,7 +5,7 @@ import unittest
 from numpy import array_equal, allclose
 
 import pyNastran
-from pyNastran.converters.cart3d.cart3d import read_cart3d
+from pyNastran.converters.cart3d.cart3d import read_cart3d, comp2tri
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
 from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 from pyNastran.converters.cart3d.cart3d_to_tecplot import cart3d_to_tecplot
@@ -46,6 +46,8 @@ class TestCart3d(unittest.TestCase):
         infile_name = os.path.join(TEST_PATH, 'flat_full.tri')
         with open(infile_name, 'w') as f:
             f.write(lines)
+
+        model = comp2tri(infile_name, infile_name, is_binary=False, float_fmt='%6.7f')
 
         log = get_logger(level='warning', encoding='utf-8')
         cart3d = read_cart3d(infile_name, log=log, debug=False)

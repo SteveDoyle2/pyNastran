@@ -5,6 +5,7 @@ Defines a method to add a card that is faster than add_card
 and far less error prone for a user
 
 That said, there are still a few bugs.
+
 """
 from __future__ import print_function
 
@@ -2191,6 +2192,7 @@ class AddCards(AddMethods):
         Notes
         -----
         offt/bit are MSC specific fields
+
         """
         elem = CBEAM(eid, pid, nids, x, g0, offt=offt, bit=bit,
                      pa=pa, pb=pb, wa=wa, wb=wb, sa=sa, sb=sb, comment=comment)
@@ -2270,7 +2272,7 @@ class AddCards(AddMethods):
         Creates a PBCOMP card
 
         Parameters
-        ---------
+        ----------
         pid : int
             Property ID
         mid : int
@@ -6160,6 +6162,7 @@ class AddCards(AddMethods):
             dependent nodes
         alpha : float; default=0.0
             ???
+
         """
         elem = RBE2(eid, gn, cm, Gmi, alpha=alpha, comment=comment)
         self._add_rigid_element_object(elem)

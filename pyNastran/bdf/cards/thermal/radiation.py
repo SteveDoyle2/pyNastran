@@ -5,6 +5,7 @@ All set cards are defined in this file.  This includes:
   * RADM, RADBC
 * views
   * VIEW, VIEW3D
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -24,6 +25,7 @@ class RADM(ThermalBC):
     """
     Defines the radiation properties of a boundary element for heat transfer
     analysis
+
     """
     type = 'RADM'
 
@@ -66,6 +68,7 @@ class RADM(ThermalBC):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         nfields = card.nfields
         radmid = integer(card, 1, 'radmid')
@@ -84,6 +87,7 @@ class RADM(ThermalBC):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         radmid, absorb = data[:2]
         emissivity = data[2:]
@@ -109,6 +113,7 @@ class RADM(ThermalBC):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -120,6 +125,7 @@ class RADBC(ThermalBC):
     """
     Specifies an CHBDYi element face for application of radiation boundary
     conditions
+
     """
     type = 'RADBC'
 
@@ -169,6 +175,7 @@ class RADBC(ThermalBC):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         nodamb = integer(card, 1, 'nodamb')
         famb = double(card, 2, 'famb')
@@ -186,6 +193,7 @@ class RADBC(ThermalBC):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by RADBC pid=%s' % self.nodamb
         elems = []
@@ -222,6 +230,7 @@ class RADBC(ThermalBC):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -243,6 +252,7 @@ class VIEW(BaseCard):
     +------+-------+---------+-------+----+----+--------+
     | VIEW |   1   |    1    | BOTH  | 2  | 3  |  0.25  |
     +------+-------+---------+-------+----+----+--------+
+
     """
     type = 'VIEW'
 
@@ -276,6 +286,7 @@ class VIEW(BaseCard):
             The displacement of a surface perpendicular to the surface
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -300,6 +311,7 @@ class VIEW(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         iview = integer(card, 1, 'iview')
         icavity = integer(card, 2, 'icavity')
@@ -332,6 +344,7 @@ class VIEW(BaseCard):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -353,6 +366,7 @@ class VIEW3D(BaseCard):
     +--------+---------+------+------+------+------+--------+------+--------+
     | VIEW3D |    1    |   2  |   2  |   4  |      | 1.0E-6 |      |        |
     +--------+---------+------+------+------+------+--------+------+--------+
+
     """
     type = 'VIEW3D'
 
@@ -396,6 +410,7 @@ class VIEW3D(BaseCard):
              Type of diagnostic output desired for the radiation exchange surfaces.
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -422,6 +437,7 @@ class VIEW3D(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         icavity = integer(card, 1, 'icavity')
         gitb = integer_or_blank(card, 2, 'gitb', 4)
@@ -457,6 +473,7 @@ class VIEW3D(BaseCard):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -479,6 +496,7 @@ class RADCAV(ThermalBC):
     +--------+---------+--------+------+---------+--------+-------+------+--------+
     |        |    3    |    5   |    4   |   5   |    7   |   5   |      |        |
     +--------+---------+--------+------+---------+--------+-------+------+--------+
+
     """
     type = 'RADCAV'
 
@@ -520,6 +538,7 @@ class RADCAV(ThermalBC):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         icavity = integer(card, 1, 'icavity')
         ele_amb = integer_or_blank(card, 2, 'ele_amb')
@@ -592,6 +611,7 @@ class RADLST(ThermalBC):
     +--------+---------+--------+------+-------+--------+-------+------+--------+
     | RADLST |    3    |    5   |  4   |   5   |    7   |   5   |      |        |
     +--------+---------+--------+------+-------+--------+-------+------+--------+
+
     """
     type = 'RADCAV'
 
@@ -624,6 +644,7 @@ class RADLST(ThermalBC):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         icavity = integer(card, 1, 'icavity')
         matrix_type = integer_or_blank(card, 2, 'matrix_type', 1)
@@ -670,12 +691,13 @@ class RADMTX(ThermalBC):
     +--------+---------+--------+--------+--------+--------+--------+--------+--------+
     | RADMTX |    2    |    1   |  0.0   |  0.1   |   0.2  |   0.2  |   0.3  |   0.2  |
     +--------+---------+--------+--------+--------+--------+--------+--------+--------+
+
     """
     type = 'RADMTX'
 
     @classmethod
     def _init_from_empty(cls):
-        iview = 1
+        icavity = 1
         index = 2
         exchange_factors = [1., 2.]
         return RADMTX(icavity, index, exchange_factors, comment='')
@@ -704,6 +726,7 @@ class RADMTX(ThermalBC):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         icavity = integer(card, 1, 'icavity')
         index = integer(card, 2, 'index')
