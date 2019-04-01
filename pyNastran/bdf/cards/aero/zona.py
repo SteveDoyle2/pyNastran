@@ -937,7 +937,7 @@ class AEROZ(Aero):
 
         # faking data to not change gui
         rcsid = 0
-        sym_xy = 0
+        #sym_xy = 0
         return AEROZ(fm_mass_unit, fm_length_unit,
                      cref, bref, sref, acsid=acsid, rcsid=rcsid,
                      sym_xz=sym_xz, flip=flip, xyz_ref=xyz_ref,
@@ -1055,8 +1055,8 @@ class AEROZ(Aero):
           the fields that define the card
 
         """
-        sym_xz = set_blank_if_default(self.sym_xz, 0)
-        sym_xy = set_blank_if_default(self.sym_xy, 0)
+        unused_sym_xz = set_blank_if_default(self.sym_xz, 0)
+        unused_sym_xy = set_blank_if_default(self.sym_xy, 0)
         #$       ACSID XZSYM FLIP FMMUNIT FMLUNIT REFC   REFB   REFS
         #$+ABC   REFX  REFY  REFZ
         #AEROZ   0     YES   NO   SLIN    IN       22.73 59.394 1175.8
@@ -1412,6 +1412,7 @@ class PAFOIL7(BaseCard):
         self.i_camber_root_ref = None
         self.i_thickness_tip_ref = None
         self.i_camber_tip_ref = None
+        self.i_axial_ref = None
 
     #@property
     #def cp(self):
@@ -2483,6 +2484,7 @@ class CAERO7(BaseCard):
         self.lspan_ref = None
         self.ascid_ref = None
         self.box_ids = None
+        self.pafoil_ref = None
         #self._init_ids() #TODO: make this work here?
 
     def validate(self):

@@ -516,7 +516,8 @@ class AELINK(BaseCard):
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = ['Cis']
-        return BaseCard.object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return BaseCard.object_attributes(self, mode=mode,
+                                          keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
@@ -1378,20 +1379,21 @@ class CAERO1(BaseCard):
 
         """
         if n == 9:
-            return self.p1[0]
+            out = self.p1[0]
         elif n == 10:
-            return self.p1[1]
+            out = self.p1[1]
         elif n == 11:
-            return self.p1[2]
+            out = self.p1[2]
 
         elif n == 13:
-            return self.p4[0]
+            out = self.p4[0]
         elif n == 14:
-            return self.p4[1]
+            out = self.p4[1]
         elif n == 15:
-            return self.p4[2]
+            out = self.p4[2]
         else:
             raise KeyError('Field %r is an invalid CAERO1 entry.' % n)
+        return out
 
     def _update_field_helper(self, n, value):
         """
@@ -1666,7 +1668,8 @@ class CAERO1(BaseCard):
 
         npanels = nchord * nspan
         try:
-            self.box_ids = np.arange(self.eid, self.eid + npanels, dtype=dtype).reshape(nspan, nchord).T
+            self.box_ids = np.arange(self.eid, self.eid + npanels,
+                                     dtype=dtype).reshape(nspan, nchord).T
         except OverflowError:
             if dtype == 'int64':
                 # we already tried int64
@@ -2092,13 +2095,14 @@ class CAERO2(BaseCard):
 
         """
         if n == 9:
-            return self.p1[0]
+            out = self.p1[0]
         elif n == 10:
-            return self.p1[1]
+            out = self.p1[1]
         elif n == 11:
-            return self.p1[2]
+            out = self.p1[2]
         else:
             raise KeyError('Field %r is an invalid CAERO2 entry.' % n)
+        return out
 
     def _update_field_helper(self, n, value):
         """
@@ -3152,7 +3156,6 @@ class CAERO5(BaseCard):
     def _init_from_empty(cls):
         eid = 1
         pid = 1
-        ncontrol_surfaces = 1
         p1 = [0., 0., 0.]
         p4 = [0., 10., 0.]
         x12 = 1.
@@ -4911,10 +4914,10 @@ class SPLINE1(Spline):
     #def safe_set(self, setg, set_type, self.eid, xref_errors, msg=''):
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)
-            try:
-                self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
-            except:
-                raise
+            #try:
+            self.setg_ref.safe_cross_reference(model, 'Node', msg=msg)
+            #except:
+                #raise
 
             nnodes = len(self.setg_ref.ids)
             if nnodes < 3:

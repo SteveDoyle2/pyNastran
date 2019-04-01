@@ -1,4 +1,4 @@
-# pylint: disable=C0301,W0613,C0103,R0913,R0914,R0904,C0111,R0201,R0902
+# pylint: disable=C0301,C0103,R0913,R0914,R0904,C0111,R0201,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
@@ -9,8 +9,9 @@ import numpy as np
 from numpy import zeros, where, searchsorted
 from numpy.linalg import eigh  # type: ignore
 
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.utils.numpy_utils import float_types
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 
 
 class RealSolidArray(OES_Object):
@@ -168,7 +169,9 @@ class RealSolidArray(OES_Object):
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
-    def add_eid_sort1(self, eType, cid, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
+    def add_eid_sort1(self, unused_etype, cid, dt, eid, unused_node_id,
+                      oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
+                      unused_acos, unused_bcos, unused_ccos, unused_pressure, ovm):
         assert cid >= -1, cid
         assert eid >= 0, eid
 
@@ -226,7 +229,9 @@ class RealSolidArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def add_node_sort1(self, dt, eid, inode, node_id, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, aCos, bCos, cCos, pressure, ovm):
+    def add_node_sort1(self, dt, eid, unused_inode, node_id,
+                       oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
+                       unused_acos, unused_bcos, unused_ccos, unused_pressure, ovm):
         # skipping aCos, bCos, cCos, pressure
         omax_mid_min = [o1, o2, o3]
         omin = min(omax_mid_min)
@@ -344,7 +349,7 @@ class RealSolidArray(OES_Object):
 
             cnnodes = nnodes + 1
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in zip(
-                count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
+                    count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
 
                 j = where(eids3 == deid)[0]
                 cid = cids3[j]
@@ -426,7 +431,7 @@ class RealSolidArray(OES_Object):
         assert nnodes > 1, nnodes
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         #fmt = '%2i %6f'
@@ -473,7 +478,7 @@ class RealSolidArray(OES_Object):
             #print('eids3', eids3)
             cnnodes = nnodes_expected + 1
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in zip(
-                count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
+                    count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
                 #print('  eid =', deid, node_id)
 
                 j = where(eids3 == deid)[0]

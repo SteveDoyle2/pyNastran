@@ -323,7 +323,7 @@ def _export_dconstrs(hdf5_file, model, encoding):
         ndconadds = len(dconadds)
         if ndconadds:
             dconadd_group = dconstrs_group.create_group('DCONADD')
-            keys = np.arange(ndconadds, dtype='int32')
+            unused_keys = np.arange(ndconadds, dtype='int32')
             dconadds0 = dconadds[0]
             dconadds0.export_to_hdf5(dconadd_group, dconadds, encoding)
 
@@ -859,10 +859,10 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
         #if isinstance(value, text_type):
             #value = value.encode(encoding)
 
-        try:
-            _h5_export_class(sub_group, model, key, value, skip_attrs, encoding, debug=False)
-        except:  # pragma: no cover
-            raise
+        #try:
+        _h5_export_class(sub_group, model, key, value, skip_attrs, encoding, debug=False)
+        #except:  # pragma: no cover
+            #raise
             # for debugging
             #sub_group2 = group.create_group('values2')
             #_h5_export_class(sub_group2, model, key, value, skip_attrs, encoding, debug=True)

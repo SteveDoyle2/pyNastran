@@ -139,7 +139,7 @@ class GEOM4(GeomCommon):
         #self.show_data(data, types='ifs')
         ntotal = 8
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_2i.unpack(edata)
             if self.is_debug_file:
@@ -203,7 +203,7 @@ class GEOM4(GeomCommon):
         out = np.frombuffer(data[n:], self.idtype).copy()
 
         #print(out)
-        izero = np.where(out == -1)[0]
+        #izero = np.where(out == -1)[0]
         nentries = 0
 
         packs = break_by_thru_type(out)
@@ -416,12 +416,12 @@ class GEOM4(GeomCommon):
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elems = []
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 8*4
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  RBAR NX=%s\n' % str(out))
-            (eid, ga, gb, cna, cnb, cma, cmb) = out
+            (eid, unused_ga, unused_gb, unused_cna, unused_cnb, unused_cma, unused_cmb) = out
             assert eid > 0, out
             out = list(out)
             out.append(0.)
@@ -441,7 +441,7 @@ class GEOM4(GeomCommon):
         if not (len(data) - n) % ntotal == 0:
             raise MixedVersionCard('failed reading as MSC')
         elems = []
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 8*4
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -650,7 +650,7 @@ class GEOM4(GeomCommon):
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_5i.unpack(edata)
             if self.is_debug_file:
@@ -670,7 +670,7 @@ class GEOM4(GeomCommon):
         nelements = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         elements = []
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -751,7 +751,7 @@ class GEOM4(GeomCommon):
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         struct_3if = Struct(self._endian + b'iiif')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n + 16]
             (sid, ID, c, dx) = struct_3if.unpack(edata)
             if self.is_debug_file:
@@ -784,7 +784,7 @@ class GEOM4(GeomCommon):
 
         constraints = []
         struc = Struct(self._endian + b'iiiif')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n + 20]
             (sid, nid, comp, xxx, dx) = struc.unpack(edata)
             assert xxx == 0, xxx
@@ -833,7 +833,7 @@ class GEOM4(GeomCommon):
                 # 9 : C:\Users\sdoyle\Dropbox\move_tpl\ifcq11r.op2
                 assert componenti in '0123456789', msg
 
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n + 16]
             (sid, nid, comp, dx) = struc.unpack(edata)
             if self.is_debug_file:
@@ -1019,7 +1019,7 @@ class GEOM4(GeomCommon):
         assert (len(data) - n) % ntotal == 0
         constraints = []
         is_long_ids = False
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_3if.unpack(edata)
             (sid, node_id, c, dx) = out
@@ -1051,7 +1051,7 @@ class GEOM4(GeomCommon):
         assert nentries > 0, nentries
         assert (len(data) - n) % ntotal == 0
         constraints = []
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_4if.unpack(edata)
             (sid, ID, c, xxx, dx) = out
@@ -1100,7 +1100,7 @@ class GEOM4(GeomCommon):
         """SUPORT(5601,56, 14) - Record 59"""
         nentries = (len(data) - n) // 8 # 2*4
         struct_2i = Struct(self._endian + b'2i')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             out = list(struct_2i.unpack(data[n:n + 8]))
             if self.is_debug_file:
                 self.binary_debug.write('  SUPORT=%s\n' % str(out))
@@ -1157,7 +1157,7 @@ class GEOM4(GeomCommon):
         ntotal = 12
         #self.show_data(data, types='is')
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_3i.unpack(edata)
             if self.is_debug_file:
@@ -1317,8 +1317,8 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
     for ii, jj in zip(i, j):
 
         idatai = idata[ii:jj]
-        eid, refg, refc, dummy, comp, grid = idatai[:6]
-        weight = fdata[ii+3]
+        eid, refg, refc, dummy, unused_comp, unused_grid = idatai[:6]
+        unused_weight = fdata[ii+3]
 
         #print('eid=%s refgrid=%s refc=%s weight=%s comp=%s grid=%s' % (
             #eid, refg, refc, weight, comp, grid))
@@ -1348,7 +1348,7 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
     #aaa
     return rbe3s
 
-def _get_rbe3_um(i, j, idata, fdata):
+def _get_rbe3_um(i, unused_j, idata, unused_fdata):
     """helper for ``read_rbe3s_from_idata_fdata``"""
     gmi = []
     cmi = []
@@ -1428,19 +1428,19 @@ def fill_rbe3_wt_comp_gijs(i, j, idata, fdata):
         # -1 defines the end of the Gij block
         #if idata[i] != -1:
             #continue
-        if idata[i] != -1 and 0:
-            msg = (
-                'Expected -1 in %i slot of idata\n'
-                'RBE3: eid=%s, refg=%s, refc=%s\n'
-                'weights=%s comps=%s\n'
-                'weight=%s comp=%s gijs=%s\n'
-                'idatai=%s\n'
-                'idata[ii+6:jj] = %s' % (i, eid, refg, refc,
-                                       weights, comps,
-                                       weight, comp, gijs,
-                                       idatai.tolist(), idata[i:j].tolist())
-            )
-            raise RuntimeError(msg)
+        #if idata[i] != -1 and 0:
+            #msg = (
+                #'Expected -1 in %i slot of idata\n'
+                #'RBE3: eid=%s, refg=%s, refc=%s\n'
+                #'weights=%s comps=%s\n'
+                #'weight=%s comp=%s gijs=%s\n'
+                #'idatai=%s\n'
+                #'idata[ii+6:jj] = %s' % (i, eid, refg, refc,
+                                         #weights, comps,
+                                         #weight, comp, gijs,
+                                         #idatai.tolist(), idata[i:j].tolist())
+            #)
+            #raise RuntimeError(msg)
 
         i += 1 # -1
         #if idata[i+3] == -2:

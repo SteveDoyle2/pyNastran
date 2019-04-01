@@ -1,7 +1,7 @@
 """
 defines readers for BDF objects in the OP2 EPT/EPTS table
 """
-#pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914
+#pylint: disable=C0103,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import unpack, Struct
@@ -36,7 +36,7 @@ class EPT(GeomCommon):
         GeomCommon.__init__(self)
         self.big_properties = {}
         self._ept_map = {
-            (3201, 32, 55): ['NSM', self._read_nsm],          # record 2  - needs an object holder (e.g. self.elements/self.properties)
+            (3201, 32, 55): ['NSM', self._read_nsm],          # record 2
             (52, 20, 181): ['PBAR', self._read_pbar],         # record 11 - buggy
             (9102, 91, 52): ['PBARL', self._read_pbarl],      # record 12 - almost there...
             (2706, 27, 287): ['PCOMP', self._read_pcomp],     # record 22 - buggy
@@ -221,15 +221,15 @@ class EPT(GeomCommon):
             #print(packs)
             return packs
         idata = np.frombuffer(data[n:], self.idtype).copy()
-        fdata = np.frombuffer(data[n:], self.fdtype).copy()
-        packs = break_by_minus1(idata)
+        unused_fdata = np.frombuffer(data[n:], self.fdtype).copy()
+        unused_packs = break_by_minus1(idata)
         #for pack in packs:
             #print(pack)
 
         ipack = 0
         while n < len(data):
             #print('ints[i:]=', ints[i:].tolist())
-            i1, i2 = packs[ipack]
+            #i1, i2 = packs[ipack]
             #print('idata=%s' % idata[i1:i2])
             #print('fdata=%s' % fdata[i1:i2])
             #print(idata[i1:i2])
@@ -315,11 +315,11 @@ class EPT(GeomCommon):
         ntotal = 76  # 19*4
         struct1 = Struct(self._endian + b'2i17f')
         nentries = (len(data) - n) // ntotal
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+76]
             out = struct1.unpack(edata)
-            (pid, mid, a, I1, I2, J, nsm, fe, c1, c2, d1, d2,
-             e1, e2, f1, f2, k1, k2, I12) = out
+            #(pid, mid, a, I1, I2, J, nsm, fe, c1, c2, d1, d2,
+             #e1, e2, f1, f2, k1, k2, I12) = out
             prop = PBAR.add_op2_data(out)
             self._add_op2_property(prop)
             n += ntotal
@@ -419,7 +419,8 @@ class EPT(GeomCommon):
             data1 = struct1.unpack(edata)
             nsections = data1[-1]
             if self.is_debug_file:
-                (pid, mid, a, i1, i2, i12, j, nsm, k1, k2, m1, m2, n1, n2, nsections) = data1
+                (pid, mid, a, i1, i2, i12, j, nsm, unused_k1, unused_k2,
+                 unused_m1, unused_m2, unused_n1, unused_n2, unused_nsections) = data1
                 self.log.info('PBCOMP pid=%s mid=%s nsections=%s\n' % (pid, mid, nsections))
 
             data2 = []
@@ -430,9 +431,9 @@ class EPT(GeomCommon):
                 # 19 MID I     Material identification number
                 # 20     UNDEF None
                 # Words 16 through 20 repeat NSECT times
-                for i in range(nsections):
+                for unused_i in range(nsections):
                     datai = data[n:n+20]
-                    xi, yi, ci, mid, null = struct2.unpack(datai)
+                    xi, yi, ci, mid, unused_null = struct2.unpack(datai)
                     data2.append((xi, yi, ci, mid))
                     n += 20
             else:
@@ -474,7 +475,7 @@ class EPT(GeomCommon):
         struct1 = Struct(self._endian + b'4if')
         struct2 = Struct(self._endian + b'16f')
         struct3 = Struct(self._endian + b'16f')
-        ntotal = 768 # 4*(5+16*12)
+        unused_ntotal = 768 # 4*(5+16*12)
         #nproperties = (len(data) - n) // ntotal
         #assert nproperties > 0, 'ndata-n=%s n=%s datai\n%s' % (len(data)-n, n, self.show_data(data[n:100+n]))
         ndata = len(data)
@@ -488,7 +489,7 @@ class EPT(GeomCommon):
             data_in = list(struct1.unpack(edata))
             #if self.is_debug_file:
                 #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s\n' % tuple(data_in))
-            (pid, mid, nsegments, ccf, x) = data_in
+            (pid, unused_mid, unused_nsegments, ccf, unused_x) = data_in
             #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
 
             # Constant cross-section flag: 1=yes and 0=no
@@ -514,11 +515,13 @@ class EPT(GeomCommon):
                     so_str = 'YES'
                 else:
                     so_str = str(soi)
-                    #msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; soi not in 0.0 or 1.0' % (pid, i, xxb, soi)
+                    #msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; soi not in 0.0 or 1.0' % (
+                        #pid, i, xxb, soi)
                     #raise NotImplementedError(msg)
 
                 #if xxb != 0.0:
-                    #msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; xxb not in 0.0 or 1.0' % (pid, i, xxb, soi)
+                    #msg = 'PBEAM pid=%s i=%s x/xb=%s soi=%s; xxb not in 0.0 or 1.0' % (
+                        #pid, i, xxb, soi)
                     #raise NotImplementedError(msg)
 
                 pack2 = (so_str, xxb, a, i1, i2, i12, j, nsm, c1, c2,
@@ -535,14 +538,12 @@ class EPT(GeomCommon):
             if len(edata) != 64:
                 endpack = []
                 raise RuntimeError('PBEAM unexpected length 2...')
-                #break
-            else:
-                endpack = struct3.unpack(edata)
-                n += 64
+            endpack = struct3.unpack(edata)
+            n += 64
 
             assert len(endpack) == 16, endpack
-            (k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
-             m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = endpack # 8 -> 16
+            #(k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
+             #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = endpack # 8 -> 16
             if self.is_debug_file:
                 self.binary_debug.write('    k=[%s,%s] s=[%s,%s] nsi=[%s,%s] cw=[%s,%s] '
                                         'ma=[%s,%s] mb=[%s,%s] na=[%s,%s] nb=[%s,%s]' % (
@@ -581,7 +582,7 @@ class EPT(GeomCommon):
 
         struct1 = Struct(self._endian + b'2i8s8s')
         nproperties = len(istart)
-        for i, (istarti, iendi) in enumerate(zip(istart, iend)):
+        for unused_i, (istarti, iendi) in enumerate(zip(istart, iend)):
             idata = data[n+istarti*4 : n+(istarti+6)*4]
             pid, mid, group, beam_type = struct1.unpack(idata)
             group = group.decode('latin1').strip()
@@ -648,7 +649,7 @@ class EPT(GeomCommon):
         nproperties = (len(data) - n) // ntotal
         assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         properties = []
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+104]
             out = struct1.unpack(edata)
             (pid, mid, area, i1, i2, j, fsi, rm, t, p, rb, theta_b,
@@ -727,12 +728,13 @@ class EPT(GeomCommon):
         nproperties = (len(data) - n) // ntotal
         assert nproperties > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         properties = []
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+132]
             out = struct1.unpack(edata)
             (pid, mid, area, i1, i2, j, fsi, rm, t, p, rb, theta_b,
              c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, nsm, rc, zc,
-             delta_n, sacl, alpha, flange, kx, ky, kz, junk,) = out
+             delta_n, unused_sacl, unused_alpha, unused_flange,
+             unused_kx, unused_ky, unused_kz, unused_junk,) = out
             beam_type = fsi
 
             pbend = PBEND(pid, mid, beam_type, area, i1, i2, j,
@@ -777,7 +779,7 @@ class EPT(GeomCommon):
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         props = []
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+72]
             out = struct1.unpack(edata)
             (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
@@ -797,11 +799,11 @@ class EPT(GeomCommon):
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
         props = []
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+92]
             out = struct1.unpack(edata)
-            (pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
-             g1, g2, g3, g4, g5, g6, sa, st, ea, et) = out
+            #(pid, k1, k2, k3, k4, k5, k6, b1, b2, b3, b4, b5, b6,
+             #g1, g2, g3, g4, g5, g6, sa, st, ea, et) = out
             prop = PBUSH.add_op2_data(out)
             props.append(prop)
             n += ntotal
@@ -864,7 +866,7 @@ class EPT(GeomCommon):
         ntotal = 152  # 38*4
         struct1 = Struct(self._endian + b'i 6f i 4f 24i 2f')
         nentries = (len(data) - n) // ntotal
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+152]
             out = struct1.unpack(edata)
             (pid, k, c, m, unused_alpha, sa, se,
@@ -872,20 +874,22 @@ class EPT(GeomCommon):
              types, idts, idcs, idtdu, idcdu, typed, idtd, idtd, idtdv, idcdv,
              typeg, idtg, idcg, idtdu, idcdu, idtdv, idcdv,
              typef, idtf, idcf,
-             ut, uc) = out
+             unused_ut, unused_uc) = out
             if not is_release:
                 if typea in [1, 2]:
-                    raise NotImplementedError(str((typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud)))
+                    raise NotImplementedError(str((typea, cvt, cvc, expvt, expvc,
+                                                   idtsu, idtcu, idtsud, idcsud)))
                 if types in [1, 2]:
-                    raise NotImplementedError(str((types, idts, idcs, idtdu, idcdu, typed, idtd, idtd, idtdv, idcdv)))
+                    raise NotImplementedError(str((types, idts, idcs, idtdu, idcdu, typed,
+                                                   idtd, idtd, idtdv, idcdv)))
                 if typeg in [1, 2]:
                     raise NotImplementedError(str((typeg, idtg, idcg, idtdu, idcdu, idtdv, idcdv)))
                 if typef in [1, 2]:
                     raise NotImplementedError(str((idtf, idcf)))
-                typea_str = type_map[typea]
-                types_str = type_map[types]
-                typeg_str = type_map[typeg]
-                typef_str = type_map[typef]
+                unused_typea_str = type_map[typea]
+                unused_types_str = type_map[types]
+                unused_typeg_str = type_map[typeg]
+                unused_typef_str = type_map[typef]
             self.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
                              optional_vars=None,)
             n += ntotal
@@ -924,7 +928,8 @@ class EPT(GeomCommon):
             out = s1.unpack(data[n:n+32])
             (pid, nlayers, z0, nsm, sb, ft, Tref, ge) = out
             if self.binary_debug:
-                self.binary_debug.write('PCOMP pid=%s nlayers=%s z0=%s nsm=%s sb=%s ft=%s Tref=%s ge=%s' % tuple(out))
+                self.binary_debug.write('PCOMP pid=%s nlayers=%s z0=%s nsm=%s '
+                                        'sb=%s ft=%s Tref=%s ge=%s' % tuple(out))
             assert isinstance(nlayers, int), out
             n += 32
 
@@ -946,7 +951,7 @@ class EPT(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('    pid=%s nlayers=%s z0=%s nms=%s sb=%s ft=%s Tref=%s ge=%s\n' % (
                     pid, nlayers, z0, nsm, sb, ft, Tref, ge))
-            for ilayer in range(nlayers):
+            for unused_ilayer in range(nlayers):
                 (mid, t, theta, sout) = s2.unpack(data[n:n+16])
                 mids.append(mid)
                 T.append(t)
@@ -1009,8 +1014,10 @@ class EPT(GeomCommon):
             out = s1.unpack(data[n:n+32])
             (pid, lam_int, z0, nsm, sb, ft_int, tref, ge) = out
             if self.binary_debug:
-                self.binary_debug.write('PCOMPG pid=%s lam_int=%s z0=%s nsm=%s sb=%s ft_int=%s tref=%s ge=%s' % tuple(out))
-            #print('PCOMPG pid=%s lam_int=%s z0=%s nsm=%s sb=%s ft_int=%s tref=%s ge=%s' % tuple(out))
+                self.binary_debug.write('PCOMPG pid=%s lam_int=%s z0=%s '
+                                        'nsm=%s sb=%s ft_int=%s tref=%s ge=%s' % tuple(out))
+            #print('PCOMPG pid=%s lam_int=%s z0=%s nsm=%s sb=%s '
+                  #'ft_int=%s tref=%s ge=%s' % tuple(out))
             assert isinstance(lam_int, int), out
             n += 32
 
@@ -1044,7 +1051,8 @@ class EPT(GeomCommon):
                 try:
                     sout = sout_map[sout_int]
                 except KeyError:
-                    self.log.error('cant parse iply=%s sout=%s; assuming 0=NO' % (iply, sout_int))
+                    self.log.error('cant parse global_ply=%s sout=%s; assuming 0=NO' % (
+                        global_ply, sout_int))
                     sout = 'NO'
 
                 global_ply_ids.append(global_ply)
@@ -1061,13 +1069,15 @@ class EPT(GeomCommon):
             try:
                 ft = ft_map[ft_int]
             except KeyError:
-                self.log.error('pid=%s cant parse ft=%s; should be HILL, HOFF, TSAI, STRN...skipping' % (pid, ft_int))
+                self.log.error('pid=%s cant parse ft=%s; should be HILL, HOFF, TSAI, STRN'
+                               '...skipping' % (pid, ft_int))
                 continue
 
             try:
                 lam = lam_map[lam_int]
             except KeyError:
-                self.log.error('pid=%s cant parse lam=%s; should be HILL, HOFF, TSAI, STRN...skipping' % (pid, lam_int))
+                self.log.error('pid=%s cant parse lam=%s; should be HILL, HOFF, TSAI, STRN'
+                               '...skipping' % (pid, lam_int))
                 continue
 
             # apparently Nastran makes duplicate property ids...
@@ -1104,7 +1114,7 @@ class EPT(GeomCommon):
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         props = []
-        for i in range(nentries):
+        for unused_i in range(nentries):
             out = struct_3if.unpack(data[n:n+ntotal])
             (pconid, mid, form, expf) = out
             ftype = tid = chlen = gidin = ce = e1 = e2 = e3 = None
@@ -1125,9 +1135,9 @@ class EPT(GeomCommon):
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         props = []
-        for i in range(nentries):
+        for unused_i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
-            (pconid, mid, form, expf, ftype, tid, undef1, undef2, chlen,
+            (pconid, mid, form, expf, ftype, tid, unused_undef1, unused_undef2, chlen,
              gidin, ce, e1, e2, e3) = out
             data_in = (pconid, mid, form, expf, ftype, tid, chlen,
                        gidin, ce, e1, e2, e3)
@@ -1148,7 +1158,7 @@ class EPT(GeomCommon):
         ntotal = 8  # 2*4
         struct_if = Struct(self._endian + b'if')
         nentries = (len(data) - n) // ntotal
-        for i in range(nentries):
+        for unused_i in range(nentries):
             out = struct_if.unpack(data[n:n+ntotal])
             #(pid, b) = out
             prop = PDAMP.add_op2_data(out)
@@ -1180,7 +1190,7 @@ class EPT(GeomCommon):
         struct_i3f = Struct(self._endian + b'i3f')
         ntotal = 16  # 4*4
         nproperties = (len(data) - n) // ntotal
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+16]
             out = struct_i3f.unpack(edata)
             #(pid, k, ge, s) = out
@@ -1196,13 +1206,15 @@ class EPT(GeomCommon):
         ntotal = 92 # 23*4
         struct1 = Struct(self._endian + b'ifii 4f')
         nproperties = (len(data) - n) // ntotal
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  PFAST=%s\n' % str(out))
-            (pid, d, mcid, connbeh, conntype, extcon, condtype, weldtype,
-             minlen, maxlen, gmcheck, spcgs, mass, ge, aa, bb, cc, mcid, mflag,
+            (pid, d, mcid, unused_connbeh, unused_conntype, unused_extcon,
+             unused_condtype, unused_weldtype, unused_minlen, unused_maxlen,
+             unused_gmcheck, unused_spcgs, mass, ge,
+             unused_aa, unused_bb, unused_cc, mcid, mflag,
              kt1, kt2, kt3, kr1, kr2, kr3) = out
 
             data_in = (pid, d, mcid, mflag, kt1, kt2, kt3,
@@ -1223,7 +1235,7 @@ class EPT(GeomCommon):
         nproperties = (len(data) - n) // ntotal
         delta = (len(data) - n) % ntotal
         assert delta == 0, 'len(data)-n=%s n=%s' % (len(data) - n, (len(data) - n) / 48.)
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             if self.is_debug_file:
@@ -1251,7 +1263,7 @@ class EPT(GeomCommon):
         ntotal = 16
         struct_4i = Struct(self._endian + b'4i')
         nproperties = (len(data) - n) // ntotal
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
@@ -1270,7 +1282,7 @@ class EPT(GeomCommon):
         ntotal = 44
         struct_i10f = Struct(self._endian + b'i10f')
         nproperties = (len(data) - n) // ntotal
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+ntotal]
             out = struct_i10f.unpack(edata)
             if self.is_debug_file:
@@ -1288,7 +1300,7 @@ class EPT(GeomCommon):
         """
         struct_i3f = Struct(self._endian + b'ifff')
         nproperties = (len(data) - n) // 16
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+16]
             out = struct_i3f.unpack(edata)
             if self.is_debug_file:
@@ -1333,13 +1345,12 @@ class EPT(GeomCommon):
         ntotal = 44  # 4*11
         s = Struct(self._endian + b'3i 4s f 6i')
         nentries = (len(data) - n) // ntotal
-        for i in range(nentries):
+        for unused_i in range(nentries):
             out = s.unpack(data[n:n+ntotal])
-            pid, mid, cid, location, t, csopt = out[:6]
+            pid, mid, cid, location, unused_t, unused_csopt = out[:6]
             location = location.decode('latin1')
             #self.show_data(data[n:n+ntotal], 'ifs')
-            plplane = self.add_plplane(pid, mid, cid=cid, stress_strain_output_location=location)
-            #print(plplane)
+            self.add_plplane(pid, mid, cid=cid, stress_strain_output_location=location)
             n += ntotal
         self.card_count['PLPLANE'] = nentries
         return n
@@ -1364,12 +1375,12 @@ class EPT(GeomCommon):
         ntotal = 28  # 4*7
         struct1 = Struct(self._endian + b'2i 4s 4i')
         nentries = (len(data) - n) // ntotal
-        for i in range(nentries):
+        for unused_i in range(nentries):
             out = struct1.unpack(data[n:n+ntotal])
-            pid, mid, location, csopt, null_a, null_b, null_c = out
+            pid, mid, location, unused_csopt, unused_null_a, unused_null_b, unused_null_c = out
             location = location.decode('latin1')
             #self.show_data(data[n:n+ntotal], 'ifs')
-            plsolid = self.add_plsolid(pid, mid, stress_strain=location, ge=0.)
+            self.add_plsolid(pid, mid, stress_strain=location, ge=0.)
             n += ntotal
         self.card_count['PLSOLID'] = nentries
         return n
@@ -1380,7 +1391,7 @@ class EPT(GeomCommon):
         """
         struct_if = Struct(self._endian + b'if')
         nentries = (len(data) - n) // 8  # 2*4
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n + 8]
             out = struct_if.unpack(edata)
             #out = (pid, mass)
@@ -1398,7 +1409,7 @@ class EPT(GeomCommon):
         ntotal = 24  # 6*4
         struct_2i4f = Struct(self._endian + b'2i4f')
         nproperties = (len(data) - n) // ntotal
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+24]
             out = struct_2i4f.unpack(edata)
             #(pid, mid, a, j, c, nsm) = out
@@ -1416,7 +1427,7 @@ class EPT(GeomCommon):
         """
         struct_2i4f = Struct(self._endian + b'2i4f')
         nproperties = (len(data) - n) // 24
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+24]
             out = struct_2i4f.unpack(edata)
             #(pid, mid, t, nsm, f1, f2) = out
@@ -1435,10 +1446,11 @@ class EPT(GeomCommon):
         ntotal = 44  # 11*4
         s = Struct(self._endian + b'iififi4fi')
         nproperties = (len(data) - n) // ntotal
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+44]
             out = s.unpack(edata)
-            (pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
+            (pid, mid1, unused_t, mid2, unused_bk, mid3, unused_ts,
+             unused_nsm, unused_z1, unused_z2, mid4) = out
             if self.is_debug_file:
                 self.binary_debug.write('  PSHELL=%s\n' % str(out))
             prop = PSHELL.add_op2_data(out)
@@ -1470,7 +1482,7 @@ class EPT(GeomCommon):
         ntotal = 28  # 7*4
         struct_6i4s = Struct(self._endian + b'6i4s')
         nproperties = (len(data) - n) // ntotal
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+28]
             out = struct_6i4s.unpack(edata)
             #(pid, mid, cid, inp, stress, isop, fctn) = out
@@ -1500,7 +1512,7 @@ class EPT(GeomCommon):
         """
         struct_2i3f = Struct(self._endian + b'2i3f')
         nproperties = (len(data) - n) // 20
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+20]  # or 24???
             out = struct_2i3f.unpack(edata)
             (pid, mid, OD, t, nsm) = out
@@ -1525,7 +1537,7 @@ class EPT(GeomCommon):
         """PVISC(1802,18,31) - the marker for Record 39"""
         struct_i2f = Struct(self._endian + b'i2f')
         nproperties = (len(data) - n) // 12
-        for i in range(nproperties):
+        for unused_i in range(nproperties):
             edata = data[n:n+12]
             out = struct_i2f.unpack(edata)
             if self.is_debug_file:

@@ -699,14 +699,15 @@ class FLUTTER(BaseCard):
 
         alts2 = alts[:len(rho)]
         assert len(rho) == len(alts2)
-        model.add_flfact(flfact_rho, rho,
-                         comment=' density: min=%.3e max=%.3e %s; alt min=%.0f max=%.0f %s' % (
-                             rho.min(), rho.max(), density_units,
-                             alts2.min(), alts2.max(), alt_units,
-        ))
+        comment = ' density: min=%.3e max=%.3e %s; alt min=%.0f max=%.0f %s' % (
+            rho.min(), rho.max(), density_units,
+            alts2.min(), alts2.max(), alt_units,
+        )
+        model.add_flfact(flfact_rho, rho, comment=comment)
         model.add_flfact(flfact_mach, mach, comment=' Mach: %s' % mach.min())
-        model.add_flfact(flfact_velocity, velocity, comment=' velocity: min=%.3f max=%.3f %s' % (
-            velocity.min(), velocity.max(), velocity_units))
+        comment = ' velocity: min=%.3f max=%.3f %s' % (
+            velocity.min(), velocity.max(), velocity_units)
+        model.add_flfact(flfact_velocity, velocity, comment=comment)
 
         # eas in velocity units
         rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
@@ -714,11 +715,12 @@ class FLUTTER(BaseCard):
         kvel = _velocity_factor(velocity_units, eas_units)
 
         eas_in_eas_units = eas * kvel
-        model.add_flfact(flfact_eas, eas_in_eas_units, comment=' EAS: min=%.3f max=%.3f %s' % (
-            eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units))
+        comment = ' EAS: min=%.3f max=%.3f %s' % (
+            eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units)
+        model.add_flfact(flfact_eas, eas_in_eas_units, comment=comment)
 
-        model.add_flfact(flfact_alt, alts2, comment=' Alt: min=%.3f max=%.3f %s' % (
-            alts2.min(), alts2.max(), alt_units,))
+        comment = ' Alt: min=%.3f max=%.3f %s' % (alts2.min(), alts2.max(), alt_units)
+        model.add_flfact(flfact_alt, alts2, comment=comment)
 
     def make_flfacts_mach_sweep(self, model, alt, machs, eas_limit=1000., alt_units='m',
                                 velocity_units='m/s',
@@ -742,15 +744,16 @@ class FLUTTER(BaseCard):
         flfact_velocity = self.sid + 3
         flfact_eas = self.sid + 4
 
-        model.add_flfact(flfact_rho, rho,
-                         comment=' density: min=%.3e max=%.3e %s; alt %.0f %s' % (
-                             rho.min(), rho.max(), density_units,
-                             alt, alt_units,
-        ))
-        model.add_flfact(flfact_mach, mach, comment=' Mach: min=%s max=%s' % (
-            mach.min(), mach.max()))
-        model.add_flfact(flfact_velocity, velocity, comment=' velocity: min=%.3f max=%.3f %s' % (
-            velocity.min(), velocity.max(), velocity_units))
+        comment = ' density: min=%.3e max=%.3e %s; alt %.0f %s' % (
+            rho.min(), rho.max(), density_units,
+            alt, alt_units,
+        )
+        model.add_flfact(flfact_rho, rho, comment=comment)
+        comment = ' Mach: min=%s max=%s' % (mach.min(), mach.max())
+        model.add_flfact(flfact_mach, mach, comment=comment)
+        comment = ' velocity: min=%.3f max=%.3f %s' % (
+            velocity.min(), velocity.max(), velocity_units)
+        model.add_flfact(flfact_velocity, velocity, comment=comment)
 
         # eas in velocity units
         rho0 = atm_density(0., alt_units=alt_units, density_units=density_units)
@@ -758,8 +761,9 @@ class FLUTTER(BaseCard):
         kvel = _velocity_factor(velocity_units, eas_units)
 
         eas_in_eas_units = eas * kvel
-        model.add_flfact(flfact_eas, eas_in_eas_units, comment=' EAS: min=%.3f max=%.3f %s' % (
-            eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units))
+        comment = ' EAS: min=%.3f max=%.3f %s' % (
+            eas_in_eas_units.min(), eas_in_eas_units.max(), eas_units)
+        model.add_flfact(flfact_eas, eas_in_eas_units, comment=comment)
 
     @property
     def headers(self):

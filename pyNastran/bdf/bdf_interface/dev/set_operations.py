@@ -1,3 +1,7 @@
+"""
+defines:
+ - array2 = intersect1d_multi(array_set, assume_unique=False)
+"""
 import numpy as np
 
 def intersect1d_multi(array_set, assume_unique=False):

@@ -1,13 +1,11 @@
-# pylint: disable=C0301,W0613,C0103,R0913,R0914,R0904,C0111,R0201,R0902
+# pylint: disable=C0301,R0913,R0914,R0904,C0111,R0201,R0902
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from struct import Struct, pack
 from six import integer_types
 
 import numpy as np
 from numpy import zeros, where, searchsorted
-from numpy.linalg import eigh  # type: ignore
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -92,7 +90,8 @@ class RandomSolidArray(OES_Object):
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
-    def add_eid_sort1(self, eType, cid, dt, eid, node_id, oxx, oyy, ozz, txy, tyz, txz):
+    def add_eid_sort1(self, unused_etype, cid, dt, eid, unused_node_id,
+                      oxx, oyy, ozz, txy, tyz, txz):
         assert cid >= -1, cid
         assert eid >= 0, eid
 
@@ -142,7 +141,7 @@ class RandomSolidArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def add_node_sort1(self, dt, eid, inode, node_id, oxx, oyy, ozz, txy, tyz, txz):
+    def add_node_sort1(self, dt, eid, unused_inode, node_id, oxx, oyy, ozz, txy, tyz, txz):
         self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz]
         #print('data[%s, %s, :] = %s' % (self.itime, self.itotal, str(self.data[self.itime, self.itotal, :])))
 
@@ -229,7 +228,7 @@ class RandomSolidArray(OES_Object):
         nodes = self.element_node[:, 1]
 
         eids3 = self.element_cid[:, 0]
-        cids3 = self.element_cid[:, 1]
+        unused_cids3 = self.element_cid[:, 1]
 
         for itime in range(ntimes):
             dt = self._times[itime]
@@ -248,7 +247,7 @@ class RandomSolidArray(OES_Object):
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz in zip(
                 count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz):
 
-                j = where(eids3 == deid)[0]
+                unused_j = where(eids3 == deid)[0]
                 #cid = cids3[j]
                 cid = 0
                 [oxxi, oyyi, ozzi, txyi, tyzi, txzi] = write_floats_13e(

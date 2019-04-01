@@ -1,8 +1,7 @@
 """
 defines readers for BDF objects in the OP2 GEOM2/GEOM2S table
 """
-# pylint: disable=W0612,C0103
-### pyldint: disable=W0612,C0103,C0302,W0613,R0914,R0201
+# pylint: disable=C0103
 from struct import Struct
 import numpy as np
 
@@ -106,9 +105,9 @@ class GEOM2(GeomCommon):
             (17000, 170, 9999) : ['CQDX4FD', self._read_fake],  # record 67
             (17100, 171, 9999) : ['CQDX9FD', self._read_fake],  # record 68
             (9108, 91, 507): ['CQUAD', self._read_cquad],       # record 69 - not tested
-            (2958, 51, 177): ['CQUAD4', self._read_cquad4],     # record 70 - maybe buggy on theta/Mcsid field
-            (13900, 139, 9989): ['CQUAD4', self._read_cquad4],  # record 71 - maybe buggy on theta/Mcsid field
-            (4701, 47, 326): ['CQUAD8', self._read_cquad8],     # record 72 - maybe buggy on theta/Mcsid field
+            (2958, 51, 177): ['CQUAD4', self._read_cquad4],     # record 70
+            (13900, 139, 9989): ['CQUAD4', self._read_cquad4],  # record 71
+            (4701, 47, 326): ['CQUAD8', self._read_cquad8],     # record 72
             (16400, 164, 9999) : ['CQUAD9FD', self._read_fake],  # record 73
             (11101, 111, 9014) : ['CQUADP', self._read_fake],  # record 74
             (8009, 80, 367): ['CQUADR', self._read_cquadr],   # record 75 - not tested
@@ -130,7 +129,7 @@ class GEOM2(GeomCommon):
             (16100, 161, 9999) : ['CTETR4FD', self._read_fake],  # record 91
             (14801, 148, 643) : ['CTQUAD', self._read_fake],  # record 92
             (14901, 149, 644) : ['CTTRIA', self._read_fake],  # record 93
-            (5959, 59, 282): ['CTRIA3', self._read_ctria3],   # record 94 - maybe buggy on theta/Mcsid field
+            (5959, 59, 282): ['CTRIA3', self._read_ctria3],   # record 94
             (16200, 162, 9999) : ['CTRIA3FD', self._read_fake],  # record 95
             (4801, 48, 327): ['CTRIA6', self._read_ctria6],   # record 96 - buggy
             # : ['RADBC', self._read_fake],  record 97
@@ -319,7 +318,7 @@ class GEOM2(GeomCommon):
         #s2 = Struct(self._endian + b'4i3f3i6f')
         s2 = s1
         s3 = Struct(self._endian + b'7ii2i6f')
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 64]  # 16*4
             fe, = self.struct_i.unpack(edata[28:32])
             # per DMAP: F = FE bit-wise AND with 3
@@ -338,7 +337,7 @@ class GEOM2(GeomCommon):
                            [f, x1, x2, x3]]
             elif f == 2:
                 out = s3.unpack(edata)
-                (eid, pid, ga, gb, g0, junk, junk, _f, pa,
+                (eid, pid, ga, gb, g0, unused_junk1, unused_junk2, _f, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a,
                             w2a, w3a, w1b, w2b, w3b], [f, g0]]
@@ -372,12 +371,12 @@ class GEOM2(GeomCommon):
         #return len(data)
         nelements = (len(data) - n) // 36
         s = Struct(self._endian + b'2i7f')
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 36]  # 9*4
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CBARAO=%s\n' % str(out))
-            (eid, scale, x1, x2, x3, x4, x5, x6, null) = out
+            (eid, scale, x1, x2, x3, x4, x5, x6, unused_null) = out
             if scale == 2:
                 scale = 'FR'
             else:
@@ -395,7 +394,7 @@ class GEOM2(GeomCommon):
         nelements = (len(data) - n) // 72
         s1 = Struct(self._endian + b'6i3f3i6f')
         s3 = Struct(self._endian + b'12i6f')
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 72]  # 18*4
             fe, = self.struct_i.unpack(edata[40:44])
 
@@ -421,7 +420,8 @@ class GEOM2(GeomCommon):
                 out = s3.unpack(edata)
                 (eid, pid, ga, gb, sa, sb, g0, xxa, xxb, fe,
                  pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                #self.log.info('CBEAM: eid=%s fe=%s f=%s; grid option (g0=%s xxa=%s xxb=%s)' % (eid, fe, f, g0, xxa, xxb))
+                #self.log.info('CBEAM: eid=%s fe=%s f=%s; grid option '
+                              #'(g0=%s xxa=%s xxb=%s)' % (eid, fe, f, g0, xxa, xxb))
                 if g0 <= 0 or g0 >= 100000000 or xxa != 0 or xxb != 0:
                     # Nastran set this wrong...MasterModelTaxi
                     #CBEAM    621614  2672    900380  900379 .197266 -.978394.0600586
@@ -442,7 +442,8 @@ class GEOM2(GeomCommon):
             else:
                 raise RuntimeError('invalid f value...f=%r' % f)
             if self.is_debug_file:
-                self.binary_debug.write('  CBEAM eid=%s f=%s fe=%s %s\n' % (eid, f, fe, str(data_in)))
+                self.binary_debug.write('  CBEAM eid=%s f=%s fe=%s %s\n' % (
+                    eid, f, fe, str(data_in)))
 
             elem = CBEAM.add_op2_data(data_in, f)
             self.add_op2_element(elem)
@@ -489,7 +490,7 @@ class GEOM2(GeomCommon):
         fstruc = Struct(self._endian + b'4i 3f 6i')
         istruc = Struct(self._endian + b'4i 3i 6i')
 
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n + 52]  # 13*4
             fe, = self.struct_i.unpack(edata[28:32])
             # per DMAP: F = FE bit-wise AND with 3
@@ -497,19 +498,19 @@ class GEOM2(GeomCommon):
             if f == 0:
                 out = fstruc.unpack(edata)
                 (eid, pid, ga, gb, x1, x2, x3, fe,
-                 dunnoa, dunnob, dunnoc, dunnod, geom) = out
+                 unused_dunnoa, unused_dunnob, unused_dunnoc, unused_dunnod, geom) = out
                 data_in = [[eid, pid, ga, gb, geom],
                            [f, x1, x2, x3]]
             elif f == 1:
                 out = fstruc.unpack(edata)
                 (eid, pid, ga, gb, x1, x2, x3, fe,
-                 dunnoa, dunnob, dunnoc, dunnod, geom) = out
+                 unused_dunnoa, unused_dunnob, unused_dunnoc, unused_dunnod, geom) = out
                 data_in = [[eid, pid, ga, gb, geom],
                            [f, x1, x2, x3]]
             elif f == 2:
                 out = istruc.unpack(edata)
-                (eid, pid, ga, gb, g0, junk, junk, fe,
-                 dunnoa, dunnob, dunnoc, dunnod, geom) = out
+                (eid, pid, ga, gb, g0, unused_junk1, unused_junk2, fe,
+                 unused_dunnoa, unused_dunnob, unused_dunnoc, unused_dunnod, geom) = out
                 data_in = [[eid, pid, ga, gb, geom],
                            [f, g0]]
             else:
@@ -530,10 +531,10 @@ class GEOM2(GeomCommon):
         nelements = (len(data) - n) // 56
         struct_obj1 = Struct(self._endian + b'4i iii i ifi3f')
         struct_obj2 = Struct(self._endian + b'4i fff i ifi3f')
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 56]  # 14*4
             out = struct_obj1.unpack(edata)
-            eid, pid, ga, gb, five, sixi, seven, f, cid, s, ocid, s1, s2, s3 = out
+            eid, pid, ga, gb, five, unused_sixi, unused_seven, f, cid, s, ocid, s1, s2, s3 = out
             si = [s1, s2, s3]
             if f == -1: # Use Element CID below for orientation
                 x = [None, None, None]
@@ -578,7 +579,7 @@ class GEOM2(GeomCommon):
         ntotal = 32 # 4*8
         nelements = (len(data) - n) // ntotal
         struct_6i = Struct(self._endian + b'8i')
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + ntotal]
             out = struct_6i.unpack(edata)
             if self.is_debug_file:
@@ -610,12 +611,12 @@ class GEOM2(GeomCommon):
         """
         nelements = (len(data) - n) // 24
         struct_6i = Struct(self._endian + b'6i')
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = struct_6i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CDAMP1=%s\n' % str(out))
-            (eid, pid, g1, g2, c1, c2) = out
+            #(eid, pid, g1, g2, c1, c2) = out
             elem = CDAMP1.add_op2_data(out)
             self.add_op2_element(elem)
             n += 24
@@ -628,12 +629,12 @@ class GEOM2(GeomCommon):
         """
         nelements = (len(data) - n) // 24
         s = Struct(self._endian + b'if4i')
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CDAMP2=%s\n' % str(out))
-            (eid, bdamp, g1, g2, c1, c2) = out
+            #(eid, bdamp, g1, g2, c1, c2) = out
             elem = CDAMP2.add_op2_data(out)
             self.add_op2_element(elem)
             n += 24
@@ -646,12 +647,12 @@ class GEOM2(GeomCommon):
         """
         struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CDAMP3=%s\n' % str(out))
-            (eid, pid, s1, s2) = out
+            #(eid, pid, s1, s2) = out
             elem = CDAMP3.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
@@ -664,12 +665,12 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'ifii')
         nelements = (len(data) - n) // 16
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CDAMP4=%s\n' % str(out))
-            (eid, bdamp, s1, s2) = out
+            #(eid, bdamp, s1, s2) = out
             elem = CDAMP4.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
@@ -682,12 +683,12 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CDAMP5=%s\n' % str(out))
-            (eid, pid, s1, s2) = out
+            #(eid, pid, s1, s2) = out
             elem = CDAMP5.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
@@ -710,12 +711,12 @@ class GEOM2(GeomCommon):
         ntotal = 24  # 6*4
         struct_4i = Struct(self._endian + b'6i')
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+24]
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CELAS1=%s\n' % str(out))
-            (eid, pid, g1, g2, c1, c2) = out
+            #(eid, pid, g1, g2, c1, c2) = out
             elem = CELAS1.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
@@ -729,12 +730,12 @@ class GEOM2(GeomCommon):
         s1 = Struct(self._endian + b'if4iff')
         ntotal = 32
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+32]
             out = s1.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CELAS2=%s\n' % str(out))
-            (eid, k, g1, g2, c1, c2, ge, s) = out
+            #(eid, k, g1, g2, c1, c2, ge, s) = out
             elem = CELAS2.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
@@ -748,12 +749,12 @@ class GEOM2(GeomCommon):
         ntotal = 16  # 4*4
         struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+16]
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CELAS3=%s\n' % str(out))
-            (eid, pid, s1, s2) = out
+            #(eid, pid, s1, s2) = out
             elem = CELAS3.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
@@ -766,12 +767,12 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'ifii')
         nelements = (len(data) - n) // 16
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CELAS4=%s\n' % str(out))
-            (eid, k, s1, s2) = out
+            #(eid, k, s1, s2) = out
             elem = CELAS4.add_op2_data(out)
             self.add_op2_element(elem)
             n += 16
@@ -800,7 +801,7 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'3i2fi')
         nelements = (len(data) - n) // 24
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -825,7 +826,7 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'4i2fi')
         nelements = (len(data) - n) // 28
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 28]  # 7*4
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -851,7 +852,7 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'5i2fi')
         nelements = (len(data) - n) // 32
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 32]  # 8*4
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -870,7 +871,7 @@ class GEOM2(GeomCommon):
         """
         s1 = Struct(self._endian + b'4i3fii')
         nelements = (len(data) - n) // 36
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 36]  # 9*4
             out = s1.unpack(edata)
             (eid, pid, ga, gb, x1, x2, x3, f, cid) = out  # f=0,1
@@ -903,7 +904,7 @@ class GEOM2(GeomCommon):
         ntotal = 28  # 7*4
         s = Struct(self._endian + b'7i')
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+28]
             out = s.unpack(edata)
             (eid, eid2, side, iviewf, iviewb, radmidf, radmidb) = out
@@ -924,10 +925,10 @@ class GEOM2(GeomCommon):
         ntotal = 64  # 16*4
         s = Struct(self._endian + b'16i')
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+64]
             out = s.unpack(edata)
-            (eid, blank, Type, iviewf, iviewb, radmidf, radmidb, blank2,
+            (eid, unused_blank, Type, iviewf, iviewb, radmidf, radmidb, unused_blank2,
              g1, g2, g3, g4, g5, g6, g7, g8) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CHBDYG=%s\n' % str(out))
@@ -947,7 +948,7 @@ class GEOM2(GeomCommon):
         ntotal = 60  # 16*4
         s = Struct(self._endian + b'12i 3f')
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+60]
             out = s.unpack(edata)
             (eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
@@ -977,7 +978,7 @@ class GEOM2(GeomCommon):
         s = Struct(self._endian + b'22i')
         ntotal = 88  # 22*4
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+88]
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -1016,7 +1017,7 @@ class GEOM2(GeomCommon):
         """
         struct_6i = Struct(self._endian + b'6i')
         nelements = (len(data) - n) // 24
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = struct_6i.unpack(edata)
             if self.is_debug_file:
@@ -1034,7 +1035,7 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'if4i')
         nelements = (len(data) - n) // 24
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 24]  # 6*4
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -1052,7 +1053,7 @@ class GEOM2(GeomCommon):
         """
         struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
@@ -1070,7 +1071,7 @@ class GEOM2(GeomCommon):
         """
         nelements = (len(data) - n) // 16
         struct_if2i = Struct(self._endian + b'ifii')
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = struct_if2i.unpack(edata)
             #(eid, m,s 1, s2) = out
@@ -1094,7 +1095,7 @@ class GEOM2(GeomCommon):
         nelements = (len(data) - n) // 20
         assert (len(data) - n) % 20 == 0
         struct_3ifi = Struct(self._endian + b'3ifi')
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 20]  # 5*4
             out = struct_3ifi.unpack(edata)
             eid, s, s2, y, ncm = out
@@ -1109,13 +1110,13 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'3i21f')
         nelements = (len(data) - n) // 96
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 96]  # 24*4
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CONM1=%s\n' % str(out))
-            (eid, g, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
-             m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = out
+            #(eid, g, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
+             #m5a, m5b, m5c, m5d, m5e, m6a, m6b, m6c, m6d, m6e, m6f) = out
             elem = CONM1.add_op2_data(out)
             self._add_mass_object(elem)
             n += 96
@@ -1129,12 +1130,12 @@ class GEOM2(GeomCommon):
         ntotal = 52  # 13*4
         s = Struct(self._endian + b'3i10f')
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+52]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CONM2=%s\n' % str(out))
-            (eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
+            #(eid, g, cid, m, x1, x2, x3, i1, i2a, i2b, i3a, i3b, i3c) = out
             elem = CONM2.add_op2_data(out)
             self._add_mass_object(elem)
             n += ntotal
@@ -1148,12 +1149,12 @@ class GEOM2(GeomCommon):
         ntotal = 32  # 8*4
         s = Struct(self._endian + b'4i4f')
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+32]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CONROD=%s\n' % str(out))
-            (eid, n1, n2, mid, a, j, c, nsm) = out
+            #(eid, n1, n2, mid, a, j, c, nsm) = out
             elem = CONROD.add_op2_data(out)
             self.add_op2_element(elem)
             n += ntotal
@@ -1234,7 +1235,7 @@ class GEOM2(GeomCommon):
         s = Struct(self._endian + b'4i 8i')
         nelements = (len(data) - n) // ntotal
         elements = []
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -1263,14 +1264,15 @@ class GEOM2(GeomCommon):
         s = Struct(self._endian + b'12i 8f')
         nelements = (len(data) - n) // ntotal
         elements = []
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+80]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CONV=%s; len=%s\n' % (str(out), len(out)))
             (eid, pcon_id, flmnd, cntrlnd,
-             ta1, ta2, ta3, ta4, ta5, ta6, ta7, ta8,
-             wt1, wt2, wt3, wt4, wt5, wt6, wt7, wt8) = out
+             # TODO: why is ta4 and wt4 unused?
+             ta1, ta2, ta3, unused_ta4, ta5, ta6, ta7, ta8,
+             wt1, wt2, wt3, unused_wt4, wt5, wt6, wt7, wt8) = out
             assert eid > 0, out
             data_in = [eid, pcon_id, flmnd, cntrlnd,
                        [ta1, ta2, ta3, ta5, ta6, ta7, ta8],
@@ -1368,7 +1370,7 @@ class GEOM2(GeomCommon):
             self.log.error(msg)
             return n + ndata
 
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+24]
             out = struct_6i.unpack(edata)
             if self.is_debug_file:
@@ -1376,7 +1378,8 @@ class GEOM2(GeomCommon):
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2) = out
             if eid <= 0:
                 self.show_data(data, 'if')
-                raise RuntimeError('eid=%s < 0' % eid)  # TODO: I'm not sure that this really has 7 fields...
+                # TODO: I'm not sure that this really has 7 fields...
+                raise RuntimeError('eid=%s < 0' % eid)
             mdot = 0.
             data_in = [eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot]
             elem = CONVM.add_op2_data(data_in)
@@ -1393,7 +1396,7 @@ class GEOM2(GeomCommon):
         """
         struct_16i = Struct(self._endian + b'16i')
         nelements = (len(data) - n) // 64
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 64]  # 15*4
             out = struct_16i.unpack(edata)
             if self.is_debug_file:
@@ -1423,7 +1426,7 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'17i')
         nelements = (len(data) - n) // 68
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 68]  # 17*4
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -1457,7 +1460,7 @@ class GEOM2(GeomCommon):
         nelements = (len(data) - n) // 44  # 11*4
         if self.is_debug_file:
             self.binary_debug.write('ndata=%s\n' % (nelements * 44))
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 44]
             out = s.unpack(edata)
             (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9) = out
@@ -1488,17 +1491,19 @@ class GEOM2(GeomCommon):
         if self.is_debug_file:
             self.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 56]  # 14*4
             out = s.unpack(edata)
-            (eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
+            (eid, pid, n1, n2, n3, n4, theta, zoffs, unused_blank, tflag,
              t1, t2, t3, t4) = out
             if self.is_debug_file:
                 self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
 
             theta_mcid = convert_theta_to_mcid(theta)
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" % (
-                #eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag, t1, t2, t3, t4))
+            #print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
+                  #'blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s' % (
+                      #eid, pid, n1, n2, n3, n4, theta, zoffs,
+                      #blank, tflag, t1, t2, t3, t4))
 
             data_init = [
                 eid, pid, n1, n2, n3, n4, theta_mcid, zoffs,
@@ -1540,18 +1545,21 @@ class GEOM2(GeomCommon):
         nelements = (len(data) - n) // 68  # 17*4
         s = Struct(self._endian + b'10i 6f i')
         elements = []
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 68]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CQUAD8=%s\n' % str(out))
-            (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
-             t3, t4, theta, zoffs, tflag) = out
+            #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
+             #t3, t4, theta, zoffs, tflag) = out
+            tflag = out[-1]
             #self.log.info('cquad8 tflag = %s' % tflag)
             assert isinstance(tflag, int), tflag
             assert tflag in [-1, 0, 1], tflag
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %
-                  #(eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
+            #print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
+                  #'tflag=%s t1=%s t2=%s t3=%s t4=%s' % (
+                      #eid, pid, n1, n2, n3, n4, theta, zoffs,
+                      #tflag, t1, t2, t3, t4))
             #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD8.add_op2_data(out)
             elements.append(elem)
@@ -1577,7 +1585,7 @@ class GEOM2(GeomCommon):
         nelements = (len(data) - n) // 64  # 16*4
         s = Struct(self._endian + b'10i 6f')
         elements = []
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 64]
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -1587,8 +1595,9 @@ class GEOM2(GeomCommon):
             tflag = None
             out = (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
                    t3, t4, theta, zoffs, tflag)
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s tflag=%s t1=%s t2=%s t3=%s t4=%s" %
-                  #(eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
+            #print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
+                  #'tflag=%s t1=%s t2=%s t3=%s t4=%s' % (
+                      #eid, pid, n1, n2, n3, n4, theta, zoffs, tflag, t1, t2, t3, t4))
             #data_init = [eid,pid,n1,n2,n3,n4,theta,zoffs,tflag,t1,t2,t3,t4]
             elem = CQUAD8.add_op2_data(out)
             elements.append(elem)
@@ -1623,12 +1632,12 @@ class GEOM2(GeomCommon):
         struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16  # 4*4
         #is_long_ids = False
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 16]
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CROD=%s\n' % str(out))
-            (eid, pid, n1, n2) = out
+            #(eid, pid, n1, n2) = out
             #if n1 > 100000000 or n2 > 100000000:
                 #is_long_ids = True
             elem = CROD.add_op2_data(out)
@@ -1647,12 +1656,12 @@ class GEOM2(GeomCommon):
         """
         struct_6i = Struct(self._endian + b'6i')
         nelements = (len(data) - n) // 24  # 6*4
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 24]
             out = struct_6i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CSHEAR=%s\n' % str(out))
-            (eid, pid, n1, n2, n3, n4) = out
+            #(eid, pid, n1, n2, n3, n4) = out
             elem = CSHEAR.add_op2_data(out)
             self.add_op2_element(elem)
             n += 24
@@ -1669,17 +1678,20 @@ class GEOM2(GeomCommon):
         """
         nelements = (len(data) - n) // 108  # 27*4
         struct_27i = Struct(self._endian + b'27i')
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+108]
             out = struct_27i.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTETP=%s\n' % str(out))
-            (eid, pid, n1, n2, n3, n4, e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
-             f1, f2, f3, f4, b1, ee1, ee2, ee3, ee4) = out
+
+            eid, pid, n1, n2, n3, n4 = out[:6]
+            #(eid, pid, n1, n2, n3, n4,
+             #e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
+             #f1, f2, f3, f4, b1, ee1, ee2, ee3, ee4) = out
             #print("out = ",out)
-            e = [e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12]
-            f = [f1, f2, f3, f4]
-            ee = [ee1, ee2, ee3, ee4]
+            #e = [e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12]
+            #f = [f1, f2, f3, f4]
+            #ee = [ee1, ee2, ee3, ee4]
 
             #print("e  = ",e)
             #print("f  = ",f)
@@ -1698,7 +1710,7 @@ class GEOM2(GeomCommon):
         """
         s = Struct(self._endian + b'12i')
         nelements = (len(data) - n) // 48  # 12*4
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 48]
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -1727,13 +1739,15 @@ class GEOM2(GeomCommon):
         ntotal = 52  # 13*4
         s = Struct(self._endian + b'5iff3i3f')
         nelements = (len(data) - n)// 52  # 13*4
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+52]
             out = s.unpack(edata)
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %
-                  #(eid, pid, n1, n2, n3, theta, zoffs, blank1, blank2, tflag, t1, t2, t3))
-            (eid, pid, n1, n2, n3, theta, zoffs, blank1,
-             blank2, tflag, t1, t2, t3) = out
+            #print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
+                  #'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
+                      #eid, pid, n1, n2, n3, theta, zoffs,
+                      #blank1, blank2, tflag, t1, t2, t3))
+            (eid, pid, n1, n2, n3, theta, zoffs, unused_blank1,
+             unused_blank2, tflag, t1, t2, t3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIA3=%s\n' % str(out))
 
@@ -1795,14 +1809,17 @@ class GEOM2(GeomCommon):
         nelements = (len(data) - n) // 56  # 14*4
         assert (len(data) - n) % 56 == 0
         elements = []
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 56]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIA6=%s\n' % str(out))
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %
-                  #(eid, pid, n1, n2, n3, theta, zoffs, blank1, blank2, tflag, t1, t2, t3))
-            (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag) = out
+            #print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
+                  #'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
+                      #eid, pid, n1, n2, n3, theta, zoffs,
+                      #blank1, blank2, tflag, t1, t2, t3))
+            #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag) = out
+            tflag = out[-1]
             #self.log.info('ctria6 tflag = %s' % tflag)
             elem = CTRIA6.add_op2_data(out)
             self.add_op2_element(elem)
@@ -1819,13 +1836,15 @@ class GEOM2(GeomCommon):
         nelements = (len(data) - n) // 52  # 13*4
         assert (len(data) - n) % 52 == 0
         elements = []
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 52]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIA6=%s\n' % str(out))
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %
-                  #(eid, pid, n1, n2, n3, theta, zoffs, blank1, blank2, tflag, t1, t2, t3))
+            #print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
+                  #'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
+                      #eid, pid, n1, n2, n3, theta, zoffs,
+                      #blank1, blank2, tflag, t1, t2, t3))
             (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3) = out
             out = (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, 0)
             elem = CTRIA6.add_op2_data(out)
@@ -1843,13 +1862,15 @@ class GEOM2(GeomCommon):
         ntotal = 52  # 13*4
         s = Struct(self._endian + b'5iff3i3f')
         nelements = (len(data) - n)// 52  # 13*4
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n+52]
             out = s.unpack(edata)
-            #print("eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s" %
-                  #(eid, pid, n1, n2, n3, theta, zoffs, blank1, blank2, tflag, t1, t2, t3))
-            (eid, pid, n1, n2, n3, theta, zoffs, blank1,
-             blank2, tflag, t1, t2, t3) = out
+            #print('eid=%s pid=%s n1=%s n2=%s n3=%s theta=%s zoffs=%s '
+                  #'blank1=%s blank2=%s tflag=%s t1=%s t2=%s t3=%s' % (
+                      #eid, pid, n1, n2, n3, theta, zoffs,
+                      #blank1, blank2, tflag, t1, t2, t3))
+            (eid, pid, n1, n2, n3, theta, zoffs, unused_blank1,
+             unused_blank2, tflag, t1, t2, t3) = out
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIAR=%s\n' % str(out))
             data_in = [eid, pid, n1, n2, n3, theta, zoffs, tflag, t1, t2, t3]
@@ -1868,7 +1889,7 @@ class GEOM2(GeomCommon):
         ntotal = 44  # 11*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'8i f ii')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n + 44]
             out = struc.unpack(edata)
             if self.is_debug_file:
@@ -1888,7 +1909,7 @@ class GEOM2(GeomCommon):
         """
         struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
@@ -1904,7 +1925,7 @@ class GEOM2(GeomCommon):
         """CVISC(3901,39,50) - the marker for Record 105"""
         struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + 16]  # 4*4
             out = struct_4i.unpack(edata)
             if self.is_debug_file:
@@ -1954,7 +1975,7 @@ class GEOM2(GeomCommon):
         struct_3i = Struct(self._endian + b'3i')
         ntotal = 12
         nelements = (len(data) - n) // ntotal
-        for i in range(nelements):
+        for unused_i in range(nelements):
             edata = data[n:n + ntotal]  # 4*4
             out = struct_3i.unpack(edata)
             if self.is_debug_file:

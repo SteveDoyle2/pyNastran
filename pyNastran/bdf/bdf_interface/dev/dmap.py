@@ -1,20 +1,4 @@
 from __future__ import print_function
-lines = [
-    "ASSIGN OUTPUT2='myMatrix.op2',",
-    '    UNIT=15',
-    '$',
-    'SOL 100',
-    'DIAG 8,44',
-    'COMPILE USERDMAP',
-    'ALTER 2',
-    'DMIIN DMI,DMINDX/A,B,MYDOF,,,,,,,/ $',
-    'MPYAD A,B,/ATB/1///$',
-    'MPYAD B,A,/BTA/1///$',
-    'OUTPUT2 A,B,ATB,BTA,MYDOF//0/15$',
-    'CEND',
-]
-#with open('isat.bdf', 'r') as f:
-    #lines = f.readlines()
 
 def read_dmap(lines):
     lines2 = []
@@ -69,7 +53,7 @@ def read_dmap(lines):
             line = line.replace(' =', '=').replace('= ', '=')
             sline = line.split()
             if len(sline) == 3:
-                assign, output, unit = sline
+                unused_assign, output, unit = sline
                 word, unit_num = unit.split('=')
                 output, fname = output.split('=')
                 assert word == 'UNIT', word
@@ -100,7 +84,7 @@ def read_dmap(lines):
             #
             # works for
             #    TYPE PARAM,,CS,Y,ALPAH=1.
-            base, NDDL, Type, y, word_val = sline
+            unused_base, unused_NDDL, unused_Type, unused_y, word_val = sline
             param_name, default_value = word_val.split('=')
             code += 'model.params[%r].set_value(%s)\n' % (param_name, default_value)
 
@@ -108,8 +92,8 @@ def read_dmap(lines):
             sline = line[5:].split('/')
             print('sline =', sline)
             if len(sline) == 4:
-                pre, b, c, resflag = sline
-                resflg = int(resflag)
+                pre, unused_b, unused_c, resflag = sline
+                unused_resflg = int(resflag)
                 if pre.startswith('FREQMASS,'):
                     raise NotImplementedError('FREQMASS')
                 elif pre.startswith(',,LAMA'):
@@ -135,7 +119,7 @@ def read_dmap(lines):
             option = int(sline[1])
             if option == 6:
                 sline = sline[2:]
-                code += space + '%s = \n'
+                code += spaces + '%s = \n'
             else:
                 raise NotImplementedError(option)
 
@@ -153,7 +137,7 @@ def read_dmap(lines):
             pass
         elif line.startswith('DMIIN DMI,DMINDX/'):
             sline = line.split('/')
-            pre, data, post = sline
+            pre, data, unused_post = sline
             matrices = data.replace(' ', '').rstrip(',')
             matrices_to_load = matrices.split(',')
             print('matrices_to_load =', matrices_to_load)
@@ -185,7 +169,7 @@ def read_dmap(lines):
         elif line.startswith('OUTPUT2 '):
             sline = line[8:].replace(' ', '').split('/')
             if len(sline) == 4:
-                output_matrices, dunno, method, unit_num = sline
+                output_matrices, unused_dunno, unused_method, unit_num = sline
                 matrix_names = output_matrices.split(',')
                 code += '\n'
                 for name in matrix_names:
@@ -204,3 +188,25 @@ def read_dmap(lines):
 
     print('-----------')
     print(code)
+
+def main():
+    lines = [
+        "ASSIGN OUTPUT2='myMatrix.op2',",
+        '    UNIT=15',
+        '$',
+        'SOL 100',
+        'DIAG 8,44',
+        'COMPILE USERDMAP',
+        'ALTER 2',
+        'DMIIN DMI,DMINDX/A,B,MYDOF,,,,,,,/ $',
+        'MPYAD A,B,/ATB/1///$',
+        'MPYAD B,A,/BTA/1///$',
+        'OUTPUT2 A,B,ATB,BTA,MYDOF//0/15$',
+        'CEND',
+    ]
+    #with open('isat.bdf', 'r') as f:
+        #lines = f.readlines()
+    read_dmap(lines)
+
+if __name__ == '__main__':  # pragma: no cover
+    main()

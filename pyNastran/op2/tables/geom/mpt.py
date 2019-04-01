@@ -1,7 +1,7 @@
 """
 defines readers for BDF objects in the OP2 MPT/MPTS table
 """
-#pylint: disable=C0111,C0103,C0301,W0612,W0613,R0914,R0201
+#pylint: disable=C0111,C0103,C0301,W0612,R0914,R0201
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from struct import Struct
@@ -373,11 +373,11 @@ class MPT(GeomCommon):
                 # C:\Users\sdoyle\Dropbox\move_tpl\ehq45.op2
                 continue_flag = 0
                 out1 = (mid, a10, a01, d1, rho, alpha, tref, ge, sf, na, nd, kp,
-                 a20, a11, a02, d2,
-                 a30, a21, a12, a03, d3,
-                 a40, a31, a22, a13, a04, d4,
-                 a50, a41, a32, a23, a14, a05, d5,
-                 continue_flag)
+                        a20, a11, a02, d2,
+                        a30, a21, a12, a03, d3,
+                        a40, a31, a22, a13, a04, d4,
+                        a50, a41, a32, a23, a14, a05, d5,
+                        continue_flag)
             data_in = [out1]
 
             if continue_flag:

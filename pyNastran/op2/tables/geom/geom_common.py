@@ -1,4 +1,4 @@
-#pylint: disable=W0613,R0201,C0111
+#pylint: disable=R0201,C0111
 from struct import Struct
 
 class SuppressLogging(object):
