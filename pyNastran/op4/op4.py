@@ -6,7 +6,7 @@ import sys
 import os
 from codecs import open
 from struct import pack, unpack, Struct
-from six import string_types, PY2, PY3
+from six import string_types, PY3
 
 import numpy as np
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
@@ -112,6 +112,7 @@ class OP4(object):
         #assert debug == True, debug
         self.log = get_logger2(log, debug)
         self._new = False
+        self.large = None
 
     def read_op4(self, op4_filename=None, matrix_names=None, precision='default'):
         """
@@ -1418,10 +1419,6 @@ class OP4(object):
         #else:        op4_form = 2   # rectangular
 
         if isinstance(op4_filename, string_types):
-            if PY2 or is_binary:
-                wb = 'wb'
-            else:
-                wb = 'w'
             with open(op4_filename, 'w') as op4:
                 self._write_op4_file(op4, name_order, is_binary, precision, matrices)
         else:
@@ -1759,7 +1756,7 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
             msg = '%8i%8i%8i\n' % (j + 1, 0, L + 1)
         op4.write(msg)
 
-        for (ipack, dpack) in enumerate(dpacks):
+        for (unused_ipack, dpack) in enumerate(dpacks):
             msg = ''
             #print("pack = ",pack)
 

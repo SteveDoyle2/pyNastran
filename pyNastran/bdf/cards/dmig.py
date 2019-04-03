@@ -1822,8 +1822,6 @@ class DMI(NastranMatrix):
         elif self.matrix_form == 9:
             matrix_type = 'identity'
         else:
-            # technically right, but nulling this will fix bad decks
-            #self.ncols = blank(card, 8, 'matrix_form=%s; ncol' % self.matrix_form)
             raise NotImplementedError('%s matrix_form=%r is not supported' % (
                 self.type, self.matrix_form))
         return matrix_type

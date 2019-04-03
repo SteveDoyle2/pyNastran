@@ -91,7 +91,7 @@ class DTABLE(BaseCard):
         """hdf5 helper function"""
         keys, values = self.default_values
         self.default_values = {key : value if not np.isnan(value) else None
-                       for key, value in zip(keys, values)}
+                               for key, value in zip(keys, values)}
 
     def __init__(self, default_values, comment=''):
         """
@@ -475,9 +475,10 @@ class TABLED3(Table):
     def _init_from_empty(cls):
         tid = 1
         x1 = 1.
+        x2 = 2.
         x = [0., 1.]
         y = [0., 1.]
-        return TABLED3(tid, x1, x, y, extrap=0, comment='')
+        return TABLED3(tid, x1, x2, x, y, extrap=0, comment='')
 
     def __init__(self, tid, x1, x2, x, y, extrap=0, comment=''):
         """
@@ -487,6 +488,8 @@ class TABLED3(Table):
             table id
         x1 : float
             y = yT(x - x1)
+        x2 : ???
+            ???
         x : List[float]
             the x values
         y : List[float]
@@ -592,8 +595,8 @@ class TABLED4(Table):
         self.x4 = x4
         self.a = np.array(a)
 
-        assert self.x2 != 0.0
-        assert self.x3 < self.x4
+        assert self.x2 != 0.0, 'x2=%s\n%s' % (self.x2, str(self))
+        assert self.x3 <= self.x4, 'x3=%s x4=%s\n%s' % (self.x3, self.x4, str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -813,13 +816,13 @@ class TABDMP1(Table):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         table_id = data[0]
-        x1 = data[1]
+        unused_x1 = data[1]
         Type = data[2]
         xy = data[5:]
         xy = np.array(xy, dtype='float64')
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABDMP1(table_id, Type, x, y, comment=comment)
+        return TABDMP1(table_id, x, y, Type=Type, comment=comment)
 
     def raw_fields(self):
         xy = []
@@ -1137,8 +1140,8 @@ class TABLEM4(Table):
         self.x3 = x3
         self.x4 = x4
         self.a = np.asarray(a)
-        assert self.x2 != 0.0
-        assert self.x3 < self.x4
+        assert self.x2 != 0.0, 'x2=%s\n%s' % (self.x2, str(self))
+        assert self.x3 <= self.x4, 'x3=%s x4=%s\n%s' % (self.x3, self.x4, str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1468,13 +1471,13 @@ class TABLEH1(Table):
         xy = xy.reshape(xy.size // 2, 2)
         x = xy[:, 0]
         y = xy[:, 1]
-        return TABLEH1(table_id, x, y, Type=1, comment=comment)
+        return TABLEH1(table_id, x, y, comment=comment)
 
     def raw_fields(self):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
-        list_fields = ['TABLEH1', self.tid, self.Type, None, None, None,
+        list_fields = ['TABLEH1', self.tid, None, None, None, None,
                        None, None, None] + xy + ['ENDT']
         return list_fields
 

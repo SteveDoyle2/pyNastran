@@ -29,6 +29,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
     def __init__(self):
         Element.__init__(self)
         self.pid_ref = None  # type: Optional[Any]
+        #self.nodes_ref = None
 
     def C(self):
         """torsional constant"""

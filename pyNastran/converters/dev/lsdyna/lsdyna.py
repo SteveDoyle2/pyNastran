@@ -13,6 +13,7 @@ def read_lsdyna(key_filename):
 class Lsdyna(object):
     def __init__(self, log=None, debug=False):
         self.log = log
+        self.nodes = None
 
     def read_lsdyna(self, key_filename):
         with open(key_filename) as key_file:

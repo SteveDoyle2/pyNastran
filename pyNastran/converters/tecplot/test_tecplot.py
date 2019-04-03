@@ -40,7 +40,7 @@ class TestTecplot(unittest.TestCase):
         bdf_model = read_bdf(nastran_filename1, log=log)
         unused_tecplot = nastran_to_tecplot(bdf_model)
 
-    def test_tecplot_02(self):
+    def test_tecplot_03(self):
         log = get_logger(level='warning')
         nastran_filename = os.path.join(NASTRAN_MODEL_PATH, 'elements', 'static_elements.bdf')
         tecplot_filename = os.path.join(NASTRAN_MODEL_PATH, 'elements', 'static_elements.plt')

@@ -7,6 +7,7 @@ from pyNastran.bdf.cards.bdf_tables import (
     TABDMP1, #TABLES1, TABLEST, TABRND1, TABRNDG,
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 model = BDF(debug=False)
 class TestTables(unittest.TestCase):
@@ -18,6 +19,9 @@ class TestTables(unittest.TestCase):
         card = BDFCard(card)
         #print(card)
         table = TABDMP1.add_card(card, comment='table')
+        table.raw_fields()
+        str(table)
+
         table.write_card(size=8)
         table.write_card_16(is_double=False)
         table.write_card_16(is_double=True)
@@ -63,6 +67,9 @@ class TestTables(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         table = TABLED1.add_card(card, comment='table')
+        table.raw_fields()
+        str(table)
+
         table.write_card(size=8)
         table.write_card_16(is_double=False)
         table.write_card_16(is_double=True)
@@ -80,6 +87,9 @@ class TestTables(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         table = TABLED2.add_card(card, comment='table')
+        table.raw_fields()
+        str(table)
+
         table.write_card(size=8)
         table.write_card_16(is_double=False)
         table.write_card_16(is_double=True)
@@ -96,6 +106,8 @@ class TestTables(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         table = TABLED3.add_card(card, comment='table')
+        table.raw_fields()
+        str(table)
 
         #interp = table.interpolate(0.)
         #print('interp =', interp, type(interp))
@@ -112,6 +124,8 @@ class TestTables(unittest.TestCase):
         table.write_card(size=8)
         table.write_card_16(is_double=False)
         table.write_card_16(is_double=True)
+        table.raw_fields()
+        str(table)
 
         interp = table.interpolate(5.)
         assert np.allclose(interp, [2.746915]), interp
@@ -129,12 +143,31 @@ class TestTables(unittest.TestCase):
 
     def test_tablem1(self):
         lines = [
+            'TABLEH1, 32',
+            '-3.0, 6.9, 2.0, 5.6, 3.0, 5.6, ENDT',
+        ]
+        card = model._process_card(lines)
+        card = BDFCard(card)
+        table = TABLEM1.add_card(card, comment='table')
+        table.raw_fields()
+        str(table)
+
+        table.write_card(size=8)
+        table.write_card_16(is_double=False)
+        table.write_card_16(is_double=True)
+        save_load_deck(model)
+
+    def test_tablem1(self):
+        lines = [
             'TABLEM1, 32',
             '-3.0, 6.9, 2.0, 5.6, 3.0, 5.6, ENDT',
         ]
         card = model._process_card(lines)
         card = BDFCard(card)
         table = TABLEM1.add_card(card, comment='table')
+        table.raw_fields()
+        str(table)
+        save_load_deck(model)
 
         #interp = table.interpolate(0.)
         #print('interp =', interp, type(interp))
@@ -149,9 +182,12 @@ class TestTables(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         table = TABLEM2.add_card(card)
+        table.raw_fields()
+        str(table)
         table.write_card(size=8)
         table.write_card_16(is_double=False)
         table.write_card_16(is_double=True)
+        save_load_deck(model)
 
         #interp = table.interpolate(0.)
         #print('interp =', interp, type(interp))
@@ -165,6 +201,13 @@ class TestTables(unittest.TestCase):
         card = model._process_card(lines)
         card = BDFCard(card)
         table = TABLEM3.add_card(card, comment='table')
+        table.raw_fields()
+        str(table)
+
+        table.write_card(size=8)
+        table.write_card_16(is_double=False)
+        table.write_card_16(is_double=True)
+        save_load_deck(model)
 
         #interp = table.interpolate(0.)
         #print('interp =', interp, type(interp))
@@ -179,9 +222,12 @@ class TestTables(unittest.TestCase):
         card = BDFCard(card)
         table = TABLEM4.add_card(card, comment='table')
         table.raw_fields()
+        str(table)
+        table.raw_fields()
         table.write_card(size=8)
         table.write_card_16(is_double=False)
         table.write_card_16(is_double=True)
+        save_load_deck(model)
 
         #interp = table.interpolate(0.)
         #print('interp =', interp, type(interp))
