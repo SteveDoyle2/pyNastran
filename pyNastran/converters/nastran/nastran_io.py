@@ -172,9 +172,7 @@ DESIRED_RESULTS = [
 
 IS_TESTING = 'test' in sys.argv[0]
 class NastranIO(NastranGuiResults, NastranGeometryHelper):
-    """
-    Defines the GUI class for Nastran.
-    """
+    """Defines the GUI class for Nastran."""
     def __init__(self):
         super(NastranIO, self).__init__()
         self.nid_release_map = {}

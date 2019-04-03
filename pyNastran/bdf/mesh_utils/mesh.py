@@ -36,22 +36,21 @@ def create_structured_cquad4s(model, pid,
         eid += 1
     return nid, eid
 
-def cone3d(model, pid,
-           xs, radius, nx=5, ntheta=10, endpoint=True):
-    """
-    create a cone by segments in 3d
+#def cone3d(model, pid,
+           #xs, radius, nx=5, ntheta=10, endpoint=True):
+    #"""
+    #create a cone by segments in 3d
 
-    xs     = [0., 1., 2.]
-    radius = [1., 2., 4.]
-    >>> cone(model, pid, xs, radius1, radius2)
-    """
-    xstation = np.asarray(xstation)
-    ystation = np.zeros(xstation.shape)
-    zstation = np.zeros(xstation.shape)
-    aspect_ratio = 1.0
-    xyz_elems = create_axisymmetric_body(
-        nx, aspect_ratio,
-        xstation, ystation, zstation, radii,
-        p1, dy, dz)
-    return
-
+    #xs     = [0., 1., 2.]
+    #radius = [1., 2., 4.]
+    #>>> cone(model, pid, xs, radius1, radius2)
+    #"""
+    #xstation = np.asarray(xstation)
+    #ystation = np.zeros(xstation.shape)
+    #zstation = np.zeros(xstation.shape)
+    #aspect_ratio = 1.0
+    #xyz_elems = create_axisymmetric_body(
+        #nx, aspect_ratio,
+        #xstation, ystation, zstation, radii,
+        #p1, dy, dz)
+    #return

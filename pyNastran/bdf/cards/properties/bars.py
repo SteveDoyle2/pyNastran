@@ -1868,6 +1868,7 @@ class PBRSECT(LineProperty):
 
         self.mid_ref = None
         self.brps_ref = {}
+        self.outp_ref = None
 
     def validate(self):
         assert self.form in ['GS', 'OP', 'CP'], 'pid=%s form=%r' % (self.pid, self.form)

@@ -1890,7 +1890,8 @@ class GetCard(GetMethods):
         return self.get_elements_properties_nodes_by_element_type(
             dtype=dtype, solids=solids)
 
-    def get_elements_properties_nodes_by_element_type(self, dtype='int32', solids=None):
+    def get_elements_properties_nodes_by_element_type(self, dtype='int32', solids=None,
+                                                      stop_if_no_eids=True):
         # type: (str, Optional[Dict[str, Any]]) -> Any
         """
         Gets a dictionary of element type to [eids, pids, node_ids]
@@ -1943,6 +1944,9 @@ class GetCard(GetMethods):
             'CQUADX', 'CQUADX4', 'CQUADX8',
             'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
             'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CFAST', 'CGAP',
+
+            # not supported
+            'GENEL', 'CHBDYG',
         ]
         output = {}
 
@@ -1954,12 +1958,15 @@ class GetCard(GetMethods):
                 'CPENTA' : (6, 15),
                 'CPYRAM' : (5, 13),
             }
+
+        etypes_found = []
         for etype in etypes:
             if etype not in self._type_to_id_map:
                 continue
             eids_list = self._type_to_id_map[etype]
             if not eids_list:
                 continue
+            etypes_found.append(etype)
             eids = np.array(eids_list, dtype=dtype)
             neids = len(eids)
             eid0 = eids[0]
@@ -2033,7 +2040,14 @@ class GetCard(GetMethods):
                     etype_min = elem.type + str(nnodes_min)
                     ieids_min = np.array(ieids_min, dtype=dtype)
                     output[etype_min] = [eids[ieids_min], pids[ieids_min], nids[ieids_min, :nnodes_min]]
-        assert len(output), 'output is empty...'
+        if stop_if_no_eids:
+            msg = (
+                'get_elements_properties_nodes_by_element_type output is empty; '
+                'nelements=%s; etypes_found=%s' % (
+                    len(self.elements), etypes_found)) # etypes_found
+            self.log.warning(msg)
+        else:
+            assert len(output), 'get_elements_properties_nodes_by_element_type output is empty...'
         return output
 
     #--------------------

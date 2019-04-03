@@ -9,7 +9,7 @@ from __future__ import print_function, absolute_import, division
 
 import numpy as np
 from .utils import cross2d, perpendicular_vector2d
-from .matrix3d import axes_stack, normalize_vector2d, dot_n33_n33
+from .matrix3d import axes_stack, normalize_vector2d
 
 
 def coords_from_vector_1d(v_array):
@@ -93,7 +93,7 @@ def tet_coord(p1, p2, p3, p4):  # pragma: no cover
 
     ## T vector joins midpoints of edges G1-G4 and G2-G3.
     p14 = (p1 + p4) / 2.
-    p23 = (P2 + p3) / 2.
+    p23 = (p2 + p3) / 2.
     t = p23 - p14
     origin = p1
 
@@ -112,7 +112,7 @@ def shape8(xyz):  # pragma: no cover
     """
     xyz : (n, 3)
     """
-    xyz = np.atleast2d(xyz)
+    xyz = np.atleast_2d(xyz)
     x = xyz[:, 0]
     y = xyz[:, 1]
     z = xyz[:, 2]
@@ -149,7 +149,12 @@ def shape4_to_xyz(p1234, n4):
     assert n4.shape == (nquads, 4), 'shape=%s' % str(n4.shape)
 
     # can't I do this more efficiently?
-    p = p1234[:,0]*n4[:,0] + p1234[:,1]*n4[:,1] + p1234[:,2]*n4[:,2] + p1234[:,3]*n4[:,3]
+    p = (
+        p1234[:, 0] * n4[:, 0] +
+        p1234[:, 1] * n4[:, 1] +
+        p1234[:, 2] * n4[:, 2] +
+        p1234[:, 3] * n4[:, 3]
+    )
     #xyz = np.matmul(p1234, n4)
     #xyz = np.dot(p1234, n4)
     #xyz = np.tensordot(p1234, n4, axes=0)
@@ -160,7 +165,8 @@ def shape4_to_xyz(p1234, n4):
     #assert xyz.shape == (nquads, 3), 'shape=%s' % str(p1234.shape)
     return p
 
-def hexa_coord(xyz1, xyz2, xyz3, xyz4):  # pragma: no cover
+def hexa_coord(xyz1, xyz2, xyz3, xyz4,
+               xyz5, xyz6, xyz7, xyz8):  # pragma: no cover
     """doesn't computes the elemental for a hexa element"""
     xyz1 = np.atleast_2d(xyz1)
     xyz2 = np.atleast_2d(xyz2)
@@ -231,4 +237,3 @@ def _coordinate_system_from_vector_2d(v21, normal):
     #rotation = cylindrical_rotation_matrix(theta, dtype=dtype)
     #coords_transformed = dot3d(rotation, coords)
     #return coords_transformed
-

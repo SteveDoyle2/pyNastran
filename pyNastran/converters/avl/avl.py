@@ -42,6 +42,10 @@ class AVL(object):
         self.zref = 0.
         self.cd0 = 0.
         self.sections = []
+        self.surfaces = None
+        self.sym_iy = None
+        self.sym_iz = None
+        self.symz = None
 
     def read_avl(self, avl_filename):
         """only the first 4 chancters are read...not in this reader"""

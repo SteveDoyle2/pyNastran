@@ -21,9 +21,11 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 
 
 class PanairIO(object):
+    """Defines the GUI class for Panair."""
     def __init__(self, gui):
         self.gui = gui
         self.colormap = 'viridis'
+        self.elements = None
 
     def get_panair_wildcard_geometry_results_functions(self):
         data = ('Panair',
@@ -103,7 +105,7 @@ class PanairIO(object):
         del self.elements
 
     def _fill_panair_geometry_case(self, cases, ID, nodes, elements, regions,
-                                   kt, cp_norm, loads):
+                                   kt, cp_norm, unused_loads):
         self.elements = elements
         colormap = 'jet' # self.colormap
         nnids = nodes.shape[0]
@@ -292,17 +294,19 @@ class PanairIO(object):
 
         if os.path.exists(panair_out_filename):
             out = read_panair_out(panair_out_filename, log=self.gui.log)
-            alphas = geom_model.alphas
-            betas = geom_model.betas
+            unused_alphas = geom_model.alphas
+            unused_betas = geom_model.betas
             icase, out_form = add_networks(out.networks, out.headers, is_beta0,
-                                           ID, icase, cases, geom_model, nelements, colormap=colormap)
+                                           ID, icase, cases, geom_model, nelements,
+                                           self.gui.log, colormap=colormap)
             assert len(out_form) > 0, out_form
             form.append(('Out: Mach=%s' % mach, None, out_form))
 
             if os.path.exists(ft13_filename):
                 out.read_ft13(ft13_filename)
                 icase, ft13_form = add_networks(out.networks_ft13, out.headers_ft13, is_beta0,
-                                                ID, icase, cases, geom_model, nelements, colormap=colormap)
+                                                ID, icase, cases, geom_model, nelements,
+                                                self.gui.log, colormap=colormap)
                 assert len(ft13_form) > 0, ft13_form
                 form.append(('Ft13: Mach=%s' % mach, None, ft13_form))
 
@@ -311,12 +315,12 @@ class PanairIO(object):
         self.gui._finish_results_io2(model_name, form, cases)
 
 def add_networks(out_networks, out_headers, is_beta0,
-                 ID, icase, cases, geom_model, nelements, colormap='jet'):
+                 ID, icase, cases, geom_model, nelements, log, colormap='jet'):
     out_form = []
-    nsolutions = len(out_networks)
+    unused_nsolutions = len(out_networks)
     for isolution, networks in sorted(out_networks.items()):
         if networks == {}:
-            self.log.info('skipping isolution=%s' % (isolution))
+            log.info('skipping isolution=%s' % (isolution))
             continue
         print('isolution = ', isolution, geom_model.alphas)
         alpha = geom_model.alphas[isolution-1]

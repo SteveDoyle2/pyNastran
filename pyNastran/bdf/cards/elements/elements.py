@@ -1114,10 +1114,10 @@ class GENEL(BaseCard):
             assert k is None, k
             iz = card_fields.index('Z')
             assert card_fields[iz] == 'Z', card_fields
-            _k_fields, unused_istop = _read_genel_fields_until_char_blank(ucard_fields, iz+1)
-            for i, _k in enumerate(_k_fields):
-                ki = double(card, i + iz+1, 'K_%i' % (i + 1))
-                k.append(ki)
+            _z_fields, unused_istop = _read_genel_fields_until_char_blank(ucard_fields, iz+1)
+            for i, _z in enumerate(_z_fields):
+                zi = double(card, i + iz+1, 'Z_%i' % (i + 1))
+                z.append(zi)
             unused_nblanks = _get_genel_offset(nz)
             #kz = z
 
@@ -1126,7 +1126,7 @@ class GENEL(BaseCard):
             i_s = ucard_fields.index('S')
             assert ucard_fields[i_s] == 'S', card_fields
             _s_fields, unused_istop = _read_genel_fields_until_char_blank(ucard_fields, i_s+1)
-            for i, _s in enumerate(_k_fields):
+            for i, _s in enumerate(_s_fields):
                 si = double(card, i + i_s+1, 'S_%i' % (i + 1))
                 s.append(si)
             unused_nblanks = _get_genel_offset(ns)

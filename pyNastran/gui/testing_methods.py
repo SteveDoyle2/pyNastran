@@ -144,8 +144,8 @@ class FakeGUIMethods(GuiVTKCommon):
         self.text_actors[3] = vtkTextActor()
         self.format_class_map = CLASS_MAP
 
-    def cell_centroid(self, cell_id):
-        return np.zeros(3)
+    def cell_centroid(self, cell_id, dtype='float32'):
+        return np.zeros(3, dtype=dtype)
 
     def setup_fake_text_actors(self):
         for icase in self.result_cases:

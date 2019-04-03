@@ -2111,23 +2111,46 @@ def _put_keys_values_into_dict(model, name, keys, values, cast_int_keys=True):
     card_count = model.card_count
 
     # 'dmigs', 'dmiks', 'dmijs', 'dmijis', 'dmis'
-    if cast_int_keys and name not in ['dscreen', 'dti', 'aecomps']:
+    if cast_int_keys and name not in ['dscreen', 'dti', 'aecomps', 'seconct', 'sebndry']:
+        #print('keys =', keys, cast_int_keys, name)
         try:
             keys = [int(key) for key in keys]
         except ValueError:  # pragma: no cover
+            # If this hits, you need probably have a non-integer key
+            # (e.g., a tuple of 2 ints) and need to skip the above
+            # caster and figure out the right way to cast it.
+            #
+            # This could be a string (in which case you just pass the
+            # initial check above and then use the normal adder below)
+            # similar to 'dscreen'.
+            #
+            # Another possibility is you have a (int_a, int_b) tuple key.
+            # Follow the pattern for 'seconct'.
             print('name =', name)
             print('keys = ', keys)
             print('values = ', values)
             raise
 
-    for key, value in zip(keys, values):
-        slot[key] = value
-        #print('  *%s %s' % (value.type, key))
-        Type = value.type
-        if Type not in card_count:
-            card_count[Type] = 0
-        card_count[Type] += 1
-        model._type_to_id_map[Type].append(key)
+    tuple_integer_casts = ('seconct', 'sebndry')
+    if name in tuple_integer_casts:
+        for key, value in zip(keys, values):
+            key = tuple(key)
+            slot[key] = value
+            #print('  *%s %s' % (value.type, key))
+            card_type = value.type
+            if card_type not in card_count:
+                card_count[card_type] = 0
+            card_count[card_type] += 1
+            model._type_to_id_map[card_type].append(key)
+    else:
+        for key, value in zip(keys, values):
+            slot[key] = value
+            #print('  *%s %s' % (value.type, key))
+            card_type = value.type
+            if card_type not in card_count:
+                card_count[card_type] = 0
+            card_count[card_type] += 1
+            model._type_to_id_map[card_type].append(key)
 
 def _put_keys_values_into_list(model, name, keys, values):
     """add something like an MKAERO1 to a list"""

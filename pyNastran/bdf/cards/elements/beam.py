@@ -731,7 +731,7 @@ class CBEAM(LineElement):
         unused_edges = self.get_edge_ids()
         if xref:  # True
             prop = self.pid_ref
-            assert prop.type in ['PBEAM', 'PBEAML', 'PBCOMP'], prop
+            assert prop.type in ['PBEAM', 'PBEAML', 'PBCOMP', 'PBMSECT'], prop
             mid = self.Mid()
             nsm = self.Nsm()
             assert isinstance(mid, int), 'mid=%r' % mid

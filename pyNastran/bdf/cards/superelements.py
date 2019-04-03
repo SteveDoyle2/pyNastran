@@ -52,6 +52,13 @@ class SEBNDRY(BaseCard):
     +---------+-------+-------+-------+-------+-------+-------+-------+-------+
     """
     type = 'SEBNDRY'
+    @classmethod
+    def _init_from_empty(cls):
+        seid_a = 1
+        seid_b = 2
+        ids = [10, 20, 30]
+        return SEBNDRY(seid_a, seid_b, ids, comment='')
+
     def __init__(self, seid_a, seid_b, ids, comment=''):
         BaseCard.__init__(self)
         if comment:

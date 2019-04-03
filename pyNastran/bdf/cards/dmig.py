@@ -304,7 +304,8 @@ class NastranMatrix(BaseCard):
         else:
             # technically right, but nulling this will fix bad decks
             #self.ncols = blank(card, 8, 'matrix_form=%s; ncol' % self.matrix_form)
-            raise NotImplementedError('self.matrix_form=%r is not supported' % self.matrix_form)
+            raise NotImplementedError('%s matrix_form=%r is not supported' % (
+                self.type, self.matrix_form))
         return matrix_type
 
     def finalize(self):
@@ -1787,6 +1788,45 @@ class DMI(NastranMatrix):
         self.Real = np.asarray(self.Real)
         if self.is_complex:
             self.Complex = np.asarray(self.Complex)
+
+    @property
+    def matrix_type(self):
+        """
+        gets the matrix type
+
+        1 Square matrix (not symmetric)
+        2 General rectangular matrix
+        3 Diagonal matrix (M=number of rows, N = 1)
+        #4 Lower triangular factor
+        #5 Upper triangular factor
+        6 Symmetric matrix
+        8 Identity matrix (M=number of rows, N = M)
+        """
+        if not isinstance(self.matrix_form, integer_types):
+            msg = 'ifo must be an integer; matrix_form=%r type=%s name=%s' % (
+                self.matrix_form, type(self.matrix_form), self.name)
+            raise TypeError(msg)
+        if isinstance(self.matrix_form, bool):
+            msg = 'matrix_form must not be a boolean; matrix_form=%r type=%s name=%s' % (
+                self.matrix_form, type(self.matrix_form), self.name)
+            raise TypeError(msg)
+
+        if self.matrix_form == 1:
+            matrix_type = 'square'
+        elif self.matrix_form == 2: # 9 ???
+            matrix_type = 'rectangular'
+        elif self.matrix_form == 3:
+            matrix_type = 'diagonal'
+        elif self.matrix_form == 6:
+            matrix_type = 'symmetric'
+        elif self.matrix_form == 9:
+            matrix_type = 'identity'
+        else:
+            # technically right, but nulling this will fix bad decks
+            #self.ncols = blank(card, 8, 'matrix_form=%s; ncol' % self.matrix_form)
+            raise NotImplementedError('%s matrix_form=%r is not supported' % (
+                self.type, self.matrix_form))
+        return matrix_type
 
     @property
     def is_polar(self):

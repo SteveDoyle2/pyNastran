@@ -9,6 +9,7 @@ All set cards are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+import warnings
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
@@ -45,17 +46,23 @@ class RADM(ThermalBC):
         self.radmid = radmid
 
         self.absorb = absorb
-        if isinstance(emissivity, float):
+        if isinstance(emissivity, float_types):
             self.emissivity = [emissivity]
         else:
             self.emissivity = emissivity
 
     def validate(self):
         assert self.radmid > 0, str(self)
+        msg = ''
         if self.absorb is not None:
-            assert 0. <= self.absorb <= 1.0, 'absorb=%s\n%s' % (self.absorb, str(self))
+            if not 0. <= self.absorb <= 1.0:
+                msg += 'absorb=%s not in range 0.0 <= absorb <= 1..0\n' % (self.absorb)
         for i, emissivityi in enumerate(self.emissivity):
-            assert 0. <= emissivityi <= 1.0, 'emissivity[%i]=%s\n%s' % (i, emissivityi, str(self))
+            if not 0. <= emissivityi <= 1.0:
+                msg += 'emissivity[%i]=%s\n' % (i, emissivityi)
+        if msg:
+            warnings.warn(msg + str(self))
+            raise RuntimeError(msg + str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
