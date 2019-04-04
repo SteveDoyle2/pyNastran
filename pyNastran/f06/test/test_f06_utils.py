@@ -47,21 +47,26 @@ class TestF06Utils(unittest.TestCase):
 
     def test_plot_flutter(self):
         """tests plot_flutter_f06"""
-        f06_filename = os.path.join(PKG_PATH, '..', 'models', 'aero', 'bah_plane', 'bah_plane.f06')
+        f06_filename = os.path.join(PKG_PATH, '..', 'models',
+                                    'aero', 'bah_plane', 'bah_plane.f06')
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         plot_flutter_f06(f06_filename, show=False, log=log)
 
     def test_plot_flutter2(self):
         """tests plot_flutter_f06"""
-        f06_filename = os.path.join(PKG_PATH, '..', 'models', 'aero', '2_mode_flutter', '0012_flutter.f06')
+        f06_filename = os.path.join(PKG_PATH, '..', 'models',
+                                    'aero', '2_mode_flutter', '0012_flutter.f06')
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         plot_flutter_f06(f06_filename,
                          plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
                          plot_kfreq_damping=True,
-                         export_zona=True,
-                         export_veas=True,
-                         export_f06=True,
+                         export_f06_filename='nastran.f06',
+                         export_veas_filename='nastran.veas',
+                         export_zona_filename='zona.f06',
                          show=False, log=log)
+        os.remove('nastran.f06')
+        os.remove('nastran.veas')
+        os.remove('zona.f06')
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

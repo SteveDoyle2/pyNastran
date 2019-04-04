@@ -801,8 +801,10 @@ class FlutterResponse(object):
                 msgi += '%s %s %s %s\n' % (mode, veli, dampi, freqi)
             if msgi:
                 msg += 'mode, V, damp, freq: (damping ratio=%s)\n%s\n' % (damping_ratio, msgi)
-        if msg:
-            print(msg)
+
+        ## TODO: doesn't always have data...
+        with open(zona_filename, 'w') as zona_file:
+            zona_file.write(msg)
         return msg
 
     def _plot_type_to_ix_xlabel(self, plot_type):
