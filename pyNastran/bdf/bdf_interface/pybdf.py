@@ -221,7 +221,7 @@ class BDFInputPy(object):
                  ilines = None
         """
         nlines = len(lines)
-        bdf_filenames = [self.bdf_filename]
+        #bdf_filenames = [self.bdf_filename]
 
         ilines = None
         if make_ilines:

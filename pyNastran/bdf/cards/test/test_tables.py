@@ -141,7 +141,7 @@ class TestTables(unittest.TestCase):
         #card = BDFCard(card)
         #card2 = TABLEHT.add_card(card)
 
-    def test_tablem1(self):
+    def test_tableh1(self):
         lines = [
             'TABLEH1, 32',
             '-3.0, 6.9, 2.0, 5.6, 3.0, 5.6, ENDT',
