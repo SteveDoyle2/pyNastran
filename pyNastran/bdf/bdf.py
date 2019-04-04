@@ -768,7 +768,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             unused
 
         """
-        from pyNastran.bdf.bdf_interface.hdf5_loader import export_bdf_to_hdf5_file
+        from pyNastran.bdf.bdf_interface.hdf5_exporter import export_bdf_to_hdf5_file
         export_bdf_to_hdf5_file(hdf5_file, self)
 
     def load_hdf5_filename(self, hdf5_filename):
@@ -1035,9 +1035,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
     def _set_pybdf_attributes(self, obj, save_file_structure):
         """common method for all functions that use BDFInputPy"""
-        #print('-------------ssett----------')
         # these are include line pairs
         #print(obj.include_lines)
+        self.active_filenames = []
+        self.reject_lines = []
+        self.include_filenames = defaultdict(list)
         for ifile, include_lines_filename_pairs in obj.include_lines.items():
             assert len(include_lines_filename_pairs) > 0, include_lines_filename_pairs
             for include_lines, bdf_filename2 in include_lines_filename_pairs:

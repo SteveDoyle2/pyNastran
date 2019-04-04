@@ -187,7 +187,7 @@ class BDFInputPy(object):
             return lines
 
         bdf_filename = cast(str, bdf_filename)
-
+        self.bdf_filename = bdf_filename
         # the directory of the 1st BDF (include BDFs are relative to this one)
         self.include_dir = os.path.dirname(os.path.abspath(bdf_filename))
 
@@ -221,6 +221,7 @@ class BDFInputPy(object):
                  ilines = None
         """
         nlines = len(lines)
+        bdf_filenames = [self.bdf_filename]
 
         ilines = None
         if make_ilines:
@@ -237,7 +238,10 @@ class BDFInputPy(object):
             if uline.startswith('INCLUDE'):
                 j, include_lines = self._get_include_lines(lines, line, i, nlines)
                 bdf_filename2 = get_include_filename(include_lines, include_dir=self.include_dir)
-                self.include_lines[ifile-1].append((include_lines, bdf_filename2))
+                #bdf_filenames.append(bdf_filename2)
+                jfile = ilines[i, 0]
+                # these are the lines associated with the 1st/2nd include file found
+                self.include_lines[jfile].append((include_lines, bdf_filename2))
 
                 if self.read_includes:
                     lines, nlines, ilines = self._update_include(
@@ -259,6 +263,7 @@ class BDFInputPy(object):
         if self.dumplines:
             self._dump_file('pyNastran_dump.bdf', lines, i)
 
+        #print(bdf_filenames)
         #if make_ilines:
             #nilines = ilines.shape[0]
             #assert nlines == ilines.shape[0], 'nlines=%s nilines=%s' % (nlines, nilines)

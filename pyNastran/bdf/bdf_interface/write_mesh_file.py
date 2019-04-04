@@ -49,7 +49,9 @@ class WriteMeshs(WriteMesh):
             None       - pops a dialog
         relative_dirname : str; default=None -> os.curdir
             A relative path to reference INCLUDEs.
-            Set this to '' if you want an absolute path.
+            ''   : relative to the main bdf
+            None : use the current directory
+            path : absolute path
         encoding : str; default=None -> system specified encoding
             the unicode encoding
             latin1, and utf8 are generally good options
@@ -91,7 +93,7 @@ class WriteMeshs(WriteMesh):
         ifile_out_filenames = _map_filenames_to_ifile_filname_dict(
             out_filenames, self.active_filenames)
         ifile0 = list(sorted(ifile_out_filenames))[0]
-        print('ifile_out_filenames =', ifile_out_filenames)
+        #print('ifile_out_filenames =', ifile_out_filenames)
 
         out_filename0 = ifile_out_filenames[ifile0]
         #print("out_filename0 =", out_filename0)
@@ -138,7 +140,25 @@ class WriteMeshs(WriteMesh):
         del bdf_files
 
     def _write_bdf_includes(self, out_filenames, bdf_files, relative_dirname=None, is_windows=True):
-        """writes the INCLUDE files"""
+        """
+        Writes the INCLUDE files
+
+        Parameters
+        ----------
+        out_filenames : dict[fname] : fname2
+            fname_in - the nominal bdf that was read
+            fname_out - the bdf that will be written
+        relative_dirname : str; default=None -> os.curdir
+            A relative path to reference INCLUDEs.
+            ''   : relative to the main bdf
+            None : use the current directory
+            path : absolute path
+        is_windows : bool; default=None
+            True/False : Windows has a special format for writing INCLUDE
+                files, so the format for a BDF that will run on Linux and
+                Windows is different.
+            None : Check the platform
+        """
         if relative_dirname is None:
             relative_dirname = os.curdir
         elif relative_dirname == '':
@@ -153,6 +173,7 @@ class WriteMeshs(WriteMesh):
             bdf_file = bdf_files[ifile]
             if bdf_file is None:
                 continue
+            #self.log.info('ifile=%s include_files=%s' % (ifile, include_filenames))
             for include_filename in include_filenames:
                 assert len(include_filename) > 0, include_filename
                 #print('***', include_filename, '***')

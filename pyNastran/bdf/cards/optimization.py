@@ -5312,13 +5312,13 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
             dresp_groupi = dresp_group.create_group(str(i))
             if len(dresp.atti) > 0:
                 if isinstance(dresp.atti[0], string_types): # ALL
-                    model.log.debug('str atti = %s' % dresp.atti)
+                    #model.log.debug('str atti = %s' % dresp.atti)
                     values_bytes = [
                         attii.encode(encoding) if isinstance(attii, string_types) else attii
                         for attii in dresp.atti]
                     dresp_groupi.create_dataset('atti', data=values_bytes)  # int
                 else:
-                    model.log.debug('atti = %s' % dresp.atti)
+                    #model.log.debug('atti = %s' % dresp.atti)
                     dresp_groupi.create_dataset('atti', data=dresp.atti)  # int
 
         dresp_group.create_dataset('dresp_id', data=dresp_id)
@@ -5354,7 +5354,7 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
         dresp_group = h5_file.create_group('DRESP2')
 
         for i, dresp in enumerate(dresp2s):
-            model.log.debug('\n' + dresp.get_stats())
+            #model.log.debug('\n' + dresp.get_stats())
 
             # DRESP2 params: {(0, u'DRESP1'): [1], (0, u'DTABLE'): [u'L1'], (0, u'DESVAR'): [1]}
             # DRESP2 params: {(0, 'DRESP1'): [10501, 10502, 10503]}
@@ -5362,7 +5362,7 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
             param_keys = [None] * len(dresp.params)
             #print(dresp_group)
 
-            model.log.debug('  DRESP2 params %s %s' % (i, dresp.params))
+            #model.log.debug('  DRESP2 params %s %s' % (i, dresp.params))
             #print('i = %i' % i)
             dresp_groupi = dresp_group.create_group(str(i))
             for (j, param_key), values in dresp.params.items():
