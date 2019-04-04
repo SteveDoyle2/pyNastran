@@ -1653,15 +1653,13 @@ def compute_ints(cards1, cards2, fem1, quiet=True):
 
     for key in sorted(all_keys):
         msg = ''
+        value1 = 0
         if key in list_keys1:
             value1 = cards1[key]
-        else:
-            value1 = 0
 
+        value2 = 0
         if key in list_keys2:
             value2 = cards2[key]
-        else:
-            value2 = 0
 
         diff = abs(value1 - value2)
         star = ' '

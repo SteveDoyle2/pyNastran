@@ -13,9 +13,11 @@ elif qt_version == 'pyside2':
 else:  # pragma: no cover
     raise NotImplementedError(qt_version)
 
+from pyNastran.gui import IS_DEV
 import pyNastran.gui.formats
 import pyNastran.gui.gui_common
-#from pyNastran.gui.menus.test_groups import *
+if IS_DEV:
+    from pyNastran.gui.menus.test_groups import *
 from pyNastran.all_tests_no_gui import *
 from pyNastran.converters.test_gui_formats import *
 
