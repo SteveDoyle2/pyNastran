@@ -34,15 +34,6 @@ class DisabledCardError(RuntimeError):
     """lets bdf_test.py flag cards as auto-crashing and then skipping the deck (e.g., CGEN)"""
     pass
 
-def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
-                            punch=False, cid=None, nastran=''):
-    # type: (str, bool, bool, bool, bool, Optional[int], str) -> None
-    """runs all the BDFs in a given folder"""
-    print("folder = %s" % folder)
-    filenames = os.listdir(folder)
-    run_lots_of_files(filenames, debug=debug, xref=xref, check=check,
-                      punch=punch, cid=cid, nastran=nastran)
-
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                       punch=False, cid=None, nastran='', encoding=None,

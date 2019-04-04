@@ -40,20 +40,12 @@ import pyNastran.bdf.test
 TEST_PATH = pyNastran.bdf.test.__path__[0]
 #warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
-                            punch=False, nastran=''):
-    # type: (str, bool, bool, bool, bool, Optional[int], str) -> None
-    """runs all the BDFs in a given folder"""
-    print("folder = %s" % folder)
-    filenames = os.listdir(folder)
-    run_lots_of_files(filenames, debug=debug, xref=xref, check=check,
-                      punch=punch, nastran=nastran)
-
 
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
+                      write_hdf5=True,
                       punch=False, nastran='', encoding=None,
                       size=None, is_double=None, post=None, sum_load=True, dev=True,
-                      crash_cards=None, pickle_obj=True):
+                      crash_cards=None, pickle_obj=True, quiet=False):
     """
     Runs multiple BDFs
 
@@ -115,7 +107,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         sizes = size
 
     if is_double is None:
-        is_doubles = [8]
+        is_doubles = [False]
     elif isinstance(is_double, bool):
         is_doubles = [is_double]
     else:
@@ -129,7 +121,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         posts = post
 
     size_doubles_post = []
-    print('posts=%s' % posts)
+    #print('posts=%s' % posts)
     for size, is_double, post in zip(sizes, is_doubles, posts):
         size_doubles_post.append((size, is_double, post))
 
@@ -161,7 +153,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                     nerrors=0,
                     post=post, sum_load=sum_load, dev=dev,
                     crash_cards=crash_cards,
-                    run_extract_bodies=False, pickle_obj=pickle_obj, hdf5=True)
+                    run_extract_bodies=False, pickle_obj=pickle_obj,
+                    hdf5=write_hdf5, quiet=quiet)
                 del fem1
                 del fem2
             diff_cards += diff_cards

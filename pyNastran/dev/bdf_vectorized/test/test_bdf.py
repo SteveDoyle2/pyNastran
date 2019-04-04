@@ -31,14 +31,6 @@ test_path = pyNastran.dev.bdf_vectorized.test.__path__[0]
 #print("test_path = ",test_path)
 
 
-def run_all_files_in_folder(folder, debug=False, xref=True, check=True,
-                            punch=False, cid=None):
-    print("folder = %s" % folder)
-    filenames = os.listdir(folder)
-    run_lots_of_files(filenames, debug=debug, xref=xref, check=check,
-                      punch=punch, cid=cid)
-
-
 def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                       punch=False, cid=None, size=8, is_double=False):
     """

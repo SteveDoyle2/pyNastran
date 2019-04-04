@@ -11,7 +11,7 @@ from pyNastran.utils import object_attributes, object_methods
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.write_path import write_include, _split_path
-from pyNastran.bdf.test.test_bdf import run_bdf, run_all_files_in_folder, compare
+from pyNastran.bdf.test.test_bdf import run_bdf, compare, run_lots_of_files
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
@@ -32,11 +32,18 @@ class Tester(unittest.TestCase):
                        sum_load=True, run_extract_bodies=run_extract_bodies,
                        save_file_structure=save_file_structure, log=log)
 
-    def run_all_files_in_folder(self, folder, xref=False, cid=None, debug=False):
-        run_all_files_in_folder(folder, xref=xref, debug=debug)
-
 
 class TestBDF(Tester):
+
+    def test_bdf_test(self):
+        filenames = [
+            #os.path.join(MODEL_PATH, 'superelements', 'resvec23.bdf'),
+            os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf'),
+        ]
+        run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True, punch=False, nastran='',
+                          encoding=None, size=None, is_double=None, post=None, sum_load=True, dev=True,
+                          crash_cards=None, pickle_obj=True, write_hdf5=True, quiet=False)
+
 
     def test_write_path(self):
         include_name = r'C:\NASA\formats\pynastran_v0.6\pyNastran\bdf\writePath.py'
