@@ -8,7 +8,7 @@ from cpylog import get_logger
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods
-from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+#from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.write_path import write_include, _split_path
 from pyNastran.bdf.test.test_bdf import run_bdf, compare, run_lots_of_files
@@ -40,9 +40,10 @@ class TestBDF(Tester):
             #os.path.join(MODEL_PATH, 'superelements', 'resvec23.bdf'),
             os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf'),
         ]
-        run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True, punch=False, nastran='',
-                          encoding=None, size=None, is_double=None, post=None, sum_load=True, dev=True,
-                          crash_cards=None, pickle_obj=True, write_hdf5=True, quiet=False)
+        run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True, punch=False,
+                          nastran='', encoding=None, size=None, is_double=None, post=None,
+                          sum_load=True, dev=True, crash_cards=None, pickle_obj=True,
+                          write_hdf5=True, quiet=False)
 
 
     def test_write_path(self):
@@ -128,7 +129,7 @@ class TestBDF(Tester):
             assert len(fem.elements) == 186, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
-        mass, cg, I = fem1.mass_properties()
+        mass, cg, unused_I = fem1.mass_properties()
 
         assert allclose(mass, 6.0), 'mass = %s' % mass
         cg_exact = array([0.5, 1., 1.5])
@@ -150,12 +151,13 @@ class TestBDF(Tester):
         etype_to_eids_pids_nids = model.get_elements_properties_nodes_by_element_type()
         assert len(etype_to_eids_pids_nids) == 1, list(etype_to_eids_pids_nids.keys())
         #etype_to_eids_pids_nids[etype] : [eids, pids, nids]
-        eids, pids, node_ids = etype_to_eids_pids_nids['CTETRA4']
+        unused_eids, pids, unused_node_ids = etype_to_eids_pids_nids['CTETRA4']
         assert pids.min() == 1, pids.min()
         assert pids.max() == 1, pids.max()
 
-        etype_pid_to_eids_nids, _etype_to_eids_pids_nids = model.get_elements_nodes_by_property_type(
+        out = model.get_elements_nodes_by_property_type(
             dtype='int32', save_element_types=False)
+        etype_pid_to_eids_nids, _etype_to_eids_pids_nids = out
         #etype_pid_to_eids_nids[(etype, pid)] : [eids, nids]
         assert _etype_to_eids_pids_nids is None, _etype_to_eids_pids_nids
         assert len(etype_pid_to_eids_nids) == 1, list(etype_pid_to_eids_nids.keys())
@@ -169,7 +171,7 @@ class TestBDF(Tester):
         etype_to_eids_pids_nids = fem1.get_element_nodes_by_element_type()
         assert len(etype_to_eids_pids_nids) == 1, list(etype_to_eids_pids_nids.keys())
         #etype_to_eids_pids_nids[etype] : [eids, pids, nids]
-        eids, pids, node_ids = etype_to_eids_pids_nids['CQUAD4']
+        unused_eids, pids, unused_node_ids = etype_to_eids_pids_nids['CQUAD4']
         assert pids.min() == 1, pids.min()
         assert pids.max() == 1, pids.max()
 
@@ -276,11 +278,11 @@ class TestBDF(Tester):
         bdf_file.writelines(lines)
         bdf_file.seek(0)
         #with self.assertRaises(NotImplementedError):
-        model = read_bdf(bdf_file, validate=True, xref=True,
-                         punch=False, skip_cards=None,
-                         read_cards=None,
-                         encoding=None, log=None,
-                         debug=True, mode='msc')
+        unused_model = read_bdf(bdf_file, validate=True, xref=True,
+                                punch=False, skip_cards=None,
+                                read_cards=None,
+                                encoding=None, log=None,
+                                debug=True, mode='msc')
 
     def test_bdf_xref_fail(self):
         """tests various xref's failing"""
@@ -523,7 +525,7 @@ class TestBDF(Tester):
     def test_bdf_05(self):
         """checks testA.dat"""
         bdf_filename = os.path.join(PKG_PATH, 'bdf', 'test', 'unit', 'testA.bdf')
-        (fem1, fem2, diff_cards) = self.run_bdf(
+        (unused_fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=False, run_extract_bodies=False,
             #save_file_structure=True,
         )
@@ -573,7 +575,7 @@ class TestBDF(Tester):
         """checks resvec23.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'resvec23.bdf')
         log = get_logger(log=None, level='error', encoding='utf-8')
-        (fem1, fem2, diff_cards) = self.run_bdf(
+        (unused_fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=True, run_extract_bodies=False,
             save_file_structure=False, log=log,
         )
@@ -588,7 +590,7 @@ class TestBDF(Tester):
         """checks superelement.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'superelement.bdf')
         log = get_logger(log=None, level='error', encoding='utf-8')
-        (fem1, fem2, diff_cards) = self.run_bdf(
+        (fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=True, run_extract_bodies=False,
             save_file_structure=True, log=log,
         )
@@ -606,7 +608,7 @@ class TestBDF(Tester):
         """checks cqrsee101b2.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'cqrsee101b2.bdf')
         log = get_logger(log=None, level='error', encoding='utf-8')
-        (fem1, fem2, diff_cards) = self.run_bdf(
+        (fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=True, run_extract_bodies=False,
             save_file_structure=True, log=log,
         )
@@ -621,7 +623,7 @@ class TestBDF(Tester):
         """checks see101l8.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'see101l8.bdf')
         log = get_logger(log=None, level='error', encoding='utf-8')
-        (fem1, fem2, diff_cards) = self.run_bdf(
+        (unused_fem1, unused_fem2, diff_cards) = self.run_bdf(
             '', bdf_filename, xref=True, run_extract_bodies=False,
             save_file_structure=True, log=log,
         )
@@ -635,8 +637,9 @@ class TestBDF(Tester):
     def test_bdf_superelement_5(self):
         """checks flyswatter.bdf"""
         from pyNastran.bdf.mesh_utils.bdf_renumber import superelement_renumber
-        bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'flyswatter', 'flyswatter.bdf')
-        bdf_filename_out = os.path.join(MODEL_PATH, 'superelements', 'flyswatter', 'flyswatter.re.bdf')
+        model_path = os.path.join(MODEL_PATH, 'superelements', 'flyswatter')
+        bdf_filename = os.path.join(model_path, 'flyswatter.bdf')
+        bdf_filename_out = os.path.join(model_path, 'flyswatter.re.bdf')
         #log = get_logger(log=None, level='error', encoding='utf-8')
 
         fem1 = read_bdf(bdf_filename, validate=True, xref=True, punch=False,
@@ -757,7 +760,8 @@ class TestBDF(Tester):
             assert fem.card_count['DOPTPRM'] == 1, fem.card_count
 
 def compare_mass_cg_inertia(fem1, reference_point=None, sym_axis=None):
-    mass1, cg1, I1 = fem1.mass_properties(reference_point=reference_point, sym_axis=sym_axis)
+    unused_mass1, unused_cg1, unused_I1 = fem1.mass_properties(
+        reference_point=reference_point, sym_axis=sym_axis)
     #mass1, cg1, I1 = fem1.mass_properties_no_xref(reference_point=reference_point, sym_axis=sym_axis)
 
 

@@ -25,18 +25,26 @@ from pyNastran.bdf.field_writer_double import print_card_double
 
 
 def is_positive_semi_definite(A, tol=1e-8):
+    """is the 3x3 matrix positive within tolerance"""
     vals = np.linalg.eigh(A)[0]
     return np.all(vals > -tol), vals
 
-class PointElement(Element):
+class PointMassElement(Element):
     def __init__(self):
         Element.__init__(self)
 
+    def repr_fields(self):
+        return self.raw_fields()
 
-class PointMassElement(PointElement):
-    def __init__(self):
-        PointElement.__init__(self)
+    def write_card(self, size=8, is_double=False):
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
+    def write_card_16(self, is_double=False):
+        card = self.repr_fields()
+        return self.comment + print_card_16(card)
 
 # class PointMass(BaseCard):
 #     def __init__(self, card, data):
@@ -320,7 +328,8 @@ class CMASS2(PointMassElement):
             #comments.append(element.comment)
             mass.append(element.mass)
             nodes.append([nid if nid is not None else 0 for nid in element.nodes])
-            components.append([comp if comp is not None else 0 for comp in [element.c1, element.c2]])
+            components.append([comp if comp is not None else 0
+                               for comp in [element.c1, element.c2]])
         #h5_file.create_dataset('_comment', data=comments)
         h5_file.create_dataset('eid', data=eids)
         h5_file.create_dataset('mass', data=mass)
@@ -1125,7 +1134,7 @@ class CONM2(PointMassElement):
     @classmethod
     def export_to_hdf5(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""
-        comments = []
+        unused_comments = []
         nid = []
         cid = []
         mass = []

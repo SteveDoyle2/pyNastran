@@ -1,23 +1,12 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import os
 import sys
 from setuptools import setup, find_packages
 
-PY2 = False
-PY3 = True
-if sys.version_info < (3, 0):
-    PY2 = True
-    PY3 = False
+from packages import check_python_version, get_package_requirements
+check_python_version()
 
-imajor, minor1, minor2 = sys.version_info[:3]
-if sys.version_info < (2, 7, 7):  # 2.7.15 used
-    # makes sure we don't get the following bug:
-    #   Issue #19099: The struct module now supports Unicode format strings.
-    sys.exit('Upgrade your Python to >= 2.7.7 or 3.5+; version=(%s.%s.%s)' % (imajor, minor1, minor2))
-
-if PY3:
-    if sys.version_info < (3, 5, 0):  # 3.7.1 used
-        sys.exit('Upgrade your Python to >= 2.7.7 or 3.5+; version=(%s.%s.%s)' % (imajor, minor1, minor2))
 import pyNastran
 packages = find_packages()+['gui/icons/*.*']
 
@@ -38,6 +27,7 @@ packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_wor
 for exclude_word in exclude_words:
     packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
+all_reqs, install_requires = get_package_requirements(is_gui=False)
 
 setup(
     name='pyNastran',
@@ -94,4 +84,3 @@ setup(
     },
     test_suite='pyNastran.all_tests',
 )
-

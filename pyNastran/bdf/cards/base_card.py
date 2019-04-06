@@ -37,6 +37,7 @@ if PY2:
 else:
     pass
 
+#from abc import ABC, abstractmethod
 
 class BaseCard(object):
     """
@@ -54,6 +55,7 @@ class BaseCard(object):
     """
     def __init__(self):
         pass
+        #ABC.__init__(self)
 
     def __deepcopy__(self, memo_dict):
         #raw_fields = self.repr_fields()

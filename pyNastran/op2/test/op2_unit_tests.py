@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
 import unittest
-from six import PY3
 import numpy as np
 from cpylog import get_logger
 
@@ -22,7 +21,7 @@ if IS_PANDAS and (np.lib.NumpyVersion(np.__version__) < '1.13.0'):
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
-from pyNastran.op2.op2 import OP2, FatalError, read_op2
+from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2
@@ -702,7 +701,7 @@ class TestOP2(Tester):
         """multi subcase buckling"""
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'buckling2_solid_shell_bar.op2')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        unused_op2 = read_op2_geom(op2_filename, debug=False)
         subcases = 1
         op2 = read_op2_geom(op2_filename, debug=False, subcases=subcases)
         assert len(op2.displacements) == 1, len(op2.displacements)
@@ -769,7 +768,7 @@ class TestOP2(Tester):
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
         f06_filename = os.path.join(folder, 'freq_solid_shell_bar.test_op2.f06')
-        op2 = read_op2_geom(op2_filename, debug=False)
+        unused_op2 = read_op2_geom(op2_filename, debug=False)
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False,
             write_f06=False, write_op2=False,
@@ -788,7 +787,7 @@ class TestOP2(Tester):
         op2_filename = os.path.join(folder, 'actuator_tf_modeling.op2')
         f06_filename = os.path.join(folder, 'freq_solid_shell_bar.test_op2.f06')
 
-        op2 = read_op2_geom(op2_filename, debug=False)
+        unused_op2 = read_op2_geom(op2_filename, debug=False)
 
         debug = False
         write_bdf = True
@@ -832,7 +831,7 @@ class TestOP2(Tester):
         os.remove('temp.debug')
 
     def test_op2_nastran_2005r3b(self):
-        """Nastran2005r3 bug"""
+        """Nastran 2005r3 bug"""
         folder = os.path.join(MODEL_PATH, 'modele_petite_zone')
         op2_filename = os.path.join(folder, 'modele_petite_zone.op2')
         f06_filename = os.path.join(folder, 'modele_petite_zone.test_op2.f06')
@@ -1451,7 +1450,7 @@ class TestOP2(Tester):
 
         #print(op2.ctria3_stress.keys())
         ctria3_stress = op2.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 16, ctria3_stress.nelements # TODO: 8-wrong
+        assert ctria3_stress.nelements == 16, ctria3_stress.nelements  # TODO: 8-wrong
         assert ctria3_stress.data.shape == (21, 16, 8), ctria3_stress.data.shape
 
         ctetra_stress = op2.ctetra_stress[isubcase]
@@ -1816,7 +1815,7 @@ class TestOP2(Tester):
         #unused_op2 = read_op2_geom(op2_filename, debug=False)
         read_bdf(bdf_filename, debug=False)
 
-        op2, unused_is_passed = run_op2(
+        unused_op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
             write_op2=False, write_hdf5=False, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=False, build_pandas=False, subcases=None,
@@ -1831,7 +1830,7 @@ class TestOP2(Tester):
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
-        op2, unused_is_passed = run_op2(
+        unused_op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=False, write_hdf5=True, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=False, build_pandas=True, subcases=None,

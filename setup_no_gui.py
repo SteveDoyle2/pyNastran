@@ -1,120 +1,18 @@
 #!/usr/bin/env python
+from __future__ import absolute_import
 import os
-import sys
 from setuptools import setup, find_packages
 
-PY2 = False
-if sys.version_info < (3, 0):
-    PY2 = True
-
-imajor, minor1, minor2 = sys.version_info[:3]
-if sys.version_info < (2, 7, 7):  # 2.7.15 used
-    # makes sure we don't get the following bug:
-    #   Issue #19099: The struct module now supports Unicode format strings.
-    sys.exit('Upgrade your Python to >= 2.7.7 or 3.5+; version=(%s.%s.%s)' % (imajor, minor1, minor2))
-
 import pyNastran
+from packages import check_python_version, get_package_requirements
+
 packages = find_packages() + ['gui/icons/*.*']
 #print("packages = %s" % packages)
 #sys.exit()
 
-py2_packages = []
-py_packages = []
+check_python_version()
+unused_all_reqs, install_requires = get_package_requirements(is_gui=False)
 
-try:
-    import numpy as np
-    ver = np.lib.NumpyVersion(np.__version__)
-    if ver < '1.11.0':
-        print("np.__version__ = %r < '1.11.0'" % np.__version__)
-        py_packages.append('numpy >= 1.11.0')
-except ImportError:
-    py_packages.append('numpy >= 1.11.0')
-
-try:
-    import scipy
-    ver = scipy.version.short_version
-    if ver < '1.0.0':
-        print("scipy.version.short_version = %r < '1.0.0'" % scipy.version.short_version)
-        py_packages.append('scipy >= 1.0.0')
-except ImportError:
-    py_packages.append('scipy >= 1.0.0')  # 1.1.0 used
-
-try:
-    import six
-    sver = [int(val) for val in six.__version__.split('-')[0].split('.')]
-    if sver < [1, 11, 0]:
-        print("six.__version__ = %r < '1.11.0'" % six.__version__)
-        py_packages.append('six >= 1.11.0')
-except ImportError:
-    py_packages.append('six >= 1.11.0')  # 1.12.0 used
-
-
-#try:
-#    import matplotlib
-#    sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
-#    if sver < [1, 5, 1]:
-#        print("matplotlib.__version__ = %r < '1.5.1'" % six.__version__)
-#        py_packages.append('matplotlib >= 1.5.1')
-#except ImportError:
-#    py_packages.append('matplotlib >= 1.5.1')
-
-
-try:
-    import cpylog
-    sver = [int(val) for val in cpylog.__version__.split('-')[0].split('.')]
-    if sver != [1, 0, 2]:
-        print("cpylog.__version__ = %r != '1.0.2'" % cpylog.__version__)
-        py_packages.append('cpylog == 1.0.2')
-except ImportError:
-    py_packages.append('cpylog == 1.0.2')  # 1.0.2 used
-
-
-try:
-    import docopt
-    sver = [int(val) for val in docopt.__version__.split('-')[0].split('.')]
-    if sver != [0, 6, 2]:
-    #if docopt.__version__ != '0.6.2':
-        print("docopt.__version__ = %r != '0.6.2'" % docopt.__version__)
-        py_packages.append('docopt == 0.6.2')
-except ImportError:
-    py_packages.append('docopt == 0.6.2')  # 0.6.2 used
-
-
-try:
-    import typing
-except ImportError:
-    # PY2
-    py_packages.append('typing >= 3.6.4')  # 3.6.6 used
-
-
-if PY2:
-    try:
-        import pathlib2
-    except ImportError:
-    # PY2
-        py_packages.append('pathlib2 >= 2.3.0')  # 2.3.2 used
-
-    try:
-        import scandir
-        sver = [int(val) for val in scandir.__version__.split('-')[0].split('.')]
-        if sver < [1, 7, 0]:
-            print("scandir.__version__ = %r < '1.7.0'" % scandir.__version__)
-            py_packages.append('scandir >= 1.7.0')
-    except ImportError:
-        py_packages.append('scandir >= 1.7.0')  # 1.9.0 used
-
-#py_packages = [
-#    'numpy >= 1.9.2',
-#    'scipy >= 0.16.0, scipy < 0.18.0',
-#]
-
-install_requires = py_packages + [
-    # -*- Extra requirements: -*-
-    #'docopt == 0.6.2',
-    ##'matplotlib >= 1.3.0',
-    #'six >= 1.9.0',
-    ##'cython',
-] + py2_packages,
 
 
 # set up all icons
@@ -190,4 +88,3 @@ setup(
     },
     test_suite='pyNastran.all_tests',
 )
-

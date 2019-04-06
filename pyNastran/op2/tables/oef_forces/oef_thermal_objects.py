@@ -2,12 +2,12 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import integer_types
-from numpy import zeros, empty
+import numpy as np
+#from numpy import zeros, empty
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import (
     write_float_13e, write_floats_13e, _eigenvalue_header)
 from pyNastran.op2.result_objects.element_table_object import RealElementTableArray
-import numpy as np
 
 
 class Real1DHeatFluxArray(ScalarObject):
@@ -63,12 +63,12 @@ class Real1DHeatFluxArray(ScalarObject):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
-        self.element_data_type = empty(self.nelements, dtype='|U8')
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element = np.zeros(self.nelements, dtype='int32')
+        self.element_data_type = np.empty(self.nelements, dtype='|U8')
 
         #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -96,7 +96,8 @@ class Real1DHeatFluxArray(ScalarObject):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid, EType\n'
-            for (eid, etype, eid2, etype2) in zip(self.element, self.element_data_type, table.element, table.element_data_type):
+            for (eid, etype, eid2, etype2) in zip(self.element, self.element_data_type,
+                                                  table.element, table.element_data_type):
                 msg += '(%s, %s), (%s, %s)\n' % (eid, etype, eid2, etype2)
             print(msg)
             raise ValueError(msg)
@@ -250,12 +251,12 @@ class RealHeatFluxVU3DArray(ScalarObject):
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_parent = zeros((self.nelements, 2), dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element_parent = np.zeros((self.nelements, 2), dtype='int32')
 
         #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-        self.vugrid = zeros((self.ntimes, self.ntotal), dtype='int32')
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+        self.vugrid = np.zeros((self.ntimes, self.ntotal), dtype='int32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
     def _build_dataframe(self):
         """creates a pandas dataframe"""
@@ -289,7 +290,8 @@ class RealHeatFluxVU3DArray(ScalarObject):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             msg += 'Eid, Parent, Coord, iCoord\n'
-            for (eid1, parent1, coord1, icord1), (eid2, parent2, coord2, icord2) in zip(self.element_parent, table.element_parent_coord_icord):
+            for (eid1, parent1, coord1, icord1), (eid2, parent2, coord2, icord2) in zip(
+                    self.element_parent, table.element_parent_coord_icord):
                 msg += '(%s, %s, %s, %s) (%s, %s, %s, %s)\n' % (
                     eid1, parent1, coord1, icord1,
                     eid2, parent2, coord2, icord2)
@@ -367,7 +369,8 @@ class RealHeatFluxVU3DArray(ScalarObject):
             ntimes_word = '1'
         headers = self.get_headers()
         n = len(headers)
-        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (ntimes_word, n, n, str(', '.join(headers))))
+        msg.append('  data: [%s, nelements, %i] where %i=[%s]\n' % (
+            ntimes_word, n, n, str(', '.join(headers))))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  element type: %s\n' % self.element_type)
         msg.append('  element name: %s\n' % self.element_name)
@@ -407,7 +410,7 @@ class RealHeatFluxVU3DArray(ScalarObject):
             zflux = self.data[itime, :, 5]
 
             for (vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi) in zip(
-                 vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
+                    vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
                 f06_file.write(
                     '         %10i    %-13E    %-13E    %-13E    %-13E    %-13E    %-13E\n' % (
                         vugrid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi))
@@ -462,12 +465,12 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_parent_coord = zeros((self.nelements, 3), dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element_parent_coord = np.zeros((self.nelements, 3), dtype='int32')
 
         #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-        self.vugrid = zeros((self.ntimes, self.ntotal, 1), dtype='int32')
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+        self.vugrid = np.zeros((self.ntimes, self.ntotal, 1), dtype='int32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -548,7 +551,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
                     raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid, parent, coord, icord, grad_fluxes):
+    def add_sort1(self, dt, eid, parent, coord, unused_icord, grad_fluxes):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
@@ -594,7 +597,7 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        asdf
+        #asdf
         msg_temp = [
             '                T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   B E A M   P - E L E M E N T S\n'
             '                    VU-ELEMENT ID=  100005001, P-ELEMENT ID =       5, OUTPUT COORD. ID= (LOCAL), P OF EDGES =  2\n'
@@ -623,13 +626,12 @@ class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
             zflux = self.data[itime, :, 5]
 
             for (nid, xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi) in zip(
-                 vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
-                vals2 = write_floats_13e(
-                    [fappliedi, free_convi, force_convi, fradi, ftotali])
-                [sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
+                    vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
+                vals2 = write_floats_13e([xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi])
+                [sxgradi, sygradi, szgradi, sxfluxi, syfluxi, szfluxi] = vals2
 
                 f06_file.write('         %10i    %13E    %13E    %13E    %13E    %13E\n' % (
-                    eid, sfapplied, sfree_conv, sforce_conv, sfrad, sftotal))
+                    nid, sxgradi, sygradi, szgradi, sxfluxi, syfluxi, szfluxi))
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -725,11 +727,11 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.nelements, 2), dtype='int32')
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element_node = np.zeros((self.nelements, 2), dtype='int32')
 
         #[free_conv, free_conv_k]
-        self.data = zeros((self.ntimes, self.ntotal, 2), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 2), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -910,12 +912,12 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
-        self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
-        self.element_type = empty(self.nelements, dtype='|U8')
+        self._times = np.zeros(self.ntimes, dtype=dtype)
+        self.element = np.zeros(self.nelements, dtype='int32')
+        self.element_type = np.empty(self.nelements, dtype='|U8')
 
         #[fapplied, free_conv, force_conv, frad, ftotal]
-        self.data = zeros((self.ntimes, self.ntotal, 5), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 5), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1034,7 +1036,7 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             ftotal = self.data[itime, :, 4]
 
             for (eid, fappliedi, free_convi, force_convi, fradi, ftotali) in zip(
-                eids, fapplied, free_conv, force_conv, frad, ftotal):
+                    eids, fapplied, free_conv, force_conv, frad, ftotal):
                 #vals2 = write_floats_13e(
                     #[fappliedi, free_convi, force_convi, fradi, ftotali])
                 #[sfapplied, sfree_conv, sforce_conv, sfrad, sftotal] = vals2
@@ -1052,7 +1054,7 @@ class RealHeatFluxVUShellArray(ScalarObject):
         self.approach_code = None
         self.analysis_code = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
-        self.is_sort1
+        unused_sort1 = self.is_sort1
         #self.dt = dt
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -1071,7 +1073,7 @@ class RealHeatFluxVUShellArray(ScalarObject):
     def data_type(self):
         return 'float32'
 
-    def get_stats(self):
+    def get_stats(self, short=False):
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1081,7 +1083,7 @@ class RealHeatFluxVUShellArray(ScalarObject):
         #ngrids = len(self.gridTypes)
         msg = []
 
-        ntimesi, ntotal = self.data.shape[:2]
+        unused_ntimesi, ntotal = self.data.shape[:2]
         ntimes = len(self._times)
         nelements = self.element.shape[0]
 
@@ -1146,15 +1148,15 @@ class RealHeatFluxVUShellArray(ScalarObject):
             ny = ntimes
             #print("ntotal=%s nelements=%s ntimes=%s" % (ntotal, nelements, ntimes))
 
-        self._times = zeros(ntimes, dtype=self._times_dtype)
+        self._times = np.zeros(ntimes, dtype=self._times_dtype)
         #self.types = array(self.nelements, dtype='|S1')
 
-        self.element = zeros(nelements, dtype='int32')
-        self.element_parent_coord_icord =  zeros((nelements, 4), dtype='int32')
+        self.element = np.zeros(nelements, dtype='int32')
+        self.element_parent_coord_icord = np.zeros((nelements, 4), dtype='int32')
         #self.element_data_type = empty(nelements, dtype='|U8')
 
         #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
-        self.data = zeros((nx, ny, 6), self.data_type())
+        self.data = np.zeros((nx, ny, 6), self.data_type())
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
@@ -1203,7 +1205,7 @@ class RealHeatFluxVUShellArray(ScalarObject):
                         t2 = table.data[itime, ieid, :]
                         (tx1, ty1, tz1, rx1, ry1, rz1) = t1
                         (tx2, ty2, tz2, rx2, ry2, rz2) = t2
-                        if not allclose(t1, t2):
+                        if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
@@ -1220,7 +1222,7 @@ class RealHeatFluxVUShellArray(ScalarObject):
                 raise ValueError(msg)
         return True
 
-    def add_sort1(self, dt, eid,  parent, coord, icord, theta,
+    def add_sort1(self, dt, eid, parent, coord, unused_icord, unused_theta,
                   xgrad, ygrad, zgrad, xflux, yflux, zflux):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
