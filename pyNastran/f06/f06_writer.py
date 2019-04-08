@@ -278,7 +278,7 @@ class F06Writer(OP2_F06_Common):
         summary_header = '                                        M O D E L   S U M M A R Y\n\n'
         summary = ''
 
-        self.cards_to_read = set([
+        self.cards_to_read = {
 
             # rigid elements
             'RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3',
@@ -294,7 +294,7 @@ class F06Writer(OP2_F06_Common):
             # temperature cards
             'CHBDYE', 'CHBDYG', 'CHBDYP',
             'CONV',
-        ])
+        }
 
 
         blocks = [

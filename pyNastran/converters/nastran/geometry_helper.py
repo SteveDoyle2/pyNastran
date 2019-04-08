@@ -74,7 +74,7 @@ class NastranGuiAttributes(object):
         self.model_type = None
         self.isubcase_name_map = None
         self.has_caero = False
-        self.dependents_nodes = set([])
+        self.dependents_nodes = set()
         self.icd_transform = {}
 
 
@@ -132,7 +132,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         # bar_types['bar'] = [ [...], [...], [...] ]
         #bar_types = defaultdict(lambda : defaultdict(list))
 
-        found_bar_types = set([])
+        found_bar_types = set()
         #neids = len(self.element_ids)
         for bar_type, data in bar_types.items():
             eids = []
@@ -147,7 +147,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
         nid_release_map = defaultdict(list)
 
         #debug = True
-        bar_nids = set([])
+        bar_nids = set()
         #print('bar_beam_eids = %s' % bar_beam_eids)
         for eid in bar_beam_eids:
             if eid not in self.eid_map:

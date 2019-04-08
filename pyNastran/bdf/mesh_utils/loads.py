@@ -62,7 +62,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
     M = array([0., 0., 0.])
     xyz = _get_xyz_cid0_dict(model, xyz_cid0=xyz_cid0)
 
-    unsupported_types = set([])
+    unsupported_types = set()
     for load, scale in zip(loads, scale_factors):
         #if load.type not in ['FORCE1']:
             #continue
@@ -405,7 +405,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
 
     xyz = _get_xyz_cid0_dict(model, xyz_cid0)
 
-    unsupported_types = set([])
+    unsupported_types = set()
     shell_elements = [
         'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR',
         'CTRIA6', 'CQUAD8', 'CQUAD', 'CSHEAR']

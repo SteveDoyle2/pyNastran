@@ -304,6 +304,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
         #model.get_bdf_stats()
     return model
 
+
 def load_bdf_object(obj_filename, xref=True, log=None, debug=True):
     model = BDF(log=log, debug=debug)
     model.load(obj_filename=obj_filename)
@@ -318,6 +319,7 @@ def load_bdf_object(obj_filename, xref=True, log=None, debug=True):
                           xref_sets=True,
                           xref_optimization=True)
     return model
+
 
 class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     """
@@ -553,8 +555,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
             'SPLINE6', 'SPLINE7',
             'TRIM', 'TRIM2',  ## trims
-            'CSSCHD', ## csschds
-            'DIVERG', ## divergs
+            'CSSCHD',  ## csschds
+            'DIVERG',  ## divergs
 
             ## coords
             'CORD1R', 'CORD1C', 'CORD1S',
@@ -567,7 +569,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CHBDYE', 'CHBDYG', 'CHBDYP',
             'PCONV', 'PCONVM', 'PHBDY',
             'RADBC', 'CONV',
-            'RADM', 'VIEW', 'VIEW3D', # TODO: not validated
+            'RADM', 'VIEW', 'VIEW3D',  # TODO: not validated
 
 
             'RADCAV', ## radcavs
@@ -698,8 +700,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         self._xref = False
 
-        case_control_cards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
-                                  'TEMP', 'TSTEPNL', 'INCLUDE'])
+        case_control_cards = {'FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
+                              'TEMP', 'TSTEPNL', 'INCLUDE'}
         self._unique_bulk_data_cards = self.cards_to_read.difference(case_control_cards)
 
         #: / is the delete from restart card
@@ -3557,7 +3559,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             else:
                 raise NotImplementedError(coord.rstrip())
 
-        cord1s_to_update = set([])
+        cord1s_to_update = set()
         if cord1s_to_update_temp:
             if len(nids_checked) == 0:
                 raise RuntimeError('len(nids_checked)=0...this shouldnt happen.')

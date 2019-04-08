@@ -67,14 +67,15 @@ class TestConstraints(unittest.TestCase):
 
     def test_support1_01(self):
         lines = ['SUPORT1, 1,      126']
-        bdf = BDF(debug=False)
-        card = bdf._process_card(lines)
+        model = BDF(debug=False)
+        card = model._process_card(lines)
         cardi = BDFCard(card)
 
         size = 8
         con = SUPORT1.add_card(cardi)
         con.write_card(size, 'dummy')
         con.raw_fields()
+        save_load_deck(model)
 
     def test_suport1_02(self):
         card = ['SUPORT1', '1']
@@ -194,7 +195,6 @@ class TestConstraints(unittest.TestCase):
         mpc = model.add_mpc(1, node_ids, components, coefficients, comment='mpc')
         mpc.raw_fields()
         card = mpc.write_card(size=8)
-        #print(card)
         mpc.write_card(size=16, is_double=False)
         mpc.write_card(size=16, is_double=True)
 
@@ -272,7 +272,6 @@ class TestConstraints(unittest.TestCase):
             model.EmptyNodes([1, 2], msg='')
         #model.add_spcoff()
         card_lines = ['SPCOFF', 1]
-        #with self.assertRaises(NotImplementedError):
         model.add_card(card_lines, 'SPCOFF', comment='spcoff', is_list=True, has_none=True)
         spcoff = model.spcoffs['SPCOFF'][0]
         spcoff.write_card(size=8)
@@ -311,7 +310,6 @@ class TestConstraints(unittest.TestCase):
         model.validate()
         model.safe_cross_reference()
 
-        #model.add_grid(43, [0., 0., 0.])
         save_load_deck(model, run_remove_unused=False, run_save_load_hdf5=False)
 
     def test_gmspc(self):

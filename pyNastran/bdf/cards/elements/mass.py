@@ -515,6 +515,7 @@ class CMASS3(PointMassElement):
     _field_map = {
         1: 'eid', 2:'pid', 3:'s1', 4:'s2',
     }
+    _properties = ['node_ids']
 
     @classmethod
     def _init_from_empty(cls):

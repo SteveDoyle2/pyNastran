@@ -47,7 +47,7 @@ class GroupsPostView(QDialog):
         self.light_grey = (211, 211, 211)
         self.inames = inames
         self.shown_set = data['shown']
-        self.deleted_groups = set([])
+        self.deleted_groups = set()
         #self.inames = argsort(self.names)
         #print('inames =', inames)
 
@@ -248,7 +248,7 @@ class GroupsPostView(QDialog):
     def on_revert_groups(self):
         for irow in range(self.nrows):
             self.table.showRow(irow)
-        self.deleted_groups = set([])
+        self.deleted_groups = set()
 
     def on_create_super_group(self):
         inames = [iname for iname, check in enumerate(self.checks)

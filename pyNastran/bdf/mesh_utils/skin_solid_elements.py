@@ -44,9 +44,9 @@ def write_skin_solid_faces(model, skin_filename,
     if len(eid_set) == 0:
         return
 
-    eid_set_to_write = set([])
-    nid_set_to_write = set([])
-    mid_set_to_write = set([])
+    eid_set_to_write = set()
+    nid_set_to_write = set()
+    mid_set_to_write = set()
     if write_solids:
         for face, eids in eid_set.items():
             eid_set_to_write.update(eids)

@@ -152,7 +152,7 @@ class Properties(object):
         return self.model.elements.get_properties(property_ids)
 
 def check_duplicate(name, objs, log):
-    unique_vals = set([])
+    unique_vals = set()
     for obj in objs:
         if hasattr(obj, name):
             vals = getattr(obj, name)

@@ -59,7 +59,7 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
     #nids = unique(hstack([model.elements[eid].node_ids for eid in save_eids]))
 
     # get nodes that are remaining in the model
-    nids = set([])
+    nids = set()
     unused_elements2 = {}
     #print(model.elements)
     for eid, element in model.elements.items():

@@ -944,7 +944,7 @@ class NastranIO(NastranIO_xref):
         print('trying to read...%s' % op2_filename)
         if '.op2' in op2_filename:  # TODO: do this based on lower & file extension
             model = OP2(log=self.log, debug=True)
-            model._results.saved = set([])
+            model._results.saved = set()
             all_results = model.get_all_results()
             desired_results = [
                 # nodal

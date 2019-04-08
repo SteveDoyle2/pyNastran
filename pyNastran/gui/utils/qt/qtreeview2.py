@@ -17,7 +17,7 @@ class QTreeView2(QTreeView):
         self.parent = parent
         self.old_rows = []
         self.data = data
-        self.cases_deleted = set([])
+        self.cases_deleted = set()
         self.choices = choices
         self.single = False
         QTreeView.__init__(self)

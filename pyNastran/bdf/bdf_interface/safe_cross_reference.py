@@ -231,7 +231,7 @@ class SafeXrefMesh(XrefMesh):
         the card).
         """
         xref_errors = defaultdict(list)
-        missing_safe_xref = set([])
+        missing_safe_xref = set()
         for elem in itervalues(self.elements):
             if hasattr(elem, 'safe_cross_reference'):
                 elem.safe_cross_reference(self, xref_errors)

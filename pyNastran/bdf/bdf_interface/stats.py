@@ -286,7 +286,7 @@ def get_bdf_stats(model, return_type='string', word=''):
             msgi = 'cant find card_group_name=%r' % card_group_name
             raise AttributeError(msgi)
 
-        groups = set([]) # type: Set[str]
+        groups = set() # type: Set[str]
 
         if not isinstance(card_group, dict):
             msgi = '%s is a %s; not dictionary, which is required by get_bdf_stats()' % (

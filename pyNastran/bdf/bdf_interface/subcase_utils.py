@@ -79,7 +79,7 @@ def expand_thru_case_control(set_value):
     >>> values = expand_thru_case_control(set_value)
     [1, 2, 3, 4, 5, 20, 22, 24, 26, 28, 30]
     """
-    set_value2 = set([])
+    set_value2 = set()
     add_mode = True
     imin = 0
     imax = 0

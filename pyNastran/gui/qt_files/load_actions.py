@@ -549,7 +549,7 @@ class LoadActions(object):
 
             # TODO: double check this should be a string instead of an int
             self.gui.label_actors[icase] = []
-            self.gui.label_ids[icase] = set([])
+            self.gui.label_ids[icase] = set()
             icase += 1
         form.append((out_filename_short, None, formi))
 

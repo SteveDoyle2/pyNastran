@@ -1073,7 +1073,7 @@ def _update_case_control(model, mapper):
         'LINE',
         ] + skip_keys_temp
 
-    sets_analyzed = set([])
+    sets_analyzed = set()
     # sets in the global don't get updated....
     # so we're going to find all the sets and
     # map them

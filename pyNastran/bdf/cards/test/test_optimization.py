@@ -720,10 +720,7 @@ class TestOpt(unittest.TestCase):
                               p_min=None, p_max=1e20, c0=0.0, validate=True, comment='')
 
         model.cross_reference()
-        save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
-                       run_convert=True, run_renumber=True, run_mirror=True,
-                       run_save_load=True, run_quality=True,
-                       write_saves=True, run_save_load_hdf5=True)
+        save_load_deck(model, xref='standard', punch=True)
 
     def test_cbar_dvprel(self):
         """tests CBAR and DVPREL1"""
@@ -821,10 +818,7 @@ class TestOpt(unittest.TestCase):
                               p_min=None, p_max=1e20, c0=0.0, validate=True, comment='')
 
         model.cross_reference()
-        save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
-                       run_convert=True, run_renumber=True, run_mirror=True,
-                       run_save_load=True, run_quality=True,
-                       write_saves=True, run_save_load_hdf5=True)
+        save_load_deck(model, xref='standard', punch=True)
 
     def test_shell_dvprel(self):
         """tests CBAR and DVPREL1"""
@@ -895,10 +889,7 @@ class TestOpt(unittest.TestCase):
                               p_min=None, p_max=1e20, c0=0.0, validate=True, comment='')
 
         model.cross_reference()
-        save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
-                       run_convert=True, run_renumber=True, run_mirror=True,
-                       run_save_load=True, run_quality=True,
-                       write_saves=True, run_save_load_hdf5=True)
+        save_load_deck(model, xref='standard', punch=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

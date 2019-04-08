@@ -36,7 +36,7 @@ class ResultSet(object):
         self.allowed = set(allowed_results)
 
         # the set of results that have been found
-        self.found = set([])
+        self.found = set()
 
         # the set of results to be saved
         self.saved = deepcopy(self.allowed)

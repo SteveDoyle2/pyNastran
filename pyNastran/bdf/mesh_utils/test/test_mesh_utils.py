@@ -173,7 +173,7 @@ class TestMeshUtils(unittest.TestCase):
         os.remove(bdf_filename_out)
 
         tol = 0.2
-        node_set = set([20, 3])
+        node_set = {20, 3}
         # Only collpase 2 nodes
         bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                               renumber_nodes=False, neq_max=4, xref=True,

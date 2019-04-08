@@ -264,7 +264,7 @@ class OP2(OP2_Scalar):
 
         """
         if skip_results is None:
-            skip_results = set([])
+            skip_results = set()
         else:
             skip_results = set(skip_results)
 
@@ -1052,13 +1052,13 @@ class OP2(OP2_Scalar):
         # isubcase, analysis_code, sort_method, count, ogs, superelement_adaptivity_index, pval_step
         #(1, 2, 1, 0, 0, 'SUPERELEMENT 0')  : result1
 
-        isubcases = set([])
-        analysis_codes = set([])
-        sort_methods = set([])
-        counts = set([])
-        ogss = set([])
-        superelement_adaptivity_indexs = set([])
-        pval_steps = set([])
+        isubcases = set()
+        analysis_codes = set()
+        sort_methods = set()
+        counts = set()
+        ogss = set()
+        superelement_adaptivity_indexs = set()
+        pval_steps = set()
 
         for key in keys:
             #print('key = %s' % str(key))

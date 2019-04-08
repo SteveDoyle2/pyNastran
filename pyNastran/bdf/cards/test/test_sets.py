@@ -104,7 +104,6 @@ class TestSets(unittest.TestCase):
         assert thru_count in [0, 1], fields
         str(set3a)
 
-
     def test_aset(self):
         """checks the ASET/ASET1 cards"""
         model = BDF(debug=False)
@@ -129,7 +128,7 @@ class TestSets(unittest.TestCase):
         asetb.validate()
         aseta.write_card()
         asetb.write_card()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_omit(self):
         """checks the OMIT/OMIT1 cards"""
@@ -183,7 +182,7 @@ class TestSets(unittest.TestCase):
         bsetb.validate()
         bseta.write_card()
         bsetb.write_card()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_cset(self):
         """checks the CSET/CSET1 cards"""
@@ -213,7 +212,7 @@ class TestSets(unittest.TestCase):
         csetb.validate()
         cseta.write_card()
         csetb.write_card()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_qset(self):
         """checks the QSET/QSET1 cards"""
@@ -241,7 +240,7 @@ class TestSets(unittest.TestCase):
         qsetb.validate()
         qseta.write_card()
         qsetb.write_card()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_uset(self):
         """checks the USET/USET1 cards"""
@@ -268,7 +267,7 @@ class TestSets(unittest.TestCase):
         useta.validate()
         model.validate()
         useta.write_card()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_sebset(self):
         """checks the SEBSET/SEBSET1 cards"""
@@ -298,7 +297,7 @@ class TestSets(unittest.TestCase):
         sebsetb.validate()
         sebseta.write_card()
         sebsetb.write_card()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_secset(self):
         """checks the SECSET/SECSET1 cards"""
@@ -329,7 +328,7 @@ class TestSets(unittest.TestCase):
         secsetb.validate()
         secseta.write_card()
         secsetb.write_card()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_seqset(self):
         """checks the QSET/QSET1 cards"""
@@ -355,7 +354,7 @@ class TestSets(unittest.TestCase):
             model.add_grid(nid, [float(nid), 0., 0.])
         seqseta.validate()
         seqseta.write_card()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     #def test_seuset(self):
         #"""checks the SEUSET/SEUSET1 cards"""
@@ -383,6 +382,7 @@ class TestSets(unittest.TestCase):
         #model.validate()
         #seuseta.write_card()
         #save_load_deck(model)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

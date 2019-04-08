@@ -278,7 +278,7 @@ class TestElements(unittest.TestCase):
 
         #model.pop_parse_errors()
         #model.cross_reference()
-        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
+        save_load_deck(model, run_convert=False)
 
     def test_genel_1(self):
         """tests a GENEL element"""
@@ -333,6 +333,7 @@ class TestElements(unittest.TestCase):
         elem = model.add_card(fields, 'GENEL', comment='card', is_list=True, has_none=True)
         elemi = model.elements[21]
         str(elemi)
+        save_load_deck(model)
 
     def test_genel_2(self):
         """tests a GENEL element"""
@@ -353,6 +354,7 @@ class TestElements(unittest.TestCase):
         assert len(genel.ul.ravel()) == 2, genel.ul
         save_load_deck(model, xref='standard', punch=True,
                        run_mirror=False)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -2796,7 +2796,7 @@ def plot_arbitrary_section(model, self,
     out_xyz = np.array([model.points[point_id].get_position()
                         for point_id in out_points])
     #print('out_xyz:\n%s' % out_xyz)
-    sections = set([])
+    sections = set()
     x = out_xyz[:, 0]
     y = out_xyz[:, 1]
     xy = {}

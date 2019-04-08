@@ -822,7 +822,7 @@ class GetCard(GetMethods):
         forces = np.zeros((nnodes, 3), dtype='float32')
         spcd = np.zeros((nnodes, 3), dtype='float32')
         # loop thru scaled loads and plot the pressure
-        cards_ignored = set([])
+        cards_ignored = set()
 
         assert normals is not None
         fail_nids = set()
@@ -1130,7 +1130,7 @@ class GetCard(GetMethods):
         if not any(['PLOAD' in self.card_count, 'PLOAD2' in self.card_count,
                     'PLOAD4' in self.card_count]):
             return False, None
-        cards_ignored = set([])
+        cards_ignored = set()
         pressure_loads = ['PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4']
 
         if not isinstance(load_case_id, integer_types):
@@ -1144,7 +1144,7 @@ class GetCard(GetMethods):
             return False, None
         pressures = np.zeros(len(self.elements), dtype='float32')
 
-        etypes_skipped = set([])
+        etypes_skipped = set()
         iload = 0
         nloads = len(loads)
         show_nloads = nloads > 5000
@@ -1730,7 +1730,7 @@ class GetCard(GetMethods):
         eid_to_nid_map = {}
 
         edge_to_eid_map = defaultdict(set)
-        nid_to_edge_map = defaultdict(set)  #set([]) ???
+        nid_to_edge_map = defaultdict(set)  #set() ???
         nid_to_eid_map = defaultdict(set)
 
         if eids is None:
@@ -1823,7 +1823,7 @@ class GetCard(GetMethods):
         if isinstance(eids, integer_types):
             eids = [eids]
 
-        nids2 = set([])
+        nids2 = set()
         for eid in eids:
             element = self.Element(eid, msg=msg)
             self.log.debug("element.pid = %s" % (element.pid))

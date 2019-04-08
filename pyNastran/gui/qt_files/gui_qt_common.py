@@ -38,7 +38,7 @@ class GuiQtCommon(GuiAttributes):
         super(GuiQtCommon, self).__init__(**kwds)
         self.is_groups = inputs['is_groups']
 
-        #self.groups = set([])
+        #self.groups = set()
         self._group_elements = {}
         self._group_coords = {}
         self._group_shown = {}

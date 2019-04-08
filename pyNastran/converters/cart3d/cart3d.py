@@ -664,7 +664,7 @@ class Cart3D(Cart3dIO):
         nelements = elements.shape[0]
         assert nelements > 0, 'nelements=%s'  % nelements
 
-        #inodes_remove = set([])
+        #inodes_remove = set()
         self.log.info('---starting make_half_model---')
         ax = self._get_ax(axis)
 
@@ -689,7 +689,7 @@ class Cart3D(Cart3dIO):
 
         inodes_save += 1  # +1 is so we don't have to shift inode
         # .. todo:: still need to handle element's node id renumbering
-        ielements_save = set([])
+        ielements_save = set()
         for ielement in range(nelements):
             save_element = True
             element = elements[ielement, :]

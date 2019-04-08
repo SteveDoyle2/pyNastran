@@ -41,7 +41,7 @@ def nastran_to_tecplot(model):
     #i = 0
     #pids = zeros(nelements, dtype='int32')
     #mids = zeros(nelements, dtype='int32')
-    unhandled_types = set([])
+    unhandled_types = set()
     for unused_eid, element in model.elements.items():
         if element.type in ['CTRIA3']:
             tris.append(element.node_ids)

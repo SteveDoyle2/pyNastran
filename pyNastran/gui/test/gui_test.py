@@ -11,6 +11,7 @@ from pyNastran.op2.test.test_op2 import get_failed_files
 from pyNastran.op2.test.op2_test import get_all_files
 from pyNastran.utils.dev import get_files_of_type
 
+s
 def remove_marc_files(filenames):
     """Marc files are not supported"""
     filenames2 = []
@@ -36,6 +37,7 @@ def remove_marc_files(filenames):
     # for fd in fds:
         # names.append(os.readlink('/proc/self/fd/%d' % fd))
     # return names
+
 
 def run(regenerate=True):
     """Runs the full BDF test suite"""
@@ -77,11 +79,10 @@ def run(regenerate=True):
     files = remove_marc_files(files2)
     files = [fname for fname in files
              if not os.path.basename(fname).startswith('out_')
-             and '.test_op2.' not in fname # removing test output files
+             and '.test_op2.' not in fname  # removing test output files
              and '.test_bdf.' not in fname
              and 'tecplot' not in fname
              and os.path.basename(fname) not in skip_files]
-
 
     print("nfiles = %s" % len(files))
     check = True
@@ -100,7 +101,8 @@ def run(regenerate=True):
             failed_cases_file.write('%s\n' % fname)
     sys.exit('finished...')
 
-def run_lots_of_files(files, debug=debug,encoding='latin1', dev=True):
+
+def run_lots_of_files(files, debug=False, encoding='latin1', dev=True):
     """used by gui_test.py to run thousands of files"""
     nfailed = 0
     ntotal = 0
@@ -147,6 +149,7 @@ def main():
     regenerate = data['--regenerate']
 
     run(regenerate=regenerate)
+
 
 if __name__ == '__main__':  # pragma: no cover
     main()

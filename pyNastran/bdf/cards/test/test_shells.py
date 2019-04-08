@@ -263,15 +263,15 @@ class TestShells(unittest.TestCase):
         # get node IDs without cross referencing
         eids = [10]
         nids = model.get_node_ids_with_elements(eids)
-        assert nids == set([1, 2, 3, 4]), nids
+        assert nids == {1, 2, 3, 4}, nids
 
         eids = [11]
         nids = model.get_node_ids_with_elements(eids)
-        assert nids == set([3, 4, 5, 6]), nids
+        assert nids == {3, 4, 5, 6}, nids
 
         eids = [10, 11]
         nids = model.get_node_ids_with_elements(eids)
-        assert nids == set([1, 2, 3, 4, 5, 6]), nids
+        assert nids == {1, 2, 3, 4, 5, 6}, nids
 
         params = [
             ('T', 1.0),
@@ -286,15 +286,15 @@ class TestShells(unittest.TestCase):
 
         eids = [10]
         nids = model.get_node_ids_with_elements(eids)
-        assert nids == set([1, 2, 3, 4]), nids
+        assert nids == {1, 2, 3, 4}, nids
 
         eids = [11]
         nids = model.get_node_ids_with_elements(eids)
-        assert nids == set([3, 4, 5, 6]), nids
+        assert nids == {3, 4, 5, 6}, nids
 
         eids = [10, 11]
         nids = model.get_node_ids_with_elements(eids)
-        assert nids == set([1, 2, 3, 4, 5, 6]), nids
+        assert nids == {1, 2, 3, 4, 5, 6}, nids
 
         save_load_deck(model)
 

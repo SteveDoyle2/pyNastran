@@ -1,8 +1,10 @@
 # coding: utf-8
 from __future__ import print_function
+from copy import deepcopy
 import unittest
 import numpy as np
 
+from cpylog import get_logger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 #from pyNastran.op2.op2 import OP2, read_op2
@@ -15,7 +17,8 @@ class TestMassElements(unittest.TestCase):
     """
     def test_conm1(self):
         """tests a CONM1"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning', encoding='utf-8')
+        model = BDF(debug=False, log=log)
         mass_matrix = np.zeros((6, 6), dtype='float32')
 
         nid = 10
@@ -28,14 +31,40 @@ class TestMassElements(unittest.TestCase):
         conm1.write_card(size=16)
         conm1.write_card(size=16, is_double=True)
         conm1.raw_fields()
+        conm1.MassMatrix()
+
+        conm1b = deepcopy(conm1)
+        conm1b.eid = 11
+        conm1b.update_field(4, 1.0)
+        conm1b.update_field(5, 1.0)
+        conm1b.update_field(6, 1.0)
+        conm1b.update_field(7, 1.0)
+        conm1b.update_field(8, 1.0)
+        conm1b.update_field(9, 1.0)
+        conm1b.update_field(10, 1.0)
+        conm1b.update_field(11, 1.0)
+        conm1b.update_field(12, 1.0)
+        conm1b.update_field(13, 1.0)
+        conm1b.update_field(14, 1.0)
+        conm1b.update_field(15, 1.0)
+        conm1b.update_field(16, 1.0)
+        conm1b.update_field(17, 1.0)
+        conm1b.update_field(18, 1.0)
+        conm1b.update_field(19, 1.0)
+        conm1b.update_field(20, 1.0)
+        conm1b.update_field(21, 1.0)
+        conm1b.update_field(22, 1.0)
+        conm1b.update_field(23, 1.0)
+        conm1b.update_field(24, 1.0)
 
         model.add_grid(nid, [0., 0., 0.])
         model.validate()
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model)
 
     def test_conm2(self):
         """tests a conm2"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning', encoding='utf-8')
+        model = BDF(debug=False, log=log)
         nid = 10
         eid = 20
         massi = 42.
@@ -67,7 +96,8 @@ class TestMassElements(unittest.TestCase):
 
     def test_cmass1(self):
         """tests a CMASS1, PMASS, CMASS2, DDVAL"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning', encoding='utf-8')
+        model = BDF(debug=False, log=log)
         eid = 1
         pid = 2
         g1 = 1
@@ -99,7 +129,7 @@ class TestMassElements(unittest.TestCase):
         model.add_grid(g2, [0., 0., 0.])
 
         oid = 3
-        ddvals = 1. # promoted to a list
+        ddvals = 1.  # promoted to a list
         ddval = model.add_ddval(oid, ddvals, comment='ddval')
         ddval.write_card(size=8)
         ddval.write_card(size=16)
@@ -112,11 +142,12 @@ class TestMassElements(unittest.TestCase):
         cmass2.write_card(size=8)
         pmass.write_card(size=8)
         ddval.write_card(size=8)
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model)
 
     def test_mass_3_4(self):
         """tests a CMASS3, PMASS, CMASS4"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning', encoding='utf-8')
+        model = BDF(debug=False, log=log)
         eid = 1
         pid = 2
         s1 = 1
@@ -151,11 +182,12 @@ class TestMassElements(unittest.TestCase):
         pmass.write_card(size=8)
         model.cross_reference()
         model.uncross_reference()
-        save_load_deck(model, run_save_load_hdf5=False)
+        save_load_deck(model)
 
     def test_cmass4(self):
         """CMASS4"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning', encoding='utf-8')
+        model = BDF(debug=False, log=log)
         eid1 = 101
         eid2 = 102
         eid3 = 103
@@ -180,7 +212,8 @@ class TestMassElements(unittest.TestCase):
 
     def test_pmass(self):
         """CMASS1/PMASS"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning', encoding='utf-8')
+        model = BDF(debug=False, log=log)
         eid1 = 101
         mass1 = 1.0
         mass2 = 2.0
@@ -205,7 +238,8 @@ class TestMassElements(unittest.TestCase):
 
     def test_nsm(self):
         """tests the NSM card"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning', encoding='utf-8')
+        model = BDF(debug=False, log=log)
         sid = 1
         nsmi = 0.1
         pid = 10
@@ -223,7 +257,8 @@ class TestMassElements(unittest.TestCase):
 
     def test_nsm1(self):
         """tests the NSM1 card"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning', encoding='utf-8')
+        model = BDF(debug=False, log=log)
         sid = 1
         #Type = 'PSHELL'
         nsmi = 0.1

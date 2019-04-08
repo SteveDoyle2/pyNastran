@@ -11,7 +11,7 @@ def test_nodal_avg_stress():
     get_centroid_stress(op2, subcase, eids)
 
 def get_types_for_eids(bdf, eids):
-    elem_prop_types = set([])
+    elem_prop_types = set()
     for eid in eids:
         elem = bdf.elements[eid]
         etype = elem.type

@@ -400,8 +400,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'ENDDATA',
         ])
 
-        case_control_cards = set(['FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
-                                  'TEMP', 'TSTEPNL', 'INCLUDE'])
+        case_control_cards = {'FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
+                              'TEMP', 'TSTEPNL', 'INCLUDE'}
         self._unique_bulk_data_cards = self.cards_to_read.difference(case_control_cards)
 
         #: / is the delete from restart card
@@ -2590,7 +2590,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         for card_group_name in card_stats:
             card_group = getattr(self, card_group_name)
-            groups = set([])
+            groups = set()
 
             if not isinstance(card_group, dict):
                 msg = '%s is a %s; not dictionary' % (card_group_name, type(card_group))

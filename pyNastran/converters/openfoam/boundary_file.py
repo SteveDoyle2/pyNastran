@@ -278,7 +278,7 @@ class Boundary(object):
                     #iface, face[0], face[1], face[2], face[3], pid, name))
 
             #f_boundary_faces.write('\n\n---First Faces----\n')
-            #pid_save = set([])
+            #pid_save = set()
             #for iface, face in enumerate(faces):
                 #pid = names[iface]
                 #if pid not in pid_save:

@@ -3382,7 +3382,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #vtkHexa().GetCellType()
         #vtkPyram().GetCellType()
 
-        skipped_etypes = set([])
+        skipped_etypes = set()
         all_nids = nid_cp_cd[:, 0]
         ieid = 0
         for eid, elem in sorted(iteritems(elements)):
@@ -6915,7 +6915,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 model = OP2(log=self.log, debug=True)
 
                 if 0:  # pragma: no cover
-                    model._results.saved = set([])
+                    model._results.saved = set()
                     all_results = model.get_all_results()
                     for result in DESIRED_RESULTS:
                         if result in all_results:

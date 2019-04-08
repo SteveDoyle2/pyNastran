@@ -91,7 +91,7 @@ def make_mass_matrix(model, reference_point):
     ]
     all_eids = np.array(list(model.elements.keys()), dtype='int32')
 
-    #etypes_skipped = set([])
+    #etypes_skipped = set()
     for etype, eids in model._type_to_id_map.items():
         if etype in no_mass:
             continue

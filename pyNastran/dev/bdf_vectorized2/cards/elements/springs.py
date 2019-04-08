@@ -16,7 +16,7 @@ class Springs(object):
         self.celas2 = model.celas2
         self.celas3 = model.celas3
         self.celas4 = model.celas4
-        self._eids = set([])
+        self._eids = set()
 
     def add(self, eid):
         if eid not in self._eids:

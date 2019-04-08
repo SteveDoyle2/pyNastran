@@ -18,7 +18,7 @@ class Masses(object):
         #self.cmass2 = model.cmass2
         #self.cmass3 = model.cmass3
         #self.cmass4 = model.cmass4
-        self._eids = set([])
+        self._eids = set()
 
     def add(self, eid):
         if eid not in self._eids:

@@ -371,7 +371,7 @@ class Beams(object):
     def __init__(self, model):
         self.model = model
         self.cbeam = model.cbeam
-        self._eids = set([])
+        self._eids = set()
 
     def add(self, eid):
         if eid not in self._eids:

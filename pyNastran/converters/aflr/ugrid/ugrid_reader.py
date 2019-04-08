@@ -726,7 +726,7 @@ class UGRID(object):
                 #print(tris)
                 #tris = tris.sort()
                 #print(tris)
-                tri_set = set([])
+                tri_set = set()
                 #tris = tris.sort()
                 for tri in tris:
                     tri_set.add(tuple(tri))
@@ -736,7 +736,7 @@ class UGRID(object):
 
             if nquads:
                 quads.sort()
-                unused_quad_set = set([])
+                unused_quad_set = set()
                 # if tris:
                     # tris = vstack(tris)
                     # tris.sort(axis=0)

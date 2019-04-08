@@ -16,7 +16,7 @@ class Bushes(object):
         self.cbush = model.cbush
         #self.cbush1d = model.cbush1d
         #self.cbush2d = model.cbush2d
-        self._eids = set([])
+        self._eids = set()
 
     def add(self, eid):
         if eid not in self._eids:

@@ -60,10 +60,10 @@ def _setup_faces(bdf_filename):
     #model = BDF()
     face_eids = []
     faces = []
-    shells = set([
+    shells = {
         'CTRIA3', 'CTRIAX', 'CTRIA6', 'CTRIAX6',
         'CQUAD4', 'CQUAD', 'CQUAD8', 'CQUADR', 'CQUADX', 'CQUADX8',
-        'CSHEAR'])
+        'CSHEAR'}
     for eid, elem in model.elements.items():
         if elem.type in shells:
             #if elem.type == 'CQUAD4':

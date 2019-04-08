@@ -19,7 +19,7 @@ def parse_set_sline(list_a):
                 else:
                     by = 1
                 #print("BY = %s" % by)
-                vals = set([])
+                vals = set()
                 start_value = interpret_value(sline[0])
                 end_value = interpret_value(sline[2]) + 1
                 for i in range(start_value, end_value, by):

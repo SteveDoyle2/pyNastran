@@ -91,7 +91,7 @@ def export_mcids(bdf_filename, csv_filename=None,
     else:
         elements = {eid : model.elements[eid] for eid in eids}
 
-    pids_failed = set([])
+    pids_failed = set()
     for unused_eidi, elem in sorted(elements.items()):
         if elem.type in ['CQUAD4', 'CQUAD8', 'CQUAD']:
             nid, eid = _export_quad(elem, nodes,

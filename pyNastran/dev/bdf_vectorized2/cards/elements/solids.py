@@ -18,7 +18,7 @@ class Solids(object):
         self.cpenta15 = model.cpenta15
         self.cpyram5 = model.cpyram5
         self.cpyram13 = model.cpyram13
-        self._eids = set([])
+        self._eids = set()
 
     def add(self, eid):
         if eid not in self._eids:

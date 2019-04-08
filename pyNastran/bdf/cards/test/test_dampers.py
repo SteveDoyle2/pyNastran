@@ -30,6 +30,7 @@ class TestDampers(unittest.TestCase):
         model.add_card(fields, card_name, comment='', is_list=True,
                        has_none=True)
         assert len(model.properties) == 2, model.properties
+        save_load_deck(model)
 
     def test_damper_02(self):
         """tests CDAMP1, CDAMP2, PDAMP, PDAMPT, GRID"""
@@ -69,6 +70,7 @@ class TestDampers(unittest.TestCase):
         model.write_bdf(bdf_file, close=False)
         bdf_file.seek(0)
         unused_model2 = read_bdf(bdf_file, punch=True, debug=False)
+        save_load_deck(model)
 
     def test_damper_03(self):
         """tests the CDAMP4, PDAMP, CDAMP4, SPOINT"""
@@ -279,6 +281,7 @@ class TestDampers(unittest.TestCase):
         model.add_card(card_lines, 'PDAMP', comment='', is_list=True, has_none=True)
         model.validate()
         model._verify_bdf()
+        save_load_deck(model)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

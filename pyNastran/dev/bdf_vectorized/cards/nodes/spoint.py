@@ -9,7 +9,7 @@ class SPOINT(object):
     def __init__(self, model):
         self.model = model
         self._comments = []
-        self.spoint = set([])
+        self.spoint = set()
         self.n = 0
 
     def __len__(self):

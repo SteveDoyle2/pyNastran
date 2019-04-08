@@ -52,7 +52,7 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(force.scaled_vector, np.array([42., 42., 84.])), force.scaled_vector
         model.cross_reference()
         force.raw_fields()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_moment(self):
         """tests CONROD, MOMENT"""
@@ -81,7 +81,7 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(moment.scaled_vector, np.array([42., 42., 84.])), moment.scaled_vector
         model.cross_reference()
         moment.raw_fields()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_accel1(self):
         """tests ACCEL1"""
@@ -107,7 +107,7 @@ class TestLoads(unittest.TestCase):
         accel1.write_card(size=8)
         accel1.write_card(size=16)
         accel1.write_card(size=16, is_double=True)
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_accel1_2(self):
         """tests problematic ACCEL1 cards"""
@@ -145,6 +145,9 @@ class TestLoads(unittest.TestCase):
         assert collapse_thru_by(fields) == [14, 'THRU', 24, 'BY', 2], collapse_thru_by(fields)
 
         model = BDF()
+        for nid in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 23, 24]:
+            model.add_grid(nid, [0., 0., 0.])
+
         for card_lines in cards:
             model.add_card(card_lines, 'ACCEL1', comment='',
                            is_list=False, has_none=True)
@@ -152,6 +155,7 @@ class TestLoads(unittest.TestCase):
         for unused_key, loads in sorted(model.loads.items()):
             for load in loads:
                 str(load)
+        save_load_deck(model)
 
     def test_accel(self):
         """tests ACCEL"""
@@ -181,7 +185,7 @@ class TestLoads(unittest.TestCase):
         accel.write_card(size=8)
         accel.write_card(size=16)
         accel.write_card(size=16, is_double=True)
-        #save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_darea_01(self):
         """tests a DAREA"""
@@ -252,7 +256,7 @@ class TestLoads(unittest.TestCase):
                                                               include_grav=True, xyz_cid0=None)
         assert np.array_equal(forces1, forces2)
         assert np.array_equal(moments1, moments2)
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_gmload(self):
         """tests GMLOAD"""
@@ -269,7 +273,7 @@ class TestLoads(unittest.TestCase):
         gmload.raw_fields()
         model.validate()
         model.cross_reference()
-        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
+        save_load_deck(model, run_convert=False)
 
     def test_pload4_01(self):
         """tests a PLOAD4"""
@@ -404,6 +408,7 @@ class TestLoads(unittest.TestCase):
         nids = None
         model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
                                           include_grav=False, xyz_cid0=None)
+        save_load_deck(model)
 
     def test_pload4_cpenta(self):
         """tests a PLOAD4 with a CPENTA"""
@@ -500,6 +505,7 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(moments1[0], fm[3], 'm=%s mexpected=%s' % (moments1, fm[3:]))
             #self.assertEqual(moments1[1], fm[4], 'm=%s mexpected=%s' % (moments1, fm[3:]))
             #self.assertEqual(moments1[2], fm[5], 'm=%s mexpected=%s' % (moments1, fm[3:]))
+        save_load_deck(model)
 
     def test_pload4_ctria3(self):
         """tests a PLOAD4 with a CTRIA3"""
@@ -551,7 +557,7 @@ class TestLoads(unittest.TestCase):
             if not allclose(forces1[2], fm[2]):
                 model.log.error('subcase=%-2i Fz f=%s fm_expected=%s' % (
                     isubcase, forces1.tolist(), fm.tolist()))
-        save_load_deck(model, punch=False, run_save_load_hdf5=True)
+        save_load_deck(model, punch=False)
 
     def test_pload4_cquad4(self):
         """tests a PLOAD4 with a CQUAD4"""
@@ -606,7 +612,7 @@ class TestLoads(unittest.TestCase):
             if not allclose(f1[2], force[2]):
                 model.log.error('subcase=%-2i Fz f=%s force_expected=%s' % (
                     isubcase, f1.tolist(), force.tolist()))
-        save_load_deck(model, punch=False, run_save_load_hdf5=True)
+        save_load_deck(model, punch=False)
 
     def test_pload4_ctetra(self):
         """tests a PLOAD4 with a CTETRA"""
@@ -703,7 +709,7 @@ class TestLoads(unittest.TestCase):
                 model.log.error('subcase=%-2i Fz g=(%s,%s) forces1=%s fexpected=%s '
                                 'face=%s normal=%s' % (
                                     isubcase, g1, g34, forces1, fm, face, normal))
-        save_load_deck(model, punch=False, run_save_load_hdf5=True)
+        save_load_deck(model, punch=False)
 
     def test_pload4_chexa(self):
         """tests a PLOAD4 with a CHEXA"""
@@ -956,7 +962,7 @@ class TestLoads(unittest.TestCase):
         model2 = read_bdf('ploadx1.temp', debug=None)
         model2._verify_bdf()
         os.remove('ploadx1.temp')
-        save_load_deck(model2, run_convert=False, run_save_load_hdf5=True)
+        save_load_deck(model2, run_convert=False)
 
     def test_loads_combo(self):
         r"""
@@ -1249,7 +1255,7 @@ class TestLoads(unittest.TestCase):
         model2.write_skin_solid_faces('skin.bdf', write_solids=False,
                                       write_shells=True)
         os.remove('skin.bdf')
-        save_load_deck(model2, run_save_load_hdf5=True)
+        save_load_deck(model2)
 
     def test_load(self):
         """makes sure LOAD cards don't get sorted"""
@@ -1305,7 +1311,7 @@ class TestLoads(unittest.TestCase):
                                                               include_grav=True, xyz_cid0=None)
         assert np.array_equal(forces1, forces2)
         assert np.array_equal(moments1, moments2)
-        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
+        save_load_deck(model, run_convert=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

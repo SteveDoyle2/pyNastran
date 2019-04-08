@@ -275,16 +275,12 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
     eid_offset = max(eid_max_elements, eid_max_masses, eid_max_rigid)
 
     if model.elements:
-        shells = set([
-            'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD',
-            'CTRIAR', 'CQUADR',
-            #'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX8',
-        ])
-        rods = set(['CROD', 'CONROD', 'CTUBE'])
-        spring_dampers = set([
+        shells = {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD', 'CTRIAR', 'CQUADR'}
+        rods = {'CROD', 'CONROD', 'CTUBE'}
+        spring_dampers = {
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
             'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-        ])
+        }
 
         eid_offset = max(model.elements)
         def _set_nodes(element, nodes):
@@ -357,6 +353,9 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
                 _set_nodes(element2, nodes)
                 #print(nodes)
                 #element2.nodes = nodes
+            elif etype == 'GENEL':
+                    element2.ul = element2.ul + nid_offset
+                    element2.ud = element2.ud + nid_offset
             else:
                 try:
                     element2.nodes = nodes
@@ -660,11 +659,11 @@ def make_symmetric_model(bdf_filename, plane='xz', zero_tol=1e-12, log=None, deb
         'xy' : ['URDD1', 'URDD2', 'URDD6', 'ROLL'], # xy plane
     }
 
-    all_labels = [
+    all_labels = {
         'URDD4', 'URDD2', 'URDD3', 'SIDES', 'YAW',
         'URDD1', 'URDD5', 'URDD3', 'PITCH', 'ANGLEA',
         'URDD1', 'URDD2', 'URDD6', 'ROLL',
-    ]
+    }
     labels_to_keep = plane_to_labels_keep_map[plane]
     labels_to_remove = [label for label in all_labels if label not in labels_to_keep]
 

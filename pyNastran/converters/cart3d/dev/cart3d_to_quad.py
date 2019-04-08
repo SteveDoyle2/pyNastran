@@ -153,7 +153,7 @@ def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
 
     # sort it
 
-    unique_normals = set([])
+    unique_normals = set()
     for normal in normals:
         unique_normals.add(tuple(normal))
 
@@ -169,7 +169,7 @@ def get_normal_groups(points, elements, rtol=1e-3, atol=1e-5):
 
     # ???
     groups = []
-    set_elements = set([])
+    set_elements = set()
     for eid in range(nelements):
         #normali = normal[eid, :]
         if eid not in set_elements:

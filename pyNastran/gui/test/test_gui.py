@@ -202,6 +202,7 @@ def run_docopt(argv=None):
         log_method = 'debug'
     return formati, input_filenames, output_filenames, failed_cases_filename, log_method, data['--test']
 
+
 def main():
     """runs the gui"""
     (formati, input_filenames, output_filenames,
@@ -290,6 +291,7 @@ def main():
 
     #test_gui.load_nastran_geometry(bdf_filename, None)
     #test_gui.load_nastran_results(op2_filename, None)
+
 
 if __name__ == '__main__':
     main()

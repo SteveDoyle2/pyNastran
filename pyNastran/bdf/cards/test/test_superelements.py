@@ -1,5 +1,6 @@
 import unittest
 from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.cards.test.utils import save_load_deck
 
 
 class TestSuperelements(unittest.TestCase):
@@ -58,6 +59,7 @@ class TestSuperelements(unittest.TestCase):
             xref_loads=True, xref_constraints=True, xref_aero=True,
             xref_sets=True, xref_optimization=True,
             create_superelement_geometry=True, debug=True, word='')
+        #save_load_deck(model, punch=True)
 
 if __name__ == '__main__':
     unittest.main()

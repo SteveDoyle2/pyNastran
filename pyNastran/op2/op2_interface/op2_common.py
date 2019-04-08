@@ -51,7 +51,7 @@ class OP2Common(Op2Codes, F06Writer):
         self._count = 0
 
         #: the results
-        self.result_names = set([])
+        self.result_names = set()
         #: bool
         self.is_vectorized = None
         self.combine = False

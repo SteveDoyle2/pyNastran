@@ -60,6 +60,7 @@ class TestDMIG(unittest.TestCase):
         #model2 = BDF(debug=False)
         #bdf_name = os.path.join(TEST_PATH, 'include_dir', 'include.inc')
         #model2.read_bdf(bdf_name, xref=False, punch=True)
+        save_load_deck(model)
 
     def test_dmig_3(self):
         model = BDF(debug=False)
@@ -86,6 +87,7 @@ class TestDMIG(unittest.TestCase):
         imag_expected = array(imag_expected_real) + array(imag_expected_imag)*1j
         self.assertTrue(array_equal(imag_expected, imag_actual))
         a_matrix.get_matrix()
+        save_load_deck(model)
 
     def test_dmig_4(self):
         model = BDF(debug=False)
@@ -115,6 +117,7 @@ class TestDMIG(unittest.TestCase):
         msg += '\n%s_delta\n%s\n----' % ('IMAGS', imags_actual-imags_expected)
         self.assertTrue(array_equal(imags_expected, imags_actual), msg)
         a_matrix.get_matrix()
+        save_load_deck(model)
 
     def test_dmig_5(self):
         model = BDF(debug=False)
@@ -176,6 +179,7 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         #a_matrix.get_matrix()
+        save_load_deck(model)
 
     def test_dmig_08(self):
         cards = [
@@ -193,6 +197,7 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         #a_matrix.get_matrix()
+        save_load_deck(model)
 
     def test_dmig_09(self):
         cards = [
@@ -210,6 +215,7 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCi) == 3, 'len(GCi)=%s GCi=%s matrix=\n%s' % (len(a_matrix.GCi), a_matrix.GCi, a_matrix)
         assert len(a_matrix.GCj) == 3, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         #a_matrix.get_matrix()
+        save_load_deck(model)
 
     def test_dmig_10(self):
         """symmetric"""
@@ -229,6 +235,7 @@ class TestDMIG(unittest.TestCase):
         assert len(a_matrix.GCj) == 4, 'len(GCj)=%s GCj=%s matrix=\n%s' % (len(a_matrix.GCj), a_matrix.GCj, a_matrix)
         assert a_matrix.shape == (4, 4), 'shape=%s' % str(a_matrix.shape)
         a_matrix.get_matrix()
+        save_load_deck(model)
 
     def test_dmig_11(self):
         pch_filename = os.path.join(TEST_PATH, 'dmig.pch')
@@ -244,7 +251,7 @@ class TestDMIG(unittest.TestCase):
         vax_dict_col_expected = {0: (1, 0)}
         assert list(sorted(vax_dict_col)) == list(sorted(vax_dict_col_expected)), 'vax_dict_col=%s vax_dict_col_expected=%s' % (vax_dict_col, vax_dict_col_expected)
         assert list(sorted(vax_dict_row)) == list(sorted(vax_dict_row_expected)), 'vax_dict_row=%s vax_dict_row_expected=%s' % (vax_dict_row, vax_dict_row_expected)
-
+        #save_load_deck(model)
 
     def test_dmi_01(self):
         """tests a DMI card"""
@@ -390,6 +397,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         assert array_equal(w2gj.Real, w2gj_new.Real)
         os.remove('dmi.bdf')
         os.remove('dmi_out.bdf')
+        save_load_deck(model2)
 
     def test_dmig_12(self):
         """tests the add card methodwith a real DMIG"""

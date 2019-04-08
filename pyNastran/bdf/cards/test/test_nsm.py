@@ -289,5 +289,6 @@ class TestNsm(unittest.TestCase):
         #for pid in [20000, 20010]:
             #print('pid=%s area=%.3f' % (pid, area_breakdown[pid]))
 
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

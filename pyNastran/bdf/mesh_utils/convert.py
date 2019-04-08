@@ -286,7 +286,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     damping_scale = force_scale / velocity_scale
 
     # these don't have any properties
-    skip_elements = set([
+    skip_elements = {
         # nothing to convert (verified)
         'CCONEAX',
         'CELAS1', 'CELAS3',
@@ -301,13 +301,13 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
         'CTRAX3', 'CTRAX6',
         'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
         'CQUADX4', 'CQUADX8',
-    ])
-    skip_masses = set(['CMASS1', 'CMASS3'])
+    }
+    skip_masses = {'CMASS1', 'CMASS3'}
 
-    tri_shells = set(['CTRIA3', 'CTRIA6', 'CTRIAR'])
-    quad_shells = set(['CQUAD4', 'CQUAD8', 'CQUADR'])
-    spring_elements = set(['CELAS2', 'CELAS4'])
-    damper_elements = set(['CDAMP2', 'CDAMP4'])
+    tri_shells = {'CTRIA3', 'CTRIA6', 'CTRIAR'}
+    quad_shells = {'CQUAD4', 'CQUAD8', 'CQUADR'}
+    spring_elements = {'CELAS2', 'CELAS4'}
+    damper_elements = {'CDAMP2', 'CDAMP4'}
 
     model.log.debug('--Element Scales--')
     model.log.debug('nsm_bar_scale (L) = %g' % nsm_bar_scale)
@@ -396,6 +396,10 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             elem.X *= xyz_scale
             # I = m * r^2
             elem.I = [moi * mass_moi_scale for moi in elem.I]
+        elif elem.type == 'CONM1':
+            elem.mass_matrix *= mass_scale
+        elif elem.type == 'CMASS2':
+            elem.mass *= mass_scale
         elif elem.type == 'CMASS4':
             elem.mass *= mass_scale
         else:
@@ -433,12 +437,12 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
     model.log.debug('damping_scale = %g' % damping_scale)
     model.log.debug('stress_scale = %g\n' % stress_scale)
 
-    skip_properties = set([
+    skip_properties = {
         'PSOLID', 'PLSOLID', 'PLPLANE', 'PIHEX',
 
         # TODO: NX-verify
         'PPLANE',
-    ])
+    }
 
     # we don't need to convert PBUSHT, PELAST, PDAMPT
     for prop in model.properties.values():
@@ -821,7 +825,7 @@ def _convert_loads(model, xyz_scale, weight_scale):
     for dloads in model.dloads.values():
         assert isinstance(dloads, str), dloads  # TEMP
 
-    tabled_scales = set([])
+    tabled_scales = set()
     for dloads in model.dload_entries.values():
         for dload in dloads:
             if dload.type == 'RLOAD1':
@@ -888,6 +892,8 @@ def _convert_loads(model, xyz_scale, weight_scale):
                 load.mag *= moment_scale
             elif load_type == 'GRAV':
                 load.scale *= accel_scale
+            elif load_type == 'ACCEL':
+                load.vals *= accel_scale
             elif load_type == 'ACCEL1':
                 load.scale *= accel_scale
             elif load_type == 'PLOAD':
@@ -974,7 +980,7 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
         model.aeros.bref *= xyz_scale
         model.aeros.sref *= area_scale
 
-    xyz_aefacts = set([])
+    xyz_aefacts = set()
     for caero in model.caeros.values():
         if caero.type == 'CAERO1':
             caero.p1 *= xyz_scale
@@ -1045,7 +1051,7 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
     if 'Q' in model.params:
         model.params['Q'].value *= pressure_scale
 
-    q_scale_tables = set([])
+    q_scale_tables = set()
     for aesurf in model.aesurf.values():
         if aesurf.hmllim is not None:
             aesurf.hmllim *= moment_scale
@@ -1064,8 +1070,8 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
             monitor.xyz *= xyz_scale
 
     # update only the FLFACTs corresponding to density/velocity (not kferq)
-    flfact_rho_ids = set([])
-    flfact_velocity_ids = set([])
+    flfact_rho_ids = set()
+    flfact_velocity_ids = set()
     for flutter in model.flutters.values():
         flfact = flutter.density_ref
         flfact_rho_ids.add(flfact.sid)

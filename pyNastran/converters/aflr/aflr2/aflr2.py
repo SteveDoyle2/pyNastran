@@ -458,7 +458,7 @@ def export_to_bedge(bedge_filename,
         log.debug('looping over ucurves=%s' % ucurves)
         nsubcurves_list = []
 
-        all_usubcurves = set([])
+        all_usubcurves = set()
         for ucurve in ucurves:
             i = where(curves == ucurve)[0]
 

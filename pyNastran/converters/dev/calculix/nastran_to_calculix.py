@@ -388,7 +388,7 @@ class CalculixConverter(BDF):
             nid_to_i_map[nid] = i
             xyz[nid] = node.get_position()
 
-        unsupported_types = set([])
+        unsupported_types = set()
         for load, scale in zip(loads2, scale_factors2):
             if isinstance(load, Force):  # FORCE, FORCE1, FORCE2
                 forcei = load.mag * load.xyz

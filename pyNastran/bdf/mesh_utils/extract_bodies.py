@@ -89,14 +89,14 @@ def extract_bodies(bdf_filename, mpc_id=0):
         raise RuntimeError(model.get_bdf_stats())
         #return {}
 
-    nids_used = set([])
-    eids_used = set([])
+    nids_used = set()
+    eids_used = set()
     ibody = 0
     all_nids_to_check = set(list(nid_to_eid_map.keys()))
     nids_to_check = set([next(iterkeys(nid_to_eid_map))])
     if debug:  # pragma: no cover
         print('all_nids_to_check= ', all_nids_to_check)
-    body_eids = {ibody : set([])}
+    body_eids = {ibody : set()}
     nbodies_max = 3
     while all_nids_to_check:
         if debug:  # pragma: no cover
@@ -175,7 +175,7 @@ def extract_bodies(bdf_filename, mpc_id=0):
         ibody += 1
         if ibody > nbodies_max:
             raise RuntimeError('Too many bodies...\n' + model.get_bdf_stats())
-        body_eids[ibody] = set([])
+        body_eids[ibody] = set()
         #print('--------------------------------------')
     if len(body_eids[ibody]) == 0:
         del body_eids[ibody]

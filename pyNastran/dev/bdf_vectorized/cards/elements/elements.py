@@ -1026,7 +1026,7 @@ class Elements(BaseMethods):
 
 
 def check_duplicate(name, objs, log):
-    unique_vals = set([])
+    unique_vals = set()
     #print("nobjs = %s" % len(objs))
     for obj in objs:
         #print('working on %s' % obj.__class__.__name__)

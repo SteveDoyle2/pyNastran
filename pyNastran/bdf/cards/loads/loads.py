@@ -1297,6 +1297,7 @@ class RFORCE1(Load):
     +---------+------+----+---------+---+----+----+----+--------+
     """
     type = 'RFORCE1'
+    _properties = ['node_id']
 
     @classmethod
     def _init_from_empty(cls):

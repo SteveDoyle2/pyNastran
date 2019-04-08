@@ -346,7 +346,7 @@ class Bars(object):
     def __init__(self, model):
         self.model = model
         self.cbar = model.cbar
-        self._eids = set([])
+        self._eids = set()
 
     def add(self, eid):
         if eid not in self._eids:

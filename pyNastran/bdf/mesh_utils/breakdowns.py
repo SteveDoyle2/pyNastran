@@ -201,7 +201,7 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
         'PVISC', 'PBCOMP', 'PBEND',
     ]
     pids_to_volume = {}
-    skipped_eid_pid = set([])
+    skipped_eid_pid = set()
     for pid, eids in pid_eids.items():
         prop = model.properties[pid]
         volumes = []
@@ -309,7 +309,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
     mass_type_to_mass = {}
     pids_to_mass = {}
     pids_to_mass_nonstructural = {}
-    skipped_eid_pid = set([])
+    skipped_eid_pid = set()
     for eid, elem in model.masses.items():
         if elem.type not in mass_type_to_mass:
             mass_type_to_mass[elem.type] = elem.Mass()

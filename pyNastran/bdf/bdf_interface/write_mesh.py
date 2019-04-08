@@ -31,7 +31,7 @@ class WriteMesh(BDFAttributes):
         """creates methods for writing cards"""
         BDFAttributes.__init__(self)
         self._auto_reject = True
-        self.cards_to_read = set([])
+        self.cards_to_read = set()
 
     def get_encoding(self, encoding=None):
         # type: (Optional[str]) -> str
@@ -400,7 +400,7 @@ class WriteMesh(BDFAttributes):
         pids = sorted(self.properties.keys())
         pid_eids = self.get_element_ids_dict_with_pids(pids, stop_if_no_eids=False)
 
-        #failed_element_types = set([])
+        #failed_element_types = set()
         for (pid, eids) in sorted(pid_eids.items()):
             prop = self.properties[pid]
             if eids:
@@ -909,7 +909,7 @@ class WriteMesh(BDFAttributes):
 
         #.. warning:: Sometimes crashes, probably on invalid BDFs.
         #"""
-        #associated_nodes = set([])
+        #associated_nodes = set()
         #for (eid, element) in iteritems(self.elements):
             #associated_nodes = associated_nodes.union(set(element.node_ids))
 

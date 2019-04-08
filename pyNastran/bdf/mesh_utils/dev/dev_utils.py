@@ -326,7 +326,7 @@ def extract_surface_patches(bdf_filename, starting_eids, theta_tols=40.):
     # now trace the model
     for starting_eid, theta_tol in zip(starting_eids, theta_tols):
         print('starting_eid = %s' % starting_eid)
-        group = set([])
+        group = set()
         check = set([starting_eid])
         while check:
             eid = next(iter(check))
@@ -400,7 +400,7 @@ def split_model_by_material_id(bdf_filename, bdf_filename_base,
     model.read_bdf(bdf_filename, xref=True, encoding=encoding)
 
     mid_to_eids_map = defaultdict(set)
-    #nids_to_write = set([])
+    #nids_to_write = set()
     elements_with_properties = [
         'CQUAD4', 'CQUAD', 'CQUAD8',
         'TRIA3', 'CTRIA6', 'CTRIAX', 'CTRIAX6',
@@ -440,7 +440,7 @@ def split_model_by_material_id(bdf_filename, bdf_filename_base,
             mat = model.materials[mid]
             bdf_file.write(mat.write_card(size=size, is_double=is_double))
 
-            nids_to_write = set([])
+            nids_to_write = set()
             for eid in eids:
                 elem = model.elements[eid]
                 nids_to_write.update(elem.node_ids)
@@ -522,7 +522,7 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
     map_nid = {}
     map_nid2 = {}
     neids = eids.size
-    all_common_nids = set([])
+    all_common_nids = set()
     normals = np.zeros((neids, 3), dtype='float64')
     for eid in eids:
         elem = model.elements[eid]

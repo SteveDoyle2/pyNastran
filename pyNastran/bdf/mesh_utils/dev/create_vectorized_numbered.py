@@ -54,7 +54,7 @@ class FakeBDFVectorized(BDF):
                     #self.elements[eid] =
                     eid0 += 1
 
-        failed_types = set([])
+        failed_types = set()
         for elem in self.elements.values():
             if elem.type not in etypes:
                 failed_types.add(elem.type)

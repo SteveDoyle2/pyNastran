@@ -54,7 +54,7 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
     #free_edges = get_free_edges(model, maps=maps)
     #---------------------------------
     normals = {}
-    etypes_skipped = set([])
+    etypes_skipped = set()
     for eid, elem in model.elements.items():
         if elem.type in ['CTRIA3', 'CQUAD4']:
             normals[eid] = elem.Normal()

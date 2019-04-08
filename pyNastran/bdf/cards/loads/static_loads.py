@@ -474,6 +474,7 @@ class ACCEL(BaseCard):
         self.cid_ref = None
 
     def validate(self):
+        self.N = np.asarray(self.N)
         assert max(abs(self.N)) > 0.
         assert self.direction in ['X', 'Y', 'Z'], 'dir=%r' % self.direction
 
@@ -629,6 +630,7 @@ class ACCEL1(BaseCard):
 
     def validate(self):
         assert len(self.N) == 3, 'N=%r' % self.N
+        # self.N = np.asarray(self.N)
         assert isinstance(self.cid, integer_types), 'cid=%r' % self.cid
         assert isinstance(self.scale, float_types), 'scale=%r' % self.scale
         assert isinstance(self.nodes, list), 'nodes=%r' % self.nodes

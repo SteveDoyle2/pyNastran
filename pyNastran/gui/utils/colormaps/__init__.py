@@ -20,8 +20,8 @@ import numpy as np
 
 __all__ = ['jet2', 'blend', 'magma', 'inferno', 'plasma', 'viridis']
 
-RGB_MAPS = set(['plasma', 'viridis', 'magma', 'inferno', 'patran_pink', 'patran_jet'])
-HSV_MAPS = set(['jet', 'jet2', 'blend'])
+RGB_MAPS = {'plasma', 'viridis', 'magma', 'inferno', 'patran_pink', 'patran_jet'}
+HSV_MAPS = {'jet', 'jet2', 'blend'}
 
 # had to add a dummy color, so red shows up
 patran_jet = np.array([ # 11 colors

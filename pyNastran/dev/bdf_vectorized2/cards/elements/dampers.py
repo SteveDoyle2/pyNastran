@@ -19,7 +19,7 @@ class Dampers(object):
         self.cvisc = model.cvisc    # TODO: temp
         self.plotel = model.plotel  # TODO: temp
         #self.cdamp5 = model.cdamp5
-        self._eids = set([])
+        self._eids = set()
 
     def add(self, eid):
         if eid not in self._eids:

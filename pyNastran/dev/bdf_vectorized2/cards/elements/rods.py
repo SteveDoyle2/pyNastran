@@ -15,7 +15,7 @@ class Rods(object):
         self.conrod = model.conrod
         self.crod = model.crod
         self.ctube = model.ctube
-        self._eids = set([])
+        self._eids = set()
 
     def add(self, eid):
         if eid not in self._eids:

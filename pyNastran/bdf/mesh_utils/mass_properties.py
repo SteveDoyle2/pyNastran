@@ -14,7 +14,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
 
-NO_MASS = set([
+NO_MASS = {
     'GRID', 'PARAM', 'FORCE', 'FORCE1', 'FORCE2', 'MOMENT1', 'MOMENT2', 'LOAD',
     'DVPREL1', 'DVPREL2', 'DVCREL1', 'DVCREL2', 'DVMREL1', 'DVMREL2', 'DCONSTR', 'DESVAR',
     'DEQATN', 'DRESP1', 'DRESP2', 'DRESP3',
@@ -54,7 +54,7 @@ NO_MASS = set([
     'DVPREL1', 'DVPREL2', 'DVMREL1', 'DVMREL2', 'DVCREL1', 'DVCREL2',
     'DESVAR', 'DCONADD', 'DRESP1', 'DRESP2', 'DRESP3', 'DEQATN', 'DSCREEN',
     'SUPORT', 'SUPORT1',
-])
+}
 
 def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
     """
@@ -497,7 +497,7 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
         #cg += m * centroid
         #return mass
 
-    etypes_skipped = set([])
+    etypes_skipped = set()
     #eid_areas = defaultdict(list)
     area_eids_pids = defaultdict(list)
     areas = defaultdict(list)

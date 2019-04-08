@@ -2303,7 +2303,7 @@ class Solver(OP2):
             #assert isinstance(moment_constraints, dict), type(moment_constraints)
             #assert isinstance(gravity_load, list), type(gravity_load)
 
-            #nids = set([])
+            #nids = set()
             #for nid in force_loads:
                 #nids.add(nid)
             #for nid in moment_loads:

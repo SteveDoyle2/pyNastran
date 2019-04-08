@@ -638,7 +638,7 @@ class GuiAttributes(object):
         for icase in self.case_keys:
             #result_name = self.get_result_name(icase)
             self.label_actors[icase] = []
-            self.label_ids[icase] = set([])
+            self.label_ids[icase] = set()
         #print(self.label_actors)
         #print(self.label_ids)
 
@@ -659,7 +659,7 @@ class GuiAttributes(object):
                 self.rend.RemoveActor(actor)
                 del actor
             self.label_actors[icase] = []
-            self.label_ids[icase] = set([])
+            self.label_ids[icase] = set()
 
     def clear_labels(self):
         """
@@ -678,7 +678,7 @@ class GuiAttributes(object):
         actors = self.label_actors[icase]
         remove_actors_from_gui(self, actors, render=True)
         self.label_actors[icase] = []
-        self.label_ids[icase] = set([])
+        self.label_ids[icase] = set()
 
     def resize_labels(self, case_keys=None, show_msg=True):
         """

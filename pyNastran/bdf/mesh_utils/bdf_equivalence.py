@@ -235,7 +235,7 @@ def _check_for_referenced_nodes(model, node_set, nids, all_nids, nodes_xyz):
         #
         # Presumably this is enough to capture all the node ids and NOT
         # spoints, but I doubt it...
-        spoint_epoint_nid_set = set([])
+        spoint_epoint_nid_set = set()
         for unused_eid, element in sorted(model.elements.items()):
             spoint_epoint_nid_set.update(element.node_ids)
         for unused_eid, element in sorted(model.masses.items()):

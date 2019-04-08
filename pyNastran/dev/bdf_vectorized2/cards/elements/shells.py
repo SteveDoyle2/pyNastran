@@ -1349,7 +1349,7 @@ class Shells(object):
         self.ctriar = model.ctriar
         self.cquadr = model.cquadr
         self.cquad = model.cquad
-        self._eids = set([])
+        self._eids = set()
 
     def add(self, eid):
         if eid not in self._eids:

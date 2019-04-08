@@ -50,7 +50,7 @@ def remap_cards(model, cross_reference=True,
 
 def delete_properties(bdf_model, property_types_to_save=None):
     """early version of way to delete specific property cards"""
-    pids_to_delete = set([])
+    pids_to_delete = set()
     if property_types_to_save:
         for pid, prop in bdf_model.properties.items():
             ptype = prop.type
@@ -62,7 +62,7 @@ def delete_properties(bdf_model, property_types_to_save=None):
 
 def delete_elements(bdf_model, element_types_to_save=None):
     """early version of way to delete specific element cards"""
-    eids_to_delete = set([])
+    eids_to_delete = set()
     if element_types_to_save:
         for eid, element in bdf_model.elements.items():
             etype = element.type
@@ -74,7 +74,7 @@ def delete_elements(bdf_model, element_types_to_save=None):
 
 #def delete_forces(bdf_model, eids_to_delete=None):
     #"""early version of way to delete specific force cards"""
-    #eids_to_delete = set([])
+    #eids_to_delete = set()
     #loads = {}
     #for load_id, load_set in bdf_model.loads.items():
         #load_set = []

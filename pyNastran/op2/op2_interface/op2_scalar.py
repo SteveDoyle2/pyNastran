@@ -718,7 +718,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_vectorized = False
         self._close_op2 = True
 
-        self.result_names = set([])
+        self.result_names = set()
 
         self.grid_point_weight = GridPointWeight()
         self.words = []
@@ -746,7 +746,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         """
         #: stores the set of all subcases that are in the OP2
-        #self.subcases = set([])
+        #self.subcases = set()
         if subcases is None or subcases == []:
             #: stores if the user entered [] for isubcases
             self.is_all_subcases = True
