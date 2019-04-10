@@ -1,3 +1,4 @@
+"""helper for setup.py"""
 import os
 import sys
 
@@ -8,22 +9,24 @@ if sys.version_info < (3, 0):
     PY3 = False
 
 def check_python_version():
+    """verifies the python version"""
     imajor, minor1, minor2 = sys.version_info[:3]
     if sys.version_info < (2, 7, 7):  # 2.7.15 used
         # makes sure we don't get the following bug:
         #   Issue #19099: The struct module now supports Unicode format strings.
-        sys.exit('Upgrade your Python to >= 2.7.7 or 3.5+; version=(%s.%s.%s)' % (imajor, minor1, minor2))
+        sys.exit('Upgrade your Python to >= 2.7.7 or 3.5+; version=(%s.%s.%s)' % (
+            imajor, minor1, minor2))
 
     if PY3:
         if sys.version_info < (3, 6, 0):  # 3.7.1 used
-            sys.exit('Upgrade your Python to >= 2.7.7 or 3.6+; version=(%s.%s.%s)' % (imajor, minor1, minor2))
+            sys.exit('Upgrade your Python to >= 2.7.7 or 3.6+; version=(%s.%s.%s)' % (
+                imajor, minor1, minor2))
 
 
 def get_package_requirements(is_gui=True):
+    """gets the requirements for setup.py"""
     all_reqs = {}
-    py2_gui_scripts = []
     py2_packages = []
-    py3_gui_scripts = []
     py3_packages = []
 
 

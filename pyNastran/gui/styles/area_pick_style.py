@@ -132,7 +132,7 @@ class AreaPickStyle(vtk.vtkInteractorStyleRubberBandZoom):  # works
             is_nids=self.is_nids, is_eids=self.is_eids,
             representation='points', add_actors=False)
         self.actor = actors[0]
-        add_actors(gui, actors, render=False)
+        add_actors_to_gui(gui, actors, render=False)
 
         if self.callback is not None:
             self.callback(eids, nids, self.name)
