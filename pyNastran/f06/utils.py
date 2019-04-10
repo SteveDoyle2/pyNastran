@@ -67,7 +67,6 @@ def cmd_line_plot_flutter():  # pragma: no cover
         base = os.path.splitext(f06_filename)[0]
         f06_filename = base + '.f06'
 
-    export_zona = data['--export']
     modes = split_int_colon(data['--modes'])
 
     xlim = [None, None]
@@ -101,7 +100,12 @@ def cmd_line_plot_flutter():  # pragma: no cover
 
     nopoints = data['--nopoints']
     noline = data['--noline']
+
     export_f06 = data['--f06']
+    export_zona = data['--export']
+    export_f06_filename = None if export_f06 is False else 'nastran.f06'
+    export_zona_filename = None if export_zona is False else 'nastran.zona'
+    export_veas_filename = None if export_zona is False else 'nastran.veas'
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
                      f06_units=in_units,
@@ -112,8 +116,9 @@ def cmd_line_plot_flutter():  # pragma: no cover
                      ylim_damping=ylim_damping, ylim_freq=ylim_freq,
                      nopoints=nopoints,
                      noline=noline,
-                     export_zona=export_zona,
-                     export_f06=export_f06,)
+                     export_veas_filename=export_veas_filename,
+                     export_zona_filename=export_zona_filename,
+                     export_f06_filename=export_f06_filename,)
 
 def split_float_colons(string_values):
     """
