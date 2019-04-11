@@ -5,7 +5,7 @@ Defines:
 from __future__ import print_function
 import os
 import unittest
-from cpylog import get_logger
+from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
@@ -33,7 +33,7 @@ class TestSurfGui(unittest.TestCase):
         """tests two_blade_wake_sym_extended.surf"""
         ugrid_filename = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models',
                                       'two_blade_wake_sym_extended.surf')
-        log = get_logger(level='warning')
+        log = SimpleLogger(level='warning')
         test = SurfGui()
         test.log = log
         test.on_load_geometry(ugrid_filename, geometry_format='surf', raise_error=True)
@@ -41,14 +41,15 @@ class TestSurfGui(unittest.TestCase):
 
     def test_surf_01(self):
         """tests two_blade_wake_sym_extended.surf"""
+        log = SimpleLogger(level='error')
         MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
         bdf_filename = os.path.join(MODEL_PATH, 'iSat', 'ISat_Launch_Sm_Rgd.dat')
         surf_filename = os.path.join(MODEL_PATH, 'iSat', 'ISat_Launch_Sm_Rgd.surf')
-        bdf_model = read_bdf(bdf_filename)
+        bdf_model = read_bdf(bdf_filename, log=log)
 
         #ugrid_filename = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models',
                                       #'two_blade_wake_sym_extended.surf')
-        #log = get_logger(level='warning')
+        #log = SimpleLogger(level='warning')
 
         pid_to_element_flags = {}
         for pid, prop in bdf_model.properties.items():

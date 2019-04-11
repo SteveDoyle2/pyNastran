@@ -7,6 +7,8 @@ from __future__ import print_function
 from six import string_types
 import numpy as np
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
+from pyNastran.bdf.bdf import read_bdf
+
 
 def convert(model, units_to, units=None):
     """
@@ -40,7 +42,9 @@ def convert(model, units_to, units=None):
 
     scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale)
 
-def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None):
+
+def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None,
+                   encoding=None, log=None, debug=True):
     """
     Scales a BDF based on factors for 3 of the 6 independent terms
 
@@ -71,19 +75,17 @@ def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None):
     #cards_to_skip = [
         #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
         #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
-    from pyNastran.bdf.bdf import read_bdf
     model = read_bdf(bdf_filename, validate=True, xref=True,
                      punch=False, save_file_structure=False,
                      skip_cards=None, read_cards=None,
-                     encoding=None, log=None, debug=True, mode='msc')
-    #from pyNastran.bdf.mesh_utils.convert import convert
+                     encoding=encoding, log=log, debug=debug, mode='msc')
     scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale)
 
     if bdf_filename_out is not None:
         model.write_bdf(bdf_filename_out)
     return model
 
-def _setup_scale_by_terms(scales, terms):
+def _setup_scale_by_terms(scales, terms, quiet=False):
     """determines the mass, length, time scaling factors"""
     term_to_mlt_map = {
         #      M   L   T
@@ -111,14 +113,19 @@ def _setup_scale_by_terms(scales, terms):
     if detA == 0.0:
         raise RuntimeError('the equations are not independent '
                            '(e.g., length, time, and velocity) '
-                           'and cannot determine mass legnth and time')
+                           'and cannot determine mass, legnth, and time')
     M = np.linalg.solve(A, [1., 0., 0.])
     L = np.linalg.solve(A, [0., 1., 0.])
     T = np.linalg.solve(A, [0., 0., 1.])
-    print('MLT:')
-    mass_scale = _scale_term('M', M, terms, scales)
-    xyz_scale = _scale_term('L', L, terms, scales)
-    time_scale = _scale_term('T', T, terms, scales)
+    mass_scale, mass_msg = _scale_term('M', M, terms, scales)
+    xyz_scale, xyz_msg = _scale_term('L', L, terms, scales)
+    time_scale, time_msg = _scale_term('T', T, terms, scales)
+    if not quiet:
+        msg = ('MLT:\n'
+               '%s\n'
+               '%s\n'
+               '%s\n' % (mass_msg, xyz_msg, time_msg))
+        print(msg)
     return mass_scale, xyz_scale, time_scale
 
 def _scale_term(name, coeffs, terms, scales):
@@ -129,8 +136,7 @@ def _scale_term(name, coeffs, terms, scales):
             msg += '%s^%s * ' % (term, coeff)
             value *= scale ** coeff
     msg = msg.strip('* ')
-    print(msg)
-    return value
+    return value, msg
 
 def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale,
                 convert_nodes=True, convert_elements=True,

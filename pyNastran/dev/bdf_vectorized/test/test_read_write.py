@@ -2,7 +2,7 @@
 from __future__ import print_function, unicode_literals
 import os
 import unittest
-#from cpylog import SimpleLogger
+from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.test.test_bdf import run_and_compare_fems
@@ -10,9 +10,8 @@ from pyNastran.dev.bdf_vectorized.bdf import read_bdf as read_bdfv
 from pyNastran.bdf.bdf import read_bdf
 #from pyNastran.dev.bdf_vectorized.solver.solver import Solver
 
-pkg_path = pyNastran.__path__[0]
-test_path = os.path.join(pkg_path, '..', 'models')
-#log = SimpleLogger('warning', encoding='utf8')
+PKG_PATH = pyNastran.__path__[0]
+test_path = os.path.join(PKG_PATH, '..', 'models')
 
 def read_write_compare(bdf_filename, bdf_filename_out):
     """runs checks on the two bdfs"""
@@ -89,13 +88,14 @@ class TestReadWriteVectorized(unittest.TestCase):
     @staticmethod
     def test_isat_02():
         """vectorized vs. standard test on ISat_Launch_Sm_4pt.dat"""
+        log = SimpleLogger(level='error')
         bdf_filename = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_4pt.dat')
         bdf_filename_outv = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_4ptv.dat')
         bdf_filename_out = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_4pt2.dat')
 
         vmodel = read_bdfv(bdf_filename)
         vmodel.write_bdf(bdf_filename_outv)
-        model = read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, log=log)
         model.write_bdf(bdf_filename_out)
 
         run_and_compare_fems(
@@ -112,6 +112,7 @@ class TestReadWriteVectorized(unittest.TestCase):
     @staticmethod
     def test_isat_03():
         """vectorized vs. standard test on ISat_Launch_Sm_Rgd.dat"""
+        log = SimpleLogger(level='error')
         bdf_filename = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_Rgd.dat')
         #bdf_filename_outv = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_Rgdv.dat')
         bdf_filename_out = os.path.join(test_path, 'iSat', 'ISat_Launch_Sm_Rgd2.dat')

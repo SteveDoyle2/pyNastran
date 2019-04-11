@@ -23,11 +23,12 @@ np.set_printoptions(edgeitems=3, infstr='inf',
                     linewidth=75, nanstr='nan', precision=3,
                     suppress=True, threshold=1000, formatter=None)
 
-log = SimpleLogger(level='error')
 class TestConvert(unittest.TestCase):
     """various BDF conversion tests"""
+
     def test_convert_bar(self):
         """converts a bar model"""
+        log = SimpleLogger(level='warning')
         model_path = os.path.join(pkg_path, '..', 'models', 'beam_modes')
         bdf_filename = os.path.join(model_path, 'beam_modes.dat')
         bdf_filename_out = os.path.join(model_path, 'beam_modes_temp.bdf')
@@ -48,11 +49,12 @@ class TestConvert(unittest.TestCase):
 
         terms = ['F', 'P', 'V']
         scales = [1.1, 0.9, 0.8]
-        scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=bdf_filename_out)
+        scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=bdf_filename_out, log=log)
         os.remove(bdf_filename_out)
 
     def test_convert_isat(self):
         """converts a isat model"""
+        log = SimpleLogger(level='error')
         model_path = os.path.join(pkg_path, '..', 'models', 'iSat')
         bdf_filename = os.path.join(model_path, 'ISat_Dploy_Sm.dat')
         bdf_filename_out = os.path.join(model_path, 'isat.bdf')
@@ -73,6 +75,7 @@ class TestConvert(unittest.TestCase):
 
     def test_convert_bwb(self):
         """converts a bwb model"""
+        log = SimpleLogger(level='error')
         bdf_filename = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf')
         bdf_filename_out = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes.bdf')
         bdf_filename_out2 = os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_modes_converted.bdf')
@@ -103,6 +106,7 @@ class TestConvert(unittest.TestCase):
 
     def test_convert_sine(self):
         """converts a sine model"""
+        log = SimpleLogger(level='error')
         model_path = os.path.join(pkg_path, '..', 'models', 'freq_sine')
         bdf_filename = os.path.join(model_path, 'good_sine.dat')
         bdf_filename_out = os.path.join(model_path, 'sine_modes.bdf')
@@ -135,6 +139,7 @@ class TestConvert(unittest.TestCase):
 
     def test_convert_null(self):
         """null conversions to verify any conversion is undone consistently"""
+        log = SimpleLogger(level='error')
         pairs = [
             ['m', 'kg', 's'],
             ['mm', 'kg', 's'],
@@ -167,6 +172,7 @@ class TestConvert(unittest.TestCase):
 
     def test_convert_units(self):
         """tests various conversions"""
+        log = SimpleLogger(level='error')
         # from -> to
         xyz_scale, mass_scale, time_scale, weight_scale, gravity_scale = get_scale_factors(
             ['in', 'lbm', 's'], ['ft', 'lbm', 's'], log)
@@ -224,6 +230,7 @@ class TestConvert(unittest.TestCase):
 
     def test_convert_01(self):
         """converts the CONM2s units"""
+        log = SimpleLogger(level='error')
         model = BDF(log=log)
         eid = 1000
         nid = 100
@@ -245,6 +252,7 @@ class TestConvert(unittest.TestCase):
 
     def test_convert_02(self):
         """converts a full model units"""
+        log = SimpleLogger(level='error')
         bdf_filename = os.path.abspath(
             os.path.join(pkg_path, '..', 'models', 'bwb', 'bwb_saero.bdf'))
         bdf_filename_out = os.path.abspath(
