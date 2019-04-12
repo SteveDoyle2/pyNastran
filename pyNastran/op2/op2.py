@@ -25,6 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
+from typing import List, Any, Optional
 from six import PY2, string_types
 from six.moves.cPickle import load, dump, dumps
 
@@ -126,6 +127,7 @@ class OP2(OP2_Scalar):
     def __init__(self,
                  debug=True, log=None,
                  debug_file=None, mode=None):
+        # type: (bool, Any, Optional[str], Optional[str]) -> None
         """
         Initializes the OP2 object
 
@@ -153,6 +155,7 @@ class OP2(OP2_Scalar):
         self.post = None
 
     def __del__(self):
+        # type: () -> None
         if hasattr(self, 'h5_file') and self.h5_file is not None:
             self.h5_file.close()
 
@@ -224,6 +227,7 @@ class OP2(OP2_Scalar):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, op2_model):
+        # type: (OP2) -> bool
         """
         Diffs the current op2 model vs. another op2 model.
         Crashes if they're not equal.
@@ -381,6 +385,7 @@ class OP2(OP2_Scalar):
         return True
 
     def set_mode(self, mode):
+        # type: (str) -> None
         """
         Sets the mode as 'msc' or 'nx'
         """
@@ -394,6 +399,7 @@ class OP2(OP2_Scalar):
             raise RuntimeError("mode=%r and must be in [msc, nx, radioss, optistruct]")
 
     def include_exclude_results(self, exclude_results=None, include_results=None):
+        # type: (Optional[List[str]], Optional[List[str]]) -> None
         """
         Sets results to include/exclude
 
@@ -417,6 +423,7 @@ class OP2(OP2_Scalar):
             self.set_results(include_results)
 
     def saves(self):
+        # type: () -> str
         """Saves a pickled string"""
         return dumps(self)
 
@@ -569,10 +576,12 @@ class OP2(OP2_Scalar):
 
     @property
     def is_geometry(self):
+        # type: () -> bool
         return False
 
     def read_op2(self, op2_filename=None, combine=True,
                  build_dataframe=None, skip_undefined_matrices=False, encoding=None):
+        # type: (Optional[str], bool, Optional[bool], bool, Optional[str]) -> None
         """
         Starts the OP2 file reading
 
@@ -644,6 +653,7 @@ class OP2(OP2_Scalar):
         self.log.debug('finished reading op2')
 
     def create_objects_from_matrices(self):
+        # type: () -> None
         """
         creates the following objects:
           - monitor3 : MONPNT3 object from the MP3F matrix
@@ -668,6 +678,7 @@ class OP2(OP2_Scalar):
                 ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
 
     def _finalize(self):
+        # type: () -> None
         """internal method"""
         result_types = self.get_table_types()
         for result_type in result_types:
@@ -683,6 +694,7 @@ class OP2(OP2_Scalar):
         self.del_structs()
 
     def build_dataframe(self):
+        # type: () -> None
         """
         Converts the OP2 objects into pandas DataFrames
 
@@ -750,11 +762,13 @@ class OP2(OP2_Scalar):
                     raise
 
     def load_hdf5(self, hdf5_filename, combine=True):
+        # type: (str, bool) -> None
         """Loads an h5 file into an OP2 object"""
         self.deprecated('load_hdf5', 'load_hdf5_filename', '1.2')
         return self.load_hdf5_filename(hdf5_filename, combine=True)
 
     def load_hdf5_filename(self, hdf5_filename, combine=True):
+        # type: (str, bool) -> None
         """
         Loads an h5 file into an OP2 object
 
@@ -777,6 +791,7 @@ class OP2(OP2_Scalar):
         self.combine_results(combine=combine)
 
     def load_hdf5_file(self, h5_file, combine=True):
+        # type: (Any, bool) -> None
         """
         Loads an h5 file object into an OP2 object
 
@@ -797,11 +812,13 @@ class OP2(OP2_Scalar):
         self.combine_results(combine=combine)
 
     def export_hdf5(self, hdf5_filename):
+        # type: (str) -> None
         """Converts the OP2 objects into hdf5 object"""
         self.deprecated('export_hdf5', 'export_hdf5_filename', '1.2')
         return self.export_hdf5_filename(hdf5_filename)
 
     def export_hdf5_filename(self, hdf5_filename):
+        # type: str -> None
         """
         Converts the OP2 objects into hdf5 object
 
@@ -813,6 +830,7 @@ class OP2(OP2_Scalar):
         export_op2_to_hdf5_filename(hdf5_filename, self)
 
     def export_hdf5_file(self, hdf5_file, exporter=None):
+        # type: (file, Any) -> None
         """
         Converts the OP2 objects into hdf5 object
 
@@ -831,6 +849,7 @@ class OP2(OP2_Scalar):
         export_op2_to_hdf5_file(hdf5_file, self)
 
     def combine_results(self, combine=True):
+        # type: (bool) -> None
         """
         we want the data to be in the same format and grouped by subcase, so
         we take
@@ -1020,6 +1039,7 @@ class OP2(OP2_Scalar):
         #print('subcase_key = %s' % self.subcase_key)
 
     def get_key_order(self):
+        # type: () -> List[int, int, int, int, int, str]
         keys = []
         table_types = self.get_table_types()
         for table_type in sorted(table_types):
@@ -1114,6 +1134,7 @@ class OP2(OP2_Scalar):
         return keys3
 
     def print_subcase_key(self):
+        # type: () -> None
         self.log.info('---self.subcase_key---')
         for isubcase, keys in sorted(self.subcase_key.items()):
             if len(keys) == 1:
@@ -1125,6 +1146,7 @@ class OP2(OP2_Scalar):
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
     def transform_displacements_to_global(self, icd_transform, coords, xyz_cid0=None, debug=False):
+        # type: (Any, Any, Any, bool) -> None
         """
         Transforms the ``data`` of displacement-like results into the
         global coordinate system for those nodes with different output

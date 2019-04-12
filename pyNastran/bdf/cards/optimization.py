@@ -1264,6 +1264,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
         atta, atti = _validate_dresp_property_none(property_type, response_type, atta, attb, atti)
 
     elif response_type == 'CFAILURE':
+        # attb is the lamina number
         if attb is None:
             attb = 1
         msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
@@ -1279,6 +1280,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
         assert attb > 0, msg
         assert len(atti) > 0, msg
     elif response_type in ['CSTRAIN', 'CSTRESS']:
+        # attb is the lamina number
         if attb is None:
             attb = 1
         msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
@@ -1302,6 +1304,10 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
             property_type, response_type, atta, attb, atti)
         raise RuntimeError(msg)
     return atta, attb, atti
+
+def _blank_or_mode(attb, msg):
+    """if it's blank, it's a static result, otherwise it's a mode id"""
+    assert attb is None or isinstance(attb, integer_types), msg
 
 def _validate_dresp_property_none(property_type, response_type, atta, attb, atti):
     """helper for ``validate_dresp``"""
@@ -1334,13 +1340,13 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
             property_type, response_type, atta, attb, atti)
         for attai in atta:
             assert atta in '123456', msg  # 8???
-        assert attb is None, msg
+        _blank_or_mode(attb, msg)
         assert len(atti) == 1, msg
 
     elif response_type in ['FRDISP', 'FRVELO', 'FRACCL', 'FRSPCF']:  # frequency displacement
         assert atta in [1, 2, 3, 4, 5, 7, 8, 9], msg
 
-        if attb is None or isinstance(attb, float):
+        if attb is None or isinstance(attb, float_types):
             # blank is all frequencies
             # float is a specific frequency
             pass
@@ -1359,7 +1365,7 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
         for attai in atta:
             assert atta in '123456', msg  # 8???
 
-        if attb is None or isinstance(attb, float):
+        if attb is None or isinstance(attb, float_types):
             # blank is all times
             # float is a specific times
             pass
@@ -1387,14 +1393,23 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
     elif response_type in ['EIGN', 'LAMA']: # EIGEN as well?
         assert isinstance(atta, integer_types), msg
         assert atta > 0, msg
-        # 1 -> direct linerization (default)
-        # 2 -> inverse approximation
+        # LAMA:
+        #   blank/1 -> direct linerization (default)
+        #   2 -> inverse linearization
+        # EIGN:
+        #   blank -> Rayleigh Quotient Approximation (default)
+        #   1 -> direct linerization
+        #   2 -> inverse approximation
         assert attb in [None, 1, 2], msg
         assert len(atti) == 0, msg
     elif response_type == 'FREQ':
         assert isinstance(atta, integer_types), msg
         assert atta > 0, msg
-        assert attb is None, msg
+        # EIGN:
+        #   blank -> Rayleigh Quotient Approximation (default)
+        #   1 -> direct linerization
+        #   2 -> inverse approximation
+        assert attb in [None, 1, 2], msg
         assert len(atti) == 0, msg
     else:
         raise RuntimeError(msg)
@@ -1405,26 +1420,21 @@ def _validate_dresp1_stress(property_type, response_type, atta, attb, atti):
     msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
         property_type, response_type, atta, attb, atti)
 
+    _blank_or_mode(attb, msg)
     if property_type == 'PBARL':
         assert atta in [2, 3, 4, 5, 7, 8], msg
-        assert attb is None, msg
     elif property_type == 'PBAR':
         assert atta in [2, 6, 7, 8, 14, 15], msg
-        assert attb is None, msg
     elif property_type == 'PBEAM':
         assert atta in [6, 8, 9, 31, 59, 108], msg
-        assert attb is None, msg
     elif property_type == 'PROD':
         assert atta in [2, 3, 7], msg
-        assert attb is None, msg
 
     elif property_type == 'PSHELL':
         assert atta in [4, 5, 6, 7, 8, 9, 15, 16, 17, 19, 26, 28, 35, 36], msg
-        assert attb is None, msg
     elif property_type == 'PCOMP':
         # this is a SMEAR PCOMP, which is basically a PSHELL
         assert atta in [9, 11, 17], msg
-        assert attb is None, msg
     #elif property_type in stress_types:
         #if not isinstance(atta, integer_types):
             #msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s; atta should be an integer' % (
@@ -1442,13 +1452,12 @@ def _validate_dresp1_force(property_type, response_type, atta, attb, atti):
     """helper for ``validate_dresp``"""
     msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
         property_type, response_type, atta, attb, atti)
+    _blank_or_mode(attb, msg)
     if property_type == 'PROD':
         assert atta in [2], msg
-        assert attb is None, msg
     elif response_type in ['FRSTRE']:
         if property_type == 'PROD':
             assert atta in [4], msg
-            assert attb is None, msg
         else:
             raise RuntimeError(msg)
         assert len(atti) > 0, msg

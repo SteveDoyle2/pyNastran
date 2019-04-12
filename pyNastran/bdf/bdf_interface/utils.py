@@ -485,7 +485,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
 
 
 def _parse_dynamic_syntax(key, dict_of_vars, log):
-    # type: (key, Any, Any) -> Any
+    # type: (key, Any, Any) -> Dict[str, Any]
     """
     Applies the dynamic syntax for %varName
 

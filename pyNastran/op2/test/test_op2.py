@@ -6,6 +6,7 @@ import os
 import sys
 import time
 from traceback import print_exc
+from typing import List, Optional
 from six import string_types
 
 import numpy as np
@@ -202,7 +203,8 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, log=None, binary_debug=False,
             quiet=False, check_memory=False, stop_on_failure=True,
-            dev=False, xref_safe=False, post=None, load_as_h5=False):
+            dev=False, xref_safe=False, post=None, load_as_h5=False):  #    is_nx?                    subcases              exclude              short,compa,debu, log,                   bina, quie, mem,  stop, dev,  xref, post,          load_as_h5
+    # type: str, bool, bool, Optional[bool], bool, boool, bool, bool, bool, Optional[str], bool, bool, Optional[List[int]], Optional[List[str]], bool, bool, bool, Optional[SimpleLogger], str, bool, bool, bool, bool, bool, Optional[int], bool -> OP2
     """
     Runs an OP2
 

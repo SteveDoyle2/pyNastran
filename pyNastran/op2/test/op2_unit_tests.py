@@ -626,7 +626,7 @@ class TestOP2(Tester):
         hdf5_filename = os.path.join(folder, 'solid_bending.h5')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
-            write_f06=True, write_op2=False,
+            write_f06=True, write_op2=False, write_hdf5=False,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,

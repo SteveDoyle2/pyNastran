@@ -931,6 +931,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.cards_to_read = self.cards_to_read.difference(disable_set)
 
     def set_cards(self, cards):
+        # type: (Union[List[str],Set[str]]) -> None
         """
         Method for setting the cards that will be processed
 
@@ -988,12 +989,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         validate_bdf(self)
 
     def _verify_bdf(self, xref=None):
+        # type: (Optional[bool]) -> None
         """Cross reference verification method."""
         if xref is None:
             xref = self._xref
         verify_bdf(self, xref)
 
     def include_zip(self, bdf_filename=None, encoding=None, make_ilines=True):
+        # type: (Optional[str], Optional[str], bool) -> List[str], Any
         """
         Read a bdf without perform any other operation, except (optionally)
         insert the INCLUDE files in the bdf
@@ -1035,7 +1038,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._set_pybdf_attributes(obj, save_file_structure=False)
         return all_lines, ilines
 
-    def _set_pybdf_attributes(self, obj, save_file_structure):
+    def _set_pybdf_attributes(self, obj, save_file_structure=False):
+        # type: (BDFInputPy, bool) -> None
         """common method for all functions that use BDFInputPy"""
         # these are include line pairs
         #print(obj.include_lines)
@@ -1057,6 +1061,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def read_bdf(self, bdf_filename=None,
                  validate=True, xref=True, punch=False, read_includes=True,
                  save_file_structure=False, encoding=None):
+        # type: (Optional[str], bool, bool, bool, bool, bool, Optional[str]) -> None
         """
         Read method for the bdf files
 
@@ -1150,6 +1155,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.log.warning('_add_superelements should be overwritten')
 
     def _parse_all_cards(self, bulk_data_lines, bulk_data_ilines):
+        # type: (List[str], Any) -> None
         """creates and loads all the cards the bulk data section"""
         cards_list = []
         cards_dict = {}
@@ -1185,6 +1191,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # TODO: redo get_card_ids_by_card_types & card_count
 
     def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
+        # type: (str, str, bool, bool) -> None
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)
@@ -1225,6 +1232,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.punch = punch
 
     def pop_parse_errors(self):
+        # type: () -> None
         """raises an error if there are parsing errors"""
         if self._stop_on_parsing_error:
             if self._iparse_errors == 1 and self._nparse_errors == 0:
@@ -1325,6 +1333,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 raise DuplicateIDsError(msg.rstrip())
 
     def pop_xref_errors(self):
+        # type: () -> None
         """raises an error if there are cross-reference errors"""
         is_error = False
         if self._stop_on_xref_error:
@@ -1340,6 +1349,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     raise CrossReferenceError(msg.rstrip())
 
     def get_bdf_cards(self, bulk_data_lines, bulk_data_ilines=None):
+        # type: (List[str], Optional[Any]) -> Any, Any, Any
         """Parses the BDF lines into a list of card_lines"""
         if bulk_data_ilines is None:
             bulk_data_ilines = np.zeros((len(bulk_data_lines), 2), dtype='int32')
@@ -1533,6 +1543,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return cards_dict, card_count
 
     def update_solution(self, sol, method, sol_iline):
+        # type: (Optional[int], Optional[str], int) -> None
         """
         Updates the overall solution type (e.g. 101,200,600)
 
@@ -1571,6 +1582,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.sol_method = None
 
     def update_card(self, card_name, icard, ifield, value):
+        # type: (str, int, int, Union[int, float, str])
         """
         Updates a Nastran card based on standard Nastran optimization names
 
@@ -1632,6 +1644,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return obj
 
     def set_dynamic_syntax(self, dict_of_vars):
+        # type: (Dict[str, Union[int, float, str]]) -> None
         """
         Uses the OpenMDAO syntax of %varName in an embedded BDF to
         update the values for an optimization study.
@@ -1673,6 +1686,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._is_dynamic_syntax = True
 
     def is_reject(self, card_name):
+        # type: (str) -> bool
         """
         Can the card be read.
 
@@ -1696,6 +1710,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return True
 
     def _process_card(self, card_lines):
+        # type: (List[str]) -> List[str]
         """
         Converts card_lines into a card.
         Considers dynamic syntax and removes empty fields
@@ -1788,13 +1803,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return card_obj, card
 
     def _parse_dynamic_syntax(self, key):
+        # type: (str) -> Dict[str, Any]
         return _parse_dynamic_syntax(key, self.dict_of_vars, self.log)
 
     def _make_card_parser(self):
+        # type: () -> None
         """creates the card parser variables that are used by add_card"""
         class Crash(object):
             """class for crashing on specific cards"""
             def __init__(self):
+                # type: () -> None
                 """dummy init"""
                 pass
             @classmethod
@@ -3261,6 +3279,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
     def get_xyz_in_coord_array(self, cid=0, fdtype='float64', idtype='int32'):
+        # type: [Optinal[int], Optional[str], Optional[str]) -> Any, Any, Any, Dict[int, Any], Dict[int, Any]
         """
         Gets the xyzs as an array in an arbitrary coordinate system
 
@@ -3298,11 +3317,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         xyz_cid = self.transform_xyzcp_to_xyz_cid(xyz_cp, nids, icp_transform,
                                                   cid=cid, in_place=False, atol=1e-6)
         return nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform
-
-    #def update_nodes(self, nids, xyz):
-        #"""
-
-        #"""
 
     def transform_xyzcp_to_xyz_cid(self, xyz_cp, nids, icp_transform,
                                    cid=0, in_place=False, atol=1e-6):
@@ -3604,6 +3618,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return hasattr(self, 'grid')
 
     def get_displacement_index(self):
+        # type: () -> Any, Any, Dict[int, Any]
         """
         Get index and transformation matricies for nodes with
         their output in coordinate systems other than the global.
@@ -3682,6 +3697,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def _old_card_fields(self, card_lines, card_name, log,
                          is_list=False, has_none=True,
                          is_dynamic_syntax=False):
+        # type: (List[str], str, SimpleLogger, bool, bool, bool) -> BDFCard
         """replication helper"""
         if is_list:
             fields = card_lines
@@ -3854,6 +3870,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return cards
 
     def _parse_cards(self, cards_list, cards_dict, card_count):
+        # type: (List[List[str]], Dict[str, List[str]], Dict[str, int]) -> None
         """creates card objects and adds the parsed cards to the deck"""
         # we don't want replication markers in the card_count
         card_names_to_remove = (card_name for card_name in list(card_count.keys())
@@ -3870,6 +3887,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self._parse_cards_list(cards_list)
 
     def _parse_cards_dict(self, cards_dict):
+        # type: (List[List[str]], Dict[str, List[str]]) -> None
         """parses the cards that are in dictionary format"""
         if self.save_file_structure:
             raise NotImplementedError('save_file_structure=True is not supported\n%s' % (
@@ -3955,6 +3973,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #return True
 
     def _parse_primary_file_header(self, bdf_filename):
+        # type: (str) -> None
         """
         Extract encoding, nastran_format, and punch from the primary BDF.
 
@@ -3992,6 +4011,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.zona.update_for_zona()
 
     def _check_pynastran_header(self, lines, check_header=True):
+        # type: (List[str], bool) -> None
         """updates the $pyNastran: key=value variables"""
         if not check_header:
             return
@@ -4046,6 +4066,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def _read_bdf_cards(self, bdf_filename=None,
                         punch=False,
                         read_includes=True, encoding=None):
+        # type: (Optional[str], bool, bool, Optional[str])
         """
         Read method for the bdf files
 
@@ -4133,6 +4154,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
 
     def _add_card_hdf5(self, card_lines, card_name, comment='', is_list=True, has_none=True):
+        # type: (List[str], str, str, bool, bool) -> Any
         """
         Creates a BaseCard object that will be used to simplify HDF5 adding.
 
@@ -4302,6 +4324,7 @@ class BDF(BDF_):
         self.load_combinations = {}  # type: Dict[int, List[Any]]
 
     def __deepcopy__(self, memo):
+        # type: (Dict[str, Any]) -> BDF
         """performs a deepcopy"""
         #newone = type(self)()
         #newone.__dict__.update(self.__dict__)
@@ -4314,6 +4337,7 @@ class BDF(BDF_):
         return result
 
     def __copy__(self):
+        # type: () -> BDF
         """performs a copy"""
         newone = type(self)()
         newone.__dict__.update(self.__dict__)
