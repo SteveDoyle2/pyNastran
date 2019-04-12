@@ -14,10 +14,9 @@ from pyNastran.utils import object_attributes, object_methods
 class FlutterResponse(object):
     """storage object for single subcase SOL 145 results"""
 
-    make_alt = False
     def __init__(self, subcase, configuration, xysym, xzsym, mach, density_ratio, method,
                  modes, results,
-                 f06_units=None, out_units=None,):
+                 f06_units=None, out_units=None, make_alt=False):
         """
         Parameters
         ----------
@@ -73,6 +72,7 @@ class FlutterResponse(object):
             ASYMMETRIC, SYMMETRIC
             unused
         """
+        self.make_alt = make_alt
         self.f06_units = f06_units
         self.out_units = out_units
         required_keys = ['altitude', 'velocity', 'eas', 'density', 'dynamic_pressure']
@@ -262,23 +262,22 @@ class FlutterResponse(object):
             symbols = self._symbols
         return symbols
 
-    def plot_vg(self, modes=None,
-                fig=None,
-                xlim=None, ylim=None,
-                show=True, clear=False, legend=True,
-                png_filename=None, **kwargs):
+    def plot_vg(self, fig=None, modes=None,
+                plot_type='tas',
+                xlim=None, ylim_damping=None,
+                clear=False, legend=True,
+                png_filename=None, show=True, **kwargs):
         """
         Make a V-g plot
 
         See ``plot_root_locus`` for arguments
         """
-        plot_type = 'tas'
         ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
         ylabel = 'Damping'
         iy = self.idamping
         scatter = True
         self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
-                       modes=modes, fig=fig, xlim=xlim, ylim=ylim,
+                       modes=modes, fig=fig, xlim=xlim, ylim=ylim_damping,
                        show=show, clear=clear, legend=legend,
                        png_filename=png_filename,
                        **kwargs)
@@ -396,7 +395,7 @@ class FlutterResponse(object):
         if png_filename:
             plt.savefig(png_filename)
         if clear:
-            plt.clear()
+            fig.clear()
         return axes
 
     def _plot_x_y2(self, ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter, modes=None,
@@ -453,6 +452,20 @@ class FlutterResponse(object):
             axes1.plot(xs[iplot], y1s[iplot], symbol, label='Mode %i' % mode, markersize=0)
             axes2.plot(xs[iplot], y2s[iplot], symbol, label='Mode %i' % mode, markersize=0)
 
+            #if symbols and showline and showpoints:
+                #symbol = symbols[i]
+                #axes1.plot(xs[iplot], y1s[iplot], symbol, label='Mode %i' % mode)
+                #axes2.plot(xs[iplot], y2s[iplot], symbol)
+            #elif symbols and showpoints:
+                ## show line, no points
+                #symbol = symbols[i].replace('-', '')
+                #axes1.plot(xs[iplot], y1s[iplot], symbol, label='Mode %i' % mode)
+                #axes2.plot(xs[iplot], y2s[iplot], symbol)
+            #else:
+                ## show line
+                #axes1.plot(xs[iplot], y1s[iplot], label='Mode %i' % mode)
+                #axes2.plot(xs[iplot], y2s[iplot])
+
             if scatter:
                 scatteri = np.linspace(.75, 50., len(xs))
                 #assert symbol[2] == '-', symbol
@@ -481,7 +494,7 @@ class FlutterResponse(object):
         if png_filename:
             plt.savefig(png_filename)
         if clear:
-            plt.clear()
+            fig.clear()
 
     def plot_kfreq_damping(self, modes=None,
                            plot_type='tas',
@@ -570,11 +583,11 @@ class FlutterResponse(object):
         # 4. find the critical mode
         # 5. ???
 
-    def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None, show=None,
+    def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None,
                    plot_type='tas',
-                   png_filename=None, clear=False, legend=True,
+                   clear=False, legend=True,
                    xlim=None, ylim_damping=None, ylim_freq=None,
-                   nopoints=False, noline=False):
+                   nopoints=False, noline=False, png_filename=None, show=None):
         """
         Make a V-g and V-f plot
 
@@ -666,10 +679,19 @@ class FlutterResponse(object):
         if png_filename:
             plt.savefig(png_filename)
         if clear:
-            plt.clear()
+            fig.clear()
 
     def export_to_veas(self, veas_filename, modes=None):
         """
+        Exports a ZONA .veas file
+
+        Parameters
+        ----------
+        veas_filename : str
+            the filename to write
+        modes : List[int] / int ndarray; (default=None -> all)
+            the modes; typically 1 to N
+
         *.VEAS
 
         ' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG SETID=     714 FOR FLUTTER/ASE ID=     714 NMODE=   12'
@@ -741,6 +763,13 @@ class FlutterResponse(object):
         """
         Writes a custom ZONA flutter file
 
+        Parameters
+        ----------
+        zona_filename : str
+            the filename to write
+        modes : List[int] / int ndarray; (default=None -> all)
+            the modes; typically 1 to N
+
         TODO: not done
         """
         if damping_ratios is None:
@@ -749,8 +778,8 @@ class FlutterResponse(object):
             xlim = [None, None]
 
         modes, imodes = _get_modes_imodes(self.modes, modes)
-        legend_items = ['Mode %i' % mode for mode in modes]
-        ix, xlabel = self._plot_type_to_ix_xlabel(plot_type)
+        #unused_legend_items = ['Mode %i' % mode for mode in modes]
+        ix, unused_xlabel = self._plot_type_to_ix_xlabel(plot_type)
 
         # these are the required damping levels to plot
         msg = ''
@@ -758,12 +787,13 @@ class FlutterResponse(object):
             msgi = ''
             xlim_min = xlim[0]
             xlim_max = xlim[1]
-            for i, imode, mode in zip(count(), imodes, modes):
+            for unused_i, imode, mode in zip(count(), imodes, modes):
                 vel = self.results[imode, :, ix].ravel()
                 damping = self.results[imode, :, self.idamping].ravel()
                 freq = self.results[imode, :, self.ifreq].ravel()
 
-                # consider flutter to be at 0, -0.01, ... damping ratio (so we have a damping margin)
+                # consider flutter to be at 0, -0.01, ... damping ratio
+                # (so we have a damping margin)
                 inot_nan = np.isfinite(damping)
                 idamp = np.where(damping[inot_nan] > -damping_ratio)[0]
 

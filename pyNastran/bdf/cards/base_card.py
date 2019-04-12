@@ -11,12 +11,13 @@ from pyNastran.utils import object_attributes, object_methods
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import is_same
-from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 from pyNastran.bdf.bdf_interface.utils import deprecated
+from pyNastran.bdf.cards.expand_card import  expand_thru, expand_thru_by, expand_thru_exclude
 
 
 if PY2:
     def long_range(start, stop=None, step=1):
+        """Python 2 doesn't handle large values of start/stop well"""
         if isinstance(stop, long):
             out = []
             i = start
@@ -54,6 +55,7 @@ class BaseCard(object):
 
     """
     def __init__(self):
+        # type: () -> None
         pass
         #ABC.__init__(self)
 
@@ -78,10 +80,12 @@ class BaseCard(object):
         deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
     def validate(self):
+        # type: () -> None
         """card checking method that should be overwritten"""
         pass
 
     def object_attributes(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
@@ -89,6 +93,7 @@ class BaseCard(object):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def object_methods(self, mode='public', keys_to_skip=None):
+        # type: (str, Optional[List[str]]) -> List[str]
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
@@ -107,13 +112,14 @@ class BaseCard(object):
 
     @comment.setter
     def comment(self, new_comment):
-    # type: (str) -> None
+        # type: (str) -> None
         """sets a comment"""
         #comment = new_comment.rstrip()
         #self._comment = comment + '\n' if comment else ''
         self._comment = _format_comment(new_comment)
 
     def _test_update_fields(self):
+        # type: () -> None
         n = 1
         while 1:
             try:
@@ -322,6 +328,7 @@ class BaseCard(object):
         raise NotImplementedError('%s has not overwritten write_card' % self.__class__.__name__)
 
     def write_card_16(self, is_double=False):
+        # type: (int, bool) -> str
         fields = self.repr_fields()
         return print_card(fields, size=16, is_double=False)
 
@@ -414,16 +421,19 @@ class Element(BaseCard):
     pid = 0  # CONM2, rigid
 
     def __init__(self):
+        # type: () -> None
         """dummy init"""
         BaseCard.__init__(self)
         #: the list of node IDs for an element (default=None)
         #self.nodes = None
 
     def verify_unique_node_ids(self):
+        # type: () -> None
         node_ids = self.node_ids
         self._verify_unique_node_ids(node_ids)
 
     def _verify_unique_node_ids(self, required_node_ids, non_required_node_ids=None):
+        # type: (Any, Any) -> None
         if required_node_ids:
             if non_required_node_ids:
                 raise NotImplementedError('only required nodes implemented')
@@ -519,7 +529,6 @@ class Element(BaseCard):
                     #self.type, self.nodes)
                 #raise IndexError(msg)
 
-
         nodes2 = []
         for nid in nodes:
             if isinstance(nid, integer_types):
@@ -532,6 +541,7 @@ class Element(BaseCard):
                 msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (self.nodes, type(nid))
                 raise RuntimeError(msg)
         self.nodes = nodes2
+
 
 def _format_comment(comment):
     # type: (str) -> str
@@ -564,6 +574,7 @@ def _format_comment(comment):
     else:
         return ''.join([u'${}\n'.format(comment_line)
                         for comment_line in comment.rstrip().split('\n')])
+
 
 def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
     try:
@@ -608,184 +619,22 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
         raise
     raise RuntimeError('huh...')
 
-def expand_thru(fields, set_fields=True, sort_fields=False):
-    # type: (List[str], bool, bool) -> List[int]
-    """
-    Expands a list of values of the form [1,5,THRU,9,13]
-    to be [1,5,6,7,8,9,13]
-
-    Parameters
-    ----------
-    fields : List[int/str]
-        the fields to expand
-    set_fields : bool; default=True
-        Should the fields be converted to a set and then back to a list?
-        This is useful for [2, 'THRU' 5, 1]
-    sort_fields : bool; default=False
-        Should the fields be sorted at the end?
-
-    """
-    # ..todo:  should this be removed...is the field capitalized when read in?
-    if isinstance(fields, integer_types):
-        return [fields]
-    #elif isinstance(fields[0], integer_types):  # don't use this [1, 'THRU', 10]
-        #return fields
-    elif len(fields) == 1:
-        return [int(fields[0])]
-
-    fields = [field.upper()
-              if isinstance(field, string_types) else field for field in fields]
-
-    out = []
-    nfields = len(fields)
-    i = 0
-    while i < nfields:
-        if isinstance(fields[i], string_types) and fields[i] == 'THRU':
-            istart = int(fields[i - 1])
-            iend = int(fields[i + 1])
-
-            # adding 1 to iend for the range offset
-            for j in range(istart+1, iend + 1):
-                out.append(j)
-            i += 2
-        else:
-            out.append(int(fields[i]))
-            i += 1
-
-    if set_fields:
-        out = list(set(out))
-    if sort_fields:
-        out.sort()
-    return out
-
-
-def expand_thru_by(fields, set_fields=True, sort_fields=True,
-                   require_int=True, allow_blanks=False):
-    # type: (List[str], bool, bool, bool, bool) -> List[int]
-    """
-    Expands a list of values of the form [1,5,THRU,9,BY,2,13]
-    to be [1,5,7,9,13]
-
-    Parameters
-    ----------
-    fields : List[int/str]
-        the fields to expand
-    set_fields : bool; default=True
-        Should the fields be converted to a set and then back to a list
-        to remove duplicates?
-        This is useful for [2, 'THRU' 5, 1]
-    sort_fields : bool; default=False
-        Should the fields be sorted at the end?
-    require_int : bool; default=True
-        True : all data must be integers
-        False : floats are allowed (e.g., DDVAL)
-    allow_blanks : bool; default=Fals
-        True : blank/Nones are ignored (e.g., NSM1/NSML1)
-        False : crash
-
-    .. todo:: not tested
-
-    Notes
-    -----
-    used for QBDY3 and what else ???
-
-    """
-    if require_int:
-        func = int
-    else:
-        func = interpret_value
-
-    # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [field.upper()
-              if isinstance(field, string_types) else field for field in fields]
-
-    if len(fields) == 1:
-        return [func(fields[0])]
-    out = []
-    nfields = len(fields)
-    i = 0
-    by = 1
-    while i < nfields:
-        #print('fields[i]=%r' % fields[i])
-        is_blank = (
-            allow_blanks and (
-                (isinstance(fields[i], string_types) and fields[i].strip() == '') or
-                fields[i] is None)
-        )
-        if is_blank:
-            #print('blank=%s' % fields[i])
-            i += 1
-            continue
-        if fields[i] == 'THRU':
-            by = 1
-            by_case = False
-            if i + 2 < nfields and fields[i + 2] == 'BY':
-                by = func(fields[i + 3])
-            else:
-                by = 1
-                by_case = True
-            min_value = func(fields[i - 1])
-            max_value = func(fields[i + 1])
-            max_range = int((max_value - min_value) // by + 1)  # max range value
-
-            for j in range(0, max_range):  # +1 is to include final point
-                value = min_value + by * j
-                out.append(value)
-            out.append(max_value)
-
-            if by_case:  # null/standard case
-                # A thru B
-                i += 2
-            else:     # BY case
-                # A thru B by C
-                i += 4
-        else:
-            out.append(func(fields[i]))
-            i += 1
-
-    if set_fields:
-        out = list(set(out))
-    if sort_fields:
-        out.sort()
-    return out
-
-
-def expand_thru_exclude(fields):
-    # type: (List[str]) -> List[int]
-    """
-    Expands a list of values of the form [1,5,THRU,11,EXCEPT,7,8,13]
-    to be [1,5,6,9,10,11,13]
-
-    .. warning:: hasn't been tested
-
-    """
-    # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [interpret_value(field.upper())
-              if isinstance(field, string_types) else field for field in fields]
-
-    fields_out = []  # type: List[int]
-    nfields = len(fields)
-    for i in range(nfields):
-        #print('fields[%i] = %r' % (i, fields[i]))
-        if fields[i] == 'THRU':
-            sorted_list = []
-            for j in range(fields[i - 1], fields[i + 1]):
-                sorted_list.append(fields[j])
-
-        elif fields[i] == 'EXCLUDE':
-            stored_set = set(sorted_list)
-            while fields[i] < max(sorted_list):
-                stored_set.remove(fields[i])
-            sorted_list = list(stored_set)
-        else:
-            if sorted_list:
-                fields_out += sorted_list
-            fields_out.append(fields[i])
-    return fields_out
 
 def break_word_by_trailing_integer(pname_fid):
     """
-    Splits a word
+    Splits a word that has a value that is an integer
+
+    Parameters
+    ----------
+    pname_fid : str
+        the DVPRELx term (e.g., A(11), NSM(5))
+
+    Returns
+    -------
+    word : str
+        the value not in parentheses
+    value : int
+        the value in parentheses
 
     Examples
     --------
@@ -814,7 +663,19 @@ def break_word_by_trailing_integer(pname_fid):
 
 def break_word_by_trailing_parentheses_integer_ab(pname_fid):
     """
-    Splits a word
+    Splits a word that has a value that can be A/B as well as an integer
+
+    Parameters
+    ----------
+    pname_fid : str
+        the DVPRELx term; A(11), NSM(5), NSM(B)
+
+    Returns
+    -------
+    word : str
+        the value not in parentheses
+    value : int/str
+        the value in parenthese
 
     Examples
     --------

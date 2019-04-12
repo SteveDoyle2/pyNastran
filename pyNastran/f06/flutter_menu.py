@@ -45,8 +45,6 @@ class PropertyPlotter(QDialog):
         self.model = model
         self.property_ids = []
         self.setWindowTitle('Property Plotter')
-
-
         #
         # property  v-------
         # layer

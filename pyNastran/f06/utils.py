@@ -1,7 +1,14 @@
+"""
+defines:
+ - cmd_line_plot_flutter()
+"""
 from __future__ import print_function
-#import PySide
+#import  matplotlib
+#matplotlib.use('Qt5Agg')
+#from pyNastran.gui.qt_version import qt_version
 
 def cmd_line_plot_flutter():  # pragma: no cover
+    """the interface to ``f06 plot_145`` on the command line"""
     import os
     import sys
     from docopt import docopt
@@ -106,6 +113,12 @@ def cmd_line_plot_flutter():  # pragma: no cover
     export_f06_filename = None if export_f06 is False else 'nastran.f06'
     export_zona_filename = None if export_zona is False else 'nastran.zona'
     export_veas_filename = None if export_zona is False else 'nastran.veas'
+
+    # TODO: need a new parameter
+    vg_filename = None if export_zona is  None else 'vg_subcase_%i.png'
+    vg_vf_filename = None if export_zona is  None else 'vg_vf_subcase_%i.png'
+    kfreq_damping_filename = None if export_zona is  None else 'kfreq_damping_subcase_%i.png'
+    root_locus_filename = None if export_zona is  None else 'root_locus_subcase_%i.png'
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
                      f06_units=in_units,
@@ -118,7 +131,11 @@ def cmd_line_plot_flutter():  # pragma: no cover
                      noline=noline,
                      export_veas_filename=export_veas_filename,
                      export_zona_filename=export_zona_filename,
-                     export_f06_filename=export_f06_filename,)
+                     export_f06_filename=export_f06_filename,
+                     vg_filename=vg_filename,
+                     vg_vf_filename=vg_vf_filename,
+                     root_locus_filename=root_locus_filename,
+                     kfreq_damping_filename=kfreq_damping_filename)
 
 def split_float_colons(string_values):
     """
@@ -203,6 +220,7 @@ def split_int_colon(modes, nmax=1000):
     return modes
 
 def cmd_line():  # pragma: no cover
+    """the interface to ``f06`` on the command line"""
     import sys
     msg = (
         'Usage:\n'

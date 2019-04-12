@@ -5,7 +5,7 @@ from __future__ import print_function
 #import PySide
 import matplotlib.pyplot as plt
 
-# if you're on linux and you don't have a bacend, add this...
+# if you're on linux and you don't have a backend, add this...
 # we'd add it here, but it breaks PySide/PySide2's QApplication...
 #try:  # pragma: no cover
     #plt.figure()
@@ -18,7 +18,7 @@ from cpylog import get_logger2
 from pyNastran.f06.flutter_response import FlutterResponse
 
 
-def make_flutter_response(f06_filename, f06_units=None, out_units=None, log=None):
+def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt=False, log=None):
     """
     Creates the FlutterResponse object
 
@@ -88,7 +88,8 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, log=None
                     flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                               mach, density_ratio, method,
                                               modes, results,
-                                              f06_units=f06_units, out_units=out_units)
+                                              f06_units=f06_units, out_units=out_units,
+                                              make_alt=make_alt)
                     flutters[subcase] = flutter
                     modes = []
                     results = []
@@ -214,7 +215,8 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, log=None
         flutter = FlutterResponse(subcase, configuration, xysym, xzsym,
                                   mach, density_ratio, method,
                                   modes, results,
-                                  f06_units=f06_units, out_units=out_units)
+                                  f06_units=f06_units, out_units=out_units,
+                                  make_alt=make_alt)
         flutters[subcase] = flutter
     return flutters
 
@@ -240,21 +242,27 @@ def _get_units(units):
             units = {'velocity' : 'knots', 'density' : 'slug/ft^3',
                      'altitude' : 'ft', 'dynamic_pressure' : 'psf', 'eas':'knots'}
         else:
-            raise NotImplementedError('units=%r' % units)
+            raise NotImplementedError('units=%r must be in [si, english_in, '
+                                      'english_ft, english_kt]' % units)
     else:
         assert isinstance(units, dict), 'units=%r' % (units)
     return units
 
 
-def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
+def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=False,
                      plot_type='tas', modes=None,
                      plot_vg=False, plot_vg_vf=False, plot_root_locus=False,
-                     plot_kfreq_damping=False, show=True,
-                     xlim=None, ylim_damping=None, ylim_freq=None,
+                     plot_kfreq_damping=False,
+                     xlim=None, ylim_damping=None, ylim_freq=None, ylim_kfreq=None,
                      nopoints=False, noline=False,
                      export_zona_filename=None,
                      export_veas_filename=None,
                      export_f06_filename=None,
+                     vg_filename=None,
+                     vg_vf_filename=None,
+                     root_locus_filename=None,
+                     kfreq_damping_filename=None,
+                     show=True, clear=True,
                      log=None):
     """
     Plots a flutter (SOL 145) deck
@@ -319,18 +327,23 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None,
 
     """
     flutters = make_flutter_response(
-        f06_filename, f06_units=f06_units, out_units=out_units, log=log)
-    make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
+        f06_filename, f06_units=f06_units, out_units=out_units, make_alt=make_alt, log=log)
+
+    make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        nopoints, noline,
                        export_zona_filename=export_zona_filename,
                        export_veas_filename=export_veas_filename,
                        export_f06_filename=export_f06_filename,
-                       show=show)
+                       vg_filename=vg_filename,
+                       vg_vf_filename=vg_vf_filename,
+                       root_locus_filename=root_locus_filename,
+                       kfreq_damping_filename=kfreq_damping_filename,
+                       show=show, clear=clear)
     return flutters
 
-def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
+def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
                        plot_type,
                        plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
                        nopoints, noline,
@@ -338,36 +351,51 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq,
                        export_zona_filename=None,
                        export_veas_filename=None,
                        export_f06_filename=None,
-                       show=True):
+                       vg_filename=None,
+                       vg_vf_filename=None,
+                       root_locus_filename=None,
+                       kfreq_damping_filename=None,
+                       show=True, clear=False,):
     """actually makes the flutter plots"""
-    for unused_subcase, flutter in sorted(flutters.items()):
+    for subcase, flutter in sorted(flutters.items()):
         if plot_vg:
+            filenamei = None if vg_filename is None else vg_filename % subcase
             flutter.plot_vg(modes=modes,
-                            show=False,
-                            xlim=xlim, ylim=ylim_damping)
+                            plot_type=plot_type,
+                            xlim=xlim, ylim_damping=ylim_damping,
+                            png_filename=filenamei, show=False, clear=clear)
         if plot_vg_vf:
+            filenamei = None if vg_vf_filename is None else vg_vf_filename % subcase
             flutter.plot_vg_vf(modes=modes,
                                plot_type=plot_type,
-                               show=False,
                                xlim=xlim,
                                ylim_damping=ylim_damping, ylim_freq=ylim_freq,
                                nopoints=nopoints, noline=noline,
-                               legend=legend)
+                               legend=legend,
+                               png_filename=filenamei, show=False, clear=clear)
         if plot_root_locus:
-            flutter.plot_root_locus(modes=modes, show=False)
+            filenamei = None if root_locus_filename is None else root_locus_filename % subcase
+            flutter.plot_root_locus(modes=modes,
+                                    fig=None, axes=None,
+                                    xlim=None, ylim=None,
+                                    clear=clear, legend=True,
+                                    png_filename=filenamei,
+                                    show=False)
+
         if plot_kfreq_damping:
+            filenamei = None if kfreq_damping_filename is None else kfreq_damping_filename % subcase
             flutter.plot_kfreq_damping(modes=modes,
                                        plot_type=plot_type,
                                        ylim_damping=ylim_damping,
-                                       ylim_kfreq=None,
+                                       ylim_kfreq=ylim_kfreq,
                                        nopoints=nopoints, noline=noline,
-                                       show=False)
+                                       png_filename=filenamei, show=False, clear=clear)
         if export_zona_filename:
             flutter.export_to_zona(export_zona_filename, modes=modes,
                                    xlim=xlim, plot_type=plot_type)
         if export_veas_filename:
             flutter.export_to_veas(export_veas_filename, modes=modes)
-        if export_veas_filename:
+        if export_f06_filename:
             flutter.export_to_f06(export_f06_filename, modes=modes)
     if show:
         plt.show()
