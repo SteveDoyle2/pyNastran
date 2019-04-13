@@ -3,8 +3,8 @@ defines:
  - cmd_line_plot_flutter()
 """
 from __future__ import print_function
-import  matplotlib
-matplotlib.use('Qt5Agg')
+#import  matplotlib
+#matplotlib.use('Qt5Agg')
 #from pyNastran.gui.qt_version import qt_version
 
 def cmd_line_plot_flutter(argv=None, show=True):
@@ -15,7 +15,7 @@ def cmd_line_plot_flutter(argv=None, show=True):
     import pyNastran
     from pyNastran.f06.parse_flutter import plot_flutter_f06
     if argv is None:
-        argv = sys.argv# [1:]
+        argv = sys.argv
     msg = (
         'Usage:\n'
         '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
@@ -63,14 +63,13 @@ def cmd_line_plot_flutter(argv=None, show=True):
         '  -h, --help      show this help message and exit\n'''
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    print(argv)
     data = docopt(msg, version=ver,  argv=argv[1:])
     f06_filename = data['F06_FILENAME']
     if not f06_filename.lower().endswith('.f06'):

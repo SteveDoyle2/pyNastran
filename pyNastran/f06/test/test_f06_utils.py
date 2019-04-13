@@ -5,8 +5,8 @@ tests:
 import os
 import unittest
 from cpylog import get_logger2
-import  matplotlib
-matplotlib.use('Qt5Agg')
+#import  matplotlib
+#matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 
 #try:  # pragma: no cover
