@@ -1987,7 +1987,7 @@ def get_test_bdf_data(argv):
         '  -h, --help     show this help message and exit\n'
         "  -v, --version  show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)

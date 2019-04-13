@@ -25,7 +25,11 @@ from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_
 from pyNastran.bdf.mesh_utils.dev.create_vectorized_numbered import create_vectorized_numbered
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
-def cmd_line_create_vectorized_numbered():  # pragma: no cover
+
+def cmd_line_create_vectorized_numbered(argv=None):  # pragma: no cover
+    if argv is None:
+        argv = sys.argv
+
     msg = (
         'Usage:\n'
         '  bdf create_vectorized_numbered IN_BDF_FILENAME [OUT_BDF_FILENAME]\n'
@@ -40,13 +44,13 @@ def cmd_line_create_vectorized_numbered():  # pragma: no cover
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     from docopt import docopt
     import pyNastran
     ver = str(pyNastran.__version__)
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     print(data)
     bdf_filename_in = data['IN_BDF_FILENAME']
     if data['OUT_BDF_FILENAME']:
@@ -57,13 +61,16 @@ def cmd_line_create_vectorized_numbered():  # pragma: no cover
     create_vectorized_numbered(bdf_filename_in, bdf_filename_out)
 
 
-def cmd_line_equivalence():  # pragma: no cover
+def cmd_line_equivalence(argv=None):
     """command line interface to bdf_equivalence_nodes"""
+    if argv is None:
+        argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
         "Usage:\n"
-        "  bdf equivalence IN_BDF_FILENAME EQ_TOL  [-o OUT_BDF_FILENAME]\n"
+        "  bdf equivalence IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME]\n"
 
         '  bdf equivalence -h | --help\n'
         '  bdf equivalence -v | --version\n'
@@ -82,14 +89,14 @@ def cmd_line_equivalence():  # pragma: no cover
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     print(data)
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
@@ -108,8 +115,12 @@ def cmd_line_equivalence():  # pragma: no cover
                           crash_on_collapse=False,
                           debug=True)
 
-def cmd_line_bin():  # pragma: no cover
+
+def cmd_line_bin(argv=None):  # pragma: no cover
     """bins the model into nbins"""
+    if argv is None:
+        argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
@@ -142,14 +153,14 @@ def cmd_line_bin():  # pragma: no cover
         '  bdf bin fem.bdf 1 2 --cid 0 --nbins 50'
     )
 
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     bdf_filename = data['IN_BDF_FILENAME']
     axis1 = int(data['AXIS1'])
     axis2 = int(data['AXIS2'])
@@ -214,8 +225,11 @@ def cmd_line_bin():  # pragma: no cover
 
 
 
-def cmd_line_renumber():  # pragma: no cover
+def cmd_line_renumber(argv=None):
     """command line interface to bdf_renumber"""
+    if argv is None:
+        argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
@@ -239,14 +253,14 @@ def cmd_line_renumber():  # pragma: no cover
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     print(data)
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['OUT_BDF_FILENAME']
@@ -270,8 +284,12 @@ def cmd_line_renumber():  # pragma: no cover
                      starting_id_dict=None, round_ids=False,
                      cards_to_skip=cards_to_skip)
 
-def cmd_line_mirror():  # pragma: no cover
+
+def cmd_line_mirror(argv=None):
     """command line interface to write_bdf_symmetric"""
+    if argv is None:
+        argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
@@ -298,14 +316,14 @@ def cmd_line_mirror():  # pragma: no cover
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     if data['--tol'] is None:
         data['TOL'] = 0.000001
 
@@ -345,8 +363,12 @@ def cmd_line_mirror():  # pragma: no cover
                           debug=True)
     os.remove(bdf_filename_temp)
 
-def cmd_line_merge():  # pragma: no cover
+
+def cmd_line_merge(argv=None):
     """command line interface to bdf_merge"""
+    if argv is None:
+        argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
@@ -367,14 +389,14 @@ def cmd_line_merge():  # pragma: no cover
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     print(data)
     size = 16
     bdf_filenames = data['IN_BDF_FILENAMES']
@@ -389,8 +411,12 @@ def cmd_line_merge():  # pragma: no cover
     bdf_merge(bdf_filenames, bdf_filename_out, renumber=True,
               encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
 
-def cmd_line_convert():  # pragma: no cover
+
+def cmd_line_convert(argv=None):
     """command line interface to bdf_merge"""
+    if argv is None:
+        argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
@@ -409,14 +435,14 @@ def cmd_line_convert():  # pragma: no cover
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
@@ -451,7 +477,11 @@ def cmd_line_convert():  # pragma: no cover
         prop.comment = ''
     model.write_bdf(bdf_filename_out)
 
-def cmd_line_scale():
+
+def cmd_line_scale(argv=None):
+    if argv is None:
+        argv = sys.argv
+
     import argparse
     import textwrap
     import pyNastran
@@ -490,7 +520,7 @@ def cmd_line_scale():
     #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
     parent_parser.add_argument('-v', '--version', action='version',
                                version=pyNastran.__version__)
-    args = parent_parser.parse_args()
+    args = parent_parser.parse_args(args=argv[1:])
     print(args)
 
     scales = []
@@ -530,81 +560,12 @@ def cmd_line_scale():
     from pyNastran.bdf.mesh_utils.convert import scale_by_terms
     scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=bdf_filename_out)
 
-def cmd_line_scale2():  # pragma: no cover
-    """command line interface to bdf_merge"""
-    from docopt import docopt
 
-    import pyNastran
-    msg = (
-        "Usage:\n"
-        '  bdf scale IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] '
-        '[--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
-        '  bdf scale -h | --help\n'
-        '  bdf scale -v | --version\n'
-        '\n'
-
-        'Positional Arguments:\n'
-        '  IN_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
-        '\n'
-
-        'Options:\n'
-        '  IN_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
-        '  -o OUT, --output  OUT_BDF_FILENAME  path to output BDF/DAT/NAS file\n'
-        '  --l  LENGTH_SF                    length scale factor\n'
-        '  --m  MASS_SF                      mass scale factor\n'
-        '  --f  FORCE_SF                     force scale factor\n'
-        '  --p  PRESSURE_SF                  pressure scale factor\n'
-        '  --t  TIME_SF                      time scale factor\n'
-        '  --v  VEL_SF                       velocity scale factor\n'
-        '\n'
-
-        'Info:\n'
-        '  -h, --help      show this help message and exit\n'
-        "  -v, --version   show program's version number and exit\n"
-    )
-    if len(sys.argv) == 1:
-        sys.exit(msg)
-
-    ver = str(pyNastran.__version__)
-    data = docopt(msg, version=ver)
-    print(data)
-    size = 16
-    bdf_filename = data['IN_BDF_FILENAME']
-    bdf_filename_out = data['--output']
-    if bdf_filename_out is None:
-        bdf_filename_out = bdf_filename + '.scale.bdf'
-
-    terms = []
-    scales = []
-    print(data)
-    if data['MASS_SF']:
-        scale = data['MASS_SF']
-        scales.append(scale)
-        terms.append('M')
-    if data['LENGTH_SF']:
-        scale = data['LENGTH_SF']
-        scales.append(scale)
-        terms.append('L')
-    if data['TIME_SF']:
-        scale = data['TIME_SF']
-        scales.append(scale)
-        terms.append('T')
-    if data['FORCE_SF']:
-        scale = data['FORCE_SF']
-        scales.append(scale)
-        terms.append('F')
-    if data['PRESSURE_SF']:
-        scale = data['PRESSURE_SF']
-        scales.append(scale)
-        terms.append('P')
-    if data['VEL_SF']:
-        scale = data['VEL_SF']
-        scales.append(scale)
-        terms.append('V')
-
-
-def cmd_line_export_mcids():  # pragma: no cover
+def cmd_line_export_mcids(argv=None):  # pragma: no cover
     """command line interface to export_mcids"""
+    if argv is None:
+        argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
@@ -632,14 +593,14 @@ def cmd_line_export_mcids():  # pragma: no cover
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
@@ -671,8 +632,11 @@ def cmd_line_export_mcids():  # pragma: no cover
         model.log.info('wrote %s' % csv_filename)
 
 
-def cmd_line_split_cbars_by_pin_flag():  # pragma: no cover
+def cmd_line_split_cbars_by_pin_flag(argv=None):  # pragma: no cover
     """command line interface to split_cbars_by_pin_flag"""
+    if argv is None:
+        argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
@@ -693,14 +657,14 @@ def cmd_line_split_cbars_by_pin_flag():  # pragma: no cover
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     print(data)
     size = 16
     bdf_filename_in = data['IN_BDF_FILENAME']
@@ -715,8 +679,11 @@ def cmd_line_split_cbars_by_pin_flag():  # pragma: no cover
     split_cbars_by_pin_flag(bdf_filename_in, pin_flags_filename=pin_flags_filename,
                             bdf_filename_out=bdf_filename_out)
 
-def cmd_line_transform():  # pragma: no cover
+def cmd_line_transform(argv=None):
     """command line interface to export_caero_mesh"""
+    if argv is None:
+        argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
@@ -738,14 +705,14 @@ def cmd_line_transform():  # pragma: no cover
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
@@ -765,18 +732,20 @@ def cmd_line_transform():  # pragma: no cover
     nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = model.get_xyz_in_coord_array(
         cid=0, fdtype='float64', idtype='int32')
 
-    update_nodes = False
+    update_nodesi = False
     # we pretend to change the SPOINT location
     if dxyz is not None:
         xyz_cid0 += dxyz
-        update_nodes = True
+        update_nodesi = True
 
     if update_nodes:
         update_nodes(model, nid_cp_cd, xyz_cid0)
         model.write_bdf(bdf_filename_out)
 
-def cmd_line_filter():  # pragma: no cover
-    """command line interface to export_caero_mesh"""
+def cmd_line_filter(argv=None):  # pragma: no cover
+    """command line interface to bdf filter"""
+    if argv is None:
+        argv = sys.argv
     from docopt import docopt
     import pyNastran
     msg = (
@@ -808,14 +777,14 @@ def cmd_line_filter():  # pragma: no cover
         '2. remove GRID points and associated cards with y value < 0:\n'
         "   >>> bdf filter fem.bdf --y '< 0.'"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
@@ -897,6 +866,7 @@ def cmd_line_filter():  # pragma: no cover
                   remove_pids=True, remove_mids=True)
     model.write_bdf(bdf_filename_out)
 
+
 def _union(xval, iunion, ix):
     """helper method for ``filter``"""
     import numpy as np
@@ -907,8 +877,12 @@ def _union(xval, iunion, ix):
             pass
     return iunion
 
-def cmd_line_export_caero_mesh():  # pragma: no cover
+
+def cmd_line_export_caero_mesh(argv=None):
     """command line interface to export_caero_mesh"""
+    if argv is None:
+        argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
@@ -930,14 +904,14 @@ def cmd_line_export_caero_mesh():  # pragma: no cover
         '  -h, --help      show this help message and exit\n'
         "  -v, --version   show program's version number and exit\n"
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
     print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
@@ -949,8 +923,11 @@ def cmd_line_export_caero_mesh():  # pragma: no cover
     model = read_bdf(bdf_filename)
     model.write_caero_model(caero_bdf_filename)
 
-def cmd_line():  # pragma: no cover
+def cmd_line(argv=None):
     """command line interface to multiple other command line scripts"""
+    if argv is None:
+        argv = sys.argv
+
     dev = True
     msg = (
         'Usage:\n'
@@ -996,37 +973,37 @@ def cmd_line():  # pragma: no cover
     msg += '  bdf -v | --version\n'
     msg += '\n'
 
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     #assert sys.argv[0] != 'bdf', msg
 
-    if sys.argv[1] == 'merge':
-        cmd_line_merge()
-    elif sys.argv[1] == 'equivalence':
-        cmd_line_equivalence()
-    elif sys.argv[1] == 'renumber':
-        cmd_line_renumber()
-    elif sys.argv[1] == 'mirror':
-        cmd_line_mirror()
-    elif sys.argv[1] == 'convert':
-        cmd_line_convert()
-    elif sys.argv[1] == 'scale':
-        cmd_line_scale()
-    elif sys.argv[1] == 'export_mcids':
-        cmd_line_export_mcids()
-    elif sys.argv[1] == 'split_cbars_by_pin_flags':
-        cmd_line_split_cbars_by_pin_flag()
-    elif sys.argv[1] == 'export_caero_mesh':
-        cmd_line_export_caero_mesh()
-    elif sys.argv[1] == 'transform':
-        cmd_line_transform()
-    elif sys.argv[1] == 'filter' and dev:  # TODO: make better name
-        cmd_line_filter()
-    elif sys.argv[1] == 'bin' and dev:
-        cmd_line_bin()
-    elif sys.argv[1] == 'create_vectorized_numbered' and dev:
-        cmd_line_create_vectorized_numbered()
+    if argv[1] == 'merge':
+        cmd_line_merge(argv)
+    elif argv[1] == 'equivalence':
+        cmd_line_equivalence(argv)
+    elif argv[1] == 'renumber':
+        cmd_line_renumber(argv)
+    elif argv[1] == 'mirror':
+        cmd_line_mirror(argv)
+    elif argv[1] == 'convert':
+        cmd_line_convert(argv)
+    elif argv[1] == 'scale':
+        cmd_line_scale(argv)
+    elif argv[1] == 'export_mcids':
+        cmd_line_export_mcids(argv)
+    elif argv[1] == 'split_cbars_by_pin_flags':
+        cmd_line_split_cbars_by_pin_flag(argv)
+    elif argv[1] == 'export_caero_mesh':
+        cmd_line_export_caero_mesh(argv)
+    elif argv[1] == 'transform':
+        cmd_line_transform(argv)
+    elif argv[1] == 'filter' and dev:  # TODO: make better name
+        cmd_line_filter(argv)
+    elif argv[1] == 'bin' and dev:
+        cmd_line_bin(argv)
+    elif argv[1] == 'create_vectorized_numbered' and dev:
+        cmd_line_create_vectorized_numbered(argv)
     else:
         sys.exit(msg)
         #raise NotImplementedError('arg1=%r' % sys.argv[1])

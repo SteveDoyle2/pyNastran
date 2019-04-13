@@ -1581,7 +1581,7 @@ class TestOP2(Tester):
                 write_f06=write_f06,
                 log=log, stop_on_failure=True, quiet=True)
 
-        argv = ['test_op2', op2_filename, '-tgcn', '--quiet']
+        argv = ['test_op2', op2_filename, '-tgc', '--quiet', '--safe']
         test_op2(argv)
 
     def test_op2_good_sine_01(self):
