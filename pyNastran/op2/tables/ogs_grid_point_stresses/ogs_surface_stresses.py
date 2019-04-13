@@ -245,7 +245,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
                         if not np.allclose(t1, t2):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s, %s)\n' % (
-                                nid, eid,
+                                nid,
                                 lxa1, lxb1, lxc1, lya1, lyb1, lyc1, lza1,
                                 lxa2, lxb2, lxc2, lya2, lyb2, lyc2, lza2)
                             i += 1

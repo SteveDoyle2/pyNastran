@@ -4,7 +4,7 @@ from six import integer_types
 import numpy as np
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
-from pyNastran.f06.f06_formatting import write_imag_floats_13e
+from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
 
 
 class ComplexCBush1DArray(OES_Object):

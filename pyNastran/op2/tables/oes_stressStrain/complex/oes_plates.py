@@ -116,7 +116,7 @@ class ComplexTriaxStressArray(OES_Object):
 
         # dt, eid, loc, rs, azs, As, ss
 
-        assert isinstance(node_id, int), node_id
+        assert isinstance(eid, int), eid
         #self.data[self.itime, self.itotal] = [oxx, oyy, txy]
         #self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
         #self.fiber_curvature[self.itotal] = fdr

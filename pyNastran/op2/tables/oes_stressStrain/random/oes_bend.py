@@ -167,7 +167,7 @@ class RandomBendArray(OES_Object):
         #self.itotal += 1
         #self.ielement += 1
 
-    def add_sort1(self, unused_dt, eid, grid, angle, sxc, sxd, sxe, sxf):
+    def add_sort1(self, dt, eid, grid, angle, sxc, sxd, sxe, sxf):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_node[self.itotal, :] = [eid, grid]

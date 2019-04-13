@@ -91,7 +91,7 @@ class RandomShearArray(OES_Object):
                     for ieid, eid, in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (max_shear, avg_shear) = t1
+                        (max_shear1, avg_shear1) = t1
                         (max_shear2, avg_shear2) = t2
                         if not allclose(t1, t2):
                         #if not np.array_equal(t1, t2):

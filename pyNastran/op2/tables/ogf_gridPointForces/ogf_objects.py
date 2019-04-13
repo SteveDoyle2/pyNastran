@@ -1299,6 +1299,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         name = mode
         """
         headers = self.get_headers()
+        import pandas as pd
         column_names, column_values = self._build_dataframe_transient_header()
         if self.is_unique:
             #node_element = [self.node_element[:, 0], self.node_element[:, 1]]

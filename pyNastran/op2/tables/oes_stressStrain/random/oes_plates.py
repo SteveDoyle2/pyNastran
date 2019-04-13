@@ -129,16 +129,16 @@ class RandomPlateArray(OES_Object):
                         if not np.allclose(
                                 [oxx1, oyy1, txy1], # atol=0.0001
                                 [oxx2, oyy2, txy2], atol=0.075):
-                            ni = len(str(eid)) + len(str(nid))
+                            ni = len(str(eid)) + len(str(eid))
                         #if not np.array_equal(t1, t2):
-                            msg += ('(%s %s)  (%s, %s, %s)\n'
-                                    '%s     (%s, %s, %s)\n' % (
-                                        eid, nid,
+                            msg += ('%s  (%s, %s, %s)\n'
+                                    '%s  (%s, %s, %s)\n' % (
+                                        eid,
                                         oxx1, oyy1, txy1,
                                         ' ' * ni,
                                         oxx2, oyy2, txy2,
                                     ))
-                            msg += ('%s     (%s, %s, %s)\n'
+                            msg += ('%s  (%s, %s, %s)\n'
                                     % (
                                         ' ' * ni,
                                         oxx1 - oxx2,

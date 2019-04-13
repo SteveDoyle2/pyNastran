@@ -5,6 +5,7 @@ from six import integer_types
 import numpy as np
 from numpy import zeros, array_equal
 
+from pyNastran.utils.numpy_utils import float_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, SORT2_TABLE_NAME_MAP)
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_13e, _eigenvalue_header

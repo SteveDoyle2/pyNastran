@@ -93,6 +93,7 @@ class ComplexBeamArray(OES_Object):
 
     def _build_dataframe(self):
         """creates a pandas dataframe"""
+        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,

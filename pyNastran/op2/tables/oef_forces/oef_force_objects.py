@@ -6,7 +6,7 @@ from six import integer_types, string_types
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
-
+from pyNastran.utils.numpy_utils import float_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_12e,
@@ -421,8 +421,8 @@ class RealSpringDamperForceArray(RealForceObject):
             if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
                         (force1, stress1) = t1
                         (force2, stress2) = t2
                         if not allclose(t1, t2):
@@ -1062,8 +1062,8 @@ class RealCBeamForceArray(RealForceObject):
             if self.is_sort1:
                 for itime in range(ntimes):
                     for ieid, eid, in enumerate(self.element):
-                        t1 = self.data[itime, inid, :]
-                        t2 = table.data[itime, inid, :]
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
                         (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
                         (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
                         if not np.allclose(t1, t2):
@@ -1893,7 +1893,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         raise NotImplementedError('SORT2')
         #if dt not in self.mx:
             #self.add_new_transient(dt)
-        self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        #self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
 
     def get_stats(self, short=False):
         if not self.is_built:
@@ -2212,7 +2212,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         raise NotImplementedError('SORT2')
         #if dt not in self.mx:
             #self.add_new_transient(dt)
-        self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
+        #self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
 
     @property
     def nnodes_per_element(self):
