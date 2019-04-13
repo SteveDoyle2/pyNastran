@@ -5,8 +5,8 @@ tests:
 import os
 import unittest
 from cpylog import get_logger2
-#import  matplotlib
-#matplotlib.use('Qt5Agg')
+import  matplotlib
+matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 
 #try:  # pragma: no cover
@@ -16,10 +16,12 @@ import matplotlib.pyplot as plt
 plt.switch_backend('Agg')
 
 import pyNastran
-from pyNastran.f06.utils import split_float_colons, split_int_colon
+from pyNastran.f06.utils import split_float_colons, split_int_colon, cmd_line_plot_flutter
 from pyNastran.f06.parse_flutter import plot_flutter_f06, make_flutter_plots
 
 PKG_PATH = pyNastran.__path__[0]
+MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+
 
 class TestF06Utils(unittest.TestCase):
     def test_split_float_colon(self):
@@ -53,16 +55,14 @@ class TestF06Utils(unittest.TestCase):
 
     def test_plot_flutter(self):
         """tests plot_flutter_f06"""
-        f06_filename = os.path.join(PKG_PATH, '..', 'models',
-                                    'aero', 'bah_plane', 'bah_plane.f06')
+        f06_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.f06')
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         plot_flutter_f06(f06_filename, show=False, log=log)
         plt.close()
 
     def test_plot_flutter2(self):
         """tests plot_flutter_f06"""
-        f06_filename = os.path.join(PKG_PATH, '..', 'models',
-                                    'aero', '2_mode_flutter', '0012_flutter.f06')
+        f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         plot_flutter_f06(
             f06_filename, make_alt=True,
@@ -110,13 +110,6 @@ class TestF06Utils(unittest.TestCase):
                 plot_kfreq_damping=True,
                 show=True, log=log)
 
-        #fluttersb = plot_flutter_f06(
-            #f06_filename,
-            #plot_type='alt',
-            #f06_units='english_in', out_units='english_kt',
-            #plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
-            #plot_kfreq_damping=True,
-            #show=False, log=log)
         plot_flutter_f06(
             f06_filename,
             plot_type='rho',
@@ -188,6 +181,12 @@ class TestF06Utils(unittest.TestCase):
         os.remove('nastran.veas')
         os.remove('zona.f06')
 
+    def test_cmd_line_plot_flutter(self):
+        f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
+        argv = ['f06', 'plot_145', f06_filename, '--eas',
+                '--in_units', 'si', '--out_units', 'english_in',
+                '--modes', '1:', '--ylimdamp', '-.3:']
+        cmd_line_plot_flutter(argv=argv, show=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

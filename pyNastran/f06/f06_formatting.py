@@ -1,8 +1,10 @@
+from typing import List
 import numpy as np
 from pyNastran.utils import object_attributes
 
 
 def write_float_12e(val):
+    # type: (float) -> str
     """writes a Nastran formatted 12.5 float"""
     v2 = '%12.5E' % val
     if v2 in (' 0.00000E+00', '-0.00000E+00'):
@@ -11,6 +13,7 @@ def write_float_12e(val):
 
 
 def write_float_13e(val):
+    # type: (float) -> str
     """writes a Nastran formatted 13.6 float"""
     val2 = '%13.6E' % val
     if val2 in (' 0.000000E+00', '-0.000000E+00'):
@@ -19,6 +22,7 @@ def write_float_13e(val):
 
 
 def write_floats_10e(vals):
+    # type: (List[float]) -> List[str]
     """writes a series of Nastran formatted 10.3 floats"""
     vals2 = []
     for v in vals:
@@ -30,6 +34,7 @@ def write_floats_10e(vals):
 
 
 def write_floats_12e(vals):
+    # type: (List[float]) -> List[str]
     """writes a series of Nastran formatted 12.5 floats"""
     vals2 = []
     for v in vals:
@@ -41,6 +46,7 @@ def write_floats_12e(vals):
 
 
 def write_floats_13e(vals):
+    # type: (List[float]) -> List[str]
     """writes a series of Nastran formatted 13.6 floats"""
     vals2 = []
     for v in vals:
@@ -52,6 +58,7 @@ def write_floats_13e(vals):
 
 
 def write_imag_floats_13e(vals, is_mag_phase):
+    # type: (List[float], bool) -> str
     vals2 = []
 
     if is_mag_phase:
@@ -85,6 +92,7 @@ def write_imag_floats_13e(vals, is_mag_phase):
 
 
 def write_floats_8p4f(vals):
+    # type: (List[float]) -> List[str]
     """writes an 8.4F formatted number"""
     vals2 = []
     for val in vals:
@@ -97,6 +105,7 @@ def write_floats_8p4f(vals):
     return vals2
 
 def write_floats_8p1e(vals):
+    # type: (List[float]) -> List[str]
     """writes an 8.1E formatted number"""
     vals2 = []
     for val in vals:

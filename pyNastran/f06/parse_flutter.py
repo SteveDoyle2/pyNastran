@@ -2,6 +2,7 @@
 SOL 145 plotter
 """
 from __future__ import print_function
+from typing import  Optional, Dict, Union
 #import PySide
 import matplotlib.pyplot as plt
 
@@ -221,6 +222,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
     return flutters
 
 def _get_units(units):
+    # type: (Optional[Union[str, Dict[str, str]]]) -> Optional[Union[str, Dict[str, str]]]
     """gets the units"""
     if units is None:
         units = 'english_in'
@@ -262,7 +264,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                      vg_vf_filename=None,
                      root_locus_filename=None,
                      kfreq_damping_filename=None,
-                     show=True, clear=True,
+                     show=True, clear=False,
                      log=None):
     """
     Plots a flutter (SOL 145) deck

@@ -11,6 +11,7 @@ import copy
 from datetime import date
 from collections import defaultdict
 from traceback import print_exc
+from typing import Optional, List, Dict, Union
 
 from six import string_types
 
@@ -44,6 +45,7 @@ def make_stamp(title, today=None, build=None):
 
 
 def make_f06_header():
+    # type: () -> str
     spaces = ''
     lines1 = [
         spaces + '/* -------------------------------------------------------------------  */\n',
@@ -101,6 +103,7 @@ def make_f06_header():
 
 
 def sorted_bulk_data_header():
+    # type: () -> str
     """creates the bulk data echo header"""
     msg = '0                                                 S O R T E D   B U L K   D A T A   E C H O                                         \n'
     msg += '                 ENTRY                                                                                                              \n'
@@ -109,6 +112,7 @@ def sorted_bulk_data_header():
 
 
 def make_end(end_flag=False, options=None):
+    # type: (bool, Optional[Dict[str, str]]) -> str
     """creates the F06 footer"""
     lines = []
     lines2 = []
@@ -195,13 +199,16 @@ class F06Writer(OP2_F06_Common):
         self._results = ResultSet(self.get_all_results(), self.log)
 
     def get_all_results(self):
+        # type: () -> List[str]
         all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()
         return all_results
 
     def clear_results(self):
+        # type: () -> None
         self._results.clear()
 
     def add_results(self, results):
+        # type: (Union[str, List[str]]) -> None
         if isinstance(results, string_types):
             results = [results]
         all_results = self.get_all_results()
@@ -235,10 +242,12 @@ class F06Writer(OP2_F06_Common):
             self._results.add(result)
 
     def set_results(self, results):
+        # type: (Union[str, List[str]]) -> None
         self.clear_results()
         self.add_results(results)
 
     def remove_results(self, results):
+        # type: (Union[str, List[str]]) -> None
         self._results.remove(results)
 
     def make_f06_header(self):
@@ -365,6 +374,7 @@ class F06Writer(OP2_F06_Common):
                   is_mag_phase=False, is_sort1=True,
                   delete_objects=True, end_flag=False, quiet=True, repr_check=False,
                   close=True):
+        # type: (str, Optional[str], bool, bool, bool, bool, bool, bool, bool) -> None
         """
         Writes an F06 file based on the data we have stored in the object
 

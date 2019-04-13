@@ -3,17 +3,19 @@ defines:
  - cmd_line_plot_flutter()
 """
 from __future__ import print_function
-#import  matplotlib
-#matplotlib.use('Qt5Agg')
+import  matplotlib
+matplotlib.use('Qt5Agg')
 #from pyNastran.gui.qt_version import qt_version
 
-def cmd_line_plot_flutter():  # pragma: no cover
+def cmd_line_plot_flutter(argv=None, show=True):
     """the interface to ``f06 plot_145`` on the command line"""
-    import os
     import sys
+    import os
     from docopt import docopt
     import pyNastran
     from pyNastran.f06.parse_flutter import plot_flutter_f06
+    if argv is None:
+        argv = sys.argv# [1:]
     msg = (
         'Usage:\n'
         '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim XLIM] [--ylimdamp DAMP] [--ylimfreq FREQ]'
@@ -68,7 +70,8 @@ def cmd_line_plot_flutter():  # pragma: no cover
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver)
+    print(argv)
+    data = docopt(msg, version=ver,  argv=argv[1:])
     f06_filename = data['F06_FILENAME']
     if not f06_filename.lower().endswith('.f06'):
         base = os.path.splitext(f06_filename)[0]
@@ -135,7 +138,7 @@ def cmd_line_plot_flutter():  # pragma: no cover
                      vg_filename=vg_filename,
                      vg_vf_filename=vg_vf_filename,
                      root_locus_filename=root_locus_filename,
-                     kfreq_damping_filename=kfreq_damping_filename)
+                     kfreq_damping_filename=kfreq_damping_filename, show=show)
 
 def split_float_colons(string_values):
     """

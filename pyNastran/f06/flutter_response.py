@@ -1,5 +1,7 @@
 from __future__ import print_function
 from itertools import count
+from typing import  List, Any, Optional, Dict, Union
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -17,6 +19,7 @@ class FlutterResponse(object):
     def __init__(self, subcase, configuration, xysym, xzsym, mach, density_ratio, method,
                  modes, results,
                  f06_units=None, out_units=None, make_alt=False):
+        # type: int, str, str, str, float, float, str, List[int], Any, Optional[Union[str, Dict[str, str]]], Optional[Union[str, Dict[str, str]]], Optional[bool] -> None
         """
         Parameters
         ----------
@@ -226,9 +229,11 @@ class FlutterResponse(object):
                 self._symbols.append(color + symbol)
 
     def set_plot_options(self, noline=False):
+        # type: (bool) -> None
         self.noline = noline
 
     def _get_unit_factor(self, name):
+        # type: (str) -> float, str
         if not self.f06_units or not self.out_units:
             msg = 'name=%r f06_units=%s out_units=%s' % (name, self.f06_units, self.out_units)
             raise RuntimeError(msg)
@@ -256,6 +261,7 @@ class FlutterResponse(object):
     @property
     def symbols(self):
         """gets the symbols for the lines"""
+        # type: () -> List[str]
         if not self.noline:
             symbols = [symbol + '-' for symbol in self._symbols]
         else:
@@ -682,6 +688,7 @@ class FlutterResponse(object):
             fig.clear()
 
     def export_to_veas(self, veas_filename, modes=None):
+        # type: (str, Optional[List[int]])
         """
         Exports a ZONA .veas file
 
