@@ -2450,7 +2450,7 @@ class GetCard(GetMethods):
             elif prop_type in ['PSHELL']:
                 mids = prop.material_ids
                 for i, mid in enumerate(mids):
-                    if mid is None:
+                    if mid is None or mid == 0:
                         continue
                     try:
                         mid_to_pids_map[mid].append(pid)

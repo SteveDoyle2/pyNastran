@@ -570,7 +570,7 @@ def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf,
                     raise
         #os.remove(bdf_filename)
 
-def get_test_op2_data():
+def get_test_op2_data(argv):
     """defines the docopt interface"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
@@ -629,10 +629,10 @@ def get_test_op2_data():
     msg += "  -h, --help     Show this help message and exit\n"
     msg += "  -v, --version  Show program's version number and exit\n"
 
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
-    data = docopt(msg, version=ver)
+    data = docopt(msg, version=ver, argv=argv[1:])
 
     if is_release:
         data['--profile'] = False
@@ -647,9 +647,12 @@ def get_test_op2_data():
     #print("data", data)
     return data
 
-def main():
+def main(argv=None):
     """the interface for test_op2"""
-    data = get_test_op2_data()
+    if argv is None:
+        argv = sys.argv
+
+    data = get_test_op2_data(argv)
     for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
@@ -719,5 +722,5 @@ def main():
         )
     print("dt = %f" % (time.time() - time0))
 
-if __name__ == '__main__':  # op2
+if __name__ == '__main__':  # pragma: no cover
     main()

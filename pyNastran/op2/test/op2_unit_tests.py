@@ -24,7 +24,7 @@ from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
-from pyNastran.op2.test.test_op2 import run_op2
+from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
 
 from pyNastran.bdf.test.bdf_unit_tests import Tester
 #from pyNastran.op2.tables.oef_forces.oef_force_objects import (
@@ -1580,6 +1580,9 @@ class TestOP2(Tester):
         run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                 write_f06=write_f06,
                 log=log, stop_on_failure=True, quiet=True)
+
+        argv = ['test_op2', op2_filename, '-tgcn', '--quiet']
+        test_op2(argv)
 
     def test_op2_good_sine_01(self):
         """tests freq_sine/good_sine.op2"""

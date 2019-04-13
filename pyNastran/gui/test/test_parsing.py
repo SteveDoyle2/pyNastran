@@ -15,7 +15,7 @@ class GuiParsing(unittest.TestCase):
     def test_parse_1(self):
         """tests parsing of the pyNastranGUI command line"""
         keys_to_remove = ['noupdate', 'log', 'test', 'geomscript', 'postscript', 'qt',
-                          'plugin', 'is_groups', 'user_geom', 'user_points', 'debug']
+                          'plugin', 'is_groups', 'groups', 'user_geom', 'user_points', 'debug']
         with open('fem.bdf', 'w') as unused_bdf_file:
             pass
         with open('fem.op2', 'w') as unused_op2_file:
@@ -67,7 +67,7 @@ class GuiParsing(unittest.TestCase):
     def test_parse_2(self):
         """tests parsing of the pyNastranGUI command line"""
         keys_to_remove = ['noupdate', 'log', 'test', 'geomscript', 'postscript', 'qt',
-                          'plugin', 'is_groups', 'debug']
+                          'plugin', 'is_groups', 'groups', 'debug']
 
         # user_points
         args = ['pyNastranGUI', 'fem.bdf', '--points_fname', 'fem.dat']
@@ -95,7 +95,7 @@ class GuiParsing(unittest.TestCase):
     def test_parse_3(self):
         """tests parsing of the pyNastranGUI command line"""
         keys_to_remove = ['noupdate', 'log', 'test', 'qt',
-                          'plugin', 'is_groups', 'user_geom', 'user_points', 'debug']
+                          'plugin', 'is_groups', 'groups', 'user_geom', 'user_points', 'debug']
 
         args = ['pyNastranGUI', 'fem.bdf', '--geomscript', 'myscript.py']
         if os.path.exists('myscript.py'):  # pragma: no cover

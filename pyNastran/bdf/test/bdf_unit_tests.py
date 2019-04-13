@@ -11,7 +11,7 @@ from pyNastran.utils import object_attributes, object_methods
 #from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.write_path import write_include, _split_path
-from pyNastran.bdf.test.test_bdf import run_bdf, compare, run_lots_of_files
+from pyNastran.bdf.test.test_bdf import run_bdf, compare, run_lots_of_files, main as test_bdf
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'test')
@@ -758,6 +758,18 @@ class TestBDF(Tester):
             assert fem.card_count['AEROS'] == 1, fem.card_count
             assert fem.card_count['FLUTTER'] == 4, fem.card_count
             assert fem.card_count['DOPTPRM'] == 1, fem.card_count
+
+    def test_aero_02(self):
+        """checks solid_bending.dat"""
+        bdf_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.bdf')
+        log = get_logger(log=None, level='error', encoding='utf-8')
+        argv = ['test_bdf', bdf_filename, '-q']
+        test_bdf(argv=argv)
+        #self.run_bdf('', bdf_filename, log=log)
+        #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, xref=True, log=log)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
 
 def compare_mass_cg_inertia(fem1, reference_point=None, sym_axis=None):
     unused_mass1, unused_cg1, unused_I1 = fem1.mass_properties(

@@ -1931,7 +1931,7 @@ def run_argparse(argv=None):
         raise
     return vars(args)
 
-def get_test_bdf_data():
+def get_test_bdf_data(argv):
     """defines the docopt interface"""
     encoding = sys.getdefaultencoding()
 
@@ -1994,7 +1994,7 @@ def get_test_bdf_data():
     type_defaults = {
         '--nerrors' : [int, 100],
     }
-    data = docopt_types(msg, version=ver, type_defaults=type_defaults)
+    data = docopt_types(msg, version=ver, argv=argv[1:], type_defaults=type_defaults)
 
     data['--xref'] = not data['--xref']
     data['--loads'] = not data['--loads']
@@ -2003,11 +2003,14 @@ def get_test_bdf_data():
 
     return data
 
-def main():
+def main(argv=None):
     """
     The main function for the command line ``test_bdf`` script.
     """
-    data = get_test_bdf_data()
+    if argv is None:
+        argv = sys.argv
+
+    data = get_test_bdf_data(argv)
     for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 

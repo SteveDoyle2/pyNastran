@@ -1255,6 +1255,7 @@ class PCOMPG(CompositeShellProperty):
                 #i += 1
 
     def GlobalPlyID(self, iply):
+        """returns the global ply id for the specified layer"""
         global_ply_id = self.global_ply_ids[iply]
         return global_ply_id
 
@@ -1262,9 +1263,9 @@ class PCOMPG(CompositeShellProperty):
         list_fields = [
             'PCOMPG', self.pid, self.z0, self.nsm, self.sb, self.ft,
             self.tref, self.ge, self.lam, ]
-        zipi = zip(self.material_ids, self.thicknesses, self.thetas,
-                   self.souts, self.global_ply_ids)
-        for (mid, t, theta, sout, global_ply_id) in zipi:
+        for (mid, t, theta, sout, global_ply_id) in zip(
+                self.material_ids, self.thicknesses, self.thetas, self.souts,
+                self.global_ply_ids):
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
         return list_fields
 
@@ -1419,6 +1420,7 @@ class PLPLANE(ShellProperty):
         #return 0.
 
     def Mid(self):
+        """returns the material id"""
         if self.mid_ref is not None:
             return self.mid_ref.mid
         return self.mid
@@ -1517,6 +1519,7 @@ class PPLANE(ShellProperty):
         #return self.pid
 
     def Mid(self):
+        """returns the material id"""
         if self.mid_ref is not None:
             return self.mid_ref.mid
         return self.mid
@@ -1659,12 +1662,15 @@ class PSHEAR(ShellProperty):
         self.mid_ref = None
 
     def Thickness(self):
+        """returns the thickness of the element"""
         return self.t
 
     def Rho(self):
+        """returns the material density"""
         return self.mid_ref.Rho()
 
     def Mid(self):
+        """returns the material id"""
         if self.mid_ref is not None:
             return self.mid_ref.mid
         return self.mid
@@ -1991,15 +1997,18 @@ class PSHELL(ShellProperty):
             assert isinstance(mpa, float), 'mass_per_area=%r' % mpa
 
     def get_z_locations(self):
+        """returns the locations of the bottom and top surface of the shell"""
         z = array([self.z1, self.z2])
         return z
 
     def materials(self):
+        """returns the material objects referenced by the shell"""
         materials = [self.mid1_ref, self.mid2_ref, self.mid3_ref, self.mid4_ref]
         return materials
 
     @property
     def material_ids(self):
+        """returns the material ids"""
         return [self.Mid1(), self.Mid2(), self.Mid3(), self.Mid4()]
 
     #@property
@@ -2012,22 +2021,26 @@ class PSHELL(ShellProperty):
 
     @property
     def mid_ref(self):
+        """returns the material used for mass"""
         if self.mid1_ref is not None:
             return self.mid1_ref
         return self.mid2_ref
 
     def Mid(self):
+        """returns the material id used for mass"""
         mid1 = self.Mid1()
         if mid1 is not None:
             return mid1
         return self.Mid2()
 
     def Mid1(self):
+        """returns the extension material id"""
         if self.mid1_ref is not None:
             return self.mid1_ref.mid
         return self.mid1
 
     def Mid2(self):
+        """returns the bending material id"""
         if self.mid2_ref is not None:
             return self.mid2_ref.mid
         return self.mid2
@@ -2043,6 +2056,7 @@ class PSHELL(ShellProperty):
         return self.mid4
 
     def Thickness(self, tflag=1, tscales=None):
+        """returns the thickness of the element"""
         t0 = self.t
         if tscales is not None:
             nt = len(tscales)
@@ -2062,9 +2076,11 @@ class PSHELL(ShellProperty):
         return thickness
 
     def Rho(self):
+        """returns the material density"""
         return self.mid_ref.rho
 
     def Nsm(self):
+        """returns the non-structural mass"""
         return self.nsm
 
     def MassPerArea(self, tflag=1, tscales=None):
@@ -2099,7 +2115,7 @@ class PSHELL(ShellProperty):
 
     def MassPerArea_structure(self):
         """
-        Calculates mass per area.
+        Calculates mass per area without considering non-structural mass.
 
         .. math:: \frac{m}{A} = nsm + \rho t"""
         mid_ref = self.mid_ref
