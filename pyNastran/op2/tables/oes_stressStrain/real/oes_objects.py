@@ -2,7 +2,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from six import string_types
 import numpy as np
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 SORT2_TABLE_NAME_MAP = {
@@ -23,13 +23,13 @@ SORT2_TABLE_NAME_MAP = {
     'OSTRRMS2' : 'OSTRRMS1',
 }
 
-class OES_Object(ScalarObject):
+class OES_Object(BaseElement):
     def __init__(self, data_code, isubcase, apply_data_code=True):
         self.element_type = None
         self.element_name = None
         self.nonlinear_factor = np.nan
         self._times = None
-        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
+        BaseElement.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
         #self.log.debug("starting OES...element_name=%-6s isubcase=%s" % (self.element_name, self.isubcase))
         #print self.data_code
 

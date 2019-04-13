@@ -5,7 +5,7 @@ from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.op2.tables.oef_forces.oef_force_objects import ForceObject
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_12e # get_key0,
 from pyNastran.f06.f06_formatting import _eigenvalue_header
@@ -299,11 +299,11 @@ class ComplexRodForceArray(ComplexForceObject):
         return itable
 
 
-class ComplexCShearForceArray(ScalarObject):
+class ComplexCShearForceArray(BaseElement):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -859,11 +859,11 @@ class ComplexDamperForceArray(ComplexSpringDamperForceArray):
         ComplexSpringDamperForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
 
-class ComplexViscForceArray(ScalarObject):
+class ComplexViscForceArray(BaseElement):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -2471,11 +2471,11 @@ class ComplexCBeamForceArray(ComplexForceObject):
         return itable
 
 
-class ComplexCBendForceArray(ScalarObject):  # 69-CBEND
+class ComplexCBendForceArray(BaseElement):  # 69-CBEND
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -3411,7 +3411,7 @@ class ComplexCBushForceArray(ComplexForceObject):
             new_result = False
         return itable
 
-class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
+class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
     """
     **ELTYPE = 191 Beam view element (VUBEAM)**
 
@@ -3447,7 +3447,7 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
     Words 5 through max repeat 2 times
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
+        BaseElement.__init__(self, data_code, isubcase, apply_data_code=True)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -3737,9 +3737,9 @@ class ComplexCBeamForceVUArray(ScalarObject):  # 191-VUBEAM
         return page_num - 1
 
 
-class ComplexForceVU_2DArray(ScalarObject):  # 189-VUQUAD,190-VUTRIA
+class ComplexForceVU_2DArray(BaseElement):  # 189-VUQUAD,190-VUTRIA
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
 
         #self.parent = {}
         #self.coord = {}

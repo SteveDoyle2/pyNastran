@@ -137,8 +137,11 @@ def run(regenerate=True, make_geom=False, write_bdf=False, build_pandas=True,
 
     nstart = 0
     nstop = 20000
+    if os.path.exists('skipped_cards.out'):
+        os.remove('skipped_cards.out')
+
     #try:
-    os.remove('skipped_cards.out')
+    #os.remove('skipped_cards.out')
     #except F:
         #pass
 

@@ -106,9 +106,9 @@ class TableArray(ScalarObject):  # displacement style table
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = np.nan
-        self.table_name = None
-        self.approach_code = None
-        self.analysis_code = None
+        #self.table_name = None
+        #self.approach_code = None
+        #self.analysis_code = None
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
         self.is_sort1
         self.is_sort2
@@ -345,14 +345,15 @@ class TableArray(ScalarObject):  # displacement style table
             #print(self.data_frame)
 
             if 0:  # pragma: no cover
-                coords = {}
-                for key, value in zip(column_names, column_values):
-                    coords[key] = value
+                pass
+                #coords = {}
+                #for key, value in zip(column_names, column_values):
+                    #coords[key] = value
 
-                import xarray
+                #import xarray
                 #a = xarray.DataArray(self.data, items=column_values,
                                      #major_axis=node_gridtype, minor_axis=headers)
-                unused_a = xarray.DataArray(self.data, coords=coords)
+                #unused_a = xarray.DataArray(self.data, coords=coords)
                 #print(unused_a)
             else:
                 self.data_frame.columns.names = column_names

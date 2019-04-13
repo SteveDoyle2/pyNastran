@@ -4,18 +4,18 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 import numpy as np
 #from numpy import zeros, empty
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import (
     write_float_13e, write_floats_13e, _eigenvalue_header)
 from pyNastran.op2.result_objects.element_table_object import RealElementTableArray
 
 
-class Real1DHeatFluxArray(ScalarObject):
+class Real1DHeatFluxArray(BaseElement):
     """1-ROD, 2-BEAM, 3-TUBE, 10-CONROD, 34-BAR, 69-BEND"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -207,12 +207,12 @@ class Real1DHeatFluxArray(ScalarObject):
         return page_num - 1
 
 
-class RealHeatFluxVU3DArray(ScalarObject):
+class RealHeatFluxVU3DArray(BaseElement):
     """189-VUQUAD 190-VUTRIA,191-VUBEAM"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -419,11 +419,11 @@ class RealHeatFluxVU3DArray(ScalarObject):
         return page_num - 1
 
 
-class RealHeatFluxVUBeamArray(ScalarObject):  # 191-VUBEAM
+class RealHeatFluxVUBeamArray(BaseElement):  # 191-VUBEAM
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -682,11 +682,11 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
         return ['grad1', 'grad2', 'grad3', 'flux1', 'flux2', 'flux3']
 
 
-class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
+class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -864,11 +864,11 @@ class RealConvHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         return page_num - 1
 
 
-class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
+class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -1047,13 +1047,13 @@ class RealChbdyHeatFluxArray(ScalarObject):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             page_num += 1
         return page_num - 1
 
-class RealHeatFluxVUShellArray(ScalarObject):
+class RealHeatFluxVUShellArray(BaseElement):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = np.nan
         self.table_name = None
         self.approach_code = None
         self.analysis_code = None
-        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
+        BaseElement.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
         unused_sort1 = self.is_sort1
         #self.dt = dt
         #self.code = [self.format_code, self.sort_code, self.s_code]

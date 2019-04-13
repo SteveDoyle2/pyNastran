@@ -1774,19 +1774,15 @@ def _nsm1_element(model, nsm, nsm_ids, all_eids_pids, area_length, nsm_centroids
         mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     return mass
 
-def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
-    """
-    Scales the mass & moement of inertia based on the symmetry axes
-    and the PARAM WTMASS card
-
-    """
+def _get_sym_axis(model, sym_axis):
+    """update the sym_axis"""
     if isinstance(sym_axis, string_types):
-        sym_axis = [sym_axis]
+        sym_axis_set = {sym_axis.lower()}
     elif isinstance(sym_axis, (list, tuple)):
         # basically overwrite the existing values on the AERO/AEROS card
-        pass
+        sym_axis_set = {sym_axisi.lower() for sym_axisi in sym_axis}
     else:
-        sym_axis = []
+        sym_axis_set = set()
 
         # The symmetry flags on the AERO/AEROS must be the same, so
         # it doesn't matter which we one pick.  However, they might
@@ -1797,33 +1793,41 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
         #
         if model.aero is not None:
             if model.aero.is_symmetric_xy or model.aero.is_anti_symmetric_xy:
-                sym_axis.append('xy')
+                sym_axis_set.add('xy')
             if model.aero.is_symmetric_xz or model.aero.is_anti_symmetric_xz:
-                sym_axis.append('xz')
+                sym_axis_set.add('xz')
 
         if model.aeros is not None:
             if model.aeros.is_symmetric_xy or model.aeros.is_anti_symmetric_xy:
-                sym_axis.append('xy')
+                sym_axis_set.add('xy')
             if model.aeros.is_symmetric_xz or model.aeros.is_anti_symmetric_xz:
-                sym_axis.append('xz')
+                sym_axis_set.add('xz')
 
-    sym_axis = list(set(sym_axis))
-    short_sym_axis = [sym_axisi.lower() for sym_axisi in sym_axis]
-    is_no = 'no' in short_sym_axis
-    if is_no and len(short_sym_axis) > 1:
-        raise RuntimeError('no can only be used by itself; sym_axis=%s' % (str(sym_axis)))
-    for sym_axisi in sym_axis:
+    is_no = 'no' in sym_axis_set
+    if is_no and len(sym_axis_set) > 1:
+        raise RuntimeError('no can only be used by itself; sym_axis=%s' % (
+            str(list(sym_axis_set))))
+    for sym_axisi in sym_axis_set:
         if sym_axisi.lower() not in ['no', 'xy', 'yz', 'xz']:
             msg = 'sym_axis=%r is invalid; sym_axisi=%r; allowed=[no, xy, yz, xz]' % (
                 sym_axis, sym_axisi)
             raise RuntimeError(msg)
+    return list(sym_axis_set)
+
+def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
+    """
+    Scales the mass & moement of inertia based on the symmetry axes
+    and the PARAM WTMASS card
+
+    """
+    sym_axis = _get_sym_axis(model, sym_axis)
 
     if sym_axis:
         # either we figured sym_axis out from the AERO cards or the user told us
         model.log.debug('Mass/MOI sym_axis = %r' % sym_axis)
 
         if 'xz' in sym_axis:
-            # y intertias are 0
+            # y inertias are 0
             cg[1] = 0.0
             mass *= 2.0
             inertia[0] *= 2.0
@@ -1834,7 +1838,7 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
             inertia[5] *= 0.0  # Iyz
 
         if 'xy' in sym_axis:
-            # z intertias are 0
+            # z inertias are 0
             cg[2] = 0.0
             mass *= 2.0
             inertia[0] *= 2.0
@@ -1845,7 +1849,7 @@ def _apply_mass_symmetry(model, sym_axis, scale, mass, cg, inertia):
             inertia[5] *= 0.0  # Iyz
 
         if 'yz' in sym_axis:
-            # x intertias are 0
+            # x inertias are 0
             cg[0] = 0.0
             mass *= 2.0
             inertia[0] *= 2.0

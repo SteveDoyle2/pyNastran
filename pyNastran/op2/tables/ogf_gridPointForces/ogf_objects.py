@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, _eigenvalue_header, write_imag_floats_13e)
 from pyNastran.op2.vector_utils import (
@@ -10,9 +10,9 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 
-class GridPointForcesObject(ScalarObject):
+class GridPointForces(BaseElement):
     def __init__(self, data_code, is_sort1, isubcase):
-        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
+        BaseElement.__init__(self, data_code, isubcase, apply_data_code=True)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -127,7 +127,7 @@ class GridPointForcesObject(ScalarObject):
         op2.write(pack(fmt, *data))
 
 
-class RealGridPointForcesArray(GridPointForcesObject):
+class RealGridPointForcesArray(GridPointForces):
     """
                                        G R I D   P O I N T   F O R C E   B A L A N C E
        POINT-ID  ELEMENT-ID   SOURCE        T1       T2    T3            R1   R2   R3
@@ -137,7 +137,7 @@ class RealGridPointForcesArray(GridPointForcesObject):
 
     """
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        GridPointForcesObject.__init__(self, data_code, is_sort1, isubcase)
+        GridPointForces.__init__(self, data_code, is_sort1, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -1153,9 +1153,9 @@ class RealGridPointForcesArray(GridPointForcesObject):
         return itable
 
 
-class ComplexGridPointForcesArray(GridPointForcesObject):
+class ComplexGridPointForcesArray(GridPointForces):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        GridPointForcesObject.__init__(self, data_code, is_sort1, isubcase)
+        GridPointForces.__init__(self, data_code, is_sort1, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         # do the element_names/node_element vectors change with the time step

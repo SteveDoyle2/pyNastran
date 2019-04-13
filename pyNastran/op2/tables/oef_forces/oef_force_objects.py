@@ -7,7 +7,7 @@ import numpy as np
 from numpy import zeros, searchsorted, allclose
 
 
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_12e,
     write_float_13e, write_float_12e,
@@ -25,14 +25,14 @@ SORT2_TABLE_NAME_MAP = {
     'OEFNO2' : 'OEFNO1',
 }
 
-class ForceObject(ScalarObject):
+class ForceObject(BaseElement):
     def __init__(self, data_code, isubcase, apply_data_code=True):
         self.element_type = None
         self.element_name = None
         self.nonlinear_factor = np.nan
         self.element = None
         self._times = None
-        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
+        BaseElement.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
 
     def finalize(self):
         """it's required that the object be in SORT1"""

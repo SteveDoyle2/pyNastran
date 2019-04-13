@@ -4,17 +4,17 @@ import numpy as np
 from numpy import zeros, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack
 
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
 
 
-class ElementTableArray(ScalarObject):  # displacement style table
+class ElementTableArray(BaseElement):  # displacement style table
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.nonlinear_factor = np.nan
         self.table_name = None
         self.approach_code = None
         self.analysis_code = None
-        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
+        BaseElement.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
         self.is_sort1
         #self.dt = dt
         #self.code = [self.format_code, self.sort_code, self.s_code]

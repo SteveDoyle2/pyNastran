@@ -3,14 +3,14 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types, string_types, binary_type
 import numpy as np
 
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
 SORT2_TABLE_NAME_MAP = {
     'ONRGY2' : 'ONRGY1',
 }
-class RealStrainEnergyArray(ScalarObject):
+class RealStrainEnergyArray(BaseElement):
     """
     ::
 
@@ -27,7 +27,7 @@ class RealStrainEnergyArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -659,7 +659,7 @@ class RealStrainEnergyArray(ScalarObject):
         op2.write(pack(fmt, *data))
 
 
-class ComplexStrainEnergyArray(ScalarObject):
+class ComplexStrainEnergyArray(BaseElement):
     """
     ::
 
@@ -675,7 +675,7 @@ class ComplexStrainEnergyArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        ScalarObject.__init__(self, data_code, isubcase)
+        BaseElement.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode

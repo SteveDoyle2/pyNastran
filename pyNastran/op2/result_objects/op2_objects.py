@@ -10,10 +10,18 @@ from pyNastran import is_release
 from pyNastran.utils import object_attributes, object_methods
 
 #from pyNastran.utils import list_print
-from pyNastran.op2.op2_interface.op2_codes import Op2Codes
+from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_sort_method_from_table_name
 from pyNastran.op2.op2_interface.write_utils import write_table_header, export_to_hdf5
 
+
 class BaseScalarObject(Op2Codes):
+    """
+    The base scalar class is used by:
+     - RealEigenvalues
+     - BucklingEigenvalues
+     - ComplexEigenvalues
+     - ScalarObject
+    """
     def __init__(self):
         Op2Codes.__init__(self)
         self.is_built = False
@@ -57,75 +65,23 @@ class BaseScalarObject(Op2Codes):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, table):
-        self._eq_header(table)
         #raise NotImplementedError(str(self.get_stats()))
         return False
 
     def __ne__(self, table):
         return not self == table
 
-    def _eq_header(self, table):
-        is_nan = (self.nonlinear_factor is not None and
-                  np.isnan(self.nonlinear_factor) and
-                  np.isnan(table.nonlinear_factor))
-        if not is_nan:
-            assert self.nonlinear_factor == table.nonlinear_factor, 'nonlinear_factor=%s table.nonlinear_factor=%s' % (self.nonlinear_factor, table.nonlinear_factor)
-        assert self.ntotal == table.ntotal
-        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (
-            self.table_name, table.table_name)
-        assert self.approach_code == table.approach_code
-
-        if hasattr(self, 'element_name'):
-            if self.nonlinear_factor not in (None, np.nan) and not is_nan:
-                assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
-                    self.element_name, self.element_type, self._times, table._times)
-
-        if hasattr(self, 'element') and not np.array_equal(self.element, table.element):
-            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (
-                self.element.shape, table.element.shape)
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\nEid\n' % str(self.code_information())
-            for eid1, eid2 in zip(self.element, table.element):
-                msg += '%s, %s\n' % (eid1, eid2)
-            print(msg)
-            raise ValueError(msg)
-
-        if hasattr(self, 'element_node') and not np.array_equal(self.element_node, table.element_node):
-            if self.element_node.shape != table.element_node.shape:
-                msg = 'self.element_node.shape=%s table.element_node.shape=%s' % (
-                    self.element_node.shape, table.element_node.shape)
-
-                print(self.element_node.tolist())
-                print(table.element_node.tolist())
-                raise ValueError(msg)
-
-            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
-            msg += '%s\n' % str(self.code_information())
-            for i, (eid1, nid1), (eid2, nid2) in zip(count(), self.element_node, table.element_node):
-                msg += '%s : (%s, %s), (%s, %s)\n' % (i, eid1, nid1, eid2, nid2)
-            print(msg)
-            raise ValueError(msg)
-
     @property
     def class_name(self):
         return self.__class__.__name__
 
-    def get_headers(self):
+    def get_headers(self):  # pragma: no cover
         raise RuntimeError()
 
-    def _get_stats_short(self):
-        msg = []
-        class_name = self.__class__.__name__
-        if hasattr(self, 'data'):
-            unused_data = self.data
-            shape = [int(i) for i in self.data.shape]
-            headers = self.get_headers()
-            headers_str = str(', '.join(headers))
-            msg.append('%s[%s]; %s; [%s]\n' % (
-                class_name, self.isubcase, shape, headers_str))
-        return msg
+    def _get_stats_short(self):  # pragma: no cover
+        raise NotImplementedError('_get_stats_short')
 
-    def build_dataframe(self):
+    def build_dataframe(self):  # pragma: no cover
         """creates a pandas dataframe"""
         print('build_dataframe is not implemented in %s' % self.__class__.__name__)
 
@@ -165,10 +121,33 @@ class BaseScalarObject(Op2Codes):
 
 
 class ScalarObject(BaseScalarObject):
+    """
+    Used by all vectorized objects including:
+     - DisplacementArray
+     - RodStressArray
+    """
     def __init__(self, data_code, isubcase, apply_data_code=True):
         assert 'nonlinear_factor' in data_code, data_code
+
+        # new terms...I think they're all valid...
+        self.result_name = None
+        self.approach_code = None
+        self.analysis_code = None
+        self.data = None
+        self._times = None
+
+        self.isubcase = None
+        self.ogs = None
+        self.pval_step = None
+        self.name = None
+        self.superelement_adaptivity_index = None
+        self._count = None
+        #--------------------------------
+
         BaseScalarObject.__init__(self)
         self.isubcase = isubcase
+
+        #--------------------------------
         self.data_frame = None
         # the nonlinear factor; None=static; float=transient
         self.dt = None
@@ -207,6 +186,33 @@ class ScalarObject(BaseScalarObject):
     #def isImaginary(self):
         #return bool(self.sort_bits[1])
 
+    def _get_stats_short(self):
+        msg = []
+        class_name = self.__class__.__name__
+        if hasattr(self, 'data'):
+            unused_data = self.data
+            shape = [int(i) for i in self.data.shape]
+            headers = self.get_headers()
+            headers_str = str(', '.join(headers))
+            msg.append('%s[%s]; %s; [%s]\n' % (
+                class_name, self.isubcase, shape, headers_str))
+        return msg
+
+    def __eq__(self, table):
+        self._eq_header(table)
+        #raise NotImplementedError(str(self.get_stats()))
+        return False
+
+    def _eq_header(self, table):
+        is_nan = (self.nonlinear_factor is not None and
+                  np.isnan(self.nonlinear_factor) and
+                  np.isnan(table.nonlinear_factor))
+        if not is_nan:
+            assert self.nonlinear_factor == table.nonlinear_factor, 'nonlinear_factor=%s table.nonlinear_factor=%s' % (self.nonlinear_factor, table.nonlinear_factor)
+        assert self.ntotal == table.ntotal
+        assert self.table_name == table.table_name, 'table_name=%r table.table_name=%r' % (
+            self.table_name, table.table_name)
+        assert self.approach_code == table.approach_code
 
     def __getstate__(self):
         """we need to remove the saved functions"""
@@ -635,3 +641,50 @@ class ScalarObject(BaseScalarObject):
         table2_format = 'i8s6i'
         fascii.write('%s header2b = %s\n' % (self.table_name, table2))
         op2_file.write(pack(table2_format, *table2))
+
+
+class BaseElement(ScalarObject):
+    def __init__(self, data_code, isubcase, apply_data_code=True):
+        #--------------------------------
+        # TODO: remove ???
+        #self.element_name = None
+        #self.element = None
+        #self.element_node = None
+        #self.element_type = None
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=apply_data_code)
+
+    def _eq_header(self, table):
+        ScalarObject._eq_header(self, table)
+        is_nan = (self.nonlinear_factor is not None and
+                  np.isnan(self.nonlinear_factor) and
+                  np.isnan(table.nonlinear_factor))
+        if hasattr(self, 'element_name'):
+            if self.nonlinear_factor not in (None, np.nan) and not is_nan:
+                assert np.array_equal(self._times, table._times), 'ename=%s-%s times=%s table.times=%s' % (
+                    self.element_name, self.element_type, self._times, table._times)
+
+        if hasattr(self, 'element') and not np.array_equal(self.element, table.element):
+            assert self.element.shape == table.element.shape, 'shape=%s element.shape=%s' % (
+                self.element.shape, table.element.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\nEid\n' % str(self.code_information())
+            for eid1, eid2 in zip(self.element, table.element):
+                msg += '%s, %s\n' % (eid1, eid2)
+            print(msg)
+            raise ValueError(msg)
+
+        if hasattr(self, 'element_node') and not np.array_equal(self.element_node, table.element_node):
+            if self.element_node.shape != table.element_node.shape:
+                msg = 'self.element_node.shape=%s table.element_node.shape=%s' % (
+                    self.element_node.shape, table.element_node.shape)
+
+                print(self.element_node.tolist())
+                print(table.element_node.tolist())
+                raise ValueError(msg)
+
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            for i, (eid1, nid1), (eid2, nid2) in zip(count(), self.element_node, table.element_node):
+                msg += '%s : (%s, %s), (%s, %s)\n' % (i, eid1, nid1, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
