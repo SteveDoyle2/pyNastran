@@ -100,7 +100,7 @@ class AddMethods(BDFAttributes):
         key = ringfl.ringfl
         assert key > 0, 'eid=%s ringfl=%s' % (key, ringfl)
         if key in self.ringfl and not allow_overwrites:
-            assert ring.ringfl not in self.ringfl, 'ringfl=%s\nold_ringfl=\n%snew_ringfl=\n%s' % (ringfl.ringfl, self.ringfl[key], ringfl)
+            assert ringfl.ringfl not in self.ringfl, 'ringfl=%s\nold_ringfl=\n%snew_ringfl=\n%s' % (ringfl.ringfl, self.ringfl[key], ringfl)
         self.ringfl[key] = ringfl
         self._type_to_id_map[ringfl.type].append(key)
         self._is_axis_symmetric = True
@@ -693,7 +693,7 @@ class AddMethods(BDFAttributes):
         key = view3d.icavity
         assert key > 0, 'key=%s; view3d=%s\n' % (key, view3d)
         if key in self.view3ds:
-            if not view == self.view3ds[key]:
+            if not view3d == self.view3ds[key]:
                 assert key not in self.view3ds, 'VIEW3D.icavity=%s\nold=\n%snew=\n%s' % (
                     key, self.view3ds[key], view3d)
         else:
@@ -709,7 +709,7 @@ class AddMethods(BDFAttributes):
         if key in self.normals:
             if not snorm == self.normals[key]:
                 assert key not in self.normals, 'VIEW.iview=%s\nold=\n%snew=\n%s' % (
-                    key, self.normals[key], view)
+                    key, self.normals[key], snorm)
         else:
             assert key > 0, 'pid=%s SNORM=\n%s' % (key, snorm)
             self.normals[key] = snorm

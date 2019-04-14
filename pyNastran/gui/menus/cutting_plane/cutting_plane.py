@@ -490,7 +490,7 @@ class CuttingPlaneWindow(PyDialog):
         #print('zaxis =', zaxis)
 
         method = self.method_pulldown.currentText()
-        assert method in self.methods, 'method=%r' % method_check_color
+        assert method in self.methods, 'method=%r' % method
         flag9 = True
 
         ytol, flag10 = check_float(self.ytol_edit)

@@ -4,6 +4,7 @@ import numpy as np
 from numpy import zeros, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack
 
+from pyNastran.op2.result_objects.table_object import append_sort1_sort2
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
 

@@ -713,18 +713,18 @@ class BDF(BDF_):
         #BDF_._write_nodes(self, bdf_file, size=size, is_double=is_double)
 
     def _write_grids(self, bdf_file, size=8, is_double=False, is_long_ids=None):
-        # type: (Any, int, bool) -> None
+        # type: (Any, int, bool, Optional[bool]) -> None
         """Writes the GRID-type cards"""
         self.nodes.write_card(size=size, is_double=is_double, bdf_file=bdf_file)
 
     def _write_elements_interspersed(self, bdf_file, size=8, is_double=False, is_long_ids=None):
-        # type: (Any, int, bool) -> None
+        # type: (Any, int, bool, Optional[bool]) -> None
         """spoofed method"""
         self._write_elements(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
         self._write_properties(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
 
     def _write_elements(self, bdf_file, size=8, is_double=False, is_long_ids=None):
-        # type: (Any, int, bool) -> None
+        # type: (Any, int, bool, Optional[bool]) -> None
         """Writes the elements in a sorted order"""
         if self.elements:
             bdf_file.write('$ELEMENTS\n')
@@ -754,7 +754,7 @@ class BDF(BDF_):
             ##bdf_file.write(loadi.write_card(size=size, is_double=is_double))
 
     def _write_loads(self, bdf_file, size=8, is_double=False, is_long_ids=None):
-        # type: (Any, int, bool) -> None
+        # type: (Any, int, bool, Optional[bool]) -> None
         """Writes the load cards sorted by ID"""
         if self.loads or self.tempds:
             #msg = ['$LOADS\n']

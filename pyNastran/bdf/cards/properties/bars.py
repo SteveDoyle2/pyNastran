@@ -2611,6 +2611,7 @@ class PBEND(LineProperty):
 
 
 def split_arbitrary_thickness_section(key, value):
+    # type: (str, Union[float, List[int]]) -> (int, Union[float, List[int]])
     """
     >>> key = 'T(11)'
     >>> value = '[1.2,PT=(123,204)]'

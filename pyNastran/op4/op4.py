@@ -1742,7 +1742,7 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
         #print('A =', A)
         irows = [A.row[jj] for jj in col]
         #print "irows = ",irows
-        (dpacks) = compress_column(irows)
+        dpacks = compress_column(irows)
         #print("dpacks = %s" % (dpacks))
 
         npacks = len(dpacks)

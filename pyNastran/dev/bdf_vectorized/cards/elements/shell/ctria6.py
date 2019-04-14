@@ -98,9 +98,8 @@ class CTRIA6(ShellElement):
                 self.element_id[i], self.property_id[i], self.node_ids[i],
                 self.zoffset[i], self.t_flag[i], self.thickness[i]):
                 theta_mcid = None
-                #tflag = None
                 card = ['CTRIA6', eid, pid, ] + list(n) + [theta_mcid, zoffset,
-                        None] + [None, tflag] + list(t)
+                        None] + [None, t_flag] + list(thickness)
                 bdf_file.write(print_card_8(card))
 
     def _verify(self):

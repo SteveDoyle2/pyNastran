@@ -1,6 +1,8 @@
 from __future__ import print_function
 import sys
 from collections import OrderedDict
+from typing import Union, Any
+
 import numpy as np
 
 #vm_word = get_plate_stress_strain(
@@ -285,6 +287,7 @@ def pivot(data, rows, cols):
     return data2, rows_new
 
 def _get_nastran_header(case, dt, itime):
+    # type: (Any, Union[int, float], int) -> str
     #if case is None:
         #return None
     try:

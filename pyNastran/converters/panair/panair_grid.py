@@ -483,34 +483,34 @@ class PanairGrid(object):
             for line in lines:
                 #print(line)
                 if len(line[0:60].rstrip()) > 0:
-                    (theta1) = double(line[0:10], 'theta%i' % ipoint)
+                    theta1 = double(line[0:10], 'theta%i' % ipoint)
                     theta.append(theta1)
                     ipoint += 1
                 else:  # pragma: no cover
                     raise RuntimeError(line.rstrip())
 
                 if len(line[0:60].rstrip()) > 0:
-                    (theta2) = double(line[10:20], 'theta%i' % ipoint)
+                    theta2 = double(line[10:20], 'theta%i' % ipoint)
                     theta.append(theta2)
                     ipoint += 1
 
                 if len(line[20:60].rstrip()) > 0:
-                    (theta3) = double(line[20:30], 'theta%i' % ipoint)
+                    theta3 = double(line[20:30], 'theta%i' % ipoint)
                     theta.append(theta3)
                     ipoint += 1
 
                 if len(line[30:60].rstrip()) > 0:
-                    (theta4) = double(line[30:40], 'theta%i' % ipoint)
+                    theta4 = double(line[30:40], 'theta%i' % ipoint)
                     theta.append(theta4)
                     ipoint += 1
 
                 if len(line[40:60].rstrip()) > 0:
-                    (theta5) = double(line[40:50], 'theta%i' % ipoint)
+                    theta5 = double(line[40:50], 'theta%i' % ipoint)
                     theta.append(theta5)
                     ipoint += 1
 
                 if len(line[50:60].rstrip()) > 0:
-                    (theta6) = double(line[50:60], 'theta%i' % ipoint)
+                    theta6 = double(line[50:60], 'theta%i' % ipoint)
                     theta.append(theta6)
                     ipoint += 1
             n += ntheta_lines

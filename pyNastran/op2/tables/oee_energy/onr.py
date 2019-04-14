@@ -720,7 +720,7 @@ class ONR(OP2Common):
             #num_wide      = 4
             #isubcase      = 1
             #MSC Nastran
-            onr
+            raise NotImplementedError('onr')
         else:
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg)

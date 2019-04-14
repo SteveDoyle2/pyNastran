@@ -270,22 +270,22 @@ class CTRIA3(ShellElement):
         #pid = self.property_id[i]
         #return self.model.property_shell.get_property_by_index[pid]
 
-    def get_stiffness_matrices(self, model, positions, index0s):
-        out = []
+    #def get_stiffness_matrices(self, model, positions, index0s):
+        #out = []
 
-        # area coordinates
-        d2 = area
-        L1 = a1 + b1 * x + c1 * y / d2
-        L2 = a2 + b2 * x + c2 * y / d2
-        L3 = a3 + b3 * x + c3 * y / d2
+        ## area coordinates
+        #d2 = area
+        #L1 = a1 + b1 * x + c1 * y / d2
+        #L2 = a2 + b2 * x + c2 * y / d2
+        #L3 = a3 + b3 * x + c3 * y / d2
 
 
-        for i in range(self.n):
-            K, dofs, nijv = self.get_stiffness_matrix(
-                i, model, positions, index0s)
-            out.append(K, dofs, nijv)
-        #self.add_stiffness(K, dofs, nijv)
-        return out
+        #for i in range(self.n):
+            #K, dofs, nijv = self.get_stiffness_matrix(
+                #i, model, positions, index0s)
+            #out.append(K, dofs, nijv)
+        ##self.add_stiffness(K, dofs, nijv)
+        #return out
 
     def get_stiffness_matrix(self, i, model, positions, index0s):
         # Mindlin-Reissner (thick plate)
@@ -310,7 +310,7 @@ class CTRIA3(ShellElement):
         # [k_bend] = [b.T] [D] [b] -> 5.16 - Przemieniecki
         # [b] - 5.139 Prz.
         # [D] - 2.28 - Prz.
-        p, q, r = xtz1, xyz2, xyz3
+        p, q, r = xyz1, xyz2, xyz3
         pq = q - p
         dpq = norm(pq)
         L = pq / dpq

@@ -988,7 +988,7 @@ class CaseControlDeck(object):
         return self.write()
 
     def write(self, write_begin_bulk=None):
-        # type: () -> str
+        # type: (Optional[bool]) -> str
         if write_begin_bulk is None:
             write_begin_bulk = self.write_begin_bulk
         msg = ''

@@ -402,9 +402,10 @@ class CHEXA8(SolidElement):
         v = ((x3+x7+x8+x4)/4. - (x1+x2+x6+x5))/4
         z = np.cross(xe, v)
         z /= np.linalg.norm(z)
-        y = np.cross(z, x)
-        y /= np.linalg.norm(y)
-        return centroid, xe, y, z
+        raise NotImplementedError('material_coordinate_system')
+        #y = np.cross(z, x)
+        #y /= np.linalg.norm(y)
+        #return centroid, xe, y, z
 
     def _verify(self, xref):
         eid = self.eid

@@ -270,43 +270,43 @@ class CBEAM(Element):
         obj.sb = self.sb[i]
         return obj
 
-    def get_stiffness_matrix(self, model, node_ids, index0s, fnorm=1.0):
-        K = np.zeros((12, 12), dtype='float64')
-        kaxial = E * A / L
-        ktorsion = G * J / L
-        K[0, 0] = K[6, 6] = kaxial
-        K[0, 6] = K[6, 0] = -kaxial
+    #def get_stiffness_matrix(self, model, node_ids, index0s, fnorm=1.0):
+        #K = np.zeros((12, 12), dtype='float64')
+        #kaxial = E * A / L
+        #ktorsion = G * J / L
+        #K[0, 0] = K[6, 6] = kaxial
+        #K[0, 6] = K[6, 0] = -kaxial
 
-        K[3, 3] = K[9, 9] = ktorsion
-        K[3, 9] = K[9, 3] = ktorsion
+        #K[3, 3] = K[9, 9] = ktorsion
+        #K[3, 9] = K[9, 3] = ktorsion
 
-        # Iy, L^3
-        eiy_3 = E * Iy / L**3
-        eiy_2 = E * Iy / L**2
-        eiy_1 = E * Iy / L
+        ## Iy, L^3
+        #eiy_3 = E * Iy / L**3
+        #eiy_2 = E * Iy / L**2
+        #eiy_1 = E * Iy / L
 
-        eiz_3 = E * Iz / L**3
-        eiz_2 = E * Iz / L**2
-        eiz_1 = E * Iz / L
+        #eiz_3 = E * Iz / L**3
+        #eiz_2 = E * Iz / L**2
+        #eiz_1 = E * Iz / L
 
-        K[1, 1] = K[7, 7] = 12 * eiz_3
-        K[2, 2] = K[8, 8] = 12 * eiy_3
+        #K[1, 1] = K[7, 7] = 12 * eiz_3
+        #K[2, 2] = K[8, 8] = 12 * eiy_3
 
-        K[4, 4] = K[10, 10] = 4 * eiy_1
-        K[5, 5] = K[11, 11] = 4 * eiz_1
+        #K[4, 4] = K[10, 10] = 4 * eiy_1
+        #K[5, 5] = K[11, 11] = 4 * eiz_1
 
-        K[4, 10] = K[10, 4] = 2 * eiy_1
-        K[5, 11] = K[11, 5] = 2 * eiz_1
+        #K[4, 10] = K[10, 4] = 2 * eiy_1
+        #K[5, 11] = K[11, 5] = 2 * eiz_1
 
-        K[4, 2] = K[8, 10] = K[10, 8] = K[4, 8] = K[8, 4] = 6 * eiy_2
-        K[2, 4] = K[2, 10] = K[10, 2] = -6 * eiy_2
+        #K[4, 2] = K[8, 10] = K[10, 8] = K[4, 8] = K[8, 4] = 6 * eiy_2
+        #K[2, 4] = K[2, 10] = K[10, 2] = -6 * eiy_2
 
-        K[1, 5] = K[1, 11] = K[5, 1] = K[11, 1] = 6 * eiz_2
-        K[5, 7] = K[11, 7] = K[7, 5] = K[7, 11] = -6 * eiz_2
+        #K[1, 5] = K[1, 11] = K[5, 1] = K[11, 1] = 6 * eiz_2
+        #K[5, 7] = K[11, 7] = K[7, 5] = K[7, 11] = -6 * eiz_2
 
-        K[1, 1] = K[7, 7] = 12 * eiz_3
-        K[2, 2] = K[8, 8] = 12 * eiy_3
-        K[2, 8] = K[8, 2] = -12 * eiy_3
-        K[1, 7] = K[7, 1] = -12 * eiz_3
+        #K[1, 1] = K[7, 7] = 12 * eiz_3
+        #K[2, 2] = K[8, 8] = 12 * eiy_3
+        #K[2, 8] = K[8, 2] = -12 * eiy_3
+        #K[1, 7] = K[7, 1] = -12 * eiz_3
 
-        return K, dofs, n_ijv
+        #return K, dofs, n_ijv

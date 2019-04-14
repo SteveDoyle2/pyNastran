@@ -184,10 +184,10 @@ class CTRIAX6(Element):
             calculate_mass=False, calculate_area=False,
             calculate_normal=True)
 
-        if total:
-            return area.sum()
-        else:
-            return area
+        #if total:
+            #return area.sum()
+        #else:
+        return area
 
     def _mass_area_normal(self, element_id=None, node_ids=None, grids_cid0=None,
                           calculate_mass=True, calculate_area=True,
@@ -214,7 +214,7 @@ class CTRIAX6(Element):
         .. note:: If node_ids is None, the positions of all the GRID cards
                   must be calculated
         """
-        if nodes_cid0 is None:
+        if grids_cid0 is None:
             node_ids = self.model.grid.node_ids
             grids_cid0 = self.model.grid.get_position_from_node_index()
 

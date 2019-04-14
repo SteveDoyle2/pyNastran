@@ -41,6 +41,7 @@ Defines various tables that don't fit in other sections:
     - read_results_table(self)
 """
 from __future__ import print_function, unicode_literals, division
+import os
 import sys
 from copy import deepcopy
 from itertools import count
@@ -2698,7 +2699,6 @@ class OP2Reader(object):
             data = self.read_block()
             imarker, = op2.struct_i.unpack(data)
             if marker != imarker:
-                import os
                 #self.show_data(data)
                 msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r; iloc=%s/%s' % (
                     marker, imarker, markers, i, op2.table_name,

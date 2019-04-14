@@ -96,7 +96,7 @@ class LOAD(LoadCombination):
                         load_types += load.type
                     else:  # int
                         load_types += [load.type] + load.get_load_types()
-                elif isinstance(load, (Force, Moment, PLOAD4, GRAV)):
+                elif isinstance(load, (Load0, Load1, Load2, PLOAD4, GRAV)):
                     load_types += [load.type]
                 else:
                     raise NotImplementedError(load)

@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 from copy import deepcopy
+from typing import List, Optional, Any
+
 from numpy import zeros
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -331,6 +333,7 @@ class ForceTableResults(NastranTable):
                  scales, data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  set_max_min=False, uname='NastranGeometry'):
+        # type: (int, List[str], List[str], Any, Any, List[float], Any, Optional[int], Optional[int], Optional[int], str, bool, str) -> None
         """this is a nodal force result"""
         linked_scale_factor = False
         location = 'node'

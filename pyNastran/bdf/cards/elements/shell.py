@@ -4525,7 +4525,7 @@ class SNORM(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by SNORM eid=%s' % self.eid
+        msg = ', which is required by SNORM nid=%s' % self.nid
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
@@ -4537,8 +4537,8 @@ class SNORM(BaseCard):
         model : BDF()
             the BDF object
         """
-        msg = ', which is required by SNORM eid=%s' % self.eid
-        self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
+        msg = ', which is required by SNORM nid=%s' % self.nid
+        self.cid_ref = model.safe_coord(self.cid, self.nid, xref_errors, msg=msg)
 
     def uncross_reference(self):
         self.cid = self.Cid()

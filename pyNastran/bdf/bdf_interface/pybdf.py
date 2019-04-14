@@ -67,7 +67,7 @@ class BDFInputPy(object):
         self.log = get_logger2(log, debug)
 
     def get_lines(self, bdf_filename, punch=False, make_ilines=True):
-        # type: (Union[str, StringIO], bool) -> List[str]
+        # type: (Union[str, StringIO], bool, bool) -> List[str]
         """
         Opens the bdf and extracts the lines by group
 
@@ -199,7 +199,7 @@ class BDFInputPy(object):
         return lines
 
     def lines_to_deck_lines(self, lines, make_ilines=True):
-        # type: (List[str]) -> List[str], int
+        # type: (List[str], bool) -> (List[str], int)
         """
         Merges the includes into the main deck.
 
@@ -1235,7 +1235,7 @@ def _check_valid_deck(flag, old_flags):
     return
 
 def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
-    # type: (Union[str, StringIO]) -> None
+    # type: (Any, Union[str, StringIO], str, int) -> None
     """
     Prints the 10 lines before the UnicodeDecodeError occurred.
 

@@ -4,6 +4,7 @@ defines:
  - GuiResult
 """
 from __future__ import print_function
+from typing import Any, Optional
 import numpy as np
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
@@ -325,6 +326,7 @@ class GuiResult(GuiResultCommon):
                  mask_value=None, nlabels=None, labelsize=None, ncolors=None, colormap='jet',
                  data_map=None,
                  data_format=None, uname='GuiResult'):
+        # type: (int, str, str, str, Any, Optional[int], Optional[int], Optional[int], Optional[int], str, Any, Optional[str], str) -> None
         """
         Parameters
         ----------

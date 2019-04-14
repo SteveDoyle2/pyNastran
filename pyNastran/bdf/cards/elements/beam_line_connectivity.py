@@ -327,7 +327,7 @@ def h_lines(dim):
         ])  # 24 x 3
     return lines, points
 
-def chan_faces(n1, n2, xform, dim1, dim2):
+def chan_faces(n1, n2, xform, dim):
     """
     ^y
     |  0--------7
@@ -378,7 +378,7 @@ def chan_faces(n1, n2, xform, dim1, dim2):
         ])  # 16 x 3
     return lines, points
 
-def chan1_lines(n1, n2, xform, dim1, dim2):
+def chan1_lines(n1, n2, xform, dim):
     """
     ^y
     |  0--------7      ^ hall
@@ -414,7 +414,7 @@ def chan1_lines(n1, n2, xform, dim1, dim2):
         ])  # 16 x 3
     return lines, points
 
-def z_lines(dim1):
+def z_lines(dim):
     """
            ^ y
            |
@@ -563,7 +563,7 @@ def t1_lines(dim):  # validated
         ])  # 16 x 3
     return lines, points
 
-def t2_lines(n1, n2, xform, dim1, dim2):  # validated
+def t2_lines(n1, n2, xform, dim):  # validated
     """
          ^y
          |

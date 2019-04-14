@@ -45,7 +45,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 #import sys
-from struct import unpack
+from struct import Struct, unpack
 from collections import Counter
 from typing import List
 from six import binary_type, string_types, PY2, PY3, b
@@ -1312,7 +1312,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         nvalues = ndata // 4
         assert ndata % 4 == 0, ndata
 
-        from struct import Struct
         structs8 = Struct(b'8s')
         struct2s8 = Struct(b'4s8s')
         struct2i = Struct(b'ii')

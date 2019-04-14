@@ -462,7 +462,7 @@ class OUG(OP2Common):
             #return self._not_implemented_or_skip(data, ndata, msg='thermal=4')
         else:
             raise RuntimeError(self.code_information())
-            n = self._not_implemented_or_skip(data, ndata, 'bad thermal=%r table' % self.thermal)
+            #n = self._not_implemented_or_skip(data, ndata, 'bad thermal=%r table' % self.thermal)
         #else:
             #raise NotImplementedError(self.thermal)
         return n

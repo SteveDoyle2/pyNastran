@@ -2893,7 +2893,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
             #]
             #'                      14                  0.0          /  0.0                           0.0          /  0.0'
         else:
-            sort2
+            raise NotImplementedError('sort2')
 
 
         return msg

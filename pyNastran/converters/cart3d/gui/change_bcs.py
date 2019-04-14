@@ -8,6 +8,7 @@ from qtpy.QtWidgets import (
     QDialog, QLineEdit, QPushButton, QGridLayout, QVBoxLayout, QHBoxLayout, QApplication,
     QColorDialog, QLabel,
 )
+from qtpy.QtGui import QColor
 
 from pyNastran.bdf.utils import parse_patran_syntax, parse_patran_syntax_dict
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
@@ -165,7 +166,7 @@ class ChangeBCs(QDialog):
     def on_edit_color(self):
         c = [int(255 * i) for i in self.text_col]
         #print('c =', c)
-        col = QColorDialog.getColor(QtGui.QColor(*c), self, "Choose a text color")
+        col = QColorDialog.getColor(QColor(*c), self, "Choose a text color")
         self.color.SetColor(col)
 
     def on_default_color(self):

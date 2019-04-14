@@ -89,7 +89,7 @@ class CELAS3(SpringElement):
 
     def write_card(self, bdf_file, size=8, element_id=None):
         if self.n:
-            if eids is None:
+            if element_id is None:
                 i = arange(self.n)
             else:
                 i = searchsorted(self.element_id, self.eid)

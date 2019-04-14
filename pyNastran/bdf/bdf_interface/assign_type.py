@@ -100,7 +100,7 @@ def parse_components(card, ifield, fieldname):
     return svalue3
 
 def components_or_blank(card, ifield, fieldname, default=None):
-    # type: (BDFCard, int, str, Optional[str]) -> str
+    # type: (BDFCard, int, str, Optional[str]) -> Optional[str]
     """
     Parameters
     ----------
@@ -1003,7 +1003,7 @@ def exact_string_or_blank(card, ifield, fieldname, default=None):
 
 
 def interpret_value(value_raw, card=''):
-    # type: (Optional[str], str) -> Union[int, float, str, None]
+    # type: (Optional[str], Union[str, BDFCard]) -> Optional[Union[int, float, str]]
     """
     Converts a value from nastran format into python format.
 

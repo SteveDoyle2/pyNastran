@@ -116,10 +116,10 @@ if IS_SCINTILLA:
         def on_margin_clicked(self, nmargin, nline, modifiers):
             return
             # Toggle marker for the line the margin was clicked on
-            if self.markersAtLine(nline) != 0:
-                self.markerDelete(nline, self.ARROW_MARKER_NUM)
-            else:
-                self.markerAdd(nline, self.ARROW_MARKER_NUM)
+            #if self.markersAtLine(nline) != 0:
+                #self.markerDelete(nline, self.ARROW_MARKER_NUM)
+            #else:
+                #self.markerAdd(nline, self.ARROW_MARKER_NUM)
 
         def toPlainText(self):
             data = str(self.text())

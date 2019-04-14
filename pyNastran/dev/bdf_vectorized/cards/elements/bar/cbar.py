@@ -274,5 +274,5 @@ class CBAR(Element):
         obj.wb = self.wb[i]
         return obj
 
-    def get_stiffness_matrix(self, model, node_ids, index0s, fnorm=1.0):
-        return K, dofs, n_ijv
+    #def get_stiffness_matrix(self, model, node_ids, index0s, fnorm=1.0):
+        #return K, dofs, n_ijv

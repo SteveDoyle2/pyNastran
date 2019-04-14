@@ -323,22 +323,22 @@ class OP2Geom(BDF, OP2GeomCommon):
         # all our instance attributes. Always use the dict.copy()
         # method to avoid modifying the original state.
         #adfasd
-        state = BDF.__getstate__(self)
+        #state = BDF.__getstate__(self)
         #print(state)
         #state = self.__dict__.copy()
 
         # Remove the unpicklable entries.
-        i = 0
-        for key, value in sorted(state.items()):
-            if isinstance(value, dict) and len(value) == 0:
-                continue
-            #if not isinstance(value, (str, int, float)):
-            if i > 5: # 72
-                del state[key]
-            else:
-                print(key, type(value), value)
-                break
-            i += 1
+        #i = 0
+        #for key, value in sorted(state.items()):
+            #if isinstance(value, dict) and len(value) == 0:
+                #continue
+            ##if not isinstance(value, (str, int, float)):
+            #if i > 5: # 72
+                #del state[key]
+            #else:
+                #print(key, type(value), value)
+                #break
+            #i += 1
 
         #i = 0
         #for key, value in sorted(state.items()):
@@ -351,7 +351,7 @@ class OP2Geom(BDF, OP2GeomCommon):
                 #print(key, type(value), value)
                 #break
             #i += 1
-        return state
+        #return state
 
     def export_hdf5_file(self, hdf5_file, exporter=None):
         """

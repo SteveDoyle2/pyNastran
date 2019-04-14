@@ -106,14 +106,14 @@ def write_card(op2, op2_ascii, card_type, cards, endian):
         key = (4901, 49, 17)
         nfields = 7
         #print(cards)
-        aaa
-        spack = Struct(endian + b'3i 4f')
+        #spack = Struct(endian + b'3i 4f')
         nbytes = write_header(card_type, nfields, ncards, key, op2, op2_ascii)
+        raise NotImplementedError('MPC')
 
-        for load in cards:
-            data = [load.sid, load.node_id, load.Cid(), load.mag] + list(load.xyz)
-            op2_ascii.write('  MPC data=%s\n' % str(data))
-            op2.write(spack.pack(*data))
+        #for load in cards:
+            #data = [load.sid, load.node_id, load.Cid(), load.mag] + list(load.xyz)
+            #op2_ascii.write('  MPC data=%s\n' % str(data))
+            #op2.write(spack.pack(*data))
     else:  # pragma: no cover
         card0 = cards[0]
         raise NotImplementedError(card0)

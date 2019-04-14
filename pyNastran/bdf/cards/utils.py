@@ -62,7 +62,7 @@ def build_table_lines(fields, nstart=1, nend=0):
 
 
 def wipe_empty_fields(card):
-    # type: (List[Optional[str]]) -> List[str]
+    # type: (List[str]) -> List[Optional[str]]
     """
     Removes any trailing Nones from the card.
     Also converts empty strings to None.
@@ -78,13 +78,16 @@ def wipe_empty_fields(card):
     short_card : List[str]
         the card with no trailing blank fields
     """
-    short_card = []
+    short_card = []  # type: List[Optional[str]]
     for field in card:
         if isinstance(field, string_types):
             field = field.strip()
             if field == '':
-                field = None
-        short_card.append(field)
+                short_card.append(None)
+            else:
+                short_card.append(field)
+        else:
+            short_card.append(field)
 
     imax = 0
     for i, field in enumerate(card):

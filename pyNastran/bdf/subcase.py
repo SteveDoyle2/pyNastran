@@ -1106,7 +1106,7 @@ class Subcase(object):
         list_before = []
         set_keys = []
         for (i, entry) in enumerate(lst):
-            key = entry[0]
+            key = entry[0]  # type: str
             if 'SET' in key[0:3]:
                 if key == 'SET':  # handles "SET = ALL"
                     key = 0

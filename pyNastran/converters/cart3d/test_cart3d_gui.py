@@ -100,7 +100,7 @@ class TestCart3dGUI(unittest.TestCase):
         test.log = log
         #test.load_nastran_geometry(geometry_filename)
         test.model.load_cart3d_geometry(geometry_filename)
-        assert test.model.data_map is not None, data_map
+        assert test.model.data_map is not None, test.model.data_map
 
         data = np.array([1., 2., 3.,])
         key = ('centroid', 'Node')

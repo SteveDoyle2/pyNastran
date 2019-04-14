@@ -2,6 +2,7 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
+from typing import List
 from six import StringIO, text_type
 import numpy as np
 
@@ -526,6 +527,7 @@ def _export_list_obj_keys(model, hdf5_file, list_obj_keys, encoding):
 
 
 def _h5_export_class(sub_group, model, key, value, skip_attrs, encoding, debug=True):
+    # type: (Any, Any, str, Any, List[str], str, bool) -> None
     #model.log.debug('exporting %s to hdf5' % key)
     #sub_groupi = sub_group.create_group('values')
     class_group = sub_group.create_group(str(key))

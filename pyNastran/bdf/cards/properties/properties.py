@@ -423,6 +423,7 @@ class CrackProperty(Property):
         Property.__init__(self)
 
     def Mid(self):
+        # type: () -> int
         if self.mid_ref is not None:
             return self.mid_ref.mid
         return self.mid

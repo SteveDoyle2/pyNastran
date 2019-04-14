@@ -4,6 +4,7 @@ defines:
 """
 # -*- coding: utf-8 -*-
 from __future__ import print_function, unicode_literals
+from typing import List
 
 from six import string_types
 from numpy import ndarray
@@ -14,6 +15,7 @@ from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 
 class Group(object):
     def __init__(self, name, element_str, elements_pound, editable=True):
+        # type: (str, str, int, bool) -> None
         """
         Creates an element group
 
@@ -54,6 +56,7 @@ class Group(object):
         self.element_str = _get_collapsed_text(eids).strip()
 
     def __repr__(self):
+        # type: () -> str
         msg = 'Group:\n'
         msg += '  name: %s\n' % self.name
         msg += '  editable: %s\n' % self.editable
@@ -66,6 +69,7 @@ class Group(object):
 
 class NodeGroup(object):
     def __init__(self, name, node_str, nodes_pound, editable=True):
+        # type: (str, str, int, bool) -> None
         """
         Creates a node group
 
@@ -106,6 +110,7 @@ class NodeGroup(object):
         self.node_str = _get_collapsed_text(nids).strip()
 
     def __repr__(self):
+        # type: () -> str
         msg = 'NodeGroup:\n'
         msg += '  name: %s\n' % self.name
         msg += '  editable: %s\n' % self.editable
@@ -114,6 +119,7 @@ class NodeGroup(object):
         return msg
 
 def _get_collapsed_text(values):
+    # type: (List[int]) -> str
     """writes the collapsed text for ``Group`` and ``NodeGroup``"""
     singles, doubles = collapse_colon_packs(values)
     text = ' '.join([str(s) for s in singles]) + ' '

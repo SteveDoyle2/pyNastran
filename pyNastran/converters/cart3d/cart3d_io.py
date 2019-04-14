@@ -40,7 +40,7 @@ class Cart3dIO(object):
         return data
 
     def _remove_old_cart3d_geometry(self, filename, model_name):
-        return
+        #return
         #if model_name != 'main':
             #return
         #return self._remove_old_geometry(filename)

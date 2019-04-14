@@ -1102,7 +1102,7 @@ class BDFAttributes(object):
 
     def set_param(self, key, values):
         """sets a param card; creates it if necessary"""
-        if isinstance(value, (int, float, str)):
+        if isinstance(values, (int, float, str)):
             values = [values]
         key = key.upper()
         if key in self.params:

@@ -818,7 +818,7 @@ class OP2(OP2_Scalar):
         return self.export_hdf5_filename(hdf5_filename)
 
     def export_hdf5_filename(self, hdf5_filename):
-        # type: str -> None
+        # type: (str) -> None
         """
         Converts the OP2 objects into hdf5 object
 

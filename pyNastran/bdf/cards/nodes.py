@@ -495,7 +495,7 @@ class SPOINTs(XPoints):
             spoints.append(spoint)
         if hasattr(self, 'ifile'):
             for spoint in spoints:
-                spoint.ifile = self.ifile
+                spoint.ifile = self.ifile # type: int
         return spoints
 
 
@@ -1224,9 +1224,9 @@ class GRID(BaseCard):
         seid : int
             the Superelement ID
         """
-        if isinstance(self.seid, integer_types):
-            return self.seid
-        return self.seid.seid
+        #if isinstance(self.seid, integer_types):
+        return self.seid
+        #return self.seid.seid
 
     def _verify(self, xref):
         # type: (bool) -> None

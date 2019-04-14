@@ -13,6 +13,7 @@ All shell properties are ShellProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from typing import List, Optional, Union
 from numpy import array
 import numpy as np
 
@@ -596,6 +597,7 @@ class PCOMP(CompositeShellProperty):
     }
     _properties = ['_field_map', 'plies', 'nplies', 'material_ids']
     def update_by_pname_fid(self, pname_fid, value):
+        # type: (Union[str, int], Union[int, float, str]) -> None
         if isinstance(pname_fid, int):
             self._update_field_helper(pname_fid, value)
         elif pname_fid == 'Z0':
@@ -669,6 +671,7 @@ class PCOMP(CompositeShellProperty):
                  mids, thicknesses, thetas=None, souts=None,
                  nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None,
                  comment=''):
+        # type: (int, List[int], List[float], Optional[List[float]], Optional[List[str]], float, float, Optional[str], float, float, Optional[str], Optional[float], str) -> None
         """
         Creates a PCOMP card
 
@@ -1456,6 +1459,7 @@ class PPLANE(ShellProperty):
         return PPLANE(pid, mid, t=0., nsm=0., formulation_option=0, comment='')
 
     def __init__(self, pid, mid, t=0., nsm=0., formulation_option=0, comment=''):
+        # type: (int, int, float, float, int, str) -> None
         """NX specific card"""
         ShellProperty.__init__(self)
         if comment:
@@ -1562,6 +1566,7 @@ class PSHEAR(ShellProperty):
         return PSHEAR(pid, mid, t, nsm=0., f1=0., f2=0., comment='')
 
     def __init__(self, pid, mid, t, nsm=0., f1=0., f2=0., comment=''):
+        # type: (int, int, float, float, float, float, str) -> None
         """
         Creates a PSHEAR card
 
@@ -1743,6 +1748,7 @@ class PSHELL(ShellProperty):
     def __init__(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
                  mid3=None, tst=0.833333, nsm=0.0,
                  z1=None, z2=None, mid4=None, comment=''):
+        # type: (int, Optional[int], float, Optional[int], float, Optional[int], float, float, Optional[float], Optional[float], Optional[int], str) -> None
         """
         Creates a PSHELL card
 

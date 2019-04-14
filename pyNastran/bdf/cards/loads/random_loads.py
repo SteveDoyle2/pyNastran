@@ -179,6 +179,7 @@ class RANDT1(RandomLoad):
         return RANDT1(sid, n, t0, tmax, comment='')
 
     def __init__(self, sid, n, t0, tmax, comment=''):
+        # type: (int, int, int, float, str) -> None
         """
         Creates a RANDT1 card
 
@@ -209,8 +210,8 @@ class RANDT1(RandomLoad):
 
         assert self.sid > 0, 'sid=%s\n%s' % (self.sid, self)
 
-    def validate(self):
-        assert self.k >= self.j, 'k=%s j=%s\n%s' % (self.k, self.j, self)
+    #def validate(self):
+        #assert self.k >= self.j, 'k=%s j=%s\n%s' % (self.k, self.j, self)
 
     @classmethod
     def add_card(cls, card, comment=''):

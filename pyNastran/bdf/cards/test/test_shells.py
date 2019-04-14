@@ -1272,7 +1272,7 @@ def make_dvmrel_optimization(model, params, material_type, mid, i=1):
         j = i + ii
         dvids = [j]
         coeffs = [1.0]
-        model.add_dvmrel1(j, material_type, eid, name, dvids, coeffs,
+        model.add_dvmrel1(j, material_type, mid, name, dvids, coeffs,
                           mp_min=None, mp_max=1e20,
                           c0=0.0, validate=True,
                           comment='')

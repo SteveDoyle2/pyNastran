@@ -786,6 +786,7 @@ class TABDMP1(Table):
         return TABDMP1(tid, x, y, Type='G', comment='')
 
     def __init__(self, tid, x, y, Type='G', comment=''):
+        # type: (int, Any, Any, str, str) -> None
         Table.__init__(self)
         if comment:
             self.comment = comment

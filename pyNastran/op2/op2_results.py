@@ -30,242 +30,242 @@ def get_nodal_averaged_stress(model, eid_to_nid_map, isubcase, options=None):
 
     """
     raise NotImplementedError()
-    assert options['mode'] in ['derive/avg', 'avg/derive'], options['mode']
-    assert options['layers'] in ['max', 'min', 'avg'], options['layers']
-    assert options['location'] in ['node', 'centroid'], options['location']
+    #assert options['mode'] in ['derive/avg', 'avg/derive'], options['mode']
+    #assert options['layers'] in ['max', 'min', 'avg'], options['layers']
+    #assert options['location'] in ['node', 'centroid'], options['location']
     #assert options['mode'] in ['derive/avg', 'avg/derive'], options['mode']
     #assert options['mode'] in ['derive/avg', 'avg/derive'], options['mode']
 
-    layer_map = {
-        'max': amax,
-        'min': amin,
-        'avg': mean,
-        #'sum': sum,
-    }
-    mode = options['mode']
-    layer_func = layer_map[options['layers']]
-    location = options['location']
+    #layer_map = {
+        #'max': amax,
+        #'min': amin,
+        #'avg': mean,
+        ##'sum': sum,
+    #}
+    #mode = options['mode']
+    #layer_func = layer_map[options['layers']]
+    #location = options['location']
 
-    results = {
-        'x': defaultdict(list),
-        'y': defaultdict(list),
-        'z': defaultdict(list),
-        'xy': defaultdict(list),
-        'yz': defaultdict(list),
-        'xz': defaultdict(list),
-        'maxP': defaultdict(list),
-        'minP': defaultdict(list),
-        'vonMises': defaultdict(list),  # 3D von mises
-        'vonMises2D': defaultdict(list),  # 3D von mises
-    }
-    if isubcase in model.solidStress:
-        case = model.solidStress[isubcase]
-        if case.is_von_mises:
-            vmWord = 'vonMises'
-        else:
-            vmWord = 'maxShear'
-        assert vmWord == 'vonMises', vmWord
+    #results = {
+        #'x': defaultdict(list),
+        #'y': defaultdict(list),
+        #'z': defaultdict(list),
+        #'xy': defaultdict(list),
+        #'yz': defaultdict(list),
+        #'xz': defaultdict(list),
+        #'maxP': defaultdict(list),
+        #'minP': defaultdict(list),
+        #'vonMises': defaultdict(list),  # 3D von mises
+        #'vonMises2D': defaultdict(list),  # 3D von mises
+    #}
+    #if isubcase in model.solidStress:
+        #case = model.solidStress[isubcase]
+        #if case.is_von_mises:
+            #vmWord = 'vonMises'
+        #else:
+            #vmWord = 'maxShear'
+        #assert vmWord == 'vonMises', vmWord
 
-        if location == 'node':  # derive/avg
-            for eid in case.ovmShear:
-                node_ids = eid_to_nid_map[eid]
-                for nid in node_ids:
-                    results['x'   ][nid].append(case.oxx[eid][nid])
-                    results['y'   ][nid].append(case.oyy[eid][nid])
-                    results['z'   ][nid].append(case.ozz[eid][nid])
-                    results['xy'  ][nid].append(case.txy[eid][nid])
-                    results['yz'  ][nid].append(case.tyz[eid][nid])
-                    results['xz'  ][nid].append(case.txz[eid][nid])
-                    results['maxP'][nid].append(case.o1[eid][nid])
-                    results['minP'][nid].append(case.o3[eid][nid])
-                    results['vonMises'][nid].append(case.ovmShear[eid][nid])
-        elif location == 'centroid':
-            for eid in case.ovmShear:  # derive/avg
-                node_ids = eid_to_nid_map[eid]
-                for nid in node_ids:
-                    results['x'   ][nid].append(case.oxx[eid]['CENTER'])
-                    results['y'   ][nid].append(case.oyy[eid]['CENTER'])
-                    results['z'   ][nid].append(case.ozz[eid]['CENTER'])
-                    results['xy'  ][nid].append(case.txy[eid]['CENTER'])
-                    results['yz'  ][nid].append(case.tyz[eid]['CENTER'])
-                    results['xz'  ][nid].append(case.txz[eid]['CENTER'])
-                    results['maxP'][nid].append(case.o1[eid]['CENTER'])
-                    results['minP'][nid].append(case.o3[eid]['CENTER'])
-                    results['vonMises'][nid].append(case.ovmShear[eid]['CENTER'])
-        else:
-            raise RuntimeError('location=%r' % location)
+        #if location == 'node':  # derive/avg
+            #for eid in case.ovmShear:
+                #node_ids = eid_to_nid_map[eid]
+                #for nid in node_ids:
+                    #results['x'   ][nid].append(case.oxx[eid][nid])
+                    #results['y'   ][nid].append(case.oyy[eid][nid])
+                    #results['z'   ][nid].append(case.ozz[eid][nid])
+                    #results['xy'  ][nid].append(case.txy[eid][nid])
+                    #results['yz'  ][nid].append(case.tyz[eid][nid])
+                    #results['xz'  ][nid].append(case.txz[eid][nid])
+                    #results['maxP'][nid].append(case.o1[eid][nid])
+                    #results['minP'][nid].append(case.o3[eid][nid])
+                    #results['vonMises'][nid].append(case.ovmShear[eid][nid])
+        #elif location == 'centroid':
+            #for eid in case.ovmShear:  # derive/avg
+                #node_ids = eid_to_nid_map[eid]
+                #for nid in node_ids:
+                    #results['x'   ][nid].append(case.oxx[eid]['CENTER'])
+                    #results['y'   ][nid].append(case.oyy[eid]['CENTER'])
+                    #results['z'   ][nid].append(case.ozz[eid]['CENTER'])
+                    #results['xy'  ][nid].append(case.txy[eid]['CENTER'])
+                    #results['yz'  ][nid].append(case.tyz[eid]['CENTER'])
+                    #results['xz'  ][nid].append(case.txz[eid]['CENTER'])
+                    #results['maxP'][nid].append(case.o1[eid]['CENTER'])
+                    #results['minP'][nid].append(case.o3[eid]['CENTER'])
+                    #results['vonMises'][nid].append(case.ovmShear[eid]['CENTER'])
+        #else:
+            #raise RuntimeError('location=%r' % location)
 
-    if isubcase in model.plateStress:
-        case = model.plateStress[isubcase]
-        if case.nonlinear_factor is not None: # transient
-            return
-        if case.is_von_mises:
-            vmWord = 'vonMises'
-        else:
-            vmWord = 'maxShear'
+    #if isubcase in model.plateStress:
+        #case = model.plateStress[isubcase]
+        #if case.nonlinear_factor is not None: # transient
+            #return
+        #if case.is_von_mises:
+            #vmWord = 'vonMises'
+        #else:
+            #vmWord = 'maxShear'
 
-        assert vmWord == 'vonMises', vmWord
-        if location == 'node':
-            for eid in case.ovmShear:
-                node_ids = eid_to_nid_map[eid]
-                eType = case.eType[eid]
-                if eType in ['CQUAD4', 'CQUAD8']:
+        #assert vmWord == 'vonMises', vmWord
+        #if location == 'node':
+            #for eid in case.ovmShear:
+                #node_ids = eid_to_nid_map[eid]
+                #eType = case.eType[eid]
+                #if eType in ['CQUAD4', 'CQUAD8']:
+                    ##cen = 'CEN/%s' % eType[-1]
+                    #assert len(node_ids[:4]) == 4, len(node_ids[:4])
+                    #if node_ids[0] in case.oxx[eid]:
+                        ## bilinear
+                        #for nid in node_ids[:4]:
+                            #results['x'   ][nid].append(layer_func(case.oxx[eid][nid]))
+                            #results['y'   ][nid].append(layer_func(case.oyy[eid][nid]))
+                            #results['xy'  ][nid].append(layer_func(case.txy[eid][nid]))
+                            #results['maxP'][nid].append(layer_func(case.majorP[eid][nid]))
+                            #results['minP'][nid].append(layer_func(case.minorP[eid][nid]))
+                            #results['vonMises'][nid].append(layer_func(case.ovmShear[eid][nid]))
+                    #else:
+                        ##cen = 'CEN/%s' % eType[-1]
+                        #cen = 0
+                        #for nid in node_ids[:4]:
+                            #results['x'   ][nid].append(layer_func(case.oxx[eid][cen]))
+                            #results['y'   ][nid].append(layer_func(case.oyy[eid][cen]))
+                            #results['xy'  ][nid].append(layer_func(case.txy[eid][cen]))
+                            #results['maxP'][nid].append(layer_func(case.majorP[eid][cen]))
+                            #results['minP'][nid].append(layer_func(case.minorP[eid][cen]))
+                            #results['vonMises'][nid].append(layer_func(case.ovmShear[eid][cen]))
+                #elif eType in ['CTRIA3', 'CTRIA6']:
+                    ##cen = 'CEN/%s' % eType[-1]
+                    #cen = 0
+                    #assert len(node_ids[:3]) == 3, len(node_ids[:3])
+                    #for nid in node_ids[:3]:
+                        #results['x'   ][nid].append(layer_func(case.oxx[eid][cen]))
+                        #results['y'   ][nid].append(layer_func(case.oyy[eid][cen]))
+                        #results['xy'  ][nid].append(layer_func(case.txy[eid][cen]))
+                        #results['maxP'][nid].append(layer_func(case.majorP[eid][cen]))
+                        #results['minP'][nid].append(layer_func(case.minorP[eid][cen]))
+                        #results['vonMises'][nid].append(layer_func(case.ovmShear[eid][cen]))
+                #else:
+                    #raise NotImplementedError(eType)
+        #elif location == 'centroid':
+            #for eid in case.ovmShear:
+                #node_ids = eid_to_nid_map[eid]
+                #eType = case.eType[eid]
+                #if eType in ['CQUAD4', 'CQUAD8', 'CTRIA3', 'CTRIA6']:
+                    ##cen = 'CEN/%s' % eType[-1]
+                    ## cen  0
+                    #pass
+                #else:
+                    #raise NotImplementedError(eType)
+                #for nid in node_ids:
+                    #results['x'   ][nid].append(layer_func(case.oxx[eid][cen]))
+                    #results['y'   ][nid].append(layer_func(case.oyy[eid][cen]))
+                    #results['xy'  ][nid].append(layer_func(case.txy[eid][cen]))
+                    #results['maxP'][nid].append(layer_func(case.majorP[eid][cen]))
+                    #results['minP'][nid].append(layer_func(case.minorP[eid][cen]))
+                    #results['vonMises'][nid].append(layer_func(case.ovmShear[eid][cen]))
+        #else:
+            #raise RuntimeError('location=%r' % location)
+
+    #if isubcase in model.compositePlateStress:
+        #case = model.compositePlateStress[isubcase]
+        #if case.nonlinear_factor is not None: # transient
+            #return
+        #if case.is_von_mises:
+            #vmWord = 'vonMises'
+        #else:
+            #vmWord = 'maxShear'
+
+        #assert vmWord == 'vonMises', vmWord
+        #if location == 'node':
+            #for eid in case.ovmShear:
+                #node_ids = eid_to_nid_map[eid]
+                #eType = case.eType[eid]
+                #if eType in ['CQUAD4', 'CQUAD8']:
+                    #assert len(node_ids[:4]) == 4, len(node_ids[:4])
+                    #for nid in node_ids[:4]:
+                        #results['x'   ][nid].append(layer_func(case.o11[eid]))
+                        #results['y'   ][nid].append(layer_func(case.o22[eid]))
+                        #results['xy'  ][nid].append(layer_func(case.t12[eid]))
+                        #results['maxP'][nid].append(layer_func(case.majorP[eid]))
+                        #results['minP'][nid].append(layer_func(case.minorP[eid]))
+                        #results['vonMises'][nid].append(layer_func(case.ovmShear[eid]))
+                #elif eType in ['CTRIA3', 'CTRIA6']:
                     #cen = 'CEN/%s' % eType[-1]
-                    assert len(node_ids[:4]) == 4, len(node_ids[:4])
-                    if node_ids[0] in case.oxx[eid]:
-                        # bilinear
-                        for nid in node_ids[:4]:
-                            results['x'   ][nid].append(layer_func(case.oxx[eid][nid]))
-                            results['y'   ][nid].append(layer_func(case.oyy[eid][nid]))
-                            results['xy'  ][nid].append(layer_func(case.txy[eid][nid]))
-                            results['maxP'][nid].append(layer_func(case.majorP[eid][nid]))
-                            results['minP'][nid].append(layer_func(case.minorP[eid][nid]))
-                            results['vonMises'][nid].append(layer_func(case.ovmShear[eid][nid]))
-                    else:
-                        #cen = 'CEN/%s' % eType[-1]
-                        cen = 0
-                        for nid in node_ids[:4]:
-                            results['x'   ][nid].append(layer_func(case.oxx[eid][cen]))
-                            results['y'   ][nid].append(layer_func(case.oyy[eid][cen]))
-                            results['xy'  ][nid].append(layer_func(case.txy[eid][cen]))
-                            results['maxP'][nid].append(layer_func(case.majorP[eid][cen]))
-                            results['minP'][nid].append(layer_func(case.minorP[eid][cen]))
-                            results['vonMises'][nid].append(layer_func(case.ovmShear[eid][cen]))
-                elif eType in ['CTRIA3', 'CTRIA6']:
-                    #cen = 'CEN/%s' % eType[-1]
-                    cen = 0
-                    assert len(node_ids[:3]) == 3, len(node_ids[:3])
-                    for nid in node_ids[:3]:
-                        results['x'   ][nid].append(layer_func(case.oxx[eid][cen]))
-                        results['y'   ][nid].append(layer_func(case.oyy[eid][cen]))
-                        results['xy'  ][nid].append(layer_func(case.txy[eid][cen]))
-                        results['maxP'][nid].append(layer_func(case.majorP[eid][cen]))
-                        results['minP'][nid].append(layer_func(case.minorP[eid][cen]))
-                        results['vonMises'][nid].append(layer_func(case.ovmShear[eid][cen]))
-                else:
-                    raise NotImplementedError(eType)
-        elif location == 'centroid':
-            for eid in case.ovmShear:
-                node_ids = eid_to_nid_map[eid]
-                eType = case.eType[eid]
-                if eType in ['CQUAD4', 'CQUAD8', 'CTRIA3', 'CTRIA6']:
-                    #cen = 'CEN/%s' % eType[-1]
-                    # cen  0
-                    pass
-                else:
-                    raise NotImplementedError(eType)
-                for nid in node_ids:
-                    results['x'   ][nid].append(layer_func(case.oxx[eid][cen]))
-                    results['y'   ][nid].append(layer_func(case.oyy[eid][cen]))
-                    results['xy'  ][nid].append(layer_func(case.txy[eid][cen]))
-                    results['maxP'][nid].append(layer_func(case.majorP[eid][cen]))
-                    results['minP'][nid].append(layer_func(case.minorP[eid][cen]))
-                    results['vonMises'][nid].append(layer_func(case.ovmShear[eid][cen]))
-        else:
-            raise RuntimeError('location=%r' % location)
+                    #assert len(node_ids[:3]) == 3, len(node_ids[:3])
+                    #for nid in node_ids[:3]:
+                        #results['x'   ][nid].append(layer_func(case.o11[eid]))
+                        #results['y'   ][nid].append(layer_func(case.o22[eid]))
+                        #results['xy'  ][nid].append(layer_func(case.t12[eid]))
+                        #results['maxP'][nid].append(layer_func(case.majorP[eid]))
+                        #results['minP'][nid].append(layer_func(case.minorP[eid]))
+                        #results['vonMises'][nid].append(layer_func(case.ovmShear[eid]))
+                #else:
+                    #raise NotImplementedError(eType)
+        #elif location == 'centroid':
+            #for eid in case.ovmShear:
+                #node_ids = eid_to_nid_map[eid]
+                #eType = case.eType[eid]
+                #for nid in node_ids:
+                    #results['x'   ][nid].append(layer_func(case.o11[eid]))
+                    #results['y'   ][nid].append(layer_func(case.o22[eid]))
+                    #results['xy'  ][nid].append(layer_func(case.t12[eid]))
+                    #results['maxP'][nid].append(layer_func(case.majorP[eid]))
+                    #results['minP'][nid].append(layer_func(case.minorP[eid]))
+                    #results['vonMises'][nid].append(layer_func(case.ovmShear[eid]))
+        #else:
+            #raise RuntimeError('location=%r' % location)
 
-    if isubcase in model.compositePlateStress:
-        case = model.compositePlateStress[isubcase]
-        if case.nonlinear_factor is not None: # transient
-            return
-        if case.is_von_mises:
-            vmWord = 'vonMises'
-        else:
-            vmWord = 'maxShear'
+    #if mode == 'derive/avg':
+        #for result_name, result in results.items():
+            #for nid, datai in result.items():
+                #results[result_name][nid] = mean(datai)
+    #elif mode == 'avg/derive':
+        #for result_name in ['x', 'y', 'z', 'xy', 'yz', 'xz']:
+            #for nid, datai in results[result_name].items():
+                #results[result_name][nid] = mean(datai)
 
-        assert vmWord == 'vonMises', vmWord
-        if location == 'node':
-            for eid in case.ovmShear:
-                node_ids = eid_to_nid_map[eid]
-                eType = case.eType[eid]
-                if eType in ['CQUAD4', 'CQUAD8']:
-                    assert len(node_ids[:4]) == 4, len(node_ids[:4])
-                    for nid in node_ids[:4]:
-                        results['x'   ][nid].append(layer_func(case.o11[eid]))
-                        results['y'   ][nid].append(layer_func(case.o22[eid]))
-                        results['xy'  ][nid].append(layer_func(case.t12[eid]))
-                        results['maxP'][nid].append(layer_func(case.majorP[eid]))
-                        results['minP'][nid].append(layer_func(case.minorP[eid]))
-                        results['vonMises'][nid].append(layer_func(case.ovmShear[eid]))
-                elif eType in ['CTRIA3', 'CTRIA6']:
-                    cen = 'CEN/%s' % eType[-1]
-                    assert len(node_ids[:3]) == 3, len(node_ids[:3])
-                    for nid in node_ids[:3]:
-                        results['x'   ][nid].append(layer_func(case.o11[eid]))
-                        results['y'   ][nid].append(layer_func(case.o22[eid]))
-                        results['xy'  ][nid].append(layer_func(case.t12[eid]))
-                        results['maxP'][nid].append(layer_func(case.majorP[eid]))
-                        results['minP'][nid].append(layer_func(case.minorP[eid]))
-                        results['vonMises'][nid].append(layer_func(case.ovmShear[eid]))
-                else:
-                    raise NotImplementedError(eType)
-        elif location == 'centroid':
-            for eid in case.ovmShear:
-                node_ids = eid_to_nid_map[eid]
-                eType = case.eType[eid]
-                for nid in node_ids:
-                    results['x'   ][nid].append(layer_func(case.o11[eid]))
-                    results['y'   ][nid].append(layer_func(case.o22[eid]))
-                    results['xy'  ][nid].append(layer_func(case.t12[eid]))
-                    results['maxP'][nid].append(layer_func(case.majorP[eid]))
-                    results['minP'][nid].append(layer_func(case.minorP[eid]))
-                    results['vonMises'][nid].append(layer_func(case.ovmShear[eid]))
-        else:
-            raise RuntimeError('location=%r' % location)
+        #for nid in results['maxP']:
+            #oxx = results['x'][nid]
+            #oyy = results['y'][nid]
+            #ozz = results['z'][nid]
 
-    if mode == 'derive/avg':
-        for result_name, result in results.items():
-            for nid, datai in result.items():
-                results[result_name][nid] = mean(datai)
-    elif mode == 'avg/derive':
-        for result_name in ['x', 'y', 'z', 'xy', 'yz', 'xz']:
-            for nid, datai in results[result_name].items():
-                results[result_name][nid] = mean(datai)
+            #txy = results['xy'][nid]
+            #tyz = results['yz'][nid]
+            #txz = results['xz'][nid]
 
-        for nid in results['maxP']:
-            oxx = results['x'][nid]
-            oyy = results['y'][nid]
-            ozz = results['z'][nid]
+            #if not isinstance(ozz, float):
+                #ozz = 0.
+            #if not isinstance(txy, float):
+                #txy = 0.
+            #if not isinstance(tyz, float):
+                #tyz = 0.
+            #if not isinstance(txz, float):
+                #txz = 0.
 
-            txy = results['xy'][nid]
-            tyz = results['yz'][nid]
-            txz = results['xz'][nid]
+            ## 3D
+            #A = array([
+                #[oxx, txy, txz],
+                #[ 0., oyy, tyz],
+                #[ 0.,  0., ozz],
+            #])
+            #eigs = eigvalsh(A, UPLO='U')
+            #maxP = eigs.max()
+            #minP = eigs.min()
+            #results['maxP'][nid] = maxP
+            #results['minP'][nid] = minP
 
-            if not isinstance(ozz, float):
-                ozz = 0.
-            if not isinstance(txy, float):
-                txy = 0.
-            if not isinstance(tyz, float):
-                tyz = 0.
-            if not isinstance(txz, float):
-                txz = 0.
+            ## 2D
+            #A2 = array([
+                #[oxx, txy],
+                #[ 0., oyy],
+            #])
+            #eigs2 = eigvalsh(A2, UPLO='U')
+            ##maxP2 = eigs2.max()
+            ##minP2 = eigs2.min()
 
-            # 3D
-            A = array([
-                [oxx, txy, txz],
-                [ 0., oyy, tyz],
-                [ 0.,  0., ozz],
-            ])
-            eigs = eigvalsh(A, UPLO='U')
-            maxP = eigs.max()
-            minP = eigs.min()
-            results['maxP'][nid] = maxP
-            results['minP'][nid] = minP
-
-            # 2D
-            A2 = array([
-                [oxx, txy],
-                [ 0., oyy],
-            ])
-            eigs2 = eigvalsh(A2, UPLO='U')
-            #maxP2 = eigs2.max()
-            #minP2 = eigs2.min()
-
-            results['vonMises'][nid] = vonMises3D(*eigs)
-            results['vonMises2D'][nid] = vonMises2D(*eigs2)
-    else:
-        raise RuntimeError('mode=%r' % mode)
-    return results
+            #results['vonMises'][nid] = vonMises3D(*eigs)
+            #results['vonMises2D'][nid] = vonMises2D(*eigs2)
+    #else:
+        #raise RuntimeError('mode=%r' % mode)
+    #return results
 
 def solid_bending():
     model_path = os.path.join(pyNastran.__path__[0], '..', 'models')

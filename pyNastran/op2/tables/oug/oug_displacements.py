@@ -1,11 +1,9 @@
 from __future__ import print_function
 from six import string_types
 import numpy as np
-#from struct import pack
 
 
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
-#RealTableObject, ComplexTableObject
 
 
 #def write_block(f, fascii)

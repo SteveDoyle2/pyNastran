@@ -365,6 +365,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         self.tid_ref = None
 
     def LoadID(self, lid):
+        # type: (int) -> int
         if isinstance(lid, list):
             sid = self.LoadID(lid[0])
         elif isinstance(lid, integer_types):
@@ -374,9 +375,11 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         return sid
 
     def get_loads(self):
+        # type: () -> Any
         return self.lid_ref
 
     def Lid(self):
+        # type: () -> int
         if self.lid_ref is not None:
             return self.LoadID(self.lid_ref)
         return self.lid
@@ -892,7 +895,7 @@ class DEFORM(Load):
         """
         sid = data[0]
         eid = data[1]
-        defomation = data[2]
+        deformation = data[2]
         return DEFORM(sid, eid, deformation, comment=comment)
 
     def cross_reference(self, model):
