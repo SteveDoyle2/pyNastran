@@ -86,13 +86,14 @@ def expand_thru_case_control(set_value):
     imax_int = 0
     #print('set_value = %r' % set_value)
     for ivalue in set_value:
+        #print('----------')
         if isinstance(ivalue, integer_types):
             assert add_mode is True, add_mode
             set_value2.add(ivalue)
             continue
 
         ivalue_str = ivalue.strip()
-        #print('  ivalue=%r; type=%s' % (ivalue, type(ivalue)))
+        #print('  ivalue=%r; type=%s add=%s' % (ivalue, type(ivalue), add_mode))
         if '/' in ivalue_str:
             set_value2.add(ivalue_str)
         else:
@@ -108,6 +109,7 @@ def expand_thru_case_control(set_value):
             ivalue2 = interpret_value(ivalue_str, card=str(set_value)) #  type: Optional[Union[int, float, str]]
             if isinstance(ivalue2, integer_types):
                 #print('  isdigit')
+                #print('  imin=%s ivalue2=%s imax=%s' % (imin_int, ivalue2, imax_int))
                 #ivalue = int(ivalue)
                 if not imin_int < ivalue2 < imax_int:
                     add_mode = True
@@ -116,9 +118,9 @@ def expand_thru_case_control(set_value):
                     #print('  adding %s' % ivalue)
                     set_value2.add(ivalue2)
                 else:
-                    #print('  removing %s' % ivalue)
+                    #print('  removing %s' % ivalue2)
                     set_value2.remove(ivalue2)
-                    imin_int = ivalue2
+                    imin_int = int(ivalue2)
             elif isinstance(ivalue2, float):
                 assert add_mode is True, add_mode
                 set_value2.add(ivalue2)
@@ -129,7 +131,7 @@ def expand_thru_case_control(set_value):
                            'SET card\n')
                     raise RuntimeError(msg)
                 elif 'THRU' in ivalue2:
-                    set_valuesi, add_mode = _expand_thru_case_control_string_thru(set_value, ivalue2, add_mode)
+                    set_valuesi, imin_int, imax_int, add_mode = _expand_thru_case_control_string_thru(set_value, ivalue2, add_mode)
                     set_value2.update(set_valuesi)
                 else:
                     assert add_mode is True, add_mode
@@ -201,7 +203,7 @@ def _expand_thru_case_control_string_thru(set_value, svalue, add_mode):
         raise RuntimeError(msg)
     #print('  set_values_out =',  set_values_out)
     #print('---')
-    return set_values_out, add_mode
+    return set_values_out, imin_int, imax_int, add_mode
 
 
 def write_stress_type(key, options, value, spaces=''):

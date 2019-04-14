@@ -102,7 +102,7 @@ class UnXrefMesh(SafeXrefMesh):
             raise
 
         data = [self.MATS1, self.MATS3, self.MATS8,
-                self.MATT1, self.MATT2, self.MATT3, self.MATT4, # self.MATT5,
+                self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,
                 self.MATT8, self.MATT9]
         for material_deps in data:
             for mat in material_deps.values():
@@ -111,13 +111,6 @@ class UnXrefMesh(SafeXrefMesh):
                 except AttributeError:
                     print(mat)
                     raise
-
-        for mat in self.MATT5.values():
-            try:
-                mat.uncross_reference(self)
-            except AttributeError:
-                print(mat)
-                raise
 
     def _uncross_reference_masses(self):
         # type: () -> None

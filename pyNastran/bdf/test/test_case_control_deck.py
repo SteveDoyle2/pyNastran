@@ -201,7 +201,7 @@ class CaseControlTest(unittest.TestCase):
             'SUBCASE 1',
             #'    SET = ALL',
             '    SET 20 = ALL',
-            '    SET 88 = 77, 78, 79, 5 THRU 14, 16 THRU 55, 100 THRU 300',
+            '    SET 88 = 77, 78, 79, 5 THRU 14, 17 THRU 55, 100 THRU 300',
             '    SET 99 = 1 THRU 10',
             '    SET 105 = 1.009, 10.2, 13.4, 14.0, 15.0',
             '    SET 111 = MAAX1, MAAX2',

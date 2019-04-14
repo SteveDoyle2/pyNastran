@@ -282,7 +282,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
             del eid, pid, mid
 
         if write_shells:
-            eid_shell = _write_shells(bdf_file, model, eid_set, face_map, pid_shell, mid_shell, mids_to_write)
+            eid_shell = _write_shells(bdf_file, model, eid_set, face_map, eid_shell, pid_shell, mid_shell, mids_to_write)
         bdf_file.write('ENDDATA\n')
     #if 0:
         #model = model.__class__.__init__()
