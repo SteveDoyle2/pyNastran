@@ -5,7 +5,7 @@ defines:
  - write_stress_type(key, options, value, spaces='')
 """
 from __future__ import print_function
-from typing import List
+from typing import List, Optional, Union, Set
 from six import string_types
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
@@ -58,6 +58,7 @@ def expand_thru_int(set_value):   # pragma: no cover
 
 
 def expand_thru_case_control(set_value):
+    # type: (List[Union[int, float, str]]) -> List[int]
     """
     Expands a case control SET card
 
@@ -81,20 +82,20 @@ def expand_thru_case_control(set_value):
     """
     set_value2 = set()
     add_mode = True
-    imin = 0
-    imax = 0
+    imin_int = 0
+    imax_int = 0
     #print('set_value = %r' % set_value)
     for ivalue in set_value:
         if isinstance(ivalue, integer_types):
             assert add_mode is True, add_mode
             set_value2.add(ivalue)
             continue
-        ivalue = ivalue.strip()
-        #print('  ivalue=%r; type=%s' % (ivalue, type(ivalue)))
-        if '/' in ivalue:
-            set_value2.add(ivalue)
-        else:
 
+        ivalue_str = ivalue.strip()
+        #print('  ivalue=%r; type=%s' % (ivalue, type(ivalue)))
+        if '/' in ivalue_str:
+            set_value2.add(ivalue_str)
+        else:
             #if 'ALL' in ivalue:
                 #msg = ('ALL is not supported on CaseControlDeck '
                        #'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
@@ -104,79 +105,38 @@ def expand_thru_case_control(set_value):
                        #'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
                 #raise RuntimeError(msg)
 
-            ivalue = interpret_value(ivalue, card=str(set_value))
-            if isinstance(ivalue, integer_types):
+            ivalue2 = interpret_value(ivalue_str, card=str(set_value)) #  type: Optional[Union[int, float, str]]
+            if isinstance(ivalue2, integer_types):
                 #print('  isdigit')
                 #ivalue = int(ivalue)
-                if not imin < ivalue < imax:
+                if not imin_int < ivalue2 < imax_int:
                     add_mode = True
                     #print('  break...\n')
                 if add_mode:
                     #print('  adding %s' % ivalue)
-                    set_value2.add(ivalue)
+                    set_value2.add(ivalue2)
                 else:
                     #print('  removing %s' % ivalue)
-                    set_value2.remove(ivalue)
-                    imin = ivalue
-            elif isinstance(ivalue, float):
+                    set_value2.remove(ivalue2)
+                    imin_int = ivalue2
+            elif isinstance(ivalue2, float):
                 assert add_mode is True, add_mode
-                set_value2.add(ivalue)
-            elif isinstance(ivalue, string_types):
+                set_value2.add(ivalue2)
+            elif isinstance(ivalue2, string_types):
                 #print('  not digit=%r' % set_value)
                 if set_value == 'EXCLUDE':
                     msg = ('EXCLUDE is not supported on CaseControlDeck '
                            'SET card\n')
                     raise RuntimeError(msg)
-                elif 'THRU' in ivalue:
-                    svalues = ivalue.split()
-                    #print('  svalues=%s' % svalues)
-                    if len(svalues) == 3:
-                        assert add_mode is True, add_mode
-                        imin, thru, imax = svalues
-                        assert thru == 'THRU', thru
-                        imin = int(imin)
-                        imax = int(imax)
-                        assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
-                        for jthru in range(imin, imax + 1):
-                            set_value2.add(jthru)
-
-                    elif len(svalues) == 4:
-                        imin, thru, imax, by_except = svalues
-                        imin = int(imin)
-                        imax = int(imax)
-                        assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
-                        assert by_except == 'EXCEPT', by_except
-
-                        for jthru in range(imin, imax + 1):
-                            set_value2.add(jthru)
-                        add_mode = False
-
-                    elif len(svalues) == 5:
-                        imin, thru, imax, by_except, increment_except = svalues
-                        imin = int(imin)
-                        imax = int(imax)
-                        assert imax > imin, 'imin=%s imax=%s' % (imin, imax)
-                        increment_except = int(increment_except)
-                        if by_except == 'BY':
-                            for jthru in range(imin, imax + 1, by_except):
-                                set_value2.add(jthru)
-                            add_mode = True
-                        elif by_except == 'EXCEPT':
-                            for jthru in range(imin, imax + 1):
-                                if jthru == increment_except:
-                                    continue
-                                set_value2.add(jthru)
-                            add_mode = False
-                        else:
-                            raise RuntimeError(ivalue)
-                    else:
-                        msg = ('expected data of the form: '
-                               '"10 THRU 20" or "10 THRU 20 BY 5"\n'
-                               'actual=%r; input=%s' % (ivalue.strip(), set_value))
-                        raise RuntimeError(msg)
+                elif 'THRU' in ivalue2:
+                    set_valuesi, add_mode = _expand_thru_case_control_string_thru(set_value, ivalue2, add_mode)
+                    set_value2.update(set_valuesi)
                 else:
                     assert add_mode is True, add_mode
-                    set_value2.add(ivalue)
+                    #print('else...', ivalue)
+                    set_value2.add(ivalue.strip())
+            else:
+                raise NotImplementedError(ivalue2)
 
     list_values = list(set_value2)
     try:
@@ -188,7 +148,64 @@ def expand_thru_case_control(set_value):
     #print('end of expansion = %s' % list_values)
     return list_values
 
+def _expand_thru_case_control_string_thru(set_value, svalue, add_mode):
+    """helper for ``expand_thru_case_control``"""
+    ## type: (List[str], Any, bool) -> (Set[int], bool)
+    set_values_out = set()  # type: Set[int]
+    svalues = svalue.split()  # type: List[str]
+    #print('  set_value=%s' %  set_value)
+    #print('  svalues=%s' % svalues)
+    if len(svalues) == 3:
+        assert add_mode is True, add_mode
+        imin, thru, imax = svalues
+        assert thru == 'THRU', thru
+        imin_int = int(imin)
+        imax_int = int(imax)
+        assert imax_int > imin_int, 'imin=%s imax=%s' % (imin_int, imax_int)
+        for jthru in range(imin_int, imax_int + 1):
+            set_values_out.add(jthru)
+
+    elif len(svalues) == 4:
+        imin, thru, imax, by_except = svalues
+        imin_int = int(imin)
+        imax_int = int(imax)
+        assert imax_int > imin_int, 'imin=%s imax=%s' % (imin_int, imax_int)
+        assert by_except == 'EXCEPT', by_except
+
+        for jthru in range(imin_int, imax_int + 1):
+            set_values_out.add(jthru)
+        add_mode = False
+
+    elif len(svalues) == 5:
+        imin, thru, imax, by_except, increment_except = svalues
+        imin_int = int(imin)
+        imax_int = int(imax)
+        assert imax_int > imin_int, 'imin=%s imax=%s' % (imin_int, imax_int)
+        increment_except_int = int(increment_except)
+        if by_except == 'BY':
+            for jthru in range(imin_int, imax_int + 1, increment_except_int):
+                set_values_out.add(jthru)
+            add_mode = True
+        elif by_except == 'EXCEPT':
+            for jthru in range(imin_int, imax_int + 1):
+                if jthru == increment_except_int:
+                    continue
+                set_values_out.add(jthru)
+            add_mode = False
+        else:
+            raise RuntimeError(svalue)
+    else:
+        msg = ('expected data of the form: '
+               '"10 THRU 20" or "10 THRU 20 BY 5"\n'
+               'actual=%r; input=%s' % (svalue.strip(), set_value))
+        raise RuntimeError(msg)
+    #print('  set_values_out =',  set_values_out)
+    #print('---')
+    return set_values_out, add_mode
+
+
 def write_stress_type(key, options, value, spaces=''):
+    # type: (str, List[str], Optional[str], str) -> str
     """
     writes:
      - STRESS(SORT1) = ALL
@@ -234,7 +251,7 @@ def write_stress_type(key, options, value, spaces=''):
 
 
 def write_set(set_id, values, spaces=''):
-    # type: (List[int], int, str) -> str
+    # type: (List[int], List[int], str) -> str
     """
     writes
     SET 80 = 3926, 3927, 3928, 4141, 4142, 4143, 4356, 4357, 4358, 4571,
