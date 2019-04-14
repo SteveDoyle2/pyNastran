@@ -6,6 +6,7 @@ from __future__ import print_function, unicode_literals
 import os
 import ntpath
 import posixpath
+from typing import List, Optional, Any
 from six import PY2
 if PY2:
     from pathlib2 import PurePosixPath, PureWindowsPath
@@ -18,7 +19,7 @@ IS_WINDOWS = 'nt' in os.name
 
 
 def get_include_filename(card_lines, include_dir='', is_windows=None):
-    # type: (List[str], str) -> str
+    # type: (List[str], str, Optional[bool]) -> str
     """
     Parses an INCLUDE file split into multiple lines (as a list).
 
@@ -130,8 +131,9 @@ def split_filename_into_tokens(include_dir, filename, is_windows):
     return pth_out
 
 def split_tokens(tokens, is_windows):
+    # type: (List[str], bool) -> List[str]
     """converts a series of path tokens into a joinable path"""
-    tokens2 = []
+    tokens2 = [] # type: List[str]
     is_mac_linux = not is_windows
     for itoken, token in enumerate(tokens):
         # this is technically legal...

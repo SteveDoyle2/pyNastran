@@ -9,7 +9,7 @@ import getpass
 import inspect
 import warnings
 from collections import defaultdict
-from typing import List, Union, Dict, Tuple, Optional
+from typing import List, Union, Dict, Tuple, Optional, Any
 
 from six import StringIO, string_types
 
@@ -278,7 +278,7 @@ def expand_tabs(line):
     return line
 
 def parse_executive_control_deck(executive_control_lines):
-    # type: (List[str]) -> Optional[int], Optional[str], Optional[int]
+    # type: (List[str]) -> (Optional[int], Optional[str], Optional[int])
     """Extracts the solution from the executive control deck"""
     sol = None
     method = None
@@ -305,7 +305,7 @@ def parse_executive_control_deck(executive_control_lines):
 
 
 def _parse_pynastran_header(line):
-    # type: (str) -> Tuple[Optional[str], Optional[str]]
+    # type: (str) -> (Tuple[Optional[str], Optional[str]])
     """
     Parameters
     ----------
@@ -398,7 +398,7 @@ def _parse_pynastran_header(line):
 
 
 def print_filename(filename, relpath=True):
-    # type: (str, str) -> str
+    # type: (str, bool) -> str
     """
     Takes a path such as C:/work/fem.bdf and locates the file using
     relative paths.  If it's on another drive, the path is not modified.
@@ -485,7 +485,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
 
 
 def _parse_dynamic_syntax(key, dict_of_vars, log):
-    # type: (key, Any, Any) -> Dict[str, Any]
+    # type: (str, Any, Any) -> Dict[str, Any]
     """
     Applies the dynamic syntax for %varName
 
@@ -512,7 +512,7 @@ def _parse_dynamic_syntax(key, dict_of_vars, log):
     return dict_of_vars[key]
 
 def _get_card_name(lines, active_filename):
-    # type: (List[str], str) -> str
+    # type: (List[str], str) -> Optional[str]
     """
     Returns the name of the card defined by the provided lines
 

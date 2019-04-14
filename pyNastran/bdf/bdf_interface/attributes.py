@@ -317,11 +317,11 @@ class BDFAttributes(object):
         #: stores CBARAO, CBEAMAO
         self.ao_element_flags = {}  # type: Dict[int, Any]
         #: stores BAROR
-        self.baror = None
+        self.baror = None  # type: Optional[Any]
         #: stores BEAMOR
-        self.beamor = None
+        self.beamor = None  # type: Optional[Any]
         #: stores SNORM
-        self.normals = {}
+        self.normals = {}  # type: Dict[int, Any]
 
         #: stores rigid elements (RBE2, RBE3, RJOINT, etc.)
         self.rigid_elements = {}  # type: Dict[int, Any]
@@ -384,7 +384,7 @@ class BDFAttributes(object):
         zaxis = array([0., 0., 1.])
         xzplane = array([1., 0., 0.])
         coord = CORD2R(cid=0, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane)
-        self.coords = {0 : coord}    # type: Dict[int, Any]
+        self.coords = {0 : coord}   # type: Dict[int, Any]
 
         # --------------------------- constraints ----------------------------
         #: stores SUPORT1s
@@ -598,19 +598,19 @@ class BDFAttributes(object):
 
 
         #--------------------------superelements------------------------------
-        self.setree = {}
-        self.senqset = {}
-        self.sebulk = {}
-        self.sebndry = {}
-        self.seloc = {}
-        self.sempln = {}
-        self.seconct = {}
-        self.selabel = {}
-        self.seexcld = {}
-        self.seelt = {}
-        self.seload = {}
-        self.csuper = {}
-        self.csupext = {}
+        self.setree = {}  # type: Dict[int, Any]
+        self.senqset = {}  # type: Dict[int, Any]
+        self.sebulk = {}  # type: Dict[int, Any]
+        self.sebndry = {}  # type: Dict[int, Any]
+        self.seloc = {}  # type: Dict[int, Any]
+        self.sempln = {}  # type: Dict[int, Any]
+        self.seconct = {}  # type: Dict[int, Any]
+        self.selabel = {}  # type: Dict[int, Any]
+        self.seexcld = {}  # type: Dict[int, Any]
+        self.seelt = {}  # type: Dict[int, Any]
+        self.seload = {}  # type: Dict[int, Any]
+        self.csuper = {}  # type: Dict[int, Any]
+        self.csupext = {}  # type: Dict[int, Any]
 
         # ---------------------------------------------------------------------
         self._type_to_id_map = defaultdict(list)  # type: Dict[int, List[Any]]
@@ -943,10 +943,12 @@ class BDFAttributes(object):
 
     @property
     def nastran_format(self):
+        # type: () -> str
         return self._nastran_format
 
     @nastran_format.setter
     def nastran_format(self, nastran_format):
+        # type: (str) -> None
         fmt_lower = nastran_format.lower().strip()
         if fmt_lower not in ['nx', 'msc', 'zona']:
             raise RuntimeError(nastran_format)
@@ -1012,6 +1014,7 @@ class BDFAttributes(object):
 
     @property
     def npoints(self):
+        # type: () -> int
         """gets the number of GRID, SPOINT, EPOINT ids"""
         return len(self.point_ids)
 
@@ -1034,7 +1037,7 @@ class BDFAttributes(object):
 
     @property
     def nproperties(self):
-    # type: () -> int
+        # type: () -> int
         """gets the number of properties"""
         return len(self.properties)
 
@@ -1101,6 +1104,7 @@ class BDFAttributes(object):
         return wtmass
 
     def set_param(self, key, values):
+        # type: (str, Union[int, float, str, List[float]]) -> None
         """sets a param card; creates it if necessary"""
         if isinstance(values, (int, float, str)):
             values = [values]

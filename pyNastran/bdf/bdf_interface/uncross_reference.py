@@ -11,12 +11,14 @@ class UnXrefMesh(SafeXrefMesh):
     Unlinks up the various cards in the BDF.
     """
     def __init__(self):
+        # type: () -> None
         """
         The main BDF class defines all the parameters that are used.
         """
         SafeXrefMesh.__init__(self)
 
     def uncross_reference(self, word=''):
+        # type: (str) -> None
         """uncross references the model"""
         self.log.debug("Uncross Referencing%s..." % word)
         self._uncross_reference_nodes()
@@ -100,7 +102,7 @@ class UnXrefMesh(SafeXrefMesh):
             raise
 
         data = [self.MATS1, self.MATS3, self.MATS8,
-                self.MATT1, self.MATT2, self.MATT3, self.MATT4, self.MATT5,
+                self.MATT1, self.MATT2, self.MATT3, self.MATT4, # self.MATT5,
                 self.MATT8, self.MATT9]
         for material_deps in data:
             for mat in material_deps.values():
@@ -109,6 +111,13 @@ class UnXrefMesh(SafeXrefMesh):
                 except AttributeError:
                     print(mat)
                     raise
+
+        for mat in self.MATT5.values():
+            try:
+                mat.uncross_reference(self)
+            except AttributeError:
+                print(mat)
+                raise
 
     def _uncross_reference_masses(self):
         # type: () -> None
@@ -262,6 +271,7 @@ class UnXrefMesh(SafeXrefMesh):
             set_obj.uncross_reference()
 
     def _uncross_reference_optimization(self):
+        # type: () -> None
         """uncross references the optimization objects"""
         for unused_key, deqatn in self.dequations.items():
             deqatn.uncross_reference()

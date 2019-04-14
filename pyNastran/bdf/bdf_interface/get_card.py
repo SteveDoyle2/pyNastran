@@ -52,6 +52,7 @@ from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector_for_surf
 class GetCard(GetMethods):
     """defines various methods to access high level BDF data"""
     def __init__(self):
+        # type: () -> Any
         self._type_to_slot_map = {}
         GetMethods.__init__(self)
 
@@ -132,6 +133,7 @@ class GetCard(GetMethods):
         return out_dict
 
     def _reset_type_to_slot_map(self):
+        # type: () -> Dict[Any, Any]
         """resets self._type_to_slot_map"""
         rslot_map = defaultdict(list)
         for dict_name, card_names in self._slot_to_type_map.items():
@@ -179,6 +181,7 @@ class GetCard(GetMethods):
         return rslot_map
 
     def reset_rslot_map(self):
+        # type: () -> None
         """helper method for get_rslot_map"""
         rslot_map = {}
         for key, values in self._slot_to_type_map.items():
@@ -188,6 +191,7 @@ class GetCard(GetMethods):
 
     @property
     def nid_map(self):
+        # type: () -> Any
         """
         Gets the GRID/SPOINT/EPOINT ids to a sorted order.
 
@@ -212,6 +216,7 @@ class GetCard(GetMethods):
         return self.get_nid_map(sort_ids=True)
 
     def get_nid_map(self, sort_ids=True):
+        # type: (bool) -> Dict[int, int]
         """
         Maps the GRID/SPOINT/EPOINT ids to a sorted/unsorted order.
 
@@ -1267,6 +1272,7 @@ class GetCard(GetMethods):
         return is_temperatures, temperatures
 
     def _get_rigid(self):
+        # type: () -> Any
         """
         GUI helper function
 
@@ -1892,7 +1898,7 @@ class GetCard(GetMethods):
 
     def get_elements_properties_nodes_by_element_type(self, dtype='int32', solids=None,
                                                       stop_if_no_eids=True):
-        # type: (str, Optional[Dict[str, Any]]) -> Any
+        # type: (str, Optional[Dict[str, Any]], bool) -> Any
         """
         Gets a dictionary of element type to [eids, pids, node_ids]
 
@@ -2054,6 +2060,7 @@ class GetCard(GetMethods):
     # ELEMENT CARDS
 
     def get_element_ids_list_with_pids(self, pids=None):
+        # type: (Optional[List[int]]) -> List[int]
         """
         Gets all the element IDs with a specific property ID.
 
@@ -2298,6 +2305,7 @@ class GetCard(GetMethods):
         return pid_to_eids_map
 
     def get_node_id_to_element_ids_map(self):
+        # type: () -> Dict[int, List[int]]
         """
         Returns a dictionary that maps node IDs to a list of elemnent IDs
 
@@ -2328,6 +2336,7 @@ class GetCard(GetMethods):
         return nid_to_eids_map
 
     def get_node_id_to_elements_map(self):
+        # type: () -> Dict[int, List[int]]
         """
         Returns a dictionary that maps node IDs to a list of elements.
 
@@ -2364,6 +2373,7 @@ class GetCard(GetMethods):
         return nid_to_elements_map
 
     def get_property_id_to_element_ids_map(self, msg=''):
+        # type: (str) -> Dict[int, List[int]]
         """
         Returns a dictionary that maps a property ID to a list of elements.
 
@@ -2402,6 +2412,7 @@ class GetCard(GetMethods):
         return pid_to_eids_map
 
     def get_material_id_to_property_ids_map(self, msg=''):
+        # type: (str) -> Dict[int, List[int]]
         """
         Returns a dictionary that maps a material ID to a list of properties
 
@@ -2734,6 +2745,7 @@ class GetCard(GetMethods):
         return nids, comps
 
     def get_mklist(self):
+        # type: () -> np.ndarray
         """gets the MKLIST vector from MKAERO1/MKAERO2"""
         mklist = []
         mkarray = np.array([])

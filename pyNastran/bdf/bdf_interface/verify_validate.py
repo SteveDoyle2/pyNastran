@@ -6,9 +6,11 @@ defines:
 from __future__ import print_function
 import sys
 import traceback
+from typing import List, Dict, Any
 from six import iteritems, reraise
 
 def verify_bdf(model, xref):
+    # type: (Any, bool) -> None
     #for key, card in sorted(model.params.items()):
         #card._verify(xref)
     for unused_key, card in sorted(iteritems(model.nodes)):
@@ -59,6 +61,7 @@ def verify_bdf(model, xref):
         verify_bdf(superelement, xref)
 
 def _verify_dict(dict_obj, xref):
+    # type: (Dict[Any, Any], bool) -> None
     """helper for ``verify_bdf``"""
     for unused_key, card in sorted(dict_obj.items()):
         try:
@@ -68,6 +71,7 @@ def _verify_dict(dict_obj, xref):
             raise
 
 def _verify_dict_list(dict_list, xref):
+    # type: (Dict[Any, List[Any]], bool) -> None
     """helper for ``verify_bdf``"""
     for unused_key, cards in sorted(dict_list.items()):
         for card in cards:
@@ -78,6 +82,7 @@ def _verify_dict_list(dict_list, xref):
                 raise
 
 def _print_card(card):
+    # type: (Any) -> str
     """helper for ``_validate_msg``"""
     try:
         return card.write_card(size=8)
@@ -85,6 +90,7 @@ def _print_card(card):
         return ''
 
 def _validate_msg(card_obj):
+    # type: (Any) -> str
     """helper for ``_validate_traceback``"""
     msg = traceback.format_exc()
     try:
@@ -120,6 +126,7 @@ def _validate_traceback(model, obj, unused_error, ifailed, nmax_failed):
     return ifailed, exc_type, exc_value, exc_traceback
 
 def validate_bdf(model):
+    # type: (Any) -> None
     _validate_dict(model, model.nodes)
     _validate_dict(model, model.points)
     _validate_dict(model, model.coords)
@@ -297,6 +304,7 @@ def validate_bdf(model):
         validate_bdf(superelement)
 
 def _validate_dict_list(model, objects_dict):
+    # type: (Any, Dict[Any, Any]) -> None
     """helper method for validate_bdf"""
     ifailed = 0
     nmax_failed = 0
@@ -316,7 +324,7 @@ def _validate_dict_list(model, objects_dict):
             reraise(exc_type, exc_value, exc_traceback)
 
 def _validate_dict(model, objects):
-    # type : (dict) -> None
+    # type : (Any, Dict[Any, Any]) -> None
     """helper method for validate_bdf"""
     assert isinstance(objects, dict), type(objects)
     ifailed = 0
@@ -331,7 +339,7 @@ def _validate_dict(model, objects):
         reraise(exc_type, exc_value, exc_traceback)
 
 def _validate_list(model, objects):
-    # type : (List) -> None
+    # type : (Any, List[Any]) -> None
     """helper method for validate_bdf"""
     ifailed = 0
     nmax_failed = 0

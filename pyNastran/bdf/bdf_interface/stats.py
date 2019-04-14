@@ -1,5 +1,8 @@
+from __future__ import print_function
+from typing import List, Set, Dict, Any, Union
+
 def get_bdf_stats(model, return_type='string', word=''):
-    # type: (str) -> Union[str, List[str]]
+    # type: (Any, str, str) -> Union[str, List[str]]
     """
     Print statistics for the BDF
 
@@ -181,7 +184,7 @@ def get_bdf_stats(model, return_type='string', word=''):
     # dloads
     for (lid, loads) in sorted(model.dloads.items()):
         msg.append('bdf.dloads[%s]' % lid)
-        groups_dict = {}
+        groups_dict = {}  # type: Dict[str, Any]
         for loadi in loads:
             groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
         for name, count_name in sorted(groups_dict.items()):
@@ -338,6 +341,7 @@ def get_bdf_stats(model, return_type='string', word=''):
     return msg
 
 def _get_bdf_stats_loads(model):
+    # type: (Any) -> List[str]
     """helper for ``get_bdf_stats(...)``"""
     # loads
     msg = []
@@ -361,7 +365,7 @@ def _get_bdf_stats_loads(model):
 
         for (lid, loads) in sorted(model.loads.items()):
             msg.append('bdf.loads[%s]' % lid)
-            groups_dict = {}  # type: Dict[str, int]
+            groups_dict = {}
             for loadi in loads:
                 groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
             for name, count_name in sorted(groups_dict.items()):

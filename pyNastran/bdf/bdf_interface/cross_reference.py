@@ -82,6 +82,7 @@ class XrefMesh(BDFAttributes):
     Links up the various cards in the BDF.
     """
     def __init__(self):
+        # type: () -> None
         """
         The main BDF class defines all the parameters that are used.
         """
@@ -243,7 +244,7 @@ class XrefMesh(BDFAttributes):
             coord.setup()
 
     def _cross_reference_aero(self, check_caero_element_ids=False):
-        # type: () -> None
+        # type: (bool) -> None
         """
         Links up all the aero cards
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS

@@ -3,12 +3,14 @@ Defines various utilities for replicated BDF parsing including:
  - to_fields
 """
 from __future__ import print_function, unicode_literals
+from typing import List, Optional
 
 from pyNastran.bdf.bdf_interface.utils import expand_tabs
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 
 def to_fields_replication(card_lines):
+    # type: (List[str]) -> List[Optional[str]]
     """
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.  Same as to_fields, but
@@ -128,6 +130,7 @@ def float_replication(field, old_field):
     return field2
 
 def int_replication(field, old_field):
+    # type: (str, str) -> int
     """*4, *(11)"""
     msg = 'field=%r; expected *(1), *2, ..., *11' % field
     assert field[0] == '*', msg

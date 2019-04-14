@@ -15,6 +15,7 @@ from pyNastran.bdf.bdf import BDF
     #return model
 
 def get_bdf_model(bdf_filename, xref=True, log=None, debug=False):
+    # type: (Union[str, BDF], bool, Any, bool) -> BDF
     if isinstance(bdf_filename, string_types):
         model = BDF(log=log, debug=debug)
         model.read_bdf(bdf_filename, xref=xref)

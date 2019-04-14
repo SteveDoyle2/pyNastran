@@ -56,6 +56,7 @@ def get_element_faces(model, element_ids=None):
 
 
 def get_solid_skin_faces(model):
+    # type: (BDF) -> Any
     """
     Gets the elements and faces that are skinned from solid elements
     This doesn't include internal faces.
@@ -247,7 +248,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
         write solid elements that have skinned faces
     write_shells : bool; default=True
         write shell elements
-    size : int; default=8
+    size : int; default=/8
         the field width
     is_double : bool; default=False
         double precision flag
@@ -281,60 +282,66 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
             del eid, pid, mid
 
         if write_shells:
-            mids_to_write.sort()
-            for imid, mid in enumerate(mids_to_write):
-                card = ['PSHELL', pid_shell + imid, mid_shell + imid, 0.1]
-                bdf_file.write(print_card_8(card))
-
-                card = ['MAT1', mid_shell + imid, 3.e7, None, 0.3]
-                #bdf_file.write(model.materials[mid].comment)
-                bdf_file.write(print_card_8(card))
-
-            for face, eids in eid_set.items():
-                face_raw = face_map[face]
-                nface = len(face)
-                #assert len(eids) == 1, eids
-                #for eid in sorted(eids):
-                    #elem = model.elements[eid]
-                    #print(elem)
-                    #break
-
-                #elem = next(itervalues(model.elements)) # old
-                elem = model.elements[eids[0]]
-                #pid = next(iterkeys(model.properties))
-                pid = elem.Pid()
-                prop = model.properties[pid]
-                try:
-                    mid = prop.Mid()
-                except AttributeError:
-                    continue
-                #print('mids_to_write = %s' % mids_to_write)
-                #print('mids = ', model.materials.keys())
-                imid = mids_to_write.index(mid)
-
-                if nface == 3:
-                    card = ['CTRIA3', eid_shell, pid_shell + imid] + list(face_raw)
-                elif nface == 4:
-                    card = ['CQUAD4', eid_shell, pid_shell + imid] + list(face_raw)
-                elif nface == 4:
-                    card = ['CQUAD4', eid_shell, pid_shell + imid] + list(face_raw)
-                elif nface == 6:
-                    card = ['CTRIA6', eid_shell, pid_shell + imid] + list(face_raw)
-                elif nface == 8:
-                    card = ['CQUAD8', eid_shell, pid_shell + imid] + list(face_raw)
-                else:
-                    raise NotImplementedError('face=%s len(face)=%s' % (face, nface))
-                bdf_file.write(print_card_8(card))
-                eid_shell += 1
-
-                #elem = model.elements[eid]
-                #bdf_file.write(elem.write_card(size=size))
-            #for pid, prop in model.properties.items():
-                #bdf_file.write(prop.write_card(size=size, is_double=is_double))
+            eid_shell = _write_shells(bdf_file, model, eid_set, face_map, pid_shell, mid_shell, mids_to_write)
         bdf_file.write('ENDDATA\n')
     #if 0:
         #model = model.__class__.__init__()
         #model.read_bdf(skin_filename)
+
+
+def _write_shells(bdf_file, model, eid_set, face_map, eid_shell, pid_shell, mid_shell, mids_to_write):
+    """helper method for ``_write_skin_solid_faces``"""
+    mids_to_write.sort()
+    for imid, mid in enumerate(mids_to_write):
+        card = ['PSHELL', pid_shell + imid, mid_shell + imid, 0.1]
+        bdf_file.write(print_card_8(card))
+
+        card = ['MAT1', mid_shell + imid, 3.e7, None, 0.3]
+        #bdf_file.write(model.materials[mid].comment)
+        bdf_file.write(print_card_8(card))
+
+    for face, eids in eid_set.items():
+        face_raw = face_map[face]
+        nface = len(face)
+        #assert len(eids) == 1, eids
+        #for eid in sorted(eids):
+            #elem = model.elements[eid]
+            #print(elem)
+            #break
+
+        #elem = next(itervalues(model.elements)) # old
+        elem = model.elements[eids[0]]
+        #pid = next(iterkeys(model.properties))
+        pid = elem.Pid()
+        prop = model.properties[pid]
+        try:
+            mid = prop.Mid()
+        except AttributeError:
+            continue
+        #print('mids_to_write = %s' % mids_to_write)
+        #print('mids = ', model.materials.keys())
+        imid = mids_to_write.index(mid)
+
+        if nface == 3:
+            card = ['CTRIA3', eid_shell, pid_shell + imid] + list(face_raw)
+        elif nface == 4:
+            card = ['CQUAD4', eid_shell, pid_shell + imid] + list(face_raw)
+        elif nface == 4:
+            card = ['CQUAD4', eid_shell, pid_shell + imid] + list(face_raw)
+        elif nface == 6:
+            card = ['CTRIA6', eid_shell, pid_shell + imid] + list(face_raw)
+        elif nface == 8:
+            card = ['CQUAD8', eid_shell, pid_shell + imid] + list(face_raw)
+        else:
+            raise NotImplementedError('face=%s len(face)=%s' % (face, nface))
+        bdf_file.write(print_card_8(card))
+        eid_shell += 1
+
+        #elem = model.elements[eid]
+        #bdf_file.write(elem.write_card(size=size))
+    #for pid, prop in model.properties.items():
+        #bdf_file.write(prop.write_card(size=size, is_double=is_double))
+    return eid_shell
 
 
 def main():  # pragma: no cover

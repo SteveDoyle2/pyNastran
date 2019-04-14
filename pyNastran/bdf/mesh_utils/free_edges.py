@@ -7,7 +7,7 @@ from __future__ import print_function
 from collections import defaultdict
 
 
-def free_edges(model, eids=None):
+def free_edges(model, eids=None, maps=None):
     """
     Gets the free edges for shell elements.
     A free edge is an edge that is only connected to 1 shell element.

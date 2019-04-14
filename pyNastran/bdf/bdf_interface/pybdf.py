@@ -32,6 +32,7 @@ class BDFInputPy(object):
     """BDF reader class that only handles lines and not building cards or parsing cards"""
     def __init__(self, read_includes, dumplines, encoding, nastran_format='msc',
                  consider_superelements=True, log=None, debug=False):
+        # type: (bool, bool, str, str, bool, Any, bool) -> None
         """
         Parameters
         ----------
@@ -122,6 +123,7 @@ class BDFInputPy(object):
                 superelement_lines, superelement_ilines)
 
     def _get_lines_zona(self, system_lines, bulk_data_lines, bulk_data_ilines, punch):
+        # type: (List[str], List[str], Any, bool) -> (List[str], Any, List[str])
         """load and update the lines for ZONA"""
         system_lines2 = []
         for system_line in system_lines:
@@ -395,6 +397,7 @@ class BDFInputPy(object):
         return lines, nlines, ilines
 
     def _get_include_lines(self, lines, line, i, nlines):
+        # type: (List[str], str, int, int) -> (int, List[str])
         """
         gets the lines for the include file
 
@@ -508,6 +511,7 @@ class BDFInputPy(object):
             raise IOError(msg)
 
     def _open_file(self, bdf_filename, basename=False, check=True, encoding=None):
+        # type: (Union[str, StringIO], bool, bool, Optional[str]) -> Any
         """
         Opens a new bdf_filename with the proper encoding and include directory
 
@@ -519,6 +523,11 @@ class BDFInputPy(object):
             should the basename of bdf_filename be appended to the include directory
         check : bool; default=True
             you can disable the checks
+
+        Returns
+        -------
+        bdf_file : file
+            a file object
         """
         if encoding is None:
             encoding = self.encoding
@@ -539,6 +548,7 @@ class BDFInputPy(object):
         return bdf_file
 
     def _validate_open_file(self, bdf_filename, bdf_filename_inc, check=True):
+        # type: (Union[str, StringIO], str, bool) -> None
         """
         checks that the file doesn't have obvious errors
          - hasn't been used
@@ -583,6 +593,7 @@ class BDFInputPy(object):
 
 
 def _check_pynastran_encoding(bdf_filename, encoding):
+    # type: (Union[str, StringIO], str) -> str
     """updates the $pyNastran: key=value variables"""
     line = '$pyNastran: punch=False'
     #line_temp = u'é à è ê'.encode('utf8').decode('ascii')
@@ -663,6 +674,7 @@ def _clean_comment(comment):
 
 def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
                     consider_superelements=False):
+    # type: (List[str], Any, bool, Any, bool, bool) -> Any
     """
     Splits the BDF lines into:
      - system lines
@@ -759,6 +771,7 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
         superelement_lines, superelement_ilines)
 
 def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelements=False):
+    # type: (List[str], Any, bool, bool) -> Any
     """
     Splits the BDF lines into:
      - system lines
@@ -1009,6 +1022,7 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
 
 def _bulk_data_lines_extract(lines, ilines, bulk_data_lines, i,
                              make_ilines=True, keep_enddata=True):
+    # type: (List[str], Any, List[str], int, bool, bool) -> Any
     """grabs the bulk data lines and ilines when we're breaking"""
     if keep_enddata:
         for line in lines[i+1:]:
@@ -1033,6 +1047,7 @@ def _bulk_data_lines_extract(lines, ilines, bulk_data_lines, i,
     return bulk_data_ilines
 
 def _is_begin_bulk(uline):
+    # type: (str) -> bool
     """
     is this a:
       'BEGIN BULK'
@@ -1125,6 +1140,7 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
     return out
 
 def _break_system_lines(executive_control_lines):
+    # type: (List[str]) -> (List[str], List[str])
     """
     Extracts the Nastran system lines.
     System lines may be interspersed with executive lines.
@@ -1276,6 +1292,7 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
             lines.append(line)
 
 def _get_auxmodel_id(line, uline):
+    # type: (str, str) -> int
     """
     parses the superelement header::
 
@@ -1299,6 +1316,7 @@ def _get_auxmodel_id(line, uline):
     return auxmodel_id
 
 def _get_afpm_id(line, uline):
+    # type: (str, str) -> int
     """
     parses the superelement header::
 
@@ -1319,6 +1337,7 @@ def _get_afpm_id(line, uline):
     return afpm_id
 
 def _get_super_id(line, uline):
+    # type: (str, str) -> int
     """
     parses the superelement header::
 
@@ -1381,6 +1400,7 @@ def _clean_comment_bulk(comment):
     return comment
 
 def _make_ilines(nlines, ifile):
+    # type: (int, int) -> np.ndarray
     """helper method"""
     ilines = np.empty((nlines, 2), dtype='int32')
     ilines[:, 0] = ifile

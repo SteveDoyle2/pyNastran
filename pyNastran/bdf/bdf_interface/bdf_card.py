@@ -56,6 +56,7 @@ class BDFCard(object):
         return self.card.__getitem__(key)
 
     def __getslice__(self, i, j):
+        # type: (int, int) -> str
         """card[1:10]"""
         return self.card.__getslice__(i, j)
 
@@ -64,6 +65,7 @@ class BDFCard(object):
         self.card.__setslice__(i, j, sequence)
 
     def index(self, value):
+        # type: (str) -> int
         """card.index(value)"""
         return self.card.index(value)
 

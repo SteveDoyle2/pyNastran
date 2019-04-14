@@ -18,6 +18,7 @@ class SafeXrefMesh(XrefMesh):
     Links up the various cards in the BDF.
     """
     def __init__(self):
+        # type: () -> None
         """
         The main BDF class defines all the parameters that are used.
         """
@@ -260,6 +261,7 @@ class SafeXrefMesh(XrefMesh):
                              str(list(missing_safe_xref)))
 
     def _show_safe_xref_errors(self, elements_word, xref_errors):
+        # type: (str, bool) -> None
         """helper method to show errors"""
         if xref_errors:
             msg = 'Failed to safe xref %s\n' % elements_word
@@ -334,6 +336,7 @@ class SafeXrefMesh(XrefMesh):
         return nodes, missing_nodes
 
     def safe_get_nodes(self, nids, msg=''):
+        # type: (List[int], bool) -> (List[Any], str)
         """safe xref version of self.Nodes(nid, msg='')"""
         nodes = []
         error_nodes = []

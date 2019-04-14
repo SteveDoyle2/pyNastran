@@ -1588,7 +1588,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         if self.mid in model.MATT5:
             self.matt5_ref = model.MATT5[self.mid]  # not using a method...
 
-    def uncross_reference(model, self):
+    def uncross_reference(self, model):
         if self.mid in model.MATT5:
             self.matt5 = self.Matt5()
         self.matt5_ref = None

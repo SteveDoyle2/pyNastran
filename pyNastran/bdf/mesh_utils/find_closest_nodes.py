@@ -5,12 +5,14 @@ defines:
 """
 from __future__ import print_function
 from itertools import count
+from typing import List, Optional
 import numpy as np
 
 from pyNastran.bdf.mesh_utils.bdf_equivalence import (
     _get_tree)
 
 def find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max=1, tol=None, msg=''):
+    # type: (np.ndarray, np.ndarray, np.ndarray, int, Optional[float], str) -> np.ndarray
     """
     Finds the closest nodes to an arbitrary set of xyz points
 
@@ -101,6 +103,7 @@ def find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol, msg=''):
 
 
 def _not_equal_nodes_build_tree(nodes_xyz, xyz_compare, tol, neq_max=4, msg=''):
+    # type: (np.ndarray, np.ndarray, float, int, str) -> (Any, np.ndarray, np.ndarray)
     """
     helper function for `bdf_equivalence_nodes`
 
