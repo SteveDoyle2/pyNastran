@@ -4,7 +4,7 @@ from pyNastran.converters.stl.stl import STL
 
 # merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=None):
 def merge_stl_files(stl_filenames, stl_out_filename=None, remove_bad_elements=False,
-                    is_binary=True, float_fmt='%6.12f'):
+                    is_binary=True, float_fmt='%6.12f', log=None):
     """
     Combines multiple STLs into a single file
 
@@ -33,7 +33,7 @@ def merge_stl_files(stl_filenames, stl_out_filename=None, remove_bad_elements=Fa
     assert len(stl_filenames) > 0, stl_filenames
 
     if len(stl_filenames) == 1:
-        model = STL()
+        model = STL(log=log)
         model.read_stl(stl_filenames[0])
         if remove_bad_elements:
             model.remove_elements_with_bad_normals()
@@ -46,7 +46,7 @@ def merge_stl_files(stl_filenames, stl_out_filename=None, remove_bad_elements=Fa
 
     n0 = 0
     for fname in stl_filenames:
-        model = STL()  # TODO: you shouldn't need to to reinstantiate the STL
+        model = STL(log=log)  # TODO: you shouldn't need to to reinstantiate the STL
         model.read_stl(fname)
         nnodes = model.nodes.shape[0]
         nodes.append(model.nodes)

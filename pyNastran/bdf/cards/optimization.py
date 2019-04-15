@@ -1800,6 +1800,81 @@ class DRESP1(OptConstraint):
             msg += str(self)
             raise NotImplementedError(msg)
 
+    def safe_cross_reference(self, model, xref_errors):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by DRESP1 dresp_id=%s' % (self.dresp_id)
+        msg += '\n' + str(self)
+
+        op2_results = [
+            'VOLUME', 'LAMA', 'FRSPCF', 'TRIM', 'ESE', 'SPCFORCE', 'FRMASS',
+            'CFAILURE', 'CSTRAT', 'STRESS', 'DIVERG', 'TOTSE', 'COMP',
+            'TACCL', 'RMSACCL',
+            'RMSVELO',
+            'PSDDISP', 'RMSDISP',
+            'TFORC', 'FRFORC',
+            'TSPCF',
+        ]
+        ref_id = self.dresp_id
+        if self.property_type in ['ELEM']:
+            self.atti_ref = model.safe_elements(self.atti, ref_id, xref_errors, msg=msg)
+        elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP', 'PCOMPG',
+                                    'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+                                    'PBEAML', 'PSHEAR', 'PTUBE',]:
+            self.atti_ref = model.Properties(self.atti, msg=msg)
+        elif self.response_type in ['FRSTRE']:
+            self.atti_ref = model.Properties(self.atti, msg=msg)
+        elif self.response_type in ['WEIGHT', 'STABDER', 'CEIG', 'EIGN', 'FREQ']:
+            pass
+        elif self.response_type == 'FLUTTER':
+            # TODO: SOL-200; add check that FLFACT values exist in the FLFACT card
+            #       referenced by the FLUTTER card for the given subcase
+            if self.property_type == 'PKNL':
+                self.atti_ref = [
+                    model.Set(self.atti[0], msg=msg),
+                    model.FLFACT(self.atti[1], msg=msg),
+                    model.FLFACT(self.atti[2], msg=msg),
+                    model.FLFACT(self.atti[3], msg=msg),
+                ]
+                #msgi = 'max density=%s mach=%s velocity=%s' % (
+                    #self.atti[1].max(), self.atti[2].max(), self.atti[3].max())
+                #print(msgi)
+            elif self.property_type is None:
+                pass
+            else:
+                msg = 'PropertyType=%r is not supported\n' % self.property_type
+                msg += str(self)
+                print(msg)
+        elif self.response_type in ['DISP',
+                                    'TDISP',
+                                    'TVELO',
+                                    'FRDISP', 'FRVELO', 'FRACCL',
+                                    'PSDVELO', 'PSDACCL']:
+            self.atti_ref = model.Nodes(self.atti, msg=msg)
+        elif self.response_type in op2_results:
+            pass
+        elif self.response_type == 'ERP':
+            assert self.property_type == 'PANEL'
+        elif self.response_type == 'GPFORCP':
+            assert len(self.atti) >= 1, 'atti=%r\n%s' % (self.atti, self)
+            self.atta_ref = model.Node(self.atta, msg=msg)
+            self.atti_ref = model.Nodes(self.atti, msg=msg)
+        elif self.response_type == 'GPFORCE':
+            #self.atta = component
+            eids = [eid for eid in self.atti if eid is not None]
+            self.atti_ref = model.Elements(eids, msg=msg)
+        else:
+            msg = 'response_type=%r ptype=%r\n' % (self.response_type, self.property_type)
+            msg += str(self)
+            raise NotImplementedError(msg)
+
     def uncross_reference(self):
         self.atti = self.atti_values()
         self.atta_ref = None
@@ -1822,20 +1897,21 @@ class DRESP1(OptConstraint):
             'TFORC', 'FRFORC',
             'TSPCF',
         ]
+        #print('self.atti_ref =', self.atti_ref)
         if self.property_type in ['ELEM']:
-            data = [elem if isinstance(elem, integer_types) else elem.eid
-                    for elem in self.atti_ref]
+            data = [eid if elem is None else elem.eid
+                    for (eid, elem) in zip(self.atti, self.atti_ref)]
         elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP', 'PCOMPG',
                                     'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
                                     'PBEAML', 'PSHEAR', 'PTUBE',
                                     'FRSTRE']:
-            data = [prop if isinstance(prop, integer_types) else prop.pid
-                    for prop in self.atti_ref]
+            data = [pid if prop is None else prop.pid
+                    for (pid, prop) in zip(self.atti, self.atti_ref)]
             for value in data:
                 assert not isinstance(value, BaseCard), value
         elif self.response_type == 'FRSTRE':
-            data = [prop if isinstance(prop, integer_types) else prop.Pid()
-                    for prop in self.atti_ref]
+            data = [pid if prop is None else prop.pid
+                    for (pid, prop) in zip(self.atti, self.atti_ref)]
             for value in data:
                 assert not isinstance(value, BaseCard), value
         elif self.response_type in ['WEIGHT', 'STABDER', 'EIGN', 'FREQ']:
@@ -1860,8 +1936,8 @@ class DRESP1(OptConstraint):
                     for node in self.atti_ref]
         elif self.response_type in ['FRFORC', 'TFORC',
                                     'STRESS', 'ESE', 'CFAILURE', 'CSTRAIN']:
-            data = [elem if isinstance(elem, integer_types) else elem.eid
-                    for elem in self.atti_ref]
+            data = [eid if elem is None else elem.eid
+                    for (eid, elem) in zip(self.atti, self.atti_ref)]
         elif self.response_type in op2_results:
             data = self.atti
             for value in data:

@@ -35,9 +35,9 @@ def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):
             card = ['GRID', inode + 1, None,] + list(node)
             bdf_file.write(print_card_8(card))
 
+        itri = 0
         if len(model.tri_elements):
             # tris only
-            itri = 0
             for itri, tri in enumerate(model.tri_elements):
                 card = ['CTRIA3', itri + 1, shell_pid] + list(tri)
                 bdf_file.write(print_card_8(card))

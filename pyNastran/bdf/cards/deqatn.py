@@ -398,7 +398,7 @@ def _join_wrapped_equation_lines(unused_eqs_temp_in, eqs_temp):
             assert len(eqi) <= 56, eqi
         elif i != neqs-1:
             # mid line
-            assert len(eqi) <= 64, 'len(eqi)=%s eq=%r' % (len(eqi), eqi)
+            #assert len(eqi) <= 64, 'len(eqi)=%s eq=%r' % (len(eqi), eqi)
             if eqi.endswith(';'):
                 eqi = eqi[:-1]
                 is_join = False
@@ -491,8 +491,8 @@ def _split_equation(lines_out, line, n, isplit=0):
     #print('aft  = %r' % aft[::-1])
     lines_out.append(line_out.replace('^', '**').strip())
     isplit += 1
-    if isplit > 10:
-        raise RuntimeError()
+    if isplit > 360:
+        raise RuntimeError('Recursion issue splitting line; isplit=%i' %  isplit)
     lines_out = _split_equation(lines_out, line[i:], n, isplit+1)
     return lines_out
 

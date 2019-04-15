@@ -31,5 +31,5 @@ from pyNastran.converters.dev.obj.test_obj import TestObjGUI
 #except ImportError:
     #pass
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

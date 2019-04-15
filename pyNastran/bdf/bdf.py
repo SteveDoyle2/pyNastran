@@ -3085,14 +3085,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #raise
                 # NameErrors should be caught
                 self._iparse_errors += 1
-                #self.log.error(card_obj)
+                #self.log.error(str(card_obj))
                 var = traceback.format_exception_only(type(exception), exception)
                 self._stored_parse_errors.append((card, var))
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
                 #raise
             #except AssertionError as exception:
-                #self.log.error(card_obj)
+                #self.log.error(str(card_obj))
 
         elif card_name in self._card_parser_prepare:
             add_card_function = self._card_parser_prepare[card_name]
@@ -3105,13 +3105,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #raise
                 # NameErrors should be caught
                 self._iparse_errors += 1
-                self.log.error(card_obj)
+                self.log.error(str(card_obj))
                 var = traceback.format_exception_only(type(exception), exception)
                 self._stored_parse_errors.append((card, var))
                 if self._iparse_errors > self._nparse_errors:
                     self.pop_parse_errors()
             #except AssertionError as exception:
-                #self.log.error(card_obj)
+                #self.log.error(str(card_obj))
                 #raise
         else:
             #raise RuntimeError(card_obj)

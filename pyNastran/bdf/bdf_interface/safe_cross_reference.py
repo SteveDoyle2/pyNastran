@@ -79,7 +79,7 @@ class SafeXrefMesh(XrefMesh):
         if xref_sets:
             self._cross_reference_sets()
         if xref_optimization:
-            self._cross_reference_optimization()
+            self._safe_cross_reference_optimization()
         if xref_nodes_with_elements:
             self._cross_reference_nodes_with_elements()
         self._safe_cross_reference_superelements(create_superelement_geometry)
@@ -319,6 +319,47 @@ class SafeXrefMesh(XrefMesh):
         for unused_key, tic in self.tics.items():
             tic.safe_cross_reference(self, xref_errors)
 
+    def _safe_cross_reference_optimization(self):
+        # type: () -> None
+        """cross references the optimization objects"""
+        xref_errors = defaultdict(list)
+        for unused_key, deqatn in self.dequations.items():
+            if hasattr(deqatn, 'safe_cross_reference'):
+                deqatn.safe_cross_reference(self)
+            else:
+                deqatn.cross_reference(self)
+
+        for unused_key, dresp in self.dresps.items():
+            if hasattr(dresp, 'safe_cross_reference'):
+                dresp.safe_cross_reference(self, xref_errors)
+            else:  # pragma: no cover
+                dresp.cross_reference(self)
+
+        for unused_key, dconstrs in self.dconstrs.items():
+            for dconstr in dconstrs:
+                if hasattr(dconstr, 'safe_cross_reference'):
+                    dconstr.safe_cross_reference(self)
+                else:  # pragma: no cover
+                    dconstr.cross_reference(self)
+
+        for unused_key, dvcrel in self.dvcrels.items():
+            if hasattr(dvcrel, 'safe_cross_reference'):
+                dvcrel.safe_cross_reference(self)
+            else:  # pragma: no cover
+                dvcrel.cross_reference(self)
+
+        for unused_key, dvmrel in self.dvmrels.items():
+            if hasattr(dvmrel, 'safe_cross_reference'):
+                dvmrel.safe_cross_reference(self)
+            else:  # pragma: no cover
+                dvmrel.cross_reference(self)
+
+        for unused_key, dvprel in self.dvprels.items():
+            if hasattr(dvprel, 'safe_cross_reference'):
+                dvprel.safe_cross_reference(self)
+            else:  # pragma: no cover
+                dvprel.cross_reference(self)
+
     def safe_empty_nodes(self, nids, msg=''):
         """safe xref version of self.Nodes(nid, msg='')"""
         nodes = []
@@ -392,6 +433,7 @@ class SafeXrefMesh(XrefMesh):
         pid = 42  # CQUAD4
         xref_errors = {'eid' : []}
         self.safe_element(eid, ref_id, xref_errors)
+
         """
         try:
             eid_ref = self.Element(eid, msg=msg)
@@ -400,6 +442,31 @@ class SafeXrefMesh(XrefMesh):
             #self.log.error('cant find Element=%s%s' % (mid, msg))
             xref_errors['eid'].append((ref_id, eid))
         return eid_ref
+
+    def safe_elements(self, eids, ref_id, xref_errors, msg=''):
+        """
+        Gets an series of elements
+
+        Doesn't get rigid (RROD, RBAR, RBE2, RBE3, RBAR, RBAR1, RSPLINE, RSSCON)
+        or mass (CMASS1, CONM2)
+
+        """
+        elements = []
+        bad_eids = []
+        for eid in eids:
+            try:
+                # elements.append(self.safe_element(eid, ref_id, xref_errors, msg))
+                elements.append(self.Element(eid, msg))
+            except KeyError:
+                bad_eids.append(eid)
+                elements.append(None)
+                xref_errors['eid'].append((ref_id, eid))
+        #if bad_eids:
+            #msg = 'eids=%s not found%s.  Allowed elements=%s' % (
+                #bad_eids, msg, np.unique(list(self.elements.keys())))
+            #self.log.error(msg)
+            #raise KeyError(msg)
+        return elements
 
     def safe_property(self, pid, ref_id, xref_errors, msg=''):
         """

@@ -6,6 +6,7 @@ from cpylog import get_logger
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
 
+from pyNastran.converters.type_converter import cmd_line_format_converter
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d, nastran_to_cart3d_filename
 from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
 from pyNastran.converters.nastran.nastran_to_surf import nastran_to_surf, clear_out_solids
@@ -17,7 +18,7 @@ from pyNastran.converters.cart3d.cart3d import read_cart3d
 import pyNastran.converters.nastran.nastran_to_ugrid3d
 
 PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, '../', 'models')
+MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 
 class TestNastran(unittest.TestCase):
 
@@ -25,11 +26,16 @@ class TestNastran(unittest.TestCase):
         """tests a large number of elements and results in SOL 101"""
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         tecplot_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.plt')
+        tecplot_filename2 = os.path.join(MODEL_PATH, 'elements', 'static_elements2.plt')
         log = get_logger(log=None, level='warning', encoding='utf-8')
         model = read_bdf(bdf_filename, log=log)
         with self.assertRaises(RuntimeError):
             nastran_to_tecplot(model)
         nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=log)
+
+        argv = ['format_converter', 'nastran', bdf_filename, 'tecplot', tecplot_filename2]
+        with self.assertRaises(RuntimeError):
+            cmd_line_format_converter(argv=argv, quiet=True)
 
     def test_nastran_to_ugrid_01(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
@@ -47,6 +53,7 @@ class TestNastran(unittest.TestCase):
 
         bdf_model = read_bdf(skin_bdf_filename, log=log, debug=debug)
         ugrid_filename_out = os.path.join(MODEL_PATH, 'solid_bending', 'solid_skin.b8.ugrid')
+        ugrid_filename_out2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_skin2.b8.ugrid')
         nastran_to_ugrid(bdf_model, ugrid_filename_out, properties=None,
                          check_shells=True, check_solids=True)
         ugrid = read_ugrid(ugrid_filename_out, encoding=None, log=log,
@@ -54,6 +61,24 @@ class TestNastran(unittest.TestCase):
 
         skin_bdf_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_skin2.bdf')
         skin_cart3d_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_skin2.tri')
+        skin_cart3d_filename3 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_skin3.tri')
+        skin_stl_filename3 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_skin3.stl')
+
+        #msg += "  format_converter nastran   <INPUT> <format2> <OUTPUT> [-o <OP2>] --no_xref\n"
+        #msg += "  format_converter <format1> <INPUT> tecplot   <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>] [--scale SCALE]\n"
+        #msg += "  format_converter <format1> <INPUT> stl       <OUTPUT> [-b]  [--scale SCALE]\n"
+        #msg += "  format_converter cart3d    <INPUT> <format2> <OUTPUT> [-b]  [--scale SCALE]\n"
+        #msg += "  format_converter <format1> <INPUT> <format2> <OUTPUT> [--scale SCALE]\n"
+        argv = ['format_converter', 'nastran', bdf_filename, 'ugrid', ugrid_filename_out2]
+        with self.assertRaises(RuntimeError):
+            cmd_line_format_converter(argv=argv, quiet=True)
+
+        #argv = ['format_converter', 'nastran', bdf_filename, 'cart3d', skin_cart3d_filename3]
+        #cmd_line_format_converter(argv=argv)
+
+        #argv = ['format_converter', 'nastran', bdf_filename, 'stl', skin_stl_filename3]
+        #cmd_line_format_converter(argv=argv)
+
         ugrid.write_bdf(skin_bdf_filename2, include_shells=True, include_solids=True,
                         convert_pyram_to_penta=True, encoding=None,
                         size=size, is_double=False)
@@ -79,6 +104,65 @@ class TestNastran(unittest.TestCase):
         stl_filename = os.path.join(MODEL_PATH, 'plate', 'plate.stl')
         log = get_logger(log=None, level='warning', encoding='utf-8')
         nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=log)
+
+    def test_format_converter(self):
+        """tests nastran_to_stl"""
+        bdf_filename = os.path.join(MODEL_PATH, 'plate', 'plate.bdf')
+        bdf_filename2 = os.path.join(MODEL_PATH, 'plate', 'plate2.bdf')
+
+        stl_filename = os.path.join(MODEL_PATH, 'plate', 'plate.stl')
+        ugrid_filename = os.path.join(MODEL_PATH, 'plate', 'plate.b8.ugrid')
+        cart3d_filename = os.path.join(MODEL_PATH, 'plate', 'plate.tri')
+        tecplot_filename = os.path.join(MODEL_PATH, 'plate', 'plate.plt')
+
+        argv = ['format_converter', 'nastran', bdf_filename, 'stl', stl_filename]
+        cmd_line_format_converter(argv=argv, quiet=True)
+
+        argv = ['format_converter', 'nastran', bdf_filename, 'tecplot', tecplot_filename]
+        cmd_line_format_converter(argv=argv, quiet=True)
+
+        argv = ['format_converter', 'nastran', bdf_filename, 'ugrid', ugrid_filename]
+        with self.assertRaises(RuntimeError):
+            cmd_line_format_converter(argv=argv, quiet=True)
+
+
+        #argv = ['format_converter', 'nastran', bdf_filename, 'cart3d', cart3d_filename]
+        #cmd_line_format_converter(argv=argv, quiet=True)
+        #os.remove(stl_filename)
+        #os.remove(cart3d_filename)
+        #os.remove(tecplot_filename)
+        # -------------------------
+        tecplot_filename2 = os.path.join(MODEL_PATH, 'plate', 'plate2.plt')
+        argv = ['format_converter', 'stl', stl_filename, 'nastran', bdf_filename2]
+        cmd_line_format_converter(argv=argv, quiet=True)
+
+        argv = ['format_converter', 'stl', stl_filename, 'tecplot', tecplot_filename2]
+        with self.assertRaises(AssertionError):
+            cmd_line_format_converter(argv=argv, quiet=True)
+
+        argv = ['format_converter', 'stl', tecplot_filename, 'ugrid', ugrid_filename]
+        with self.assertRaises(AssertionError):
+            cmd_line_format_converter(argv=argv, quiet=True)
+
+        os.remove(bdf_filename2)
+        #os.remove(stl_filename)
+        #os.remove(cart3d_filename)
+        #os.remove(tecplot_filename)
+        # -------------------------
+        argv = ['format_converter', 'tecplot', tecplot_filename, 'nastran', bdf_filename2]
+        cmd_line_format_converter(argv=argv, quiet=True)
+
+        #argv = ['format_converter', 'tecplot', tecplot_filename, 'stl', stl_filename]
+        #cmd_line_format_converter(argv=argv, quiet=True)
+
+        argv = ['format_converter', 'tecplot', tecplot_filename, 'ugrid', ugrid_filename]
+        with self.assertRaises(AssertionError):
+            cmd_line_format_converter(argv=argv, quiet=True)
+
+        os.remove(bdf_filename2)
+        os.remove(stl_filename)
+        #os.remove(cart3d_filename)
+        os.remove(tecplot_filename)
 
     def test_clear_out_solids(self):
         """tests clear_out_solids"""

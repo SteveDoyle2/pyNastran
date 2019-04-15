@@ -13,7 +13,9 @@ All shell properties are ShellProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from typing import List, Optional, Union
+import  warnings
+from itertools import count
+from typing import List, Optional, Union, Any
 from numpy import array
 import numpy as np
 
@@ -134,6 +136,7 @@ class CompositeShellProperty(ShellProperty):
         return False
 
     def _adjust_ply_id(self, iply):
+        # type: (int) -> int
         """
         Gets the ply ID that's stored in **self.plies**.
 
@@ -193,9 +196,11 @@ class CompositeShellProperty(ShellProperty):
             if iply < self.nplies:
                 iply = nplies - iply - 1
             else:
-                raise IndexError('invalid value for iply=%r' % iply)
+                raise IndexError('invalid value for nplies=%s iply=%r\n%s' % (
+                    nplies, iply, str(self)))
         elif iply < 0:
-            raise IndexError('invalid value for iply=%r' % iply)
+            raise IndexError('invalid value for nplies=%s iply=%r\n%s' % (
+                nplies, iply, str(self)))
         return iply
 
     def get_thickness(self, iply='all'):
@@ -644,10 +649,12 @@ class PCOMP(CompositeShellProperty):
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
         ilayer = nnew // 4
+        iply = self._adjust_ply_id(ilayer - 1)
+
         slot = nnew % 4
         #print(self.plies)
         try:
-            ply = self.plies[ilayer]
+            ply = self.plies[iply]
         except IndexError:
             msg = 'PCOMP pid=%s; n=%s nnew=%s ilayer=%s slot=%r\n' % (
                 self.pid, n, nnew, ilayer, slot)
@@ -754,6 +761,17 @@ class PCOMP(CompositeShellProperty):
             msg = 'lam=%r is invalid; allowed=[%s]' % (self.lam, ', '.join(allowed_lam))
             raise ValueError(msg)
 
+        for iply, mid, thickness, theta, sout in  zip(count(), self.material_ids, self.thicknesses,
+                                                      self.thetas, self.souts):
+            if thickness <= 0.:
+                ply = [mid, thickness, theta, sout]
+                msg = ('thickness of PCOMP layer is invalid pid=%s'
+                       ' iLayer=%s t=%s ply=[mid,t,theta,'
+                       'sout]=%s' % (self.pid, iply, thickness, ply))
+                warnings.warn(msg)
+                continue
+                #raise RuntimeError(msg)
+
         # this is a loose requirement
         #if self.ft in ['HILL', 'HOFF', 'TSAI', 'STRN'] and self.sb <= 0.:
             #msg = 'PCOMP pid=%s FT=%s sb=%s; sb must be greater than 0' % (
@@ -812,12 +830,6 @@ class PCOMP(CompositeShellProperty):
             t = double_or_blank(card, i + 1, 't', thick_last)
             theta = double_or_blank(card, i + 2, 'theta', 0.0)
             sout = string_or_blank(card, i + 3, 'sout', 'NO')
-
-            if t <= 0.:
-                msg = ('thickness of PCOMP layer is invalid pid=%s'
-                       ' iLayer=%s t=%s ply=[mid,t,theta,'
-                       'sout]=%s' % (pid, iply, t, ply))
-                raise RuntimeError(msg)
 
             # if this card has 2 plies on the line
             if actual != [None, None, None, None]:

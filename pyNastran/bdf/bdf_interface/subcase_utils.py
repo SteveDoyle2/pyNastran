@@ -5,7 +5,7 @@ defines:
  - write_stress_type(key, options, value, spaces='')
 """
 from __future__ import print_function
-from typing import List, Optional, Union, Set
+from typing import List, Optional, Union, Set, Any
 from six import string_types
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
@@ -151,6 +151,7 @@ def expand_thru_case_control(set_value):
     return list_values
 
 def _expand_thru_case_control_string_thru(set_value, svalue, add_mode):
+    # type: (Any, str, bool) -> Any
     """helper for ``expand_thru_case_control``"""
     ## type: (List[str], Any, bool) -> (Set[int], bool)
     set_values_out = set()  # type: Set[int]

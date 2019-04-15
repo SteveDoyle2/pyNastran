@@ -11,6 +11,7 @@ from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 from pyNastran.converters.cart3d.cart3d_to_tecplot import cart3d_to_tecplot
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 import pyNastran.converters.cart3d.input_cntl_reader
+from pyNastran.converters.type_converter import run_format_converter
 
 from cpylog import get_logger
 
