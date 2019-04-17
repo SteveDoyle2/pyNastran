@@ -45,14 +45,15 @@ __all__ = ['CTRIA3', 'CTRIA6', 'CSHEAR',
 
 def _triangle_area_centroid_normal(nodes, card):
     """
+    Gets the area, centroid and normal for a triangle.
 
     Parameters
-    -------------
+    ----------
     nodes : List[np.ndarray]
         List of three triangle vertices.
 
     Returns
-    --------
+    -------
     area : float
         Area of triangle.
     centroid : ndarray

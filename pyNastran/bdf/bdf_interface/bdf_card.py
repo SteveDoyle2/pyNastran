@@ -3,7 +3,7 @@ Defines the BDFCard class that is passed into the various Nastran cards.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Any
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_16 import print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
@@ -37,17 +37,19 @@ class BDFCard(object):
         BDFCard(card, has_none=True)
         """
         if has_none:
-            card = wipe_empty_fields([print_field_16(field).strip() for field in card])
-        self.card = card
-        self.nfields = len(self.card)
+            long_fields = [print_field_16(field).strip() for field in card]
+            card = wipe_empty_fields(long_fields)
+        self.card = card  # type: List[Optional[str]]
+        self.nfields = len(self.card)  # type: int
 
     def pop(self):
-        # type: () -> str
+        # type: () -> Optional[str]
         """card.pop()"""
         self.nfields -= 1
         return self.card.pop()
 
     def __setitem__(self, key, value):
+        # type: (int, str) -> None
         """card[4] = value"""
         self.card.__setitem__(key, value)
 
@@ -61,6 +63,7 @@ class BDFCard(object):
         return self.card.__getslice__(i, j)
 
     def __setslice__(self, i, j, sequence):
+        # type: (int, int, Any) -> Any
         """card[1:10] = 2"""
         self.card.__setslice__(i, j, sequence)
 
@@ -83,6 +86,7 @@ class BDFCard(object):
         return '%r' % self.card
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         """prints the card in 8/16/16-double format"""
         return print_card(self.card, size=size, is_double=is_double)
 
@@ -92,6 +96,7 @@ class BDFCard(object):
         return self.nfields
 
     def fields(self, i=0, j=None, defaults=None):
+        # type: (int, Optional[int], Any) -> Any
         """
         Gets multiple fields on the card
 
@@ -130,7 +135,7 @@ class BDFCard(object):
         return out
 
     def field(self, i, default=None):
-        # type: (int, Optional[Union[int, float, str]]) -> Optional[str]
+        # type: (int, Optional[Union[int, float, str]]) -> Optional[Union[int, float, str]]
         """
         Gets the ith field on the card
 

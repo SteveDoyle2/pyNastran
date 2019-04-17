@@ -1198,7 +1198,7 @@ def _get_times(model, key):
     times = None
     for table_type in table_types:
         if not model.has_result(table_type):
-            print('no table_type=%s' % table_type)
+            #model.log.debug('no table_type=%s' % table_type)
             continue
         table = model.get_result(table_type)
         if len(table) == 0:

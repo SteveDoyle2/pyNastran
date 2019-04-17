@@ -141,15 +141,15 @@ def compare_card_content(fem1, fem2):
         #assert_fields(card1, card2)
 
     for mpc_id in fem1.mpcadds:
-        fem1.get_MPCx_node_ids(mpc_id)
-        fem1.get_MPCx_node_ids_c1(mpc_id)
-        fem1.get_reduced_mpcs(mpc_id)
+        fem1.get_MPCx_node_ids(mpc_id, consider_mpcadd=True)
+        fem1.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True)
+        fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
         fem1.get_mpcs(mpc_id)
 
     for mpc_id in fem1.mpcs:
-        fem1.get_MPCx_node_ids(mpc_id)
-        fem1.get_MPCx_node_ids_c1(mpc_id)
-        fem1.get_reduced_mpcs(mpc_id)
+        fem1.get_MPCx_node_ids(mpc_id, consider_mpcadd=False)
+        fem1.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=False)
+        fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=False)
         fem1.get_mpcs(mpc_id)
         #card1 = fem1.mpcs[key]
         #card2 = fem2.mpcs[key]

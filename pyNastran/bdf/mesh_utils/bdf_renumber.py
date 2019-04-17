@@ -632,13 +632,16 @@ def _write_bdf(model, bdf_filename_out, size=8, is_double=False):
 
 def get_renumber_starting_ids_from_model(model):
     """
-    Get the starting ids dictionary used for renumbering with ids greater than those in model.
+    Get the starting ids dictionary used for renumbering with ids greater
+    than those in model.
+
     Parameters
-    -----------
+    ----------
     model : BDF
         BDF object to get maximum ids from.
+
     Returns
-    --------
+    -------
     starting_id_dict : dict {str : int, ...}
         Dictionary from id type to starting id.
     """

@@ -21,6 +21,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 import math
+from typing import List, Union
 from six import string_types
 
 import numpy as np
@@ -465,13 +466,14 @@ class AELINK(BaseCard):
 
     def __init__(self, aelink_id, label, independent_labels, linking_coefficents,
                  comment=''):
+        # type: (Union[int,str], str, List[str], List[float], str) -> None
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
 
         Parameters
         ----------
-        aelink_id : int
+        aelink_id : int/str
             unique id
         label : str
             name of the dependent AESURF card
@@ -631,6 +633,7 @@ class AELIST(BaseCard):
         return AELIST(1, [1], comment='')
 
     def __init__(self, sid, elements, comment=''):
+        # type: (int, List[int], str) -> None
         """
         Creates an AELIST card, which defines the aero boxes for
         an AESURF/SPLINEx.
@@ -740,6 +743,7 @@ class AEPARM(BaseCard):
         return AEPARM(aeparm_id, label, units, comment='')
 
     def __init__(self, aeparm_id, label, units, comment=''):
+        # type: (int, str, str, str) -> None
         """
         Creates an AEPARM card, which defines a new trim variable.
 
@@ -868,6 +872,7 @@ class AESURF(BaseCard):
                  hmllim=None, hmulim=None, # hinge moment lower/upper limits
                  tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
                  comment=''):
+        # type: (int, str, int, int, Optional[int], Optional[int], float, str, float, float, float, float, Optional[int], Optional[int], Optional[int], Optional[int], str) -> None
         """
         Creates an AESURF card, which defines a control surface
 
@@ -1148,7 +1153,7 @@ class AESURF(BaseCard):
         return self.comment + print_card_8(card)
 
 
-class AESURFS(BaseCard):  # not integrated
+class AESURFS(BaseCard):
     """
     Optional specification of the structural nodes associated with an
     aerodynamic control surface that has been defined on an AESURF entry. The
@@ -1176,6 +1181,7 @@ class AESURFS(BaseCard):  # not integrated
         return AESURFS(aesid, label, list1, list2, comment='')
 
     def __init__(self, aesid, label, list1, list2, comment=''):
+        # type: (int, str, List[int], List[int]) -> None
         """
         Creates an AESURFS card
 
@@ -1523,6 +1529,13 @@ class CAERO1(BaseCard):
     def validate(self):
         msg = ''
         is_failed = False
+        if self.x12 <= 0.:
+            msg += 'X12=%s and must be greater than or equal to 0\n' % (self.x12)
+            is_failed = True
+        if self.x43 <= 0.:
+            msg += 'X43=%s and must be greater than or equal to 0\n' % (self.x43)
+            is_failed = True
+
         if self.nspan == 0 and self.lspan == 0:
             msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (
                 self.nspan, self.lspan)

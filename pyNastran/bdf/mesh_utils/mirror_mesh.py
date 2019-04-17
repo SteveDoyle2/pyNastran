@@ -136,7 +136,6 @@ def write_bdf_symmetric(bdf_filename, out_filename=None, encoding=None,
      - aero cards : see ``_mirror_aero``
 
     """
-    #model.write_caero_model()
     model, nid_offset, eid_offset = bdf_mirror(bdf_filename, plane=plane)
     model.write_bdf(out_filename=out_filename, encoding=encoding,
                     size=size, is_double=is_double,

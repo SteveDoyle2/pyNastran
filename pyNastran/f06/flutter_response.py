@@ -688,7 +688,7 @@ class FlutterResponse(object):
             fig.clear()
 
     def export_to_veas(self, veas_filename, modes=None):
-        # type: (str, Optional[List[int]])
+        # type: (str, Optional[List[int]]) -> None
         """
         Exports a ZONA .veas file
 
@@ -738,6 +738,7 @@ class FlutterResponse(object):
                 veas_file.write(''.join(str_values) + '\n')
 
     def export_to_f06(self, f06_filename, modes=None, page_stamp=None, page_num=1):
+        # type: (str, Optional[List[int]], Optional[str], int) -> None
         if page_stamp is None:
             page_stamp = 'PAGE %i'
         # nmodes, vel, res
@@ -767,6 +768,7 @@ class FlutterResponse(object):
 
     def export_to_zona(self, zona_filename, modes=None, xlim=None, plot_type='tas',
                        damping_ratios=None):
+        # type: (str, Optional[List[int]], Optional[List[int]], str, Optional[List[int]]) -> None
         """
         Writes a custom ZONA flutter file
 

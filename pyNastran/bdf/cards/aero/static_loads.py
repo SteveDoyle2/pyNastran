@@ -886,26 +886,31 @@ class TRIM(BaseCard):
             naesurf = len(aesurf_names)
             naeparm = len(aeparm_labels)
 
-            naelink = 0
             aelinksi = []
+            if 0 in aelinks:
+                aelinksi += [aelink.label for aelink in aelinks[0]]
+            #if 'ALWAYS' in aelinks:
+                #aelinksi += [aelink.label for aelink in aelinks['ALWAYS']]
+
             if self.sid in aelinks:
-                aelinksi = aelinks[self.sid]
-                naelink = len(aelinksi)
-            #if 0 in aelinks:
-                #  TODO: what is this...is 0 the global subcase?
-                #naelink += len(aelinks[0])
+                aelinksi += [aelink.label for aelink in aelinks[self.sid]]
+            naelink = len(aelinksi)
+
 
             ntrim_aesurf = 0
             labels = aestat_labels + aesurf_names + aeparm_labels
+            msg = ''
             for label in self.labels:
                 if label not in labels:
-                    msg = 'label=%r\n aestat_labels=%s\n aeparm_labels=%s\n aesurf_names=%s' % (
-                        label, aestat_labels, aeparm_labels, aesurf_names)
-                    raise RuntimeError(msg)
+                    msg += 'TRIM label=%r is not defined\n' % label
 
                 if label in aesurf_names:
                     #print('AESTAT/AESURF label = %r' % label)
                     ntrim_aesurf += 1
+            if msg:
+                msg += '\n aestat_labels=%s\n aeparm_labels=%s\n aesurf_names=%s\n%s' % (
+                    aestat_labels, aeparm_labels, aesurf_names, str(self))
+                raise RuntimeError(msg)
 
             # TODO: this doesn't work for multiple subcases
             #ntotal_suport_dofs = nsuport_dofs, nsuport1_dofs

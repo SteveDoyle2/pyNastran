@@ -285,7 +285,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
         Separates structural and nonstructural mass outputs.
 
     Returns
-    --------
+    -------
     pids_to_mass : dict {int : float, ...}
         Map from property id to mass (structural mass only if detailed is True).
     pids_to_mass_nonstructural : dict {int : float, ...}, optional

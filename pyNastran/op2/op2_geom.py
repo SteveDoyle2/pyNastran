@@ -306,7 +306,7 @@ class OP2Geom(BDF, OP2GeomCommon):
             msg += 'gpdt is None'
             return
         if msg:
-            self.log.error(msg.rstrip('; '))
+            self.log.error('Cannot convert EQEXIN/GPDT to nodes because %s' % msg.rstrip('; '))
             return
 
         nid_cp_cd_ps = gpdt.nid_cp_cd_ps

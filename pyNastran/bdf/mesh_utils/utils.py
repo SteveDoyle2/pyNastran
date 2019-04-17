@@ -887,7 +887,7 @@ def cmd_line_export_caero_mesh(argv=None):
     import pyNastran
     msg = (
         'Usage:\n'
-        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels]\n'
         '  bdf export_caero_mesh -h | --help\n'
         '  bdf export_caero_mesh -v | --version\n'
         '\n'
@@ -898,6 +898,7 @@ def cmd_line_export_caero_mesh(argv=None):
 
         'Options:\n'
         '  -o OUT, --output  OUT_CAERO_BDF_FILENAME  path to output BDF file\n'
+        '  -subpanels                                write the subpanels (default=False)\n'
         '\n'
 
         'Info:\n'
@@ -918,10 +919,27 @@ def cmd_line_export_caero_mesh(argv=None):
     caero_bdf_filename = data['--output']
     if caero_bdf_filename is None:
         caero_bdf_filename = 'caero.bdf'
+    is_subpanel_model = data['--subpanels']
 
     from pyNastran.bdf.bdf import read_bdf
-    model = read_bdf(bdf_filename)
-    model.write_caero_model(caero_bdf_filename)
+    from pyNastran.bdf.mesh_utils.export_caero_mesh import write_caero_model
+    skip_cards = [
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CONM2',
+        'CROD', 'CONROD'
+        'CBAR', 'CBEAM',
+        'CQUAD4', 'CTRIA3',
+        'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM',
+        'RBE1', 'RBE2', 'RBE3', 'RBAR',
+
+        'PELAS', 'PDAMP', 'PROD',
+        'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
+        'PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG', 'PSOLID',
+        'MAT1', 'MAT8',
+
+        'SPC', 'SPC1', 'MPC', 'SPCADD', 'MPCADD', 'DEQATN',
+    ]
+    model = read_bdf(bdf_filename, skip_cards=skip_cards)
+    write_caero_model(model, caero_bdf_filename, is_subpanel_model=is_subpanel_model)
 
 def cmd_line(argv=None):
     """command line interface to multiple other command line scripts"""

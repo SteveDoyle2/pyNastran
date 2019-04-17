@@ -89,7 +89,6 @@ class WriteMeshs(WriteMesh):
             if is_long_ids:
                 size = 16
 
-        #self.write_caero_model()
         ifile_out_filenames = _map_filenames_to_ifile_filname_dict(
             out_filenames, self.active_filenames)
         ifile0 = list(sorted(ifile_out_filenames))[0]

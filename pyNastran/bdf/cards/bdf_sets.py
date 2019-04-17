@@ -33,9 +33,11 @@ The superelement sets start with SE:
 +------------+-----------------+
 |  SEBSETi   | BSETi           |
 +------------+-----------------+
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from typing import List, Union, Optional, Any
 from six import string_types
 import numpy as np
 
@@ -60,18 +62,22 @@ class Set(BaseCard):
         self.ids = []
 
     def clean_ids(self):
+        # () -> None
         """eliminates duplicate IDs from self.IDs and sorts self.IDs"""
         self.ids = list(set(self.ids))
         self.ids.sort()
 
     def repr_fields(self):
+        # type: () -> List[Optional[Union[int, float, str]]]
         list_fields = self.raw_fields()
         return list_fields
 
     def __repr__(self):
+        # type: () -> str
         return self.comment + print_card_8(self.repr_fields())
 
     def write_card(self, size=8, is_double=False):
+        # type: (int, bool) -> str
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -111,6 +117,7 @@ class ABCQSet(Set):
             self.components = self.components.tolist()
 
     def __init__(self, ids, components, comment=''):
+        # type: (List[int], List[int], str) -> None
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -120,6 +127,7 @@ class ABCQSet(Set):
         self.ids_ref = None
 
     def validate(self):
+        # type: () -> None
         assert isinstance(self.ids, list), type(self.ids)
         assert isinstance(self.components, list), type(self.components)
         assert len(self.ids) == len(self.components), 'len(ids)=%s len(components)=%s' % (len(self.ids), len(self.components))
@@ -140,6 +148,7 @@ class ABCQSet(Set):
 
     @classmethod
     def add_op2_data(cls, data, comment=''):
+        # type: (List[Any], str) -> ABCQSet
         ids = [data[0]]
         components = [data[1]]
         return cls(ids, components, comment=comment)
@@ -1431,6 +1440,7 @@ class SEBSET(SuperABCQSet):
     +--------+------+-----+------+-----+----+-----+----+
     | SEBSET |  C   | ID1 | THRU | ID2 |    |     |    |
     +--------+------+-----+------+-----+----+-----+----+
+
     """
     type = 'SEBSET'
     _properties = ['node_ids']
@@ -1460,6 +1470,7 @@ class SEBSET1(SuperABQSet1):
     +----------+------+-----+------+------+-----+-----+-----+-----+
     | SEBSET1  | SEID |  C  | ID1  | THRU | ID2 |     |     |     |
     +----------+------+-----+------+------+-----+-----+-----+-----+
+
     """
     type = 'SEBSET1'
     _properties = ['node_ids']
@@ -1502,6 +1513,7 @@ class SECSET1(SuperABQSet1):
     +----------+------+-----+------+------+-----+-----+-----+-----+
     | SECSET1  | SEID |  C  | ID1  | THRU | ID2 |     |     |     |
     +----------+------+-----+------+------+-----+-----+-----+-----+
+
     """
     type = 'SECSET1'
     _properties = ['node_ids']
@@ -1551,6 +1563,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
     Used with the CSUPER entry to define the correspondence of the
     exterior grid points between an identical or mirror-image
     superelement and its primary superelement.
+
     """
     type = 'SEQSEP'
 
@@ -1586,6 +1599,11 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
         psid = integer(card, 2, 'psid')
         ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
         return SEQSEP(ssid, psid, ids, comment=comment)
+
+    def get_ids(self):
+        # type: () -> List[int]
+        """gets the ids"""
+        return self.ids
 
     def raw_fields(self):
         """gets the "raw" card without any processing as a list for printing"""
@@ -1833,6 +1851,7 @@ class USET1(ABQSet1):
     +-------+-------+-----+------+------+-----+-----+-----+-----+
     | USET1 | SNAME |  C  | ID1  | THRU | ID2 |     |     |     |
     +-------+-------+-----+------+------+-----+-----+-----+-----+
+
     """
     type = 'USET1'
     _properties = ['node_ids']
@@ -1859,6 +1878,7 @@ class USET1(ABQSet1):
             the degree of freedoms (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
+
         """
         ABQSet1.__init__(self, ids, components, comment=comment)
         #if comment:
@@ -1885,6 +1905,7 @@ class USET1(ABQSet1):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         name = string(card, 1, 'name')
         components = fcomponents_or_blank(card, 2, 'components', 0)
@@ -1907,6 +1928,7 @@ class USET1(ABQSet1):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by USET1 name=%s' % (self.name)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)

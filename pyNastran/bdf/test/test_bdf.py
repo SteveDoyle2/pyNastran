@@ -1458,10 +1458,10 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
 
     if 'MPC' in subcase:
         mpc_id = subcase.get_parameter('MPC')[0]
-        fem2.get_mpcs(mpc_id, stop_on_failure=False)
-        fem2.get_reduced_mpcs(mpc_id, stop_on_failure=False)
-        fem2.get_MPCx_node_ids_c1(mpc_id, stop_on_failure=False)
-        fem2.get_MPCx_node_ids(mpc_id, stop_on_failure=False)
+        fem2.get_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=False)
+        fem2.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=False)
+        fem2.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True, stop_on_failure=False)
+        fem2.get_MPCx_node_ids(mpc_id, consider_mpcadd=True, stop_on_failure=False)
 
     if 'NSM' in subcase:
         nsm_id = subcase.get_parameter('NSM')[0]

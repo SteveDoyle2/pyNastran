@@ -2,6 +2,7 @@
 Multi-input/output format converter
 """
 from __future__ import print_function
+import sys
 import glob
 
 # stl_to_plot3d ???
@@ -344,4 +345,4 @@ def cmd_line_format_converter(argv=None, quiet=False):
 
 
 if __name__ == '__main__':  # pragma: no cover
-    cmd_line_type_converter()
+    cmd_line_format_converter()

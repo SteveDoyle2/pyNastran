@@ -4290,7 +4290,13 @@ class BDF(BDF_):
     """
     NASTRAN BDF Reader/Writer/Editor class.
     """
-    _properties = ['is_bdf_vectorized', 'nid_map', 'wtmass', 'type_slot_str']
+    _properties = ['is_bdf_vectorized', 'nid_map', 'wtmass', 'type_slot_str'] + [
+        'nastran_format', 'is_long_ids', 'sol', 'subcases',
+        'nnodes', 'node_ids', 'point_ids', 'npoints',
+        'nelements', 'element_ids', 'nproperties', 'property_ids',
+        'nmaterials', 'material_ids', 'ncoords', 'coord_ids',
+        'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map']
+
     def __init__(self, debug=True, log=None, mode='msc'):
         # type: (Optional[bool], SimpleLogger, str) -> None
         """

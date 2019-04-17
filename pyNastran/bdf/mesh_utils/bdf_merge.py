@@ -37,7 +37,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
         If true, don't consider the case control deck while merging.
 
     Returns
-    --------
+    -------
     model : BDF
         Merged model.
     mappers_all : List[mapper]

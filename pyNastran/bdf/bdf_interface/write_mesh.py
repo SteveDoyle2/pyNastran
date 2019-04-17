@@ -88,93 +88,6 @@ class WriteMesh(BDFAttributes):
         #self.log.debug("***writing %s" % fname)
         return out_filename
 
-    def write_caero_model(self, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
-        # type: (str, bool) -> None
-        """write the CAERO cards as CQUAD4s that can be visualized"""
-        def _get_subpanel_property(eid):
-            """gets the property id for the subpanel"""
-            pidi = None
-            for aesurf_id, aesurf in self.aesurf.items():
-                aelist_id = aesurf.aelist_id1()
-                aelist = self.aelists[aelist_id]
-                if eid in aelist.elements:
-                    pidi = aesurf_id
-                    break
-            if pidi is None:
-                #pidi = pid
-                pidi = 1
-            return pidi
-
-        inid = 1
-        mid = 1
-        self.log.debug('---starting BDF.write_caero_model of %s---' % caero_bdf_filename)
-        with open(caero_bdf_filename, 'w') as bdf_file:
-            #bdf_file.write('$ pyNastran: punch=True\n')
-            bdf_file.write('CEND\n')
-            bdf_file.write('BEGIN BULK\n')
-            #if is_subpanel_model:
-            for aesurf_id, unused_aesurf in self.aesurf.items():
-                #cid = aesurf.cid1
-
-                #aesurf_mid = aesurf_id
-                aesurf_mid = 1
-                bdf_file.write('PSHELL,%s,%s,0.1\n' % (aesurf_id, aesurf_mid))
-                #print(cid)
-                #ax, ay, az = cid.i
-                #bx, by, bz = cid.j
-                #cx, cy, cz = cid.k
-                #bdf_file.write('CORD2R,%s,,%s,%s,%s,%s,%s,%s\n' % (
-                    #cid, ax, ay, az, bx, by, bz))
-                #bdf_file.write(',%s,%s,%s\n' % (cx, cy, cz))
-                #print(cid)
-                #aesurf.elements
-
-            for caero_eid, caero in sorted(self.caeros.items()):
-                #assert caero_eid != 1, 'CAERO eid=1 is reserved for non-flaps'
-                scaero = str(caero).rstrip().split('\n')
-                if is_subpanel_model:
-                    if caero.type == 'CAERO2':
-                        continue
-
-                    bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
-                    points, elements = caero.panel_points_elements()
-                    npoints = points.shape[0]
-                    #nelements = elements.shape[0]
-                    for ipoint, point in enumerate(points):
-                        x, y, z = point
-                        bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
-
-                    #pid = caero_eid
-                    #mid = caero_eid
-                    jeid = 0
-                    for elem in elements + inid:
-                        p1, p2, p3, p4 = elem
-                        eid2 = jeid + caero_eid
-                        pidi = _get_subpanel_property(eid2)
-                        fields = ['CQUAD4', eid2, pidi, p1, p2, p3, p4]
-                        bdf_file.write(print_card_8(fields))
-                        jeid += 1
-                else:
-                    if caero.type == 'CAERO2':
-                        continue
-                    bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
-                    points = caero.get_points()
-                    npoints = 4
-                    for ipoint, point in enumerate(points):
-                        x, y, z = point
-                        bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
-
-                    pid = _get_subpanel_property(caero_eid)
-                    p1 = inid
-                    p2 = inid + 1
-                    p3 = inid + 2
-                    p4 = inid + 3
-                    bdf_file.write(print_card_8(['CQUAD4', caero_eid, pid, p1, p2, p3, p4]))
-                inid += npoints
-            bdf_file.write('PSHELL,%s,%s,0.1\n' % (1, 1))
-            bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
-            bdf_file.write('ENDDATA\n')
-
     def write_bdf(self, out_filename=None, encoding=None,
                   size=8, is_double=False,
                   interspersed=False, enddata=None, write_header=True, close=True):
@@ -229,7 +142,6 @@ class WriteMesh(BDFAttributes):
             if is_long_ids:
                 size = 16
 
-        #self.write_caero_model()
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
         encoding = self.get_encoding(encoding)

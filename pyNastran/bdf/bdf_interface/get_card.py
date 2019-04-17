@@ -346,7 +346,8 @@ class GetCard(GetMethods):
             out[card_type] = cards
         return out
 
-    def get_SPCx_node_ids(self, spc_id, stop_on_failure=True):
+    def get_SPCx_node_ids(self, spc_id, consider_spcadd=True, stop_on_failure=True):
+        # type: (int, bool, bool) -> List[int]
         """
         Get the SPC/SPCADD/SPC1/SPCAX IDs.
 
@@ -363,7 +364,8 @@ class GetCard(GetMethods):
             the constrained associated node ids
 
         """
-        spcs = self.get_reduced_spcs(spc_id, stop_on_failure=stop_on_failure)
+        spcs = self.get_reduced_spcs(
+            spc_id, consider_spcadd=consider_spcadd, stop_on_failure=stop_on_failure)
 
         warnings = ''
         node_ids = []
@@ -431,7 +433,8 @@ class GetCard(GetMethods):
             self.log.warning("get_SPCx_node_ids_c1 doesn't consider:\n%s" % warnings.rstrip('\n'))
         return node_ids_c1
 
-    def get_MPCx_node_ids(self, mpc_id, stop_on_failure=True):
+    def get_MPCx_node_ids(self, mpc_id, consider_mpcadd=True, stop_on_failure=True):
+        # type: (int, bool, bool) -> List[List[int]]
         r"""
         Get the MPC/MPCADD IDs.
 
@@ -439,6 +442,9 @@ class GetCard(GetMethods):
         ----------
         mpc_id : int
             the MPC id
+        consider_mpcadd : bool
+            MPCADDs should not be considered when referenced from an MPCADD
+            from a case control, True should be used.
         stop_on_failure : bool; default=True
             errors if parsing something new
 
@@ -456,7 +462,9 @@ class GetCard(GetMethods):
 
         """
         lines = []
-        mpcs = self.get_reduced_mpcs(mpc_id, stop_on_failure=stop_on_failure)
+        mpcs = self.get_reduced_mpcs(
+            mpc_id, consider_mpcadd=consider_mpcadd,
+            stop_on_failure=stop_on_failure)
 
         # dependent, independent
         for card in mpcs:
@@ -477,7 +485,8 @@ class GetCard(GetMethods):
                     self.log.warning(msg)
         return lines
 
-    def get_MPCx_node_ids_c1(self, mpc_id, stop_on_failure=True):
+    def get_MPCx_node_ids_c1(self, mpc_id, consider_mpcadd=True, stop_on_failure=True):
+        # type: int, (bool, bool) -> (Dict[str, List[int]], Dict[str, List[int]])
         r"""
         Get the MPC/MPCADD IDs.
 
@@ -485,6 +494,9 @@ class GetCard(GetMethods):
         ----------
         mpc_id : int
             the MPC id
+        consider_mpcadd : bool
+            MPCADDs should not be considered when referenced from an MPCADD
+            from a case control, True should be used.
         stop_on_failure : bool; default=True
             errors if parsing something new
 
@@ -511,7 +523,9 @@ class GetCard(GetMethods):
             msg = 'mpc_id must be an integer; type=%s, mpc_id=\n%r' % (type(mpc_id), mpc_id)
             raise TypeError(msg)
 
-        mpcs = self.get_reduced_mpcs(mpc_id, stop_on_failure=stop_on_failure)
+        mpcs = self.get_reduced_mpcs(
+            mpc_id, consider_mpcadd=consider_mpcadd,
+            stop_on_failure=stop_on_failure)
 
         # dependent, independent
         independent_node_ids_c1 = defaultdict(list)
@@ -2536,6 +2550,7 @@ class GetCard(GetMethods):
         return nsms2
 
     def get_reduced_mpcs(self, mpc_id, consider_mpcadd=False, stop_on_failure=True):
+        # type: (int, bool, bool) -> List[Any]
         """
         Get all traced MPCs that are part of a set
 
@@ -2729,7 +2744,9 @@ class GetCard(GetMethods):
           - MPCADD
 
         """
-        mpcs = self.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=stop_on_failure)
+        mpcs = self.get_reduced_mpcs(
+            mpc_id, consider_mpcadd=True,
+            stop_on_failure=stop_on_failure)
         nids = []
         comps = []
         for mpc in mpcs:

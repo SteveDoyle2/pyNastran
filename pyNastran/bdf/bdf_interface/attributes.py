@@ -49,7 +49,7 @@ class BDFAttributes(object):
     def __properties__(self):
         """the list of @property attributes"""
         return ['nastran_format', 'is_long_ids', 'sol', 'subcases',
-                'nnodes', 'node_ids', 'point_ids',
+                'nnodes', 'node_ids', 'point_ids', 'npoints',
                 'nelements', 'element_ids', 'nproperties', 'property_ids',
                 'nmaterials', 'material_ids', 'ncoords', 'coord_ids',
                 'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map']
