@@ -27,9 +27,6 @@ class TestOpenMDAO(unittest.TestCase):
             ['PARAM', 'WTMASS', 2, 0.0025],  # value1
             ['PCOMP', 1, 2, 1.],
             ['PCOMP', 1, 3, 2.],
-            ['PCOMP', 1, 12, 'YES_A'],
-            ['PCOMP', 1, 16, 'YES_B'],
-            ['PCOMP', 1, 20, 'YES_C'],
             ['CTETRA', 8, 3, 1], # nid[0]
             ['CTETRA', 8, 4, 2], # nid[1]
             ['CTETRA', 8, 5, 3], # nid[2]
@@ -47,11 +44,28 @@ class TestOpenMDAO(unittest.TestCase):
 
         model = BDF(debug=False)
         model.read_bdf(bdf_filename)
+        pcomp_updates = [
+            ['PCOMP', 1, 15, 'YES_A', 'souts_0'],
+            ['PCOMP', 1, 19, 'YES_B', 'souts_1'],
 
+            ['PCOMP', 1, 25, 'YES_C', 'souts_2'],
+            #['PCOMP', 1, 29, 'YES_D', 'souts_3'],
+        ]
         for iupdate in updates:
-            Type, iType, ifield, value = iupdate
-            card = model.update_card(Type, iType, ifield, value)
-            #print(card)
+            card_type, itype, ifield, value = iupdate
+            card = model.update_card(card_type, itype, ifield, value)
+
+        for iupdate in pcomp_updates:
+            card_type, itype, ifield, value, field_name = iupdate
+            card = model.update_card(card_type, itype, ifield, value)
+            if '_' in field_name:
+                field_name2, index = field_name.split('_')
+                index = int(index)
+                actual = getattr(card, field_name2)[index]
+                assert actual == value, 'field_name=%r ifield=%s value=%s actual=%s\n%s' % (
+                    field_name, ifield, value, actual, card.print_raw_card())
+            #if card_type == 'PCOMP':
+                #print(card)
 
     def test_openmdao_bad_1(self):
         updates = [  # KeyError
@@ -66,14 +80,17 @@ class TestOpenMDAO(unittest.TestCase):
         model.read_bdf(bdf_filename)
 
         for iupdate in updates:
-            Type, iType, ifield, value = iupdate
-            self.assertRaises(KeyError, model.update_card, Type, iType, ifield, value)
-            #print("tried to apply %r=%s" % (Type, iType))
+            card_type, itype, ifield, value = iupdate
+            self.assertRaises(KeyError, model.update_card, card_type, itype, ifield, value)
+            #print("tried to apply %r=%s" % (card_type, itype))
 
     def test_openmdao_bad_2(self):
         updates = [  # IndexError
             ['PARAM', 'WTMASS', 3, 0.005],  # value2; invalid b/c WTMASS
-            ['PCOMP', 1, 24, 'YES_D'],  # too many plies
+            ['PCOMP', 1, 26, 'MID_D'],  # too many plies
+            ['PCOMP', 1, 27, 'T_D'],  # too many plies
+            ['PCOMP', 1, 28, 'THETA_D'],  # too many plies
+            ['PCOMP', 1, 29, 'YES_D'],  # too many plies
         ]
         bdf_filename = os.path.join(mesh_utils_path, 'test_mass.dat')
 
@@ -81,9 +98,9 @@ class TestOpenMDAO(unittest.TestCase):
         model.read_bdf(bdf_filename)
 
         for iupdate in updates:
-            Type, iType, ifield, value = iupdate
-            self.assertRaises(IndexError, model.update_card, Type, iType, ifield, value)
-            #print("tried to apply %r=%s" % (Type, iType))
+            card_type, itype, ifield, value = iupdate
+            self.assertRaises(IndexError, model.update_card, card_type, itype, ifield, value)
+            #print("tried to apply %r=%s" % (card_type, itype))
 
     def test_openmaod_bad_3(self):
         params_bad = {1 : '10'}

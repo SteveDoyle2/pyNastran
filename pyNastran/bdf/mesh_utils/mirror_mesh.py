@@ -81,7 +81,7 @@ def bdf_mirror(bdf_filename, plane='xz', log=None, debug=True):
 
 def write_bdf_symmetric(bdf_filename, out_filename=None, encoding=None,
                         size=8, is_double=False,
-                        enddata=None, close=True, plane='xz'):
+                        enddata=None, close=True, plane='xz', log=None):
     """
     Mirrors the model about the symmetry plane
 
@@ -136,7 +136,7 @@ def write_bdf_symmetric(bdf_filename, out_filename=None, encoding=None,
      - aero cards : see ``_mirror_aero``
 
     """
-    model, nid_offset, eid_offset = bdf_mirror(bdf_filename, plane=plane)
+    model, nid_offset, eid_offset = bdf_mirror(bdf_filename, plane=plane, log=None)
     model.write_bdf(out_filename=out_filename, encoding=encoding,
                     size=size, is_double=is_double,
                     interspersed=False, enddata=enddata, close=close)

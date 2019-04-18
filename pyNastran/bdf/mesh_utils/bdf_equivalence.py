@@ -96,7 +96,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
         tol = float(tol)
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
         bdf_filename, tol, renumber_nodes=renumber_nodes,
-        xref=xref, node_set=node_set, debug=debug)
+        xref=xref, node_set=node_set, log=log, debug=debug)
     ieq, slots = _eq_nodes_build_tree(nodes_xyz, nids, tol,
                                       inew=inew, node_set=node_set,
                                       neq_max=neq_max)[1:]
@@ -115,7 +115,7 @@ def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
 
 def _eq_nodes_setup(bdf_filename, unused_tol,
                     renumber_nodes=False, xref=True,
-                    node_set=None, debug=True):
+                    node_set=None, log=None, debug=True):
     """helper function for ``bdf_equivalence_nodes``"""
     if node_set is not None:
         if renumber_nodes:
@@ -129,7 +129,7 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
         else:
             node_set = asarray(node_set, dtype='int32')
 
-    model = get_bdf_model(bdf_filename, xref=xref, log=None, debug=debug)
+    model = get_bdf_model(bdf_filename, xref=xref, log=log, debug=debug)
 
     # quads / tris
     #nids_quads = []

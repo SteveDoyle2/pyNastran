@@ -1,39 +1,44 @@
+"""
+defines:
+ - export_caero_mesh(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True)
+
+"""
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.field_writer_8 import print_card_8
 
-def write_caero_model(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
+def export_caero_mesh(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
     # type: (BDF, str, bool) -> None
     """write the CAERO cards as CQUAD4s that can be visualized"""
-    write_caero_model_aesurf(model, caero_bdf_filename='caero.bdf', is_subpanel_model=is_subpanel_model)
+    export_caero_model_aesurf(model, caero_bdf_filename='caero.bdf', is_subpanel_model=is_subpanel_model)
 
-def write_caero_model_base(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
+#def export_caero_model_base(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
+    ## type: (BDF, str, bool) -> None
+    #inid = 1
+    #mid = 1
+    #model.log.debug('---starting export_caero_model of %s---' % caero_bdf_filename)
+    #with open(caero_bdf_filename, 'w') as bdf_file:
+        #bdf_file.write('CEND\n')
+        #bdf_file.write('BEGIN BULK\n')
+
+        #for caero_eid, caero in sorted(model.caeros.items()):
+            #if caero.type == 'CAERO2':
+                #continue
+
+            ##assert caero_eid != 1, 'CAERO eid=1 is reserved for non-flaps'
+            #scaero = str(caero).rstrip().split('\n')
+            #bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
+            #points, elements = caero.panel_points_elements()
+            #npoints = points.shape[0]
+            ##nelements = elements.shape[0]
+            #for ipoint, point in enumerate(points):
+                #x, y, z = point
+                #bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
+
+def export_caero_model_aesurf(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
     # type: (BDF, str, bool) -> None
     inid = 1
     mid = 1
-    model.log.debug('---starting write_caero_model of %s---' % caero_bdf_filename)
-    with open(caero_bdf_filename, 'w') as bdf_file:
-        bdf_file.write('CEND\n')
-        bdf_file.write('BEGIN BULK\n')
-
-        for caero_eid, caero in sorted(model.caeros.items()):
-            if caero.type == 'CAERO2':
-                continue
-
-            #assert caero_eid != 1, 'CAERO eid=1 is reserved for non-flaps'
-            scaero = str(caero).rstrip().split('\n')
-            bdf_file.write('$ ' + '\n$ '.join(scaero) + '\n')
-            points, elements = caero.panel_points_elements()
-            npoints = points.shape[0]
-            #nelements = elements.shape[0]
-            for ipoint, point in enumerate(points):
-                x, y, z = point
-                bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
-
-def write_caero_model_aesurf(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
-    # type: (BDF, str, bool) -> None
-    inid = 1
-    mid = 1
-    model.log.debug('---starting write_caero_model of %s---' % caero_bdf_filename)
+    model.log.debug('---starting export_caero_model of %s---' % caero_bdf_filename)
     with open(caero_bdf_filename, 'w') as bdf_file:
         #bdf_file.write('$ pyNastran: punch=True\n')
         bdf_file.write('CEND\n')

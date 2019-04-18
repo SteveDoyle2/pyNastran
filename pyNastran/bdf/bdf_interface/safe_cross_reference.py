@@ -322,6 +322,8 @@ class SafeXrefMesh(XrefMesh):
     def _safe_cross_reference_optimization(self):
         # type: () -> None
         """cross references the optimization objects"""
+        #self._cross_reference_optimization()
+        #return
         xref_errors = defaultdict(list)
         for unused_key, deqatn in self.dequations.items():
             if hasattr(deqatn, 'safe_cross_reference'):

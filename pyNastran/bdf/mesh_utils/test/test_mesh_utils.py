@@ -354,33 +354,36 @@ class TestMeshUtils(unittest.TestCase):
     def test_export_caero_mesh(self):
         """tests multiple ``bdf`` tools"""
         bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
-        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero.bdf']
-        cmd_line(argv=argv)
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_no_sub.bdf']
+        cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero.bdf', '--subpanels']
+        cmd_line(argv=argv, quiet=True)
 
         #bdf mirror IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]
         argv = ['bdf', 'mirror', 'caero.bdf', '-o', 'caero2.bdf', '--plane', 'xz', '--tol', '1e-5']
-        cmd_line(argv=argv)
+        cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'equivalence', 'caero2.bdf', '0.001', '-o', 'caero3.bdf']
-        cmd_line(argv=argv)
+        cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'renumber', 'caero3.bdf', 'caero4.bdf', '--size', '8']
-        cmd_line(argv=argv)
+        cmd_line(argv=argv, quiet=True)
 
         #bdf transform IN_BDF_FILENAME [-o OUT_CAERO_BDF_FILENAME] [--shift XYZ]
         argv = ['bdf', 'transform', 'caero4.bdf', '-o', 'caero5.bdf', '--shift', '0,0,20.']
-        cmd_line(argv=argv)
+        cmd_line(argv=argv, quiet=True)
 
         #'  bdf convert IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
         argv = ['bdf', 'convert', 'caero5.bdf',
                 '-o', 'caero6.bdf',
                 '--in_units', 'in,lbm', '--out_units', 'ft,lbm']
-        cmd_line(argv=argv)
+        cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'scale', 'caero6.bdf',
                 #'-o', 'caero6.bdf',
                 '--length', '0.5', '--time', '1.', '--mass', str(0.5**3.)]
-        cmd_line(argv=argv)
+        cmd_line(argv=argv, quiet=True)
 
     def test_export_mcids(self):
         """creates material coordinate systems"""

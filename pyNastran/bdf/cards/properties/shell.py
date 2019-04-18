@@ -196,10 +196,10 @@ class CompositeShellProperty(ShellProperty):
             if iply < self.nplies:
                 iply = nplies - iply - 1
             else:
-                raise IndexError('invalid value for nplies=%s iply=%r\n%s' % (
+                raise IndexError('invalid value for nplies=%s iply=%r (iply is 0-based)\n%s' % (
                     nplies, iply, str(self)))
         elif iply < 0:
-            raise IndexError('invalid value for nplies=%s iply=%r\n%s' % (
+            raise IndexError('invalid value for nplies=%s iply=%r (iply is 0-based)\n%s' % (
                 nplies, iply, str(self)))
         return iply
 
@@ -575,30 +575,29 @@ class CompositeShellProperty(ShellProperty):
 
 class PCOMP(CompositeShellProperty):
     """
-    +-------+--------+--------+---------+------+--------+--------+-------+------+
-    |   1   |    2   |    3   |    4    |  5   |    6   |    7   |   8   |   9  |
-    +=======+========+========+=========+======+========+========+=======+======+
-    | PCOMP |   PID  |   Z0   |   NSM   |  SB  |   FT   |  TREF  |  GE   | LAM  |
-    +-------+--------+--------+---------+------+--------+--------+-------+------+
-    | MID1  |   T1   | THETA1 |  SOUT1  | MID2 |   T2   | THETA2 | SOUT2 |      |
-    +-------+--------+--------+---------+------+--------+--------+-------+------+
-    | MID3  |   T3   | THETA3 |  SOUT3  | etc. |        |        |       |      |
-    +-------+--------+--------+---------+------+--------+--------+-------+------+
+    +-------+--------+--------+---------+-------+--------+--------+--------+-------+
+    |   1   |    2   |    3   |    4    |   5   |   6    |   7    |    8   |   9   |
+    +=======+========+========+=========+=======+========+========+========+=======+
+    | PCOMP |   PID  |   Z0   |   NSM   |   SB  |   FT   |  TREF  |   GE   |  LAM  |
+    +-------+--------+--------+---------+-------+--------+--------+--------+-------+
+    |       |  MID1  |   T1   |  THETA1 | SOUT1 |  MID2  |  T2    | THETA2 | SOUT2 |
+    +-------+--------+--------+---------+-------+--------+--------+--------+-------+
+    |       |  MID3  |   T3   |  THETA3 | SOUT3 |  etc.  |        |        |       |
+    +-------+--------+--------+---------+-------+--------+--------+--------+-------+
 
-    +-------+--------+--------+---------+------+--------+--------+-------+------+
-    | PCOMP | 701512 | 0.0+0  | 1.549-2 |      |        | 0.0+0  | 0.0+0 | SYM  |
-    +-------+--------+--------+---------+------+--------+--------+-------+------+
-    |       | 300704 | 3.7-2  |  0.0+0  | YES  | 300704 | 3.7-2  |   45. | YES  |
-    +-------+--------+--------+---------+------+--------+--------+-------+------+
-    |       | 300704 | 3.7-2  |  -45.   | YES  | 300704 | 3.7-2  |   90. | YES  |
-    +-------+--------+--------+---------+------+--------+--------+-------+------+
-    |       | 300705 |   .5   |  0.0+0  | YES  |        |        |       |      |
-    +-------+--------+--------+---------+------+--------+--------+-------+------+
+    +-------+--------+--------+---------+-------+--------+--------+--------+-------+
+    | PCOMP | 701512 | 0.0+0  | 1.549-2 |       |        | 0.0+0  | 0.0+0  |  SYM  |
+    +-------+--------+--------+---------+-------+--------+--------+--------+-------+
+    |       | 300704 | 3.7-2  |  0.0+0  |  YES  | 300704 | 3.7-2  |   45.  |  YES  |
+    +-------+--------+--------+---------+-------+--------+--------+--------+-------+
+    |       | 300704 | 3.7-2  |  -45.   |  YES  | 300704 | 3.7-2  |   90.  |  YES  |
+    +-------+--------+--------+---------+-------+--------+--------+--------+-------+
+    |       | 300705 |   .5   |  0.0+0  |  YES  |        |        |        |       |
+    +-------+--------+--------+---------+-------+--------+--------+--------+-------+
     """
     type = 'PCOMP'
     _field_map = {
-        1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'tref',
-        7: 'ge', 8:'lam',
+        1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'tref', 7: 'ge', 8:'lam',
     }
     _properties = ['_field_map', 'plies', 'nplies', 'material_ids']
     def update_by_pname_fid(self, pname_fid, value):
@@ -644,15 +643,25 @@ class PCOMP(CompositeShellProperty):
             return
 
         assert n > 0, 'PCOMP pid=%s; negative indicies are not supported (pname_fid=%r)' % (self.pid, n)
-        nnew = n - 9
+        nnew = n - 10
         if nnew <= 0:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-        ilayer = nnew // 4
-        iply = self._adjust_ply_id(ilayer - 1)
+        # the + 1 is to tell us we're on row 1 at minimum (not row 0)
+        irow = n // 10
+        irow_start = irow * 10 + 2
+        offset = n - irow_start
+        if offset < 0:
+            raise RuntimeError('field=%s is invalid for the PCOMP' % n)
 
-        slot = nnew % 4
-        #print(self.plies)
+        irow_layer = irow - 1
+        ilayer = irow_layer * 2 + offset // 4
+        #print('\nn=%s nnew=%s irow_start=%s irow=%s offset=%s ilayer=%s' % (n, nnew, irow_start, irow, offset, ilayer))
+        assert ilayer >= 0
+        iply = self._adjust_ply_id(ilayer)
+
+        slot = offset % 4
+        #print('iply=%s slot=%s' % (iply, slot))
         try:
             ply = self.plies[iply]
         except IndexError:
@@ -662,6 +671,16 @@ class PCOMP(CompositeShellProperty):
                     'iply_min=0; iply_max=%i' % (self.pid, ilayer, len(self.plies)))
             raise IndexError(msg)
 
+        if slot == 0:
+            self.material_ids[iply] = value
+        elif slot == 1:
+            self.thicknesses[iply] = value
+        elif slot == 2:
+            self.thetas[iply] = value
+        elif slot == 3:
+            self.souts[iply] = value
+        else:
+            raise RuntimeError('ilayer=%s iply=%s slot=%s in [mid, t, theta, sout]' % (ilayer, iply, slot))
         # ply = [mid, t, theta, sout]
         ply[slot] = value
 
@@ -1748,7 +1767,8 @@ class PSHELL(ShellProperty):
     type = 'PSHELL'
     _field_map = {
         1: 'pid', 2:'mid1', 3:'t', 4:'mid2', 5:'twelveIt3', 6:'mid3',
-        7: 'tst', 8:'nsm', 9:'z1', 10:'z2',
+        7: 'tst', 8:'nsm',
+        11:'z1', 12:'z2',
     }
     pname_fid_map = {
         # 1 based

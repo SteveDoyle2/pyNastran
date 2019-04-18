@@ -1,5 +1,6 @@
 from __future__ import print_function
 from six import string_types
+#from six.moves import StringIO
 
 from pyNastran.bdf.bdf import BDF
 
@@ -23,6 +24,9 @@ def get_bdf_model(bdf_filename, xref=True, log=None, debug=False):
         model = bdf_filename
         if xref:
             model.cross_reference(xref=xref)
+    #elif isinstance(bdf_filename, StringIO):
+        #model = BDF(log=log, debug=debug)
+        #model.read_bdf(bdf_filename, xref=xref)
     else:
         raise NotImplementedError(bdf_filename)
     return model

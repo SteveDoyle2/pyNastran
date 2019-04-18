@@ -77,10 +77,6 @@ class WriteMesh(BDFAttributes):
         self.log.debug("***writing %s" % fname)
         return out_filename
 
-    def write_caero_model(self, caero_bdf_filename='caero.bdf'):
-        """write the CAERO cards as CQUAD4s that can be visualized"""
-        raise NotImplementedError()
-
     def write_bdf(self, out_filename=None, encoding=None,
                   size=8, is_double=False,
                   interspersed=False, enddata=None, close=True):
@@ -114,7 +110,6 @@ class WriteMesh(BDFAttributes):
         close : bool; default=True
             should the output file be closed
         """
-        #self.write_caero_model()
         out_filename = self._output_helper(out_filename,
                                            interspersed, size, is_double)
         self.log.debug('---starting BDF.write_bdf of %s---' % out_filename)

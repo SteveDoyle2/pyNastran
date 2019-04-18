@@ -11,12 +11,14 @@ defines:
 from __future__ import print_function
 import os
 import sys
+from cpylog import SimpleLogger
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, superelement_renumber
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 from pyNastran.bdf.mesh_utils.pierce_shells import pierce_shell_model
 
 # testing these imports are up to date
+# if something is imported and tested, it should be removed from here
 from pyNastran.bdf.mesh_utils.shift import update_nodes
 from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
@@ -26,7 +28,7 @@ from pyNastran.bdf.mesh_utils.dev.create_vectorized_numbered import create_vecto
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
 
-def cmd_line_create_vectorized_numbered(argv=None):  # pragma: no cover
+def cmd_line_create_vectorized_numbered(argv=None, quiet=False):  # pragma: no cover
     if argv is None:
         argv = sys.argv
 
@@ -51,7 +53,8 @@ def cmd_line_create_vectorized_numbered(argv=None):  # pragma: no cover
     import pyNastran
     ver = str(pyNastran.__version__)
     data = docopt(msg, version=ver, argv=argv[1:])
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
     bdf_filename_in = data['IN_BDF_FILENAME']
     if data['OUT_BDF_FILENAME']:
         bdf_filename_out = data['OUT_BDF_FILENAME']
@@ -61,7 +64,7 @@ def cmd_line_create_vectorized_numbered(argv=None):  # pragma: no cover
     create_vectorized_numbered(bdf_filename_in, bdf_filename_out)
 
 
-def cmd_line_equivalence(argv=None):
+def cmd_line_equivalence(argv=None, quiet=False):
     """command line interface to bdf_equivalence_nodes"""
     if argv is None:
         argv = sys.argv
@@ -97,7 +100,8 @@ def cmd_line_equivalence(argv=None):
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
@@ -105,6 +109,9 @@ def cmd_line_equivalence(argv=None):
     tol = data['EQ_TOL']
     size = 16
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
     bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
                           renumber_nodes=False,
                           neq_max=10, xref=True,
@@ -113,10 +120,10 @@ def cmd_line_equivalence(argv=None):
                           remove_collapsed_elements=False,
                           avoid_collapsed_elements=False,
                           crash_on_collapse=False,
-                          debug=True)
+                          log=log, debug=True)
 
 
-def cmd_line_bin(argv=None):  # pragma: no cover
+def cmd_line_bin(argv=None, quiet=False):  # pragma: no cover
     """bins the model into nbins"""
     if argv is None:
         argv = sys.argv
@@ -176,14 +183,16 @@ def cmd_line_bin(argv=None):  # pragma: no cover
     if data['--nbins']:
         nbins = int(data['--nbins'])
     assert nbins >= 2, nbins
-    print(data)
-    #asdf
+    if not quiet:  # pragma: no cover
+        print(data)
 
     import numpy as np
     import matplotlib.pyplot as plt
     from pyNastran.bdf.bdf import read_bdf
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
 
-    model = read_bdf(bdf_filename)
+    model = read_bdf(bdf_filename, log=log)
     xyz_cid = model.get_xyz_in_coord(cid=cid, fdtype='float64')
     y = xyz_cid[:, axis1]
     z = xyz_cid[:, axis2]
@@ -210,9 +219,10 @@ def cmd_line_bin(argv=None):  # pragma: no cover
         y1i += dy
     zs_max = np.array(zs_max)
     zs_min = np.array(zs_min)
-    print('ys = %s' % ys)
-    print('zs_max = %s' % zs_max)
-    print('zs_min = %s' % zs_min)
+    if not quiet:  # pragma: no cover
+        print('ys = %s' % ys)
+        print('zs_max = %s' % zs_max)
+        print('zs_min = %s' % zs_min)
     plt.plot(ys, zs_max, 'r-o', label='max')
     plt.plot(ys, zs_min, 'b-o', label='min')
     plt.plot(ys, zs_max - zs_min, 'g-o', label='delta')
@@ -225,7 +235,7 @@ def cmd_line_bin(argv=None):  # pragma: no cover
 
 
 
-def cmd_line_renumber(argv=None):
+def cmd_line_renumber(argv=None, quiet=False):
     """command line interface to bdf_renumber"""
     if argv is None:
         argv = sys.argv
@@ -261,7 +271,8 @@ def cmd_line_renumber(argv=None):
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['OUT_BDF_FILENAME']
     if bdf_filename_out is None:
@@ -275,17 +286,20 @@ def cmd_line_renumber(argv=None):
         #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
         #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
     cards_to_skip = []
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
     if data['--superelement']:
         superelement_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
                               starting_id_dict=None, #round_ids=False,
-                              cards_to_skip=cards_to_skip)
+                              cards_to_skip=cards_to_skip, log=log)
     else:
         bdf_renumber(bdf_filename, bdf_filename_out, size=size, is_double=False,
                      starting_id_dict=None, round_ids=False,
-                     cards_to_skip=cards_to_skip)
+                     cards_to_skip=cards_to_skip, log=log)
 
 
-def cmd_line_mirror(argv=None):
+def cmd_line_mirror(argv=None, quiet=False):
     """command line interface to write_bdf_symmetric"""
     if argv is None:
         argv = sys.argv
@@ -335,22 +349,27 @@ def cmd_line_mirror(argv=None):
     if data['--plane'] is not None:
         plane = data['--plane']
 
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
         bdf_filename_out = 'mirrored.bdf'
 
+    from six.moves import StringIO
     from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
-    model = read_bdf(bdf_filename)
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    model = read_bdf(bdf_filename, log=log)
     size = 16
-    bdf_filename_temp = '__temp.bdf__'
+    bdf_filename_temp = '__temp__.bdf'
     write_bdf_symmetric(model, bdf_filename_temp, encoding=None, size=size,
                         is_double=False,
                         enddata=None, close=True,
-                        plane=plane)
+                        plane=plane, log=log)
 
     bdf_equivalence_nodes(bdf_filename_temp, bdf_filename_out, tol,
                           renumber_nodes=False,
@@ -360,11 +379,11 @@ def cmd_line_mirror(argv=None):
                           remove_collapsed_elements=False,
                           avoid_collapsed_elements=False,
                           crash_on_collapse=False,
-                          debug=True)
+                          debug=True, log=log)
     os.remove(bdf_filename_temp)
 
 
-def cmd_line_merge(argv=None):
+def cmd_line_merge(argv=None, quiet=False):
     """command line interface to bdf_merge"""
     if argv is None:
         argv = sys.argv
@@ -397,7 +416,8 @@ def cmd_line_merge(argv=None):
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
     size = 16
     bdf_filenames = data['IN_BDF_FILENAMES']
     bdf_filename_out = data['--output']
@@ -412,7 +432,7 @@ def cmd_line_merge(argv=None):
               encoding=None, size=size, is_double=False, cards_to_skip=cards_to_skip)
 
 
-def cmd_line_convert(argv=None):
+def cmd_line_convert(argv=None, quiet=False):
     """command line interface to bdf_merge"""
     if argv is None:
         argv = sys.argv
@@ -443,7 +463,8 @@ def cmd_line_convert(argv=None):
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
@@ -468,17 +489,20 @@ def cmd_line_convert(argv=None):
         #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']
     from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.convert import convert
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
     model = read_bdf(bdf_filename, validate=True, xref=True,
                      punch=False, save_file_structure=False,
                      skip_cards=None, read_cards=None,
-                     encoding=None, log=None, debug=True, mode='msc')
+                     encoding=None, log=log, debug=True, mode='msc')
     convert(model, units_to, units=units)
     for prop in model.properties.values():
         prop.comment = ''
     model.write_bdf(bdf_filename_out)
 
 
-def cmd_line_scale(argv=None):
+def cmd_line_scale(argv=None, quiet=False):
     if argv is None:
         argv = sys.argv
 
@@ -521,7 +545,8 @@ def cmd_line_scale(argv=None):
     parent_parser.add_argument('-v', '--version', action='version',
                                version=pyNastran.__version__)
     args = parent_parser.parse_args(args=argv[1:])
-    print(args)
+    if not quiet:  # pragma: no cover
+        print(args)
 
     scales = []
     terms = []
@@ -558,10 +583,13 @@ def cmd_line_scale(argv=None):
         terms.append('V')
 
     from pyNastran.bdf.mesh_utils.convert import scale_by_terms
-    scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=bdf_filename_out)
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=bdf_filename_out, log=log)
 
 
-def cmd_line_export_mcids(argv=None):  # pragma: no cover
+def cmd_line_export_mcids(argv=None, quiet=False):
     """command line interface to export_mcids"""
     if argv is None:
         argv = sys.argv
@@ -601,7 +629,8 @@ def cmd_line_export_mcids(argv=None):  # pragma: no cover
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     csv_filename_in = data['--output']
@@ -619,10 +648,14 @@ def cmd_line_export_mcids(argv=None):  # pragma: no cover
     if data['--iplies']:
         iplies = data['--iplies'].split(',')
         iplies = [int(iply) for iply in iplies]
-        print('iplies = %s' % iplies)
+        if not quiet:  # pragma: no cover
+            print('iplies = %s' % iplies)
 
     from pyNastran.bdf.bdf import read_bdf
-    model = read_bdf(bdf_filename, xref=False) #, log=log, debug=debug)
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    model = read_bdf(bdf_filename, log=log, xref=False) #, log=log, debug=debug)
     model.safe_cross_reference()
 
     for iply in iplies:
@@ -632,7 +665,7 @@ def cmd_line_export_mcids(argv=None):  # pragma: no cover
         model.log.info('wrote %s' % csv_filename)
 
 
-def cmd_line_split_cbars_by_pin_flag(argv=None):  # pragma: no cover
+def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False):
     """command line interface to split_cbars_by_pin_flag"""
     if argv is None:
         argv = sys.argv
@@ -665,7 +698,8 @@ def cmd_line_split_cbars_by_pin_flag(argv=None):  # pragma: no cover
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
     size = 16
     bdf_filename_in = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
@@ -679,7 +713,7 @@ def cmd_line_split_cbars_by_pin_flag(argv=None):  # pragma: no cover
     split_cbars_by_pin_flag(bdf_filename_in, pin_flags_filename=pin_flags_filename,
                             bdf_filename_out=bdf_filename_out)
 
-def cmd_line_transform(argv=None):
+def cmd_line_transform(argv=None, quiet=False):
     """command line interface to export_caero_mesh"""
     if argv is None:
         argv = sys.argv
@@ -713,7 +747,9 @@ def cmd_line_transform(argv=None):
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
+
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
@@ -727,7 +763,10 @@ def cmd_line_transform(argv=None):
         assert len(dxyz) == 3, dxyz
 
     from pyNastran.bdf.bdf import read_bdf
-    model = read_bdf(bdf_filename)
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    model = read_bdf(bdf_filename, log=log)
 
     nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = model.get_xyz_in_coord_array(
         cid=0, fdtype='float64', idtype='int32')
@@ -742,7 +781,7 @@ def cmd_line_transform(argv=None):
         update_nodes(model, nid_cp_cd, xyz_cid0)
         model.write_bdf(bdf_filename_out)
 
-def cmd_line_filter(argv=None):  # pragma: no cover
+def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
     """command line interface to bdf filter"""
     if argv is None:
         argv = sys.argv
@@ -785,7 +824,8 @@ def cmd_line_filter(argv=None):  # pragma: no cover
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
@@ -816,7 +856,10 @@ def cmd_line_filter(argv=None):  # pragma: no cover
         assert zsign in ['<', '>', '<=', '>='], zsign
 
     from pyNastran.bdf.bdf import read_bdf
-    model = read_bdf(bdf_filename)
+
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    model = read_bdf(bdf_filename, log=log)
 
     #nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = model.get_xyz_in_coord_array(
         #cid=0, fdtype='float64', idtype='int32')
@@ -878,7 +921,7 @@ def _union(xval, iunion, ix):
     return iunion
 
 
-def cmd_line_export_caero_mesh(argv=None):
+def cmd_line_export_caero_mesh(argv=None, quiet=False):
     """command line interface to export_caero_mesh"""
     if argv is None:
         argv = sys.argv
@@ -913,7 +956,8 @@ def cmd_line_export_caero_mesh(argv=None):
     #    '--nerrors' : [int, 100],
     #}
     data = docopt(msg, version=ver, argv=argv[1:])
-    print(data)
+    if not quiet:  # pragma: no cover
+        print(data)
     size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     caero_bdf_filename = data['--output']
@@ -922,26 +966,39 @@ def cmd_line_export_caero_mesh(argv=None):
     is_subpanel_model = data['--subpanels']
 
     from pyNastran.bdf.bdf import read_bdf
-    from pyNastran.bdf.mesh_utils.export_caero_mesh import write_caero_model
+    from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
     skip_cards = [
+        # elements
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CONM2',
-        'CROD', 'CONROD'
-        'CBAR', 'CBEAM',
+        'CROD', 'CTUBE', 'CONROD', 'CBAR', 'CBEAM',
         'CQUAD4', 'CTRIA3',
         'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM',
         'RBE1', 'RBE2', 'RBE3', 'RBAR',
 
-        'PELAS', 'PDAMP', 'PROD',
+        # properties
+        'PELAS', 'PDAMP', 'PROD', 'PTUBE',
         'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PBCOMP',
         'PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG', 'PSOLID',
         'MAT1', 'MAT8',
 
+        # loads
+        'PLOAD', 'PLOAD2', 'PLOAD4', 'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
+        'GRAV', 'ACCEL', 'ACCEL1',
+        # constraints
         'SPC', 'SPC1', 'MPC', 'SPCADD', 'MPCADD', 'DEQATN',
-    ]
-    model = read_bdf(bdf_filename, skip_cards=skip_cards)
-    write_caero_model(model, caero_bdf_filename, is_subpanel_model=is_subpanel_model)
 
-def cmd_line(argv=None):
+        #  optimization
+        'DVPREL1', 'DVPREL2', 'DVMREL1', 'DVMREL2', 'DVCREL1', 'DVCREL2', 'DCONADD',
+        'DRESP1', 'DRESP2', 'DRESP3', 'DESVAR',
+        #  aero: mabye enable later
+        'TRIM', 'AESTAT', 'FLUTTER', 'FLFACT',
+    ]
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    model = read_bdf(bdf_filename, log=log, skip_cards=skip_cards)
+    export_caero_mesh(model, caero_bdf_filename, is_subpanel_model=is_subpanel_model)
+
+def cmd_line(argv=None, quiet=False):
     """command line interface to multiple other command line scripts"""
     if argv is None:
         argv = sys.argv
@@ -957,7 +1014,7 @@ def cmd_line(argv=None):
         '  bdf scale                       bdf scale IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
-        '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
+        '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels]\n'
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
     )
 
@@ -980,9 +1037,6 @@ def cmd_line(argv=None):
         '  bdf export_caero_mesh  -h | --help\n'
         '  bdf split_cbars_by_pin_flags  -h | --help\n'
     )
-    #bdf create_vectorized_numbered -h | --help
-    #bdf create_vectorized_numbered -v | --version
-
 
     if dev:
         msg += '  bdf create_vectorized_numbered  -h | --help\n'
@@ -997,31 +1051,31 @@ def cmd_line(argv=None):
     #assert sys.argv[0] != 'bdf', msg
 
     if argv[1] == 'merge':
-        cmd_line_merge(argv)
+        cmd_line_merge(argv, quiet=quiet)
     elif argv[1] == 'equivalence':
-        cmd_line_equivalence(argv)
+        cmd_line_equivalence(argv, quiet=quiet)
     elif argv[1] == 'renumber':
-        cmd_line_renumber(argv)
+        cmd_line_renumber(argv, quiet=quiet)
     elif argv[1] == 'mirror':
-        cmd_line_mirror(argv)
+        cmd_line_mirror(argv, quiet=quiet)
     elif argv[1] == 'convert':
-        cmd_line_convert(argv)
+        cmd_line_convert(argv, quiet=quiet)
     elif argv[1] == 'scale':
-        cmd_line_scale(argv)
+        cmd_line_scale(argv, quiet=quiet)
     elif argv[1] == 'export_mcids':
-        cmd_line_export_mcids(argv)
+        cmd_line_export_mcids(argv, quiet=quiet)
     elif argv[1] == 'split_cbars_by_pin_flags':
-        cmd_line_split_cbars_by_pin_flag(argv)
+        cmd_line_split_cbars_by_pin_flag(argv, quiet=quiet)
     elif argv[1] == 'export_caero_mesh':
-        cmd_line_export_caero_mesh(argv)
+        cmd_line_export_caero_mesh(argv, quiet=quiet)
     elif argv[1] == 'transform':
-        cmd_line_transform(argv)
+        cmd_line_transform(argv, quiet=quiet)
     elif argv[1] == 'filter' and dev:  # TODO: make better name
-        cmd_line_filter(argv)
+        cmd_line_filter(argv, quiet=quiet)
     elif argv[1] == 'bin' and dev:
-        cmd_line_bin(argv)
+        cmd_line_bin(argv, quiet=quiet)
     elif argv[1] == 'create_vectorized_numbered' and dev:
-        cmd_line_create_vectorized_numbered(argv)
+        cmd_line_create_vectorized_numbered(argv, quiet=quiet)
     else:
         sys.exit(msg)
         #raise NotImplementedError('arg1=%r' % sys.argv[1])

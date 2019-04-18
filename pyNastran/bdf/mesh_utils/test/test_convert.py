@@ -16,7 +16,7 @@ from pyNastran.bdf.cards.elements.mass import CONM2
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CaseControlDeck, PARAM
 from pyNastran.bdf.mesh_utils.convert import convert, get_scale_factors, scale_by_terms
-from pyNastran.bdf.mesh_utils.export_caero_mesh import write_caero_model
+from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
 
 pkg_path = pyNastran.__path__[0]
 
@@ -267,7 +267,7 @@ class TestConvert(unittest.TestCase):
         model.write_bdf(bdf_filename_out)
 
         caero_bdf_filename = 'caero.bdf'
-        write_caero_model(model, caero_bdf_filename=caero_bdf_filename)
+        export_caero_mesh(model, caero_bdf_filename=caero_bdf_filename)
         os.remove(bdf_filename_out)
         os.remove(caero_bdf_filename)
 
