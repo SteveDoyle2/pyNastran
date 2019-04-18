@@ -171,116 +171,21 @@ class AbaqusIO(object):
                 n_c3d8r += part.c3d8r.shape[0]
 
 
-            if n_r2d2:
-                eids = part.r2d2[:, 0]
-                node_ids = part.r2d2[:, 1:] + nid_offset
-                for unused_eid, node_ids in zip(eids, node_ids):
-                    elem = vtkLine()
-                    elem.GetPointIds().SetId(0, node_ids[0])
-                    elem.GetPointIds().SetId(1, node_ids[1])
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            add_lines(grid, n_r2d2, part.r2d2, nid_offset)
+            add_tris(grid, n_cpe3, part.cpe3, nid_offset)
 
-            if n_cpe3:
-                eids = part.cpe3[:, 0]
-                node_ids = part.cpe3[:, 1:] + nid_offset
-                for unused_eid, node_ids in zip(eids, node_ids):
-                    elem = vtkTriangle()
-                    elem.GetPointIds().SetId(0, node_ids[0])
-                    elem.GetPointIds().SetId(1, node_ids[1])
-                    elem.GetPointIds().SetId(2, node_ids[2])
-                    grid.InsertNextCell(5, elem.GetPointIds())
+            add_quads(grid, n_cpe4, part.cpe4, nid_offset)
+            add_quads(grid, n_cpe4r, part.cpe4r, nid_offset)
+            add_quads(grid, n_coh2d4, part.coh2d4, nid_offset)
+            add_quads(grid, n_cohax4, part.cohax4, nid_offset)
 
-            if n_cpe4:
-                eids = part.cpe4[:, 0]
-                node_ids = part.cpe4[:, 1:] + nid_offset
-                for unused_eid, node_ids in zip(eids, node_ids):
-                    elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, node_ids[0])
-                    elem.GetPointIds().SetId(1, node_ids[1])
-                    elem.GetPointIds().SetId(2, node_ids[2])
-                    elem.GetPointIds().SetId(3, node_ids[3])
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            add_quads(grid, n_cax4r, part.cax4r, nid_offset)
+            add_tris(grid, n_cax3, part.cax3, nid_offset)
 
-            if n_cpe4r:
-                eids = part.cpe4r[:, 0]
-                node_ids = part.cpe4r[:, 1:] + nid_offset
-                for unused_eid, node_ids in zip(eids, node_ids):
-                    elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, node_ids[0])
-                    elem.GetPointIds().SetId(1, node_ids[1])
-                    elem.GetPointIds().SetId(2, node_ids[2])
-                    elem.GetPointIds().SetId(3, node_ids[3])
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-
-            if n_coh2d4:
-                eids = part.coh2d4[:, 0]
-                node_ids = part.coh2d4[:, 1:] + nid_offset
-                for unused_eid, node_ids in zip(eids, node_ids):
-                    elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, node_ids[0])
-                    elem.GetPointIds().SetId(1, node_ids[1])
-                    elem.GetPointIds().SetId(2, node_ids[2])
-                    elem.GetPointIds().SetId(3, node_ids[3])
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-
-            if n_cohax4:
-                eids = part.cohax4[:, 0]
-                node_ids = part.cohax4[:, 1:] + nid_offset
-                for unused_eid, node_ids in zip(eids, node_ids):
-                    elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, node_ids[0])
-                    elem.GetPointIds().SetId(1, node_ids[1])
-                    elem.GetPointIds().SetId(2, node_ids[2])
-                    elem.GetPointIds().SetId(3, node_ids[3])
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-
-            if n_cax3:
-                eids = part.cax3[:, 0]
-                node_ids = part.cax3[:, 1:] + nid_offset
-                for unused_eid, node_ids in zip(eids, node_ids):
-                    elem = vtkTriangle()
-                    elem.GetPointIds().SetId(0, node_ids[0])
-                    elem.GetPointIds().SetId(1, node_ids[1])
-                    elem.GetPointIds().SetId(2, node_ids[2])
-                    grid.InsertNextCell(5, elem.GetPointIds())
-
-            if n_cax4r:
-                eids = part.cax4r[:, 0]
-                node_ids = part.cax4r[:, 1:] + nid_offset
-                for unused_eid, node_ids in zip(eids, node_ids):
-                    elem = vtkQuad()
-                    elem.GetPointIds().SetId(0, node_ids[0])
-                    elem.GetPointIds().SetId(1, node_ids[1])
-                    elem.GetPointIds().SetId(2, node_ids[2])
-                    elem.GetPointIds().SetId(3, node_ids[3])
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             # solids
-            if n_c3d10h:
-                eids = part.c3d10h[:, 0]
-                node_ids = part.c3d10h[:, 1:] + nid_offset
-                for unused_eid, node_ids in zip(eids, node_ids):
-                #for unused_eid, node_ids in part.c3d10h:
-                    elem = vtkTetra()
-                    elem.GetPointIds().SetId(0, node_ids[0])
-                    elem.GetPointIds().SetId(1, node_ids[1])
-                    elem.GetPointIds().SetId(2, node_ids[2])
-                    elem.GetPointIds().SetId(3, node_ids[3])
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            if n_c3d8r:
-                eids = part.c3d8r[:, 0]
-                node_ids = part.c3d8r[:, 1:] + nid_offset
-                for unused_eid, node_ids in zip(eids, node_ids):
-                    elem = vtkHexahedron()
-                    elem.GetPointIds().SetId(0, node_ids[0])
-                    elem.GetPointIds().SetId(1, node_ids[1])
-                    elem.GetPointIds().SetId(2, node_ids[2])
-                    elem.GetPointIds().SetId(3, node_ids[3])
-                    elem.GetPointIds().SetId(4, node_ids[4])
-                    elem.GetPointIds().SetId(5, node_ids[5])
-                    elem.GetPointIds().SetId(6, node_ids[6])
-                    elem.GetPointIds().SetId(7, node_ids[7])
-                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            add_tetras(grid, n_c3d10h, part.c3d10h, nid_offset)
+            add_hexas(grid, n_c3d8r, part.c3d8r, nid_offset)
 
             nid_offset += nnodesi
         nids = np.hstack(nids)
@@ -351,3 +256,74 @@ class AbaqusIO(object):
         ]
         icase = 2
         return form, cases, icase, node_ids, element_ids
+
+
+def add_lines(grid, nlines, eids_lines, nid_offset):
+    """adds line elements to the vtkUnstructuredGrid"""
+    if nlines:
+        eids = eids_lines[:, 0]
+        node_ids = eids_lines[:, 1:] + nid_offset
+        for unused_eid, node_ids in zip(eids, node_ids):
+            elem = vtkLine()
+            elem.GetPointIds().SetId(0, node_ids[0])
+            elem.GetPointIds().SetId(1, node_ids[1])
+            grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+
+def add_tris(grid, ntris, eids_tris, nid_offset):
+    """adds tri elements to the vtkUnstructuredGrid"""
+    if ntris:
+        eids = eids_tris[:, 0]
+        node_ids = eids_tris[:, 1:] + nid_offset
+        for unused_eid, node_ids in zip(eids, node_ids):
+            elem = vtkTriangle()
+            elem.GetPointIds().SetId(0, node_ids[0])
+            elem.GetPointIds().SetId(1, node_ids[1])
+            elem.GetPointIds().SetId(2, node_ids[2])
+            grid.InsertNextCell(5, elem.GetPointIds())
+
+
+def add_quads(grid, nquads, eids_quads, nid_offset):
+    """adds quad elements to the vtkUnstructuredGrid"""
+    if nquads:
+        eids = eids_quads[:, 0]
+        node_ids = eids_quads[:, 1:] + nid_offset
+        for unused_eid, node_ids in zip(eids, node_ids):
+            elem = vtkQuad()
+            elem.GetPointIds().SetId(0, node_ids[0])
+            elem.GetPointIds().SetId(1, node_ids[1])
+            elem.GetPointIds().SetId(2, node_ids[2])
+            elem.GetPointIds().SetId(3, node_ids[3])
+            grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+
+def add_tetras(grid, ntetras, eids_tetras, nid_offset):
+    """adds tet elements to the vtkUnstructuredGrid"""
+    if ntetras:
+        eids = eids_tetras[:, 0]
+        node_ids = eids_tetras[:, 1:] + nid_offset
+        for unused_eid, node_ids in zip(eids, node_ids):
+            elem = vtkTetra()
+            elem.GetPointIds().SetId(0, node_ids[0])
+            elem.GetPointIds().SetId(1, node_ids[1])
+            elem.GetPointIds().SetId(2, node_ids[2])
+            elem.GetPointIds().SetId(3, node_ids[3])
+            grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+
+
+def add_hexas(grid, nhexas, eids_hexas, nid_offset):
+    """adds hex elements to the vtkUnstructuredGrid"""
+    if nhexas:
+        eids = eids_hexas[:, 0]
+        node_ids = eids_hexas[:, 1:] + nid_offset
+        for unused_eid, node_ids in zip(eids, node_ids):
+            elem = vtkHexahedron()
+            elem.GetPointIds().SetId(0, node_ids[0])
+            elem.GetPointIds().SetId(1, node_ids[1])
+            elem.GetPointIds().SetId(2, node_ids[2])
+            elem.GetPointIds().SetId(3, node_ids[3])
+            elem.GetPointIds().SetId(4, node_ids[4])
+            elem.GetPointIds().SetId(5, node_ids[5])
+            elem.GetPointIds().SetId(6, node_ids[6])
+            elem.GetPointIds().SetId(7, node_ids[7])
+            grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())

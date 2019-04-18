@@ -6,6 +6,60 @@ import numpy as np
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 
+RESULT_NAME_MAP = {
+    'BAR' : 'cbar_strain_energy',
+    'BEAM' : 'cbeam_strain_energy',
+    'BEND' : 'cbend_strain_energy',
+
+    'ROD' : 'crod_strain_energy',
+    'TUBE' : 'ctube_strain_energy',
+    'CONROD' : 'conrod_strain_energy',
+
+    'TRIA3' : 'ctria3_strain_energy',
+    'TRIAFD' : 'ctria3_strain_energy',
+    'TRIA3FD' : 'ctria3_strain_energy',
+    'TRIA6' : 'ctria6_strain_energy',
+    'TRIAX6' : 'ctriax6_strain_energy',
+    'TRIAR' : 'ctriar_strain_energy',
+    'TRIAX3FD' : 'ctriax_strain_energy',
+    'TRIAXFD' : 'ctriax_strain_energy',
+
+    'QUAD4' : 'cquad4_strain_energy',
+    'QUADFD' : 'cquad4_strain_energy',
+    'QUAD4FD' : 'cquad4_strain_energy',
+    'QUAD8' : 'cquad8_strain_energy',
+
+    'QUADR' : 'cquadr_strain_energy',
+    'QUADXFD' : 'cquadx_strain_energy',
+    'QUADX4FD' : 'cquadx_strain_energy',
+    'SHEAR' : 'cshear_strain_energy',
+
+    'TETRA' : 'ctetra_strain_energy',
+    'TETRAFD' : 'ctetra_strain_energy',
+    'TETRA4FD' : 'ctetra_strain_energy',
+    'PENTA' : 'cpenta_strain_energy',
+    'PENTAFD' : 'cpenta_strain_energy',
+    'PENTA6FD' : 'cpenta_strain_energy',
+    'HEXA' : 'chexa_strain_energy',
+    'HEXAFD' : 'chexa_strain_energy',
+    'HEXA8FD' : 'chexa_strain_energy',
+    'PYRAM' : 'cpyram_strain_energy',
+
+    'GAP' : 'cgap_strain_energy',
+    'BUSH' : 'cbush_strain_energy',
+    'ELAS1' : 'celas1_strain_energy',
+    'ELAS2' : 'celas2_strain_energy',
+    'ELAS3' : 'celas3_strain_energy',
+    'ELAS4' : 'celas4_strain_energy',
+
+    'DUM8' : 'cdum8_strain_energy',
+    'DMIG' : 'dmig_strain_energy',
+    'GENEL' : 'genel_strain_energy',
+    'CONM2' : 'conm2_strain_energy',
+    'RBE1' : 'rbe1_strain_energy',
+    'RBE3' : 'rbe3_strain_energy',
+}
+
 class ONR(OP2Common):
     def __init__(self):
         OP2Common.__init__(self)
@@ -377,83 +431,11 @@ class ONR(OP2Common):
         dt = self.nonlinear_factor
         n = 0
 
-        if self.data_code['element_name'] == 'BAR':
-            result_name = 'cbar_strain_energy'
-        elif self.data_code['element_name'] == 'BEAM':
-            result_name = 'cbeam_strain_energy'
-        elif self.data_code['element_name'] == 'BEND':
-            result_name = 'cbend_strain_energy'
-
-        elif self.data_code['element_name'] == 'ROD':
-            result_name = 'crod_strain_energy'
-        elif self.data_code['element_name'] == 'TUBE':
-            result_name = 'ctube_strain_energy'
-        elif self.data_code['element_name'] == 'CONROD':
-            result_name = 'conrod_strain_energy'
-
-
-        elif self.data_code['element_name'] in ['TRIA3', 'TRIAFD', 'TRIA3FD']:
-            result_name = 'ctria3_strain_energy'
-        elif self.data_code['element_name'] == 'TRIA6':
-            result_name = 'ctria6_strain_energy'
-        elif self.data_code['element_name'] == 'TRIAX6':
-            result_name = 'ctriax6_strain_energy'
-        elif self.data_code['element_name'] == 'TRIAR':
-            result_name = 'ctriar_strain_energy'
-        elif self.data_code['element_name'] in ['TRIAX3FD', 'TRIAXFD']:
-            result_name = 'ctriax_strain_energy'
-
-
-        elif self.data_code['element_name'] in ['QUAD4', 'QUADFD', 'QUAD4FD']:
-            result_name = 'cquad4_strain_energy'
-        elif self.data_code['element_name'] == 'QUAD8':
-            result_name = 'cquad8_strain_energy'
-        elif self.data_code['element_name'] == 'QUADR':
-            result_name = 'cquadr_strain_energy'
-        elif self.data_code['element_name'] in ['QUADXFD', 'QUADX4FD']:
-            result_name = 'cquadx_strain_energy'
-        elif self.data_code['element_name'] == 'SHEAR':
-            result_name = 'cshear_strain_energy'
-
-        elif self.data_code['element_name'] in ['HEXA', 'HEXAFD', 'HEXA8FD']:
-            result_name = 'chexa_strain_energy'
-        elif self.data_code['element_name'] in ['PENTA', 'PENTAFD', 'PENTA6FD']:
-            result_name = 'cpenta_strain_energy'
-        elif self.data_code['element_name'] in ['TETRA', 'TETRAFD', 'TETRA4FD']:
-            result_name = 'ctetra_strain_energy'
-        elif self.data_code['element_name'] in ['PYRAM']:
-            result_name = 'cpyram_strain_energy'
-
-        elif self.data_code['element_name'] == 'GAP':
-            result_name = 'cgap_strain_energy'
-        elif self.data_code['element_name'] == 'BUSH':
-            result_name = 'cbush_strain_energy'
-
-        elif self.data_code['element_name'] == 'ELAS1':
-            result_name = 'celas1_strain_energy'
-        elif self.data_code['element_name'] == 'ELAS2':
-            result_name = 'celas2_strain_energy'
-        elif self.data_code['element_name'] == 'ELAS3':
-            result_name = 'celas3_strain_energy'
-        elif self.data_code['element_name'] == 'ELAS4':
-            result_name = 'celas4_strain_energy'
-
-        elif self.data_code['element_name'] == 'DUM8':
-            result_name = 'cdum8_strain_energy'
-        elif self.data_code['element_name'] == 'DMIG':
-            result_name = 'dmig_strain_energy'
-        elif self.data_code['element_name'] == 'GENEL':
-            result_name = 'genel_strain_energy'
-        elif self.data_code['element_name'] == 'CONM2':
-            result_name = 'conm2_strain_energy'
-        elif self.data_code['element_name'] == 'RBE1':
-            result_name = 'rbe1_strain_energy'
-        elif self.data_code['element_name'] == 'RBE3':
-            result_name = 'rbe3_strain_energy'
-        else:
-            #result_name = 'chexa8fd_strain_energy'
-            raise NotImplementedError('element_name=%r' % (
-                self.data_code['element_name']))
+        element_name = self.data_code['element_name']
+        try:
+            result_name = RESULT_NAME_MAP[element_name]
+        except KeyError:
+            raise NotImplementedError('element_name=%r' % (self.data_code['element_name']))
         prefix, postfix = self.get_onr_prefix_postfix()
         result_name = prefix + result_name + postfix
         #result_name = 'strain_energy'
@@ -627,7 +609,7 @@ class ONR(OP2Common):
                 obj.ielement = ielement2
             else:
                 s = Struct(self._endian + b'i4f')
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n+20]
                     out = s.unpack(edata)
                     (eid_device, energyr, energyi, percent, density) = out
@@ -677,7 +659,7 @@ class ONR(OP2Common):
                 obj.ielement = ielement2
             else:
                 struct1 = Struct(self._endian + b'i8s3f')
-                for i in range(nnodes):
+                for unused_i in range(nnodes):
                     edata = data[n:n+24]
                     out = struct1.unpack(edata)
                     (word, energy, percent, density) = out  # TODO: this has to be wrong...
