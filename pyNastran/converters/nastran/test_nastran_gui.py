@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use('Agg')
 import vtk
 
+from cpylog import SimpleLogger
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastran_io import NastranIO, BDF
@@ -218,8 +219,26 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         #test.load_nastran_results(op2_filename)
+        nresult_cases = len(test.result_cases)
+        icase = max(test.result_cases)
+
+        # these are the two cases we're checking were added
         test.on_load_custom_results(out_filename=deflection_filename, restype='Deflection')
         test.on_load_custom_results(out_filename=deflection_filename, restype='Force')
+        dresult_cases = len(test.result_cases) - nresult_cases
+        icase_final = max(test.result_cases)
+        dcase = icase_final - icase
+        assert dresult_cases == 2, dresult_cases
+        assert dcase == 2, dcase
+        assert (icase_final - 1) in test.label_actors
+        assert icase_final in test.label_actors
+        assert len(test.label_actors[icase_final]) == 0
+
+        nids = [1, 2, 3, 5]
+        icase = icase_final
+        text = 'word'
+        test.mark_nodes(nids, icase, text)
+        assert len(test.label_actors[icase_final]) == 4, len(test.label_actors[icase_final])
 
 
     def test_beam_modes_01(self):
@@ -778,11 +797,13 @@ class TestNastranGUI(unittest.TestCase):
     def test_gui_zona_model_1(self):
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
         test = NastranGUI()
+        test.log = SimpleLogger(level='error', encoding='utf-8', log_func=None)
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_zona_model_2(self):
         bdf_file = get_zona_model()
         test = NastranGUI()
+        test.log = SimpleLogger(level='error', encoding='utf-8', log_func=None)
         test.load_nastran_geometry(bdf_file)
 
 #def test_bottle():  # pragma: no cover
