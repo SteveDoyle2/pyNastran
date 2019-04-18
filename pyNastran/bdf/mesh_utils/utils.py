@@ -544,6 +544,7 @@ def cmd_line_scale(argv=None, quiet=False):
     #parent_parser.add_argument('-h', '--help', help='show this help message and exits', action='store_true')
     parent_parser.add_argument('-v', '--version', action='version',
                                version=pyNastran.__version__)
+
     args = parent_parser.parse_args(args=argv[1:])
     if not quiet:  # pragma: no cover
         print(args)
@@ -598,7 +599,7 @@ def cmd_line_export_mcids(argv=None, quiet=False):
     import pyNastran
     msg = (
         'Usage:\n'
-        '  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--iplies PLIES] [--no_x] [--no_y]\n'
+        '  bdf export_mcids IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--iplies PLIES] [--no_x | --no_y]\n'
         '  bdf export_mcids -h | --help\n'
         '  bdf export_mcids -v | --version\n'
         '\n'
@@ -609,7 +610,7 @@ def cmd_line_export_mcids(argv=None, quiet=False):
 
         'Options:\n'
         '  -o OUT, --output  OUT_CSV_FILENAME  path to output CSV file\n'
-        '  --iplies PLIES                      the plies to export; comma separated (default=0)\n'
+        '  --iplies PLIES                      the plies indices to export; comma separated (default=0)\n'
         '\n'
 
         'Data Suppression:\n'
@@ -655,7 +656,7 @@ def cmd_line_export_mcids(argv=None, quiet=False):
 
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
-    model = read_bdf(bdf_filename, log=log, xref=False) #, log=log, debug=debug)
+    model = read_bdf(bdf_filename, log=log, xref=False)
     model.safe_cross_reference()
 
     for iply in iplies:
@@ -1012,7 +1013,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf mirror                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
         '  bdf convert                     bdf convert IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
         '  bdf scale                       bdf scale IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
-        '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x] [--no_y]\n'
+        '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x | --no_y]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
         '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels]\n'
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'

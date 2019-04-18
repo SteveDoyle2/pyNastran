@@ -5608,6 +5608,26 @@ class AddCards(AddMethods):
         self._add_aecomp_object(aecomp)
         return aecomp
 
+    def add_aecompl(self, name, labels, comment=''):
+        # type: (str, List[str]) -> None
+        """
+        Creates an AECOMPL card
+
+        Parameters
+        ----------
+        name : str
+            the name of the component
+        labels : List[str, str, ...]; str
+            A string of 8 characters referring to the names of other components
+            defined by either AECOMP or other AECOMPL entries.
+        comment : str; default=''
+            a comment for the card
+
+        """
+        aecompl = AECOMPL(name, labels, comment=comment)
+        self._add_aecomp_object(aecompl)
+        return aecompl
+
     def add_aestat(self, aestat_id, label, comment=''):
         """
         Creates an AESTAT card, which is a variable to be used in a TRIM analysis

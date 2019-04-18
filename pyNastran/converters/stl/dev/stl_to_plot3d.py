@@ -3,7 +3,7 @@ from numpy import savetxt
 from pyNastran.converters.stl.stl import STL
 #from pyNastran.bdf.field_writer_8 import print_card
 
-def stl_to_plot3d_filename(stl_filename, p3d_filename, log=None, ascii=True):
+def stl_to_plot3d_filename(stl_filename, p3d_filename, log=None, is_ascii=True):
     model = STL(log=log)
     model.read_stl(stl_filename)
 

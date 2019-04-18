@@ -4,6 +4,7 @@ import os
 import unittest
 from codecs import open
 
+from docopt import DocoptExit
 from six import StringIO
 import numpy as np
 #import pyNastran
@@ -351,10 +352,50 @@ class TestMeshUtils(unittest.TestCase):
         read_bdf(bdf_filename_out2, log=log)
         read_bdf(bdf_filename_out3, log=log)
 
+    def test_exit(self):
+        """tests totally failing to run"""
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf'])
+
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'export_caero_mesh'])
+
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'convert'])
+
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'scale'])
+
+        #with self.assertRaises(SystemExit):
+            #cmd_line(argv=['bdf', 'bin'])
+
+        #with self.assertRaises(SystemExit):
+            #cmd_line(argv=['bdf', 'filter'])
+
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'mirror'])
+
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'renumber'])
+
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'equivalence'])
+
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'transform'])
+
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'export_mcids'])
+
     def test_export_caero_mesh(self):
         """tests multiple ``bdf`` tools"""
         bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_no_sub.bdf']
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=argv[:1])
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=argv[:2])
+
         cmd_line(argv=argv, quiet=True)
 
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero.bdf', '--subpanels']
@@ -396,6 +437,15 @@ class TestMeshUtils(unittest.TestCase):
 
         model = read_bdf(bdf_filename, xref=False, debug=False)
         model.safe_cross_reference()
+        #os.remove('mcids.csv')
+
+        argv = ['bdf', 'export_mcids', bdf_filename, '-o', csv_filename, '--iplies', '0,1,2,3,4,5,6,7,8,9,10', '--no_x', '--no_y']
+        with self.assertRaises(DocoptExit):
+            # can't define both --no_x and --no_y
+            cmd_line(argv=argv, quiet=True)
+
+        argv = ['bdf', 'export_mcids', bdf_filename, '-o', csv_filename, '--iplies', '0,1,2,3,4,5,6,7,8,9', '--no_x']
+        cmd_line(argv=argv, quiet=True)
 
         eids = [1204, 1211]
         export_mcids(model, csv_filename=None, eids=eids,
@@ -408,20 +458,28 @@ class TestMeshUtils(unittest.TestCase):
                      export_xaxis=False, export_yaxis=True,
                      iply=9, log=log, debug=False)
         with self.assertRaises(AssertionError):
+            # export_xaxis and export_yaxis can't both be False
             export_mcids(model, csv_filename=None, eids=eids,
                          export_xaxis=False, export_yaxis=False,
                          iply=9)
 
         with self.assertRaises(RuntimeError):
+            # no iply=10
             export_mcids(model, csv_filename, eids=eids,
                          export_xaxis=True, export_yaxis=True,
                          iply=10)
+        #os.remove('mcids.csv')
 
     def test_split_cbars_by_pin_flag_1(self):
         """null pin flag test"""
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'static_solid_shell_bar.bdf')
         split_cbars_by_pin_flag(bdf_filename, pin_flags_filename='pin_flags.csv',
                                 bdf_filename_out='pin_flags.bdf', debug=False)
+        os.remove('pin_flags.csv')
+        os.remove('pin_flags.bdf')
+
+        argv = ['bdf', 'split_cbars_by_pin_flags',  bdf_filename, '-o', 'pin_flags.bdf', '-p', 'pin_flags.csv']
+        cmd_line(argv=argv, quiet=True)
         os.remove('pin_flags.csv')
         os.remove('pin_flags.bdf')
 

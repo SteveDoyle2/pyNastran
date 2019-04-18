@@ -2334,10 +2334,7 @@ class CAERO2(BaseCard):
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by CAERO2 eid=%s' % self.eid
-        try:
-            self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO2
-        except KeyError:
-            pass
+        self.pid_ref = model.safe_paero(self.pid, self.eid, xref_errors, msg=msg)  # links to PAERO2
 
         self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
@@ -2636,11 +2633,7 @@ class CAERO3(BaseCard):
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by CAERO3 eid=%s' % self.eid
-        try:
-            self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO3
-        except KeyError:
-            model.log.warning('cannot find PAERO3 pid=%s%s' % (self.pid, msg))
-
+        self.pid_ref = model.safe_paero(self.pid, self.eid, xref_errors, msg=msg)  # links to PAERO3
         self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         if self.list_w is not None:
@@ -2976,11 +2969,7 @@ class CAERO4(BaseCard):
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by CAERO4 eid=%s' % self.eid
-        try:
-            self.pid_ref = model.PAero(self.pid, msg=msg)  # links to PAERO4 (not added)
-        except KeyError:
-            model.warning('cannot find PAERO4=%r' % self.pid)
-
+        self.pid_ref = model.safe_paero(self.pid, self.eid, xref_errors, msg=msg)  # links to PAERO4 (not added)
         self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
 
         if self.nspan == 0:
@@ -3305,13 +3294,8 @@ class CAERO5(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         xref_errors = {}
         msg = ', which is required by CAERO5 eid=%s' % self.eid
-        try:
-            self.pid_ref = model.PAero(self.pid, msg=msg)
-        except KeyError:
-            pass
-
+        self.pid_ref = model.safe_paero(self.pid, self.eid, xref_errors, msg=msg)
         self.cp_ref = model.safe_coord(self.cp, self.eid, xref_errors, msg=msg)
-
         if self.nspan == 0:
             self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg=msg)
 
@@ -3964,6 +3948,7 @@ class PAERO1(BaseCard):
     +========+=====+====+====+====+====+====+====+
     | PAERO1 | PID | B1 | B2 | B3 | B4 | B5 | B6 |
     +--------+-----+----+----+----+----+----+----+
+
     """
     type = 'PAERO1'
     _field_map = {1: 'pid'}
@@ -4021,6 +4006,7 @@ class PAERO1(BaseCard):
         attribute_names : List[str]
             sorted list of the names of attributes of a given type or None
             if the mode is wrong
+
         """
         if keys_to_skip is None:
             keys_to_skip = []
@@ -4134,6 +4120,7 @@ class PAERO2(BaseCard):
     +--------+------+--------+-------+------+------+------+------+------+
     | THI1   | THN1 |  THI2  |  THN2 | THI3 | THN3 |      |      |      |
     +--------+------+--------+-------+------+------+------+------+------+
+
     """
     type = 'PAERO2'
     _field_map = {
@@ -4413,6 +4400,7 @@ class PAERO3(BaseCard):
     +--------+------+------+-------+------+-----+------+------+------+
     |        |  86. | 130. |  116. | 130. |     |      |      |      |
     +--------+------+------+-------+------+-----+------+------+------+
+
     """
     type = 'PAERO3'
     _field_map = {
@@ -4759,6 +4747,7 @@ class SPLINE1(Spline):
     +---------+-------+-------+------+------+------+----+------+-------+
     | SPLINE1 |   3   |  111  | 115  | 122  |  14  | 0. |      |       |
     +---------+-------+-------+------+------+------+----+------+-------+
+
     """
     type = 'SPLINE1'
     _field_map = {
@@ -4999,6 +4988,7 @@ class SPLINE2(Spline):
     +---------+------+-------+-------+-------+------+----+------+-----+
     |         |  1.  |       |       |       |      |    |      |     |
     +---------+------+-------+-------+-------+------+----+------+-----+
+
     """
     type = 'SPLINE2'
     _field_map = {
@@ -5226,6 +5216,7 @@ class SPLINE3(Spline):
     +---------+------+-------+-------+------+----+----+-----+-------+
     |         |  43  |   5   | -1.0  |      |    |    |     |       |
     +---------+------+-------+-------+------+----+----+-----+-------+
+
     """
     type = 'SPLINE3'
     _properties = ['node_ids']
@@ -5433,6 +5424,7 @@ class SPLINE3(Spline):
         +---------+------+-------+-------+------+----+----+-----+-------+
         |         |  G4  |  C4   |  A4   | etc. |    |    |     |       |
         +---------+------+-------+-------+------+----+----+-----+-------+
+
         """
         list_fields = [
             'SPLINE3', self.eid, self.CAero(), self.box_id, self.components,
@@ -5463,6 +5455,7 @@ class SPLINE4(Spline):
     +---------+-------+-------+--------+-----+------+----+------+-------+
     | SPLINE4 |   3   | 111   |   115  |     |  14  | 0. | IPS  |       |
     +---------+-------+-------+--------+-----+------+----+------+-------+
+
     """
     type = 'SPLINE4'
     _properties = ['aero_element_ids']
@@ -5846,10 +5839,7 @@ class SPLINE5(Spline):
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by SPLINE5 eid=%s' % self.eid
         self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
-        try:
-            self.caero_ref = model.CAero(self.caero, msg=msg)
-        except KeyError:
-            pass
+        self.caero_ref = model.safe_caero(self.caero, self.eid, xref_errors, msg=msg)
 
         try:
             self.setg_ref = model.Set(self.setg, msg=msg)

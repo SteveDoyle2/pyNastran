@@ -426,6 +426,8 @@ class SafeXrefMesh(XrefMesh):
 
     def safe_element(self, eid, ref_id, xref_errors, msg=''):
         """
+        Gets an element card
+
         Parameters
         ----------
         ref_id : int
@@ -492,6 +494,8 @@ class SafeXrefMesh(XrefMesh):
 
     def safe_property_mass(self, pid, ref_id, xref_errors, msg=''):
         """
+        Gets a mass_property card
+
         Parameters
         ----------
         ref_id : int
@@ -507,6 +511,8 @@ class SafeXrefMesh(XrefMesh):
 
     def safe_material(self, mid, ref_id, xref_errors, msg=''):
         """
+        Gets a material card
+
         Parameters
         ----------
         ref_id : int
@@ -522,10 +528,13 @@ class SafeXrefMesh(XrefMesh):
 
     def safe_coord(self, cid, ref_id, xref_errors, msg=''):
         """
+        Gets a CORDx card
+
         Parameters
         ----------
         ref_id : int
             the referencing value (e.g., an node and element references a coord)
+
         """
         try:
             cid_ref = self.Coord(cid, msg=msg)
@@ -535,12 +544,37 @@ class SafeXrefMesh(XrefMesh):
             xref_errors['cid'].append((ref_id, cid))
         return cid_ref
 
+    def safe_paero(self, paero_id, ref_id, xref_errors, msg=''):
+        """
+        Gets a PAEROx card
+
+        Parameters
+        ----------
+        ref_id : int
+            the referencing value (e.g., a load references an element)
+
+        ref_id = 10 # CAERO1
+        pid = 42  # PAERO1
+        xref_errors = {'paero' : []}
+        self.safe_element(pid, ref_id, xref_errors)
+
+        """
+        try:
+            paero_ref = self.PAero(paero_id, msg=msg)
+        except KeyError:
+            paero_ref = None
+            xref_errors['paero'].append((ref_id, paero_id))
+        return paero_ref
+
     def safe_aefact(self, aefact_id, ref_id, xref_errors, msg=''):
         """
+        Gets an AEFACT card
+
         Parameters
         ----------
         ref_id : int
             the referencing value (e.g., an CAERO eid references a AEFACT)
+
         """
         try:
             aefact_ref = self.AEFact(aefact_id, msg=msg)
@@ -552,10 +586,13 @@ class SafeXrefMesh(XrefMesh):
 
     def safe_aelist(self, aelist_id, ref_id, xref_errors, msg=''):
         """
+        Gets an AELIST card
+
         Parameters
         ----------
         ref_id : int
             the referencing value (e.g., an AESURF eid references a AELIST)
+
         """
         try:
             aefact_ref = self.AELIST(aelist_id, msg=msg)

@@ -224,6 +224,7 @@ class TestAero(unittest.TestCase):
         #print(model.aelinks[idi])
         assert model.aelinks[idi][0].comment == '$cat\n', 'comment=%r' % str(model.aelinks[idi][0].comment)
 
+        #-------------------------------
         idi = 11
         label = 'LABEL'
         independent_labels = ['pig', 'frog', 'dog']
@@ -232,6 +233,15 @@ class TestAero(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             model.validate()
         aelink2.Cis = [1.0, 2.0, 3.0]
+        assert aelink2.Cis == [1., 2., 3.]
+
+        #-------------------------------
+        idi = 'ALWAYS'
+        label = 'LABEL'
+        independent_labels = ['pig', 'frog', 'dog']
+        linking_coefficents = [1.0, 2.0, 3.0]
+        model.add_aelink(idi, label, independent_labels, linking_coefficents)
+
         model.validate()
         model.cross_reference()
 
@@ -1878,6 +1888,7 @@ class TestAero(unittest.TestCase):
         """checks the TRIM card"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
+        #model.add_aecompl
 
         sid = 100
         mach = 0.75
@@ -2211,8 +2222,9 @@ class TestAero(unittest.TestCase):
 
     def test_zona_1(self):
         """zona explicit test"""
+        log = SimpleLogger(level='error', encoding='utf-8', log_func=None)  # lots of zona errors
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
-        model = read_bdf(bdf_filename, xref=False, debug=None)
+        model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
@@ -2222,8 +2234,9 @@ class TestAero(unittest.TestCase):
 
     def test_zona_2(self):
         """zona explicit test"""
+        log = SimpleLogger(level='error', encoding='utf-8', log_func=None)  # lots of zona errors
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'ztran.bdf')
-        model = read_bdf(bdf_filename, xref=False, debug=None)
+        model = read_bdf(bdf_filename, xref=False, debug=None, log=log)
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,

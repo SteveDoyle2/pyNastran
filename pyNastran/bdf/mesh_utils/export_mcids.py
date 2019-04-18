@@ -112,7 +112,7 @@ def export_mcids(bdf_filename, csv_filename=None,
             raise NotImplementedError(msg)
 
     if len(nodes) == 0 and pids_failed:
-        msg = 'No material coordinate systems could be found\n'
+        msg = 'No material coordinate systems could be found for iply=%s\n' % iply
         pids_failed_list = list(pids_failed)
         pids_failed_list.sort()
         model.log.warning('pids_failed_list = %s' % str(pids_failed_list))
