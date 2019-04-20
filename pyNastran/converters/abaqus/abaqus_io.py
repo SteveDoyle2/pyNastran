@@ -60,7 +60,7 @@ class AbaqusIO(object):
         nelements = 0
         all_nodes = []
         for unused_part_name, part in model.parts.items():
-            unused_nids = part.nids - 1
+            #unused_nids = part.nids - 1
             nodes = part.nodes
 
             nnodes += nodes.shape[0]
@@ -96,6 +96,7 @@ class AbaqusIO(object):
             n_cps3 + n_cpe3 + n_cpe4 + n_cpe4r +
             n_coh2d4 + n_c3d10h + n_cohax4 + n_cax3 + n_cax4r + n_c3d8r
         )
+        self.gui.log.info('nelements = %s' % nelements)
         assert nelements > 0, nelements
         #nodes = model.nodes
         #elements = model.elements
@@ -113,6 +114,7 @@ class AbaqusIO(object):
 
         assert nodes is not None
         nnodes = nodes.shape[0]
+        self.gui.log.info('nnodes = %s' % nnodes)
 
         if len(all_nodes) == 1:
             nodes = all_nodes[0]
@@ -136,7 +138,8 @@ class AbaqusIO(object):
         nids = []
         for unused_part_name, part in model.parts.items():
             nnodesi = part.nodes.shape[0]
-            nids.append(part.nids)
+            nidsi = part.nids
+            nids.append(nidsi)
 
             n_r2d2 = 0
 
@@ -182,23 +185,23 @@ class AbaqusIO(object):
                 n_c3d8r += part.c3d8r.shape[0]
 
 
-            add_lines(grid, n_r2d2, part.r2d2, nid_offset)
+            add_lines(grid, n_r2d2, nidsi, part.r2d2, nid_offset)
 
-            add_tris(grid, n_cps3, part.cps3, nid_offset)
-            add_tris(grid, n_cpe3, part.cpe3, nid_offset)
+            add_tris(grid, n_cps3, nidsi, part.cps3, nid_offset)
+            add_tris(grid, n_cpe3, nidsi, part.cpe3, nid_offset)
 
-            add_quads(grid, n_cpe4, part.cpe4, nid_offset)
-            add_quads(grid, n_cpe4r, part.cpe4r, nid_offset)
-            add_quads(grid, n_coh2d4, part.coh2d4, nid_offset)
-            add_quads(grid, n_cohax4, part.cohax4, nid_offset)
+            add_quads(grid, n_cpe4, nidsi, part.cpe4, nid_offset)
+            add_quads(grid, n_cpe4r, nidsi, part.cpe4r, nid_offset)
+            add_quads(grid, n_coh2d4, nidsi, part.coh2d4, nid_offset)
+            add_quads(grid, n_cohax4, nidsi, part.cohax4, nid_offset)
 
-            add_quads(grid, n_cax4r, part.cax4r, nid_offset)
-            add_tris(grid, n_cax3, part.cax3, nid_offset)
+            add_quads(grid, n_cax4r, nidsi, part.cax4r, nid_offset)
+            add_tris(grid, n_cax3, nidsi, part.cax3, nid_offset)
 
 
             # solids
-            add_tetras(grid, n_c3d10h, part.c3d10h, nid_offset)
-            add_hexas(grid, n_c3d8r, part.c3d8r, nid_offset)
+            add_tetras(grid, n_c3d10h, nidsi, part.c3d10h, nid_offset)
+            add_hexas(grid, n_c3d8r, nidsi, part.c3d8r, nid_offset)
 
             nid_offset += nnodesi
         nids = np.hstack(nids)
@@ -271,72 +274,82 @@ class AbaqusIO(object):
         return form, cases, icase, node_ids, element_ids
 
 
-def add_lines(grid, nlines, eids_lines, nid_offset):
+def add_lines(grid, nlines, nids, eids_lines, nid_offset):
     """adds line elements to the vtkUnstructuredGrid"""
     if nlines:
         eids = eids_lines[:, 0]
-        node_ids = eids_lines[:, 1:] + nid_offset
-        for unused_eid, node_ids in zip(eids, node_ids):
+        elem_nids = eids_lines[:, 1:]
+        #inids = np.searchsorted(nids, elem_nids)
+        node_ids = elem_nids + nid_offset
+        for unused_eid, node_idsi in zip(eids, node_ids):
             elem = vtkLine()
-            elem.GetPointIds().SetId(0, node_ids[0])
-            elem.GetPointIds().SetId(1, node_ids[1])
+            elem.GetPointIds().SetId(0, node_idsi[0])
+            elem.GetPointIds().SetId(1, node_idsi[1])
             grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
 
-def add_tris(grid, ntris, eids_tris, nid_offset):
+def add_tris(grid, ntris, nids, eids_tris, nid_offset):
     """adds tri elements to the vtkUnstructuredGrid"""
     if ntris:
         eids = eids_tris[:, 0]
-        node_ids = eids_tris[:, 1:] + nid_offset
-        for unused_eid, node_ids in zip(eids, node_ids):
+        elem_nids = eids_tris[:, 1:]
+        #inids = np.searchsorted(nids, elem_nids)
+        node_ids = elem_nids + nid_offset
+        for unused_eid, node_idsi in zip(eids, node_ids):
             elem = vtkTriangle()
-            elem.GetPointIds().SetId(0, node_ids[0])
-            elem.GetPointIds().SetId(1, node_ids[1])
-            elem.GetPointIds().SetId(2, node_ids[2])
+            elem.GetPointIds().SetId(0, node_idsi[0])
+            elem.GetPointIds().SetId(1, node_idsi[1])
+            elem.GetPointIds().SetId(2, node_idsi[2])
             grid.InsertNextCell(5, elem.GetPointIds())
 
 
-def add_quads(grid, nquads, eids_quads, nid_offset):
+def add_quads(grid, nquads, nids, eids_quads, nid_offset):
     """adds quad elements to the vtkUnstructuredGrid"""
     if nquads:
         eids = eids_quads[:, 0]
-        node_ids = eids_quads[:, 1:] + nid_offset
-        for unused_eid, node_ids in zip(eids, node_ids):
+        elem_nids = eids_quads[:, 1:]
+        #inids = np.searchsorted(nids, elem_nids)
+        node_ids = elem_nids + nid_offset
+        for unused_eid, node_idsi in zip(eids, node_ids):
             elem = vtkQuad()
-            elem.GetPointIds().SetId(0, node_ids[0])
-            elem.GetPointIds().SetId(1, node_ids[1])
-            elem.GetPointIds().SetId(2, node_ids[2])
-            elem.GetPointIds().SetId(3, node_ids[3])
+            elem.GetPointIds().SetId(0, node_idsi[0])
+            elem.GetPointIds().SetId(1, node_idsi[1])
+            elem.GetPointIds().SetId(2, node_idsi[2])
+            elem.GetPointIds().SetId(3, node_idsi[3])
             grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
 
-def add_tetras(grid, ntetras, eids_tetras, nid_offset):
+def add_tetras(grid, ntetras, nids, eids_tetras, nid_offset):
     """adds tet elements to the vtkUnstructuredGrid"""
     if ntetras:
         eids = eids_tetras[:, 0]
-        node_ids = eids_tetras[:, 1:] + nid_offset
-        for unused_eid, node_ids in zip(eids, node_ids):
+        elem_nids = eids_tetras[:, 1:]
+        #inids = np.searchsorted(nids, elem_nids)
+        node_ids = elem_nids + nid_offset
+        for unused_eid, node_idsi in zip(eids, node_ids):
             elem = vtkTetra()
-            elem.GetPointIds().SetId(0, node_ids[0])
-            elem.GetPointIds().SetId(1, node_ids[1])
-            elem.GetPointIds().SetId(2, node_ids[2])
-            elem.GetPointIds().SetId(3, node_ids[3])
+            elem.GetPointIds().SetId(0, node_idsi[0])
+            elem.GetPointIds().SetId(1, node_idsi[1])
+            elem.GetPointIds().SetId(2, node_idsi[2])
+            elem.GetPointIds().SetId(3, node_idsi[3])
             grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
 
-def add_hexas(grid, nhexas, eids_hexas, nid_offset):
+def add_hexas(grid, nhexas, nids, eids_hexas, nid_offset):
     """adds hex elements to the vtkUnstructuredGrid"""
     if nhexas:
         eids = eids_hexas[:, 0]
-        node_ids = eids_hexas[:, 1:] + nid_offset
-        for unused_eid, node_ids in zip(eids, node_ids):
+        elem_nids = eids_hexas[:, 1:]
+        #inids = np.searchsorted(nids, elem_nids)
+        node_ids = elem_nids + nid_offset
+        for unused_eid, node_idsi in zip(eids, node_ids):
             elem = vtkHexahedron()
-            elem.GetPointIds().SetId(0, node_ids[0])
-            elem.GetPointIds().SetId(1, node_ids[1])
-            elem.GetPointIds().SetId(2, node_ids[2])
-            elem.GetPointIds().SetId(3, node_ids[3])
-            elem.GetPointIds().SetId(4, node_ids[4])
-            elem.GetPointIds().SetId(5, node_ids[5])
-            elem.GetPointIds().SetId(6, node_ids[6])
-            elem.GetPointIds().SetId(7, node_ids[7])
+            elem.GetPointIds().SetId(0, node_idsi[0])
+            elem.GetPointIds().SetId(1, node_idsi[1])
+            elem.GetPointIds().SetId(2, node_idsi[2])
+            elem.GetPointIds().SetId(3, node_idsi[3])
+            elem.GetPointIds().SetId(4, node_idsi[4])
+            elem.GetPointIds().SetId(5, node_idsi[5])
+            elem.GetPointIds().SetId(6, node_idsi[6])
+            elem.GetPointIds().SetId(7, node_idsi[7])
             grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())

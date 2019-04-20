@@ -173,12 +173,31 @@ class Part(object):
         self.c3d8r_eids = None
         self._store_elements(element_types)
 
+    def _etypes_nnodes(self):
+        """internal helper method"""
+        etypes_nnodes = [
+            ('r2d2', 2),  #  similar to a CBAR
+
+            #  shells
+            ('cps3', 3),
+            ('cpe3', 3),
+            ('cpe4', 4),
+            ('cpe4r', 4),
+            ('coh2d4', 4), #  cohesive zone
+            ('cohax4', 4), #  cohesive zone
+            ('cax3', 3),
+            ('cax4r', 4),
+            ('cps4r', 4),
+
+            #  solids
+            ('c3d10h', 10),  #  tet10
+            ('c3d8r', 8),  #  hexa8
+        ]
+        return etypes_nnodes
+
     def _store_elements(self, element_types):
         """helper method for the init"""
-
-        etypes_nnodes = [
-            ('cps3', 3),
-        ]
+        etypes_nnodes = self._etypes_nnodes()
         for etype, nnodes in etypes_nnodes:
             if etype in element_types:
                 etype_eids = '%s_eids' % etype
@@ -188,149 +207,21 @@ class Part(object):
                 setattr(self, etype_eids, eids_elements[:,  0]) #  r2d2_eids
                 assert eids_elements.shape[1] == nnodes + 1, eids_elements.shape
 
-        if 'r2d2' in element_types: # similar to CBAR
-            elements = element_types['r2d2']
-            self.r2d2 = np.array(elements, dtype='int32')
-            self.r2d2_eids = self.r2d2[:, 0]
-            assert self.r2d2.shape[1] == 3, self.r2d2.shape
-
-        #-------------------------------------------------------
-        # shells
-        if 'cpe3' in element_types: # similar to CTRIA3
-            elements = element_types['cpe3']
-            self.cpe3 = np.array(elements, dtype='int32')
-            self.cpe3_eids = self.cpe3[:, 0]
-            assert self.cpe3.shape[1] == 4, self.cpe3.shape
-
-        if 'cpe4' in element_types: # similar to CQUAD4
-            elements = element_types['cpe4']
-            self.cpe4 = np.array(elements, dtype='int32')
-            self.cpe4_eids = self.cpe4[:, 0]
-            assert self.cpe4.shape[1] == 5, self.cpe4.shape
-
-        if 'cpe4r' in element_types: # similar to CQUAD4
-            elements = element_types['cpe4r']
-            self.cpe4r = np.array(elements, dtype='int32')
-            self.cpe4r_eids = self.cpe4r[:, 0]
-            assert self.cpe4r.shape[1] == 5, self.cpe4r.shape
-
-        if 'coh2d4' in element_types:
-            elements = element_types['coh2d4']
-            self.coh2d4 = np.array(elements, dtype='int32')
-            self.coh2d4_eids = self.coh2d4[:, 0]
-            assert self.coh2d4.shape[1] == 5, self.coh2d4.shape
-
-        if 'cohax4' in element_types:
-            elements = element_types['cohax4']
-            self.cohax4 = np.array(elements, dtype='int32')
-            self.cohax4_eids = self.cohax4[:, 0]
-            assert self.cohax4.shape[1] == 5, self.cohax4.shape
-
-        if 'cax3' in element_types:
-            elements = element_types['cax3']
-            self.cax3 = np.array(elements, dtype='int32')
-            self.cax3_eids = self.cax3[:, 0]
-            assert self.cax3.shape[1] == 4, self.cax3.shape
-
-        if 'cax4r' in element_types:
-            elements = element_types['cax4r']
-            self.cax4r = np.array(elements, dtype='int32')
-            self.cax4r_eids = self.cax4r[:, 0]
-            assert self.cax4r.shape[1] == 5, self.cax4r.shape
-
-        if 'cps4r' in element_types:
-            elements = element_types['cps4r']
-            self.cps4r = np.array(elements, dtype='int32')
-            self.cps4r_eids = self.cps4r[:, 0]
-            assert self.cps4r.shape[1] == 5, self.cps4r.shape
-
-        #-------------------------------------------------------
-        # solids
-        if 'c3d10h' in element_types: # similar to CTRIA3
-            elements = element_types['c3d10h']
-            self.c3d10h = np.array(elements, dtype='int32')
-            self.c3d10h_eids = self.c3d10h[:, 0]
-            assert self.c3d10h.shape[1] == 11, self.c3d10h.shape
-        if 'c3d8r' in element_types:
-            elements = element_types['c3d8r']
-            self.c3d8r = np.array(elements, dtype='int32')
-            self.c3d8r_eids = self.c3d8r[:, 0]
-            assert self.c3d8r.shape[1] == 9, self.c3d8r.shape
-
 
     def element(self, eid):
         """gets a specific element of the part"""
         elem = None
-        # bars
-        if self.r2d2_eids is not None:
-            ieid = np.where(eid == self.r2d2_eids)[0]
-            #self.log.info('ieid_r2d2 = %s, %s' % (ieid, len(ieid)))
-            if len(ieid):
-                ieid = ieid[0]
-                etype = 'r2d2'
-                elem = self.r2d2[ieid, :]
-                return etype, ieid, elem
-
-        #-------------------------------------------------------
-
-         # shells
-        if self.cpe3_eids is not None:
-            ieid = np.where(eid == self.cpe3_eids)[0]
-            #self.log.debug('ieid_cpe3 = %s, %s' % (ieid, len(ieid)))
-            if len(ieid):
-                ieid = ieid[0]
-                etype = 'cpe3'
-                elem = self.cpe3[ieid, :]
-                return etype, ieid, elem
-
-        if self.cpe4_eids is not None:
-            ieid = np.where(eid == self.cpe4_eids)[0]
-            if len(ieid):
-                ieid = ieid[0]
-                etype = 'cpe4'
-                elem = self.cpe4[ieid, :]
-                return etype, ieid, elem
-
-        if self.cpe4r_eids is not None:
-            ieid = np.where(eid == self.cpe4r_eids)[0]
-            if len(ieid):
-                ieid = ieid[0]
-                etype = 'cpe4r'
-                elem = self.cpe4r[ieid, :]
-                return etype, ieid, elem
-
-        if self.coh2d4_eids is not None:
-            ieid = np.where(eid == self.coh2d4_eids)[0]
-            #self.log.debug('ieid_coh2d4 = %s, %s' % (ieid, len(ieid)))
-            if len(ieid):
-                ieid = ieid[0]
-                etype = 'coh2d4'
-                elem = self.coh2d4[ieid, :]
-                return etype, ieid, elem
-            else:
-                self.log.debug('ieid = %s' % ieid)
-
-        if self.coh2d4_eids is not None:
-            ieid = np.where(eid == self.coh2d4_eids)[0]
-            #print('ieid_coh2d4 = %s, %s' % (ieid, len(ieid)))
-            if len(ieid):
-                ieid = ieid[0]
-                etype = 'coh2d4'
-                elem = self.coh2d4[ieid, :]
-                return etype, ieid, elem
-            else:
-                self.log.debug('ieid = %s' % ieid)
-
-        if self.cohax4_eids is not None:
-            ieid = np.where(eid == self.cohax4_eids)[0]
-            #print('ieid_cohax4 = %s, %s' % (ieid, len(ieid)))
-            if len(ieid):
-                ieid = ieid[0]
-                etype = 'cohax4'
-                elem = self.cohax4[ieid, :]
-                return etype, ieid, elem
-            else:
-                self.log.debug('ieid = %s' % ieid)
+        etypes_nnodes = self._etypes_nnodes()
+        for etype, nnodes in etypes_nnodes:
+            etype_eids = '%s_eids' % etype
+            eids = getattr(self, etype_eids)  # r2d2_eids
+            if eids is not None:
+                ieid = np.where(eid == eids)[0]
+                if len(ieid):
+                    ieidi = ieid[0]
+                    elems = getattr(self, etype)  # r2d2
+                    elem = elems[ieid, :]
+                    return etype, ieid, elem
         return None, None, None
 
     def check_materials(self, materials):
@@ -385,7 +276,7 @@ class Part(object):
         if self.cps4r is not None:
             n_cps4r = self.cps4r.shape[0]
 
-        neids = (n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 +
+        neids = (n_r2d2 + n_cps3 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 +
                  n_c3d10h + n_cohax4 + n_cax3 + n_cax4r + n_cps4r)
         msg = (
             'Part(name=%r, nnodes=%i, neids=%i,\n'
@@ -426,7 +317,7 @@ class Part(object):
         """writes a Part"""
         #name, nids, nodes, element_types, node_sets, element_sets,
          #                solid_sections, log
-        abq_file.write('*Part,name=%s\n' % self.name)
+        abq_file.write('*Part,name=%s\n' % write_name(self.name))
 
         abq_file.write('*Node\n')
         if is_2d:
@@ -446,24 +337,24 @@ class Part(object):
             nnodes = elems.shape[1]
             fmt = '%s,\t' * (nnodes - 1) + '%s\n'
             for eid, elem in zip(eids, elems):
-                #print(elem)
-                #nids_strs = (str(nid) for nid in elem.tolist())
-                #abq_file.write(str(eid) + ','.join(nids_strs) + '\n')
-                #abq_file.write(',\t'.join(nids_strs) + '\n')
                 abq_file.write(fmt % tuple(elem))
 
         for set_name, values in sorted(self.element_sets.items()):
             write_element_set_to_file(abq_file, set_name, values)
         abq_file.write('*endpart')
 
+def write_name(name):
+    """Abaqus has odd rules for writing words without spaces vs. with spaces"""
+    return '%r' % name if ' ' in name else '%s' % name
+
 def write_element_set_to_file(abq_file, set_name, values_array):
     """writes an element set"""
-    abq_file.write('*Elset, elset=%s\n' % set_name)
+    abq_file.write('*Elset, elset=%s\n' % write_name(set_name))
     write_set_to_file(abq_file, values_array)
 
 def write_node_set_to_file(abq_file, set_name, values_array):
     """writes a node set"""
-    abq_file.write('*Nset, nset=%s\n' % set_name)
+    abq_file.write('*Nset, nset=%s\n' % write_name(set_name))
     write_set_to_file(abq_file, values_array)
 
 def write_set_to_file(abq_file, values_array):
