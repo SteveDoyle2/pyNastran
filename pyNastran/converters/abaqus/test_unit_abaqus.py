@@ -96,7 +96,7 @@ def _make_part(part_name):
         'mass_str',
         '*rotary inertia',
         'rotary_inertia_str',
-        '*elset',
+        '*elset,elset=eset',
         '1',
         '*mass',
         'mass_str',

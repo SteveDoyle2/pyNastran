@@ -61,10 +61,24 @@ class Material(object):
 class Assembly(object):
     def __init__(self, element_types, node_sets, element_sets):
         self.element_types = element_types
-        self.node_sets = node_sets,
+        self.node_sets = node_sets
         self.element_sets = element_sets
+
     def write(self, abq_file):
         abq_file.write('** skipping Assembly\n')
+
+    def __repr__(self):
+        """summary for the Assembly"""
+        etypes = list(self.element_types.keys())
+        nsets = list(self.node_sets.keys())
+        esets = list(self.element_sets.keys())
+        msg = (
+            'Assembly:\n'
+            '  element_types = %s\n'
+            '  node_sets = %s\n'
+            '  element_sets = %s\n' % (etypes, nsets, esets)
+        )
+        return msg
 
 class Part(object):
     """a Part object is a series of nodes & elements (of various types)"""
@@ -77,7 +91,7 @@ class Part(object):
         ----------
         name : str
             the name
-        element_types : Dict[element_type] : nodes
+        element_types : Dict[element_type] : node_ids
             element_type : str
                 the element type
 
@@ -99,6 +113,8 @@ class Part(object):
         """
         self.name = name
         self.log = log
+        self.node_sets = node_sets
+        self.element_sets = element_sets
         self.solid_sections = solid_sections
 
         try:
@@ -126,6 +142,7 @@ class Part(object):
         self.r2d2 = None
 
         # shells
+        self.cps3 = None
         self.cpe3 = None
         self.cpe4 = None
         self.cpe4r = None
@@ -141,6 +158,8 @@ class Part(object):
         #-----------------------------------
         # eids
         self.r2d2_eids = None
+
+        self.cps3_eids =  None
         self.cpe3_eids = None
         self.cpe4_eids = None
         self.cpe4r_eids = None
@@ -156,6 +175,19 @@ class Part(object):
 
     def _store_elements(self, element_types):
         """helper method for the init"""
+
+        etypes_nnodes = [
+            ('cps3', 3),
+        ]
+        for etype, nnodes in etypes_nnodes:
+            if etype in element_types:
+                etype_eids = '%s_eids' % etype
+                elements = element_types[etype]
+                eids_elements = np.array(elements, dtype='int32')
+                setattr(self, etype, eids_elements)  # r2d2
+                setattr(self, etype_eids, eids_elements[:,  0]) #  r2d2_eids
+                assert eids_elements.shape[1] == nnodes + 1, eids_elements.shape
+
         if 'r2d2' in element_types: # similar to CBAR
             elements = element_types['r2d2']
             self.r2d2 = np.array(elements, dtype='int32')
@@ -232,7 +264,7 @@ class Part(object):
         # bars
         if self.r2d2_eids is not None:
             ieid = np.where(eid == self.r2d2_eids)[0]
-            self.log.info('ieid_r2d2 = %s, %s' % (ieid, len(ieid)))
+            #self.log.info('ieid_r2d2 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'r2d2'
@@ -244,7 +276,7 @@ class Part(object):
          # shells
         if self.cpe3_eids is not None:
             ieid = np.where(eid == self.cpe3_eids)[0]
-            self.log.debug('ieid_cpe3 = %s, %s' % (ieid, len(ieid)))
+            #self.log.debug('ieid_cpe3 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'cpe3'
@@ -269,7 +301,7 @@ class Part(object):
 
         if self.coh2d4_eids is not None:
             ieid = np.where(eid == self.coh2d4_eids)[0]
-            self.log.debug('ieid_coh2d4 = %s, %s' % (ieid, len(ieid)))
+            #self.log.debug('ieid_coh2d4 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'coh2d4'
@@ -280,7 +312,7 @@ class Part(object):
 
         if self.coh2d4_eids is not None:
             ieid = np.where(eid == self.coh2d4_eids)[0]
-            print('ieid_coh2d4 = %s, %s' % (ieid, len(ieid)))
+            #print('ieid_coh2d4 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'coh2d4'
@@ -291,7 +323,7 @@ class Part(object):
 
         if self.cohax4_eids is not None:
             ieid = np.where(eid == self.cohax4_eids)[0]
-            print('ieid_cohax4 = %s, %s' % (ieid, len(ieid)))
+            #print('ieid_cohax4 = %s, %s' % (ieid, len(ieid)))
             if len(ieid):
                 ieid = ieid[0]
                 etype = 'cohax4'
@@ -315,6 +347,8 @@ class Part(object):
         """prints a summary for the part"""
         nnodes = self.nodes.shape[0]
         n_r2d2 = 0
+
+        n_cps3 = 0
         n_cpe3 = 0
         n_cpe4 = 0
         n_cpe4r = 0
@@ -327,6 +361,10 @@ class Part(object):
         n_cps4r = 0
         if self.r2d2 is not None:
             n_r2d2 = self.r2d2.shape[0]
+
+        if self.cps3 is not None:
+            n_cps3 = self.cps3.shape[0]
+
         if self.cpe3 is not None:
             n_cpe3 = self.cpe3.shape[0]
         if self.cpe4 is not None:
@@ -351,14 +389,18 @@ class Part(object):
                  n_c3d10h + n_cohax4 + n_cax3 + n_cax4r + n_cps4r)
         msg = (
             'Part(name=%r, nnodes=%i, neids=%i,\n'
-            '     n_r2d2=%i, n_cpe3=%i, n_cpe4=%i, n_cpe4r=%i, n_coh2d4=%i,\n'
+            '     n_r2d2=%i, n_cps3=%i, n_cpe3=%i, n_cpe4=%i, n_cpe4r=%i, n_coh2d4=%i,\n'
             '     n_cohax4=%i, n_cax3=%i, n_cax4r=%i, n_cps4r=%i,\n'
             '     n_c3d10h=%i)\n' % (
                 self.name, nnodes, neids,
-                n_r2d2, n_cpe3, n_cpe4, n_cpe4r, n_coh2d4,
+                n_r2d2, n_cps3, n_cpe3, n_cpe4, n_cpe4r, n_coh2d4,
                 n_cohax4, n_cax3, n_cax4r, n_cps4r,
                 n_c3d10h,)
         )
+        nsets = list(self.node_sets.keys())
+        esets = list(self.element_sets.keys())
+        msg += '  Node Sets: %s\n' % nsets
+        msg += '  Element Sets: %s\n' % esets
         for section in self.solid_sections:
             msg += str(section) + '\n'
         return msg
@@ -368,6 +410,7 @@ class Part(object):
         """simplified way to access all the elements as a dictionary"""
         element_types = {}
         element_types['r2d2'] = (self.r2d2_eids, self.r2d2)
+        element_types['cps3'] = (self.cps3_eids, self.cps3)
         element_types['cpe3'] = (self.cpe3_eids, self.cpe3)
         element_types['cpe4'] = (self.cpe4_eids, self.cpe4)
         element_types['cpe4r'] = (self.cpe4r_eids, self.cpe4r)
@@ -379,23 +422,65 @@ class Part(object):
         element_types['c3d10h'] = (self.c3d10h_eids, self.c3d10h)
         return element_types
 
-    def write(self, abq_file):
+    def write(self, abq_file, is_2d=False):
         """writes a Part"""
         #name, nids, nodes, element_types, node_sets, element_sets,
          #                solid_sections, log
-        abq_file.write('*Part,name=%r\n' % self.name)
+        abq_file.write('*Part,name=%s\n' % self.name)
 
         abq_file.write('*Node\n')
-        for inid, node in enumerate(self.nodes):
-            abq_file.write('%i,%s,%s,%s\n' % (inid, node[0], node[1], node[2]))
+        if is_2d:
+            for nid, node in zip(self.nids, self.nodes):
+                abq_file.write('%i,\t%s,\t%s,\t%s\n' % (nid, node[0], node[1], node[2]))
+        else:
+            for nid, node in zip(self.nids, self.nodes):
+                abq_file.write('%i,\t%s,\t%s\n' % (nid, node[0], node[1]))
+
+        for set_name, values in sorted(self.node_sets.items()):
+            write_node_set_to_file(abq_file, set_name, values)
 
         for elem_type, (eids, elems) in self.element_types.items():
             if eids is None:
                 continue
             abq_file.write('*Element,type=%s\n' % elem_type)
+            nnodes = elems.shape[1]
+            fmt = '%s,\t' * (nnodes - 1) + '%s\n'
             for eid, elem in zip(eids, elems):
                 #print(elem)
-                nids_strs = (str(nid) for nid in elem.tolist())
+                #nids_strs = (str(nid) for nid in elem.tolist())
                 #abq_file.write(str(eid) + ','.join(nids_strs) + '\n')
-                abq_file.write(','.join(nids_strs) + '\n')
+                #abq_file.write(',\t'.join(nids_strs) + '\n')
+                abq_file.write(fmt % tuple(elem))
+
+        for set_name, values in sorted(self.element_sets.items()):
+            write_element_set_to_file(abq_file, set_name, values)
         abq_file.write('*endpart')
+
+def write_element_set_to_file(abq_file, set_name, values_array):
+    """writes an element set"""
+    abq_file.write('*Elset, elset=%s\n' % set_name)
+    write_set_to_file(abq_file, values_array)
+
+def write_node_set_to_file(abq_file, set_name, values_array):
+    """writes a node set"""
+    abq_file.write('*Nset, nset=%s\n' % set_name)
+    write_set_to_file(abq_file, values_array)
+
+def write_set_to_file(abq_file, values_array):
+    """writes 16 integer values per line to a set card"""
+    assert isinstance(values_array, np.ndarray), type(values_array)
+    nvalues = len(values_array)
+    nrows = nvalues // 16
+    nleftover = nvalues % 16
+    if nrows:
+        values_array_square = values_array[:nrows*16].reshape(nrows, 16)
+        fmt = '%i,\t' * 16 + '\n'
+        fmt2 = '%i,\t' * 15 + '%i\n'
+        for row in values_array_square[:-1, :]:
+            abq_file.write(fmt % tuple(row))
+        abq_file.write(fmt2 % tuple(values_array_square[-1, :]))
+
+    if nleftover:
+        fmt = '%i,\t' * (nleftover - 1) +  '%i\n'
+        leftover = values_array[nrows*16:]
+        abq_file.write(fmt % tuple(leftover))

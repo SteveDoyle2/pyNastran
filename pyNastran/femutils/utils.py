@@ -13,6 +13,33 @@ import numpy as np
 #ver = np.lib.NumpyVersion(np.__version__)
 #if ver < '1.13.0':
 
+
+def pivot_table(data, rows, cols):
+    """
+    PCOMP: rows=element_ids, cols=layer
+    """
+    ncount = len(rows)
+    icount = np.arange(ncount)
+    assert len(data.shape) == 3, data.shape
+    ntimes = data.shape[0]
+    nresults = data.shape[-1]
+
+    rows_new, row_pos_new = np.unique(rows, return_inverse=True)
+    cols_new, col_pos_new = np.unique(cols, return_inverse=True)
+    nrows = len(rows_new)
+    ncols = len(cols_new)
+
+    pivot_table = np.full((nrows, ncols), -1, dtype='int32')
+    pivot_table[row_pos_new, col_pos_new] = icount
+    #print(pivot_table)
+
+    ipivot_row, ipivot_col = np.where(pivot_table != -1)
+    data2 = np.full((ntimes, nrows, ncols, nresults), np.nan, dtype=data.dtype)
+    data2[:, ipivot_row, ipivot_col, :] = data[:, icount, :]
+
+    return data2, rows_new
+
+
 def unique2d(a):
     """
     Gets the unique pairs in a 2D vector where the pairs are defined:

@@ -1,9 +1,10 @@
 from __future__ import print_function
 import sys
 from collections import OrderedDict
-from typing import Union, Any
+from typing import Tuple, Dict, Union, Any
 
 import numpy as np
+from pyNastran.femutils.utils import pivot_table
 
 #vm_word = get_plate_stress_strain(
     #model, key, is_stress, vm_word, itime,
@@ -12,12 +13,13 @@ import numpy as np
 
 class StressObject(object):
     def __init__(self, model, key, all_eids, is_stress=True):
+        # type: (Any, str, Any, bool) -> None
         #print('--StressObject--')
         self.model = model
         self.vm_word = None
-        self.header_dict = OrderedDict()
-        self.keys_map = {}
-        self.composite_ieids = {}
+        self.header_dict = OrderedDict()  # type: Dict[Any, str]
+        self.keys_map = {}  # type: Dict[str, str]
+        self.composite_ieids = {}  # type: Dict[str, str]
         self.is_stress = is_stress
 
         self.composite_data_dict = create_composite_plates(model, key, is_stress, self.keys_map)
@@ -45,6 +47,7 @@ class StressObject(object):
                                  key, itime, oxx, oyy, txy, tyz, txz,
                                  max_principal, min_principal, ovm,
                                  is_element_on, header_dict):
+        # type: (int, int, Any, Any, Any, Any, Any, Any, Any, Any, Any, Dict[Any,Any]) -> str
         #print("setting...")
 
         for element_type, composite_data in self.composite_data_dict.items():
@@ -78,7 +81,7 @@ class StressObject(object):
         return vm_word
 
     def set_composite_stress(self,
-                             oxx, oyy, txy, tyz, txz,
+                             key, oxx, oyy, txy, tyz, txz,
                              max_principal, min_principal, ovm,
                              ):  # pragma: no cover
 
@@ -98,9 +101,10 @@ class StressObject(object):
             max_principal[ieids] = np.nanmax(data2[:, :, :, 6], axis=2)
             min_principal[ieids] = np.nanmin(data2[:, :, :, 7], axis=2)
             ovm[ieids] = np.nanmax(data2[:, :, :, 8], axis=2)
-            assert oxxi.shape == (ntimes, neids)
+            assert oxx.shape == (ntimes, neids)
 
     def __repr__(self):
+        # type: () -> str
         if self.is_stress:
             msg = 'StressObject:\n'
         else:
@@ -110,6 +114,7 @@ class StressObject(object):
         return msg
 
 def create_plates(model, key, is_stress):
+    # type: (Any, str, bool) -> Dict[str, Any]
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
         plates = [
@@ -244,7 +249,7 @@ def create_composite_plates(model, key, is_stress, keys_map):
                 eidsi = case.element_layer[:, 0]
                 layers = case.element_layer[:, 1]
                 ntimes = case.data.shape[0]
-                data2, ueids = pivot(case.data, eidsi, layers)
+                data2, ueids = pivot_table(case.data, eidsi, layers)
 
                 headers = []
                 for itime, dt in enumerate(case._times):
@@ -260,31 +265,6 @@ def create_composite_plates(model, key, is_stress, keys_map):
 
     return composite_data_dict
 
-
-def pivot(data, rows, cols):
-    """
-    PCOMP: rows=element_ids, cols=layer
-    """
-    ncount = len(rows)
-    icount = np.arange(ncount)
-    assert len(data.shape) == 3
-    ntimes = data.shape[0]
-    nresults = data.shape[-1]
-
-    rows_new, row_pos_new = np.unique(rows, return_inverse=True)
-    cols_new, col_pos_new = np.unique(cols, return_inverse=True)
-    nrows = len(rows_new)
-    ncols = len(cols_new)
-
-    pivot_table = np.full((nrows, ncols), -1, dtype='int32')
-    pivot_table[row_pos_new, col_pos_new] = icount
-    #print(pivot_table)
-
-    ipivot_row, ipivot_col = np.where(pivot_table != -1)
-    data2 = np.full((ntimes, nrows, ncols, nresults), np.nan, dtype=data.dtype)
-    data2[:, ipivot_row, ipivot_col, :] = data[:, icount, :]
-
-    return data2, rows_new
 
 def _get_nastran_header(case, dt, itime):
     # type: (Any, Union[int, float], int) -> str

@@ -43,6 +43,8 @@ class AbaqusIO(object):
         model.read_abaqus_inp(abaqus_filename)
 
         n_r2d2 = 0
+
+        n_cps3 = 0
         n_cpe3 = 0
         n_cpe4 = 0
         n_cpe4r = 0
@@ -64,6 +66,9 @@ class AbaqusIO(object):
             nnodes += nodes.shape[0]
             if part.r2d2 is not None:
                 n_r2d2 += part.r2d2.shape[0]
+
+            if part.cps3 is not None:
+                n_cps3 += part.cps3.shape[0]
             if part.cpe3 is not None:
                 n_cpe3 += part.cpe3.shape[0]
             if part.cpe4 is not None:
@@ -87,7 +92,8 @@ class AbaqusIO(object):
 
             all_nodes.append(nodes)
         nelements += (
-            n_r2d2 + n_cpe3 + n_cpe4 + n_cpe4r +
+            n_r2d2 +
+            n_cps3 + n_cpe3 + n_cpe4 + n_cpe4r +
             n_coh2d4 + n_c3d10h + n_cohax4 + n_cax3 + n_cax4r + n_c3d8r
         )
         assert nelements > 0, nelements
@@ -133,6 +139,8 @@ class AbaqusIO(object):
             nids.append(part.nids)
 
             n_r2d2 = 0
+
+            n_cps3 = 0
             n_cpe3 = 0
             n_cpe4 = 0
             n_cpe4r = 0
@@ -148,6 +156,9 @@ class AbaqusIO(object):
 
             if part.r2d2 is not None:
                 n_r2d2 += part.r2d2.shape[0]
+
+            if part.cps3 is not None:
+                n_cps3 += part.cps3.shape[0]
             if part.cpe3 is not None:
                 n_cpe3 += part.cpe3.shape[0]
             if part.cpe4 is not None:
@@ -172,6 +183,8 @@ class AbaqusIO(object):
 
 
             add_lines(grid, n_r2d2, part.r2d2, nid_offset)
+
+            add_tris(grid, n_cps3, part.cps3, nid_offset)
             add_tris(grid, n_cpe3, part.cpe3, nid_offset)
 
             add_quads(grid, n_cpe4, part.cpe4, nid_offset)

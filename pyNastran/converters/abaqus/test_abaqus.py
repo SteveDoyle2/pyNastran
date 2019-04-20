@@ -18,7 +18,7 @@ from pyNastran.converters.abaqus.abaqus import read_abaqus
 np.seterr(all='raise')
 
 
-def run_abaqus(abaqus_filename, debug=False):
+def run_abaqus(abaqus_filename, write_abaqus=True, debug=False):
     """
     Runs a single abaqus deck
 
@@ -29,6 +29,11 @@ def run_abaqus(abaqus_filename, debug=False):
 
     """
     fem1 = read_abaqus(abaqus_filename, debug=debug, log=None)
+    if write_abaqus:
+        base, ext = os.path.splitext(abaqus_filename)
+        abqaqus_filename_out = '%s.test_abqaus.%s' % (base, ext)
+        fem1.write(abqaqus_filename_out)
+
 
 
 def main():
@@ -38,7 +43,7 @@ def main():
     encoding = sys.getdefaultencoding()
     from docopt import docopt
     msg = "Usage:\n"
-    msg += "  test_abaqus ABAQUS_FILENAME [-d]\n"
+    msg += "  test_abaqus ABAQUS_FILENAME [-d] [-w]\n"
     msg += '  test_abaqus -h | --help\n'
     msg += '  test_abaqus -v | --version\n'
     msg += '\n'
@@ -48,6 +53,7 @@ def main():
     msg += '\n'
     msg += "Options:\n"
     msg += "  -d, --debug  debug mode\n"
+    msg += "  -w, --write  write test.test_abaqus.inp\n"
     msg += '\n'
 
     #msg += 'Options:\n'
@@ -70,6 +76,7 @@ def main():
     time0 = time.time()
     run_abaqus(
         data['ABAQUS_FILENAME'],
+        data['--write'],
         debug=data['--debug'],
     )
     print("total time:  %.2f sec" % (time.time() - time0))

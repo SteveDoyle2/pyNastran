@@ -68,6 +68,7 @@ mesh_utils
    mesh_utils/pyNastran.bdf.mesh_utils.convert
    mesh_utils/pyNastran.bdf.mesh_utils.delete_bad_elements
    mesh_utils/pyNastran.bdf.mesh_utils.export_mcids
+   mesh_utils/pyNastran.bdf.mesh_utils.export_caero_mesh
    mesh_utils/pyNastran.bdf.mesh_utils.mirror_mesh
    mesh_utils/pyNastran.bdf.mesh_utils.extract_bodies
    mesh_utils/pyNastran.bdf.mesh_utils.find_closest_nodes

@@ -11,6 +11,7 @@ cards Package
    pyNastran.bdf.cards.coordinate_systems
    pyNastran.bdf.cards.dmig
    pyNastran.bdf.cards.dynamic
+   pyNastran.bdf.cards.expand_card
    pyNastran.bdf.cards.materials
    pyNastran.bdf.cards.material_deps
    pyNastran.bdf.cards.methods

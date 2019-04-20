@@ -643,8 +643,8 @@ class Abaqus(object):
                 element_types[etype] = elements
 
             elif '*nset' in line0:
-                params_map = get_param_map(iline, word, required_keys=['name', 'part'])
-                set_name = params_map['name']
+                params_map = get_param_map(iline, line0, required_keys=['nset'])
+                set_name = params_map['nset']
                 line0 = lines[iline].strip().lower()
                 set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
                 node_sets[set_name] = set_ids
@@ -652,8 +652,9 @@ class Abaqus(object):
             elif '*elset' in line0:
                 # TODO: skips header parsing
                 #iline += 1
-                params_map = get_param_map(iline, word, required_keys=['name', 'part'])
-                set_name = params_map['name']
+                #print('elset: ', line0)
+                params_map = get_param_map(iline, line0, required_keys=['elset'])
+                set_name = params_map['elset']
                 line0 = lines[iline].strip().lower()
                 set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
                 element_sets[set_name] = set_ids
@@ -719,7 +720,6 @@ class Abaqus(object):
             unused_is_start = False
 
             #print(line0)
-            #qqq
         #node_sets = []
         #element_sets = []
 
@@ -738,7 +738,9 @@ class Abaqus(object):
         allowed_element_types = [
             'r2d2', 'conn2d2',
             'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h', 'cohax4',
-            'cax3', 'cax4r', 'cps4r', 'mass', 'rotaryi', 't2d2', 'c3d8r']
+            'cax3', 'cax4r', 'cps4r', 'mass', 'rotaryi', 't2d2', 'c3d8r',
+            'cps3',
+        ]
         if len(sline) < 1:
             raise RuntimeError("looking for element_type (e.g., '*Element, type=R2D2')\n"
                                "line0=%r\nsline=%s; allowed:\n[%s]" % (
@@ -893,7 +895,7 @@ class Abaqus(object):
         self.log.debug('  end of step %i...' % istep)
         return iline, line0
 
-    def write(self, abqaqus_filename_out):
+    def write(self, abqaqus_filename_out, is_2d=False):
         self.log.info('writing %r' % abqaqus_filename_out)
         #self.parts = {}
         #self.boundaries = {}
@@ -910,7 +912,7 @@ class Abaqus(object):
             if self.assembly is not None:
                 self.assembly.write(abq_file)
             for unused_part_name, part in self.parts.items():
-                part.write(abq_file)
+                part.write(abq_file, is_2d=is_2d)
             for unused_part_name, initial_conditions in self.initial_conditions.items():
                 initial_conditions.write(abq_file)
             for unused_part_name, amplitude in self.amplitudes.items():
@@ -1027,7 +1029,6 @@ def main(): # pragma: no cover
     edge_length_max = edge_length_21.max()
     edge_length_min = edge_length_21.min()
     dedge = edge_length_max - edge_length_min
-    print('dedge =', dedge)
     #print('edge_length_21 =\n%s' % edge_length_21)
 
     import matplotlib.pyplot as plt

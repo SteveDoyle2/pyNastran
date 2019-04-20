@@ -506,6 +506,8 @@ class GuiQtCommon(GuiAttributes):
         self.is_max_actor = True
 
         if location == 'node':
+            if self.xyz_cid0 is None:
+                return
             xyzs = [
                 self.xyz_cid0[imin, :], # min
                 self.xyz_cid0[imax, :], # max
