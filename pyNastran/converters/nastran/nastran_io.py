@@ -749,6 +749,33 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.load_nastran_geometry_unvectorized(bdf_filename, plot=plot)
         self.gui.format = 'nastran'
 
+    def _points_to_vtkpoints_coords(self, model, xyz_cid0):
+        """
+        helper method for:
+         - load_nastran_geometry_unvectorized
+         - load_nastran_geometry_vectorized
+        """
+        points = numpy_to_vtk_points(xyz_cid0)
+        self.gui.grid.SetPoints(points)
+
+        self.xyz_cid0 = xyz_cid0
+
+        maxi = xyz_cid0.max(axis=0)
+        mini = xyz_cid0.min(axis=0)
+        assert len(maxi) == 3, len(maxi)
+        xmax, ymax, zmax = maxi
+        xmin, ymin, zmin = mini
+        dim_max = max(xmax-xmin, ymax-ymin, zmax-zmin)
+
+        #print('_create_nastran_coords')
+        self._create_nastran_coords(model, dim_max)
+        #print('done _create_nastran_coords')
+
+        self.gui.log_info("xmin=%s xmax=%s dx=%s" % (xmin, xmax, xmax-xmin))
+        self.gui.log_info("ymin=%s ymax=%s dy=%s" % (ymin, ymax, ymax-ymin))
+        self.gui.log_info("zmin=%s zmax=%s dz=%s" % (zmin, zmax, zmax-zmin))
+        return dim_max
+
     def load_nastran_geometry_unvectorized(self, bdf_filename, plot=True):
         """
         The entry point for Nastran geometry loading.

@@ -507,14 +507,11 @@ class TestCoords(unittest.TestCase):
             xyz_cp, nids, icp_transform, cid=0)
         array_equal(xyz_cid0_actual, xyz_cid0_xform)
         assert array_equal(nids, array([30, 31, 32]))
-        model2.nodes.nids = nid_cp_cd[:, 0]
 
 
         for cid in [30, 31, 32]:
             unused_xyz_cid_a = model.transform_xyzcp_to_xyz_cid(
                 xyz_cp, nids, icp_transform, cid=cid)
-            unused_xyz_cid_b = model2.transform_xyzcp_to_xyz_cid(
-                xyz_cp, nids, icp_transform, cid=cid, atol=None)
             #assert np.allclose(xyz_cid_a, xyz_cid_b), '%s' % np.isclose(xyz_cid_a, xyz_cid_b)
 
             #print(xyz_cid_a)
