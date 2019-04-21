@@ -100,3 +100,4 @@ nosetests.xml
 *structMan*
 *CoFE*
 
+/pyNastran/env
