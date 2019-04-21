@@ -24,7 +24,6 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import write_bdf_symmetric
 from pyNastran.bdf.mesh_utils.collapse_bad_quads import convert_bad_quads_to_tris
 from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_bad_shells
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
-from pyNastran.bdf.mesh_utils.dev.create_vectorized_numbered import create_vectorized_numbered
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
 

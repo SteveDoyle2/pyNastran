@@ -19,7 +19,7 @@ from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.utils import Position, PositionWRT, TransformLoadWRT
 from pyNastran.bdf.cards.aero.utils import make_monpnt1s_from_cids
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDFv
+
 
 class TestCoords(unittest.TestCase):
     """tests the coordinate systems and their transforms"""
@@ -484,9 +484,6 @@ class TestCoords(unittest.TestCase):
         #-------------------------------------------------
         model.cross_reference()
 
-        model2 = BDFv(debug=False)
-        model2.read_bdf(bdf_file, punch=True, xref=False, save_file_structure=False)
-        bdf_file.seek(0)
         #-------------------------------------------------
 
         xyz_cid0_actual = array([

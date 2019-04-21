@@ -31,7 +31,6 @@ except ImportError:
 import pyNastran
 from pyNastran import is_release
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
-from pyNastran.op2.dev.op2_writer import OP2Writer
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
@@ -422,25 +421,6 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         #if compare:
             #op2_nv.build_dataframe()
 
-        if write_op2:
-            model = os.path.splitext(op2_filename)[0]
-            op2_filename2 = model + '.test_op2.op2'
-            op2w = OP2Writer(op2)
-            total_case_count = op2w.write_op2(op2_filename2, obj=op2,
-                                              #is_mag_phase=is_mag_phase,
-                                              endian=b'<')
-            if total_case_count > 0:
-                print('------------------------------')
-                op2a = OP2(debug_file='debug.out')
-                op2a.use_vector = False
-                op2a.read_op2(op2_filename2)
-                os.remove(op2_filename2)
-            #read_op2(op2_filename2)
-            if delete_f06:
-                try:
-                    os.remove(op2_filename2)
-                except:
-                    pass
 
         if is_memory and check_memory:
             op2 = None
