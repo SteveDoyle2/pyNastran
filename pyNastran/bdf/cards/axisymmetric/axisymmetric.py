@@ -65,7 +65,7 @@ class AXIC(BaseCard):
 class AXIF(BaseCard):
     """
     AXIF CID G  DRHO DB NOSYM F
-         N1  N2 N3   N4  N5   -etc.-
+         N1  N2 N3   N4  N5    etc.
     """
     type = 'AXIF'
 
