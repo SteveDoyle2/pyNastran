@@ -7,5 +7,4 @@
     :members:
     :private-members:
     :undoc-members:
-    :undoc-members:
 

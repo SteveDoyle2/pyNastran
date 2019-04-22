@@ -77,7 +77,7 @@ class TEMPP1(object):
     def __init__(self, model):
         """
         TEMPP1 SID  EID1 TBAR TPRIME T1   T2   NA    NA
-               EID2 EID3 EID4 EID5   EID6 EID7 -etc.-
+               EID2 EID3 EID4 EID5   EID6 EID7  etc.
 
         TEMPP1 EID2 THRU EIDi EIDj THRU EIDk
         TEMPP1 1    THRU 10   30   THRU 61

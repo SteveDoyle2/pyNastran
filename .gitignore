@@ -101,3 +101,4 @@ nosetests.xml
 *CoFE*
 
 .mypy_cache
+/pyNastran/env
