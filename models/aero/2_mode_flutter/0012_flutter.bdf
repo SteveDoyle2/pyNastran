@@ -1,0 +1,21 @@
+SOL 145
+CEND
+TITLE = MSC.Nastran job created on 29-Nov-17 at 14:54:26
+ECHO = NONE
+SUBCASE 1
+   SUBTITLE=Default
+   METHOD = 1
+   SPC = 10
+   VECTOR(PLOT,SORT1,REAL)=ALL
+   $SPCFORCES(PRINT,SORT1,REAL)=ALL
+   $MPCFORCES(PRINT,SORT1,REAL)=ALL
+   FMETHOD = 50
+BEGIN BULK
+$
+$--------------------------------------------------------------------------
+include 'aero_cards.inc'
+include 'flutter_cards.inc'
+include 'rigid_modes.inc'
+include 'geom.inc'
+$--------------------------------------------------------------------------
+ENDDATA fc9937dc

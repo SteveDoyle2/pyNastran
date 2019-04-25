@@ -1,0 +1,165 @@
+ID MSC, DEGVCN03 $ NEW FOR V2002 LWOO 2/1/02
+TIME 100
+SOL 200
+CEND
+TITLE = EIGENVECTOR SENSITIVITY AND OPTIMIZATION
+SUBTITLE = CANTILIVER BEAM, BASELINE FOR SUBSPACE ITERATION AND SUPERELEMENT
+SPC         = 100
+DISP        = ALL
+DESOPJ(MIN) = 500
+SUBCASE 11
+ANALYSIS = STATICS
+LOAD     = 21
+LABEL    = STATIC LOAD ON FREE END
+SUBCASE 12
+ANALYSIS = MODES
+METHOD   = 22
+LABEL    = NORMAL MODES
+DESSUB   = 600
+BEGIN BULK
+PARAM,NASPRT,1
+PARAM,OPTEXIT,4
+DOPTPRM DESMAX  20      IPRINT  3       p1      1       p2      31
+GRID    101             1.      0.      0.
+GRID    102             2.      0.      0.
+GRID    103             3.      0.      0.
+GRID    104             4.      0.      0.
+GRID    105             5.      0.      0.
+GRID    106             6.      0.      0.
+GRID    107             7.      0.      0.
+GRID    108             8.      0.      0.
+GRID    109             9.      0.      0.
+CBAR    1       11      101     102     0.      1.      0.
+CBAR    2       12      102     103     0.      1.      0.
+CBAR    3       13      103     104     0.      1.      0.
+CBAR    4       14      104     105     0.      1.      0.
+CBAR    5       15      105     106     0.      1.      0.
+CBAR    6       16      106     107     0.      1.      0.
+CBAR    7       17      107     108     0.      1.      0.
+CBAR    8       18      108     109     0.      1.      0.
+CMASS1  41      51      102     2
+CMASS1  42      52      103     2
+CMASS1  43      53      104     2
+CMASS1  44      54      105     2
+CMASS1  45      55      106     2
+CMASS1  46      56      107     2
+CMASS1  47      57      108     2
+CMASS1  48      58      109     2
+PBARL   11      21              BAR                                     +B1
++B1     0.2     0.4
+PBARL   12      22              BAR                                     +B2
++B2     0.2     0.4
+PBARL   13      23              BAR                                     +B3
++B3     0.2     0.4
+PBARL   14      24              BAR                                     +B4
++B4     0.2     0.4
+PBARL   15      25              BAR                                     +B5
++B5     0.2     0.4
+PBARL   16      26              BAR                                     +B6
++B6     0.2     0.4
+PBARL   17      27              BAR                                     +B7
++B7     0.2     0.4
+PBARL   18      28              BAR                                     +B8
++B8     0.2     0.4
+PMASS   51      0.08
+PMASS   52      0.08
+PMASS   53      0.08
+PMASS   54      0.08
+PMASS   55      0.08
+PMASS   56      0.08
+PMASS   57      0.08
+PMASS   58      0.04
+MAT1    21      10.E6           0.3     1.0
+MAT1    22      10.E6           0.3     1.0
+MAT1    23      10.E6           0.3     1.0
+MAT1    24      10.E6           0.3     1.0
+MAT1    25      10.E6           0.3     1.0
+MAT1    26      10.E6           0.3     1.0
+MAT1    27      10.E6           0.3     1.0
+MAT1    28      10.E6           0.3     1.0
+SPC     100     101     123456
+SPC1    100     1345    102     103     104     105
+SPC1    100     1345    106     107     108     109
+FORCE   21      109             100.    0.      -1.0    0.
+EIGR    22      GIV     0.                      5
+DESVAR  201     CMAS1   0.08    0.01    1.
+DESVAR  202     CMAS2   0.08    0.01    1.
+DESVAR  203     CMAS3   0.08    0.01    1.
+DESVAR  204     CMAS4   0.08    0.01    1.
+DESVAR  205     CMAS5   0.08    0.01    1.
+DESVAR  206     CMAS6   0.08    0.01    1.
+DESVAR  207     CMAS7   0.08    0.01    1.
+DESVAR  208     CMAS8   0.04    0.01    1.
+DVPREL1 301     PMASS   51      3                                       +D1
++D1     201     1.0
+DVPREL1 302     PMASS   52      3                                       +D2
++D2     202     1.0
+DVPREL1 303     PMASS   53      3                                       +D3
++D3     203     1.0
+DVPREL1 304     PMASS   54      3                                       +D4
++D4     204     1.0
+DVPREL1 305     PMASS   55      3                                       +D5
++D5     205     1.0
+DVPREL1 306     PMASS   56      3                                       +D6
++D6     206     1.0
+DVPREL1 307     PMASS   57      3                                       +D7
++D7     207     1.0
+DVPREL1 308     PMASS   58      3                                       +D8
++D8     208     1.0
+DRESP1  500     WEIGHT  WEIGHT                  2       2
+DRESP1  501     FREQ1   FREQ                    1
+DRESP1  502     FREQ2   FREQ                    2
+DRESP1  503     FREQ3   FREQ                    3
+DRESP1  511     MDISP11 DISP                    2       1       102
+DRESP1  512     MDISP12 DISP                    2       1       103
+DRESP1  513     MDISP13 DISP                    2       1       104
+DRESP1  514     MDISP14 DISP                    2       1       105
+DRESP1  515     MDISP15 DISP                    2       1       106
+DRESP1  516     MDISP16 DISP                    2       1       107
+DRESP1  517     MDISP17 DISP                    2       1       108
+DRESP1  518     MDISP18 DISP                    2       1       109
+DRESP1  521     MDISP11 DISP                    2       2       102
+DRESP1  522     MDISP12 DISP                    2       2       103
+DRESP1  523     MDISP13 DISP                    2       2       104
+DRESP1  524     MDISP14 DISP                    2       2       105
+DRESP1  525     MDISP15 DISP                    2       2       106
+DRESP1  526     MDISP16 DISP                    2       2       107
+DRESP1  527     MDISP17 DISP                    2       2       108
+DRESP1  528     MDISP18 DISP                    2       2       109
+DRESP1  531     MDISP11 DISP                    2       3       102
+DRESP1  532     MDISP12 DISP                    2       3       103
+DRESP1  533     MDISP13 DISP                    2       3       104
+DRESP1  534     MDISP14 DISP                    2       3       105
+DRESP1  535     MDISP15 DISP                    2       3       106
+DRESP1  536     MDISP16 DISP                    2       3       107
+DRESP1  537     MDISP17 DISP                    2       3       108
+DRESP1  538     MDISP18 DISP                    2       3       109
+DCONSTR 600     501     1.8     2.0
+DCONSTR 600     502     10.     12.
+DCONSTR 600     503     30.     34.
+DCONSTR 600     511     -1.0    1.0
+DCONSTR 600     512     -1.0    1.0
+DCONSTR 600     513     -1.0    1.0
+DCONSTR 600     514     -1.0    1.0
+DCONSTR 600     515     -2.0    2.0
+DCONSTR 600     516     -2.0    2.0
+DCONSTR 600     517     -2.0    2.0
+DCONSTR 600     518     -2.0    2.0
+DCONSTR 600     521     -1.0    1.0
+DCONSTR 600     522     -1.0    1.0
+DCONSTR 600     523     -1.0    1.0
+DCONSTR 600     524     -1.0    1.0
+DCONSTR 600     525     -2.0    2.0
+DCONSTR 600     526     -2.0    2.0
+DCONSTR 600     527     -2.0    2.0
+DCONSTR 600     528     -2.0    2.0
+DCONSTR 600     531     -1.0    1.0
+DCONSTR 600     532     -1.0    1.0
+DCONSTR 600     533     -1.0    1.0
+DCONSTR 600     534     -1.0    1.0
+DCONSTR 600     535     -2.0    2.0
+DCONSTR 600     536     -2.0    2.0
+DCONSTR 600     537     -2.0    2.0
+DCONSTR 600     538     -2.0    2.0
+PARAM,POST,-1
+ENDDATA

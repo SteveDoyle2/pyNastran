@@ -1,0 +1,53 @@
+0                                                                                                                                   
+0
+
+
+                          E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (READ MODULE) 
+
+
+
+                                     BLOCK SIZE USED ......................    7
+
+                                     NUMBER OF DECOMPOSITIONS .............    2
+
+                                     NUMBER OF ROOTS FOUND ................    2
+
+                                     NUMBER OF SOLVES REQUIRED ............   20
+
+1    TEST                                                                  FEBRUARY  19, 2014  NX NASTRAN  8/11/12   PAGE    11
+                                                                                                                                    
+0                                                                                                                                   
+ 
+                                              R E A L   E I G E N V A L U E S
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1         1        1.111111E+00        1.111111E+00        1.111111E+00        1.000000E+00        1.111111E+00
+        2         2        2.222222E+00        2.222222E+00        2.222222E+00        1.000000E+00        2.222222E+00
+1    TEST                                                                  FEBRUARY  19, 2014  NX NASTRAN  8/11/12   PAGE    12
+                                                                                                                                    
+0                                                                                                                                   
+1    TEST                                                                  FEBRUARY  19, 2014  NX NASTRAN  8/11/12   PAGE    13
+                                                                                                                                    
+                                                                                                                                    
+0                                                                                                                                   
+      EIGENVALUE =  4.957681E+04
+          CYCLES =  3.543720E+01         R E A L   E I G E N V E C T O R   N O .          1
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      1.000000E+00   2.000000E+00   3.000000E+00                                  
+             2      G      4.000000E+00   5.000000E+00   6.000000E+00                                  
+             3      G      7.000000E+00   8.000000E+00   9.000000E+00                                  
+             4      S      1.000000E+01   1.100000E+01   1.200000E+01                                  
+1    TEST                                                                  FEBRUARY  19, 2014  NX NASTRAN  8/11/12   PAGE    20
+                                                                                                                                    
+0                                                                                                                                   
+      EIGENVALUE =  5.618003E+04
+          CYCLES =  3.772342E+01         R E A L   E I G E N V E C T O R   N O .          2
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+             1      G      1.000000E+00   1.000000E+00   1.000000E+00                                  
+             2      G      1.000000E+00   1.000000E+00   1.000000E+00                                  
+             3      G      1.000000E+00   1.000000E+00   1.000000E+00                                  
+             4      G      1.000000E+00   1.000000E+00   1.000000E+00      
+1    TEST                                                                  FEBRUARY  19, 2014  NX NASTRAN  8/11/12   PAGE    21
+   

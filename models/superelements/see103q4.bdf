@@ -1,0 +1,631 @@
+ID MSC, SEE103Q4 $
+$$ V69 4-SEP-1996 CNP
+SOL 103
+TIME 60
+DIAG 8
+CEND
+TITLE = SE MIRROR PLANE TEST FOR SMALL AIRCRAFT SHELL MODEL    SEE103Q4
+ECHO = BOTH
+DISP = ALL
+STRESS = ALL
+SPCFORCE = ALL
+OLOAD = ALL
+$LOAD = 101
+$SPC = 100
+METHOD = 9
+$
+OUTPUT(PLOT)
+  CSCALE  1.3
+  PLOTTER NAST
+  SET 1 ALL
+$	isometric view
+$   VIEW  210., 25. , 180.
+$	front view
+   view 0., 0., 180.
+   AXES y ,  z,  x
+   FIND SCALE ORIGIN 1 SET 1
+$ SEPLOT 1 2
+$  ptitle =  se 1 & 2
+$  FIND SCALE ORIGIN 1 SET 1
+$  PLOT  SET 1
+$ SEPLOT  2 3
+$  ptitle =  se 2 & 3
+$  FIND SCALE ORIGIN 1 SET 1
+$  PLOT  SET 1
+$ SEPLOT  1 12 13
+$  ptitle =  se 1 12 & 13
+$  FIND SCALE ORIGIN 1 SET 1
+$  PLOT  SET 1
+$ SEPLOT 1 2 3 4 12 13
+$  ptitle = assembled plot
+$  FIND SCALE ORIGIN 1 SET 1
+$  PLOT  SET 1
+$SEPLOT 0
+$  FIND SCALE ORIGIN 1 SET 1
+$  PLOT  STATIC  SET 1
+$ SEPLOT 1
+$  FIND SCALE ORIGIN 1 SET 1
+$  PLOT  STATIC  SET 1
+$ SEPLOT 2
+$  FIND SCALE ORIGIN 1 SET 1
+$  PLOT  STATIC  SET 1
+$ SEPLOT 3
+$  FIND SCALE ORIGIN 1 SET 1
+$  PLOT  STATIC  SET 1
+$ SEPLOT 4
+$  FIND SCALE ORIGIN 1 SET 1
+$  PLOT  STATIC  SET 1
+ SEPLOT 5 15
+  FIND SCALE ORIGIN 1 SET 1
+  PLOT  STATIC  SET 1
+ SEUPPLOT 0
+  FIND SCALE ORIGIN 1 SET 1
+  PLOT  STATIC  SET 1
+BEGIN BULK
+param,post,-1
+param	usetprt	0
+SELABEL	1	Fuselage
+SELABEL	2	Main Wing Panel
+SELABEL	3	Winglet
+SELABEL	4	Veritcal Tail
+SELABEL 5	Stabalizer
+SELABEL 12	Mirrored Main Wing Panel
+SELABEL 13 	Mirrored Winglet
+SELABEL	15	Mirrored Stabalizer
+$-------2-------3-------4-------5-------6-------7-------8-------9-------10
+$
+$	Information contained in here is used for the SELOC's
+$
+GRID	2001		1.	1.625	-1.
+GRID	2002		1.	0.	-1.
+GRID	2003		1.	-.25	-2.
+SELOC	2	19	24	23	2001	2002	2003
+$
+GRID	2011		1.	 1.75   -5.
+GRID	2012		1.	-1.00   -5.	
+GRID	2013		1.	-1.08333-6.0
+SELOC	3	43	49	35	2011	2012	2013
+$
+GRID	2021		0.	-3.	0.
+GRID	2022		0.	-4.	0.
+GRID	2023		.515	-3.	2.58-8
+SELOC	4	15	14	100	2021	2022	2023
+$
+GRID    3001            1.      1.625    1.
+GRID    3002            1.      0.       1.
+GRID    3003            1.      -.25     2.
+SELOC   12      19      24      23      3001    3002    3003
+$
+GRID    3011            1.       1.75    5.
+GRID    3012            1.      -1.00    5.
+GRID    3013            1.      -1.08333 6.0
+SELOC   13      43      49      35      3011    3012    3013
+$
+GRID	4001		-1.975	-3.4125	0.
+GRID	4002		-1.925	-3.9875	0.
+GRID	4003		-1.925	-3.9875	1.	
+SELOC	5 	1	3	6	4001	4002	4003
+$
+$GRID    4101            -1.975  -3.4125 0.
+$GRID    4102            -1.925  -3.9875 0.
+GRID    4103            -1.925  -3.9875 -1.
+SELOC   15      1       3       6       4001    4002    4103
+$-------2-------3-------4-------5-------6-------7-------8-------9-------10
+GRID	9998		-5.96-8  1.625   0.
+GRID	9997		0.	0.	0.
+GRID	9996		2.      0.      2.87-7
+SEMPLN	12	PLANE	9998	9997	9996
+SEMPLN	13	PLANE	9998	9997	9996
+SEMPLN	15	PLANE	9998	9997	9996
+SEBULK	12	MIRROR	2	AUTO
+SEBULK	13	MIRROR	3	AUTO
+SEBULK	15	MIRROR	5	AUTO
+$SEBULK,12,MANUAL,3
+$
+EIGRL	9	0.1	9000.	6
+$
+begin bulk super = 1
+$ NASTRAN input file created by the PDA MSC/NASTRAN input file
+$ translator ( PAT3/MSC-NASTRAN Release 1.4-1 ) on April     30, 1996 at
+$  11:47:25.
+$
+$
+$ Elements and Element Properties for region : fg
+MAT1	1	345.9e4		0.234	4.6	
+PSHELL   1       1       .1768   1               1
+CQUAD4   17      1       5       9       31      30
+CQUAD4   18      1       9       14      32      31
+CQUAD4   19      1       14      19      33      32
+CQUAD4   20      1       19      24      34      33
+CQUAD4   21      1       30      31      36      35
+CQUAD4   22      1       31      32      37      36
+CQUAD4   23      1       32      33      38      37
+CQUAD4   24      1       33      34      39      38
+CQUAD4   25      1       35      36      41      40
+CQUAD4   26      1       36      37      42      41
+CQUAD4   27      1       37      38      43      42
+CQUAD4   28      1       38      39      44      43
+CQUAD4   29      1       40      41      46      45
+CQUAD4   30      1       41      42      47      46
+CQUAD4   31      1       42      43      48      47
+CQUAD4   32      1       43      44      49      48
+CQUAD4   33      1       45      46      51      50
+CQUAD4   34      1       46      47      52      51
+CQUAD4   35      1       47      48      53      52
+CQUAD4   36      1       48      49      54      53
+CQUAD4   37      1       50      51      56      55
+CQUAD4   38      1       51      52      57      56
+CQUAD4   39      1       52      53      58      57
+CQUAD4   40      1       53      54      59      58
+CQUAD4   41      1       55      56      61      60
+CQUAD4   42      1       56      57      62      61
+CQUAD4   43      1       57      58      63      62
+CQUAD4   44      1       58      59      64      63
+CQUAD4   45      1       60      61      9       5
+CQUAD4   46      1       61      62      14      9
+CQUAD4   47      1       62      63      19      14
+CQUAD4   48      1       63      64      24      19
+CTRIA3   49      1       80      79      5
+CTRIA3   50      1       5       30      80
+CTRIA3   51      1       30      35      80
+CTRIA3   52      1       81      80      35
+CTRIA3   53      1       82      81      35
+CTRIA3   54      1       35      40      82
+CTRIA3   55      1       40      45      82
+CTRIA3   56      1       83      82      45
+CTRIA3   57      1       84      83      45
+CTRIA3   58      1       45      50      84
+CTRIA3   59      1       50      55      84
+CTRIA3   60      1       85      84      55
+CTRIA3   61      1       86      85      55
+CTRIA3   62      1       55      60      86
+CTRIA3   63      1       60      5       86
+CTRIA3   64      1       79      86      5
+CTRIA3   65      1       79      80      88
+CTRIA3   66      1       89      88      80
+CTRIA3   67      1       90      89      80
+CTRIA3   68      1       80      81      90
+CTRIA3   69      1       81      82      90
+CTRIA3   70      1       91      90      82
+CTRIA3   71      1       92      91      82
+CTRIA3   72      1       82      83      92
+CTRIA3   73      1       83      84      92
+CTRIA3   74      1       93      92      84
+CTRIA3   75      1       94      93      84
+CTRIA3   76      1       84      85      94
+CTRIA3   77      1       85      86      94
+CTRIA3   78      1       95      94      86
+CTRIA3   79      1       88      95      86
+CTRIA3   80      1       86      79      88
+CTRIA3   81      1       107     106     24
+CTRIA3   82      1       24      34      107
+CTRIA3   83      1       108     107     34
+CTRIA3   84      1       34      39      108
+CTRIA3   85      1       109     108     39
+CTRIA3   86      1       39      44      109
+CTRIA3   87      1       110     109     44
+CTRIA3   88      1       44      49      110
+CTRIA3   89      1       49      54      110
+CTRIA3   90      1       111     110     54
+CTRIA3   91      1       54      59      111
+CTRIA3   92      1       112     111     59
+CTRIA3   93      1       59      64      112
+CTRIA3   94      1       113     112     64
+CTRIA3   95      1       64      24      113
+CTRIA3   96      1       106     113     24
+CTRIA3   97      1       116     115     106
+CTRIA3   98      1       106     107     116
+CTRIA3   99      1       117     116     107
+CTRIA3   100     1       107     108     117
+CTRIA3   101     1       118     117     108
+CTRIA3   102     1       108     109     118
+CTRIA3   103     1       119     118     109
+CTRIA3   104     1       109     110     119
+CTRIA3   105     1       110     111     119
+CTRIA3   106     1       120     119     111
+CTRIA3   107     1       111     112     120
+CTRIA3   108     1       121     120     112
+CTRIA3   109     1       112     113     121
+CTRIA3   110     1       122     121     113
+CTRIA3   111     1       113     106     122
+CTRIA3   112     1       115     122     106
+CTRIA3   113     1       125     124     115
+CTRIA3   114     1       115     116     125
+CTRIA3   115     1       126     125     116
+CTRIA3   116     1       116     117     126
+CTRIA3   117     1       127     126     117
+CTRIA3   118     1       117     118     127
+CTRIA3   119     1       128     127     118
+CTRIA3   120     1       118     119     128
+CTRIA3   121     1       119     120     128
+CTRIA3   122     1       129     128     120
+CTRIA3   123     1       120     121     129
+CTRIA3   124     1       130     129     121
+CTRIA3   125     1       121     122     130
+CTRIA3   126     1       131     130     122
+CTRIA3   127     1       122     115     131
+CTRIA3   128     1       124     131     115
+CTRIA3   129     1       134     133     124
+CTRIA3   130     1       124     125     134
+CTRIA3   131     1       135     134     125
+CTRIA3   132     1       125     126     135
+CTRIA3   133     1       136     135     126
+CTRIA3   134     1       126     127     136
+CTRIA3   135     1       137     136     127
+CTRIA3   136     1       127     128     137
+CTRIA3   137     1       128     129     137
+CTRIA3   138     1       138     137     129
+CTRIA3   139     1       129     130     138
+CTRIA3   140     1       139     138     130
+CTRIA3   141     1       130     131     139
+CTRIA3   142     1       140     139     131
+CTRIA3   143     1       131     124     140
+CTRIA3   144     1       133     140     124
+$ Referenced Material Records
+$ Material Record : carb
+$ Description of Material :
+$ Externally Defined Material of NASTRAN Material id "1" and NASTRAN
+$ Material Type "MAT1".
+$ External Material carb                            MAT1    ID 1
+$ Nodes of the Entire Model
+GRID     5              -2.38-7  6.5     0.
+GRID     9              -1.78-7  4.875   0.
+GRID     14             -1.19-7  3.25    0.
+GRID     19             -5.96-8  1.625   0.
+GRID     24              0.      0.      0.
+GRID     30              .292893 6.5     .707107
+GRID     31              .292893 4.875   .707107
+GRID     32              .292893 3.25    .707107
+GRID     33              .292893 1.625   .707107
+GRID     34              .292893 0.      .707107
+GRID     35              1.      6.5     1.
+GRID     36              1.      4.875   1.
+GRID     37              1.      3.25    1.
+GRID     38              1.      1.625   1.
+GRID     39              1.      0.      1.
+GRID     40              1.70710 6.5     .707107
+GRID     41              1.70710 4.875   .707107
+GRID     42              1.70710 3.25    .707107
+GRID     43              1.70710 1.625   .707107
+GRID     44              1.70710 0.      .707107
+GRID     45              2.      6.5     2.87-7
+GRID     46              2.      4.875   2.87-7
+GRID     47              2.      3.25    2.87-7
+GRID     48              2.      1.625   2.87-7
+GRID     49              2.      0.      2.87-7
+GRID     50              1.70710 6.5    -.707107
+GRID     51              1.70710 4.875  -.707107
+GRID     52              1.70710 3.25   -.707107
+GRID     53              1.70710 1.625  -.707107
+GRID     54              1.70710 0.     -.707107
+GRID     55              1.      6.5    -1.
+GRID     56              1.      4.875  -1.
+GRID     57              1.      3.25   -1.
+GRID     58              1.      1.625  -1.
+GRID     59              1.      0.     -1.
+GRID     60              .292893 6.5    -.707107
+GRID     61              .292893 4.875  -.707107
+GRID     62              .292893 3.25   -.707107
+GRID     63              .292893 1.625  -.707107
+GRID     64              .292893 0.     -.707107
+GRID     79              .495    10.75    0.
+GRID     80              .642911 10.75    .35709
+GRID     81              1.      10.75    .505
+GRID     82              1.35708 10.75    .35709
+GRID     83              1.505   10.75    5.04-8
+GRID     84              1.35708 10.75   -.35709
+GRID     85              1.      10.75   -.505
+GRID     86              .642905 10.75   -.35708
+GRID     88              .99     14.     0.
+GRID     89              .992929 14.     .007071
+GRID     90              1.      14.     .01
+GRID     91              1.00707 14.     .007071
+GRID     92              1.01    14.     0.
+GRID     93              1.00707 14.    -.007071
+GRID     94              1.      14.    -.01
+GRID     95              .992929 14.    -.007071
+GRID     106             0.     -1.00    0.
+GRID     107             .220402-1.00    .532098
+GRID     108             .7525  -1.00    .7525
+GRID     109             1.28459-1.00    .532098
+GRID     110             1.505  -1.00    2.16-7
+GRID     111             1.28459-1.00   -.532098
+GRID     112             .7525  -1.00   -.7525
+GRID     113             .220398-1.00   -.532094
+GRID     115             0.     -2.00    0.
+GRID     116             .147911-2.00    .357089
+GRID     117             .505   -2.00    .505
+GRID     118             .862089-2.00    .357089
+GRID     119             1.01   -2.00    5.04-8
+GRID     120             .862089-2.00   -.357089
+GRID     121             .505   -2.00   -.505
+GRID     122             .147906-2.00   -.357083
+GRID     124             0.     -3.000   0.
+GRID     125             .07542 -3.000   .18208
+GRID     126             .2575  -3.000   .2575
+GRID     127             .43958 -3.000   .18208
+GRID     128             .515   -3.000   2.57-8
+GRID     129             .43958 -3.000  -.18208
+GRID     130             .2575  -3.000  -.2575
+GRID     131             .075416-3.000  -.182076
+GRID     133             0.     -4.0     0.
+GRID     134             .002929-4.0     .007071
+GRID     135             .01    -4.0     .01
+GRID     136             .017071-4.0     .007071
+GRID     137             .02    -4.0     0.
+GRID     138             .017071-4.0    -.007071
+GRID     139             .01    -4.0    -.01
+GRID     140             .002929-4.0    -.007071
+$SPC1	100	123456	45	thru	49
+Force	101	79		80.	0.	-1.	0.
+Force   101     80              80.     0.      -1.     0.
+Force   101     81              80.     0.      -1.     0.
+Force   101     82              80.     0.      -1.     0.
+Force   101     83              80.     0.      -1.     0.
+Force   101     84              80.     0.      -1.     0.
+Force   101     85              80.     0.      -1.     0.
+Force   101     86              80.     0.      -1.     0.
+$
+Begin Bulk Super = 2
+MAT1    1       541.9e4         0.234   4.6
+$include 'wing.dat'
+PSHELL   3       1       .217    1               1
+CQUAD4   1       3       1       2       8       10
+CQUAD4   2       3       2       3       7       8
+CQUAD4   3       3       3       4       6       7
+CQUAD4   4       3       4       5       9       6
+CTRIA3   5       3       10      8       11
+CQUAD4   6       3       8       7       12      11
+CQUAD4   7       3       7       6       13      12
+CQUAD4   8       3       6       9       14      13
+CQUAD4   9       3       10      11      16      15
+CQUAD4   10      3       11      12      17      16
+CQUAD4   11      3       12      13      18      17
+CQUAD4   12      3       13      14      19      18
+CQUAD4   13      3       15      16      21      20
+CQUAD4   14      3       16      17      22      21
+CQUAD4   15      3       17      18      23      22
+CQUAD4   16      3       18      19      24      23
+GRID     1              -4.      1.75    0.
+GRID     2              -2.77776 2.74616 0.
+GRID     3              -1.65656 3.85502 0.
+GRID     4              -.668054 5.08269 0.
+GRID     5              -2.38-7  6.5     0.
+GRID     6              -.853195 3.81499 0.
+GRID     7              -1.82520 2.83594 0.
+GRID     8              -2.88596 1.90095 0.
+GRID     9              -1.78-7  4.875   0.
+GRID     10             -4.      .833333 0.
+GRID     11             -2.94435 1.19596 0.
+GRID     12             -1.91550 1.79503 0.
+GRID     13             -.933078 2.49271 0.
+GRID     14             -1.19-7  3.25    0.
+GRID     15             -4.     -.083333 0.
+GRID     16             -2.97767 .258299 0.
+GRID     17             -1.96635 .670566 0.
+GRID     18             -.973989 1.1327  0.
+GRID     19             -5.96-8  1.625   0.
+GRID     20             -4.     -1.      0.
+GRID     21             -3.     -.75     0.
+GRID     22             -2.     -.5      0.
+GRID     23             -1.     -.25     0.
+GRID     24              0.      0.      0.
+FORCE	101	1		80.	0.	-1.	0.
+FORCE	101	2		50.	0.	-1.	0.
+FORCE	101	3		30.	0.	-1.	0.
+FORCE	101	4		20.	0.	-1.	0.
+$PLOAD2	101	-48.7	1	thru	4
+$PLOAD2	101	-51.0	13	thru	16
+
+Begin Bulk Super = 3
+MAT1    2       309.0e4         0.330   1.6
+$include 'winlet.dat'
+PSHELL   2       2       .0998   2               2
+CTRIA6   101     2       17      15      1       16      8       9
+CTRIA6   102     2       1       3       17      2       10      9
+CTRIA6   103     2       19      17      3       18      10      11
+CTRIA6   104     2       3       5       19      4       12      11
+CTRIA6   105     2       21      19      5       20      12      13
+CTRIA6   106     2       5       7       21      6       14      13
+CTRIA6   107     2       31      29      15      30      22      23
+CTRIA6   108     2       15      17      31      16      24      23
+CTRIA6   109     2       33      31      17      32      24      25
+CTRIA6   110     2       17      19      33      18      26      25
+CTRIA6   111     2       35      33      19      34      26      27
+CTRIA6   112     2       19      21      35      20      28      27
+CTRIA6   114     2       29      31      45      30      38      37
+CTRIA6   116     2       31      33      47      32      40      39
+CTRIA6   118     2       33      35      49      34      42      41
+CTRIA3	 119	 2	 29	36	37
+CTRIA3	 120	 2 	 29	37	30
+CTRIA3	 121	 2 	 30	38	31
+CTRIA3	 122	 2 	 31	38	39
+CTRIA3	 123	 2 	 31	39	32
+CTRIA3	 124	 2 	 32	40	33
+CTRIA3	 125	 2 	 33	40	 41
+CTRIA3	 126	 2 	 33	41	34
+CTRIA3	 127	 2 	 34	42	35
+CTRIA3	 128	 2 	 30	37	38
+CTRIA3	 129	 2	 32	39	40
+CTRIA3	 130	 2 	 34	41	42
+CTRIA3	 131	 2	 36	43	37
+CTRIA3	 132	 2 	 38	45	39
+CTRIA3	 133	 2 	 40	47	41
+CTRIA3	 134	 2	 37	43	45
+CTRIA3	 135	 2	 39	45	47
+CTRIA3	 136	 2	 41	47	49
+$	2	4	5	6	7	
+GRID     1              -3.     -1.5     0.
+GRID     2              -3.     -1.75    0.
+GRID     3              -3.     -2.      0.
+GRID     4              -3.     -2.25    0.
+GRID     5              -3.     -2.5     0.
+GRID     6              -3.     -2.75    0.
+GRID     7              -3.     -3.      0.
+GRID     8              -2.5    -1.25    0.
+GRID     9              -2.5    -1.56944 0.
+GRID     10             -2.5    -1.81944 0.
+GRID     11             -2.5    -2.13888 0.
+GRID     12             -2.5    -2.38888 0.
+GRID     13             -2.5    -2.70833 0.
+GRID     14             -2.5    -2.95833 0.
+GRID     15             -2.     -1.      0.
+GRID     16             -2.     -1.31944 0.
+GRID     17             -2.     -1.63888 0.
+GRID     18             -2.     -1.95833 0.
+GRID     19             -2.     -2.27777 0.
+GRID     20             -2.     -2.59722 0.
+GRID     21             -2.     -2.91666 0.
+GRID     22             -1.5    -.75     0.
+GRID     23             -1.5    -1.13888 0.
+GRID     24             -1.5    -1.45833 0.
+GRID     25             -1.5    -1.84722 0.
+GRID     26             -1.5    -2.16666 0.
+GRID     27             -1.5    -2.55555 0.
+GRID     28             -1.5    -2.875   0.
+GRID     29             -1.     -.5      0.
+GRID     30             -1.     -.888889 0.
+GRID     31             -1.     -1.27777 0.
+GRID     32             -1.     -1.66666 0.
+GRID     33             -1.     -2.05555 0.
+GRID     34             -1.     -2.44444 0.
+GRID     35             -1.     -2.83333 0.
+GRID     36             -.5     -.25     0.
+GRID     37             -.5     -.708333 0.
+GRID     38             -.5     -1.09722 0.
+GRID     39             -.5     -1.55555 0.
+GRID     40             -.5     -1.94444 0.
+GRID     41             -.5     -2.40277 0.
+GRID     42             -.5     -2.79166 0.
+GRID     43              0.      0.      0.
+GRID     45              0.     -.916667 0.
+GRID     47              0.     -1.83333 0.
+GRID     49              0.     -2.75    0.
+$PLOAD2	101	-9.1	119	thru	136
+Begin Bulk Super = 4
+$include 'tail.dat'
+PSHELL   1       1       .5467   1               1
+CQUAD4   1       1       1       2       5       4
+CQUAD4   2       1       4       5       8       6
+CQUAD4   3       1       6       8       10      9
+CQUAD4   4       1       9       10      12      13
+CQUAD4   5       1       10      8       11      12
+CQUAD4   6       1       8       5       7       11
+CQUAD4   7       1       5       2       3       7
+CQUAD4   8       1       13      12      15      14
+CQUAD4   9       1       12      11      16      15
+CQUAD4   10      1       11      7       17      16
+CQUAD4   11      1       7       3       18      17
+CQUAD4   12      1       19      20      26      25
+CQUAD4   13      1       20      21      27      26
+CQUAD4   14      1       21      22      28      27
+CQUAD4   15      1       22      23      29      28
+CQUAD4   16      1       23      24      30      29
+CQUAD4   17      1       25      26      32      31
+CQUAD4   18      1       26      27      33      32
+CQUAD4   19      1       27      28      34      33
+CQUAD4   20      1       28      29      35      34
+CQUAD4   21      1       29      30      36      35
+CQUAD4   22      1       31      32      38      37
+CQUAD4   23      1       32      33      39      38
+CQUAD4   24      1       33      34      40      39
+CQUAD4   25      1       34      35      41      40
+CQUAD4   26      1       35      36      42      41
+CQUAD4   27      1       37      38      4       1
+CQUAD4   28      1       38      39      6       4
+CQUAD4   29      1       39      40      9       6
+CQUAD4   30      1       40      41      13      9
+CQUAD4   31      1       41      42      14      13
+$ Referenced Material Records
+$ Material Record : dfg
+$ Description of Material : Date: 08-May-96           Time: 11:03:04
+MAT1     1       8.39+6          .3      1.0998
+$ Nodes of the Entire Model
+GRID     1               2.      .5      0.
+GRID     2               1.33333 .333333 0.
+GRID     3               .666667 .166667 0.
+GRID     4               2.4     .4      0.
+GRID     5               1.90212 .270923 0.
+GRID     6               2.8     .3      0.
+GRID     7               1.44018 .137315 0.
+GRID     8               2.43496 .213047 0.
+GRID     9               3.2     .2      0.
+GRID     10              2.84578 .169594 0.
+GRID     11              2.19370 .111566 0.
+GRID     12              2.90669 .09548  0.
+GRID     13              3.6     .1      0.
+GRID     14              4.      0.      0.
+GRID     15              3.      0.      0.
+GRID     16              2.      0.      0.
+GRID     17              1.      0.      0.
+GRID     18              0.      0.      0.
+GRID     19              3.5     2.5     0.
+GRID     20              3.75    2.5     0.
+GRID     21              4.      2.5     0.
+GRID     22              4.25    2.5     0.
+GRID     23              4.5     2.5     0.
+GRID     24              4.75    2.5     0.
+GRID     25              3.125   2.      0.
+GRID     26              3.4125  1.975   0.
+GRID     27              3.7     1.95    0.
+GRID     28              3.9875  1.925   0.
+GRID     29              4.275   1.9     0.
+GRID     30              4.5625  1.875   0.
+GRID     31              2.75    1.5     0.
+GRID     32              3.075   1.45    0.
+GRID     33              3.4     1.4     0.
+GRID     34              3.725   1.35    0.
+GRID     35              4.05    1.3     0.
+GRID     36              4.375   1.25    0.
+GRID     37              2.375   1.      0.
+GRID     38              2.7375  .925    0.
+GRID     39              3.1     .85     0.
+GRID     40              3.4625  .775    0.
+GRID     41              3.825   .7      0.
+GRID     42              4.1875  .625    0.
+GRID    100              3.      -.515   0.
+Begin Bulk Super = 5
+$include 'stab.dat'
+PSHELL   1       1       .388    1               1
+CQUADR   1       1       1       2       5       4
+CQUADR   2       1       2       3       6       5
+CQUADR   3       1       4       5       8       7
+CQUADR   4       1       5       6       9       8
+CQUADR   5       1       10      11      14      13
+CQUADR   6       1       11      3       6       14
+CQUADR   7       1       13      14      17      16
+CQUADR   8       1       14      6       9       17
+$ Referenced Material Records
+$ Material Record : nhgf
+$ Description of Material : Date: 09-May-96           Time: 09:18:17
+MAT1     1       8.95+6          .265    1.06757
+$ Nodes of the Entire Model
+$	2	3	4	5	6	
+GRID     1              0.      0.      0.
+GRID     2              .288585 0.      0.
+GRID     3              .57717  0.      0.
+GRID     4              .145811 -.037706-1.00
+GRID     5              .361523 -.018858-1.0
+GRID     6              .57717  0.      -1.0
+GRID     7              .292969 -.050112-2.5
+GRID     8              .43507  -.025056-2.5
+GRID     9              .57717  0.      -2.5
+GRID     10             1.3     .2      0.
+GRID     11             .938585 .1      0.
+GRID     13             1.10442 .196706 -1.
+GRID     14             .84073  .098346 -1.
+GRID     16             .915729 .16124  -2.5
+GRID     17             .74645  .08062  -2.5
+$ Loads for Load Case : Default
+$PLOAD2	101	-32.4	1	thru	8
+enddata
+
+Mirror plane, SELOC both translations and rotations, Coord systems
+SELABEL,QUAD4,tri3,tri6,SOL 103
+
+When Run on 5-10-96:
+
+ 0*** SYSTEM FATAL MESSAGE  3007 MODULE = LCGEN
+ +1745  0ILLEGAL INPUT TO SUBROUTINE LCGEN
+ +1746  0FATAL ERROR
+

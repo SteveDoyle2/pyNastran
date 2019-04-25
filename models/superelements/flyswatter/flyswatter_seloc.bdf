@@ -1,0 +1,90 @@
+$
+$ file - se1s101p.dat
+$
+$ all 7 s.e. brought in using begin super
+$ duplicate boundary grid ids
+$ each s.e. contains its own property description
+$
+SOL 101
+CEND
+TITLE = S.E. SAMPLE PROBLEM 1
+SUBTITLE = S.E. STATICS - RUN 1 - MULTIPLE LOADS
+DISP = ALL
+$
+$ default is super = all for V69
+$
+$ set defaults for all se - see section 5
+$
+PARAM,GRDPNT,0
+PARAM,WTMASS,.00259
+SUPER = ALL
+SUBCASE 101
+  LABEL = PRESSURE LOAD
+  $LOAD = 101
+SUBCASE 201
+  LABEL = 2# NORMAL LOADS
+  $LOAD = 201
+SUBCASE 301
+  LABEL = OPPOSING LOADS
+  $LOAD = 301
+$------------------------------------------------
+BEGIN BULK
+include 'part0.inc'
+PARAM,POST,-1
+$
+$ MAIN BULK DATA - only POINTs and SELOC shown for moving PART 100
+$ the model is not shown here
+$
+POINT,10001,,-3.6,6.,0.
+POINT,10002,,-2.8,6.,0.
+POINT,10003,,-1.2,10.,0.
+$SELOC,100,350,360,980,10001,10002,10003
+$GRID	35		-3.6	6.	1.
+$GRID	36		-2.8	6.	1.
+$GRID	98		-1.2	10.	1.
+
+SELOC,100,35,36,98,10001,10002,10003
+$
+$ end of MAIN BULK DATA SECTION
+$
+BEGIN SUPER=100
+include 'part100.inc'
+$$
+$ input for PART 100 not shown, except GRID points 350, 360, and 970
+$
+$GRID,350,,-5.2,8.,0.
+$GRID,360,,-4.4,8.,0.
+$GRID,980,,-2.8,12.,0.
+$
+$------------------------------------------------
+begin super=2
+ECHOON
+$include 'load_part2.inc'
+include 'part2.inc'
+$
+$------------------------------------------------
+begin super=3
+ECHOON
+include 'part3.inc'
+$
+$------------------------------------------------
+begin super=4
+ECHOON
+include 'part4.inc'
+$
+$------------------------------------------------
+begin super=5
+ECHOON
+include 'part5.inc'
+$
+$------------------------------------------------
+begin super=6
+ECHOON
+include 'part6.inc'
+$
+$------------------------------------------------
+begin super=7
+ECHOON
+include 'part7.inc'
+$
+ENDDATA

@@ -1,0 +1,26 @@
+\section{General}
+   \subsection{Transformation}
+     \subsubsection{Overview}
+     \[ [T] = 
+            \left[ \begin{array}{ccc}
+               g_1 \cdot p_1 & g_1 \cdot p_2 & g_1 \cdot p_3 \\
+               g_1 \cdot p_2 & g_2 \cdot p_2 & g_2 \cdot p_3 \\
+               g_1 \cdot p_3 & g_2 \cdot p_3 & g_3 \cdot p_3 \\
+            \end{array}\right]\]
+     \subsubsection{Coordinates}
+      \[ \{p_{Global}\}  = [T]\{p_{Local,XYZ}\} \]
+      \[ \{p_{Local,XYZ}\} = [x_0,y_0,z_0]+[x,y,z] \]
+      \[ \{p_{Local,RTZ}\} = [x_0,y_0,z_0]+transform([r,\theta,   z]) \]
+      \[ \{p_{Local,RTP}\} = [x_0,y_0,z_0]+transform([r,\theta,\phi]) \]
+
+     \subsubsection{FEM}
+      These transformation from the element coordinate system to the global coordinate system is:
+      \[ [K] = [T]^{-T} [K_e] [T]  \]
+
+  \subsection{Moments of Inertia}
+    Moments of Inertia are calculated as follows \cite{momentInertia}:
+    \[ [I] = \Sigma_{i=0}^n m_i \left[ \begin{array}{ccc}
+               y_i^2+z_i^2 & -x_i y_i    & -x_i z_i  \\
+               -x_i y_i    & x_i^2+z_i^2 & -y_i z_i  \\
+               -x_i z_i    & -y_i z_i    & x_i^2+y_i^2
+            \end{array}\right] \]

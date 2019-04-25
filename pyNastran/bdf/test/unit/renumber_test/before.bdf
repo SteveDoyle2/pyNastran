@@ -1,0 +1,50 @@
+$NODES
+GRID           1       42392.082-428.685884.3833       4
+GRID           2       4 2391.85-428.977884.8707       4
+GRID           3       42392.692-429.126 885.182       4
+GRID           4       42391.972-428.824884.6146       4
+GRID           5       4 2392.05-427.982884.8039       4
+GRID           6       42391.819-428.288885.2829       4
+GRID           7       42392.661-428.436885.5941       4
+GRID           8       42391.941-428.127885.0312       4
+$ELEMENTS_WITH_PROPERTIES
+$ Femap with NX Nastran Property 1 : dummy plate
+PSHELL         1       2      .1       2               2
+CQUAD4         5       1       2       6       7       3
+CQUAD4         6       1       2       4       8       6
+CQUAD4         7       1       4       1       5       8
+$ Femap with NX Nastran Property 2 : dummy solid
+PSOLID         2       1
+CPENTA         1       2       2       3       4       6       7       8
+$ Femap with NX Nastran Property 3 : dummy bar
+$ Femap with NX Nastran PropShape 3 : 5,0,0.1,0.,0.,0.,0.,0.
+$ Femap with NX Nastran PropOrient 3 : 5,0,0.,1.,2.,3.,4.,-1.,0.,0.
+PBAR           3       1.0314159 7.854-5 7.854-51.5695-4
+                     -.1      .1                      .1     -.1
+        .8861787.8861755
+CBAR           2       3       1       3.3187958.8231729-.469846
+$ Femap with NX Nastran Property 4 : dummy beam
+$ Femap with NX Nastran PropShape 4 : 5,0,0.2,0.,0.,0.,0.,0.
+$ Femap with NX Nastran PropOrient 4 : 5,0,0.,1.,2.,3.,4.,-1.,0.,0.
+PBEAM          4       1 .125664.0012566.0012566        .0025112
+                     -.2      .2                      .2     -.2
+            YESA      1.      0.
+        .8861727.8861727
+              1.      1.
+CBEAM          3       4       1       7.3187958.8231729-.469846     GGG
+$ Femap with NX Nastran Property 5 : dummy pcomp
+PCOMP          5
+               1      .1      0.     YES       1      .1     45.     YES
+CTRIA3         9       5       3       1       7
+$MATERIALS
+$ Femap with NX Nastran Material 1 : dummy
+MAT1           1    1.+7             .33      .1
+$ Femap with NX Nastran Material 2 : dummy 2d ortho
+MAT8           2 100000.1000000.      .3   1000.  10000.   1000.      .1
+$RIGID ELEMENTS
+RBE3           4               6     123      1.     123       8       4
+RBE2           8       5  123456       7
+$COORDS
+$ Femap with NX Nastran Coordinate System 4 : dummy
+CORD2R         4              5.      7.      3. 5.342026.5301543.813798
+        5.9254177.3187962.795126

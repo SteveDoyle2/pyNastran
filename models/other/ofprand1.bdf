@@ -1,0 +1,539 @@
+ASSIGN PUNCH=OUTDIR:'ofprandp.n',NEW,UNIT=7
+ID MSC, OFPRAND1 $ Ningjun Teng v2002 9-Oct-2001
+SOL 108
+TIME 10
+CEND
+TITLE = RANDOM OFP FORMAT, OFPRAND1 
+SUBTI = DATA PRINTED IN F06 FILE, UNCOUPLED EXCITATIONS  
+SPC   = 1
+MPC   = 1
+DLOAD = 1
+FREQ  = 1
+RANDOM = 10
+  SET 1 = 3306,7404,6708,6722,6750,202,205,3402,3405,6904,
+          6404,6423,7504,7519,6808,6837,9906,7004
+  SET 21= 3306,7404,6708,6722
+  SET 2 = 201,202,3401,3402,3301,3302,6701,6702,6703,6901,6902,
+          7001,7002,7401,7402,
+          6401,6402,6411,6412,7501,7502,7511,7512,6801,6811,9901,9902
+  SET 3 = 201,3401,3305,9905,7001,7401,6702,6735,2001,6902,6413,3303,
+          9903
+  SET 71= 2102,2202,3304,3306,3402
+DISPLACEMENT( SORT2,PRINT,IMAG,RALL,RPRINT,RPUNCH ) = 21
+VELOCITY( PRINT,IMAG,RALL,RPRINT,RPUNCH )     = 21
+ACCELERATION( PRINT,IMAG,RALL,RPRINT,RPUNCH ) = 21
+SPCFORCE( RALL,RPRINT,RPUNCH ) = ALL
+MPCFPRCE( RALL,RPRINT,RPUNCH) = 71
+OLOAD   ( RALL,RPRINT,RPUNCH) = 1
+STRESS(IMAG, RALL, sort2 ) = ALL
+STRAIN(IMAG, RALL, sort2 ) = ALL
+FORCE(RALL,RPRINT,RPUNCH ) = ALL
+SUBCASE 1
+  LABEL = SUBCASE 1
+SUBCASE 2
+  LABEL = SUBCASE 2 
+OUTPUT(XYOUT)
+  TCURVE = ELEMENT  202   WEB SHEAR-2  STA 1.0
+  XYPRINT ELFORCE PSDF /  202(167)
+        XYPRINT ELFORCE AUTO / 202(167)
+  TCURVE = ELEMENT 3302   BEND MY
+  XYPRINT ELFORCE PSDF / 3302( 6)
+        XYPRINT ELFORCE AUTO / 3302(6)
+  TCURVE = ELEMENT 6402   BEND MY
+  XYPRINT ELFORCE PSDF / 6402( 6)
+        XYPRINT ELFORCE AUTO / 6402(6)
+  TCURVE = ELEMENT 6412   BEND MY
+  XYPRINT ELFORCE PSDF / 6412( 6)
+        XYPRINT ELFORCE AUTO / 6412(6)
+  TCURVE = ELEMENT 7402   T.V.SHEAR QX
+  XYPRINT ELFORCE PSDF / 7402(8)
+        XYPRINT ELFORCE AUTO / 7402(8)
+  TCURVE = ELEMENT 7002   T.V.SHEAR QX
+  XYPRINT ELFORCE PSDF / 7002(8)
+        XYPRINT ELFORCE AUTO / 7002(8)
+  TCURVE = ELEMENT 7502   T.V.SHEAR QX
+  XYPRINT ELFORCE PSDF / 7502(8)
+        XYPRINT ELFORCE AUTO / 7502(8)
+  TCURVE = ELEMENT 7512   T.V.SHEAR QX
+  XYPRINT ELFORCE PSDF / 7512(8)
+        XYPRINT ELFORCE AUTO / 7512(8)
+  TCURVE = ELEMENT 9902   BEND MY
+  XYPRINT ELFORCE PSDF / 9902( 6)
+        XYPRINT ELFORCE AUTO / 9902(6)
+  TCURVE = ELEMENT  201   LOCATION E  STA 0.5
+  XYPRINT STRESS  PSDF /  201(16)
+  TCURVE = ELEMENT 3301   SHEAR XY AT Z1
+  XYPRINT STRESS  PSDF / 3301( 7)
+  TCURVE = ELEMENT 6401   SHEAR XY AT Z1
+  XYPRINT STRESS  PSDF / 6401( 7)
+  TCURVE = ELEMENT 6411   SHEAR XY AT Z1
+  XYPRINT STRESS  PSDF / 6411( 7)
+  TCURVE = ELEMENT 6701   NORMAL Z , GP 30101
+  XYPRINT STRESS  PSDF / 6701(86)
+        XYPRINT STRESS AUTO / 6701(86)
+  TCURVE = ELEMENT 7001   NORMAL Y , AT Z2
+  XYPRINT STRESS  PSDF / 7001(12)
+  TCURVE = ELEMENT 7401   NORMAL Y , AT Z2
+  XYPRINT STRESS  PSDF / 7401(12)
+  TCURVE = ELEMENT 7501   NORMAL Y , AT Z2
+  XYPRINT STRESS  PSDF / 7501(12)
+  TCURVE = ELEMENT 7511   NORMAL Y , AT Z2
+  XYPRINT STRESS  PSDF / 7511(12)
+  TCURVE = ELEMENT 9901   SHEAR XY AT Z1
+  XYPRINT STRESS  PSDF / 9901( 7)
+  TCURVE = ELEMENT  6901  SHEAR-2  END B
+  XYPRINT ELFORCE PSDF / 6901(17)
+  XYPRINT ELFORCE AUTO / 6901(17)
+BEGIN BULK
+PARAM   W3      1.
+MAT1    1       10.+6   4.+6    .25     2.038685                .03333  +MAT1
++MAT1   3.      5.
+RLOAD1  1       1                       1
+TLOAD2  2       1                               1.
+TABLED1 1                                                               +TAB1
++TAB1   0.      1.      1.      1.      ENDT
+FREQ    1       0.      2.5     10.
+TSTEP   1       3       1.-4    1
+PARAM   W4      1.
+RANDPS  10      1       1       4.              1
+RANDPS  10      2       2       8.              1
+RANDT1  10      4       0.0     0.4
+TABRNDG 1       1       .2      6.
+GRID    201             0.0     0.0     0.0
+GRID    202             .4      0.0     0.0
+GRID    203             1.      0.0     0.0
+GRID    204             0.0     1.      0.0
+GRID    205             .4      1.      0.0
+GRID    206             1.      1.      0.0
+CBEAM   201             201     202     204                             +B1
++B1                                                                     +B2
++B2     204     205
+CBEAM   202             202     203     205                             +B3
++B3                                                                     +B4
++B4     205     206
+CROD    1101    101     201     202
+CROD    1102    101     201     205
+PROD    101     1       1.0     2.0     0.1     0.5
+CONROD  101001  201     202     1       1.0     1.0     1.0     0.5
+CONROD  101007  201     205     1       1.0     1.0     1.0     0.5
+CTUBE   3306    301     201     202
+CTUBE   3307    301     201     205
+PTUBE   301     1       1.0     0.1     2.0
+SPC1    1       123456  201     204     203     206
+SPC1    1       23456   204     205     206
+FORCE   1       202             1.      1.
+MOMENT  1       202             1.      1.
+FORCE   2       202             1.              1.
+FORCE   3       202             1.                      1.
+DAREA   1       202     1       1.      202     3       2.
+DAREA   1       202     4       1.
+DESVAR  2       BEAM    1.0     .01     100.
+DVPREL1 2       PBEAM   201     -8                                      +DB1
++DB1    2       1.0
+PBEAM   201     1       1.      .0833   .0833           .05             +B5
++B5     -.5     -.5     -.5     +.5     +.5     +.5     +.5     -.5     +B6
++B6     YESA    .5                                                      +B7
++B7     YESA    1.                                                      +B8
++B8                                                     1.2
+PBEAM   202     1       1.      .0833   .0833           .05             +B9
++B9     -.5     -.5     -.5     +.5     +.5     +.5     +.5     -.5     +B10
++B10                                                    1.2
+GRID    3301            0.0     0.0     0.0             6
+GRID    3302            1.      0.0     0.0             6
+GRID    3303            0.0     .5      0.0             6
+GRID    3304            1.      .5      0.0             6
+GRID    3305            0.0     1.      0.0             6
+GRID    3306            1.      1.      0.0             6
+CQUAD4  3301    3300    3301    3302    3304    3303
+CQUAD4  3302    3300    3303    3304    3306    3305
+PSHELL  3300    1       .05     1
+SPC1    1       12345   3301    3303    3305
+SPC1    1       12345   3301    3302
+MPC     1       3304    3       0.1     3306    3       0.01            +mpcf1
++mpcf1          3402    3       0.99
+FORCE   1       3306            1.      1.
+FORCE   2       3306            1.              1.
+FORCE   3       3306            1.                      1.
+DAREA   1       3306    1       1.      3306    3       2.
+DESVAR  33      QUAD4   1.0     .01     100.
+DVPREL1 33      PSHELL  3300    4                                       +Q4
++Q4     33      0.05
+CSHEAR  401     401     401     402     403     404
+GRID    401     0       0.0     0.0     0.0
+GRID    402     0       1.0     0.0     0.0
+GRID    403     0       1.0     1.0     0.0
+GRID    404     0       0.0     1.0     0.0
+SPC1    1       123456  401     404
+SPC1    1       13456   402     403
+FORCE   1       402     0       1.0     0.0     1.0     0.0
+FORCE   1       403     0       1.0     0.0     1.0     0.0
+DAREA   1       402     2       1.0     403     2       1.0
+CSHEAR  413     401     413     414     415     416
+GRID    413     3       1.00     90.0   45.0    3       23456
+GRID    414     3       1.414214 45.0   45.0    3       123456
+GRID    415     3       2.23606863.4349545.0    3       654321
+GRID    416     3       2.00     90.0   45.0    3       65432
+FORCE1  1       413     1.0     413     416
+FORCE1  1       416     1.0     413     416
+DAREA   1       413     1       1.0     416     4       1.0
+PSHEAR, 401,    1,      1.0,    0.5, 1.,30. $ F1,F2 ADDED MSC/61 MG JUL80
+CORD2C  1       0       3.0     -1.0    0.0     9.0     -1.0    0.0     +CORD2C
++CORD2C 9.0     0.0     -1.0
+CORD2R  2       0       0.0     -2.0    0.0     1.011234-2.0    0.0     +CORD2R
++CORD2R 0.0     0.0     0.0
+CORD2S  3       1       3.0     225.0   0.0     3.0     225.0   1.234567+CORD2S
++CORD2S 3.0     -45.0   3.0
+GRID    3401            0.0     0.0     0.0
+GRID    3402            .4      0.0     0.0
+GRID    3403            1.      0.0     0.0
+GRID    3404            0.0     1.      0.0
+GRID    3405            .4      1.      0.0
+GRID    3406            1.      1.      0.0
+CBAR    3401            3401    3402    3404
+CBAR    3402            3402    3403    3405
+CBARAO  3402    FR      0.2     0.5     0.7
+SPC1    1       123456  3401    3404    3403    3406
+SPC1    1       23456   3404    3405    3406
+FORCE   1       3402            1.      1.
+MOMENT  1       3402            1.      1.
+FORCE   2       3402            1.              1.
+FORCE   3       3402            1.                      1.
+DAREA   1       3402    1       1.      3402    3       2.
+DAREA   1       3402    4       1.
+DESVAR  34      BAR     1.0     .01     100.
+DVPREL1 34      PBAR    3401    4                                       +3405
++3405   34      1.0
+PBAR    3401    1       1.      .0833   .0833   .05                     +3406
++3406   -.5     -.5
+PBAR    3402    1       1.      .0833   .0833           .05             +3407
++3407   -.5     -.5
+CELAS1  111101  1101    3401    3       3402    3
+SPOINT  1101    1102
+PELAS   1101    1.0     0.5     0.1
+CELAS2  121201  1.0     1201    0       1202    0       0.5     1.0
+SPOINT  1201    1202
+SPC1    1       0       1201
+SLOAD   1       1202    1.0
+DAREA   1       1202    0       1.0
+CELAS3  131301  1301    0       1302
+SLOAD   1       1302    1.0
+DAREA   1       1302    0       1.0
+PELAS   1301    1.0     0.5     0.1
+CELAS4  141401  1.0     0       1402
+SLOAD   1       1402    1.0
+DAREA   1       1402    0       1.0
+CDAMP1  202001  2001    2001    0       2002    0
+SPOINT  2001    2002
+SPC     1       2002    0       0.0
+SPC1    1       0       2001
+SLOAD   1       2002    1.0
+DAREA   1       2002    0       1.0
+PDAMP   2001    1.0
+CDAMP2  212101  1.0     2101    0       2102    0
+SPOINT  2101    2102
+SPC     1       2102    0       0.0
+SPC1    1       0       2101
+SLOAD   1       2102    1.0
+DAREA   1       2102    0       1.0
+CDAMP3  222201  2201    0       2202
+SPC     1       2202    0       0.0
+SLOAD   1       2202    1.0
+DAREA   1       2202    0       1.0
+PDAMP   2201    1.0
+CDAMP4  232301  1.0     0       2302
+SPC     1       2302    0       0.0
+SLOAD   1       2302    1.0
+DAREA   1       2302    0       1.0
+CVISC   242401  2401    2401    2402
+GRID    2401    0       0.0     0.0     0.0
+GRID    2402    0       1.0     0.0     0.0
+SPC     1       2402    23456   0.0
+SPC1    1       123456  2401
+FORCE1  1       2402    1.0     2401    2402
+DAREA   1       2402    1       1.0
+CVISC   242407  2401    2407    2408
+GRID    2407    0       2.0     90.0    45.0            123456
+GRID    2408    0       2.23606863.43495 45.0           123456
+FORCE   1       2408    2       1.0     0.0     0.0     1.0
+DAREA   1       2407    2       -1.0
+PVISC   2401    1.0     2.0
+CBUSH,  10210,  1001,   201,    202,    206,       ,       ,
+,       0.
+CBUSH   10211,  10010,  201,    205
+CBUSH   10212   1001    201     205     206
+PBUSH   1001    k       500000.         5000000.
+PBUSH   10010   k       5000.
+GRID    6401            0.0     0.0     0.0             6
+GRID    6402            1.      0.0     0.0             6
+GRID    6403            0.0     .5      0.0             6
+GRID    6404            .5      .5      0.0             6
+GRID    6405            1.      .5      0.0             6
+GRID    6406            0.0     1.      0.0             6
+GRID    6407            1.      1.      0.0             6
+CQUAD8  6401    6400    6401    6402    6405    6403                    +Q81
++Q81    6404
+CQUAD8  6402    6400    6403    6405    6407    6406    6404            +Q82
++Q82
+PSHELL  6400    1       .05     1
+SPC1    1       12345   6401    6402
+SPC1    1       12345   6401    6403    6406
+FORCE   1       6407            1.      1.
+FORCE   2       6407            1.              1.
+FORCE   3       6407            1.                      1.
+DAREA   1       6407    1       1.      6407    3       2.
+DESVAR  64      QUAD8   1.0     .01     100.
+DVPREL1 64      PSHELL  6400    4                                       +Q8
++Q8     64      0.05
+GRID    6411            0.0     0.0     0.0             6
+GRID    6412            .5      0.0     0.0             6
+GRID    6413            1.      0.0     0.0             6
+GRID    6414            0.0     .25     0.0             6
+GRID    6415            1.      .25     0.0             6
+GRID    6416            0.0     .5      0.0             6
+GRID    6417            .5      .5      0.0             6
+GRID    6418            1.      .5      0.0             6
+GRID    6419            0.0     .75     0.0             6
+GRID    6420            1.      .75     0.0             6
+GRID    6421            0.0     1.      0.0             6
+GRID    6422            .5      1.      0.0             6
+GRID    6423            1.      1.      0.0             6
+CQUAD8  6411    6400    6411    6413    6418    6416    6412    6415    +Q83
++Q83    6417    6414
+CQUAD8  6412    6400    6416    6418    6423    6421    6417    6420    +Q84
++Q84    6422    6419
+SPC1    1       12345   6411    6412    6413
+SPC1    1       12345   6411    6414    6416    6419    6421
+FORCE   1       6423            1.      1.
+FORCE   2       6423            1.              1.
+FORCE   3       6423            1.                      1.
+DAREA   1       6423    1       1.      6423    3       2.
+GRID    6701            0.0     0.0     0.0             456
+GRID    6702            1.      0.0     0.0             456
+GRID    6703            0.0     1.      0.0             456
+GRID    6704            1.      1.      0.0             456
+GRID    6705            0.0     0.0     1.              456
+GRID    6706            1.      0.0     1.              456
+GRID    6707            0.0     1.      1.              456
+GRID    6708            1.      1.      1.              456
+CHEXA   6701    6700    6701    6702    6704    6703    6705    6706    +H81
++H81    6708    6707
+SPC1    1       123     6701    6702    6703    6704
+SPC1    1       123     6701    6702    6705    6706
+SPC1    1       123     6701    6703    6705    6707
+FORCE   1       6708            1.      1.
+FORCE   2       6708            1.              1.
+FORCE   3       6708            1.                      1.
+DAREA   1       6708    1       1.      6708    3       2.
+GRID    6711            0.0     0.0     0.0             456
+GRID    6712            .5      0.0     0.0             456
+GRID    6713            1.      0.0     0.0             456
+GRID    6714            0.0     1.      0.0             456
+GRID    6715            .5      1.      0.0             456
+GRID    6716            1.      1.      0.0             456
+GRID    6717            0.0     0.0     1.              456
+GRID    6718            .5      0.0     1.              456
+GRID    6719            1.      0.0     1.              456
+GRID    6720            0.0     1.      1.              456
+GRID    6721            .5      1.      1.              456
+GRID    6722            1.      1.      1.              456
+CHEXA   6702    6700    6711    6713    6716    6714    6717    6719    +H82
++H82    6722    6720    6712            6715                            +H83
++H83                    6718            6721
+SPC1    1       123     6711    6714    6717    6720    6712    6713
+SPC1    1       123     6718    6719    6715    6716
+FORCE   1       6722            1.      1.
+FORCE   2       6722            1.              1.
+FORCE   3       6722            1.                      1.
+DAREA   1       6722    1       1.      6722    3       2.
+GRID    6731            0.0     0.0     0.0             456
+GRID    6732            .5      0.0     0.0             456
+GRID    6733            1.      0.0     0.0             456
+GRID    6734            0.0     .5      0.0             456
+GRID    6735            1.      .5      0.0             456
+GRID    6736            0.0     1.      0.0             456
+GRID    6737            .5      1.      0.0             456
+GRID    6738            1.      1.      0.0             456
+GRID    6739            0.0     0.0     .5              456
+GRID    6740            1.      0.0     .5              456
+GRID    6741            0.0     1.      .5              456
+GRID    6742            1.      1.      .5              456
+GRID    6743            0.0     0.0     1.              456
+GRID    6744            .5      0.0     1.              456
+GRID    6745            1.      0.0     1.              456
+GRID    6746            0.0     .5      1.              456
+GRID    6747            1.      .5      1.              456
+GRID    6748            0.0     1.      1.              456
+GRID    6749            .5      1.      1.              456
+GRID    6750            1.      1.      1.              456
+CHEXA   6703    6700    6731    6733    6738    6736    6743    6745    +H84
++H84    6750    6748    6732    6735    6737    6734    6739    6740    +H85
++H85    6742    6741    6744    6747    6749    6746
+PSOLID  6700    1
+SPC1    1       123     6731    6734    6736    6739    6741    6743    +S14
++S14    6746    6748
+SPC1    1       123     6731    6732    6733    6739    6740    6743    +S15
++S15    6744    6745
+SPC1    1       123     6731    6732    6733    6734    6735    6736    +S16
++S16    6737    6738
+FORCE   1       6750            1.      1.
+FORCE   2       6750            1.              1.
+FORCE   3       6750            1.                      1.
+DAREA   1       6750    1       1.      6750    3       2.
+GRID    6801            0.0     0.0     0.0             456
+GRID    6802            1.      0.0     0.0             456
+GRID    6803            0.0     1.      0.0             456
+GRID    6804            1.      1.      0.0             456
+GRID    6805            0.0     0.0     1.              456
+GRID    6806            1.      0.0     1.              456
+GRID    6807            0.0     1.      1.              456
+GRID    6808            1.      1.      1.              456
+CPENTA  6801    6800    6801    6802    6803    6805    6806    6807
+CPENTA  6802    6800    6802    6804    6803    6806    6808    6807
+PSOLID  6800    1
+SPC1    1       123     6801    6802    6805    6806
+SPC1    1       123     6801    6802    6803    6804
+SPC1    1       123     6801    6803    6805    6807
+FORCE   1       6808            1.      1.
+FORCE   2       6808            1.              1.
+FORCE   3       6808            1.                      1.
+DAREA   1       6808    1       1.      6808    3       2.
+GRID    6811            0.0     0.0     0.0             456
+GRID    6812            .5      0.0     0.0             456
+GRID    6813            1.      0.0     0.0             456
+GRID    6814            0.0     .5      0.0             456
+GRID    6815            .5      .5      0.0             456
+GRID    6816            1.      .5      0.0             456
+GRID    6817            0.0     1.      0.0             456
+GRID    6818            .5      1.      0.0             456
+GRID    6819            1.      1.      0.0             456
+GRID    6820            0.0     0.0     .5              456
+GRID    6821            .5      0.0     .5              456
+GRID    6822            1.      0.0     .5              456
+GRID    6823            0.0     .5      .5              456
+GRID    6824            .5      .5      .5              456
+GRID    6825            1.      .5      .5              456
+GRID    6826            0.0     1.      .5              456
+GRID    6827            .5      1.      .5              456
+GRID    6828            1.      1.      .5              456
+GRID    6829            0.0     0.0     1.              456
+GRID    6830            .5      0.0     1.              456
+GRID    6831            1.      0.0     1.              456
+GRID    6832            0.0     .5      1.              456
+GRID    6833            .5      .5      1.              456
+GRID    6834            1.      .5      1.              456
+GRID    6835            0.0     1.      1.              456
+GRID    6836            .5      1.      1.              456
+GRID    6837            1.      1.      1.              456
+CPENTA  6811    6800    6811    6813    6817    6829    6831    6835    +P681
++P681   6812    6815    6814    6820    6822    6826    6830    6833    +P682
++P682   6832
+CPENTA  6812    6800    6813    6819    6817    6831    6837    6835    +P683
++P683   6816    6818    6815    6822    6828    6826    6834    6836    +P684
++P684   6833
+PARAM   AUTOSPC YES
+SPC1    1       123     6811    6812    6813    6814    6815    6816    +S11
++S11    6817    6818    6819
+SPC1    1       123     6811    6814    6817    6820    6823    6826    +S12
++S12    6829    6832    6835
+SPC1    1       123     6811    6812    6813    6820    6821    6822    +S13
++S13    6829    6830    6831
+FORCE   1       6837            1.      1.
+FORCE   2       6837            1.              1.
+FORCE   3       6837            1.                      1.
+DAREA   1       6837    1       1.      6837    3       2.
+GRID    6901            0.0     0.0     0.0
+GRID    6902            1.      0.0     0.0
+GRID    6903            0.0     1.      0.0
+GRID    6904            1.      1.      0.0
+CBEND   6901            6901    6904    6903                    1
+CBEND   6902            6901    6904    6902                    1
+PBEND   6901    1       1.      .0833   .0833   .05                     +PD1
++PD1    -.5     -.5     -.5     .5      .5      .5      .5      -.5     +PD2
++PD2                                            0.
+PBEND   6902    1       1       .3285   .4845
+SPC1    1       123456  6901    6902    6903
+FORCE   1       6904            1.      1.
+FORCE   2       6904            1.              1.
+MOMENT  3       6904            1.      1.      1.
+FORCE   3       6904            1.                      1.
+DAREA   1       6904    1       1.      6904    3       2.
+DAREA   1       6904    4       1.
+GRID    7001            0.0     0.0     0.0
+GRID    7002            1.      0.0     0.0
+GRID    7003            0.0     1.      0.0
+GRID    7004            1.      1.      0.0
+CTRIAR  7001    7000    7001    7002    7004
+CTRIAR  7002    7000    7004    7003    7001
+PSHELL  7000    1       .05     1
+SPC1    1       12345   7001    7002
+SPC1    1       12345   7001    7003
+FORCE   1       7004            1.      1.
+FORCE   2       7004            1.              1.
+FORCE   3       7004            1.                      1.
+DAREA   1       7004    1       1.      7004    3       2.
+GRID    7401            0.0     0.0     0.0             6
+GRID    7402            1.      0.0     0.0             6
+GRID    7403            0.0     1.      0.0             6
+GRID    7404            1.      1.      0.0             6
+CTRIA3  7401    7400    7401    7402    7404
+CTRIA3  7402    7400    7404    7403    7401
+PSHELL  7400    1       .05     1
+SPC1    1       12345   7401    7403
+SPC1    1       12345   7401    7402
+FORCE   1       7404            1.      1.
+FORCE   2       7404            1.              1.
+FORCE   3       7404            1.                      1.
+DAREA   1       7404    1       1.      7404    3       2.
+DESVAR  74      TRIA3   1.0     .01     100.
+DVPREL1 74      PSHELL  7400    4                                       +T3
++T3     74      0.05
+GRID    7501            0.0     0.0     0.0             6
+GRID    7502            1.      0.0     0.0             6
+GRID    7503            0.0     1.      0.0             6
+GRID    7504            1.      1.      0.0             6
+CTRIA6  7501    7500    7501    7502    7504
+CTRIA6  7502    7500    7504    7503    7501
+PSHELL  7500    1       .05     1
+SPC1    1       12345   7501    7502
+SPC1    1       12345   7501    7503
+FORCE   1       7504            1.      1.
+FORCE   2       7504            1.              1.
+FORCE   3       7504            1.                      1.
+DAREA   1       7504    1       1.      7504    3       2.
+DESVAR  75      TRIA6   1.0     .01     100.
+DVPREL1 75      PSHELL  7500    4                                       +T6
++T6     75      0.05
+GRID    7511            0.0     0.0     0.0             6
+GRID    7512            .5      0.0     0.0             6
+GRID    7513            1.      0.0     0.0             6
+GRID    7514            0.0     .5      0.0             6
+GRID    7515            .5      .5      0.0             6
+GRID    7516            1.      .5      0.0             6
+GRID    7517            0.0     1.      0.0             6
+GRID    7518            .5      1.      0.0             6
+GRID    7519            1.      1.      0.0             6
+CTRIA6  7511    7500    7511    7513    7519    7512    7516    7515
+CTRIA6  7512    7500    7519    7517    7511    7518    7514    7515
+SPC1    1       12345   7511    7514    7517
+SPC1    1       12345   7511    7512    7513
+FORCE   1       7519            1.      1.
+FORCE   2       7519            1.              1.
+FORCE   3       7519            1.                      1.
+DAREA   1       7519    1       1.      7519    3       2.
+GRID    9901            0.0     0.0     0.0
+GRID    9902            1.      0.0     0.0
+GRID    9903            0.0     .5      0.0
+GRID    9904            1.      .5      0.0
+GRID    9905            0.0     1.      0.0
+GRID    9906            1.      1.      0.0
+CQUADR  9901    9900    9901    9902    9904    9903
+CQUADR  9902    9900    9903    9904    9906    9905
+PSHELL  9900    1       .05     1
+SPC1    1       12345   9901    9903    9905
+SPC1    1       12345   9901    9902
+FORCE   1       9906            1.      1.
+FORCE   2       9906            1.              1.
+FORCE   3       9906            1.                      1.
+DAREA   1       9906    1       1.      9906    3       2.
+PARAM,POST,-1
+ENDDATA

@@ -1,0 +1,77 @@
+$
+$ file - se1s101p.dat
+$
+$ all 7 s.e. brought in using begin super
+$ duplicate boundary grid ids
+$ each s.e. contains its own property description
+$
+SOL 101
+CEND
+TITLE = S.E. SAMPLE PROBLEM 1
+SUBTITLE = S.E. STATICS - RUN 1 - MULTIPLE LOADS
+DISP = ALL
+$
+$ default is super = all for V69
+$
+$ set defaults for all se - see section 5
+$
+PARAM,GRDPNT,0
+PARAM,WTMASS,.00259
+SUBCASE 101
+  LABEL = PRESSURE LOAD
+  $LOAD = 101
+SUBCASE 201
+  LABEL = 2# NORMAL LOADS
+  $LOAD = 201
+SUBCASE 301
+  LABEL = OPPOSING LOADS
+  $LOAD = 301
+$
+$include 'plot.dat'
+$
+BEGIN BULK
+$------------------------------------------------
+ECHOON
+PARAM,POST,-1
+$$ main bulk data section
+$
+include 'part0.inc'
+$
+$------------------------------------------------
+begin super=1
+ECHOON
+include 'load_part1.inc'
+include 'part1.inc'
+$
+$------------------------------------------------
+begin super=2
+ECHOON
+include 'load_part2.inc'
+include 'part2.inc'
+$
+$------------------------------------------------
+begin super=3
+ECHOON
+include 'part3.inc'
+$
+$------------------------------------------------
+begin super=4
+ECHOON
+include 'part4.inc'
+$
+$------------------------------------------------
+begin super=5
+ECHOON
+include 'part5.inc'
+$
+$------------------------------------------------
+begin super=6
+ECHOON
+include 'part6.inc'
+$
+$------------------------------------------------
+begin super=7
+ECHOON
+include 'part7.inc'
+$
+enddata

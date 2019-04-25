@@ -1,0 +1,59 @@
+ASSIGN MASTER='S:\beam_ra.MASTER', DELETE
+ASSIGN DBALL='S:\beam_ra.DBALL', DELETE
+$*
+SOL SEMODES
+$
+$INCLUDE 'pchdispa.alt'
+$*
+CEND
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*  CASE CONTROL        
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+TITLE    = Simple Beam Example
+SUBTITLE = Modes
+ECHO     = SORT  
+$*
+$* GLOBAL CASE
+$*
+SPC = 1 
+ELFOR(PUNCH)=ALL
+STRESS(PUNCH)=ALL
+METHOD = 1
+DISP = ALL
+OUTPUT(XYPLOT)
+XYPRINT DISP / 1(T2), 2(T2), 3(T2), 4(T2) 
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+$*  BULK DATA           
+$*
+$*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$*
+BEGIN BULK
+$*
+$*  PARAM CARDS
+$*
+PARAM   AUTOSPC YES 
+PARAM   GRDPNT         0
+PARAM   K6ROT   100.0000
+PARAM   OUGCORD GLOBAL
+PARAM   POST          -2
+PARAM   POSTEXT YES 
+$*
+EIGRL          1                      10                             MAX
+$*
+INCLUDE 'beam.blk'
+$*
+$*  RESTRAINT CARDS
+$*
+SPC            1       1  123456     0.0
+$*
+$*  USET, U2 CARDS
+$*
+USET    U2             1     123
+$*
+ENDDATA

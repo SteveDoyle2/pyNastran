@@ -1,0 +1,93 @@
+SOL 105
+CEND
+TITLE = MSC.Nastran job
+ECHO = NONE
+$ Direct Text Input for Global Case Control Data
+
+DISPLACEMENT(PLOT,PRINT,SORT1,REAL)=ALL
+SPCFORCES(PLOT,PRINT,SORT1,REAL)=ALL
+STRESS(PLOT,PRINT,SORT1,REAL,VONMISES,BILIN)=ALL
+STRAIN(PLOT,PRINT,SORT1,REAL,VONMISES,BILIN)=ALL
+OLOAD(PLOT,PRINT)=ALL
+MPCFORCES(PLOT,PRINT)=ALL
+GPFORCE(PLOT,PRINT)=ALL
+GPKE=ALL
+FORCE(PLOT,PRINT)=ALL
+LINE = 99999
+SUBCASE 1
+   SUBTITLE=Default1
+   SPC = 123456
+   LOAD = 10000
+SUBCASE 2
+   SUBTITLE=Default2
+   SPC = 123456
+   METHOD = 42
+
+BEGIN BULK
+
+$ this is a preload buckling case
+EIGB,42,INV,0.0,100.0,20
+$EIGB,42,SINV,1.,1000.,20
+SPCD,10000,13,1,-0.01
+PARAM    POST    -1
+PARAM    AUTOSPC NO
+PARAM   PRTMAXIM YES
+INCLUDE 'geom.inc'
+MAT1     1      2.9+7   1.1+7   .32     .283
+$ Nodes of the Entire Model
+
+GRID     13             .5      .5      3.
+$
+GRID     5              1.      1.      1.
+GRID     6               0.     1.      1.
+GRID     7               0.      0.     1.
+GRID     8              1.       0.     1.
+$
+GRID     12              0.      0.     2.
+GRID     10              0.     1.      2.
+GRID     9              1.      1.      2.
+GRID     11             1.       0.     2.
+$
+GRID     1               0.      0.      0.
+GRID     4               0.     1.       0.
+GRID     3              1.      1.       0.
+GRID     2              1.       0.      0.
+$
+GRID     14              0.      0.     -1.
+GRID     15              0.     1.      -1.
+GRID     16             1.      1.      -1.
+GRID     17             1.       0.     -1.
+$
+GRID     18              0.      0.     -2.
+GRID     19              0.     1.      -2.
+GRID     20             1.      1.      -2.
+GRID     21             1.       0.     -2.
+$
+GRID     22              0.      0.     -3.
+GRID     23              0.     1.      -3.
+GRID     24             1.      1.      -3.
+GRID     25             1.       0.     -3.
+
+CELAS1,22,8,21,1,25,1
+CELAS2,23,10.0,21,1,25,1
+$CELAS3,24,8,100,200
+$CELAS4,25,10.0,25,1
+PELAS,8,10.
+
+$CQUAD4   17      7      17      16       20      21
+CSHEAR,28,9,17,16,20,21
+PSHEAR,9,1,0.1
+
+CDAMP2,26,10.0,20,1,24,1
+CONROD,27,18,22, 1, 1.0, 2.0
+
+$ Loads for Load Case : Default
+LOAD     123458 1.      1.       10000
+$ Displacement Constraints of Load Set : 123456
+SPC1     123456  123456  18      19      20      21
+SPC1     123456     456  5       thru    13
+$ Nodal Forces of Load Set : 10000
+$ORCE    10000   13      0      10000.   0.      0.     1.
+FORCE    10000   13      0      .00001   0.      0.     1.
+$ Referenced Coordinate Frames
+ENDDATA 58e050da

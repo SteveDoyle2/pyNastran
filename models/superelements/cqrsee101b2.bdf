@@ -1,0 +1,113 @@
+$ per NX 12/tpl
+$
+SOL 101
+TIME 10
+CEND
+STRESS = ALL
+DISP = ALL
+LOAD = 100
+SPC = 200
+TITLE = PURE TRANSLATION OF 2 SUPER ELEMENTS                   SEE101B2
+SUPER = ALL
+param,usetprt,2
+OUTPUT(PLOT)
+  CSCALE  1.3
+  PLOTTER NAST
+  PAPER SIZE 20. X 20.
+  SET 1 ALL
+  MAXI DEFO 5.0
+  AXES Z , X , Y
+  VIEW 0.0, 0.0, 0.0
+ SEPLOT 0
+  FIND SCALE ORIGIN 1 SET 1
+  PLOT   SET 1 LABEL BOTH
+ SEPLOT 1
+  FIND SCALE ORIGIN 1 SET 1
+  PLOT   SET 1 LABEL BOTH
+ SEPLOT 2
+  FIND SCALE ORIGIN 1 SET 1
+  PLOT   SET 1 LABEL BOTH
+ SEPLOT 3
+  FIND SCALE ORIGIN 1 SET 1
+  PLOT   SET 1 LABEL BOTH
+BEGIN BULK
+PARAM	AUTOSPC	YES
+$
+GRID 	1001		4.	1.	0.
+GRID	1002		2.	1.	0.
+GRID	1003		2.	0.	0.
+GRID	1101		8.	1.	0.
+GRID	1102		6.	1.	0.
+GRID	1103		6.	-1.	0.
+$
+SELOC 	2	22	21	24	1001	1002	1003
+SELOC	3	42	41	44	1101	1102	1103
+begin bulk super = 1
+GRID	1		-2.	1.	0.
+GRID	2		-1.	1.	0.
+GRID	3		0.	1.	0.
+GRID	4		1.0	1.0	0.
+GRID	5		2.	1.	0.
+GRID	6		2.	0.	0.
+GRID	7		2.	-1.	0.
+GRID	8		1.	-1.	0.
+GRID	9		0.	-1.	0.
+GRID	10		-1.	-1.	0.
+GRID	11		-2.	-1.	0.
+GRID	12		-2.	0.	0.
+GRID	13		0.0	0.0	0.0
+$
+$	2	3	4	5	6	7	8	9	10
+CQUAD8	1	1	1	3	9	11	2	13
+	10	12
+CQUAD8	2	1	3	5	7	9	4	6
+	8	13
+$
+SPC1    200     123     7
+MAT1    101     1.013e7         0.33
+PSHELL  1       101     0.4     101             101
+$________________________________________________________________________
+$
+begin bulk super = 2
+$
+GRID	21		-2.	5.	0.
+GRID	22		0.	5.	0.
+GRID	23		2.	5.	0.
+GRID	24		-2.	4.	0.
+GRID	25		0.	4.	0.
+GRID	26		-2.	3.	0.
+GRID	27		0.	3.	0.
+GRID	28		2.	3.	0.
+$
+CTRIAR	10	1	24	22	21
+CTRIAR	11	1	24	25	22
+CTRIAR	12	1	26	25	24
+CTRIAR	13	1	26	27	25
+CTRIAR	14	1	27	28	25
+CTRIAR	15	1	25	28	23
+CTRIAR	16	1	25	23	22
+$
+$
+FORCE   100     22              200.    0.      -1.     0.
+MAT1    101     1.013e7         0.33
+PSHELL  1       101     0.4     101             101
+SPC1	200	456	28	26
+$________________________________________________________________________
+$
+begin bulk super = 3
+$
+GRID	41		-2.	-3.	0.
+GRID	42		0.	-3.	0.
+GRID	43		2.	-3.	0.
+GRID	44		-2.	-5.	0.
+GRID	45		0.	-5.	0.
+GRID	46		2.	-5.	0.
+$
+CQUADR	101	1	44	45	42	41
+CQUADR	102	1	45	46	43	42
+$
+SPC1	200	123	44
+$
+MAT1	101	1.013e7		0.33
+PSHELL	1	101	0.4	101		101
+ENDDATA

@@ -1,0 +1,48 @@
+$EXECUTIVE CONTROL DECK
+SOL 101
+CEND
+$CASE CONTROL DECK
+BEGIN BULK
+$PARAMS
+PARAM       POST      -1
+$ELEMENTS_WITH_PROPERTIES
+$UNASSOCIATED_PROPERTIES
+PBEAM*   4570049         4570010        .12             2.56-4          *    HRY
+*    HRY.005625                         8.889-4         6.4444-7        *    HRZ
+*    HRZ-.04            -.75            .04             -.75            *    HSA
+*    HSA.04             .75             -.04            .75             *    HSB
+*    HSB YES            1.              .12             2.56-4          *    HSC
+*    HSC.005625                         8.889-4         6.4444-7        *    HSD
+*    HSD-.04            -.75            .04             -.75            *    HSE
+*    HSE.04             .75             -.04            .75             *    HSF
+*    HSF.853433         .849842                                         *    HSG
+*    HSG
+$MATERIALS
+$ Pset: "pbeam.4570049" will be imported as: "pbeam.4570049"
+MAT1,4570010,1.0,2.0,3.0
+
+$ Material Record : mat8.4700007
+$ Description of Material :
+MAT8*    4700007        1675.47         1675.47         .33             *   LHIG
+*   LHIG28.2            210000.         78000.                          *   LHIH
+*   LHIH1.32-5          1.32-5          75.             1.943           *   LHII
+*   LHII1.943           1.943           1.943           3.35
+$ Material Record : mat8.4700010
+$ Description of Material :
+MAT8*    4700010        2.83+6          1.14+6          .55             *   LHIJ
+*   LHIJ717000.         285194.         285194.                         *   LHIK
+*   LHIK9.17-6          2.606-5         70.                             *   LHIL
+*   LHIL
+$ Material Record : mat8.4750000
+$ Description of Material :
+MAT8*    4750000        2.1955+7        1.34+6          .329            *   LHIM
+*   LHIM390000.         710000.         422000.                         *   LHIN
+*   LHIN6.-7            1.94-5          70.             76634.          *   LHIO
+*   LHIO45341.          3990.           2411.           1887.
+$ Material Record : mat8.4750001
+$ Description of Material :
+MAT8*    4750001        18.386          18.386          .99             *   LHIP
+*   LHIP.3092           20533.3         31966.2                         *   LHIQ
+*   LHIQ1.28-5          1.28-5          70.             1000.           *   LHIR
+*   LHIR1000.           1000.           1000.           1000.
+ENDDATA

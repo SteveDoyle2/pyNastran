@@ -1,0 +1,108 @@
+$ DEC/CMS REPLACEMENT HISTORY, Element D07D2.DAT
+$ *1    15-JUN-1990 15:43:57 CMSMGR "66B PLUS/G 66B/ Initial installation of DEMO test problems"
+$ DEC/CMS REPLACEMENT HISTORY, Element D07D2.DAT
+NASTRAN SYSTEM(7)=-1
+ID MSC, D07D2    $
+$ Modified 1-Apr-2003 v2003 rak
+TIME  5
+APP DISP
+SOL 28
+$SOL 7,0
+$COMPILE DMAP=SOL28,SOUIN=MSCSOU,NOLIST,NOREF
+$RFALTER RF28D78
+$ READ 9 $ RF28D78 $ THIS FORMAT OBSOLETE IN V66
+CEND
+TITLE = SAMPLE HYDROELASTIC PROBLEM.                           D07D2
+SUBTITLE = EIGENVALUE ANALYSIS WITH FLEXIBLE BOUNDARY.
+AXISYM = FLUID
+SPC = 3
+CMETHOD = 1
+OUTPUT
+PRESS(PLOT,PRINT)=ALL
+HARMONICS = ALL
+ELFORCE(PLOT,PRINT) = ALL
+STRESS(PLOT,PRINT) = ALL
+STRAIN(PLOT,PRINT) = ALL
+BEGIN BULK
+$ Set k6rot=0.0 to get pre V2003 results
+param,k6rot,0.0
+param,post,-1
+$	cid	g	drho	db	nosym	f
+AXIF    2       32.2    0.03            NO                              +AX
+$	n1	n2	...
++AX     1       3
+CORD2C  2               0.      0.      0.      0.      0.      1.0     +CO
++CO     1.0     0.      0.
+$
+$ requires an AXIF card
+$	ringfl	xa1	xa2	xa3	ringfl	xb1	xb2	xb3
+RINGFL  1       4.0             10.0    2       8.0             10.0
+RINGFL  7       4.0             5.0     8       8.0             5.0
+RINGFL  13      4.0             0.0
+$
+$ requires an AXIF card
+$ 	eid	ringfl	ringfl	ringfl	ringfl	rho	b
+CFLUID2 101     1       7
+CFLUID2 102     7       13
+CFLUID3 103     7       8       13
+CFLUID4 104     1       2       7       8
+$
+$ requires an AXIF card
+$ FSLIST: free surface list
+$ ringfl can be AXIS in the first or last field...
+$ 	rho	ringfl	ringfl	ringfl
+FSLIST  0.03    AXIS    1       2
+BDYLIST         2       8       13
+$
+$ requires an AXIF card
+$	nid			phi		cd	ps	ringfl_id
+GRIDB   3                       0.0             2       4       2
+GRIDB   4                       30.0            2       4       2
+GRIDB   5                       60.0            2       4       2
+GRIDB   6                       90.0            2       4       2
+GRIDB   9                       0.              2               8
+GRIDB   10                      30.             2               8
+GRIDB   11                      60.             2               8
+GRIDB   12                      90.             2               8
+GRIDB   14                      0.              2               13
+GRIDB   15                      30.             2               13
+GRIDB   16                      60.             2               13
+GRIDB   17                      90.             2               13
+$
+$	ringfl		pres_pt	phi1	pres_pt	phi2
+PRESPT  7               27      30.     28      60.
+PRESPT  8               30      30.     31      60.
+PRESPT  13              33      30.     34      60.
+$
+$ requires an AXIF card
+$	ringfl		free_pt	phi1	free_pt	phi2	free_pt	phi3
+FREEPT  1               40      15.     41      30.     42      45.
+FREEPT  1               43      60.     44      75.
+FREEPT  2               45      15.     46      30.     47      45.
+FREEPT  2               48      60.     49      75.
+$
+$GRIDB   3                       0.0             2       4       2
+$GRIDB   9                       0.              2               8
+$GRIDB   10                      30.             2               8
+$GRIDB   4                       30.0            2       4       2
+CQUAD4  10      11      3       9       10      4
+CQUAD4  11      11      4       10      11      5
+CQUAD4  12      11      5       11      12      6
+CQUAD4  13      11      9       14      15      10
+CQUAD4  14      11      10      15      16      11
+CQUAD4  15      11      11      16      17      12
+PSHELL  11      12      0.5     12
+MAT1    12      10.6+6          0.3     0.05
+$SPC1    3       246     3       9       14
+$SPC1    3       135     6       12      17
+$SPC1    3       135     14      15      16
+$
+$ only one FLSYM card allowed
+$ m: number of symmetric sections around the circumference; must be even
+$ S: symmetric
+$ A: asymmetric
+$	m	s1	s2
+FLSYM   4       S       A
+EIGC    1       INV     MAX                                             +EI
++EI     0.      0.      0.      5.      3.      2       2
+ENDDATA

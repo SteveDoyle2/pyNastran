@@ -1,0 +1,430 @@
+1
+ 
+ 
+ 
+ 
+                     THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET OF MSC.SOFTWARE CORPORATION.  THE RECEIPT OR    
+                  POSSESSION OF THIS PROGRAM DOES NOT CONVEY ANY RIGHTS TO REPRODUCE OR DISCLOSE ITS CONTENTS, OR TO 
+                 MANUFACTURE, USE, OR SELL ANYTHING HEREIN, IN WHOLE OR IN PART, WITHOUT THE SPECIFIC WRITTEN CONSENT
+                                                    OF MSC.SOFTWARE CORPORATION.                                     
+ 
+ 
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *           MSC.SOFTWARE          * *
+                                              * *               CORP              * *
+                                              * *                                 * *
+                                              * *      M S C . N a s t r a n      * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *        Version 2005.5.2         * *
+                                              * *             2005r3b             * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *          JUN  6, 2006           * *
+                                              * *                                 * *
+                                              * *       x86-64 Based System       * *
+                                              * *MODEL Intel /1596.000000MHz/1596 * *
+                                              * *      Linux 2.6.18-164.el5       * *
+                                              * *       Compiled for x8664        * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+1News file - (2/7/06):
+  
+ Thank you for choosing MSC.Nastran, the industry standard in FEA.
+  
+                    Welcome to MSC.Nastran 2005 r3.
+  
+ You can find version-specific online documentation, and online technical
+ support at:
+  
+   http://www.mscsoftware.com/support/prod_support/nastran/
+  
+ Also at the technical support location is a searchable list of technical
+ application notes and the current error/avoidance list. Please don't hesitate
+ to contact your nearest technical support representative if you require
+ assistance.
+  
+   http://www.mscsoftware.com/about/locate/
+  
+ MSC.Nastran 2005 r3 provides new features and enhancements in the areas of
+ high performance computing, nonlinear analysis, assembly modeling,
+ optimization, rotor dynamics and aeroelasticity. These include:
+  
+ Nonlinear
+ - MSC.Nastran Implicit Nonlinear (SOL 600) - More robust data exchange,
+   faster contact (three to six-fold CPU time improvements), auto SPC and
+   MSET, inertia relief, an improved out-of-core solver, expanded results
+   support, automated brake squeal computations, improved fixed time stepping,
+   and improved user subroutine support.
+  
+ Numeric Enhancements
+ - A new iterative solution for static analysis. Also, significant performance
+   improvements along with reduction in I/O requirements have been achieved in
+   the ACMS solution.
+  
+ Elements
+ - Arbitrary Beam Cross-Section. Enhancements include a cross-section outline
+   display, stress data recovery and design optimization. The profiles can now
+   be optimized using SOL 200. Stress recovery includes both torsion and shear
+   terms.
+ - Line Interface Elements Connects dissimilar meshes along edges. A set of
+   MPC equations are internally generated to enforce the compatibility of
+   displacements and rotations across the interface.
+ - Three-node Beam Element. A general spatial three-node beam element for
+   linear static, modal, dynamic, and buckling analyses.
+ - NSML1 - Non-Structural Lumped Mass Interface Enhancement. The NSML1 entry
+   single element SET specification restriction has been removed. Multiple
+   element SETs can now be specified directly on the entry.
+  
+ Connector Elements
+ - CWSEAM Element - A new seam element to connect surface patches. Extends the
+1  existing CWELD and CFAST connector elements.
+ - RBE2GS Element - This new element generates internal RBE2 element connecting
+   a grid point pair closest to a user-defined search grid point. You can
+   exclude optional grids within search radius.
+  
+ Dynamics and Superelements
+ - Rotor Dynamics - A new general displacement and speed dependent nonlinear
+   element for rotor bearings and a nonlinear squeeze film damper element.
+   Also, support for the gyroscopic terms in aero solution sequences,
+   non-linear harmonic response, and an easier Campbell diagram to identify
+   rotor modes and track across subcases.
+ - External Superelement EXTSEOUT feature. Ability to: (a) specify suffixes
+   for DMIG matrices resulting from the use of the DMIGPCH option, (b) get
+   output for boundary points and PLOTEL points of an external SE in the
+   assembly run regardless of output requests in the external SE creation run,
+   and (c) have control over the Q-set or generalized degrees of freedom (DOFs)
+   of an external SE in the assembly run.
+  
+ Optimization
+ - MSC.Nastran Topology Optimization - This release supports manufacturing
+   constraints including casting (draw direction), extruding, and symmetry.
+  
+ Aeroelasticity
+ - Monitor Points - MONPNT2 selects a specific element response for output.
+   MONPNT3 outputs an integrated load on a structural subcomponent. MONDSP1
+   provides averaged displacement components. All of these are available in
+   SOLs 101 and 144, while SOL 146 supports MONPNT1 and MONDSP1.
+ - Export and Import of Loads - The EXPORTLD Case Control command supports
+   creation of a datablock that contains the external load of a user specified
+   set of grids. Alternatively, export a free-body load based on the grid point
+   forces of a user specified subcomponent. Loads can be imported into a
+   subsequent analysis via dblocate commands, and included in the external
+   load specification.
+1                                                                            AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN OP2NEW=0 $ MSC.NASTRAN .LCL FILE                                        
+     NASTRAN BUFFSIZE=65537 $(/SOFT/MSC/2005R3B/CONF/NAST20055RC[1])                 
+     NASTRAN SYSTEM(20)=0 $(/SOFT/MSC/2005R3B/CONF/NAST20055RC[2])                   
+     NASTRAN SYSTEM(319)=1 $(/SOFT/MSC/2005R3B/CONF/NAST20055RC[3])                  
+     NASTRAN SYSTEM(151)=1 $(/SOFT/MSC/2005R3B/CONF/NAST20055RC[4])                  
+1                                                                            AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     SOL 101                                                                                 
+     TIME 100                                                                                
+     $INCLUDE ./dmap_charge                                                                  
+     ECHOOFF $                                                                               
+     (SEE NASTRAN SOURCE PROGRAM COMPILATION FOR LISTING OF DMAP SEQUENCE)
+     END                                                                                     
+     (SEE NASTRAN SOURCE PROGRAM COMPILATION FOR LISTING OF DMAP SEQUENCE)
+     END                                                                                     
+     (SEE NASTRAN SOURCE PROGRAM COMPILATION FOR LISTING OF DMAP SEQUENCE)
+     END                                                                                     
+     $END OF INCLUDE FILE ./dmap_charge                                                      
+     CEND                                                                                    
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      TITLE = MODELE_PETITE_ZONE                                                              
+                  2      ECHO = NONE                                                                             
+                  3      $                                                                                       
+                  4         SPC = 2                                                                              
+                  5         LOAD = 2                                                                             
+                  6         STRESS(PLOT)=ALL                                                                     
+                  7         STRAIN(PLOT)=ALL                                                                     
+                  8      $                                                                                       
+                  9      $---------------------------------                                                      
+                 10      $ DEFINITION DES CAS DE CHARGEMENT                                                      
+                 11      $---------------------------------                                                      
+                 12      $                                                                                       
+                 13      SUBCASE=1                                                                               
+                 14      SUBTITLE=CHARGEMENT                                                                     
+                 15              LABEL=CHARGEMENT                                                                
+                 16              LOAD=1                                                                          
+                 17              SPC=2                                                                           
+                 18              MPC=101106                                                                      
+                 19      $                                                                                       
+                 20      BEGIN BULK                                                                              
+0                             INPUT BULK DATA ENTRY COUNT =     252
+0                       TOTAL COUNT=       161
+ *** USER WARNING MESSAGE 2251 (IFS1P)
+     ONE OR MORE MAT1 ENTRIES HAVE UNREASONABLE OR INCONSISTENT VALUES OF E,G OR NU.  ID OF FIRST ONE = 20000010
+     User information:
+     Potentially bad elastic constants have been defined on one or more
+     MAT1 entries.  Checks are made for (a) any of E << 0.0, G << 0.0,
+     (unless two of the three data fields are blank).  Verify that the
+     values defined are meaningful for the designated application.
+ *** USER WARNING MESSAGE 2251 (IFS1P)
+     THE NUMBER OF MAT1 ENTRIES HAVING UNREASONABLE OR INCONSISTENT VALUES FOR E,G AND/OR NU IS 2
+     ID OF LAST ONE = 20076500
+     User information:
+     See Message 2251.0.  Check all MAT1 entries in the range indicated
+     for the ones with potentially bad elastic constants.  These values
+     should be verified for application suitability.
+ *** USER WARNING MESSAGE 4124 (IFS3P)
+     THE SPCADD OR MPCADD UNION CONSISTS OF A SINGLE SET.
+     User information:
+     Only one SET was on an SPCADD or MPCADD entry.  There are no sets
+     to add together.
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =       15
+ 
+                                   NUMBER OF CBEAM    ELEMENTS =        4
+                                   NUMBER OF CQUAD4   ELEMENTS =        8
+                                   NUMBER OF CROD     ELEMENTS =       26
+ 
+ *** USER INFORMATION MESSAGE 4109 (OUTPX2)
+     THE LABEL IS V2005R3B FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          7 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          8 RECORDS.)
+                (TOTAL DATA WRITTEN FOR LABEL =         17 WORDS.)
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK CASECC   WRITTEN ON FORTRAN UNIT 12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR CASECC, TRL =
+                    101                 1                 0               600                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS CASECC  
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         600 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         624 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK PVT0     WRITTEN ON FORTRAN UNIT 12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR PVT, TRL =
+                    101                71                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS PVT0    
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          71 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          95 WORDS.)
+ ^^^GEOM1 DATABLOCK FROM MAKEOLD IS OK   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM1    WRITTEN ON FORTRAN UNIT 12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR GEOM168, TRL =
+                    101                 0              2048                 8                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM1   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         123 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         174 WORDS.)
+ ^^^GEOM3 DATABLOCK FROM MAKEOLD IS OK   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM3    WRITTEN ON FORTRAN UNIT 12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR GEOM301, TRL =
+                    101                 0                 0                64                 8                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM3   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          24 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          68 WORDS.)
+ ^^^GEOM4 DATABLOCK FROM MAKEOLD IS OK   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM4    WRITTEN ON FORTRAN UNIT 12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR GEOM4705, TRL =
+                    101                 0                 0                 0                96                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM4   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          11 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          25 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          52 WORDS.)
+ *** USER WARNING MESSAGE 2047 (GP4)
+     UNDEFINED MULTI-POINT CONSTRAINT SET   101106
+     User information:
+     A multipoint constraint set selected in the Case Control could not
+     be found in either an MPC or MPCADD entry or a set referenced on an
+     MPCADD entry could not be found on an MPC entry.
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R
+0                                                     REFERENCE POINT =        0
+                                                                M O
+                      *  2.828209E+00  0.000000E+00  0.000000E+00  0.000000E+00 -4.859438E+03 -4.429639E+03 *
+                      *  0.000000E+00  2.828209E+00 -3.295975E-17  4.859438E+03  1.599866E-13  1.372813E+04 *
+                      *  0.000000E+00 -3.295975E-17  2.828209E+00  4.429639E+03 -1.372813E+04 -1.599866E-13 *
+                      *  0.000000E+00  4.859438E+03  4.429639E+03  1.544468E+07 -2.150147E+07  2.358771E+07 *
+                      * -4.859438E+03  1.599866E-13 -1.372813E+04 -2.150147E+07  7.510039E+07  7.557858E+06 *
+                      * -4.429639E+03  1.372813E+04 -1.599866E-13  2.358771E+07  7.557858E+06  7.361698E+07 *
+                                                                 S
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  1.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  0.000000E+00  1.000000E+00 *
+                               DIRECTION
+                          MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
+                                  X            2.828209E+00      0.000000E+00  1.566234E+03 -1.718203E+03
+                                  Y            2.828209E+00      4.854000E+03  5.656816E-14 -1.718203E+03
+                                  Z            2.828209E+00      4.854000E+03  1.566234E+03 -5.656816E-14
+                                                                I(S)
+                                           *  1.573267E+05  3.725290E-09  3.725290E-09 *
+                                           *  3.725290E-09  1.145592E+05  5.316019E+04 *
+                                           *  3.725290E-09  5.316019E+04  4.278971E+04 *
+                                                                I(Q)
+                                           *  1.573267E+05                             *
+                                           *                1.428128E+05               *
+                                           *                              1.453616E+04 *
+                                                                 Q
+                                           *  1.000000E+00  0.000000E+00  0.000000E+00 *
+                                           *  0.000000E+00  8.830317E-01  4.693132E-01 *
+                                           *  0.000000E+00 -4.693132E-01  8.830317E-01 *
+
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE     6
+                                                                                                                                    
+0                                                                                                                                   
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE     7
+                                                                                                                                    
+0                                                                                                                                   
+0 RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----       0.000000E+00     ----       0.000000E+00     ----       0.000000E+00                             
+               FZ       ----          ----      -3.000000E+03 -4.658140E+06  1.456200E+07     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00  0.000000E+00 -3.000000E+03 -4.658140E+06  1.456200E+07  0.000000E+00
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    3.388449E+01
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE     8
+                                                                                                                                    
+0    CHARGEMENT                                                                                              SUBCASE=1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+    User information:
+    One line of output is printed for each static loading condition.
+    Small values of EPSILON are due to accumulated round-off error. Large
+    values of EPSILON indicate possible singularities in the stiffness
+    matrix.  See Section 9.5.1.
+                1          5.4488587E-17          1.4028300E+01
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE     9
+                                                                                                                                    
+0                                                                                                                                   
+0                                                  MAXIMUM  DISPLACEMENTS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   0.0000000E+00  1.0219319E-02  1.1260033E-02  6.2087202E-05  0.0000000E+00  0.0000000E+00
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+0                                                  MAXIMUM  APPLIED LOADS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   0.0000000E+00  0.0000000E+00  1.0000000E+03  0.0000000E+00  0.0000000E+00  0.0000000E+00
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE    11
+                                                                                                                                    
+0                                                                                                                                   
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE    12
+                                                                                                                                    
+0                                                                                                                                   
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE    13
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK ASSIG    WRITTEN ON FORTRAN UNIT 12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OES1M, TRL =
+                    101                 1                 1                 1                 1                 1                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS ASSIG   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         310 WORDS.)
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE    14
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK ASEPS    WRITTEN ON FORTRAN UNIT 12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OSTR1M, TRL =
+                    101                 1                 1                 1                 1                 1                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS ASEPS   
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         146 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =         310 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OES1X1   WRITTEN ON FORTRAN UNIT 12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OES1X1, TRL =
+                    101                63                 8                23                16                 0                 2
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OES1X1  
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         444 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          40 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1197 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK OSTR1X   WRITTEN ON FORTRAN UNIT 12 IN BINARY (LTLEND) FORMAT USING NDDL DESCRIPTION FOR OSTR1X, TRL =
+                    101                63                 8                23                16                 0                 2
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS OSTR1X  
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =      131074 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =         444 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          40 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1197 WORDS.)
+ *** USER INFORMATION MESSAGE 4110 (OUTPX2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1    MODELE_PETITE_ZONE                                                      AUGUST  23, 2016  MSC.NASTRAN  6/ 6/06   PAGE    15
+                                                                                                                                    
+0                                                                                                                                   
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     30
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1            0           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+ 
+ No PARAM values were set in the Control File.
+ 
+1                                        * * * END OF JOB * * *
+ 
+ 

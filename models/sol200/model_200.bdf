@@ -1,0 +1,80 @@
+SOL 200
+CEND
+LINE = 500000
+DISP(PLOT)=ALL
+subcase 1
+    analysis = STATICS
+    SPC = 1
+    LOAD = 10
+    DESOBJ(MIN) = 100
+BEGIN BULK
+PARAM, POST, -1
+PARAM, GRDPNT, 0
+GRID           1         .093728      0.      0.
+GRID           2        .5351075  1.2275.0643305
+GRID           3        .8927557  2.2275.1167383
+GRID           4        1.253594  3.2275.1691461
+GRID           5         1.61353    4.24 .222209
+SPC1           1  123456       1
+CBEAM          1       1       1       2      0.      0.      1.
+PBEAM          1       171156.29  311.55 684.183         11.5833.7993671
++
+              NO      1.80727.37  256.01562.1705        9.517492.7486528
+CBEAM          2       2       2       3      0.      0.      1.
+PBEAM          2       180727.37  256.01562.1705        9.517492.7486528
++
+              NO      1.92898.52   208.7458.2828        7.757458.7073376
+CBEAM          3       3       3       4      0.      0.      1.
+PBEAM          3       192898.52   208.7458.2828        7.757458.7073376
++
+              NO      1.99817.51  186.14408.7442        6.918595.6660225
+CBEAM          4       4       4       5      0.      0.      1.
+PBEAM          4       199817.51  186.14408.7442        6.918595.6660225
++
+              NO      1. 126457.  131.43288.6337        4.884768.6241909
+CONM2         10       5           .0666.8763962.1567351.8888889
+              0.      0.      0.      0.      0.      0.
+MAT1           1      1.      1.
+GRAV          10            9.81      0.      0.     -1.
+DTABLE        y1      0.      y2  1.2275      y3  2.2275      y4  3.2275
+              y5    4.24
+DESVAR      1000       a      0.  -1.+20   1.+20
+DESVAR      2000       b  -.3822  -1.+20   1.+20
+DESVAR      3000       c  1.6906   -1.+8    1.+8
+DEQATN         1QUAD(a,b,c,x) = a*x**2 + b*x + c
+DVPREL2       11   PBEAM       1   I1(A)                       1
+          DESVAR    1000    2000    3000
+          DTABLE      y1
+DVPREL2       12   PBEAM       1   I1(B)                       1
+          DESVAR    1000    2000    3000
+          DTABLE      y2
+DVPREL2       21   PBEAM       2   I1(A)                       1
+          DESVAR    1000    2000    3000
+          DTABLE      y2
+DVPREL2       22   PBEAM       2   I1(B)                       1
+          DESVAR    1000    2000    3000
+          DTABLE      y3
+DVPREL2       31   PBEAM       3   I1(A)                       1
+          DESVAR    1000    2000    3000
+          DTABLE      y3
+DVPREL2       32   PBEAM       3   I1(B)                       1
+          DESVAR    1000    2000    3000
+          DTABLE      y4
+DVPREL2       41   PBEAM       4   I1(A)                       1
+          DESVAR    1000    2000    3000
+          DTABLE      y4
+DVPREL2       42   PBEAM       4   I1(B)                       1
+          DESVAR    1000    2000    3000
+          DTABLE      y5
+DEQATN       100OBJ(X1,X2,X3,X4,X5) = RSS(X1+0.000, X2+0.103, X3+0.312,
+        X4+0.565, X5+0.910)
+DRESP1       101   disp1    DISP                       3               1
+DRESP1       102   disp2    DISP                       3               2
+DRESP1       103   disp3    DISP                       3               3
+DRESP1       104   disp4    DISP                       3               4
+DRESP1       105   disp5    DISP                       3               5
+DRESP2       100     OBJ     100
+          DRESP1     101     102     103     104     105
+DOPTPRM    CONV1  .00001  DELOBJ .000001  DESMAX     100      P1       1
+              P2      13
+ENDDATA 

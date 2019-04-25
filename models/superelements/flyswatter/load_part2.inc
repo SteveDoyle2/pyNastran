@@ -1,0 +1,14 @@
+$ file - loadprt2.dat
+$ loads on s.e. 2
+$
+$ LOAD CASE 1 - PRESSURE LOAD
+$
+PLOAD2,101,-1.,43,THRU,67
+$
+$ LOAD CASE 2 - 2 POINT LOADS AT CORNERS
+$
+FORCE,201,104,,2.,0.,0.,1.
+$
+$ LOAD CASE 3 - OPPOSING POINT LOADS AT CORNERS
+$
+FORCE,301,104,,2.,0.,0.,-1.

@@ -1,0 +1,55 @@
+$*
+$*  GRID CARDS
+$*
+GRID           1       0     0.0     0.0     0.0       0
+GRID           2       0 1.00000     0.0     0.0       0
+GRID           3       0 2.00000     0.0     0.0       0
+GRID           4       0 3.00000     0.0     0.0       0
+GRID           5       0 4.00000     0.0     0.0       0
+GRID           6       0 5.00000     0.0     0.0       0
+GRID           7       0 6.00000     0.0     0.0       0
+GRID           8       0 7.00000     0.0     0.0       0
+GRID           9       0 8.00000     0.0     0.0       0
+GRID          10       0 9.00000     0.0     0.0       0
+GRID          11       0 10.0000     0.0     0.0       0
+GRID          12       0 5.49607     0.0     0.0       0
+$*
+$*  ELEMENT CARDS
+$*
+CBAR           1       1       1       2     0.01.000000     0.0
+CBAR           2       1       2       3     0.01.000000     0.0
+CBAR           3       1       3       4     0.01.000000     0.0
+CBAR           4       1       4       5     0.01.000000     0.0
+CBAR           5       1       5       6     0.01.000000     0.0
+CBAR           6       1       6       7     0.01.000000     0.0
+CBAR           7       1       7       8     0.01.000000     0.0
+CBAR           8       1       8       9     0.01.000000     0.0
+CBAR           9       1       9      10     0.01.000000     0.0
+CBEAM         10       3      10      11     0.01.000000     0.0
+$*  NEXT ELEMENT CREATED FROM
+$*  I-DEAS property: 2  name: CONM2   2
+CONM2         21      11       02.5900-3     0.0     0.0     0.0        + 
++       2.5900-3     0.02.5900-3     0.0     0.02.5900-3
+$*
+$*  MATERIAL CARDS
+$*
+$*
+$*  I-DEAS Material: 2  name: MAT1  1
+MAT1           23.0000+71.1628+7.29000007.4851-4     0.0             0.0
+$*
+$*  PROPERTY CARDS
+$*
+$*
+$*  I-DEAS property: 1  name: PBARL   1
+$*  Fore Section   : 1  name: PBARL 1_ PIPE 2.000 X 0.000 X 0.000
+PBARL          1       2MSCBML0 ROD                                     + 
++       1.000000     0.0
+$*
+PROD           2       2     1.0
+$*
+$*  I-DEAS property: 1  name: PBARL   1
+$*  Fore Section   : 1  name: PBARL 1_ PIPE 2.000 X 0.000 X 0.000
+PBEAML         3       2MSCBML0 ROD                                     + 
++       1.000000     0.0
+$*
+

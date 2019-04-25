@@ -1,0 +1,296 @@
+
+                          E I G E N V A L U E  A N A L Y S I S   S U M M A R Y   (READ MODULE) 
+
+
+
+                                     BLOCK SIZE USED ......................    7
+
+                                     NUMBER OF DECOMPOSITIONS .............    2
+
+                                     NUMBER OF ROOTS FOUND ................    8
+
+                                     NUMBER OF SOLVES REQUIRED ............    7
+
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE     7
+                                                                                                                                    
+0    FZ                                                                                                                             
+ 
+                                              R E A L   E I G E N V A L U E S
+                                         (BEFORE AUGMENTATION OF RESIDUAL VECTORS)
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1         1        1.018377E-03        3.191203E-02        5.078956E-03        1.000000E+00        1.018377E-03
+        2         2        1.018377E-03        3.191203E-02        5.078956E-03        1.000000E+00        1.018377E-03
+        3         3        3.977008E-02        1.994244E-01        3.173937E-02        1.000000E+00        3.977008E-02
+        4         4        3.977009E-02        1.994244E-01        3.173938E-02        1.000000E+00        3.977009E-02
+        5         5        3.102166E-01        5.569710E-01        8.864468E-02        1.000000E+00        3.102166E-01
+        6         6        3.102167E-01        5.569710E-01        8.864468E-02        1.000000E+00        3.102167E-01
+        7         7        1.184979E+00        1.088567E+00        1.732509E-01        1.000000E+00        1.184979E+00
+        8         8        1.184979E+00        1.088567E+00        1.732509E-01        1.000000E+00        1.184979E+00
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KYY      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    5.398059E+01
+ *** USER INFORMATION MESSAGE 5458 (REIG)
+     QL HOUSEHOLDER METHOD IS AUTOMATICALLY SELECTED .
+ *** USER INFORMATION MESSAGE 5458 (REIG)
+     QL HOUSEHOLDER METHOD IS AUTOMATICALLY SELECTED .
+ *** USER INFORMATION MESSAGE 5458 (REIG)
+     QL HOUSEHOLDER METHOD IS AUTOMATICALLY SELECTED .
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE     8
+                                                                                                                                    
+0    FZ                                                                                                                             
+ 
+                                              R E A L   E I G E N V A L U E S
+                                         (AFTER AUGMENTATION OF RESIDUAL VECTORS)
+   MODE    EXTRACTION      EIGENVALUE            RADIANS             CYCLES            GENERALIZED         GENERALIZED
+    NO.       ORDER                                                                       MASS              STIFFNESS
+        1         1        1.018377E-03        3.191203E-02        5.078956E-03        1.000000E+00        1.018377E-03
+        2         2        1.018377E-03        3.191203E-02        5.078956E-03        1.000000E+00        1.018377E-03
+        3         3        3.977008E-02        1.994244E-01        3.173937E-02        1.000000E+00        3.977008E-02
+        4         4        3.977009E-02        1.994244E-01        3.173938E-02        1.000000E+00        3.977009E-02
+        5         5        3.102166E-01        5.569710E-01        8.864468E-02        1.000000E+00        3.102166E-01
+        6         6        3.102166E-01        5.569710E-01        8.864468E-02        1.000000E+00        3.102166E-01
+        7         7        1.184979E+00        1.088567E+00        1.732509E-01        1.000000E+00        1.184979E+00
+        8         8        1.184979E+00        1.088567E+00        1.732509E-01        1.000000E+00        1.184979E+00
+        9         9        4.761022E+00        2.181977E+00        3.472723E-01        1.000000E+00        4.761022E+00
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE     9
+                                                                                                                                    
+0    FZ                                                                                                                             
+ ^^^     
+ ^^^ SYSTEM INFORMATION MESSAGE 9157 (GMAM)  
+ ^^^ FASTFR OPTION REQUESTED, BUT THE MODEL DID NOT  MEET THE FOLLOWING CRITERIA:    
+ ^^^  THE H-SIZE OF THE PROBLEM IS SMALL. H-SIZE =  9          
+ ^^^ USER INFORMATION:   STANDARD FREQUENCY RESPONSE METHOD WILL BE USED 
+ ^^^     
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    10
+                                                                                                                                    
+0    FZ                                                                                                                             
+ *** USER INFORMATION MESSAGE 7559 (FRLGA)
+     THIS FREQUENCY RESPONSE ANALYSIS INVOLVES THE FOLLOWING TYPES OF EXCITATION --
+
+     * APPLIED LOADS
+ *** USER INFORMATION MESSAGE 5222 (SQFREQ)
+     UN COUPLED SOLUTION ALGORITHM USED.
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    11
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  0.000000E+00
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -3.121461E-16   6.463935E-11   5.456761E+04   0.0           -2.728380E+04  -3.318477E-11
+                           0.0            0.0            0.0            0.0            0.0            0.0
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    12
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  9.999999E-03
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G      1.633975E-16   6.681370E-12  -1.668586E+04   0.0            5.257800E+03   3.270376E-11
+                           1.335872E-18   3.298861E-13  -2.629783E+02   0.0            1.338179E+02   4.421023E-13
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    13
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  2.000000E-02
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G      8.955885E-17  -3.644478E-13  -1.180007E+03   0.0           -2.720717E+03   1.192415E-11
+                          -1.345871E-18   7.873606E-14  -6.728021E+01   0.0            8.657026E+01  -2.980566E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    14
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  3.000000E-02
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G      3.962602E-16  -9.596116E-11   1.089622E+04   0.0           -1.972819E+04  -1.083126E-10
+                          -6.947526E-17   3.757208E-11  -2.170037E+03   0.0            3.479460E+03   5.255346E-11
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    15
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  4.000000E-02
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -7.390465E-17  -7.824380E-12  -2.858377E+03   0.0            3.122829E+03  -1.967829E-11
+                          -3.077476E-18  -5.617833E-13  -1.024264E+02   0.0            1.652479E+02  -1.250586E-12
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    16
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  5.000000E-02
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -3.235292E-17  -2.130265E-12  -1.134496E+03   0.0            6.751038E+02  -6.017893E-12
+                          -5.474072E-19  -6.991131E-14  -2.484048E+01   0.0            4.403085E+01  -1.818481E-13
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    17
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  6.000000E-02
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -2.184921E-17  -1.025565E-12  -5.147817E+02   0.0           -1.987308E+02  -3.045193E-12
+                          -1.395089E-19  -2.762313E-14  -1.656047E+01   0.0            3.551812E+01  -7.667340E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    18
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  7.000000E-02
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -1.827706E-17  -4.641780E-13  -9.982558E+01   0.0           -9.008245E+02  -1.483668E-12
+                           7.669563E-20  -3.420959E-14  -2.374741E+01   0.0            5.943659E+01  -9.462825E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    19
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  7.999999E-02
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -1.955293E-17   8.271655E-13   5.194263E+02   0.0           -2.313041E+03   2.039881E-12
+                           6.893994E-19  -2.883465E-13  -9.099585E+01   0.0            2.415772E+02  -7.791744E-13
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    20
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  9.000000E-02
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G      1.909586E-17   1.877278E-11  -4.085979E+03   0.0            1.016295E+04   4.965367E-11
+                           2.001520E-17   4.270491E-11  -2.516882E+03   0.0            6.731655E+03   1.140120E-10
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    21
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  9.999999E-02
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -5.841535E-18   8.151693E-13  -8.066592E+02   0.0            1.497505E+03   1.898907E-12
+                           4.883839E-19   1.655077E-13  -5.334322E+01   0.0            1.432883E+02   4.399901E-13
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    22
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  1.100000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -8.284058E-18   1.268781E-13  -4.436590E+02   0.0            5.987263E+02   7.858328E-14
+                           2.513659E-19   2.704618E-14  -1.694443E+01   0.0            4.691019E+01   7.398758E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    23
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  1.200000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -9.715697E-18  -7.608302E-15  -2.840594E+02   0.0            2.194389E+02  -2.871783E-13
+                           2.661858E-19   8.893719E-15  -9.673943E+00   0.0            2.861392E+01   2.779611E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    24
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  1.300000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -1.139705E-17  -4.708025E-14  -1.818294E+02   0.0           -2.698193E+01  -4.168121E-13
+                           3.717328E-19   3.817833E-15  -7.883787E+00   0.0            2.549829E+01   1.716470E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    25
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  1.400000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -1.401417E-17  -5.743233E-14  -9.853881E+01   0.0           -2.445312E+02  -4.920676E-13
+                           6.151644E-19   1.396748E-15  -8.840488E+00   0.0            3.108848E+01   1.578587E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    26
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  1.500000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -1.891809E-17  -4.990813E-14  -9.335268E+00   0.0           -5.111541E+02  -5.629597E-13
+                           1.250298E-18  -2.104153E-15  -1.410070E+01   0.0            5.242075E+01   1.754774E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    27
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  1.600000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -3.115394E-17   1.033440E-14   1.392467E+02   0.0           -1.023068E+03  -5.990560E-13
+                           3.810666E-18  -2.453660E-14  -3.785073E+01   0.0            1.442688E+02  -1.143635E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    28
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  1.700000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G     -9.610258E-17   7.602723E-13   7.791630E+02   0.0           -3.431150E+03   8.455482E-13
+                           5.033896E-17  -1.406907E-12  -4.771608E+02   0.0            1.828990E+03  -4.285964E-12
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    29
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  1.800000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G      5.273652E-17   5.396756E-13  -6.053945E+02   0.0            1.912196E+03   3.275646E-12
+                           1.397394E-17   2.882933E-13  -1.334402E+02   0.0            5.118320E+02   1.412177E-12
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    30
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  1.900000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G      2.148863E-17   1.001727E-13  -2.919810E+02   0.0            7.389177E+02   9.008833E-13
+                           2.392174E-18   2.525204E-14  -2.393596E+01   0.0            9.250357E+01   1.489286E-13
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    31
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  2.000000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G      1.300091E-17   2.947103E-14  -1.961036E+02   0.0            3.935818E+02   4.409586E-13
+                           9.414620E-19   7.431992E-15  -1.020359E+01   0.0            4.031010E+01   4.876182E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    32
+                                                                                                                                    
+0    FZ                                                                                                                             
+      FREQUENCY =  2.100000E-01
+                                       C O M P L E X   D I S P L A C E M E N T   V E C T O R
+                                                          (REAL/IMAGINARY)
+ 
+      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3
+0           21      G      9.121415E-18   5.869901E-15  -1.456074E+02   0.0            2.171751E+02   2.631261E-13
+                           4.977449E-19   3.364763E-15  -6.035482E+00   0.0            2.480264E+01   2.345500E-14
+1   POUTRES                                                                DECEMBER  13, 2013  MD NASTRAN   4/27/11   PAGE    33
+                                                                                                                                    
+0    FZ                                                                                                                             

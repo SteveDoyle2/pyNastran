@@ -1,0 +1,873 @@
+$$$$$$$$  HANDBOOK FOR AEROELASTIC ANALYSIS EXAMPLE CPMOPT      $$$$$$$$
+$                                                                      $
+$       MODEL DESCRIPTION        30 DEG FORWARD SWEPT WING WITH        $
+$                                AILERON, CANARD AND AFT SWEPT         $
+$                                VERTICAL FIN AND RUDDER.              $
+$                                BAR MODEL WITH DUMBBELL MASSES.       $
+$                                A HALF SPAN MODEL IS USED             $
+$                                                                      $
+$                                                                      $
+$       SOLUTION                 QUASI-STEADY AEROELASTIC ANALYSIS     $
+$                                AND UNSTEADY FLUTTER ANALYSIS USING   $
+$                                DOUBLET-LATTICE METHOD                $
+$                                AERODYNAMICS AT MACH NO. 0.9.         $
+$                                CPM    AERODYNAMICS AT MACH NO. 1.2   $
+$                                                                      $
+$       OUTPUT                   STANDARD AEROELASTIC OUTPUT PLUS      $
+$                                A TABLE IDENTIFYING RESPONSES         $
+$                                FOR WHICH SENSITIVITY RESULTS ARE     $
+$                                AVAILABLE FOLLOWED BY A MATRIX OF     $
+$                                SENSITIVITY VALUES.                   $
+$                                                                      $
+$$$$$$$$                                                        $$$$$$$$
+SOL 200 $ FLUTTER
+$diag 8 $ ,15,19
+CEND
+TITLE= EXAMPLE CPMOPT: 30 DEG FWD SWEPT WING WITH CANARD & FINCPMOPT
+SUBTI     = HALF-SPAN MODEL, SYMMETRIC AND ANTISYMMETRIC ANALYSES 
+ECHO      = NONE
+SVEC(PLOT) = ALL
+DISP(PLOT) = ALL $ PRINT selected flutter modes
+desobj    = 10
+aeconfig  = fswhalf
+SUBCASE 1
+  LABEL   = SUBSONIC SYMMETRIC PULLOUT
+  ANALYSIS= SAERO
+  DESSUB  = 1     $ stress + twist 
+  suport  = 201   $ symmetry
+  aesymxz = symmetric
+  SPC     = 101   $ SYMMETRIC BOUNDARY CONDTION
+  bc      = 2      $ symmetry
+  TRIM    = 1 $
+SUBCASE 2
+  LABEL   = SUPERSONIC SYMMETRIC PULLOUT
+  ANALYSIS= SAERO
+  DESSUB  = 2     $ STRESS + TWIST
+  aesymxz = symmetric
+  suport  = 201   $ symmetry
+  aesymxz = symmetric
+  SPC     = 101   $ SYMMETRIC BOUNDARY CONDITION
+  bc      = 2      $ symmetry
+  TRIM    = 2 $
+SUBCASE 3
+  LABEL   = subsonic roll 
+  ANALYSIS= SAERO
+  DESSUB  = 3     $ SUBSONIC ROLL REQUIREMENT
+  suport  = 101   $ antisymmetry
+  aesymxz = antisymmetric
+  SPC     = 1     $ ANTISYMMETRIC BOUNDARY CONDITION
+  bc      = 1     $ antisymmetric
+  TRIM    = 3 $
+SUBCASE 4
+  LABEL   = supersonic roll 
+  ANALYSIS= SAERO
+  DESSUB  = 4     $ SUPERSONIC ROLL REQUIREMENT
+  suport  = 101   $ antisymmetry
+  aesymxz = antisymmetric
+  SPC     = 1     $ ANTISYMMETRIC BOUNDARY CONDITION
+  bc      = 1     $ antisymmetric
+  TRIM    = 4 $
+SUBCASE 16
+  LABEL = ANTISYMMETRIC subsonic flutter analysis
+  fmethod = 16   $ pk flutter analysis
+  method  = 1
+  ANALYSIS= FLUT
+  bc      = 1     $ antisymmetric
+  suport  = 101    $ antisymmetry
+  aesymxz = antisymmetric
+  SPC     = 1   $ ANTISYMMETRIC BOUNDARY CONDITION
+  dessub  = 16  $ SUBSONIC FLUTTER REQUIREMENT
+SUBCASE 17
+  LABEL = antisymmetric supersonic flutter analysis 
+  fmethod = 17   $ pk flutter analysis
+  method  = 1
+  ANALYSIS= FLUT
+  bc      = 1     $ antisymmetric
+  suport  =101    $ antisymmetry
+  aesymxz = antisymmetric
+  SPC     = 1      $ ANTISYMMETRIC BOUNDARY CONDTION
+  dessub  = 17     $ SUPERSONIC FLUTTER REQUIREMENT
+SUBCASE 26
+  LABEL = SYMMETRIC subsonic flutter analysis
+  fmethod = 26   $ pk flutter analysis
+  method  = 2
+  ANALYSIS= FLUT
+  bc      = 2      $ symmetry
+  suport  = 201    $ symmetry
+  aesymxz = symmetric
+  SPC     = 101   $ SYMMETRIC BOUNDARY CONDTION 
+  dessub  = 26    $ SUBSONIC FLUTTER REQUIREMENT
+SUBCASE 27
+  LABEL = symmetric supersonic flutter analysis 
+  fmethod = 27   $ pk flutter analysis
+  method  = 2
+  ANALYSIS= FLUT
+  bc      = 2      $ symmetry
+  suport  = 201    $ symmetry
+  aesymxz = symmetric
+  SPC     = 101 $ SYMMETRIC BOUNDARY CONDTION 
+  dessub  = 27  $ SUPERSONIC FLUTTER REQUIREMENT 
+BEGIN BULK
+$
+$ USE THE CPM METHOD INSTEAD OF ZONA
+$
+PARAM, POST, -2
+PARAM, SUPAERO, CPM
+$
+$                                                                       $
+$        THE ANNOTATIONS IN THIS INPUT DECK ARE INTENDED TO             $
+$        EXPLAIN THE DATA ON THE BULK DATA ENTRIES FOR THIS SPECIFIC    $
+$        EXAMPLE WITHOUT REFERENCE TO THE VARIOUS MANUALS WHERE         $
+$        MORE GENERAL DESCRIPTIONS WILL BE FOUND.                       $
+$                                                                       $
+$*** * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * ***$
+$                                                                       $
+$                       * * * STRUCTURAL DATA * * *                     $
+$                                                                       $
+$                            (LB-FT-SEC SYSTEM)                         $
+$                                                                       $
+$                          * * GRID GEOMETRY * *                        $
+$                                                                       $
+$        GRID  90 - 100 (T3) FUSELAGE POINTS                            $
+$        GRID 110 - 122 (T3) WING POINTS                                $
+$        GRID 310 - 312 (t3) FIN POINTS                                 $
+$                                                                       $
+$                            * FUSELAGE GRID *                          $
+$                                                                       $
+$        THE GRID ENTRY DEFINES THE LOCATION OF A STRUCTURAL GRID       $
+$        POINT.  LISTED ARE ITS COORDINATE SYSTEM ID, ITS LOCATION,     $
+$        THE ID OF THE COORDINATE SYSTEM IN WHICH ITS DISPLACEMENTS     $
+$        ARE DEFINED, ITS PERMANENT SINGLE-POINT CONSTRAINTS AND        $
+$        ITS ASSOCIATED SUPERELEMENT ID.                                $
+$                                                                       $
+$       ID      CP      X1      X2      X3      CD      PS      SEID
+GRID    90              15.     0.      0.
+GRID    97              0.      0.      0.
+GRID    98              10.     0.      0.
+GRID    99              20.     0.      0.
+GRID    100             30.     0.      0.
+$                                                                       $
+$                             * WING GRID *                             $
+$                                                                       $
+$       ID      CP      X1      X2      X3      CD      PS      SEID
+GRID    111             24.61325 +5.    0.
+GRID    110             27.11325 +5.    0.
+GRID    112             29.61325 +5.    0.
+GRID    121             18.83975+15.    0.
+GRID    120             21.33975+15.    0.
+GRID    122             23.83975+15.    0.
+$                                                                       $
+$                             * FIN GRID *                              $
+$                                                                       $
+GRID    310             32.88675+0.     5.
+GRID    311             30.38675+0.     5.
+GRID    312             35.38675+0.     5.
+$                                                                       $
+$                * * STRUCTURAL STIFFNESS PROPERTIES * *                $
+$                                                                       $
+$                        * FUSELAGE STRUCTURE *                         $
+$                                                                       $
+$        THE CBAR ENTRY DEFINES A SIMPLE BEAM ELEMENT.  LISTED ARE      $
+$        ITS PROPERTY ENTRY ID, THE TWO GRID POINTS JOINED BY THE       $
+$        BEAM AND COMPONENTS OF A VECTOR FROM THE FIRST POINT.          $
+$        THIS VECTOR DEFINES THE DIRECTION OF THE STRUCTURAL DE-        $
+$        FLECTION OF THE POINT AND ITS POSITIVE SENSE.                  $
+$                                                                       $
+$       EID     PID     GA      GB      X1,GO   X2      X3
+CBAR    101     100     97      98      0.      0.      1.
+CBAR    102     100     98      90      0.      0.      1.
+CBAR    104     100     90      99      0.      0.      1.
+CBAR    103     100     99      100     0.      0.      1.
+$                                                                       $
+$        THE PBAR ENTRY DEFINES GEOMETRIC PROPERTIES OF THE BEAM.       $
+$        LISTED ARE ITS ASSOCIATED MATERIAL ENTRY ID, ITS CROSS SEC-    $
+$        TIONAL AREA, AREA MOMENTS OF INERTIA, TORSIONAL MOMENT         $
+$        OF INERTIA AND NON-STRUCTURAL MASS PER UNIT AREA.  THE         $
+$        OPTIONAL CONTINUATION ENTRY CONTAINS STRESS RECOVERY           $
+$        COEFFICIENTS, I.E., Y,Z COORDINATES WHERE STRESSES ARE         $
+$        TO BE COMPUTED.  K1 AND K2 ARE AREA FACTORS FOR SHEAR          $
+$        STIFFNESS (DEFAULT IS BLANK; THEN SHEAR STIFFNESS IS           $
+$        INFINITE, I.E., SHEAR FLEXIBILITY IS ZERO.  I12 IS THE         $
+$        AREA PRODUCT OF INERTIA.                                       $
+$                                                                       $
+$ FUSELAGE                                                              $
+$       PID     MID     A       I1      I2      J       NSM
+PBAR    100     1       2.0     .173611 0.15    0.5                     +PB1F
+$       C1      C2      D1      D2      E1      E2      F1      F2
++PB1F   1.0     1.0     1.0     -1.0    -1.0    1.0     -1.0    -1.0    +PB2F
+$       K1      K2      I12
++PB2F                   0.0
+$ INBOARD WING
+$
+$       PID     MID     A       I1      I2      J       NSM
+PBAR    101     2       1.5     0.173611+2.0    0.462963                +PB1W
+$       C1      C2      D1      D2      E1      E2      F1      F2
++PB1W   0.5     3.0     0.5     -3.0    -0.5    3.0     -0.5    -3.0    +PB2W
+$       K1      K2      I12
++PB2W                   0.0
+$
+$ OUTBOARD WING
+$
+$       PID     MID     A       I1      I2      J       NSM
+PBAR    102     2       1.5     0.173611+2.0    0.462963                +PB3W
+$       C1      C2      D1      D2      E1      E2      F1      F2
++PB3W   0.5     3.0     0.5     -3.0    -0.5    3.0     -0.5    -3.0    +PB4W
+$       K1      K2      I12
++PB4W                   0.0
+$                                                                       $
+$                           * WING STRUCTURE *                          $
+$                                                                       $
+$       EID     PID     GA      GB      X1,GO   X2      X3
+CBAR    110     101     100     110     0.      0.      1.
+CBAR    120     102     110     120     0.      0.      1.
+$                                                                       $
+$        THE RBAR ENTRY DEFINES A RIGID BAR.  LISTED ARE THE GRID       $
+$        POINTS AT EACH END AND THE DEPENDENT AND INDEPENDENT DOFS      $
+$        AT EACH END.  THE NUMBER OF INDEPENDENT DOFS AT THE TWO        $
+$        ENDS MUST EQUAL SIX.  BY DEFAULT THOSE NOT DECLARED INDE-      $
+$        PENDENT ARE MADE DEPENDENT.                                    $
+$                                                                       $
+$       EID     GA      GB      CNA     CNB     CMA     CMB
+RBAR    111     110     111     123456
+RBAR    112     110     112     123456
+RBAR    121     120     121     123456
+RBAR    122     120     122     123456
+$                                                                       $
+$                           * FIN STRUCTURE *                           $
+$                                                                       $
+CBAR    310     301     100     310     0.      0.      1.
+$                                                                       $
+RBAR    311     310     311     123456
+RBAR    312     310     312     123456
+$                                                                       $
+PBAR    301     3       .75     .086806 1.0     .231482                 +PB1FI
++PB1FI  0.5     3.0     0.5     -3.0    -0.5    3.0     -0.5    -3.0    +PB2FI
++PB2FI                  0.
+$
+$        THE MAT1 ENTRY DEFINES THE MATERIAL PROPERTIES.  LISTED        $
+$        ARE ITS ID, ITS ELASTIC MODULUS, SHEAR MODULUS, POISSONS       $
+$        RATIO, MASS DENSITY, TEMPERATURE EXPANSION COEFFICIENT,        $
+$        REFERENCE TEMPERATURE AND A STRUCTURAL DAMPING COEFFICIENT.    $
+$                                                                       $
+$       MID     E       G       NU      RHO     A       TREF    GE
+MAT1    1       1.44+9  5.40+8
+$   DENSITY HAS BEEN ADJUSTED TO GIVE A WEIGHT OF 333.333 LBS FOR THE
+$   INBOARD BAR AND 666.667 LBS FOR THE OUTBOARD BAR WHEN X1 = X2 = 1.0
+$   AND 50.0 LBS FOR THE FIN WHEN X3 = 1.0
+$
+$       MID     E       G       NU      RHO     A       TREF    GE
+MAT1    2       1.44+9  5.40+8          38.49002                        +MT2
+$+MAT1  ST      SC      SS      MCSID
++MT2    7.20+6  5.76+6
+MAT1    3       1.44+9  5.40+8          5.773503                        +MT3
++MT3    7.20+6  5.76+6
+$                                                                       $
+$                 * * MASS AND INERTIA PROPERTIES * *                   $
+$                                                                       $
+$                          * FUSELAGE MASSES *                          $
+$                                                                       $
+$        THE CONM2 ENTRY DEFINES A CONCENTRATED MASS.  LISTED ARE       $
+$        ITS ID, GRID LOCATION, COORDINATE SYSTEM TO LOCATE THE         $
+$        CENTER OF GRAVITY, THE MASS VALUE AND THE LOCATION OF          $
+$        THE CENTER OF GRAVITY RELATIVE TO THE GRID LOCATION.           $
+$                                                                       $
+$       EID     G       CID     M       X1      X2      X3
+CONM2   97      97      0       1500.0
+CONM2   98      98      0       1500.0
+CONM2   99      99      0       1500.0
+CONM2   100     100     0       1500.0
+$                                                                       $
+$                            * WING MASSES *                            $
+$                                                                       $
+CONM2   111     111     0       600.0
+CONM2   112     112     0       400.0
+CONM2   121     121     0       600.0
+CONM2   122     122     0       400.0
+$                                                                       $
+$                            * FIN MASSES *                             $
+$                                                                       $
+CONM2   311     311     0       30.0
+CONM2   312     312     0       20.0
+$                                                                       $
+$                    * * STRUCTURAL PARAMETERS * *                      $
+$                                                                       $
+$        THE PARAM,GRDPNT,XX ENTRY CAUSES THE GRID POINT WEIGHT         $
+$        GENERATOR TO BE EXECUTED USING GRID POINT XX AS THE REF-       $
+$        ERENCE POINT.  THEN THE INERTIA MATRIX, THE TRANSFER MATRIX    $
+$        FROM BASIC TO PRINCIPAL AXES AND OTHER PERTINENT INERTIA       $
+$        DATA ARE PRINTED.                                              $
+$                                                                       $
+PARAM   GRDPNT  90
+$                                                                       $
+$        THE PARAM,WTMASS,GINV CAUSES ALL THE STRUCTURAL MASSES AND     $
+$        MASS DENSITIES TO BE MULTIPLIED BY GINV (I.E., BY ONE OVER     $
+$        THE ACCELERATION OF GRAVITY).  THE DYNAMIC PRESSURE SUPPLIED   $
+$        FOR AERODYNAMIC FORCE CALCULATIONS WILL NOT BE MULTIPLIED      $
+$        BY GINV.                                                       $
+$                                                                       $
+PARAM   WTMASS  .031081
+$                                                                       $
+$                     * * STRUCTURAL CONSTRAINTS * *                    $
+$                                                                       $
+$        THE SPC1 ENTRY CONSTRAINS THE LISTED GRID POINTS IN THE        $
+$        SPECIFIED DOF COMPONENTS.                                      $
+$                                                                       $
+$       SID     C       G1      G2      G3      G4
+$ antisymmetric
+SPC1    1       135     90
+SPC1    1       35      97      98      99      100
+$ symmetric
+SPC1    101     1246    90
+SPC1    101     246     97      98      99      100
+$                                                                       $
+$        THE SUPORT ENTRY IDENTIFIES A GRID POINT OR A SCALAR POINT     $
+$        AND SPECIFIES THE DOF COMPONENTS IN WHICH THE USER DESIRES     $
+$        REACTIONS TO BE APPLIED TO PREVENT RIGID BODY MOTION.  IT      $
+$        THUS INVOKES THE SOLUTION OF THE BALANCE EQUATIONS TO DETER-   $
+$        MINE THE REACTIONS.  IN THE STATIC AEROELASTIC SOLUTION        $
+$        THE DOF COMPONENTS MUST BE CONSISTENT WITH THE UNDEFINED       $
+$        VARIABLES ON THE TRIM ENTRIES.                                 $
+$                                                                       $
+$       ID      C
+suport1	101	90	246
+suport1	201	90	35
+$                                                                       $
+$        THIS CORD2R ENTRY DEFINES THE AERO COORDINATE SYSTEM           $
+$        FLAGGED BY THE AEROS ENTRY.  THE ORIGIN IS AT THE CANARD       $
+$        QUARTER CHORD.  LISTED ARE THE ORIGIN, A POINT ALONG THE       $
+$        Z AXIS AND A POINT IN THE X-Z PLANE, ALL IN THE RID            $
+$        COORDINATE SYSTEM.                                             $
+$                                                                       $
+$       CID     RID     A1      A2      A3      B1      B2      B3
+CORD2R  1       0       12.5    0.      0.      12.5    0.      10.     +CRD1
+$       C1      C2      C3
++CRD1   20.     0.      0.
+$                                                                       $
+$        THIS CORD2R ENTRY DEFINES THE NACA COORDINATE SYSTEM TO        $
+$        WHICH ALL THE STABILITY DERIVATIVES AND TRIM CONDITIONS        $
+$        WILL BE REFERENCED.                                            $
+$                                                                       $
+$       CID     RID     A1      A2      A3      B1      B2      B3
+CORD2R  100     0       15.0    0.0     0.0     15.0    0.0     -10.0   +CRD100
+$       C1      C2      C3
++CRD100 0.0     0.0     0.0
+$                                                                       $
+$                                                                       $
+$                       * WING AERODYNAMIC MODEL *                      $
+$                                                                       $
+$        THE CAERO1 ENTRY IS USED FOR DOUBLET-LATTICE AERODYNAMICS.     $
+$        LISTED ARE ITS PAERO ENTRY ID AND THE COORDINATE SYSTEM        $
+$        FOR LOCATING THE INBOARD AND OUTBOARD LEADING EDGE POINTS      $
+$        (1 AND 4).  NSPAN AND NCHORD, OR LSPAN AND LCHORD, ARE         $
+$        USED TO PARTITION THE WING INTO AERODYNAMIC PANELS,            $
+$        THE FORMER FOR UNIFORMLY SPACED PANELS AND THE LATTER          $
+$        FOR NON-UNIFORMLY SPACED PANELS.  IGID IS THE ID OF ITS        $
+$        ASSOCIATED INTERFERENCE GROUP.  THE CONTINUATION ENTRY         $
+$        DEFINES POINTS 1 AND 4, THE ROOT CHORD AND TIP CHORD.          $
+$        THE BOXES FORMED BY THE GRID LINES WILL BE NUMBERED            $
+$        BEGINNING WITH EID SO CHOOSE A NUMBER THAT IS UNIQUE,          $
+$        AND IS GREATER THAN ALL STRUCTURAL GRID, SCALAR AND            $
+$        EXTRA POINT IDS.                                               $
+$                                                                       $
+$       EID     PID     CP      NSPAN   NCHORD  LSPAN   LCHORD  IGID
+CAERO1  1100    1000            8       4                       1       +CAW
+$      ( FWD LEFT POINT  )     CHORD ( FWD RIGHT POINT   )     CHORD
+$       X1      Y1      Z1      X12     X4        Y4    Z4      X14
++CAW    25.     0.      0.      10.     13.45299+20.    0.      10.
+$                                                                       $
+$        THE PAERO1 ENTRY IS REQUIRED EVEN THOUGH IT IS NON-FUNCTIONAL  $
+$        (BECAUSE THERE ARE NO ASSOCIATED BODIES IN THIS EXAMPLE).      $
+$                                                                       $
+$       PID     B1      B2      B3      B4      B5      B6
+PAERO1  1000
+$                                                                       $
+$                      * CANARD AERODYNAMIC MODEL *                     $
+$                                                                       $
+CAERO1  1000    1000            2       4                       1       +CAC
++CAC    10.     0.      0.      10.     10.     5.      0.      10.
+$                                                                       $
+$                       * FIN AERODYNAMIC MODEL *                       $
+$                                                                       $
+CAERO1  3100    1000            4       4                       1       +CA1FI
++CA1FI  30.7735 0.      10.     10.     25.     0.      0.      10.
+$                                                                       $
+$        THE DMI ENTRY ACCOMMODATES DIRECT INPUT OF USER SUPPLIED       $
+$        MATRICES OF DATA.  LISTED ARE THE NAME OF THE MATRIX, THE      $
+$        FORM OF MATRIX (IN THIS CASE DIAGONAL), THE TYPE OF DATA       $
+$        (IN THIS CASE REAL SINGLE PRECISION), BEING INPUT AND THE      $
+$        TYPE EXPECTED AT OUTPUT (IN THIS CASE TO BE DETERMINED         $
+$        INTERNALLY).  M IS THE NUMBER OF ROWS AND N IS THE NUMBER      $
+$        OF COLUMNS.  THE DATA IS EXPECTED BY COLUMNS.  THE CONTIN-     $
+$        UATION ENTRY LISTS THE COLUMN NO., THE ROW NO. OF THE FIRST    $
+$        NON-ZERO ELEMENT AND THE FOLLOWING ELEMENTS IN THAT COLUMN.    $
+$                                                                       $
+$               * PRESSURE MODIFIERS (WEIGHTING MATRIX) *               $
+$                                                                       $
+$       NAME    "0"     FORM    TIN     TOUT            M       N
+DMI     WKK     0       3       1       0               112     1
+$       NAME    J       I1      A(I1,J) A(I1+1,J) . . .
+DMI     WKK     1       1       1.0     THRU    112
+$                                                                       $
+$     * INITIAL DOWNWASHES (E.G., DUE TO INCIDENCE,TWIST OR CAMBER) *   $
+$                                                                       $
+DMI     W2GJ    0       2       1       0               56      1
+DMI     W2GJ    1       9       .0017453THRU    40
+$                                                                       $
+$              * PRESSURES (E.G., AT ZERO ANGLE OF ATTACK) *            $
+$                                                                       $
+DMI     FA2J    0       2       1       0               56      1
+DMI     FA2J    1       1       0.0     THRU    56
+$                                                                       $
+$                * * SPLINE FIT ON THE LIFTING SURFACES * *             $
+$                                                                       $
+$                     * BEAM SPLINE FIT ON THE WING *                   $
+$                                                                       $
+$        THE SPLINE2 ENTRY SPECIFIES A BEAM SPLINE FOR INTERPOLAT-      $
+$        ION OVER THE REGION OF THE CAERO ENTRY (ID1 AND ID2 ARE        $
+$        THE FIRST AND LAST BOXES IN THIS REGION).  SETG REFERS         $
+$        TO A SET1 ENTRY WHERE THE STRUCTURAL GRID POINTS ARE           $
+$        DEFINED.  DZ AND DTOR ARE SMOOTHING CONSTANTS FOR LINEAR       $
+$        ATTACHMENT AND TORSIONAL FLEXIBILITIES.  CID IDENTIFIES        $
+$        THE CORD2R ENTRY THAT DEFINES THE SPLINE AXIS.  DTHX AND       $
+$        DTHY ARE ROTATIONAL ATTACHMENT FLEXIBILITIES (-1. SPECIFIES    $
+$        NO ATTACHMENT).                                                $
+$                                                                       $
+$       EID     CAERO   ID1     ID2     SETG    DZ      DTOR    CID
+SPLINE2 1601    1100    1100    1131    1100    0.      1.      2       +SPW
+$       DTHX    DTHY
++SPW    -1.     -1.
+$                                                                       $
+$        THE SET1 ENTRY DEFINES THE SETS OF STRUCTURAL GRID POINTS      $
+$        TO BE USED BY THE BEAM SPLINE FOR INTERPOLATION.               $
+$                                                                       $
+$       SID     G1      G2      G3      G4
+SET1    1100    99      100     111     112     121     122
+$                                                                       $
+$                  * BEAM SPLINE FIT ON THE CANARD *                    $
+$                                                                       $
+SPLINE2 1501    1000    1000    1007    1000    0.      1.      1       +SPC
++SPC    1.      -1.
+$                                                                       $
+SET1    1000    98      99
+$                                                                       $
+$                    * BEAM SPLINE FIT ON THE FIN *                     $
+$                                                                       $
+SPLINE2 3100    3100    3100    3115    3100    0.      1.      300     +SP2FI
++SP2FI  -1.     -1.
+$                                                                       $
+SET1    3100    99      100     311     312
+$                                                                       $
+$        THE CORD2R ENTRY DEFINES THE COORDINATE SYSTEM IN WHICH THE    $
+$        BEAM SPLINE EXTENDS ALONG THE WING Y-AXIS.  IT LISTS THE       $
+$        ORIGIN, A POINT ALONG THE Z-AXIS AND A POINT IN THE X-Z        $
+$        PLANE.                                                         $
+$                                                                       $
+$                         * WING SPLINE AXIS *                          $
+$                                                                       $
+$       CID     CS      A1      A2      A3      B1      B2      B3
+CORD2R  2       0       30.     0.      0.      30.     0.      10.     +CRD2
+$       C1      C2      C3
++CRD2   38.66025+5.0    0.
+$                                                                       $
+$                          * FIN SPLINE AXIS *                          $
+$                                                                       $
+CORD2R  300     0       30.0    0.      0.      30.0    10.0    0.      +CRD2FI
++CRD2FI 20.0    0.      5.7735
+$                                                                       $
+$                  * CONTROL SURFACE DEFINITION *                       $
+$                                                                       $
+$        THE AESURF ENTRY DEFINES AN AERODYNAMIC CONTROL SURFACE.       $
+$        LISTED ARE THE ALPHANUMERIC NAME OF THE SURFACE, THE ID        $
+$        OF A COORDINATE SYSTEM THAT DEFINES THE HINGE LINE AND         $
+$        THE ID OF AN AELIST ENTRY.                                     $
+$                                                                       $
+$       ID      LABEL   CID1    ALID1   CID2    ALID2
+AESURF  517     AILERON 110     2000
+AESURF  518     RUDDER  301     3000
+AESURF  505     ELEV    1       1000
+$                                                                       $
+$        THE AELIST ENTRY LISTS AERODYNAMIC BOXES THAT LIE ON THE       $
+$        CONTROL SURFACE.                                               $
+$                                                                       $
+$       SID     E1      E2      E3      ETC
+AELIST  1000    1000    THRU    1007
+AELIST  2000    1119    1123    1127    1131
+AELIST  3000    3103    3107    3111    3115
+$                                                                       $
+$                    * CONTROL SURFACE HINGE LINES *                    $
+$                                                                       $
+$                            * AILERON *                                $
+CORD2R  110     0       26.7265 10.0    0.      26.7265 10.0    -10.0   +CRD2A
++CRD2A  36.7265 15.7735 0.
+$                                                                       $
+$                             * RUDDER *                                $
+CORD2R  301     0       32.5    0.      0.      32.5    -10.    0.0     +CRD2R
++CRD2R  22.5    0.      5.7735
+$                                                                       $
+$                                                                       $
+$        THE PARAM,AUNITS,GINV PERMITS THE ACCELERATIONS ON THE TRIM    $
+$        ENTRY TO BE SPECIFIED IN UNITS OF LOAD FACTOR, I.E., IN G'S.   $
+$                                                                       $
+PARAM   AUNITS  .031081
+$                                                                       $
+$                       * * AERODYNAMIC DOFS * *                        $
+$                                                                       $
+$        THE AESTAT ENTRY LISTS TRIM VARIABLES USED TO SPECIFY          $
+$        RIGID BODY MOTIONS.  THESE AND THE CONTROL SURFACE             $
+$        ROTATIONS MAKE UP THE VARIABLES IN THE EQUATIONS OF            $
+$        MOTION.                                                        $
+$                                                                       $
+$       ID      LABEL
+AESTAT  501     ANGLEA
+AESTAT  502     PITCH
+AESTAT  503     URDD3
+AESTAT  504     URDD5
+AESTAT  511     SIDES
+AESTAT  512     YAW
+AESTAT  513     ROLL
+AESTAT  514     URDD2
+AESTAT  515     URDD4
+AESTAT  516     URDD6
+$
+$                      * * * AERODYNAMIC DATA * * *                     $
+$                                                                       $
+$                           (LB-FT-SEC SYSTEM)                          $
+$                                                                       $
+$                        * * ELEMENT GEOMETRY * *                       $
+$                                                                       $
+$        THE AEROS ENTRY IS UNIQUE TO THE STATIC AEROELASTIC ANALYSIS   $
+$        ACSID IDENTIFIES THE AERO COORDINATE                           $
+$        SYSTEM, RCSID IDENTIFIES THE REFERENCE COORDINATE SYS-         $
+$        TEM FOR RIGID BODY MOTION.  REFC IS THE REFERENCE CHORD.       $
+$        REFB IS THE REFERENCE SPAN.  REFS IS THE REFERENCE WING        $
+$        AREA.  SYMXZ AND SYMXY ARE SYMMETRY KEYS.                      $
+$                                                                       $
+$       ACSID   RCSID   REFC    REFB    REFS    SYMXZ   SYMXY
+AEROS   1       100     10.0    40.0    400.0
+$       ACSID   velo    REFC    rhoref  SYMXZ   SYMXY
+$                                                                       $
+$                        * * TRIM CONDITIONS * *                        $
+$                                                                       $
+$        THE TRIM ENTRY SPECIFIES CONSTRAINTS FOR THE TRIM VARIABLES    $
+$        LISTED ON THE AESTAT AND AESURF ENTRYS.  LISTED ARE ITS ID,    $
+$        THE MACH NUMBER, DYNAMIC PRESSURE AND PAIRS OF TRIM VARI-      $
+$        ABLES AND THEIR CONSTRAINED VALUES.  THOSE THAT ARE NOT        $
+$        HELD FIXED MUST BE CONSTRAINED BY REACTION FORCES STIPU-       $
+$        LATED ON THE SUPORT ENTRY.  SEE SECTION 3.5.3 OF THE THEO-     $
+$        RETICAL MANUAL FOR MORE DETAILS.                               $
+$                                                                       $
+$        TRIM CONDITION 1: SUBSONIC SYMMETRIC PULLOUT                   $
+$                                                                       $
+$       ID      MACH    Q       LABEL1  UX1     LABEL2  UX2             +TRM
+TRIM    1       0.9     1200.0  PITCH   0.0     URDD3   -6.0            +TR1A
+$       LABEL3  UX3     ETC
++TR1A   URDD5   0.0     AILERON 0.0     RUDDER  0.0     URDD2   0.0     +TR1B
++TR1B   URDD4   0.0     URDD6   0.0     sides   0.0     yaw     0.0     +TR1C      
++TR1C   ROLL    0.0
+$                                                                       $
+$        TRIM CONDITION 2: SUPERSONIC SYMMETRIC PULLOUT                 $
+$
+TRIM    2       1.2     863.0   PITCH   0.      URDD3   -4.0            +TR2A
++TR2A   URDD5   0.0     AILERON 0.0     RUDDER  0.0     URDD2   0.0     +TR2B
++TR2B   URDD4   0.0     URDD6   0.0     sides   0.0     yaw     0.0     +TR2C      
++TR2C   ROLL    0.0
+$                                                                       $
+$        TRIM CONDITION 3: SUBSONIC ROLL REQUIREMENT
+$                                                                       $
+TRIM    3       0.9     1200.0  PITCH   0.0     URDD3   0.0 
+        URDD5   0.      AILERON .174533 YAW     0.      URDD2   0. 
+        URDD4   0.      URDD6   0.	anglea	0.0	elev	0.0
+$                                                                       $
+$        TRIM CONDITION 4: SUPERSONIC ROLL REQUIREMENT
+$                                                                       $
+TRIM    4       1.2     863.0   PITCH   0.0     URDD3   0.0 
+        URDD5   0.      AILERON .174533 YAW     0.      URDD2   0. 
+        URDD4   0.      URDD6   0.	anglea	0.0	elev	0.0
+$                                                                       $
+$                   * * *  FLUTTER ANALYSIS  * * *
+$                                 * * *                                 $
+AERO    1       100.0   10.0    0.002378
+$                                                                       $
+$                     * * AERODYNAMIC CONDITIONS * *                    $
+$                                                                       $
+$        ALL COMBINATIONS OF MACH NUMBER AND REDUCED FREQUENCY LISTED   $
+$        ON THE MKAERO1 ENTRY AND ITS CONTINUATION WILL BE USED TO      $
+$        GENERATE GENERALIZED AERO FORCE MATRICES.  IF MORE THAN EIGHT  $
+$        MACH NOS OR REDUCED FREQUENCIES ARE REQUIRED A SECOND MKAERO1  $
+$        IS NECESSARY.                                                  $
+$                                                                       $
+MKAERO1 .9	1.2
+	.001	.01	.1	.5	1.	2.	3.	5.
+$                                                                       $
+$                 * * VIBRATION SOLUTION PARAMETERS * *                 $
+$                                                                       $
+$        THE EIGR ENTRY SPECIFIES THE METHOD OF EXTRACTING THE EIGEN-   $
+$        SOLUTIONS OF THE STRUCTURE IN A VACUUM; IN THIS CASE THE       $
+$        MODIFIED GIVENS METHOD.  THREE MODES ARE DESIRED, NORMAL-      $
+$        IZED ON THE MAXIMUM DISPLACEMENTS.                             $
+$                                                                       $
+$       SID     F1      F2                                              $
+EIGRL   1               75.
+EIGRL	2		75.
+$                                                                       $
+$                 * * FLUTTER SOLUTION PARAMETERS * *                   $
+$                                                                       $
+$        THE FLUTTER ENTRY DEFINES THE METHOD OF SOLUTION, IDENTIFIES   $
+$        THE FLFACT ENTRIES THAT FOLL0W, SPECIFIES THE INTERPOLATION    $
+$        METHOD, THE NUMBER OF ROOTS DESIRED IN THE OUTPUT AND THE      $
+$        CRITERION FOR CONVERGENCE (DEFAULT IS 10-3).                   $
+$                                                                       $
+$       SID     METHOD  DENS    MACH    VEL     IMETH   NVALUE  EPS     $
+FLUTTER 16      PK      1       2       3
+FLUTTER 17      PK      1       20      3
+FLUTTER	26	PK	1	2	3
+FLUTTER	27	PK	1	20	3
+$                                                                       $
+$        FLFACT ENTRIES ARE USED TO SPECIFY DENSITY RATIOS, MACH NOS    $
+$        AND REDUCED FREQUENCIES/VELOCITIES FOR FLUTTER ANALYSES.       $
+$        NEGATIVE VELOCITIES ARE SIGNALS TO COMPUTE AND PRINT EIGEN-    $
+$        VECTORS.                                                       $
+$                                                                       $
+$       SID     F1      F2      F3      F4      F5      F6      F7      $
+FLFACT  1       1.                                                      DENSITY
+FLFACT  2       .9                                                      MACH NO.
+FLFACT	20	1.2
+FLFACT  3       500.	600.	700.	800.	900.	1000.	1100.
+	1200.	1300.   1500.
+$                                                                       $
+$DESVAR ID      LABEL   XINIT   XLB     XUB
+DESVAR  10      PBAR101 1.0     0.001   100.0	
+DESVAR  20      PBAR102 1.0     0.001   100.0
+DESVAR  30      PBAR301 0.1     0.001   100.0
+$
+$ RELATIONSHIP OF DESIGN VARIABLES TO ANALYSIS MODEL PROPERTIES
+$
+$        THE DVPREL1 ENTRY EXPRESSES AN AN ANALYSIS MODEL PROPERTY AS
+$        A LINEAR FUNCTION OF DESIGN VARIABLES.  IT LISTS A UNIQUE ID,
+$        AN ANALYSIS MODEL ENTRY TYPE ID STRING, A PROPERTY ENTRY ID,
+$        THE FIELD POSITION OF THE PROPERTY ENTRY OR WORD POSITION IN
+$        THE ELEMENT PROPERTY TABLE OF THE ANALYSIS MODEL, THE MINIMUM
+$        AND MAXIMUM VALUES ALLOWED FOR THIS PROPERTY DURING OPTIMIZATION,
+$        A CONSTANT TERM OF RELATION, A DESIGN VARIABLE ENTRY (DESVAR)
+$        ID, AND A COEFFICIENT OF LINEAR RELATION.  THE EQUATION IS PI
+$        = CO + CJXJ AND THE CONTINUATION ENTRY CAN BE USED TO LIST
+$        MORE THAN ONE CJ.  IN THIS CASE, THERE IS ONLY ONE CJ FOR EACH
+$        DVPREL1 ENTRY.
+$
+$DVPREL1ID      TYPE    PID     FID     PMIN    PMAX    C0      XXXX    +DVPREL1
+DVPREL1 1014    PBAR    101     4
+$       DVID1   COEF1   DVID2   COEF2   DVID3   COEF3   ....
+        10      1.5
+DVPREL1 1015    PBAR    101     5
+        10      0.173611
+DVPREL1 1016    PBAR    101     6
+        10      2.0
+DVPREL1 1017    PBAR    101     7
+        10      0.462963
+DVPREL1 1024    PBAR    102     4
+        20      1.5
+DVPREL1 1025    PBAR    102     5
+        20      0.173611
+DVPREL1 1026    PBAR    102     6
+        20      2.0
+DVPREL1 1027    PBAR    102     7
+        20      .462963
+DVPREL1 1028    PBAR    301     4
+        30      1.5
+DVPREL1 1029    PBAR    301     5
+        30      0.173611
+DVPREL1 1030    PBAR    301     6
+        30      2.0
+DVPREL1 1031    PBAR    301     7
+        30      .462963
+$  THE OBJECTIVE IS THE TOTAL WEIGHT OF THE VEHICLE 
+DRESP1  10      WEIGHT  WEIGHT
+$
+$        THE FOLLOWING DRESP1 ENTRIES IDENTIFY MAXIMUM AND MINIMUM
+$        STRESSES AT END A OF ALL ELEMENTS IN PROPERTY GROUPS 101,
+$        102, AND 301.  THE STRESS ITEM CODES LISTED IN THE ATTA
+$        FIELDS CAN BE FOUND IN SECTION 4 OF THE MSC/NASTRAN USERS
+$        MANUAL.
+$
+$ STRESS RESPONSES
+$
+$DRESP1 ID      LABEL   RTYPE   PTYPE   REGION  ATTA    ATTB    ATT1
+DRESP1  1001    TEN110  STRESS  PBAR            7               101
+        102     301
+DRESP1  1002    COM110  STRESS  PBAR            8               101
+        102     301
+$
+$ STRESS CONSTRAINTS
+$
+$        THE DCONSTR ENTRY DEFINES DESIGN CONSTRAINTS.  LISTED ARE
+$        A CONSTRAINT SET ID, THE DRESPI ENTRY ID AND THE LOWER AND
+$        UPPER BOUND IMPOSED ON THIS RESPONSE QUANTITY.  THE FOLLOWING
+$        TWO ENTRIES IMPOSE LIMITS ON THE ALLOWABLE STRESSES IN THE
+$        BARS IN UNITS OF POUNDS/FOOT**2.
+$
+$DCONSTR DCID   RID     LALLOW  UALLOW
+DCONSTR 200     1001    -5.76+6 7.20+6
+DCONSTR 200     1002    -5.76+6 7.20+6
+$
+$
+$ TIP TWIST RESPONSE
+$
+DRESP1  101     RTIPROT DISP                    5               120
+DRESP1  100     RTROT   DISP                    5               100
+$
+$ SECOND LEVEL RESPONSES FOR TIP TWIST
+$
+$        THE DRESP2 ENTRY DEFINES THE INPUT ARGUMENTS TO USER-SUPPLIED
+$        EQUATIONS.  THESE SECOND-LEVEL RESPONSES CAN THEN EITHER BE
+$        USED AS CONSTRAINTS OR AS AN OBJECTIVE FUNCTION.  INPUT MAY
+$        CONSIST OF DESIGN VARIABLES (DESVAR), FIRST-LEVEL (DRESP1)
+$        RESPONSES, TABLE CONSTANTS (DTABLE), AND GRID COORDINATES
+$        (DVGRID).  IT LISTS AN ID, A USER DEFINED LABEL, THE DEQATN
+$        ENTRY ID, A REGION IDENTIFIER FOR CONSTRAINT SCREENING, A
+$        STRING INDICATING DESVAR ID NUMBERS, A DESVAR ID, A STRING
+$        INDICATING THAT THE LABELS FOR THE CONSTANTS IN A DTABLE ENTRY
+$        FOLLOW, THE LABELS OF CONSTANTS IN THE DTABLE INPUT,
+$        A STRING INDICATING DRESP1 ID NUMBERS, DRESP1 IDS, A STRING
+$        SIGNIFYING THAT THE IDS AND DIRECTIONS FOLLOWING ARE NODE
+$        NUMBERS AND CARTESIAN DIRECTION COMPONENTS, NODE NUMBERS,
+$        AND CARTESIAN DIRECTIONS.
+$
+$DRESP2 ID      LABEL   EQID    REGION  XXXX    XXXX    XXXX    XXXX
+DRESP2  5       RHSTWIST5                                               +DR25
+$       DRESP1  NR1     NR2     NR3     ETC
++DR25   DRESP1  101     100
+$
+$ EQUATION DEFINING SECOND LEVEL RESPONSE FOR TIP TWIST
+$
+$        THE DEQATN ENTRY DEFINES THE EQUATION(S) USED IN THE DESIGN
+$        PROCESS.  IT LISTS A UNIQUE EQUATION ID, AND THE EQUATION IS
+$        WRITTEN IN FORTRAN LIKE SYNTAX FOLLOWING THE RULES IN DEFINING
+$        DMAP ASSIGNMENTS AND FUNCTIONS.
+$
+$DEQATN EQID            EQUATION
+DEQATN  5       F(RTIP,RROOT) = RTIP - RROOT
+$
+$
+$ TIP TWIST CONSTRAINTS - SUBSONICALLY, THE LIMIT IS ONE DEGREE OF TWIST
+$                         SUPERSONICALLY, THE LIMIT IS HALF A DEGREE
+$
+DCONSTR 50      5       -0.017450.01745
+DCONSTR 60      5       -.008726 .008726
+$
+DCONADD 1       50      200
+DCONADD 2       60      200
+$
+$                       *       *       *
+$
+$                 * AILERON ROLL EFFECTIVENESS *
+$
+$
+$ RESPONSES REQUIRED FOR ROLL EFFECTIVENESS
+$
+DRESP1  1401    CLDELTA STABDER                 517     0       4
+DRESP1  1402    CLP     STABDER                 513     0       4
+$
+$
+$DRESP2 ID      LABEL   EQID    REGION  XXX     XXX     XXX     XXX     +DRES2
+DRESP2  2401    ROLLEFF 103                                             +DR2401
+$       DRESP1  NR1     NR2     NR3     ETC
++DR2401 DRESP1  1402    1401
+$DEQATN EQID            EQUATION
+DEQATN  103     F(A,B) = -B/A
+$
+$ SUBSONIC AILERON EFFECTIVENESS CONSTRAINT
+$
+DCONSTR 3       2401    0.60
+$
+$ SUPERSONIC AILERON EFFECTIVENESS CONSTRAINT
+$
+DCONSTR 4       2401    0.43
+$
+$                 * SUBSONIC AND SUPERSONIC FLUTTER *
+$
+$ THE SAME SET OF SPEEDS ARE CONSTRAINED SYMMETRICALLY AND
+$ ANTISYMMETRICALLY, WHICH IS A REASONABLE CONDITION.  THE SAME SET
+$ OF SPEEDS ARE ALSO CONSTRAINED SUBSONICALLY AND SUPERSONICALLY,
+$ WHICH IS NOT REASONABLE, BUT EXPEDIENT 
+$
+$ RESPONSE FOR SUBSONIC ANTISYMMETRIC FLUTTER
+$
+$DRESP1 ID      LABEL   FLUTTER XXXX    REGION  SID     XXXX    ID_MODE +DR
+DRESP1  16      FLUTTER FLUTTER                                 88      +DR1
+$       ID_DENS ID_MACH ID_VEL
++DR1    1       2       4
+$
+$ RESPONSE FOR SUPERSONIC ANTISYMMETRIC FLUTTER
+$
+DRESP1  17      FLUTTER FLUTTER                                 88      
+        1       20      4
+$
+$ SELECTION OF FLUTTER MODES FOR OPTIMIZATION
+$
+SET1    88      3       THRU    7
+$
+$ SELECTION OF VELOCITIES FOR IMPOSING FLUTTER CONSTRAINTS
+$
+flfact	4	1000.0	1300.0  1500.0
+$
+$ EQUATION FOR SECOND LEVEL FLUTTER RESPONSE TO CONSTRAIN SYSTEM DAMPING
+$
+DRESP2  116       GDAMP   4                                                       
+        DRESP1  16
+DEQATN  4       F(A) = (A - 0.03)/0.1
+DRESP2  117      GDAMP   4
+        DRESP1  17
+$
+$ RESPONSE FOR SUBSONIC SYMMETRIC FLUTTER
+$
+$DRESP1 ID      LABEL   FLUTTER XXXX    REGION  SID     XXXX    ID_MODE +DR
+DRESP1  26      FLUTTER FLUTTER                                 89      +DR11
+$       ID_DENS ID_MACH ID_VEL
++DR11   1       2       4
+DRESP1  27      FLUTTER FLUTTER                                 89 
+$       ID_DENS ID_MACH ID_VEL
+        1       20      4
+$
+set1	89	2	thru	7
+$
+DRESP2  126     GDAMP   4                                               
+        DRESP1  26
+DRESP2  127     GDAMP   4
+        DRESP1  27
+$
+$
+$ CONSTRAINTS ON AEROELASTIC SYSTEM DAMPING
+$
+DCONSTR 16      116     -1.0+20 -0.3
+DCONSTR 17      117     -1.0+20 -0.3
+DCONSTR 26      126     -1.0+20 -0.3
+DCONSTR 27      127     -1.0+20 -0.3
+$
+$                       *       *       *
+$
+$                * OPTIMIZATION CONTROL PARAMS *
+$
+$        THE DOPTPRM ENTRY IS USED TO OVERRIDE DEFAULT OPTIMIZATION
+$        PARAMETERS.  THE DOPTPRM ENTRY IS USED
+$        HERE TO SET THE MAXIMUM NUMBER OF DESIGN CYCLES TO 25 AND TO
+$        REQUEST DETAILED RESULTS FOLLOWING EACH OPTIMIZATION CYCLE.
+$
+$       PARAM1  VAL1    PARAM2  VAL2    ETC
+DOPTPRM DESMAX  25      P1      2       P2      15      DELB    0.01
+	delx	0.5
+$
+$        THE PARAMETER CDIF,YES FORCES THE SELECTION OF THE CENTRAL
+$        DIFFERENCE SCHEME USED IN THE SEMI-ANALYTIC APPROACH
+$        REGARDLESS OF THE TYPE OF OPTIMIZATION REQUESTED.
+PARAM	optexit	7
+param	cdif	yes
+$ extra
+PARAM,PRTGPL,YES
+PARAM,PRTEQXIN,YES
+PARAM,PRTGPDT,YES
+PARAM,PRTCSTM,YES
+PARAM,PRTBGPDT,YES
+PARAM,PRTGPTT,YES
+PARAM,PRTMGG,YES
+PARAM,PRTPG,YES
+ENDDATA
