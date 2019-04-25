@@ -18,7 +18,6 @@ import pyNastran.gui.formats
 import pyNastran.gui.gui_common
 #if not IS_DEV:
     #from pyNastran.gui.menus.test_groups import *
-from pyNastran.all_tests_no_gui import *
 from pyNastran.converters.test_gui_formats import *
 
 

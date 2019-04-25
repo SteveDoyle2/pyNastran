@@ -30,7 +30,7 @@ for exclude_word in exclude_words:
 all_reqs, install_requires = get_package_requirements(is_gui=False)
 
 setup(
-    name='pyNastran',
+    name='pyNastran_gui',
     version=pyNastran.__version__,
     description=pyNastran.__desc__,
     long_description="""\
@@ -64,17 +64,10 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            #'run_nastran_double_precision = pyNastran.bdf.test.run_nastran_double_precision:cmd_line',
-            'test_bdf  = pyNastran.bdf.test.test_bdf:main',
-            'test_op2  = pyNastran.op2.test.test_op2:main',
-            'test_op4  = pyNastran.op4.test.test_op4:main',
             #'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
             'test_pynastrangui = pyNastran.gui.test.test_gui:main',
-
             'format_converter = pyNastran.converters.type_converter:cmd_line_format_converter',
             'pyNastranGUI = pyNastran.gui.gui:cmd_line',
-            'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
-            'f06 = pyNastran.f06.utils:cmd_line',
 
             #'pyNastranv = pyNastran.dev.bdf_vectorized.solver.solver:main',
             #'test_bdfv = pyNastran.dev.bdf_vectorized.test.test_bdf_vectorized2:main',
