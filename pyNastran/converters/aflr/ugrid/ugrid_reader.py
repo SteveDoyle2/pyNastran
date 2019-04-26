@@ -132,42 +132,50 @@ class UGRID(object):
             # data and and then do a reshape
             self.log.debug('ndarray_float=%s' % (ndarray_float))
             #nodes = zeros(nnodes * 3, dtype=ndarray_float)
-            #tris = zeros(ntris * 3, dtype='int32')
-            #quads = zeros(nquads * 4, dtype='int32')
+            tris = array([], dtype='int32')
+            quads = array([], dtype='int32')
             #pids = zeros(npids, dtype='int32')
+            #nodes = array([], dtype='float32')
 
             ## NODES
-            data = ugrid_file.read(nnodes * 3 * nfloat)
-            self.n += nnodes * 3 * nfloat
+            nbytes_expected = nnodes * 3 * nfloat
+            data = ugrid_file.read(nbytes_expected)
+            self.n += nbytes_expected
             dtype = endian + float_fmt
             nodes = np.frombuffer(data, dtype=dtype).reshape((nnodes, 3)).copy()
             #print('min xyz value = ' , nodes.min())
             #print('max xyz value = ' , nodes.max())
 
             ## CTRIA3
-            data = ugrid_file.read(ntris * 3 * 4)
-            self.n += ntris * 3 * 4
             dtype = endian + 'i'
-            tris = np.frombuffer(data, dtype=dtype).reshape((ntris, 3)).copy()
-            #print('min tris value = ' , tris.min())
-            #print('max tris value = ' , tris.max())
+            if ntris:
+                data = ugrid_file.read(ntris * 3 * 4)
+                tris = np.frombuffer(data, dtype=dtype).reshape((ntris, 3)).copy()
+                self.n += ntris * 3 * 4
+                #print('min tris value = ' , tris.min())
+                #print('max tris value = ' , tris.max())
 
 
             ## CQUAD4
-            data = ugrid_file.read(nquads * 4 * 4)
-            self.n += nquads * 4 * 4
-            quads = np.frombuffer(data, dtype=dtype).reshape((nquads, 4)).copy()
-            #print('min quads value = ' , quads.min())
-            #print('max quads value = ' , quads.max())
+            if nquads:
+                nbytes_expected = nquads * 4 * 4
+                data = ugrid_file.read(nbytes_expected)
+                self.n += nbytes_expected
+                assert len(data) == nbytes_expected, 'ndata=%s nbytes_expected=%s nquads_actual=%g nquads=%s' % (
+                        len(data), nbytes_expected, len(data)/16., nquads)
+                quads = np.frombuffer(data, dtype=dtype).reshape((nquads, 4)).copy()
+                #print('min quads value = ' , quads.min())
+                #print('max quads value = ' , quads.max())
 
             if npids:
-                data = ugrid_file.read(npids * 4)
-                assert len(data) == (npids * 4), 'len(data)=%s' % (len(data))
-                self.n += npids * 4
+                nbytes_expected = npids * 4
+                data = ugrid_file.read(nbytes_expected)
+                assert len(data) == nbytes_expected, 'len(data)=%s' % (len(data))
+                self.n += nbytes_expected
                 pids = np.frombuffer(data, dtype=dtype).copy()
+                self.pids = pids
                 #print('min pids value = ' , pids.min())
                 #print('max pids value = ' , pids.max())
-                self.pids = pids
 
             self.nodes = nodes
             self.tris = tris
@@ -188,25 +196,29 @@ class UGRID(object):
 
             if ntets:
                 ## CTETRA
-                data = ugrid_file.read(ntets * 4 * 4)
-                self.n += ntets * 4 * 4
+                nbytes_expected = ntets * 4 * 4
+                data = ugrid_file.read(nbytes_expected)
                 tets = np.frombuffer(data, dtype=dtype).reshape((ntets, 4)).copy()
+                self.n += nbytes_expected
                 #print('min tets value = ' , tets.min())
                 #print('max tets value = ' , tets.max())
 
             if npenta5s:
                 ## CPYRAM
-                data = ugrid_file.read(npenta5s * 5 * 4)
-                self.n += npenta5s * 5 * 4
+                nbytes_expected = npenta5s * 5 * 4
+                data = ugrid_file.read(nbytes_expected)
                 penta5s = np.frombuffer(data, dtype=dtype).reshape((npenta5s, 5)).copy()
+                self.n += nbytes_expected
                 #print('min penta5s value = ' , penta5s.min())
                 #print('max penta5s value = ' , penta5s.max())
 
             if npenta6s:
                 ## CPENTA
-                data = ugrid_file.read(npenta6s * 6 * 4)
-                self.n += npenta6s * 6 * 4
+                nbytes_expected = npenta6s * 6 * 4
+                data = ugrid_file.read(nbytes_expected)
+                penta6s = np.frombuffer(data, dtype=dtype)
                 penta6s = np.frombuffer(data, dtype=dtype).reshape((npenta6s, 6)).copy()
+                self.n += nbytes_expected
                 #print('min penta6s value = ' , penta6s.min())
                 #print('max penta6s value = ' , penta6s.max())
 
@@ -215,15 +227,10 @@ class UGRID(object):
                 nbytes_expected = nhexas * 8 * 4
                 data = ugrid_file.read(nbytes_expected)
                 ndata = len(data)
-                self.n += nhexas * 8 * 4
-
-                try:
-                    hexas = np.frombuffer(data, dtype=dtype).reshape((nhexas, 8)).copy()
-                except ValueError:  ## pragma: no cover
-                    msg = 'ndata=%s nbytes_expected=%s nhexas_actual=%g nhexas=%s' % (
+                assert ndata == nbytes_expected, 'ndata=%s nbytes_expected=%s nhexas_actual=%g nhexas=%s' % (
                         ndata, nbytes_expected, ndata/32., nhexas)
-                    self.log.error(msg)
-                    raise
+                hexas = np.frombuffer(data, dtype=dtype).reshape((nhexas, 8)).copy()
+                self.n += nhexas * 8 * 4
                 #print('min hexas value = ' , hexas.min())
                 #print('max hexas value = ' , hexas.max())
 
