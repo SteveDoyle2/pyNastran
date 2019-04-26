@@ -20,6 +20,7 @@ UGRID_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models')
 TECPLOT_PATH = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models')
 NASTRAN_PATH = os.path.join(PKG_PATH, '..', 'models')
 
+
 class TestUgrid(unittest.TestCase):
     """runs ugrid2d/3d tests"""
 
