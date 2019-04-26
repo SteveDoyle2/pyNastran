@@ -432,6 +432,32 @@ class CHEXA8(SolidElement):
         return centroid
 
     def Volume(self):
+        """Calculate the volume of the hex"""
+        # https://www.osti.gov/servlets/purl/632793/
+        #volume = (
+            #det3(x7 - x0, x1 - x0, x3 - x5) +
+            #det3(x7 - x0, x4 - x0, x5 - x6) +
+            #det3(x7 - x0, x2 - x0, x6 - x3)
+        #) / 6.
+        #  swap points
+        # x2 -> x3
+        # x3 -> x2
+        #
+        # x6 -> x7
+        # x7 -> x6
+        #def det3(a, b, c):
+            #return np.det(np.vstack(a, b, c))
+        #volume = (
+            #det3(x6 - x0, x1 - x0, x2 - x5) +
+            #det3(x6 - x0, x4 - x0, x5 - x7) +
+            #det3(x6 - x0, x3 - x0, x7 - x3)
+        #) / 6.
+        # add 1
+        #volume = (
+            #det3(x7 - x1, x2 - x1, x3 - x6) +
+            #det3(x7 - x1, x5 - x1, x6 - x8) +
+            #det3(x7 - x1, x4 - x1, x8 - x4)
+        #) / 6.
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         (area1, c1) = area_centroid(n1, n2, n3, n4)
         (area2, c2) = area_centroid(n5, n6, n7, n8)
@@ -1058,6 +1084,7 @@ class CPENTA6(SolidElement):
         return centroid
 
     def Volume(self):
+        """Calculate the volume of the penta"""
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         area1 = 0.5 * norm(cross(n3 - n1, n2 - n1))
         area2 = 0.5 * norm(cross(n6 - n4, n5 - n4))
@@ -2043,6 +2070,7 @@ class CTETRA4(SolidElement):
         ]
 
     def Volume(self):
+        """Calculate the volume of the tet"""
         (n1, n2, n3, n4) = self.get_node_positions()
         return volume4(n1, n2, n3, n4)
 
