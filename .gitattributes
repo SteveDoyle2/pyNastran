@@ -36,4 +36,4 @@
 *.cogsg binary
 *.pptx binary
 *.docx binary
-.b8.ugrid
+*.b8.ugrid binary
