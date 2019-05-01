@@ -23,20 +23,20 @@ numpy:
 matrix:
   include:
     - python: '2.7'
-    - numpy: 'numpy=1.11.3'
-    - scipy: 'scipy=0.18.1'
+      numpy: 'numpy=1.11.3'
+      scipy: 'scipy=0.18.1'
 
     - python: '2.7'
-    - numpy: 'numpy'
-    - scipy: 'scipy'
+      numpy: 'numpy'
+      scipy: 'scipy'
 
     - python: '3.6'
-    - numpy: 'numpy'
-    - scipy: 'scipy'
+      numpy: 'numpy'
+      scipy: 'scipy'
 
     - python: '3.7'
-    - numpy: 'numpy'
-    - scipy: 'scipy'
+      numpy: 'numpy'
+      scipy: 'scipy'
 #-------------------------------------------------
 # old-A
 
