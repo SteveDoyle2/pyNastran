@@ -94,12 +94,12 @@ def get_package_requirements(is_gui=True):
         import six
         sver = [int(val) for val in six.__version__.split('-')[0].split('.')]
         all_reqs['six'] = '.'.join((str(val) for val in sver))
-        if sver < [1, 11, 0]:
-            print("six.__version__ = %r < '1.11.0'" % six.__version__)
-            all_reqs['six'] = '>= 1.11.0'
-            py_packages.append('six >= 1.11.0')
+        if sver < [1, 10, 0]:
+            print("six.__version__ = %r < '1.10.0'" % six.__version__)
+            all_reqs['six'] = '>= 1.10.0'
+            py_packages.append('six >= 1.10.0')
     except ImportError:
-        py_packages.append('six >= 1.11.0')  # 1.12.0 used
+        py_packages.append('six >= 1.10.0')  # 1.12.0 used
 
     if is_gui:
         try:
@@ -120,10 +120,10 @@ def get_package_requirements(is_gui=True):
         all_reqs['cpylog'] = '.'.join((str(val) for val in sver))
         if sver <= [1, 0, 2]:
             print("cpylog.__version__ = %r != '1.0.2'" % cpylog.__version__)
-            all_reqs['cpylog'] = '== 1.0.2'
-            py_packages.append('cpylog == 1.0.2')
+            all_reqs['cpylog'] = '>= 1.0.2'
+            py_packages.append('cpylog >= 1.0.2')
     except ImportError:
-        py_packages.append('cpylog == 1.0.2')  # 1.0.2 used
+        py_packages.append('cpylog >= 1.0.2')  # 1.0.2 used
 
 
     try:

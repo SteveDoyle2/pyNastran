@@ -5,16 +5,38 @@
 dist: xenial
 language: python
 python:
-  - "2.7"
-  #- "3.5"
-  - "3.6"
-  - "3.7"
+  - '2.7'
+  #- '3.5'
+  - '3.6'
+  - '3.7'
   #  # https://github.com/travis-ci/travis-ci/issues/9815
   #  dist: xenial
   #  sudo: true
 #  - "3.5-dev" # 3.5 development branch
 #  - "nightly" # currently points to 3.6-dev
+scipy:
+  - SCIPY='scipy'
+  - SCIPY='scipy=0.18.1'
+numpy:
+  - NUMPY='numpy'
+  - NUMPY='numpy=1.11.3'
+matrix:
+  include:
+    - python: '2.7'
+    - numpy: 'numpy=1.11.3'
+    - scipy: 'scipy=0.18.1'
 
+    - python: '2.7'
+    - numpy: 'numpy'
+    - scipy: 'scipy'
+
+    - python: '3.6'
+    - numpy: 'numpy'
+    - scipy: 'scipy'
+
+    - python: '3.7'
+    - numpy: 'numpy'
+    - scipy: 'scipy'
 #-------------------------------------------------
 # old-A
 
@@ -76,6 +98,7 @@ install:
 
   # PY2: numpy 1.14.2: pandas works in 0.20.3; broken in 0.22.0, 0.23.4
   # PY3: numpy 1.14.2; pandas is fine: 0.22.0
+  - echo "python=$TRAVIS_PYTHON_VERSION atlas $NUMPY $SCIPY matplotlib pandas h5py vtk pyqt"
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib pandas=0.20 h5py vtk pyqt; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib pandas      h5py vtk pyqt; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi

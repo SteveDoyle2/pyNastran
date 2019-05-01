@@ -430,7 +430,7 @@ class TestMeshUtils(unittest.TestCase):
         os.remove('caero4.bdf')
         os.remove('caero5.bdf')
         os.remove('caero6.bdf')
-        os.remove('caero5.scaled.bdf')
+        #os.remove('caero5.scaled.bdf')
         os.remove('caero6.scaled.bdf')
 
     def test_export_mcids(self):
