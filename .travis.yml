@@ -3,6 +3,8 @@
 # - osx
 
 dist: xenial
+git:
+  quiet: true
 language: python
 python:
   - '2.7'
@@ -22,9 +24,10 @@ numpy:
   - NUMPY='numpy=1.11.3'
 matrix:
   include:
-    - python: '2.7'
-      numpy: 'numpy=1.11.3'
-      scipy: 'scipy=0.18.1'
+    - name: "Python 2.7 old packages"
+      python: '2.7'
+      numpy: NUMPY='numpy=1.11.3'
+      scipy: SCIPY='scipy=0.18.1'
 
 #    - python: '2.7'
 #      numpy: 'numpy'
