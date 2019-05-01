@@ -599,11 +599,13 @@ class TestNastranGUI(unittest.TestCase):
             xyz_file.write('4., 5., 6.\n')
         csv_filename = 'xyz1.csv' # os.path.join(MODEL_PATH, 'xyz1.csv')
         test.on_load_csv_points(csv_filename=csv_filename, name=None, color=None)
+        os.remove(csv_filename)
 
         with open('xyz2.csv', 'w') as xyz_file:
             xyz_file.write('10., 20., 30.')
         csv_filename = 'xyz2.csv' # os.path.join(MODEL_PATH, 'xyz2.csv')
         test.on_load_csv_points(csv_filename=csv_filename, name=None, color=None)
+        os.remove(csv_filename)
 
         #test.on_wireframe()
         #test.on_surface()

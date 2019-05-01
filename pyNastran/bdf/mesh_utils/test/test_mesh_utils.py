@@ -425,6 +425,13 @@ class TestMeshUtils(unittest.TestCase):
                 #'-o', 'caero6.bdf',
                 '--length', '0.5', '--time', '1.', '--mass', str(0.5**3.)]
         cmd_line(argv=argv, quiet=True)
+        os.remove('caero.bdf')
+        os.remove('caero2.bdf')
+        os.remove('caero4.bdf')
+        os.remove('caero5.bdf')
+        os.remove('caero6.bdf')
+        os.remove('caero5.scaled.bdf')
+        os.remove('caero6.scaled.bdf')
 
     def test_export_mcids(self):
         """creates material coordinate systems"""

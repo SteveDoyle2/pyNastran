@@ -63,6 +63,9 @@ class GuiParsing(unittest.TestCase):
         out = get_inputs(print_inputs=False, argv=args)
         remove_args(out, *keys_to_remove)
         assert out == {'format': ['nastran'], 'output': ['fem.op2'], 'input': ['fem.bdf']}, out
+        os.remove('fem.bdf')
+        os.remove('fem.op2')
+        os.remove('fem.tri')
 
     def test_parse_2(self):
         """tests parsing of the pyNastranGUI command line"""
