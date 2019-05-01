@@ -513,7 +513,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             self.elements[eid] = elem
         for eid, elem in replace_model.rigid_elements.items():
             self.rigid_elements[eid] = elem
-        for pid, prop in iteritems(replace_model.properties):
+        for pid, prop in replace_model.properties.items():
             self.properties[pid] = prop
         for mid, mat in replace_model.materials.items():
             self.materials[mid] = mat
@@ -587,7 +587,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             coord.validate()
         for eid, elem in sorted(iteritems(self.elements)):
             elem.validate()
-        for pid, prop in sorted(iteritems(self.properties)):
+        for pid, prop in sorted(self.properties.items()):
             prop.validate()
 
         for eid, elem in sorted(self.rigid_elements.items()):
@@ -931,7 +931,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         self._parse_cards(cards, card_count)
 
         if 0 and self.values_to_skip:
-            for key, values in iteritems(self.values_to_skip):
+            for key, values in self.values_to_skip.items():
                 dict_values = getattr(self, key)
                 if not isinstance(dict_values, dict):
                     msg = '%r is an invalid type; only dictionaries are supported' % key
@@ -1355,7 +1355,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """
         self.dict_of_vars = {}
         assert len(dict_of_vars) > 0, 'nvars = %s' % len(dict_of_vars)
-        for (key, value) in sorted(iteritems(dict_of_vars)):
+        for (key, value) in sorted(dict_of_vars.items()):
             assert len(key) <= 7, ('max length for key is 7; '
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
@@ -2564,12 +2564,12 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
-        for (lid, loads) in sorted(iteritems(self.dload_entries)):
+        for (lid, loads) in sorted(self.dload_entries.items()):
             msg.append('bdf.dload_entries[%s]' % lid)
             groups_dict = {}
             for loadi in loads:
                 groups_dict[loadi.type] = groups_dict.get(loadi.type, 0) + 1
-            for name, count_name in sorted(iteritems(groups_dict)):
+            for name, count_name in sorted(groups_dict.items()):
                 msg.append('  %-8s %s' % (name + ':', count_name))
             msg.append('')
 
@@ -3467,7 +3467,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 print(str(card))
 
                 #raise
-        for key, card in sorted(iteritems(self.properties)):
+        for key, card in sorted(self.properties.items()):
             try:
                 card._verify(xref)
             except:

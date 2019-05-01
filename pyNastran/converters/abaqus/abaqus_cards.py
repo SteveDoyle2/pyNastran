@@ -34,16 +34,25 @@ class SolidSection(object):
         msg += ')\n'
         return msg
 
+
 class Material(object):
     """a Material object is a series of nodes & elements (of various types)"""
-    def __init__(self, name, sections):
+    def __init__(self, name, sections, density=None, ndepvars=None, ndelete=None):
         self.name = name
-        if 'density' in sections:
-            self.density = sections['density']
-        if 'depvar' in sections:
-            self.depvar = sections['depvar']
-        if 'user_material' in sections:
-            self.user_material = sections['user_material']
+        self.density = density
+
+        #self.depvar = None
+        self.ndelete = ndelete
+        self.ndepvars = ndepvars
+
+        self.user_material = None
+        #print(sections)
+        #if 'density' in sections:
+            #self.density = sections['density']
+        #if 'depvar' in sections:
+            #self.depvar = sections['depvar']
+        #if 'user_material' in sections:
+            #self.user_material = sections['user_material']
         self.sections = sections
 
     def __repr__(self):
@@ -56,7 +65,36 @@ class Material(object):
         return msg
 
     def write(self, abq_file):
-        abq_file.write('** skipping Material %s\n' % self.name)
+        #*Material, name=Glassy828DEA
+        #*Density
+        #1180.,
+        #*Elastic
+            #2.14078e+09, 0.42718
+        #*Material, name=MAT1_828DEA_Dam
+        #*Density
+        #1180.,
+        #*Depvar, delete=4
+            #20,
+        #*User Material, constants=16
+        #** K      CTELIN      C10          C01       DAM_FORM   FUNC_FORM     EVOLF         EVMF
+            #3.2e+09, 5.667e-05,  3.75e+08,        0.,        2.,        1.,    50000.,      0.05
+            #**EVM0ISO    EVM0VOL      EVM0VM DAM_METHOD      ALPHA         A          B          C
+                #0.,       0.5,       0.5,        1.,        0.,        0.,       0.5,       0.6
+        #*Material, name=Steel
+        #*Density
+        #7800.,
+        #*Elastic
+            #2e+11, 0.3
+        abq_file.write('*Material, name=%s\n' % write_name(self.name))
+        if self.density:
+            abq_file.write('*Density\n  %s,\n' % self.density)
+        if self.ndepvars:
+            ndelete = '' if self.ndelete is None else ', delete=%s' % self.ndelete
+            abq_file.write('*Depvar%s\n  %s,\n' % (ndelete, self.ndepvars))
+        if self.user_material:
+            nconstants = ''
+            abq_file.write('*User Material%s\n  %s,\n' % (nconstants, self.user_material))
+        #abq_file.write('** skipping Material %s\n' % self.name)
 
 class Assembly(object):
     def __init__(self, element_types, node_sets, element_sets):
@@ -341,7 +379,7 @@ class Part(object):
 
         for set_name, values in sorted(self.element_sets.items()):
             write_element_set_to_file(abq_file, set_name, values)
-        abq_file.write('*endpart')
+        abq_file.write('*endpart\n')
 
 def write_name(name):
     """Abaqus has odd rules for writing words without spaces vs. with spaces"""

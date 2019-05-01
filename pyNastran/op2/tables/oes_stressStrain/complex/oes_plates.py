@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import numpy as np
 from numpy import zeros
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
@@ -109,7 +110,7 @@ class ComplexTriaxStressArray(OES_Object):
         self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
 
     def add_eid_sort1(self, dt, eid, loc, rs, azs, As, ss):
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
@@ -275,7 +276,7 @@ class ComplexPlateArray(OES_Object):
         self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
 
     def add_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))

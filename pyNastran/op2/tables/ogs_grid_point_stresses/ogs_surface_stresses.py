@@ -1,6 +1,6 @@
-from six import integer_types
 import numpy as np
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import (
     write_floats_10e, _eigenvalue_header)
@@ -76,7 +76,7 @@ class GridPointSurfaceStressesArray(ScalarObject):
 
     def add_sort1(self, dt, nid, eid, fiber, nx, ny, txy, angle, majorP, minorP, tmax, ovm):
         """unvectorized method for adding SORT1 transient data"""
-        #assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.node_element[self.itotal, :] = [nid, eid]
         self.location[self.itotal] = fiber

@@ -1,4 +1,5 @@
 import numpy as np
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e
 
@@ -56,7 +57,7 @@ class AppliedLoadsVectorArray(ScalarObject):
     def add_sort1(self, node_id, eid, source, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
         #raise NotImplementedError('AppliedLoadsVector')
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         msg = "node_id=%s v1=%s v2=%s v3=%s" % (node_id, v1, v2, v3)
         assert 0 < node_id < 1000000000, msg
         #assert nodeID not in self.forces

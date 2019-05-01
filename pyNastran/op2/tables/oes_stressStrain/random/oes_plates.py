@@ -4,6 +4,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import numpy as np
 from numpy import zeros
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_float_13e
 
@@ -169,7 +170,7 @@ class RandomPlateArray(OES_Object):
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
 
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.data[self.itime, self.itotal] = [oxx, oyy, txy]
         self.element[self.itotal, :] = eid  # 0 is center
         self.fiber_curvature[self.itotal] = fd
@@ -189,7 +190,7 @@ class RandomPlateArray(OES_Object):
         #print(self.element_types2, element_type, self.element_types2.dtype)
         #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
 
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.data[self.itime, self.itotal] = [oxx, oyy, txy, ovm]
         self.element[self.itotal, :] = eid  # 0 is center
         self.fiber_curvature[self.itotal] = fd

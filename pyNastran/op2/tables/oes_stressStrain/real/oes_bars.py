@@ -3,8 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, ravel
-ints = (int, np.int32)
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -147,7 +147,7 @@ class RealBarArray(OES_Object):
                           s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
                           s1b, s2b, s3b, s4b, smaxb, sminb, MSc):
 
-        assert isinstance(eid, ints)
+        assert isinstance(eid, integer_types)
         self._times[self.itime] = dt
         self.element[self.itotal] = eid
         self.data[self.itime, self.itotal, :] = [s1a, s2a, s3a, s4a, axial, smaxa, smina, MSt,
@@ -162,7 +162,7 @@ class RealBarArray(OES_Object):
         ##print(msg)
         #if isinstance(nodeID, string_types):
             #nodeID = 0
-        ##assert isinstance(nodeID, ints), nodeID
+        ##assert isinstance(nodeID, integer_types), nodeID
         #self.element_node[self.itotal, :] = [eid, nodeID]
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy, txy, angle, majorP, minorP, ovm]
         #self.itotal += 1

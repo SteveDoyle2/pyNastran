@@ -64,9 +64,6 @@ class VectorizedCardDict(object):
         for key, value in self._objs.items():
             yield key, value
 
-    def iteritems(self):
-        return self.items()
-
     def __repr__(self):
         file_obj = StringIO()
         file_obj.write('<%s object> n=%s\n' % (self.type, self.n))

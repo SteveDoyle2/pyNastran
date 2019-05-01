@@ -4261,6 +4261,51 @@ class DVPREL1(DVXREL1):
             raise NotImplementedError('prop_type=%r is not supported' % self.prop_type)
         return pid
 
+    def get_xinit_lower_upper_bound(self, model):
+        """gets the active x value and the lower/upper bounds"""
+        lower_bound = self.p_min
+        upper_bound = None if self.p_max == 1e20 else self.p_max
+        xinit = self.c0
+
+        desvars = self.dvids
+        ndesvars = len(desvars)
+        for desvar, coeff in zip(desvars, self.coeffs):
+            if isinstance(desvar, integer_types):
+                desvar_ref = model.desvars[desvar]
+            else:
+                desvar_ref = desvar.desvar_ref
+            xiniti = desvar_ref.xinit
+
+            # update the lower/upper bound if we have 1 desvar
+            if desvar_ref.xlb != -1e20:
+                xiniti = max(xiniti, desvar_ref.xlb)
+                if ndesvars == 1:
+                    lower_bound = none_max(lower_bound, desvar_ref.xlb)
+            if desvar_ref.xub != 1e20:
+                xiniti = min(xiniti, desvar_ref.xub)
+                if ndesvars == 1:
+                    upper_bound = none_min(upper_bound, desvar_ref.xub)
+
+            # code validation
+            if desvar_ref.delx is not None and desvar_ref.delx != 1e20:
+                pass
+
+            # TODO: haven't quite decided what to do
+            if desvar_ref.ddval is not None:
+                msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar_ref)
+            assert desvar_ref.ddval is None, desvar_ref
+            xinit += coeff * xiniti
+
+        if lower_bound:
+            xinit = max(xinit, lower_bound)
+        else:
+            lower_bound = np.nan
+        if upper_bound:
+            xinit = min(xinit, upper_bound)
+        else:
+            upper_bound = np.nan
+        return xinit, lower_bound, upper_bound
+
     def raw_fields(self):
         list_fields = ['DVPREL1', self.oid, self.prop_type, self.Pid(),
                        self.pname_fid, self.p_min, self.p_max, self.c0, None]
@@ -4628,6 +4673,10 @@ class DVPREL2(DVXREL2):
 
     #def OptValue(self):  #: .. todo:: not implemented
         #self.pid_ref.OptValue(self.pname_fid)
+
+    def get_xinit_lower_upper_bound(self, model):
+        """gets the active x value and the lower/upper bounds"""
+        return None, None, None
 
     def raw_fields(self):
         list_fields = ['DVPREL2', self.oid, self.prop_type, self.Pid(),
@@ -5499,3 +5548,16 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
     ndresp3s = len(dresp3s)
     if ndresp3s:
         model.log.warning('skipping DRESP3')
+
+def none_max(lower_bound, xlb):
+    """helper method for DVPREL1"""
+    if lower_bound is None:
+        return xlb
+    return max(lower_bound, xlb)
+
+def none_min(upper_bound, xub):
+    """helper method for DVPREL1"""
+    if upper_bound is None:
+        return xub
+    return min(upper_bound, xub)
+

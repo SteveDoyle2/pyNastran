@@ -23,12 +23,6 @@ class Material(VectorizedCard):
         for i in range(self.n):
             yield i, self.__getitem__([i])
 
-    def iteritems(self):
-        return self.items()
-
-    def iterkeys(self):
-        return self.keys()
-
     def slice_by_material_id(self, material_id):
         """
         Allows for slicing:

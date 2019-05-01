@@ -281,8 +281,8 @@ class Abaqus(object):
         name = param_map['name']
 
         iline += 1
-        line0 = lines[iline].strip().lower()
-        word = line0.strip('*').lower()
+        word_line = lines[iline].strip().lower()
+        word = word_line.strip('*').lower()
         unused_allowed_words = ['elastic']
         unallowed_words = [
             'material', 'step', 'boundary', 'amplitude', 'surface interaction',
@@ -292,6 +292,9 @@ class Abaqus(object):
         #print('  wordA =', word)
         #while word in allowed_words:
         sections = {}
+        density = None
+        ndelete = None
+        ndepvars = None
         while word not in unallowed_words:
             data_lines = []
             #self.log.info('  mat_word = %r' % word)
@@ -330,6 +333,7 @@ class Abaqus(object):
                 key = 'density'
                 sline = line0.split(',')
                 assert len(sline) == 1, 'sline=%s line0=%r' % (sline, line0)
+                density = float(sline[0])
                 iline += 1
             elif word.startswith('damage initiation'):
                 key = 'damage initiation'
@@ -387,11 +391,19 @@ class Abaqus(object):
                     #line0 = lines[iline].strip().lower()
                 #self.log.debug(line0)
 
-            elif word == 'depvar':
+            elif word.startswith('depvar'):
                 key = 'depvar'
+                sline = word_line.split()
+                if len(sline) > 1:
+                    assert len(sline) == 2, sline
+                    sline2 = sline[1].split('=')
+                    assert  len(sline2) == 2, sline
+                    assert sline2[0].lower() == 'delete', sline
+                    ndelete = int(sline2[1])
+
                 sline = line0.split(',')
                 assert len(sline) == 1, sline
-                unused_ndepvars = int(sline[0])
+                ndepvars = int(sline[0])
                 iline += 1
             elif word.startswith('user material'):
                 key = 'user material'
@@ -470,8 +482,8 @@ class Abaqus(object):
                 #raise RuntimeError(msg)
             sections[key] = data_lines
 
-            line0 = lines[iline].strip('\n\r\t, ').lower()
-            word = line0.strip('*').lower()
+            word_line = lines[iline].strip('\n\r\t, ').lower()
+            word = word_line.strip('*').lower()
 
             iline += 1
             line0 = lines[iline].strip('\n\r\t, ').lower()
@@ -487,7 +499,8 @@ class Abaqus(object):
             if is_broken:
                 iline -= 1
                 break
-        material = Material(name, sections=sections)
+        material = Material(name, sections=sections, density=density,
+                            ndepvars=ndepvars, ndelete=ndelete)
         iline -= 1
         return iline, line0, material
 
@@ -766,7 +779,7 @@ class Abaqus(object):
             elements.append(line0.split(','))
             iline += 1
             line0 = lines[iline].strip().lower()
-        self.log.debug('elements = %s' % elements)
+        #self.log.debug('elements = %s' % elements)
         return line0, iline, etype, elements
 
     def read_step(self, lines, iline, line0, istep):
@@ -806,7 +819,6 @@ class Abaqus(object):
             #print('active_line =', line0)
             unused_data_lines = []
             if word == 'static':
-                #print('static!!!!!!!')
                 sline = line0.split(',')
                 assert len(sline) == 4, sline
                 iline += 1

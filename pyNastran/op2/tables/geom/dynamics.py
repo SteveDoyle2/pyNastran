@@ -278,9 +278,6 @@ class DYNAMICS(GeomCommon):
         ints = unpack(b(self._uendian + '%ii' % nfields), datan)
         floats = unpack(b(self._uendian + '%if' % nfields), datan)
         strings = unpack(b(self._uendian + '4s'* nfields), datan)
-        #print('ints = ', ints)
-        #print('floats = ', floats)
-        #print('strings = ', strings)
 
         i = 0
         nentries = 0

@@ -6,8 +6,8 @@ import unittest
 from cpylog import get_logger
 
 import pyNastran
-from pyNastran.gui.testing_methods import FakeGUIMethods
 #from pyNastran.bdf.bdf import BDF
+from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.usm3d.usm3d_io import Usm3dIO
 
 

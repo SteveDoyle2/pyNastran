@@ -9,11 +9,11 @@ matplotlib.use('Agg')
 import vtk
 
 from cpylog import SimpleLogger
+import pyNastran
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
+from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastran_io import NastranIO, BDF
-from pyNastran.bdf.errors import DuplicateIDsError
-import pyNastran
 #from cpylog import get_logger2
 
 class NastranGUI(NastranIO, FakeGUIMethods):

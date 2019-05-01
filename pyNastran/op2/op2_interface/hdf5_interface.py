@@ -13,9 +13,7 @@ defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-from six import b
-
-from six import PY3, binary_type, string_types
+from six import b, PY3, binary_type, string_types
 import numpy as np
 import h5py
 
@@ -990,6 +988,7 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
     _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str_data_names,
                                      debug=debug)
     return obj
+
 
 def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str_data_names,
                                      debug=False):

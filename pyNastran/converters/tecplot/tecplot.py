@@ -1,4 +1,3 @@
-# coding: utf-8
 """
 models from:
     http://people.sc.fsu.edu/~jburkardt/data/tec/tec.html
@@ -11,7 +10,6 @@ from collections import defaultdict
 import itertools
 
 from six import string_types
-import numpy as np
 from numpy import (
     array, vstack, hstack, where, unique, zeros, loadtxt, savetxt, intersect1d, in1d)
 #import numpy as np
@@ -435,721 +433,58 @@ class Tecplot(object):
         return (self.hexa_elements.shape[0] + self.tet_elements.shape[0] +
                 self.quad_elements.shape[0] + self.tri_elements.shape[0])
 
-    def read_word(self, tecplot_file):
-        n0 = self.n
-        n = 0
-        while 1:
-            data = tecplot_file.read(4)
-            value, = unpack(b'f', data)
-            n += 4
-            if value == 299.0:  # 299.0 is the zone_marker
-                break
-        tecplot_file.seek(n0)
-        data = tecplot_file.read(n)
-        self.show_data(data)
-        self.n += n
-
-        nbytes_title = n - 4
-        n_title_letters = (n - 4) // 4
-        int_letters = unpack('i'*n_title_letters, data[:nbytes_title])
-        word = ''
-        words = []
-        for i, letter in enumerate(int_letters):
-            if letter == 0:
-                words.append(word)
-                word = ''
-                break
-
-            char = chr(letter)
-            word += char
-            # letters = [chr(letter) for letter in int_letters]
-        self.n -= nbytes_title
-        #self.n += len(words[0])
-        tecplot_file.seek(self.n)
-        return words[0]
-
-    def read_var(self, tecplot_file):
-        var = ''
-        cont = True
-        while cont:
-            data = tecplot_file.read(4)
-            self.n += 4
-            chari, = unpack(b'i', data)
-            if chari != 0:
-                var += chr(data[0])
-            else:
-                cont = False
-        return var
-
     def read_tecplot_binary(self, tecplot_filename, nnodes=None,
                             nelements=None):
         """
         The binary file reader must have ONLY CHEXAs and be Tecplot 360
         with:
         `rho`, `u`, `v`, `w`, and `p`.
-
         """
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
-
-        zone_type_map = {
-            0 : 'ORDERED',
-            1 : 'FELINESEG',
-            2 : 'FETRIANGLE',
-            3 : 'FEQUADRILATERAL',
-            4 : 'FETETRAHEDRON',
-            5 : 'FEBRICK',
-            6 : 'FEPOLYGON',
-            7 : 'FEPOLYHEDRON',
-        }
-        data_packing_map = {
-            0 : 'BLOCK',
-            1 : 'POINT',
-        }
-        var_location_map = {
-            0 : 'NODE',
-            1 : 'CELL-CENTERED',
-        }
-
         with open(tecplot_filename, 'rb') as tecplot_file:
             self.f = tecplot_file
             self._uendian = '<'
             self.n = 0
             self.variables = ['rho', 'u', 'v', 'w', 'p']
 
-            # http://home.ustc.edu.cn/~cbq/360_data_format_guide.pdf
-            # ------------------------------------------
-            # header section
-
-            #  i. Magic number, Version number
             data = tecplot_file.read(8)
-            #self.show_data(data)
             self.n += 8
             word, = unpack(b'8s', data)
-            word = word.decode('utf8')
-            try:
-                magic_number, version = word.split('V')
-            except:
-                print('word = %r' %  word)
-                raise
-            self.log.debug('word=%r magic_number=%r version=%r' % (word, magic_number, version))
+            self.log.debug('word = %r' % word)
 
-            # ii. Integer value of 1.
-            data = tecplot_file.read(4)
-            self.n += 4
-            byte_order = unpack(b'i', data)
-            self.log.debug('byte_order=%r' % (byte_order))
+            #self.show(100, endian='<')
 
-            # iii. Title and variable names.
-            # FileType:
-            #    0 = FULL
-            #    1 = GRID
-            #    2 = SOLUTION
-            data = tecplot_file.read(4)
-            self.n += 4
-            file_type = unpack(b'i', data)
-            self.log.debug('file_type=%r (0=full, 1=grid, 2=solution)' % (file_type))
-
-            # Title (INT32*N)
-            title = self.read_var(tecplot_file)
-            self.log.debug('TITLE = "%s"' % title)
-
-            # Number of variables (INT32)
-            data = tecplot_file.read(4)
-            self.n += 4
-            num_vars, = unpack(b'i', data)
-            self.log.debug('Number of variables = %d' % num_vars)
-
-            # Variable names
-            variable_names = []
-            for i in range(num_vars):
-                var = self.read_var(tecplot_file)
-                variable_names.append(var.lower())
-            self.log.debug('Variables: %s' % variable_names)
-            #self.show(164)
-
-            #header = ''.join(letters)
-            #print("header='%s'" % header, len(header))
-            #self.show(200, types='i', endian='<')
-
-            #  iv. Zones (p.152)
-            zones = []
-            zone_marker = 0.0
-            izone = 0
-            while zone_marker != 357.0:
-                print('------------------------------------------------------------')
-                # Zone marker (FLOAT32) (should be 299.0)
-                data = tecplot_file.read(4)
-                self.n += 4
-
-                zone_marker, = unpack(b'f', data)
-                self.log.debug('zone_marker = %s' %  zone_marker)
-                if zone_marker == 357.0:
-                    break
-                #assert zone_marker == 0.0, zone_marker
-
-                #--------------------------------------------------------------------
-                # you need to loop over everything until you get 357.0 (end of header)
-                # If you get more that don't work passed this point, you may have to
-                # add:
-                #       399.0   (Geometry marker)
-                #       499.0   (Text)
-                #       599.0   (CustomLabel)
-                #       699.0   (UserRec)
-                #       899.0   (Variable Auxiliary data)
-                #--------------------------------------------------------------------
-                if zone_marker == 299.0:
-                    zone = {}
-                    # Zone name (INT32*N)
-                    cont = True
-                    zone_name = ''
-                    zone_name = self.read_var(tecplot_file)
-                    self.log.debug('Zone name = "%s"' % zone_name)
-                    zone['NAME'] = zone_name
-
-                    if version == '102':
-                        strand_id = None
-                        solution_time = None
-                        data = tecplot_file.read(16)
-                        self.n += 16
-                        # i            i            i                 i
-                        parent_zone, zone_type_int, data_packing_int, var_location_int = unpack(b'<4i', data)
-                        self.log.debug('parent_zone=%s, zone_type=%s' % (
-                            parent_zone, zone_type_int))
-                    else:
-                        data = tecplot_file.read(32)
-                        self.n += 32
-                        # i             i            d            i        i            i                 i
-                        parent_zone, strand_id, solution_time, not_used, zone_type_int, data_packing_int, var_location_int = unpack(b'<2i d iiii', data)
-                        self.log.debug('parent_zone=%s,  strand_id=%s, solution_time=%s, not_used=%s, zone_type=%s' % (
-                            parent_zone,  strand_id, solution_time, not_used, zone_type_int))
-
-                    # ParentZone: Zero-based zone number within this
-                    #             datafile to which this zone is
-                    #             a child.
-
-                    # StrandID: -2 = pending strand ID for assignment by Tecplot
-                    #           -1 = static strand ID
-                    #            0 <= N < 32700 valid strand ID
-
-                    zone_type = zone_type_map[zone_type_int]
-                    self.log.debug('zone_type=%s' % zone_type)
-
-                    # Data Packing (INT32)
-                    data_packing = data_packing_map[data_packing_int]
-                    self.log.debug('Data packing = %s' % data_packing)
-
-                    # Specify Var Location (INT32)
-                    #specify_var_location = 'UNKNOWN'
-                    if var_location_int == 0:
-                        specify_var_location = "Don't specify"
-                    elif var_location_int == 1:
-                        specify_var_location = 'Specify'
-                        # Variable Locations (INT32*NV)
-                        # 0 = Node
-                        # 1 = Cell Centered
-                        nbytes = num_vars * 4
-                        data = tecplot_file.read(nbytes)
-                        self.n += 4
-                        assert nbytes == 4, nbytes
-                        var_location_int, = unpack(b'i', data)
-                        var_location = var_location_map[var_location_int]
-                        #self.log.debug('var_location_int = %d' % var_location_int)
-                        self.log.debug('var location = %s' % var_location)
-                    else:
-                        raise NotImplementedError(var_location_int)
-                    self.log.debug('Specify var location = %s' % specify_var_location)
-
-                    # Are raw local 1-to-1 face neighbors supplied?
-                    # (0=FALSE 1=TRUE).
-                    #
-                    # These raw values are a compact form of the local
-                    # 1-to-1 face neighbors.  If supplied, Tecplot
-                    # assumes that the face neighbors are fully specified.
-                    # As such, it will not perform auto face neighbor
-                    # assignment.
-
-                    # This improves Tecplot’s time to first plot.
-                    # See the data section below for format details.
-                    # ORDERED and FELINESEG zones must specify 0 for
-                    # this value because raw face neighbors are not
-                    # defined for these zone types. FEPOLYGON and
-                    # FEPOLYHEDRON zones must specify 0 for this value
-                    # since face neighbors are defined in the face map
-                    # for these zone types.
-                    #
-                    # Raw local 1-to-1 face neighbors (INT32)
-                    data = tecplot_file.read(4)
+            # http://home.ustc.edu.cn/~cbq/360_data_format_guide.pdf
+            # page 151
+            if 1:
+                values = []
+                ii = 0
+                for ii in range(100):
+                    datai = tecplot_file.read(4)
+                    vali, = unpack(b'i', datai)
+                    valf, = unpack(b'f', datai)
                     self.n += 4
-                    are_raw_local_one_to_one_face_neighbors, = unpack(b'i', data)
-                    self.log.debug('are_raw_local_one_to_one_face_neighbors=%s' % (are_raw_local_one_to_one_face_neighbors))
+                    values.append((vali, valf))
+                    if vali == 9999:
+                        print('breaking...')
+                        break
+                #for j, vals in enumerate(values):
+                    #print('  ', j, vals)
+                assert ii < 100, ii
 
-                    num_misc_user_defned_face_neighbor_connections_int = None
-                    if are_raw_local_one_to_one_face_neighbors == 1:
-                        # Number of misc user-defined face neighbor connection (INT32)
-                        data = tecplot_file.read(4)
-                        self.n += 4
-                        num_misc_user_defned_face_neighbor_connections_int, = unpack(b'i', data)
-
-                        num_misc_user_defned_face_neighbor_connections_map = {
-                            0 : 'Local 1-to-1',
-                            1 : 'Local 1-to-many',
-                            2 : 'Global 1-to-1',
-                            3 : 'Global 1-to-many',
-                        }
-                        misc_user_defned_face_neighbor_connections =  num_misc_user_defned_face_neighbor_connections_map[
-                            num_misc_user_defned_face_neighbor_connections_int]
-                        self.log.debug('misc_user_defned_face_neighbor_connections=%s' % (
-                            misc_user_defned_face_neighbor_connections))
-                        if num_misc_user_defned_face_neighbor_connections_int != 0:
-                            # User-defined face neighbor mode (INT32)
-                            data = tecplot_file.read(4)
-                            self.n += 4
-                            user_defined_face_neighbor_mode, = unpack(b'i', data)
-                            self.log.debug('user_defined_face_neighbor_mode=%s' % (
-                                user_defined_face_neighbor_mode))
-                            if  'FE' in zone_type:
-                                # If FE face neighbors are specified by misc face neighbors given (INT32)
-                                data = tecplot_file.read(4)
-                                fe_face_neighbors_specified_by_misc_face_neighbors_given, = unpack(b'i', data)
-                                self.log.debug('fe_face_neighbors_specified_by_misc_face_neighbors_given=%s' % (
-                                    fe_face_neighbors_specified_by_misc_face_neighbors_given))
-
-                    if zone_type == 'ORDERED':
-                        # IMax, JMax, KMax (INT32*3)
-                        data = tecplot_file.read(3 * 4)
-                        self.n += 12
-                        imax, jmax, kmax, = unpack(b'3i', data)
-                        self.log.debug('IMax, JMax, KMax = %d, %d, %d' % (imax, jmax, kmax))
-                        aasdf
-
-                    elif 'FE' in zone_type:  # FE-ZONE
-                        # NumPts (INT32)
-                        data = tecplot_file.read(4)
-                        self.n += 4
-                        num_pts, = unpack(b'i', data)
-                        self.log.debug('Num points = %d' % (num_pts))
-                        zone['NPNTS'] = num_pts
-
-                        #if FE Zone:
-                          #+-------+--------+
-                          #| INT32 | NumPts |
-                          #+-------+--------+
-                          #if ZoneType is FEPOLYGON or FEPOLYHEDRON:
-
-                        if zone_type == 'FEPOLYGON' or zone_type == 'FEPOLYHEDRON':
-                            # NumFaces (INT32)
-                            data = tecplot_file.read(4)
-                            self.n += 4
-                            num_faces, = unpack(b'i', data)
-                            self.log.debug('Num faces = %d' % (num_faces))
-
-                            # Total number of face nodes (INT32)
-                            data = tecplot_file.read(4)
-                            self.n += 4
-                            num_face_nodes, = unpack(b'i', data)
-                            self.log.debug('Num face nodes = %d' % (num_face_nodes))
-
-                            # Total number of boundary faces (INT32)
-                            data = tecplot_file.read(4)
-                            self.n += 4
-                            num_bnd_faces, = unpack(b'i', data)
-                            self.log.debug('Num boundary faces = %d' % (num_bnd_faces))
-
-                            # Total number of boundary connections (INT32)
-                            data = tecplot_file.read(4)
-                            self.n += 4
-                            num_bnd_con, = unpack(b'i', data)
-                            self.log.debug('Num boundary connections = %d' % (num_bnd_con))
-
-                        #For all zone types (repeat for each Auxiliary data name/value pair)
-                        #+-----------+
-                        #|   INT32   | 1=Auxiliary name/value pair to follow
-                        #+-----------+ 0=No more Auxiliary name/value pairs.
-                        #
-                        #If the above is 1, then supply the following:
-                        #+-----------+
-                        #|  INT32*N  | name string (See note 1.)
-                        #+-----------+
-                        #+-----------+
-                        #|   INT32   | Auxiliary Value Format
-                        #+-----------+ (Currently only allow 0=AuxDataType_String)
-                        #
-                        #+-----------+
-                        #|  INT32*N  | Value string (See note 1.)
-                        #+-----------+
-                        #raise NotImplementedError(zone_type)
-                        #
-                        # NumElements (INT32)
-                        data = tecplot_file.read(4)
-                        self.n += 4
-                        num_elems, = unpack(b'i', data)
-                        self.log.debug('Num elements = %d' % (num_elems))
-                        zone['NELEMS'] = num_elems
-
-                        # ICellDim, JCellDim, KCellDim (INT32*3)
-                        data = tecplot_file.read(3 * 4)
-                        self.n += 12
-                        icelldim, jcelldim, kcelldim, = unpack(b'3i', data)
-                        self.log.debug('ICellDim, JCellDim, KCellDim = %d, %d, %d' % (icelldim, jcelldim, kcelldim))
-
-                        # Aux continue (INT32)
-                        data = tecplot_file.read(4)
-                        self.n += 4
-                        aux_continue, = unpack(b'i', data)
-                        self.log.debug('Aux continue = %d' % (aux_continue))
-                        if aux_continue == 1:
-                            #TODO
-                            # Name string
-                            # Aux Value Format
-                            # Value string
-                            pass
-                            raise NotImplementedError(aux_continue)
-                        else:
-                            # TODO: why???
-                            # this has been 36 and 48 (9/12 in words)
-                            datai = b''
-                            ni = 0
-                            self.show(4)
-                            while ni < 1000:
-                                dataii = tecplot_file.read(4)
-                                floati, = unpack('f', dataii)
-                                if floati in [299., 357.]:
-                                    print('***floati', floati)
-                                    break
-                                if len(dataii) == 0:
-                                    raise RuntimeError('bad data')
-                                datai += dataii
-                                ni += 4
-                            if ni == 1000:
-                                raise RuntimeError('didnt find end of table')
-                            self.n += ni
-                            tecplot_file.seek(self.n)
-                            self.show(ni)
-                            #n0 = self.n
-                            #aux_word = self.read_var(tecplot_file)
-                            #print('aux_word =', aux_word)
-                            #print('dn =', self.n - n0)
-                            #self.show(56)
-                            #data = tecplot_file.read(36)
-                            #self.show_data(data, types='ifs', endian=None)
-                            #self.n += 36
-                            #raise NotImplementedError(aux_continue)
-                        zones.append(zone)
-                        print(zone)
-                    else:
-                        raise NotImplementedError(zone_type_int)
-                    #sss
-                elif zone_marker in [399., 499., 599., 699., 799., 899.]:
-                    raise NotImplementedError('zone_marker = %r' % zone_marker)
-                else:
-                    raise NotImplementedError('zone_marker = %r' % zone_marker)
-
-                #self.show(40)
-                #aaa
-
-
-            pshell = 1
-
-            # ------------------------------------------------------------------------------------------------------------
-            variable_data_format_map = {
-                1 : 'float',
-                2 : 'double',
-                3 : 'long',
-                4 : 'short',
-                5 : 'byte',
-                6 : 'bit',
-            }
-            #II. DATA SECTION (don’t forget to separate the header from the data
-            #                  with an EOHMARKER). The data section contains all
-            #                  of the data associated with the zone definitions
-            #                  in the header.
-            for i, zone in enumerate(zones):
-                zone_name = zone['NAME']
-                npoints = zone['NPNTS']
-                nelements = zone['NELEMS']
-                self.log.info('Processing Zone: %s, npts: %d, nelems: %d' % (
-                    zone_name, npoints, nelements))
-                variables = {}
-
-                # i. For both ordered and fe zones:
-                #    Zone marker (FLOAT32); p.
-                data = tecplot_file.read(4)
-                self.n += 4
-                zone_marker, = unpack(b'f', data)
-                self.log.debug('  Zone marker: %f' % zone_marker)
-
-                # Variable data format (INT32*N)
-                # Variable data format, N=Total number of vars
-                #  1=Float, 2=Double, 3=LongInt,
-                #  4=ShortInt, 5=Byte, 6=Bit
-                data = tecplot_file.read(4 * num_vars)
-                self.n += 4 * num_vars
-                variable_data_format_ints = np.frombuffer(data, dtype=np.int32)
-                variable_data_format = [variable_data_format_map[variable_data_format_int]
-                                        for variable_data_format_int in variable_data_format_ints]
-                self.log.debug('  Variable data format: %r' % variable_data_format_ints)
-                self.log.debug('  Variable data format: %r' % variable_data_format)
-
-                # Has passive variables (INT32)
-                data = tecplot_file.read(4)
-                self.n += 4
-                npassive_vars, = unpack(b'i', data)
-                self.log.debug('  Passive Vars: %d' % npassive_vars)
-                if npassive_vars != 0:
-                    self.log.debug('    Has passive vars')
-                    # Is variable passive (INT32*NV)
-                    data = tecplot_file.read(4 * num_vars)
-                    self.n += 4 * num_vars
-                    is_var_passive = np.frombuffer(data, dtype=np.int32)
-
-                # Has variable sharing (INT32)
-                data = tecplot_file.read(4)
-                self.n += 4
-                var_sharing, = unpack(b'i', data)
-                self.log.debug('  Variable sharing: %d' % var_sharing)
-                if var_sharing != 0:
-                    # Zero based zone number to share var with (INT32*NV)
-                    data = tecplot_file.read(4 * num_vars)
-                    self.n += 4 * num_vars
-                    zero_based_zone_num = np.frombuffer(data, dtype=np.int32)
-                    self.log.debug('    Has variable sharing; 0-based_zone_num=%s' % zero_based_zone_num)
-
-                # Zero based zone number to share connectivity list with (INT32)
-                data = tecplot_file.read(4)
-                self.n += 4
-                zone_number_to_share_connectivity_list, = unpack(b'i', data)
-                self.log.debug('  Zero based zone number to share connectivity list with: %d' % zone_number_to_share_connectivity_list)
-
-                # List of min/max pairs for each non-shared and
-                # non-passive variables (FLOAT64)
-                data = tecplot_file.read(8 * 2 * num_vars)
-                self.n += 8 * 2 * num_vars
-                var_minMax = np.frombuffer(data, dtype=np.float64).reshape(num_vars, 2)
-                self.log.debug('  Min/Max of vars:\n%r' % var_minMax)
-
-                #5. Cell centered variable (DATA SECTION)
-                #    To make reading of cell centered binary data efficient, Tecplot stores
-                #    IMax*JMax*KMax numbers of cell centered values, where IMax, JMax,
-                #    and KMax represent the number of points in the I, J, and K directions.
-                #    Therefore extra zero values (ghost values) are written to the data file
-                #    for the slowest moving indices. For example, if your data’s IJK
-                #    dimensions are 2x3x2, a cell-centered variable will have 1x2x1
-                #    (i.e. (I-1)x(J-1)x(K-1)) significant values. However, 2x3x2 values must
-                #    be written out because it must include the ghost values. Assume that the
-                #    two significant cell-centered values are 1.5 and 12.5. The ghost values
-                #    will be output with a zero value.
-                #    So if the zone was dimensioned 2x3x2 its cell centered variable would be
-                #    represented as follows:
-                #    1.5 0.0 12.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-                #    If the zone was dimensioned 3x2x2 its cell centered variable would be
-                #    represented as follows:
-                #    1.5 12.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-                #    and if the zone was dimensioned 2x2x3 its cell centered variable would be
-                #    represented as follows:
-                #    1.5 0.0 0.0 0.0 12.5 0.0 0.0 0.0 0.0 0.0 0.0 0.0
-                #    For large variables the wasted space is less significant that it
-                #    is for the small example above.
-                nrows = 5
-                num_vars = 733 *2  #  733
-                nbytes = 4 * nrows * num_vars
+                nbytes = 3 * 4
                 data = tecplot_file.read(nbytes)
                 self.n += nbytes
-                    #8.102624
-                vals = np.frombuffer(data, dtype='float32').reshape(nrows, num_vars).T
-                for i, val in enumerate(vals):
-                    print(i, val.tolist())
+                self.show_data(data, types='if', endian='<')
 
-                #print(vals)
-                self.show(500, types='ifs')
-                if zone_type == 'ORDERED':
-                    # if 'zone number to share connectivity list with' == -1 and
-                    #    'num of misc. user defined face neighbor connections' != 0
-                    #    +-----------+
-                    #    |  INT32*N  | Face neighbor connections.
-                    #    +-----------+ N = (number of miscellaneous user defined
-                    #                       face neighbor connections) * P
-                    #     (See note 5 below).
-                    if zone_number_to_share_connectivity_list == -1:
-                        if num_misc_user_defned_face_neighbor_connections_int != 0:
-                            #TODO
-                            pass
-                    raise NotImplementedError(zone_type)
-                elif 'FE' in zone_type:
-                    if zone_type not in ['FEPOLYGON', 'FEPOLYHEDRON']:
-                        #if 'zone number to share connectivity lists with' == -1
-                        #+-----------+
-                        #|  INT32*N  | Zone Connectivity Data N=L*JMax
-                        #+-----------+ (see note 2 below ).
+            nbytes = 1 * 4
+            data = tecplot_file.read(nbytes)
+            self.n += nbytes
+            zone_type, = unpack(b'i', data)
+            self.log.debug('zone_type = %s' % zone_type)
+            self.show(100, types='if', endian='<')
 
-                        # Zone connectivity (INT32*N);  N=L*JMax
-                        #2. This represents JMax sets of adjacency zero based indices where each
-                        #    set contains L values and L is:
-                        #    2 for LINESEGS
-                        #    3 for TRIANGLES
-                        #    4 for QUADRILATERALS
-                        #    4 for TETRAHEDRONS
-                        #    8 for BRICKS
-                        if 0:
-                            self.log.debug('  Reading zone connectivity data')
-                            npoints_L_map = {
-                                #'LINE' : 2,
-                                'FETRIANGLE' : 3,
-                                'FEQUADRILATERAL' : 4,
-                                #'FETET' : 4,
-                                #'FEBRICK' : 8,
-                            }
-                            npoints_L = npoints_L_map[zone_type]
-
-                            self.log.info('npoints_L=%r nelements=%s' % (npoints_L, nelements))
-                            if nelements:
-                                data = tecplot_file.read(4 * npoints_L * nelements)
-                                connectivity = np.frombuffer(data, np.int32).reshape(nelements,  npoints_L)
-
-
-                        #-----------------
-
-                        if zone_number_to_share_connectivity_list == -1 and  are_raw_local_one_to_one_face_neighbors == 1:
-                            note_3
-                            #if 'zone number to share connectivity lists with' == -1 &&
-                            #   'raw local 1-to-1 face neighbors are supplied'
-                            #
-                            #+-----------+ Raw local 1-to-1 face neighbor array.
-                            #|  INT32*N  | N = (NumElements * NumFacesPerElement)
-                            #+-----------+ (See note 3 below).
-                            #
-                            #3. The raw face neighbor array is dimensioned by (number of elements for
-                            #   the zone) times (the number of faces per element), where each member
-                            #   of the array holds the zero-based element neighbor of that face. A
-                            #   boundary face is one that has no neighboring element and is
-                            #   represented by a -1. Faces should only be neighbors if they logically
-                            #   share nodes and they should be reciprocal.
-
-                        #if zone_number_to_share_connectivity_list == -1 and num_misc_user_defned_face_neighbor_connections_int != 0:
-                            #if 'zone number to share connectivity lists with' == -1 &&
-                            #   'num of misc. user defined face neighbor connections' != 0
-                            #
-                            #+-----------+ Face neighbor connections.
-                            #|  INT32*N  | N = (number of miscellaneous user defined
-                            #+-----------+      face neighbor connections) * P
-                            #              (See note 4 below).
-                            #
-                            # 4. FaceNeighbor Mode # values Data
-                            #    ---------------------------------------------------------------------
-                            #    LocalOneToOne 3 cz,fz,cz
-                            #    LocalOneToMany nz+4 cz,fz,oz,nz,cz1,cz2,...,czn
-                            #    GlobalOneToOne 4 cz,fz,ZZ,CZ
-                            #    GlobalOneToMany 2*nz+4 cz,fz,oz,nz,ZZ1,CZ1,ZZ2,CZ2,...,ZZn,CZn
-                            #
-                            #    Where:
-                            #    cz = cell in current zone (zero based)
-                            #    fz = face of cell in current zone (zero based)
-                            #    oz = face obscuration flag (only applies to one-to-many):
-                            #    0 = face partially obscured
-                            #    1 = face entirely obscured
-                            #    nz = number of cell or zone/cell associations
-                            #    (only applies to one-to-many)
-                            #    ZZ = remote Zone (zero based)
-                            #    CZ = cell in remote zone (zero based)
-                            #
-                            #    cz,fz combinations must be unique and multiple entries are
-                            #    not allowed. Additionally, Tecplot assumes that with the
-                            #    one-to-one face neighbor modes, a supplied cell face is
-                            #    entirely obscured by its neighbor. With one-to-many, the
-                            #    obscuration flag must be supplied.
-                            #
-                            #    Face neighbors that are not supplied are run through
-                            #    Tecplot’s auto face neighbor generator (FE only).
-                            #note4
-                            #
-                    elif zone_type in ['FEPOLYGON', 'FEPOLYHEDRON']:
-                        pass
-                        # if 'zone number to share face map data with' == -1
-                        #
-                        #+-----------+ Face node offsets into the face nodes array
-                        #|  INT32*F  | below. Does not exist for FEPOLYGON zones.
-                        #+-----------+ F = NumFaces+1.
-                        #
-                        #
-                        #+-----------+ Face nodes array containing the node numbers
-                        #|  INT32*FN | for all nodes in all faces.
-                        #+-----------+ FN = total number of face nodes.
-                        #
-                        #+-----------+ Elements on the left side of all faces.
-                        #|  INT32*F  | Boundary faces use a negative value which is
-                        #+-----------+ the negated offset into the face boundary
-                        #              connection offsets array. A value of '-1'
-                        #              indicates there is no left element.
-                        #              F = NumFaces.
-                        #
-                        #+-----------+ Elements on the right side of all faces. See
-                        #|  INT32*F  | description of left elements above for more
-                        #+-----------+ details. F = NumFaces.
-                        #
-                        raise RuntimeError(zone_type)
-                        #if 'total number of boundary faces' != 0:
-                            #raise RuntimeError('total number of boundary faces=%s' % total_number_of_boudary_faces)
-                        #if 'total number of boundary faces' != 0
-                        #+-----------+ Boundary face connection offsets into the
-                        #| INT32*NBF | boundary face connecion elements array and
-                        #+-----------+ the boundary face connection zones array.
-                        #              The number of elements for a face (F) is
-                        #              determined by offset[-o] - offset[-o-1]
-                        #              where ‘o’ is the negative value from either
-                        #              the left or right elements arrays above.
-                        #              Offset[0] = 0. Offset[1] = 0 so that -1 as
-                        #              the left or right element always indicates
-                        #              no neighboring element. If the number of
-                        #              elements is 0, then there is no neighboring
-                        #              element.
-                        #              NBF = total number of boundary faces + 1.
-                        #
-                        #
-                        #+-----------+ Boundary face connection elements. A value of
-                        #| INT32*NBI | '-1' indicates there is no element on part of
-                        #+-----------+ the face.
-                        #              NBI = total number of boundary connections.
-                        #
-                        #+-----------+ Boundary face connection zones. A value of
-                        #| INT32*NBI | '-1' indicates the current zone.
-                        #+-----------+ NBI = total number of boundary connections.
-                        #
-
-
-                    for ivar, variable_name in enumerate(variable_names):
-                        dtype = variable_data_format[ivar]
-                        self.log.debug('  Reading variable %s; npoints=%s' % (variable_name, npoints))
-                        #npoints = zone['NPNTS']
-                        if dtype == 'double':
-                            sdtype = 'd'
-                            nwords = 2
-                        elif dtype == 'float':
-                            nwords = 1
-                            sdtype = 'f'
-                        else:
-                            raise NotImplementedError(dtype)
-                        data = tecplot_file.read(4 * nwords * npoints)
-                        self.n += 4 * nwords * npoints
-                        vals = np.frombuffer(data, dtype=sdtype)
-                        #print(npoints, vals)
-                        variables[variable_name] = vals
-                    print(variables)
-                else:
-                    raise NotImplementedError(zone_type)
-
-                #if debug:
-                    #debug_file.write('%12s  ' % 'Point')
-                    #for v in vars:
-                        #debug_file.write('%12s  ' % v)
-                    #debug_file.write('\n')
-                    #for n in range(zone['NPNTS']):
-                        #debug_file.write('%12i  ' % (n+1))
-                        #for v in vars:
-                            #debug_file.write('%12g  ' % variables[v][n])
-                        #debug_file.write('\n')
-
-                #end_of_zone
-            end_of_header
             nbytes = 11 * 4
             data = tecplot_file.read(nbytes)
             self.n += nbytes
@@ -2068,7 +1403,6 @@ def _header_lines_to_header_dict(header_lines):
     #print(headers_dict.keys())
     assert len(headers_dict) > 0, headers_dict
     return headers_dict
-
 
 if __name__ == '__main__':
     main()

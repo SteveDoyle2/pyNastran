@@ -19,7 +19,6 @@ else:
         import PySide
         qt_int = 4
         qt_version = 'pyside'
-        from qtpy import PYSIDE_VERSION as PYQT_VERSION
         found_gui = True
     except ImportError:
         pass
@@ -29,7 +28,6 @@ else:
             import PySide2
             qt_int = 5
             qt_version = 'pyside2'
-            from qtpy import PYSIDE_VERSION as PYQT_VERSION
             found_gui = True
         except ImportError:
             pass
@@ -39,7 +37,6 @@ else:
             import PyQt5
             qt_int = 5
             qt_version = 'pyqt5'
-            from qtpy import PYQT_VERSION
             found_gui = True
         except ImportError:
             pass
@@ -49,13 +46,18 @@ else:
             import PyQt4
             qt_int = 4
             qt_version = 'pyqt4'
-            from qtpy import PYQT_VERSION
             found_gui = True
         except ImportError:
             pass
     if not found_gui:
         raise ImportError('PyQt4, PyQt5, PySide, or PySide2 is required')
 
+#if qt_version in ['pyside', 'pyside2']:
+    #from qtpy import PYSIDE_VERSION as PYQT_VERSION
+#elif qt_version in ['pyqt4', 'pyqt5']:
+    #from qtpy import PYQT_VERSION
+#else:
+    #raise NotImplementedError(qt_version)
 
 from qtpy import API as qt_version
 

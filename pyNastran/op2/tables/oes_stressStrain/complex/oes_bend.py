@@ -3,11 +3,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import cycle
 import numpy as np
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
-
-ints = (int, np.int32)
 
 
 class ComplexBendArray(OES_Object):
@@ -132,7 +131,7 @@ class ComplexBendArray(OES_Object):
 
     def add_sort1(self, dt, eid, grid, angle, sc, sd, se, sf):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [angle, sc, sd, se, sf]
         self.element_node[self.itotal] = [eid, grid]
@@ -206,7 +205,7 @@ class ComplexBendArray(OES_Object):
                     assert len(eids) == len(angles)
                     assert len(angles) > 0, angles
                     for i, eid, nid, anglei, sci, sdi, sei, sfi in zip(counter, eids, nids, angles, scs, sds, ses, sfs):
-                        assert isinstance(eid, ints), 'eid=%s type=%s' % (eid, type(eid))
+                        assert isinstance(eid, integer_types), 'eid=%s type=%s' % (eid, type(eid))
                         [sc_real, sc_imag,
                          sd_real, sd_imag,
                          se_real, se_imag,

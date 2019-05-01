@@ -216,7 +216,6 @@ class UGRID(object):
                 ## CPENTA
                 nbytes_expected = npenta6s * 6 * 4
                 data = ugrid_file.read(nbytes_expected)
-                penta6s = np.frombuffer(data, dtype=dtype)
                 penta6s = np.frombuffer(data, dtype=dtype).reshape((npenta6s, 6)).copy()
                 self.n += nbytes_expected
                 #print('min penta6s value = ' , penta6s.min())

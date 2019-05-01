@@ -14,6 +14,7 @@ This file defines the OUG Table, which contains:
 """
 import numpy as np
 #from pyNastran import is_release
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 
 from pyNastran.op2.tables.oug.oug_displacements import (
@@ -306,7 +307,7 @@ class OUG(OP2Common):
             self.binary_debug.write('  %-14s = %r\n' % ('isubcase', self.isubcase))
         self._read_title(data)
         self._write_debug_bits()
-        assert isinstance(self.nonlinear_factor, (int, np.int32)), self.nonlinear_factor
+        assert isinstance(self.nonlinear_factor, integer_types), self.nonlinear_factor
 
     def _read_oug_4(self, data, ndata):
         """reads the SORT1 version of table 4 (the data table)"""

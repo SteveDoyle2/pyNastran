@@ -4,8 +4,8 @@ from itertools import count
 from six import integer_types
 import numpy as np
 from numpy import zeros, searchsorted, ravel
-ints = (int, np.int32)
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
@@ -142,8 +142,7 @@ class RealTriaxArray(OES_Object):
 
     def add_sort1(self, dt, eid, nid, radial, azimuthal, axial, shear, omax, oms, ovm):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, ints)
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_node[self.itotal, :] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [radial, azimuthal, axial, shear, omax, oms, ovm]

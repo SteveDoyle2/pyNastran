@@ -200,7 +200,7 @@ GEOM_TABLES = [
 
     b'DIT', b'DITS',
 
-    b'PVT0', b'CASECC',
+    b'PVT', b'PVT0', b'CASECC',
     b'EDOM', b'OGPFB1',
     b'DYNAMIC', b'DYNAMICS',
 
@@ -598,7 +598,7 @@ STR_PARAMS_1 = [
     b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
     b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
     b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
-    b'CDIF', b'SUPAERO', b'RSCON',
+    b'CDIF', b'SUPAERO', b'RSCON', b'AUTOMPC',
 
     # part of param, checkout
     b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',
@@ -1153,7 +1153,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'BGPDTS' : [self._table_passer, self._table_passer],
             b'BGPDTOLD' : [self._table_passer, self._table_passer],
 
-            b'PVT' : [self._table_passer, self._table_passer], # PVT - Parameter Variable Table
+            b'PVT' : [self._read_pvto_3, self._read_pvto_4], # PVT - Parameter Variable Table
             b'PVT0' : [self._read_pvto_3, self._read_pvto_4],  # user parameter value table
             b'DESTAB' : [self._table_passer, self._table_passer],
             b'TOLD' : [self._table_passer, self._table_passer],

@@ -2,7 +2,6 @@
 from __future__ import print_function
 import os
 from collections import OrderedDict
-from six import iteritems
 
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
@@ -166,7 +165,7 @@ class NastranIO(NastranIO_xref):
                 #'CBUSH', 'CBUSH1D', 'CFAST', 'CROD', 'CONROD',
                 #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                 #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5', 'CVISC', ]
-            #for (eid, element) in sorted(iteritems(model.elements)):
+            #for (eid, element) in sorted(model.elements.items()):
                 #if (isinstance(element, (LineElement, SpringElement)) or
                     #element.type in elements_no_mass):
                         #node_ids = element.node_ids
@@ -212,7 +211,7 @@ class NastranIO(NastranIO_xref):
 
         sphere_size = self._get_sphere_size(dim_max)
         #if 0:
-            #for (eid, element) in sorted(iteritems(model.elements.mass)):
+            #for (eid, element) in sorted(model.elements.mass.items()):
                 #if isinstance(element, CONM2):
                     ##del self.eid_map[eid]
 
@@ -453,7 +452,7 @@ class NastranIO(NastranIO_xref):
                 ie += 1
 
         if 0:
-            for (eid, element) in sorted(iteritems(model.elements)):
+            for (eid, element) in sorted(model.elements.items()):
                 self.eid_map[eid] = i
                 #print(element.type)
                 pid = 0
@@ -741,7 +740,7 @@ class NastranIO(NastranIO_xref):
             pids = array(pids, 'int32')
             if not len(pids) == len(self.eid_map):
                 msg = 'ERROR:  len(pids)=%s len(eidMap)=%s\n' % (len(pids), len(self.eid_map))
-                for eid, pid in sorted(iteritems(pids_dict)):
+                for eid, pid in sorted(pids_dict.items()):
                     if eid not in self.eid_map:
                         msg += 'eid=%s %s' % (eid, str(model.elements[eid]))
                 raise RuntimeError(msg)
@@ -752,7 +751,7 @@ class NastranIO(NastranIO_xref):
         #nzs = []
         #i = 0
 
-        #for eid, element in sorted(iteritems(model.elements)):
+        #for eid, element in sorted(model.elements.items()):
             #if isinstance(element, ShellElement):
                 #(nx, ny, nz) = element.Normal()
             #else:
@@ -770,7 +769,7 @@ class NastranIO(NastranIO_xref):
         nidsSet = True
         if nidsSet:
             nids = model.grid.node_id
-            #for (nid, nid2) in iteritems(self.nid_map):
+            #for (nid, nid2) in self.nid_map.items():
             #    nids[nid2] = nid
             cases[(0, 'Node_ID', 1, 'node', '%i')] = nids
             nidsSet = True
@@ -780,7 +779,7 @@ class NastranIO(NastranIO_xref):
         Types, eids, pids = model.elements.get_element_properties()
         if eidsSet:
             #eids = zeros(nElements, dtype='int32')
-            #for (eid, eid2) in iteritems(self.eid_map):
+            #for (eid, eid2) in self.eid_map.items():
                #eids[eid2] = eid
             #eids = model.elements.element_id
             cases[(0, 'Element_ID', 1, 'centroid', '%i')] = eids
@@ -984,7 +983,7 @@ class NastranIO(NastranIO_xref):
 
         #case = model.displacements[1]
         #print("case = %s" % case)
-        #for nodeID,translation in sorted(iteritems(case.translations)):
+        #for nodeID,translation in sorted(case.translations.items()):
             #print("nodeID=%s t=%s" % (nodeID, translation))
         #self.isubcase_name_map[self.isubcase] = [Subtitle, Label]
 
@@ -1041,7 +1040,7 @@ class NastranIO(NastranIO_xref):
                 res = getattr(case, word)
 
                 self.log.debug('case.type =', case.__class__.__name__)
-                for (nid, txyz) in iteritems(res):
+                for (nid, txyz) in res.items():
                     nid2 = self.nid_map[nid]
                     displacements[nid2] = txyz
                     xyz_displacements[nid2] = norm(txyz)
@@ -1063,7 +1062,7 @@ class NastranIO(NastranIO_xref):
                 if case.nonlinear_factor is not None: # transient
                     return
                 temperatures = zeros(nnodes, dtype='float32')
-                for (nid, txyz) in iteritems(case.translations):
+                for (nid, txyz) in case.translations.items():
                     nid2 = self.nid_map[nid]
                     displacements[nid2] = txyz
                     temperatures[nid2] = norm(txyz)

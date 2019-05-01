@@ -1,10 +1,10 @@
 import os
 import unittest
 
+import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.lawgs.wgs_reader import read_lawgs
 from pyNastran.converters.lawgs.wgs_io import LaWGS_IO
-import pyNastran
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'lawgs')

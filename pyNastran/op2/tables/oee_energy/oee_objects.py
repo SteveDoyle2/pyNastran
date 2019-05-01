@@ -1,8 +1,9 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types, string_types, binary_type
+from six import string_types, binary_type
 import numpy as np
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
@@ -883,7 +884,7 @@ class ComplexStrainEnergyArray(BaseElement):
     def add_sort1(self, dt, eid, energyr, energyi, percenti, densityi):
         """unvectorized method for adding SORT1 transient data"""
         #itime = self.itime // self.nelement_types
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         itime = self.itime
         self._times[itime] = dt
         try:

@@ -3,8 +3,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from six import integer_types
 import numpy as np
 from numpy import zeros
-ints = (int, np.int32)
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
@@ -175,7 +175,7 @@ class RealBeamArray(OES_Object):
         #self.add_new_eid_sort1(dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc)
 
     def add_new_eid_sort1(self, dt, eid, grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc):
-        assert isinstance(eid, ints), eid
+        assert isinstance(eid, integer_types), eid
         assert eid >= 0, eid
         self._times[self.itime] = dt
         self.element_node[self.itotal] = [eid, grid]
@@ -554,9 +554,8 @@ class RealNonlinearBeamArray(OES_Object):
          unused_db, long_db, eqs_db, te_db, eps_db, ecs_db,
          unused_eb, long_eb, eqs_eb, te_eb, eps_eb, ecs_eb,
          unused_fb, long_fb, eqs_fb, te_fb, eps_fb, ecs_fb):
-        assert isinstance(eid, ints), eid
-        assert eid >= 0, eid
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #assert eid >= 0, eid
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #(grid_a,
          #unused_ca, long_ca, eqs_ca, te_ca, eps_ca, ecs_ca,

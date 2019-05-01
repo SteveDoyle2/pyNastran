@@ -80,10 +80,3 @@ class SPOINT(object):
         ##self.model.log.debug('mids = %s' % mids)
         #for mid in mids:
             #yield mid, self.__getitem__(mid)
-
-    #def iteritems(self):
-        #return self.items()
-
-    #def iterkeys(self):
-        #return self.keys()
-
