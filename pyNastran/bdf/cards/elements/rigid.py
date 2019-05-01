@@ -1716,7 +1716,14 @@ class RSSCON(RigidElement):
             self.a_solid_grids = a_solid_grids
             self.b_solid_grids = b_solid_grids
             self.shell_grids = shell_grids
+        elif rigid_type == 'INTC':
+            self.shell_eid = None
+            self.solid_eid = None
+            self.shell_grids = shell_grids
+            self.a_solid_grids = None
+            self.b_solid_grids = None
         else:
+            #| RSSCON |  116 | INTC |  2  |  1  |  3  |     |     |     |
             raise RuntimeError('rigid_type=%s and must be [ELEM, GRID]' % rigid_type)
         self.shell_eid_ref = None
         self.solid_eid_ref = None
@@ -1743,6 +1750,7 @@ class RSSCON(RigidElement):
             # ES1, EA1
             shell_eid = integer(card, 3, 'shell_eid')  # ES1
             solid_eid = integer(card, 4, 'solid_eid')  # EA1
+            assert len(card) == 5, card
         elif rigid_type == 'GRID':
             shell_eid = None
             solid_eid = None
@@ -1754,8 +1762,20 @@ class RSSCON(RigidElement):
             shell_grids.append(integer_or_blank(card, 6, 'shell_nid_2'))  # ES2
             a_solid_grids.append(integer_or_blank(card, 7, 'a_solid_grid_2'))  # EA2
             b_solid_grids.append(integer_or_blank(card, 8, 'b_solid_grid_2'))  # EA2
+            assert len(card) <= 9, card
+        elif  rigid_type == 'INTC':
+            shell_eid = None
+            solid_eid = None
+            shell_grids = [
+                integer(card, 3, 'RSSCON INTC field 3'),
+                integer(card, 4, 'RSSCON INTC field 4'),
+                integer(card, 5, 'RSSCON INTC field 5'),
+            ]
+            a_solid_grids = None
+            b_solid_grids = None
+            assert len(card) == 6, card
         else:
-            msg = 'RSSCON; eid=%s rigid_type=%s and must be [ELEM, GRID]' % (eid, rigid_type)
+            msg = 'RSSCON; eid=%s rigid_type=%s and must be [ELEM, GRID, INTC]' % (eid, rigid_type)
             raise RuntimeError(msg)
         return RSSCON(eid, rigid_type,
                       shell_eid=shell_eid, solid_eid=solid_eid,

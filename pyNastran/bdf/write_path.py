@@ -4,8 +4,7 @@ Defines following useful methods:
 """
 from __future__ import print_function
 import sys
-import os
-import typing
+from typing import Tuple
 from six import PY2
 if PY2:
     from pathlib2 import PurePosixPath, PureWindowsPath
@@ -80,6 +79,7 @@ def write_include(filename, is_windows=None):
 
 
 def _split_path(abspath, is_windows):
+    # type: (str, bool) -> Tuple[str, ...]
     """
     Takes a path and splits it into the various components.
 

@@ -673,15 +673,6 @@ class Coord(VectorizedCard):
         for i in range(self.n):
             yield i, self.__getitem__(i)
 
-    def iterkeys(self):
-        return self.keys()
-
-    def itervalues(self):
-        return self.values()
-
-    def iteritems(self):
-        return self.items()
-
 def _check_xyz_shape(xyz):
     xyz = asarray(xyz)
     ndim = len(xyz.shape)

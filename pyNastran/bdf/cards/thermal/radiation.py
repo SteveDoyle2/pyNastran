@@ -56,13 +56,13 @@ class RADM(ThermalBC):
         msg = ''
         if self.absorb is not None:
             if not 0. <= self.absorb <= 1.0:
-                msg += 'absorb=%s not in range 0.0 <= absorb <= 1..0\n' % (self.absorb)
+                msg += 'absorb=%s not in range 0.0 <= absorb <= 1.0\n' % (self.absorb)
         for i, emissivityi in enumerate(self.emissivity):
             if not 0. <= emissivityi <= 1.0:
                 msg += 'emissivity[%i]=%s\n' % (i, emissivityi)
         if msg:
             warnings.warn(msg + str(self))
-            raise RuntimeError(msg + str(self))
+            #raise RuntimeError(msg + str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -552,7 +552,7 @@ class RADCAV(ThermalBC):
         shadow = string_or_blank(card, 3, 'shadow', 'YES')
         scale = double_or_blank(card, 4, 'scale', 0.0)
         prtpch = integer_or_blank(card, 5, 'prtpch')
-        nefci = double_or_blank(card, 6, 'nefci')
+        nefci = string_or_blank(card, 6, 'nefci')
         rmax = double_or_blank(card, 7, 'rmax', 1.0)
         ncomp = integer_or_blank(card, 8, 'ncomp', 32)
 

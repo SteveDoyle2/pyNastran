@@ -6,7 +6,7 @@ from __future__ import print_function, unicode_literals
 import os
 import ntpath
 import posixpath
-from typing import List, Optional, Any
+from typing import List, Tuple, Optional, Any
 from six import PY2
 if PY2:
     from pathlib2 import PurePosixPath, PureWindowsPath
@@ -80,6 +80,7 @@ def get_include_filename(card_lines, include_dir='', is_windows=None):
 
 
 def split_filename_into_tokens(include_dir, filename, is_windows):
+    # type: (str, str, bool) -> Any
     r"""
     Tokens are the individual components of paths
 
@@ -131,7 +132,7 @@ def split_filename_into_tokens(include_dir, filename, is_windows):
     return pth_out
 
 def split_tokens(tokens, is_windows):
-    # type: (List[str], bool) -> List[str]
+    # type: (Tuple[str], bool) -> List[str]
     """converts a series of path tokens into a joinable path"""
     tokens2 = [] # type: List[str]
     is_mac_linux = not is_windows

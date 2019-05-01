@@ -35,7 +35,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank,
     string_or_blank, blank, fields, components_or_blank,
     integer_string_or_blank, integer_or_double, #parse_components,
-    modal_components,
+    modal_components_or_blank,
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -2434,7 +2434,7 @@ class TIC(BaseCard):
         """
         sid = integer(card, 1, 'sid')
         nid = integer(card, 2, 'G')
-        comp = modal_components(card, 3, 'C')
+        comp = modal_components_or_blank(card, 3, 'C', 0)
         u0 = double_or_blank(card, 4, 'U0', 0.)
         v0 = double_or_blank(card, 5, 'V0', 0.)
         return TIC(sid, nid, comp, u0=u0, v0=v0, comment=comment)

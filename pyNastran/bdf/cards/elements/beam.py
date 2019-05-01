@@ -127,7 +127,10 @@ class CBEAM(LineElement):
                 offt.append(b'')
             else:
                 bit.append(np.nan)
-                offt.append(element.offt.encode(encoding))
+                offti = element.offt
+                if isinstance(offti, integer_types):
+                    offti = str(offti)
+                offt.append(offti.encode(encoding))
 
 
             pa.append(element.pa)
@@ -213,6 +216,9 @@ class CBEAM(LineElement):
         else:
             wb = np.asarray(wb)
 
+        if isinstance(offt, str):
+            offt = offt.replace('E', 'O')
+            offt = int(offt) if offt.isdigit() else offt
         self.eid = eid
         self.pid = pid
         self.ga = nids[0]
@@ -232,8 +238,6 @@ class CBEAM(LineElement):
         self.pid_ref = None
         self.g0_ref = None
         self.g0_vector = None
-        if self.offt is not None:
-            self.offt = self.offt.replace('E', 'O')
 
     def validate(self):
         msg = ''
@@ -260,7 +264,7 @@ class CBEAM(LineElement):
         if self.offt is not None:
             if isinstance(self.offt, integer_types):
                 assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
-                raise NotImplementedError('invalid offt; offt=%i' % self.offt)
+                #raise NotImplementedError('invalid offt; offt=%i' % self.offt)
             elif not isinstance(self.offt, string_types):
                 raise SyntaxError('invalid offt expected a string of length 3 '
                                   'offt=%r; Type=%s' % (self.offt, type(self.offt)))

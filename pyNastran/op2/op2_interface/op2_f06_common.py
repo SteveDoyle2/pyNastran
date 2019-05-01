@@ -314,9 +314,9 @@ class OP2_F06_Common(object):
 
         #: OUP
 
-        self.displacement_scaled_response_spectra_NRL = {}  # thermal=8
-        self.displacement_scaled_response_spectra_ABS = {}  # thermal=2
-        self.displacement_scaled_response_spectra_SRSS = {} # thermal=4
+        self.displacement_scaled_response_spectra_nrl = {}  # thermal=8
+        self.displacement_scaled_response_spectra_abs = {}  # thermal=2
+        self.displacement_scaled_response_spectra_srss = {} # thermal=4
         #self.displacement_scaled_response_spectra_psd = {}
         #self.displacement_scaled_response_spectra_ato = {}
         #self.displacement_scaled_response_spectra_rms = {}
@@ -327,8 +327,8 @@ class OP2_F06_Common(object):
         #: OUG - velocity
         self.velocities = {}              # tCode=10 thermal=0
 
-        #self.velocity_scaled_response_spectra_NRL = {}
-        self.velocity_scaled_response_spectra_ABS = {}
+        #self.velocity_scaled_response_spectra_nrl = {}
+        self.velocity_scaled_response_spectra_abs = {}
         #self.velocity_scaled_response_spectra_psd = {}
         #self.velocity_scaled_response_spectra_ato = {}
         #self.velocity_scaled_response_spectra_rms = {}
@@ -338,8 +338,8 @@ class OP2_F06_Common(object):
         #: OUG - acceleration
         self.accelerations = {}            # tCode=11 thermal=0
 
-        self.acceleration_scaled_response_spectra_NRL = {}
-        self.acceleration_scaled_response_spectra_ABS = {}
+        self.acceleration_scaled_response_spectra_nrl = {}
+        self.acceleration_scaled_response_spectra_abs = {}
         #self.acceleration_scaled_response_spectra_psd = {}
         #self.acceleration_scaled_response_spectra_ato = {}
         #self.acceleration_scaled_response_spectra_rms = {}
@@ -470,7 +470,7 @@ class OP2_F06_Common(object):
         # OQG - spc/mpc forces
         self.spc_forces = {}  # OQG1, tCode=3?
         self.spc_forces_v = {} # OQGV1
-        self.spc_forces_scaled_response_spectra_NRL = {}
+        self.spc_forces_scaled_response_spectra_nrl = {}
 
         self.mpc_forces = {}  # tCode=39
         self.mpc_forces_RAQCONS = {}
@@ -620,7 +620,7 @@ class OP2_F06_Common(object):
             'accelerations',
 
             # OQG - spc/mpc forces
-            'spc_forces', 'spc_forces_v', 'spc_forces_scaled_response_spectra_NRL',
+            'spc_forces', 'spc_forces_v', 'spc_forces_scaled_response_spectra_nrl',
             'mpc_forces', 'mpc_forces_RAQCONS', 'mpc_forces_RAQEATC',
             'thermal_gradient_and_flux',
 
@@ -833,12 +833,12 @@ class OP2_F06_Common(object):
             'rbe1_strain_energy', 'rbe3_strain_energy',
 
             # unused?
-            'displacement_scaled_response_spectra_NRL',
-            'displacement_scaled_response_spectra_ABS',
-            'displacement_scaled_response_spectra_SRSS',
-            'velocity_scaled_response_spectra_ABS',
-            'acceleration_scaled_response_spectra_NRL',
-            'acceleration_scaled_response_spectra_ABS',
+            'displacement_scaled_response_spectra_nrl',
+            'displacement_scaled_response_spectra_abs',
+            'displacement_scaled_response_spectra_srss',
+            'velocity_scaled_response_spectra_abs',
+            'acceleration_scaled_response_spectra_nrl',
+            'acceleration_scaled_response_spectra_abs',
         ]
         utables = unique(table_types)
         if len(table_types) != len(utables):

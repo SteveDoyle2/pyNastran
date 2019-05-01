@@ -2379,16 +2379,20 @@ class GetCard(GetMethods):
         pids = self.property_ids
         for pid in pids:
             pid_to_eids_map[pid] = []
-        for pid in self.phbdys.keys():
-            assert pid not in pid_to_eids_map, 'pid=%s is already used and must be used by PHBDY' % pid
-            pid_to_eids_map[pid] = []
+        #for pid in self.phbdys.keys():
+            #assert pid not in pid_to_eids_map, 'pid=%s is already used and must be used by PHBDY' % pid
+            #pid_to_eids_map[pid] = []
 
-        elements_without_properties = [
-            'CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'GENEL']
+        elements_without_properties = {
+            'CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'GENEL'}
+        thermal_elements = {'CHBDYP'}
+        elements_without_properties.update(thermal_elements)
+        skip_elements = elements_without_properties
+
         for eid in self.element_ids:
             element = self.Element(eid)
             element_type = element.type
-            if element_type in elements_without_properties:
+            if element_type in skip_elements:
                 continue
             if hasattr(element, 'pid'):
                 pid = element.Pid()
@@ -2697,7 +2701,7 @@ class GetCard(GetMethods):
                     comps.append(node.ps)
         return nids, comps
 
-    def get_mpcs(self, mpc_id, stop_on_failure=True):
+    def get_mpcs(self, mpc_id, consider_mpcadd=True, stop_on_failure=True):
         """
         Gets the MPCs in a semi-usable form.
 
@@ -2721,7 +2725,7 @@ class GetCard(GetMethods):
 
         """
         mpcs = self.get_reduced_mpcs(
-            mpc_id, consider_mpcadd=True,
+            mpc_id, consider_mpcadd=consider_mpcadd,
             stop_on_failure=stop_on_failure)
         nids = []
         comps = []
