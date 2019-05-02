@@ -1682,6 +1682,9 @@ def check_offt(element):
     B,G,O
     Note: The character 'O' in the table replaces the obsolete character 'E'
     """
+    if isinstance(element.offt, integer_types):
+        raise SyntaxError('invalid offt expected a string of length 3; '
+                          'offt=%r; Type=%s\n%s' % (element.offt, type(element.offt), str(element)))
     msg = 'invalid offt parameter of %s...offt=%s' % (element.type, element.offt)
     assert element.offt[0] in ['G', 'B'], msg
     assert element.offt[1] in ['G', 'O', 'E'], msg

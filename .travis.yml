@@ -16,15 +16,6 @@ language: python
   #  sudo: true
 #  - "3.5-dev" # 3.5 development branch
 #  - "nightly" # currently points to 3.6-dev
-#scipy:
-#  - SCIPY='scipy'
-#  - SCIPY='scipy=0.18.1'
-#numpy:
-#  - NUMPY='numpy'
-#  - NUMPY='numpy=1.11.3'
-env:
-  - NUMPY='numpy scipy'
-  - NUMPY='numpy=1.11.3 scipy=0.18.1'
 matrix:
   include:
       # latest versions of package
@@ -47,21 +38,7 @@ matrix:
     - name: "Python 2.7 old packages"
       python: '2.7'
       numpy: NUMPY=1.11.3
-      scipy: NUMPY=0.18.1
-#      numpy: NUMPY='numpy=1.11.3'
-#      scipy: SCIPY='scipy=0.18.1'
-
-#    - python: '2.7'
-#      numpy: 'numpy'
-#      scipy: 'scipy'
-
-#    - python: '3.6'
-#      numpy: 'numpy'
-#      scipy: 'scipy'
-
-#    - python: '3.7'
-#      numpy: 'numpy'
-#      scipy: 'scipy'
+      scipy: SCIPY=0.18.1
 #-------------------------------------------------
 # old-A
 

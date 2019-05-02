@@ -265,10 +265,11 @@ class CBEAM(LineElement):
             if isinstance(self.offt, integer_types):
                 assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
                 #raise NotImplementedError('invalid offt; offt=%i' % self.offt)
-            elif not isinstance(self.offt, string_types):
-                raise SyntaxError('invalid offt expected a string of length 3 '
-                                  'offt=%r; Type=%s' % (self.offt, type(self.offt)))
-            check_offt(self)
+            elif isinstance(self.offt, string_types):
+                check_offt(self)
+            else:
+                raise TypeError('invalid offt expected a string of length 3 '
+                                'offt=%r; Type=%s' % (self.offt, type(self.offt)))
 
     @classmethod
     def add_card(cls, card, beamor=None, comment=''):
@@ -663,7 +664,7 @@ class CBEAM(LineElement):
         if self.bit is not None:
             assert isinstance(self.bit, float), 'bit=%r type=%s' % (self.bit, type(self.bit))
             return False
-        assert isinstance(self.offt, string_types), 'offt=%r' % self.offt
+        #assert isinstance(self.offt, string_types), 'offt=%r' % self.offt
         return True
 
     @property
@@ -838,6 +839,9 @@ def _init_offt_bit(card, unused_eid, offt_default):
     elif field8 is None:
         offt = 'GGG'  # default
         bit = None
+    elif isinstance(field8, integer_types):
+        bit = None
+        offt = field8
     elif isinstance(field8, string_types):
         bit = None
         offt = field8
@@ -900,8 +904,6 @@ class BEAMOR(BaseCard):
         else:
             raise NotImplementedError('BEAMOR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
-        if isinstance(offt, integer_types):
-            raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
         assert len(card) <= 9, 'len(BEAMOR card) = %i\ncard=%s' % (len(card), card)
         return BEAMOR(pid, is_g0, g0, x, offt=offt, comment=comment)
 

@@ -572,6 +572,8 @@ class XrefMesh(BDFAttributes):
             dvmrel.cross_reference(self)
         for unused_key, dvprel in self.dvprels.items():
             dvprel.cross_reference(self)
+        for unused_key, desvar in self.desvars.items():
+            desvar.cross_reference(self)
 
     def _cross_reference_superelements(self):
         """cross references the superelement objects"""

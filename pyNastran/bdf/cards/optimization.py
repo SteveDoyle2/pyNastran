@@ -810,6 +810,29 @@ class DESVAR(OptConstraint):
                        self.xub, self.delx, self.ddval]
         return list_fields
 
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        if self.ddval:
+            msg = ', which is required by DESVAR desvar_id=%r' % self.desvar_id
+            self.ddval_ref = model.DDVal(self.ddval, msg=msg)
+
+    def uncross_reference(self):
+        self.ddval = self.DDVal()
+        self.ddval_ref = None
+
+    def DDVal(self):
+        if self.ddval_ref is  not None:
+            return self.ddval_ref.oid
+        return self.ddval
+
     def repr_fields(self):
         """
         Gets the fields in their simplified form
@@ -4292,8 +4315,8 @@ class DVPREL1(DVXREL1):
 
             # TODO: haven't quite decided what to do
             if desvar_ref.ddval is not None:
-                msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar_ref)
-            assert desvar_ref.ddval is None, desvar_ref
+                msg = 'DESVAR id=%s DDVAL is not None\n%s' % (desvar, str(desvar_ref))
+            #assert desvar_ref.ddval is None, desvar_ref
             xinit += coeff * xiniti
 
         if lower_bound:
