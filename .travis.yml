@@ -5,7 +5,7 @@
 dist: xenial
 git:
   quiet: true
-#language: python
+language: python
 #python:
 #  - '2.7'
 #  #- '3.5'
@@ -16,9 +16,6 @@ git:
   #  sudo: true
 #  - "3.5-dev" # 3.5 development branch
 #  - "nightly" # currently points to 3.6-dev
-env:
-  - NUMPY='numpy scipy'
-  - NUMPY='numpy=1.11.3 scipy=0.18.1'
 matrix:
   include:
       # latest versions of package
