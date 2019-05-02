@@ -5,7 +5,7 @@
 dist: xenial
 git:
   quiet: true
-language: python
+#language: python
 #python:
 #  - '2.7'
 #  #- '3.5'
