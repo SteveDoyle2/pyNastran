@@ -31,7 +31,7 @@ def run_abaqus(abaqus_filename, write_abaqus=True, debug=False):
     fem1 = read_abaqus(abaqus_filename, debug=debug, log=None)
     if write_abaqus:
         base, ext = os.path.splitext(abaqus_filename)
-        abqaqus_filename_out = '%s.test_abqaus.%s' % (base, ext)
+        abqaqus_filename_out = '%s.test_abqaus%s' % (base, ext)
         fem1.write(abqaqus_filename_out)
 
 

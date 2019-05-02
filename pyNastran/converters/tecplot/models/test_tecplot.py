@@ -1,7 +1,7 @@
 import os
 
-from pyNastran.converters.tecplot.tecplot import read_tecplot
 from cpylog import get_logger2
+from pyNastran.converters.tecplot.tecplot import read_tecplot
 
 def main():
     dirnames = ['ascii', 'binary']

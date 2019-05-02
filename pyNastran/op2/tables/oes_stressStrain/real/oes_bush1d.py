@@ -1,11 +1,10 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 from itertools import count
 import numpy as np
 from numpy import zeros, searchsorted, ravel
-ints = (int, np.int32)
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
@@ -138,8 +137,7 @@ class RealBush1DStressArray(OES_Object):
     def add_sort1(self, dt, eid, element_force, axial_displacement, axial_velocity,
                   axial_stress, axial_strain, plastic_strain, is_failed):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, ints)
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         # pyNastran_examples\move_tpl\ar29scb1.op2
         #print('dt=%s eid=%s force=%s' % (dt, eid, element_force))
         #print('element.shape=%s' % self.element.shape)

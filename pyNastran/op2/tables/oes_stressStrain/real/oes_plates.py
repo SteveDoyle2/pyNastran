@@ -3,13 +3,13 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import integer_types
 import numpy as np
+
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
-ints = (int, np.int32)
 
 class RealPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -171,8 +171,8 @@ class RealPlateArray(OES_Object):
 
     def add_new_eid_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
                           major_principal, minor_principal, ovm):
-        assert isinstance(eid, ints), eid
-        assert isinstance(node_id, ints), node_id
+        assert isinstance(eid, integer_types), eid
+        assert isinstance(node_id, integer_types), node_id
         self._times[self.itime] = dt
         #assert self.itotal == 0, oxx
         self.element_node[self.itotal, :] = [eid, node_id]
@@ -189,8 +189,8 @@ class RealPlateArray(OES_Object):
     def add_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle,
                   major_principal, minor_principal, ovm):
         assert eid is not None, eid
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        assert isinstance(node_id, ints), node_id
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(node_id, integer_types), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
         self.data[self.itime, self.itotal, :] = [fiber_dist, oxx, oyy, txy, angle,
                                                  major_principal, minor_principal, ovm]

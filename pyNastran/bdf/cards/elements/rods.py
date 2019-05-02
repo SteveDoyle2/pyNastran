@@ -702,12 +702,14 @@ class CONROD(RodElement):
         return self.mid_ref.rho
 
     def Centroid(self):
+        """Get the centroid of the element (save as the center of mass for the CONROD)"""
         if self.mid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         return (self.nodes_ref[0].get_position() + self.nodes_ref[1].get_position()) / 2.
 
     def center_of_mass(self):
+        """Get the center of mass of the element (save as the centroid for the CONROD)"""
         return self.Centroid()
 
     def Mid(self):
@@ -719,9 +721,11 @@ class CONROD(RodElement):
         return self.mid_ref.mid
 
     def Pid(self):
+        """Spoofs the property id for the CONROD"""
         return self.pid
 
     def MassPerLength(self):
+        """Gets the mass per length of the CONROD"""
         if self.mid_ref is None:
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)

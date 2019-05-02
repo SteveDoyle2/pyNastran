@@ -120,10 +120,10 @@ def get_package_requirements(is_gui=True):
         all_reqs['cpylog'] = '.'.join((str(val) for val in sver))
         if sver <= [1, 0, 2]:
             print("cpylog.__version__ = %r != '1.0.2'" % cpylog.__version__)
-            all_reqs['cpylog'] = '== 1.0.2'
-            py_packages.append('cpylog == 1.0.2')
+            all_reqs['cpylog'] = '>= 1.0.2'
+            py_packages.append('cpylog >= 1.0.2')
     except ImportError:
-        py_packages.append('cpylog == 1.0.2')  # 1.0.2 used
+        py_packages.append('cpylog >= 1.0.2')  # 1.0.2 used
 
 
     try:

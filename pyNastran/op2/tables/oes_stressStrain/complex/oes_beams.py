@@ -3,6 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import numpy as np
 from numpy import zeros
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
@@ -141,7 +142,7 @@ class ComplexBeamArray(OES_Object):
     def add_sort1(self, dt, eid, grid, sd,
                   exc, exd, exe, exf):
         """adss the non-vectorized data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self.element_node[self.itotal] = [eid, grid]
         self.sd[self.itotal] = sd
         self.data[self.itime, self.itotal, :] = [exc, exd, exe, exf]

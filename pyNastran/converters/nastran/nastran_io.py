@@ -10,7 +10,7 @@ import traceback
 from itertools import chain
 from collections import defaultdict, OrderedDict
 
-from six import iteritems, StringIO, string_types
+from six import StringIO, string_types
 from pyNastran import __version__
 from pyNastran.op2.result_objects.stress_object import StressObject
 from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
@@ -1870,7 +1870,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             for (eid, pin_flagi) in data:
                 sub_release_map[pin_flagi] += (str(eid) + ', ')
             texti = '\n'.join(['%s-%s'  % (pin_flagi, msg.rstrip(', '))
-                               for (pin_flagi, msg) in sorted(iteritems(sub_release_map))])
+                               for (pin_flagi, msg) in sorted(sub_release_map.items())])
 
             # super messy
             #texti = ', '.join(['%s-%s'  % (pin_flagi, eid) for (eid, pin_flagi) in data])
@@ -1909,6 +1909,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         bar_form = ('CBAR / CBEAM', None, [])
         #print('geo_form =', geo_form)
         #bar_types2 = {}
+        bar_eids = []
+        for bar_type, data in sorted(bar_types.items()):
+            eids, lines_bar_y, lines_bar_z = data
+            if len(eids):
+                bar_eids.append(eids)
+        ibars = 0
+        if bar_eids:
+            bar_eids = np.hstack(bar_eids)
+            ibars = np.searchsorted(self.element_ids, bar_eids)
+
         for bar_type, data in sorted(bar_types.items()):
             eids, lines_bar_y, lines_bar_z = data
             if len(eids):
@@ -1932,9 +1942,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 # form = ['Geometry', None, []]
                 i = np.searchsorted(self.element_ids, eids)
-                is_type = np.zeros(self.element_ids.shape, dtype='int32')
+                is_type = np.full(self.element_ids.shape, -1, dtype='int32')
+                is_type[ibars] = 0
                 try:
-                    is_type[i] = 1.
+                    is_type[i] = 1
                 except:
                     #print('self.element_ids =', self.element_ids)
                     #print('eids =', eids)
@@ -1947,7 +1958,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
                 msg = 'is_%s' % bar_type
                 type_res = GuiResult(0, header=msg, title=msg,
-                                     location='centroid', scalar=is_type)
+                                     location='centroid', scalar=is_type, mask_value=-1)
                 cases[icase] = (type_res, (0, msg))
                 icase += 1
 
@@ -2331,7 +2342,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         skipped_etypes = set()
         all_nids = nid_cp_cd[:, 0]
         ieid = 0
-        for eid, elem in sorted(iteritems(elements)):
+        for eid, elem in sorted(elements.items()):
             if ieid % 5000 == 0 and ieid > 0:
                 print('  map_elements = %i' % ieid)
             etype = elem.type
@@ -3175,7 +3186,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if eids_set and nelements:
             eids = np.zeros(nelements, dtype='int32')
             eid_map = self.gui.eid_map
-            for (eid, eid2) in iteritems(eid_map):
+            for (eid, eid2) in eid_map.items():
                 eids[eid2] = eid
 
             eid_res = GuiResult(0, header='ElementID', title='ElementID',
@@ -3392,7 +3403,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print("map_elements...")
         eid_to_nid_map = self.eid_to_nid_map
         eid_map = self.gui.eid_map
-        for (eid, element) in sorted(iteritems(elements)):
+        for (eid, element) in sorted(elements.items()):
             eid_map[eid] = i
             if i % 5000 == 0 and i > 0:
                 print('  map_elements = %i' % i)
@@ -4273,7 +4284,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print("map_elements...")
         eid_to_nid_map = self.eid_to_nid_map
         eid_map = self.gui.eid_map
-        for (eid, element) in sorted(iteritems(elements)):
+        for (eid, element) in sorted(elements.items()):
             eid_map[eid] = i
             if i % 5000 == 0 and i > 0:
                 print('  map_elements = %i' % i)
@@ -5650,23 +5661,28 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 t_init_res = GuiResult(
                     0, header='DVPREL Init - %s' % key, title='DVPREL Init - %s' % key,
                     location='centroid', scalar=dvprel_init)
-                t_min_res = GuiResult(
-                    0, header='DVPREL Min - %s' % key, title='DVPREL Min - %s' % key,
-                    location='centroid', scalar=dvprel_min)
-                t_max_res = GuiResult(
-                    0, header='DVPREL Max - %s' % key, title='DVPREL Max - %s' % key,
-                    location='centroid', scalar=dvprel_max)
+                opt_cases = []
                 cases[icase] = (region_res, (0, 'DV Region'))
                 cases[icase + 1] = (t_init_res, (0, 'DVPREL Init - %s' % key))
-                cases[icase + 2] = (t_min_res, (0, 'DVPREL Min - %s' % key))
-                cases[icase + 3] = (t_max_res, (0, 'DVPREL Max - %s' % key))
-                opt_cases = []
                 opt_cases.append(('DV Region', icase, []))
                 opt_cases.append(('DVPREL Init - %s' % key, icase + 1, []))
-                opt_cases.append(('DVPREL Min - %s' % key, icase + 2, []))
-                opt_cases.append(('DVPREL Max - %s' % key, icase + 3, []))
+                icase += 2
+
+                if np.any(np.isfinite(dvprel_min)):
+                    t_min_res = GuiResult(
+                        0, header='DVPREL Min - %s' % key, title='DVPREL Min - %s' % key,
+                        location='centroid', scalar=dvprel_min)
+                    cases[icase] = (t_min_res, (0, 'DVPREL Min - %s' % key))
+                    opt_cases.append(('DVPREL Min - %s' % key, icase, []))
+                    icase += 1
+                if np.any(np.isfinite(dvprel_max)):
+                    t_max_res = GuiResult(
+                        0, header='DVPREL Max - %s' % key, title='DVPREL Max - %s' % key,
+                        location='centroid', scalar=dvprel_max)
+                    cases[icase] = (t_max_res, (0, 'DVPREL Max - %s' % key))
+                    opt_cases.append(('DVPREL Max - %s' % key, icase, []))
+                    icase += 1
                 optimization_cases.append((key, None, opt_cases))
-                icase += 4
             if optimization_cases:
                 form0.append(('Optimization', None, optimization_cases))
         return icase
@@ -5949,7 +5965,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.isubcase_name_map[isubcase] = [subcase_name, label]
             del subtitle, label
         # self.isubcase_name_map = {subcase_id : label for
-                                # in iteritems(model.isubcase_name_map)}
+                                # in model.isubcase_name_map.items()}
 
         form = self._fill_op2_output(results_filename, cases, model, form, icase)
         self._finish_results_io2(model_name, form, cases)

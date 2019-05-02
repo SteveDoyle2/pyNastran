@@ -4,6 +4,7 @@ import numpy as np
 from numpy import zeros, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.table_object import append_sort1_sort2
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
@@ -181,7 +182,7 @@ class ElementTableArray(BaseElement):  # displacement style table
 
     def add_sort1(self, dt, eid, etype, v1, v2, v3, v4, v5, v6):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         # itotal - the node number
         # itime - the time/frequency step
 

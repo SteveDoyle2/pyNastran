@@ -1,10 +1,11 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import integer_types
 
 import numpy as np
 from numpy import zeros, searchsorted
+from pyNastran.utils.numpy_utils import integer_types
+
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 

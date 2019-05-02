@@ -185,6 +185,8 @@ class BAROR(BaseCard):
         self.g0 = g0
         self.x = x
         self.offt = offt
+        #if isinstance(offt, integer_types):
+            #raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -206,8 +208,6 @@ class BAROR(BaseCard):
         else:
             raise NotImplementedError('BAROR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
-        if isinstance(offt, integer_types):
-            raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
         assert len(card) <= 9, 'len(BAROR card) = %i\ncard=%s' % (len(card), card)
         return BAROR(pid, is_g0, g0, x, offt=offt, comment=comment)
 
@@ -450,7 +450,10 @@ class CBAR(LineElement):
                 x.append(nan)
                 g0.append(element.g0)
 
-            offt.append(element.offt.encode(encoding))
+            offti = element.offt
+            if isinstance(offti, integer_types):
+                offti = str(offti)
+            offt.append(offti.encode(encoding))
             pa.append(element.pa)
             pb.append(element.pb)
             wa.append(element.wa)
@@ -516,6 +519,10 @@ class CBAR(LineElement):
 
         if x is not None:
             x = np.asarray(x)
+        if isinstance(offt, str):
+            offt = offt.replace('E', 'O')
+            offt = int(offt) if offt.isdigit() else offt
+
         self.eid = eid
         self.pid = pid
         self.x = x
@@ -532,8 +539,6 @@ class CBAR(LineElement):
         self.gb_ref = None
         self.g0_ref = None
         self.g0_vector = None
-        if isinstance(self.offt, str):
-            self.offt = self.offt.replace('E', 'O')
 
     def validate(self):
         msg = ''
@@ -547,18 +552,19 @@ class CBAR(LineElement):
         if msg:
             raise ValueError(msg)
 
-        if isinstance(self.offt, integer_types):
-            assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
-            raise NotImplementedError('invalid offt; offt=%i' % self.offt)
-        elif not isinstance(self.offt, string_types):
-            raise SyntaxError('invalid offt expected a string of length 3 '
-                              'offt=%r; Type=%s' % (self.offt, type(self.offt)))
-
         if self.g0 in [self.ga, self.gb]:
             msg = 'G0=%s cannot be GA=%s or GB=%s' % (self.g0, self.ga, self.gb)
             raise RuntimeError(msg)
 
-        check_offt(self)
+        if isinstance(self.offt, integer_types):
+            assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
+            #raise NotImplementedError('invalid offt; offt=%i' % self.offt)
+        elif not isinstance(self.offt, string_types):
+            raise SyntaxError('invalid offt expected a string of length 3 '
+                              'offt=%r; Type=%s' % (self.offt, type(self.offt)))
+
+        if not isinstance(self.offt, integer_types):
+            check_offt(self)
 
     @classmethod
     def add_card(cls, card, baror=None, comment=''):

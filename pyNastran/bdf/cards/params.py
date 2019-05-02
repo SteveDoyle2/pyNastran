@@ -124,18 +124,22 @@ class PARAM(BaseCard):
         elif key == 'UNITSYS':
             value = string(card, 2, 'value')
         else:
+            n = 2
             value1 = integer_double_string_or_blank(card, 2, 'value1')
             value2 = integer_double_string_or_blank(card, 3, 'value2')
             if value2 is None:
                 value = value1
+                n = 1
 
         if value is None:
+            # n=2 or blank
             if isinstance(value1, string_types):
                 assert ' ' not in value1, 'PARAM value1=%r' % value1
             if isinstance(value2, string_types):
                 assert ' ' not in value2, 'PARAM value2=%r' % value2
             values = [value1, value2]
         else:
+            # n=1
             if isinstance(value, string_types):
                 assert ' ' not in value, 'PARAM value=%r' % value
             values = [value]

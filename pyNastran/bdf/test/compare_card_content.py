@@ -366,6 +366,7 @@ def compare_optimization_content(fem1, fem2):
         card1 = fem1.dvprels[key]
         card2 = fem2.dvprels[key]
         assert_fields(card1, card2)
+        card1.get_xinit_lower_upper_bound(fem1)
 
 
 def compare_aero_content(fem1, fem2):

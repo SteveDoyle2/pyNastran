@@ -7,13 +7,13 @@ from __future__ import print_function
 import sys
 import traceback
 from typing import List, Dict, Any
-from six import iteritems, reraise
+from six import reraise
 
 def verify_bdf(model, xref):
     # type: (Any, bool) -> None
     #for key, card in sorted(model.params.items()):
         #card._verify(xref)
-    for unused_key, card in sorted(iteritems(model.nodes)):
+    for unused_key, card in sorted(model.nodes.items()):
         try:
             card._verify(xref)
         except:
@@ -21,7 +21,7 @@ def verify_bdf(model, xref):
             raise
 
     _verify_dict(model.coords, xref)
-    for unused_key, card in sorted(iteritems(model.elements)):
+    for unused_key, card in sorted(model.elements.items()):
         try:
             card._verify(xref)
         except:

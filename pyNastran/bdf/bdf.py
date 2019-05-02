@@ -3239,7 +3239,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 nid_cp_cd[i, 0] = nid
                 i += 1
         if ngridb:
-            for nid, node in sorted(iteritems(self.gridb)):
+            for nid, node in sorted(self.gridb.items()):
                 phi = node.phi
                 cd = node.cd
                 ringfl_id = node.ringfl

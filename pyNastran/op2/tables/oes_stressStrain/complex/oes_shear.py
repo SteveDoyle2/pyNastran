@@ -2,11 +2,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import numpy as np
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
-
-ints = (int, np.int32)
 
 
 class ComplexShearArray(OES_Object):
@@ -128,7 +127,7 @@ class ComplexShearArray(OES_Object):
 
     def add_sort1(self, dt, eid, max_shear, avg_shear):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [max_shear, avg_shear]
         self.element[self.itotal] = eid
@@ -197,7 +196,7 @@ class ComplexShearArray(OES_Object):
                     assert len(eids) == len(max_shear)
                     assert len(max_shear) > 0, max_shear
                     for eid, max_sheari, avg_sheari in zip(eids, max_shear, avg_shear):
-                        assert isinstance(eid, ints), 'eid=%s type=%s' % (eid, type(eid))
+                        assert isinstance(eid, integer_types), 'eid=%s type=%s' % (eid, type(eid))
                         [rmax_shear, imax_shear, ravg_shear, iavg_shear
                          ,] = write_imag_floats_13e([max_sheari, avg_sheari], is_mag_phase)
 

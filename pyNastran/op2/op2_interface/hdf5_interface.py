@@ -13,9 +13,7 @@ defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-from six import b
-
-from six import PY3, binary_type, string_types
+from six import b, PY3, binary_type, string_types
 import numpy as np
 import h5py
 
@@ -107,8 +105,9 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     RealChbdyHeatFluxArray, RealConvHeatFluxArray,
     Real1DHeatFluxArray,
-    #RealElementTableArray, RealHeatFluxVUArray, RealHeatFluxVUBeamArray,
-    #RealHeatFluxVU3DArray,
+    #RealElementTableArray, RealHeatFluxVUArray,
+    RealHeatFluxVUBeamArray,
+    RealHeatFluxVU3DArray,
     RealHeatFlux_2D_3DArray,
 )
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
@@ -133,9 +132,9 @@ TABLE_OBJ_MAP = {
     'crm.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
     'psd.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
     'rms.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
-    'displacement_scaled_response_spectra_ABS' : (RealDisplacementArray, ComplexDisplacementArray),
-    'displacement_scaled_response_spectra_NRL' : (RealDisplacementArray, ComplexDisplacementArray),
-    'displacement_scaled_response_spectra_SRSS' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacement_scaled_response_spectra_abs' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacement_scaled_response_spectra_nrl' : (RealDisplacementArray, ComplexDisplacementArray),
+    'displacement_scaled_response_spectra_srss' : (RealDisplacementArray, ComplexDisplacementArray),
 
     'velocities' : (RealVelocityArray, ComplexVelocityArray, RealThermalVelocityVectorArray),
     'no.velocities' : (RealVelocityArray, ComplexVelocityArray),
@@ -143,7 +142,7 @@ TABLE_OBJ_MAP = {
     'crm.velocities' : (RealVelocityArray, ComplexVelocityArray),
     'psd.velocities' : (RealVelocityArray, ComplexVelocityArray),
     'rms.velocities' : (RealVelocityArray, ComplexVelocityArray),
-    'velocity_scaled_response_spectra_ABS' : (RealVelocityArray, ComplexVelocityArray),
+    'velocity_scaled_response_spectra_abs' : (RealVelocityArray, ComplexVelocityArray),
 
     'accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
     'no.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
@@ -151,9 +150,9 @@ TABLE_OBJ_MAP = {
     'crm.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
     'psd.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
     'rms.accelerations' : (RealAccelerationArray, ComplexAccelerationArray),
-    'acceleration_scaled_response_spectra_ABS' : (RealAccelerationArray, ComplexAccelerationArray),
-    'acceleration_scaled_response_spectra_NRL' : (RealAccelerationArray, ComplexAccelerationArray),
-    'acceleration_scaled_response_spectra_SRSS' : (RealAccelerationArray, ComplexAccelerationArray),
+    'acceleration_scaled_response_spectra_abs' : (RealAccelerationArray, ComplexAccelerationArray),
+    'acceleration_scaled_response_spectra_nrl' : (RealAccelerationArray, ComplexAccelerationArray),
+    'acceleration_scaled_response_spectra_srss' : (RealAccelerationArray, ComplexAccelerationArray),
 
     'spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'spc_forces_v' : (RealSPCForcesArray, ComplexSPCForcesArray),
@@ -162,8 +161,8 @@ TABLE_OBJ_MAP = {
     'crm.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'psd.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'rms.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'spc_forces_scaled_response_spectra_ABS' : (RealSPCForcesArray, ComplexSPCForcesArray),
-    'spc_forces_scaled_response_spectra_NRL' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_scaled_response_spectra_abs' : (RealSPCForcesArray, ComplexSPCForcesArray),
+    'spc_forces_scaled_response_spectra_nrl' : (RealSPCForcesArray, ComplexSPCForcesArray),
 
     'mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
     'no.mpc_forces' : (RealMPCForcesArray, ComplexMPCForcesArray),
@@ -403,11 +402,14 @@ TABLE_OBJ_MAP = {
 
     'cbar_force' : (RealCBarForceArray, ComplexCBarForceArray),
     'cbar_force_abs' : (RealCBarForceArray, ),
+    'cbar_force_nrl' : (RealCBarForceArray, ),
     'ato.cbar_force' : (RealCBarForceArray, ),
     'crm.cbar_force' : (RealCBarForceArray, ),
     'psd.cbar_force' : (RealCBarForceArray, ),
     'rms.cbar_force' : (RealCBarForceArray, ),
     'no.cbar_force' : (RealCBarForceArray, ),
+
+    'nrl.cbar_force' : (RealCBarForceArray, ),
     'RAFCONS.cbar_force' : (RealCBarForceArray, ),
     'RAFEATC.cbar_force' : (RealCBarForceArray, ),
 
@@ -849,6 +851,7 @@ TABLE_OBJ_MAP = {
 
     'nonlinear_cquad4_stress' : (RealNonlinearPlateArray, ),
     'nonlinear_ctria3_stress' : (RealNonlinearPlateArray, ),
+    'nonlinear_cbush1d_stress_strain' : (RealBush1DStressArray, ComplexCBush1DStressArray),
 
     'hyperelastic_cquad4_strain' : (HyperelasticQuadArray, ),
 
@@ -861,6 +864,7 @@ TABLE_OBJ_MAP = {
     'grid_point_stresses_volume_direct' : (GridPointStressesVolumeDirectArray, ),
     'grid_point_stresses_volume_principal' : (GridPointStressesVolumePrincipalArray, ),
 
+    # ----------------------------------------------------------
     'crod_thermal_load' :  (Real1DHeatFluxArray, ),
     'ctube_thermal_load' :  (Real1DHeatFluxArray, ),
     'conrod_thermal_load' : (Real1DHeatFluxArray, ),
@@ -882,6 +886,32 @@ TABLE_OBJ_MAP = {
     'chbdye_thermal_load' :  (RealChbdyHeatFluxArray, ),
     'chbdyp_thermal_load' : (RealChbdyHeatFluxArray, ),
     'chbdyg_thermal_load' : (RealChbdyHeatFluxArray, ),
+    'thermalLoad_VU_3D' : (RealHeatFluxVU3DArray, ),
+    'vu_beam_thermal_load' : (RealHeatFluxVUBeamArray, ),
+
+    # ----------------------------------------------------------
+    'crod_thermal_load_flux' :  (Real1DHeatFluxArray, ),
+    'ctube_thermal_load_flux' :  (Real1DHeatFluxArray, ),
+    'conrod_thermal_load_flux' : (Real1DHeatFluxArray, ),
+
+    'cbar_thermal_load_flux' :  (Real1DHeatFluxArray, ),
+    'cbeam_thermal_load_flux' : (Real1DHeatFluxArray, ),
+    'cbend_thermal_load_flux' : (Real1DHeatFluxArray, ),
+
+    'cquad4_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'cquad8_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'ctria3_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'ctria6_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'ctriax6_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+
+    'ctetra_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'cpenta_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'chexa_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+
+    'chbdye_thermal_load_flux' :  (RealChbdyHeatFluxArray, ),
+    'chbdyp_thermal_load_flux' : (RealChbdyHeatFluxArray, ),
+    'chbdyg_thermal_load_flux' : (RealChbdyHeatFluxArray, ),
+    # ----------------------------------------------------------
 
     'vu_tria_force' : (RealForceVU2DArray, ),
     'vu_quad_force' : (RealForceVU2DArray, ),
@@ -990,6 +1020,7 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
     _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str_data_names,
                                      debug=debug)
     return obj
+
 
 def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str_data_names,
                                      debug=False):

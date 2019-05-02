@@ -8,9 +8,9 @@ warnings.simplefilter('always')
 np.seterr(all='raise')
 
 
+import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.su2.su2_io import SU2_IO
-import pyNastran
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'su2')

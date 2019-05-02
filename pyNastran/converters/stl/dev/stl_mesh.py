@@ -24,7 +24,7 @@ def projected_barycentric_coord(p, q, u, v):
     u = p2 - p1
     v = p3 - p1
     """
-    n = cross(u, v)
+    n = np.cross(u, v)
     one_over_4_area_squared = 1.0 / np.dot(n, n)
     w = p - q
     b[2] = np.dot(np.cross(u, w), n) * one_over_4_area_squared

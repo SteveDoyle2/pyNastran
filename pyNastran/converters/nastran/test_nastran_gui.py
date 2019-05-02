@@ -9,11 +9,11 @@ matplotlib.use('Agg')
 import vtk
 
 from cpylog import SimpleLogger
+import pyNastran
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
+from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.nastran_io import NastranIO, BDF
-from pyNastran.bdf.errors import DuplicateIDsError
-import pyNastran
 #from cpylog import get_logger2
 
 class NastranGUI(NastranIO, FakeGUIMethods):
@@ -599,11 +599,13 @@ class TestNastranGUI(unittest.TestCase):
             xyz_file.write('4., 5., 6.\n')
         csv_filename = 'xyz1.csv' # os.path.join(MODEL_PATH, 'xyz1.csv')
         test.on_load_csv_points(csv_filename=csv_filename, name=None, color=None)
+        os.remove(csv_filename)
 
         with open('xyz2.csv', 'w') as xyz_file:
             xyz_file.write('10., 20., 30.')
         csv_filename = 'xyz2.csv' # os.path.join(MODEL_PATH, 'xyz2.csv')
         test.on_load_csv_points(csv_filename=csv_filename, name=None, color=None)
+        os.remove(csv_filename)
 
         #test.on_wireframe()
         #test.on_surface()

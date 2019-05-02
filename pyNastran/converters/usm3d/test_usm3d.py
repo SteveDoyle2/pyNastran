@@ -3,10 +3,10 @@ tests Usm3d
 """
 import os
 import unittest
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.usm3d.usm3d_reader import read_usm3d
-from cpylog import get_logger
 
 
 PKG_PATH = pyNastran.__path__[0]

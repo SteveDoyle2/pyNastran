@@ -433,7 +433,7 @@ class XrefMesh(BDFAttributes):
         """
         Links the properties to materials
         """
-        for prop in itervalues(self.properties):
+        for prop in self.properties.values():
             try:
                 prop.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:

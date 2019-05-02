@@ -3,11 +3,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import cycle
 import numpy as np
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_floats_13e, write_floats_8p1e
-
-ints = (int, np.int32)
 
 
 class RealBendArray(OES_Object):
@@ -130,7 +129,7 @@ class RealBendArray(OES_Object):
 
     def add_sort1(self, dt, eid, grid, angle, sc, sd, se, sf, omax, omin, mst, msc):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal] = [angle, sc, sd, se, sf, omax, omin, mst, msc]
         self.element_node[self.itotal] = [eid, grid]
@@ -211,7 +210,7 @@ class RealBendArray(OES_Object):
                     assert len(eids) == len(angles)
                     assert len(angles) > 0, angles
                     for i, eid, nid, anglei, sci, sdi, sei, sfi, maxi, mini, msti, msci in zip(counter, eids, nids, angles, scs, sds, ses, sfs, maxs, mins, msts, mscs):
-                        assert isinstance(eid, ints), 'eid=%s type=%s' % (eid, type(eid))
+                        assert isinstance(eid, integer_types), 'eid=%s type=%s' % (eid, type(eid))
                         [angle, sc, sd, se, sf, omax, omin] = write_floats_13e([anglei, sci, sdi, sei, sfi, maxi, mini])
                         [mst, msc] = write_floats_8p1e([msti, msci])
 

@@ -432,6 +432,7 @@ class CHEXA8(SolidElement):
         return centroid
 
     def Volume(self):
+        """Calculate the volume of the hex"""
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.get_node_positions()
         (area1, c1) = area_centroid(n1, n2, n3, n4)
         (area2, c2) = area_centroid(n5, n6, n7, n8)
@@ -1058,6 +1059,7 @@ class CPENTA6(SolidElement):
         return centroid
 
     def Volume(self):
+        """Calculate the volume of the penta"""
         (n1, n2, n3, n4, n5, n6) = self.get_node_positions()
         area1 = 0.5 * norm(cross(n3 - n1, n2 - n1))
         area2 = 0.5 * norm(cross(n6 - n4, n5 - n4))
@@ -2043,6 +2045,7 @@ class CTETRA4(SolidElement):
         ]
 
     def Volume(self):
+        """Calculate the volume of the tet"""
         (n1, n2, n3, n4) = self.get_node_positions()
         return volume4(n1, n2, n3, n4)
 

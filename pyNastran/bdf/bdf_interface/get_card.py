@@ -672,6 +672,7 @@ class GetCard(GetMethods):
             key : str
                 the optimization string
             design_region : (nelements,) int ndarray
+                the DVPRELx id
             dvprel_init : (nelements,) float ndarray
                 the initial values of the variable
             dvprel_min : (nelements,)float ndarray
@@ -707,8 +708,6 @@ class GetCard(GetMethods):
 
             key, msg = get_dvprel_key(dvprel, prop)
             if dvprel.type == 'DVPREL1':
-                assert len(desvars) == 1, len(desvars)
-                coeffs = dvprel.coeffs
                 if msg:
                     self.log.warning(msg)
                     continue
@@ -722,31 +721,8 @@ class GetCard(GetMethods):
                 optimization_region = dvprel.oid
                 assert optimization_region > 0, str(self)
                 design_region[i] = optimization_region
-                #value = 0.
-                lower_bound = 0.
-                upper_bound = 0.
-                for desvar, coeff in zip(desvars, coeffs):
-                    if isinstance(desvar, integer_types):
-                        desvar_ref = self.desvars[desvar]
-                    else:
-                        desvar_ref = desvar.desvar_ref
-                    xiniti = desvar_ref.xinit
-                    if desvar_ref.xlb != -1e20:
-                        xiniti = max(xiniti, desvar_ref.xlb)
-                        lower_bound = desvar_ref.xlb
-                    if desvar_ref.xub != 1e20:
-                        xiniti = min(xiniti, desvar_ref.xub)
-                        upper_bound = desvar_ref.xub
+                xinit, lower_bound, upper_bound = dvprel.get_xinit_lower_upper_bound(self)
 
-                    # code validation
-                    if desvar_ref.delx is not None and desvar_ref.delx != 1e20:
-                        pass
-
-                    # TODO: haven't quite decided what to do
-                    if desvar_ref.ddval is not None:
-                        msg = 'DESVAR id=%s DDVAL is not None\n%s' % str(desvar_ref)
-                    assert desvar_ref.ddval is None, desvar_ref
-                    xinit = coeff * xiniti
                 dvprel_init[i] = xinit
                 dvprel_min[i] = lower_bound
                 dvprel_max[i] = upper_bound
@@ -2403,16 +2379,20 @@ class GetCard(GetMethods):
         pids = self.property_ids
         for pid in pids:
             pid_to_eids_map[pid] = []
-        for pid in self.phbdys.keys():
-            assert pid not in pid_to_eids_map, 'pid=%s is already used and must be used by PHBDY' % pid
-            pid_to_eids_map[pid] = []
+        #for pid in self.phbdys.keys():
+            #assert pid not in pid_to_eids_map, 'pid=%s is already used and must be used by PHBDY' % pid
+            #pid_to_eids_map[pid] = []
 
-        elements_without_properties = [
-            'CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'GENEL']
+        elements_without_properties = {
+            'CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4', 'GENEL'}
+        thermal_elements = {'CHBDYP'}
+        elements_without_properties.update(thermal_elements)
+        skip_elements = elements_without_properties
+
         for eid in self.element_ids:
             element = self.Element(eid)
             element_type = element.type
-            if element_type in elements_without_properties:
+            if element_type in skip_elements:
                 continue
             if hasattr(element, 'pid'):
                 pid = element.Pid()
@@ -2721,7 +2701,7 @@ class GetCard(GetMethods):
                     comps.append(node.ps)
         return nids, comps
 
-    def get_mpcs(self, mpc_id, stop_on_failure=True):
+    def get_mpcs(self, mpc_id, consider_mpcadd=True, stop_on_failure=True):
         """
         Gets the MPCs in a semi-usable form.
 
@@ -2745,7 +2725,7 @@ class GetCard(GetMethods):
 
         """
         mpcs = self.get_reduced_mpcs(
-            mpc_id, consider_mpcadd=True,
+            mpc_id, consider_mpcadd=consider_mpcadd,
             stop_on_failure=stop_on_failure)
         nids = []
         comps = []

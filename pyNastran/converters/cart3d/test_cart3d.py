@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import unittest
 from numpy import array_equal, allclose
+from cpylog import get_logger
 
 import pyNastran
 from pyNastran.converters.cart3d.cart3d import read_cart3d, comp2tri
@@ -13,7 +14,6 @@ from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 import pyNastran.converters.cart3d.input_cntl_reader
 from pyNastran.converters.type_converter import run_format_converter
 
-from cpylog import get_logger
 
 PKG_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')

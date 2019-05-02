@@ -6,10 +6,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from math import isnan
 from itertools import cycle
-from six import integer_types
 import numpy as np
 from numpy import zeros
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
 
@@ -140,7 +140,7 @@ class RealNonlinearPlateArray(OES_Object):
 
     def add_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         if isnan(fd):
             fd = 0.
         if isnan(sz):

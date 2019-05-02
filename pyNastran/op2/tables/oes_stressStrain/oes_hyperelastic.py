@@ -1,10 +1,9 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import cycle
-from six import integer_types
 import numpy as np
-ints = (int, np.int32)
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
@@ -174,8 +173,8 @@ class HyperelasticQuadArray(OES_Object):
 
 
     def _add_new_eid_sort1(self, dt, eid, eype, node_id, oxx, oyy, txy, angle, majorP, minorP):
-        assert isinstance(eid, ints), eid
-        assert isinstance(node_id, ints), node_id
+        assert isinstance(eid, integer_types), eid
+        assert isinstance(node_id, integer_types), node_id
         self._times[self.itime] = dt
         #assert self.itotal == 0, oxx
         self.element_node[self.itotal, :] = [eid, node_id]
@@ -184,11 +183,11 @@ class HyperelasticQuadArray(OES_Object):
         self.ielement += 1
 
     #def _add_new_node(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #assert isinstance(node_id, ints), node_id
+        #assert isinstance(node_id, integer_types), node_id
         #self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     #def _add(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
-        #assert isinstance(node_id, ints), node_id
+        #assert isinstance(node_id, integer_types), node_id
         #self._add_sort1(dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm)
 
     #def _add_new_node_sort1(self, dt, eid, node_id, fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm):
@@ -196,7 +195,7 @@ class HyperelasticQuadArray(OES_Object):
 
     def _add_sort1(self, dt, eid, etype, node_id, oxx, oyy, txy, angle, majorP, minorP):
         assert eid is not None, eid
-        assert isinstance(node_id, ints), node_id
+        assert isinstance(node_id, integer_types), node_id
         self.element_node[self.itotal, :] = [eid, node_id]
         self.data[self.itime, self.itotal, :] = [oxx, oyy, txy, angle, majorP, minorP]
         self.itotal += 1

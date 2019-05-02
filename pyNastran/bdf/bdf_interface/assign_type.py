@@ -274,6 +274,27 @@ def modal_components(card, ifield, fieldname):
                           'card=%s' % (fieldname, value, ifield, card))
     return value
 
+def modal_components_or_blank(card, ifield, fieldname, default=None):
+    # type: (BDFCard, int, str, Any) -> int
+    """
+    Gets the modal components (allows a -1 value); used by TIC
+
+    Parameters
+    ----------
+    card : BDFCard()
+        BDF card as a list
+    ifield : int
+        field number
+    fieldname : str
+        name of field
+    """
+    value = integer_or_blank(card, ifield, fieldname, default=default)
+    if not(-1 <= value <= 6):
+        raise SyntaxError('%s=%s (field #%s) on card must be an integer '
+                          '(-1 <= val <= 6).\n'
+                          'card=%s' % (fieldname, value, ifield, card))
+    return value
+
 def integer(card, ifield, fieldname):
     # type: (BDFCard, int, str) -> int
     """

@@ -63,9 +63,14 @@ class GuiParsing(unittest.TestCase):
         out = get_inputs(print_inputs=False, argv=args)
         remove_args(out, *keys_to_remove)
         assert out == {'format': ['nastran'], 'output': ['fem.op2'], 'input': ['fem.bdf']}, out
+        os.remove('fem.bdf')
+        os.remove('fem.op2')
+        os.remove('fem.tri')
 
     def test_parse_2(self):
         """tests parsing of the pyNastranGUI command line"""
+        with open('fem.bdf', 'w') as unused_bdf_file:
+            pass
         keys_to_remove = ['noupdate', 'log', 'test', 'geomscript', 'postscript', 'qt',
                           'plugin', 'is_groups', 'groups', 'debug']
 
@@ -90,10 +95,13 @@ class GuiParsing(unittest.TestCase):
         out = get_inputs(print_inputs=False, argv=args)
         remove_args(out, *keys_to_remove)
         assert out == {'format': ['nastran'], 'user_geom': ['fem.dat', 'fem2.dat'], 'output': [], 'user_points': None, 'input': ['fem.bdf']}, out
+        os.remove('fem.bdf')
 
 
     def test_parse_3(self):
         """tests parsing of the pyNastranGUI command line"""
+        with open('fem.bdf', 'w') as unused_bdf_file:
+            pass
         keys_to_remove = ['noupdate', 'log', 'test', 'qt',
                           'plugin', 'is_groups', 'groups', 'user_geom', 'user_points', 'debug']
 
@@ -120,6 +128,7 @@ class GuiParsing(unittest.TestCase):
         out = get_inputs(print_inputs=False, argv=args)
         remove_args(out, *keys_to_remove)
         assert out == {'format': ['nastran'], 'output': [], 'postscript': 'myscript.py', 'input': ['fem.bdf'], 'geomscript': None}, out
+        os.remove('fem.bdf')
 
 
 def remove_args(dicti, *keys_to_remove):

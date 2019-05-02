@@ -6,7 +6,7 @@ defines:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from typing import  List
+from typing import  List, Union
 from six import string_types
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -165,25 +165,26 @@ def expand_thru_exclude(fields):
 
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
-    fields = [interpret_value(field.upper())
-              if isinstance(field, string_types) else field for field in fields]
+    isfields = [interpret_value(field.upper())
+                if isinstance(field, string_types) else field
+                for field in fields]  # type: List[Union[str,int]]
 
     fields_out = []  # type: List[int]
-    nfields = len(fields)
+    nfields = len(isfields)
     for i in range(nfields):
-        #print('fields[%i] = %r' % (i, fields[i]))
-        if fields[i] == 'THRU':
+        #print('fields[%i] = %r' % (i, isfields[i]))
+        if isfields[i] == 'THRU':
             sorted_list = []
-            for j in range(fields[i - 1], fields[i + 1]):
-                sorted_list.append(fields[j])
+            for j in range(isfields[i - 1], isfields[i + 1]):
+                sorted_list.append(isfields[j])
 
-        elif fields[i] == 'EXCLUDE':
+        elif isfields[i] == 'EXCLUDE':
             stored_set = set(sorted_list)
-            while fields[i] < max(sorted_list):
-                stored_set.remove(fields[i])
+            while isfields[i] < max(sorted_list):
+                stored_set.remove(isfields[i])
             sorted_list = list(stored_set)
         else:
             if sorted_list:
                 fields_out += sorted_list
-            fields_out.append(fields[i])
+            fields_out.append(isfields[i])
     return fields_out

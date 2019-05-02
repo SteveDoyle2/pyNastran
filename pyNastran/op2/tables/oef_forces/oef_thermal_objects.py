@@ -1,9 +1,9 @@
 #pylint disable=C0103,C0301
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import integer_types
 import numpy as np
-#from numpy import zeros, empty
+
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import (
     write_float_13e, write_floats_13e, _eigenvalue_header)
@@ -132,7 +132,7 @@ class Real1DHeatFluxArray(BaseElement):
 
     def add_sort1(self, dt, eid, etype, xgrad, ygrad, zgrad, xflux, yflux, zflux):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.element_data_type[self.ielement] = etype
@@ -329,7 +329,7 @@ class RealHeatFluxVU3DArray(BaseElement):
     def add_sort1(self, dt, eid, parent, grad_fluxes):
         """unvectorized method for adding SORT1 transient data"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #icord,
         self.element_parent[self.ielement, :] = [eid, parent]
@@ -553,7 +553,7 @@ class RealHeatFluxVUBeamArray(BaseElement):  # 191-VUBEAM
 
     def add_sort1(self, dt, eid, parent, coord, unused_icord, grad_fluxes):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_parent_coord[self.ielement, :] = [eid, parent, coord]
         for grad_flux in grad_fluxes:
@@ -790,7 +790,7 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def add_sort1(self, dt, eid, cntl_node, free_conv, free_conv_k):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element_node[self.ielement, :] = [eid, cntl_node]
         self.data[self.itime, self.ielement, :] = [free_conv, free_conv_k]
@@ -967,7 +967,7 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
     def add_sort1(self, dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.element_type[self.ielement] = etype
@@ -1225,7 +1225,7 @@ class RealHeatFluxVUShellArray(BaseElement):
     def add_sort1(self, dt, eid, parent, coord, unused_icord, unused_theta,
                   xgrad, ygrad, zgrad, xflux, yflux, zflux):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, (int, np.int32)) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         # itotal - the node number
         # itime - the time/frequency step
 
