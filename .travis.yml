@@ -30,18 +30,24 @@ matrix:
       # latest versions of package
     - name: "Python 2.7"
       python: '2.7'
-      env: 'numpy scipy'
+      numpy: NUMPY=numpy
+      scipy: SCIPY=scipy
+
     - name: "Python 3.6"
       python: '3.6'
-      env: 'numpy scipy'
+      numpy: NUMPY=numpy
+      scipy: SCIPY=scipy
+
     - name: "Python 3.7"
       python: '3.7'
-      env: 'numpy scipy'
+      numpy: NUMPY=numpy
+      scipy: SCIPY=scipy
 
       # old versions of packages
     - name: "Python 2.7 old packages"
       python: '2.7'
-      env: 'numpy=1.11.3 scipy=0.18.1'
+      numpy: NUMPY=1.11.3
+      scipy: NUMPY=0.18.1
 #      numpy: NUMPY='numpy=1.11.3'
 #      scipy: SCIPY='scipy=0.18.1'
 
@@ -118,7 +124,7 @@ install:
   # PY2: numpy 1.14.2: pandas works in 0.20.3; broken in 0.22.0, 0.23.4
   # PY3: numpy 1.14.2; pandas is fine: 0.22.0
 #  - echo "python=$TRAVIS_PYTHON_VERSION atlas $NUMPY $SCIPY matplotlib pandas h5py vtk pyqt"
-  - echo "python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} matplotlib pandas h5py vtk pyqt"
+  - echo "python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} ${SCIPY} matplotlib pandas h5py vtk pyqt"
 #  - if [[ "$TRAVIS_JOB_NAME"]]
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib pandas=0.20 h5py vtk pyqt; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib pandas      h5py vtk pyqt; fi
