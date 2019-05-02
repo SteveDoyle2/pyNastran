@@ -771,6 +771,7 @@ class DESVAR(OptConstraint):
         self.delx = delx
         # DDVAL id if you want discrete values
         self.ddval = ddval
+        self.ddval_ref = None
 
     def _verify(self, xref):
         pass
@@ -850,7 +851,7 @@ class DESVAR(OptConstraint):
         if len(label) <= 6:
             label = ' %6s ' % label
         list_fields = ['DESVAR', self.desvar_id, label, self.xinit, xlb,
-                       xub, self.delx, self.ddval]
+                       xub, self.delx, self.DDVal()]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
