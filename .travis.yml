@@ -67,7 +67,7 @@ matrix:
       env:
       #- NUMPY='numpy=1.15 scipy=0.19 matplotlib=2.2'  # doesn't work
       # bumped scipy from 1.0 to 1.1 for compatibility with numpy
-      - NUMPY='numpy=1.14 scipy=1.0 matplotlib=2.2'
+      - NUMPY='numpy=1.14 scipy=1.1 matplotlib=2.2'
 
     - name: "Python 3.7 old packages"
       python: '3.7'
