@@ -10,29 +10,34 @@ if sys.version_info < (3, 0):
 
 # features in packages used by pyNastran
 # numpy
-#  - 1.13: adds axis support to unique used by cutting plane tool
-#  - 1.14: adds encoding support to savetxt
-# scipy 0.18.1:
-#  - fixed kdtree used by nodal equivalencing
-# matplotlib 2.1:
-#  - adds plt.subplots support used by shear/moment/torque plotter
+#  - 1.13: adds axis support to unique
+#  - 1.14: adds encoding support to savetxt (unused)
+#  - 1.14: adds proper writing of np.savetxt for open file objects
+#          (used for unicode savetxt using with statement) in Python 3.6
+#  - 1.15: min for Python 3.7? I guess 1.14 is fine for a requirement...
+# scipy:
+#  - 0.18.1: fixed kdtree used by nodal equivalencing; min for Python 2.7
+#  - 0.19:   min for Python 3.6, 3.7
+# matplotlib:
+#  - 2.1: adds plt.subplots support
+#  - 2.2: min for Python 3.7
 
 # the packages that change requirements based on python version
 REQS = {
     '2.7' : {
         # package : (less than check, required)
-        'numpy' : ('1.13', '>=1.13,<1.17'), #  1.12???
+        'numpy' : ('1.13', '>=1.13,<1.17'),
         'scipy' : ('0.18.1', '>=0.18.1,<1.13'),
         'matplotlib' : ('2.1', '>=2.1,<3'),
     },
     '3.6' : {
-        'numpy' : ('1.13', '>=1.13'),  # 1.12 adds Python 3.6 support
-        'scipy' : ('0.19', '>=0.19'),  # 0.19 adds Python 3.6 support
-        'matplotlib' : ('2.1', '>=2.1'),  # guess
+        'numpy' : ('1.14', '>=1.14'),
+        'scipy' : ('0.19', '>=0.19'),
+        'matplotlib' : ('2.1', '>=2.1'),
     },
     '3.7' : {
-        'numpy' : ('1.13', '>=1.15'),
-        'scipy' : ('0.19', '>=0.19'), #  1.12???
+        'numpy' : ('1.14', '>=1.14'),
+        'scipy' : ('0.19', '>=0.19'),
         'matplotlib' : ('2.2', '>=2.2'),  # 2.2.4 adds Python 3.7 support
     },
 }
