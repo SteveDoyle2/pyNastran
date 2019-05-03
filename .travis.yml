@@ -16,34 +16,47 @@ language: python
   #  sudo: true
 #  - "3.5-dev" # 3.5 development branch
 #  - "nightly" # currently points to 3.6-dev
+
+# numpy:
+#  - 1.12 min for 3.6
+#  - 1.15 min for 3.7
+# scipy:
+#  - 0.19 min for 3.6
+#  - ???  min for 3.7
 matrix:
   include:
       # latest versions of package
     - name: "Python 2.7"
       python: '2.7'
       env:
-      - NUMPY='numpy scipy'
+      - NUMPY='numpy scipy matplotlib'
 
     - name: "Python 3.6"
       python: '3.6'
       env:
-      - NUMPY='numpy scipy'
+      - NUMPY='numpy scipy matplotlib'
 
     - name: "Python 3.7"
       python: '3.7'
       env:
-      - NUMPY='numpy scipy'
+      - NUMPY='numpy scipy matplotlib'
 
       # old versions of packages
     - name: "Python 2.7 old packages"
       python: '2.7'
       env:
-      - NUMPY='numpy=1.11.3 scipy=0.18.1'
+      - NUMPY='numpy=1.11.3 scipy=0.18.1 matplotlib=2.0'
+
+      # old versions of packages
+    - name: "Python 3.6 old packages"
+      python: '2.7'
+      env:
+      - NUMPY='numpy=1.12 scipy=0.19 matplotlib=2.0'
 
     - name: "Python 3.7 old packages"
       python: '3.7'
       env:
-      - NUMPY='numpy=1.12 scipy=0.18.1'
+      - NUMPY='numpy=1.15 scipy=0.19 matplotlib=2.2'
 #-------------------------------------------------
 # old-A
 
@@ -114,11 +127,11 @@ install:
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib pandas; fi
 
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} matplotlib pandas=0.20 h5py vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} matplotlib pandas      h5py vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} matplotlib pandas      h5py vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} matplotlib pandas      h5py vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} matplotlib pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas=0.20 h5py vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas      h5py vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas      h5py vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas      h5py vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
   - source activate test-environment
   - conda list
   - python setup.py develop
