@@ -127,12 +127,12 @@ def get_package_requirements(is_gui=True, python_version=None):
             #print('numpy %r %r' % (sver, iversion_check))
             if iver < iversion_check:
                 print("numpy.__version__ = %r < %s" % (np.__version__, version_check))
-                py_packages.append('numpy %s' % version_check)
+                py_packages.append('numpy %s' % required_version)
                 all_reqs['numpy'] = version_check
-                py_packages.append('numpy %s' % version_check) # was 1.11; ,<1.13.0
+                py_packages.append('numpy %s' % required_version) # was 1.11; ,<1.13.0
         except ImportError:
-            all_reqs['numpy'] = version_check
-            py_packages.append('numpy %s' % version_check) # ,<1.13.0; 1.15.1 used
+            all_reqs['numpy'] = required_version
+            py_packages.append('numpy %s' % required_version) # ,<1.13.0; 1.15.1 used
 
     if is_rtd:
         py_packages.append('scipy')
