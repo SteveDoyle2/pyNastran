@@ -20,19 +20,19 @@ if sys.version_info < (3, 0):
 REQS = {
     '2.7' : {
         # package : (less than check, required)
-        'numpy' : ('1.12', '>=1.12,<1.17'), #  1.12???
+        'numpy' : ('1.11', '>=1.12,<1.17'), #  1.12???
         'scipy' : ('0.18.1', '>=0.18.1,<1.13'),
-        'matplotlib' : ('2.1', '>=2.1'),
+        'matplotlib' : ('2.1', '>=2.1,<3'),
     },
     '3.6' : {
-        'numpy' : ('1.12', '>=1.12'),
-        'scipy' : ('0.19', '>=0.19'),
+        'numpy' : ('1.12', '>=1.12'),  # 1.12 adds Python 3.6 support
+        'scipy' : ('0.19', '>=0.19'),  # 0.19 adds Python 3.6 support
         'matplotlib' : ('2.1', '>=2.1'),  # guess
     },
     '3.7' : {
         'numpy' : ('1.12', '>=1.15'),
         'scipy' : ('0.19', '>=0.19'), #  1.12???
-        'matplotlib' : ('2.2', '>=2.2'),  # 2.2.4
+        'matplotlib' : ('2.2', '>=2.2'),  # 2.2.4 adds Python 3.7 support
     },
 }
 

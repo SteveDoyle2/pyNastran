@@ -45,13 +45,13 @@ matrix:
     - name: "Python 2.7 old packages"
       python: '2.7'
       env:
-      - NUMPY='numpy=1.11.3 scipy=0.18.1 matplotlib=2.0'
+      - NUMPY='numpy=1.11.3 scipy=0.18.1 matplotlib=2.1'
 
       # old versions of packages
     - name: "Python 3.6 old packages"
       python: '2.7'
       env:
-      - NUMPY='numpy=1.12 scipy=0.19 matplotlib=2.0'
+      - NUMPY='numpy=1.12 scipy=0.19 matplotlib=2.1'
 
     - name: "Python 3.7 old packages"
       python: '3.7'
