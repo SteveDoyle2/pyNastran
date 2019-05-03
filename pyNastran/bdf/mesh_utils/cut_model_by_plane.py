@@ -165,7 +165,7 @@ def export_edge_cut(csv_filename, result_array):
     #X = np.concatenate((geometry_array, results_array), axis=1)
     header = 'x, y, z, Cp'
     np.savetxt(csv_filename, result_array, delimiter=',', newline='\n', header=header,
-               footer='', comments='# ', encoding=None)
+               footer='', comments='# ') # , encoding=None # numpy 1.14
 
 def export_face_cut(csv_filename, geometry_arrays, results_arrays, header=''):
     """
@@ -195,7 +195,7 @@ def export_face_cut(csv_filename, geometry_arrays, results_arrays, header=''):
             header2 = 'Curve %i\n' % (i+1)
             header2 += 'eid, nid1, nid2, x, y, z, Cp'
             np.savetxt(csv_file, X, fmt=fmt, newline='\n', header=header2,
-                       footer='', comments='# ', encoding=None)
+                       footer='', comments='# ') # , encoding=None # numpy 1.14
             csv_file.write('\n')
 
 def _determine_cord2r(origin, zaxis, xzplane):
