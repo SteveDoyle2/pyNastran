@@ -236,7 +236,8 @@ def plot_cutting_plane_edges(title, p1, p2, zaxis,
             'x, y, z, x_local, y_local, z_local, %s%s\n' % (
                 str(p1), str(p2), str(zaxis), title, nd_msg)
         )
-    np.savetxt(csv_filename, result_array2, delimiter=',', header=header, comments='# ',
-               encoding=None)
+
+    # encoding=None - added in numpy 1.14
+    np.savetxt(csv_filename, result_array2, delimiter=',', header=header, comments='# ',)
     if show:
         plt.show()

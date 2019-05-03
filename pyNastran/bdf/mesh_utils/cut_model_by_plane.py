@@ -802,6 +802,7 @@ def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup=True):
     #print(','.join([str(val) for val in np.unique(edges)]))
     #print('geom =', geometry_array[myrow, :])
 
+    # axis added in numpy 1.13
     unused_unique_edges, unique_edge_index = np.unique(
         geometry_array[:, 1:],
         return_index=True, return_inverse=False, return_counts=False,
