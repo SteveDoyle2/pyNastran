@@ -56,7 +56,8 @@ matrix:
     - name: "Python 3.7 old packages"
       python: '3.7'
       env:
-      - NUMPY='numpy=1.15 scipy=0.19 matplotlib=2.2'
+      #- NUMPY='numpy=1.15 scipy=0.19 matplotlib=2.2'  # doesn't work
+      - NUMPY='numpy=1.15 scipy=1.0 matplotlib=2.2'
 #-------------------------------------------------
 # old-A
 
