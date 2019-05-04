@@ -236,6 +236,7 @@ def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
     .. note :: this method will change in order to return an object that
                does not have so many methods
     .. todo:: finish this
+
     """
     model = BDF(log=log, debug=debug, mode=mode)
     if read_cards and skip_cards:
@@ -330,6 +331,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     If you add very few methods and attributes to this, you get the ``BDF``
     class.  The point of this class is to break out a attributes, so the
     names (e.g., nodes) can be reused when vectorize the data.
+
     """
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
@@ -352,6 +354,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         mode : str; default='msc'
             the type of Nastran
             valid_modes = {'msc', 'nx'}
+
         """
         assert debug in [True, False, None], 'debug=%r' % debug
         self.echo = False
@@ -3310,6 +3313,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             coordinate system.
 
         .. todo:: how are SPOINTs/EPOINTs identified?
+
         """
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = self.get_displacement_index_xyz_cp_cd(
             fdtype=fdtype, idtype=idtype, sort_ids=True)
@@ -3552,6 +3556,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             the Cps that were checked
         cps_to_check : List[int]
             the Cps that are unreferenceable given the current information
+
         """
         nids_checked, cps_checked, cps_to_check = transform_coords_vectorized(
             cps_to_check0, icp_transform,
@@ -4252,6 +4257,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         class_instance : obj or None
             obj : GRID, CQUAD4, ...
             None : ECHOON, ECHOOFF, reject
+
         """
         if card_name == 'ECHOON':
             self.echo = True
@@ -4287,9 +4293,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         return class_instance
 
 class BDF(BDF_):
-    """
-    NASTRAN BDF Reader/Writer/Editor class.
-    """
+    """NASTRAN BDF Reader/Writer/Editor class."""
     _properties = ['is_bdf_vectorized', 'nid_map', 'wtmass', 'type_slot_str'] + [
         'nastran_format', 'is_long_ids', 'sol', 'subcases',
         'nnodes', 'node_ids', 'point_ids', 'npoints',

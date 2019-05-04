@@ -20,6 +20,7 @@ All shell elements are defined in this file.  This includes:
 
 All tris are TriShell, ShellElement, and Element objects.
 All quads are QuadShell, ShellElement, and Element objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -72,6 +73,7 @@ def _triangle_area_centroid_normal(nodes, card):
 
       Area = 0.5 * |n|
       unit_normal = n/|n|
+
     """
     (n1, n2, n3) = nodes
     vector = cross(n1 - n2, n1 - n3)
@@ -148,9 +150,7 @@ class ShellElement(Element):
 
     def Thickness(self):
         # () -> float
-        """
-        Returns the thickness
-        """
+        """Returns the thickness"""
         return self.pid_ref.Thickness()
 
     #def Volume(self):
@@ -166,6 +166,7 @@ class ShellElement(Element):
         Returns the material
 
         .. todo:: possibly remove this
+
         """
         return self.pid_ref.material_ids
 
@@ -175,6 +176,7 @@ class ShellElement(Element):
         Returns the material
 
         .. todo:: possibly remove this
+
         """
         return self.pid_ref.mid()
 
@@ -184,21 +186,18 @@ class ShellElement(Element):
         Returns the material ID
 
         .. todo:: possibly remove this
+
         """
         return self.pid_ref.Mid()
 
     def Nsm(self):
         # () -> float
-        """
-        Returns the non-structural mass
-        """
+        """Returns the non-structural mass"""
         return self.pid_ref.Nsm()
 
     def MassPerArea(self):
         # () -> float
-        """
-        Returns the mass per area
-        """
+        """Returns the mass per area"""
         tscales = self.get_thickness_scale()
         return self.pid_ref.MassPerArea(tflag=self.tflag, tscales=tscales)
 
@@ -206,6 +205,7 @@ class ShellElement(Element):
         # () -> float
         r"""
         .. math:: m = \frac{m}{A} A  \f]
+
         """
         A = self.Area()
         tscales = self.get_thickness_scale()
@@ -225,6 +225,7 @@ class ShellElement(Element):
         # () -> float
         r"""
         .. math:: m = \frac{m}{A} A  \f]
+
         """
         A = self.Area()
         mpa = self.pid_ref.MassPerArea_structure()
@@ -238,6 +239,7 @@ class ShellElement(Element):
     def Mass_no_xref(self, model):
         r"""
         .. math:: m = \frac{m}{A} A  \f]
+
         """
         A = self.Area_no_xref(model)
         pid_ref = model.Property(self.pid)
@@ -260,9 +262,7 @@ class TriShell(ShellElement):
         self.pid_ref = None  # type: Optional[Any]
 
     def get_edge_ids(self):
-        """
-        Return the edge IDs
-        """
+        """Return the edge IDs"""
         node_ids = self.node_ids
         return [
             tuple(sorted([node_ids[0], node_ids[1]])),
@@ -302,6 +302,7 @@ class TriShell(ShellElement):
                the centroid
         normal : (3,) array
                the normal vector
+
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
@@ -331,6 +332,7 @@ class TriShell(ShellElement):
         .. math::
           n = \frac{(n_0-n_1) \times (n_0-n_2)}
              {\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
+
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         try:
@@ -350,6 +352,7 @@ class TriShell(ShellElement):
 
         .. math::
           CG = \frac{1}{3} (n_0+n_1+n_2)
+
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         centroid = (n1 + n2 + n3) / 3.
@@ -387,6 +390,7 @@ class TriShell(ShellElement):
             the unit normal vector
 
         .. todo:: rotate the coordinate system by the angle theta
+
         """
         if normal is None:
             normal = self.Normal() # k = kmat
@@ -440,6 +444,7 @@ class CTRIA3(TriShell):
     +--------+-------+-------+----+----+----+------------+---------+
     |        |       | TFLAG | T1 | T2 | T3 |            |         |
     +--------+-------+-------+----+----+----+------------+---------+
+
     """
     type = 'CTRIA3'
     _field_map = {
@@ -528,6 +533,7 @@ class CTRIA3(TriShell):
             to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
+
         """
         TriShell.__init__(self)
         if comment:
@@ -559,6 +565,7 @@ class CTRIA3(TriShell):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -592,6 +599,7 @@ class CTRIA3(TriShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         #: Element ID
         eid = integer(card, 1, 'eid')
@@ -632,6 +640,7 @@ class CTRIA3(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CTRIA3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
@@ -647,6 +656,7 @@ class CTRIA3(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CTRIA3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
@@ -716,6 +726,7 @@ class CTRIA3(TriShell):
               * *   -->   * *
              *   *       *   *
             2-----3     3-----2
+
         """
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
@@ -775,6 +786,7 @@ class CPLSTN3(TriShell):
     +=========+=======+=======+=====+===+====+=======+
     | CPLSTN3 |  EID  |  PID  | N1 | N2 | N3 | THETA |
     +---------+-------+-------+----+----+----+-------+
+
     """
     type = 'CPLSTN3'
     _field_map = {1: 'eid', 2:'pid', 6:'theta', }
@@ -843,6 +855,7 @@ class CPLSTN3(TriShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         #: Element ID
         eid = integer(card, 1, 'eid')
@@ -869,6 +882,7 @@ class CPLSTN3(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTN3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
@@ -882,6 +896,7 @@ class CPLSTN3(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTN3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
@@ -928,6 +943,7 @@ class CPLSTN3(TriShell):
               * *   -->   * *
              *   *       *   *
             2-----3     3-----2
+
         """
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
@@ -966,6 +982,7 @@ class CTRIA6(TriShell):
     +--------+------------+---------+----+----+----+----+----+-----+
     |        | THETA/MCID | ZOFFSET | T1 | T2 | T3 |    |    |     |
     +--------+------------+---------+----+----+----+----+----+-----+
+
     """
     type = 'CTRIA6'
     def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0., tflag=0,
@@ -997,6 +1014,7 @@ class CTRIA6(TriShell):
             to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
+
         """
         TriShell.__init__(self)
         if comment:
@@ -1065,6 +1083,7 @@ class CTRIA6(TriShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         #: Element ID
         eid = integer(card, 1, 'eid')
@@ -1109,6 +1128,7 @@ class CTRIA6(TriShell):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -1144,6 +1164,7 @@ class CTRIA6(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CTRIA6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -1157,6 +1178,7 @@ class CTRIA6(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CTRIA6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -1198,15 +1220,14 @@ class CTRIA6(TriShell):
         return [self.T1, self.T2, self.T3]
 
     def Thickness(self):
-        """
-        Returns the thickness, :math:`t`
-        """
+        """Returns the thickness, :math:`t`"""
         return self.pid_ref.Thickness()
 
     def AreaCentroidNormal(self):
         """
         Returns area, centroid, normal as it's more efficient to do them
         together
+
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
@@ -1228,6 +1249,7 @@ class CTRIA6(TriShell):
 
         .. math::
           n = \frac{(n_0-n_1) \times (n_0-n_2)}{\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
+
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         return _normal(n1 - n2, n1 - n3)
@@ -1238,6 +1260,7 @@ class CTRIA6(TriShell):
 
         .. math::
           CG = \frac{1}{3} (n_1+n_2+n_3)
+
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         centroid = (n1 + n2 + n3) / 3.
@@ -1258,6 +1281,7 @@ class CTRIA6(TriShell):
              4    6   -->     6    4
             *      *         *      *
            2----5---3       3----5---2
+
         """
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n3, n2, n6, n5, n4]
@@ -1312,6 +1336,7 @@ class CTRIAR(TriShell):
     +--------+-------+-------+----+----+----+------------+---------+
     |        |       | TFLAG | T1 | T2 | T3 |            |         |
     +--------+-------+-------+----+----+----+------------+---------+
+
     """
     type = 'CTRIAR'
     def __init__(self, eid, pid, nids, theta_mcid=0.0, zoffset=0.0,
@@ -1343,6 +1368,7 @@ class CTRIAR(TriShell):
             to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
+
         """
         TriShell.__init__(self)
         if comment:
@@ -1411,6 +1437,7 @@ class CTRIAR(TriShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -1445,6 +1472,7 @@ class CTRIAR(TriShell):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -1487,6 +1515,7 @@ class CTRIAR(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CTRIAR eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
@@ -1515,6 +1544,7 @@ class CTRIAR(TriShell):
               * *   -->   * *
              *   *       *   *
             2-----3     3-----2
+
         """
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
@@ -1677,6 +1707,7 @@ class QuadShell(ShellElement):
          where:
            c=centroid
            A=area
+
         """
         nodes_ref = self.nodes_ref[:4]
         n1, n2, n3, n4 = self.get_node_positions(nodes=nodes_ref)
@@ -1773,6 +1804,7 @@ class QuadShell(ShellElement):
             the unit normal vector
 
         .. todo:: rotate the coordinate system by the angle theta
+
         """
         if normal is None:
             normal = self.Normal() # k = kmat
@@ -1804,6 +1836,7 @@ class CSHEAR(QuadShell):
     +========+=======+=======+=====+===+====+====+
     | CSHEAR |  EID  |  PID  | N1 | N2 | N3 | N4 |
     +--------+-------+-------+----+----+----+----+
+
     """
     type = 'CSHEAR'
     def __init__(self, eid, pid, nids, comment=''):
@@ -1820,6 +1853,7 @@ class CSHEAR(QuadShell):
             node ids
         comment : str; default=''
             a comment for the card
+
         """
         QuadShell.__init__(self)
         if comment:
@@ -1861,6 +1895,7 @@ class CSHEAR(QuadShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -1882,6 +1917,7 @@ class CSHEAR(QuadShell):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -1896,6 +1932,7 @@ class CSHEAR(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CSHEAR eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
@@ -1909,6 +1946,7 @@ class CSHEAR(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CSHEAR eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
@@ -1948,6 +1986,7 @@ class CSHEAR(QuadShell):
          where:
            c=centroid
            A=area
+
         """
         (n1, n2, n3, n4) = self.get_node_positions()
         a = n1 - n2
@@ -2016,6 +2055,7 @@ class CSHEAR(QuadShell):
           |   |  -->  |   |
           |   |       |   |
           4---3       2---3
+
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -2080,6 +2120,7 @@ class CQUAD4(QuadShell):
     +--------+-------+-------+----+----+----+----+------------+---------+
     |        |       | TFLAG | T1 | T2 | T3 | T4 |            |         |
     +--------+-------+-------+----+----+----+----+------------+---------+
+
     """
     type = 'CQUAD4'
     cp_name_map = {
@@ -2168,6 +2209,7 @@ class CQUAD4(QuadShell):
             to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
+
         """
         QuadShell.__init__(self)
         if comment:
@@ -2201,6 +2243,7 @@ class CQUAD4(QuadShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -2241,6 +2284,7 @@ class CQUAD4(QuadShell):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -2273,6 +2317,7 @@ class CQUAD4(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CQUAD4 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
@@ -2288,6 +2333,7 @@ class CQUAD4(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CQUAD4 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
@@ -2582,6 +2628,7 @@ class CQUAD4(QuadShell):
 
         .. todo:: doesn't consider theta_mcid if a float correctly (use an integer)
         .. todo:: doesn't optimize the orientation of the nodes yet...
+
         """
         n1, n2, n3, n4 = self.nodes
         nids = [n1, n2, n3]
@@ -2628,6 +2675,7 @@ class CQUAD4(QuadShell):
           |   |  -->  |   |
           |   |       |   |
           4---3       2---3
+
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -2643,6 +2691,7 @@ class CQUAD4(QuadShell):
         """
         triangle - 012
         triangle - 023
+
         """
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         nodes1 = [self.nodes[0], self.nodes[1], self.nodes[2]]
@@ -2717,6 +2766,7 @@ class CPLSTN4(QuadShell):
     +=========+=======+=======+====+====+====+====+=======+
     | CPLSTN4 |  EID  |  PID  | N1 | N2 | N3 | N4 | THETA |
     +---------+-------+-------+----+----+----+----+-------+
+
     """
     type = 'CPLSTN4'
     _field_map = {1: 'eid', 2:'pid', 7:'theta'}
@@ -2778,6 +2828,7 @@ class CPLSTN4(QuadShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -2798,6 +2849,7 @@ class CPLSTN4(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTN4 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
@@ -2811,6 +2863,7 @@ class CPLSTN4(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTN4 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
@@ -2853,6 +2906,7 @@ class CPLSTN4(QuadShell):
           |   |  -->  |   |
           |   |       |   |
           4---3       2---3
+
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -2924,6 +2978,7 @@ class CPLSTN6(TriShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         #: Element ID
         eid = integer(card, 1, 'eid')
@@ -2953,6 +3008,7 @@ class CPLSTN6(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTN8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -2966,6 +3022,7 @@ class CPLSTN6(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTN8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -3029,6 +3086,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -3045,6 +3103,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTN6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -3058,6 +3117,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTN6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -3094,15 +3154,14 @@ def export_to_hdf5(cls, h5_file, model, eids):
                 #assert isinstance(n[i], float)
 
     def Thickness(self):
-        """
-        Returns the thickness, :math:`t`
-        """
+        """Returns the thickness, :math:`t`"""
         return self.pid_ref.Thickness()
 
     def AreaCentroidNormal(self):
         """
         Returns area, centroid, normal as it's more efficient to do them
         together
+
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         return _triangle_area_centroid_normal([n1, n2, n3], self)
@@ -3124,6 +3183,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
 
         .. math::
           n = \frac{(n_0-n_1) \times (n_0-n_2)}{\lvert (n_0-n_1) \times (n_0-n_2) \lvert}
+
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         return _normal(n1 - n2, n1 - n3)
@@ -3134,6 +3194,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
 
         .. math::
           CG = \frac{1}{3} (n_1+n_2+n_3)
+
         """
         n1, n2, n3 = self.get_node_positions(nodes=self.nodes_ref[:3])
         centroid = (n1 + n2 + n3) / 3.
@@ -3151,6 +3212,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
              4    6   -->     6    4
             *      *         *      *
            2----5---3       3----5---2
+
         """
         (n1, n2, n3, n4, n5, n6) = self.nodes
         self.nodes = [n1, n3, n2, n6, n5, n4]
@@ -3228,6 +3290,7 @@ class CPLSTN8(QuadShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -3278,6 +3341,7 @@ class CPLSTN8(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTN8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -3291,6 +3355,7 @@ class CPLSTN8(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTN8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -3326,9 +3391,7 @@ class CPLSTN8(QuadShell):
             #assert isinstance(mass, float), 'mass=%r' % mass
 
     def Thickness(self):
-        """
-        Returns the thickness
-        """
+        """Returns the thickness"""
         return self.pid_ref.Thickness()
 
     def flip_normal(self):
@@ -3340,6 +3403,7 @@ class CPLSTN8(QuadShell):
           8     6       5     7
           |     |       |     |
           4--7--3       2--6--3
+
         """
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5]
@@ -3364,6 +3428,7 @@ class CPLSTN8(QuadShell):
              where:
                c=centroid
                A=area
+
         """
         n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
         a = n1 - n2
@@ -3421,6 +3486,7 @@ class CQUADR(QuadShell):
     +--------+-------+-------+----+----+----+----+------------+---------+
     |        |       | TFLAG | T1 | T2 | T3 | T4 |            |         |
     +--------+-------+-------+----+----+----+----+------------+---------+
+
     """
     type = 'CQUADR'
 
@@ -3453,6 +3519,7 @@ class CQUADR(QuadShell):
             to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
+
         """
         QuadShell.__init__(self)
         if comment:
@@ -3518,6 +3585,7 @@ class CQUADR(QuadShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -3549,6 +3617,7 @@ class CQUADR(QuadShell):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -3581,6 +3650,7 @@ class CQUADR(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CQUADR eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
@@ -3595,6 +3665,7 @@ class CQUADR(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CQUADR eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -3613,9 +3684,7 @@ class CQUADR(QuadShell):
         return [self.T1, self.T2, self.T3, self.T4]
 
     def Thickness(self):
-        """
-        Returns the thickness
-        """
+        """Returns the thickness"""
         return self.pid_ref.Thickness()
 
     def _verify(self, xref):
@@ -3648,6 +3717,7 @@ class CQUADR(QuadShell):
           |   |  -->  |   |
           |   |       |   |
           4---3       2---3
+
         """
         (n1, n2, n3, n4) = self.nodes
         self.nodes = [n1, n4, n3, n2]
@@ -3694,6 +3764,7 @@ class CPLSTS3(TriShell):
     +---------+-------+-------+----+----+----+-------+-------+-----+
     |         |       | TFLAG | T1 | T2 | T3 |       |       |     |
     +---------+-------+-------+----+----+----+-------+-------+-----+
+
     """
     type = 'CPLSTS3'
     _field_map = {
@@ -3761,6 +3832,7 @@ class CPLSTS3(TriShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         #: Element ID
         eid = integer(card, 1, 'eid')
@@ -3799,6 +3871,7 @@ class CPLSTS3(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTS3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
@@ -3812,6 +3885,7 @@ class CPLSTS3(TriShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CPLSTS3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
@@ -3857,6 +3931,7 @@ class CPLSTS3(TriShell):
               * *   -->   * *
              *   *       *   *
             2-----3     3-----2
+
         """
         (n1, n2, n3) = self.nodes
         self.nodes = [n1, n3, n2]
@@ -3916,6 +3991,7 @@ class CQUAD(QuadShell):
     +-------+-------+-----+----+------------+----+----+----+----+
 
     theta_mcid is an MSC specific variable
+
     """
     type = 'CQUAD'
     #tflag = 1
@@ -3940,6 +4016,7 @@ class CQUAD(QuadShell):
                   mcid is projected onto the element
         comment : str; default=''
             a comment for the card
+
         """
         QuadShell.__init__(self)
         if comment:
@@ -3995,6 +4072,7 @@ class CQUAD(QuadShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -4019,6 +4097,7 @@ class CQUAD(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CQUAD eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
@@ -4034,6 +4113,7 @@ class CQUAD(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CQUAD eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -4061,9 +4141,7 @@ class CQUAD(QuadShell):
 
     def Mass(self):
         # () -> float
-        r"""
-        .. math:: m = \frac{m}{A} A  \f]
-        """
+        r""".. math:: m = \frac{m}{A} A  \f]"""
         A = self.Area()
         mpa = self.pid_ref.MassPerArea()
         try:
@@ -4073,9 +4151,7 @@ class CQUAD(QuadShell):
             raise TypeError(msg)
 
     def Thickness(self):
-        """
-        Returns the thickness
-        """
+        """Returns the thickness"""
         return self.pid_ref.Thickness()
 
     def flip_normal(self):
@@ -4087,6 +4163,7 @@ class CQUAD(QuadShell):
           8  9  6       5  9  7
           |     |       |     |
           4--7--3       2--6--3
+
         """
         (n1, n2, n3, n4, n5, n6, n7, n8, n9) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5, n9]
@@ -4132,6 +4209,7 @@ class CQUAD8(QuadShell):
     +--------+-------+-----+----+----+----+----+------------+-------+
     |        | TFLAG |     |    |    |    |    |            |       |
     +--------+-------+-----+----+----+----+----+------------+-------+
+
     """
     type = 'CQUAD8'
     def __init__(self, eid, pid, nids, theta_mcid=0., zoffset=0.,
@@ -4164,6 +4242,7 @@ class CQUAD8(QuadShell):
             to the value of T on the PSHELL entry.
         comment : str; default=''
             a comment for the card
+
         """
         QuadShell.__init__(self)
         if comment:
@@ -4231,6 +4310,7 @@ class CQUAD8(QuadShell):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer(card, 2, 'pid')
@@ -4274,6 +4354,7 @@ class CQUAD8(QuadShell):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         #print "CQUAD8 = ",data
         #(6401,
@@ -4308,6 +4389,7 @@ class CQUAD8(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CQUAD8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -4321,6 +4403,7 @@ class CQUAD8(QuadShell):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CQUAD8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -4361,9 +4444,7 @@ class CQUAD8(QuadShell):
         return [self.T1, self.T2, self.T3, self.T4]
 
     def Thickness(self):
-        """
-        Returns the thickness
-        """
+        """Returns the thickness"""
         return self.pid_ref.Thickness()
 
     def flip_normal(self):
@@ -4375,6 +4456,7 @@ class CQUAD8(QuadShell):
           8     6       5     7
           |     |       |     |
           4--7--3       2--6--3
+
         """
         (n1, n2, n3, n4, n5, n6, n7, n8) = self.nodes
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5]
@@ -4402,6 +4484,7 @@ class CQUAD8(QuadShell):
              where:
                c=centroid
                A=area
+
         """
         n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
         a = n1 - n2
@@ -4460,6 +4543,7 @@ class SNORM(BaseCard):
     +--------+-------+-------+----+-----+----+
     |  SNORM |   3   |   2   | 0. | -1. | 0. |
     +--------+-------+-------+----+-----+----+
+
     """
     type = 'SNORM'
 
@@ -4483,6 +4567,7 @@ class SNORM(BaseCard):
             normal vector
         comment : str; default=''
             a comment for the card
+
         """
         BaseCard.__init__(self)
         if comment:
@@ -4504,6 +4589,7 @@ class SNORM(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         nid = integer(card, 1, 'nid')
         cid = integer_or_blank(card, 2, 'cid', default=0)
@@ -4525,6 +4611,7 @@ class SNORM(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SNORM nid=%s' % self.nid
         self.cid_ref = model.Coord(self.cid, msg=msg)
@@ -4537,6 +4624,7 @@ class SNORM(BaseCard):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by SNORM nid=%s' % self.nid
         self.cid_ref = model.safe_coord(self.cid, self.nid, xref_errors, msg=msg)

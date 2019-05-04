@@ -53,9 +53,7 @@ class TestMeshUtils(unittest.TestCase):
         create_structured_cquad4s(model, pid, p1, p2, p3, p4, nx, ny, nid=1, eid=1, theta_mcid=0.)
 
     def test_eq1(self):
-        """
-        Collapse nodes 2 and 3; consider 1-3
-        """
+        """Collapse nodes 2 and 3; consider 1-3"""
         log = SimpleLogger(level='error')
         msg = (
             'CEND\n'
@@ -100,6 +98,7 @@ class TestMeshUtils(unittest.TestCase):
           |     \ |
           *-------* 3
           1       20
+
         """
         log = SimpleLogger(level='error')
         msg = (
@@ -275,6 +274,7 @@ class TestMeshUtils(unittest.TestCase):
           |     \ |
           *-------* 3
           1       20
+
         """
         log = SimpleLogger(level='error')
         msg = 'CEND\n'
@@ -606,6 +606,7 @@ class TestMeshUtils(unittest.TestCase):
         """
         tests differential mass and material coordinate systems
         on CQUAD4/CTRIA3 elements
+
         """
         pid = 10
         mid1 = 100
@@ -836,6 +837,7 @@ class TestMeshUtils(unittest.TestCase):
                 #print(i, j, p,
                       #triangle_intersection(p, v, p0, p1, p2),
                       #quad_intersection(p, v, p0, p1, p3, p2))
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

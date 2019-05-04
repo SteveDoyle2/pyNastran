@@ -47,6 +47,7 @@ class CBEAM(LineElement):
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
 
     offt/bit are MSC specific fields
+
     """
     type = 'CBEAM'
     _field_map = {
@@ -521,6 +522,7 @@ class CBEAM(LineElement):
         |  +--+
         |     |
         +-----+
+
         """
         cda = self.ga_ref.cid_ref
         cdb = self.gb_ref.cid_ref
@@ -539,6 +541,7 @@ class CBEAM(LineElement):
         description of the OFFT flag.
 
         TODO: not integrated with CBAR yet...
+
         """
         check_offt(self)
         is_failed = True
@@ -573,6 +576,7 @@ class CBEAM(LineElement):
         description of the OFFT flag.
 
         TODO: not integrated with CBAR yet...
+
         """
         is_failed = True
         eid = self.eid
@@ -690,6 +694,7 @@ class CBEAM(LineElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CBEAM eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
@@ -784,6 +789,7 @@ class CBEAM(LineElement):
         Notes
         -----
         Used by CBAR and CBEAM
+
         """
         if self.g0 is not None:
             return (self.G0(), None, None)
@@ -865,6 +871,7 @@ class BEAMOR(BaseCard):
     +--------+-----+---+---+---+-------+-----+-------+------+
     | BEAMOR | 39  |   |   |   |  0.6  | 2.9 | -5.87 | GOG  |
     +--------+-----+---+---+---+-------+-----+-------+------+
+
     """
     type = 'BEAMOR'
     def __init__(self, pid, is_g0, g0, x, offt='GGG', comment=''):

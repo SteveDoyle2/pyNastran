@@ -11,6 +11,7 @@ reading/writing/accessing of BDF data.  Such methods include:
       change all nodes to a specific coordinate system
   - unresolve_grids
       puts all nodes back to original coordinate system
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -49,6 +50,7 @@ class BDFMethods(BDFAttributes):
         gets a breakdown of the length by property region
 
         TODO: What about CONRODs?
+
         """
         return get_length_breakdown(self, property_ids=property_ids, stop_if_no_length=stop_if_no_length)
 
@@ -84,6 +86,7 @@ class BDFMethods(BDFAttributes):
         #'PBEAM3',
         #'PBEND',
         #'PIHEX',
+
         """
         return get_volume_breakdown(self, property_ids=property_ids,
                                     stop_if_no_volume=stop_if_no_volume)
@@ -118,6 +121,7 @@ class BDFMethods(BDFAttributes):
         #'PBEND',
         #'PIHEX',
         #'PCOMPS',
+
         """
         return get_mass_breakdown(self, property_ids=property_ids,
                                   stop_if_no_mass=stop_if_no_mass, detailed=detailed)
@@ -193,6 +197,7 @@ class BDFMethods(BDFAttributes):
         >>> pid_eids = self.get_element_ids_dict_with_pids(pids)
         >>> for pid, eids in sorted(pid_eids.items()):
         >>>     mass, cg, I = model.mass_properties(element_ids=eids)
+
         """
         mass, cg, I = mass_properties(
             self,
@@ -274,6 +279,7 @@ class BDFMethods(BDFAttributes):
         >>> pid_eids = self.get_element_ids_dict_with_pids(pids)
         >>> for pid, eids in sorted(pid_eids.items()):
         >>>     mass, cg, I = model.mass_properties(element_ids=eids)
+
         """
         mass, cg, I = mass_properties_no_xref(
             self, element_ids=element_ids, mass_ids=mass_ids,
@@ -466,6 +472,7 @@ class BDFMethods(BDFAttributes):
         you have.
 
         .. todo:: not done...
+
         """
         forces, moments = sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
                                                       include_grav=include_grav, xyz_cid0=xyz_cid0)
@@ -507,6 +514,7 @@ class BDFMethods(BDFAttributes):
                  precomputed node locations.
 
         Pressure acts in the normal direction per model/real/loads.bdf and loads.f06
+
         """
         forces, moments = sum_forces_moments(self, p0, loadcase_id,
                                              include_grav=include_grav, xyz_cid0=xyz_cid0)
@@ -530,6 +538,7 @@ class BDFMethods(BDFAttributes):
         eid_faces : (int, List[(int, int, ...)])
            value1 : element id
            value2 : face
+
         """
         if element_ids is None:
             element_ids = self.element_ids
@@ -576,6 +585,7 @@ class BDFMethods(BDFAttributes):
             double precision flag
         encoding : str; default=None -> system default
             the string encoding
+
         """
         return write_skin_solid_faces(
             self, skin_filename,

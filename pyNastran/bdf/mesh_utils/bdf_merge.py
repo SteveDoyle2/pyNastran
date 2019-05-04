@@ -2,6 +2,7 @@
 defines:
  - bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None, size=8,
              is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False)
+
 """
 from __future__ import print_function
 from six.moves import StringIO
@@ -378,6 +379,8 @@ def _get_mapper_0(model):
 
 def _renumber_mapper(mapper_0, mapper_renumber):
     """
+    Renumbers a mapper
+
     Parameters
     ----------
     mapper_0 : dict[key]: value

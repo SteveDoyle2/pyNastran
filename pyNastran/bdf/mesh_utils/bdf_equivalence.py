@@ -7,6 +7,7 @@ defines:
                                   remove_collapsed_elements=False,
                                   avoid_collapsed_elements=False,
                                   crash_on_collapse=False, log=None, debug=True)
+
 """
 from __future__ import print_function
 
