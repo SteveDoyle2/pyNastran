@@ -21,6 +21,11 @@ warnings.simplefilter('default')
 
 np.seterr(all='raise')
 
+#from pyNastran.gui.qt_version import qt_version
+#import PySide2
+#import matplotlib
+#matplotlib.use('Qt5Agg')
+
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.errors import (
@@ -31,6 +36,7 @@ from pyNastran.bdf.errors import (
 )
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_breakdown
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 #from pyNastran.bdf.mesh_utils.convert import convert
@@ -1745,6 +1751,7 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
         fem1.get_elements_nodes_by_property_type()
     mass1, cg1, inertia1 = fem1.mass_properties(reference_point=None, sym_axis=None)
     mass2, cg2, inertia2 = fem1.mass_properties_nsm(reference_point=None, sym_axis=None)
+    #mass3, cg3, inertia3 = mass_properties_breakdown(fem1)[:3]
     if not quiet:
         if fem1.wtmass != 1.0:
             print('weight = %s' % (mass1 / fem1.wtmass))

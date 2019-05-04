@@ -73,8 +73,8 @@ def _triangle_area_centroid_normal(nodes, card):
       Area = 0.5 * |n|
       unit_normal = n/|n|
     """
-    (n0, n1, n2) = nodes
-    vector = cross(n0 - n1, n0 - n2)
+    (n1, n2, n3) = nodes
+    vector = cross(n1 - n2, n1 - n3)
     length = norm(vector)
     try:
         normal = vector / length
@@ -86,15 +86,15 @@ def _triangle_area_centroid_normal(nodes, card):
             #[207.42750549, 0.0, 0.69803673]
         msg = error.message # strerror
         msg += '\nvector: %s; length: %s' % (vector, length)
-        msg += '\n  %s\n  %s\n  %s' % (n0.tolist(), n1.tolist(), n2.tolist())
+        msg += '\n  %s\n  %s\n  %s' % (n1.tolist(), n2.tolist(), n3.tolist())
         raise RuntimeError(msg)
 
     if not allclose(norm(normal), 1.):
         msg = ('function _triangle_area_centroid_normal, check...\n'
                'a = {0}\nb = {1}\nnormal = {2}\nlength = {3}\n{4}'.format(
-                   n0 - n1, n0 - n2, normal, length, str(card)))
+                   n1 - n2, n1 - n3, normal, length, str(card)))
         raise RuntimeError(msg)
-    return (0.5 * length, (n0 + n1 + n2) / 3., normal)
+    return (0.5 * length, (n1 + n2 + n3) / 3., normal)
 
 
 def _normal(a, b):

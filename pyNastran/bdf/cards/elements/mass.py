@@ -624,6 +624,15 @@ class CMASS3(PointMassElement):
         self.nodes_ref = None
         self.pid_ref = None
 
+    #def Mass(self):
+        #return self.mass
+
+    def Centroid(self):
+        return np.zeros(3)
+
+    def center_of_mass(self):
+        return self.Centroid()
+
     def raw_fields(self):
         fields = ['CMASS3', self.eid, self.Pid(), self.S1(), self.S2()]
         return fields

@@ -6,8 +6,8 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.utils import object_methods
 
-rootpath = pyNastran.__path__[0]
-mesh_utils_path = os.path.join(rootpath, 'bdf', 'mesh_utils', 'test')
+PKG_PATH = pyNastran.__path__[0]
+mesh_utils_path = os.path.join(PKG_PATH, 'bdf', 'mesh_utils', 'test')
 
 
 class TestMass(unittest.TestCase):

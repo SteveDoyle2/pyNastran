@@ -62,19 +62,13 @@ matrix:
       # bumped numpy from 1.13 to 1.14 to fix unicode savetxt writing
       - NUMPY='numpy=1.14 scipy=0.19 matplotlib=2.1'
 
-    - name: "Python 3.7 old packages (test)"
+    - name: "Python 3.7 old packages"
       python: '3.7'
       env:
       #- NUMPY='numpy=1.15 scipy=0.19 matplotlib=2.2'  # doesn't work
       # bumped scipy from 1.0 to 1.1 for compatibility with numpy
       - NUMPY='numpy=1.14 scipy=1.1 matplotlib=2.2'
 
-    - name: "Python 3.7 old packages"
-      python: '3.7'
-      env:
-      #- NUMPY='numpy=1.15 scipy=0.19 matplotlib=2.2'  # doesn't work
-      # bumped scipy from 1.0 to 1.1 for compatibility with numpy
-      - NUMPY='numpy=1.15 scipy=1.1 matplotlib=2.2'
 #-------------------------------------------------
 # old-A
 

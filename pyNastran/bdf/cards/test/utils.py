@@ -2,12 +2,14 @@
 import os
 from copy import deepcopy
 from six import StringIO
+import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.delete_bad_elements import element_quality
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.convert import convert
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_breakdown
 
 try:
     import h5py
@@ -18,7 +20,7 @@ except ImportError:
 def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                    run_convert=True, run_renumber=True, run_mirror=True,
                    run_save_load=True, run_quality=True, write_saves=True,
-                   run_save_load_hdf5=True):
+                   run_save_load_hdf5=True, run_mass_properties=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.validate()
     model.pop_parse_errors()
@@ -51,6 +53,25 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
     model2.pop_parse_errors()
     model2.get_bdf_stats()
     model2.write_bdf('model2.bdf')
+    nelements = len(model2.elements) + len(model2.masses)
+    if run_mass_properties and len(model2.nodes) == 0 and nelements > 0:
+        mass1, cg1, inertia1 = model2.mass_properties(reference_point=None, sym_axis=None)
+        mass2, cg2, inertia2 = model2.mass_properties_nsm(reference_point=None, sym_axis=None)
+        #if not quiet:
+            #if model2.wtmass != 1.0:
+                #print('weight = %s' % (mass1 / model2.wtmass))
+            #print('mass = %s' % mass1)
+            #print('cg   = %s' % cg1)
+            #print('Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
+        assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
+        assert np.allclose(cg1, cg2), 'mass=%s\ncg1=%s cg2=%s' % (mass1, cg1, cg2)
+        assert np.allclose(inertia1, inertia2, atol=1e-5), 'mass=%s cg=%s\ninertia1=%s\ninertia2=%s\ndinertia=%s' % (mass1, cg1, inertia1, inertia2, inertia1-inertia2)
+
+        mass3, cg3, inertia3 = mass_properties_breakdown(model2)[:3]
+        assert np.allclose(mass1, mass3), 'mass1=%s mass3=%s' % (mass1, mass3)
+        #assert np.allclose(cg1, cg3), 'mass=%s\ncg1=%s cg3=%s' % (mass1, cg1, cg3)
+
+
 
     if run_save_load:
         model2.save(obj_filename='model.obj', unxref=True)
