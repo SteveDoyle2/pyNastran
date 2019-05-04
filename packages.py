@@ -10,6 +10,7 @@ if sys.version_info < (3, 0):
 
 # features in packages used by pyNastran
 # numpy
+#  - 1.12 min for 3.6
 #  - 1.13: adds axis support to unique
 #  - 1.14: adds encoding support to savetxt (unused)
 #  - 1.14: adds proper writing of np.savetxt for open file objects
@@ -17,7 +18,8 @@ if sys.version_info < (3, 0):
 #  - 1.15: min for Python 3.7? I guess 1.14 is fine for a requirement...
 # scipy:
 #  - 0.18.1: fixed kdtree used by nodal equivalencing; min for Python 2.7
-#  - 0.19:   min for Python 3.6, 3.7
+#  - 0.19:   min for Python 3.6
+#  - 0.19:   min for Python 3.7?
 # matplotlib:
 #  - 2.1: adds plt.subplots support
 #  - 2.2: min for Python 3.7
@@ -141,12 +143,6 @@ def get_package_requirements(is_gui=True, python_version=None):
             import scipy
             sver = scipy.version.short_version
             iver = int_version(sver)
-            # numpy:
-            #  - 1.12 min for 3.6
-            #  - 1.15 min for 3.7
-            # scipy:
-            #  - 0.19 min for 3.6
-            #  - ???  min for 3.7
             all_reqs['scipy'] = sver
 
             version_check, required_version = vreqs['scipy']
@@ -176,7 +172,7 @@ def get_package_requirements(is_gui=True, python_version=None):
         try:
             import matplotlib
             iver = int_version(matplotlib.__version__)
-            all_reqs['matplotlib'] = str_version(sver)
+            all_reqs['matplotlib'] = str_version(iver)
             version_check, required_version = vreqs['matplotlib']
             iversion_check = int_version(version_check)
             if iver < iversion_check:
@@ -190,9 +186,9 @@ def get_package_requirements(is_gui=True, python_version=None):
 
     try:
         import cpylog
-        sver = int_version(cpylog.__version__)
-        all_reqs['cpylog'] = str_version(sver)
-        if sver <= [1, 0, 2]:
+        iver = int_version(cpylog.__version__)
+        all_reqs['cpylog'] = str_version(iver)
+        if iver <= [1, 0, 2]:
             print("cpylog.__version__ = %r != '1.0.2'" % cpylog.__version__)
             all_reqs['cpylog'] = '>= 1.0.2'
             py_packages.append('cpylog >= 1.0.2')
