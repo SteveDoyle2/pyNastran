@@ -540,9 +540,9 @@ class CBEAM(LineElement):
         :func:`pyNastran.bdf.cards.elements.bars._rotate_v_wa_wb` for a
         description of the OFFT flag.
 
-        TODO: not integrated with CBAR yet...
-
         """
+        #TODO: not integrated with CBAR yet...
+
         check_offt(self)
         is_failed = True
         ihat = None
@@ -575,9 +575,9 @@ class CBEAM(LineElement):
         :func:`pyNastran.bdf.cards.elements.bars._rotate_v_wa_wb` for a
         description of the OFFT flag.
 
-        TODO: not integrated with CBAR yet...
-
         """
+        #TODO: not integrated with CBAR yet...
+
         is_failed = True
         eid = self.eid
         #centroid = (n1 + n2) / 2.
