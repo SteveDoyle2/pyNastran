@@ -117,13 +117,13 @@ def get_package_requirements(is_gui=True, python_version=None):
     if is_rtd:
         py_packages.append('numpy')
     else:
+        version_check, required_version = vreqs['scipy']
         try:
             import numpy as np
             sver = np.lib.NumpyVersion(np.__version__)
             iver = int_version(sver.version)
             all_reqs['numpy'] = sver.version
 
-            version_check, required_version = vreqs['scipy']
             iversion_check = int_version(version_check)
             #srequired_version = int_version(required_version)
             #print('numpy %r %r' % (sver, iversion_check))
@@ -139,13 +139,13 @@ def get_package_requirements(is_gui=True, python_version=None):
     if is_rtd:
         py_packages.append('scipy')
     else:
+        version_check, required_version = vreqs['scipy']
         try:
             import scipy
             sver = scipy.version.short_version
             iver = int_version(sver)
             all_reqs['scipy'] = sver
 
-            version_check, required_version = vreqs['scipy']
             iversion_check = int_version(version_check)
             #srequired_version = int_version(required_version)
             print('scipy %r %r' % (sver, iversion_check))
@@ -169,11 +169,11 @@ def get_package_requirements(is_gui=True, python_version=None):
         py_packages.append('six >= 1.9.0')  # 1.12.0 used
 
     if is_gui:
+        version_check, required_version = vreqs['matplotlib']
         try:
             import matplotlib
             iver = int_version(matplotlib.__version__)
             all_reqs['matplotlib'] = str_version(iver)
-            version_check, required_version = vreqs['matplotlib']
             iversion_check = int_version(version_check)
             if iver < iversion_check:
                 print("matplotlib.__version__ = %r < %r" % (matplotlib.__version__, version_check))
