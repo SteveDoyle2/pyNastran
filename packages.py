@@ -59,10 +59,13 @@ def check_python_version():
                 imajor, minor1, minor2))
 
 
-def int_version(version):
+def int_version(name, version):
     """splits the version into a tuple of integers"""
     sversion = version.split('-')[0]
-    return [int(val) for val in sversion.split('.')]
+    try:
+        return [int(val) for val in sversion.split('.')]
+    except ValueError:
+        raise SyntaxError('cannot determine version for %s %s' % (name, sversion))
 
 
 def str_version(version):
@@ -121,11 +124,11 @@ def get_package_requirements(is_gui=True, python_version=None):
         try:
             import numpy as np
             sver = np.lib.NumpyVersion(np.__version__)
-            iver = int_version(sver.version)
+            iver = int_version('numpy', sver.version)
             all_reqs['numpy'] = sver.version
 
-            iversion_check = int_version(version_check)
-            #srequired_version = int_version(required_version)
+            iversion_check = int_version('numpy', version_check)
+            #srequired_version = int_version('numpy', required_version)
             #print('numpy %r %r' % (sver, iversion_check))
             if iver < iversion_check:
                 print("numpy.__version__ = %r < %s" % (np.__version__, version_check))
@@ -143,11 +146,11 @@ def get_package_requirements(is_gui=True, python_version=None):
         try:
             import scipy
             sver = scipy.version.short_version
-            iver = int_version(sver)
+            iver = int_version('scipy', sver)
             all_reqs['scipy'] = sver
 
-            iversion_check = int_version(version_check)
-            #srequired_version = int_version(required_version)
+            iversion_check = int_version('scipy', version_check)
+            #srequired_version = int_version('scipy', required_version)
             print('scipy %r %r' % (sver, iversion_check))
             if iver < iversion_check:
                 print("scipy.version.short_version = %r < %r" % (
@@ -159,7 +162,7 @@ def get_package_requirements(is_gui=True, python_version=None):
 
     try:
         import six
-        iver = int_version(six.__version__)
+        iver = int_version('six', six.__version__)
         all_reqs['six'] = str_version(iver)
         if iver < [1, 9, 0]:
             print("six.__version__ = %r < '1.9.0'" % six.__version__)
@@ -172,9 +175,9 @@ def get_package_requirements(is_gui=True, python_version=None):
         version_check, required_version = vreqs['matplotlib']
         try:
             import matplotlib
-            iver = int_version(matplotlib.__version__)
+            iver = int_version('matplotlib', matplotlib.__version__)
             all_reqs['matplotlib'] = str_version(iver)
-            iversion_check = int_version(version_check)
+            iversion_check = int_version('matplotlib', version_check)
             if iver < iversion_check:
                 print("matplotlib.__version__ = %r < %r" % (matplotlib.__version__, version_check))
                     #matplotlib.__version__, str_version(iversion_check)))
@@ -186,7 +189,7 @@ def get_package_requirements(is_gui=True, python_version=None):
 
     try:
         import cpylog
-        iver = int_version(cpylog.__version__)
+        iver = int_version('cpylog', cpylog.__version__)
         all_reqs['cpylog'] = str_version(iver)
         if iver <= [1, 0, 2]:
             print("cpylog.__version__ = %r != '1.0.2'" % cpylog.__version__)
@@ -198,7 +201,7 @@ def get_package_requirements(is_gui=True, python_version=None):
 
     try:
         import docopt
-        iver = int_version(docopt.__version__)
+        iver = int_version('docopt', docopt.__version__)
         all_reqs['docopt'] = str_version(iver)
         if iver != [0, 6, 2]:
         #if docopt.__version__ != '0.6.2':
@@ -213,7 +216,7 @@ def get_package_requirements(is_gui=True, python_version=None):
     elif is_gui:
         try:
             import qtpy
-            iver = int_version(qtpy.__version__)
+            iver = int_version('qtpy', qtpy.__version__)
             all_reqs['qtpy'] = str_version(iver)
             if iver < [1, 4, 0]:
                 print("qtpy.__version__ = %r < '1.4.0'" % qtpy.__version__)
