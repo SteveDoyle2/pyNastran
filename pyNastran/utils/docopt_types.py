@@ -58,7 +58,7 @@ def docopt_types(doc, argv=None, help=True, version=None, options_first=False, t
      'serial': False,
      'tcp': True}
 
-    See also
+    See Also
     --------
     - For video introduction see http://docopt.org
     - Full documentation is available in README.rst as well as online

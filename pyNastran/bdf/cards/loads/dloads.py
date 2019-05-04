@@ -1044,7 +1044,7 @@ class TLOAD1(DynamicLoad):
         #: identification number of DELAY Bulk Data entry that defines .
         #: If it is real, then it directly defines the value of that will
         #: be used for all degrees-of-freedom that are excited by this
-        #: dynamic load entry.  See also Remark 9. (Integer >= 0,
+        #: dynamic load entry.  See Also Remark 9. (Integer >= 0,
         #: real or blank)
         self.delay = delay
 

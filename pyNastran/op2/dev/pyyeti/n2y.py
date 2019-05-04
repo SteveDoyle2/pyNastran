@@ -684,7 +684,7 @@ def uset_print(filename, uset, printsets="M,S,O,Q,R,C,B,E,L,T,A,F,N,G",
 
     User-defined sets: U1, U2, U3, U4, U5, and U6.
 
-    See also
+    See Also
     --------
     :func:`op2.read_nas2can_op2`, :func:`n2y.mksetpv`,
     :func:`n2y.rigid_body_geom_uset`, :func:`op2.read_nas2cam`
@@ -1720,7 +1720,7 @@ def get_coords(uset, gid, csys, coordref=None):
         &\text{otherwise}
         \end{cases}
 
-    See also
+    See Also
     --------
     :func:`op2.rdn2cop2`, :func:`nastran.bulk2uset`,
     :func:`coordcardinfo`, :func:`nastran.wtcoordcards`,

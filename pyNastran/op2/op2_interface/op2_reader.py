@@ -2180,7 +2180,7 @@ class OP2Reader(object):
         """
         Reads a matrix in "standard" form.
 
-        See also
+        See Also
         --------
         read_matrix_mat
 
@@ -2896,7 +2896,7 @@ class OP2Reader(object):
         data : bytes
             the data in binary
 
-        See also
+        See Also
         --------
         read_3_blocks
 
