@@ -535,8 +535,8 @@ class CBEAM(LineElement):
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
-        See Also
-        --------
+        Notes
+        -----
         :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
         description of the OFFT flag.
 
@@ -570,8 +570,8 @@ class CBEAM(LineElement):
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
-        See Also
-        --------
+        Notes
+        -----
         :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
         description of the OFFT flag.
 
