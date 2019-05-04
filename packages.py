@@ -240,16 +240,16 @@ def get_package_requirements(is_gui=True, python_version=None):
             all_reqs['pathlib2'] = '>= 2.3.0'
             py_packages.append('pathlib2 >= 2.3.0')  # 2.3.2 used
 
-        try:
-            import scandir
-            iver = int_version(scandir.__version__)
-            all_reqs['scandir'] = str_version(iver)
-            if sver < [1, 7, 0]:
-                print("scandir.__version__ = %r < '1.7.0'" % scandir.__version__)
-                all_reqs['scandir'] = '>= 1.7.0'
-                py_packages.append('scandir >= 1.7.0')
-        except ImportError:
-            py_packages.append('scandir >= 1.7.0')  # 1.9.0 used
+        #try:
+            #import scandir
+            #iver = int_version(scandir.__version__)
+            #all_reqs['scandir'] = str_version(iver)
+            #if sver < [1, 7, 0]:
+                #print("scandir.__version__ = %r < '1.7.0'" % scandir.__version__)
+                #all_reqs['scandir'] = '>= 1.7.0'
+                #py_packages.append('scandir >= 1.7.0')
+        #except ImportError:
+            #py_packages.append('scandir >= 1.7.0')  # 1.9.0 used
 
     if is_rtd:
         pass
