@@ -62,6 +62,18 @@ def check_python_version():
 def int_version(name, version):
     """splits the version into a tuple of integers"""
     sversion = version.split('-')[0]
+    #numpy
+    #scipy
+    #matplotlib
+    #qtpy
+    #vtk
+    #cpylog
+    #pyNastran
+    if 'rc' not in name:
+        # it's gotta be something...
+        # matplotlib3.1rc1
+        sversion = sversion.split('rc')[0]
+
     try:
         return [int(val) for val in sversion.split('.')]
     except ValueError:
