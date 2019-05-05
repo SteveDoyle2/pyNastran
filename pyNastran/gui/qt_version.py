@@ -16,7 +16,7 @@ elif 'PySide' in sys.modules:
 else:
     found_gui = False
     try:
-        import PySide
+        import PySide  # pylint: disable=unused-import
         qt_int = 4
         qt_version = 'pyside'
         found_gui = True
@@ -25,7 +25,7 @@ else:
 
     if not found_gui:
         try:
-            import PySide2
+            import PySide2  # pylint: disable=unused-import
             qt_int = 5
             qt_version = 'pyside2'
             found_gui = True
@@ -34,7 +34,7 @@ else:
 
     if not found_gui:
         try:
-            import PyQt5
+            import PyQt5  # pylint: disable=unused-import
             qt_int = 5
             qt_version = 'pyqt5'
             found_gui = True
@@ -43,7 +43,7 @@ else:
 
     if not found_gui:
         try:
-            import PyQt4
+            import PyQt4  # pylint: disable=unused-import
             qt_int = 4
             qt_version = 'pyqt4'
             found_gui = True
@@ -82,7 +82,7 @@ if qt_version not in ['pyqt4', 'pyqt5', 'pyside', 'pyside2']:
 
 # required to make a pretty console
 try:
-    import pygments
+    import pygments  # pylint: disable=unused-import
     is_pygments = True
 except ImportError:
     is_pygments = False

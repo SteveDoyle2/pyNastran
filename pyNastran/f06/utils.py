@@ -7,7 +7,7 @@ from __future__ import print_function
 #matplotlib.use('Qt5Agg')
 #from pyNastran.gui.qt_version import qt_version
 
-def cmd_line_plot_flutter(argv=None, show=True):
+def cmd_line_plot_flutter(argv=None, plot=True, show=True):
     """the interface to ``f06 plot_145`` on the command line"""
     import sys
     import os
@@ -121,6 +121,8 @@ def cmd_line_plot_flutter(argv=None, show=True):
     vg_vf_filename = None if export_zona is  None else 'vg_vf_subcase_%i.png'
     kfreq_damping_filename = None if export_zona is  None else 'kfreq_damping_subcase_%i.png'
     root_locus_filename = None if export_zona is  None else 'root_locus_subcase_%i.png'
+    if not plot:
+        return
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
                      f06_units=in_units,

@@ -64,7 +64,8 @@ class TestF06Utils(unittest.TestCase):
         f06_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.f06')
         log = get_logger2(log=None, debug=None, encoding='utf-8')
         plot_flutter_f06(f06_filename, show=False, log=log)
-        plt.close()
+        if IS_MATPLOTLIB:
+            plt.close()
 
     def test_plot_flutter2(self):
         """tests plot_flutter_f06"""
@@ -77,8 +78,9 @@ class TestF06Utils(unittest.TestCase):
             f06_units='si', out_units='english_ft',
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
-            show=False, log=log)
-        plt.close()
+            plot=IS_MATPLOTLIB, show=False, log=log)
+        if IS_MATPLOTLIB:
+            plt.close()
 
         flutters = plot_flutter_f06(
             f06_filename,
@@ -92,12 +94,17 @@ class TestF06Utils(unittest.TestCase):
             vg_vf_filename='vg_vf_subcase_%i.png',
             kfreq_damping_filename='kfreq_damping_subcase_%i.png',
             root_locus_filename='root_locus_subcase_%i.png',
-            show=False, log=log)
-        plt.close()
-        os.remove('vg_subcase_1.png')
-        os.remove('vg_vf_subcase_1.png')
-        os.remove('kfreq_damping_subcase_1.png')
-        os.remove('root_locus_subcase_1.png')
+            plot=IS_MATPLOTLIB, show=False, log=log)
+        if IS_MATPLOTLIB:
+            plt.close()
+            os.remove('vg_subcase_1.png')
+            os.remove('vg_vf_subcase_1.png')
+            os.remove('kfreq_damping_subcase_1.png')
+            os.remove('root_locus_subcase_1.png')
+
+            os.remove('nastran.f06')
+            os.remove('nastran.veas')
+            os.remove('zona.f06')
 
         with self.assertRaises(NotImplementedError):
             plot_flutter_f06(
@@ -106,7 +113,7 @@ class TestF06Utils(unittest.TestCase):
                 f06_units='cat', out_units=None,
                 plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
                 plot_kfreq_damping=True,
-                show=False, log=log)
+                plot=IS_MATPLOTLIB, show=False, log=log)
         with self.assertRaises(NotImplementedError):
             plot_flutter_f06(
                 f06_filename,
@@ -122,8 +129,9 @@ class TestF06Utils(unittest.TestCase):
             f06_units='si', out_units='english_ft',
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
-            show=False, log=log)
-        plt.close()
+            plot=IS_MATPLOTLIB, show=False, log=log)
+        if IS_MATPLOTLIB:
+            plt.close()
 
         plot_flutter_f06(
             f06_filename,
@@ -131,8 +139,9 @@ class TestF06Utils(unittest.TestCase):
             f06_units='si', out_units='english_ft',
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
-            show=False, clear=True, log=log)
-        plt.close()
+            plot=IS_MATPLOTLIB, show=False, clear=True, log=log)
+        if IS_MATPLOTLIB:
+            plt.close()
 
         plot_flutter_f06(
             f06_filename,
@@ -140,8 +149,9 @@ class TestF06Utils(unittest.TestCase):
             f06_units='si', out_units='english_ft',
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
-            show=False, clear=True, log=log)
-        plt.close()
+            plot=IS_MATPLOTLIB, show=False, clear=True, log=log)
+        if IS_MATPLOTLIB:
+            plt.close()
 
         plot_flutter_f06(
             f06_filename,
@@ -149,8 +159,9 @@ class TestF06Utils(unittest.TestCase):
             f06_units='si', out_units='english_ft',
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
-            show=False, clear=True, log=log)
-        plt.close()
+            plot=IS_MATPLOTLIB, show=False, clear=True, log=log)
+        if IS_MATPLOTLIB:
+            plt.close()
 
         plot_flutter_f06(
             f06_filename,
@@ -159,8 +170,9 @@ class TestF06Utils(unittest.TestCase):
             f06_units='si', out_units='english_ft',
             plot_vg=True, plot_vg_vf=True, plot_root_locus=True,
             plot_kfreq_damping=True,
-            show=False, clear=True, log=log)
-        plt.close()
+            plot=IS_MATPLOTLIB, show=False, clear=True, log=log)
+        if IS_MATPLOTLIB:
+            plt.close()
 
         plot_type = 'eas'
         modes = None
@@ -169,30 +181,28 @@ class TestF06Utils(unittest.TestCase):
         ylim_damping = [-0.2, 0.2]
         ylim_freq = None
         ylim_kfreq = None
-        make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
-                           plot_type,
-                           plot_vg=True, plot_vg_vf=True,
-                           plot_root_locus=True, plot_kfreq_damping=True,
-                           nopoints=True, noline=False,
-                           #export_zona_filename=export_zona_filename,
-                           #export_veas_filename=export_veas_filename,
-                           #export_f06_filename=export_f06_filename,
-                           #vg_filename=vg_filename,
-                           #vg_vf_filename=vg_vf_filename,
-                           #root_locus_filename=root_locus_filename,
-                           #kfreq_damping_filename=kfreq_damping_filename,
-                           show=False, clear=True)
-        plt.close()
-        os.remove('nastran.f06')
-        os.remove('nastran.veas')
-        os.remove('zona.f06')
+        if IS_MATPLOTLIB:
+            make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
+                               plot_type,
+                               plot_vg=True, plot_vg_vf=True,
+                               plot_root_locus=True, plot_kfreq_damping=True,
+                               nopoints=True, noline=False,
+                               #export_zona_filename=export_zona_filename,
+                               #export_veas_filename=export_veas_filename,
+                               #export_f06_filename=export_f06_filename,
+                               #vg_filename=vg_filename,
+                               #vg_vf_filename=vg_vf_filename,
+                               #root_locus_filename=root_locus_filename,
+                               #kfreq_damping_filename=kfreq_damping_filename,
+                               show=False, clear=True)
+            plt.close()
 
     def test_cmd_line_plot_flutter(self):
         f06_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.f06')
         argv = ['f06', 'plot_145', f06_filename, '--eas',
                 '--in_units', 'si', '--out_units', 'english_in',
                 '--modes', '1:', '--ylimdamp', '-.3:']
-        cmd_line_plot_flutter(argv=argv, show=False)
+        cmd_line_plot_flutter(argv=argv, plot=IS_MATPLOTLIB, show=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

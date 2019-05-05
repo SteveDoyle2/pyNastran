@@ -7,7 +7,7 @@ from typing import  Optional, Dict, Union
 try:
     import matplotlib.pyplot as plt  # pylint: disable=unused-import
     IS_MATPLOTLIB = True
-except ImportError:
+except ImportError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 # if you're on linux and you don't have a backend, add this...
@@ -268,7 +268,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                      vg_vf_filename=None,
                      root_locus_filename=None,
                      kfreq_damping_filename=None,
-                     show=True, clear=False,
+                     plot=True, show=True, clear=False,
                      log=None):
     """
     Plots a flutter (SOL 145) deck
@@ -335,18 +335,20 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
     flutters = make_flutter_response(
         f06_filename, f06_units=f06_units, out_units=out_units, make_alt=make_alt, log=log)
 
-    make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
-                       plot_type,
-                       plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
-                       nopoints, noline,
-                       export_zona_filename=export_zona_filename,
-                       export_veas_filename=export_veas_filename,
-                       export_f06_filename=export_f06_filename,
-                       vg_filename=vg_filename,
-                       vg_vf_filename=vg_vf_filename,
-                       root_locus_filename=root_locus_filename,
-                       kfreq_damping_filename=kfreq_damping_filename,
-                       show=show, clear=clear)
+    if plot:
+        assert IS_MATPLOTLIB, IS_MATPLOTLIB
+        make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
+                           plot_type,
+                           plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,
+                           nopoints, noline,
+                           export_zona_filename=export_zona_filename,
+                           export_veas_filename=export_veas_filename,
+                           export_f06_filename=export_f06_filename,
+                           vg_filename=vg_filename,
+                           vg_vf_filename=vg_vf_filename,
+                           root_locus_filename=root_locus_filename,
+                           kfreq_damping_filename=kfreq_damping_filename,
+                           show=show, clear=clear)
     return flutters
 
 def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,

@@ -1,6 +1,6 @@
 from __future__ import print_function
 from itertools import count
-from typing import  List, Any, Optional, Dict, Union
+from typing import  List, Any, Optional, Dict, Union, Tuple
 
 import numpy as np
 
@@ -12,7 +12,8 @@ except ImportError:  # pragma: no cover
     IS_MATPLOTLIB = False
 
 from pyNastran.utils.atmosphere import (
-    get_alt_for_density, convert_altitude, atm_density,
+    get_alt_for_density, atm_density,
+    convert_altitude, convert_velocity, convert_density, convert_pressure,
 )
 from pyNastran.utils import object_attributes, object_methods
 
@@ -237,7 +238,7 @@ class FlutterResponse(object):
         self.noline = noline
 
     def _get_unit_factor(self, name):
-        # type: (str) -> float, str
+        # type: (str) -> Tuple[float, str]
         if not self.f06_units or not self.out_units:
             msg = 'name=%r f06_units=%s out_units=%s' % (name, self.f06_units, self.out_units)
             raise RuntimeError(msg)
