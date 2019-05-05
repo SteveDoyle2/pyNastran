@@ -5,6 +5,7 @@ defines:
  - BAROR
  - CBEAM3
  - CBEND
+
 """
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import (nested_scopes, generators, division, absolute_import,
@@ -105,9 +106,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         raise NotImplementedError('implement self.Area() for %s' % self.type)
 
     def MassPerLength(self):
-        """
-        Get the mass per unit length, :math:`\frac{m}{L}`
-        """
+        """Get the mass per unit length, :math:`\frac{m}{L}`"""
         if self.pid_ref is None:
             raise RuntimeError('Element eid=%i has not been '
                                'cross referenced.\n%s' % (self.eid, str(self)))
@@ -118,6 +117,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         Get the mass of the element.
 
         .. math:: m = \left( \rho A + nsm \right) L
+
         """
         L = self.Length()
         mass = L * self.MassPerLength()
@@ -143,6 +143,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         Gets the length, :math:`L`, of the element.
 
         .. math:: L = \sqrt{  (n_{x2}-n_{x1})^2+(n_{y2}-n_{y1})^2+(n_{z2}-n_{z1})^2  }
+
         """
         L = norm(self.nodes_ref[1].get_position() - self.nodes_ref[0].get_position())
         return L
@@ -164,6 +165,7 @@ class BAROR(BaseCard):
     +-------+---+-----+---+---+-------+-----+-------+------+
     | BAROR |   | 39  |   |   |  0.6  | 2.9 | -5.87 | GOG  |
     +-------+---+-----+---+---+-------+-----+-------+------+
+
     """
     type = 'BAROR'
 
@@ -225,7 +227,6 @@ class BAROR(BaseCard):
         return self.comment + print_card_16(card)
 
 class CBARAO(BaseCard):
-    type = 'CBARAO'
     """
     Per MSC 2016.1
     +--------+------+-------+------+-----+--------+-----+----+----+
@@ -244,7 +245,9 @@ class CBARAO(BaseCard):
     +--------+------+-------+------+-----+--------+-----+----+----+
     | CBARAO | 1065 |  FR   |  4   | 0.2 |  0.2   |     |    |    |
     +--------+------+-------+------+-----+--------+-----+----+----+
+
     """
+    type = 'CBARAO'
 
     @classmethod
     def _init_from_empty(cls):
@@ -278,6 +281,7 @@ class CBARAO(BaseCard):
             a comment for the card
 
         MSC only
+
         """
         if comment:
             self.comment = comment
@@ -296,6 +300,7 @@ class CBARAO(BaseCard):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         scale = string(card, 2, 'scale')
@@ -363,6 +368,7 @@ class CBAR(LineElement):
     +-------+-------+-----+-------+-------+--------+-------+-------+-------+
     |       |       | 513 |  0.0  |  0.0  |    -9. |  0.0  |  0.0  |   -9. |
     +-------+-------+-----+-------+-------+--------+-------+-------+-------+
+
     """
     type = 'CBAR'
     _field_map = {
@@ -504,6 +510,7 @@ class CBAR(LineElement):
             points of the axis of the shear center
         comment : str; default=''
             a comment for the card
+
         """
         LineElement.__init__(self)
         if comment:
@@ -579,6 +586,7 @@ class CBAR(LineElement):
             defines the defaults
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid_default = eid
@@ -811,6 +819,7 @@ class CBAR(LineElement):
         Notes
         -----
         Used by CBAR and CBEAM
+
         """
         if self.g0 is not None:
             return (self.G0(), None, None)
@@ -868,9 +877,7 @@ class CBAR(LineElement):
         self.gb_ref = values[1]
 
     def raw_fields(self):
-        """
-        Gets the fields of the card in their full form
-        """
+        """Gets the fields of the card in their full form"""
         (x1, x2, x3) = self.get_x_g0_defaults()
 
         # offt doesn't exist in NX nastran
@@ -881,9 +888,7 @@ class CBAR(LineElement):
         return list_fields
 
     def repr_fields(self):
-        """
-        Gets the fields of the card in their reduced form
-        """
+        """Gets the fields of the card in their reduced form"""
         pa = set_blank_if_default(self.pa, 0)
         pb = set_blank_if_default(self.pb, 0)
 
@@ -917,6 +922,7 @@ class CBAR(LineElement):
 class CBEAM3(LineElement):  # was CBAR
     """
     Defines a three-node beam element
+
     """
     type = 'CBEAM3'
 
@@ -1025,6 +1031,7 @@ class CBEAM3(LineElement):  # was CBAR
         """
         # TODO: consider w1a and w1b in the length formulation
         # TODO: add gc to length formula
+
         """
         L = norm(self.gb_ref.get_position() - self.ga_ref.get_position())
         assert isinstance(L, float)
@@ -1167,6 +1174,7 @@ class CBEND(LineElement):
                 of curvature.
         comment : str; default=''
             a comment for the card
+
         """
         LineElement.__init__(self)
         if comment:
@@ -1197,6 +1205,7 @@ class CBEND(LineElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -1364,6 +1373,7 @@ class CBEND(LineElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CBEND eid=%s' % (self.eid)
         #self.g0 = model.nodes[self.g0]
@@ -1534,6 +1544,7 @@ def rotate_v_wa_wb(model, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset,
                 the CBAR/CBEAM
     - orientation -> wa/wb are defined in the xform_offset (yz) frame;
                      this is likely the easiest frame for a user
+
     """
     check_offt(elem)
     v, cd1, cd1_ref, cd2, cd2_ref = get_bar_vector(model, elem, node1, node2, xyz1)
@@ -1646,6 +1657,7 @@ def get_bar_yz_transform(v, ihat, eid, xyz1, xyz2, nid1, nid2, i, Li):
        the CBAR/CBEAM's y-axis
     zhat (3, ) float ndarray
        the CBAR/CBEAM's z-axis
+
     """
     vhat = v / norm(v) # j
     try:
@@ -1681,7 +1693,11 @@ def check_offt(element):
     """
     B,G,O
     Note: The character 'O' in the table replaces the obsolete character 'E'
+
     """
+    if isinstance(element.offt, integer_types):
+        raise SyntaxError('invalid offt expected a string of length 3; '
+                          'offt=%r; Type=%s\n%s' % (element.offt, type(element.offt), str(element)))
     msg = 'invalid offt parameter of %s...offt=%s' % (element.type, element.offt)
     assert element.offt[0] in ['G', 'B'], msg
     assert element.offt[1] in ['G', 'O', 'E'], msg

@@ -31,8 +31,14 @@ environment:
       PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
       PYNASTRAN_LIBS: "numpy scipy pandas matplotlib vtk pyqt"
 
-    - PYTHON: "C:\\Miniconda35-x64"
+    - PYTHON: "C:\\Miniconda36-x64"
       PYTHON_VERSION: "3.6.x" # currently 3.6.x
+      PYTHON_ARCH: "64"
+      PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
+      PYNASTRAN_LIBS: "numpy scipy pandas matplotlib vtk pyqt"
+
+    - PYTHON: "C:\\Miniconda37-x64"
+      PYTHON_VERSION: "3.7.x" # currently 3.7.x
       PYTHON_ARCH: "64"
       PYNASTRAN_TEST_PATH: "pyNastran/all_tests.py"
       PYNASTRAN_LIBS: "numpy scipy pandas matplotlib vtk pyqt"

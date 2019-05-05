@@ -280,3 +280,5 @@ class UnXrefMesh(SafeXrefMesh):
             dvmrel.uncross_reference()
         for unused_key, dvprel in self.dvprels.items():
             dvprel.uncross_reference()
+        for unused_key, desvar in self.desvars.items():
+            desvar.uncross_reference()

@@ -5,7 +5,7 @@ import numpy as np
 from cpylog import get_logger
 
 try:
-    import pandas
+    import pandas  # pylint: disable=unused-import
     IS_PANDAS = True
     # per http://stackoverflow.com/questions/35175949/ignore-pandas-warnings
     # doesn't work...
@@ -14,6 +14,12 @@ try:
         #'.*unorderable dtypes; returning scalar but in the future this will be an error.*')
 except ImportError:
     IS_PANDAS = False
+
+try:
+    import h5py  # pylint: disable=unused-import
+    IS_H5PY = True
+except ImportError:  # pragma: no cover
+    IS_H5PY = False
 
 IS_TRANSIENT_PANDAS = False
 if IS_PANDAS and (np.lib.NumpyVersion(np.__version__) < '1.13.0'):
@@ -609,6 +615,7 @@ class TestOP2(Tester):
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
+    @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_op2_solid_bending_02(self):
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
@@ -632,13 +639,15 @@ class TestOP2(Tester):
             compare=True, debug=False, binary_debug=False,
             quiet=True, check_memory=False, stop_on_failure=True,
             dev=False, build_pandas=True)
-        assert op2.displacements[1].data_frame is not None
-        op2.export_hdf5_filename(hdf5_filename)
-        op2.print_subcase_key()
+        if IS_PANDAS:
+            assert op2.displacements[1].data_frame is not None
 
-        op2b = OP2(debug=False)
-        op2b.load_hdf5_filename(hdf5_filename, combine=True)
-        op2b.print_subcase_key()
+        op2.print_subcase_key()
+        if IS_H5PY:
+            op2.export_hdf5_filename(hdf5_filename)
+            op2b = OP2(debug=False)
+            op2b.load_hdf5_filename(hdf5_filename, combine=True)
+            op2b.print_subcase_key()
 
     def test_op2_solid_shell_bar_01_geom(self):
         """tests reading op2 geometry"""

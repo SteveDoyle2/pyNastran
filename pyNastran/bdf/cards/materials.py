@@ -1234,6 +1234,9 @@ class MAT3(OrthotropicMaterial):
         return MAT3(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
                     ax, ath, az, tref, ge, comment=comment)
 
+    def Rho(self):
+        return self.rho
+
     def get_density(self):
         return self.rho
 
@@ -1592,6 +1595,9 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         if self.mid in model.MATT5:
             self.matt5 = self.Matt5()
         self.matt5_ref = None
+
+    def Rho(self):
+        return self.rho
 
     def get_density(self):
         return self.rho
@@ -2463,6 +2469,12 @@ class MAT10(Material):
         if self.table_gamma is not None:
             del self.table_gamma_ref
 
+    def Rho(self):
+        return self.rho
+
+    def get_density(self):
+        return self.rho
+
     def _verify(self, xref):
         """
         Verifies all methods for this object work
@@ -2548,7 +2560,7 @@ class MATG(Material):
     +======+========+========+=========+========+========+=========+========+========+
     | MATG |  MID   | IDMEM  |  BEHAV  | TABLD  | TABLU1 | TABLU2  | TABLU3 | TABLU4 |
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
-    |      | TABLU5 | TABLU6 | TABLU7  | TABLU8 | TABLU9 | TABLU10 |  YPRS  | EPL    |
+    |      | TABLU5 | TABLU6 | TABLU7  | TABLU8 | TABLU9 | TABLU10 |  YPRS  |  EPL   |
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
     |      |   GPL  |  GAP   | TABYPRS | TABEPL | TABGPL | TABGAP  |        |        |
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
@@ -2560,7 +2572,7 @@ class MATG(Material):
     +======+========+========+=========+========+========+=========+========+========+
     | MATG |  MID   | IDMEM  |  BEHAV  | TABLD  | TABLU1 | TABLU2  | TABLU3 | TABLU4 |
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
-    |      | TABLU5 | TABLU6 | TABLU7  | TABLU8 | TABLU9 | TABLU10 |  YPRS  | EPL    |
+    |      | TABLU5 | TABLU6 | TABLU7  | TABLU8 | TABLU9 | TABLU10 |  YPRS  |  EPL   |
     +------+--------+--------+---------+--------+--------+---------+--------+--------+
     |      |   GPL  |        |         |        |        |         |        |        |
     +------+--------+--------+---------+--------+--------+---------+--------+--------+

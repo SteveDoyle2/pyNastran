@@ -7,26 +7,7 @@ if is_pynastrangui_exe:
     # pyInstaller
     from pyNastran.version import __version__, __releaseDate__
 else:
-    import subprocess
-
-    def get_git_revision_short_hash():
-        try:
-            #ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
-
-            # independent of pyNastran location as long as there is a git folder
-            #   what about if you use setup_user.py install?
-            #   what about if you don't have git?
-            # can raise a subprocess.CalledProcessError, which means the return code != 0
-            ghash = subprocess.check_output(['git', 'describe', '--always'], cwd=os.path.dirname(__file__))
-
-            ghash = ghash.decode('utf-8').rstrip()
-        except:
-            # git isn't installed
-            ghash = 'no.checksum.error'
-        return 'dev.%s' % ghash
-
-    revision = get_git_revision_short_hash()
-    __version__ = '1.2.0+%s' % revision
+    __version__ = '1.2.0'
     __releaseDate__ = '2019/6/xx'
     __releaseDate2__ = 'JUNE xx, 2019'
 

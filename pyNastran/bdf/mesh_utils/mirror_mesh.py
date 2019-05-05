@@ -9,6 +9,7 @@ This file defines:
   - model = make_symmetric_model(
         bdf_filename, plane='xz', zero_tol=1e-12,
         log=None, debug=True)
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -172,6 +173,7 @@ def _mirror_nodes_plane(model, mirror_model, plane, use_nid_offset=True):
     .. warning:: doesn't mirror SPOINTs, EPOINTs
 
     https://mathinsight.org/distance_point_plane
+
     """
     nid_offset = 0
 
@@ -260,6 +262,7 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
     -----
     Doesn't handle CBAR/CBEAM offsets
     Doesn't handle CBEAM SPOINTs
+
     """
     eid_max_elements = 0
     eid_max_masses = 0
@@ -426,6 +429,7 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
     Considers:
      - PLOAD4
         - no coordinate systems (assumes cid=0)
+
     """
     for unused_load_id, loads in model.loads.items():
         for load in loads:
@@ -463,6 +467,7 @@ def _mirror_aero(model, nid_offset, plane):
       - doesn't consider lspan/lchord
      - SPLINE1
      - SET1
+
     """
     if model.aeros is not None:
         aeros = model.aeros
@@ -588,6 +593,7 @@ def make_symmetric_model(bdf_filename, plane='xz', zero_tol=1e-12, log=None, deb
         BDF : the BDF model object
 
     ## TODO: doesn't handle elements straddling the centerline
+
     """
     model = get_model(bdf_filename, log=log, debug=debug)
     iy, plane = _plane_to_iy(plane)

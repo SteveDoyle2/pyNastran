@@ -8,13 +8,49 @@ if sys.version_info < (3, 0):
     PY2 = True
     PY3 = False
 
+# features in packages used by pyNastran
+# numpy
+#  - 1.12 min for 3.6
+#  - 1.13: adds axis support to unique
+#  - 1.14: adds encoding support to savetxt (unused)
+#  - 1.14: adds proper writing of np.savetxt for open file objects
+#          (used for unicode savetxt using with statement) in Python 3.6
+#  - 1.15: min for Python 3.7? I guess 1.14 is fine for a requirement...
+# scipy:
+#  - 0.18.1: fixed kdtree used by nodal equivalencing; min for Python 2.7
+#  - 0.19:   min for Python 3.6
+#  - 0.19:   min for Python 3.7?
+# matplotlib:
+#  - 2.1: adds plt.subplots support
+#  - 2.2: min for Python 3.7
+
+# the packages that change requirements based on python version
+REQS = {
+    '2.7' : {
+        # package : (less than check, required)
+        'numpy' : ('1.13', '>=1.13,<1.17'),
+        'scipy' : ('0.18.1', '>=0.18.1,<1.13'),
+        'matplotlib' : ('2.1', '>=2.1,<3'),
+    },
+    '3.6' : {
+        'numpy' : ('1.14', '>=1.14'),
+        'scipy' : ('0.19', '>=0.19'),
+        'matplotlib' : ('2.1', '>=2.1'),
+    },
+    '3.7' : {
+        'numpy' : ('1.14', '>=1.14'),
+        'scipy' : ('1.0', '>=1.0'),
+        'matplotlib' : ('2.2', '>=2.2'),  # 2.2.4 adds Python 3.7 support
+    },
+}
+
 def check_python_version():
     """verifies the python version"""
     imajor, minor1, minor2 = sys.version_info[:3]
     if sys.version_info < (2, 7, 7):  # 2.7.15 used
         # makes sure we don't get the following bug:
         #   Issue #19099: The struct module now supports Unicode format strings.
-        sys.exit('Upgrade your Python to >= 2.7.7 or 3.5+; version=(%s.%s.%s)' % (
+        sys.exit('Upgrade your Python to >= 2.7.7 or 3.6+; version=(%s.%s.%s)' % (
             imajor, minor1, minor2))
 
     if PY3:
@@ -23,8 +59,41 @@ def check_python_version():
                 imajor, minor1, minor2))
 
 
-def get_package_requirements(is_gui=True):
+def int_version(name, version):
+    """splits the version into a tuple of integers"""
+    sversion = version.split('-')[0]
+    #numpy
+    #scipy
+    #matplotlib
+    #qtpy
+    #vtk
+    #cpylog
+    #pyNastran
+    if 'rc' not in name:
+        # it's gotta be something...
+        # matplotlib3.1rc1
+        sversion = sversion.split('rc')[0]
+
+    try:
+        return [int(val) for val in sversion.split('.')]
+    except ValueError:
+        raise SyntaxError('cannot determine version for %s %s' % (name, sversion))
+
+
+def str_version(version):
+    """converts a tuple of intergers to a version number"""
+    return '.'.join(str(versioni) for versioni in version)
+
+
+def get_package_requirements(is_gui=True, python_version=None):
     """gets the requirements for setup.py"""
+    if python_version is None:
+        python_version = '%s.%s' % sys.version_info[:2]
+
+    if python_version not in REQS:
+        python_version = '3.7'
+    vreqs = REQS[python_version]
+
     all_reqs = {}
     py2_packages = []
     py3_packages = []
@@ -63,62 +132,78 @@ def get_package_requirements(is_gui=True):
     if is_rtd:
         py_packages.append('numpy')
     else:
+        version_check, required_version = vreqs['scipy']
         try:
             import numpy as np
-            ver = np.lib.NumpyVersion(np.__version__)
-            all_reqs['numpy'] = ver.version
-            if ver < '1.11.0':
-                print("np.__version__ = %r < '1.11.0'" % np.__version__)
-                py_packages.append('numpy >= 1.11.0')
-                all_reqs['numpy'] = '>= 1.11.0'
-                py_packages.append('numpy >= 1.11.0') # ,<1.13.0
+            sver = np.lib.NumpyVersion(np.__version__)
+            iver = int_version('numpy', sver.version)
+            all_reqs['numpy'] = sver.version
+
+            iversion_check = int_version('numpy', version_check)
+            #srequired_version = int_version('numpy', required_version)
+            #print('numpy %r %r' % (sver, iversion_check))
+            if iver < iversion_check:
+                print("numpy.__version__ = %r < %s" % (np.__version__, version_check))
+                py_packages.append('numpy %s' % required_version)
+                all_reqs['numpy'] = version_check
+                py_packages.append('numpy %s' % required_version) # was 1.11; ,<1.13.0
         except ImportError:
-            all_reqs['numpy'] = '>= 1.11.0'
-            py_packages.append('numpy >= 1.11.0') # ,<1.13.0; 1.15.1 used
+            all_reqs['numpy'] = required_version
+            py_packages.append('numpy %s' % required_version) # ,<1.13.0; 1.15.1 used
 
     if is_rtd:
         py_packages.append('scipy')
     else:
+        version_check, required_version = vreqs['scipy']
         try:
             import scipy
-            ver = scipy.version.short_version
-            all_reqs['scipy'] = ver
-            if ver < '1.0.0':
-                print("scipy.version.short_version = %r < '1.0.0'" % scipy.version.short_version)
-                all_reqs['scipy'] = '>= 1.0.0'
-                py_packages.append('scipy >= 1.0.0')
+            sver = scipy.version.short_version
+            iver = int_version('scipy', sver)
+            all_reqs['scipy'] = sver
+
+            iversion_check = int_version('scipy', version_check)
+            #srequired_version = int_version('scipy', required_version)
+            print('scipy %r %r' % (sver, iversion_check))
+            if iver < iversion_check:
+                print("scipy.version.short_version = %r < %r" % (
+                    scipy.version.short_version, version_check))
+                all_reqs['scipy'] = required_version
+                py_packages.append('scipy %s' % required_version)
         except ImportError:
-            py_packages.append('scipy >= 1.0.0')  # 1.1.0 used
+            py_packages.append('scipy %s' % required_version)  # 1.1.0 used
 
     try:
         import six
-        sver = [int(val) for val in six.__version__.split('-')[0].split('.')]
-        all_reqs['six'] = '.'.join((str(val) for val in sver))
-        if sver < [1, 11, 0]:
-            print("six.__version__ = %r < '1.11.0'" % six.__version__)
-            all_reqs['six'] = '>= 1.11.0'
-            py_packages.append('six >= 1.11.0')
+        iver = int_version('six', six.__version__)
+        all_reqs['six'] = str_version(iver)
+        if iver < [1, 9, 0]:
+            print("six.__version__ = %r < '1.9.0'" % six.__version__)
+            all_reqs['six'] = '>= 1.9.0'
+            py_packages.append('six >= 1.9.0')
     except ImportError:
-        py_packages.append('six >= 1.11.0')  # 1.12.0 used
+        py_packages.append('six >= 1.9.0')  # 1.12.0 used
 
     if is_gui:
+        version_check, required_version = vreqs['matplotlib']
         try:
             import matplotlib
-            sver = [int(val) for val in matplotlib.__version__.split('-')[0].split('.')]
-            all_reqs['matplotlib'] = '.'.join((str(val) for val in sver))
-            if sver < [2, 1, 2]:
-                print("matplotlib.__version__ = %r < '2.1.2'" % matplotlib.__version__)
-                all_reqs['matplotlib'] = '>= 2.1.2'
-                py_packages.append('matplotlib >= 2.1.2')
+            iver = int_version('matplotlib', matplotlib.__version__)
+            all_reqs['matplotlib'] = str_version(iver)
+            iversion_check = int_version('matplotlib', version_check)
+            if iver < iversion_check:
+                print("matplotlib.__version__ = %r < %r" % (matplotlib.__version__, version_check))
+                    #matplotlib.__version__, str_version(iversion_check)))
+                all_reqs['matplotlib'] = required_version # '>= 2.1.2'
+                py_packages.append('matplotlib %s' % required_version)
         except ImportError:
-            py_packages.append('matplotlib >= 2.1.2')  # 2.2.3 used
+            py_packages.append('matplotlib %s' % required_version)  # was 2.1.2; 2.2.3 used
 
 
     try:
         import cpylog
-        sver = [int(val) for val in cpylog.__version__.split('-')[0].split('.')]
-        all_reqs['cpylog'] = '.'.join((str(val) for val in sver))
-        if sver <= [1, 0, 2]:
+        iver = int_version('cpylog', cpylog.__version__)
+        all_reqs['cpylog'] = str_version(iver)
+        if iver <= [1, 0, 2]:
             print("cpylog.__version__ = %r != '1.0.2'" % cpylog.__version__)
             all_reqs['cpylog'] = '>= 1.0.2'
             py_packages.append('cpylog >= 1.0.2')
@@ -128,9 +213,9 @@ def get_package_requirements(is_gui=True):
 
     try:
         import docopt
-        sver = [int(val) for val in docopt.__version__.split('-')[0].split('.')]
-        all_reqs['docopt'] = '.'.join((str(val) for val in sver))
-        if sver != [0, 6, 2]:
+        iver = int_version('docopt', docopt.__version__)
+        all_reqs['docopt'] = str_version(iver)
+        if iver != [0, 6, 2]:
         #if docopt.__version__ != '0.6.2':
             print("docopt.__version__ = %r != '0.6.2'" % docopt.__version__)
             all_reqs['docopt'] = '== 0.6.2'
@@ -143,40 +228,39 @@ def get_package_requirements(is_gui=True):
     elif is_gui:
         try:
             import qtpy
-            sver = [int(val) for val in qtpy.__version__.split('-')[0].split('.')]
-            all_reqs['qtpy'] = '.'.join((str(val) for val in sver))
-            if sver < [1, 4, 0]:
+            iver = int_version('qtpy', qtpy.__version__)
+            all_reqs['qtpy'] = str_version(iver)
+            if iver < [1, 4, 0]:
                 print("qtpy.__version__ = %r < '1.4.0'" % qtpy.__version__)
                 all_reqs['qtpy'] = '>= 1.4.0'
                 py_packages.append('qtpy >= 1.4.0')
         except ImportError:
             py_packages.append('qtpy >= 1.4.0')  # 1.5.0 used
 
-    try:
-        import typing
-    except ImportError:
-        # PY2
-        all_reqs['typing'] = '>= 3.6.4'
-        py_packages.append('typing >= 3.6.4')  # 3.6.6 used
-
-
     if PY2:
+        try:
+            import typing
+        except ImportError:
+            # PY2
+            all_reqs['typing'] = '>= 3.6.4'
+            py_packages.append('typing >= 3.6.4')  # 3.6.6 used
+
         try:
             import pathlib2
         except ImportError:
             all_reqs['pathlib2'] = '>= 2.3.0'
             py_packages.append('pathlib2 >= 2.3.0')  # 2.3.2 used
 
-        try:
-            import scandir
-            sver = [int(val) for val in scandir.__version__.split('-')[0].split('.')]
-            all_reqs['scandir'] = '.'.join((str(val) for val in sver))
-            if sver < [1, 7, 0]:
-                print("scandir.__version__ = %r < '1.7.0'" % scandir.__version__)
-                all_reqs['scandir'] = '>= 1.7.0'
-                py_packages.append('scandir >= 1.7.0')
-        except ImportError:
-            py_packages.append('scandir >= 1.7.0')  # 1.9.0 used
+        #try:
+            #import scandir
+            #iver = int_version(scandir.__version__)
+            #all_reqs['scandir'] = str_version(iver)
+            #if sver < [1, 7, 0]:
+                #print("scandir.__version__ = %r < '1.7.0'" % scandir.__version__)
+                #all_reqs['scandir'] = '>= 1.7.0'
+                #py_packages.append('scandir >= 1.7.0')
+        #except ImportError:
+            #py_packages.append('scandir >= 1.7.0')  # 1.9.0 used
 
     if is_rtd:
         pass
@@ -207,4 +291,6 @@ def get_package_requirements(is_gui=True):
         # -*- Extra requirements: -*-
         ##'cython',
     ] + py2_packages + py3_packages,
+    #print(all_reqs)
+    #print(install_requires)
     return all_reqs, install_requires

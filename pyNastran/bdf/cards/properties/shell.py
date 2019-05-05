@@ -569,9 +569,8 @@ class CompositeShellProperty(ShellProperty):
             t = self.thicknesses[iply]
             mass_per_area += rho * t
 
-        if self.is_symmetrical():
-            return 2. * mass_per_area
-        return mass_per_area
+        ksym = 2. if self.is_symmetrical() else 1.
+        return ksym * mass_per_area
 
 class PCOMP(CompositeShellProperty):
     """

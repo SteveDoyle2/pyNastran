@@ -378,7 +378,7 @@ def _increment_inertia(centroid, reference_point, m, mass, cg, I):
 def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
                         reference_point=None,
                         sym_axis=None, scale=None, inertia_reference='cg',
-                        xyz_cid0_dict=None, debug=False):  # pragma: no cover
+                        xyz_cid0_dict=None, debug=False):
     """
     Calculates mass properties in the global system about the
     reference point.  Considers NSM, NSM1, NSML, NSML1.

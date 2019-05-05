@@ -2,6 +2,7 @@
 defines:
   - split_line_elements(bdf_model, eids, neids=2,
                         eid_start=1, nid_start=1)
+
 """
 from __future__ import print_function
 import numpy as np

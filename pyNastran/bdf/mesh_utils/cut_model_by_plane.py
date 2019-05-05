@@ -10,6 +10,7 @@ defines:
 """
 from __future__ import print_function
 from itertools import count
+import warnings
 
 from six import iterkeys
 import numpy as np
@@ -18,7 +19,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 NUMPY_VERSION = np.lib.NumpyVersion(np.__version__)
 if NUMPY_VERSION < '1.13.0':
-    raise RuntimeError('numpy version=%s required>=1.13.0' % np.__version__)
+    warnings.warn('numpy version=%s required>=1.13.0' % np.__version__)
+    #raise RuntimeError('numpy version=%s required>=1.13.0' % np.__version__)
 
 
 #def cut_edge_model_by_axes(bdf_filename, view_up, p1, p2, tol,
@@ -163,7 +165,7 @@ def export_edge_cut(csv_filename, result_array):
     #X = np.concatenate((geometry_array, results_array), axis=1)
     header = 'x, y, z, Cp'
     np.savetxt(csv_filename, result_array, delimiter=',', newline='\n', header=header,
-               footer='', comments='# ', encoding=None)
+               footer='', comments='# ') # , encoding=None # numpy 1.14
 
 def export_face_cut(csv_filename, geometry_arrays, results_arrays, header=''):
     """
@@ -193,7 +195,7 @@ def export_face_cut(csv_filename, geometry_arrays, results_arrays, header=''):
             header2 = 'Curve %i\n' % (i+1)
             header2 += 'eid, nid1, nid2, x, y, z, Cp'
             np.savetxt(csv_file, X, fmt=fmt, newline='\n', header=header2,
-                       footer='', comments='# ', encoding=None)
+                       footer='', comments='# ') # , encoding=None # numpy 1.14
             csv_file.write('\n')
 
 def _determine_cord2r(origin, zaxis, xzplane):
@@ -800,6 +802,7 @@ def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup=True):
     #print(','.join([str(val) for val in np.unique(edges)]))
     #print('geom =', geometry_array[myrow, :])
 
+    # axis added in numpy 1.13
     unused_unique_edges, unique_edge_index = np.unique(
         geometry_array[:, 1:],
         return_index=True, return_inverse=False, return_counts=False,

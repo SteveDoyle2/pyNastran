@@ -4,6 +4,11 @@ import os
 import unittest
 import numpy as np
 #import PySide
+try:
+    import matplotlib  # pylint: disable=unused-import
+    IS_MATPLOTLIB = True
+except ImportError:  # pragma: no cover
+    IS_MATPLOTLIB = False
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
@@ -22,10 +27,11 @@ class TestCuttingPlane(unittest.TestCase):
     """various cutting plane tests"""
     def test_cut_plate(self):
         """mode 10 is a sine wave"""
+        log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
         bdf_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.dat')
         op2_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.op2')
-        model = read_bdf(bdf_filename)
-        op2_model = read_op2_geom(op2_filename)
+        model = read_bdf(bdf_filename, log=log)
+        op2_model = read_op2_geom(op2_filename, log=log)
 
         title = 'Mode 10 Eigenvector'
         p1 = None
@@ -42,7 +48,7 @@ class TestCuttingPlane(unittest.TestCase):
         cut_and_plot_model(title, p1, p2, zaxis,
                            model, coord, nodal_result, model.log, ytol,
                            plane_atol=1e-5, csv_filename='real_result.csv', invert_yaxis=False,
-                           cut_type='edge', show=False)
+                           cut_type='edge', plot=IS_MATPLOTLIB, show=False)
 
         # complex
         nodal_result2 = np.asarray(nodal_result, dtype='complex64')
@@ -50,7 +56,7 @@ class TestCuttingPlane(unittest.TestCase):
         cut_and_plot_model(title, p1, p2, zaxis,
                            model, coord, nodal_result2, model.log, ytol,
                            plane_atol=1e-5, csv_filename='complex_result.csv', invert_yaxis=True,
-                           cut_type='edge', show=False)
+                           cut_type='edge', plot=IS_MATPLOTLIB, show=False)
         os.remove('real_result.csv')
         os.remove('complex_result.csv')
 
@@ -75,14 +81,15 @@ class TestCuttingPlane(unittest.TestCase):
                            plane_atol=1e-5,
                            csv_filename=None,
                            invert_yaxis=False,
-                           cut_type='edge', show=False)
+                           cut_type='edge', plot=IS_MATPLOTLIB, show=False)
         #=========================================================================
-        local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
+        out = cut_edge_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5)
+        unused_local_points_array, unused_global_points_array, result_array =  out
         assert len(result_array) == 16, len(result_array)
 
-        geometry_array, result_array = cut_face_model_by_coord(
+        unused_geometry_array, result_array = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5)
         assert result_array is None, len(result_array) # no quad support
@@ -121,14 +128,15 @@ class TestCuttingPlane(unittest.TestCase):
                            plane_atol=1e-5,
                            csv_filename=None,
                            invert_yaxis=False,
-                           cut_type='edge', show=False)
+                           cut_type='edge', plot=IS_MATPLOTLIB, show=False)
 
-        local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
+        out = cut_edge_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5, csv_filename='cut_edge_2.csv')
+        unused_local_points_array, unused_global_points_array, result_array = out
         assert len(result_array) == 20, len(result_array)
 
-        geometry_arrays, result_arrays = cut_face_model_by_coord(
+        unused_geometry_arrays, result_arrays = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5, csv_filename='cut_face_2.csv')
         assert len(result_arrays[0]) == 8, len(result_arrays)
@@ -150,7 +158,7 @@ class TestCuttingPlane(unittest.TestCase):
         nedges = geometry_array.shape[0]
         results_array = np.arange(0, nedges)
         #print(results_array)
-        iedges, geometry_arrays2, results_arrays2 = connect_face_rows(
+        iedges, unused_geometry_arrays2, unused_results_arrays2 = connect_face_rows(
             geometry_array, results_array, skip_cleanup=False)
         assert np.array_equal(iedges, [[0, 1, 2, 3, 4]]), 'iedges=%s' % iedges
         #-----------------------------------------------------------------------
@@ -165,7 +173,7 @@ class TestCuttingPlane(unittest.TestCase):
         ])
         nedges = geometry_array.shape[0]
         results_array = np.arange(0, nedges)
-        iedges, geometry_arrays2, results_arrays2 = connect_face_rows(
+        iedges, unused_geometry_arrays2, unused_results_arrays2 = connect_face_rows(
             geometry_array, results_array, skip_cleanup=False)
         assert np.array_equal(iedges, [[0, 4, 3, 1, 2]]), 'iedges=%s' % iedges
         #print(geometry_array2)
@@ -188,7 +196,7 @@ class TestCuttingPlane(unittest.TestCase):
         nedges = geometry_array.shape[0]
         results_array = np.arange(0, nedges)
         #print(results_array)
-        iedges, geometry_array2, results_array2 = connect_face_rows(
+        iedges, unused_geometry_array2, unused_results_array2 = connect_face_rows(
             geometry_array, results_array, skip_cleanup=False)
         assert np.array_equal(iedges, [[0, 1, 2], [3, 4, 5]]), 'iedges=%s' % iedges
 
@@ -203,7 +211,7 @@ class TestCuttingPlane(unittest.TestCase):
         nedges = geometry_array.shape[0]
         results_array = np.arange(0, nedges)
         #print(results_array)
-        iedges, geometry_array2, results_array2 = connect_face_rows(
+        iedges, unused_geometry_array2, unused_results_array2 = connect_face_rows(
             geometry_array, results_array, skip_cleanup=False)
         assert np.array_equal(iedges, [[0, 1, 2, 3, 0]]), 'iedges=%s' % iedges
 
@@ -223,7 +231,7 @@ class TestCuttingPlane(unittest.TestCase):
         nedges = geometry_array.shape[0]
         results_array = np.arange(0, nedges)
         #print(results_array)
-        iedges, geometry_array2, results_array2 = connect_face_rows(
+        iedges, unused_geometry_array2, unused_results_array2 = connect_face_rows(
             geometry_array, results_array, skip_cleanup=False)
         assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
 

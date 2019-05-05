@@ -1,14 +1,19 @@
 from __future__ import print_function
 from itertools import count
-from typing import  List, Any, Optional, Dict, Union
+from typing import  List, Any, Optional, Dict, Union, Tuple
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec
+    IS_MATPLOTLIB = True
+except ImportError:  # pragma: no cover
+    IS_MATPLOTLIB = False
 
 from pyNastran.utils.atmosphere import (
-    get_alt_for_density, convert_altitude, atm_density,
-    convert_density, convert_pressure, convert_velocity,
+    get_alt_for_density, atm_density,
+    convert_altitude, convert_velocity, convert_density, convert_pressure,
 )
 from pyNastran.utils import object_attributes, object_methods
 
@@ -233,7 +238,7 @@ class FlutterResponse(object):
         self.noline = noline
 
     def _get_unit_factor(self, name):
-        # type: (str) -> float, str
+        # type: (str) -> Tuple[float, str]
         if not self.f06_units or not self.out_units:
             msg = 'name=%r f06_units=%s out_units=%s' % (name, self.f06_units, self.out_units)
             raise RuntimeError(msg)
@@ -261,9 +266,8 @@ class FlutterResponse(object):
     @property
     def symbols(self):
         """gets the symbols for the lines"""
-        # type: () -> List[str]
         if not self.noline:
-            symbols = [symbol + '-' for symbol in self._symbols]
+            symbols = [symbol + '-' for symbol in self._symbols]  # type: List[str]
         else:
             symbols = self._symbols
         return symbols
@@ -706,26 +710,27 @@ class FlutterResponse(object):
         '  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  1.4277E+01  7.7705E+01  8.8016E+01  2.2346E+02  2.4656E+02  3.2366E+02  4.5518E+02  4.9613E+02  6.7245E+02  7.3197E+02  8.0646E+02  0.0000E+00'
         '  4.9374E-01 -1.6398E-03 -5.4768E-04 -2.3136E-04 -3.5776E-04 -6.2358E-05 -3.0348E-04 -7.7492E-05 -2.0301E-05 -1.7733E-04 -9.2383E-05 -1.2849E-05 -2.8854E-05  4.9374E-01  1.4272E+01  7.7726E+01  8.8010E+01  2.2347E+02  2.4655E+02  3.2364E+02  4.5516E+02  4.9612E+02  6.7245E+02  7.3195E+02  8.0646E+02  0.0000E+00'
         """
-        nmodes = self.results.shape[0]
+        modes, nmodes = self._modes_nmodes(modes)
 
         damping_modes = []
         omega_modes = []
-        for imode in range(1, nmodes+1):
-            if imode < 10:
-                gmode = '   G,MODE--%i' % imode
-                wmode = ' WHZ,MODE--%i' % imode
-            elif imode < 100:
-                gmode = '   G,MODE-%2i' % imode
-                wmode = ' WHZ,MODE-%2i' % imode
+        for mode in modes:
+            if mode < 10:
+                gmode = '   G,MODE--%i' % mode
+                wmode = ' WHZ,MODE--%i' % mode
+            elif mode < 100:
+                gmode = '   G,MODE-%2i' % mode
+                wmode = ' WHZ,MODE-%2i' % mode
             else:
-                gmode = '   G,MODE%3i' % imode
-                wmode = ' WHZ,MODE%3i' % imode
+                gmode = '   G,MODE%3i' % mode
+                wmode = ' WHZ,MODE%3i' % mode
             damping_modes.append(gmode)
             omega_modes.append(wmode)
 
         headers = ['EQUIVALENT V'] + damping_modes + ['EQUIVALENT V'] + omega_modes
         with open(veas_filename, 'w') as veas_file:
-            veas_file.write(' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG SETID=       1 FOR FLUTTER/ASE ID=       1 NMODE=  %3i\n' % nmodes)
+            veas_file.write(' DAMPING & FREQUENCY X-Y PLOT FILE OF PLTVG '
+                            'SETID=       1 FOR FLUTTER/ASE ID=       1 NMODE=  %3i\n' % nmodes)
             veas_file.write(''.join(headers) + '\n')
             nspeeds = self.results.shape[1]
             for i in range(nspeeds):
@@ -737,14 +742,33 @@ class FlutterResponse(object):
                 str_values = (' %11.4E' % value for value in values)
                 veas_file.write(''.join(str_values) + '\n')
 
+    def _imodes(self, modes):
+        """gets the imodes from the modes"""
+        if modes is None:
+            nmodes = self.results.shape[0]
+            imodes = range(nmodes)
+        else:
+            imodes = modes - 1
+        return imodes
+
+    def _modes_nmodes(self, modes):
+        """gets the modes and nmodes"""
+        if modes is None:
+            nmodes = self.results.shape[0]
+            modes = range(1, nmodes + 1)
+        else:
+            nmodes = max(modes)
+        return modes, nmodes
+
     def export_to_f06(self, f06_filename, modes=None, page_stamp=None, page_num=1):
         # type: (str, Optional[List[int]], Optional[str], int) -> None
         if page_stamp is None:
             page_stamp = 'PAGE %i'
         # nmodes, vel, res
-        nmodes = self.results.shape[0]
+        imodes = self._imodes(modes)
+
         with open(f06_filename, 'w') as f06_file:
-            for imode in range(nmodes):
+            for imode in imodes:
                 #'      MACH 0.0                                                                                                                      '
                 f06_file.write('0                                                                                                            SUBCASE %i\n' % self.subcase)
                 f06_file.write('0                                                       FLUTTER  SUMMARY\n')

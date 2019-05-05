@@ -11,6 +11,7 @@ reading/writing/accessing of BDF data.  Such methods include:
       change all nodes to a specific coordinate system
   - unresolve_grids
       puts all nodes back to original coordinate system
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -49,6 +50,7 @@ class BDFMethods(BDFAttributes):
         gets a breakdown of the length by property region
 
         TODO: What about CONRODs?
+
         """
         return get_length_breakdown(self, property_ids=property_ids, stop_if_no_length=stop_if_no_length)
 
@@ -84,6 +86,7 @@ class BDFMethods(BDFAttributes):
         #'PBEAM3',
         #'PBEND',
         #'PIHEX',
+
         """
         return get_volume_breakdown(self, property_ids=property_ids,
                                     stop_if_no_volume=stop_if_no_volume)
@@ -118,6 +121,7 @@ class BDFMethods(BDFAttributes):
         #'PBEND',
         #'PIHEX',
         #'PCOMPS',
+
         """
         return get_mass_breakdown(self, property_ids=property_ids,
                                   stop_if_no_mass=stop_if_no_mass, detailed=detailed)
@@ -159,7 +163,7 @@ class BDFMethods(BDFAttributes):
             The mass of the model.
         cg : ndarray
             The cg of the model as an array.
-        I : ndarray
+        inertia : ndarray
             Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
 
         I = mass * centroid * centroid
@@ -184,8 +188,8 @@ class BDFMethods(BDFAttributes):
         --------
         Mass properties of entire structure
 
-        >>> mass, cg, I = model.mass_properties()
-        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+        >>> mass, cg, inertia = model.mass_properties()
+        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
 
         Mass properties of model based on Property ID
 
@@ -193,6 +197,7 @@ class BDFMethods(BDFAttributes):
         >>> pid_eids = self.get_element_ids_dict_with_pids(pids)
         >>> for pid, eids in sorted(pid_eids.items()):
         >>>     mass, cg, I = model.mass_properties(element_ids=eids)
+
         """
         mass, cg, I = mass_properties(
             self,
@@ -239,7 +244,7 @@ class BDFMethods(BDFAttributes):
             The mass of the model.
         cg : ndarray
             The cg of the model as an array.
-        I : ndarray
+        inertia : ndarray
             Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
 
         I = mass * centroid * centroid
@@ -264,8 +269,8 @@ class BDFMethods(BDFAttributes):
         --------
         **mass properties of entire structure**
 
-        >>> mass, cg, I = model.mass_properties()
-        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+        >>> mass, cg, inertia = model.mass_properties()
+        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
 
 
         **mass properties of model based on Property ID**
@@ -273,14 +278,15 @@ class BDFMethods(BDFAttributes):
         >>> pids = list(model.pids.keys())
         >>> pid_eids = self.get_element_ids_dict_with_pids(pids)
         >>> for pid, eids in sorted(pid_eids.items()):
-        >>>     mass, cg, I = model.mass_properties(element_ids=eids)
+        >>>     mass, cg, inertia = model.mass_properties(element_ids=eids)
+
         """
-        mass, cg, I = mass_properties_no_xref(
+        mass, cg, inertia = mass_properties_no_xref(
             self, element_ids=element_ids, mass_ids=mass_ids,
             reference_point=reference_point,
             sym_axis=sym_axis, scale=scale,
             inertia_reference=inertia_reference)
-        return mass, cg, I
+        return mass, cg, inertia
 
     def mass_properties_nsm(self, element_ids=None, mass_ids=None, nsm_id=None,
                             reference_point=None,
@@ -328,7 +334,7 @@ class BDFMethods(BDFAttributes):
             The mass of the model.
         cg : ndarray
             The cg of the model as an array.
-        I : ndarray
+        inertia : ndarray
             Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
 
         I = mass * centroid * centroid
@@ -353,15 +359,15 @@ class BDFMethods(BDFAttributes):
         --------
         **mass properties of entire structure**
 
-        >>> mass, cg, I = model.mass_properties()
-        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+        >>> mass, cg, inertia = model.mass_properties()
+        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
 
 
         **mass properties of model based on Property ID**
         >>> pids = list(model.pids.keys())
         >>> pid_eids = model.get_element_ids_dict_with_pids(pids)
         >>> for pid, eids in sorted(pid_eids.items()):
-        >>>     mass, cg, I = mass_properties(model, element_ids=eids)
+        >>>     mass, cg, inertia = mass_properties(model, element_ids=eids)
 
         Warnings
         --------
@@ -371,13 +377,13 @@ class BDFMethods(BDFAttributes):
            will be considered, even if not included in the element set
 
         """
-        mass, cg, I = mass_properties_nsm(
+        mass, cg, inertia = mass_properties_nsm(
             self, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id,
             reference_point=reference_point,
             sym_axis=sym_axis, scale=scale,
             inertia_reference=inertia_reference,
             xyz_cid0_dict=xyz_cid0_dict, debug=debug)
-        return (mass, cg, I)
+        return (mass, cg, inertia)
 
     #def __gravity_load(self, loadcase_id):
         #"""
@@ -466,6 +472,7 @@ class BDFMethods(BDFAttributes):
         you have.
 
         .. todo:: not done...
+
         """
         forces, moments = sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
                                                       include_grav=include_grav, xyz_cid0=xyz_cid0)
@@ -507,6 +514,7 @@ class BDFMethods(BDFAttributes):
                  precomputed node locations.
 
         Pressure acts in the normal direction per model/real/loads.bdf and loads.f06
+
         """
         forces, moments = sum_forces_moments(self, p0, loadcase_id,
                                              include_grav=include_grav, xyz_cid0=xyz_cid0)
@@ -530,6 +538,7 @@ class BDFMethods(BDFAttributes):
         eid_faces : (int, List[(int, int, ...)])
            value1 : element id
            value2 : face
+
         """
         if element_ids is None:
             element_ids = self.element_ids
@@ -576,6 +585,7 @@ class BDFMethods(BDFAttributes):
             double precision flag
         encoding : str; default=None -> system default
             the string encoding
+
         """
         return write_skin_solid_faces(
             self, skin_filename,
@@ -607,7 +617,6 @@ class BDFMethods(BDFAttributes):
         # calculates the real delta to be used by DVGRID
         desvar_delta = {key : (desvar_init[key] - desvar_values[key])
                         for key in self.desvars}
-
 
         #min(max(self.xinit, self.xlb), self.xub)
 

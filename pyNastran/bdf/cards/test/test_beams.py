@@ -11,9 +11,15 @@ from itertools import count
 
 import numpy as np
 
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+try:
+    import matplotlib
+    IS_MATPLOTLIB = True
+except ImportError:  # pragma: no cover
+    IS_MATPLOTLIB = False
+
+if IS_MATPLOTLIB:
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PBEAM, PBEND, PBMSECT, PBRSECT
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -1375,7 +1381,7 @@ class TestBeams(unittest.TestCase):
         pbrsect.write_card()
 
     def test_pbrsect_1(self):
-        model = BDF(debug=True, log=None, mode='msc')
+        model = BDF(debug=False, log=None, mode='msc')
         mid = 10
         model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
 
@@ -1417,9 +1423,10 @@ class TestBeams(unittest.TestCase):
 
         #model2 = BDF(debug=True, log=None, mode='msc')
         #model2.read_bdf(r'C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\zbr3.dat')
-        for pid, prop in model.properties.items():
-            prop.plot(model, show=False)
-        plt.close()
+        if IS_MATPLOTLIB:
+            for pid, prop in model.properties.items():
+                prop.plot(model, show=False)
+            plt.close()
 
     def test_pbrsect_2(self):
         model = BDF(debug=False)
@@ -1458,8 +1465,9 @@ class TestBeams(unittest.TestCase):
             #outp=1000, brp(1)=2000, brp(2)=3000
             #t(1)=5.
         model.cross_reference()
-        prop.plot(model, show=False)
-        plt.close()
+        if IS_MATPLOTLIB:
+            prop.plot(model, show=False)
+            plt.close()
 
     def test_pbmsect_2(self):
         """
@@ -1542,14 +1550,15 @@ class TestBeams(unittest.TestCase):
         #BRP(1)=201,CORE(3)=[201,PT=(2,3)], +
         #BRP(3)=102,CORE(3)=[102,PT=(5,4)]
 
-        prop1.plot(model, figure_id=pid, show=False)
-        #plt.close()
-        prop2.plot(model, figure_id=pid+1, show=False)
-        #plt.close()
+        if IS_MATPLOTLIB:
+            prop1.plot(model, figure_id=pid, show=False)
+            #plt.close()
+            prop2.plot(model, figure_id=pid+1, show=False)
+            #plt.close()
         #save_load_deck(model, run_convert=False, run_remove_unused=False)
 
     def test_pbmsect_1(self):
-        model = BDF(debug=True, log=None, mode='msc')
+        model = BDF(debug=False, log=None, mode='msc')
         mid = 10
         model.add_mat1(mid, 3.0e7, None, 0.3, rho=0.2)
 
@@ -1595,8 +1604,9 @@ class TestBeams(unittest.TestCase):
         prop = model.add_pbmsect(pid, mid, form, options)
         model.cross_reference()
         #print(prop)
-        prop.plot(model, figure_id=2, show=False)
-        plt.close()
+        if IS_MATPLOTLIB:
+            prop.plot(model, figure_id=2, show=False)
+            plt.close()
         #pbmsect  31     10      GS
             #OUTP=111,inp=122,inp=133
         #DESVAR  31      DBOXGS	15.0	0.01	60.0
@@ -1624,9 +1634,10 @@ class TestBeams(unittest.TestCase):
         ]
         pbmsect = model.add_pbmsect(pid, mid, form, options, comment='pbmsect')
         model.cross_reference()
-        #pbmsect.cross_reference(model)
-        pbmsect.plot(model, show=False)
-        plt.close()
+        if IS_MATPLOTLIB:
+            #pbmsect.cross_reference(model)
+            pbmsect.plot(model, show=False)
+            plt.close()
 
 
         pbmsect.validate()

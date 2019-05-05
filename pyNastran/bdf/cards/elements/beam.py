@@ -47,6 +47,7 @@ class CBEAM(LineElement):
     +-------+-----+-----+-----+-----+-----+-----+-----+----------+
 
     offt/bit are MSC specific fields
+
     """
     type = 'CBEAM'
     _field_map = {
@@ -265,10 +266,11 @@ class CBEAM(LineElement):
             if isinstance(self.offt, integer_types):
                 assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
                 #raise NotImplementedError('invalid offt; offt=%i' % self.offt)
-            elif not isinstance(self.offt, string_types):
-                raise SyntaxError('invalid offt expected a string of length 3 '
-                                  'offt=%r; Type=%s' % (self.offt, type(self.offt)))
-            check_offt(self)
+            elif isinstance(self.offt, string_types):
+                check_offt(self)
+            else:
+                raise TypeError('invalid offt expected a string of length 3 '
+                                'offt=%r; Type=%s' % (self.offt, type(self.offt)))
 
     @classmethod
     def add_card(cls, card, beamor=None, comment=''):
@@ -520,6 +522,7 @@ class CBEAM(LineElement):
         |  +--+
         |     |
         +-----+
+
         """
         cda = self.ga_ref.cid_ref
         cdb = self.gb_ref.cid_ref
@@ -532,13 +535,14 @@ class CBEAM(LineElement):
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
-        See also
-        --------
-        :func:`pyNastran.bdf.cards.elements.bars._rotate_v_wa_wb` for a
+        Notes
+        -----
+        :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
         description of the OFFT flag.
 
-        TODO: not integrated with CBAR yet...
         """
+        #TODO: not integrated with CBAR yet...
+
         check_offt(self)
         is_failed = True
         ihat = None
@@ -566,13 +570,14 @@ class CBEAM(LineElement):
         """
         Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
 
-        See also
-        --------
-        :func:`pyNastran.bdf.cards.elements.bars._rotate_v_wa_wb` for a
+        Notes
+        -----
+        :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
         description of the OFFT flag.
 
-        TODO: not integrated with CBAR yet...
         """
+        #TODO: not integrated with CBAR yet...
+
         is_failed = True
         eid = self.eid
         #centroid = (n1 + n2) / 2.
@@ -663,7 +668,7 @@ class CBEAM(LineElement):
         if self.bit is not None:
             assert isinstance(self.bit, float), 'bit=%r type=%s' % (self.bit, type(self.bit))
             return False
-        assert isinstance(self.offt, string_types), 'offt=%r' % self.offt
+        #assert isinstance(self.offt, string_types), 'offt=%r' % self.offt
         return True
 
     @property
@@ -689,6 +694,7 @@ class CBEAM(LineElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CBEAM eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
@@ -783,6 +789,7 @@ class CBEAM(LineElement):
         Notes
         -----
         Used by CBAR and CBEAM
+
         """
         if self.g0 is not None:
             return (self.G0(), None, None)
@@ -838,6 +845,9 @@ def _init_offt_bit(card, unused_eid, offt_default):
     elif field8 is None:
         offt = 'GGG'  # default
         bit = None
+    elif isinstance(field8, integer_types):
+        bit = None
+        offt = field8
     elif isinstance(field8, string_types):
         bit = None
         offt = field8
@@ -861,6 +871,7 @@ class BEAMOR(BaseCard):
     +--------+-----+---+---+---+-------+-----+-------+------+
     | BEAMOR | 39  |   |   |   |  0.6  | 2.9 | -5.87 | GOG  |
     +--------+-----+---+---+---+-------+-----+-------+------+
+
     """
     type = 'BEAMOR'
     def __init__(self, pid, is_g0, g0, x, offt='GGG', comment=''):
@@ -900,8 +911,6 @@ class BEAMOR(BaseCard):
         else:
             raise NotImplementedError('BEAMOR field5 = %r' % field5)
         offt = integer_string_or_blank(card, 8, 'offt', 'GGG')
-        if isinstance(offt, integer_types):
-            raise NotImplementedError('the integer form of offt is not supported; offt=%s' % offt)
         assert len(card) <= 9, 'len(BEAMOR card) = %i\ncard=%s' % (len(card), card)
         return BEAMOR(pid, is_g0, g0, x, offt=offt, comment=comment)
 

@@ -362,6 +362,12 @@ class SafeXrefMesh(XrefMesh):
             else:  # pragma: no cover
                 dvprel.cross_reference(self)
 
+        for unused_key, desvar in self.desvars.items():
+            if hasattr(desvar, 'safe_cross_reference'):
+                desvar.cross_reference(self)
+            else:  # pragma: no cover
+                desvar.cross_reference(self)
+
     def safe_empty_nodes(self, nids, msg=''):
         """safe xref version of self.Nodes(nid, msg='')"""
         nodes = []

@@ -7,7 +7,7 @@ from __future__ import print_function
 #matplotlib.use('Qt5Agg')
 #from pyNastran.gui.qt_version import qt_version
 
-def cmd_line_plot_flutter(argv=None, show=True):
+def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
     """the interface to ``f06 plot_145`` on the command line"""
     import sys
     import os
@@ -70,7 +70,7 @@ def cmd_line_plot_flutter(argv=None, show=True):
     #type_defaults = {
     #    '--nerrors' : [int, 100],
     #}
-    data = docopt(msg, version=ver,  argv=argv[1:])
+    data = docopt(msg, version=ver, argv=argv[1:])
     f06_filename = data['F06_FILENAME']
     if not f06_filename.lower().endswith('.f06'):
         base = os.path.splitext(f06_filename)[0]
@@ -121,6 +121,8 @@ def cmd_line_plot_flutter(argv=None, show=True):
     vg_vf_filename = None if export_zona is  None else 'vg_vf_subcase_%i.png'
     kfreq_damping_filename = None if export_zona is  None else 'kfreq_damping_subcase_%i.png'
     root_locus_filename = None if export_zona is  None else 'root_locus_subcase_%i.png'
+    if not plot:
+        return
     plot_flutter_f06(f06_filename, modes=modes,
                      plot_type=plot_type,
                      f06_units=in_units,
@@ -137,7 +139,7 @@ def cmd_line_plot_flutter(argv=None, show=True):
                      vg_filename=vg_filename,
                      vg_vf_filename=vg_vf_filename,
                      root_locus_filename=root_locus_filename,
-                     kfreq_damping_filename=kfreq_damping_filename, show=show)
+                     kfreq_damping_filename=kfreq_damping_filename, show=show, log=log)
 
 def split_float_colons(string_values):
     """
@@ -221,9 +223,12 @@ def split_int_colon(modes, nmax=1000):
         pass
     return modes
 
-def cmd_line():  # pragma: no cover
+def cmd_line(argv=None, plot=True, show=True, log=None):
     """the interface to ``f06`` on the command line"""
     import sys
+    if argv is None:
+        argv = sys.argv
+
     msg = (
         'Usage:\n'
         '  f06 plot_145 F06_FILENAME [--noline] [--modes MODES] [--subcases SUB] [--xlim FREQ] [--ylimdamp DAMP] '
@@ -233,17 +238,16 @@ def cmd_line():  # pragma: no cover
         '  f06 -v | --version\n'
         '\n'
     )
-
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     #assert sys.argv[0] != 'bdf', msg
 
-    if sys.argv[1] == 'plot_145':
-        cmd_line_plot_flutter()
+    if argv[1] == 'plot_145':
+        cmd_line_plot_flutter(argv=argv, plot=plot, show=show, log=log)
     else:
         sys.exit(msg)
-        #raise NotImplementedError('arg1=%r' % sys.argv[1])
+        #raise NotImplementedError('arg1=%r' % argv[1])
 
 if __name__ == '__main__':  # pragma: no cover
     cmd_line()

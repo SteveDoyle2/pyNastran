@@ -2,6 +2,7 @@
 """
 defines:
  - convert(model, units_to, units=None)
+
 """
 from __future__ import print_function
 from six import string_types
@@ -30,6 +31,7 @@ def convert(model, units_to, units=None):
     Note
     ----
     mass refers to the elemental mass, which could be a weight
+
     """
     # units_start = 'in'
     # units_end = 'mm'
@@ -64,6 +66,7 @@ def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None,
     -------
     model : BDF()
        the scaled BDF
+
     """
     mass_scale, xyz_scale, time_scale = _setup_scale_by_terms(scales, terms)
 
@@ -197,6 +200,7 @@ def _set_wtmass(model, gravity_scale):
     1 lbf = g_scale * 1 slinch  * 1 in/s^2
     1 lbf = g_scale * 12 slug   * 1 in/s^2
     --> g_scale = 1/12.
+
     """
     if 'WTMASS' in model.params:
         param = model.params['WTMASS']
@@ -229,6 +233,7 @@ def _convert_coordinates(model, xyz_scale):
     Converts the coordinate systems
 
     Supports: CORD1x, CORD2x
+
     """
     for cid, coord in model.coords.items():
         if cid == 0:
@@ -421,6 +426,7 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
     Skips : PSOLID, PLSOLID, PLPLANE, PIHEX
 
     Skips are unscaled (intentionally)
+
     """
     time_scale = 1.
     force_scale = weight_scale
@@ -631,6 +637,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
     Converts the materials
 
     Supports: MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11
+
     """
     force_scale = weight_scale
     stress_scale = force_scale / xyz_scale ** 2
@@ -772,6 +779,7 @@ def _convert_constraints(model, xyz_scale):
 
     Supports: SPC1, SPC, SPCAX
     Implicitly supports: MPC, MPCADD, SPCADD
+
     """
     for unused_spc_id, spcs in model.spcs.items():
         for spc in spcs:
@@ -811,6 +819,7 @@ def _convert_loads(model, xyz_scale, weight_scale):
      - combinations: DLOAD, LOAD
 
     * probably not done
+
     """
     time_scale = 1.
     frequency_scale = 1. / time_scale
@@ -950,6 +959,7 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
     Skips: PAERO1, AESTAT, AESURFS, AECOMP, AELIST
     Doesn't support:CAERO3-5, PAERO3-5, SPLINEx, AEPARAM,  AELINK, AEPRESS, AEFORCE,
     *probably not done
+
     """
     if not(model.aecomps or model.aefacts or model.aeparams or model.aelinks or
            model.aelists or model.aestats or model.aesurf or model.aesurfs or
@@ -1096,6 +1106,7 @@ def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
     Converts the optimization objects
 
     Limited Support: DESVAR, DCONSTR, DVCREL1, DVPREL1
+
     """
     #time_scale = 1.
     #area_scale = xyz_scale ** 2
@@ -1351,6 +1362,7 @@ def get_scale_factors(units_from, units_to, log):
     """
     [length, mass, time]
     [in, lb, s]
+
     """
     # in-lb-s
     # m-kg-s
@@ -1394,6 +1406,7 @@ def convert_length(length_from, length_to):
     Determines the length scale factor
 
     We crate a gravity_scale_length for any non-standard unit (ft, m)
+
     """
     xyz_scale = 1.0
     gravity_scale_length = 1.0
@@ -1472,6 +1485,7 @@ def convert_mass(mass_from, mass_to, log):
        --> gscale = 1
 
     TODO: slinch/slug not validated
+
     """
     mass_scale = 1.0
     weight_scale = 1.0

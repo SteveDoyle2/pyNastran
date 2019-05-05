@@ -67,8 +67,8 @@ def print_scientific_8(value):
     Prints a value in 8-character scientific notation.
     This is a sub-method and shouldnt typically be called
 
-    See Also
-    --------
+    Notes
+    -----
     print_float_8 : a better float printing method
     """
     if value == 0.0:
