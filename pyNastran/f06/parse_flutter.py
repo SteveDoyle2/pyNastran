@@ -336,7 +336,6 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
         f06_filename, f06_units=f06_units, out_units=out_units, make_alt=make_alt, log=log)
 
     if plot:
-        assert IS_MATPLOTLIB, IS_MATPLOTLIB
         make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
                            plot_type,
                            plot_vg, plot_vg_vf, plot_root_locus, plot_kfreq_damping,

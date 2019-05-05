@@ -35,17 +35,17 @@ matrix:
     - name: "Python 2.7"
       python: '2.7'
       env:
-      - NUMPY='numpy scipy matplotlib'
+      - NUMPY='numpy scipy matplotlib h5py vtk pyqt'
 
     - name: "Python 3.6"
       python: '3.6'
       env:
-      - NUMPY='numpy scipy matplotlib'
+      - NUMPY='numpy scipy matplotlib h5py vtk pyqt'
 
     - name: "Python 3.7"
       python: '3.7'
       env:
-      - NUMPY='numpy scipy matplotlib'
+      - NUMPY='numpy scipy matplotlib h5py vtk pyqt'
 
       # old versions of packages
     - name: "Python 2.7 old packages"
@@ -53,21 +53,27 @@ matrix:
       env:
       # bumped numpy from 1.11 to 1.13 fix unique axis bug
       # bumped scipy from 0.18.1 to 0.19 for compatibility with numpy
-      - NUMPY='numpy=1.13 scipy=0.19 matplotlib=2.1'
+      - NUMPY='numpy=1.13 scipy=0.19 matplotlib=2.1 h5py vtk pyqt'
 
       # old versions of packages
     - name: "Python 3.6 old packages"
       python: '3.6'
       env:
       # bumped numpy from 1.13 to 1.14 to fix unicode savetxt writing
-      - NUMPY='numpy=1.14 scipy=0.19 matplotlib=2.1'
+      - NUMPY='numpy=1.14 scipy=0.19 matplotlib=2.1 h5py vtk pyqt'
 
     - name: "Python 3.7 old packages"
       python: '3.7'
       env:
       #- NUMPY='numpy=1.15 scipy=0.19 matplotlib=2.2'  # doesn't work
       # bumped scipy from 1.0 to 1.1 for compatibility with numpy
-      - NUMPY='numpy=1.14 scipy=1.1 matplotlib=2.2'
+      - NUMPY='numpy=1.14 scipy=1.1 matplotlib=2.2 h5py vtk pyqt'
+
+    - name: "Python 3.7 (no gui)"
+      python: '3.7'
+      env:
+      - NUMPY='numpy scipy'
+      - NOGUI='_no_gui'
 
 #-------------------------------------------------
 # old-A
@@ -97,7 +103,7 @@ before_install:
 
 # per http://conda.pydata.org/docs/travis.html
 install:
-  - echo "python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} ${SCIPY} matplotlib pandas h5py vtk pyqt"
+  - echo "python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas"
   - sudo apt-get update
   - sudo apt-get install gfortran
 
@@ -139,23 +145,23 @@ install:
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib pandas; fi
 
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas=0.20 h5py vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas      h5py vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas      h5py vtk pyqt; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas      h5py vtk pyqt; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas=0.20; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
   - source activate test-environment
   - conda list
-  - python setup.py develop
+  - python setup${NOGUI}.py develop
 
 
 # Run test
 script:
   #- nosetests --with-cov --cov YOUR_PACKAGE_NAME_HERE --cov-config .coveragerc --logging-level=INFO
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then coverage run pyNastran/all_tests.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then coverage run pyNastran/all_tests.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then coverage run pyNastran/all_tests.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then coverage run pyNastran/all_tests.py; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then coverage run pyNastran/all_tests${NOGUI}.py; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then coverage run pyNastran/all_tests${NOGUI}.py; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then coverage run pyNastran/all_tests${NOGUI}.py; fi
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then coverage run pyNastran/all_tests${NOGUI}.py; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then python pyNastran/all_tests_no_gui.py; fi
 
   # good
