@@ -15,6 +15,12 @@ try:
 except ImportError:
     IS_PANDAS = False
 
+try:
+    import h5py  # pylint: disable=unused-import
+    IS_H5PY = True
+except ImportError:  # pragma: no cover
+    IS_H5PY = False
+
 IS_TRANSIENT_PANDAS = False
 if IS_PANDAS and (np.lib.NumpyVersion(np.__version__) < '1.13.0'):
     IS_TRANSIENT_PANDAS = True
@@ -609,6 +615,7 @@ class TestOP2(Tester):
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
+    @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_op2_solid_bending_02(self):
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')

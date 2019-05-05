@@ -1,14 +1,23 @@
 # coding: utf-8
 """tests for dict_to_h5py"""
-import os
 import unittest
 from six import text_type, binary_type
 import numpy as np
 
-from pyNastran.utils.dict_to_h5py import load_obj_from_hdf5, export_obj_to_hdf5
+try:
+    import h5py  # pylint: disable=unused-import
+    IS_H5PY = True
+except ImportError:  # pragma: no cover
+    IS_H5PY = False
+
+if IS_H5PY:
+    from pyNastran.utils.dict_to_h5py import load_obj_from_hdf5, export_obj_to_hdf5
 from pyNastran.bdf.bdf import BDF
 
+
 class TestDictToH5(unittest.TestCase):
+
+    @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_dict_to_h5py(self):
         model = BDF()
         obj = {

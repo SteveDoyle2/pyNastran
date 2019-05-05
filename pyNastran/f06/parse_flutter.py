@@ -4,7 +4,11 @@ SOL 145 plotter
 from __future__ import print_function
 from typing import  Optional, Dict, Union
 #import PySide
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt  # pylint: disable=unused-import
+    IS_MATPLOTLIB = True
+except ImportError:
+    IS_MATPLOTLIB = False
 
 # if you're on linux and you don't have a backend, add this...
 # we'd add it here, but it breaks PySide/PySide2's QApplication...

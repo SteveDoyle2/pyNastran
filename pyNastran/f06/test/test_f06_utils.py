@@ -5,15 +5,21 @@ tests:
 import os
 import unittest
 from cpylog import get_logger2
-#import  matplotlib
-#matplotlib.use('Qt5Agg')
-import matplotlib.pyplot as plt
+try:
+    import matplotlib  # pylint: disable=unused-import
+    IS_MATPLOTLIB = True
+except ImportError:  # pragma: no cover
+    IS_MATPLOTLIB = False
 
-#try:  # pragma: no cover
-    #plt.figure()
-    #plt.close()
-#except:  # pragma: no cover
-plt.switch_backend('Agg')
+if IS_MATPLOTLIB:
+    #matplotlib.use('Qt5Agg')
+    import matplotlib.pyplot as plt
+
+    #try:  # pragma: no cover
+        #plt.figure()
+        #plt.close()
+    #except:  # pragma: no cover
+    plt.switch_backend('Agg')
 
 import pyNastran
 from pyNastran.f06.utils import split_float_colons, split_int_colon, cmd_line_plot_flutter

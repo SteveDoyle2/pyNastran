@@ -3,12 +3,16 @@ from itertools import count
 from typing import  List, Any, Optional, Dict, Union
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.gridspec as gridspec
+    IS_MATPLOTLIB = True
+except ImportError:  # pragma: no cover
+    IS_MATPLOTLIB = False
 
 from pyNastran.utils.atmosphere import (
     get_alt_for_density, convert_altitude, atm_density,
-    convert_density, convert_pressure, convert_velocity,
 )
 from pyNastran.utils import object_attributes, object_methods
 
@@ -261,9 +265,8 @@ class FlutterResponse(object):
     @property
     def symbols(self):
         """gets the symbols for the lines"""
-        # type: () -> List[str]
         if not self.noline:
-            symbols = [symbol + '-' for symbol in self._symbols]
+            symbols = [symbol + '-' for symbol in self._symbols]  # type: List[str]
         else:
             symbols = self._symbols
         return symbols
