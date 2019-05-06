@@ -592,16 +592,14 @@ class GetMethods(BDFAttributes):
         """gets the AERO"""
         if self.aero is not None:
             return self.aero
-        else:
-            raise RuntimeError('no AERO card found%s.' % (msg))
+        raise RuntimeError('no AERO card found%s.' % (msg))
 
     def Aeros(self, msg=''):
         # type: (str) -> Any
         """gets the AEROS"""
         if self.aeros is not None:
             return self.aeros
-        else:
-            raise RuntimeError('no AEROS card found%s.' % (msg))
+        raise RuntimeError('no AEROS card found%s.' % (msg))
 
     def Spline(self, eid, msg=''):
         # type: (int, str) -> Any

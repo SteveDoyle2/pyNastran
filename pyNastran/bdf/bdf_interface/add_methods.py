@@ -1141,7 +1141,7 @@ class AddMethods(BDFAttributes):
         """adds a DRESP1/DRESP2/DRESP3 object"""
         key = dresp.dresp_id
         assert key not in self.dresps, 'DRESPx=%s old=\n%snew=\n%s' % (
-                    key, self.dresps[key], dresp)
+            key, self.dresps[key], dresp)
         assert key > 0
         self.dresps[key] = dresp
         self._type_to_id_map[dresp.type].append(key)
@@ -1150,7 +1150,7 @@ class AddMethods(BDFAttributes):
         """adds a DVCREL1/DVCREL2 object"""
         key = dvcrel.oid
         assert key not in self.dvcrels, 'DVCRELx=%s old\n%snew=\n%s' % (
-                    key, self.dvcrels[key], dvcrel)
+            key, self.dvcrels[key], dvcrel)
         assert key > 0
         self.dvcrels[key] = dvcrel
         self._type_to_id_map[dvcrel.type].append(key)
@@ -1159,7 +1159,7 @@ class AddMethods(BDFAttributes):
         """adds a DVMREL1/DVMREL2 object"""
         key = dvmrel.oid
         assert key not in self.dvmrels, 'DVMRELx=%s old=\n%snew=\n%s' % (
-                    key, self.dvmrels[key], dvmrel)
+            key, self.dvmrels[key], dvmrel)
         assert key not in self.dvmrels
         assert key > 0
         self.dvmrels[key] = dvmrel
@@ -1169,7 +1169,7 @@ class AddMethods(BDFAttributes):
         """adds a DVPREL1/DVPREL2 object"""
         key = dvprel.oid
         assert key not in self.dvprels, 'DVPRELx=%s old\n%snew=\n%s' % (
-                    key, self.dvprels[key], dvprel)
+            key, self.dvprels[key], dvprel)
         assert key > 0
         self.dvprels[key] = dvprel
         self._type_to_id_map[dvprel.type].append(key)

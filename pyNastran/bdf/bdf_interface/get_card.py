@@ -38,7 +38,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from copy import deepcopy
 from collections import defaultdict
-from typing import List, Dict, Set, Optional, Any
+from typing import List, Dict, Set, Optional, Any, Tuple
 from six import string_types
 
 import numpy as np
@@ -160,12 +160,12 @@ class GetCard(GetMethods):
                         if isinstance(value, list):
                             msg = '%s; names=%s value=%s' % (type(value), card_names, value)
                             raise NotImplementedError(msg)
+
+                        if value.type in ['CSET1', 'CSET']:
+                            pass
+                            #rslot_map[value.type] = value.
                         else:
-                            if value.type in ['CSET1', 'CSET']:
-                                pass
-                                #rslot_map[value.type] = value.
-                            else:
-                                raise NotImplementedError('list; names=%s' % card_names)
+                            raise NotImplementedError('list; names=%s' % card_names)
                 else:
                     raise NotImplementedError('%s; names=%s' % (type(adict), card_names))
         return rslot_map
@@ -426,8 +426,7 @@ class GetCard(GetMethods):
                 msg = 'get_SPCx_node_ids_c1 doesnt supprt %r' % card.type
                 if stop_on_failure:
                     raise RuntimeError(msg)
-                else:
-                    self.log.warning(msg)
+                self.log.warning(msg)
 
         if warnings:
             self.log.warning("get_SPCx_node_ids_c1 doesn't consider:\n%s" % warnings.rstrip('\n'))
@@ -481,12 +480,11 @@ class GetCard(GetMethods):
                 msg = 'get_MPCx_node_ids doesnt support %r' % card.type
                 if stop_on_failure:
                     raise RuntimeError(msg)
-                else:
-                    self.log.warning(msg)
+                self.log.warning(msg)
         return lines
 
     def get_MPCx_node_ids_c1(self, mpc_id, consider_mpcadd=True, stop_on_failure=True):
-        # type: int, (bool, bool) -> (Dict[str, List[int]], Dict[str, List[int]])
+        # type: (int, bool, bool) -> Tuple(Dict[str, List[int]], Dict[str, List[int]])
         r"""
         Get the MPC/MPCADD IDs.
 
@@ -548,8 +546,7 @@ class GetCard(GetMethods):
                 msg = 'get_MPCx_node_ids_c1 doesnt support %r' % card.type
                 if stop_on_failure:
                     raise RuntimeError(msg)
-                else:
-                    self.log.warning(msg)
+                self.log.warning(msg)
         return independent_node_ids_c1, dependent_node_ids_c1
 
     def get_load_arrays(self, subcase_id, eid_map, node_ids, normals, nid_map=None):
@@ -695,12 +692,12 @@ class GetCard(GetMethods):
 
         for dvprel_key, dvprel in self.dvprels.items():
             prop_type = dvprel.prop_type
-            desvars = dvprel.dvids
+            unused_desvars = dvprel.dvids
             if dvprel.pid_ref is not None:
                 pid = dvprel.pid_ref.pid
             else:
                 pid = dvprel.pid
-            var_to_change = dvprel.pname_fid
+            unused_var_to_change = dvprel.pname_fid
 
             prop = self.properties[pid]
             if not prop.type == prop_type:
@@ -1379,9 +1376,8 @@ class GetCard(GetMethods):
         except KeyError:
             if stop_on_failure:
                 raise
-            else:
-                self.log.error("could not find expected LOAD/LOADSET id=%s" % load_case_id)
-                return []
+            self.log.error("could not find expected LOAD/LOADSET id=%s" % load_case_id)
+            return []
 
         loads, scale_factors, is_grav = self._reduce_load_case(load_case, scale=scale)
         assert len(loads) == len(scale_factors)
@@ -1875,8 +1871,7 @@ class GetCard(GetMethods):
 
         if save_element_types:
             return output, etype_to_eids_pids_nids
-        else:
-            return output, None
+        return output, None
 
     def get_element_nodes_by_element_type(self, dtype='int32', solids=None):
         # type: (str, bool) -> Any
@@ -2501,9 +2496,8 @@ class GetCard(GetMethods):
         except KeyError:
             if stop_on_failure:
                 raise
-            else:
-                self.log.error("could not find expected NSM id=%s" % nsm_id)
-                return []
+            self.log.error("could not find expected NSM id=%s" % nsm_id)
+            return []
 
         nsms2 = []
         for nsm in nsms:
@@ -2559,9 +2553,8 @@ class GetCard(GetMethods):
         except KeyError:
             if stop_on_failure:
                 raise
-            else:
-                self.log.error("could not find expected MPC id=%s" % mpc_id)
-                return []
+            self.log.error("could not find expected MPC id=%s" % mpc_id)
+            return []
 
         mpcs2 = []
         for mpc in mpcs:
@@ -2616,9 +2609,8 @@ class GetCard(GetMethods):
         except KeyError:
             if stop_on_failure:
                 raise
-            else:
-                self.log.error("could not find expected SPC id=%s" % spc_id)
-                return []
+            self.log.error("could not find expected SPC id=%s" % spc_id)
+            return []
 
         spcs2 = []
         for spc in spcs:

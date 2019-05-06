@@ -68,7 +68,7 @@ setup(
             'test_bdf  = pyNastran.bdf.test.test_bdf:main',
             'test_op2  = pyNastran.op2.test.test_op2:main',
             'test_op4  = pyNastran.op4.test.test_op4:main',
-            'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
+            #'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
             'test_pynastrangui = pyNastran.gui.test.test_gui:main',
 
             'format_converter = pyNastran.converters.type_converter:cmd_line_format_converter',

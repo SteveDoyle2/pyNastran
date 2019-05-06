@@ -163,7 +163,7 @@ class BDFMethods(BDFAttributes):
             The mass of the model.
         cg : ndarray
             The cg of the model as an array.
-        I : ndarray
+        inertia : ndarray
             Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
 
         I = mass * centroid * centroid
@@ -188,8 +188,8 @@ class BDFMethods(BDFAttributes):
         --------
         Mass properties of entire structure
 
-        >>> mass, cg, I = model.mass_properties()
-        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+        >>> mass, cg, inertia = model.mass_properties()
+        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
 
         Mass properties of model based on Property ID
 
@@ -244,7 +244,7 @@ class BDFMethods(BDFAttributes):
             The mass of the model.
         cg : ndarray
             The cg of the model as an array.
-        I : ndarray
+        inertia : ndarray
             Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
 
         I = mass * centroid * centroid
@@ -269,8 +269,8 @@ class BDFMethods(BDFAttributes):
         --------
         **mass properties of entire structure**
 
-        >>> mass, cg, I = model.mass_properties()
-        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+        >>> mass, cg, inertia = model.mass_properties()
+        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
 
 
         **mass properties of model based on Property ID**
@@ -278,15 +278,15 @@ class BDFMethods(BDFAttributes):
         >>> pids = list(model.pids.keys())
         >>> pid_eids = self.get_element_ids_dict_with_pids(pids)
         >>> for pid, eids in sorted(pid_eids.items()):
-        >>>     mass, cg, I = model.mass_properties(element_ids=eids)
+        >>>     mass, cg, inertia = model.mass_properties(element_ids=eids)
 
         """
-        mass, cg, I = mass_properties_no_xref(
+        mass, cg, inertia = mass_properties_no_xref(
             self, element_ids=element_ids, mass_ids=mass_ids,
             reference_point=reference_point,
             sym_axis=sym_axis, scale=scale,
             inertia_reference=inertia_reference)
-        return mass, cg, I
+        return mass, cg, inertia
 
     def mass_properties_nsm(self, element_ids=None, mass_ids=None, nsm_id=None,
                             reference_point=None,
@@ -334,7 +334,7 @@ class BDFMethods(BDFAttributes):
             The mass of the model.
         cg : ndarray
             The cg of the model as an array.
-        I : ndarray
+        inertia : ndarray
             Moment of inertia array([Ixx, Iyy, Izz, Ixy, Ixz, Iyz]).
 
         I = mass * centroid * centroid
@@ -359,15 +359,15 @@ class BDFMethods(BDFAttributes):
         --------
         **mass properties of entire structure**
 
-        >>> mass, cg, I = model.mass_properties()
-        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = I
+        >>> mass, cg, inertia = model.mass_properties()
+        >>> Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
 
 
         **mass properties of model based on Property ID**
         >>> pids = list(model.pids.keys())
         >>> pid_eids = model.get_element_ids_dict_with_pids(pids)
         >>> for pid, eids in sorted(pid_eids.items()):
-        >>>     mass, cg, I = mass_properties(model, element_ids=eids)
+        >>>     mass, cg, inertia = mass_properties(model, element_ids=eids)
 
         Warnings
         --------
@@ -377,13 +377,13 @@ class BDFMethods(BDFAttributes):
            will be considered, even if not included in the element set
 
         """
-        mass, cg, I = mass_properties_nsm(
+        mass, cg, inertia = mass_properties_nsm(
             self, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id,
             reference_point=reference_point,
             sym_axis=sym_axis, scale=scale,
             inertia_reference=inertia_reference,
             xyz_cid0_dict=xyz_cid0_dict, debug=debug)
-        return (mass, cg, I)
+        return (mass, cg, inertia)
 
     #def __gravity_load(self, loadcase_id):
         #"""
@@ -617,7 +617,6 @@ class BDFMethods(BDFAttributes):
         # calculates the real delta to be used by DVGRID
         desvar_delta = {key : (desvar_init[key] - desvar_values[key])
                         for key in self.desvars}
-
 
         #min(max(self.xinit, self.xlb), self.xub)
 
