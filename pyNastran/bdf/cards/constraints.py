@@ -364,7 +364,7 @@ class SESUP(SUPORT):
 
     @classmethod
     def _init_from_empty(cls):
-        nodes= [1, 2]
+        nodes = [1, 2]
         Cs = ['1', '2']
         return SESUP(nodes, Cs, comment='')
 
@@ -870,7 +870,7 @@ class SPC(Constraint):
     def raw_fields(self):
         fields = ['SPC', self.conid]
         for (node_id, constraint, enforced) in zip(self.node_ids, self.components,
-                                               self.enforced):
+                                                   self.enforced):
             fields += [node_id, constraint, enforced]
         return fields
 

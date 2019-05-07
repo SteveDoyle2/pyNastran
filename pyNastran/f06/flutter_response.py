@@ -24,7 +24,7 @@ class FlutterResponse(object):
     def __init__(self, subcase, configuration, xysym, xzsym, mach, density_ratio, method,
                  modes, results,
                  f06_units=None, out_units=None, make_alt=False):
-        # type: int, str, str, str, float, float, str, List[int], Any, Optional[Union[str, Dict[str, str]]], Optional[Union[str, Dict[str, str]]], Optional[bool] -> None
+        # type: (int, str, str, str, float, float, str, List[int], Any, Optional[Union[str, Dict[str, str]]], Optional[Union[str, Dict[str, str]]], Optional[bool]) -> None
         """
         Parameters
         ----------
@@ -164,7 +164,7 @@ class FlutterResponse(object):
             #for color in colors:
                 #symbol_list.append('%s-%s' % (shape, color))
         self.noline = False
-        self._symbols = []
+        self._symbols = []  # type: List[str]
         self.generate_symbols()
 
     def set_pknl_results(self, results):
@@ -792,7 +792,7 @@ class FlutterResponse(object):
 
     def export_to_zona(self, zona_filename, modes=None, xlim=None, plot_type='tas',
                        damping_ratios=None):
-        # type: (str, Optional[List[int]], Optional[List[int]], str, Optional[List[int]]) -> None
+        # type: (str, Optional[List[int]], Optional[List[int]], str, Optional[List[int]]) -> str
         """
         Writes a custom ZONA flutter file
 

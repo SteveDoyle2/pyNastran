@@ -12,6 +12,7 @@ All material dependency cards are defined in this file.  This includes:
  * MATT9 (anisotropic solid) - NA
 
 All cards are Material objects.
+
 """
 #pylint: disable=E1103,C0103,C0111
 from __future__ import (nested_scopes, generators, division, absolute_import,
@@ -55,6 +56,7 @@ class MATS1(MaterialDependence):
     involving nonlinear materials. This entry is used if a MAT1, MAT2 or MAT9
     entry is specified with the same MID in a nonlinear solution sequence
     (SOLs 106 and 129).
+
     """
     type = 'MATS1'
 
@@ -124,6 +126,7 @@ class MATS1(MaterialDependence):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         mid = integer(card, 1, 'mid')
         tid = integer_or_blank(card, 2, 'tid')
@@ -168,6 +171,7 @@ class MATS1(MaterialDependence):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         (mid, tid, Type, h, yf, hr, limit1, limit2) = data
         if Type == 1:
@@ -200,6 +204,7 @@ class MATS1(MaterialDependence):
         -------
         E : float
             Young's Modulus
+
         """
         msg = "E (Young's Modulus) not implemented for MATS1"
         raise NotImplementedError(msg)
@@ -215,6 +220,7 @@ class MATS1(MaterialDependence):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MATS1 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
@@ -260,6 +266,7 @@ class MATT1(MaterialDependenceThermal):
     +-------+-------+-------+-------+-------+--------+------+------+-------+
     |       | T(ST) | T(SC) | T(SS) |       |        |      |      |       |
     +-------+-------+-------+-------+-------+--------+------+------+-------+
+
     """
     type = 'MATT1'
 
@@ -329,6 +336,7 @@ class MATT1(MaterialDependenceThermal):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         mid = integer(card, 1, 'mid')
         e_table = integer_or_blank(card, 2, 'T(E)')
@@ -356,6 +364,7 @@ class MATT1(MaterialDependenceThermal):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         (mid, E_table, G_table, nu_table, rho_table, A_table, dunno_a, ge_table,
          st_table, sc_table, ss_table, dunno_b) = data
@@ -403,6 +412,7 @@ class MATT1(MaterialDependenceThermal):
         -------
         E : float
             Young's Modulus
+
         """
         E = None
         if self.E_table:
@@ -417,6 +427,7 @@ class MATT1(MaterialDependenceThermal):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MATT1 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
@@ -514,6 +525,7 @@ class MATT2(MaterialDependenceThermal):
     +-------+-------+--------+--------+--------+--------+--------+--------+--------+
     |       | T(A1) | T(A2)  | T(A3)  |        | T(GE)  | T(ST)  | T(SC)  |  T(SS) |
     +-------+-------+--------+--------+--------+--------+--------+--------+--------+
+
     """
     type = 'MATT2'
 
@@ -576,6 +588,7 @@ class MATT2(MaterialDependenceThermal):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         mid = integer(card, 1, 'mid')
         g11_table = integer_or_blank(card, 2, 'T(G11)')
@@ -608,6 +621,7 @@ class MATT2(MaterialDependenceThermal):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MATT2 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
@@ -719,6 +733,7 @@ class MATT3(MaterialDependenceThermal):
     +--------+-------+-------+--------+-------+----------+----------+---------+--------+
     |        |       |       | T(GZX) | T(AX) |  T(ATH)  |  T(AZ)   |         |  T(GE) |
     +--------+-------+-------+--------+-------+----------+----------+---------+--------+
+
     """
     type = 'MATT3'
 
@@ -834,6 +849,7 @@ class MATT3(MaterialDependenceThermal):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         mid = integer(card, 1, 'mid')
         ex_table = integer_or_blank(card, 2, 'T(EX)')
@@ -927,6 +943,7 @@ class MATT3(MaterialDependenceThermal):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+
 class MATT4(MaterialDependenceThermal):
     """
     Specifies temperature-dependent material properties on MAT2 entry
@@ -937,6 +954,7 @@ class MATT4(MaterialDependenceThermal):
     +=======+=======+=======+=======+========+=======+=======+=========+
     | MATT4 |  MID  |  T(K) | T(CP) |        | T(H)  | T(mu) | T(HGEN) |
     +-------+-------+-------+-------+--------+-------+-------+---------+
+
     """
     type = 'MATT4'
 
@@ -987,6 +1005,7 @@ class MATT4(MaterialDependenceThermal):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         mid = integer(card, 1, 'mid')
         k_table = integer_or_blank(card, 2, 'T(K)')
@@ -1010,6 +1029,7 @@ class MATT4(MaterialDependenceThermal):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         (mid, k_table, cp_table, null, h_table, mu_table, hgen_table) = data
         assert null == 0, data
@@ -1024,6 +1044,7 @@ class MATT4(MaterialDependenceThermal):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MATT4 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
@@ -1095,6 +1116,7 @@ class MATT5(MaterialDependenceThermal):
     +-------+---------+---------+--------+--------+--------+--------+--------+-------+
     |       |         | T(HGEN) |        |        |        |        |        |       |
     +-------+---------+---------+--------+--------+--------+--------+--------+-------+
+
     """
     type = 'MATT5'
 
@@ -1141,6 +1163,7 @@ class MATT5(MaterialDependenceThermal):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         mid = integer(card, 1, 'mid')
         kxx_table = integer_or_blank(card, 2, 'T(Kxx)')
@@ -1168,6 +1191,7 @@ class MATT5(MaterialDependenceThermal):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         (mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
          cp_table, null, hgen_table) = data
@@ -1201,6 +1225,7 @@ class MATT5(MaterialDependenceThermal):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MATT5 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
@@ -1290,6 +1315,7 @@ class MATT8(MaterialDependenceThermal):
     +-------+--------+--------+-------+---------+--------+--------+--------+--------+
     |       |  T(GE) | T(F12) |       |         |        |        |        |        |
     +-------+--------+--------+-------+---------+--------+--------+--------+--------+
+
     """
     type = 'MATT8'
 
@@ -1361,6 +1387,7 @@ class MATT8(MaterialDependenceThermal):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         mid = integer(card, 1, 'mid')
         e1_table = integer_or_blank(card, 2, 'T(E1)')
@@ -1397,6 +1424,7 @@ class MATT8(MaterialDependenceThermal):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MATT1 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
@@ -1567,6 +1595,7 @@ class MATT8(MaterialDependenceThermal):
         +--------+--------+--------+--------+--------+--------+--------+--------+--------+
         |        | T(A2)  | T(A3)  | T(A4)  | T(A5)  | T(A6)  |        |  T(GE) |        |
         +--------+--------+--------+--------+--------+--------+--------+--------+--------+
+
         """
         list_fields = self.raw_fields()
         return self.comment + print_card_8(list_fields)
@@ -1654,6 +1683,7 @@ class MATT9(MaterialDependenceThermal):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         mid = integer(card, 1, 'mid')
         g11_table = integer_or_blank(card, 2, 'T(G11)')
@@ -1710,6 +1740,7 @@ class MATT9(MaterialDependenceThermal):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by MATT1 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)

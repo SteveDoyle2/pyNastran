@@ -164,38 +164,37 @@ def split_tokens(tokens, is_windows):
             if len(stokens[0]) < 2:
                 raise SyntaxError('token cannot include colons (:); token=%r; tokens=%s' % (
                     token, str(tokens)))
-            else:
-                # variables in Windows are not case sensitive; not handled?
-                token0 = stokens[0]
-                if is_windows:
-                    assert '$' not in stokens[0], token0
-                    assert '%' not in stokens[0], token0
+            # variables in Windows are not case sensitive; not handled?
+            token0 = stokens[0]
+            if is_windows:
+                assert '$' not in stokens[0], token0
+                assert '%' not in stokens[0], token0
 
-                    if '%' in token0:
-                        assert token0[0] == '%', token0
-                        assert token0[-1] == '%', token0
-                        token0 = '%' + token0 + '%'
-                    else:
-                        token0 = '$' + token0
-
-                    #tokeni = os.path.expandvars('$' + stokens[0])
-                    tokeni = os.path.expandvars(token0)
-                    if '$' in tokeni:
-                        raise SyntaxError('tokeni=%r has a $ in it after expanding (token0=%r)...\n'
-                                          'tokens=%s stokens=%s' % (tokeni, token0, tokens, stokens))
-
-                    tokensi = PureWindowsPath(tokeni).parts
+                if '%' in token0:
+                    assert token0[0] == '%', token0
+                    assert token0[-1] == '%', token0
+                    token0 = '%' + token0 + '%'
                 else:
-                    if '$' in token0:
-                        assert token0[0] == '$', token0
-                    else:
-                        token0 = '$' + token0
-                    assert '%' not in stokens[0], token0
-                    tokeni = os.path.expandvars(token0)
-                    tokensi = PurePosixPath(tokeni).parts
+                    token0 = '$' + token0
 
-                tokens2.extend(tokensi)
-                tokens2.append(stokens[1])
+                #tokeni = os.path.expandvars('$' + stokens[0])
+                tokeni = os.path.expandvars(token0)
+                if '$' in tokeni:
+                    raise SyntaxError('tokeni=%r has a $ in it after expanding (token0=%r)...\n'
+                                      'tokens=%s stokens=%s' % (tokeni, token0, tokens, stokens))
+
+                tokensi = PureWindowsPath(tokeni).parts
+            else:
+                if '$' in token0:
+                    assert token0[0] == '$', token0
+                else:
+                    token0 = '$' + token0
+                assert '%' not in stokens[0], token0
+                tokeni = os.path.expandvars(token0)
+                tokensi = PurePosixPath(tokeni).parts
+
+            tokens2.extend(tokensi)
+            tokens2.append(stokens[1])
 
         elif ':' in token:
             # Windows

@@ -348,7 +348,7 @@ def _split_equations_by_semicolon(eqs_in):
         #nline = len(eq.rstrip('; \n')) + 16
         if ';' in eq2:
             eq2s = eq2.split(';')
-            eq_tempi = [eqi.strip() + ';' for eqi in eq2s if eqi.strip() ]
+            eq_tempi = [eqi.strip() + ';' for eqi in eq2s if eqi.strip()]
             #for check_line in eq2s:
                 #print(check_line)
                 #_check_for_valid_line(check_line, eq)
@@ -571,12 +571,11 @@ def fortran_to_python(lines, default_values, comment=''):
         except ValueError:
             if '=' not in line:
                 raise SyntaxError('= not found in %r' % (line))
-            else:
-                msg = 'only 1 = sign may be found a line\n'
-                msg += 'line = %r\n' % line
-                if len(lines) > 1:
-                    msg += 'lines:\n%s' % '\n'.join(lines)
-                raise SyntaxError(msg)
+            msg = 'only 1 = sign may be found a line\n'
+            msg += 'line = %r\n' % line
+            if len(lines) > 1:
+                msg += 'lines:\n%s' % '\n'.join(lines)
+            raise SyntaxError(msg)
         f = f.strip()
         eq = eq.strip().rstrip(';')
 

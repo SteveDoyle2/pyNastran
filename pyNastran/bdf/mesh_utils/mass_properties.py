@@ -2545,6 +2545,7 @@ def _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2):
 
 def _transform_shell(e2, telem):
     """helper method for the breakdown"""
+    # https://www.brown.edu/Departments/Engineering/Courses/EN224/anis_general/anis_general.htm
     et = np.einsum('nij,njk->nik', e2, telem)
     tet = np.einsum('nij,njk->nik', telem, et)
     #print(tet[0, :, :])

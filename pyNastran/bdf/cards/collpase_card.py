@@ -267,7 +267,7 @@ def build_thru(packs, max_dv=None, nthru=None):
         the value of the field
 
     """
-    singles = []
+    #singles = []
     fields = []
     if nthru is not None:
         raise NotImplementedError('nthru=%s' % nthru)

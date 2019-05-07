@@ -20,7 +20,7 @@ All tables have a self.table parameter that is a TableObj
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-
+from typing import Any
 import numpy as np
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8

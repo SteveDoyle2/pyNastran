@@ -1723,7 +1723,7 @@ class USET(Set):
 
     @classmethod
     def _init_from_empty(cls):
-        name = 'SNAME'
+        #name = 'SNAME'
         ids = [1, 2]
         components = ['123', '456']
         return QSET(ids, components, comment='')
