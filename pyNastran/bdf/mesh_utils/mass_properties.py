@@ -2004,6 +2004,16 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             e2_dict['rod'].append(Sei2)
             nsm_per_length_dict[ptype].append(prop.nsm)
             mass_per_length_dict[ptype].append(mid_ref.rho * prop.A)
+        elif ptype == 'PBAR':
+            pids_per_length_dict['bar'].append(pid)
+            mid_ref = prop.mid_ref
+            rhoi = prop.Rho()
+            areai = prop.Area()
+            nsmi = prop.Nsm()
+            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            e2_dict['bar'].append(Sei2)
+            nsm_per_length_dict['bar'].append(nsmi)
+            mass_per_length_dict['bar'].append(areai * rhoi)
         elif ptype == 'PBARL':
             pids_per_length_dict['bar'].append(pid)
             mid_ref = prop.mid_ref
@@ -2243,6 +2253,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             theta_mcid = theta_mcid_dict[etype]
             telem = _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
             exx, eyy, ezz = _transform_shell(e2, telem)
+            #exx = eyy = ezz = 1.
             mpa = mass_per_area[ipids]
             npa = nsm_per_area[ipids]
             mass = mpa * area
@@ -2283,6 +2294,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             # [T^T][e][T]
             theta_mcid = theta_mcid_dict[etype]
             telem = _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #exx = eyy = ezz = 1.
             exx, eyy, ezz = _transform_shell(e2, telem)
             mpa = mass_per_area[ipids]
             npa = nsm_per_area[ipids]
@@ -2302,7 +2314,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         data[ieids, 12] = exx
         data[ieids, 13] = eyy
         data[ieids, 12] = ezz
-        del e2, exx, eyy, ezz, nelementsi, pids, ipids, telem
+        del e2, exx, eyy, ezz, nelementsi, pids, ipids # , telem
 
     if nmasses:
         data = np.vstack([data, data_mass])
@@ -2509,7 +2521,7 @@ def _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2):
         icids = np.searchsorted(cids, mcid)
         iaxesi = iaxes[icids, :]
         jmat = np.cross(normal[imcid, :], iaxesi) # k x i
-        jmat /= np.linalg.norm(jmat, axis=1)
+        jmat /= np.linalg.norm(jmat, axis=1)[:, np.newaxis]
         # we do an extra normalization here because
         # we had to project i onto the elemental plane
         # unlike in the next block
@@ -2541,6 +2553,17 @@ def _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2):
     #
     telem[ielem, 2, :] = normal
 
+    #T = np.ones(3)
+    #K = T
+    #K = np.zeros(6, 6)
+    #K[:3, :3] = T
+    #K2 = K[:3, 3:]
+    #K3 = K[3:, :3]
+    #K4 = K[3:, 3:]
+    #K2[0, 0] = K2[0, 1]
+    #K2[0, 1] = K2[0, 2]
+    #K2[0, 2] = K2[0, 0]
+
     return telem
 
 def _transform_shell(e2, telem):
@@ -2549,6 +2572,7 @@ def _transform_shell(e2, telem):
     et = np.einsum('nij,njk->nik', e2, telem)
     tet = np.einsum('nij,njk->nik', telem, et)
     #print(tet[0, :, :])
+
     exx_inv = tet[:, 0, 0]
     eyy_inv = tet[:, 1, 1]
     ezz_inv = tet[:, 2, 2]

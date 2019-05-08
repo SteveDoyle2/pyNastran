@@ -1,8 +1,5 @@
-"""
-defines readers for BDF objects in the OP2 DYNAMIC/DYNAMICS table
-"""
+"""defines readers for BDF objects in the OP2 DYNAMIC/DYNAMICS table"""
 from __future__ import print_function
-from six import b
 from struct import unpack, Struct
 import numpy as np
 
@@ -93,6 +90,7 @@ class DYNAMICS(GeomCommon):
         2 P   I  Grid, scalar, or extra point identification number
         3 C   I  Component number
         4 A   RS Scale factor
+
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
@@ -115,6 +113,7 @@ class DYNAMICS(GeomCommon):
         2 P   I  Grid, scalar, or extra point identification number
         3 C   I  Component number
         4 T   RS Time delay
+
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
@@ -140,6 +139,7 @@ class DYNAMICS(GeomCommon):
         3  SI  RS Scale factor i
         4  LI  I Load set identification number i
         Words 3 through 4 repeat until (-1,-1) occurs
+
         """
         #ndata = len(data)
         #nfields = (ndata - n) // 4
@@ -184,6 +184,7 @@ class DYNAMICS(GeomCommon):
         2 P   I Grid, scalar, or extra point identification number
         3 C   I Component number
         4 TH  RS Phase lead
+
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
@@ -248,6 +249,7 @@ class DYNAMICS(GeomCommon):
         Words 11 through 17 repeat until (-1,-1,-1,-1,-1,-1,-1) occ
         CONTFLG =-1 Without continuation
         End CONTFLG
+
         """
         if 0:
             ntotal = 60
@@ -275,9 +277,9 @@ class DYNAMICS(GeomCommon):
         ndata = len(data)
         nfields = (ndata - n) // 4
         datan = data[n:]
-        ints = unpack(b(self._uendian + '%ii' % nfields), datan)
-        floats = unpack(b(self._uendian + '%if' % nfields), datan)
-        strings = unpack(b(self._uendian + '4s'* nfields), datan)
+        ints = unpack(self._endian + b'%ii' % nfields, datan)
+        floats = unpack(self._endian + b'%if' % nfields, datan)
+        strings = unpack(self._endian + b'4s'* nfields, datan)
 
         i = 0
         nentries = 0
@@ -398,12 +400,13 @@ class DYNAMICS(GeomCommon):
         2 ALPHA RS Location of pole on real axis
         3 OMEGA RS Location of pole on imaginary axis
         4 M      I Multiplicity of complex root at pole
+
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('EIGP', nentries)
         struct1 = Struct('i2fi')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             sid, alpha, omega, m = out
@@ -429,11 +432,12 @@ class DYNAMICS(GeomCommon):
         12 G  I Grid or scalar point identification number
         13 C  I Component number
         14 UNDEF(5 ) None
+
         """
         ntotal = 72
         nentries = (len(data) - n) // ntotal
         struct1 = Struct('i 8s 2f 4i 8s 7i')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
             (sid, method, f1, f2, ne, nd, null_a, null_b, norm, g, c,
@@ -467,6 +471,7 @@ class DYNAMICS(GeomCommon):
         13 NUMS   I Number of frequency segments
         14 FI    RS Frequency at the upper boundary of the i-th segment
         Word 14 repeats NUMS times
+
         """
         ndata = len(data)
         s = Struct('i 2f 3i f 2i 8s f i')
@@ -506,7 +511,7 @@ class DYNAMICS(GeomCommon):
     def _read_epoint(self, data, n):
         """EPOINT(707,7,124) - Record 12"""
         npoints = (len(data) - n) // 4
-        fmt = b(self._uendian + '%ii' % npoints)
+        fmt = self._endian + b'%ii' % npoints
         nids = unpack(fmt, data[n:])
         if self.is_debug_file:
             self.binary_debug.write('EPOINT=%s\n' % str(nids))
@@ -538,11 +543,12 @@ class DYNAMICS(GeomCommon):
         2 F1  RS First frequency
         3 DF  RS Frequency increment
         4 NDF I  Number of frequency increments
+
         """
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'iffi')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, f1, df, ndf = out
@@ -567,7 +573,7 @@ class DYNAMICS(GeomCommon):
         ntotal = 16
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'iffi')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, f1, f2, nf = out
@@ -589,6 +595,7 @@ class DYNAMICS(GeomCommon):
         4 TYPE CHAR4 Type of interpolation: LINE or LOG
         5 NEF      I Number of frequencies
         6 BIAS    RS Clustering bias parameter
+
         """
         ntotal = 24 # 4*6
         nentries = (len(data) - n) // ntotal
@@ -618,11 +625,12 @@ class DYNAMICS(GeomCommon):
         3 F2   RS Upper bound of modal frequency range
         4 FSPD RS Frequency spread
         5 NFM   I Number of evenly spaced frequencies per spread
+
         """
         ntotal = 20 # 4*5
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'i 3f i')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, f1, f2, fspread, nfm = out
@@ -641,6 +649,7 @@ class DYNAMICS(GeomCommon):
         2 F1  RS Lower bound of modal frequency range
         3 F2  RS Upper bound of modal frequency range
         4 FRI RS Fractions of natural frequencies
+
         """
         ints = np.frombuffer(data, dtype='int32').copy()
         floats = np.frombuffer(data, dtype='float32').copy()
@@ -700,11 +709,12 @@ class DYNAMICS(GeomCommon):
         5 Y    RS Y component
         6 TIDI  I Identification number of a TABRNDi entry that defines G(f)
         7 TIDR RS If TIDI = 0, constant value for G(f)
+
         """
         ntotal = 28
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'3i 2f if')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, j, k, x, y, tidi, tidf = out
@@ -737,9 +747,9 @@ class DYNAMICS(GeomCommon):
         3 K I Subcase identification number of the applied load set
         4 X RS X component
         5 Y RS Y component
-        6 TIDI I Identification number of a TABRNDi entry that defines
-        G(f)
+        6 TIDI I Identification number of a TABRNDi entry that defines G(f)
         7 TIDR RS If TIDI = 0, constant value for G(f)
+
         """
         ntotal = 24
         nentries = (len(data) - n) // ntotal
@@ -765,11 +775,12 @@ class DYNAMICS(GeomCommon):
         2 N    I  Number of time lag intervals
         3 TO   RS Starting time lag
         4 TMAX RS Maximum time lag
+
         """
         ntotal = 16  # 4*4
         struct1 = Struct(self._endian + b'2i 2f')
         nentries = (len(data) - n) // ntotal
-        for i in range(nentries):
+        for unused_i in range(nentries):
             out = struct1.unpack(data[n:n+ntotal])
             if self.is_debug_file:
                 self.binary_debug.write('  RANDT1=%s\n' % str(out))
@@ -801,12 +812,13 @@ class DYNAMICS(GeomCommon):
         9 DPHASER RS If DPHASEI = 0, constant value for phase
         10 TCR    RS If TCI = 0, constant value for C(f)
         11 TDR    RS If TDI = 0, constant value for D(f)
+
         """
         dloads = []
         ntotal = 44
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'7i 4f')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, dphasei, tci, tdi, load_type, delayr, dphaser, tcr, tdr = out # 44
@@ -846,12 +858,13 @@ class DYNAMICS(GeomCommon):
         7 TYPE   I  Nature of the dynamic excitation
         8 T      RS Time delay
         9 PH     RS Phase lead
+
         """
         dloads = []
         ntotal = 36
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'2i 2f 3i 2f')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, dphaser, delayr, tci, tdi, load_type, tau, phi = out # 36
@@ -890,12 +903,13 @@ class DYNAMICS(GeomCommon):
         9 DPHASER RS If DPHASEI = 0, constant value for phase
         10 TBR    RS If TBI = 0, constant value for B(f)
         11 TPR    RS If TPI = 0, constant value for PHI(f)
+
         """
         dloads = []
         ntotal = 44
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'7i 4f')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, dphasei, tbi, tpi, load_type, delayr, dphaser, tbr, tpr = out
@@ -933,12 +947,13 @@ class DYNAMICS(GeomCommon):
         7 TYPE   I  Nature of the dynamic excitation
         8 T      RS Time delay
         9 PH     RS Phase lead
+
         """
         dloads = []
         ntotal = 36
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'7i 2f')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, dphasei, delayi, tbi, tpi, load_type, tau, phase = out
@@ -962,11 +977,12 @@ class DYNAMICS(GeomCommon):
         7 SPDLOW      RS Lower limit of speed range
         8 SPDHGH      RS Upper limit of speed range
         9 SPEED       RS Specific speed
+
         """
         ntotal = 36 # 4*9
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'i 8s i 8s 3f')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, asynci, refrot, unit, speed_low, speed_high, speed = out
@@ -992,12 +1008,13 @@ class DYNAMICS(GeomCommon):
         4 GR         RS Rotor damping coefficient
         5 UNIT(2) CHAR4 RPM/FREQ flag for speed input
         7 TABLEID     I Table identification number for speed history
+
         """
         #self.show_data(data[12:], 'ifs')
         ntotal = 28 # 4*7
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'3if 8s i')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             rid, grida, gridb, gr, unit, table_id = out
@@ -1068,11 +1085,12 @@ class DYNAMICS(GeomCommon):
         3 C   I Component number for point GD
         4 U0 RS Initial displacement
         5 V0 RS Initial velocity
+
         """
         ntotal = 20  # 5*4
         struct1 = Struct(self._endian + b'3i 2f')
         nentries = (len(data) - n) // ntotal
-        for i in range(nentries):
+        for unused_i in range(nentries):
             out = struct1.unpack(data[n:n+ntotal])
             if self.is_debug_file:
                 self.binary_debug.write('  TIC=%s\n' % str(out))
@@ -1097,6 +1115,7 @@ class DYNAMICS(GeomCommon):
         6 U0     RS Initial displacement factor for enforced motion (MSC; NX undocumented)
         7 V0     RS Initial velocity factor for enforced motion (MSC; NX undocumented)
         8 T      RS Time delay (MSC)
+
         """
         ntotal = 8*4
         #self.show_data(data[n:], 'if')

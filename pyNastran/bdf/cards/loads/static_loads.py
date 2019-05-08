@@ -2821,7 +2821,7 @@ class PLOAD4(Load):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
-def update_pload4_vector_for_surf(pload4, normal, cid):
+def update_pload4_vector(pload4, normal, cid):
     """helper method"""
     if cid in [0, None] and np.abs(pload4.nvector).max() == 0.:
         # element surface normal

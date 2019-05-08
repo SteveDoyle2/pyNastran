@@ -25,3 +25,6 @@ class DisabledCardError(RuntimeError):
 class SuperelementFlagError(SyntaxError):
     pass
 
+class ReplicationError(SyntaxError):
+    pass
+

@@ -4,7 +4,6 @@ defines readers for BDF objects in the OP2 GEOM4/GEOM4S table
 #pylint: disable=C0111,C0103,C1801
 from __future__ import print_function
 from struct import unpack, Struct
-from six import b
 import numpy as np
 
 from pyNastran.bdf.cards.elements.rigid import RBAR, RBE2, RBE3, RROD
@@ -345,8 +344,8 @@ class GEOM4(GeomCommon):
         ndata = len(data)
         nfields = (ndata - n) // 4
         datan = data[n:]
-        ints = unpack(b(self._uendian + '%ii' % nfields), datan)
-        floats = unpack(b(self._uendian + '%if' % nfields), datan)
+        ints = unpack(self._endian + b'%ii' % nfields, datan)
+        floats = unpack(self._endian + b'%if' % nfields, datan)
 
         i = 0
         nentries = 0
@@ -1113,7 +1112,7 @@ class GEOM4(GeomCommon):
     def _read_suport1(self, data, n):
         """SUPORT1(10100,101,472) - Record 60"""
         nfields = (len(data) - n) // 4 - 2
-        out = unpack(b(self._uendian + '%ii' % nfields), data[n:n+nfields*4])
+        out = unpack(self._endian + b'%ii' % nfields, data[n:n+nfields*4])
 
         i = 0
         nsuports = 0

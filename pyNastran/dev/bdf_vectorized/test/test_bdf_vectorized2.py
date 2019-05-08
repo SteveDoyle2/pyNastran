@@ -54,7 +54,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     is_double : bool / List[bool], optional
         Is this a double precision model?
             True : size = 16
-            False : six = {8, 16}
+            False : size = {8, 16}
     nastran : str, optional
         the path to nastran (default=''; no analysis)
     post : int / List[int], optional
@@ -189,7 +189,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     is_double : bool, optional
         Is this a double precision model?
             True : size = 16
-            False : six = {8, 16}
+            False : size = {8, 16}
     reject : bool, optional
         True : all the cards are rejected
         False : the model is read

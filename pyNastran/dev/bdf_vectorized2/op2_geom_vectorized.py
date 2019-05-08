@@ -1,6 +1,5 @@
 from __future__ import print_function
 import struct
-from six import b
 import numpy as np
 from pyNastran.op2.op2_geom import OP2GeomCommon
 from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF
@@ -606,21 +605,21 @@ class OP2Geom(OP2GeomCommon, BDF):
             x = None
             g0 = None
             if f == 0:
-                out = struct.unpack(b(self._endian + '4i3f3i6f'), edata)
+                out = struct.unpack(self._endian + b'4i3f3i6f', edata)
                 (eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
                  w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
                 x = [x1, x2, x3]
             elif f == 1:
-                out = struct.unpack(b(self._endian + '4i3f3i6f'), edata)
+                out = struct.unpack(self._endian + b'4i3f3i6f', edata)
                 (eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
                  w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
                 x = [x1, x2, x3]
             elif f == 2:
-                out = struct.unpack(b(self._endian + '7ii2i6f'), edata)
+                out = struct.unpack(self._endian + b'7ii2i6f', edata)
                 (eid, pid, ga, gb, g0, junk, junk, _f, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a,
@@ -653,7 +652,7 @@ class OP2Geom(OP2GeomCommon, BDF):
             x = None
             g0 = None
             if f == 0:  # basic cid
-                out = struct.unpack(b(self._endian + '6i3f3i6f'), edata)
+                out = struct.unpack(self._endian + b'6i3f3i6f', edata)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 #self.log.info('CBEAM: eid=%s fe=%s f=%s; basic cid' % (eid, fe, f))
@@ -661,7 +660,7 @@ class OP2Geom(OP2GeomCommon, BDF):
                            [f, x1, x2, x3]]
                 x = [x1, x2, x3]
             elif f == 1:  # global cid
-                out = struct.unpack(b(self._endian + '6i3f3i6f'), edata)
+                out = struct.unpack(self._endian + b'6i3f3i6f', edata)
                 (eid, pid, ga, gb, sa, sb, x1, x2, x3, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 #self.log.info('CBEAM: eid=%s fe=%s f=%s; global cid' % (eid, fe, f))
@@ -669,7 +668,7 @@ class OP2Geom(OP2GeomCommon, BDF):
                            [f, x1, x2, x3]]
                 x = [x1, x2, x3]
             elif f == 2:  # grid option
-                out = struct.unpack(b(self._endian + '12i6f'), edata)
+                out = struct.unpack(self._endian + b'12i6f', edata)
                 (eid, pid, ga, gb, sa, sb, g0, xx, xx, fe, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 #self.log.info('CBEAM: eid=%s fe=%s f=%s; grid option' % (eid, fe, f))
@@ -693,8 +692,8 @@ class OP2Geom(OP2GeomCommon, BDF):
         CBUSH(2608,26,60) - the marker for Record 13
         """
         nelements = (len(data) - n) // 56
-        struct_obj1 = struct.Struct(b(self._endian + '4i iii i ifi3f'))
-        struct_obj2 = struct.Struct(b(self._endian + '4i fff i ifi3f'))
+        struct_obj1 = struct.Struct(self._endian + b'4i iii i ifi3f')
+        struct_obj2 = struct.Struct(self._endian + b'4i fff i ifi3f')
         for i in range(nelements):
             edata = data[n:n + 56]  # 14*4
             out = struct_obj1.unpack(edata)

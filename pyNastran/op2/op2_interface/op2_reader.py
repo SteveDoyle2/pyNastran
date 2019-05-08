@@ -39,6 +39,7 @@ Defines various tables that don't fit in other sections:
     - _skip_table_helper(self)
     - _print_month(self, month, day, year, zero, one)
     - read_results_table(self)
+
 """
 from __future__ import print_function, unicode_literals, division
 import os
@@ -46,7 +47,6 @@ import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct
-from six import b
 import numpy as np
 import scipy  # type: ignore
 
@@ -262,7 +262,7 @@ class OP2Reader(object):
         unused_table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
-        idata = unpack(self._uendian + '7i', data)
+        idata = unpack(self._endian + b'7i', data)
         assert idata[0] == 101, idata
         unused_nnodes = idata[1]
         assert idata[2] == 0, idata
@@ -945,7 +945,7 @@ class OP2Reader(object):
 
         nfloats = (ndata - 8) // 4
         assert nfloats * 4 == (ndata - 8)
-        fmt = b(self._uendian + '%sf' % nfloats)
+        fmt = self._endian + b'%if' % nfloats
         freqs = np.array(list(unpack(fmt, data[8:])), dtype='float32')
 
         if self.read_mode == 2:
@@ -1895,19 +1895,19 @@ class OP2Reader(object):
         if tout == 1:
             nfloats = nvalues
             nterms = nvalues
-            fmt = b(self._uendian + 'i %if' % nfloats)
+            fmt = self._endian + b'i %if' % nfloats
         elif tout == 2:
             nfloats = nvalues // 2
             nterms = nvalues // 2
-            fmt = b(self._uendian + 'i %id' % nfloats)
+            fmt = self._endian + b'i %id' % nfloats
         elif tout == 3:
             nfloats = nvalues
             nterms = nvalues // 2
-            fmt = b(self._uendian + 'i %if' % nfloats)
+            fmt = self._endian + b'i %if' % nfloats
         elif tout == 4:
             nfloats = nvalues // 2
             nterms = nvalues // 4
-            fmt = b(self._uendian + 'i %id' % nfloats)
+            fmt = self._endian + b'i %id' % nfloats
         else:
             raise RuntimeError('tout = %s' % tout)
         return fmt, nfloats, nterms
