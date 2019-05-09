@@ -182,7 +182,7 @@ class TestMassElements(unittest.TestCase):
         pmass.write_card(size=8)
         model.cross_reference()
         model.uncross_reference()
-        save_load_deck(model, run_mass_properties=False)
+        save_load_deck(model)
 
     def test_cmass4(self):
         """CMASS4"""

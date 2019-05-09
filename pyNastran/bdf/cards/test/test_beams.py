@@ -521,11 +521,11 @@ class TestBeams(unittest.TestCase):
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
         model.add_grid(10, [0., 0., 0.])
-        model.add_grid(20, [0., 0., 0.])
+        model.add_grid(20, [1., 0., 0.])
         model.add_grid(30, [0., 1., 0.])
         model.cross_reference()
 
-        save_load_deck(model, run_mass_properties=False)
+        save_load_deck(model)
 
     def test_cbeam_pbeaml(self):
         """CBEAM/PBEAML"""
@@ -1033,7 +1033,7 @@ class TestBeams(unittest.TestCase):
         assert pbeam_a1.MassPerLength() == 21.0, pbeam_a1.MassPerLength()
         assert pbeam_a2.MassPerLength() == 21.0, pbeam_a2.MassPerLength()
 
-        save_load_deck(model, run_mass_properties=False)
+        save_load_deck(model)
 
     def test_pbeaml_nsm(self):
         """tests the PBEAML with non structural mass"""

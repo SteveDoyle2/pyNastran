@@ -963,7 +963,7 @@ class TestShells(unittest.TestCase):
 
         model.uncross_reference()
         model.safe_cross_reference()
-        save_load_deck(model, run_mass_properties=False)
+        save_load_deck(model)
         #model.mass_properties()
 
     def test_shear(self):

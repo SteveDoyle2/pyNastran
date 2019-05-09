@@ -596,6 +596,9 @@ class CBEAM(LineElement):
         # they are considered in ihat
         i = xyz2 - xyz1
         Li = norm(i)
+        if Li == 0.:
+            msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
+            raise ValueError(msg)
         i_offset = i / Li
 
         unused_v, wa, wb, xform = rotate_v_wa_wb(
