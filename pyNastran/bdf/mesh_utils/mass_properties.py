@@ -1036,7 +1036,7 @@ def _get_tri_mass(model, xyz, element_ids, all_eids,
             # works for PCOMP
             # F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl\cqr3compbuck.dat
             mpa = prop.get_mass_per_area()
-        elif prop.type == 'PLPLANE':
+        elif prop.type in ['PLPLANE', 'PPLANE']:
             continue
         else:
             raise NotImplementedError(prop.type)
@@ -1102,7 +1102,7 @@ def _get_quad_mass(model, xyz, element_ids, all_eids,
             #rho_t = [mat.Rho() * t for (mat, t) in zip(prop.mids_ref, prop.ts)]
             #mpa = sum(rho_t) + nsm
             mpa = prop.get_mass_per_area()
-        elif prop.type == 'PLPLANE':
+        elif prop.type in ['PLPLANE', 'PPLANE']:
             continue
             #raise NotImplementedError(prop.type)
         else:
@@ -1922,7 +1922,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         etype = elem.type
         if etype in NO_MASS:
             continue
-        if etype in ['CQUAD4', 'CTRIA3']:
+        if etype in ['CQUAD4', 'CTRIA3', 'CQUAD8', 'CTRIA6', 'CTRIAR', 'CQUADR']:
             nids_dict[etype].append(elem.nodes)
             pids_dict[etype].append(elem.pid)
             thetai = elem.theta_mcid
@@ -1934,14 +1934,16 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             x_dict[etype].append(nan if elem.g0 is not None else elem.x)
             offt_dict[etype].append(elem.offt)
             #print(elem.get_stats())
-        elif etype == 'CROD':
+        elif etype in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
             nids_dict[etype].append(elem.nodes)
             pids_dict[etype].append(elem.pid)
-
+        elif etype in ['CROD', 'CTUBE']:
+            nids_dict[etype].append(elem.nodes)
+            pids_dict[etype].append(elem.pid)
         elif etype == 'CONROD':
             nids_dict[etype].append(elem.nodes)
             mids_dict[etype].append(elem.mid)
-        elif etype in ['CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM']:
+        elif etype in 'CSHEAR':
             nids_dict[etype].append(elem.nodes)
             pids_dict[etype].append(elem.pid)
         else:
@@ -1978,9 +1980,583 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
     if len(all_eids):
         all_eids = np.hstack(all_eids)
         all_eids.sort()
-    nelements = len(all_eids)
+    nelements = len(all_eids) + len(eids_mass)
     if nelements == 0:
         return 0., [0., 0., 0], [0., 0., 0., 0., 0., 0.], None, None, None
+
+    all_mids = []
+    for mids in mids_dict.values():
+        all_mids.append(eids)
+    if len(all_mids):
+        all_mids = np.hstack(all_mids)
+        all_mids.sort()
+
+    dicts = _breakdown_property_dicts(model)
+    (pids_per_length_dict, mass_per_length_dict, nsm_per_length_dict,
+     pids_per_area_dict, mass_per_area_dict, nsm_per_area_dict,
+     pids_per_volume_dict, mass_per_volume_dict,
+     e2_dict, e3_dict, ) = dicts
+
+    data = np.zeros((nelements, 15), dtype='float64')
+    for etype, nids_list in nids_dict.items():
+        eids = np.hstack(eids_dict[etype])
+        ieids = np.searchsorted(all_eids, eids)
+        nids = np.vstack(nids_list)
+        nelementsi = nids.shape[0]
+        #print(etype, nelementsi)
+        if etype == 'CROD':
+            pids = pids_dict[etype]
+            assert len(pids) > 0, pids
+            all_pids = np.array(pids_per_length_dict['PROD'], dtype='int32')
+            mass_per_length = np.array(mass_per_length_dict['PROD'], dtype='int32')
+            nsm_per_length = np.array(nsm_per_length_dict['PROD'], dtype='int32')
+            assert len(nsm_per_length) > 0, nsm_per_length
+
+            ipids = np.searchsorted(all_pids, pids)
+            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            iaxis = p2 - p1
+            length = np.linalg.norm(iaxis, axis=1)
+            centroid = (p1 + p2) / 2.
+            assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
+
+            e2i = np.array(e2_dict['rod'], dtype='float64')
+            e2 = e2i[ipids, :, :]
+            exx = eyy = ezz = 1. / e2[:, 0, 0]
+
+            mpl = mass_per_length[ipids]
+            npl = nsm_per_length[ipids]
+            mass = mpl * length
+            nsm = npl * length
+        elif etype == 'CONROD':
+            mids = mids_dict[etype]
+            assert len(mids) > 0, mids
+            #all_pids = np.array(pids_per_length_dict['PROD'], dtype='int32')
+            mass_per_length = np.array(mass_per_length_dict['CONROD'], dtype='int32')
+            nsm_per_length = np.array(nsm_per_length_dict['CONROD'], dtype='int32')
+            #assert len(mass_per_length) > 0, mass_per_length
+            #assert len(nsm_per_length) > 0, nsm_per_length
+
+            #ipids = np.searchsorted(all_pids, pids)
+            imids = np.searchsorted(all_mids, mids)
+            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            iaxis = p2 - p1
+            length = np.linalg.norm(iaxis, axis=1)
+            centroid = (p1 + p2) / 2.
+            assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
+
+            #e2i = np.array(e2_dict['rod'], dtype='float64')
+            #e2 = e2i[imids, :, :]
+            #exx = eyy = ezz = 1. / e2[:, 0, 0]
+            exx = eyy = ezz = 1.
+
+            mpl = npl = 0.
+            #mpl = mass_per_length# [ipids]
+            #npl = nsm_per_length# [ipids]
+            mass = mpl * length
+            nsm = npl * length
+        elif etype == 'CTUBE':
+            pids = pids_dict[etype]
+            assert len(pids) > 0, pids
+            all_pids = np.array(pids_per_length_dict['PTUBE'], dtype='int32')
+            mass_per_length = np.array(mass_per_length_dict['PTUBE'], dtype='int32')
+            nsm_per_length = np.array(nsm_per_length_dict['PTUBE'], dtype='int32')
+            assert len(nsm_per_length) > 0, nsm_per_length
+
+            ipids = np.searchsorted(all_pids, pids)
+            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            iaxis = p2 - p1
+            length = np.linalg.norm(iaxis, axis=1)
+            centroid = (p1 + p2) / 2.
+            assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
+            e2i = np.array(e2_dict['tube'], dtype='float64')
+            e2 = e2i[ipids, :, :]
+            exx = eyy = ezz = 1. / e2[:, 0, 0]
+
+            mpl = mass_per_length[ipids]
+            npl = nsm_per_length[ipids]
+            mass = mpl * length
+            nsm = npl * length
+        elif etype == 'CBAR':
+            pids = pids_dict[etype]
+            assert len(pids) > 0, pids
+            all_pids = np.array(pids_per_length_dict['bar'], dtype='int32')
+            g0 = np.array(g0_dict['CBAR'], dtype='int32')
+            offt = np.array(offt_dict['CBAR'], dtype='|S3')
+            x = np.vstack(x_dict['CBAR'])
+
+            jaxis = _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelementsi)
+
+            mass_per_length = np.array(mass_per_length_dict['bar'])
+            nsm_per_length = np.array(nsm_per_length_dict['bar'])
+            assert len(nsm_per_length) > 0, nsm_per_length
+
+            ipids = np.searchsorted(all_pids, pids)
+            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            iaxis = p2 - p1
+            length = np.linalg.norm(iaxis, axis=1)
+            centroid = (p1 + p2) / 2.
+            assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
+
+            zaxis = np.cross(iaxis, jaxis)
+            telem = np.zeros((nelementsi, 3, 3), dtype='float64')
+            telem[:, 0, :] = iaxis
+            telem[:, 1, :] = jaxis
+            telem[:, 2, :] = zaxis
+
+            # e2i is (npids,3,3)
+            # e2 is (nelementsi,3,3)
+            e2i = np.array(e2_dict['bar'], dtype='float64')
+            e2 = e2i[ipids, :, :]
+            assert e2.shape[0] == nelementsi
+
+
+            #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            # [T^T][e][T]
+            #print(e2.shape, telem.shape)
+            exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+
+            mpl = mass_per_length[ipids]
+            npl = nsm_per_length[ipids]
+            mass = mpl * length
+            nsm = npl * length
+        elif etype == 'CBEAM':
+            pids = pids_dict[etype]
+            assert len(pids) > 0, pids
+            all_pids = np.array(pids_per_length_dict['beam'], dtype='int32')
+            g0 = np.array(g0_dict['CBEAM'], dtype='int32')
+            offt = np.array(offt_dict['CBEAM'], dtype='|S3')
+            x = np.vstack(x_dict['CBEAM'])
+
+            jaxis = _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelementsi)
+
+            mass_per_length = np.array(mass_per_length_dict['beam'])
+            nsm_per_length = np.array(nsm_per_length_dict['beam'])
+            #print(nsm_per_length_dict)
+            assert len(nsm_per_length) > 0, nsm_per_length
+            ipids = np.searchsorted(all_pids, pids)
+            #print(all_pids, pids, ipids)
+            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            iaxis = p2 - p1
+            length = np.linalg.norm(iaxis, axis=1)
+            centroid = (p1 + p2) / 2.
+            assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
+
+            zaxis = np.cross(iaxis, jaxis)
+            telem = np.zeros((nelementsi, 3, 3), dtype='float64')
+            telem[:, 0, :] = iaxis
+            telem[:, 1, :] = jaxis
+            telem[:, 2, :] = zaxis
+
+            # e2i is (npids,3,3)
+            # e2 is (nelementsi,3,3)
+            #print(e2_dict)
+            e2i = np.array(e2_dict['beam'], dtype='float64')
+            assert len(e2i) > 0, e2_dict
+            e2 = e2i[ipids, :, :]
+            assert e2.shape[0] == nelementsi
+
+
+            #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            # [T^T][e][T]
+            #print(e2.shape, telem.shape)
+            exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+
+            mpl = mass_per_length[ipids]
+            npl = nsm_per_length[ipids]
+            mass = mpl * length
+            nsm = npl * length
+
+        elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR']:
+            # no offsets
+            nids2 = nids[:, :3]
+            pids = np.array(pids_dict[etype], dtype='int32')
+            assert len(pids) > 0, pids
+            all_pids = np.array(pids_per_area_dict['shell'], dtype='int32')
+            mass_per_area = np.array(mass_per_area_dict['shell'])
+            nsm_per_area = np.array(nsm_per_area_dict['shell'])
+            assert len(mass_per_area) > 0, mass_per_area_dict
+
+            ipids = np.searchsorted(all_pids, pids)
+            inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 3)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            p3 = xyz_cid0[inids[:, 2], :]
+
+            # normal is correct; matters for +rotation and offsets
+            v12 = p1 - p2
+            v13 = p1 - p3
+            normal = np.cross(v12, v13)
+            ni = np.linalg.norm(normal, axis=1)
+            normal /= ni[:, np.newaxis]
+            area = 0.5 * ni
+            assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
+            centroid = (p1 + p2 + p3) / 3.
+
+            # e2i is (npids,3,3)
+            # e2 is (nelementsi,3,3)
+            e2i = np.array(e2_dict['shell'], dtype='float64')
+            e2 = e2i[ipids, :, :]
+            assert e2.shape[0] == nelementsi
+
+            # [T^T][e][T]
+            theta_mcid = theta_mcid_dict[etype]
+            telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+            #exx = eyy = ezz = 1.
+            mpa = mass_per_area[ipids]
+            npa = nsm_per_area[ipids]
+            mass = mpa * area
+            nsm = npa * area
+        elif etype == 'CSHEAR':
+            pids = np.array(pids_dict[etype], dtype='int32')
+            assert len(pids) > 0, pids
+            all_pids = np.array(pids_per_area_dict['shear'])
+            mass_per_area = np.array(mass_per_area_dict['shear'])
+            nsm_per_area = np.array(nsm_per_area_dict['shear'])
+            assert len(mass_per_area) > 0, mass_per_area_dict
+            ipids = np.searchsorted(all_pids, pids)
+            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 4)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            p3 = xyz_cid0[inids[:, 2], :]
+            p4 = xyz_cid0[inids[:, 3], :]
+
+            # normal is correct; matters for +rotation and offsets
+            v13 = p1 - p3
+            v24 = p2 - p4
+            normal = np.cross(v13, v24)
+            ni = np.linalg.norm(normal, axis=1)
+            normal /= ni[:, np.newaxis]
+            area = 0.5 * ni
+            assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
+            centroid = (p1 + p2 + p3 + p4) / 3.
+            #n = _normal(n1 - n3, n2 - n4)
+
+            # e2i is (npids,3,3)
+            # e2 is (nelementsi,3,3)
+            e2i = np.array(e2_dict['shear'], dtype='float64')
+            e2 = e2i[ipids, :, :]
+            assert e2.shape[0] == nelementsi
+
+            # [T^T][e][T]
+            #theta_mcid = theta_mcid_dict[etype]
+            #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            exx = eyy = ezz = 1.
+            #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+            mpa = mass_per_area[ipids]
+            npa = nsm_per_area[ipids]
+            mass = mpa * area
+            nsm = npa * area
+        elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR']:
+            # no offsets
+            nids2 = nids[:, :4]
+            pids = np.array(pids_dict[etype], dtype='int32')
+            assert len(pids) > 0, pids
+            all_pids = np.array(pids_per_area_dict['shell'])
+            mass_per_area = np.array(mass_per_area_dict['shell'])
+            nsm_per_area = np.array(nsm_per_area_dict['shell'])
+            assert len(mass_per_area) > 0, mass_per_area_dict
+
+            ipids = np.searchsorted(all_pids, pids)
+            inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            p3 = xyz_cid0[inids[:, 2], :]
+            p4 = xyz_cid0[inids[:, 3], :]
+
+            # normal is correct; matters for +rotation and offsets
+            v13 = p1 - p3
+            v24 = p2 - p4
+            normal = np.cross(v13, v24)
+            ni = np.linalg.norm(normal, axis=1)
+            normal /= ni[:, np.newaxis]
+            area = 0.5 * ni
+            assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
+            centroid = (p1 + p2 + p3 + p4) / 3.
+            #n = _normal(n1 - n3, n2 - n4)
+
+            # e2i is (npids,3,3)
+            # e2 is (nelementsi,3,3)
+            e2i = np.array(e2_dict['shell'], dtype='float64')
+            e2 = e2i[ipids, :, :]
+            assert e2.shape[0] == nelementsi
+
+            # [T^T][e][T]
+            theta_mcid = theta_mcid_dict[etype]
+            telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #exx = eyy = ezz = 1.
+            exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+            mpa = mass_per_area[ipids]
+            npa = nsm_per_area[ipids]
+            mass = mpa * area
+            nsm = npa * area
+        elif etype == 'CTETRA':
+            nids2 = nids[:, :4]
+            pids = np.array(pids_dict[etype], dtype='int32')
+            assert len(pids) > 0, pids
+            rho = np.array(mass_per_volume_dict['PSOLID']) # rho
+            assert  len(rho) > 0., rho
+
+            inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            p3 = xyz_cid0[inids[:, 2], :]
+            p4 = xyz_cid0[inids[:, 3], :]
+            centroid = (p1 + p2 + p3 + p4) / 4.
+            a = p1 - p4
+            b = cross(p2 - p4, p3 - p4)
+            #volume = -dot(a, b) / 6.
+            #volume = -np.tensordot(a, b, axes=1)
+            volume = -np.einsum('ij,ij->i', a, b) / 6.
+            mass = rho * volume
+            nsm = np.zeros(nelementsi, dtype='float64')
+            exx = eyy = ezz = 1.
+            e2 = None
+        elif etype == 'CHEXA':
+            nids2 = nids[:, :8]
+            pids = np.array(pids_dict[etype], dtype='int32')
+            assert len(pids) > 0, pids
+            rho = np.array(mass_per_volume_dict['PSOLID']) # rho
+            assert  len(rho) > 0., rho
+
+            inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 8)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            p3 = xyz_cid0[inids[:, 2], :]
+            p4 = xyz_cid0[inids[:, 3], :]
+            p5 = xyz_cid0[inids[:, 4], :]
+            p6 = xyz_cid0[inids[:, 5], :]
+            p7 = xyz_cid0[inids[:, 6], :]
+            p8 = xyz_cid0[inids[:, 7], :]
+
+            v13 = p1 - p3
+            v24 = p2 - p4
+            normal = np.cross(v13, v24)
+            ni = np.linalg.norm(normal, axis=1)
+            c1 = (p1 + p2 + p3 + p4) / 4.
+            area1 = 0.5 * ni
+
+            v57 = p5 - p7
+            v68 = p6 - p7
+            normal = np.cross(v57, v68)
+            ni = np.linalg.norm(normal, axis=1)
+            c2 = (p5 + p6 + p7 + p8) / 4.
+            area2 = 0.5 * ni
+
+            centroid = (c1 + c2) / 2.
+            volume = (area1 + area2) / 2. * norm(c1 - c2, axis=1)
+            assert len(volume) == nelementsi, len(volume)
+
+            mass = rho * volume
+            nsm = np.zeros(nelementsi, dtype='float64')
+            exx = eyy = ezz = 1.
+            e2 = None
+        elif etype == 'CPENTA':
+            nids2 = nids[:, :6]
+            pids = np.array(pids_dict[etype], dtype='int32')
+            assert len(pids) > 0, pids
+            rho = np.array(mass_per_volume_dict['PSOLID']) # rho
+            assert  len(rho) > 0., rho
+
+            inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 6)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            p3 = xyz_cid0[inids[:, 2], :]
+            p4 = xyz_cid0[inids[:, 3], :]
+            p5 = xyz_cid0[inids[:, 4], :]
+            p6 = xyz_cid0[inids[:, 5], :]
+
+            c1 = (p1 + p2 + p3) / 3.
+            c2 = (p4 + p5 + p6) / 3.
+            centroid = (c1 + c2) / 2.
+
+            area1 = 0.5 * norm(cross(p3 - p1, p2 - p1), axis=1)
+            area2 = 0.5 * norm(cross(p6 - p4, p5 - p4), axis=1)
+            #c1 = (p1 + p2 + p3) / 3.
+            #c2 = (p4 + p5 + p6) / 3.
+            volume = (area1 + area2) / 2. * norm(c1 - c2, axis=1)
+            volume = np.abs(volume)
+
+            mass = rho * volume
+            nsm = np.zeros(nelementsi, dtype='float64')
+            exx = eyy = ezz = 1.
+            e2 = None
+        elif etype == 'CPYRAM':
+            nids2 = nids[:, :5]
+            pids = np.array(pids_dict[etype], dtype='int32')
+            assert len(pids) > 0, pids
+            rho = np.array(mass_per_volume_dict['PSOLID']) # rho
+            assert  len(rho) > 0., rho
+
+            inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 5)
+            p1 = xyz_cid0[inids[:, 0], :]
+            p2 = xyz_cid0[inids[:, 1], :]
+            p3 = xyz_cid0[inids[:, 2], :]
+            p4 = xyz_cid0[inids[:, 3], :]
+            p5 = xyz_cid0[inids[:, 4], :]
+
+            v13 = p1 - p3
+            v24 = p2 - p4
+            normal = np.cross(v13, v24)
+            ni = np.linalg.norm(normal, axis=1)
+            c1 = (p1 + p2 + p3 + p4) / 4.
+            area1 = 0.5 * ni
+
+            #c1 = area_centroid(n1, n2, n3, n4)[1]
+            centroid = (c1 + p5) / 2.
+
+            #area1, c1 = area_centroid(p1, p2, n3, n4)
+            volume = area1 / 3. * norm(c1 - p5, axis=1)
+            #volume = np.abs(volume)
+            #return abs(volume)
+            mass = rho * volume
+            nsm = np.zeros(nelementsi, dtype='float64')
+            exx = eyy = ezz = 1.
+            e2 = None
+
+        else:
+            model.log.warning('skipping mass_properties_breakdown for %s' % etype)
+            continue
+        data[ieids, 0] = mass + nsm # total mass
+        data[ieids, 1] = mass
+        data[ieids, 2] = nsm
+
+        # 0         1     2    3  4  5  6     7    8    9    10   11   12
+        #
+        #total_mass, mass, nsm, x, y, z, [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+        data[ieids, 3:6] = centroid
+        data[ieids, 12] = exx
+        data[ieids, 13] = eyy
+        data[ieids, 12] = ezz
+        del exx, eyy, ezz, nelementsi # , pids # , ipids, e2, telem
+
+    if nmasses:
+        data = np.vstack([data, data_mass])
+    #x2 = x * x
+    #y2 = y * y
+    #z2 = z * z
+    #I[0] += m * (y2 + z2)  # Ixx
+    #I[1] += m * (x2 + z2)  # Iyy
+    #I[2] += m * (x2 + y2)  # Izz
+    #I[3] += m * x * y      # Ixy
+    #I[4] += m * x * z      # Ixz
+    #I[5] += m * y * z      # Iyz
+    ix = 3
+    iy = 4
+    iz = 5
+    total_mass = data[:, 0]
+    x = data[:, ix]
+    y = data[:, iy]
+    z = data[:, iz]
+    x2 = x ** 2
+    y2 = y ** 2
+    z2 = z ** 2
+    #data[:, 6]
+    #print(total_mass * (y2 + z2))
+    data[:, 6] = total_mass * (y2 + z2) # ixx
+    data[:, 7] = total_mass * (x2 + z2) # iyy
+    data[:, 8] = total_mass * (x2 + y2) # izz
+    data[:, 9] = total_mass * (x * y) # ixy
+    data[:, 10] = total_mass * (x * z) # ixz
+    data[:, 11] = total_mass * (y * z) # iyz
+    mass = data[:, :3]
+    cg = data[:, 3:6]
+    inertia = data[:, 6:12]
+    exyz = data[:, 12:]
+    assert mass.shape[1] == 3
+    assert cg.shape[1] == 3
+    assert inertia.shape[1] == 6
+    assert exyz.shape[1] == 3, exyz.shape[1]
+
+    # only transform if we're calculating the inertia about the cg
+    total_mass_overall = total_mass.sum()
+    inertia_overall = inertia.sum(axis=0)
+    assert len(inertia_overall) == 6, len(inertia_overall)
+
+    cg_overall = np.zeros(3, dtype='float64')
+    if total_mass_overall == 0.:
+        return total_mass_overall, cg_overall, inertia_overall, mass, cg, inertia
+        #raise RuntimeError('total_mass_overall=%s' % total_mass_overall)
+    cg_overall = (total_mass[:, np.newaxis] * cg).sum(axis=0) / total_mass_overall
+
+    #if is_cg:
+        #xyz_ref = reference_point
+        #xyz_ref2 = (cg[:, 0], cg[:, 1], cg[:, 2])
+        #inertia2 = (inertia[:, 0], inertia[:, 1], inertia[:, 2],
+                    #inertia[:, 3], inertia[:, 4], inertia[:, 5], )
+        #print('cg_overall =', cg_overall)
+        #inertia = transform_inertia(mass, cg_overall, xyz_ref, xyz_ref2, inertia2)
+
+    make_plot = False
+    if make_plot:
+        ycg = cg[:, 1]
+        ixx = inertia[:, 0]
+        iyy = inertia[:, 1]
+        izz = inertia[:, 2]
+        exx = exyz[:, 0]
+        eyy = exyz[:, 1]
+        ezz = exyz[:, 2]
+        isort = np.argsort(ycg)
+        ycg2 = ycg[isort]
+
+        mass2 = total_mass[isort]
+        exx2 = exx[isort]
+        eyy2 = eyy[isort]
+        ezz2 = ezz[isort]
+
+        ixx2 = ixx[isort]
+        iyy2 = iyy[isort]
+        izz2 = izz[isort]
+
+        ixxe2 = ixx[isort] * exx2
+        iyye2 = iyy[isort] * eyy2
+        izze2 = izz[isort] * ezz2
+        # cumulative moi; we integrate from the right side (the iyy2[::-1]
+        # and then reverse it with cumsum(...)[::-1]
+        cmass = np.cumsum(mass2[::-1])[::-1]
+        cixx = np.cumsum(ixx2[::-1])[::-1]
+        ciyy = np.cumsum(iyy2[::-1])[::-1]
+        cizz = np.cumsum(izz2[::-1])[::-1]
+
+        cixxe = np.cumsum(ixxe2[::-1])[::-1]
+        ciyye = np.cumsum(iyye2[::-1])[::-1]
+        cizze = np.cumsum(izze2[::-1])[::-1]
+
+        #import matplotlib
+        #matplotlib.use('Qt5cairo')
+        import matplotlib.pyplot as plt
+        figsize = (8., 6.)
+        dpi = 100
+        fig = plt.figure(figsize=figsize, dpi=dpi)
+        ax = fig.gca()
+        ax.plot(ycg2, cmass / cmass[0], label='mass=%g' % cmass[0])
+        #ax.plot(ycg2, exx2 / exx2.max(), label='exx')
+        #ax.plot(ycg2, eyy2 / eyy2.max(), label='eyy')
+        #ax.plot(ycg2, ezz2 / ezz2.max(), label='ezz')
+        ax.plot(ycg2, cixx / cixx[0], label='Ixx=%.3e' % cixx[0])
+        ax.plot(ycg2, ciyy / ciyy[0], label='Iyy=%.3e' % ciyy[0])
+        ax.plot(ycg2, cizz / cizz[0], label='Izz=%.3e' % cizz[0])
+        ax.legend()
+        ax.set_xlabel('y')
+        ax.set_ylabel('Moment of Inertia')
+        ax.set_title('Moment of Inertia vs Span')
+        ax.grid(True)
+        fig.savefig('moi vs span.png')
+        #plt.show()
+    return total_mass_overall, cg_overall, inertia_overall, mass, cg, inertia
+
+def _breakdown_property_dicts(model):
+    """helper method"""
     pids_per_length_dict = defaultdict(list)
     mass_per_length_dict = defaultdict(list)
     nsm_per_length_dict = defaultdict(list)
@@ -1995,15 +2571,24 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
     e3_dict = defaultdict(list)
     for pid, prop in sorted(model.properties.items()):
         ptype = prop.type
+        print(prop)
         if ptype in NO_MASS:
             continue
-        elif ptype == 'PROD':
+        elif ptype in 'PROD':
             pids_per_length_dict[ptype].append(pid)
             mid_ref = prop.mid_ref
             Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
             e2_dict['rod'].append(Sei2)
             nsm_per_length_dict[ptype].append(prop.nsm)
             mass_per_length_dict[ptype].append(mid_ref.rho * prop.A)
+        elif ptype in 'PTUBE':
+            pids_per_length_dict[ptype].append(pid)
+            mid_ref = prop.mid_ref
+            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            e2_dict['tube'].append(Sei2)
+            nsm_per_length_dict[ptype].append(prop.nsm)
+            mass_per_length_dict[ptype].append(mid_ref.rho * prop.Area())
+
         elif ptype == 'PBAR':
             pids_per_length_dict['bar'].append(pid)
             mid_ref = prop.mid_ref
@@ -2024,13 +2609,37 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             e2_dict['bar'].append(Sei2)
             nsm_per_length_dict['bar'].append(nsmi)
             mass_per_length_dict['bar'].append(areai * rhoi)
+
+        elif ptype == 'PBEAM':
+            pids_per_length_dict['beam'].append(pid)
+            mid_ref = prop.mid_ref
+            rhoi = prop.Rho()
+            areai = prop.Area()
+            nsmi = prop.Nsm()
+            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            e2_dict['beam'].append(Sei2)
+            nsm_per_length_dict['beam'].append(nsmi)
+            mass_per_length_dict['beam'].append(areai * rhoi)
         elif ptype == 'PBEAML':
             pids_per_length_dict['beam'].append(pid)
             rhoi = prop.Rho()
             areai = prop.Area()
             nsmi = prop.Nsm()
+            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            e2_dict['beam'].append(Sei2)
             nsm_per_length_dict['beam'].append(nsmi)
             mass_per_length_dict['beam'].append(areai * rhoi)
+        elif prop.type == 'PBCOMP':
+            mid_ref = prop.mid_ref
+            mass_per_length = prop.MassPerLength()
+            nsm_per_length = prop.nsm
+            #nsm_n1 = (p1 + jhat * prop.m1 + khat * prop.m2)
+            #nsm_n2 = (p2 + jhat * prop.m1 + khat * prop.m2)
+            #nsm_centroid = (nsm_n1 + nsm_n2) / 2.
+            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            e2_dict['beam'].append(Sei2)
+            nsm_per_length_dict['beam'].append(nsm_per_length)
+            mass_per_length_dict['beam'].append(mass_per_length)
 
         elif ptype == 'PSHELL':
             pids_per_area_dict['shell'].append(pid)
@@ -2044,6 +2653,36 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             # doesn't consider tflag
             #thickness = self.Thickness(tflag=tflag, tscales=tscales)
             thickness = prop.t
+
+            mass_per_area_dict['shell'].append(rhoi * thickness)
+            nsm_per_area_dict['shell'].append(prop.nsm)
+        elif ptype == 'PSHEAR':
+            pids_per_area_dict['shear'].append(pid)
+            mid_ref = prop.mid_ref
+            rhoi = mid_ref.Rho()
+            ei2, ei3 = _get_mat_props_S(mid_ref)
+
+            e2_dict['shear'].append(ei2)
+            e3_dict['shear'].append(ei3)
+
+            # doesn't consider tflag
+            #thickness = self.Thickness(tflag=tflag, tscales=tscales)
+            thickness = prop.t
+
+            mass_per_area_dict['shear'].append(rhoi * thickness)
+            nsm_per_area_dict['shear'].append(prop.nsm)
+        elif ptype == 'PLPLANE':
+            pids_per_area_dict['shell'].append(pid)
+            mid_ref = prop.mid_ref
+            rhoi = mid_ref.Rho()
+            ei2, ei3 = _get_mat_props_S(mid_ref)
+
+            e2_dict['shell'].append(ei2)
+            e3_dict['shell'].append(ei3)
+
+            # doesn't consider tflag
+            #thickness = self.Thickness(tflag=tflag, tscales=tscales)
+            thickness = 0.
 
             mass_per_area_dict['shell'].append(rhoi * thickness)
             nsm_per_area_dict['shell'].append(prop.nsm)
@@ -2107,10 +2746,12 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             mass_per_area_dict['shell'].append(sum(mpai))
             nsm_per_area_dict['shell'].append(prop.nsm)
 
-        elif ptype == 'PSOLID':
+        elif ptype in ['PSOLID', 'PIHEX']:
             pids_per_volume_dict[ptype].append(pid)
             mid_ref = prop.mid_ref
-            mass_per_volume_dict[ptype].append(mid_ref.rho)
+            rho = mid_ref.rho
+            assert  rho >= 0., rho
+            mass_per_volume_dict[ptype].append(rho)
         else:
             model.log.warning('skipping mass_properties_breakdown for %s' % ptype)
 
@@ -2125,306 +2766,60 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         #else:
             #model.log.warning('skipping mass_properties_breakdown for %s' % mtype)
     #---------------------------------------------------------------------------
+    dicts = (
+        pids_per_length_dict, mass_per_length_dict, nsm_per_length_dict,
+        pids_per_area_dict, mass_per_area_dict, nsm_per_area_dict,
+        pids_per_volume_dict, mass_per_volume_dict,
+        e2_dict, e3_dict,
+    )
+    return dicts
 
-    data = np.zeros((nelements, 15), dtype='float64')
-    for etype, nids_list in nids_dict.items():
-        eids = np.hstack(eids_dict[etype])
-        ieids = np.searchsorted(all_eids, eids)
-        nids = np.vstack(nids_list)
-        nelementsi = nids.shape[0]
-        print(etype, nelementsi)
-        if etype == 'CROD':
-            pids = pids_dict[etype]
-            assert len(pids) > 0, pids
-            all_pids = pids_per_length_dict['PROD']
-            mass_per_length = mass_per_length_dict['PROD']
-            nsm_per_length = nsm_per_length_dict['PROD']
-            assert len(nsm_per_length) > 0, nsm_per_length
+def _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelements):
+    ix = np.where(g0 == -1)[0]
+    ig0 = np.where(g0 != -1)[0]
 
-            ipids = np.searchsorted(all_pids, pids)
-            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
-            p1 = xyz_cid0[inids[:, 0], :]
-            p2 = xyz_cid0[inids[:, 1], :]
-            iaxis = p2 - p1
-            length = np.linalg.norm(iaxis, axis=1)
-            centroid = (p1 + p2) / 2.
-            assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
+    g0 = g0[ig0]
+    x = x[ix, :]
+    jaxis = np.full((nelements, 3), np.nan, dtype='float64')
+    if len(g0):
+        offti = offt[ig0]
+        nofft = len(offti)
 
-            mpl = mass_per_length[ipids]
-            npl = nsm_per_length[ipids]
-            mass = mpl * length
-            nsm = npl * length
-        elif etype == 'CBAR':
-            pids = pids_dict[etype]
-            assert len(pids) > 0, pids
-            all_pids = np.array(pids_per_length_dict['bar'], dtype='int32')
-            g0 = np.array(g0_dict['CBAR'], dtype='int32')
-            offt = np.array(offt_dict['CBAR'], dtype='|S3')
-            ix = np.where(g0 == -1)[0]
-            ig0 = np.where(g0 != -1)[0]
-            x = np.vstack(x_dict['CBAR'])
+        iggg = np.where(b'GGG' == offti)[0]
+        iig0 = np.searchsorted(all_nids, g0)
 
-            g0 = g0[ig0]
-            x = x[ix, :]
+        #print('iggg =', iggg, len(iggg))
+        #print('x.shape', x.shape)
+        #x[iggg, :]
+        #jaxis[iggg, :]
+        x = xyz_cid0[iig0, :]
+        nggg = len(iggg)
+        nofft_found = nggg
+        if nggg:
+            jaxis[iggg, :] = x
+        if nofft != nofft_found:
+            raise RuntimeError(offti)
 
-            jaxis = np.full((nelementsi, 3), np.nan, dtype='float64')
-            if len(g0):
-                raise NotImplementedError(g0)
-            if len(x):
-                #print('g0 =', g0)
-                #print('x =', x)
-                #print('offt =', offt)
-                iggg = np.where(b'GGG' == offt[ix])[0]
-                #print('iggg =', iggg, len(iggg))
-                #print('x.shape', x.shape)
-                x[iggg, :]
-                jaxis[iggg, :]
-                jaxis[iggg, :] = x[iggg, :]
-            print('xmax', x.max())
-            assert np.abs(x).max() > 0., 'x has nan values...only supports GGG'
-            mass_per_length = np.array(mass_per_length_dict['bar'])
-            nsm_per_length = np.array(nsm_per_length_dict['bar'])
-            assert len(nsm_per_length) > 0, nsm_per_length
-
-            ipids = np.searchsorted(all_pids, pids)
-            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
-            p1 = xyz_cid0[inids[:, 0], :]
-            p2 = xyz_cid0[inids[:, 1], :]
-            iaxis = p2 - p1
-            length = np.linalg.norm(iaxis, axis=1)
-            centroid = (p1 + p2) / 2.
-            assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
-
-            zaxis = np.cross(iaxis, jaxis)
-            telem = np.zeros((nelementsi, 3, 3), dtype='float64')
-            telem[:, 0, :] = iaxis
-            telem[:, 1, :] = jaxis
-            telem[:, 2, :] = zaxis
-
-            # e2i is (npids,3,3)
-            # e2 is (nelementsi,3,3)
-            e2i = np.array(e2_dict['bar'], dtype='float64')
-            e2 = e2i[ipids, :, :]
-            assert e2.shape[0] == nelementsi
-
-
-            #telem = _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
-            # [T^T][e][T]
-            print(e2.shape, telem.shape)
-            exx, eyy, ezz = _transform_shell(e2, telem)
-
-            mpl = mass_per_length[ipids]
-            npl = nsm_per_length[ipids]
-            mass = mpl * length
-            nsm = npl * length
-
-        elif etype == 'CTRIA3':
-            # no offsets
-            pids = np.array(pids_dict[etype], dtype='int32')
-            assert len(pids) > 0, pids
-            all_pids = np.array(pids_per_area_dict['shell'], dtype='int32')
-            mass_per_area = np.array(mass_per_area_dict['shell'])
-            nsm_per_area = np.array(nsm_per_area_dict['shell'])
-            assert len(mass_per_area) > 0, mass_per_area_dict
-
-            ipids = np.searchsorted(all_pids, pids)
-            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 3)
-            p1 = xyz_cid0[inids[:, 0], :]
-            p2 = xyz_cid0[inids[:, 1], :]
-            p3 = xyz_cid0[inids[:, 2], :]
-
-            # normal is correct; matters for +rotation and offsets
-            v12 = p1 - p2
-            v13 = p1 - p3
-            normal = np.cross(v12, v13)
-            ni = np.linalg.norm(normal, axis=1)
-            normal /= ni[:, np.newaxis]
-            area = 0.5 * ni
-            assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
-            centroid = (p1 + p2 + p3) / 3.
-
-            # e2i is (npids,3,3)
-            # e2 is (nelementsi,3,3)
-            e2i = np.array(e2_dict['shell'], dtype='float64')
-            e2 = e2i[ipids, :, :]
-            assert e2.shape[0] == nelementsi
-
-            # [T^T][e][T]
-            theta_mcid = theta_mcid_dict[etype]
-            telem = _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
-            exx, eyy, ezz = _transform_shell(e2, telem)
-            #exx = eyy = ezz = 1.
-            mpa = mass_per_area[ipids]
-            npa = nsm_per_area[ipids]
-            mass = mpa * area
-            nsm = npa * area
-        elif etype == 'CQUAD4':
-            # no offsets
-            pids = np.array(pids_dict[etype], dtype='int32')
-            assert len(pids) > 0, pids
-            all_pids = np.array(pids_per_area_dict['shell'])
-            mass_per_area = np.array(mass_per_area_dict['shell'])
-            nsm_per_area = np.array(nsm_per_area_dict['shell'])
-            assert len(mass_per_area) > 0, mass_per_area_dict
-
-            ipids = np.searchsorted(all_pids, pids)
-            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 4)
-            p1 = xyz_cid0[inids[:, 0], :]
-            p2 = xyz_cid0[inids[:, 1], :]
-            p3 = xyz_cid0[inids[:, 2], :]
-            p4 = xyz_cid0[inids[:, 3], :]
-
-            # normal is correct; matters for +rotation and offsets
-            v13 = p1 - p3
-            v24 = p2 - p4
-            normal = np.cross(v13, v24)
-            ni = np.linalg.norm(normal, axis=1)
-            normal /= ni[:, np.newaxis]
-            area = 0.5 * ni
-            assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
-            centroid = (p1 + p2 + p3 + p4) / 3.
-            #n = _normal(n1 - n3, n2 - n4)
-
-            # e2i is (npids,3,3)
-            # e2 is (nelementsi,3,3)
-            e2i = np.array(e2_dict['shell'], dtype='float64')
-            e2 = e2i[ipids, :, :]
-            assert e2.shape[0] == nelementsi
-
-            # [T^T][e][T]
-            theta_mcid = theta_mcid_dict[etype]
-            telem = _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
-            #exx = eyy = ezz = 1.
-            exx, eyy, ezz = _transform_shell(e2, telem)
-            mpa = mass_per_area[ipids]
-            npa = nsm_per_area[ipids]
-            mass = mpa * area
-            nsm = npa * area
-        else:
-            model.log.warning('skipping mass_properties_breakdown for %s' % etype)
-            continue
-        data[ieids, 0] = mass + nsm # total mass
-        data[ieids, 1] = mass
-        data[ieids, 2] = nsm
-
-        # 0         1     2    3  4  5  6     7    8    9    10   11   12
-        #
-        #total_mass, mass, nsm, x, y, z, [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
-        data[ieids, 3:6] = centroid
-        data[ieids, 12] = exx
-        data[ieids, 13] = eyy
-        data[ieids, 12] = ezz
-        del e2, exx, eyy, ezz, nelementsi, pids, ipids # , telem
-
-    if nmasses:
-        data = np.vstack([data, data_mass])
-    #x2 = x * x
-    #y2 = y * y
-    #z2 = z * z
-    #I[0] += m * (y2 + z2)  # Ixx
-    #I[1] += m * (x2 + z2)  # Iyy
-    #I[2] += m * (x2 + y2)  # Izz
-    #I[3] += m * x * y      # Ixy
-    #I[4] += m * x * z      # Ixz
-    #I[5] += m * y * z      # Iyz
-    ix = 3
-    iy = 4
-    iz = 5
-    total_mass = data[:, 0]
-    x = data[:, ix]
-    y = data[:, iy]
-    z = data[:, iz]
-    x2 = x ** 2
-    y2 = y ** 2
-    z2 = z ** 2
-    #data[:, 6]
-    #print(total_mass * (y2 + z2))
-    data[:, 6] = total_mass * (y2 + z2) # ixx
-    data[:, 7] = total_mass * (x2 + z2) # iyy
-    data[:, 8] = total_mass * (x2 + y2) # izz
-    data[:, 9] = total_mass * (x * y) # ixy
-    data[:, 10] = total_mass * (x * z) # ixz
-    data[:, 11] = total_mass * (y * z) # iyz
-    mass = data[:, :3]
-    cg = data[:, 3:6]
-    inertia = data[:, 6:12]
-    exyz = data[:, 12:]
-    assert mass.shape[1] == 3
-    assert cg.shape[1] == 3
-    assert inertia.shape[1] == 6
-    assert exyz.shape[1] == 3, exyz.shape[1]
-
-    # only transform if we're calculating the inertia about the cg
-    total_mass_overall = total_mass.sum()
-    cg_overall = (total_mass[:, np.newaxis] * cg).sum(axis=0) / total_mass_overall
-    inertia_overall = inertia.sum(axis=0)
-    assert len(inertia_overall) == 6, len(inertia_overall)
-
-    #if is_cg:
-        #xyz_ref = reference_point
-        #xyz_ref2 = (cg[:, 0], cg[:, 1], cg[:, 2])
-        #inertia2 = (inertia[:, 0], inertia[:, 1], inertia[:, 2],
-                    #inertia[:, 3], inertia[:, 4], inertia[:, 5], )
-        #print('cg_overall =', cg_overall)
-        #inertia = transform_inertia(mass, cg_overall, xyz_ref, xyz_ref2, inertia2)
-
-    make_plot = True
-    if make_plot:
-        ycg = cg[:, 1]
-        ixx = inertia[:, 0]
-        iyy = inertia[:, 1]
-        izz = inertia[:, 2]
-        exx = exyz[:, 0]
-        eyy = exyz[:, 1]
-        ezz = exyz[:, 2]
-        isort = np.argsort(ycg)
-        ycg2 = ycg[isort]
-
-        mass2 = total_mass[isort]
-        exx2 = exx[isort]
-        eyy2 = eyy[isort]
-        ezz2 = ezz[isort]
-
-        ixx2 = ixx[isort]
-        iyy2 = iyy[isort]
-        izz2 = izz[isort]
-
-        ixxe2 = ixx[isort] * exx2
-        iyye2 = iyy[isort] * eyy2
-        izze2 = izz[isort] * ezz2
-        # cumulative moi; we integrate from the right side (the iyy2[::-1]
-        # and then reverse it with cumsum(...)[::-1]
-        cmass = np.cumsum(mass2[::-1])[::-1]
-        cixx = np.cumsum(ixx2[::-1])[::-1]
-        ciyy = np.cumsum(iyy2[::-1])[::-1]
-        cizz = np.cumsum(izz2[::-1])[::-1]
-
-        cixxe = np.cumsum(ixxe2[::-1])[::-1]
-        ciyye = np.cumsum(iyye2[::-1])[::-1]
-        cizze = np.cumsum(izze2[::-1])[::-1]
-
-        #import matplotlib
-        #matplotlib.use('Qt5cairo')
-        import matplotlib.pyplot as plt
-        figsize = (8., 6.)
-        dpi = 100
-        fig = plt.figure(figsize=figsize, dpi=dpi)
-        ax = fig.gca()
-        ax.plot(ycg2, cmass / cmass[0], label='mass=%g' % cmass[0])
-        #ax.plot(ycg2, exx2 / exx2.max(), label='exx')
-        #ax.plot(ycg2, eyy2 / eyy2.max(), label='eyy')
-        #ax.plot(ycg2, ezz2 / ezz2.max(), label='ezz')
-        ax.plot(ycg2, cixx / cixx[0], label='Ixx=%.3e' % cixx[0])
-        ax.plot(ycg2, ciyy / ciyy[0], label='Iyy=%.3e' % ciyy[0])
-        ax.plot(ycg2, cizz / cizz[0], label='Izz=%.3e' % cizz[0])
-        ax.legend()
-        ax.set_xlabel('y')
-        ax.set_ylabel('Moment of Inertia')
-        ax.set_title('Moment of Inertia vs Span')
-        ax.grid(True)
-        fig.savefig('moi vs span.png')
-        #plt.show()
-    return total_mass_overall, cg_overall, inertia_overall, mass, cg, inertia
+    if len(x):
+        offti = offt[ix]
+        nofft = len(offti)
+        #print('g0 =', g0)
+        #print('x =', x)
+        #print('offt =', offt)
+        iggg = np.where(b'GGG' == offti)[0]
+        #print('iggg =', iggg, len(iggg))
+        #print('x.shape', x.shape)
+        #x[iggg, :]
+        #jaxis[iggg, :]
+        nggg = len(iggg)
+        nofft_found = nggg
+        if nggg:
+            jaxis[iggg, :] = x[iggg, :]
+        if nofft != nofft_found:
+            raise RuntimeError(offti)
+    #print('xmax', x.max())
+    assert np.abs(x).max() > 0., 'x has nan values...only supports GGG'
+    return jaxis
 
 def _get_mat_props_S(mid_ref):
     """
@@ -2478,6 +2873,13 @@ def _get_mat_props_S(mid_ref):
         e3 = 1.
         nu12 = material.nu12
         g12, g31, g23 = material.g12, material.g1z, material.g2z
+        if g12 == 0.:
+            g12 = 1.
+        if g31 == 0.:
+            g31 = 1.
+        if g23 == 0.:
+            g23 = 1.
+
         # nu21 * E1 = nu12 * E2
         nu13 = nu12 # assume; should fall out in calcs given e3=0
         nu23 = nu12 # assume; should fall out in calcs given e3=0
@@ -2502,7 +2904,7 @@ def _get_mat_props_S(mid_ref):
         raise NotImplementedError(mid_ref.get_stats())
     return ei2, ei3
 
-def _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2):
+def _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2):
     """calculate the material transformation matrix"""
     is_mcid = np.array([isinstance(val, integer_types) for val in theta_mcid], dtype='bool')
     nelements = len(theta_mcid)
@@ -2521,7 +2923,11 @@ def _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2):
         icids = np.searchsorted(cids, mcid)
         iaxesi = iaxes[icids, :]
         jmat = np.cross(normal[imcid, :], iaxesi) # k x i
-        jmat /= np.linalg.norm(jmat, axis=1)[:, np.newaxis]
+        ji = np.linalg.norm(jmat, axis=1)[:, np.newaxis]
+        ipos = np.where(ji > 0.)[0]
+        #izero = np.where(ji == 0.)[0]
+        #jmat[izero] = np.nan
+        jmat[ipos] /= ji[ipos]
         # we do an extra normalization here because
         # we had to project i onto the elemental plane
         # unlike in the next block
@@ -2566,7 +2972,7 @@ def _material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2):
 
     return telem
 
-def _transform_shell(e2, telem):
+def _breakdown_transform_shell(e2, telem):
     """helper method for the breakdown"""
     # https://www.brown.edu/Departments/Engineering/Courses/EN224/anis_general/anis_general.htm
     et = np.einsum('nij,njk->nik', e2, telem)
@@ -2579,6 +2985,7 @@ def _transform_shell(e2, telem):
     exx = np.zeros(exx_inv.shape, dtype=exx_inv.dtype)
     eyy = np.zeros(eyy_inv.shape, dtype=eyy_inv.dtype)
     ezz = np.zeros(ezz_inv.shape, dtype=ezz_inv.dtype)
+    assert abs(exx_inv.max()) >= 0., exx_inv
     iexx = np.where(exx_inv > 0)[0]
     ieyy = np.where(eyy_inv > 0)[0]
     iezz = np.where(ezz_inv > 0)[0]
