@@ -2055,7 +2055,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
     nmasses = len(model.masses)
     eids_mass = []
-    data_mass = np.zeros((nmasses, 15), dtype='float64')
+    data_mass = np.zeros((nmasses, 24), dtype='float64')
     ieid = 0
     for eid, elem in sorted(model.masses.items()):
         etype = elem.type
@@ -2082,8 +2082,8 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
     if len(all_eids):
         all_eids = np.hstack(all_eids)
         all_eids.sort()
-    nelements = len(all_eids) + len(eids_mass)
-    if nelements == 0:
+    nelements = len(all_eids)
+    if nelements + nmasses == 0:
         return 0., [0., 0., 0], [0., 0., 0., 0., 0., 0.], None, None, None
 
     all_mids = []
@@ -2108,7 +2108,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         ieids = np.searchsorted(all_eids, eids)
         nids = np.vstack(nids_list)
         nelementsi = nids.shape[0]
-        #print(etype, nelementsi)
+        #print(etype, nelementsi, eids)
         Ax = 0.
         Ay = 0.
         Az = 0.
@@ -2367,14 +2367,15 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             nsm = npa * area
 
             # assume the panel is square to calculate w; then multiply by t to get tw
-            tw = thickness * np.sqrt(area)
+            tw = thickness[ipids] * np.sqrt(area)
             assert len(tw) > 0, tw
-            Ax = tw * norm(cross(xaxis, normal))
-            Ay = tw * norm(cross(yaxis, normal))
-            Az = tw * norm(cross(zaxis, normal))
+            Ax = tw * norm(cross(xaxis, normal), axis=1)
+            Ay = tw * norm(cross(yaxis, normal), axis=1)
+            Az = tw * norm(cross(zaxis, normal), axis=1)
         elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR']:
             # no offsets
             nids2 = nids[:, :4]
+            assert  nids2.shape[0] == nelementsi, nids2.shape
             pids = np.array(pids_dict[etype], dtype='int32')
             assert len(pids) > 0, pids
             all_pids = np.array(pids_per_area_dict['shell'])
@@ -2382,6 +2383,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             nsm_per_area = np.array(nsm_per_area_dict['shell'])
             thickness = np.array(thickness_dict['shell'])
             assert len(mass_per_area) > 0, mass_per_area_dict
+            assert len(thickness) > 0, thickness
 
             ipids = np.searchsorted(all_pids, pids)
             inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
@@ -2419,10 +2421,10 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             # assume the panel is square to calculate w; then multiply by t to get tw
             assert len(area) > 0, area
             assert len(thickness) > 0, thickness
-            tw = thickness * np.sqrt(area)
-            Ax = tw * norm(cross(xaxis, normal))
-            Ay = tw * norm(cross(yaxis, normal))
-            Az = tw * norm(cross(zaxis, normal))
+            tw = thickness[ipids] * np.sqrt(area)
+            Ax = tw * norm(cross(xaxis, normal), axis=1)
+            Ay = tw * norm(cross(yaxis, normal), axis=1)
+            Az = tw * norm(cross(zaxis, normal), axis=1)
 
         elif etype == 'CTETRA':
             nids2 = nids[:, :4]
@@ -2559,13 +2561,16 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         data[ieids, 12] = exx
         data[ieids, 13] = eyy
         data[ieids, 14] = ezz
+        #print(ieids, Ax)
         data[ieids, 15] = Ax
         data[ieids, 16] = Ay
         data[ieids, 17] = Az
         del exx, eyy, ezz, nelementsi # , pids # , ipids, e2, telem
 
-    if nmasses:
+    if nmasses and nelements:
         data = np.vstack([data, data_mass])
+    elif nmasses:
+        data = data_mass
     #x2 = x * x
     #y2 = y * y
     #z2 = z * z
