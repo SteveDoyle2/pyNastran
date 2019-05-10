@@ -2330,6 +2330,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             all_pids = np.array(pids_per_area_dict['shear'])
             mass_per_area = np.array(mass_per_area_dict['shear'])
             nsm_per_area = np.array(nsm_per_area_dict['shear'])
+            thickness = np.array(thickness_dict['shear'])
             assert len(mass_per_area) > 0, mass_per_area_dict
             ipids = np.searchsorted(all_pids, pids)
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 4)
@@ -2367,6 +2368,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
             # assume the panel is square to calculate w; then multiply by t to get tw
             tw = thickness * np.sqrt(area)
+            assert len(tw) > 0, tw
             Ax = tw * norm(cross(xaxis, normal))
             Ay = tw * norm(cross(yaxis, normal))
             Az = tw * norm(cross(zaxis, normal))
@@ -2415,6 +2417,8 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             nsm = npa * area
 
             # assume the panel is square to calculate w; then multiply by t to get tw
+            assert len(area) > 0, area
+            assert len(thickness) > 0, thickness
             tw = thickness * np.sqrt(area)
             Ax = tw * norm(cross(xaxis, normal))
             Ay = tw * norm(cross(yaxis, normal))
@@ -2845,6 +2849,7 @@ def _breakdown_property_dicts(model):
             #thickness = self.Thickness(tflag=tflag, tscales=tscales)
             thickness = 0.
 
+            thickness_dict['shell'].append(thickness)
             mass_per_area_dict['shell'].append(rhoi * thickness)
             nsm_per_area_dict['shell'].append(prop.nsm)
         elif ptype == 'PPLANE':
@@ -2857,6 +2862,7 @@ def _breakdown_property_dicts(model):
             e3_dict['shell'].append(ei3)
 
             thickness = prop.Thickness()
+            thickness_dict['shell'].append(thickness)
             mass_per_area_dict['shell'].append(rhoi * thickness)
             nsm_per_area_dict['shell'].append(prop.nsm)
         elif ptype == 'PCOMP':
@@ -3099,7 +3105,7 @@ def _get_mat_props_S(mid_ref):
         C2 = np.array([
             [e1, -nu21 * e1, 0.],
             [nu12 * e2, e2, 0.],
-            [0., 0., g * denom],
+            [0., 0., g12 * denom],
         ]) / denom
 
     else:

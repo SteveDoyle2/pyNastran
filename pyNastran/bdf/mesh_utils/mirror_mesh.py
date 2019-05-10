@@ -36,13 +36,15 @@ def get_model(bdf_filename, log=None, debug=True):
                          debug=debug, mode='msc')
     return model
 
-def bdf_mirror_plane(bdf_filename, plane, mirror_model=None, log=None, debug=True, use_nid_offset=True):
+def bdf_mirror_plane(bdf_filename, plane, mirror_model=None,
+                     log=None, debug=True, use_nid_offset=True):
     """mirrors a model about an arbitrary plane"""
     model = get_model(bdf_filename, log=log, debug=debug)
     if mirror_model is None:
         mirror_model = BDF(debug=debug, log=log, mode='msc')
 
-    nid_offset, plane = _mirror_nodes_plane(model, mirror_model, plane, use_nid_offset=use_nid_offset)
+    nid_offset, plane = _mirror_nodes_plane(model, mirror_model, plane,
+                                            use_nid_offset=use_nid_offset)
     eid_offset = _mirror_elements(model, mirror_model, nid_offset)
     #_mirror_loads(model, nid_offset, eid_offset)
     return model, mirror_model, nid_offset, eid_offset
@@ -328,7 +330,8 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
                 element2.g0 = g0
 
             elif etype == 'CGAP':
-                #nodes = [node_id + nid_offset if node_id is not None else None for node_id in nodes]
+                #nodes = [node_id + nid_offset if node_id is not None else None
+                         #for node_id in nodes]
                 #_set_nodes(element2, nodes)
                 ga = element2.ga + nid_offset if element2.ga is not None else None
                 gb = element2.gb + nid_offset if element2.gb is not None else None
@@ -446,7 +449,7 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
                     g34 = load.g34 + nid_offset
 
                 eids = [eid + eid_offset for eid in load.eids]
-                load2 = PLOAD4(
+                load = PLOAD4(
                     load.sid, eids, load.pressures, g1, g34,
                     cid=load.cid, nvector=load.nvector,
                     surf_or_line=load.surf_or_line,
@@ -454,7 +457,7 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
                 loads_new.append(load)
             elif load_type == 'QVOL':
                 elements = [eid + eid_offset for eid in load.elements]
-                load = QVOL(load.sid, load.qvol, nid_offset + load.control_point, elements, comment='')
+                load = QVOL(load.sid, load.qvol, nid_offset + load.control_point, elements)
                 loads_new.append(load)
             elif load_type == 'QHBDY':
                 grids = [nid + nid_offset for nid in load.grids]
