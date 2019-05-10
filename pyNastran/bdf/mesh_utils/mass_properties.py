@@ -2095,17 +2095,23 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
     dicts = _breakdown_property_dicts(model)
     (pids_per_length_dict, mass_per_length_dict, nsm_per_length_dict,
-     pids_per_area_dict, mass_per_area_dict, nsm_per_area_dict,
+     pids_per_area_dict, mass_per_area_dict, nsm_per_area_dict, thickness_dict,
      pids_per_volume_dict, mass_per_volume_dict,
      e2_dict, e3_dict, ) = dicts
 
-    data = np.zeros((nelements, 15), dtype='float64')
+    xaxis = np.array([1., 0., 0.])
+    yaxis = np.array([0., 1., 0.])
+    zaxis = np.array([0., 0., 1.])
+    data = np.zeros((nelements, 24), dtype='float64')
     for etype, nids_list in nids_dict.items():
         eids = np.hstack(eids_dict[etype])
         ieids = np.searchsorted(all_eids, eids)
         nids = np.vstack(nids_list)
         nelementsi = nids.shape[0]
         #print(etype, nelementsi)
+        Ax = 0.
+        Ay = 0.
+        Az = 0.
         if etype == 'CROD':
             pids = pids_dict[etype]
             assert len(pids) > 0, pids
@@ -2284,6 +2290,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             all_pids = np.array(pids_per_area_dict['shell'], dtype='int32')
             mass_per_area = np.array(mass_per_area_dict['shell'])
             nsm_per_area = np.array(nsm_per_area_dict['shell'])
+            thickness = np.array(thickness_dict['shell'])
             assert len(mass_per_area) > 0, mass_per_area_dict
 
             ipids = np.searchsorted(all_pids, pids)
@@ -2357,6 +2364,12 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             npa = nsm_per_area[ipids]
             mass = mpa * area
             nsm = npa * area
+
+            # assume the panel is square to calculate w; then multiply by t to get tw
+            tw = thickness * np.sqrt(area)
+            Ax = tw * norm(cross(xaxis, normal))
+            Ay = tw * norm(cross(yaxis, normal))
+            Az = tw * norm(cross(zaxis, normal))
         elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR']:
             # no offsets
             nids2 = nids[:, :4]
@@ -2365,6 +2378,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             all_pids = np.array(pids_per_area_dict['shell'])
             mass_per_area = np.array(mass_per_area_dict['shell'])
             nsm_per_area = np.array(nsm_per_area_dict['shell'])
+            thickness = np.array(thickness_dict['shell'])
             assert len(mass_per_area) > 0, mass_per_area_dict
 
             ipids = np.searchsorted(all_pids, pids)
@@ -2399,6 +2413,13 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             npa = nsm_per_area[ipids]
             mass = mpa * area
             nsm = npa * area
+
+            # assume the panel is square to calculate w; then multiply by t to get tw
+            tw = thickness * np.sqrt(area)
+            Ax = tw * norm(cross(xaxis, normal))
+            Ay = tw * norm(cross(yaxis, normal))
+            Az = tw * norm(cross(zaxis, normal))
+
         elif etype == 'CTETRA':
             nids2 = nids[:, :4]
             pids = np.array(pids_dict[etype], dtype='int32')
@@ -2530,9 +2551,13 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         #
         #total_mass, mass, nsm, x, y, z, [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
         data[ieids, 3:6] = centroid
+        #data[ieids, 6:11] = inertia
         data[ieids, 12] = exx
         data[ieids, 13] = eyy
-        data[ieids, 12] = ezz
+        data[ieids, 14] = ezz
+        data[ieids, 15] = Ax
+        data[ieids, 16] = Ay
+        data[ieids, 17] = Az
         del exx, eyy, ezz, nelementsi # , pids # , ipids, e2, telem
 
     if nmasses:
@@ -2556,20 +2581,37 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
     x2 = x ** 2
     y2 = y ** 2
     z2 = z ** 2
+
+    #  mass moi
     data[:, 6] = total_mass * (y2 + z2) # ixx
     data[:, 7] = total_mass * (x2 + z2) # iyy
     data[:, 8] = total_mass * (x2 + y2) # izz
     data[:, 9] = total_mass * (x * y) # ixy
     data[:, 10] = total_mass * (x * z) # ixz
     data[:, 11] = total_mass * (y * z) # iyz
+
     mass = data[:, :3]
     cg = data[:, 3:6]
     inertia = data[:, 6:12]
-    exyz = data[:, 12:]
+    exyz = data[:, 12:15]
+    axyz = data[:, 15:18]
+    aixyz = data[:, 18:24]
     assert mass.shape[1] == 3
     assert cg.shape[1] == 3
     assert inertia.shape[1] == 6
     assert exyz.shape[1] == 3, exyz.shape[1]
+    assert axyz.shape[1] == 3, axyz.shape[1]
+
+    #  area moi
+    ax = axyz[:, 0]
+    ay = axyz[:, 1]
+    az = axyz[:, 2]
+    aixyz[:, 0] = ax * (y2 + z2) # ixx
+    aixyz[:, 1] = ay * (x2 + z2) # iyy
+    aixyz[:, 2] = az* (x2 + y2) # izz
+    aixyz[:, 3] = az * (x * y) # ixy
+    aixyz[:, 4] = ay * (x * z) # ixz
+    aixyz[:, 5] = ax * (y * z) # iyz
 
     # only transform if we're calculating the inertia about the cg
     total_mass_overall = total_mass.sum()
@@ -2592,10 +2634,10 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
     make_plot = False
     if make_plot:
-        plot_inertia(total_mass, cg, inertia, exyz)
+        plot_inertia(total_mass, cg, inertia, exyz, axyz)
     return total_mass_overall, cg_overall, inertia_overall, mass, cg, inertia
 
-def plot_inertia(total_mass, cg, inertia, exyz):  # pragma: no cover
+def plot_inertia(total_mass, cg, inertia, exyz, axyz):  # pragma: no cover
     ycg = cg[:, 1]
     ixx = inertia[:, 0]
     iyy = inertia[:, 1]
@@ -2615,6 +2657,10 @@ def plot_inertia(total_mass, cg, inertia, exyz):  # pragma: no cover
     iyy2 = iyy[isort]
     izz2 = izz[isort]
 
+    ax = axyz[:, 0]
+    ay = axyz[:, 1]
+    az = axyz[:, 2]
+
     ixxe2 = ixx[isort] * exx2
     iyye2 = iyy[isort] * eyy2
     izze2 = izz[isort] * ezz2
@@ -2628,6 +2674,10 @@ def plot_inertia(total_mass, cg, inertia, exyz):  # pragma: no cover
     cixxe = np.cumsum(ixxe2[::-1])[::-1]
     ciyye = np.cumsum(iyye2[::-1])[::-1]
     cizze = np.cumsum(izze2[::-1])[::-1]
+
+    cax = np.cumsum(ax[::-1])[::-1]
+    cay = np.cumsum(ay[::-1])[::-1]
+    caz = np.cumsum(az[::-1])[::-1]
 
     #import matplotlib
     #matplotlib.use('Qt5cairo')
@@ -2645,10 +2695,23 @@ def plot_inertia(total_mass, cg, inertia, exyz):  # pragma: no cover
     ax.plot(ycg2, cizz / cizz[0], label='Izz=%.3e' % cizz[0])
     ax.legend()
     ax.set_xlabel('y')
-    ax.set_ylabel('Moment of Inertia')
-    ax.set_title('Moment of Inertia vs Span')
+    ax.set_ylabel('Mass Moment of Inertia')
+    ax.set_title('Mass Moment of Inertia vs Span')
     ax.grid(True)
     fig.savefig('moi vs span.png')
+
+    fig = plt.figure(figsize=figsize, dpi=dpi)
+    ax = fig.gca()
+    ax.plot(ycg2, cax / cax[0], label='Ixx=%.3e' % cax[0])
+    ax.plot(ycg2, cay / cay[0], label='Iyy=%.3e' % cay[0])
+    ax.plot(ycg2, caz / caz[0], label='Izz=%.3e' % caz[0])
+    ax.legend()
+    ax.set_xlabel('y')
+    ax.set_ylabel('Area Moment of Inertia')
+    ax.set_title('Area Moment of Inertia vs Span')
+    ax.grid(True)
+    fig.savefig('moi vs span.png')
+
     #plt.show()
 
 def _breakdown_property_dicts(model):
@@ -2660,6 +2723,7 @@ def _breakdown_property_dicts(model):
     pids_per_area_dict = defaultdict(list)
     mass_per_area_dict = defaultdict(list)
     nsm_per_area_dict = defaultdict(list)
+    thickness_dict = defaultdict(list)
 
     pids_per_volume_dict = defaultdict(list)
     mass_per_volume_dict = defaultdict(list)
@@ -2751,6 +2815,7 @@ def _breakdown_property_dicts(model):
 
             mass_per_area_dict['shell'].append(rhoi * thickness)
             nsm_per_area_dict['shell'].append(prop.nsm)
+            thickness_dict['shell'].append(thickness)
         elif ptype == 'PSHEAR':
             pids_per_area_dict['shear'].append(pid)
             mid_ref = prop.mid_ref
@@ -2764,6 +2829,7 @@ def _breakdown_property_dicts(model):
             #thickness = self.Thickness(tflag=tflag, tscales=tscales)
             thickness = prop.t
 
+            thickness_dict['shear'].append(thickness)
             mass_per_area_dict['shear'].append(rhoi * thickness)
             nsm_per_area_dict['shear'].append(prop.nsm)
         elif ptype == 'PLPLANE':
@@ -2800,6 +2866,8 @@ def _breakdown_property_dicts(model):
             #rhoi = [mid_ref.Rho() for mid_ref in mids_ref]
             ksym = 2 if prop.is_symmetrical() else 1
             mpai = [ksym * mid_ref.Rho() * t for mid_ref, t in zip(mids_ref, prop.thicknesses)]
+            nlayers = ksym * len(prop.thicknesses)
+            thickness = ksym * sum(prop.thicknesses)
             nlayers = ksym * len(prop.thicknesses)
             ti = np.zeros((nlayers, 3, 3), dtype='float64')
             if prop.is_symmetrical():
@@ -2852,6 +2920,7 @@ def _breakdown_property_dicts(model):
             e2_dict['shell'].append(S02)
             mass_per_area_dict['shell'].append(sum(mpai))
             nsm_per_area_dict['shell'].append(prop.nsm)
+            thickness_dict['shell'].append(thickness)
 
         elif ptype in ['PSOLID', 'PIHEX']:
             pids_per_volume_dict[ptype].append(pid)
@@ -2875,7 +2944,7 @@ def _breakdown_property_dicts(model):
     #---------------------------------------------------------------------------
     dicts = (
         pids_per_length_dict, mass_per_length_dict, nsm_per_length_dict,
-        pids_per_area_dict, mass_per_area_dict, nsm_per_area_dict,
+        pids_per_area_dict, mass_per_area_dict, nsm_per_area_dict, thickness_dict,
         pids_per_volume_dict, mass_per_volume_dict,
         e2_dict, e3_dict,
     )
@@ -3092,9 +3161,9 @@ def _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p
     #
     telem[ielem, 2, :] = normal
 
-    T = np.ones(3)
+    T = np.eye(3, dtype='float64')
     #K = T
-    K = np.zeros(6, 6)
+    K = np.zeros((6, 6), dtype='float64')
     K[:3, :3] = T
     K2 = K[:3, 3:]
     K3 = K[3:, :3]
