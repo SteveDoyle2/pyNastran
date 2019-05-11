@@ -9,8 +9,9 @@ defines:
  - slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5)
 """
 from __future__ import print_function
-from itertools import count
+import  os
 import warnings
+from itertools import count
 
 #from six import iterkeys
 import numpy as np
@@ -63,7 +64,8 @@ def _setup_faces(bdf_filename):
 
 def cut_face_model_by_coord(bdf_filename, coord, tol,
                             nodal_result, plane_atol=1e-5, skip_cleanup=True,
-                            csv_filename=None, plane_bdf_filename='plane_face.bdf', plane_bdf_offset=0.):
+                            csv_filename=None,
+                            plane_bdf_filename='plane_face.bdf', plane_bdf_offset=0.):
     """
     Cuts a Nastran model with a cutting plane
 
@@ -89,7 +91,7 @@ def cut_face_model_by_coord(bdf_filename, coord, tol,
     """
     assert isinstance(tol, float), tol
     nids, xyz_cid0, faces, face_eids = _setup_faces(bdf_filename)
-    unique_geometry_array, unique_results_array = _cut_face_model_by_coord(
+    unique_geometry_array, unique_results_array, rods_array = _cut_face_model_by_coord(
         nids, xyz_cid0, faces, face_eids, coord, tol,
         nodal_result, plane_atol=plane_atol, skip_cleanup=skip_cleanup,
         plane_bdf_filename=plane_bdf_filename, plane_bdf_offset=plane_bdf_offset)
@@ -97,7 +99,7 @@ def cut_face_model_by_coord(bdf_filename, coord, tol,
         export_face_cut(csv_filename, unique_geometry_array, unique_results_array)
     #print('unique_geometry_array=%s unique_results_array=%s' % (
         #unique_geometry_array, unique_results_array))
-    return unique_geometry_array, unique_results_array
+    return unique_geometry_array, unique_results_array, rods_array
 
 
 def export_face_cut(csv_filename, geometry_arrays, results_arrays, header=''):
@@ -119,14 +121,17 @@ def export_face_cut(csv_filename, geometry_arrays, results_arrays, header=''):
         if header:
             csv_file.write(header)
         for i, geometry_array, results_array in zip(count(), geometry_arrays, results_arrays):
-            nints = geometry_array.shape[1]
+            geometry_array2 = geometry_array[:, [0, 2, 3]]
+            assert geometry_array.shape[1] == 4, geometry_array.shape
+            nints = geometry_array2.shape[1]
             nfloats = results_array.shape[1]
             max_int = geometry_array.max()
             #len_max_int = len(str(max_int))
-            #fmt = ('%%%ii,' % (len_max_int)) * nints + '%19.18e,' * nfloats
+            #fmt = ('%%%ii,' % (len_max_int)) * nints + '%19.18e,' * nfloa# ts
             fmt = '%i,' * nints + '%19.18e,' * nfloats
             fmt = fmt.rstrip(',')
-            X = np.concatenate((geometry_array, results_array), axis=1)
+            # eid, nid, nid1, nid2 -> eid, nid1, nid2
+            X = np.concatenate((geometry_array2, results_array), axis=1)
             header2 = 'Curve %i\n' % (i+1)
             header2 += 'eid, nid1, nid2, x, y, z, Cp'
             np.savetxt(csv_file, X, fmt=fmt, newline='\n', header=header2,
@@ -243,13 +248,13 @@ def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord, tol,
 
     #print('iclose_edges_array:')
     #print(iclose_edges_array)
-    unique_geometry_array, unique_results_array = slice_faces(
+    unique_geometry_array, unique_results_array, rods_array = slice_faces(
         nids, xyz_cid0, xyz_cid, iclose_faces_array, close_face_eids_array,
         nodal_result, plane_atol=plane_atol, skip_cleanup=skip_cleanup,
         plane_bdf_filename=plane_bdf_filename, plane_bdf_offset=plane_bdf_offset)
 
     #print(coord)
-    return unique_geometry_array, unique_results_array
+    return unique_geometry_array, unique_results_array, rods_array
 
 def get_close_faces(faces, face_eids, unused_nids_close):
     """this seems like it could be a lot faster"""
@@ -317,6 +322,10 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
     unique_results_array : ???
         ???
     """
+    rod_elements = []
+    rod_nids = []
+    rod_xyzs = []
+
     fbdf = open(plane_bdf_filename, 'w')
     fbdf.write('$pyNastran: punch=True\n')
     fbdf.write('MAT1,1,3.0e7,,0.3\n')
@@ -395,7 +404,9 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
                 xyz1_global, xyz2_global, xyz3_global,
                 nodal_result,
                 local_points, global_points,
-                geometry, result, plane_atol, plane_bdf_offset=plane_bdf_offset)
+                geometry, result,
+                rod_elements, rod_nids, rod_xyzs,
+                plane_atol, plane_bdf_offset=plane_bdf_offset)
 
         if len(local_points) != len(result):
             msg = 'lengths are not equal; local_points=%s result=%s' % (
@@ -404,8 +415,11 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
         fbdf.write('$------\n')
         #print('----------------------')
     fbdf.close()
+    if len(rod_elements) == 0:
+        os.remove(plane_bdf_filename)
+
     if len(geometry) == 0:
-        return None, None
+        return None, None, (None, None, None)
     unused_local_points_array = np.array(local_points)
     unused_global_points_array = np.array(global_points)
     results_array = np.array(result)
@@ -413,9 +427,13 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
     #for g in geometry:
         #print(g)
     geometry_array = np.array(geometry, dtype='int32')
+    rods_elements_array = np.array(rod_elements, dtype='int32')
+    rod_nids_array = np.array(rod_nids, dtype='int32')
+    rod_xyzs_array = np.array(rod_xyzs, dtype='float64')
+
     unique_geometry_array, unique_results_array = _unique_face_rows(
         geometry_array, results_array, nodes, skip_cleanup=skip_cleanup)
-    return unique_geometry_array, unique_results_array
+    return unique_geometry_array, unique_results_array, (rods_elements_array, rod_nids_array, rod_xyzs_array)
 
 def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup=True):
     """
@@ -442,13 +460,15 @@ def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup=True):
 
     #print('geometry_array:')
     #print(geometry_array)
-    unused_edges = geometry_array[:, 1:]
+    # eid, nid, n1, n2
+    edges = geometry_array[:, 2:]
+    #print(edges)
     #print(','.join([str(val) for val in np.unique(edges)]))
     #print('geom =', geometry_array[myrow, :])
 
     # axis added in numpy 1.13
     unused_unique_edges, unique_edge_index = np.unique(
-        geometry_array[:, 1:],
+        edges,
         return_index=True, return_inverse=False, return_counts=False,
         axis=0)
     unique_geometry_array = geometry_array[unique_edge_index, :]
@@ -595,7 +615,9 @@ def _face_on_edge(eid, eid_new, nid_new, mid, area, J, fbdf,
                   xyz1_global, xyz2_global, unused_xyz3_global,
                   nodal_result,
                   local_points, global_points,
-                  geometry, result, unused_plane_atol):
+                  geometry, result,
+                  rod_elements, rod_nids, rod_xyzs,
+                  unused_plane_atol):
     """is this function necessary?"""
     #raise NotImplementedError('on edge-y1')
     #print('  y-sym; nid1=%s nid2=%s edge=%s' % (nid1, nid2, str(edge)))
@@ -615,6 +637,9 @@ def _face_on_edge(eid, eid_new, nid_new, mid, area, J, fbdf,
     fbdf.write(print_card_8(out_grid2))
     fbdf.write(print_card_8(conrod))
     fbdf.write(print_card_8(conm2))
+    rod_elements.append([eid_new, nid_new, nid_new + 1])
+    rod_nids.extend([nid_new, nid_new + 1])
+    rod_xyzs.append([xyz1_local, xyz2_local])
 
     local_points.append(xyz1_local)
     local_points.append(xyz2_local)
@@ -645,7 +670,9 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
                              xyz1_global, xyz2_global, xyz3_global,
                              nodal_result,
                              local_points, global_points,
-                             geometry, result, plane_atol, plane_bdf_offset=0.):
+                             geometry, result,
+                             rod_elements, rod_nids, rod_xyzs,
+                             plane_atol, plane_bdf_offset=0.):
     """
     These edges have crossings.  We rework:
      y = m*x + b
@@ -770,6 +797,9 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
         #print('    avg_global=%s' % avg_global)
         sid = 1
         out_grid = ['GRID', nid_new, None, ] + list(avg_local)
+        #rod_elements, rod_nids, rod_xyzs
+        rod_nids.append(nid_new)
+        rod_xyzs.append(avg_local)
         out_grid[4] += plane_bdf_offset
         msg += print_card_8(out_grid)
 
@@ -782,11 +812,11 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
             resulti = result2  * percent + result1  * (1 - percent)
             msg += print_card_8(out_temp)
 
-            geometry_temp.append([eid] + cut_edgei)
+            geometry_temp.append([eid, nid_new] + cut_edgei)
             # TODO: doesn't handle results of length 2+
             results_temp.append([xl, yl, zl, xg, yg, zg, resulti])
         else:
-            geometry_temp.append([eid] + cut_edgei)
+            geometry_temp.append([eid, nid_new] + cut_edgei)
             results_temp.append([xl, yl, zl, xg, yg, zg])
         i_values.append(i)
         percent_values.append(percent)
@@ -830,6 +860,7 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
     conrod = ['CONROD', eid, nid_a_prime, nid_b_prime, mid, area, J]
     #print('  ', conrod)
     fbdf.write(print_card_8(conrod))
+    rod_elements.append([eid, nid_a_prime, nid_b_prime])
 
     eid_new += 1
     nid_new += 2
@@ -852,3 +883,85 @@ def _is_dot(ivalues, percent_values, plane_atol):
         raise RuntimeError('incorrect ivalues=%s' % ivalues)
     #print('%s; percents=%s is_dot=%s' % (dot_type, percent_array, is_dot))
     return is_dot
+
+def calculate_area_moi(model, rods, moi_filename=None):
+    rod_elements, rod_nids, rod_xyzs = rods
+    eids = np.abs(rod_elements[:, 0])
+    neids = len(eids)
+    all_nids = rod_nids
+    n1 = rod_elements[:, 1]
+    n2 = rod_elements[:, 2]
+    inid1 = np.searchsorted(all_nids, n1)
+    inid2 = np.searchsorted(all_nids, n2)
+    xyz1 = rod_xyzs[inid1, :]
+    xyz2 = rod_xyzs[inid2, :]
+    centroid = (xyz1 + xyz2) / 2.
+    length = np.linalg.norm(xyz2 - xyz1, axis=1)
+    assert len(length) == neids
+
+    cg = []
+    area = []
+    thickness = []
+    for eid, lengthi, centroidi in zip(eids, length, centroid):
+        element = model.elements[eid]
+        if element.type in ['CTRIA3', 'CQUAD4']:
+            prop = element.pid_ref
+            thicknessi = prop.Thickness()
+            #normal = element.Normal()
+            areai = thicknessi * lengthi
+            thickness.append(thicknessi)
+            area.append(areai)
+            cg.append(centroidi)
+        else:
+            print(element)
+    centroid = np.array(cg, dtype='float64')
+    area = np.array(area, dtype='float64')
+    thickness = np.array(thickness, dtype='float64')
+    I = np.zeros((len(area), 3), dtype='float64') # type: np.ndarray
+
+    total_area = area.sum()
+    avg_centroid = (centroid * area[:, np.newaxis]) .sum(axis=0) / total_area
+    assert len(avg_centroid) == 3, len(avg_centroid)
+    # y corresponds to the station in the plane of the coordinate system
+    x = centroid[:, 0] - avg_centroid[0]
+    z = centroid[:, 2] - avg_centroid[2]
+    I[:, 0] = area * (x * x)  # Ixx
+    I[:, 1] = area * (z * z)  # Izz
+    I[:, 2] = area * (x * z)  # Ixz
+    Isum = I.sum(axis=0)
+    assert len(Isum) == 3, len(Isum)
+    if moi_filename:
+        eid_filename = 'eid_file.csv'
+        with open(moi_filename, 'w') as bdf_file, open(eid_filename, 'w') as eid_file:
+            bdf_file.write('$ pyNastran: punch=True\n')
+            bdf_file.write('MAT1,1,3.0e7,,0.3\n')
+            nid0 = max(n1.max(), n2.max()) + 1
+            conm2 = ['CONM2', 1, nid0]
+            grid = ['GRID', nid0, 0, avg_centroid[0], avg_centroid[2], 0.]
+            bdf_file.write(print_card_8(grid))
+            bdf_file.write(print_card_8(conm2))
+            eidi = 1
+            mid = 1
+
+            fmt = ('%s,' * 7)[:-1] + '\n'
+            eid_file.write('# eid(%i),pid(%i),area,thickness,Ixx,Izz,Ixz\n')
+            for eid, n1i, n2i, xyz1i, xyz2i, lengthi, thicknessi, areai, centroidi, Ii in zip(
+                    eids, n1, n2, xyz1, xyz2, length, thickness, area, centroid, I):
+                assert nid0 not in [n1i, n2i], (n1i, n2i)
+                pidi = abs(eid)
+                pid = eidi
+                grid1 = ['GRID', n1i, None] + xyz1i.tolist()
+                grid2 = ['GRID', n2i, None] + xyz2i.tolist()
+                #crod = ['CROD', eidi, pid, n1i, n2i]
+                A, J, nsm = Ii
+                #prod = ['PROD', pid, mid, A, J, 0., nsm]
+                conrod = ['CONROD', eidi, n1i, n2i, mid, A, J, 0., nsm]
+                bdf_file.write(print_card_8(grid1))
+                bdf_file.write(print_card_8(grid2))
+                #bdf_file.write(print_card_8(crod))
+                #bdf_file.write(print_card_8(prod))
+                bdf_file.write(print_card_8(conrod))
+                eidi += 1
+                #PID | MID |  A  |  J  |  C  | NSM
+                eid_file.write(fmt % (eidi, pidi, areai, thicknessi, Ii[0], Ii[1], Ii[2]))
+    return Isum, avg_centroid

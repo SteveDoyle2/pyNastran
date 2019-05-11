@@ -4,6 +4,8 @@ import os
 import unittest
 import numpy as np
 #import PySide
+import matplotlib
+matplotlib.use('Qt5Agg')
 try:
     import matplotlib  # pylint: disable=unused-import
     import matplotlib.pyplot as plt  # pylint: disable=unused-import
@@ -16,7 +18,8 @@ from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
-    cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows, split_to_trias)
+    cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows,
+    split_to_trias, calculate_area_moi)
 from pyNastran.bdf.mesh_utils.cutting_plane_plotter import cut_and_plot_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.op2.op2_geom import read_op2_geom
@@ -72,31 +75,93 @@ class TestCuttingPlane(unittest.TestCase):
     def test_cut_bwb(self):
         """recover element ids"""
         log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
-        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        #bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')  # ymax~=1262.0
+        bdf_filename = r'C:\NASA\asm\all_modes_mach_0.85\flutter.bdf'  # ymax=1160.601
+
         model = read_bdf(bdf_filename, log=log)
-        nnodes = len(model.nodes)
+        model2 = read_bdf(bdf_filename, log=log)
+        #nnodes = len(model.nodes)
 
         ytol = 2.
         nodal_result = None
         plane_bdf_filenames = []
-        for i in range(60):
-            dy = 25. * i + 1.
+        y = []
+        I = []
+        avg_centroid = []
+        for i in range(2000):
+            dy = 1. * i + 1.
             coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.],
                            comment='')
             print(coord)
             model.coords[1] = coord
             plane_bdf_filename = 'plane_face_%i.bdf' % i
-            unique_geometry_array, unique_results_array = cut_face_model_by_coord(
-                bdf_filename, coord, ytol,
-                nodal_result, plane_atol=1e-5, skip_cleanup=True,
-                #csv_filename='cut_face_%i.csv' % i
-                csv_filename=None,
-                plane_bdf_filename=plane_bdf_filename, plane_bdf_offset=dy)
+            try:
+                out = cut_face_model_by_coord(
+                    model2, coord, ytol,
+                    nodal_result, plane_atol=1e-5, skip_cleanup=True,
+                    csv_filename='cut_face_%i.csv' % i,
+                    #csv_filename=None,
+                    plane_bdf_filename=plane_bdf_filename, plane_bdf_offset=dy)
+            except RuntimeError:
+                # incorrect ivalues=[0, 1, 2]; dy=771. for CRM
+                continue
+            unused_unique_geometry_array, unused_unique_results_array, rods = out
+
+            if not os.path.exists(plane_bdf_filename):
+                break
             plane_bdf_filenames.append(plane_bdf_filename)
+            # eid, nid, inid1, inid2
+            #print(unique_geometry_array)
+            #moi_filename = 'amoi_%i.bdf' % i
+            moi_filename = None
+            out = calculate_area_moi(model, rods, moi_filename=moi_filename)
+            #print(out)
+            Ii, avg_centroidi = out
+            y.append(dy)
+            I.append(Ii)
+            avg_centroid.append(avg_centroidi)
             #break
-        bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
-                  encoding=None, size=8, is_double=False, cards_to_skip=None,
-                  log=None, skip_case_control_deck=False)
+        I = np.array(I, dtype='float64')
+        avg_centroid = np.array(avg_centroid, dtype='float64')
+        #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
+        #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')
+        #plt.plot(y, I[:, 2] / I[:, 2].max(), 'go-', label='Qxy')
+        aI = np.abs(I)
+
+        fig = plt.figure(1)
+        ax = fig.gca()
+        ax.plot(y, I[:, 0] / aI[:, 0].max(), 'ro-', label='Ixx')
+        ax.plot(y, I[:, 1] / aI[:, 1].max(), 'bo-', label='Izz')
+        ax.plot(y, I[:, 2] / aI[:, 2].max(), 'go-', label='Ixz')
+        ax.grid(True)
+        ax.set_xlabel('Span, y')
+        ax.set_ylabel('Normalized Area MOI, I')
+        ax.legend()
+
+        fig = plt.figure(2)
+        ax = fig.gca()
+        ax.plot(y, I[:, 0], 'ro-', label='Ixx')
+        ax.plot(y, I[:, 1], 'bo-', label='Izz')
+        ax.plot(y, I[:, 2], 'go-', label='Ixz')
+        ax.grid(True)
+        ax.set_xlabel('Span, y')
+        ax.set_ylabel('Area MOI, I')
+        ax.legend()
+
+        fig = plt.figure(3)
+        ax = fig.gca()
+        ax.plot(y, avg_centroid[:, 0], 'ro-', label='xcg')
+        ax.plot(y, avg_centroid[:, 2], 'bo-', label='zcg')
+        ax.grid(True)
+        ax.set_xlabel('Span, y')
+        ax.set_ylabel('CG')
+        ax.legend()
+        plt.show()
+
+        #bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
+                  #encoding=None, size=8, is_double=False, cards_to_skip=None,
+                  #log=None, skip_case_control_deck=False)
+
 
     def test_cut_plate_eids(self):
         """recover element ids"""
@@ -111,7 +176,7 @@ class TestCuttingPlane(unittest.TestCase):
         model.coords[1] = coord
         ytol = 2.
 
-        unique_geometry_array, unique_results_array = cut_face_model_by_coord(
+        unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
             bdf_filename, coord, ytol,
             nodal_result, plane_atol=1e-5, skip_cleanup=True,
             csv_filename='cut_face.csv')
@@ -158,7 +223,7 @@ class TestCuttingPlane(unittest.TestCase):
         unused_local_points_array, unused_global_points_array, result_array = out
         assert len(result_array) == 16, len(result_array)
 
-        unused_geometry_array, result_array = cut_face_model_by_coord(
+        unused_geometry_array, result_array, unused_rods = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5)
         result_array = np.array(result_array)
@@ -200,7 +265,7 @@ class TestCuttingPlane(unittest.TestCase):
         unused_local_points_array, unused_global_points_array, result_array = out
         assert len(result_array) == 20, len(result_array)
 
-        unused_geometry_arrays, result_arrays = cut_face_model_by_coord(
+        unused_geometry_arrays, result_arrays, unused_rods = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5, csv_filename='cut_face_2.csv')
         assert len(result_arrays[0]) == 8, len(result_arrays)
@@ -298,7 +363,6 @@ class TestCuttingPlane(unittest.TestCase):
         iedges, unused_geometry_array2, unused_results_array2 = connect_face_rows(
             geometry_array, results_array, skip_cleanup=False)
         assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
-
 
 def _cut_shell_model_quads():
     """helper method"""
