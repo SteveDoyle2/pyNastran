@@ -1,6 +1,4 @@
-"""
-Plots a model cutting plane
-"""
+"""Plots a model cutting plane"""
 from __future__ import print_function, unicode_literals
 import numpy as np
 try:
@@ -65,10 +63,11 @@ def cut_and_plot_model(title, p1, p2, zaxis,
         if len(local_points_array) == 0:
             log.error('No elements were piereced.  Check your cutting plane.')
             return
-        plot_cutting_plane_edges(title, p1, p2, zaxis,
-                                 local_points_array, global_points_array, result_array,
-                                 csv_filename=csv_filename, invert_yaxis=invert_yaxis,
-                                 plot=plot, show=show)
+        if plot or csv_filename:
+            plot_cutting_plane_edges(title, p1, p2, zaxis,
+                                     local_points_array, global_points_array, result_array,
+                                     csv_filename=csv_filename, invert_yaxis=invert_yaxis,
+                                     plot=plot, show=show)
     elif cut_type == 'face':
         csv_filename_face = None
         if csv_filename:

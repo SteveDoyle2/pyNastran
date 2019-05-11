@@ -647,12 +647,12 @@ def get_renumber_starting_ids_from_model(model):
     """
     eid_max = max([
         max(model.elements.keys()),
-        max(model.masses.keys()) if model.masses else 0,
-        max(model.rigid_elements.keys()) if model.rigid_elements else 0,
+        max(model.masses) if model.masses else 0,
+        max(model.rigid_elements) if model.rigid_elements else 0,
     ])
     pid_max = max([
-        max(model.properties.keys()),
-        0 if len(model.properties_mass) == 0 else max(model.properties_mass.keys()),
+        max(model.properties) if model.masses else 0,
+        0 if len(model.properties_mass) == 0 else max(model.properties_mass),
     ])
     starting_id_dict = {
         'cid' : max(model.coords.keys()) + 1,

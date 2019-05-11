@@ -6,6 +6,7 @@ import numpy as np
 #import PySide
 try:
     import matplotlib  # pylint: disable=unused-import
+    import matplotlib.pyplot as plt  # pylint: disable=unused-import
     IS_MATPLOTLIB = True
 except ImportError:  # pragma: no cover
     IS_MATPLOTLIB = False
@@ -15,8 +16,9 @@ from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
-    cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows)
+    cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows, split_to_trias)
 from pyNastran.bdf.mesh_utils.cutting_plane_plotter import cut_and_plot_model
+from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.op2.op2_geom import read_op2_geom
 
 PKG_PATH = pyNastran.__path__[0]
@@ -42,6 +44,13 @@ class TestCuttingPlane(unittest.TestCase):
         model.coords[1] = coord
         ytol = 2.
 
+        # no result
+        nodal_result = None
+        cut_and_plot_model(title, p1, p2, zaxis,
+                           model, coord, nodal_result, model.log, ytol,
+                           plane_atol=1e-5, csv_filename=None, invert_yaxis=False,
+                           cut_type='edge', plot=False, show=False)
+
         # real
         nodal_result = op2_model.eigenvectors[1].data[9, :, 2]
 
@@ -59,6 +68,66 @@ class TestCuttingPlane(unittest.TestCase):
                            cut_type='edge', plot=IS_MATPLOTLIB, show=False)
         os.remove('real_result.csv')
         os.remove('complex_result.csv')
+
+    def test_cut_bwb(self):
+        """recover element ids"""
+        log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
+        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')
+        model = read_bdf(bdf_filename, log=log)
+        nnodes = len(model.nodes)
+
+        ytol = 2.
+        nodal_result = None
+        plane_bdf_filenames = []
+        for i in range(60):
+            dy = 25. * i + 1.
+            coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.],
+                           comment='')
+            print(coord)
+            model.coords[1] = coord
+            plane_bdf_filename = 'plane_face_%i.bdf' % i
+            unique_geometry_array, unique_results_array = cut_face_model_by_coord(
+                bdf_filename, coord, ytol,
+                nodal_result, plane_atol=1e-5, skip_cleanup=True,
+                #csv_filename='cut_face_%i.csv' % i
+                csv_filename=None,
+                plane_bdf_filename=plane_bdf_filename, plane_bdf_offset=dy)
+            plane_bdf_filenames.append(plane_bdf_filename)
+            #break
+        bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
+                  encoding=None, size=8, is_double=False, cards_to_skip=None,
+                  log=None, skip_case_control_deck=False)
+
+    def test_cut_plate_eids(self):
+        """recover element ids"""
+        log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
+        bdf_filename = os.path.join(MODEL_PATH, 'plate_py', 'plate_py.dat')
+        model = read_bdf(bdf_filename, log=log)
+        nnodes = len(model.nodes)
+        nodal_result = np.ones(nnodes)
+
+        coord = CORD2R(1, rid=0, origin=[0., 0., 0.], zaxis=[0., 0., 1], xzplane=[1., 0., 0.],
+                       comment='')
+        model.coords[1] = coord
+        ytol = 2.
+
+        unique_geometry_array, unique_results_array = cut_face_model_by_coord(
+            bdf_filename, coord, ytol,
+            nodal_result, plane_atol=1e-5, skip_cleanup=True,
+            csv_filename='cut_face.csv')
+        #print(unique_geometry_array)
+        #print(unique_results_array)
+        unique_geometry_array = np.array(unique_geometry_array)
+        unique_results_array = np.array(unique_results_array)
+        assert unique_geometry_array.shape == (1, 40, 3), unique_geometry_array.shape
+        assert unique_results_array.shape == (1, 40, 7), unique_results_array.shape
+        unique_geometry_array = unique_geometry_array[0, :, :]
+        unique_results_array = unique_results_array[0, :, :]
+
+        assert unique_geometry_array.shape == (40, 3), unique_geometry_array.shape
+        assert unique_results_array.shape == (40, 7), unique_results_array.shape
+        #print(unique_geometry_array)
+        #print(unique_results_array)
 
     def test_cut_shell_model_1(self):
         """
@@ -86,13 +155,14 @@ class TestCuttingPlane(unittest.TestCase):
         out = cut_edge_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5)
-        unused_local_points_array, unused_global_points_array, result_array =  out
+        unused_local_points_array, unused_global_points_array, result_array = out
         assert len(result_array) == 16, len(result_array)
 
         unused_geometry_array, result_array = cut_face_model_by_coord(
             model, coord, tol, nodal_result,
             plane_atol=1e-5)
-        assert result_array is None, len(result_array) # no quad support
+        result_array = np.array(result_array)
+        assert result_array.shape == (1, 8, 7), result_array.shape
         os.remove('plane_edge.bdf')
         os.remove('plane_face.bdf')
 
@@ -108,13 +178,7 @@ class TestCuttingPlane(unittest.TestCase):
         model, nodal_result = _cut_shell_model_quads()
         #-------------------------------------------------------------------------
         # triangles
-        elements2 = {}
-        neids = len(model.elements)
-        for eid, elem in model.elements.items():
-            elem_a, elem_b = elem.split_to_ctria3(eid, eid + neids)
-            elements2[elem_a.eid] = elem_a
-            elements2[elem_b.eid] = elem_b
-        model.elements = elements2
+        split_to_trias(model)
         model.coords[1] = coord
         model.write_bdf('tris.bdf')
 

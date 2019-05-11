@@ -609,5 +609,45 @@ class TestBars(unittest.TestCase):
         #model._verify_bdf(xref=True)
         #model.uncross_reference()
 
+    def test_cbeam3(self):
+        """tests a CBEAM3"""
+        model = BDF(debug=False)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        model.add_grid(4, [0., 0., 0.])
+        eid = 1
+        pid = 2
+        nids = [1, 2, 3]
+        x = None
+        g0 = 4
+        cbeam3 = model.add_cbeam3(eid, pid, nids, x, g0, wa=None, wb=None, wc=None, tw=None, s=None, comment='cbeam3')
+
+        A = 1.
+        iz = 2.
+        iy = 3.
+        mid = 4
+        pbeam3 = model.add_pbeam3(pid, mid, A, iz, iy, iyz=0., j=None,
+                                  nsm=0., cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0., comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.1)
+        str(cbeam3)
+        pbeam3s = str(pbeam3)
+        str(pbeam3s)
+        card_lines = pbeam3s.split('\n')
+
+        cbeam3._verify(xref=False)
+        model.cross_reference()
+        model.uncross_reference()
+
+        del model.properties[pid]
+        model.cards_to_read.add('PBEAM3')
+        model.add_card(card_lines, 'PBEAM3', comment='', ifile=None, is_list=False, has_none=True)
+        model.pop_parse_errors()
+        model.pop_xref_errors()
+        assert pbeam3 == model.properties[pid]
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

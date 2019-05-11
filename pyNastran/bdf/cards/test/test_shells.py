@@ -658,10 +658,15 @@ class TestShells(unittest.TestCase):
         pcomp = model.add_pcomp(pid, mids, thicknesses)
 
         assert pcomp.Thickness() == sum(thicknesses), thicknesses
+        assert np.allclose(pcomp.get_thicknesses(), [0.1, 0.2, 0.3]), pcomp.get_thicknesses()
+        assert np.allclose(pcomp.get_thetas(), [0., 0., 0.]), pcomp.get_thetas()
 
         pcomp.lam = 'SYM'
         assert pcomp.Thickness() == sum(thicknesses)*2, thicknesses
 
+        assert np.allclose(pcomp.get_thicknesses(), [0.1, 0.2, 0.3, 0.3, 0.2, 0.1]), pcomp.get_thicknesses()
+        assert np.allclose(pcomp.get_thetas(), [0., 0., 0., 0., 0., 0.]), pcomp.get_thetas()
+        #---------------------------------------------------
         model.validate()
 
         ctria6.raw_fields()

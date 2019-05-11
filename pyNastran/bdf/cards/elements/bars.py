@@ -925,10 +925,21 @@ class CBEAM3(LineElement):  # was CBAR
 
     """
     type = 'CBEAM3'
-
     def __init__(self, eid, pid, nids, x, g0,
-                 wa, wb, wc, tw, s, comment=''):
+                 wa=None, wb=None, wc=None, tw=None, s=None, comment=''):
         LineElement.__init__(self)
+
+        if wa is None:
+            wa = np.zeros(3, dtype='float64')
+        if wb is None:
+            wb = np.zeros(3, dtype='float64')
+        if wc is None:
+            wc = np.zeros(3, dtype='float64')
+        if tw is None:
+            tw = np.zeros(3, dtype='float64')
+        if s is None:
+            s = np.zeros(3, dtype='int32')
+
         if comment:
             self.comment = comment
         self.eid = eid
@@ -946,6 +957,7 @@ class CBEAM3(LineElement):  # was CBAR
         self.ga_ref = None
         self.gb_ref = None
         self.gc_ref = None
+        self.g0_ref = None
         self.pid_ref = None
 
     @classmethod
@@ -969,7 +981,6 @@ class CBEAM3(LineElement):  # was CBAR
 
         # card, eid, x1_default, x2_default, x3_default
         x, g0 = init_x_g0(card, eid, 0., 0., 0.)
-
         wa = np.array([double_or_blank(card, 9, 'w1a', 0.0),
                        double_or_blank(card, 10, 'w2a', 0.0),
                        double_or_blank(card, 11, 'w3a', 0.0)], dtype='float64')
@@ -992,7 +1003,7 @@ class CBEAM3(LineElement):  # was CBAR
                       integer_or_blank(card, 23, 'sc', -1)], dtype='int32')
         assert len(card) <= 24, 'len(CBEAM3 card) = %i\ncard=%s' % (len(card), card)
         return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
-                      wa, wb, wc, tw, s, comment=comment)
+                      wa=wa, wb=wb, wc=wc, tw=tw, s=s, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -1009,6 +1020,8 @@ class CBEAM3(LineElement):  # was CBAR
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.gc_ref = model.Node(self.gc, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+        if self.g0:
+            self.g0_ref = model.Node(self.g0, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by CBEAM3 eid=%s' % (self.eid)
@@ -1016,11 +1029,16 @@ class CBEAM3(LineElement):  # was CBAR
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.gc_ref = model.Node(self.gc, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if self.g0:
+            self.g0_ref = model.Node(self.g0, msg=msg)
 
     def uncross_reference(self):
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.gc = self.Gc()
+        if self.g0_ref is not None:
+            self.g0 = self.G0()
+            self.g0_ref = None
         self.pid = self.Pid()
         self.ga_ref = None
         self.gb_ref = None
@@ -1054,23 +1072,52 @@ class CBEAM3(LineElement):  # was CBAR
         return nsm
 
     def Ga(self):
+        """gets node 1"""
         if self.ga_ref is None:
             return self.ga
         return self.ga_ref.nid
 
     def Gb(self):
+        """gets node 2"""
         if self.gb_ref is None:
             return self.gb
         return self.gb_ref.nid
 
     def Gc(self):
+        """gets the node between node 1 and 2"""
         if self.gc_ref is None:
             return self.gc
         return self.gc_ref.nid
 
+    def G0(self):
+        """gets the orientation vector node"""
+        if self.g0_ref is None:
+            return self.g0
+        return self.g0_ref.nid
+
     @property
     def node_ids(self):
         return [self.Ga(), self.Gb(), self.Gc()]
+
+    def get_x_g0_defaults(self):
+        """
+        X and G0 compete for the same fields, so the method exists to
+        make it easier to write the card
+
+        Returns
+        -------
+        x_g0 : varies
+            g0 : List[int, None, None]
+            x : List[float, float, float]
+
+        Notes
+        -----
+        Used by CBAR, CBEAM, and CBEAM3
+
+        """
+        if self.g0 is not None:
+            return (self.G0(), None, None)
+        return list(self.x)
 
     def raw_fields(self):
         x1, x2, x3 = self.get_x_g0_defaults()

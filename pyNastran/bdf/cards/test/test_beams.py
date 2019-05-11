@@ -880,15 +880,20 @@ class TestBeams(unittest.TestCase):
 
         mass_a = L / 2. * (area1 * rho + nsm_a)
         mass_b = L / 2. * (area2 * rho + nsm_b)
-        unused_xcg = (0.0 * mass_a + 1.0 * mass_b) / (mass_a + mass_b)
+        #xcg = (0.0 * mass_a + 1.0 * mass_b) / (mass_a + mass_b)
+
         #print(mass_a, mass_b, xcg, mass_a + mass_b)
         #print('mass =', mass)
         #cbeam = CBEAM()
         cbeam = model.elements[10]
         pbeam = model.properties[11]
+        cg = cbeam.center_of_mass()
+        centroid = cbeam.Centroid()
         assert pbeam.Nu() == nu, 'pbeam.Nu()=%s nu=%s' % (pbeam.Nu(), nu)
         assert pbeam.Rho() == rho, 'pbeam.Rho()=%s rho=%s' % (pbeam.Rho(), rho)
         assert np.allclose(cbeam.Length(), 1.0), cbeam.Length()
+        assert np.allclose(cg[0], 0.5), 'cg=%s' % cg
+        assert np.allclose(centroid[0], 0.5), 'centroid=%s' % centroid
         #assert allclose(cbeam.Mass(), 10.25), cbeam.Mass()
         #assert allclose(cbeam.MassPerLength(), 10.25), cbeam.MassPerLength()
         #assert allclose(mass, 10.25), mass
@@ -1075,7 +1080,24 @@ class TestBeams(unittest.TestCase):
         mat1.rho = 10.0
         assert pbeaml.MassPerLength() == 21.0, pbeaml.MassPerLength()
         assert pbeaml2.MassPerLength() == 21.0, pbeaml2.MassPerLength()
-        save_load_deck(model, run_save_load_hdf5=True)
+
+        eid = 1
+        nids = [1, 2]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0., 0., 1.])
+        x = None
+        g0 = 3
+        cbeam = model.add_cbeam(eid, pid, nids, x, g0, offt='GGG',
+                                bit=None, pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+        model.uncross_reference()
+        model.cross_reference()
+
+        cg = cbeam.center_of_mass()
+        centroid = cbeam.Centroid()
+        assert np.allclose(cg, [0.5, 0., 0.]), cg
+        assert np.allclose(centroid, [0.5, 0., 0.]), centroid
+        save_load_deck(model)
 
     def test_pbeam_opt(self):
         """tests a PBEAM with DVPREL1"""

@@ -1950,7 +1950,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PBMSECT' : (PBMSECT, self._add_property_object),
 
             'CBEAM3' : (CBEAM3, self._add_element_object),
-            #'PBEAM3' : (PBEAM3, self._add_property_object),
+            'PBEAM3' : (PBEAM3, self._add_property_object),
 
             'CBEND' : (CBEND, self._add_element_object),
             'PBEND' : (PBEND, self._add_property_object),

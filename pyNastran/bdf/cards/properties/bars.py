@@ -2072,12 +2072,15 @@ class PBRSECT(LineProperty):
 class PBEAM3(LineProperty):  # not done, cleanup
     type = 'PBEAM3'
 
-    def __init__(self, pid, mid, A, iz, iy, iyz, j, nsm=0.,
-                 cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0., comment=''):
+    def __init__(self, pid, mid, A, iz, iy, iyz=0., j=None, nsm=0.,
+                 cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0.,
+                 ky=1., kz=1., comment=''):
         """Creates a PBEAM3 card"""
         LineProperty.__init__(self)
         if comment:
             self.comment = comment
+        if j is None:
+            j = iy + iz
         self.pid = pid
         self.mid = mid
 
@@ -2096,9 +2099,24 @@ class PBEAM3(LineProperty):  # not done, cleanup
         self.ez = ez
         self.fy = fy
         self.fz = fz
+
+        self.ky = ky
+        self.kz = kz
         self.mid_ref = None
 
-    def add_card(self, card, comment=''):
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a PBARL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        #PID MID A(A) IZ(A) IY(A) IYZ(A) J(A) NSM(A)
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
 
@@ -2106,9 +2124,10 @@ class PBEAM3(LineProperty):  # not done, cleanup
         iz = double(card, 4, 'Iz')
         iy = double(card, 5, 'Iy')
         iyz = double_or_blank(card, 6, 'Iyz', 0.0)
-        j = double_or_blank(card, 7, 'J', self.iy + self.iz)
+        j = double_or_blank(card, 7, 'J', iy + iz)
         nsm = double_or_blank(card, 8, 'nsm', 0.0)
 
+        #CY(A) CZ(A) DY(A) DZ(A) EY(A) EZ(A) FY(A) FZ(A)
         cy = double(card, 9, 'cy')
         cz = double(card, 10, 'cz')
 
@@ -2120,9 +2139,48 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
         fy = double(card, 15, 'fy')
         fz = double(card, 16, 'fz')
+
+        #SO(B)  A(B) IZ(B) IY(B) IYZ(B)  J(B) NSM(B)
+        #CY(B) CZ(B) DY(B) DZ(B) EY(B)  EZ(B) FY(B)  FZ(B)
+
+        #SO(C)  A(C) IZ(C) IY(C) IYZ(C) J(C)  NSM(C)
+        #CY(C) CZ(C) DY(C) DZ(C) EY(C)  EZ(C) FY(C)  FZ(C)
+        locations = ['B', 'C']
+        for i, location in enumerate(locations):
+            offset = 17 + i * 8
+            soi = string_or_blank(card, offset, 'SO_%s' % location, default='YESA')
+            areai = double_or_blank(card, offset + 1, 'area_%s' % location, default=A)
+            izi = double_or_blank(card, offset + 2, 'Iz', default=iz)
+            iyi = double_or_blank(card, offset + 3, 'Iy', default=iy)
+            iyzi = double_or_blank(card, offset + 4, 'Iyz', default=iyz)
+            ji = double_or_blank(card, offset + 5, 'J', default=j)
+            nsmi = double_or_blank(card, offset + 6, 'nsm', default=nsm)
+
+            cyi = double_or_blank(card, offset + 7, 'cy', default=0.)
+            czi = double_or_blank(card, offset + 8, 'cz', default=0.)
+
+            dyi = double_or_blank(card, offset + 9, 'dy', default=0.)
+            dzi = double_or_blank(card, offset + 10, 'dz', default=0.)
+
+            eyi = double_or_blank(card, offset + 11, 'ey', default=0.)
+            ezi = double_or_blank(card, offset + 12, 'ez', default=0.)
+
+            fyi = double_or_blank(card, offset + 13, 'fy', default=0.)
+            fzi = double_or_blank(card, offset + 14, 'fz', default=0.)
+
+        #KY       KZ      NY(A)   NZ(A)    NY(B)   NZ(B)   NY(C)    NZ(C)
+        #MY(A)    MZ(A)   MY(B)   MZ(B)    MY(C)   MZ(C)   NSIY(A)  NSIZ(A)
+        #NSIYZ(A) NSIY(B) NSIZ(B) NSIYZ(B) NSIY(C) NSIZ(C) NSIYZ(C) CW(A)
+        #CW(B)    CW(C)   STRESS
+        ifield = 49
+        ky = double_or_blank(card, ifield, 'Ky', default=1.0)
+        kz = double_or_blank(card, ifield, 'Ky', default=1.0)
+
         # more...
+
         return PBEAM3(pid, mid, A, iz, iy, iyz, j, nsm=nsm,
-                      cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz, comment=comment)
+                      cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
+                      ky=ky, kz=kz, comment=comment)
 
     def add_op2_data(self, data, comment=''):
         if comment:
@@ -2152,7 +2210,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def repr_fields(self):
+    def raw_fields(self):
         """.. todo:: not done"""
         list_fields = [
             'PBEAM3', self.pid, self.Mid(), self.A, self.iz, self.iy, self.iyz, self.j, self.nsm,

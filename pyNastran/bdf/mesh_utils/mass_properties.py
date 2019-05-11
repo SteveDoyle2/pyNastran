@@ -2790,6 +2790,7 @@ def _breakdown_property_dicts(model):
             mass_per_length_dict['beam'].append(areai * rhoi)
         elif ptype == 'PBEAML':
             pids_per_length_dict['beam'].append(pid)
+            mid_ref = prop.mid_ref
             rhoi = prop.Rho()
             areai = prop.Area()
             nsmi = prop.Nsm()
@@ -2798,6 +2799,7 @@ def _breakdown_property_dicts(model):
             nsm_per_length_dict['beam'].append(nsmi)
             mass_per_length_dict['beam'].append(areai * rhoi)
         elif prop.type == 'PBCOMP':
+            pids_per_length_dict['beam'].append(pid)
             mid_ref = prop.mid_ref
             mass_per_length = prop.MassPerLength()
             nsm_per_length = prop.nsm
