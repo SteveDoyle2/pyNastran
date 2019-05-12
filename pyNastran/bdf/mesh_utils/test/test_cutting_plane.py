@@ -4,14 +4,21 @@ import os
 import unittest
 import numpy as np
 #import PySide
-import matplotlib
-matplotlib.use('Qt5Agg')
+#0import matplotlib
+#matplotlib.use('Qt5Agg')
+from pyNastran.gui.qt_version import  qt_version
+from pyNastran.gui.matplotlib_backend import matplotlib_backend
+
 try:
     import matplotlib  # pylint: disable=unused-import
-    import matplotlib.pyplot as plt  # pylint: disable=unused-import
     IS_MATPLOTLIB = True
 except ImportError:  # pragma: no cover
     IS_MATPLOTLIB = False
+
+
+if IS_MATPLOTLIB:
+    matplotlib.use(matplotlib_backend)
+    import matplotlib.pyplot as plt  # pylint: disable=unused-import
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf, BDF, CORD2R
@@ -21,7 +28,7 @@ from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     cut_edge_model_by_coord, cut_face_model_by_coord, connect_face_rows,
     split_to_trias, calculate_area_moi)
 from pyNastran.bdf.mesh_utils.cutting_plane_plotter import cut_and_plot_model
-from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
+#from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.op2.op2_geom import read_op2_geom
 
 PKG_PATH = pyNastran.__path__[0]
@@ -75,8 +82,9 @@ class TestCuttingPlane(unittest.TestCase):
     def test_cut_bwb(self):
         """recover element ids"""
         log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
-        #bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')  # ymax~=1262.0
-        bdf_filename = r'C:\NASA\asm\all_modes_mach_0.85\flutter.bdf'  # ymax=1160.601
+        bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')  # ymax~=1262.0
+        #bdf_filename = r'C:\NASA\asm\all_modes_mach_0.85\flutter.bdf'  # ymax=1160.601
+        normal_plane = np.array([0., 1., 0.])
 
         model = read_bdf(bdf_filename, log=log)
         model2 = read_bdf(bdf_filename, log=log)
@@ -89,10 +97,13 @@ class TestCuttingPlane(unittest.TestCase):
         I = []
         avg_centroid = []
         for i in range(2000):
-            dy = 1. * i + 1.
+            dy = 50. * i + 1.
+            #dy = .5 * i + 1.
+            #if dy > 150.:
+                #break
             coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.],
                            comment='')
-            print(coord)
+            #print(coord)
             model.coords[1] = coord
             plane_bdf_filename = 'plane_face_%i.bdf' % i
             try:
@@ -114,49 +125,18 @@ class TestCuttingPlane(unittest.TestCase):
             #print(unique_geometry_array)
             #moi_filename = 'amoi_%i.bdf' % i
             moi_filename = None
-            out = calculate_area_moi(model, rods, moi_filename=moi_filename)
+            out = calculate_area_moi(model, rods, normal_plane, moi_filename=moi_filename)
             #print(out)
             Ii, avg_centroidi = out
             y.append(dy)
             I.append(Ii)
             avg_centroid.append(avg_centroidi)
             #break
+
         I = np.array(I, dtype='float64')
         avg_centroid = np.array(avg_centroid, dtype='float64')
-        #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
-        #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')
-        #plt.plot(y, I[:, 2] / I[:, 2].max(), 'go-', label='Qxy')
-        aI = np.abs(I)
-
-        fig = plt.figure(1)
-        ax = fig.gca()
-        ax.plot(y, I[:, 0] / aI[:, 0].max(), 'ro-', label='Ixx')
-        ax.plot(y, I[:, 1] / aI[:, 1].max(), 'bo-', label='Izz')
-        ax.plot(y, I[:, 2] / aI[:, 2].max(), 'go-', label='Ixz')
-        ax.grid(True)
-        ax.set_xlabel('Span, y')
-        ax.set_ylabel('Normalized Area MOI, I')
-        ax.legend()
-
-        fig = plt.figure(2)
-        ax = fig.gca()
-        ax.plot(y, I[:, 0], 'ro-', label='Ixx')
-        ax.plot(y, I[:, 1], 'bo-', label='Izz')
-        ax.plot(y, I[:, 2], 'go-', label='Ixz')
-        ax.grid(True)
-        ax.set_xlabel('Span, y')
-        ax.set_ylabel('Area MOI, I')
-        ax.legend()
-
-        fig = plt.figure(3)
-        ax = fig.gca()
-        ax.plot(y, avg_centroid[:, 0], 'ro-', label='xcg')
-        ax.plot(y, avg_centroid[:, 2], 'bo-', label='zcg')
-        ax.grid(True)
-        ax.set_xlabel('Span, y')
-        ax.set_ylabel('CG')
-        ax.legend()
-        plt.show()
+        if IS_MATPLOTLIB:
+            plot_inertia(y, I, avg_centroid, show=False)
 
         #bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
                   #encoding=None, size=8, is_double=False, cards_to_skip=None,
@@ -184,12 +164,12 @@ class TestCuttingPlane(unittest.TestCase):
         #print(unique_results_array)
         unique_geometry_array = np.array(unique_geometry_array)
         unique_results_array = np.array(unique_results_array)
-        assert unique_geometry_array.shape == (1, 40, 3), unique_geometry_array.shape
+        assert unique_geometry_array.shape == (1, 40, 4), unique_geometry_array.shape
         assert unique_results_array.shape == (1, 40, 7), unique_results_array.shape
         unique_geometry_array = unique_geometry_array[0, :, :]
         unique_results_array = unique_results_array[0, :, :]
 
-        assert unique_geometry_array.shape == (40, 3), unique_geometry_array.shape
+        assert unique_geometry_array.shape == (40, 4), unique_geometry_array.shape
         assert unique_results_array.shape == (40, 7), unique_results_array.shape
         #print(unique_geometry_array)
         #print(unique_results_array)
@@ -364,6 +344,47 @@ class TestCuttingPlane(unittest.TestCase):
             geometry_array, results_array, skip_cleanup=False)
         assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
 
+
+def plot_inertia(y, I, avg_centroid, ifig=1, show=True):  # pragma: no cover
+    """hepler method for test"""
+    #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
+    #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')
+    #plt.plot(y, I[:, 2] / I[:, 2].max(), 'go-', label='Qxy')
+    aI = np.abs(I)
+
+    fig = plt.figure(ifig)
+    ax = fig.gca()
+    ax.plot(y, I[:, 0] / aI[:, 0].max(), 'ro-', label='Ixx')
+    ax.plot(y, I[:, 1] / aI[:, 1].max(), 'bo-', label='Izz')
+    ax.plot(y, I[:, 2] / aI[:, 2].max(), 'go-', label='Ixz')
+    ax.grid(True)
+    ax.set_xlabel('Span, y')
+    ax.set_ylabel('Normalized Area MOI, I')
+    ax.legend()
+
+    fig = plt.figure(ifig + 1)
+    ax = fig.gca()
+    ax.plot(y, I[:, 0], 'ro-', label='Ixx')
+    ax.plot(y, I[:, 1], 'bo-', label='Izz')
+    ax.plot(y, I[:, 2], 'go-', label='Ixz')
+    ax.grid(True)
+    ax.set_xlabel('Span, y')
+    ax.set_ylabel('Area MOI, I')
+    ax.legend()
+
+    fig = plt.figure(ifig + 2)
+    ax = fig.gca()
+    ax.plot(y, avg_centroid[:, 0], 'ro-', label='xcg')
+    ax.plot(y, avg_centroid[:, 2], 'bo-', label='zcg')
+    ax.grid(True)
+    ax.set_xlabel('Span, y')
+    ax.set_ylabel('CG')
+    ax.legend()
+    if show:
+        plt.show()
+    ifig += 3
+    return ifig
+
 def _cut_shell_model_quads():
     """helper method"""
     log = SimpleLogger(level='error')
@@ -416,5 +437,6 @@ def _cut_shell_model_quads():
     nodal_result = np.linspace(0., 1., num=16)
     return model, nodal_result
 
-if __name__ == '__main__':
+
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

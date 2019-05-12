@@ -10,6 +10,8 @@ else:
     import subprocess
 
     def get_git_revision_short_hash():
+        """determines the git revision; only works if the packages was checked
+        out using git"""
         try:
             #ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
 

@@ -1,7 +1,11 @@
 """
 defines:
     bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_id_dict=None, round_ids=False, cards_to_skip=None)
+                 starting_id_dict=None, round_ids=False, cards_to_skip=None,
+                 log=None, debug=False)
+    superelement_renumber(bdf_filename, bdf_filename_out=None, size=8, is_double=False,
+                          starting_id_dict=None, cards_to_skip=None,
+                          log=None, debug=False)
 """
 from __future__ import print_function
 from itertools import chain
@@ -13,6 +17,7 @@ import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
+
 
 def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                  starting_id_dict=None, round_ids=False, cards_to_skip=None,
@@ -235,7 +240,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     flfact_id = None
     flutter_id = None
     freq_id = None
-    tstep_id = None
+    ##tstep_id = None
     tstepnl_id = None
     set_id = None
     suport_id = None
@@ -318,6 +323,13 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
             tf_id = int(value)
         else:
             raise NotImplementedError('key=%r' % key)
+
+    # just to make pylint be quiet
+    str(
+        (nsm_id, method_id, cmethod_id, flfact_id, flutter_id,
+         tstep_id, tstepnl_id,
+         suport_id, suport1_id)
+    )
 
     # build the maps
     mass_id_map = {}
@@ -516,11 +528,11 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         dessub_map[key] = value
 
     # tables
-    for table_idi, table in sorted(model.tables.items()):
+    for unused_table_idi, table in sorted(model.tables.items()):
         assert hasattr(table, 'tid')
         table.tid = table_id
         table_id += 1
-    for table_idi, table in sorted(model.random_tables.items()):
+    for unused_table_idi, table in sorted(model.random_tables.items()):
         assert hasattr(table, 'tid')
         table.tid = table_id
         table_id += 1
@@ -573,10 +585,8 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
         'materials' : mid_map,
         'properties' : properties_map,
         'properties_mass' : properties_mass_map,
-        #'SPC' : spc_map,
         'spcs' : spc_map,
-        #'MPC' : mpc_map,   # TODO: come up with unified system that uses the same key
-        'mpcs' : mpc_map,  #       for bdf_merge and _update_case_control
+        'mpcs' : mpc_map,
         'METHOD' : method_map,
         'CMETHOD' : cmethod_map,
         'FLFACT' : flfact_map,
@@ -619,6 +629,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     _write_bdf(model, bdf_filename_out, size=size, is_double=is_double)
     return model, mapper
 
+
 def _write_bdf(model, bdf_filename_out, size=8, is_double=False):
     """helper method"""
     if bdf_filename_out is not None:
@@ -629,6 +640,7 @@ def _write_bdf(model, bdf_filename_out, size=8, is_double=False):
             close = False
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double,
                         interspersed=False, close=close)
+
 
 def get_renumber_starting_ids_from_model(model):
     """
@@ -646,26 +658,28 @@ def get_renumber_starting_ids_from_model(model):
         Dictionary from id type to starting id.
     """
     eid_max = max([
-        max(model.elements.keys()),
+        max(model.elements),
         max(model.masses) if model.masses else 0,
         max(model.rigid_elements) if model.rigid_elements else 0,
     ])
     pid_max = max([
         max(model.properties) if model.masses else 0,
-        0 if len(model.properties_mass) == 0 else max(model.properties_mass),
+        max(model.properties_mass) if model.properties_mass else 0,
     ])
+    mids = model.material_ids
     starting_id_dict = {
-        'cid' : max(model.coords.keys()) + 1,
+        'cid' : max(model.coords) + 1,
         'nid' : max(model.point_ids) + 1,
         'eid' : eid_max + 1,
         'pid' : pid_max + 1,
-        'mid' : max(model.material_ids) + 1,
-        'set_id' : max(model.sets.keys()) + 1 if model.sets else 1,
-        'spline_id' : max(model.splines.keys()) + 1 if model.splines else 1,
+        'mid' : max(mids) + 1 if mids else 1,
+        'set_id' : max(model.sets) + 1 if model.sets else 1,
+        'spline_id' : max(model.splines) + 1 if model.splines else 1,
         'caero_id' : max(caero.box_ids[-1, -1]
                          for caero in model.caeros.values()) + 1 if model.caeros else 1,
     }
     return starting_id_dict
+
 
 def get_starting_ids_dict_from_mapper(model, mapper):
     starting_id_dict2 = {}
@@ -800,6 +814,7 @@ def superelement_renumber(bdf_filename, bdf_filename_out=None, size=8, is_double
     _write_bdf(model, bdf_filename_out, size=size, is_double=is_double)
     return model #, mapper
 
+
 def _create_nid_maps(model, starting_id_dict, nid):
     """builds the nid_maps"""
     nid_map = {}
@@ -848,6 +863,7 @@ def _create_nid_maps(model, starting_id_dict, nid):
         reverse_nid_map = nid_map
     return nid_map, reverse_nid_map
 
+
 def _create_mid_map(model, mid):
     """builds the mid_map"""
     mid_map = {}
@@ -883,6 +899,7 @@ def _create_mid_map(model, mid):
             mid_map[midi] = mid + i
     return mid_map, all_materials
 
+
 def _get_bdf_model(bdf_filename, cards_to_skip=None, log=None, debug=False):
     """helper method"""
     if isinstance(bdf_filename, BDF):
@@ -892,6 +909,7 @@ def _get_bdf_model(bdf_filename, cards_to_skip=None, log=None, debug=False):
         model.disable_cards(cards_to_skip)
         model.read_bdf(bdf_filename)
     return model
+
 
 def _update_nodes(model, starting_id_dict, nid, nid_map):
     """updates the nodes"""
@@ -903,6 +921,7 @@ def _update_nodes(model, starting_id_dict, nid, nid_map):
             nid_new = nid_map[nid]
             #print('nid=%s -> %s' % (nid, nid_new))
             node.nid = nid_new
+
 
 def _update_properties(model, starting_id_dict, pid,
                        properties_map, properties_mass_map):
@@ -931,6 +950,7 @@ def _update_properties(model, starting_id_dict, pid,
             prop.pid = pid
             pid += 1
 
+
 def _update_elements(model, starting_id_dict, eid,
                      eid_map, mass_id_map, rigid_elements_map):
     """updates the elements"""
@@ -957,6 +977,7 @@ def _update_elements(model, starting_id_dict, eid,
         #for eidi, elem in model.caeros.items():
             #pass
 
+
 def _update_materials(unused_model, starting_id_dict, mid,
                       mid_map, all_materials):
     if 'mid' in starting_id_dict and mid is not None:
@@ -966,6 +987,7 @@ def _update_materials(unused_model, starting_id_dict, mid,
                 mid = mid_map[midi]
                 assert hasattr(material, 'mid')
                 material.mid = mid
+
 
 def _update_spcs(model, starting_id_dict, spc_id,
                  spc_map):
@@ -992,6 +1014,7 @@ def _update_spcs(model, starting_id_dict, spc_id,
         for spc_id in model.spcs:
             spc_map[spc_id] = spc_id
 
+
 def _update_mpcs(model, starting_id_dict, mpc_id,
                  mpc_map):
     """updates the mpcs"""
@@ -1017,6 +1040,7 @@ def _update_mpcs(model, starting_id_dict, mpc_id,
         for mpc_id in model.mpcs:
             mpc_map[mpc_id] = mpc_id
 
+
 def _update_coords(model, starting_id_dict, cid,
                    cid_map):
     """updates the coords"""
@@ -1029,6 +1053,7 @@ def _update_coords(model, starting_id_dict, cid,
             coord.cid = cid
             cid_map[cidi] = cid
             cid += 1
+
 
 def _update_case_control(model, mapper):
     """
@@ -1103,9 +1128,7 @@ def _update_case_control(model, mapper):
     for isubcase, subcase in sorted(case_control.subcases.items()):
         #print('-----------------------')
         for key, values in sorted(subcase.params.items()):
-            mapper_key = key
-            if key in case_control_card_to_pynastran_key:
-                mapper_key = case_control_card_to_pynastran_key[key]
+            mapper_key = case_control_card_to_pynastran_key.get(key, key)
 
             if key in skip_keys:
                 pass
@@ -1212,6 +1235,8 @@ def _update_case_control(model, mapper):
         #print()
 
 def _update_case_key(key, elemental_quantities, seti2, eid_map, nid_map):
+    """Updates a Case Control SET card.  A set may have an elemental result
+    or a nodal result."""
     values2 = []
     eids_missing = []
     nids_missing = []

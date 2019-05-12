@@ -635,6 +635,7 @@ class TestBars(unittest.TestCase):
         model.add_mat1(mid, E, G, nu, rho=0.1)
         str(cbeam3)
         pbeam3s = str(pbeam3)
+        #print(pbeam3s)
         str(pbeam3s)
         card_lines = pbeam3s.split('\n')
 

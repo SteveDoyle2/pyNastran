@@ -236,6 +236,16 @@ class BaseCard(object):
             return False
         fields1 = self.raw_fields()
         fields2 = card.raw_fields()
+
+        #print(fields1)
+        #print(fields2)
+        #print(self._is_same_fields_long(fields1, fields2))
+        #print(fields1[0])
+        #for i in range(1, len(fields1), 8):
+            #print(fields1[i:i+8])
+            #print(fields2[i:i+8])
+            #print(self._is_same_fields_long(fields1[i:i+8], fields2[i:i+8]))
+            #print()
         return self._is_same_fields(fields1, fields2)
 
     def _is_same_fields(self, fields1, fields2):
@@ -244,6 +254,14 @@ class BaseCard(object):
             if not is_same(field1, field2):
                 return False
         return True
+
+    def _is_same_fields_long(self, fields1, fields2):  # pragma: no cover
+        """helper for __eq__"""
+        out = []
+        for (field1, field2) in zip(fields1, fields2):
+            is_samei = is_same(field1, field2)
+            out.append(is_samei)
+        return out
 
     def print_raw_card(self, size=8, is_double=False):
         # type: (int, bool) -> str

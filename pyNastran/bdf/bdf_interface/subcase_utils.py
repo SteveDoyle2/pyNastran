@@ -144,7 +144,7 @@ def expand_thru_case_control(set_value):
     try:
         list_values.sort()
     except TypeError:
-        msg = 'sort error: list_values=%s'  % (list_values)
+        msg = 'sort error: list_values=%s set_value2=%s'  % (list_values, set_value2)
         raise TypeError(msg)
 
     #print('end of expansion = %s' % list_values)

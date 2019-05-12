@@ -12,6 +12,8 @@ Multi-segment beams are IntegratedLineProperty objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import count
+from typing import List, Tuple, Union
 from six import integer_types, string_types
 from numpy import pi, array
 import numpy as np
@@ -2072,15 +2074,77 @@ class PBRSECT(LineProperty):
 class PBEAM3(LineProperty):  # not done, cleanup
     type = 'PBEAM3'
 
-    def __init__(self, pid, mid, A, iz, iy, iyz=0., j=None, nsm=0.,
-                 cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0.,
-                 ky=1., kz=1., comment=''):
-        """Creates a PBEAM3 card"""
+    def __init__(self, pid, mid, A, iz, iy, iyz=None, j=None, nsm=0.,
+                 cy=None, cz=None, dy=None, dz=None, ey=None, ez=None, fy=None, fz=None,
+                 ky=1., kz=1.,
+                 ny=None, nz=None, my=None, mz=None,
+                 nsiy=None, nsiz=None, nsiyz=None,
+                 cw=None, stress='GRID',
+                 comment=''):
+        """
+        Creates a PBEAM3 card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        A : List[float]
+            areas for ABC
+        iz / iy / iyz : List[float]
+            area moment of inertias for ABC
+        iyz : List[float]; default=None -> [0., 0., 0.]
+            area moment of inertias for ABC
+        j : List[float]; default=None
+            polar moment of inertias for ABC
+            None -> iy + iz from section A for ABC
+        cy / cz / dy / dz / ey / ez / fy / fz : List[float]; default=[0., 0., 0.]
+            stress recovery loctions for ABC
+        ny / nz / my / mz : List[float]
+            ???
+        nsiy / nsiz / nsiyz : List[float]
+            ???
+        cw : List[float]
+            warping coefficients for ABC
+        stress : str; default='GRID'
+            ???
+
+        """
         LineProperty.__init__(self)
         if comment:
             self.comment = comment
+
+        if isinstance(A, float_types):
+            A = [A] * 3
+        if isinstance(iy, float_types):
+            iy = [iy] * 3
+        if isinstance(iz, float_types):
+            iz = [iz] * 3
+        if isinstance(iyz, float_types):
+            iyz = [iyz] * 3
+        if isinstance(nsm, float_types):
+            nsm = [nsm] * 3
+
         if j is None:
-            j = iy + iz
+            j = [iy[0] + iz[0]] * 3
+        elif isinstance(j, float_types):
+            j = [j] * 3
+
+        def _pbeam3_default_list(values, default_list):
+            if values is None:
+                values = default_list
+            elif isinstance(values, float_types):
+                values = [values] * 3
+            return values
+
+        def _pbeam3_default_list_station_a(values, default_list):
+            if values is None:
+                values = default_list
+            elif isinstance(values, float_types):
+                values = [values] * 3
+            return values
+
         self.pid = pid
         self.mid = mid
 
@@ -2091,17 +2155,29 @@ class PBEAM3(LineProperty):  # not done, cleanup
         self.j = j
         self.nsm = nsm
 
-        self.cy = cy
-        self.cz = cz
-        self.dy = dy
-        self.dz = dz
-        self.ey = ey
-        self.ez = ez
-        self.fy = fy
-        self.fz = fz
+        self.cy = _pbeam3_default_list(cy, [0., 0., 0.])
+        self.cz = _pbeam3_default_list(cz, [0., 0., 0.])
+        self.dy = _pbeam3_default_list(dy, [0., 0., 0.])
+        self.dz = _pbeam3_default_list(dz, [0., 0., 0.])
+        self.ey = _pbeam3_default_list(ey, [0., 0., 0.])
+        self.ez = _pbeam3_default_list(ez, [0., 0., 0.])
+        self.fy = _pbeam3_default_list(fy, [0., 0., 0.])
+        self.fz = _pbeam3_default_list(fz, [0., 0., 0.])
 
         self.ky = ky
         self.kz = kz
+
+        self.ny = _pbeam3_default_list_station_a(ny, [0., 0., 0.])
+        self.nz = _pbeam3_default_list_station_a(nz, [0., 0., 0.])
+        self.my = _pbeam3_default_list_station_a(my, [0., 0., 0.])
+        self.mz = _pbeam3_default_list_station_a(mz, [0., 0., 0.])
+
+        self.nsiy = _pbeam3_default_list_station_a(nsiy, [0., 0., 0.])
+        self.nsiz = _pbeam3_default_list_station_a(nsiz, [0., 0., 0.])
+        self.nsiyz = _pbeam3_default_list_station_a(nsiyz, [0., 0., 0.])
+
+        self.cw = _pbeam3_default_list_station_a(cw, [0., 0., 0.])
+        self.stress = stress
         self.mid_ref = None
 
     @classmethod
@@ -2120,25 +2196,25 @@ class PBEAM3(LineProperty):  # not done, cleanup
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
 
-        A = double(card, 3, 'A')
-        iz = double(card, 4, 'Iz')
-        iy = double(card, 5, 'Iy')
-        iyz = double_or_blank(card, 6, 'Iyz', 0.0)
-        j = double_or_blank(card, 7, 'J', iy + iz)
-        nsm = double_or_blank(card, 8, 'nsm', 0.0)
+        area = [double(card, 3, 'A')]
+        iz = [double(card, 4, 'Iz')]
+        iy = [double(card, 5, 'Iy')]
+        iyz = [double_or_blank(card, 6, 'Iyz', 0.0)]
+        j = [double_or_blank(card, 7, 'J', iy[0] + iz[0])]
+        nsm = [double_or_blank(card, 8, 'nsm', 0.0)]
 
         #CY(A) CZ(A) DY(A) DZ(A) EY(A) EZ(A) FY(A) FZ(A)
-        cy = double(card, 9, 'cy')
-        cz = double(card, 10, 'cz')
+        cy = [double(card, 9, 'cy')]
+        cz = [double(card, 10, 'cz')]
 
-        dy = double(card, 11, 'dy')
-        dz = double(card, 12, 'dz')
+        dy = [double(card, 11, 'dy')]
+        dz = [double(card, 12, 'dz')]
 
-        ey = double(card, 13, 'ey')
-        ez = double(card, 14, 'ez')
+        ey = [double(card, 13, 'ey')]
+        ez = [double(card, 14, 'ez')]
 
-        fy = double(card, 15, 'fy')
-        fz = double(card, 16, 'fz')
+        fy = [double(card, 15, 'fy')]
+        fz = [double(card, 16, 'fz')]
 
         #SO(B)  A(B) IZ(B) IY(B) IYZ(B)  J(B) NSM(B)
         #CY(B) CZ(B) DY(B) DZ(B) EY(B)  EZ(B) FY(B)  FZ(B)
@@ -2147,26 +2223,27 @@ class PBEAM3(LineProperty):  # not done, cleanup
         #CY(C) CZ(C) DY(C) DZ(C) EY(C)  EZ(C) FY(C)  FZ(C)
         locations = ['B', 'C']
         for i, location in enumerate(locations):
-            offset = 17 + i * 8
+            offset = 17 + i * 16
             soi = string_or_blank(card, offset, 'SO_%s' % location, default='YESA')
-            areai = double_or_blank(card, offset + 1, 'area_%s' % location, default=A)
-            izi = double_or_blank(card, offset + 2, 'Iz', default=iz)
-            iyi = double_or_blank(card, offset + 3, 'Iy', default=iy)
-            iyzi = double_or_blank(card, offset + 4, 'Iyz', default=iyz)
-            ji = double_or_blank(card, offset + 5, 'J', default=j)
-            nsmi = double_or_blank(card, offset + 6, 'nsm', default=nsm)
 
-            cyi = double_or_blank(card, offset + 7, 'cy', default=0.)
-            czi = double_or_blank(card, offset + 8, 'cz', default=0.)
+            area.append(double_or_blank(card, offset + 2, 'area_%s' % location, default=area[0]))
+            iz.append(double_or_blank(card, offset + 3, 'Iz', default=iz[0]))
+            iy.append(double_or_blank(card, offset + 4, 'Iy', default=iy[0]))
+            iyz.append(double_or_blank(card, offset + 5, 'Iyz', default=iyz[0]))
+            j.append(double_or_blank(card, offset + 6, 'J', default=j[0]))
+            nsm.append(double_or_blank(card, offset + 7, 'nsm', default=nsm[0]))
 
-            dyi = double_or_blank(card, offset + 9, 'dy', default=0.)
-            dzi = double_or_blank(card, offset + 10, 'dz', default=0.)
+            cy.append(double_or_blank(card, offset + 8, 'cy', default=0.))
+            cz.append(double_or_blank(card, offset + 9, 'cz', default=0.))
 
-            eyi = double_or_blank(card, offset + 11, 'ey', default=0.)
-            ezi = double_or_blank(card, offset + 12, 'ez', default=0.)
+            dy.append(double_or_blank(card, offset + 10, 'dy', default=0.))
+            dz.append(double_or_blank(card, offset + 11, 'dz', default=0.))
 
-            fyi = double_or_blank(card, offset + 13, 'fy', default=0.)
-            fzi = double_or_blank(card, offset + 14, 'fz', default=0.)
+            ey.append(double_or_blank(card, offset + 12, 'ey', default=0.))
+            ez.append(double_or_blank(card, offset + 13, 'ez', default=0.))
+
+            fy.append(double_or_blank(card, offset + 14, 'fy', default=0.))
+            fz.append(double_or_blank(card, offset + 15, 'fz', default=0.))
 
         #KY       KZ      NY(A)   NZ(A)    NY(B)   NZ(B)   NY(C)    NZ(C)
         #MY(A)    MZ(A)   MY(B)   MZ(B)    MY(C)   MZ(C)   NSIY(A)  NSIZ(A)
@@ -2178,7 +2255,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
         # more...
 
-        return PBEAM3(pid, mid, A, iz, iy, iyz, j, nsm=nsm,
+        return PBEAM3(pid, mid, area, iz, iy, iyz, j, nsm=nsm,
                       cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
                       ky=ky, kz=kz, comment=comment)
 
@@ -2212,9 +2289,39 @@ class PBEAM3(LineProperty):  # not done, cleanup
 
     def raw_fields(self):
         """.. todo:: not done"""
-        list_fields = [
-            'PBEAM3', self.pid, self.Mid(), self.A, self.iz, self.iy, self.iyz, self.j, self.nsm,
-            self.cy, self.cz, self.dy, self.dz, self.ey, self.ez, self.fy, self.fz]
+        list_fields = ['PBEAM3', self.pid, self.Mid()]
+        for (i, ai, iz, iy, iyz, j, nsm, cy, cz, dy, dz, ey, ez, fy, fz) in zip(
+                count(), self.A, self.iz, self.iy, self.iyz, self.j, self.nsm,
+                self.cy, self.cz, self.dy, self.dz, self.ey, self.ez, self.fy, self.fz):
+            assert iy == 3., iy
+            assert  iz == 2., iz
+            if i == 0:
+                list_fields += [
+                    ai, iz, iy, iyz, j, nsm,
+                    cy, cz, dy, dz, ey, ez, fy, fz]
+            else:
+                list_fields += [
+                    'YES', None,
+                    ai, iz, iy, iyz, j, nsm,
+                    cy, cz, dy, dz, ey, ez, fy, fz]
+
+        #KY KZ NY(A) NZ(A) NY(B) NZ(B) NY(C) NZ(C)
+        #MY(A) MZ(A) MY(B) MZ(B) MY(C) MZ(C) NSIY(A) NSIZ(A)
+        #NSIYZ(A) NSIY(B) NSIZ(B) NSIYZ(B) NSIY(C) NSIZ(C) NSIYZ(C) CW(A)
+        #CW(B) CW(C) STRESS
+        list_fields += [self.ky, self.kz]
+        for ny, nz in zip(self.ny, self.nz):
+            list_fields += [ny, nz]
+        for my, mz in zip(self.my, self.mz):
+            list_fields += [my, mz]
+        for nsiy, nsiz, nsiyz in zip(self.nsiy, self.nsiz, self.nsiyz):
+            list_fields += [nsiy, nsiz, nsiyz]
+
+        list_fields += self.cw
+        list_fields += [self.stress, None, None, None, None, None]
+
+        #WC(A) WYC(A) WZC(A) WD(A) WYD(A) WZD(A) WE(A) WYE(A)
+        #WZE(A) WF(A)) WYF(A) WZF(A)
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -2669,7 +2776,7 @@ class PBEND(LineProperty):
 
 
 def split_arbitrary_thickness_section(key, value):
-    # type: (str, Union[float, List[int]]) -> (int, Union[float, List[int]])
+    # type: (str, Union[float, List[int]]) -> Tuple(int, Union[float, List[int]])
     """
     >>> key = 'T(11)'
     >>> value = '[1.2,PT=(123,204)]'
@@ -2868,7 +2975,7 @@ def plot_arbitrary_section(model, self,
     #print('all_points =', all_points)
     #plt.show()
 
-    for key, thickness in ts.items():
+    for key, unused_thickness in ts.items():
         if key == 1:
             continue
         #print(thickness)

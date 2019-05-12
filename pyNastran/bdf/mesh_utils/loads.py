@@ -188,7 +188,7 @@ def _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p):
             loadcase_id, elem.type, load.type))
     else:
         raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
-    return
+    return F, M
 
 def _pload1_elements(model, loadcase_id, load, scale, eids, xyz, F, M, p):
     """helper method for ``sum_forces_moments_elements``"""
@@ -203,7 +203,7 @@ def _pload1_elements(model, loadcase_id, load, scale, eids, xyz, F, M, p):
             loadcase_id, elem.type, load.type))
     else:
         raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
-    return
+    return F, M
 
 def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p):
     """
@@ -580,7 +580,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     for loadtype in unsupported_types:
         model.log.warning('case=%s loadtype=%r not supported' % (loadcase_id, loadtype))
     #model.log.info("case=%s F=%s M=%s\n" % (loadcase_id, F, M))
-    return (F, M)
+    return F, M
 
 
 def _bar_eq_pload1(load, elem, xyz, Ldir,
@@ -668,7 +668,7 @@ def _bar_eq_pload1(load, elem, xyz, Ldir,
             'Type=%r is not supported.\n'
             'Use [FX, FXE, FY, FYE, FZ, FZE,\n'
             '     MX, MXE, MY, MYE, MZ, MZE]' % load.Type)
-    return
+    return F, M
 
 
 def _pload4_total(loadcase_id, load, scale, xyz, F, M, p):
@@ -678,7 +678,7 @@ def _pload4_total(loadcase_id, load, scale, xyz, F, M, p):
         fi, mi = _pload4_helper(loadcase_id, load, scale, elem, xyz, p)
         F += fi
         M += mi
-    return
+    return F, M
 
 def _pload4_elements(loadcase_id, load, scale, eids, xyz, F, M, p):
     """helper method for ``sum_forces_moments_elements``"""
@@ -690,7 +690,7 @@ def _pload4_elements(loadcase_id, load, scale, eids, xyz, F, M, p):
         fi, mi = _pload4_helper(loadcase_id, load, scale, elem, xyz, p)
         F += fi
         M += mi
-    return
+    return F, M
 
 def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
     """gets the nodes, area, centroid, normal, and nface"""
@@ -736,6 +736,51 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
             face_acn = elem.get_face_area_centroid_normal(g1, load.g34_ref.nid)
             nface = 4
         unused_face, area, centroid, normal = face_acn
+    elif etype == 'CPYRAM':
+        #C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\nast\demo\sslv09c.dat
+        nodes = None
+        g1 = load.g1_ref.nid
+        g3 = load.g34_ref.nid
+        nids = elem.node_ids[:5]
+        in1 = nids.index(g1)
+        in3 = nids.index(g3)
+        in13 = [in1, in3]
+        in13.sort()
+        in13 = tuple(in13)
+
+        # TODO: verify normal
+        xyzs = elem.get_node_positions()[:5]
+        if in13 in [(0, 2), (1, 3)]:
+            # G1 Identification number of a grid point connected to a corner of
+            # the face. Required data for solid elements only.
+            # (Integer > 0 or blank)
+
+            # G3 For CHEXA, CPYRAM, or CPENTA quadrilateral faces, G3 is
+            # the identification number of a grid point connected to a corner
+            # diagonally opposite to G1. Required for quadrilateral faces of
+            # CHEXA, CPYRAM and CPENTA elements only.
+            p1, p2, p3, p4, unused_p5 = xyzs
+            v31 = p3 - p1
+            v42 = p4 - p2
+            normal = -np.cross(v31, v42)
+            nface = 4
+        elif in13 in [(0, 1), (1, 2), (2, 3), (0, 3)]:
+            # For CPYRAM element triangle faces, G1 and G3 are adjacent
+            # corner nodes on the quadrilateral face, and the load is applied
+            # on the triangular face which includes those grids.
+            p1 = xyzs[in13[0]]
+            p3 = xyzs[in13[1]]
+            p2 = xyzs[4]  # top node
+            v21 = p2 - p1 # towards the top
+            v31 = p3 - p1 # towards the base
+            normal = np.cross(v21, v31)
+            nface = 3
+        else:  # pragma: no cover
+            raise RuntimeError(in13)
+        ni = np.linalg.norm(normal)
+        normal /= ni
+        area = 0.5 * ni
+        centroid = elem.Centroid()
     else:
         eid = elem.eid
         msg = 'PLOAd4: case=%s eid=%s etype=%r loadtype=%r not supported\n%s%s' % (

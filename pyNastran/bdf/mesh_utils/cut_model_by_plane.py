@@ -450,18 +450,24 @@ def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup=True):
     #geometry_array[:, 1:] = nodes[iedges.flatten()].reshape(iedges.shape)
     #aaa
     #myrow = None
+
+    # eid, nid, inid1, inid2
+    # cut it as [eid, nid, | inid, inid2]
+    # | = 2
+    n = 2
     for irow, row in enumerate(geometry_array):
         #if row[0] == 11029:
             #myrow = irow
             #print('ids=%s' % row[1:])
             #print('nids=%s' % nodes[row[1:]])
-        out = nodes[row[1:]]
-        geometry_array[irow, 1:] = out
+
+        out = nodes[row[n:]]
+        geometry_array[irow, n:] = out
 
     #print('geometry_array:')
     #print(geometry_array)
     # eid, nid, n1, n2
-    edges = geometry_array[:, 2:]
+    edges = geometry_array[:, n:]
     #print(edges)
     #print(','.join([str(val) for val in np.unique(edges)]))
     #print('geom =', geometry_array[myrow, :])
@@ -806,10 +812,10 @@ def _interpolate_face_to_bar(nodes, eid, eid_new, nid_new, mid, area, J, fbdf,
         #print('  ', out_grid)
         #print('  plane_atol=%s dy=%s\n' % (plane_atol, dy))
         if is_result:
-            out_temp = ['TEMP', sid, nid_new, resulti] #+ resulti.tolist()
             result1 = nodal_result[inid_a]
             result2 = nodal_result[inid_b]
             resulti = result2  * percent + result1  * (1 - percent)
+            out_temp = ['TEMP', sid, nid_new, resulti] #+ resulti.tolist()
             msg += print_card_8(out_temp)
 
             geometry_temp.append([eid, nid_new] + cut_edgei)
@@ -884,7 +890,7 @@ def _is_dot(ivalues, percent_values, plane_atol):
     #print('%s; percents=%s is_dot=%s' % (dot_type, percent_array, is_dot))
     return is_dot
 
-def calculate_area_moi(model, rods, moi_filename=None):
+def calculate_area_moi(model, rods, normal_plane, moi_filename=None):
     rod_elements, rod_nids, rod_xyzs = rods
     eids = np.abs(rod_elements[:, 0])
     neids = len(eids)
@@ -906,9 +912,13 @@ def calculate_area_moi(model, rods, moi_filename=None):
         element = model.elements[eid]
         if element.type in ['CTRIA3', 'CQUAD4']:
             prop = element.pid_ref
-            thicknessi = prop.Thickness()
-            #normal = element.Normal()
-            areai = thicknessi * lengthi
+            normal = element.Normal()
+            if abs(np.dot(normal_plane, normal)) > 0.9:
+                thicknessi = 0.
+                areai = 0.
+            else:
+                thicknessi = prop.Thickness()
+                areai = thicknessi * lengthi
             thickness.append(thicknessi)
             area.append(areai)
             cg.append(centroidi)
@@ -923,6 +933,7 @@ def calculate_area_moi(model, rods, moi_filename=None):
     avg_centroid = (centroid * area[:, np.newaxis]) .sum(axis=0) / total_area
     assert len(avg_centroid) == 3, len(avg_centroid)
     # y corresponds to the station in the plane of the coordinate system
+    # and is 0. because we're in the local plane
     x = centroid[:, 0] - avg_centroid[0]
     z = centroid[:, 2] - avg_centroid[2]
     I[:, 0] = area * (x * x)  # Ixx
@@ -949,7 +960,7 @@ def calculate_area_moi(model, rods, moi_filename=None):
                     eids, n1, n2, xyz1, xyz2, length, thickness, area, centroid, I):
                 assert nid0 not in [n1i, n2i], (n1i, n2i)
                 pidi = abs(eid)
-                pid = eidi
+                #pid = eidi
                 grid1 = ['GRID', n1i, None] + xyz1i.tolist()
                 grid2 = ['GRID', n2i, None] + xyz2i.tolist()
                 #crod = ['CROD', eidi, pid, n1i, n2i]
