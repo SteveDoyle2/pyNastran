@@ -6,7 +6,6 @@ import numpy as np
 #import PySide
 #0import matplotlib
 #matplotlib.use('Qt5Agg')
-from pyNastran.gui.qt_version import  qt_version
 from pyNastran.gui.matplotlib_backend import matplotlib_backend
 
 try:
