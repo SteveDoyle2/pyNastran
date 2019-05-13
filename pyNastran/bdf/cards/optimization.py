@@ -1913,10 +1913,10 @@ class DRESP1(OptConstraint):
 
     def Atta(self):
         """returns the values of ATTa"""
-        if self.response_type == 'GPFORCE':
+        if self.response_type in ['GPFORCE', 'GPFORCP']:
             atta = self.atta_ref.nid if self.atta_ref is not None else self.atta
         else:
-            assert  self.atta_ref is None, str(self)
+            assert  self.atta_ref is None, self.get_stats()
             atta = self.atta
         return atta
 

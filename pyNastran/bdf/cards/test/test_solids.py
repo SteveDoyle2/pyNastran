@@ -1,6 +1,5 @@
 """various solid element tests"""
 from __future__ import print_function
-import os
 import copy
 import unittest
 
@@ -371,8 +370,8 @@ class TestSolids(unittest.TestCase):
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(20, [1., 0., 0.])
         model.add_grid(30, [1., 1., 0.])
-        model.add_grid(40, [0., 0., 2.])
-        model.add_grid(50, [1., 1., 2.])
+        model.add_grid(40, [0., 1., 0.])
+        model.add_grid(50, [0., 0., 1.])
         model.add_psolid(pid, mid)
         model.add_mat1(mid, E, G, nu, rho=1.0)
         nids = [10, 20, 30, 40, 50]
@@ -386,8 +385,116 @@ class TestSolids(unittest.TestCase):
         elem2.write_card(size=16)
         elem2.write_card_16(is_double=False)
 
+        # quad face; g1/g3 are opposite
+        # tri face: g1/g3 are adjacent
+        #model.add_pload4(sid, eids, pressures, g1=None, g34=None, cid=0, nvector=None,
+                         #surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        # --------------------------------------------------------------------------------------------
+        eid = 10
+        pressures = 10.
+        # -------------------
+        # quad faces
+        sid = 10
+        g1 = 10
+        g3 = 30
+        model.add_pload4(sid, eid, pressures, g1=g1, g34=g3, cid=0, nvector=None,
+                         surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        sid = 11
+        g1 = 30
+        g3 = 10
+        model.add_pload4(sid, eid, pressures, g1=g1, g34=g3, cid=0, nvector=None,
+                         surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        # -------------------
+        # tri faces
+        sid = 21
+        g1 = 10
+        g3 = 20
+        model.add_pload4(sid, eid, pressures, g1=g1, g34=g3, cid=0, nvector=None,
+                         surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        sid = 22
+        g1 = 20
+        g3 = 30
+        model.add_pload4(sid, eid, pressures, g1=g1, g34=g3, cid=0, nvector=None,
+                         surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        sid = 23
+        g1 = 30
+        g3 = 40
+        model.add_pload4(sid, eid, pressures, g1=g1, g34=g3, cid=0, nvector=None,
+                         surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        sid = 24
+        g1 = 40
+        g3 = 10
+        model.add_pload4(sid, eid, pressures, g1=g1, g34=g3, cid=0, nvector=None,
+                         surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        # -------------------
+        # tri faces top
+        g3 = 50
+
+        sid = 31
+        g1 = 10
+        model.add_pload4(sid, eid, pressures, g1=g1, g34=g3, cid=0, nvector=None,
+                         surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        sid = 32
+        g1 = 20
+        model.add_pload4(sid, eid, pressures, g1=g1, g34=g3, cid=0, nvector=None,
+                         surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        sid = 33
+        g1 = 30
+        model.add_pload4(sid, eid, pressures, g1=g1, g34=g3, cid=0, nvector=None,
+                         surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        sid = 34
+        g1 = 40
+        model.add_pload4(sid, eid, pressures, g1=g1, g34=g3, cid=0, nvector=None,
+                         surf_or_line='SURF', line_load_dir='NORM', comment='')
+
+        # --------------------------------------------------------------------------------------------
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+
+        eids = None
+        nids = None
+        p0 = [0., 0., 0.]
+        # --------------------------------------------------------------------------------------------
+        def sum_loads(loadcase_id, force):
+            force1, moment1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False, xyz_cid0=None)
+            force2, moment2 =  model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+                                                                 include_grav=False, xyz_cid0=None)
+            assert np.allclose(force1, force), 'sid=%s force1=%s force2=%s' % (loadcase_id, force1, force2)
+            assert np.allclose(force2, force), 'sid=%s force1=%s force2=%s' % (loadcase_id, force1, force2)
+
+        sum_loads(10, [0., 0., -10.])
+        sum_loads(11, [0., 0., -10.])
+
+        sum_loads(21, [0., -5., 0.])
+        sum_loads(22, [5., 0., 5.])
+        sum_loads(23, [0., 5., 5.])
+        sum_loads(24, [5., 0., 0.])
+
+        with self.assertRaises(RuntimeError):
+            sum_loads(31, [0., -5., 0.])
+        with self.assertRaises(RuntimeError):
+            sum_loads(32, [5., 0., 5.])
+        with self.assertRaises(RuntimeError):
+            sum_loads(33, [0., 5., 5.])
+        with self.assertRaises(RuntimeError):
+            sum_loads(34, [5., 0., 0.])
+
+        # -------------------
+
+
         end_checks(model)
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_solids_cpenta(self):
         """tests a CPENTA6"""
@@ -490,10 +597,10 @@ def end_checks(model):
     mass, cg, inertia = model.mass_properties()
     assert mass > 0, 'mass=%s, cg=%s, inertia=%s' % (mass, cg, inertia)
 
-    bdf_filename = 'solid_test.bdf'
-    model.write_bdf(bdf_filename)
-    read_bdf(bdf_filename, debug=False)
-    os.remove(bdf_filename)
+    #bdf_filename = 'solid_test.bdf'
+    #model.write_bdf(bdf_filename)
+    #read_bdf(bdf_filename, debug=False)
+    #os.remove(bdf_filename)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

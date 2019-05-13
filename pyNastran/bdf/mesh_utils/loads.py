@@ -693,7 +693,7 @@ def _pload4_elements(loadcase_id, load, scale, eids, xyz, F, M, p):
     return F, M
 
 def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
-    """gets the nodes, area, centroid, normal, and nface"""
+    """gets the nodes, area, face_centroid, normal, and nface"""
     etype = elem.type
     if etype in ['CTRIA3', 'CTRIA6', 'CTRIAR',]:
         # triangles
@@ -701,7 +701,7 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
         n1, n2, n3 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]]
         axb = cross(n1 - n2, n1 - n3)
         area, normal = _get_area_normal(axb, nodes, xyz)
-        centroid = (n1 + n2 + n3) / 3.
+        face_centroid = (n1 + n2 + n3) / 3.
         nface = 3
     elif etype in ['CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
         # quads
@@ -709,13 +709,13 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
         n1, n2, n3, n4 = xyz[nodes[0]], xyz[nodes[1]], xyz[nodes[2]], xyz[nodes[3]]
         axb = cross(n1 - n3, n2 - n4)
         area, normal = _get_area_normal(axb, nodes, xyz)
-        centroid = (n1 + n2 + n3 + n4) / 4.
+        face_centroid = (n1 + n2 + n3 + n4) / 4.
         nface = 4
 
     elif etype == 'CTETRA':
         nodes = None
         face_acn = elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
-        unused_face, area, centroid, normal = face_acn
+        unused_face, area, face_centroid, normal = face_acn
         nface = 3
 
     elif etype == 'CHEXA':
@@ -723,7 +723,7 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
         face_acn = elem.get_face_area_centroid_normal(load.g34_ref.nid, load.g1_ref.nid)
         # TODO: backwards?
         #face_acn= elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
-        unused_face, area, centroid, normal = face_acn
+        unused_face, area, face_centroid, normal = face_acn
         nface = 4
 
     elif etype == 'CPENTA':
@@ -735,7 +735,7 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
         else:
             face_acn = elem.get_face_area_centroid_normal(g1, load.g34_ref.nid)
             nface = 4
-        unused_face, area, centroid, normal = face_acn
+        unused_face, area, face_centroid, normal = face_acn
     elif etype == 'CPYRAM':
         #C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\nast\demo\sslv09c.dat
         nodes = None
@@ -748,7 +748,6 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
         in13.sort()
         in13 = tuple(in13)
 
-        # TODO: verify normal
         xyzs = elem.get_node_positions()[:5]
         if in13 in [(0, 2), (1, 3)]:
             # G1 Identification number of a grid point connected to a corner of
@@ -763,6 +762,7 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
             v31 = p3 - p1
             v42 = p4 - p2
             normal = -np.cross(v31, v42)
+            face_centroid = (p1 + p2 + p3 + p4) / 4.
             nface = 4
         elif in13 in [(0, 1), (1, 2), (2, 3), (0, 3)]:
             # For CPYRAM element triangle faces, G1 and G3 are adjacent
@@ -773,20 +773,28 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
             p2 = xyzs[4]  # top node
             v21 = p2 - p1 # towards the top
             v31 = p3 - p1 # towards the base
-            normal = np.cross(v21, v31)
+            normal = -np.cross(v21, v31)
+            face_centroid = (p1 + p2 + p3) / 3.
             nface = 3
-        else:  # pragma: no cover
-            raise RuntimeError(in13)
+        else:
+            msg = (
+                'Invalid CPYRAM faces nodes.  Pick either:\n'
+                ' - two opposite nodes on the quad face for pressure on the bottom face\n'
+                ' - two adjacent nodes on the quad face for pressure on the side faces\n\n'
+                'Do not pick a bottom and the top node for:\n%s' % str(load))
+            raise RuntimeError(msg)
         ni = np.linalg.norm(normal)
         normal /= ni
         area = 0.5 * ni
-        centroid = elem.Centroid()
+
+        # centroid of face
+        #print('nface=%s ni=%s normal=%s area=%s face_centroid=%s' % (nface, ni, normal, area, face_centroid))
     else:
         eid = elem.eid
         msg = 'PLOAd4: case=%s eid=%s etype=%r loadtype=%r not supported\n%s%s' % (
             loadcase_id, eid, etype, load.type, str(load), str(elem))
         raise NotImplementedError(msg)
-    return nodes, area, centroid, normal, nface
+    return nodes, area, face_centroid, normal, nface
 
 def _pload4_helper(loadcase_id, load, scale, elem, xyz, p):
     """gets the contribution for a single PLOAD4 element"""

@@ -1555,6 +1555,21 @@ class PPLANE(ShellProperty):
     def Thickness(self):
         return self.t
 
+    def MassPerArea(self, tflag=1, tscales=None):
+        """
+        Calculates mass per area.
+
+        .. math:: \frac{m}{A} = nsm + \rho t"""
+        mid_ref = self.mid_ref
+        rho = mid_ref.Rho()
+        thickness = self.Thickness()  # Thickness(tflag=tflag, tscales=tscales)
+        try:
+            mass_per_area = self.nsm + rho * thickness
+        except:
+            print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
+            raise
+        return mass_per_area
+
     def Mid(self):
         """returns the material id"""
         if self.mid_ref is not None:

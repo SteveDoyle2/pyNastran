@@ -3601,6 +3601,9 @@ class MATHP(HyperelasticMaterial):
                      a32, a23, a14, a05, d5, tab1, tab2,
                      tab3, tab4, tabd, comment=comment)
 
+    def Rho(self):
+        return self.rho
+
     def raw_fields(self):
         list_fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,
                        self.av, self.tref, self.ge,

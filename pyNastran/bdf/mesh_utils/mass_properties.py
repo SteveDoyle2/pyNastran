@@ -253,6 +253,7 @@ def _mass_properties(model, elements, masses, reference_point, is_cg):
                 m = element.Mass()
                 #print('eid=%s type=%s mass=%s'  %(element.eid, element.type, m))
             except:
+                #raise
                 if element.type in no_mass:
                     continue
                 # PLPLANE
@@ -2010,11 +2011,14 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         etype = elem.type
         if etype in NO_MASS:
             continue
-        if etype in ['CQUAD4', 'CTRIA3', 'CQUAD8', 'CTRIA6', 'CTRIAR', 'CQUADR']:
+        if etype in ['CQUAD4', 'CTRIA3', 'CQUAD8', 'CTRIA6', 'CTRIAR', 'CQUADR', 'CQUAD', 'CTRIAX']:
             nids_dict[etype].append(elem.nodes)
             pids_dict[etype].append(elem.pid)
             thetai = elem.theta_mcid
             theta_mcid_dict[etype].append(thetai)
+        elif etype == 'CTRIAX6':
+            nids_dict[etype].append(elem.nodes)
+            pids_dict[etype].append(elem.pid)
         elif etype == 'CBEAM':
             if elem.bit is not None:
                 continue
@@ -2282,7 +2286,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             mass = mpl * length
             nsm = npl * length
 
-        elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR']:
+        elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR', ]:
             # no offsets
             nids2 = nids[:, :3]
             pids = np.array(pids_dict[etype], dtype='int32')
@@ -2372,7 +2376,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             Ax = tw * norm(cross(xaxis, normal), axis=1)
             Ay = tw * norm(cross(yaxis, normal), axis=1)
             Az = tw * norm(cross(zaxis, normal), axis=1)
-        elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR']:
+        elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD']:
             # no offsets
             nids2 = nids[:, :4]
             assert  nids2.shape[0] == nelementsi, nids2.shape
