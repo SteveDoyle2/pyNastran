@@ -406,6 +406,41 @@ class CaseControlTest(unittest.TestCase):
         with self.assertRaises(KeyError):  # FAKE is not a key
             unused_deck = CaseControlDeck(lines)
 
+    def test_groundcheck_3(self):
+        lines = [
+            'GROUNDCHECK(SET=ALL)=YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'GROUNDCHECK(SET=ALL) = YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+            'BEGIN BULK',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
+        lines = [
+            'GROUNDCHECK(PRINT, THRESH=0.01, DATAREC=NO, SET=ALL)=YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+        ]
+        lines_expected = [
+            'GROUNDCHECK(PRINT, THRESH=0.01, DATAREC=NO, SET=ALL) = YES',
+            'SUBCASE 1',
+            '    DISPLACEMENT = ALL',
+            'BEGIN BULK',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
+
     def test_weightcheck(self):
         weightchecks = [
             'WEIGHTCHECK=YES',

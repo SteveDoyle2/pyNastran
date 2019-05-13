@@ -473,22 +473,22 @@ class TestSolids(unittest.TestCase):
             assert np.allclose(force1, force), 'sid=%s force1=%s force2=%s' % (loadcase_id, force1, force2)
             assert np.allclose(force2, force), 'sid=%s force1=%s force2=%s' % (loadcase_id, force1, force2)
 
-        sum_loads(10, [0., 0., -10.])
-        sum_loads(11, [0., 0., -10.])
+        sum_loads(10, [0., 0., 10.])
+        sum_loads(11, [0., 0., 10.])
 
-        sum_loads(21, [0., -5., 0.])
-        sum_loads(22, [5., 0., 5.])
-        sum_loads(23, [0., 5., 5.])
-        sum_loads(24, [5., 0., 0.])
+        sum_loads(21, [0., 5., 0.])
+        sum_loads(22, [-5., 0., -5.])
+        sum_loads(23, [0., -5., -5.])
+        sum_loads(24, [-5., 0., 0.])
 
         with self.assertRaises(RuntimeError):
-            sum_loads(31, [0., -5., 0.])
+            sum_loads(31, [0., 5., 0.])
         with self.assertRaises(RuntimeError):
-            sum_loads(32, [5., 0., 5.])
+            sum_loads(32, [-5., 0., -5.])
         with self.assertRaises(RuntimeError):
-            sum_loads(33, [0., 5., 5.])
+            sum_loads(33, [0., -5., -5.])
         with self.assertRaises(RuntimeError):
-            sum_loads(34, [5., 0., 0.])
+            sum_loads(34, [-5., 0., 0.])
 
         # -------------------
 

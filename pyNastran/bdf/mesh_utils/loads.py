@@ -761,19 +761,23 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
             p1, p2, p3, p4, unused_p5 = xyzs
             v31 = p3 - p1
             v42 = p4 - p2
-            normal = -np.cross(v31, v42)
+            normal = np.cross(v31, v42)
             face_centroid = (p1 + p2 + p3 + p4) / 4.
             nface = 4
         elif in13 in [(0, 1), (1, 2), (2, 3), (0, 3)]:
             # For CPYRAM element triangle faces, G1 and G3 are adjacent
             # corner nodes on the quadrilateral face, and the load is applied
             # on the triangular face which includes those grids.
+            #
+            #    2
+            #  /   \
+            # 1-----3
             p1 = xyzs[in13[0]]
             p3 = xyzs[in13[1]]
             p2 = xyzs[4]  # top node
             v21 = p2 - p1 # towards the top
             v31 = p3 - p1 # towards the base
-            normal = -np.cross(v21, v31)
+            normal = np.cross(v21, v31)
             face_centroid = (p1 + p2 + p3) / 3.
             nface = 3
         else:
@@ -788,7 +792,8 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
         area = 0.5 * ni
 
         # centroid of face
-        #print('nface=%s ni=%s normal=%s area=%s face_centroid=%s' % (nface, ni, normal, area, face_centroid))
+        #print('nface=%s ni=%s normal=%s area=%s face_centroid=%s' % (
+            #nface, ni, normal, area, face_centroid))
     else:
         eid = elem.eid
         msg = 'PLOAd4: case=%s eid=%s etype=%r loadtype=%r not supported\n%s%s' % (
@@ -799,7 +804,7 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
 def _pload4_helper(loadcase_id, load, scale, elem, xyz, p):
     """gets the contribution for a single PLOAD4 element"""
     #eid = elem.eid
-    nodes, area, centroid, normal, nface = _get_pload4_area_centroid_normal_nface(
+    nodes, area, face_centroid, normal, nface = _get_pload4_area_centroid_normal_nface(
         loadcase_id, load, elem, xyz)
 
     pressures = load.pressures[:nface]
@@ -809,7 +814,7 @@ def _pload4_helper(loadcase_id, load, scale, elem, xyz, p):
         pressure = _mean_pressure_on_pload4(pressures, load, elem)
         load_dir = update_pload4_vector(load, normal, cid)
 
-        r = centroid - p
+        r = face_centroid - p
         fi = pressure * area * load_dir * scale
         #load.cid_ref.transform_to_global()
         mi = cross(r, fi)
