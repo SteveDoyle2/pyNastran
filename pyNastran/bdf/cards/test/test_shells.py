@@ -7,6 +7,7 @@ import numpy as np
 from numpy import array
 
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
+from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 
@@ -1240,6 +1241,132 @@ class TestShells(unittest.TestCase):
         model2.elements[10].comment = ''
         assert model2.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
         assert model2.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
+
+    def test_abd(self):
+        model = BDF(debug=False, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        nids = [1, 2, 3, 4]
+        eid = 1
+        pid = 10
+        mid = 20
+        model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0.,
+                         tflag=0, T1=None, T2=None, T3=None, T4=None, comment='')
+
+        thetas = [0., 45., 90.]
+        thicknesses = [0.1] * 3
+        mids = len(thicknesses) * [mid]
+        pcomp = model.add_pcomp(pid, mids, thicknesses, thetas=None,
+                                souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0.,
+                                lam=None, z0=0., comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        #--------------------------
+        #e1_e2 = 40.
+        #g12_e2 = 0.5
+        #nu12 = 0.25
+        #e22 = 30e6
+
+        e1_e2 = 3.
+        g12_e2 = 0.5
+        nu12 = 0.25
+        e22 = 1.
+
+        e11 = e1_e2 * e22
+        g12 = g12_e2 * e22
+
+        mid8 = 8
+        mat8 = model.add_mat8(
+            mid8, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8, rho=0.,
+            a1=0., a2=0., tref=0.,
+            Xt=0., Xc=None, Yt=0., Yc=None, S=0., ge=0.,
+            F12=0., strn=0., comment='')
+        S = get_mat_props_S(mat8)
+
+        pid8 = 8
+        pcomp8 = model.add_pcomp(pid8, [mid8], [1.], thetas=[0.],
+                                 souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0.,
+                                 lam=None, z0=0., comment='')
+
+
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+        ABD = pcomp.get_ABD_matrices()
+
+        thetad = np.linspace(0., 180., num=91)
+        plot_material_properties_vs_theta(pcomp8, mat8, thetad)
+
+def plot_material_properties_vs_theta(pcomp, mid_ref, thetad, plot=False, show=False):
+    e22 = mid_ref.e22
+    g12 = mid_ref.g12
+    theta = np.radians(thetad)
+
+    Ex = []
+    Ey = []
+    Gxy = []
+    Q66 = []
+    nu_xy = []
+    for thetai in  theta:
+        Qbar = pcomp.get_Q_matrix(mid_ref, thetai)
+        Sbar = np.linalg.inv(Qbar)
+        Exi = 1 / Sbar[0, 0]
+        Eyi = 1 / Sbar[1, 1]
+        Gxyi = 1 / Sbar[2, 2]
+        Q66i = Qbar[2, 2]
+        nu_xyi = -Sbar[0, 1] * Exi
+
+        #Gxyi = 1 / Q66i
+        Ex.append(Exi)
+        Ey.append(Eyi)
+        Gxy.append(Gxyi)
+        Q66.append(Q66i)
+        nu_xy.append(nu_xyi)
+    Ex = np.array(Ex)
+    Ey = np.array(Ey)
+    Gxy = np.array(Gxy)
+    Q66 = np.array(Q66)
+    nu_xy = np.array(nu_xy)
+
+    min_max_theta = [thetad.min(), thetad.max()]
+
+    if plot:
+        from pyNastran.gui.matplotlib_backend import matplotlib_backend
+        import matplotlib
+        matplotlib.use(matplotlib_backend)
+        import matplotlib.pyplot as plt
+        fig = plt.figure(1)
+        ax = fig.gca()
+
+        #ax.plot(thetad, Q66/Q66.max(), label='Q66=%g' % Q66.max())
+        #ax.plot(thetad, Ex/Ex.max(), label='Ex=%g' % Ex.max())
+        #ax.plot(thetad, Ey/Ey.max(), label='Ey=%g' % Ey.max())
+        #ax.plot(thetad, Gxy/Gxy.max(), label='Gxy=%g' % Gxy.max())
+        ax.plot(thetad, Ex/e22, label='Ex/E2=%g' % Ex.max())
+        ax.plot(thetad, Ey, label='Ey=%g' % Ey.max())
+        ax.plot(thetad, Gxy/g12, label='Gxy/G12=%g' % Gxy.max())
+        #ax.set_xlim(min_max_theta)
+        ax.legend()
+        ax.grid()
+        ax.set_xlabel('Q66')
+        ax.set_xlabel('theta')
+        #----------------------------
+        fig = plt.figure(2)
+        ax = fig.gca()
+        ax.plot(thetad, nu_xy, label='\nu xy=%g' % nu_xy.max())
+        ax.set_xlim(min_max_theta)
+        ax.legend()
+        ax.grid()
+        ax.set_xlabel('\nu xy')
+        ax.set_xlabel('theta')
+        if show:
+            plt.show()
 
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     j = i

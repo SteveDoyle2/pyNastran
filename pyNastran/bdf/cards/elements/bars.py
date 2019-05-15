@@ -437,7 +437,7 @@ class CBAR(LineElement):
         x = []
         g0 = []
         offt = []
-        bit = []
+        unused_bit = []
         pa = []
         pb = []
         wa = []
@@ -822,14 +822,13 @@ class CBAR(LineElement):
 
         """
         if self.g0 is not None:
-            return (self.G0(), None, None)
-        else:
-            #print('x =', self.x)
-            #print('g0 =', self.g0)
-            #x1 = set_blank_if_default(self.x[0], 0.0)
-            #x2 = set_blank_if_default(self.x[1], 0.0)
-            #x3 = set_blank_if_default(self.x[2], 0.0)
-            return list(self.x)
+            return self.G0(), None, None
+        #print('x =', self.x)
+        #print('g0 =', self.g0)
+        #x1 = set_blank_if_default(self.x[0], 0.0)
+        #x2 = set_blank_if_default(self.x[1], 0.0)
+        #x3 = set_blank_if_default(self.x[2], 0.0)
+        return list(self.x)
 
     def get_orientation_vector(self, xyz):
         """
@@ -1046,21 +1045,66 @@ class CBEAM3(LineElement):  # was CBAR
         self.pid_ref = None
 
     def Length(self):
-        """
-        # TODO: consider w1a and w1b in the length formulation
-        # TODO: add gc to length formula
+        r"""
+        [xa, xb, xc] = [A][a1, b1, c1].T
+        [ya, yb, yc] = [A][a2, b2, c2].T
+        [za, zb, zc] = [A][a3, b3, c3].T
 
+        [a1, b1, c1] = [A^-1][[xa, xb, xc].T
+        A = [0.  , 0.  , 1.  ]
+            [1.  , 1.  , 1.  ]
+            [0.25, 0.5 , 1.  ]
+        Ainv = [ 2.,  2., -4.]
+               [-3., -1.,  4.]
+               [ 1.,  0.,  0.]
         """
-        L = norm(self.gb_ref.get_position() - self.ga_ref.get_position())
-        assert isinstance(L, float)
-        return L
+        xa, ya, za = self.ga_ref.get_position() + self.wa
+        xb, yb, zb = self.gb_ref.get_position() + self.wb
+        xc, yc, zc = self.gc_ref.get_position() + self.wc
+        length = self._integrate(
+            np.array([xa, xb, xc]),
+            np.array([ya, yb, yc]),
+            np.array([za, zb, zc]),
+        )
+        return length
+
+    def _integrate(self, xabc, yabc, zabc):
+        Ainv = np.array([
+            [2., 2., -4.],
+            [-3., -1., 4.],
+            [1., 0., 0.]])
+        a1, b1, unused_c1 = Ainv * xabc
+        a2, b2, unused_c2 = Ainv * yabc
+        a3, b3, unused_c3 = Ainv * zabc
+        t = 1.
+        a = 4 * (a1 ** 2 + a2 ** 2 + a3 ** 2)
+        b = (b1 ** 2 + b2 ** 2 + b3 ** 2)
+        c = 2 * (a1 * b1 + a2 * b2 + a3 * b3)
+        at2btc = a * t **2 + b * t + c
+        length = (
+            (b + 2 * a * t) / (4 * a) * np.sqrt(at2btc) +
+            (4 * a * c - b ** 2) / (8 * a ** 1.5) * np.log(
+                2*a*t + b + 2*np.sqrt(a*(at2btc)))
+        )
+        return length
 
     def Area(self):
         if isinstance(self.pid_ref, integer_types):
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         A = self.pid_ref.Area()
-        assert isinstance(A, float)
+        assert isinstance(A, float), A
+
+        xa, ya, za = self.ga_ref.get_position() + self.wa
+        xb, yb, zb = self.gb_ref.get_position() + self.wb
+        xc, yc, zc = self.gc_ref.get_position() + self.wc
+        Aa, Ab, Ac = self.pid_ref.area
+        A = self._integrate(
+            np.array([Aa * xa, Ab * xb, Ac * xc]),
+            np.array([Aa * ya, Ab * yb, Ac * yc]),
+            np.array([Aa * za, Ab * zb, Ac * zc]),
+        )
+        assert isinstance(A, float), A
         return A
 
     def Nsm(self):
@@ -1068,7 +1112,18 @@ class CBEAM3(LineElement):  # was CBAR
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         nsm = self.pid_ref.Nsm()
-        assert isinstance(nsm, float)
+        assert isinstance(nsm, float), nsm
+
+        xa, ya, za = self.ga_ref.get_position() + self.wa
+        xb, yb, zb = self.gb_ref.get_position() + self.wb
+        xc, yc, zc = self.gc_ref.get_position() + self.wc
+        nsma, nsmb, nsmc = self.pid_ref.nsm
+        nsm = self._integrate(
+            np.array([nsma * xa, nsmb * xb, nsmc * xc]),
+            np.array([nsma * ya, nsmb * yb, nsmc * yc]),
+            np.array([nsma * za, nsmb * zb, nsmc * zc]),
+        )
+        assert isinstance(nsm, float), nsm
         return nsm
 
     def Ga(self):
@@ -1116,7 +1171,7 @@ class CBEAM3(LineElement):  # was CBAR
 
         """
         if self.g0 is not None:
-            return (self.G0(), None, None)
+            return self.G0(), None, None
         return list(self.x)
 
     def raw_fields(self):
@@ -1141,8 +1196,8 @@ class CBEAM3(LineElement):  # was CBAR
         twb = set_blank_if_default(self.tw[1], 0.0)
         twc = set_blank_if_default(self.tw[2], 0.0)
 
-        (x1, x2, x3) = self.get_x_g0_defaults()
-        (ga, gb, gc) = self.node_ids
+        x1, x2, x3 = self.get_x_g0_defaults()
+        ga, gb, gc = self.node_ids
         list_fields = ['CBEAM3', self.eid, self.Pid(), ga, gb, gc, x1, x2, x3,
                        w1a, w2a, w3a, w1b, w2b, w3b, w1c, w2c, w3c,
                        twa, twb, twc, self.s[0], self.s[1], self.s[2]]
@@ -1304,14 +1359,13 @@ class CBEND(LineElement):
 
     def get_x_g0_defaults(self):
         if self.g0 is not None:
-            return (self.g0, None, None)
-        else:
-            #print('x =', self.x)
-            #print('g0 =', self.g0)
-            #x1 = set_blank_if_default(self.x[0], 0.0)
-            #x2 = set_blank_if_default(self.x[1], 0.0)
-            #x3 = set_blank_if_default(self.x[2], 0.0)
-            return list(self.x)
+            return self.g0, None, None
+        #print('x =', self.x)
+        #print('g0 =', self.g0)
+        #x1 = set_blank_if_default(self.x[0], 0.0)
+        #x2 = set_blank_if_default(self.x[1], 0.0)
+        #x3 = set_blank_if_default(self.x[2], 0.0)
+        return list(self.x)
 
     def Length(self):
         # TODO: consider w1a and w1b in the length formulation
@@ -1465,8 +1519,7 @@ class CBEND(LineElement):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        else:
-            return self.comment + print_card_16(card)
+        return self.comment + print_card_16(card)
 
 def init_x_g0(card, eid, x1_default, x2_default, x3_default):
     """common method to read the x/g0 field for the CBAR, CBEAM, CBEAM3"""

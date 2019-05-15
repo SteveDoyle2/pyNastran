@@ -890,7 +890,7 @@ def _is_dot(ivalues, percent_values, plane_atol):
     #print('%s; percents=%s is_dot=%s' % (dot_type, percent_array, is_dot))
     return is_dot
 
-def calculate_area_moi(model, rods, normal_plane, moi_filename=None):
+def calculate_area_moi(model, rods, normal_plane, thetas, moi_filename=None):
     rod_elements, rod_nids, rod_xyzs = rods
     eids = np.abs(rod_elements[:, 0])
     neids = len(eids)
@@ -908,26 +908,96 @@ def calculate_area_moi(model, rods, normal_plane, moi_filename=None):
     cg = []
     area = []
     thickness = []
+    E = []
+    normal_plane_vector = normal_plane.copy().reshape((3, 1))
     for eid, lengthi, centroidi in zip(eids, length, centroid):
         element = model.elements[eid]
         if element.type in ['CTRIA3', 'CQUAD4']:
             prop = element.pid_ref
-            normal = element.Normal()
+            element = model.elements[eid]
+            pid_ref = element.pid_ref
+            thicknessi = element.Thickness()
+            centroid, imat, jmat, normal = element.material_coordinate_system()
+            n1, n2, n3 = normal
+            n12 = n1 * n2
+            n13 = n1 * n3
+            n23 = n2 * n3
+            #  http://scipp.ucsc.edu/~haber/ph216/rotation_12.pdf
+            # expanding eq 20 into
+            #  R(n,theta) = R0 + R1*sin(theta) + R2*cos(theta)
+            #R0 = np.array([
+                #[n1 ** 2, n12, n13],
+                #[n12, n2 ** 2, n23],
+                #[n13, n23, n3 ** 2],
+            #], dtype='float64')
+            R1 = np.array([
+                [0., -n3, n2],
+                [n3, 0., -n1],
+                [-n2, n1, 0.],
+            ], dtype='float64')
+            R2 = np.array([
+                [1 - n1 ** 2, -n12, -n13],
+                [-n12, 1 - n2 ** 2, -n23],
+                [-n13, -n23, 1 - n3 ** 2],
+            ])
+            imat = imat.reshape(3, 1)
+            #print(normal_plane.shape, R1.shape, imat.shape)
+            #a = np.linalg.multi_dot([normal_plane.T, R0, imat])
+            b = np.linalg.multi_dot([normal_plane_vector.T, R1, imat])
+            c = np.linalg.multi_dot([normal_plane_vector.T, R2, imat])
+
+            #  maximize m' dot p = p.T dot m
+            # m' = R dot m
+            #    = a + b*sin(theta) + c*cos(theta)
+            #
+            #  d/d(theta) = b*cos(theta)*sin(theta) = 0
+            #
+            # the theta to rotate by in order to orient imat with the normal
+            #print(b, c)
+            theta = np.arctan2(b, c)
+            thetad = np.degrees(theta)
+            if thetad <= -90.:
+                thetad += 180.
+            elif thetad > 90.:
+                thetad -= 180.
+
+            #normal = element.Normal()
             if abs(np.dot(normal_plane, normal)) > 0.9:
                 thicknessi = 0.
                 areai = 0.
+                Ex = 0.
+                Ey = 0.
+                Gxy = 0.
             else:
+                ABD = pid_ref.get_ABD_matrices(thetad)
+                A = ABD[:3, :3]
+                Ainv = np.linalg.inv(A)
+
+                # equivalent compliance matrix
+                S = thicknessi * Ainv
+                # these are on the main diagonal
+                Ex = 1. / S[0, 0]
+                Ey = 1. / S[1, 1]
+                Gxy = 1. / S[2, 2]
                 thicknessi = prop.Thickness()
                 areai = thicknessi * lengthi
+
+            thetas[eid] = (thetad, Ex, Ey, Gxy)
             thickness.append(thicknessi)
             area.append(areai)
             cg.append(centroidi)
+            E.append((Ex, Ey, Gxy))
         else:
             print(element)
+
     centroid = np.array(cg, dtype='float64')
     area = np.array(area, dtype='float64')
     thickness = np.array(thickness, dtype='float64')
+    E = np.array(E, dtype='float64')
     I = np.zeros((len(area), 3), dtype='float64') # type: np.ndarray
+
+    # (Ex, Ey, Gxy)
+    Ex = E[:, 0]
 
     total_area = area.sum()
     avg_centroid = (centroid * area[:, np.newaxis]) .sum(axis=0) / total_area
@@ -940,6 +1010,7 @@ def calculate_area_moi(model, rods, normal_plane, moi_filename=None):
     I[:, 1] = area * (z * z)  # Izz
     I[:, 2] = area * (x * z)  # Ixz
     Isum = I.sum(axis=0)
+    EIsum = (Ex[:, np.newaxis] * I).sum(axis=0)
     assert len(Isum) == 3, len(Isum)
     if moi_filename:
         eid_filename = 'eid_file.csv'
@@ -956,10 +1027,12 @@ def calculate_area_moi(model, rods, normal_plane, moi_filename=None):
 
             fmt = ('%s,' * 7)[:-1] + '\n'
             eid_file.write('# eid(%i),pid(%i),area,thickness,Ixx,Izz,Ixz\n')
-            for eid, n1i, n2i, xyz1i, xyz2i, lengthi, thicknessi, areai, centroidi, Ii in zip(
-                    eids, n1, n2, xyz1, xyz2, length, thickness, area, centroid, I):
+            for eid, n1i, n2i, xyz1i, xyz2i, lengthi, thicknessi, areai, centroidi, Ii, Ei in zip(
+                    eids, n1, n2, xyz1, xyz2, length, thickness, area, centroid, I, E):
+                actual_eid = abs(eid)
+
                 assert nid0 not in [n1i, n2i], (n1i, n2i)
-                pidi = abs(eid)
+                pidi = actual_eid
                 #pid = eidi
                 grid1 = ['GRID', n1i, None] + xyz1i.tolist()
                 grid2 = ['GRID', n2i, None] + xyz2i.tolist()
@@ -975,4 +1048,4 @@ def calculate_area_moi(model, rods, normal_plane, moi_filename=None):
                 eidi += 1
                 #PID | MID |  A  |  J  |  C  | NSM
                 eid_file.write(fmt % (eidi, pidi, areai, thicknessi, Ii[0], Ii[1], Ii[2]))
-    return Isum, avg_centroid
+    return total_area, Isum, EIsum, avg_centroid

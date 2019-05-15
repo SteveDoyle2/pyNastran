@@ -12,6 +12,7 @@ from six import string_types
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore
 import numpy as np
+from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
 
@@ -2749,14 +2750,14 @@ def _breakdown_property_dicts(model):
         elif ptype in 'PROD':
             pids_per_length_dict[ptype].append(pid)
             mid_ref = prop.mid_ref
-            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
             e2_dict['rod'].append(Sei2)
             nsm_per_length_dict[ptype].append(prop.nsm)
             mass_per_length_dict[ptype].append(mid_ref.rho * prop.A)
         elif ptype in 'PTUBE':
             pids_per_length_dict[ptype].append(pid)
             mid_ref = prop.mid_ref
-            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
             e2_dict['tube'].append(Sei2)
             nsm_per_length_dict[ptype].append(prop.nsm)
             mass_per_length_dict[ptype].append(mid_ref.rho * prop.Area())
@@ -2767,7 +2768,7 @@ def _breakdown_property_dicts(model):
             rhoi = prop.Rho()
             areai = prop.Area()
             nsmi = prop.Nsm()
-            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
             e2_dict['bar'].append(Sei2)
             nsm_per_length_dict['bar'].append(nsmi)
             mass_per_length_dict['bar'].append(areai * rhoi)
@@ -2777,7 +2778,7 @@ def _breakdown_property_dicts(model):
             rhoi = prop.Rho()
             areai = prop.Area()
             nsmi = prop.Nsm()
-            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
             e2_dict['bar'].append(Sei2)
             nsm_per_length_dict['bar'].append(nsmi)
             mass_per_length_dict['bar'].append(areai * rhoi)
@@ -2788,7 +2789,7 @@ def _breakdown_property_dicts(model):
             rhoi = prop.Rho()
             areai = prop.Area()
             nsmi = prop.Nsm()
-            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
             e2_dict['beam'].append(Sei2)
             nsm_per_length_dict['beam'].append(nsmi)
             mass_per_length_dict['beam'].append(areai * rhoi)
@@ -2798,7 +2799,7 @@ def _breakdown_property_dicts(model):
             rhoi = prop.Rho()
             areai = prop.Area()
             nsmi = prop.Nsm()
-            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
             e2_dict['beam'].append(Sei2)
             nsm_per_length_dict['beam'].append(nsmi)
             mass_per_length_dict['beam'].append(areai * rhoi)
@@ -2810,7 +2811,7 @@ def _breakdown_property_dicts(model):
             #nsm_n1 = (p1 + jhat * prop.m1 + khat * prop.m2)
             #nsm_n2 = (p2 + jhat * prop.m1 + khat * prop.m2)
             #nsm_centroid = (nsm_n1 + nsm_n2) / 2.
-            Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
             e2_dict['beam'].append(Sei2)
             nsm_per_length_dict['beam'].append(nsm_per_length)
             mass_per_length_dict['beam'].append(mass_per_length)
@@ -2819,7 +2820,7 @@ def _breakdown_property_dicts(model):
             pids_per_area_dict['shell'].append(pid)
             mid_ref = prop.mid_ref
             rhoi = mid_ref.Rho()
-            ei2, ei3 = _get_mat_props_S(mid_ref)
+            ei2, ei3 = get_mat_props_S(mid_ref)
 
             e2_dict['shell'].append(ei2)
             e3_dict['shell'].append(ei3)
@@ -2835,7 +2836,7 @@ def _breakdown_property_dicts(model):
             pids_per_area_dict['shear'].append(pid)
             mid_ref = prop.mid_ref
             rhoi = mid_ref.Rho()
-            ei2, ei3 = _get_mat_props_S(mid_ref)
+            ei2, ei3 = get_mat_props_S(mid_ref)
 
             e2_dict['shear'].append(ei2)
             e3_dict['shear'].append(ei3)
@@ -2851,7 +2852,7 @@ def _breakdown_property_dicts(model):
             pids_per_area_dict['shell'].append(pid)
             mid_ref = prop.mid_ref
             rhoi = mid_ref.Rho()
-            ei2, ei3 = _get_mat_props_S(mid_ref)
+            ei2, ei3 = get_mat_props_S(mid_ref)
 
             e2_dict['shell'].append(ei2)
             e3_dict['shell'].append(ei3)
@@ -2867,7 +2868,7 @@ def _breakdown_property_dicts(model):
             pids_per_area_dict['shell'].append(pid)
             mid_ref = prop.mid_ref
             rhoi = mid_ref.Rho()
-            ei2, ei3 = _get_mat_props_S(mid_ref)
+            ei2, ei3 = get_mat_props_S(mid_ref)
 
             e2_dict['shell'].append(ei2)
             e3_dict['shell'].append(ei3)
@@ -2922,7 +2923,7 @@ def _breakdown_property_dicts(model):
                 #print(ti)
                 #print(T)
                 Tinv = np.linalg.inv(T)
-                Sei2, unused_Sei3 = _get_mat_props_S(mid_ref)
+                Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
 
                 # [Sbar] = [T_inv][S][T_inv^T]
                 S02 += Tinv.dot(Sei2.dot(Tinv.T))
@@ -3014,114 +3015,6 @@ def _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelements):
     assert np.abs(x).max() > 0., 'x has nan values...only supports GGG'
     return jaxis
 
-def _get_mat_props_S(mid_ref):
-    """
-    Gets the material matrix [S] or [C] for plane strain
-
-    [e] = [S][o]
-    """
-    mtype = mid_ref.type
-    if mtype == 'MAT1':
-        e = mid_ref.e
-        g = mid_ref.g
-        nu = mid_ref.nu
-        # http://web.mit.edu/16.20/homepage/3_Constitutive/Constitutive_files/module_3_with_solutions.pdf
-        # [e11, e22, 2*e12] = ei @  [o11, o22, o12]
-        #[e] = [S][o]
-        #[o] = [C][e]
-        # eq 3.35 (2d)
-        # eq 3.50 (3d)
-        ei2 = np.array([
-            [e, -nu / e, 0., ],
-            [-nu / e, e, 0., ],
-            [0., 0., 1/g],
-        ])
-        #G = E / (2*(1 + nu))
-        #1 / G = (2*(1 + nu)) / E
-        nu2 = 2 * (1 + nu)
-        ei3 = np.array([
-            [1, -nu, -nu, 0., 0., 0.],
-            [-nu, 1, -nu, 0., 0., 0.],
-            [-nu, -nu, 1, 0., 0., 0.],
-            [0., 0., 0., nu2, 0., 0.],
-            [0., 0., 0., 0., nu2, 0.],
-            [0., 0., 0., 0., 0., nu2],
-        ]) / e
-
-        #denom = e / (1 - nu ** 2)
-        #C2 = np.array([
-            #[1., -nu, 0.],
-            #[nu, 1., 0.],
-            #[0., 0., g / denom],
-        #]) * denom
-
-        #lambd = e * nu / (1 + nu) / (1 - 2 * nu)
-        #lambda_2u = lambd + 2 * g
-        #C3 = np.array([
-            #[lambda_2u, lambd, lambd, 0., 0., 0.],
-            #[lambd, lambda_2u, lambd, 0., 0., 0.],
-            #[lambd, lambd, lambda_2u, 0., 0., 0.],
-            #[0., 0., 0., g, 0., 0.],
-            #[0., 0., 0., 0., g, 0.],
-            #[0., 0., 0., 0., 0., g],
-        #])
-
-    elif mtype == 'MAT8':
-        # orthotropic
-        material = mid_ref
-        # http://web.mit.edu/16.20/homepage/3_Constitutive/Constitutive_files/module_3_with_solutions.pdf
-        # [e11, e22, 2*e12] = ei @  [o11, o22, o12]
-        # eq 3.35 (2d)
-        # eq 3.50 (3d)
-        #ei2 = np.array([
-            #[e, -nu / e, 0., ],
-            #[-nu / e, e, 0., ],
-            #[0., 0., 1/g],
-        #])
-        #G = E / (2*(1 + nu))
-        #1 / G = (2*(1 + nu)) / E
-
-        #  https://en.wikipedia.org/wiki/Orthotropic_material
-        e1, e2 = material.e11, material.e22 # , material.e33
-        e3 = 1.
-        nu12 = material.nu12
-        g12, g31, g23 = material.g12, material.g1z, material.g2z
-        if g12 == 0.:
-            g12 = 1.
-        if g31 == 0.:
-            g31 = 1.
-        if g23 == 0.:
-            g23 = 1.
-
-        # nu21 * E1 = nu12 * E2
-        nu13 = nu12 # assume; should fall out in calcs given e3=0
-        nu23 = nu12 # assume; should fall out in calcs given e3=0
-        nu21 = nu12 * e2 / e1
-        nu31 = nu13 * e3 / e1
-        nu32 = nu23 * e3 / e2
-        ei2 = np.array([
-            [    1/e1, -nu21/e2,    0.],
-            [-nu12/e1,     1/e2,    0.],
-            [      0.,       0., 1/g12],
-        ])
-        ei3 = np.array([
-            [    1/e1, -nu21/e2, -nu31/e3,    0.,    0.,    0.],
-            [-nu12/e1,     1/e2, -nu32/e3,    0.,    0.,    0.],
-            [-nu13/e1, -nu23/e2,     1/e3,    0.,    0.,    0.],
-            [      0.,       0.,       0., 1/g23,    0.,    0.],
-            [      0.,       0.,       0.,    0., 1/g31,    0.],
-            [      0.,       0.,       0.,    0.,    0., 1/g12],
-        ])
-        denom = 1 - nu12 * nu21
-        C2 = np.array([
-            [e1, -nu21 * e1, 0.],
-            [nu12 * e2, e2, 0.],
-            [0., 0., g12 * denom],
-        ]) / denom
-
-    else:
-        raise NotImplementedError(mid_ref.get_stats())
-    return ei2, ei3
 
 def _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2):
     """calculate the material transformation matrix"""

@@ -2199,7 +2199,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pbeam(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+    def add_pbeam(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                   c1=None, c2=None, d1=None, d2=None,
                   e1=None, e2=None, f1=None, f2=None,
                   k1=1., k2=1., s1=0., s2=0.,

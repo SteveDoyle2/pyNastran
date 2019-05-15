@@ -16,13 +16,14 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import  warnings
 from itertools import count
 from typing import List, Optional, Union, Any
-from numpy import array
+#from numpy import array
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property, Material
 from pyNastran.bdf.cards.optimization import break_word_by_trailing_integer
+from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -203,6 +204,11 @@ class CompositeShellProperty(ShellProperty):
                 nplies, iply, str(self)))
         return iply
 
+    def get_material_id(self, iply):
+        iply = self._adjust_ply_id(iply)
+        mid = self.mids[iply]
+        return mid
+
     def get_thickness(self, iply='all'):
         """
         Gets the thickness of the :math:`i^{th}` ply.
@@ -355,19 +361,26 @@ class CompositeShellProperty(ShellProperty):
         sout = self.souts[iply]
         return sout
 
+    def get_material_ids(self):
+        thickness = []
+        for i in range(self.nplies):
+            thick = self.get_material_id(i)
+            thickness.append(thick)
+        return np.array(thickness, dtype='int32')
+
     def get_thicknesses(self):
         thickness = []
         for i in range(self.nplies):
             thick = self.get_thickness(i)
             thickness.append(thick)
-        return array(thickness)
+        return np.array(thickness, dtype='float64')
 
     def get_thetas(self):
         thetas = []
         for i in range(self.nplies):
             theta = self.get_theta(i)
             thetas.append(theta)
-        return array(thetas)
+        return np.array(thetas, dtype='float64')
 
     def get_z_locations(self):
         """
@@ -959,6 +972,108 @@ class PCOMP(CompositeShellProperty):
             #self.thetas[i] = theta
             #self.souts[i] = sout
             #i += 1
+
+    def get_ABD_matrices(self, theta_offset=0.):
+        """
+        Gets the ABD matrix
+
+        Parameters
+        ----------
+        theta_offset : float
+            rotates the ABD matrix; measured in degrees
+
+        """
+        mids = self.get_material_ids()
+        thicknesses = self.get_thicknesses()
+        thetad = self.get_thetas()
+        theta = np.radians(thetad)
+
+        csum = np.cumsum(thicknesses)
+        z0 = self.z0 + np.hstack([0., csum[:-1]])
+        z1 = self.z0 + csum
+        #dz = z1 - z0
+        #dzsquared = z1 ** 2 - z0 ** 2
+        #zcubed = z1 ** 3 - z0 ** 3
+        assert len(z0) == len(z1)
+        zmeans = (z0 + z1) / 2.
+        # A11 A12 A16
+        # A12 A22 A26
+        # A16 A26 A66
+        A = np.zeros((3, 3), dtype='float64')
+        B = np.zeros((3, 3), dtype='float64')
+        D = np.zeros((3, 3), dtype='float64')
+        Q = np.zeros((3, 3), dtype='float64')
+
+        mids_ref = self.mids_ref
+        for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip(mids, mids_ref, theta,
+                                                                    thicknesses, zmeans, z0, z1):
+            Q = self.get_Q_matrix(mid_ref, thetai)
+            A += Q * thickness
+            B += Q * thickness * zmean
+            D += Q * thickness * (z1i ** 3 - z0i ** 3)
+            #N += Q * alpha * thickness
+            #M += Q * alpha * thickness * zmean
+        B /= 2.
+        D /= 3.
+        #M /= 2.
+        ABD = np.block([
+            [A, B],
+            [B, D],
+        ])
+        np.set_printoptions(linewidth=120, suppress=True)
+        #print(ABD)
+        return ABD
+
+    def get_Q_matrix(self, mid_ref, thetai):
+        """theta must be in radians"""
+        S2, unused_S3 = get_mat_props_S(mid_ref)
+        ct = np.cos(thetai)
+        st = np.sin(thetai)
+        ct2 = ct ** 2
+        st2 = st ** 2
+        cst = st * ct
+
+        T126 = np.array([
+            [ct2, st2,    2 * cst],
+            [st2, ct2,   -2 * cst],
+            [-cst, cst, ct2 - st2],
+        ])
+        #T126inv = np.array([
+            #[ct2,  st2,   -2 * cst],
+            #[st2,  ct2,    2 * cst],
+            #[cst, -cst, ct2 - st2],
+        #])
+        T = T126
+        #T123456 = np.array([
+            #[     ct2,     st2,   0., 0.,  0.,  -2 * cst],
+            #[     st2,     ct2,   0., 0.,  0.,   2 * cst],
+            #[      0.,      0.,   1., 0.,  0.,        0.],
+            #[      0.,      0.,   0., ct, -st,        0.],
+            #[      0.,      0.,   0., st,  ct,        0.],
+            #[-ct * st, ct * st,   0., 0.,  0., ct2 - st2],
+        #])
+        #T123456 = np.array([
+            #[     ct2,     st2,  -2 * cst],
+            #[     st2,     ct2,   2 * cst],
+            #[-ct * st, ct * st, ct2 - st2],
+        #])
+
+        #R = np.array([
+            #[1., 0., 0.],
+            #[0., 1., 0.],
+            #[0., 0., 2.],
+        #])
+        Tinv = np.linalg.inv(T)
+        Q = np.linalg.inv(S2)
+
+        # [Qbar] = [T^-1][Q][T^-T]
+        # [T^-T] = [R][T][R^-1] = [T^-1].T
+        Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
+
+        # [T.T] = [R][T^-1][R^-1]
+        #Sbar = np.linalg.multi_dot([T.T, S2, T])
+        #Qbar = np.linalg.inv(Sbar)
+        return Qbar
 
     def _verify(self, xref):
         pid = self.Pid()
@@ -2181,6 +2296,66 @@ class PSHELL(ShellProperty):
             print("nsm=%s rho=%s t=%s" % (self.nsm, rho, self.t))
             raise
         return mass_per_area
+
+    def get_ABD_matrices(self, theta_offset=0.):
+        """
+        Gets the ABD matrix
+
+        Parameters
+        ----------
+        theta_offset : float
+            rotates the ABD matrix; measured in degrees
+
+        """
+        #mids = self.get_material_ids()
+        thickness = self.Thickness()
+        theta = 0.
+
+        z0 = self.z1
+        z1 = self.z2
+        zmean = (z0 + z1) / 2.
+        #dz = z1 - z0
+        #dzsquared = z1 ** 2 - z0 ** 2
+        #zcubed = z1 ** 3 - z0 ** 3
+        # A11 A12 A16
+        # A12 A22 A26
+        # A16 A26 A66
+        A = np.zeros((3, 3), dtype='float64')
+        B = np.zeros((3, 3), dtype='float64')
+        D = np.zeros((3, 3), dtype='float64')
+        Q = np.zeros((3, 3), dtype='float64')
+
+        S2, S3 = get_mat_props_S(self.mid1_ref)
+        ct = np.cos(0.)
+        st = np.sin(0.)
+        ct2 = ct ** 2
+        st2 = st ** 2
+        cst = st * ct
+        T = np.array([
+            [ct2, st2, -2 * cst],
+            [st2, ct2, 2 * cst],
+            [st, -st, ct2 - st2],
+        ])
+        Tinv = np.linalg.inv(T)
+        #Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
+        Sbar = np.linalg.multi_dot([T.T, S2, T])
+        Q = np.linalg.inv(Sbar)
+
+        A += Q * thickness
+        #B += Q * thickness * zmean
+        #D += Q * thickness * (z1i ** 3 - z0i ** 3)
+        #N += Q * alpha * thickness
+        #M += Q * alpha * thickness * zmean
+        #B /= 2.
+        #D /= 3.
+        #M /= 2.
+        ABD = np.block([
+            [A, B],
+            [B, D],
+        ])
+        np.set_printoptions(linewidth=120, suppress=True)
+        #print(ABD)
+        return ABD
 
     def cross_reference(self, model):
         """
