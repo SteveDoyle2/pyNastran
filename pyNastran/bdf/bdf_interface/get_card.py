@@ -565,6 +565,13 @@ class GetCard(GetMethods):
             the BDF object
         subcase_id : int
             the subcase id
+        eid_map : Dict[int eid : int index]
+            ???
+        node_ids : List[int] / int ndarray
+            the node ids in sorted order
+        normals : (nelements, 3) ndarray?
+            the normal vectors for the shells
+            what about solids???
 
         Returns
         -------
@@ -592,7 +599,8 @@ class GetCard(GetMethods):
         """
         if nid_map is None:
             nid_map = self.nid_map
-        assert len(nid_map) == len(node_ids), 'len(nid_map)=%s len(node_ids)=%s' % (len(nid_map), len(node_ids))
+        nnodes = len(node_ids)
+        assert len(nid_map) == nnodes, 'len(nid_map)=%s nnodes=%s' % (len(nid_map), nnodes)
         subcase = self.subcases[subcase_id]
         is_loads = False
         is_temperatures = False
@@ -631,7 +639,7 @@ class GetCard(GetMethods):
                 centroidal_pressures, forces, spcd = self._get_forces_moments_array(
                     p0, load_case_id,
                     eid_map=eid_map,
-                    node_ids=node_ids,
+                    nnodes=nnodes,
                     normals=normals,
                     dependents_nodes=self.node_ids,
                     nid_map=nid_map,
@@ -741,7 +749,7 @@ class GetCard(GetMethods):
         return dvprel_dict
 
     def _get_forces_moments_array(self, p0, load_case_id,
-                                  eid_map, node_ids, normals, dependents_nodes,
+                                  eid_map, nnodes, normals, dependents_nodes,
                                   nid_map=None, include_grav=False):
         """
         Gets the forces/moments on the nodes for the GUI, but there may
@@ -755,12 +763,13 @@ class GetCard(GetMethods):
             the load id
         nid_map : ???
             ???
-        eid_map : ???
+        eid_map : Dict[int eid : int index]
             ???
-        node_ids : ???
-            ???
+        nnodes : ???
+            the number of nodes in nid_map
         normals : (nelements, 3) float ndarray
             the normal vectors for the shells
+            what about solids???
         dependents_nodes : ???
             ???
         include_grav : bool; default=False
@@ -801,8 +810,7 @@ class GetCard(GetMethods):
                     'PLOAD4' in self.card_count, 'SPCD' in self.card_count,
                     'SLOAD' in self.card_count]):
             return None, None, None
-        nnodes = len(node_ids)
-        assert len(nid_map) == len(node_ids), 'len(nid_map)=%s len(node_ids)=%s' % (len(nid_map), len(node_ids))
+        assert len(nid_map) == nnodes, 'len(nid_map)=%s nnodes=%s' % (len(nid_map), nnodes)
 
         loads, scale_factors = self.get_reduced_loads(
             load_case_id, skip_scale_factor0=True)[:2]

@@ -1,6 +1,6 @@
 """defines testing utils"""
 import os
-from copy import deepcopy
+#from copy import deepcopy
 from six import StringIO
 import numpy as np
 from pyNastran.bdf.bdf import BDF
@@ -20,7 +20,7 @@ except ImportError:  # pragma: no cover
 def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                    run_convert=True, run_renumber=True, run_mirror=True,
                    run_save_load=True, run_quality=True, write_saves=True,
-                   run_save_load_hdf5=True, run_mass_properties=True):
+                   run_save_load_hdf5=True, run_mass_properties=True, run_loads=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.validate()
     model.pop_parse_errors()
@@ -55,26 +55,9 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
     model2.write_bdf('model2.bdf')
     nelements = len(model2.elements) + len(model2.masses)
     nnodes = len(model2.nodes) + len(model2.spoints) + len(model2.epoints)
-    if run_mass_properties and nelements:
-        if nelements > 1 and nnodes == 0:  # pragma: no cover
-            raise RuntimeError('no nodes exist')
-        mass1, cg1, inertia1 = model2.mass_properties(reference_point=None, sym_axis=None)
-        mass2, cg2, inertia2 = model2.mass_properties_nsm(reference_point=None, sym_axis=None)
-        #if not quiet:
-            #if model2.wtmass != 1.0:
-                #print('weight = %s' % (mass1 / model2.wtmass))
-            #print('mass = %s' % mass1)
-            #print('cg   = %s' % cg1)
-            #print('Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
-        assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
-        assert np.allclose(cg1, cg2), 'mass=%s\ncg1=%s cg2=%s' % (mass1, cg1, cg2)
-        assert np.allclose(inertia1, inertia2, atol=1e-5), 'mass=%s cg=%s\ninertia1=%s\ninertia2=%s\ndinertia=%s' % (mass1, cg1, inertia1, inertia2, inertia1-inertia2)
 
-        mass3, cg3, inertia3 = mass_properties_breakdown(model2)[:3]
-        #assert np.allclose(mass1, mass3), 'mass1=%s mass3=%s' % (mass1, mass3)
-        #assert np.allclose(cg1, cg3), 'mass=%s\ncg1=%s cg3=%s' % (mass1, cg1, cg3)
-
-
+    _run_mass_properties(model2, nnodes, nelements, run_mass_properties=run_mass_properties)
+    _run_loads(model2, nelements, run_loads=run_loads)
 
     if run_save_load:
         model2.save(obj_filename='model.obj', unxref=True)
@@ -93,7 +76,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         bdf_stream = StringIO()
         model4.write_bdf(bdf_stream, encoding=None, size=8, is_double=False,
                          interspersed=False, enddata=None, write_header=True, close=True)
-        for key, value in model2.card_count.items():
+        for key, unused_value in model2.card_count.items():
             if key == 'ENDDATA':
                 continue
             if key not in model4.card_count:
@@ -116,6 +99,70 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
     if model.elements and run_quality:
         element_quality(model)
     return model3
+
+def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):
+    """helper method"""
+    if not(run_mass_properties and nelements):
+        return
+
+    if nelements > 1 and nnodes == 0:  # pragma: no cover
+        raise RuntimeError('no nodes exist')
+    mass1, cg1, inertia1 = model2.mass_properties(reference_point=None, sym_axis=None)
+    mass2, cg2, inertia2 = model2.mass_properties_nsm(reference_point=None, sym_axis=None)
+    #if not quiet:
+        #if model2.wtmass != 1.0:
+            #print('weight = %s' % (mass1 / model2.wtmass))
+        #print('mass = %s' % mass1)
+        #print('cg   = %s' % cg1)
+        #print('Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
+    assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
+    assert np.allclose(cg1, cg2), 'mass=%s\ncg1=%s cg2=%s' % (mass1, cg1, cg2)
+    if not np.allclose(inertia1, inertia2, atol=1e-5):  # pragma: no cover
+        raise ValueError('mass=%s cg=%s\ninertia1=%s\ninertia2=%s\ndinertia=%s' % (
+            mass1, cg1, inertia1, inertia2, inertia1-inertia2))
+
+    unused_mass3, unused_cg3, unused_inertia3 = mass_properties_breakdown(model2)[:3]
+    #assert np.allclose(mass1, mass3), 'mass1=%s mass3=%s' % (mass1, mass3)
+    #assert np.allclose(cg1, cg3), 'mass=%s\ncg1=%s cg3=%s' % (mass1, cg1, cg3)
+
+def _run_loads(model, nelements, run_loads=True):
+    """helper method"""
+    if not run_loads:
+        return
+    eid_map = {}
+    normals = np.zeros((nelements, 3), dtype='float64')
+    ieid = 0
+    #node_ids = None
+
+    #nnodes = model.nnodes
+    #node_ids = [None] * nnodes
+    try:
+        out = model.get_displacement_index_xyz_cp_cd(
+            fdtype='float64', idtype='int32', sort_ids=True)
+    except ValueError:
+        return
+    unused_icd_transformi, unused_icp_transformi, unused_xyz_cpi, nid_cp_cd = out
+    node_ids = nid_cp_cd[:, 0]
+    eids = []
+    for eid, elem in model.elements.items():
+        if hasattr(elem, 'Normal'):
+            normals[ieid, :] = elem.Normal()
+        eid_map[eid] = ieid
+        eids.append(eid)
+        ieid += 1
+
+    nsubcases = len(model.subcases)
+    if nsubcases == 0:
+        load_ids = list(set(list(model.load_combinations) + list(model.loads)))
+        for load_id in sorted(load_ids):
+            unused_subcase = model.case_control_deck.add_subcase(load_id)
+            model.get_pressure_array(load_id, eids, stop_on_failure=True)
+
+    for subcase_id in model.subcases:
+        model.get_load_arrays(subcase_id, eid_map, node_ids, normals, nid_map=None)
+
+    if nsubcases == 0:
+        del model.case_control_deck
 
 def _cross_reference(model, xref):
     """helper method for ``_cross_reference``"""

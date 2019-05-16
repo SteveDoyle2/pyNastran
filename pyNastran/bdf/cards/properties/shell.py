@@ -8,7 +8,7 @@ All shell properties are defined in this file.  This includes:
  * PSHELL
  * PPLANE
 
-All shell properties are ShellProperty and Property objects.
+All shell properties are Property objects.
 
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
@@ -28,32 +28,15 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
-class ShellProperty(Property):
-    """
-    Common class for:
-     - PSHELL
-     - PSHEAR
-     - PLPLANE
-     - PPLANE
-    """
-    def __init__(self):
-        Property.__init__(self)
-    @property
-    def TRef(self):
-        return self.tref
-    @TRef.setter
-    def TRef(self, tref):
-        self.tref = tref
 
-
-class CompositeShellProperty(ShellProperty):
+class CompositeShellProperty(Property):
     """
     Common class for:
      - PCOMP
      - PCOMPG
     """
     def __init__(self):
-        ShellProperty.__init__(self)
+        Property.__init__(self)
         self.mids = []
         self.thicknesses = []
         self.thetas = []
@@ -66,6 +49,13 @@ class CompositeShellProperty(ShellProperty):
         self.ft = None
         self.lam = None
         self.mids_ref = None
+
+    @property
+    def TRef(self):
+        return self.tref
+    @TRef.setter
+    def TRef(self, tref):
+        self.tref = tref
 
     def MassPerArea(self, iply='all', method='nplies', tflag=1, tscales=None):
         return self.get_mass_per_area(iply, method)
@@ -521,10 +511,10 @@ class CompositeShellProperty(ShellProperty):
             # where nsmi has two methods
             mass_per_area = 0.
             #nplies = len(self.thicknesses)
-            for iply in range(nplies):
-                #rho = self.get_density(iply)
-                rho = rhos[iply]
-                t = self.thicknesses[iply]
+            for iplyi in range(nplies):
+                #rho = self.get_density(iplyi)
+                rho = rhos[iplyi]
+                t = self.thicknesses[iplyi]
                 mass_per_area += rho * t
 
             if self.is_symmetrical():
@@ -667,7 +657,8 @@ class PCOMP(CompositeShellProperty):
 
         irow_layer = irow - 1
         ilayer = irow_layer * 2 + offset // 4
-        #print('\nn=%s nnew=%s irow_start=%s irow=%s offset=%s ilayer=%s' % (n, nnew, irow_start, irow, offset, ilayer))
+        #print('\nn=%s nnew=%s irow_start=%s irow=%s offset=%s ilayer=%s' % (
+            #n, nnew, irow_start, irow, offset, ilayer))
         assert ilayer >= 0
         iply = self._adjust_ply_id(ilayer)
 
@@ -691,7 +682,8 @@ class PCOMP(CompositeShellProperty):
         elif slot == 3:
             self.souts[iply] = value
         else:
-            raise RuntimeError('ilayer=%s iply=%s slot=%s in [mid, t, theta, sout]' % (ilayer, iply, slot))
+            raise RuntimeError('ilayer=%s iply=%s slot=%s in [mid, t, theta, sout]' % (
+                ilayer, iply, slot))
         # ply = [mid, t, theta, sout]
         ply[slot] = value
 
@@ -846,7 +838,7 @@ class PCOMP(CompositeShellProperty):
 
         mid_last = None
         thick_last = None
-        ply = None
+        #ply = None
         iply = 1
 
         # supports single ply per line
@@ -1001,15 +993,15 @@ class PCOMP(CompositeShellProperty):
         A = np.zeros((3, 3), dtype='float64')
         B = np.zeros((3, 3), dtype='float64')
         D = np.zeros((3, 3), dtype='float64')
-        Q = np.zeros((3, 3), dtype='float64')
+        #Q = np.zeros((3, 3), dtype='float64')
 
         mids_ref = self.mids_ref
         for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip(mids, mids_ref, theta,
                                                                     thicknesses, zmeans, z0, z1):
-            Q = self.get_Q_matrix(mid_ref, thetai)
-            A += Q * thickness
-            B += Q * thickness * zmean
-            D += Q * thickness * (z1i ** 3 - z0i ** 3)
+            Qbar = self.get_Qbar_matrix(mid_ref, thetai)
+            A += Qbar * thickness
+            B += Qbar * thickness * zmean
+            D += Qbar * thickness * (z1i ** 3 - z0i ** 3)
             #N += Q * alpha * thickness
             #M += Q * alpha * thickness * zmean
         B /= 2.
@@ -1023,10 +1015,10 @@ class PCOMP(CompositeShellProperty):
         #print(ABD)
         return ABD
 
-    def get_Q_matrix(self, mid_ref, theta):
+    def get_Qbar_matrix(self, mid_ref, theta):
         """theta must be in radians"""
         S2, unused_S3 = get_mat_props_S(mid_ref)
-        T = self._get_2d_transform(theta)
+        T = get_2d_plate_transform(theta)
 
         #R = np.array([
             #[1., 0., 0.],
@@ -1045,39 +1037,11 @@ class PCOMP(CompositeShellProperty):
         #Qbar = np.linalg.inv(Sbar)
         return Qbar
 
-    def _get_2d_transform(self, theta):
+    def get_Sbar_matrix(self, mid_ref, theta):
         """theta must be in radians"""
-        ct = np.cos(theta)
-        st = np.sin(theta)
-        ct2 = ct ** 2
-        st2 = st ** 2
-        cst = st * ct
-
-        T126 = np.array([
-            [ct2, st2,    2 * cst],
-            [st2, ct2,   -2 * cst],
-            [-cst, cst, ct2 - st2],
-        ])
-        #T126inv = np.array([
-            #[ct2,  st2,   -2 * cst],
-            #[st2,  ct2,    2 * cst],
-            #[cst, -cst, ct2 - st2],
-        #])
-        T = T126
-        #T123456 = np.array([
-            #[     ct2,     st2,   0., 0.,  0.,  -2 * cst],
-            #[     st2,     ct2,   0., 0.,  0.,   2 * cst],
-            #[      0.,      0.,   1., 0.,  0.,        0.],
-            #[      0.,      0.,   0., ct, -st,        0.],
-            #[      0.,      0.,   0., st,  ct,        0.],
-            #[-ct * st, ct * st,   0., 0.,  0., ct2 - st2],
-        #])
-        #T123456 = np.array([
-            #[     ct2,     st2,  -2 * cst],
-            #[     st2,     ct2,   2 * cst],
-            #[-ct * st, ct * st, ct2 - st2],
-        #])
-        return T
+        Qbar = self.get_Qbar_matrix(mid_ref, theta)
+        Sbar = np.linalg.inv(Qbar)
+        return Sbar
 
     def _verify(self, xref):
         pid = self.Pid()
@@ -1445,7 +1409,7 @@ class PCOMPG(CompositeShellProperty):
         return self.comment + print_card_16(card)
 
 
-class PLPLANE(ShellProperty):
+class PLPLANE(Property):
     """
     Fully Nonlinear Plane Element Properties (SOL 601)
     Defines the properties of a fully nonlinear
@@ -1502,7 +1466,7 @@ class PLPLANE(ShellProperty):
             a comment for the card
 
         """
-        ShellProperty.__init__(self)
+        Property.__init__(self)
         if comment:
             self.comment = comment
         #: Property ID
@@ -1597,7 +1561,7 @@ class PLPLANE(ShellProperty):
         return self.comment + print_card_8(card)
 
 
-class PPLANE(ShellProperty):
+class PPLANE(Property):
     type = 'PPLANE'
     _field_map = {1: 'pid', 2:'mid', 3:'t', 4:'nsm', 5:'formulation_option'}
 
@@ -1610,7 +1574,7 @@ class PPLANE(ShellProperty):
     def __init__(self, pid, mid, t=0., nsm=0., formulation_option=0, comment=''):
         # type: (int, int, float, float, int, str) -> None
         """NX specific card"""
-        ShellProperty.__init__(self)
+        Property.__init__(self)
         if comment:
             self.comment = comment
         #: Property ID
@@ -1672,6 +1636,7 @@ class PPLANE(ShellProperty):
         #return self.pid
 
     def Thickness(self):
+        """returns the thickness of the element"""
         return self.t
 
     def MassPerArea(self, tflag=1, tscales=None):
@@ -1708,7 +1673,7 @@ class PPLANE(ShellProperty):
         return self.comment + print_card_8(card)
 
 
-class PSHEAR(ShellProperty):
+class PSHEAR(Property):
     """
     Defines the properties of a shear panel (CSHEAR entry).
 
@@ -1755,7 +1720,7 @@ class PSHEAR(ShellProperty):
             a comment for the card
 
         """
-        ShellProperty.__init__(self)
+        Property.__init__(self)
         if comment:
             self.comment = comment
         #: Property ID
@@ -1888,7 +1853,7 @@ class PSHEAR(ShellProperty):
         return self.comment + print_card_16(card)
 
 
-class PSHELL(ShellProperty):
+class PSHELL(Property):
     """
     +--------+-------+------+--------+------+----------+------+------+---------+
     |   1    |   2   |   3  |    4   |  5   |    6     |   7  |  8   |    9    |
@@ -1932,8 +1897,10 @@ class PSHELL(ShellProperty):
             defines element density if mid1=None
         mid3 : int; default=None
             defines transverse shear material
+            (only defined if mid2 > 0)
         mid4 : int; default=None
             defines membrane-bending coupling material
+            (only defined if mid1 > 0 and mid2 > 0; can't be mid1/mid2)
         twelveIt3 : float; default=1.0
             Bending moment of inertia ratio, 12I/T^3. Ratio of the actual
             bending moment inertia of the shell, I, to the bending
@@ -1949,7 +1916,7 @@ class PSHELL(ShellProperty):
             a comment for the card
 
         """
-        ShellProperty.__init__(self)
+        Property.__init__(self)
         if comment:
             self.comment = comment
         if mid2 == -1:
@@ -2301,6 +2268,25 @@ class PSHELL(ShellProperty):
             raise
         return mass_per_area
 
+    def get_Qbar_matrix(self, mid_ref, theta=0.):
+        """theta must be in radians"""
+        S2, unused_S3 = get_mat_props_S(mid_ref)
+        T = get_2d_plate_transform(theta)
+        #Tinv = np.linalg.inv(T)
+        #Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
+        Sbar = np.linalg.multi_dot([T.T, S2, T])
+        Qbar = np.linalg.inv(Sbar)
+        return Qbar
+
+    def get_Sbar_matrix(self, mid_ref, theta=0.):
+        """theta must be in radians"""
+        # this is the inverse of Sbar
+        S2, unused_S3 = get_mat_props_S(mid_ref)
+        T = get_2d_plate_transform(theta)
+        #Tinv = np.linalg.inv(T)
+        Sbar = np.linalg.multi_dot([T.T, S2, T])
+        return Sbar
+
     def get_ABD_matrices(self, theta_offset=0.):
         """
         Gets the ABD matrix
@@ -2313,11 +2299,10 @@ class PSHELL(ShellProperty):
         """
         #mids = self.get_material_ids()
         thickness = self.Thickness()
-        theta = 0.
 
-        z0 = self.z1
-        z1 = self.z2
-        zmean = (z0 + z1) / 2.
+        #z0 = self.z1
+        #z1 = self.z2
+        #zmean = (z0 + z1) / 2.
         #dz = z1 - z0
         #dzsquared = z1 ** 2 - z0 ** 2
         #zcubed = z1 ** 3 - z0 ** 3
@@ -2327,29 +2312,14 @@ class PSHELL(ShellProperty):
         A = np.zeros((3, 3), dtype='float64')
         B = np.zeros((3, 3), dtype='float64')
         D = np.zeros((3, 3), dtype='float64')
-        Q = np.zeros((3, 3), dtype='float64')
 
-        S2, S3 = get_mat_props_S(self.mid1_ref)
-        ct = np.cos(0.)
-        st = np.sin(0.)
-        ct2 = ct ** 2
-        st2 = st ** 2
-        cst = st * ct
-        T = np.array([
-            [ct2, st2, -2 * cst],
-            [st2, ct2, 2 * cst],
-            [st, -st, ct2 - st2],
-        ])
-        Tinv = np.linalg.inv(T)
-        #Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
-        Sbar = np.linalg.multi_dot([T.T, S2, T])
-        Q = np.linalg.inv(Sbar)
+        Qbar = self.get_Qbar_matrix(self.mid1_ref, theta=0.)
 
-        A += Q * thickness
-        #B += Q * thickness * zmean
-        #D += Q * thickness * (z1i ** 3 - z0i ** 3)
-        #N += Q * alpha * thickness
-        #M += Q * alpha * thickness * zmean
+        A += Qbar * thickness
+        #B += Qbar * thickness * zmean
+        #D += Qbar * thickness * (z1i ** 3 - z0i ** 3)
+        #N += Qbar * alpha * thickness
+        #M += Qbar * alpha * thickness * zmean
         #B /= 2.
         #D /= 3.
         #M /= 2.
@@ -2437,3 +2407,37 @@ class PSHELL(ShellProperty):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+def get_2d_plate_transform(theta):
+    """theta must be in radians"""
+    ct = np.cos(theta)
+    st = np.sin(theta)
+    ct2 = ct ** 2
+    st2 = st ** 2
+    cst = st * ct
+
+    T126 = np.array([
+        [ct2, st2,    2 * cst],
+        [st2, ct2,   -2 * cst],
+        [-cst, cst, ct2 - st2],
+    ])
+    #T126inv = np.array([
+        #[ct2,  st2,   -2 * cst],
+        #[st2,  ct2,    2 * cst],
+        #[cst, -cst, ct2 - st2],
+    #])
+    T = T126
+    #T123456 = np.array([
+        #[     ct2,     st2,   0., 0.,  0.,  -2 * cst],
+        #[     st2,     ct2,   0., 0.,  0.,   2 * cst],
+        #[      0.,      0.,   1., 0.,  0.,        0.],
+        #[      0.,      0.,   0., ct, -st,        0.],
+        #[      0.,      0.,   0., st,  ct,        0.],
+        #[-ct * st, ct * st,   0., 0.,  0., ct2 - st2],
+    #])
+    #T123456 = np.array([
+        #[     ct2,     st2,  -2 * cst],
+        #[     st2,     ct2,   2 * cst],
+        #[-ct * st, ct * st, ct2 - st2],
+    #])
+    return T

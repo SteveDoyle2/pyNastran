@@ -207,7 +207,7 @@ class TestSolids(unittest.TestCase):
         for fields in cards:
             model.add_card(fields, fields[0], is_list=True)
         model.cross_reference()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_solid_04(self):
         """checks linear static solid material"""
@@ -260,7 +260,7 @@ class TestSolids(unittest.TestCase):
         model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_solids_ctetra4(self):
         """tests a CTETRA4"""
@@ -286,7 +286,7 @@ class TestSolids(unittest.TestCase):
         model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_solids_ctetra4_mat9(self):
         """tests a CTETRA4"""
@@ -356,7 +356,7 @@ class TestSolids(unittest.TestCase):
         model.get_mass_breakdown(property_ids=None, stop_if_no_mass=True, detailed=True)
         model.get_volume_breakdown(property_ids=None, stop_if_no_volume=True)
 
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_solids_cpyram5(self):
         """tests a CPYRAM5"""
@@ -524,7 +524,7 @@ class TestSolids(unittest.TestCase):
         elem2.write_card(size=16)
         elem2.write_card_16(is_double=False)
         end_checks(model)
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_solids_chexa(self):
         """tests a CHEXA8"""
@@ -563,7 +563,7 @@ class TestSolids(unittest.TestCase):
         end_checks(model)
         elem = model.elements[eid]
         assert elem.Mass() > 0, elem.Mass()
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def check_solid(self, model, eid, etype, pid, ptype, mid, mtype, nsm, rho, V):
         """checks that various solid methods work"""

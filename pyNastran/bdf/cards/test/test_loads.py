@@ -505,7 +505,7 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(moments1[0], fm[3], 'm=%s mexpected=%s' % (moments1, fm[3:]))
             #self.assertEqual(moments1[1], fm[4], 'm=%s mexpected=%s' % (moments1, fm[3:]))
             #self.assertEqual(moments1[2], fm[5], 'm=%s mexpected=%s' % (moments1, fm[3:]))
-        save_load_deck(model)
+        save_load_deck(model, run_loads=False)
 
     def test_pload4_ctria3(self):
         """tests a PLOAD4 with a CTRIA3"""
@@ -709,7 +709,7 @@ class TestLoads(unittest.TestCase):
                 model.log.error('subcase=%-2i Fz g=(%s,%s) forces1=%s fexpected=%s '
                                 'face=%s normal=%s' % (
                                     isubcase, g1, g34, forces1, fm, face, normal))
-        save_load_deck(model, punch=False)
+        save_load_deck(model, punch=False, run_loads=False)
 
     def test_pload4_chexa(self):
         """tests a PLOAD4 with a CHEXA"""

@@ -489,7 +489,9 @@ class Element(BaseCard):
         positions = np.empty((nnodes, 3), dtype='float64')
         positions.fill(np.nan)
         for i, node in enumerate(nodes):
-            assert not isinstance(node, int), self.type
+            if isinstance(node, int):
+                raise TypeError("node=%s; type=%s must be a Node\n%s" % (
+                    str(node), type(node), self.get_stats()))
             if node is not None:
                 positions[i, :] = node.get_position()
         return positions

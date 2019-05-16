@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_material_properties_vs_theta(pcomp, mid_ref, thetad,
-                                      plot=False, show=False, png_filename=None):
+def plot_equivalent_lamina_vs_theta(pcomp, mid_ref, thetad,
+                                    plot=False, show=False, png_filename=None):
     """plots a PCOMP mid vs. theta"""
     e22 = mid_ref.e22
     g12 = mid_ref.g12
@@ -14,7 +14,8 @@ def plot_material_properties_vs_theta(pcomp, mid_ref, thetad,
     Q66 = []
     nu_xy = []
     for thetai in  theta:
-        Qbar = pcomp.get_Q_matrix(mid_ref, thetai)
+        Sbar = pcomp.get_Sbar_matrix(mid_ref, thetai)
+        Qbar = pcomp.get_Qbar_matrix(mid_ref, thetai)
         Sbar = np.linalg.inv(Qbar)
         Exi = 1 / Sbar[0, 0]
         Eyi = 1 / Sbar[1, 1]
@@ -33,6 +34,12 @@ def plot_material_properties_vs_theta(pcomp, mid_ref, thetad,
     Gxy = np.array(Gxy)
     Q66 = np.array(Q66)
     nu_xy = np.array(nu_xy)
+    out = {
+        'Ex' : Ex,
+        'Ey' : Ey,
+        'Gxy' : Gxy,
+        'nu_xy' : nu_xy,
+    }
 
     min_max_theta = [thetad.min(), thetad.max()]
 
@@ -68,4 +75,4 @@ def plot_material_properties_vs_theta(pcomp, mid_ref, thetad,
             fig.savefig(png_filename)
         if show:
             plt.show()
-
+    return out

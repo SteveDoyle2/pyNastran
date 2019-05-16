@@ -3409,7 +3409,7 @@ class CPLSTN8(QuadShell):
         self.nodes = [n1, n4, n3, n2, n8, n7, n6, n5]
 
     def Normal(self):
-        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes[:4])
+        n1, n2, n3, n4 = self.get_node_positions(nodes=self.nodes_ref[:4])
         return _normal(n1 - n3, n2 - n4)
 
     def AreaCentroid(self):
