@@ -63,7 +63,7 @@ matrix:
       env:
       # - bumped numpy from 1.13 to 1.14 to fix unicode savetxt writing
       # - no pyside2
-      - NUMPY='numpy=1.14 scipy=0.19 matplotlib=2.0 h5py vtk pyside'
+      - NUMPY='numpy=1.14 scipy=0.19 matplotlib=2.0 h5py vtk pyqt'
 
     - name: "Python 3.7 old packages"
       python: '3.7'
@@ -71,7 +71,7 @@ matrix:
       #- NUMPY='numpy=1.15 scipy=0.19 matplotlib=2.2'  # doesn't work
       # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
       # - no pyside2
-      - NUMPY='numpy=1.14 scipy=1.1 matplotlib=2.2 h5py vtk pyside'
+      - NUMPY='numpy=1.14 scipy=1.1 matplotlib=2.2 h5py vtk pyqt'
 
     - name: "Python 3.7 (no gui)"
       python: '3.7'

@@ -170,7 +170,7 @@ class ShearMomentTorqueObject(object):
                            comment='')
         except:
             log.error('The coordinate system is invalid; check your cutting plane.')
-            return
+            return None, None
         origin = coord.origin
         beta = coord.beta().T
 
@@ -215,43 +215,44 @@ def plot_smt(x, force_sum, moment_sum, show=True):
     import matplotlib.pyplot as plt
     plt.close()
     #f, ax = plt.subplots()
+    # ax = fig.subplots()
     fig = plt.figure(1)
-    ax = fig.subplots()
+    ax = fig.gca()
     ax.plot(x, force_sum[:, 0], '-*')
     ax.set_xlabel('X')
     ax.set_ylabel('Axial')
     ax.grid(True)
 
     fig = plt.figure(2)
-    ax = fig.subplots()
+    ax = fig.gca()
     ax.plot(x, force_sum[:, 1], '-*')
     ax.set_xlabel('X')
     ax.set_ylabel('Shear Y')
     ax.grid(True)
 
     fig = plt.figure(3)
-    ax = fig.subplots()
+    ax = fig.gca()
     ax.plot(x, force_sum[:, 2], '-*')
     ax.set_xlabel('X')
     ax.set_ylabel('Shear Z')
     ax.grid(True)
 
     fig = plt.figure(4)
-    ax = fig.subplots()
+    ax = fig.gca()
     ax.plot(x, moment_sum[:, 0], '-*')
     ax.set_xlabel('X')
     ax.set_ylabel('Torque')
     ax.grid(True)
 
     fig = plt.figure(5)
-    ax = fig.subplots()
+    ax = fig.gca()
     ax.plot(x, moment_sum[:, 1], '-*')
     ax.set_xlabel('X')
     ax.set_ylabel('Moment Y')
     ax.grid(True)
 
     fig = plt.figure(6)
-    ax = fig.subplots()
+    ax = fig.gca()
     ax.plot(x, moment_sum[:, 2], '-*')
     ax.set_xlabel('X')
     ax.set_ylabel('Moment Z')
