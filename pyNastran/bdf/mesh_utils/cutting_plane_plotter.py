@@ -176,7 +176,7 @@ def plot_cutting_plane_edges(title, p1, p2, zaxis,
         fig = plt.figure(1)
         ax = fig.add_subplot(1, 1, 1)
 
-        colors = ['C0<', 'C1>'] if MPL_VER >= (2, 1) else ['b>', 'r<']
+        colors = ['C0<', 'C1>'] if MPL_VER >= [2, 1] else ['b>', 'r<']
         ax.plot(local_x, cp.real, colors[0], label='real')
         if is_complex:
             ax.plot(local_x, cp.imag, colors[0], label='imag')

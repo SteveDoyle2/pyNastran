@@ -51,23 +51,25 @@ matrix:
     - name: "Python 2.7 old packages"
       python: '2.7'
       env:
-      # bumped numpy from 1.11 to 1.13 fix unique axis bug
-      # bumped scipy from 0.18.1 to 0.19 for compatibility with numpy
-      - NUMPY='numpy=1.13 scipy=0.19 matplotlib=1.5 h5py vtk pyqt'
+      # - bumped numpy from 1.11 to 1.13 fix unique axis bug
+      # - bumped scipy from 0.18.1 to 0.19 for compatibility with numpy
+      # - bumped matplotlib from 1.5 to 2.0 for compatiblity with numpy 1.13;
+      #   matplotlib 1.5 wants numpy 1.11
+      - NUMPY='numpy=1.13 scipy=0.19 matplotlib=2.0 h5py vtk pyside'
 
       # old versions of packages
     - name: "Python 3.6 old packages"
       python: '3.6'
       env:
-      # bumped numpy from 1.13 to 1.14 to fix unicode savetxt writing
-      - NUMPY='numpy=1.14 scipy=0.19 matplotlib=2.0 h5py vtk pyqt'
+      # - bumped numpy from 1.13 to 1.14 to fix unicode savetxt writing
+      - NUMPY='numpy=1.14 scipy=0.19 matplotlib=2.0 h5py vtk pyside2'
 
     - name: "Python 3.7 old packages"
       python: '3.7'
       env:
       #- NUMPY='numpy=1.15 scipy=0.19 matplotlib=2.2'  # doesn't work
-      # bumped scipy from 1.0 to 1.1 for compatibility with numpy
-      - NUMPY='numpy=1.14 scipy=1.1 matplotlib=2.2 h5py vtk pyqt'
+      # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
+      - NUMPY='numpy=1.14 scipy=1.1 matplotlib=2.2 h5py vtk pyside2'
 
     - name: "Python 3.7 (no gui)"
       python: '3.7'
