@@ -16,7 +16,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import  warnings
 from itertools import count
 from typing import List, Optional, Union, Any
-#from numpy import array
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -402,7 +401,7 @@ class CompositeShellProperty(ShellProperty):
         for thick in self.get_thicknesses():
             zi += thick
             z.append(zi)
-        return array(z)
+        return np.array(z)
 
     def get_mass_per_area(self, iply='all', method='nplies'):
         r"""
@@ -1024,11 +1023,32 @@ class PCOMP(CompositeShellProperty):
         #print(ABD)
         return ABD
 
-    def get_Q_matrix(self, mid_ref, thetai):
+    def get_Q_matrix(self, mid_ref, theta):
         """theta must be in radians"""
         S2, unused_S3 = get_mat_props_S(mid_ref)
-        ct = np.cos(thetai)
-        st = np.sin(thetai)
+        T = self._get_2d_transform(theta)
+
+        #R = np.array([
+            #[1., 0., 0.],
+            #[0., 1., 0.],
+            #[0., 0., 2.],
+        #])
+        Tinv = np.linalg.inv(T)
+        Q = np.linalg.inv(S2)
+
+        # [Qbar] = [T^-1][Q][T^-T]
+        # [T^-T] = [R][T][R^-1] = [T^-1].T
+        Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
+
+        # [T.T] = [R][T^-1][R^-1]
+        #Sbar = np.linalg.multi_dot([T.T, S2, T])
+        #Qbar = np.linalg.inv(Sbar)
+        return Qbar
+
+    def _get_2d_transform(self, theta):
+        """theta must be in radians"""
+        ct = np.cos(theta)
+        st = np.sin(theta)
         ct2 = ct ** 2
         st2 = st ** 2
         cst = st * ct
@@ -1057,23 +1077,7 @@ class PCOMP(CompositeShellProperty):
             #[     st2,     ct2,   2 * cst],
             #[-ct * st, ct * st, ct2 - st2],
         #])
-
-        #R = np.array([
-            #[1., 0., 0.],
-            #[0., 1., 0.],
-            #[0., 0., 2.],
-        #])
-        Tinv = np.linalg.inv(T)
-        Q = np.linalg.inv(S2)
-
-        # [Qbar] = [T^-1][Q][T^-T]
-        # [T^-T] = [R][T][R^-1] = [T^-1].T
-        Qbar = np.linalg.multi_dot([Tinv, Q, Tinv.T])
-
-        # [T.T] = [R][T^-1][R^-1]
-        #Sbar = np.linalg.multi_dot([T.T, S2, T])
-        #Qbar = np.linalg.inv(Sbar)
-        return Qbar
+        return T
 
     def _verify(self, xref):
         pid = self.Pid()
@@ -2168,7 +2172,7 @@ class PSHELL(ShellProperty):
 
     def get_z_locations(self):
         """returns the locations of the bottom and top surface of the shell"""
-        z = array([self.z1, self.z2])
+        z = np.array([self.z1, self.z2])
         return z
 
     def materials(self):

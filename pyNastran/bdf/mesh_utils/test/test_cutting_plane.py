@@ -82,8 +82,11 @@ class TestCuttingPlane(unittest.TestCase):
     def test_cut_bwb(self):
         """recover element ids"""
         log = SimpleLogger(level='warning', encoding='utf-8', log_func=None)
-        #bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')  # ymax~=1262.0
-        bdf_filename = r'C:\NASA\asm\all_modes_mach_0.85\flutter.bdf'  # ymax=1160.601
+        is_bwb = True
+        if is_bwb:
+            bdf_filename = os.path.join(MODEL_PATH, 'bwb', 'bwb_saero.bdf')  # ymax~=1262.0
+        else:  #  pragma: no cover
+            bdf_filename = r'C:\NASA\asm\all_modes_mach_0.85\flutter.bdf'  # ymax=1160.601
         normal_plane = np.array([0., 1., 0.])
 
         model = read_bdf(bdf_filename, log=log)
@@ -106,20 +109,20 @@ class TestCuttingPlane(unittest.TestCase):
         I = []
         EI = []
         avg_centroid = []
-        is_bwb = True
-        
+
         for i in range(2000):
             if is_bwb:
                 dy = 100. * i + 1.  #  bwb
-                coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.],
-            else:
+                coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
+            else:  #  pragma: no cover
                 dy = 4. * i + 1.  #  CRM
-                origin = np.array([0., dy, 0.])
+                coord = CORD2R(1, rid=0, origin=[0., dy, 0.], zaxis=[0., dy, 1], xzplane=[1., dy, 0.])
+                #origin = np.array([0., dy, 0.])
                 #xzplane = origin + dx
-                xzplane = np.array([1., dy, 0.])
+                #xzplane = np.array([1., dy, 0.])
                 #coord = CORD2R.add_axes(cid, rid=0, origin=p1, xaxis=p2-p1, yaxis=None, zaxis=None,
                                          #xyplane=None, yzplane=None, xzplane=None, comment='')
-            print(coord)
+                print(coord)
             model.coords[1] = coord
             plane_bdf_filename = 'plane_face_%i.bdf' % i
             cut_face_filename = 'cut_face_%i.csv' % i
@@ -208,25 +211,15 @@ class TestCuttingPlane(unittest.TestCase):
                                  n1a=0., n2a=None, n1b=0., n2b=None, comment='')
         beam_model.write_bdf('equivalent_beam_model.bdf')
 
-        #def vstack(data):
-            #for i, datai in enumerate(data):
-                #print(i, datai.shape)
-            #X = np.vstack(data)
-            #return X
-        #def hstack(data):
-            #for i, datai in enumerate(data):
-                #print(i, datai.shape)
-            #X = np.hstack(data)
-            #return X
-        #print('len(y)=', len(y))
         X = np.vstack([y, A]).T
         Y = np.hstack([X, I, EI, avg_centroid])
-        np.savetxt('cut_data_vs_span.csv', Y, header='y, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid', delimiter=',')
+        header = 'y, A, Ix, Iz, Ixz, Ex*Ix, Ex*Iz, Ex*Ixz, xcentroid, ycentroid, zcentroid'
+        np.savetxt('cut_data_vs_span.csv', Y, header=header, delimiter=',')
 
 
         show = True
         #show = False
-        if IS_MATPLOTLIB or 1:
+        if IS_MATPLOTLIB:
             plot_inertia(y, A, I, EI, avg_centroid, show=show)
 
         #bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
