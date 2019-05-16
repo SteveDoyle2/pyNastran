@@ -9,7 +9,13 @@ from numpy import array
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.cards.elements.plot import plot_material_properties_vs_theta
+
+try:
+    import matplotlib
+    IS_MATPLOTLIB = True
+    from pyNastran.bdf.cards.elements.plot import plot_material_properties_vs_theta
+except ImportError:
+    IS_MATPLOTLIB = False
 
 class TestShells(unittest.TestCase):
     def test_pshell(self):
@@ -1301,7 +1307,8 @@ class TestShells(unittest.TestCase):
         ABD = pcomp.get_ABD_matrices()
 
         thetad = np.linspace(0., 90., num=91)
-        plot_material_properties_vs_theta(pcomp8, mat8, thetad, show=False)
+        if IS_MATPLOTLIB:
+            plot_material_properties_vs_theta(pcomp8, mat8, thetad, show=False)
 
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     """makes a series of DVCREL1 and a DESVAR"""
