@@ -19,9 +19,12 @@ if sys.version_info < (3, 0):
 # scipy:
 #  - 0.18.1: fixed kdtree used by nodal equivalencing; min for Python 2.7
 #  - 0.19:   min for Python 3.6
-#  - 0.19:   min for Python 3.7?
+#  - 0.19:   min for Python 3.7?; last 0.x release
 # matplotlib:
-#  - 2.1: adds plt.subplots support
+#  - 1.5: min for Python 2.7; last 1.x release
+#  - 2.0: adds C0/C1 colors (use colors from default colormap);
+#    min for Python 3.6
+#  - 2.1: adds plt.subplots support (untested?)
 #  - 2.2: min for Python 3.7
 
 # the packages that change requirements based on python version
@@ -30,12 +33,12 @@ REQS = {
         # package : (less than check, required)
         'numpy' : ('1.13', '>=1.13,<1.17'),
         'scipy' : ('0.18.1', '>=0.18.1,<1.13'),
-        'matplotlib' : ('2.1', '>=2.1,<3'),
+        'matplotlib' : ('1.5', '>=1.5,<3'),
     },
     '3.6' : {
         'numpy' : ('1.14', '>=1.14'),
         'scipy' : ('0.19', '>=0.19'),
-        'matplotlib' : ('2.1', '>=2.1'),
+        'matplotlib' : ('2.0', '>=2.0'),
     },
     '3.7' : {
         'numpy' : ('1.14', '>=1.14'),

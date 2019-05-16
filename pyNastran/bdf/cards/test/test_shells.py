@@ -1307,7 +1307,8 @@ class TestShells(unittest.TestCase):
         ABD = pcomp.get_ABD_matrices()
 
         thetad = np.linspace(0., 90., num=91)
-        plot_equivalent_lamina_vs_theta(pcomp8, mat8, thetad, show=False)
+        if IS_MATPLOTLIB:
+            plot_equivalent_lamina_vs_theta(pcomp8, mat8, thetad, show=False)
 
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     """makes a series of DVCREL1 and a DESVAR"""

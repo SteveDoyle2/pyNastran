@@ -53,14 +53,14 @@ matrix:
       env:
       # bumped numpy from 1.11 to 1.13 fix unique axis bug
       # bumped scipy from 0.18.1 to 0.19 for compatibility with numpy
-      - NUMPY='numpy=1.13 scipy=0.19 matplotlib=2.1 h5py vtk pyqt'
+      - NUMPY='numpy=1.13 scipy=0.19 matplotlib=1.5 h5py vtk pyqt'
 
       # old versions of packages
     - name: "Python 3.6 old packages"
       python: '3.6'
       env:
       # bumped numpy from 1.13 to 1.14 to fix unicode savetxt writing
-      - NUMPY='numpy=1.14 scipy=0.19 matplotlib=2.1 h5py vtk pyqt'
+      - NUMPY='numpy=1.14 scipy=0.19 matplotlib=2.0 h5py vtk pyqt'
 
     - name: "Python 3.7 old packages"
       python: '3.7'
