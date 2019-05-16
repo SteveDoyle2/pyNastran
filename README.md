@@ -73,17 +73,21 @@ If you're using 60+ GB OP2s, you also might have had issues with RAM usage in th
 With the new ability to dump the OP2 directly to HDF5, this should not be an as much of
 an issue.  It's not 100% implemented, so let me know if you need it for another result.
 
-Regarding the GUI, there are also some neat new features.  Groups finally work right.
-Logging has been dramatically sped up so the GUI loads faster and you can load Nastran
-models even faster if you disable additional results (e.g., element quality).
+Regarding the GUI, there are also some neat new features.  Groups work a bit better, but 
+aren't quite perect.  Logging has been dramatically sped up so the GUI loads faster and 
+you can load Nastran models even faster if you disable additional results (e.g., element
+quality).
 
-Finally, Python 2.7 is end of life.  Numpy, scipy, and matplotlib have all dropped Python 2.7 support.  It's time for pyNastran to as well.  The OP2 reader is 30% faster in Python 3.6+ than Python 2.7, so it's not all bad!
+Finally, Python 2.7 is end of life.  Numpy, scipy, and matplotlib have all dropped 
+Python 2.7 support.  It's time for pyNastran to as well.  The OP2 reader is 30% faster in
+Python 3.6+ than Python 2.7, so it's not all bad!
 
 Programmatics:
  - This is the last Python 2.7 release.
  - Dropping Python 3.5 support
  - Supports Python 2.7, 3.6-3.7
  - GUI is compatible with PyQt4/PyQt5 as well as PySide/PySide2
+ - improved testing of old versions of packages
 
 BDF:
  - 373 cards supported (up from 343)
@@ -153,13 +157,10 @@ Known issues:
 This should be hidden...
 
 
-### pyNastran v1.2 has not been released (2019/4/15xx)
+### pyNastran v1.3 has not been released (2019/4/15xx)
 OP2:
  - OP2 write support
  - TODO: stress transforms.  This is probably a bit of work.
-
-### pyNastran v1.1.1 has not been released (x/xx/xx)
-This should be hidden...
 
 --->
 

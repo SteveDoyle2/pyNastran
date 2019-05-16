@@ -9,7 +9,13 @@ from numpy import array
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
-from pyNastran.bdf.cards.elements.plot import plot_equivalent_lamina_vs_theta
+
+try:
+    import matplotlib
+    IS_MATPLOTLIB = True
+    from pyNastran.bdf.cards.elements.plot import plot_equivalent_lamina_vs_theta
+except ImportError:
+    IS_MATPLOTLIB = False
 
 class TestShells(unittest.TestCase):
     def test_pshell(self):
