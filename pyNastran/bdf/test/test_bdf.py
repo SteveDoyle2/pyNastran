@@ -5,6 +5,7 @@
   - various card methods (e.g. Area) work correctly
 
 As such, ``test_bdf`` is very useful for debugging models.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -13,7 +14,7 @@ import sys
 import traceback
 import warnings
 from itertools import chain
-from typing import List, Tuple, Optional
+from typing import List, Any
 from six import StringIO
 import numpy as np
 #warnings.simplefilter('always')
@@ -47,6 +48,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
                       punch=False, nastran='', encoding=None,
                       size=None, is_double=None, post=None, sum_load=True, dev=True,
                       crash_cards=None, pickle_obj=True, quiet=False):
+    # type: (List[str], str, bool, bool, bool, bool, bool, str, Any, Any, Any, Any, bool, bool, Any, bool, bool) -> List[str]
     """
     Runs multiple BDFs
 
@@ -96,6 +98,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     .. python ::
 
         run_lots_of_files(filenames, xref=[True, False]) # valid
+
     """
     filenames = list(set(filenames))
     filenames.sort()
@@ -281,6 +284,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         False : doesn't crash; useful for running many tests
     pickle_obj : bool; default=True
         tests pickling
+
     """
     if not quiet:
         print('debug = %s' % debug)
@@ -467,10 +471,12 @@ def run_and_compare_fems(
 
 
 def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
+    # type: (BDF, str, int, int, bool) -> None
     """
     Verifies that a valid bdf was written by running nastran and parsing
     the OP2.  Many cards do not support double precision and since there
     is no list, a test is necessary.
+
     """
     if nastran:
         from pyNastran.op2.op2 import read_op2
@@ -523,6 +529,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
              run_extract_bodies=False, save_file_structure=False, hdf5=False,
              encoding=None, crash_cards=None, safe_xref=True,
              pickle_obj=False, stop=False):
+    # type: (BDF, str, str, str, bool, bool, bool, int, int, bool, bool, bool, Any, Any, bool, bool, bool) -> BDF
     """
     Reads/writes the BDF
 
@@ -557,6 +564,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         the file encoding
     crash_cards : ???
         ???
+
     """
     if crash_cards is None:
         crash_cards = []
@@ -652,7 +660,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         fem1a.write_bdf(bdf_stream, encoding=None, size=8,
                         is_double=False, interspersed=False,
                         enddata=None, write_header=True, close=True) # hdf5
-        for key, value in fem1.card_count.items():
+        for key, unused_value in fem1.card_count.items():
             if key in ['ECHOOFF', 'ECHOON']:
                 continue
             #if key == 'ENDDATA':
@@ -729,9 +737,11 @@ def remake_model(bdf_model, fem1, pickle_obj):
     return fem1
 
 def check_for_cd_frame(fem1):
+    # type: (BDF) -> None
     """
     A cylindrical/spherical CD frame will cause problems with the
     grid point force transformation
+
     """
     is_grid_points = any([card_name in fem1.card_count
                           for card_name in ['GRID', 'SPOINT', 'EPOINT', 'RINGAX']])
@@ -785,6 +795,7 @@ def run_fem2(bdf_model, out_model, xref, punch,
         debugs
     quiet : bool
         supress prints
+
     """
     assert os.path.exists(bdf_model), bdf_model
     assert os.path.exists(out_model), out_model
@@ -842,6 +853,7 @@ def _assert_has_spc(subcase, fem):
     """
     SPCs may be defined on SPC/SPC1 cards or may be defined on
     the GRID PS field
+
     """
     if 'SPC' not in subcase:
         has_ps = False
@@ -882,6 +894,7 @@ def check_for_flag_in_subcases(fem2, subcase, parameters):
     stepping.  In the dynamic time stepping case, for the first 3 seconds
     you can define one set of time stepping, but then you can switch to
     a much finer time step/increased number of convergence iterations.
+
     """
     if not any(subcase.has_parameter(*parameters)):
         unused_subcases = fem2.subcases
@@ -897,6 +910,7 @@ def check_for_flag_in_subcases(fem2, subcase, parameters):
             raise RuntimeError(msg)
 
 def stop_if_max_error(msg, error, ierror, nerrors):
+    # type: (str, Any, int, int) -> int
     """if the error count is greater than nerrors, stop"""
     if ierror == nerrors:
         raise error(msg)
@@ -904,8 +918,9 @@ def stop_if_max_error(msg, error, ierror, nerrors):
     return ierror
 
 def check_for_optional_param(keys, subcase, msg, error, log, ierror, nerrors):
+    # type: (List[str], Any, str, Any, Any, int, int) -> int
     """one or more must be True"""
-    if not subcase.has_parameter(*keys):
+    if not any(subcase.has_parameter(*keys)):
         msg = 'Must have one of %s\n%s' % (str(keys), msg)
         log.error(msg)
         if ierror == nerrors:
@@ -950,6 +965,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
        # one or both
        SUPORT1 = 5 # implicit point to SUPORT1
        # implicit call to SUPORT
+
     """
     log = fem2.log
 
@@ -1092,6 +1108,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
     return ierror
 
 def _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors):
+    # type: (BDF, Any, int, Any, int, int) -> int
     """checks that TRIM/DIVERG is valid"""
     if not any(subcase.has_parameter('TRIM', 'DIVERG')):
         msg = 'A TRIM or DIVERG card is required for STATIC AERO - SOL %i\n%s' % (
@@ -1113,6 +1130,7 @@ def _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors):
     return ierror
 
 def _check_flutter_case(fem2, log, sol, subcase, ierror, nerrors):
+    # type: (BDF, Any, int, Any, int, int) -> int
     """checks that FLUTTER is valid"""
     if fem2.aero is None:
         msg = 'An AERO card is required for FLUTTER - SOL %i; AERO=%s' % (sol, fem2.aero)
@@ -1156,6 +1174,7 @@ def _check_flutter_case(fem2, log, sol, subcase, ierror, nerrors):
     return ierror
 
 def _check_gust_case(fem2, log, sol, subcase, ierror, nerrors):
+    # type: (BDF, Any, int, Any, int, int) -> int
     """checks that GUST is valid"""
     if 'METHOD' not in subcase:  # EIGRL
         msg = 'A METHOD card is required for FLUTTER - SOL %i\n%s' % (sol, subcase)
@@ -1192,6 +1211,7 @@ def _check_gust_case(fem2, log, sol, subcase, ierror, nerrors):
     return ierror
 
 def _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log):
+    # type: (BDF, Any, BDF, Any, Any, int, Any, Any) -> None
     """
     helper method for ``check_case``
 
@@ -1206,6 +1226,7 @@ def _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log):
              required globally
     1 or more DESSUB/DESGLB are required globally
     1 DESOBJ is required
+
     """
     assert 'ANALYSIS' in subcase, 'sol=%s\n%s' % (sol, subcase)
 
@@ -1256,7 +1277,7 @@ def _check_case_sol_200(sol, subcase, fem2, p0, isubcase, subcases, log):
         solution = 108
         check_case(solution, subcase, fem2, p0, isubcase, subcases)
     elif analysis == 'MFREQ':
-        if subcase.has_parameter('GUST'):
+        if 'GUST' in subcase:
             solution = 146
         else:
             solution = 111
@@ -1538,7 +1559,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         #  - no LOADSET -> SPCD
         #  -    LOADSET -> SPCDs as specified by LSEQ
         loads, scale_factors = fem2.get_reduced_dloads(dload_id)
-        fem2.log.info('scale_factors=%s loads=%s' % (scale_factors, loads))
+        #fem2.log.info('scale_factors=%s loads=%s' % (scale_factors, loads))
 
         if sol in [108, 111]:  # direct frequency, modal frequency
             for load2, scale_factor in zip(loads, scale_factors):
@@ -1551,6 +1572,8 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
             for load2, scale_factor in zip(loads, scale_factors):
                 force = load2.get_load_at_time(0.) * scale_factor
+        elif  sol == 200:
+            pass
         else:
             fem2.log.debug('solution=%s; DLOAD is not supported' % sol)
 
@@ -1563,6 +1586,7 @@ def divide(value1, value2):
     """
     Used to divide the number of cards to check that nothing was lost.
     Handles division by 0 by returning 0, which is the reciprocal.
+
     """
     if value1 == value2:  # good for 0/0
         return 1.0
@@ -1576,9 +1600,7 @@ def divide(value1, value2):
 
 def test_get_cards_by_card_types(model):
     # type: (BDF) -> None
-    """
-    Verifies the ``model.get_cards_by_card_types`` method works
-    """
+    """Verifies the ``model.get_cards_by_card_types`` method works"""
     # setup to remove hackish cards
     card_types = list(model.card_count.keys())
     removed_cards = []
@@ -1614,9 +1636,7 @@ def test_get_cards_by_card_types(model):
 
 def compare_card_count(fem1, fem2, print_stats=False, quiet=False):
     # type: (BDF, BDF, bool, bool) -> List[str]
-    """
-    Checks that no cards from fem1 are lost when we write fem2
-    """
+    """Checks that no cards from fem1 are lost when we write fem2"""
     cards1 = fem1.card_count
     cards2 = fem2.card_count
     for key in cards1:
@@ -1643,6 +1663,7 @@ def compute_ints(cards1, cards2, fem1, quiet=True):
     *SPOINT  10     1     9    10.      0.1
 
     The * indicates a change, which may or may not be a problem.
+
     """
     card_keys1 = set(cards1.keys())
     card_keys2 = set(cards2.keys())
@@ -1689,9 +1710,7 @@ def compute_ints(cards1, cards2, fem1, quiet=True):
 
 
 def compute(cards1, cards2, quiet=False):
-    """
-    Computes the difference between two dictionaries to data is the same
-    """
+    """Computes the difference between two dictionaries to data is the same"""
     card_keys1 = set(cards1.keys())
     card_keys2 = set(cards2.keys())
     all_keys = card_keys1.union(card_keys2)
@@ -1777,9 +1796,7 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
 
 def get_matrix_stats(fem1, unused_fem2):
     # type: (BDF, BDF) -> None
-    """
-    Verifies the dmig.get_matrix() method works.
-    """
+    """Verifies the dmig.get_matrix() method works."""
     for (unused_key, dmig) in sorted(fem1.dmigs.items()):
         try:
             if isinstance(dmig, NastranMatrix):
@@ -1876,10 +1893,10 @@ def run_argparse(argv=None):
     #'  --encoding ENCODE  the encoding method (default=None -> %r)\n' % encoding +
     xref_safe_group = parent_parser.add_mutually_exclusive_group()
     xref_safe_group.add_argument('-x', '--xref',
-                               help='disables cross-referencing and checks of the BDF '
-                               '(default=True -> on)', action='store_true')
+                                 help='disables cross-referencing and checks of the BDF '
+                                 '(default=True -> on)', action='store_true')
     xref_safe_group.add_argument('--safe', help='Use safe cross-reference (default=False)',
-                               action='store_true')
+                                 action='store_true')
 
     parent_parser.add_argument('-p', '--punch',
                                help='disables reading the executive and case control decks '
@@ -2008,9 +2025,7 @@ def get_test_bdf_data(argv):
     return data
 
 def main(argv=None):
-    """
-    The main function for the command line ``test_bdf`` script.
-    """
+    """The main function for the command line ``test_bdf`` script."""
     if argv is None:
         argv = sys.argv
 

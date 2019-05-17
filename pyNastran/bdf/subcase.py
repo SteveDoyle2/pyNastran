@@ -2,7 +2,7 @@
 Subcase creation/extraction class
 """
 from __future__ import print_function, unicode_literals
-from typing import Dict, Any
+from typing import List, Dict, Any
 from six import string_types, PY2, PY3, text_type, binary_type
 from numpy import ndarray
 
@@ -520,6 +520,7 @@ class Subcase(object):
         return False
 
     def has_parameter(self, *param_names):
+        # type: List[bool]
         """
         Checks to see if one or more parameter names are in the subcase.
 
