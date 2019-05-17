@@ -241,6 +241,7 @@ class TestConstraints(unittest.TestCase):
         spc = model.add_spc(1, node_ids, components, enforced, comment='spc')
         spc.validate()
         #assert spc.enforced == enforced
+        assert spc.nodes == node_ids
         assert spc.gids == node_ids
 
         spc.raw_fields()

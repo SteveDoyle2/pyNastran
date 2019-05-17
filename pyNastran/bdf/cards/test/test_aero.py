@@ -232,8 +232,8 @@ class TestAero(unittest.TestCase):
         aelink2 = model.add_aelink(idi, label, independent_labels, linking_coefficents)
         with self.assertRaises(RuntimeError):
             model.validate()
-        aelink2.Cis = [1.0, 2.0, 3.0]
-        assert aelink2.Cis == [1., 2., 3.]
+        aelink2.linking_coefficents = [1.0, 2.0, 3.0]
+        assert aelink2.linking_coefficents == [1., 2., 3.]
 
         #-------------------------------
         idi = 'ALWAYS'
