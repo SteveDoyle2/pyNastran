@@ -7,8 +7,15 @@ import numpy as np
 from numpy import array
 
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
+from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
+try:
+    import matplotlib
+    IS_MATPLOTLIB = True
+    from pyNastran.bdf.cards.elements.plot import plot_equivalent_lamina_vs_theta
+except ImportError:
+    IS_MATPLOTLIB = False
 
 class TestShells(unittest.TestCase):
     def test_pshell(self):
@@ -658,10 +665,15 @@ class TestShells(unittest.TestCase):
         pcomp = model.add_pcomp(pid, mids, thicknesses)
 
         assert pcomp.Thickness() == sum(thicknesses), thicknesses
+        assert np.allclose(pcomp.get_thicknesses(), [0.1, 0.2, 0.3]), pcomp.get_thicknesses()
+        assert np.allclose(pcomp.get_thetas(), [0., 0., 0.]), pcomp.get_thetas()
 
         pcomp.lam = 'SYM'
         assert pcomp.Thickness() == sum(thicknesses)*2, thicknesses
 
+        assert np.allclose(pcomp.get_thicknesses(), [0.1, 0.2, 0.3, 0.3, 0.2, 0.1]), pcomp.get_thicknesses()
+        assert np.allclose(pcomp.get_thetas(), [0., 0., 0., 0., 0., 0.]), pcomp.get_thetas()
+        #---------------------------------------------------
         model.validate()
 
         ctria6.raw_fields()
@@ -1236,7 +1248,70 @@ class TestShells(unittest.TestCase):
         assert model2.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
         assert model2.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
 
+    def test_abd(self):
+        """tests some ABD matrix functionality for a PCOMP"""
+        model = BDF(debug=False, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        nids = [1, 2, 3, 4]
+        eid = 1
+        pid = 10
+        mid = 20
+        model.add_cquad4(eid, pid, nids, theta_mcid=0.0, zoffset=0.,
+                         tflag=0, T1=None, T2=None, T3=None, T4=None, comment='')
+
+        thetas = [0., 45., 90.]
+        thicknesses = [0.1] * 3
+        mids = len(thicknesses) * [mid]
+        pcomp = model.add_pcomp(pid, mids, thicknesses, thetas=None,
+                                souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0.,
+                                lam=None, z0=0., comment='')
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+
+        #--------------------------
+        #e1_e2 = 40.
+        #g12_e2 = 0.5
+        #nu12 = 0.25
+        #e22 = 30e6
+
+        e1_e2 = 3.
+        g12_e2 = 0.5
+        nu12 = 0.25
+        e22 = 1.
+
+        e11 = e1_e2 * e22
+        g12 = g12_e2 * e22
+
+        mid8 = 8
+        mat8 = model.add_mat8(
+            mid8, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8, rho=0.,
+            a1=0., a2=0., tref=0.,
+            Xt=0., Xc=None, Yt=0., Yc=None, S=0., ge=0.,
+            F12=0., strn=0., comment='')
+        S = get_mat_props_S(mat8)
+
+        pid8 = 8
+        pcomp8 = model.add_pcomp(pid8, [mid8], [1.], thetas=[0.],
+                                 souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0.,
+                                 lam=None, z0=0., comment='')
+
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+        ABD = pcomp.get_ABD_matrices()
+
+        thetad = np.linspace(0., 90., num=91)
+        if IS_MATPLOTLIB:
+            plot_equivalent_lamina_vs_theta(pcomp8, mat8, thetad, show=False)
+
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
+    """makes a series of DVCREL1 and a DESVAR"""
     j = i
     for ii, (name, desvar_value) in enumerate(params):
         j = i + ii
@@ -1250,6 +1325,7 @@ def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     return j + 1
 
 def make_dvprel_optimization(model, params, prop_type, pid, i=1):
+    """makes a series of DVPREL1 and a DESVAR"""
     j = i
     for ii, (name, desvar_value) in enumerate(params):
         j = i + ii
@@ -1263,6 +1339,7 @@ def make_dvprel_optimization(model, params, prop_type, pid, i=1):
     return j + 1
 
 def make_dvmrel_optimization(model, params, material_type, mid, i=1):
+    """makes a series of DVMREL1 and a DESVAR"""
     j = i
     for ii, (name, desvar_value) in enumerate(params):
         j = i + ii

@@ -876,8 +876,8 @@ class DEFORM(Load):
         """
         offset = 2 * icard
         sid = integer(card, 1, 'sid')
-        eid = integer(card, 2 + offset, 'eid')
-        deformation = double(card, 3 + offset, 'D1')
+        eid = integer(card, 2 + offset, 'eid%i' % (icard + 1))
+        deformation = double(card, 3 + offset, 'D%i' % (icard + 1))
         return DEFORM(sid, eid, deformation, comment=comment)
 
     @classmethod

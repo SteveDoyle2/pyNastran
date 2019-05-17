@@ -9,6 +9,7 @@ All method cards are defined in this file.  This includes:
  * EIGRL
 
 All cards are Method objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
@@ -27,6 +28,7 @@ class Method(BaseCard):
     """
     Generic class for all methods.
     Part of self.methods
+
     """
     def __init__(self):
         pass
@@ -100,6 +102,7 @@ class EIGB(Method):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         method = string_or_blank(card, 2, 'method')
@@ -178,6 +181,7 @@ class EIGC(Method):
     +======+=========+=========+=========+=========+=========+=========+=====+
     |      | SHIFTR1 | SHIFTI1 |         |         |         | ISRRFLG | ND1 |
     +------+---------+---------+---------+---------+---------+---------+-----+
+
     """
     type = 'EIGC'
 
@@ -265,6 +269,7 @@ class EIGC(Method):
             used by ISSR
         comment : str; default=''
             a comment for the card
+
         """
         Method.__init__(self)
         if comment:
@@ -380,6 +385,7 @@ class EIGC(Method):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         method = string(card, 2, 'method')
@@ -670,6 +676,7 @@ class EIGP(Method):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
 
@@ -753,6 +760,7 @@ class EIGR(Method):
             component for normalization (1-6); only for POINT
         comment : str; default=''
             a comment for the card
+
         """
         Method.__init__(self)
         if comment:
@@ -809,6 +817,7 @@ class EIGR(Method):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         method = string_or_blank(card, 2, 'method', 'LAN')
@@ -876,6 +885,7 @@ class EIGRL(Method):
     +-------+-----+----+----+----+--------+--------+--------+------+
     |        option_1 = value_1 option_2 = value_2, etc.           |
     +--------------------------------------------------------------+
+
     """
     type = 'EIGRL'
 
@@ -914,6 +924,7 @@ class EIGRL(Method):
             ???
         comment : str; default=''
             a comment for the card
+
         """
         Method.__init__(self)
         if comment:
@@ -980,6 +991,7 @@ class EIGRL(Method):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         sid = integer(card, 1, 'sid')
         v1 = double_or_blank(card, 2, 'v1')

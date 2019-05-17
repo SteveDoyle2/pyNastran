@@ -1,6 +1,5 @@
 """defines readers for BDF objects in the OP2 DYNAMIC/DYNAMICS table"""
 from __future__ import print_function
-from six import b
 from struct import unpack, Struct
 import numpy as np
 

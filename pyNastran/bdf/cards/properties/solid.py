@@ -1,12 +1,16 @@
 #pylint: disable=C0103,C0111,R0902
 """
-All ungrouped properties are defined in this file.  This includes:
- * PCOMPS (SolidProperty)
- * PLSOLID (SolidProperty)
- * PSOLID (SolidProperty)
+All solid properties are defined in this file.  This includes:
+ * PCOMPS
+ * PLSOLID
+ * PSOLID
+
+ All solid properties are Property objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from typing import Dict, Any
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -18,16 +22,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
-class SolidProperty(Property):
-    def __init__(self):
-        Property.__init__(self)
-        self.mid_ref = None
 
-    def Rho(self):
-        return self.mid_ref.rho
-
-
-class PLSOLID(SolidProperty):
+class PLSOLID(Property):
     """
     Defines a fully nonlinear (i.e., large strain and large rotation)
     hyperelastic solid element.
@@ -69,7 +65,7 @@ class PLSOLID(SolidProperty):
         comment : str; default=''
             a comment for the card
         """
-        SolidProperty.__init__(self)
+        Property.__init__(self)
         if stress_strain == 'GAUS':
             stress_strain = 'GAUSS'
 
@@ -146,9 +142,7 @@ class PLSOLID(SolidProperty):
         self.mid_ref = None
 
     def Rho(self):
-        """
-        Returns the density
-        """
+        """Returns the density"""
         return self.mid_ref.rho
 
     def _verify(self, xref):
@@ -166,12 +160,12 @@ class PLSOLID(SolidProperty):
         return self.comment + print_card_16(card)
 
 
-class PCOMPS(SolidProperty):
+class PCOMPS(Property):
     type = 'PCOMPS'
     _field_map = {
         #1: 'pid', 2:'mid', 3:'cordm', 4:'integ', 5:'stress',
         #6:'isop', 7:'fctn',
-    }
+    }  # type: Dict[int,str]
 
     @classmethod
     def _init_from_empty(cls):
@@ -198,7 +192,7 @@ class PCOMPS(SolidProperty):
             interlaminar_failure_theories = [None] * nplies
         if souts is None:
             souts = ['NO'] * nplies
-        SolidProperty.__init__(self)
+        Property.__init__(self)
         self.pid = pid
         self.cordm = cordm
         self.psdir = psdir
@@ -336,7 +330,8 @@ class PCOMPS(SolidProperty):
         # this card has integers & strings, so it uses...
         return self.comment + print_card_8(card)
 
-class PSOLID(SolidProperty):
+
+class PSOLID(Property):
     """
     +--------+-----+-----+-------+-----+--------+---------+------+
     |    1   |  2  |  3  |   4   |  5  |    6   |    7    |   8  |
@@ -392,7 +387,7 @@ class PSOLID(SolidProperty):
         comment : str; default=''
             a comment for the card
         """
-        SolidProperty.__init__(self)
+        Property.__init__(self)
         if comment:
             self.comment = comment
         #: Property ID

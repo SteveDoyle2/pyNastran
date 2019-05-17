@@ -1950,7 +1950,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PBMSECT' : (PBMSECT, self._add_property_object),
 
             'CBEAM3' : (CBEAM3, self._add_element_object),
-            #'PBEAM3' : (PBEAM3, self._add_property_object),
+            'PBEAM3' : (PBEAM3, self._add_property_object),
 
             'CBEND' : (CBEND, self._add_element_object),
             'PBEND' : (PBEND, self._add_property_object),
@@ -2502,9 +2502,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """adds a DEFORM"""
         loads = [DEFORM.add_card(card_obj, comment=comment)]
         if card_obj.field(4):
-            loads.append(DEFORM.add_card(card_obj, 2, comment=comment))
+            loads.append(DEFORM.add_card(card_obj, 1, comment=comment))
         if card_obj.field(6):
-            loads.append(DEFORM.add_card(card_obj, 3, comment=comment))
+            loads.append(DEFORM.add_card(card_obj, 2, comment=comment))
         for loadi in loads:
             self._add_load_object(loadi)
         return loads

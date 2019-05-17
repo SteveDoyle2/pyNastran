@@ -144,7 +144,7 @@ class TestLoads(unittest.TestCase):
         fields = expand_thru_by(fields, set_fields=True, sort_fields=True)
         assert collapse_thru_by(fields) == [14, 'THRU', 24, 'BY', 2], collapse_thru_by(fields)
 
-        model = BDF()
+        model = BDF(debug=False)
         for nid in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 23, 24]:
             model.add_grid(nid, [0., 0., 0.])
 
@@ -301,7 +301,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 LINE option"""
         #PLOAD4        10      10      0.819.2319
         #0      1.      0.      0.    LINE    NORM
-        model = BDF(debug=True, log=None, mode='msc')
+        model = BDF(debug=False, log=None, mode='msc')
 
         sid = 1
         eids = 1
@@ -505,7 +505,7 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(moments1[0], fm[3], 'm=%s mexpected=%s' % (moments1, fm[3:]))
             #self.assertEqual(moments1[1], fm[4], 'm=%s mexpected=%s' % (moments1, fm[3:]))
             #self.assertEqual(moments1[2], fm[5], 'm=%s mexpected=%s' % (moments1, fm[3:]))
-        save_load_deck(model)
+        save_load_deck(model, run_loads=False)
 
     def test_pload4_ctria3(self):
         """tests a PLOAD4 with a CTRIA3"""
@@ -709,7 +709,7 @@ class TestLoads(unittest.TestCase):
                 model.log.error('subcase=%-2i Fz g=(%s,%s) forces1=%s fexpected=%s '
                                 'face=%s normal=%s' % (
                                     isubcase, g1, g34, forces1, fm, face, normal))
-        save_load_deck(model, punch=False)
+        save_load_deck(model, punch=False, run_loads=False)
 
     def test_pload4_chexa(self):
         """tests a PLOAD4 with a CHEXA"""
@@ -962,7 +962,7 @@ class TestLoads(unittest.TestCase):
         model2 = read_bdf('ploadx1.temp', debug=None)
         model2._verify_bdf()
         os.remove('ploadx1.temp')
-        save_load_deck(model2, run_convert=False)
+        save_load_deck(model2, run_convert=False, run_mass_properties=False)
 
     def test_loads_combo(self):
         r"""

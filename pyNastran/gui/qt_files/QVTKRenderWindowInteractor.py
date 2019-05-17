@@ -145,6 +145,12 @@ class QVTKRenderWindowInteractor(QWidget):
     }
 
     def __init__(self, parent=None, wflags=Qt.WindowFlags(), **kw):
+        # default value
+        self._TimerDuration = 10
+        if 'timer_duration' in kw:
+            self._TimerDuration = kw['timer_duration']
+            del kw['timer_duration']
+
         # the current button
         self._ActiveButton = Qt.NoButton
 
@@ -251,7 +257,13 @@ class QVTKRenderWindowInteractor(QWidget):
         self._RenderWindow.Finalize()
 
     def CreateTimer(self, obj, evt):
-        self._Timer.start(10)
+        self._Timer.start(self._TimerDuration) # self._Timer.start(10) in orginal
+
+    #def CreateRepeatingTimer(self, duration):
+        #print('duration = %s' % duration)
+        #self._TimerDuration = duration
+        #super(QVTKRenderWindowInteractor, self).GetRenderWindow().GetInteractor().CreateRepeatingTimer(duration)
+        #self._TimeDuration = 10
 
     def DestroyTimer(self, obj, evt):
         self._Timer.stop()

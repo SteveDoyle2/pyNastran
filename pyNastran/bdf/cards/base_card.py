@@ -245,6 +245,14 @@ class BaseCard(object):
                 return False
         return True
 
+    def _is_same_fields_long(self, fields1, fields2):  # pragma: no cover
+        """helper for __eq__"""
+        out = []
+        for (field1, field2) in zip(fields1, fields2):
+            is_samei = is_same(field1, field2)
+            out.append(is_samei)
+        return out
+
     def print_raw_card(self, size=8, is_double=False):
         # type: (int, bool) -> str
         """A card's raw fields include all defaults for all fields"""
@@ -471,7 +479,9 @@ class Element(BaseCard):
         positions = np.empty((nnodes, 3), dtype='float64')
         positions.fill(np.nan)
         for i, node in enumerate(nodes):
-            assert not isinstance(node, int), self.type
+            if isinstance(node, int):
+                raise TypeError("node=%s; type=%s must be a Node\n%s" % (
+                    str(node), type(node), self.get_stats()))
             if node is not None:
                 positions[i, :] = node.get_position()
         return positions

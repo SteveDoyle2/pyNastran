@@ -7,6 +7,7 @@ from typing import List, Optional
 
 from pyNastran.bdf.bdf_interface.utils import expand_tabs
 from pyNastran.bdf.cards.utils import wipe_empty_fields
+from pyNastran.bdf.errors import ReplicationError
 
 
 def to_fields_replication(card_lines):
@@ -78,7 +79,9 @@ def to_fields_replication(card_lines):
                 fields.extend([line[8:16], line[16:24], line[24:32],
                                line[32:40], line[40:48], line[48:56], line[56:64],
                                line[64:72]])
-    assert '*' not in card_name, card_lines
+    if '*' in card_name:
+        raise ReplicationError('* found in unexpected position; %r\nlines = %s' % (card_name, card_lines))
+
     wiped_fields = wipe_empty_fields(fields)
     for field in fields:
         sfield = field.strip()

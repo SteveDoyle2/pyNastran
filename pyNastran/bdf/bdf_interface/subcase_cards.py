@@ -1,5 +1,5 @@
 from __future__ import print_function, unicode_literals
-from typing import List, Dict, Tuple, Union, Any
+from typing import List, Dict, Tuple, Union, Set, Any
 from six import string_types, text_type
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 
@@ -17,6 +17,7 @@ class IntCard(CaseControlCard):
     """
     interface for cards of the form:
        NAME = 10
+
     """
     type = 'IntCard'
     def __init__(self, value):
@@ -27,6 +28,7 @@ class IntCard(CaseControlCard):
         ----------
         value : int
             the value for the card
+
         """
         super(IntCard, self).__init__()
         self.value = int(value)
@@ -54,6 +56,7 @@ class IntCard(CaseControlCard):
             unused
         i : int
             unused
+
         """
         value = line.split('=')[1]
         return cls(value)
@@ -71,9 +74,10 @@ class IntStrCard(IntCard):
     interface for cards of the form:
        NAME = 10
        NAME = ALL
+
     """
     type = 'IntStrCard'
-    allowed_strings = [] # type: List[str]
+    allowed_strings = set([]) # type: Set[str]
     def __init__(self, value):
         """
         Creates an IntStrCard
@@ -82,6 +86,7 @@ class IntStrCard(IntCard):
         ----------
         value : int/str
             the value for the card
+
         """
         super(IntStrCard, self).__init__()
         try:
@@ -99,49 +104,49 @@ class IntStrCard(IntCard):
 
 class ADACT(IntStrCard):
     type = 'ADACT'
-    allowed_strings = ['ALL', 'NONE']
+    allowed_strings = {'ALL', 'NONE'}
     def __init__(self, value):
         super(ADACT, self).__init__(value)
 
 class AEROF(IntStrCard):
     type = 'AEROF'
-    allowed_strings = ['ALL']
+    allowed_strings = {'ALL'}
     def __init__(self, value):
         super(AEROF, self).__init__(value)
 
 class APRES(IntStrCard):
     type = 'APRES'
-    allowed_strings = ['ALL']
+    allowed_strings = {'ALL'}
     def __init__(self, value):
         super(APRES, self).__init__(value)
 
 class GPRSORT(IntStrCard):
     type = 'GPRSORT'
-    allowed_strings = ['ALL']
+    allowed_strings = {'ALL'}
     def __init__(self, value):
         super(GPRSORT, self).__init__(value)
 
 class GPSDCON(IntStrCard):
     type = 'GPSDCON'
-    allowed_strings = ['ALL']
+    allowed_strings = {'ALL'}
     def __init__(self, value):
         super(GPSDCON, self).__init__(value)
 
 class HARMONICS(IntStrCard):
     type = 'HARMONICS'
-    allowed_strings = ['ALL', 'NONE']
+    allowed_strings = {'ALL', 'NONE'}
     def __init__(self, value):
         super(HARMONICS, self).__init__(value)
 
 class OFREQUENCY(IntStrCard):
     type = 'OFREQUENCY'
-    allowed_strings = ['ALL']
+    allowed_strings = {'ALL'}
     def __init__(self, value):
         super(OFREQUENCY, self).__init__(value)
 
 class OMODES(IntStrCard):
     type = 'OMODES'
-    allowed_strings = ['ALL']
+    allowed_strings = {'ALL'}
     def __init__(self, value):
         super(OMODES, self).__init__(value)
 
@@ -488,7 +493,7 @@ class SET(CaseControlCard):
             raise RuntimeError(key)
 
         assert key.upper() == key, key
-        options = int(set_id)
+        uused_options = int(set_id)
 
         #if self.debug:
             #self.log.debug('SET-type key=%r set_id=%r' % (key, set_id))
@@ -517,6 +522,7 @@ class SET(CaseControlCard):
         SET 80 = 3926, 3927, 3928, 4141, 4142, 4143, 4356, 4357, 4358, 4571,
              4572, 4573, 3323 THRU 3462, 3464 THRU 3603, 3605 THRU 3683,
              3910 THRU 3921, 4125 THRU 4136, 4340 THRU 4351
+
         """
         return write_set(self.set_id, self.value, spaces=spaces)
 
@@ -535,6 +541,7 @@ class SETMC(SET):
                  38(T1) 38(T2) 38(T3),
             ACCE/45(T1) 45(T2) 45(T3),
                  38(T1) 38(T2) 38(T3)
+
     """
     type = 'SETMC'
     def __init__(self, set_id, values):
@@ -546,16 +553,19 @@ class CheckCard(CaseControlCard):
 
     GROUNDCHECK=YES
     GROUNDCHECK(GRID=12,SET=(G,N,A),THRESH=1.E-5,DATAREC=YES)=YES
+    GROUNDCHECK(SET=ALL)=YES
 
     WEIGHTCHECK=YES
     WEIGHTCHECK(GRID=12,SET=(G,N,A),MASS)=YES
+    WEIGHTCHECK(SET=ALL)=YES
+
     """
     type = 'CheckCard'
-    allowed_keys = []
+    allowed_keys = set([])  # type: Set[str]
 
     # key:(type, allowed_values)
     allowed_values = {}  # type: Dict[str, Union[float, str]]
-    allowed_strings = [] # type: List[str]
+    allowed_strings = set([]) # type: Set[str]
     duplicate_names = {} # type: Dict[Any, Any]
     allow_ints = False
 
@@ -613,6 +623,7 @@ class CheckCard(CaseControlCard):
             the options
         value : str
             the response value
+
         """
         super(CheckCard, self).__init__()
         self.key = key
@@ -754,6 +765,9 @@ class CheckCard(CaseControlCard):
         """add method used by the CaseControl class"""
         equals_count = line.count('=')
         if equals_count == 1:
+            #GROUNDCHECK=YES
+            #WEIGHTCHECK=YES
+
             if '=' in line:
                 (key, value) = line_upper.strip().split('=')
             else:
@@ -764,7 +778,7 @@ class CheckCard(CaseControlCard):
             value = value.strip()
             #if self.debug:
                 #self.log.debug("key=%r value=%r" % (key, value))
-            param_type = 'STRESS-type'
+            #param_type = 'STRESS-type'
             assert key.upper() == key, key
 
             if '(' in key:  # comma may be in line - STRESS-type
@@ -784,7 +798,7 @@ class CheckCard(CaseControlCard):
                 # DISPLACEMENT = ALL
                 options = []
 
-        elif equals_count > 2 and '(' in line:
+        elif equals_count >= 2 and '(' in line:
             #GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
             #WEIGHTCHECK(PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)=YES
             assert len(lines) == 1, lines
@@ -826,10 +840,13 @@ class CheckCard(CaseControlCard):
                 options = split_by_mixed_commas_parentheses(str_options)
             else:
                 options = str_options.split(',')
-            param_type = 'STRESS-type'
+            #param_type = 'STRESS-type'
             key = key.upper()
+        #elif equals_count == 2:
+            #GROUNDCHECK(SET=ALL)=YES
+            #WEIGHTCHECK(SET=ALL, PRINT, THRESH=0.01, DATAREC=NO)=YES
         else:
-            raise RuntimeError('line = %r' % line)
+            raise RuntimeError('equals_count=%s; line = %r' % (equals_count, line))
         return cls(key, value, options)
 
     def write(self, spaces):
@@ -871,11 +888,12 @@ def split_by_mixed_commas_parentheses(str_options):
         something that's actually parseable
         ['PRINT', 'SET=(G,N,N+AUTOSPC,F,A)', 'DATAREC=NO']
         ['PRINT', 'SET=(G,N,F,A)',           'CGI=NO',    'WEIGHT']
+
     """
     options_start = []
     options_end = []
-    options_start_new = []
-    options_end_new = []
+    options_start_new = []  # type: List[str]
+    options_end_new = []  # type: List[str]
 
     # search for ',' until one is '(' closer to the beginning
     # of the string; put it in options_start
@@ -932,10 +950,11 @@ class GROUNDCHECK(CheckCard):
     """
     GROUNDCHECK=YES
     GROUNDCHECK(GRID=12,SET=(G,N,A),THRESH=1.E-5,DATAREC=YES)=YES
+
     """
     type = 'GROUNDCHECK'
-    allowed_keys = ['GRID', 'SET', 'PRINT', 'NOPRINT', 'THRESH', 'DATAREC', 'RTHRESH']
-    allowed_strings = ['YES']
+    allowed_keys = {'GRID', 'SET', 'PRINT', 'NOPRINT', 'THRESH', 'DATAREC', 'RTHRESH'}
+    allowed_strings = {'YES'}
     allowed_values = {
         'CGI' : (str, ['YES', 'NO']),
         'SET' : (str, ['G', 'N', 'AUTOSPC', 'F', 'A', 'ALL']),
@@ -952,13 +971,14 @@ class WEIGHTCHECK(CheckCard):
     """
     WEIGHTCHECK=YES
     WEIGHTCHECK(GRID=12,SET=(G,N,A),MASS)=YES
+
     """
     type = 'WEIGHTCHECK'
-    allowed_keys = ['GRID', 'SET', 'PRINT', 'NOPRINT', 'CGI', 'MASS', 'WEIGHT']
-    allowed_strings = ['YES']
+    allowed_keys = {'GRID', 'SET', 'PRINT', 'NOPRINT', 'CGI', 'MASS', 'WEIGHT'}
+    allowed_strings = {'YES'}
     allowed_values = {
-        'CGI':(str, ['YES', 'NO']),
-        'SET':(str, ['G', 'N', 'AUTOSPC', 'F', 'A', 'V', 'ALL']),
+        'CGI': (str, ['YES', 'NO']),
+        'SET': (str, ['G', 'N', 'AUTOSPC', 'F', 'A', 'V', 'ALL']),
         'GRID' : (int, None),
     }
 
@@ -969,22 +989,23 @@ class MODCON(CheckCard):
     """
     MODCON=123
     MODCON(SORT1,PHASE,PRINT,PUNCH,BOTH,TOPS=5)=ALL
+
     """
     type = 'MODCON'
-    allowed_keys = ['SORT1', 'SORT2', 'REAL', 'IMAG', 'PHASE', 'PRINT', 'NOPRINT',
+    allowed_keys = {'SORT1', 'SORT2', 'REAL', 'IMAG', 'PHASE', 'PRINT', 'NOPRINT',
                     'PUNCH', 'ABS', 'NORM', 'BOTH', 'TOPS', 'TOPF', 'SOLUTION',
-                    'PANELMC']
+                    'PANELMC'}
     duplicate_names = {
         'TOP' : 'TOPS',
         'SOLU' : 'SOLUTION',
         'PANE' : 'PANELMC',
     }
-    allowed_strings = ['ALL', 'NONE']
+    allowed_strings = {'ALL', 'NONE'}
     allow_ints = True
 
     allowed_values = {
-        'TOPS':(int, None),
-        'TOPF':(int, None),
+        'TOPS': (int, None),
+        'TOPF': (int, None),
         'SOLUTION' : (int, None),  ## TODO: is this right???
     }
 
@@ -1004,15 +1025,16 @@ class EXTSEOUT(CaseControlCard):
     EXTSEOUT(ASMBULK,EXTBULK,EXTID=500,DMIGSFIX=EXTID,DMIGPCH)
     EXTSEOUT(STIF,MASS,DAMP,EXTID=600,ASMBULK,EXTBULK,MATDB)
     EXTSEOUT(STIF,MASS,DAMP,GEOM,EXTID=600)
+
     """
     type = 'EXTSEOUT'
-    allowed_keys = ['EXTID', 'ASMBULK', 'EXTBULK', 'MATDB', 'MATRIXDB',
+    allowed_keys = {'EXTID', 'ASMBULK', 'EXTBULK', 'MATDB', 'MATRIXDB',
                     'GEOM', 'DMIGSFIX', 'DMIGDB',
                     'STIFF', 'STIFFNESS', 'MASS',
                     'DAMP', 'DAMPING', 'K4DAMP',
                     'LOADS',
                     'DMIGOP2', 'DMIGPCH',
-                    'MATOP4', 'MATRIXOP4']
+                    'MATOP4', 'MATRIXOP4'}
 
     def __init__(self, data):
         super(EXTSEOUT, self).__init__()
@@ -1081,6 +1103,7 @@ class EXTSEOUT(CaseControlCard):
         """
         STIFFNESS, DAMPING, K4DAMP, and LOADS may be abbreviated to STIF,
         DAMP, K4DA, and LOAD, respectively.
+
         """
         key = key.strip()
         if key == 'STIF':
@@ -1116,15 +1139,16 @@ class DISPLACEMENT(CheckCard):
     DISPLACEMENT=5
     DISPLACEMENT(REAL)=ALL
     DISPLACEMENT(SORT2, PUNCH, REAL)=ALL
+
     """
     type = 'DISPLACEMENT'
     short_name = 'DISP'
-    allowed_keys = [
+    allowed_keys = {
         'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
         'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
         'NOPRINT', 'RPUNCH',
-    ]
-    allowed_strings = ['ALL', 'NONE']
+    }
+    allowed_strings = {'ALL', 'NONE'}
     allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
@@ -1136,16 +1160,17 @@ class VELOCITY(CheckCard):
     VELOCITY=5
     VELOCITY(REAL)=ALL
     VELOCITY(SORT2, PUNCH, REAL)=ALL
+
     """
     type = 'VELOCITY'
     short_name = 'VELO'
 
-    allowed_keys = [
+    allowed_keys = {
         'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
         'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
         'NOPRINT', 'RPUNCH',
-    ]
-    allowed_strings = ['ALL', 'NONE']
+    }
+    allowed_strings = {'ALL', 'NONE'}
     allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
@@ -1157,15 +1182,16 @@ class ACCELERATION(CheckCard):
     ACCELERATION=5
     ACCELERATION(REAL)=ALL
     ACCELERATION(SORT2, PUNCH, REAL)=ALL
+
     """
     type = 'ACCELERATION'
     short_name = 'ACCE'
-    allowed_keys = [
+    allowed_keys = {
         'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
         'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
         'NOPRINT', 'RPUNCH',
-    ]
-    allowed_strings = ['ALL', 'NONE']
+    }
+    allowed_strings = {'ALL', 'NONE'}
     allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
@@ -1177,15 +1203,16 @@ class SPCFORCES(CheckCard):
     SPCFORCES=5
     SPCFORCES(REAL)=ALL
     SPCFORCES(SORT2, PUNCH, REAL)=ALL
+
     """
     type = 'SPCFORCES'
     short_name = 'SPCF'
-    allowed_keys = [
+    allowed_keys = {
         'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
         'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
         'NOPRINT', 'RPUNCH',
-    ]
-    allowed_strings = ['ALL', 'NONE']
+    }
+    allowed_strings = {'ALL', 'NONE'}
     allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
@@ -1197,15 +1224,16 @@ class MPCFORCES(CheckCard):
     MPCFORCES=5
     MPCFORCES(REAL)=ALL
     MPCFORCES(SORT2, PUNCH, REAL)=ALL
+
     """
     type = 'MPCFORCES'
     short_name = 'MPCF'
-    allowed_keys = [
+    allowed_keys = {
         'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
         'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
         'NOPRINT', 'RPUNCH',
-    ]
-    allowed_strings = ['ALL', 'NONE']
+    }
+    allowed_strings = {'ALL', 'NONE'}
     allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
@@ -1217,11 +1245,12 @@ class NLLOAD(CheckCard):
     NLLOAD(PRINT, PUNCH)=ALL
     NLLOAD(PRINT, PUNCH)=N
     NLLOAD(PRINT, PUNCH)=NONE
+
     """
     type = 'NLLOAD'
     short_name = type
-    allowed_keys = ['PRINT', 'PUNCH']
-    allowed_strings = ['ALL', 'NONE']
+    allowed_keys = {'PRINT', 'PUNCH'}
+    allowed_strings = {'ALL', 'NONE'}
     allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
@@ -1233,11 +1262,12 @@ class NLSTRESS(CheckCard):
     NLSTRESS=5
     NLSTRESS (SORT1,PRINT,PUNCH,PHASE)=15
     NLSTRESS(PLOT)=ALL
+
     """
     type = 'NLSTRESS'
     short_name = type
-    allowed_keys = ['SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT']
-    allowed_strings = ['ALL', 'NONE']
+    allowed_keys = {'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT'}
+    allowed_strings = {'ALL', 'NONE'}
     allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
@@ -1251,8 +1281,8 @@ class NLSTRESS(CheckCard):
     #NOUTPUT (4,L)=10
     #"""
     #type = 'NOUTPUT'
-    #allowed_keys = ['SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT']
-    #allowed_strings = ['ALL']
+    #allowed_keys = {'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT']
+    #allowed_strings = {'ALL'}
     #allowed_values = {}
 
     #def __init__(self, key, value, options):
@@ -1262,13 +1292,14 @@ class OLOAD(CheckCard):
     """
     OLOAD=ALL
     OLOAD(SORT1,PHASE)=5
+
     """
     type = 'OLOAD'
     short_name = type
-    allowed_keys = ['SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT',
+    allowed_keys = {'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT',
                     'REAL', 'IMAG', 'PHASE', 'PSDF', 'ATOC', 'CRMS',
-                    'RMS', 'RALL', 'RPRINT', 'NORPRINT', 'RPUNCH']
-    allowed_strings = ['ALL', 'NONE']
+                    'RMS', 'RALL', 'RPRINT', 'NORPRINT', 'RPUNCH'}
+    allowed_strings = {'ALL', 'NONE'}
     allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
@@ -1280,11 +1311,12 @@ class OPRESS(CheckCard):
     """
     OPRESS=ALL
     OPRESS(PRINT,PUNCH)=17
+
     """
     type = 'OPRESS'
     short_name = type
-    allowed_keys = ['PRINT', 'PUNCH']
-    allowed_strings = ['ALL', 'NONE']
+    allowed_keys = {'PRINT', 'PUNCH'}
+    allowed_strings = {'ALL', 'NONE'}
     allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 
@@ -1295,11 +1327,12 @@ class OTEMP(CheckCard):
     """
     OTEMP=ALL
     OTEMP(PRINT,PUNCH)=17
+
     """
     type = 'OTEMP'
     short_name = type
-    allowed_keys = ['PRINT', 'PUNCH']
-    allowed_strings = ['ALL', 'NONE']
+    allowed_keys = {'PRINT', 'PUNCH'}
+    allowed_strings = {'ALL', 'NONE'}
     allowed_values = {}  # type: Dict[str, Union[str, int]]
     allow_ints = True
 

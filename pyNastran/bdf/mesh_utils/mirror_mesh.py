@@ -17,7 +17,9 @@ from warnings import warn
 
 import numpy as np
 
-from pyNastran.bdf.cards.loads.static_loads import PLOAD4
+from pyNastran.bdf.cards.loads.static_loads import (
+    FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+    PLOAD, PLOAD2, PLOAD4)
 from pyNastran.bdf.cards.thermal.loads import TEMP, QVOL, QBDY1, QBDY2, QBDY3, QHBDY
 from pyNastran.bdf.cards.aero.aero import CAERO1, SPLINE1
 from pyNastran.bdf.cards.bdf_sets import SET1 #, SET3
@@ -428,7 +430,7 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
 
 def _mirror_loads(model, nid_offset=0, eid_offset=0):
     """
-    Mirrors the loads
+    Mirrors the loads.  A mirrored force acts in the same direction.
 
     Considers:
      - PLOAD4
@@ -455,6 +457,44 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
                     surf_or_line=load.surf_or_line,
                     line_load_dir=load.line_load_dir, comment='')
                 loads_new.append(load)
+
+            elif load_type == 'FORCE':
+                load = FORCE(load.sid, load.node + nid_offset, load.mag, load.xyz,
+                              cid=load.cid, comment='')
+                loads_new.append(load)
+            elif load_type == 'FORCE1':
+                load = FORCE1(load.sid, load.node + nid_offset, load.mag,
+                              load.g1 + nid_offset, load.g2 + nid_offset, comment='')
+                loads_new.append(load)
+            elif load_type == 'FORCE2':
+                load = FORCE2(load.sid, load.node + nid_offset, load.mag,
+                              load.g1 + nid_offset, load.g2 + nid_offset,
+                              load.g3 + nid_offset, load.g4 + nid_offset, comment='')
+                loads_new.append(load)
+
+            elif load_type == 'MOMENT':
+                load = MOMENT(load.sid, load.node + nid_offset, load.mag, load.xyz,
+                              cid=load.cid, comment='')
+                loads_new.append(load)
+            elif load_type == 'MOMENT1':
+                load = MOMENT1(load.sid, load.node + nid_offset, load.mag,
+                               load.g1 + nid_offset, load.g2 + nid_offset, comment='')
+                loads_new.append(load)
+            elif load_type == 'MOMENT2':
+                load = MOMENT2(load.sid, load.node + nid_offset, load.mag,
+                               load.g1 + nid_offset, load.g2 + nid_offset,
+                               load.g3 + nid_offset, load.g4 + nid_offset, comment='')
+                loads_new.append(load)
+
+            elif load_type == 'PLOAD':
+                nodes = [nid + nid_offset for nid in load.nodes]
+                load = PLOAD(load.sid, load.pressure, nodes, comment='')
+                loads_new.append(load)
+            elif load_type == 'PLOAD2':
+                eids = [eid + eid_offset for eid in load.eids]
+                load = PLOAD2(load.sid, load.pressure, eids, comment='')
+                loads_new.append(load)
+
             elif load_type == 'QVOL':
                 elements = [eid + eid_offset for eid in load.elements]
                 load = QVOL(load.sid, load.qvol, nid_offset + load.control_point, elements)
@@ -481,6 +521,8 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
                     temperatures[nid + nid_offset] = temp
                 load = TEMP(load.sid, temperatures)
                 loads_new.append(load)
+            elif load_type == 'GRAV':
+                pass
             else:  # pragma: no cover
                 model.log.warning('skipping:\n%s' % load.rstrip())
         if loads_new:

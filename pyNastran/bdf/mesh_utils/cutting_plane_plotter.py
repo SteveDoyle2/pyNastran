@@ -1,16 +1,19 @@
-"""
-Plots a model cutting plane
-"""
+"""Plots a model cutting plane"""
 from __future__ import print_function, unicode_literals
 import numpy as np
+from pyNastran.utils import int_version
 try:
     import matplotlib.pyplot as plt
+    import matplotlib
+    MPL_VER = int_version('matplotlib', matplotlib.__version__)
     IS_MATPLOTLIB = True
 except ImportError:  # pragma: no cover
     IS_MATPLOTLIB = False
+    MPL_VER = None
 
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
     cut_edge_model_by_coord, cut_face_model_by_coord, export_face_cut)
+
 
 def cut_and_plot_model(title, p1, p2, zaxis,
                        model, coord, nodal_result,
@@ -65,15 +68,16 @@ def cut_and_plot_model(title, p1, p2, zaxis,
         if len(local_points_array) == 0:
             log.error('No elements were piereced.  Check your cutting plane.')
             return
-        plot_cutting_plane_edges(title, p1, p2, zaxis,
-                                 local_points_array, global_points_array, result_array,
-                                 csv_filename=csv_filename, invert_yaxis=invert_yaxis,
-                                 plot=plot, show=show)
+        if plot or csv_filename:
+            plot_cutting_plane_edges(title, p1, p2, zaxis,
+                                     local_points_array, global_points_array, result_array,
+                                     csv_filename=csv_filename, invert_yaxis=invert_yaxis,
+                                     plot=plot, show=show)
     elif cut_type == 'face':
         csv_filename_face = None
         if csv_filename:
             csv_filename_face = csv_filename + '_face.csv'
-        geometry_arrays, results_arrays = cut_face_model_by_coord(
+        geometry_arrays, results_arrays, unused_rods_array = cut_face_model_by_coord(
             model, coord, ytol,
             nodal_result, plane_atol=plane_atol,
             csv_filename=csv_filename_face)
@@ -171,9 +175,11 @@ def plot_cutting_plane_edges(title, p1, p2, zaxis,
         plt.close()
         fig = plt.figure(1)
         ax = fig.add_subplot(1, 1, 1)
-        ax.plot(local_x, cp.real, 'C0<', label='real')
+
+        colors = ['C0<', 'C1>'] if MPL_VER >= [2, 1] else ['b>', 'r<']
+        ax.plot(local_x, cp.real, colors[0], label='real')
         if is_complex:
-            ax.plot(local_x, cp.imag, 'C1>', label='imag')
+            ax.plot(local_x, cp.imag, colors[0], label='imag')
         ax.set_xlabel('Local X')
         ax.set_ylabel(title)
         ax.legend()

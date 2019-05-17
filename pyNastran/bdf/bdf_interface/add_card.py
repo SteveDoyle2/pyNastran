@@ -2199,7 +2199,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pbeam(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm,
+    def add_pbeam(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                   c1=None, c2=None, d1=None, d2=None,
                   e1=None, e2=None, f1=None, f2=None,
                   k1=1., k2=1., s1=0., s2=0.,
@@ -2327,11 +2327,11 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_pbeam3(self, pid, mid, A, iz, iy, iyz, j, nsm=0.,
+    def add_pbeam3(self, pid, mid, A, iz, iy, iyz=0., j=None, nsm=0.,
                    cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0.,
                    comment=''):
         """Creates a PBEAM3 card"""
-        prop = PBEAM3(pid, mid, A, iz, iy, iyz, j, nsm=nsm,
+        prop = PBEAM3(pid, mid, A, iz, iy, iyz=iyz, j=j, nsm=nsm,
                       cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
                       comment=comment)
         self._add_property_object(prop)

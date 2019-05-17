@@ -1913,10 +1913,10 @@ class DRESP1(OptConstraint):
 
     def Atta(self):
         """returns the values of ATTa"""
-        if self.response_type == 'GPFORCE':
+        if self.response_type in ['GPFORCE', 'GPFORCP']:
             atta = self.atta_ref.nid if self.atta_ref is not None else self.atta
         else:
-            assert  self.atta_ref is None, str(self)
+            assert  self.atta_ref is None, self.get_stats()
             atta = self.atta
         return atta
 
@@ -5554,8 +5554,12 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
             #print('i = %i' % i)
             dresp_groupi = dresp_group.create_group(str(i))
             for (j, param_key), values in dresp.params.items():
-                #print('  DRESP2', (i, j), param_key, values)
-                param_keys[j] = param_key.encode(encoding)
+                try:
+                    param_keys[j] = param_key.encode(encoding)
+                except IndexError:
+                    print(self.get_stats())
+                    print('  DRESP2', (i, j), param_key, values)
+                    raise
                 dresp_groupj = dresp_groupi.create_group(str(j))
                 values2 = [val.encode(encoding) if isinstance(val, string_types) else val
                            for val in values]

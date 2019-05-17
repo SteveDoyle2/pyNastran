@@ -9,9 +9,12 @@ All bar properties are defined in this file.  This includes:
 
 All bars are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
+from itertools import count
+from typing import List, Tuple, Union, Any
 from six import integer_types, string_types
 from numpy import pi, array
 import numpy as np
@@ -36,6 +39,7 @@ def Iyy_beam(b, h):
 
 
 def I_beam(b, h):
+    # type: (float, float) -> Tuple[float, float, float]
     """gets the Iyy, Izz, Iyz for a solid beam"""
     f = 1 / 12. * b * h
     Iyy = f * h * h  # 1/12.*b*h**3
@@ -45,6 +49,7 @@ def I_beam(b, h):
 
 
 def I_beam_offset(b, h, y, z):
+    # type: (float, float, float, float) -> Tuple[float, float, float]
     A = b * h
     f = 1. / 12. * A
 
@@ -104,6 +109,7 @@ def get_inertia_rectangular(sections):
 
 
 def _IAreaL(prop, dim):
+    # type: (Any, List[float]) -> Tuple[float, float, float, float]
     beam_type = prop.beam_type
     if beam_type == 'ROD':
         R = dim[0]
@@ -211,38 +217,47 @@ class LineProperty(Property):
         #pass
 
     def Area(self):
+        # type: () -> float
         """gets area"""
         return self.A
 
     def Nsm(self):
+        # type: () -> float
         """gets nonstructural mass per unit length"""
         return self.nsm
 
     def J(self):
+        # type: () -> float
         """gets J"""
         return self.j
 
     def I11(self):
+        # type: () -> float
         """gets I11"""
         return self.i1
 
     def I22(self):
+        # type: () -> float
         """gets I22"""
         return self.i2
 
     def Rho(self):
+        # type: () -> float
         """gets the material density"""
         return self.mid_ref.rho
 
     def E(self):
+        # type: () -> float
         """gets the material Young's ratio"""
         return self.mid_ref.E
 
     def G(self):
+        # type: () -> float
         """gets the material Shear ratio"""
         return self.mid_ref.G
 
     def Nu(self):
+        # type: () -> float
         """gets the material Poisson's ratio"""
         return self.mid_ref.nu
 
@@ -283,6 +298,7 @@ def I1_I2_I12(prop, dim):
     return(I1, I2, I12)
 
 def _bar_areaL(class_name, beam_type, dim, prop):
+    # type: (str, str, List[float], Any) -> float
     """
     Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
 
@@ -841,26 +857,32 @@ class IntegratedLineProperty(LineProperty):
         LineProperty.__init__(self)
 
     def Area(self):
+        # type: () -> float
         A = integrate_positive_unit_line(self.xxb, self.A)
         return A
 
     def J(self):
+        # type: () -> float
         J = integrate_positive_unit_line(self.xxb, self.j)
         return J
 
     def I11(self):
+        # type: () -> float
         i1 = integrate_positive_unit_line(self.xxb, self.i1)
         return i1
 
     def I22(self):
+        # type: () -> float
         i2 = integrate_positive_unit_line(self.xxb, self.i2)
         return i2
 
     def I12(self):
+        # type: () -> float
         i12 = integrate_unit_line(self.xxb, self.i12)
         return i12
 
     def Nsm(self):
+        # type: () -> float
         #print("xxb = ",self.xxb)
         #print("nsm = ",self.nsm)
         nsm = integrate_positive_unit_line(self.xxb, self.nsm)
@@ -1136,6 +1158,7 @@ class PBAR(LineProperty):
             assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
 
     def MassPerLength(self):
+        # type: () -> float
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
 
@@ -1163,6 +1186,7 @@ class PBAR(LineProperty):
         self.mid_ref = None
 
     def Area(self):
+        # type: () -> float
         """Gets the area :math:`A` of the CBAR."""
         return self.A
 
@@ -1173,14 +1197,17 @@ class PBAR(LineProperty):
        #return self.j
 
     def I11(self):
+        # type: () -> float
         """gets the section I11 moment of inertia"""
         return self.i1
 
     def I22(self):
+        # type: () -> float
         """gets the section I22 moment of inertia"""
         return self.i2
 
     def I12(self):
+        # type: () -> float
         """gets the section I12 moment of inertia"""
         return self.i12
 
@@ -1459,18 +1486,17 @@ class PBARL(LineProperty):
         self.beam_type = beam_type
 
     def Area(self):
-        """
-        Gets the area :math:`A` of the CBAR.
-        """
+        # type: () -> float
+        """Gets the area :math:`A` of the CBAR."""
         return _bar_areaL('PBARL', self.beam_type, self.dim, self)
 
     def Nsm(self):
-        """
-        Gets the non-structural mass :math:`nsm` of the CBAR.
-        """
+        # type: () -> float
+        """Gets the non-structural mass :math:`nsm` of the CBAR."""
         return self.nsm
 
     def MassPerLength(self):
+        # type: () -> float
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
 
@@ -1482,16 +1508,19 @@ class PBARL(LineProperty):
         return area * rho + nsm
 
     def I1(self):
+        # type: () -> float
         """gets the section I1 moment of inertia"""
         I = self.I1_I2_I12()
         return I[0]
 
     def I2(self):
+        # type: () -> float
         """gets the section I2 moment of inertia"""
         I = self.I1_I2_I12()
         return I[1]
 
     def I12(self):
+        # type: () -> float
         """gets the section I12 moment of inertia"""
         try:
             I = self.I1_I2_I12()
@@ -1505,6 +1534,7 @@ class PBARL(LineProperty):
         #return I1_I2_I12(prop, prop.dim)
 
     def I11(self):
+        # type: () -> float
         return self.I1()
 
     def _points(self, beam_type, dim):
@@ -1613,6 +1643,7 @@ class PBARL(LineProperty):
         return array(points), Area
 
     def J(self):
+        # type: () -> float
         if self.beam_type in ['ROD']:
             r = self.dim[0]
             Ixx = pi * r**4 / 4.
@@ -1758,6 +1789,7 @@ class PBARL(LineProperty):
         return J
 
     def I22(self):
+        # type: () -> float
         return self.I2()
 
     def raw_fields(self):
@@ -2012,20 +2044,19 @@ class PBRSECT(LineProperty):
         #assert isinstance(mpl, float), 'mass_per_length=%r' % mpl
 
     def Area(self):
-        """
-        Gets the area :math:`A` of the CBAR.
-        """
+        # type: () -> float
+        """Gets the area :math:`A` of the CBAR."""
         return 0.
         #raise NotImplementedError('Area is not implemented for PBRSECT')
 
     def Nsm(self):
-        """
-        Gets the non-structural mass :math:`nsm` of the CBAR.
-        """
+        # type: () -> float
+        """Gets the non-structural mass :math:`nsm` of the CBAR."""
         return 0.
         #raise NotImplementedError('Nsm is not implemented for PBRSECT')
 
     def MassPerLength(self):
+        # type: () -> float
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
 
@@ -2069,60 +2100,362 @@ class PBRSECT(LineProperty):
         return self.write_card()
 
 
-class PBEAM3(LineProperty):  # not done, cleanup
+class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
+    """
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |    1   |     2    |    3    |    4    |     5    |    6    |    7    |     8    |     9    |
+    +========+==========+=========+=========+==========+=========+=========+==========+==========+
+    | PBEAM3 |    PID   |   MID   |   A(A)  |   IZ(A)  |  IY(A)  |  IYZ(A) |   J(A)   |  NSM(A)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   CY(A)  |  CZ(A)  |  DY(A)  |   DZ(A)  |  EY(A)  |  EZ(A)  |   FY(A)  |   FZ(A)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   SO(B)  |         |   A(B)  |   IZ(B)  |  IY(B)  |  IYZ(B) |   J(B)   |  NSM(B)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   CY(B)  |  CZ(B)  |  DY(B)  |   DZ(B)  |  EY(B)  |  EZ(B)  |   FY(B)  |   FZ(B)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   SO(C)  |         |   A(C)  |   IZ(C)  |  IY(C)  |  IYZ(C) |   J(C)   |  NSM(C)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   CY(C)  |  CZ(C)  |  DY(C)  |   DZ(C)  |  EY(C)  |  EZ(C)  |   FY(C)  |   FZ(C)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |    KY    |   KZ    |  NY(A)  |   NZ(A)  |  NY(B)  |  NZ(B)  |   NY(C)  |   NZ(C)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |  MY(A)   |  MZ(A)  |  MY(B)  |   MZ(B)  |  MY(C)  |  MZ(C)  |  NSIY(A) |  NSIZ(A) |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        | NSIYZ(A) | NSIY(B) | NSIZ(B) | NSIYZ(B) | NSIY(C) | NSIZ(C) | NSIYZ(C) |   CW(A)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   CW(B)  |  CW(C)  |  STRESS |          |         |         |          |          |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   WC(A)  |  WYC(A) |  WZC(A) |   WD(A)  |  WYD(A) |  WZD(A) |   WE(A)  |  WYE(A)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |  WZE(A)  |  WF(A)  |  WYF(A) |  WZF(A)  |  WC(B)  |  WYC(B) |  WZC(B)  |   WD(B)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |  WYD(B)  |  WZD(B) |  WE(B)  |  WYE(B)  |  WZE(B) |  WF(B)  |  WYF(B)  |  WZF(B)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |   WC(C)  |  WYC(C) |  WZC(C) |   WD(C)  |  WYD(C) |  WZD(C) |  WE(C)   |  WYE(C)  |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+    |        |  WZE(C)  |  WF(C)  |  WYF(C) |  WZF(C)  |         |         |          |          |
+    +--------+----------+---------+---------+----------+---------+---------+----------+----------+
+
+    """
     type = 'PBEAM3'
 
-    def __init__(self, pid, mid, A, iz, iy, iyz, j, nsm=0.,
-                 cy=0., cz=0., dy=0., dz=0., ey=0., ez=0., fy=0., fz=0., comment=''):
-        """Creates a PBEAM3 card"""
+    def __init__(self, pid, mid, A, iz, iy, iyz=None, j=None, nsm=0.,
+                 so=None,
+                 cy=None, cz=None, dy=None, dz=None, ey=None, ez=None, fy=None, fz=None,
+                 ky=1., kz=1.,
+                 ny=None, nz=None, my=None, mz=None,
+                 nsiy=None, nsiz=None, nsiyz=None,
+                 cw=None, stress='GRID',
+                 w=None, wy=None, wz=None,
+                 comment=''):
+        """
+        Creates a PBEAM3 card
+
+        Parameters
+        ----------
+        pid : int
+            property id
+        mid : int
+            material id
+        A : List[float]
+            areas for ABC
+        iz / iy / iyz : List[float]
+            area moment of inertias for ABC
+        iyz : List[float]; default=None -> [0., 0., 0.]
+            area moment of inertias for ABC
+        j : List[float]; default=None
+            polar moment of inertias for ABC
+            None -> iy + iz from section A for ABC
+        so : List[str]; default=None
+            None -> ['YES', 'YESA', 'YESA']
+        cy / cz / dy / dz / ey / ez / fy / fz : List[float]; default=[0., 0., 0.]
+            stress recovery loctions for ABC
+        ny / nz : List[float]
+            Local (y, z) coordinates of neutral axis for ABC
+        my / mz : List[float]
+            Local (y, z) coordinates of nonstructural mass center of gravity for ABC
+        nsiy / nsiz / nsiyz : List[float]
+            Nonstructural mass moments of inertia per unit length about
+            local y and z-axes, respectively, with regard to the nonstructural mass
+            center of gravity for ABC
+        cw : List[float]
+            warping coefficients for ABC
+        stress : str; default='GRID'
+            Location selection for stress, strain and force output.
+        w : (4, 3) float numpy array; default=None
+            Values of warping function at stress recovery points
+            None : array of 0.0
+        wy / wz : (4, 3) float numpy array; default=None
+            Gradients of warping function in the local (y, z) coordinate
+            system at stress recovery points
+            None : array of 0.0
+        """
         LineProperty.__init__(self)
         if comment:
             self.comment = comment
+
+        def _pbeam3_station_a(values):
+            """used by A, Iz, Iy"""
+            if isinstance(values, float_types):
+                values = [values] * 3
+            station_a_value = values[0]
+            for i, value in zip(count(), values[1:]):
+                if value is None:
+                    values[i + 1] = station_a_value
+            return values
+
+        def _pbeam3_station_a_default(values, default_value):
+            """used by Iyz, nsm"""
+            if values is None:
+                values = [default_value] * 3
+            elif isinstance(values, float_types):
+                values = [values] * 3
+
+            station_a_value = default_value if values[0] is None else values[0]
+            for i, value in zip(count(), values[1:]):
+                if value is None:
+                    values[i + 1] = station_a_value
+            return values
+
+
         self.pid = pid
         self.mid = mid
 
-        self.A = A
-        self.iz = iz
-        self.iy = iy
-        self.iyz = iyz
-        self.j = j
-        self.nsm = nsm
+        self.A = _pbeam3_station_a(A)
+        self.iz = _pbeam3_station_a(iz)
+        self.iy = _pbeam3_station_a(iy)
+        self.iyz = _pbeam3_station_a_default(iyz, 0.0)
+        self.j = _pbeam3_station_a_default(j, self.iy[0] + self.iz[0])
+        self.nsm = _pbeam3_station_a_default(nsm, 0.0)
 
-        self.cy = cy
-        self.cz = cz
-        self.dy = dy
-        self.dz = dz
-        self.ey = ey
-        self.ez = ez
-        self.fy = fy
-        self.fz = fz
+        if so is None:
+            so = ['YES', 'YESA', 'YESA']
+        elif isinstance(so, string_types):
+            so = [so] * 3
+        self.so = so
+
+        def _pbeam3_default_list(values, default):
+            """used by Cy/Cz, Dy/Dz, Ey/Ez, Fy/Fz"""
+            if values is None:
+                values = [default] * 3
+            elif isinstance(values, float_types):
+                values = [values] * 3
+            for i, value in zip(count(), values):
+                if value is None:
+                    values[i] = default
+            return values
+
+        self.cy = _pbeam3_default_list(cy, 0.)
+        self.cz = _pbeam3_default_list(cz, 0.)
+        self.dy = _pbeam3_default_list(dy, 0.)
+        self.dz = _pbeam3_default_list(dz, 0.)
+        self.ey = _pbeam3_default_list(ey, 0.)
+        self.ez = _pbeam3_default_list(ez, 0.)
+        self.fy = _pbeam3_default_list(fy, 0.)
+        self.fz = _pbeam3_default_list(fz, 0.)
+
+        self.ky = ky
+        self.kz = kz
+
+        def _pbeam3_default_list_station_a(values, default):
+            """used by Ny/Nz, My/Mz, NSIy/NSIz/NSIyz, Cw"""
+            if values is None:
+                values = [default] * 3
+            elif isinstance(values, float_types):
+                values = [values] * 3
+            if values[0] is None:
+                values[0] = default
+
+            station_a_value = values[0]
+            for i, value in zip(count(), values[1:]):
+                if value is None:
+                    values[i + 1] = station_a_value
+            return values
+
+        self.ny = _pbeam3_default_list_station_a(ny, 0.)
+        self.nz = _pbeam3_default_list_station_a(nz, 0.)
+        self.my = _pbeam3_default_list_station_a(my, 0.)
+        self.mz = _pbeam3_default_list_station_a(mz, 0.)
+
+        self.nsiy = _pbeam3_default_list_station_a(nsiy, 0.)
+        self.nsiz = _pbeam3_default_list_station_a(nsiz, 0.)
+        self.nsiyz = _pbeam3_default_list_station_a(nsiyz, 0.)
+
+        self.cw = _pbeam3_default_list_station_a(cw, 0.)
+        self.stress = stress
+
+        if w is None:
+            w = np.zeros((3, 4), dtype='float64')
+        if wy is None:
+            wy = np.zeros((3, 4), dtype='float64')
+        if wz is None:
+            wz = np.zeros((3, 4), dtype='float64')
+
+        self.w = w
+        self.wy = wy
+        self.wz = wz
         self.mid_ref = None
 
-    def add_card(self, card, comment=''):
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a PBARL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        #PID MID A(A) IZ(A) IY(A) IYZ(A) J(A) NSM(A)
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
 
-        A = double(card, 3, 'A')
-        iz = double(card, 4, 'Iz')
-        iy = double(card, 5, 'Iy')
-        iyz = double_or_blank(card, 6, 'Iyz', 0.0)
-        j = double_or_blank(card, 7, 'J', self.iy + self.iz)
-        nsm = double_or_blank(card, 8, 'nsm', 0.0)
+        area = [double(card, 3, 'A')]
+        iz = [double(card, 4, 'Iz')]
+        iy = [double(card, 5, 'Iy')]
+        iyz = [double_or_blank(card, 6, 'Iyz', 0.0)]
+        j = [double_or_blank(card, 7, 'J', iy[0] + iz[0])]
+        nsm = [double_or_blank(card, 8, 'nsm', 0.0)]
 
-        cy = double(card, 9, 'cy')
-        cz = double(card, 10, 'cz')
+        #CY(A) CZ(A) DY(A) DZ(A) EY(A) EZ(A) FY(A) FZ(A)
+        cy = [double(card, 9, 'cy')]
+        cz = [double(card, 10, 'cz')]
 
-        dy = double(card, 11, 'dy')
-        dz = double(card, 12, 'dz')
+        dy = [double(card, 11, 'dy')]
+        dz = [double(card, 12, 'dz')]
 
-        ey = double(card, 13, 'ey')
-        ez = double(card, 14, 'ez')
+        ey = [double(card, 13, 'ey')]
+        ez = [double(card, 14, 'ez')]
 
-        fy = double(card, 15, 'fy')
-        fz = double(card, 16, 'fz')
-        # more...
-        return PBEAM3(pid, mid, A, iz, iy, iyz, j, nsm=nsm,
-                      cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz, comment=comment)
+        fy = [double(card, 15, 'fy')]
+        fz = [double(card, 16, 'fz')]
+
+        #SO(B)        A(B) IZ(B) IY(B) IYZ(B)  J(B) NSM(B)
+        #CY(B) CZ(B) DY(B) DZ(B) EY(B)  EZ(B) FY(B)  FZ(B)
+
+        #SO(C)        A(C) IZ(C) IY(C) IYZ(C) J(C)  NSM(C)
+        #CY(C) CZ(C) DY(C) DZ(C) EY(C)  EZ(C) FY(C)  FZ(C)
+
+        so = ['YES']
+        locations = ['B', 'C']
+        for i, location in enumerate(locations):
+            offset = 17 + i * 16
+            so.append(string_or_blank(card, offset, 'SO_%s' % location, default='YESA'))
+
+            area.append(double_or_blank(card, offset + 2, 'area_%s' % location, default=area[0]))
+            iz.append(double_or_blank(card, offset + 3, 'Iz', default=iz[0]))
+            iy.append(double_or_blank(card, offset + 4, 'Iy', default=iy[0]))
+            iyz.append(double_or_blank(card, offset + 5, 'Iyz', default=iyz[0]))
+            j.append(double_or_blank(card, offset + 6, 'J', default=j[0]))
+            nsm.append(double_or_blank(card, offset + 7, 'nsm', default=nsm[0]))
+
+            cy.append(double_or_blank(card, offset + 8, 'cy', default=0.))
+            cz.append(double_or_blank(card, offset + 9, 'cz', default=0.))
+
+            dy.append(double_or_blank(card, offset + 10, 'dy', default=0.))
+            dz.append(double_or_blank(card, offset + 11, 'dz', default=0.))
+
+            ey.append(double_or_blank(card, offset + 12, 'ey', default=0.))
+            ez.append(double_or_blank(card, offset + 13, 'ez', default=0.))
+
+            fy.append(double_or_blank(card, offset + 14, 'fy', default=0.))
+            fz.append(double_or_blank(card, offset + 15, 'fz', default=0.))
+
+        #KY       KZ      NY(A)   NZ(A)    NY(B)   NZ(B)   NY(C)    NZ(C)
+        #MY(A)    MZ(A)   MY(B)   MZ(B)    MY(C)   MZ(C)   NSIY(A)  NSIZ(A)
+        #NSIYZ(A) NSIY(B) NSIZ(B) NSIYZ(B) NSIY(C) NSIZ(C) NSIYZ(C) CW(A)
+        #CW(B)    CW(C)   STRESS
+
+        ifield = 49
+        ky = double_or_blank(card, ifield, 'Ky', default=1.0)
+        kz = double_or_blank(card, ifield + 1, 'Kz', default=1.0)
+        ifield += 2
+
+        locations = ['A', 'B', 'C']
+        ny = []
+        nz = []
+        for i, location in enumerate(locations):
+            if i == 0:
+                nyi = double_or_blank(card, ifield, 'NY(%s)' % location, default=0.0)
+                nzi = double_or_blank(card, ifield + 1, 'NZ(%s)' % location, default=0.0)
+            else:
+                nyi = double_or_blank(card, ifield, 'NY(%s)' % location, default=ny[0])
+                nzi = double_or_blank(card, ifield + 1, 'NZ(%s)' % location, default=nz[0])
+            ny.append(nyi)
+            nz.append(nzi)
+            ifield += 2
+
+        my = []
+        mz = []
+        for i, location in enumerate(locations):
+            if i == 0:
+                myi = double_or_blank(card, ifield, 'MY(%s)' % location, default=0.0)
+                mzi = double_or_blank(card, ifield + 1, 'MZ(%s)' % location, default=0.0)
+            else:
+                myi = double_or_blank(card, ifield, 'MY(%s)' % location, default=my[0])
+                mzi = double_or_blank(card, ifield + 1, 'MZ(%s)' % location, default=mz[0])
+            my.append(myi)
+            mz.append(mzi)
+            ifield += 2
+
+        nsiy = []
+        nsiz = []
+        nsiyz = []
+        for i, location in enumerate(locations):
+            if i == 0:
+                nsiyi = double_or_blank(card, ifield, 'NSIY(%s)' % location, default=0.0)
+                nsizi = double_or_blank(card, ifield + 1, 'NSIZ(%s)' % location, default=0.0)
+                nsiyzi = double_or_blank(card, ifield + 2, 'NSIYZ(%s)' % location, default=0.0)
+            else:
+                nsiyi = double_or_blank(card, ifield, 'NSIY(%s)' % location, default=nsiy[0])
+                nsizi = double_or_blank(card, ifield + 1, 'NSIZ(%s)' % location, default=nsiz[0])
+                nsiyzi = double_or_blank(card, ifield + 2, 'NSIYZ(%s)' % location, default=nsiyz[0])
+            nsiy.append(nsiyi)
+            nsiz.append(nsizi)
+            nsiyz.append(nsiyzi)
+            ifield += 3
+
+        cw = []
+        for location in locations:
+            cwi = double_or_blank(card, ifield, 'CW(%s)' % location, default=0.0)
+            cw.append(cwi)
+            ifield += 1
+        stress = string_or_blank(card, ifield, 'STRESS', default='GRID')
+        ifield += 6
+
+
+        # WC(A)  WYC(A) WZC(A) WD(A)  WYD(A) WZD(A) WE(A)  WYE(A)
+        # WZE(A) WF(A)) WYF(A) WZF(A) WC(B)  WYC(B) WZC(B) WD(B)
+        # WYD(B) WZD(B) WE(B)  WYE(B) WZE(B) WF(B)  WYF(B) WZF(B)
+        # WC(C)  WYC(C) WZC(C) WD(C)  WYD(C) WZD(C) WE(C)  WYE(C)
+        # WZE(C) WF(C)  WYF(C) WZF(C)
+
+        spots = ('C', 'D', 'E', 'F')
+        w = np.zeros((3, 4), dtype='float64')
+        wy = np.zeros((3, 4), dtype='float64')
+        wz = np.zeros((3, 4), dtype='float64')
+        for iloc, location in enumerate(locations):
+            for ispot, spot in enumerate(spots):
+                wi = double_or_blank(card, ifield, 'W%s(%s)' % (spot, location), default=0.0)
+                wyi = double_or_blank(card, ifield + 1, 'WY%s(%s)' % (spot, location), default=0.0)
+                wzi = double_or_blank(card, ifield + 2, 'WZ%s(%s)' % (spot, location), default=0.0)
+                w[iloc, ispot] = wi
+                wy[iloc, ispot] = wyi
+                wz[iloc, ispot] = wzi
+                ifield += 3
+
+        return PBEAM3(pid, mid, area, iz, iy, iyz, j, nsm=nsm,
+                      so=so,
+                      cy=cy, cz=cz, dy=dy, dz=dz, ey=ey, ez=ez, fy=fy, fz=fz,
+                      ky=ky, kz=kz,
+                      ny=ny, nz=nz, my=my, mz=mz,
+                      nsiy=nsiy, nsiz=nsiz, nsiyz=nsiyz,
+                      cw=cw, stress=stress,
+                      w=w, wy=wy, wz=wz,
+                      comment=comment)
 
     def add_op2_data(self, data, comment=''):
         if comment:
@@ -2130,6 +2463,7 @@ class PBEAM3(LineProperty):  # not done, cleanup
         raise NotImplementedError(data)
 
     def Nsm(self):
+        # type: () -> List[float]
         """
         Gets the non-structural mass :math:`nsm`.
         .. warning:: nsm field not supported fully on PBEAM3 card
@@ -2152,11 +2486,41 @@ class PBEAM3(LineProperty):  # not done, cleanup
         self.mid = self.Mid()
         self.mid_ref = None
 
-    def repr_fields(self):
-        """.. todo:: not done"""
-        list_fields = [
-            'PBEAM3', self.pid, self.Mid(), self.A, self.iz, self.iy, self.iyz, self.j, self.nsm,
-            self.cy, self.cz, self.dy, self.dz, self.ey, self.ez, self.fy, self.fz]
+    def raw_fields(self):
+        list_fields = ['PBEAM3', self.pid, self.Mid()]
+        for (i, soi, ai, iz, iy, iyz, j, nsm, cy, cz, dy, dz, ey, ez, fy, fz) in zip(
+                count(), self.so, self.A, self.iz, self.iy, self.iyz, self.j, self.nsm,
+                self.cy, self.cz, self.dy, self.dz, self.ey, self.ez, self.fy, self.fz):
+            if i == 0:
+                list_fields += [
+                    ai, iz, iy, iyz, j, nsm,
+                    cy, cz, dy, dz, ey, ez, fy, fz]
+            else:
+                list_fields += [
+                    soi, None,
+                    ai, iz, iy, iyz, j, nsm,
+                    cy, cz, dy, dz, ey, ez, fy, fz]
+
+        #KY KZ NY(A) NZ(A) NY(B) NZ(B) NY(C) NZ(C)
+        #MY(A) MZ(A) MY(B) MZ(B) MY(C) MZ(C) NSIY(A) NSIZ(A)
+        #NSIYZ(A) NSIY(B) NSIZ(B) NSIYZ(B) NSIY(C) NSIZ(C) NSIYZ(C) CW(A)
+        #CW(B) CW(C) STRESS
+        list_fields += [self.ky, self.kz]
+        for ny, nz in zip(self.ny, self.nz):
+            list_fields += [ny, nz]
+        for my, mz in zip(self.my, self.mz):
+            list_fields += [my, mz]
+        for nsiy, nsiz, nsiyz in zip(self.nsiy, self.nsiz, self.nsiyz):
+            list_fields += [nsiy, nsiz, nsiyz]
+
+        list_fields += self.cw
+        list_fields += [self.stress, None, None, None, None, None]
+
+        #WC(A) WYC(A) WZC(A) WD(A) WYD(A) WZD(A) WE(A) WYE(A)
+        #WZE(A) WF(A)) WYF(A) WZF(A)
+        for w, wy, wz in zip(self.w, self.wy, self.wz):
+            for wi, wyi, wzi in zip(w, wy, wz):
+                list_fields += [wi, wyi, wzi]
         return list_fields
 
     def write_card(self, size=8, is_double=False):
@@ -2572,11 +2936,13 @@ class PBEND(LineProperty):
         self.mid_ref = None
 
     def MassPerLength(self):
+        # type: () -> float
         """m/L = rho*A + nsm"""
         rho = self.mid_ref.Rho()
         return self.A * rho + self.nsm
 
     def raw_fields(self):
+        # type: () -> List[Union[str, float, int, None]]
         return self.repr_fields()
 
     def repr_fields(self):
@@ -2611,8 +2977,10 @@ class PBEND(LineProperty):
 
 
 def split_arbitrary_thickness_section(key, value):
-    # type: (str, Union[float, List[int]]) -> (int, Union[float, List[int]])
+    # type: (str, Union[str, float, List[int]]) -> Tuple[int, Union[float, List[int]]]
     """
+    Helper method for PBRSECT/PBMSECT
+
     >>> key = 'T(11)'
     >>> value = '[1.2,PT=(123,204)]'
     >>> index, out = split_arbitrary_thickness_section(key, value)
@@ -2646,6 +3014,7 @@ def split_arbitrary_thickness_section(key, value):
 
 
 def get_beam_sections(line):
+    # type: (str) -> List[str]
     """
     Splits a PBRSECT/PBMSECT line
 
@@ -2681,10 +3050,10 @@ def get_beam_sections(line):
         words.append(word)
     return words
 
-def write_arbitrary_beam_section(inps, ts, brps, nsm, outp_id, core=None):
+def write_arbitrary_beam_section(inps, ts, branch_paths, nsm, outp_id, core=None):
     """writes the PBRSECT/PBMSECT card"""
     end = ''
-    for key, dicts in [('INP', inps), ('T', ts), ('BRP', brps), ('CORE', core)]:
+    for key, dicts in [('INP', inps), ('T', ts), ('BRP', branch_paths), ('CORE', core)]:
         if dicts is None:
             continue
         # dicts = {int index : int/float value}
@@ -2717,7 +3086,7 @@ def write_arbitrary_beam_section(inps, ts, brps, nsm, outp_id, core=None):
     return end
 
 def plot_arbitrary_section(model, self,
-                           inps, ts, brps, nsm, outp_ref,
+                           inps, ts, branch_paths, nsm, outp_ref,
                            figure_id=1, title='', show=False):
     """helper for PBRSECT/PBMSECT"""
     import matplotlib.pyplot as plt
@@ -2810,7 +3179,7 @@ def plot_arbitrary_section(model, self,
     #print('all_points =', all_points)
     #plt.show()
 
-    for key, thickness in ts.items():
+    for key, unused_thickness in ts.items():
         if key == 1:
             continue
         #print(thickness)
@@ -2827,8 +3196,8 @@ def plot_arbitrary_section(model, self,
         add_to_sections(sections, xy, section, x, y)
         #print(sections)
 
-    if brps:
-        for key, brp_set_ref in brps.items():
+    if branch_paths:
+        for key, brp_set_ref in branch_paths.items():
             brp_points = brp_set_ref.ids
             brp_points_ref = brp_set_ref.ids_ref
             brp_xyz = np.array([point.get_position() for point in brp_points_ref])
