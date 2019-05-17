@@ -5,8 +5,6 @@ from itertools import count
 import unittest
 import numpy as np
 #import PySide
-#0import matplotlib
-#matplotlib.use('Qt5Agg')
 from pyNastran.gui.matplotlib_backend import matplotlib_backend
 
 try:
@@ -14,7 +12,6 @@ try:
     IS_MATPLOTLIB = True
 except ImportError:  # pragma: no cover
     IS_MATPLOTLIB = False
-
 
 if IS_MATPLOTLIB:
     matplotlib.use(matplotlib_backend)

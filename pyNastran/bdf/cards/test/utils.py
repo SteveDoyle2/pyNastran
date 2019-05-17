@@ -164,6 +164,7 @@ def _run_loads(model, nelements, run_loads=True):
     if nsubcases == 0:
         del model.case_control_deck
 
+
 def _cross_reference(model, xref):
     """helper method for ``_cross_reference``"""
     if xref in [True, 'standard']:

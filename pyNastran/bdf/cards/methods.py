@@ -581,6 +581,8 @@ class EIGC(Method):
                 list_fields += [alphaA, omegaA, mblksz, iblksz,
                                 kstep, None, Nj, None]
         elif self.method == 'ISRR':
+            assert self.shift_r1 is not None, self.get_stats()
+            assert len(self.shift_r1) > 0, self.get_stats()
             for shift_r1i, shift_i1i, isrr_flagi, nd1i in zip(
                 self.shift_r1, self.shift_i1, self.isrr_flag, self.nd1):
                 list_fields += [shift_r1i, shift_i1i, None, None, None, isrr_flagi, nd1i, None]

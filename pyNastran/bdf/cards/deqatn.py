@@ -137,6 +137,7 @@ def _get_ta(f):
     ta2 = k1 * f**4 / ((f**2 + p1**2)**2 * (f**2 + p4**2)**2)
     return ta1, ta2
 
+# we'll add _ to the beginning of these variables
 BUILTINS = ['del', 'eval', 'yield', 'async', 'await', 'property',
             'slice', 'filter', 'map']
 
@@ -581,6 +582,8 @@ def fortran_to_python(lines, default_values, comment=''):
 
         #print('f=%r eq=%r' % (f, eq))
         for builtin in BUILTINS:
+            if builtin == f:
+                f = f.replace(builtin, builtin + '_')
             if builtin == eq:
                 eq = eq.replace(builtin, builtin + '_')
 
@@ -654,6 +657,8 @@ def write_function_header(func_header, eq, default_values, comment=''):
     func_name, arguments = func_header.strip('(,)').split('(')
     func_name = func_name.strip(' ')
     variables = arguments.split(',')
+    variables = ['_' + var if var in BUILTINS else var
+                 for var in variables]
 
     if func_name in BUILTINS:
         func_name += '_'
@@ -666,7 +671,7 @@ def write_function_header(func_header, eq, default_values, comment=''):
         # def f(a,b,c):
         #     f = 1.
         #
-        msg += _write_function_line(func_name, variables, default_values)
+        func_line = _write_function_line(func_name, variables, default_values)
     else:
         # f(a,b,c) = min(a,b,c)
         #
@@ -675,12 +680,15 @@ def write_function_header(func_header, eq, default_values, comment=''):
         # def f(a,b,c):
         #     f = min(a,b,c)
         #
-        msg += _write_function_line(func_name, variables, default_values)
+        func_line = _write_function_line(func_name, variables, default_values)
+    msg += func_line
     msg += _write_comment(comment)
     msg += _write_variables(variables)
     for builtin in BUILTINS:
-        if builtin in eq and '_' + builtin not in eq:
-            raise RuntimeError('cannot have an equation with %r\n%s' % (builtin, eq))
+        if builtin in func_line and '_' + builtin not in func_line:
+            raise RuntimeError('cannot have an equation with %r\n%s' % (builtin, func_line))
+        if builtin in variables and '_' + builtin not in variables:
+            raise RuntimeError('cannot have an equation with %r\n%s' % (builtin, variables))
             #import re
             #eq = 'YIELD_A_YIELD'
             #eq = '/YIELD'
@@ -695,6 +703,10 @@ def write_function_header(func_header, eq, default_values, comment=''):
                 #print(y.group(0))
                 #print('***eq = %r' % eq)
             #aaa
+    for builtin in BUILTINS:
+        if builtin in eq and '_' + builtin not in eq:
+            eq = eq.replace(builtin, '_'+builtin)
+
     msg += '    %s = %s\n' % (func_name, eq)
     return func_name, msg, variables
 

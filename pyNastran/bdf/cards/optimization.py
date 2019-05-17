@@ -5557,7 +5557,7 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
                 try:
                     param_keys[j] = param_key.encode(encoding)
                 except IndexError:
-                    print(self.get_stats())
+                    print(dresp.get_stats())
                     print('  DRESP2', (i, j), param_key, values)
                     raise
                 dresp_groupj = dresp_groupi.create_group(str(j))

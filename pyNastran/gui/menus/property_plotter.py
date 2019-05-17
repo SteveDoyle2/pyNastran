@@ -1,11 +1,13 @@
 from __future__ import print_function
 
-import numpy as np
+from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore
 from qtpy.QtWidgets import (
     QVBoxLayout, QWidget, QDockWidget, QComboBox, QGridLayout, QSizePolicy, QLabel, QDialog,
     QPushButton,
 )
+#import matplotlib
+#matplotlib.use('Qt5Agg')
 from matplotlib.figure import Figure
 #from pyNastran.bdf.cards.elements.beam_connectivity import box_faces
 from pyNastran.bdf.cards.elements.beam_line_connectivity import box_lines
@@ -100,94 +102,97 @@ class PropertyPlotter(QDialog):
         self.close()
 
     def on_plot(self, value=0):
-        zmean = []
-        thickness = []
-        mids = []
-        thetas = []
-        title = None
-        xlabel = None
-        ylabel = 'Z'
 
         pid = self.property_ids[value]
         prop = self.model.properties[pid]
-        lines = []
-        xs = [0., 1.]
-        if prop.type in ['PCOMP', 'PCOMPG']:
-            zs = prop.get_z_locations()
-            zmean = (zs[1:] + zs[:-1]) / 2.
-            zmin = zs.min()
-            zmax = zs.max()
-            for zi in zs:
-                ys = [zi, zi]
-                lines.append((xs, ys))
-            lines.append(([0., 0.], [zmin, zmax]))
-            lines.append(([1., 1.], [zmin, zmax]))
-            thickness = prop.get_thicknesses()
-            mids = prop.get_material_ids()
-            thetas = prop.get_thetas()
-            #print('zs =', zs)
-        elif prop.type == 'PSHELL':
-            t = prop.Thickness()
-            zs = prop.get_z_locations()
-            zmean = (zs[1:] + zs[:-1]) / 2.
-            zmin = zs.min()
-            zmax = zs.max()
-            for zi in zs:
-                ys = [zi, zi]
-                lines.append((xs, ys))
-            thickness = [t]
-            mids = [prop.Mid1()]
-            thetas = [None]
-            lines.append(([0., 0.], [zmin, zmax]))
-            lines.append(([1., 1.], [zmin, zmax]))
-        elif prop.type in ['PBARL']:
-            dim = prop.dim
-            title = 'Mid = %s' % prop.mid
-            xlabel = 'Z'
-            ylabel = 'Y'
-            if prop.Type == 'BOX':
-                ilines, points = box_lines(dim)
-                for line in ilines:
-                    xs = points[line, 1]
-                    ys = points[line, 0]
-                    lines.append((xs, ys))
-            else:
-                xs = [0., 1., 2., 3.]
-                ys = [1., 0., 1., 0.]
+        plot_property(self.subplot, prop)
+        self.canvas.draw()
+
+def plot_property(subplot, prop):
+    zmean = []
+    thickness = []
+    mids = []
+    thetas = []
+    title = None
+    xlabel = None
+    ylabel = 'Z'
+
+    lines = []
+    xs = [0., 1.]
+    if prop.type in ['PCOMP', 'PCOMPG']:
+        zs = prop.get_z_locations()
+        zmean = (zs[1:] + zs[:-1]) / 2.
+        zmin = zs.min()
+        zmax = zs.max()
+        for zi in zs:
+            ys = [zi, zi]
+            lines.append((xs, ys))
+        lines.append(([0., 0.], [zmin, zmax]))
+        lines.append(([1., 1.], [zmin, zmax]))
+        thickness = prop.get_thicknesses()
+        mids = prop.get_material_ids()
+        thetas = prop.get_thetas()
+    elif prop.type == 'PSHELL':
+        t = prop.Thickness()
+        zs = prop.get_z_locations()
+        zmean = (zs[1:] + zs[:-1]) / 2.
+        zmin = zs.min()
+        zmax = zs.max()
+        for zi in zs:
+            ys = [zi, zi]
+            lines.append((xs, ys))
+        thickness = [t]
+        mids = [prop.Mid1()]
+        thetas = [None]
+        lines.append(([0., 0.], [zmin, zmax]))
+        lines.append(([1., 1.], [zmin, zmax]))
+    elif prop.type in ['PBARL']:
+        dim = prop.dim
+        title = 'Mid = %s' % prop.mid
+        xlabel = 'Z'
+        ylabel = 'Y'
+        if prop.Type == 'BOX':
+            ilines, points = box_lines(dim)
+            for line in ilines:
+                xs = points[line, 1]
+                ys = points[line, 0]
                 lines.append((xs, ys))
         else:
             xs = [0., 1., 2., 3.]
             ys = [1., 0., 1., 0.]
-            zmean = []
-            thickness = []
-            mids = []
-            thetas = []
             lines.append((xs, ys))
+    else:
+        xs = [0., 1., 2., 3.]
+        ys = [1., 0., 1., 0.]
+        zmean = []
+        thickness = []
+        mids = []
+        thetas = []
+        lines.append((xs, ys))
 
-        #print(lines)
-        self.subplot.clear()
-        self.subplot.grid(True)
-        for (xs, ys) in lines:
-            self.subplot.plot(xs, ys, 'r')
+    #print(lines)
+    subplot.clear()
+    subplot.grid(True)
+    for (xs, ys) in lines:
+        subplot.plot(xs, ys, 'r')
 
-        #print('zmean = %s' % zmean)
-        for zmeani, thicknessi, mid, theta in zip(zmean, thickness, mids, thetas):
-            stheta = ' theta=%s' % theta if theta is not None else ''
-            self.subplot.text(0.5, zmeani, 't=%s mid=%s%s' % (thicknessi, mid, stheta),
-                              horizontalalignment='center')
-        if title:
-            self.subplot.set_title(title)
+    #print('zmean = %s' % zmean)
+    for zmeani, thicknessi, mid, theta in zip(zmean, thickness, mids, thetas):
+        stheta = ' theta=%s' % theta if theta is not None else ''
+        subplot.text(0.5, zmeani, 't=%s mid=%s%s' % (thicknessi, mid, stheta),
+                     horizontalalignment='center')
+    if title:
+        subplot.set_title(title)
 
-        if xlabel:
-            self.subplot.set_xlabel(xlabel)
-            self.subplot.set_aspect('equal', 'box')
-        else:
-            # the x-axis is free; 1D
-            self.subplot.set_aspect('auto', None)
+    if xlabel:
+        subplot.set_xlabel(xlabel)
+        subplot.set_aspect('equal', 'box')
+    else:
+        # the x-axis is free; 1D
+        subplot.set_aspect('auto', None)
 
-        if ylabel:
-            self.subplot.set_ylabel(ylabel)
-        self.canvas.draw()
+    if ylabel:
+        subplot.set_ylabel(ylabel)
 
 
 def main():
