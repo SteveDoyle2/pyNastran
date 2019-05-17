@@ -2228,7 +2228,7 @@ class TestAero(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
-                       run_save_load=False, run_save_load_hdf5=False)
+                       run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False)
         with self.assertRaises(NotImplementedError):
             model.zona.convert_to_nastran()
 
@@ -2240,7 +2240,7 @@ class TestAero(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
-                       run_save_load=False, run_save_load_hdf5=False)
+                       run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False)
         model.zona.convert_to_nastran()
 
     def test_zona_3(self):

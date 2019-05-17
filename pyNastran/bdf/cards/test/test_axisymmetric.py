@@ -1,7 +1,5 @@
 # coding: utf-8
-"""
-tests aero cards
-"""
+"""tests aero cards"""
 from __future__ import print_function
 import unittest
 #from cpylog import SimpleLogger
@@ -16,6 +14,7 @@ class TestAxi(unittest.TestCase):
      * CCONEAX
      * AXIC
      * CQUADX
+
     """
     def test_cquadx(self):
         model = BDF(debug=True, log=None, mode='msc')
@@ -96,7 +95,7 @@ class TestAxi(unittest.TestCase):
         cconeax.raw_fields()
         pconeax.raw_fields()
         axic.raw_fields()
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_mass_properties=False)
 
 
 if __name__ == '__main__':  # pragma: no cover

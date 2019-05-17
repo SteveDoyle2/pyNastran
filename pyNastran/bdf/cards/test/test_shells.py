@@ -300,9 +300,7 @@ class TestShells(unittest.TestCase):
 
 
     def test_pcomp_01(self):
-        """
-        asymmetrical, nsm=0.0 and nsm=1.0
-        """
+        """asymmetrical, nsm=0.0 and nsm=1.0"""
         #self.pid = data[0]
         #self.z0 = data[1]
         #self.nsm = data[2]
@@ -446,9 +444,7 @@ class TestShells(unittest.TestCase):
             self.assertAlmostEqual(za, ze)
 
     def test_pcomp_02(self):
-        """
-        symmetrical, nsm=0.0 and nsm=1.0
-        """
+        """symmetrical, nsm=0.0 and nsm=1.0"""
         pid = 1
         z0 = 0.
         nsm = 0.
@@ -992,9 +988,9 @@ class TestShells(unittest.TestCase):
         model.add_pshear(pid, mid, t=t,
                          nsm=nsm, f1=0., f2=0., comment='pshear')
         model.add_pshell(pid_pshell, mid1=mid, t=t, mid2=None, twelveIt3=1.0,
-                        mid3=None, tst=0.833333,
-                        nsm=nsm, z1=None, z2=None,
-                        mid4=None, comment='')
+                         mid3=None, tst=0.833333,
+                         nsm=nsm, z1=None, z2=None,
+                         mid4=None, comment='')
 
         E = 3.0e7
         G = None
@@ -1211,9 +1207,9 @@ class TestShells(unittest.TestCase):
                          T1=None, T2=None, T3=None, T4=None, comment='')
 
         model.add_pshell(pid, mid1=mid, t=0.1, mid2=mid, twelveIt3=1.0,
-                        mid3=None, tst=0.833333,
-                        nsm=0.0, z1=None, z2=None,
-                        mid4=None, comment='')
+                         mid3=None, tst=0.833333,
+                         nsm=0.0, z1=None, z2=None,
+                         mid4=None, comment='')
         E = 3.0e7
         G = None
         nu = 0.3
@@ -1278,6 +1274,7 @@ def make_dvmrel_optimization(model, params, material_type, mid, i=1):
                           comment='')
         model.add_desvar(j, 'v%s' % name, desvar_value)
     return j + 1
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

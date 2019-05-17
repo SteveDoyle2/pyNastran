@@ -13,7 +13,7 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 try:
     import h5py
     IS_H5PY = True
-except ImportError:
+except ImportError:  # pragma: no cover
     IS_H5PY = False
 
 def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
@@ -53,7 +53,10 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
     model2.get_bdf_stats()
     model2.write_bdf('model2.bdf')
     nelements = len(model2.elements) + len(model2.masses)
-    if run_mass_properties and len(model2.nodes) == 0 and nelements > 0:
+    nnodes = len(model2.nodes) + len(model2.spoints) + len(model2.epoints)
+    if run_mass_properties and nelements:
+        if nelements > 1 and nnodes == 0:  # pragma: no cover
+            raise RuntimeError('no nodes exist')
         mass1, cg1, inertia1 = model2.mass_properties(reference_point=None, sym_axis=None)
         mass2, cg2, inertia2 = model2.mass_properties_nsm(reference_point=None, sym_axis=None)
         #if not quiet:

@@ -1856,17 +1856,16 @@ class Cord2x(Coord):
             #self.e3 = self.rid_ref.transform_node_to_local(xyz + e13)
             msg = 'this method is very confusing...xyz is not defined...is that origin?'
             raise RuntimeError(msg)
-        else:
-            self.rid = 0
-            self.rid_ref = None
-            self.rid_trace = [0]
-            #beta = self.beta()
-            #self.e1 = copy.deepcopy(self.origin)
-            #self.e2 = self.origin + beta[2, :]
-            #self.e3 = self.origin + beta[0, :]
-            self.e1 = copy.deepcopy(self.origin)
-            self.e2 = self.origin + self.k
-            self.e3 = self.origin + self.i
+        self.rid = 0
+        self.rid_ref = None
+        self.rid_trace = [0]
+        #beta = self.beta()
+        #self.e1 = copy.deepcopy(self.origin)
+        #self.e2 = self.origin + beta[2, :]
+        #self.e3 = self.origin + beta[0, :]
+        self.e1 = copy.deepcopy(self.origin)
+        self.e2 = self.origin + self.k
+        self.e3 = self.origin + self.i
 
     def write_card(self, size=8, is_double=False):
         card = self.repr_fields()
@@ -1919,7 +1918,7 @@ class Cord1x(Coord):
     @classmethod
     def export_to_hdf5(cls, h5_file, model, cids):
         """exports the coords in a vectorized way"""
-        comments = []
+        unused_comments = []
         nodes = []
         for cid in cids:
             coord = model.coords[cid]

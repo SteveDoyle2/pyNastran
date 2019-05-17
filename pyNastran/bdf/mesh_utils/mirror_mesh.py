@@ -18,6 +18,7 @@ from warnings import warn
 import numpy as np
 
 from pyNastran.bdf.cards.loads.static_loads import PLOAD4
+from pyNastran.bdf.cards.thermal.loads import TEMP, QVOL, QBDY1, QBDY2, QBDY3, QHBDY
 from pyNastran.bdf.cards.aero.aero import CAERO1, SPLINE1
 from pyNastran.bdf.cards.bdf_sets import SET1 #, SET3
 from pyNastran.bdf.bdf import BDF, read_bdf
@@ -35,13 +36,15 @@ def get_model(bdf_filename, log=None, debug=True):
                          debug=debug, mode='msc')
     return model
 
-def bdf_mirror_plane(bdf_filename, plane, mirror_model=None, log=None, debug=True, use_nid_offset=True):
+def bdf_mirror_plane(bdf_filename, plane, mirror_model=None,
+                     log=None, debug=True, use_nid_offset=True):
     """mirrors a model about an arbitrary plane"""
     model = get_model(bdf_filename, log=log, debug=debug)
     if mirror_model is None:
         mirror_model = BDF(debug=debug, log=log, mode='msc')
 
-    nid_offset, plane = _mirror_nodes_plane(model, mirror_model, plane, use_nid_offset=use_nid_offset)
+    nid_offset, plane = _mirror_nodes_plane(model, mirror_model, plane,
+                                            use_nid_offset=use_nid_offset)
     eid_offset = _mirror_elements(model, mirror_model, nid_offset)
     #_mirror_loads(model, nid_offset, eid_offset)
     return model, mirror_model, nid_offset, eid_offset
@@ -179,7 +182,7 @@ def _mirror_nodes_plane(model, mirror_model, plane, use_nid_offset=True):
 
     if model.nodes:
         all_nodes, xyz_cid0 = model.get_xyz_in_coord_no_xref(cid=0, fdtype='float64', sort_ids=True)
-        cid = max(model.coords) + 1
+        unused_cid = max(model.coords) + 1
         origin = plane[0, :]
 
         # just a triangle's normal vector
@@ -327,7 +330,8 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
                 element2.g0 = g0
 
             elif etype == 'CGAP':
-                #nodes = [node_id + nid_offset if node_id is not None else None for node_id in nodes]
+                #nodes = [node_id + nid_offset if node_id is not None else None
+                         #for node_id in nodes]
                 #_set_nodes(element2, nodes)
                 ga = element2.ga + nid_offset if element2.ga is not None else None
                 gb = element2.gb + nid_offset if element2.gb is not None else None
@@ -356,8 +360,8 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
                 #print(nodes)
                 #element2.nodes = nodes
             elif etype == 'GENEL':
-                    element2.ul = element2.ul + nid_offset
-                    element2.ud = element2.ud + nid_offset
+                element2.ul = element2.ul + nid_offset
+                element2.ud = element2.ud + nid_offset
             else:
                 try:
                     element2.nodes = nodes
@@ -429,6 +433,7 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
     Considers:
      - PLOAD4
         - no coordinate systems (assumes cid=0)
+     - TEMP, QHBDY, QBDY1, QBDY2, QBDY3
 
     """
     for unused_load_id, loads in model.loads.items():
@@ -444,11 +449,37 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
                     g34 = load.g34 + nid_offset
 
                 eids = [eid + eid_offset for eid in load.eids]
-                load2 = PLOAD4(
+                load = PLOAD4(
                     load.sid, eids, load.pressures, g1, g34,
                     cid=load.cid, nvector=load.nvector,
                     surf_or_line=load.surf_or_line,
                     line_load_dir=load.line_load_dir, comment='')
+                loads_new.append(load)
+            elif load_type == 'QVOL':
+                elements = [eid + eid_offset for eid in load.elements]
+                load = QVOL(load.sid, load.qvol, nid_offset + load.control_point, elements)
+                loads_new.append(load)
+            elif load_type == 'QHBDY':
+                grids = [nid + nid_offset for nid in load.grids]
+                load = QHBDY(load.sid, load.flag, load.q0, grids, af=load.af)
+                loads_new.append(load)
+            elif load_type == 'QBDY1':
+                eids = [eid + eid_offset for eid in load.eids]
+                load = QBDY1(load.sid, load.qflux, eids)
+                loads_new.append(load)
+            elif load_type == 'QBDY2':
+                load = QBDY2(load.sid, load.eid + eid_offset, load.qfluxs, comment='')
+                loads_new.append(load)
+            elif load_type == 'QBDY3':
+                eids = [eid + eid_offset for eid in load.eids]
+                load = QBDY3(load.sid, load.q0, load.cntrlnd + nid_offset, eids)
+                loads_new.append(load)
+
+            elif load_type == 'TEMP':
+                temperatures = {}
+                for nid, temp in load.temperatures.items():
+                    temperatures[nid + nid_offset] = temp
+                load = TEMP(load.sid, temperatures)
                 loads_new.append(load)
             else:  # pragma: no cover
                 model.log.warning('skipping:\n%s' % load.rstrip())

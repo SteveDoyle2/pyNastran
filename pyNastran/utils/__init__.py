@@ -34,11 +34,6 @@ def ipython_info():
         return get_ipython()
     except NameError:
         return None
-    #if 'ipykernel' in sys.modules:
-        #ip = 'notebook'
-    #elif 'Ipython' in sys.modules:
-        #ip = 'terminal'
-    #return ip
 
 def is_file_obj(filename):
     """does this object behave like a file object?"""

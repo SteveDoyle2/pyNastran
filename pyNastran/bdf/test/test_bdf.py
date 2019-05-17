@@ -28,6 +28,7 @@ from pyNastran.bdf.errors import (
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections,
     #UnsupportedCard,
     DisabledCardError,
+    ReplicationError,
 )
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
@@ -72,7 +73,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     is_double : bool / List[bool], optional
         Is this a double precision model?
             True : size = 16
-            False : six = {8, 16}
+            False : size = {8, 16}
     nastran : str, optional
         the path to nastran (default=''; no analysis)
     post : int / List[int], optional
@@ -173,6 +174,9 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             #pass
         #except SyntaxError:  # only temporarily uncomment this when running lots of tests
             #pass
+        except ReplicationError:
+            if not dev:
+                raise
         except SystemExit:
             sys.exit('sys.exit...')
         except:
@@ -255,7 +259,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     is_double : bool, optional
         Is this a double precision model?
             True : size = 16
-            False : six = {8, 16}
+            False : size = {8, 16}
     stop : bool; default=False
         stop reading the first BDF
     nastran : str, optional

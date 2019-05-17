@@ -570,9 +570,8 @@ def _format_comment(comment):
     """
     if comment.strip() == '':  # deals with a bunch of spaces
         return ''
-    else:
-        return ''.join([u'${}\n'.format(comment_line)
-                        for comment_line in comment.rstrip().split('\n')])
+    return ''.join([u'${}\n'.format(comment_line)
+                    for comment_line in comment.rstrip().split('\n')])
 
 
 def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
@@ -592,26 +591,26 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
                     nodes2.append(node.nid)
             assert nodes2 is not None, str(card)
             return nodes2
-        else:
-            try:
-                node_ids = []
-                for node in nodes:
-                    if isinstance(node, integer_types):
-                        node_ids.append(node)
-                    else:
-                        node_ids.append(node.nid)
 
-                #if isinstance(nodes[0], integer_types):
-                    #node_ids = [node for node in nodes]
-                #else:
-                    #node_ids = [node.nid for node in nodes]
-            except:
-                print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
-                    card.type, nodes, allow_empty_nodes, msg))
-                raise
-            assert 0 not in node_ids, 'node_ids = %s' % node_ids
-            assert node_ids is not None, str(card)
-            return node_ids
+        try:
+            node_ids = []
+            for node in nodes:
+                if isinstance(node, integer_types):
+                    node_ids.append(node)
+                else:
+                    node_ids.append(node.nid)
+
+            #if isinstance(nodes[0], integer_types):
+                #node_ids = [node for node in nodes]
+            #else:
+                #node_ids = [node.nid for node in nodes]
+        except:
+            print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
+                card.type, nodes, allow_empty_nodes, msg))
+            raise
+        assert 0 not in node_ids, 'node_ids = %s' % node_ids
+        assert node_ids is not None, str(card)
+        return node_ids
     except:
         print('type=%s nodes=%s allow_empty_nodes=%s\nmsg=%s' % (
             card.type, nodes, allow_empty_nodes, msg))

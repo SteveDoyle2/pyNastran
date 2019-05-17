@@ -343,7 +343,8 @@ class NastranMatrix(BaseCard):
 
         name = string(card, 1, 'name')
         if name == 'UACCEL':
-            return  self._add_column_uaccel()
+            self._add_column_uaccel()
+            return
 
         Gj = integer(card, 2, 'Gj')
         # Cj = integer(card, 3, 'Cj')
@@ -1082,7 +1083,8 @@ class DMIG(NastranMatrix):
     +------+------+----+-----+-----+------+-------+----+------+
     """
     type = 'DMIG'
-    _properties = ['is_real', 'is_complex', 'is_polar', 'matrix_type', 'shape', 'tin_dtype', 'tout_dtype']
+    _properties = ['is_real', 'is_complex', 'is_polar', 'matrix_type', 'shape',
+                   'tin_dtype', 'tout_dtype']
 
     #@classmethod
     #def _init_from_empty(cls):
@@ -2082,7 +2084,7 @@ def _export_dmig_to_hdf5(h5_file, model, dict_obj, encoding):
         if dmig.type == 'DMIG' and name == 'UACCEL':
             if dmig.ncol is not None:
                 dmig_group.create_dataset('ncol', data=dmig.ncol)
-            load_seq_group = dmig_group.create_group('load_sequences')
+            #load_seq_group = dmig_group.create_group('load_sequences')
 
             nids = []
             dofs = []

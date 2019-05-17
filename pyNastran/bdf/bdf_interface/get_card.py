@@ -46,7 +46,7 @@ import numpy as np
 from pyNastran.bdf.bdf_interface.get_methods import GetMethods
 from pyNastran.bdf.cards.optimization import get_dvprel_key
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector_for_surf
+from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 
 
 class GetCard(GetMethods):
@@ -908,7 +908,7 @@ class GetCard(GetMethods):
 
                         if load.surf_or_line == 'SURF':
                             cid = load.Cid()
-                            normal = update_pload4_vector_for_surf(load, normal, cid)
+                            normal = update_pload4_vector(load, normal, cid)
                         else:
                             msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
                                 load.surf_or_line, str(load))

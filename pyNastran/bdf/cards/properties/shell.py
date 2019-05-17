@@ -1552,6 +1552,9 @@ class PPLANE(ShellProperty):
     #def Pid(self):
         #return self.pid
 
+    def Thickness(self):
+        return self.t
+
     def Mid(self):
         """returns the material id"""
         if self.mid_ref is not None:

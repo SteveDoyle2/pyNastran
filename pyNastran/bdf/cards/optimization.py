@@ -1819,6 +1819,9 @@ class DRESP1(OptConstraint):
             #self.atta = component
             eids = [eid for eid in self.atti if eid is not None]
             self.atti_ref = model.Elements(eids, msg=msg)
+        elif  self.response_type == 'ABSTRESS':
+            # atta - Arbitrary Beam Stress Item Code
+            self.atti_ref = model.Properties(self.atti, msg=msg)
         else:
             msg = 'response_type=%r ptype=%r\n' % (self.response_type, self.property_type)
             msg += str(self)
@@ -1847,7 +1850,7 @@ class DRESP1(OptConstraint):
             'TSPCF',
         ]
         ref_id = self.dresp_id
-        if self.property_type in ['ELEM']:
+        if self.property_type == 'ELEM':
             self.atti_ref = model.safe_elements(self.atti, ref_id, xref_errors, msg=msg)
         elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP', 'PCOMPG',
                                     'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
@@ -1894,6 +1897,9 @@ class DRESP1(OptConstraint):
             #self.atta = component
             eids = [eid for eid in self.atti if eid is not None]
             self.atti_ref = model.Elements(eids, msg=msg)
+        elif  self.response_type == 'ABSTRESS':
+            # atta - Arbitrary Beam Stress Item Code
+            self.atti_ref = model.Properties(self.atti, msg=msg)
         else:
             msg = 'response_type=%r ptype=%r\n' % (self.response_type, self.property_type)
             msg += str(self)
@@ -1901,10 +1907,21 @@ class DRESP1(OptConstraint):
 
     def uncross_reference(self):
         self.atti = self.atti_values()
+        self.atta = self.Atta()
         self.atta_ref = None
         self.atti_ref = None
 
+    def Atta(self):
+        """returns the values of ATTa"""
+        if self.response_type == 'GPFORCE':
+            atta = self.atta_ref.nid if self.atta_ref is not None else self.atta
+        else:
+            assert  self.atta_ref is None, str(self)
+            atta = self.atta
+        return atta
+
     def atti_values(self):
+        """returns the values of ATTi"""
         if self.atti_ref is None:
             return self.atti
 
@@ -1922,22 +1939,15 @@ class DRESP1(OptConstraint):
             'TSPCF',
         ]
         #print('self.atti_ref =', self.atti_ref)
-        if self.property_type in ['ELEM']:
-            data = [eid if elem is None else elem.eid
-                    for (eid, elem) in zip(self.atti, self.atti_ref)]
+        if self.property_type == 'ELEM':
+            data = self._elements()
         elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP', 'PCOMPG',
                                     'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
                                     'PBEAML', 'PSHEAR', 'PTUBE',
                                     'FRSTRE']:
-            data = [pid if prop is None else prop.pid
-                    for (pid, prop) in zip(self.atti, self.atti_ref)]
-            for value in data:
-                assert not isinstance(value, BaseCard), value
+            data = self._properties()
         elif self.response_type == 'FRSTRE':
-            data = [pid if prop is None else prop.pid
-                    for (pid, prop) in zip(self.atti, self.atti_ref)]
-            for value in data:
-                assert not isinstance(value, BaseCard), value
+            data = self._properties()
         elif self.response_type in ['WEIGHT', 'STABDER', 'EIGN', 'FREQ']:
             data = self.atti
         elif self.response_type == 'FLUTTER':
@@ -1955,32 +1965,30 @@ class DRESP1(OptConstraint):
                                     'TDISP', 'TVELO',
                                     'FRDISP', 'FRVELO', 'FRACCL',
                                     'PSDVELO', 'PSDACCL']:
-            #self.atti = model.Nodes(self.atti, msg=msg)
-            data = [node if isinstance(node, integer_types) else node.nid
-                    for node in self.atti_ref]
+            data = self._nodes()
         elif self.response_type in ['FRFORC', 'TFORC',
                                     'STRESS', 'ESE', 'CFAILURE', 'CSTRAIN']:
-            data = [eid if elem is None else elem.eid
-                    for (eid, elem) in zip(self.atti, self.atti_ref)]
+            data = self._elements()
         elif self.response_type in op2_results:
             data = self.atti
             for value in data:
                 assert not isinstance(value, BaseCard), 'response_type=%s value=%s' % (self.response_type, value)
         elif self.response_type in ['GPFORCP']:
             # MSC Nastran specific
-            data = [node if isinstance(node, integer_types) else node.nid
-                    for node in self.atti_ref]
+            data = self._nodes()
         elif self.response_type in ['GPFORCE']:
             # MSC
-            data = [elem if isinstance(elem, integer_types) else elem.eid
-                    for elem in self.atti_ref
-                    if elem is not None]
+            data = self._elements()
         elif self.response_type in ['ERP']:
             msg = 'response_type=%r property_type=%r atta=%r attb=%r atti=%r\n' % (
                 self.response_type, self.property_type, self.atta, self.attb, self.atti)
             assert self.property_type == 'PANEL', msg
             # atta=None attb=3000.0 atti=[555]
             data = self.atti
+        elif  self.response_type == 'ABSTRESS':
+            ## atta - Arbitrary Beam Stress Item Code
+            #ids = [idi for idi in self.atti if idi is not None]
+            data = self._properties()
         else:
             msg = 'response_type=%r property_type=%r atta=%r attb=%r atti=%r\n' % (
                 self.response_type, self.property_type, self.atta, self.attb, self.atti)
@@ -1988,9 +1996,31 @@ class DRESP1(OptConstraint):
             raise NotImplementedError(msg)
         return data
 
+    def _nodes(self):
+        """helper method"""
+        data = [node if isinstance(node, integer_types) else node.nid
+                for node in self.atti_ref]
+        #self.atti = data
+        return data
+
+    def _elements(self):
+        """helper method"""
+        data = [eid if elem is None else elem.eid
+                for (eid, elem) in zip(self.atti, self.atti_ref)]
+        #self.atti = data
+        return data
+
+    def _properties(self):
+        """helper method"""
+        data = [pid if prop is None else prop.pid
+                for (pid, prop) in zip(self.atti, self.atti_ref)]
+        #self.atti = data
+        #self.atti_ref = None
+        return data
+
     def raw_fields(self):
         list_fields = ['DRESP1', self.dresp_id, self.label, self.response_type, self.property_type,
-                       self.region, self.atta, self.attb] + self.atti_values()
+                       self.region, self.Atta(), self.attb] + self.atti_values()
         return list_fields
 
     def repr_fields(self):
@@ -2007,7 +2037,7 @@ class DRESP1(OptConstraint):
         if len(label) <= 6:
             label = ' %6s ' % label
         list_fields = ['DRESP1', self.dresp_id, self.label, self.response_type, self.property_type,
-                       self.region, self.atta, self.attb] + self.atti_values()
+                       self.region, self.Atta(), self.attb] + self.atti_values()
         return list_fields
 
     def write_card(self, size=8, is_double=False):

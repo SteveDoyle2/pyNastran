@@ -48,7 +48,7 @@ import os
 from struct import Struct, unpack
 from collections import Counter
 from typing import List
-from six import binary_type, string_types, PY2, PY3, b
+from six import binary_type, string_types, PY2, PY3
 
 from numpy import array
 import numpy as np
@@ -1579,8 +1579,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #print('----------')
                 #self.show_data(flag_data, types='iqlfsld', endian='>')
                 raise FatalError('cannot determine endian')
-            #if PY2:
-                #self._endian = b(self._endian)
         else:
             self.op2_reader._goto(self.n)
 
@@ -1799,7 +1797,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 if isinstance(matrix_name, binary_type):
                     self.additional_matrices[matrix_name] = matrix
                 else:
-                    self.additional_matrices[b(matrix_name)] = matrix
+                    self.additional_matrices[matrix_name.encode('latin1')] = matrix
 
     def _finish(self):
         """

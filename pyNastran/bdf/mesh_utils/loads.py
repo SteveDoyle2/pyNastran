@@ -7,11 +7,15 @@ Defines:
 
 """
 from __future__ import print_function
+#from math import nan
 import numpy as np
 from numpy import array, cross, allclose, mean
 from numpy.linalg import norm  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector_for_surf
+from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
+
+def isnan(value):
+    return value is None or np.isnan(value)
 
 def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None):
     """
@@ -747,18 +751,19 @@ def _pload4_helper(loadcase_id, load, scale, elem, xyz, p):
 
     pressures = load.pressures[:nface]
     assert len(pressures) == nface
+    cid = load.Cid()
     if load.surf_or_line == 'SURF':
         pressure = _mean_pressure_on_pload4(pressures, load, elem)
-        cid = load.Cid()
-        normal = update_pload4_vector_for_surf(load, normal, cid)
+        load_dir = update_pload4_vector(load, normal, cid)
 
         r = centroid - p
-        fi = pressure * area * normal * scale
+        fi = pressure * area * load_dir * scale
         #load.cid_ref.transform_to_global()
         mi = cross(r, fi)
 
     elif load.surf_or_line == 'LINE':
-        fi, mi = _pload4_helper_line(load, elem, scale, pressures, nodes, xyz, p)
+        load_dir = update_pload4_vector(load, normal, cid)
+        fi, mi = _pload4_helper_line(load, load_dir, elem, scale, pressures, nodes, xyz, p)
     else:  # pragma: no cover
         msg = 'surf_or_line=%r on PLOAD4 is not supported\n%s' % (
             load.surf_or_line, str(load))
@@ -833,7 +838,7 @@ def _get_load_summation_point(model, p0, cid=0):
         p = array(p0)
     return p
 
-def _pload4_helper_line(load, elem, scale, pressures, nodes, xyz, p):
+def _pload4_helper_line(load, load_dir, elem, scale, pressures, nodes, xyz, p):
     # this is pressure per unit length?
     # edge_length * thickness I assume?
     fi = np.zeros(3)
@@ -861,7 +866,6 @@ def _pload4_helper_line(load, elem, scale, pressures, nodes, xyz, p):
         raise NotImplementedError(pressures)
 
     thickness = elem.Thickness()
-    load_dir = load.nvector / np.linalg.norm(load.nvector)
     for edge in edges:
         inode1, inode2 = edge
         ixyz1 = nodes[inode1]
@@ -871,10 +875,14 @@ def _pload4_helper_line(load, elem, scale, pressures, nodes, xyz, p):
         p1 = pressures[inode1]
         p2 = pressures[inode2]
         area_edge = thickness * np.linalg.norm(xyz2 - xyz1)
-        if p1 is None:
+
+        # TODO: fails on case where p1 and p2 are nan
+        if isnan(p1):
             p1 = p2
-        if p2 is None:
+        if isnan(p2):
             p2 = p1
+        assert abs(p1) >= 0.0, p1
+        assert abs(p2) >= 0.0, p2
 
         centroid1 = (xyz2 + xyz1) / 2.
         if p1 > p2:
@@ -894,9 +902,12 @@ def _pload4_helper_line(load, elem, scale, pressures, nodes, xyz, p):
         m2 = cross(r2, f2)
         fi += f1 + f2
         mi += m1 + m2
+        #assert abs(dp) >= 0.0, dp
+        #assert f1.max() >= 0.0, f1
+        #assert f2.max() >= 0.0, f2
+        #assert m1.max() >= 0.0, m1
+        #assert m2.max() >= 0.0, m2
 
-    cid = load.Cid()
-    if cid != 0:
-        raise NotImplementedError('cid=%r nvector=%s on a PLOAD4 is not supported\n%s' % (
-            cid, load.nvector, str(load)))
+    #assert fi.max() >= 0, fi
+    #assert mi.max() >= 0, mi
     return fi, mi

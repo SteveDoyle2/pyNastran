@@ -167,7 +167,7 @@ from pyNastran.bdf.bdf_interface.stats import get_bdf_stats
 
 from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, UnsupportedCard, DisabledCardError,
-                                  SuperelementFlagError)
+                                  SuperelementFlagError, ReplicationError)
 from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
@@ -3759,7 +3759,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         old_card_real = None
         if old_card[0] == '=':
             #print(dig_str, 'A!!!')
-            assert dig is True, dig
+            if dig is False:
+                raise ReplicationError('dig=False...')
+
             cards2 = self._expand_replication(
                 card_name, icard-1, cards_list, card_lines_old, dig=False)
             assert len(cards2) == 1, 'cards2=%s; ncards=%s' % (cards2, len(cards2))
@@ -3922,8 +3924,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
                 if '=' in card_name:
                     #print(card)
-                    replicated_cards = self._expand_replication(
-                        card_name, icard, cards_list, card_lines)
+                    try:
+                        replicated_cards = self._expand_replication(
+                            card_name, icard, cards_list, card_lines)
+                    except ReplicationError:
+                        self.log.error('failed to expand %s\n%s' % (card_name, ''.join(card_lines)))
+                        raise
 
                     _check_replicated_cards(replicated_cards)
                     for replicated_card in replicated_cards:
@@ -3950,8 +3956,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
                 if '=' in card_name:
                     #print(card)
-                    replicated_cards = self._expand_replication(
-                        card_name, icard, cards_list, card_lines)
+                    try:
+                        replicated_cards = self._expand_replication(
+                            card_name, icard, cards_list, card_lines)
+                    except ReplicationError:
+                        self.log.error('failed to expand %s\n%s' % (card_name, ''.join(card_lines)))
+                        raise
 
                     _check_replicated_cards(replicated_cards)
                     for replicated_card in replicated_cards:
