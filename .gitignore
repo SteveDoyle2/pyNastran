@@ -12,6 +12,7 @@ htmlcov
 # Other
 *.pyc
 *.pyd
+*.exe
 *.whl
 *.dll
 *.log
