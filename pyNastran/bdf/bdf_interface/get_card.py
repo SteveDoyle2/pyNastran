@@ -1079,7 +1079,7 @@ class GetCard(GetMethods):
                 #self.nodes = [integer(card, 2, 'G1'),]
                 #self.constraints = [components_or_blank(card, 3, 'C1', 0)]
                 #self.enforced = [double_or_blank(card, 4, 'D1', 0.0)]
-                for nid, c1, d1 in zip(load.node_ids, load.constraints, load.enforced):
+                for nid, c1, d1 in zip(load.node_ids, load.components, load.enforced):
                     if nid in dependents_nodes:
                         fail_nids.add(nid)
                         fail_count += 1

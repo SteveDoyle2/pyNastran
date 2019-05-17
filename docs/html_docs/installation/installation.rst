@@ -22,28 +22,29 @@ The software is tested against:
 
 Packages
 --------
-The suggested set of packages include:
+The package requirements are slightly different depending on your version
+of Python, but the ones below will work on all supported versions.  The 
+set of packages include:
  * **Required**:
 
-   * numpy >= 1.15.4
-   * scipy >= 1.2.0
-   * cpylog == 1.0.3
+   * numpy >= 1.14
+   * scipy >= 1.0
+   * cpylog >= 1.0.2
    * docopt == 0.6.2    **(required for command line tools)**
-   * typing >= 3.6.1    **(python 2.7)**
-   * pathlib2 >= 2.2.0  **(python 2.7)**
-   * scandir >= 1.9.0   **(python 2.7)**
+   * typing >= 3.6.4    **(python 2.7)**
+   * pathlib2 >= 2.3.0  **(python 2.7)**
 
  * **Optional**:
 
    * colorama >= 0.3.9    **(colored logging)**
    * pandas ???
-   * matplotlib >= 2.2.3  **(F06 plotting)**
+   * matplotlib >= 2.2.4  **(plotting)**
    * h5py >= 2.8.0        **(HDF5 support)**
 
  * **GUI**:
 
    * vtk 7.1.1 or 8.1.1
-   * qtpy >= 1.5.2
+   * qtpy >= 1.4.0
    * Qt **(pick one)**
 
      * PyQt4 >= 4.x
@@ -64,10 +65,9 @@ Base functionality:
  * ``conda install docopt``   **(required for command line tools)**
  * ``conda install typing``   **(python 2.7)**
  * ``conda install pathlib2`` **(python 2.7)**
- * ``conda install scandir``  **(python 2.7)**
  * ``conda install pandas``   **(optional)**
  * ``conda install h5py``       **(optional for HDF5 support)**
- * ``conda install matplotlib`` **(optional for F06 plotting)**
+ * ``conda install matplotlib`` **(optional for plotting)**
  * ``conda install colorama``   **(optional for colored logging)**
  * ``pip install cpylog``
  * ``pip install pyNastran``
@@ -112,10 +112,9 @@ Base functionality:
    * ``pip install colorama``
    * ``conda install typing``   **(Python 2.7)**
    * ``conda install pathlib2`` **(Python 2.7)**
-   * ``conda install scandir``  **(Python 2.7)**
    * ``pip install pandas``     **(optional)**
    * ``pip install h5py``       **(optional for HDF5 support)**
-   * ``pip install matplotlib`` **(optional for F06 plotting)**
+   * ``pip install matplotlib`` **(optional for plotting)**
    * ``pip install cpylog``
    * ``pip install pyNastran``
 
@@ -124,29 +123,19 @@ For gui support (optional; required for GUI):
  * From `Windows binaries <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_:
    * Download VTK:
      * VTK-7.1.1-cp27-cp27m-win_amd64.whl **(Python 2.7)**
-     * VTK-8.1.1-cp36-cp36m-win_amd64.whl **(Python 3.6)**
-     * VTK-8.1.1-cp37-cp37m-win_amd64.whl **(Python 3.7)**
-
-    * Download PyQt:
-     * PyQt4-4.11.4-cp27-cp27m-win_amd64.whl **(Python 2.7)**
-     * PyQt4-4.11.4-cp36-cp36m-win_amd64.whl **(Python 3.6)**
-     * PyQt4-4.11.4-cp37-cp36m-win_amd64.whl **(Python 3.7; not verified**)
+     * VTK-8.1.2-cp36-cp36m-win_amd64.whl **(Python 3.6)**
+     * VTK-8.1.2-cp37-cp37m-win_amd64.whl **(Python 3.7)**
 
  * On the command line:
     * ``pip install imageio``   **(optional for animation support)**
     * ``pip install VTK*.whl``
-    * ``pip install PyQt4*.whl``
+    * ``pip install pyqt``
     * ``pip install qtpy``
-
-***********************************************
-Install Procedure - From WinPython (incomplete)
-***********************************************
- * `WinPython <http://winpython.sourceforge.net/>`_
 
 
 Use Web docs
 ------------
-See `docs <http://http://pynastran.m4-engineering.com/>`_
+See `docs <https://pynastran-git.readthedocs.io/en/latest/>`_
 
 -------------------------
 Installation From Source
@@ -196,7 +185,7 @@ Install pyNastran
 =================
 There are two ways to install the 1.2 (master/dev) version of pyNastran
 
- 1. Download the most recent `zip version <https://github.com/SteveDoyle2/pynastran/archive/master.zip>`_
+ 1. Download the most recent `zip version <https://github.com/SteveDoyle2/pyNastran/archive/master.zip>`_
 
  2. Clone pyNastran (see below).  Using Git allows you to easily update to the
     latest dev version when you want to as well as push any commits of your own.
@@ -250,6 +239,4 @@ Navigate to ``pyNastran/docs_sphinx`` directory on the command line.
 .. code-block:: console
 
   >>> make html
-
-Alternatively, see `docs <http://pynastran-git.readthedocs.org/en/latest/>`_
 

@@ -198,8 +198,6 @@ class TestConstraints(unittest.TestCase):
         mpc.write_card(size=16, is_double=False)
         mpc.write_card(size=16, is_double=True)
 
-        assert mpc.enforced == coefficients  # testing deprecation
-        assert mpc.gids == node_ids  # testing deprecation
         assert mpc.coefficients == coefficients
         assert mpc.nodes == node_ids
 
@@ -241,7 +239,7 @@ class TestConstraints(unittest.TestCase):
         spc = model.add_spc(1, node_ids, components, enforced, comment='spc')
         spc.validate()
         #assert spc.enforced == enforced
-        assert spc.gids == node_ids
+        assert spc.nodes == node_ids
 
         spc.raw_fields()
         card = spc.write_card(size=8)
