@@ -34,7 +34,6 @@ from pyNastran.op2.op2 import OP2, FatalError, read_op2
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
-is_release = False
 
 
 # we need to check the memory usage
@@ -613,7 +612,6 @@ def get_test_op2_data(argv):
         sys.exit(msg)
 
     data = docopt(msg, version=ver, argv=argv[1:])
-
     if is_release:
         data['--profile'] = False
         data['--write_xlsx'] = False

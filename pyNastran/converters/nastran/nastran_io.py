@@ -298,27 +298,27 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         pass
 
     def create_nastran_tools_menu(self, gui):
-        nastran_tools_menu = gui.menubar.addMenu('Tools')
-        gui.nastran_tools_menu = nastran_tools_menu
-        if 'dev' not in __version__ and 0:
+        if 'dev' not in __version__:
             return
 
+        #nastran_tools_menu = gui.menubar.addMenu('Tools')
+        #gui.nastran_tools_menu = nastran_tools_menu
         tools = [
             #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
-            ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', None,
-             'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu),
-            ('create_coord', 'Create Coordinate System...', 'coord.png', None, 'Creates a Coordinate System', self.on_create_coord),
+            #('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', None,
+             #'Creates a Shear, Moment, Torque Plot', self.shear_moment_torque_obj.set_shear_moment_torque_menu),
+            #('create_coord', 'Create Coordinate System...', 'coord.png', None, 'Creates a Coordinate System', self.on_create_coord),
         ]
         items = (
-            'shear_moment_torque',
-            'create_coord',
+            #'shear_moment_torque',
+            #'create_coord',
         )
-        menu_items = {
-            'nastran_tools' : (nastran_tools_menu, items),
-        }
-        icon_path = ''
-        gui._prepare_actions_helper(icon_path, tools, self.actions, checkables=None)
-        gui._populate_menu(menu_items, actions=self.actions)
+        #menu_items = {
+            #'nastran_tools' : (nastran_tools_menu, items),
+        #}
+        #icon_path = ''
+        #gui._prepare_actions_helper(icon_path, tools, self.actions, checkables=None)
+        #gui._populate_menu(menu_items, actions=self.actions)
 
     def toggle_caero_panels(self):
         """
