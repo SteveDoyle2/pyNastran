@@ -111,7 +111,7 @@ def pierce_shell_model(bdf_filename, xyz_points, tol=1.0):
     """
     xyz_points = np.asarray(xyz_points)
     assert xyz_points.shape[1] == 3, xyz_points.shape
-    xy_points = xyz_points[:, :2]
+    xy_points = xyz_points[:, :2].copy()
     assert xy_points.shape[1] == 2, xy_points.shape
 
     if isinstance(bdf_filename, BDF):

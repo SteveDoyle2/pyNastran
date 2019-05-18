@@ -168,7 +168,7 @@ class TestBDF(Tester):
         self.run_bdf('', bdf_filename)
         fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, xref=True)
 
-        etype_to_eids_pids_nids = fem1.get_element_nodes_by_element_type()
+        etype_to_eids_pids_nids = fem1.get_elements_properties_nodes_by_element_type()
         assert len(etype_to_eids_pids_nids) == 1, list(etype_to_eids_pids_nids.keys())
         #etype_to_eids_pids_nids[etype] : [eids, pids, nids]
         unused_eids, pids, unused_node_ids = etype_to_eids_pids_nids['CQUAD4']

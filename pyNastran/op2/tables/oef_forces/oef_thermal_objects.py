@@ -254,8 +254,8 @@ class RealHeatFluxVU3DArray(BaseElement):
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.element_parent = np.zeros((self.nelements, 2), dtype='int32')
 
-        #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
         self.vugrid = np.zeros((self.ntimes, self.ntotal), dtype='int32')
+        #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
         self.data = np.zeros((self.ntimes, self.ntotal, 6), dtype='float32')
 
     def _build_dataframe(self):
@@ -400,7 +400,9 @@ class RealHeatFluxVU3DArray(BaseElement):
 
             # [xgrad, ygrad, zgrad, xflux, yflux, zflux]
             #nids = self.int_data[itime, :, 0]
-            vugrids = self.int_data[itime, :, 0]
+            #self.element_parent = np.zeros((self.nelements, 2), dtype='int32')
+            #self.vugrid = np.zeros((self.ntimes, self.ntotal), dtype='int32')
+            vugrids = self.vugrid[itime, :]
             #print(vugrids)
             xgrad = self.data[itime, :, 0]
             ygrad = self.data[itime, :, 1]
@@ -629,8 +631,7 @@ class RealHeatFluxVUBeamArray(BaseElement):  # 191-VUBEAM
                     vugrids, xgrad, ygrad, zgrad, xflux, yflux, zflux):
                 vals2 = write_floats_13e([xgradi, ygradi, zgradi, xfluxi, yfluxi, zfluxi])
                 [sxgradi, sygradi, szgradi, sxfluxi, syfluxi, szfluxi] = vals2
-
-                f06_file.write('         %10i    %13E    %13E    %13E    %13E    %13E\n' % (
+                f06_file.write('         %10i    %13s    %13s    %13s    %13s    %13s    %s\n' % (
                     nid, sxgradi, sygradi, szgradi, sxfluxi, syfluxi, szfluxi))
             f06_file.write(page_stamp % page_num)
             page_num += 1

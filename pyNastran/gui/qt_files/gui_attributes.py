@@ -14,6 +14,12 @@ import vtk
 from qtpy import QtGui
 from qtpy.QtWidgets import QMainWindow
 
+try:
+    import matplotlib
+    IS_MATPLOTLIB = True
+except ImportError:
+    IS_MATPLOTLIB = False
+
 import pyNastran
 from pyNastran.gui.gui_objects.settings import Settings
 
@@ -27,12 +33,13 @@ from pyNastran.gui.qt_files.mark_actions import MarkActions
 from pyNastran.gui.menus.legend.legend_object import LegendObject
 from pyNastran.gui.menus.highlight.highlight_object import HighlightObject
 from pyNastran.gui.menus.preferences.preferences_object import PreferencesObject
-#from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
+if IS_MATPLOTLIB:
+    from pyNastran.gui.menus.cutting_plane.cutting_plane_object import CuttingPlaneObject
+    from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
 from pyNastran.gui.menus.clipping.clipping_object import ClippingObject
 from pyNastran.gui.menus.camera.camera_object import CameraObject
 from pyNastran.gui.menus.edit_geometry_properties.edit_geometry_properties_object import (
     EditGeometryPropertiesObject)
-#from pyNastran.gui.menus.cutting_plane.shear_moment_torque_object import ShearMomentTorqueObject
 
 from pyNastran.gui.utils.vtk.gui_utils import remove_actors_from_gui
 from pyNastran.gui.utils.vtk.vtk_utils import (
@@ -75,8 +82,9 @@ class GuiAttributes(object):
         self.clipping_obj = ClippingObject(self)
         self.highlight_obj = HighlightObject(self)
         self.preferences_obj = PreferencesObject(self)
-        #self.cutting_plane_obj = CuttingPlaneObject(self)
-        #self.shear_moment_torque_obj = ShearMomentTorqueObject(self)
+        if IS_MATPLOTLIB:
+            self.cutting_plane_obj = CuttingPlaneObject(self)
+            self.shear_moment_torque_obj = ShearMomentTorqueObject(self)
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
 
         self.min_max_actors = []

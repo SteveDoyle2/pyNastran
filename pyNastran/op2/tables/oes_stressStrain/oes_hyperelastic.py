@@ -289,12 +289,12 @@ class HyperelasticQuadArray(OES_Object):
                 if i == 1:
                     gauss = 'GAUS'  # TODO: update
                     f06_file.write(
-                        '0%8i %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % (
-                            eid, gauss, 1, oxxi, oyyi, txyi, angle, major, minor))
+                        '0%8i %8s  %8i  %13s  %13s  %13s  %13s  %13s  %13s\n' % (
+                            eid, gauss, 1, oxxi, oyyi, txyi, anglei, major, minor))
                 else:
                     f06_file.write(
-                        ' %8s %8s  %8i  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6  %13E.6\n' % (
-                            '', '', i, oxxi, oyyi, txyi, angle, major, minor))
+                        ' %8s %8s  %8i  %13s  %13s  %13s  %13s  %13s  %13s\n' % (
+                            '', '', i, oxxi, oyyi, txyi, anglei, major, minor))
 
             f06_file.write(page_stamp % page_num)
             page_num += 1

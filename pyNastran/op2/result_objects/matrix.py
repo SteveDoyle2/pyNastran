@@ -99,7 +99,8 @@ class Matrix(object):
 
         matrix = self.data
         if self.data is None:
-            mat.write('skipping %s because data is None\n\n' % self.name)
+            skip_msg = 'skipping %s because data is None\n\n' % self.name
+            mat.write(skip_msg.encode('ascii'))
             return
         if isinstance(matrix, coo_matrix):
             if print_full:
