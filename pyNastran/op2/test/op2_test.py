@@ -23,8 +23,7 @@ def get_failed_files(filename):
 def parse_skipped_cards(fname):
     """
     An outdated method to read the log file created by this script to
-    determine what was skipped.
-    """
+    determine what was skipped."""
     with open(fname, 'r') as skip_file:
         lines = skip_file.readlines()
 
@@ -192,7 +191,10 @@ def main():
 
     msg = "Usage:\n"
     #is_release = False
-    msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [--safe] [--skip_dataframe]\n"
+    if 'dev' in ver:
+        msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [--safe] [--skip_dataframe]\n"
+    else:
+        msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-h] [-d] [-b] [--safe] [--skip_dataframe]\n"
     msg += "  op2_test -h | --help\n"
     msg += "  op2_test -v | --version\n"
     msg += "\n"
@@ -210,7 +212,8 @@ def main():
     # n is for NAS
     msg += "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
-    msg += "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
+    if 'dev' in ver:
+        msg += "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
     msg += "  -h, --write_hdf5       Writes the hdf5 to fem.test_op2.h5\n"
     msg += "  --skip_dataframe       Disables pandas dataframe building; [default: False]\n"
     msg += "  -s, --save_cases       Disables saving of the cases (default=False)\n"
@@ -229,7 +232,9 @@ def main():
     make_geom = data['--geometry']
     write_bdf = data['--write_bdf']
     write_f06 = data['--write_f06']
-    write_op2 = data['--write_op2']
+    write_op2 = False
+    if 'dev' in ver:
+        write_op2 = data['--write_op2']
     write_hdf5 = data['--write_hdf5']
     save_cases = not data['--save_cases']
     short_stats = data['--short_stats']

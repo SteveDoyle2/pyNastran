@@ -298,11 +298,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         pass
 
     def create_nastran_tools_menu(self, gui):
-        nastran_tools_menu = gui.menubar.addMenu('Tools')
-        gui.nastran_tools_menu = nastran_tools_menu
-        if 'dev' not in __version__ and 0:
+        if 'dev' not in __version__:
             return
 
+        nastran_tools_menu = gui.menubar.addMenu('Tools')
+        gui.nastran_tools_menu = nastran_tools_menu
         tools = [
             #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
             ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', None,

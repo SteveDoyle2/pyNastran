@@ -28,7 +28,7 @@ else:
         return 'dev.%s' % ghash
 
     revision = get_git_revision_short_hash()
-    __version__ = '1.2.0+%s' % revision
+    __version__ = '1.3.0+%s' % revision
     __releaseDate__ = '2019/6/xx'
     __releaseDate2__ = 'JUNE xx, 2019'
 
@@ -42,11 +42,12 @@ __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
 #__docs__ = 'http://pynastran.m4-engineering.com/master'  # still not setup...
-__docs_rtd__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
-
-__docs__ = 'http://pynastran.m4-engineering.com/%s' % __version__
-if 'dev' in __version__:
+if 'dev' in  __version__:
+    __docs_rtd__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
     __docs__ = __docs_rtd__
+else:
+    __docs_rtd__ = 'https://pynastran-git.readthedocs.io/en/%s/quick_start/index.html' % __version__[:3] # 1.2
+    __docs__ = 'http://pynastran.m4-engineering.com/%s' % __version__
 
 __issue__ = 'https://github.com/SteveDoyle2/pyNastran/issues'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'

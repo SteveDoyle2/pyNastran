@@ -1,4 +1,15 @@
 import numpy as np
+
+try:
+    import matplotlib
+    IS_MATPLOTLIB = True
+except ImportError:
+    IS_MATPLOTLIB = False
+
+if IS_MATPLOTLIB:
+    from pyNastran.gui.matplotlib_backend import matplotlib_backend
+    matplotlib.use(matplotlib_backend)
+
 #import warnings
 #warnings.filterwarnings('ignore', 'missing __init__.py*')
 from pyNastran.gui.qt_version import qt_version
