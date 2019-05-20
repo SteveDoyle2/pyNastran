@@ -21,11 +21,13 @@ OP2
 .. toctree::
    op2_overview
    op2_demo
+   op2_demo_numpy1
+   op2_demo_numpy2
    test_op2
    pandas
-   op2_pandas_multi_case
    op2_pandas_DataFrames
    op2_pandas_unstack
+   op2_pandas_multi_case
 
 OP4
 ---
