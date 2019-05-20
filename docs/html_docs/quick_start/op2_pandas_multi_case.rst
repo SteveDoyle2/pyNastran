@@ -3,11 +3,10 @@ Static & Transient DataFrames in PyNastran
 ==========================================
 
 The Jupyter notebook for this demo can be found in: -
-docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`2_pandas_multi_case.ipynb
--
+docs/quick_start/demo/op2_pandas_multi_case.ipynb -
 https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_pandas_multi_case.ipynb
 
-.. code:: python
+.. code:: ipython3
 
     import os
     import pandas as pd
@@ -20,9 +19,9 @@ https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_p
 Solid Bending
 -------------
 
-Letís show off ``combine=True/False``. Weíll talk about the keys soon.
+Let‚Äôs show off ``combine=True/False``. We‚Äôll talk about the keys soon.
 
-.. code:: python
+.. code:: ipython3
 
     solid_bending_op2 = os.path.join(model_path, 'solid_bending', 'solid_bending.op2')
     solid_bending = read_op2(solid_bending_op2, combine=False, debug=False)
@@ -32,16 +31,27 @@ Letís show off ``combine=True/False``. Weíll talk about the keys soon.
 
 .. raw:: html
 
-    <text style=color:green>INFO:    op2_scalar.py:1291           op2_filename = 'c:\\nasa\\m4\\formats\\git\\v1.1-dev\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
+    <text style=color:green>INFO:    op2_scalar.py:1459           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
     </text>
 
 
 .. parsed-literal::
 
-    [(1, 1, 1, 0, 0, u'', u'')]
+    dict_keys([(1, 1, 1, 0, 0, '', '')])
     
 
-.. code:: python
+.. parsed-literal::
+
+    c:\nasa\m4\formats\git\pynastran\pyNastran\op2\op2.py:740: FutureWarning: 
+    Panel is deprecated and will be removed in a future version.
+    The recommended way to represent these types of 3-dimensional data are with a MultiIndex on a DataFrame, via the Panel.to_frame() method
+    Alternatively, you can use the xarray package http://xarray.pydata.org/en/stable/.
+    Pandas provides a `.to_xarray()` method to help automate this conversion.
+    
+      obj.build_dataframe()
+    
+
+.. code:: ipython3
 
     solid_bending_op2 = os.path.join(model_path, 'solid_bending', 'solid_bending.op2')
     solid_bending2 = read_op2(solid_bending_op2, combine=True, debug=False)
@@ -51,24 +61,24 @@ Letís show off ``combine=True/False``. Weíll talk about the keys soon.
 
 .. raw:: html
 
-    <text style=color:green>INFO:    op2_scalar.py:1291           op2_filename = 'c:\\nasa\\m4\\formats\\git\\v1.1-dev\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
+    <text style=color:green>INFO:    op2_scalar.py:1459           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\solid_bending\\solid_bending.op2'
     </text>
 
 
 .. parsed-literal::
 
-    [1]
+    dict_keys([1])
     
 
 Single Subcase Buckling Example
 -------------------------------
 
-The keys cannot be ìcombinedî despite us telling the program that it was
-OK. Weíll get the following values that we need to handle. ####
+The keys cannot be ‚Äúcombined‚Äù despite us telling the program that it was
+OK. We‚Äôll get the following values that we need to handle. ####
 isubcase, analysis_code, sort_method, count, subtitle \* isubcase -> the
-same key that youíre used to accessing \* sort_method -> 1 (SORT1), 2
+same key that you‚Äôre used to accessing \* sort_method -> 1 (SORT1), 2
 (SORT2) \* count -> the optimization count \* subtitle -> the analysis
-subtitle (changes for superlements) \* analysis code -> the ìtypeî of
+subtitle (changes for superlements) \* analysis code -> the ‚Äútype‚Äù of
 solution
 
 ### Partial code for calculating analysis code:
@@ -90,7 +100,7 @@ solution
      else:
          raise NotImplementedError('transient_word=%r is not supported...' % trans_word)
 
-Letís look at an odd case:
+Let‚Äôs look at an odd case:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can do buckling as one subcase or two subcases (makes parsing it a
@@ -104,7 +114,7 @@ optimization on that and print out a subset of the elements. At the end,
 it will rerun an analysis to double check the constraints are satisfied.
 It does not always do multi-step optimization.
 
-.. code:: python
+.. code:: ipython3
 
     op2_filename = os.path.join(model_path, 'sol_101_elements', 'buckling_solid_shell_bar.op2')
     model = read_op2(op2_filename, combine=True, debug=False, build_dataframe=True)
@@ -113,30 +123,26 @@ It does not always do multi-step optimization.
 
 .. raw:: html
 
-    <text style=color:green>INFO:    op2_scalar.py:1291           op2_filename = 'c:\\nasa\\m4\\formats\\git\\v1.1-dev\\pyNastran\\..\\models\\sol_101_elements\\buckling_solid_shell_bar.op2'
+    <text style=color:green>INFO:    op2_scalar.py:1459           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran\\pyNastran\\..\\models\\sol_101_elements\\buckling_solid_shell_bar.op2'
     </text>
 
 
-.. code:: python
+.. code:: ipython3
 
     stress_keys = model.cquad4_stress.keys()
     print (stress_keys)
     
-    # old: subcase, analysis_code, sort_method, count, ogs, subtitle
-    #key0 = (1, 1, 1, 0, '')
-    #key1 = (1, 8, 1, 0, '')
-    
-    # new: subcase, analysis_code, sort_method, count, isuperelmemnt_adaptivity_index, pval_step
+    # subcase, analysis_code, sort_method, count, isuperelmemnt_adaptivity_index, pval_step
     key0 = (1, 1, 1, 0, 0, '', '')
     key1 = (1, 8, 1, 0, 0, '', '')
 
 
 .. parsed-literal::
 
-    [(1, 1, 1, 0, 0, u'', u''), (1, 8, 1, 0, 0, u'', u'')]
+    dict_keys([(1, 1, 1, 0, 0, '', ''), (1, 8, 1, 0, 0, '', '')])
     
 
-Keys: \* key0 is the ìstaticî key \* key1 is the ìbucklingî key
+Keys: \* key0 is the ‚Äústatic‚Äù key \* key1 is the ‚Äúbuckling‚Äù key
 
 Similarly: \* Transient solutions can have preload \* Frequency
 solutions can have loadsets (???)
@@ -145,13 +151,13 @@ Moving onto the data frames
 ---------------------------
 
 -  The static case is the initial deflection state
--  The buckling case is ìtransientî, where the modes (called load steps
-   or lsdvmn here) represent the ìtimesî
+-  The buckling case is ‚Äútransient‚Äù, where the modes (called load steps
+   or lsdvmn here) represent the ‚Äútimes‚Äù
 
 pyNastran reads these tables differently and handles them differently
 internally. They look very similar though.
 
-.. code:: python
+.. code:: ipython3
 
     stress_static = model.cquad4_stress[key0].data_frame
     stress_transient = model.cquad4_stress[key1].data_frame
@@ -170,9 +176,9 @@ internally. They look very similar though.
 
 .. parsed-literal::
 
-    stress_static.nonlinear_factor = None
+    stress_static.nonlinear_factor = nan
     stress_transient.nonlinear_factor = 4
-    data_names  = [u'lsdvmn', u'eigr']
+    data_names  = ['lsdvmn', 'eigr']
     loadsteps   = [1, 2, 3, 4]
     eigenvalues = [-49357660160.0, -58001940480.0, -379750744064.0, -428462538752.0]
     
@@ -180,7 +186,7 @@ internally. They look very similar though.
 Static Table
 ------------
 
-.. code:: python
+.. code:: ipython3
 
     # Sets default precision of real numbers for pandas output\n"
     pd.set_option('precision', 2)
@@ -193,17 +199,17 @@ Static Table
 .. raw:: html
 
     <div>
-    <style>
-        .dataframe thead tr:only-child th {
-            text-align: right;
-        }
-    
-        .dataframe thead th {
-            text-align: left;
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
         }
     
         .dataframe tbody tr th {
             vertical-align: top;
+        }
+    
+        .dataframe thead th {
+            text-align: right;
         }
     </style>
     <table border="1" class="dataframe">
@@ -499,7 +505,7 @@ Static Table
 Transient Table
 ---------------
 
-.. code:: python
+.. code:: ipython3
 
     # Sets default precision of real numbers for pandas output\n"
     pd.set_option('precision', 3)
@@ -514,17 +520,21 @@ Transient Table
 .. raw:: html
 
     <div>
-    <style>
-        .dataframe thead tr:only-child th {
-            text-align: right;
-        }
-    
-        .dataframe thead th {
-            text-align: left;
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
         }
     
         .dataframe tbody tr th {
             vertical-align: top;
+        }
+    
+        .dataframe thead tr th {
+            text-align: left;
+        }
+    
+        .dataframe thead tr:last-of-type th {
+            text-align: right;
         }
     </style>
     <table border="1" class="dataframe">
@@ -546,8 +556,8 @@ Transient Table
           <th></th>
           <th>-49357660160.0</th>
           <th>-58001940480.0</th>
-          <th>-3.79750744064e+11</th>
-          <th>-4.28462538752e+11</th>
+          <th>-379750744064.0</th>
+          <th>-428462538752.0</th>
         </tr>
         <tr>
           <th>ElementID</th>
