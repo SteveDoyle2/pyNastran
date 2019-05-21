@@ -147,8 +147,9 @@ if not on_rtd:
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
+    'IPython.sphinxext.ipython_console_highlighting', # for notebooks
     'sphinx.ext.todo',
-    'sphinx.ext.mathjax',
+    'sphinx.ext.mathjax',  # equations
     'sphinx.ext.autodoc',
     #'sphinx.ext.coverage',
     'sphinx.ext.viewcode',

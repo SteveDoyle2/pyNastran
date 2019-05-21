@@ -25,7 +25,7 @@ If the BWB example OP2 doesn’t exist, we’ll run Nastran to create it.
     import os
     import copy
     import numpy as np
-    np.set_printoptions(precision=2, threshold=20, suppress=True)
+    np.set_printoptions(precision=2, threshold=20, linewidth=100, suppress=True)
     
     import pyNastran
     from pyNastran.op2.op2 import read_op2
@@ -97,7 +97,8 @@ Composite Stress/Strain data is tricky to access as there is not a good way to i
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Let’s cheat a bit using the element ids and layers to make a pivot
-table. The table is (nelements, nows).
+table. - **table** is (ntimes, nelements, nlayers, ndata) -
+**max_principal_stress_table** is (nelements, nlayers)
 
 .. code:: ipython3
 
@@ -109,16 +110,17 @@ table. The table is (nelements, nows).
     ## now pivot the stress
     table, rows_new = pivot_table(stress.data, eids, layers)
     
-    # itime, nelements, nlayers, data
+    # now access the max principal stress for the static result
+    # table is (itime, nelements, nlayers, data)
     itime = 0
-    stress_table = table[itime,:,:,imax]
+    max_principal_stress_table = table[itime,:,:,imax]
     ueids = np.unique(eids)
-    #print(rows_new, len(rows_new), len(ueids))
-    print(stress_table)
+    print('max_principal_stress_table:\n%s' % max_principal_stress_table)
 
 
 .. parsed-literal::
 
+    max_principal_stress_table:
     [[ 239.3   163.91   98.41 ...  -35.77  -34.6   -19.86]
      [  18.61   78.52   25.52 ...  -63.92  -62.48  -12.99]
      [   2.99  105.48   49.37 ... -137.74 -127.07  -41.14]
@@ -133,26 +135,28 @@ More realistic pivot table
 
 All the elements have 10 layers. Let’s remove the last 5 layers.
 
-By having empty layers, the pivot tabl now has nan data in it.
+By having empty layers, the pivot table now has nan data in it.
 
 .. code:: ipython3
 
+    # drop out 5 layers
     eids2 = stress.element_layer[:-5, 0]
     layers2 = stress.element_layer[:-5, 1]
     data2 = stress.data[:, :-5, :]
-    ## now pivot the stress
+    
+    # now pivot the stress
     table, rows_new = pivot_table(data2, eids2, layers2)
     
-    # itime, nelements, nlayers, data
+    # access the table data
+    # table is (itime, nelements, nlayers, data)
     itime = 0
-    stress_table2 = table[itime,:,:,imax]
-    #ueids = np.unique(eids)
-    #print(rows_new, len(rows_new), len(ueids))
-    print(stress_table2)
+    max_principal_stress_table2 = table[itime,:,:,imax]
+    print('max_principal_stress_table2:\n%s' % max_principal_stress_table2)
 
 
 .. parsed-literal::
 
+    max_principal_stress_table2:
     [[ 239.3   163.91   98.41 ...  -35.77  -34.6   -19.86]
      [  18.61   78.52   25.52 ...  -63.92  -62.48  -12.99]
      [   2.99  105.48   49.37 ... -137.74 -127.07  -41.14]
