@@ -12,4 +12,7 @@ sphinx>=1.5.0
 sphinx_rtd_theme>=0.1.9
 numpydoc>=0.5.0
 pygments>=2.1.0
+
+# for notebook conversion
+ipython
 #qtpy
