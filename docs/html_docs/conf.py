@@ -160,6 +160,9 @@ extensions = [
     'numpydoc',
 ]
 
+# don't require matplotlib
+ipython_mplbackend = None
+
 # suppress warnings
 numpydoc_show_class_members = False
 
