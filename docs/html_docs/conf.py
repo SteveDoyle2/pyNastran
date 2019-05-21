@@ -147,8 +147,9 @@ if not on_rtd:
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
+    'IPython.sphinxext.ipython_console_highlighting', # for notebooks
     'sphinx.ext.todo',
-    'sphinx.ext.mathjax',
+    'sphinx.ext.mathjax',  # equations
     'sphinx.ext.autodoc',
     #'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
@@ -158,6 +159,9 @@ extensions = [
     #'sphinx.ext.napolean',
     'numpydoc',
 ]
+
+# don't require matplotlib
+ipython_mplbackend = None
 
 # suppress warnings
 numpydoc_show_class_members = False
@@ -192,9 +196,9 @@ master_doc = 'index'
 # built documents.
 #
 # The short X.Y version.
-version = u'1.2-dev'
+version = u'1.3-dev'
 # The full version, including alpha/beta/rc tags.
-release = u'1.2-dev'
+release = u'1.3-dev'
 
 # General information about the project.
 project = u'pyNastran' + u' ' + version
