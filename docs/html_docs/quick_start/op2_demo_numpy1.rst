@@ -16,7 +16,7 @@ If you code like that, your code will be slow, so let’s show you how to
 really use the numpy-style with the OP2.
 
 Import the packages
--------------------
+~~~~~~~~~~~~~~~~~~~
 
 .. code:: ipython3
 
@@ -111,7 +111,7 @@ Find the max centroidal stress on the CTETRA elements
     
 
 The 0 location is the centroid
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can either query the 0 location or calculate it with a numpy arange.
 CTETRA elements have 4 nodes (even 10 noded CTETRA elements) in the OP2.
@@ -151,7 +151,7 @@ CTETRA elements have 4 nodes (even 10 noded CTETRA elements) in the OP2.
     
 
 Finding the VM stress associated with a single node ID
-======================================================
+------------------------------------------------------
 
 One node in a tet mesh may be shared by many elements. In this case, 26
 elements share 1 node!
@@ -191,7 +191,7 @@ elements share 1 node!
     
 
 Finding the centroidal VM stress for a set of elements
-======================================================
+------------------------------------------------------
 
 Some fancy numpy code will be used for this case. Your code will be much
 faster if you are familiar with numpy.
@@ -233,7 +233,7 @@ faster if you are familiar with numpy.
     
 
 Finding the centroidal VM stress for a set of elements when you have multiple element types
-===========================================================================================
+-------------------------------------------------------------------------------------------
 
 In this case, we’ll assume the set of element_ids to lookup contain
 CHEXAs as well as CTETRAs. Thus, we need to filter the data.
@@ -296,7 +296,7 @@ Let’s filter the data using sets and then use searchsorted.
     
 
 Other Elements that are Similar
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  Rod Stress/strain
 -  Beam Stress/strain

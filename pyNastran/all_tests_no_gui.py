@@ -11,7 +11,7 @@ manual_path = os.path.abspath(os.path.join(pkg_path, '..', 'docs', 'html_docs', 
 sys.path.append(manual_path)
 
 #print(sys.path)
-from notebook_to_markdown import create_rst_from_ipython_notebooks
+#from notebook_to_markdown import create_rst_from_ipython_notebooks
 #create_rst_from_ipython_notebooks()
 
 #bdf
