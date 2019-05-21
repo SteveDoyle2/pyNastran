@@ -3,8 +3,7 @@ OP2 Introduction
 ================
 
 The Jupyter notebook for this demo can be found in: -
-docs:raw-latex:`\quick`\_start:raw-latex:`\demo`:raw-latex:`\op`2_demo.ipynb
--
+docs/quick_start/demo/op2_demo.ipynb -
 https://github.com/SteveDoyle2/pyNastran/tree/master/docs/quick_start/demo/op2_demo.ipynb
 
 Why use the OP2? Why not use the F06/PCH file?
@@ -54,7 +53,7 @@ code, this is turned off, but is turned on for ``test_op2``.
 Import the packages
 -------------------
 
-.. code:: python
+.. code:: ipython3
 
     import os
     import copy
@@ -73,7 +72,7 @@ Import the packages
 Sets default precision of real numbers for pandas output
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: python
+.. code:: ipython3
 
     pd.set_option('precision', 3)
     np.set_printoptions(precision=3, threshold=20)
@@ -85,7 +84,7 @@ just use the short form.
 In addition to the default numpy support, there is also **``pandas``**
 dataframe support.
 
-.. code:: python
+.. code:: ipython3
 
     #op2_filename = r'D:\work\pynastran_0.8.0\models\iSat\ISat_Launch_Sm_Rgd.op2'
     #op2_filename = r'D:\work\pynastran_0.8.0\models\iSat\ISat_Launch_Sm_4pt.op2'
@@ -99,9 +98,20 @@ dataframe support.
 
 .. raw:: html
 
-    <text style=color:green>INFO:    op2_scalar.py:1291           op2_filename = 'c:\\nasa\\m4\\formats\\git\\v1.1-dev\\models\\iSat\\ISat_Launch_Sm_4pt.op2'
+    <text style=color:green>INFO:    op2_scalar.py:1469           op2_filename = 'c:\\nasa\\m4\\formats\\git\\pynastran_1.2\\models\\iSat\\ISat_Launch_Sm_4pt.op2'
     </text>
 
+
+.. parsed-literal::
+
+    c:\nasa\m4\formats\git\pynastran_1.2\pyNastran\op2\op2.py:752: FutureWarning: 
+    Panel is deprecated and will be removed in a future version.
+    The recommended way to represent these types of 3-dimensional data are with a MultiIndex on a DataFrame, via the Panel.to_frame() method
+    Alternatively, you can use the xarray package http://xarray.pydata.org/en/stable/.
+    Pandas provides a `.to_xarray()` method to help automate this conversion.
+    
+      obj.build_dataframe()
+    
 
 OP2 Introspection
 -----------------
@@ -109,7 +119,7 @@ OP2 Introspection
 The ``get_op2_stats()`` function lets you quickly understand what in an
 op2.
 
-.. code:: python
+.. code:: ipython3
 
     print(op2.get_op2_stats())
 
@@ -128,7 +138,7 @@ op2.
       mode_cycles = [  8.358   9.507  15.664 ... 395.101 395.329 397.237]
     
     cbar_force[1]
-      type=RealCBarForceArray ntimes=167 nelements=827
+      type=RealCBarForceArray ntimes=167 nelements=827; table_name='OEF1X'
       data: [ntimes, nnodes, 8] where 8=[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
       data.shape = (167, 827, 8)
       element.shape = (827,)
@@ -173,7 +183,7 @@ op2.
 If that’s too long…
 ~~~~~~~~~~~~~~~~~~~
 
-.. code:: python
+.. code:: ipython3
 
     print(op2.get_op2_stats(short=True))
 
@@ -207,7 +217,7 @@ The tutorial is intetionally just accessing the objects in a very clear,
 though inefficient way. The OP2 objects can take full advantage of the
 numpy operations.
 
-.. code:: python
+.. code:: ipython3
 
     # what modes did we analyze:  1 to 167
     print("loadcases = %s" % op2.eigenvectors.keys())
@@ -234,7 +244,7 @@ numpy operations.
 
 .. parsed-literal::
 
-    loadcases = [1]
+    loadcases = dict_keys([1])
     modes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167]
     
     times = [  1.   2.   3. ... 165. 166. 167.]
@@ -267,7 +277,7 @@ as: http://pandas.pydata.org/pandas-docs/stable/10min.html
 
 or a very long, but good video:
 
-.. code:: python
+.. code:: ipython3
 
     from IPython.display import YouTubeVideo
     YouTubeVideo('5JnMutdy6Fw')
@@ -290,7 +300,7 @@ or a very long, but good video:
 
 
 
-.. code:: python
+.. code:: ipython3
 
     # get subcase 1
     eig1 = op2.eigenvectors[1]
@@ -303,17 +313,21 @@ or a very long, but good video:
 .. raw:: html
 
     <div>
-    <style>
-        .dataframe thead tr:only-child th {
-            text-align: right;
-        }
-    
-        .dataframe thead th {
-            text-align: left;
+    <style scoped>
+        .dataframe tbody tr th:only-of-type {
+            vertical-align: middle;
         }
     
         .dataframe tbody tr th {
             vertical-align: top;
+        }
+    
+        .dataframe thead tr th {
+            text-align: left;
+        }
+    
+        .dataframe thead tr:last-of-type th {
+            text-align: right;
         }
     </style>
     <table border="1" class="dataframe">
@@ -1938,7 +1952,7 @@ nodes.
 
 Be careful about what you’re accessing.
 
-.. code:: python
+.. code:: ipython3
 
     # element forces/stresses/strains are by element type consistent with the F06, so...
     plate_stress = op2.cquad4_stress[1]
@@ -1970,19 +1984,19 @@ Be careful about what you’re accessing.
 .. parsed-literal::
 
     plate_stress_obj = <class 'pyNastran.op2.tables.oes_stressStrain.real.oes_plates.RealPlateStressArray'>
-    plate_stress = ['itime', 'subtitle', 'words', 's_code', 'is_built', 'stress_bits', 'load_set', 'mode', '_ntotals', 'nnodes', 'sort_bits', 'isubcase', 'data', 'element_name', 'nonlinear_factor', 'title', '_times', 'ntotal', 'approach_code', 'is_stress_flag', 'label', 'element_node', 'is_msc', 'sort_method', 'num_wide', 'eign', 'format_code', 'device_code', 'superelement_adaptivity_index', 'modes', '_times_dtype', 'eigns', 'thermal_bits', 'mode2s', 'data_frame', 'mode2', 'dt', 'is_strain_flag', 'itotal', 'cycle', 'cycles', 'name', 'nelements', 'ielement', 'thermal', 'analysis_code', 'table_code', 'element_type', 'table_name', 'data_code', 'tCode', 'sort_code', 'pval_step', 'ntimes', 'data_names']
+    plate_stress = dict_keys(['element_type', 'element_name', 'nonlinear_factor', '_times', 'result_name', 'approach_code', 'analysis_code', 'data', 'isubcase', 'ogs', 'pval_step', 'name', 'superelement_adaptivity_index', '_count', 'is_built', 'format_code', 'sort_code', 'table_code', 'title', 'subtitle', 'label', 'num_wide', 'device_code', 'table_name', 'data_frame', 'dt', 'ntimes', 'ntotal', '_ntotals', 'load_as_h5', 'h5_file', 'data_code', 'ielement', 'nelements', 'nnodes', '_encoding', '_times_dtype', 'cycle', 'data_names', 'eign', 'is_msc', 'is_strain_flag', 'is_stress_flag', 'load_set', 'mode', 'mode2', 's_code', 'sort_bits', 'sort_method', 'stress_bits', 'subtitle_original', 'tCode', 'thermal', 'thermal_bits', 'modes', 'eigns', 'mode2s', 'cycles', 'itotal', 'itime', 'element_node', 'words'])
     
-    data_code_keys = [u'subtitle', u'stress_bits', u'load_set', u'thermal', u's_code', u'sort_bits', u'isubcase', u'element_name', u'nonlinear_factor', u'title', u'approach_code', u'is_stress_flag', u'label', u'table_name', u'sort_method', u'num_wide', u'mode', u'format_code', u'device_code', u'superelement_adaptivity_index', u'_times_dtype', u'thermal_bits', u'mode2', u'is_strain_flag', u'cycle', u'name', u'analysis_code', u'table_code', u'element_type', u'is_msc', u'eign', u'tCode', u'sort_code', u'data_names', u'pval_step']
+    data_code_keys = dict_keys(['_encoding', 'load_as_h5', 'is_msc', 'table_name', 'approach_code', 'isubcase', 'table_code', 'tCode', 'sort_code', 'sort_method', 'device_code', 'analysis_code', 'sort_bits', 'element_type', 'load_set', 'format_code', 'num_wide', 's_code', 'thermal', 'nonlinear_factor', 'name', 'mode', 'eign', 'mode2', 'cycle', 'data_names', '_times_dtype', 'thermal_bits', 'element_name', 'subtitle', 'subtitle_original', 'pval_step', 'superelement_adaptivity_index', 'label', 'title', 'stress_bits', 'is_stress_flag', 'is_strain_flag', 'result_name', '_count'])
     
-    name = u'mode'
-    list-type variables = [u'mode', u'eign', u'mode2', u'cycle']
+    name = 'mode'
+    list-type variables = ['mode', 'eign', 'mode2', 'cycle']
     modes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167]
     
 
 Similar to the BDF, we can use object_attributes/methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: python
+.. code:: ipython3
 
     #print "attributes =", object_attributes(plate_stress)
     print("methods = %s\n" % object_methods(plate_stress))
@@ -1992,19 +2006,19 @@ Similar to the BDF, we can use object_attributes/methods
 
 .. parsed-literal::
 
-    methods = ['add_new_eid_sort1', 'add_new_node_sort1', 'add_sort1', 'apply_data_code', 'approach_code_str', 'build', 'build_dataframe', 'cast_grid_type', 'code_information', 'eid_to_element_node_index', 'export_to_hdf5', 'get_data_code', 'get_element_index', 'get_element_type', 'get_headers', 'get_nnodes_bilinear', 'get_stats', 'get_unsteady_value', 'is_bilinear', 'is_magnitude_phase', 'is_thermal', 'object_attributes', 'object_methods', 'print_data_members', 'print_table_code', 'recast_gridtype_as_string', 'set_table_type', 'update_data_code', 'update_dt', 'write_f06']
+    methods = ['add_new_eid_sort1', 'add_new_node_sort1', 'add_sort1', 'apply_data_code', 'approach_code_str', 'build', 'build_dataframe', 'cast_grid_type', 'code_information', 'eid_to_element_node_index', 'export_to_hdf5', 'finalize', 'get_data_code', 'get_element_index', 'get_element_type', 'get_headers', 'get_nnodes_bilinear', 'get_stats', 'get_unsteady_value', 'is_bilinear', 'is_magnitude_phase', 'is_sort1_new', 'is_thermal', 'object_attributes', 'object_methods', 'print_data_members', 'print_table_code', 'recast_gridtype_as_string', 'set_as_sort1', 'set_table_type', 'update_data_code', 'update_dt', 'update_t_code', 'write_f06', 'write_op2']
     
-    methods2= ['add_new_eid_sort1', 'add_new_node_sort1', 'add_sort1', 'apply_data_code', 'approach_code_str', 'build', 'build_dataframe', 'cast_grid_type', 'code_information', 'eid_to_element_node_index', 'export_to_hdf5', 'get_data_code', 'get_element_index', 'get_element_type', 'get_headers', 'get_nnodes_bilinear', 'get_stats', 'get_unsteady_value', 'is_bilinear', 'is_magnitude_phase', 'is_thermal', 'print_data_members', 'print_table_code', 'recast_gridtype_as_string', 'set_table_type', 'update_data_code', 'update_dt', 'write_f06']
+    methods2= ['add_new_eid_sort1', 'add_new_node_sort1', 'add_sort1', 'apply_data_code', 'approach_code_str', 'build', 'build_dataframe', 'cast_grid_type', 'code_information', 'eid_to_element_node_index', 'export_to_hdf5', 'finalize', 'get_data_code', 'get_element_index', 'get_element_type', 'get_headers', 'get_nnodes_bilinear', 'get_stats', 'get_unsteady_value', 'is_bilinear', 'is_magnitude_phase', 'is_sort1_new', 'is_thermal', 'print_data_members', 'print_table_code', 'recast_gridtype_as_string', 'set_as_sort1', 'set_table_type', 'update_data_code', 'update_dt', 'update_t_code', 'write_f06', 'write_op2']
     
-    headers = [u'fiber_distance', u'oxx', u'oyy', u'txy', u'angle', u'omax', u'omin', u'von_mises']
+    headers = ['fiber_distance', 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', 'von_mises']
     
     
 
 Number of Nodes on a CQUAD4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
--  For linear CQUAD4s, there is 1 centroidal stress at two locations
--  For bilinear quads, there are 5 stresses at two locations (4 nodes +
+-  For CENT, there is 1 centroidal stress at two locations
+-  For BILIN, there are 5 stresses at two locations (4 nodes +
    centroidal)
 -  node_id=0 indicates a centroidal quantity
 -  CTRIA3s are always centroidal
@@ -2014,11 +2028,11 @@ What sets this?
 
 ::
 
-   STRESS(real, sort1, BILIN) = ALL   # bilinear cquad
-   STRESS(real, sort1, CENT) = ALL    # linear quad
+   STRESS(real, sort1, BILIN) = ALL   # centroid + 4 corner nodes
+   STRESS(real, sort1, CENT) = ALL    # centroid
 
-   STRAIN(real, sort1, BILIN) = ALL   # bilinear cquad
-   STRAIN(real, sort1, CENT) = ALL    # linear quad
+   STRAIN(real, sort1, BILIN) = ALL   # centroid + 4 corner nodes
+   STRAIN(real, sort1, CENT) = ALL    # centroid
 
 How do we know if we’re bilinear?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -2031,7 +2045,7 @@ What locations are chosen?
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 That depends on fiber distance/fiber curvature… - fiber_curvature - mean
-stress (oa) & slope (om)
+stress (:math:`\sigma_{alt}`) & slope (:math:`\sigma_{mean}`)
 
 ::
 
@@ -2066,7 +2080,7 @@ Accessing results
 Note that this is intentionally done iinefficiently to access specific entries in order to explain the data structure.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: ipython3
 
     # element forces/stresses/strains are by element type consistent 
     # with the F06, so...
@@ -2138,7 +2152,7 @@ Note that this is intentionally done iinefficiently to access specific entries i
     ovm_mode6_eid1000 = [90.618 94.091] -> 94.09056
     
 
-.. code:: python
+.. code:: ipython3
 
     # see the difference between "transient"/"modal"/"frequency"-style results
     # and "nodal"/"elemental"-style results
@@ -2184,7 +2198,7 @@ Note that this is intentionally done iinefficiently to access specific entries i
     fiber_distance = -0.4
     
 
-.. code:: python
+.. code:: ipython3
 
     from pyNastran.bdf.bdf import read_bdf
     bdf_filename = os.path.abspath(os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Launch_Sm_4pt.dat'))
@@ -2195,56 +2209,56 @@ Note that this is intentionally done iinefficiently to access specific entries i
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=1 midsurface: z1=0.400000006 z2=-0.400000006 t=0.035999998 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=1 midsurface: z1=0.400000006 z2=-0.400000006 t=0.035999998 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=2 midsurface: z1=0.400000006 z2=-0.400000006 t=0.054000005 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=2 midsurface: z1=0.400000006 z2=-0.400000006 t=0.054000005 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=3 midsurface: z1=0.400000006 z2=-0.400000006 t=0.017999999 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=3 midsurface: z1=0.400000006 z2=-0.400000006 t=0.017999999 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=7 midsurface: z1=0.418000013 z2=-0.418000013 t=0.035999998 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=7 midsurface: z1=0.418000013 z2=-0.418000013 t=0.035999998 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=34 midsurface: z1=0.194000006 z2=-0.194000006 t=0.0186 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=34 midsurface: z1=0.194000006 z2=-0.194000006 t=0.0186 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=37 midsurface: z1=0.308999985 z2=-0.308999985 t=0.0186 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=38 midsurface: z1=0.284000009 z2=-0.284000009 t=0.0186 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=38 midsurface: z1=0.284000009 z2=-0.284000009 t=0.0186 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=46 midsurface: z1=0.199000001 z2=-0.199000001 t=0.0186 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=46 midsurface: z1=0.199000001 z2=-0.199000001 t=0.0186 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=37 midsurface: z1=0.308999985 z2=-0.308999985 t=0.0186 not in range of -1.5t < zi < 1.5t
     </text>
 
 
@@ -2254,7 +2268,7 @@ Let’s print out the actual mass properties from the OP2 and get the same resul
 We need ``PARAM,POSTEXT,YES`` in out BDF to get the Grid Point Weight
 Table
 
-.. code:: python
+.. code:: ipython3
 
     gpw = op2.grid_point_weight
     #print(gpw.object_attributes())
@@ -2274,7 +2288,7 @@ Table
 We can also write the full ``F06``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. code:: ipython3
 
     import getpass
     name = getpass.getuser()
@@ -2289,7 +2303,7 @@ We can also write the full ``F06``
 
 .. parsed-literal::
 
-    1    ISAT_SM_LAUNCH_4PT MODES TO 400 HZ                                    FEBRUARY  14, 2018  pyNastran v1.1.0       PAGE     1
+    1    ISAT_SM_LAUNCH_4PT MODES TO 400 HZ                                    FEBRUARY  14, 2018  pyNastran v1.2.0       PAGE     1
          
     0                                                                                                            SUBCASE 1
                                              R E A L   E I G E N V E C T O R   N O .          1
@@ -2331,25 +2345,25 @@ We can also write the full ``F06``
                 34      G     -7.555627E-04  -2.869231E-05   7.518338E-04   8.680357E-06  -2.425363E-04  -9.971128E-06
     
 
-.. code:: python
+.. code:: ipython3
 
     #from IPython.display import display, Math, Latex
 
 The mass results are different as pyNastran’s mass assumes point masses
 
-.. math:: m_{plates} = A * (rho * t + nsm)
+.. math:: m_{plates} = A (\rho t + nsm)
 
-.. math:: m_{solid} = V * rho
+.. math:: m_{solid} = V \rho
 
-.. math:: m_{bars} = L * (rho * A + nsm)
+.. math:: m_{bars} = L (\rho A + nsm)
 
-.. math:: I = m*r^2
+.. math:: I = m r^2
 
 The larger your model is and the further from the origin, the more
 accurate the result. For some applications (e.g. a weight breakdown),
 this is probably be fine.
 
-.. code:: python
+.. code:: ipython3
 
     print('cg =\n%s' % gpw.cg)
     print('cg = %s' % cg)
@@ -2377,7 +2391,7 @@ Limitations
 
 These are things that pyNastran ``can`` do.
 
-.. code:: python
+.. code:: ipython3
 
     from pyNastran.bdf.bdf import read_bdf
     bdf_filename = os.path.abspath(os.path.join(pkg_path, '..', 'models', 'iSat', 'ISat_Launch_Sm_4pt.dat'))
@@ -2387,56 +2401,56 @@ These are things that pyNastran ``can`` do.
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=1 midsurface: z1=0.400000006 z2=-0.400000006 t=0.035999998 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=1 midsurface: z1=0.400000006 z2=-0.400000006 t=0.035999998 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=2 midsurface: z1=0.400000006 z2=-0.400000006 t=0.054000005 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=2 midsurface: z1=0.400000006 z2=-0.400000006 t=0.054000005 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=3 midsurface: z1=0.400000006 z2=-0.400000006 t=0.017999999 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=3 midsurface: z1=0.400000006 z2=-0.400000006 t=0.017999999 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=7 midsurface: z1=0.418000013 z2=-0.418000013 t=0.035999998 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=7 midsurface: z1=0.418000013 z2=-0.418000013 t=0.035999998 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=34 midsurface: z1=0.194000006 z2=-0.194000006 t=0.0186 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=34 midsurface: z1=0.194000006 z2=-0.194000006 t=0.0186 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=37 midsurface: z1=0.308999985 z2=-0.308999985 t=0.0186 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=38 midsurface: z1=0.284000009 z2=-0.284000009 t=0.0186 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=38 midsurface: z1=0.284000009 z2=-0.284000009 t=0.0186 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=46 midsurface: z1=0.199000001 z2=-0.199000001 t=0.0186 not in range of -1.5t < zi < 1.5t
     </text>
 
 
 
 .. raw:: html
 
-    <text style=color:orange>WARNING: shell.py:2060                PSHELL pid=46 midsurface: z1=0.199000001 z2=-0.199000001 t=0.0186 not in range of -1.5t < zi < 1.5t
+    <text style=color:orange>WARNING: shell.py:2360                PSHELL pid=37 midsurface: z1=0.308999985 z2=-0.308999985 t=0.0186 not in range of -1.5t < zi < 1.5t
     </text>
 
 
@@ -2445,33 +2459,32 @@ Weight Statement
 
 Let’s get the breakdown by property ID
 
-.. code:: python
+.. code:: ipython3
 
-    from six import iteritems
     #help(model.mass_properties)
     
     pid_to_eids_map = model.get_element_ids_dict_with_pids()
     #print(pid_to_eids_map.keys())
-    print('pid, mass, cg, [ixx, iyy, izz, ixy, ixz]')
-    for pid, eids in sorted(iteritems(pid_to_eids_map)):
+    print('pid, mass, cg, [ixx, iyy, izz, ixy, ixz, iyz]')
+    for pid, eids in sorted(pid_to_eids_map.items()):
         mass, cg, inertia = model.mass_properties(element_ids=eids, mass_ids=[], reference_point=[0., 0., 0.])
         print('%-6s %-.6f %-38s %s' % (pid, mass, cg, inertia))
     
     mass_ids = list(model.masses.keys())
     mass, cg, inertia = model.mass_properties(element_ids=[], mass_ids=mass_ids, reference_point=[0., 0., 0.])
-    print('%-6s %-.6f %-38s %s' % ('masses', mass, cg, inertia))    
+    print('%-6s %-.6f %-38s %s' % ('mass', mass, cg, inertia))
 
 
 .. parsed-literal::
 
-    pid, mass, cg, [ixx, iyy, izz, ixy, ixz]
+    pid, mass, cg, [ixx, iyy, izz, ixy, ixz, iyz]
     1      0.027278 [  0.   0. -20.]                       [3.699 6.553 4.384 0.    0.    0.   ]
     2      0.047993 [ -0.   0. -20.]                       [18.033 18.033 12.454 -0.    -0.     0.   ]
     3      0.020998 [  0.  -0. -20.]                       [5.881 3.907 5.27  0.    0.    0.   ]
     4      0.012216 [  0.043   0.438 -19.702]              [2.346 3.23  2.019 0.01  0.005 0.052]
     5      0.330158 [  0.    2.2 -20. ]                    [63.317 28.366 41.752  0.     0.     0.   ]
-    7      0.027813 [ -0.  -0. -20.]                       [ 8.141  8.141  9.438 -0.    -0.    -0.   ]
-    8      0.081584 [  0.   0. -20.]                       [15.087 15.087 30.174  0.     0.    -0.   ]
+    7      0.027813 [  0.  -0. -20.]                       [ 8.141  8.141  9.438 -0.    -0.    -0.   ]
+    8      0.081584 [  0.   0. -20.]                       [15.087 15.087 30.174 -0.     0.     0.   ]
     9      0.077642 [  0.   0. -20.]                       [17.017 17.017 18.911 -0.    -0.     0.   ]
     10     0.000236 [  0.  -0. -20.]                       [ 0.035  0.035  0.057 -0.    -0.    -0.   ]
     11     0.041700 [ -1.025  23.773 -12.016]              [ 0.666  0.988  0.348 -0.037  0.263 -0.056]
@@ -2482,7 +2495,7 @@ Let’s get the breakdown by property ID
     16     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
     19     0.017749 [ -0.23    6.021 -35.642]              [ 1.77   4.395  5.817 -0.053  0.005 -0.145]
     20     0.163082 [  0.      0.    -18.545]              [ 9.01 34.77 25.76  0.    0.    0.  ]
-    21     0.003625 [ -0.  -0. -20.]                       [ 0.728  0.728  1.41   0.    -0.     0.   ]
+    21     0.003625 [ -0.  -0. -20.]                       [ 0.728  0.728  1.41  -0.    -0.    -0.   ]
     22     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
     23     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
     33     0.001346 [-0.    -2.175  0.369]                 [ 0.077  0.085  0.162  0.    -0.    -0.001]
@@ -2498,5 +2511,5 @@ Let’s get the breakdown by property ID
     46     0.003671 [ 0.    0.   15.28]                    [ 0.178  0.348  0.335  0.    -0.     0.   ]
     60     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
     61     0.000000 [0. 0. 0.]                             [0. 0. 0. 0. 0. 0.]
-    masses 0.772000 [  0.     -8.256 -18.238]              [392.813 338.699 118.704  -0.     -0.    138.698]
+    mass   0.772000 [  0.     -8.256 -18.238]              [392.813 338.699 118.704  -0.     -0.    138.698]
     
