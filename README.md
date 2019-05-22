@@ -1,63 +1,51 @@
 
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
-|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](http://pynastran.m4-engineering.com/1.1.0/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.1.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
+|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](https://pynastran-git.readthedocs.io/en/1.2/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/1.2.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/1.2.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=1.2) |
 |   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) |
 
 
 
 <!---
 [![Windows Status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
-
 [![codecov](https://codecov.io/gh/SteveDoyle2/pyNastran/branch/master/graph/badge.svg)](https://codecov.io/gh/SteveDoyle2/pyNastran)
-
 [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/master.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
 --->
 
 <!---
-
 [![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/master)
-
 [![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
-
 [![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
 [![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=master)
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
 --->
 
-### v1.1.0
+### v1.2.0
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2018/6/26)
-
-<!---
-[Doumentation](http://pynastran-git.readthedocs.org/en/latest/index.html)
---->
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2019/5/21)
 
 Also, check out the:
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
   * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the master branch)
-  * [Docs](http://pynastran.m4-engineering.com/1.1.0/)
+  * [Docs](https://pynastran-git.readthedocs.io/en/1.2/)
 
 for more detailed information.
 
-<!--- this isn't setup... -->
-<!--- http://stevedoyle2.github.io/pyNastran/ --->
-
 # Overview
 
-pyNastran is an interface library to the various Nastran file formats (BDF, OP2, OP4).  Using the BDF interface, you can read/edit/write Nastran geometry without worrying about field formatting.  Many checks are also performed to verify that your model is correct.  Using the OP2 interface, you can read very large result files very quckly and very efficiently.  Additionally, you can also extract a subset of the result data and write OP2/F06 result files.
+pyNastran is an interface library to the various Nastran file formats (BDF, OP2, OP4).
+Using the BDF interface, you can read/edit/write Nastran geometry without worrying about
+field formatting.  Many checks are also performed to verify that your model is correct.
+Using the OP2 interface, you can read large result files quckly and efficiently.
+Additionally, you can also extract a subset of the result data and write OP2/F06 result
+files.  For a more detailed list of features, see:
+  * [Features](https://pynastran-git.readthedocs.io/en/1.2/quick_start/features.html#overview)
 
-Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.  While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a commercial program.
+Using the pyNastran GUI, you can read in Nastran models and quickly view results for a model.
+While it's no FEMAP/Patran, it can replace many tasks that would otherwise require a
+commercial program.
 
 ![GUI](https://github.com/SteveDoyle2/pynastran/blob/master/pyNastran/gui/images/caero.png)
-
-
-<!--- Ripped off meshio  --->
-<!--- [![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.svg?branch=master)](https://travis-ci.org/SteveDoyle2/pyNastran)  --->
-<!--- [![codecov.io](https://codecov.io/github/SteveDoyle2/pyNastran/coverage.svg?branch=master)](https://codecov.io/github/SteveDoyle2/pyNastran?branch=master)  --->
-
-<!--- ## pyNastran v0.8.0 has NOT been released (8/21/2016)   --->
-<!--- [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)  --->
 
 
 # News
@@ -157,8 +145,8 @@ GUI:
 
 
 Known issues:
- - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
-   this is probably pretty easy to fix.
+ - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
+   If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
 
 ### pyNastran v1.1.0 has been released (2018/6/26)
@@ -166,7 +154,6 @@ Known issues:
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
 |  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](http://pynastran.m4-engineering.com/1.1.0/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.1.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
-|   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) |
 
 It's been roughly a year and ~100 tickets closed since the last version, so it's probably
 time for another release!  I want to thank everybody who helped with this release, especially
@@ -229,8 +216,8 @@ GUI:
  - better PSHELL/PCOMP distinction
 
 Known issues:
- - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
-   this is probably pretty easy to fix.
+ - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
+   If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
 ### pyNastran v1.0.0 has been released (2017/5/25)
 
@@ -244,13 +231,8 @@ See [v1.0.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0) for i
 |  [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.8)](http://pynastran-git.readthedocs.io/en/v0.8.0/?badge=v0.8.0) |
 
 <!---
-
 [![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi/branch/master?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran/branch/master)
-
 [![Build status](https://ci.appveyor.com/api/projects/status/1qau107h43mbgghi?svg=true)](https://ci.appveyor.com/project/SteveDoyle2/pynastran)
-
-[![Build Status](https://travis-ci.org/SteveDoyle2/pyNastran.png)](https://travis-ci.org/SteveDoyle2/pyNastran)
-[![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
 --->
 
 See [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) for information regarding enhancements.
