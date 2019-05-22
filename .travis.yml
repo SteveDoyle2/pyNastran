@@ -99,11 +99,7 @@ install:
    #wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
 
     # 4.1.11 -> 4.5.4 (2018/8/19)
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-4.5.4-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh -O miniconda.sh;
-    fi
+    wget https://repo.continuum.io/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
@@ -126,9 +122,8 @@ install:
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib pandas; fi
 
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas
+  - pip install python-coveralls
   - source activate test-environment
   - conda list
   - python setup${NOGUI}.py develop
@@ -137,9 +132,7 @@ install:
 # Run test
 script:
   #- nosetests --with-cov --cov YOUR_PACKAGE_NAME_HERE --cov-config .coveragerc --logging-level=INFO
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then coverage run pyNastran/all_tests${NOGUI}.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then coverage run pyNastran/all_tests${NOGUI}.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then python pyNastran/all_tests_no_gui.py; fi
+  - coverage run pyNastran/all_tests${NOGUI}.py
 
   # good
   #- "python pyNastran/all_tests.py"

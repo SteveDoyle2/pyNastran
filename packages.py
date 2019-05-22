@@ -224,10 +224,6 @@ def get_package_requirements(is_gui=True, python_version=None):
         except ImportError:
             py_packages.append('imageio >= 2.2.0')
 
-    #py_packages = [
-    #    'numpy >= 1.9.2',
-    #    'scipy >= 0.16.0, scipy < 0.18.0',
-    #]
 
     is_windows = 'nt' in os.name
     if is_travis and not is_windows:
@@ -237,5 +233,5 @@ def get_package_requirements(is_gui=True, python_version=None):
 
     install_requires = py_packages
     #print(all_reqs)
-    #print(install_requires)
+    print('install_requires =', install_requires)
     return all_reqs, install_requires
