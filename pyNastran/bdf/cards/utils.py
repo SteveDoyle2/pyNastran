@@ -5,7 +5,6 @@ defines:
 """
 from __future__ import unicode_literals, print_function
 from typing import List, Union, Optional
-from six import string_types
 
 
 def build_table_lines(fields, nstart=1, nend=0):
@@ -80,7 +79,7 @@ def wipe_empty_fields(card):
     """
     short_card = []  # type: List[Optional[str]]
     for field in card:
-        if isinstance(field, string_types):
+        if isinstance(field, str):
             field = field.strip()
             if field == '':
                 short_card.append(None)

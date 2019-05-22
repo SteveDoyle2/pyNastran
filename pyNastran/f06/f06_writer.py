@@ -13,8 +13,6 @@ from collections import defaultdict
 from traceback import print_exc
 from typing import Optional, List, Dict, Union
 
-from six import string_types
-
 import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
@@ -209,7 +207,7 @@ class F06Writer(OP2_F06_Common):
 
     def add_results(self, results):
         # type: (Union[str, List[str]]) -> None
-        if isinstance(results, string_types):
+        if isinstance(results, str):
             results = [results]
         all_results = self.get_all_results()
         for result in results:

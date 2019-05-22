@@ -1,6 +1,5 @@
 from __future__ import print_function, unicode_literals
 from typing import List, Dict, Tuple, Union, Set, Any
-from six import string_types
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 
 class CaseControlCard(object):
@@ -640,7 +639,7 @@ class CheckCard(CaseControlCard):
                     self.type, key, ', '.join(self.allowed_keys))
                 raise KeyError(msg)
 
-        if isinstance(value, string_types):
+        if isinstance(value, str):
             value = value.strip().upper()
         if self.allow_ints:
             try:
@@ -695,7 +694,7 @@ class CheckCard(CaseControlCard):
                             raise ValueError(msg)
 
             key = key.upper()
-            if isinstance(valuei, string_types):
+            if isinstance(valuei, str):
                 valuei = valuei.upper()
             self.data.append((key, valuei))
         else:

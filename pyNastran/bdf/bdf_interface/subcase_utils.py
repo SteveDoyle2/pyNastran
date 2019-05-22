@@ -6,7 +6,6 @@ defines:
 """
 from __future__ import print_function
 from typing import List, Optional, Union, Set, Any
-from six import string_types
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
@@ -124,7 +123,7 @@ def expand_thru_case_control(set_value):
             elif isinstance(ivalue2, float):
                 assert add_mode is True, add_mode
                 set_value2.add(ivalue2)
-            elif isinstance(ivalue2, string_types):
+            elif isinstance(ivalue2, str):
                 #print('  not digit=%r' % set_value)
                 if set_value == 'EXCLUDE':
                     msg = ('EXCLUDE is not supported on CaseControlDeck '

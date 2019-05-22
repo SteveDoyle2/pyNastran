@@ -6,7 +6,6 @@ from __future__ import print_function
 import sys
 from io import StringIO, IOBase
 
-from six import string_types
 from numpy import array, unique, concatenate, intersect1d, where
 
 from pyNastran.bdf.utils import print_filename
@@ -51,7 +50,7 @@ class WriteMesh(BDFAttributes):
 
         if not(hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, IOBase):
             return out_filename
-        elif not isinstance(out_filename, string_types):
+        elif not isinstance(out_filename, str):
             msg = 'out_filename=%r must be a string; type=%s' % (
                 out_filename, type(out_filename))
             raise TypeError(msg)
@@ -712,7 +711,7 @@ class WriteMesh(BDFAttributes):
                     reject2 = reject.rstrip()
                     if reject2:
                         msg.append('%s\n' % reject2)
-            elif isinstance(reject_lines, string_types):
+            elif isinstance(reject_lines, str):
                 reject2 = reject_lines.rstrip()
                 if reject2:
                     msg.append('%s\n' % reject2)

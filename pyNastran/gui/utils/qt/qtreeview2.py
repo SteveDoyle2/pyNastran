@@ -1,7 +1,5 @@
 from __future__ import print_function
 
-from six import string_types
-
 from qtpy import QtGui
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QTreeView, QMessageBox, QMenu

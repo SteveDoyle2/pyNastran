@@ -1,6 +1,5 @@
 from __future__ import print_function
 from collections import defaultdict
-from six import string_types
 from numpy import unique, int32, int64
 
 from pyNastran import is_release
@@ -1020,11 +1019,11 @@ class OP2_F06_Common(object):
         except TypeError:
             for msgi in msg:
                 print('TypeError...%r' % msgi.rstrip())
-                assert isinstance(msgi, string_types), msgi
+                assert isinstance(msgi, str), msgi
         except UnicodeDecodeError:
             for msgi in msg:
                 print('UnicodeDecodeError...%r' % msgi.rstrip())
-                assert isinstance(msgi, string_types), msgi
+                assert isinstance(msgi, str), msgi
             raise
 
 class Op2F06Attributes(OP2_F06_Common):

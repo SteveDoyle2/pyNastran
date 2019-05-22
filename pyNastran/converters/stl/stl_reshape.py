@@ -1,6 +1,5 @@
 from __future__ import print_function
 from copy import deepcopy
-from six import string_types
 from docopt import docopt
 
 import pyNastran
@@ -146,19 +145,19 @@ def stl_reshape(data):
         yshift = 1.
         zshift = 1.
         if data['<xshift>'] is not None:
-            if isinstance(xshift, string_types):
+            if isinstance(xshift, str):
                 xshift = float(data['<xshift>'].strip("'"))
             else:
                 xshift = float(data['<xshift>'])
 
         if data['<yshift>'] is not None:
-            if isinstance(xshift, string_types):
+            if isinstance(xshift, str):
                 yshift = float(data['<yshift>'].strip("'"))
             else:
                 yshift = float(data['<yshift>'])
 
         if data['<zshift>'] is not None:
-            if isinstance(xshift, string_types):
+            if isinstance(xshift, str):
                 zshift = float(data['<zshift>'].strip("'"))
             else:
                 zshift = float(data['<zshift>'])

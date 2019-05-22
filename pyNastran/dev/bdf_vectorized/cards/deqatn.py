@@ -7,7 +7,6 @@ The capitalization of the sub-functions is important.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from copy import deepcopy
-from six import exec_
 
 import numpy as np
 from numpy import (
@@ -223,7 +222,7 @@ class DEQATN(BaseCard):  # needs work...
             self.eqs, default_values, str(self))
         self.func_str = func_str
         self.func_name = func_name
-        exec_(func_str)
+        exec(func_str)
         #print(locals().keys())
         func = locals()[func_name]
         setattr(self, func_name, func)
@@ -369,7 +368,7 @@ def fortran_to_python_short(line, default_values):
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
     d = {}
-    exec_(func_str, globals(), d)
+    exec(func_str, globals(), d)
     return d['func']
 
 def fortran_to_python(lines, default_values, comment=''):

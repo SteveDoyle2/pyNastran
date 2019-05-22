@@ -20,7 +20,6 @@ http://mscnastrannovice.blogspot.com/2014/06/msc-nastran-design-optimization-qui
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import cycle, count
-from six import string_types
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -232,7 +231,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
         if isinstance(pname_fid, integer_types) and pname_fid < 0:
             pname_fid = update_pbeam_negative_integer(pname_fid)
 
-        if isinstance(pname_fid, string_types):
+        if isinstance(pname_fid, str):
             if pname_fid in options_station_a:
                 word = pname_fid
                 num = 'A'
@@ -270,7 +269,7 @@ def validate_dvprel(prop_type, pname_fid, validate):
             #cp_name =
         #assert pname_fid in ['T', 4, 6], msg
     elif prop_type == 'PCOMP':
-        if isinstance(pname_fid, string_types):
+        if isinstance(pname_fid, str):
             if pname_fid in ['Z0', 'SB', 'TREF', 'GE']:
                 pass
             else:
@@ -2206,7 +2205,7 @@ class DRESP2(OptConstraint):
             assert len(key) == 2, 'key=%s' % str(key)
             iorder, name = key
             assert isinstance(iorder, int), 'iorder=%s key=%s' % (iorder, str(key))
-            assert isinstance(name, string_types), 'name=%r key=%s' % (name, str(key))
+            assert isinstance(name, str), 'name=%r key=%s' % (name, str(key))
             if name == 'DNODE':
                 assert len(values) == 2, 'name=%r must be a tuple of length 2 (nids, components); values=%s' % (name, values)
                 nids, components = values
@@ -2595,7 +2594,7 @@ class DRESP3(OptConstraint):
             assert len(key) == 2, 'key=%s' % str(key)
             iorder, name = key
             assert isinstance(iorder, int), 'iorder=%s key=%s' % (iorder, str(key))
-            assert isinstance(name, string_types), 'name=%r key=%s' % (name, str(key))
+            assert isinstance(name, str), 'name=%r key=%s' % (name, str(key))
             if name == 'DNODE':
                 assert len(values) == 2, 'name=%r must be a tuple of length 2 (nids, components); values=%s' % (name, values)
                 nids, components = values
@@ -4931,7 +4930,7 @@ def parse_table_fields(card_type, card, fields):
             elif name == 'DTABLE':
                 #print('field=%s value=%r type=%r should be an string...\ncard=%s' % (
                     #i+9, field, name, card))
-                assert isinstance(field, string_types), 'field=%i value=%r type=%s should be an string...\ncard=%s' % (i+9, field, name, card)
+                assert isinstance(field, str), 'field=%i value=%r type=%s should be an string...\ncard=%s' % (i+9, field, name, card)
             elif name == 'DFRFNC':
                 pass
             elif name == 'USRDATA' and card_type == 'DRESP3':
@@ -5100,8 +5099,7 @@ def get_deqatn_value(dvxrel2, model, desvar_values):
     values = get_deqatn_args(dvxrel2, model, desvar_values)
     deqatn = model.DEQATN(dvxrel2.dequation)
     #print(deqatn.func_str)
-    #from six import exec_
-    #exec_(deqatn.func_str)
+    #exec(deqatn.func_str)
     func = deqatn.func
     if func is None:
         msg = 'func is None...DEQATN=%s\n%s\n%s' % (dvxrel2.dequation, dvxrel2, deqatn)
@@ -5205,7 +5203,7 @@ def get_dvprel_key(dvprel, prop=None):
             msg = 'prop_type=%r pname/fid=%r is not supported' % (prop_type, var_to_change)
 
     elif prop_type == 'PBEAM':
-        if isinstance(var_to_change, string_types):
+        if isinstance(var_to_change, str):
             if var_to_change in ['A', 'I1', 'I2', 'I1(B)', 'J', 'I2(B)',
                                  'A(A)',]:
                 pass
@@ -5451,7 +5449,7 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
                 attai = str(dresp.atta)
             elif isinstance(dresp.atta, float):
                 attai = '%.12e' % dresp.atta
-            elif isinstance(dresp.atta, string_types):
+            elif isinstance(dresp.atta, str):
                 attai = dresp.atta
             else:
                 raise TypeError(type(dresp.atta))
@@ -5464,7 +5462,7 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
                 attbi = str(dresp.attb)
             elif isinstance(dresp.attb, float):
                 attbi = '%.12e' % dresp.attb
-            elif isinstance(dresp.attb, string_types):
+            elif isinstance(dresp.attb, str):
                 attbi = dresp.attb
             else:
                 raise TypeError(type(dresp.attb))
@@ -5499,10 +5497,10 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
             #response_type : 'DISP'
             dresp_groupi = dresp_group.create_group(str(i))
             if len(dresp.atti) > 0:
-                if isinstance(dresp.atti[0], string_types): # ALL
+                if isinstance(dresp.atti[0], str): # ALL
                     #model.log.debug('str atti = %s' % dresp.atti)
                     values_bytes = [
-                        attii.encode(encoding) if isinstance(attii, string_types) else attii
+                        attii.encode(encoding) if isinstance(attii, str) else attii
                         for attii in dresp.atti]
                     dresp_groupi.create_dataset('atti', data=values_bytes)  # int
                 else:
@@ -5561,7 +5559,7 @@ def _export_dresps_to_hdf5(h5_file, model, encoding):
                     print('  DRESP2', (i, j), param_key, values)
                     raise
                 dresp_groupj = dresp_groupi.create_group(str(j))
-                values2 = [val.encode(encoding) if isinstance(val, string_types) else val
+                values2 = [val.encode(encoding) if isinstance(val, str) else val
                            for val in values]
                 dresp_groupj.create_dataset('values', data=values2)
             dresp_groupi.create_dataset('param_keys', data=param_keys)

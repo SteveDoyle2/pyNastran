@@ -18,7 +18,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 
 import numpy as np
-from six import text_type
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, expand_thru #, _node_ids
@@ -439,7 +438,7 @@ class SELABEL(BaseCard):
         self.label = label
 
     def validate(self):
-        assert isinstance(self.label, text_type), self.label
+        assert isinstance(self.label, str), self.label
 
     @classmethod
     def add_card(cls, card, comment=''):

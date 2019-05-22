@@ -594,7 +594,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, encoding, debug=T
             for i, (keyi, valuei) in enumerate(class_value.items()):
                 keysi.append(keyi)
                 valuesi.append(valuei)
-                #if isinstance(valuei, text_type):
+                #if isinstance(valuei, str):
                     #param_group.create_dataset(str(i), data=valuei.encode('ascii'))
                 #elif valuei is None:
                     #param_group.create_dataset(str(i), data=np.nan)
@@ -841,7 +841,7 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
 
     for key in keys:
         value = obj_dict[key]
-        #if isinstance(value, text_type):
+        #if isinstance(value, str):
             #value = value.encode(encoding)
 
         #try:

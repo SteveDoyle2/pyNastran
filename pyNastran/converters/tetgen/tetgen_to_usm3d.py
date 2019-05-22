@@ -1,6 +1,5 @@
 from __future__ import print_function
 #from struct import unpack #pack
-from six import integer_types
 #from cpylog import get_logger
 
 from pyNastran.converters.tetgen.tetgen import Tetgen
@@ -17,7 +16,7 @@ def tetgen_to_usm3d(base):
     ntris = m2.tris.shape[0]
 
     nboundary_nodes = m2.nodes.shape[0]
-    if not isinstance(nboundary_nodes, integer_types):
+    if not isinstance(nboundary_nodes, int):
         msg = 'nboundary_nodes=%r; type=%s must be an integer' % (
             nboundary_nodes, type(nboundary_nodes))
         raise TypeError(msg)

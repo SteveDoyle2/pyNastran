@@ -26,8 +26,6 @@ from cpylog import get_logger2
 
 from pyNastran.utils import is_binary_file, _filename, b
 
-string_type = str
-bytes_type = bytes
 WRITE_ASCII = 'wb'
 
 
@@ -161,7 +159,7 @@ class Cart3dIO(object):
             outfile.write(floats)
             outfile.write(four)
         else:
-            if isinstance(float_fmt, bytes_type):
+            if isinstance(float_fmt, bytes):
                 fmt_ascii = float_fmt
             else:
                 fmt_ascii = float_fmt.encode('latin1')
@@ -182,7 +180,7 @@ class Cart3dIO(object):
             outfile.write(ints)
             outfile.write(four)
         else:
-            if isinstance(int_fmt, bytes_type):
+            if isinstance(int_fmt, bytes):
                 fmt_ascii = int_fmt
             else:
                 fmt_ascii = int_fmt.encode('latin1')

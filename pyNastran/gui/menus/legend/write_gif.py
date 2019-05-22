@@ -6,7 +6,6 @@ Defines:
 """
 from __future__ import print_function
 import os
-from six import string_types
 import numpy as np
 try:
     import imageio
@@ -129,7 +128,7 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
     We want to set it to true because if an animation is onesided, we can skip
     making half the images.
     """
-    if isinstance(profile, string_types):
+    if isinstance(profile, str):
         profile = profile.lower()
         if profile == '0 to scale':
             # doesn't end at start point
@@ -199,7 +198,7 @@ def setup_animate_scale(scale, icase_fringe, icase_disp, icase_vector, time, pro
     is_linspace_endpoint = not endpoint
     isteps = np.linspace(0, nframes, num=nframes, endpoint=is_linspace_endpoint, dtype='int32')
 
-    if isinstance(profile, string_types):
+    if isinstance(profile, str):
         profile = profile.lower()
         if profile == '0 to scale':
             yp = np.array([0, scale])

@@ -38,7 +38,6 @@ The superelement sets start with SE:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from typing import List, Union, Optional, Any
-from six import string_types
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
@@ -1016,7 +1015,7 @@ class SET1(Set):
         is_skin = False
         i = 0
         if len(ids) > 0:
-            if isinstance(ids[0], string_types) and ids[0] == 'SKIN':
+            if isinstance(ids[0], str) and ids[0] == 'SKIN':
                 is_skin = True
                 i += 1
         else:

@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six import string_types
 import numpy as np
 
 
@@ -14,7 +13,7 @@ def make_pack_form(data):
     fold = None
     old = None
     for d in data:
-        if isinstance(d, string_types):
+        if isinstance(d, str):
             n = len(d)
             f = 's'
         elif isinstance(d, int):

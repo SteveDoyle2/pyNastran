@@ -19,7 +19,6 @@ The ConstraintObject contain multiple constraints.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, expand_thru
@@ -456,7 +455,7 @@ class MPC(Constraint):
         assert len(self.nodes) == len(self.coefficients)
         for nid, comp, coefficient in zip(self.nodes, self.components, self.coefficients):
             assert isinstance(nid, integer_types), self.nodes
-            assert isinstance(comp, string_types), self.components
+            assert isinstance(comp, str), self.components
             assert isinstance(coefficient, float), self.coefficients
 
     @classmethod
@@ -735,7 +734,7 @@ class SPC(Constraint):
         assert len(self.nodes) == len(self.enforced), 'len(self.nodes)=%s len(self.enforced)=%s' % (len(self.nodes), len(self.enforced))
         for nid, comp, enforcedi in zip(self.nodes, self.components, self.enforced):
             assert isinstance(nid, integer_types), self.nodes
-            assert isinstance(comp, string_types), self.components
+            assert isinstance(comp, str), self.components
             assert isinstance(enforcedi, float), self.enforced
 
     @classmethod
@@ -1095,6 +1094,7 @@ class SPC1(Constraint):
             GRID/SPOINT ids
         comment : str; default=''
             a comment for the card
+
         """
         Constraint.__init__(self)
         if comment:
@@ -1111,7 +1111,7 @@ class SPC1(Constraint):
 
     def validate(self):
         assert isinstance(self.nodes, list), 'nodes=%s\n%s' % (self.nodes, str(self))
-        assert isinstance(self.components, string_types), 'components=%s\n%s' % (self.components, str(self))
+        assert isinstance(self.components, str), 'components=%s\n%s' % (self.components, str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1244,7 +1244,7 @@ class SPCOFF(Constraint):
         assert len(self.nodes) == len(self.components), 'len(self.nodes)=%s len(self.components)=%s' % (len(self.nodes), len(self.components))
         for nid, comp in zip(self.nodes, self.components):
             assert isinstance(nid, integer_types), self.nodes
-            assert isinstance(comp, string_types), self.components
+            assert isinstance(comp, str), self.components
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1384,7 +1384,7 @@ class SPCOFF1(Constraint):
 
     def validate(self):
         assert isinstance(self.nodes, list), 'nodes=%s\n%s' % (self.nodes, str(self))
-        assert isinstance(self.components, string_types), 'components=%s\n%s' % (self.components, str(self))
+        assert isinstance(self.components, str), 'components=%s\n%s' % (self.components, str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):

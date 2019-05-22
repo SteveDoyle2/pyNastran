@@ -16,7 +16,6 @@ Just type:
 Python
 ------
 The software is tested against:
- * Python 2.7.15 **(Windows/Linux)**
  * Python 3.6 **(Linux)**
  * Python 3.7 **(Windows/Linux)**
 
@@ -31,8 +30,6 @@ set of packages include:
    * scipy >= 1.0
    * cpylog >= 1.0.2
    * docopt == 0.6.2    **(required for command line tools)**
-   * typing >= 3.6.4    **(python 2.7)**
-   * pathlib2 >= 2.3.0  **(python 2.7)**
 
  * **Optional**:
 
@@ -63,8 +60,6 @@ Base functionality:
  * ``conda install numpy``
  * ``conda install scipy``
  * ``conda install docopt``   **(required for command line tools)**
- * ``conda install typing``   **(python 2.7)**
- * ``conda install pathlib2`` **(python 2.7)**
  * ``conda install pandas``   **(optional)**
  * ``conda install h5py``       **(optional for HDF5 support)**
  * ``conda install matplotlib`` **(optional for plotting)**
@@ -73,13 +68,6 @@ Base functionality:
  * ``pip install pyNastran``
 
 For **optional** GUI support:
- * **Python 2.7**:
-
-   * From `Windows binaries <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_:
-
-     * **Download VTK**:
-
-       * VTK-7.1.1-cp27-cp27m-win_amd64.whl (Python 2.7)
 
  * On the command line:
     * ``conda install imageio`` **(optional for animation support)**
@@ -94,6 +82,8 @@ For **optional** GUI support:
     * ``conda install pyqt``
     * ``conda install vtk``
     * ``pip install qtpy``
+
+ * Additional source for `Windows binaries <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_
 
 
 ************************************
@@ -110,8 +100,6 @@ Base functionality:
    * ``pip install scipy``
    * ``pip install docopt``
    * ``pip install colorama``
-   * ``conda install typing``   **(Python 2.7)**
-   * ``conda install pathlib2`` **(Python 2.7)**
    * ``pip install pandas``     **(optional)**
    * ``pip install h5py``       **(optional for HDF5 support)**
    * ``pip install matplotlib`` **(optional for plotting)**
@@ -122,7 +110,6 @@ Base functionality:
 For gui support (optional; required for GUI):
  * From `Windows binaries <http://www.lfd.uci.edu/~gohlke/pythonlibs/>`_:
    * Download VTK:
-     * VTK-7.1.1-cp27-cp27m-win_amd64.whl **(Python 2.7)**
      * VTK-8.1.2-cp36-cp36m-win_amd64.whl **(Python 3.6)**
      * VTK-8.1.2-cp37-cp37m-win_amd64.whl **(Python 3.7)**
 

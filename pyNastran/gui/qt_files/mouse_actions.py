@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six import string_types, integer_types
 import numpy as np
 import vtk
 
@@ -62,7 +61,7 @@ class MouseActions(object):
         force : bool; default=False
             override the mode=camera_mode check
         """
-        assert isinstance(mode, string_types), mode
+        assert isinstance(mode, str), mode
         assert revert in [True, False], revert
 
         #print('setup_mouse_buttons mode=%r _camera_mode=%r' % (mode, self._camera_mode))

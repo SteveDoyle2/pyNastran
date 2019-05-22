@@ -5,7 +5,6 @@ defines:
 
 """
 from __future__ import print_function
-from six import string_types
 import numpy as np
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
 from pyNastran.bdf.bdf import read_bdf
@@ -1253,7 +1252,7 @@ def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
         else:  # pragma: no cover
             raise NotImplementedError('cannot convert %r\n%s' % (var_to_change, dvprel))
     elif prop_type == 'PBEAM':
-        if isinstance(prop_type, string_types):
+        if isinstance(prop_type, str):
             word, unused_num = break_word_by_trailing_parentheses_integer_ab(
                 var_to_change)
             if word == 'A':

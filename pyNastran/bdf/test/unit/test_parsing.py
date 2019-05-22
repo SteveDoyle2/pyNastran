@@ -22,7 +22,7 @@ class TestBDFParsing(unittest.TestCase):
 
         #args = ['test_bdf', 'fem.bdf', 'fem2.bdf']
         #out = run_argparse(argv=args)
-        #assert isinstance(out, string_types), out # error
+        #assert isinstance(out, str), out # error
 
         args = ['test_bdf', 'fem.bdf', '-x']
         out = run_argparse(argv=args)
@@ -35,7 +35,7 @@ class TestBDFParsing(unittest.TestCase):
 
         #args = ['test_bdf', 'fem.bdf', '--safe', '--xref']
         #out = run_argparse(argv=args)
-        #assert isinstance(out, string_types), out # error
+        #assert isinstance(out, str), out # error
 
         args = ['test_bdf', 'fem.bdf', '-xc']
         out = run_argparse(argv=args)

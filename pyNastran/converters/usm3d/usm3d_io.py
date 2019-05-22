@@ -4,7 +4,6 @@ Defines the GUI IO file for Usm3d.
 from __future__ import print_function
 import os
 from collections import defaultdict, OrderedDict
-from six import string_types
 
 import numpy as np
 
@@ -51,7 +50,7 @@ class Usm3dIO(object):
                     if key not in ['edge_actor']:
                         self.gui.log.warning('key=%s is undefined...' % key)
 
-                if isinstance(value, (integer_float_types, string_types)):
+                if isinstance(value, (integer_float_types, str)):
                     dir_gui.append(key)
             dir_gui.sort()
             msg += 'dir(gui) = [%s]' % ', '.join(dir_gui)

@@ -14,7 +14,6 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -383,7 +382,7 @@ class FLFACT(BaseCard):
         #self.fmid = fmid
 
         # the dumb string_types thing is because we also get floats
-        if len(factors) > 1 and isinstance(factors[1], string_types) and factors[1] == 'THRU':
+        if len(factors) > 1 and isinstance(factors[1], str) and factors[1] == 'THRU':
             #msg = 'embedded THRUs not supported yet on FLFACT card\n'
             nfactors = len(factors)
             if nfactors == 4:
@@ -427,7 +426,7 @@ class FLFACT(BaseCard):
             assert len(card) == 3, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
         elif isinstance(field3, float):
             factors = fields(double, card, 'factors', i=2, j=len(card))
-        elif isinstance(field3, string_types) and field3 == 'THRU':
+        elif isinstance(field3, str) and field3 == 'THRU':
             f1 = double(card, 2, 'f1')
             fnf = double(card, 4, 'fnf')
             nf = integer(card, 5, 'nf')

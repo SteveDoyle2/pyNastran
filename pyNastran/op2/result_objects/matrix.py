@@ -4,7 +4,7 @@ from __future__ import print_function
 from scipy.sparse import coo_matrix  # type: ignore
 import numpy as np
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
-from pyNastran.utils import object_attributes, object_methods, unicode_type
+from pyNastran.utils import object_attributes, object_methods
 from pyNastran.op2.op2_interface.op2_codes import MSC_ELEMENTS
 
 
@@ -55,7 +55,7 @@ class Matrix(object):
         self.col_dof = None
         self.row_nid = None
         self.row_dof = None
-        if not isinstance(name, unicode_type):
+        if not isinstance(name, str):
             raise TypeError('name=%r must be a string; type=%s' % (name, type(name)))
 
     @property

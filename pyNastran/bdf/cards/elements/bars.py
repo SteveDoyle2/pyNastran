@@ -10,8 +10,6 @@ defines:
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
-
 import numpy as np
 from numpy.linalg import norm
 
@@ -566,7 +564,7 @@ class CBAR(LineElement):
         if isinstance(self.offt, integer_types):
             assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
             #raise NotImplementedError('invalid offt; offt=%i' % self.offt)
-        elif not isinstance(self.offt, string_types):
+        elif not isinstance(self.offt, str):
             raise SyntaxError('invalid offt expected a string of length 3 '
                               'offt=%r; Type=%s' % (self.offt, type(self.offt)))
 

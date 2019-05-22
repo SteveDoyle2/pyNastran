@@ -1,9 +1,6 @@
-"""
-Defines functions for single precision 8 character field writing.
-"""
+"""Defines functions for single precision 8 character field writing."""
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, integer_types
 import sys
 from typing import List, Union, Any
 from numpy import float32, isnan
@@ -25,8 +22,8 @@ def is_same(value1, value2):
 
     .. note:: this method is used by almost every card when printing
     """
-    if isinstance(value1, string_types) or value1 is None:
-        return True if value1 == value2 else False
+    if isinstance(value1, str) or value1 is None:
+        return value1 == value2
     if value1 == value2:
         return True
     return False
@@ -56,8 +53,7 @@ def set_default_if_blank(value, default):
     # type: (Any, Any) -> Union[int, float, str]
     """
     Used when initializing a card and the default value isn't set
-    Used on PBARL
-    """
+    Used on PBARL"""
     return default if value is None or value == '' else value
 
 
@@ -70,6 +66,7 @@ def print_scientific_8(value):
     Notes
     -----
     print_float_8 : a better float printing method
+
     """
     if value == 0.0:
         return '%8s' % '0.'
@@ -102,6 +99,7 @@ def print_float_8(value):
     """
     Prints a float in nastran 8-character width syntax using the
     highest precision possbile.
+
     """
     if isnan(value):
         return '        '
@@ -190,7 +188,8 @@ def print_float_8(value):
             try:
                 ifield = field.index('.')
             except ValueError:
-                raise ValueError('error printing float; cant find decimal; field=%r value=%s' % (field, value))
+                raise ValueError('error printing float; cant find decimal; field=%r value=%s' % (
+                    field, value))
             if ifield < 8:
                 field = '%7s.' % int(round(value, 0))
                 #assert '.' != field[0], field
@@ -222,7 +221,7 @@ def print_float_8(value):
     #"""
     #if isinstance(value, (float, float32)):
         #field = print_float_8(value)
-    #elif isinstance(value, integer_types):
+    #elif isinstance(value, int):
         #field = "%8i" % value
     #else:
         #msg = 'Invalid Type:  value=%r type=%s' % (value, type(value))
@@ -244,8 +243,9 @@ def print_field_8(value):
     -------
     field : str
         an 8-character string
+
     """
-    if isinstance(value, integer_types):
+    if isinstance(value, int):
         field = "%8i" % value
     elif isinstance(value, (float, float32)):
         field = print_float_8(value)
@@ -289,6 +289,7 @@ def print_card_8(fields):
       DUMMY          1       2       3               4       5       6       7
       DUMMY          1       2       3               4       5       6       7
                     8.
+
     """
     try:
         out = '%-8s' % fields[0]
@@ -332,6 +333,7 @@ def print_int_card(fields):
     .. code-block:: python
 
       fields = ['SET', 1, 2, 3, 4, 5, 6, ..., n]
+
     """
     try:
         out = '%-8s' % fields[0]

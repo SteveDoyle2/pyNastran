@@ -6,8 +6,6 @@ import os.path
 import datetime
 from collections import OrderedDict
 from math import ceil
-
-from six import string_types
 import html
 
 
@@ -517,11 +515,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                         else:
                             raise TypeError(menu)
                         continue
-                    elif not isinstance(item, string_types):
+                    elif not isinstance(item, str):
                         raise RuntimeError('what is this...action item() = %r' % item())
 
                     try:
-                        action = self.actions[item] #if isinstance(item, string_types) else item()
+                        action = self.actions[item] #if isinstance(item, str) else item()
                     except:
                         print(self.actions.keys())
                         raise
@@ -677,7 +675,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             #print('filename = %s' % filename)
             #print('lineno = %s' % lineno)
             #print('msg = %s' % msg)
-            #assert isinstance(msg, string_types), msg
+            #assert isinstance(msg, str), msg
             msg = html.escape(msg)
 
             #message colors
@@ -2257,7 +2255,7 @@ def populate_sub_qmenu(menu, items, actions):
     sub_menu_name = items[0]
     sub_menu = menu.addMenu(sub_menu_name)
     for ii_count, ii in enumerate(items[1:]):
-        if not isinstance(ii, string_types):
+        if not isinstance(ii, str):
             raise RuntimeError('what is this...action ii() = %r' % ii())
         action = actions[ii]
         if ii_count > 0:
@@ -2283,7 +2281,7 @@ def populate_sub_qtoolbar(toolbar, items, actions):
     toolbar.addWidget(custom_button)
 
     for unused_ii_count, itemi in enumerate(items[1:]):
-        if not isinstance(itemi, string_types):
+        if not isinstance(itemi, str):
             raise RuntimeError('what is this...action ii() = %r' % itemi())
         action = actions[itemi]
         # temp

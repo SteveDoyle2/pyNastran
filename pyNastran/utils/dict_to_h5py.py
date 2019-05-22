@@ -383,7 +383,8 @@ class HDF5Importer(object):
            '2' : value2,
            '3' : value3,
         }
-        We do this because we need top worry about unicode
+        We do this because we need to worry about unicode
+
         """
         temp_dict = {}
         sub_h5 = value

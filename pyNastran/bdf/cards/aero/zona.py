@@ -9,7 +9,6 @@ All cards are BaseCard objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types
 import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods
@@ -3101,7 +3100,7 @@ class TRIM_ZONA(BaseCard):
         while i < len(card):
             label = integer(card, i, 'label%i' % n)
             ux = double_or_string(card, i + 1, 'ux%i' % n)
-            if isinstance(ux, string_types):
+            if isinstance(ux, str):
                 assert ux == 'FREE', 'ux=%r' % ux
             #print('  label=%s ux=%s' % (label, ux))
             labels.append(label)
@@ -3158,7 +3157,7 @@ class TRIM_ZONA(BaseCard):
             if ux != 'FREE':
                 trimvar = model.zona.trimvar[label_id]
                 label = trimvar.label
-                assert isinstance(label, string_types), 'label=%r' % label
+                assert isinstance(label, str), 'label=%r' % label
                 comment += str(trimvar)
                 labels.append(label)
                 uxs.append(ux)

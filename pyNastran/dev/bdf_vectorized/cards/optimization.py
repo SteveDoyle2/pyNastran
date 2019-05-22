@@ -1,7 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -1548,7 +1547,7 @@ class DRESP2(OptConstraint):
                     assert isinstance(field, integer_types), 'field=%i value=%r type=%s should be an integer...\ncard=%s' % (i+9, field, name, card)
                 elif name == 'DTABLE':
                     #print('field=%s value=%r type=%r should be an string...\ncard=%s' % (i+9, field, name, card))
-                    assert isinstance(field, string_types), 'field=%i value=%r type=%s should be an string...\ncard=%s' % (i+9, field, name, card)
+                    assert isinstance(field, str), 'field=%i value=%r type=%s should be an string...\ncard=%s' % (i+9, field, name, card)
                 elif name == 'DFRFNC':
                     pass
                 else:
@@ -1651,7 +1650,7 @@ class DRESP2(OptConstraint):
             raise NotImplementedError(self.dequation)
 
     #def DEquation(self):
-        #if isinstance(self.dequation, (int, string_types)):
+        #if isinstance(self.dequation, (int, str)):
             #return self.dequation
         #return self.dequation_ref.equation_id
 
@@ -2379,7 +2378,7 @@ class DVCREL2(OptConstraint):
     #def DEquation(self):
         #if isinstance(self.dequation, integer_types):
             #return self.dequation
-        #elif isinstance(self.dequation, string_types):
+        #elif isinstance(self.dequation, str):
             #return self.dequation
         #else:
             #return self.dequation_ref.equation_id
@@ -2662,7 +2661,7 @@ class DVMREL2(OptConstraint):
 
         if labels is None:
             labels = []
-        elif isinstance(labels, string_types):
+        elif isinstance(labels, str):
             labels = [labels]
 
         #: Unique identification number
@@ -3197,7 +3196,7 @@ class DVPREL2(OptConstraint):
 
         if labels is None:
             labels = []
-        elif isinstance(labels, string_types):
+        elif isinstance(labels, str):
             labels = [labels]
 
         #: Unique identification number

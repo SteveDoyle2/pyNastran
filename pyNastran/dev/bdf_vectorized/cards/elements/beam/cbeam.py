@@ -1,7 +1,6 @@
 """
 http://www.ce.memphis.edu/7117/notes/presentations/chapter_04b.pdf
 """
-from six import string_types
 import numpy as np
 from numpy import array, arange, zeros, unique, searchsorted, nan, full
 from numpy.linalg import norm  # type: ignore
@@ -108,7 +107,7 @@ class CBEAM(Element):
         if isinstance(field8, float):
             self.is_offt[i] = False
             self.bit[i] = field8
-        elif isinstance(field8, string_types):
+        elif isinstance(field8, str):
             self.is_offt[i] = True
             offt = field8
             msg = 'invalid offt parameter of CBEAM...offt=%s' % offt

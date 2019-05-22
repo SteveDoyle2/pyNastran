@@ -21,7 +21,6 @@ class GridPointForces(BaseElement):
 
     def _write_table_3(self, op2, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
         import inspect
-        from six import string_types
         from struct import pack
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
@@ -112,7 +111,7 @@ class GridPointForces(BaseElement):
         for v in table3:
             if isinstance(v, (int, float)):
                 n += 4
-            elif isinstance(v, string_types):
+            elif isinstance(v, str):
                 n += len(v)
             else:
                 #print('write_table_3', v)

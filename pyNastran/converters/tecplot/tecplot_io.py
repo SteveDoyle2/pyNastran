@@ -2,8 +2,6 @@
 Defines the GUI IO file for Tecplot.
 """
 from __future__ import print_function
-#import os
-from six import integer_types
 from collections import OrderedDict
 
 from numpy import arange, mean, amax, amin, array
@@ -229,8 +227,8 @@ class TecplotIO(object):
             ('NodeID', 0, []),
             (element_id, 1, []),
         ]
-        assert isinstance(nnodes, integer_types), 'nnodes=%s type=%s' % (nnodes, type(nnodes))
-        assert isinstance(nelements, integer_types), 'nelements=%s type=%s' % (nelements, type(nelements))
+        assert isinstance(nnodes, int), 'nnodes=%s type=%s' % (nnodes, type(nnodes))
+        assert isinstance(nelements, int), 'nelements=%s type=%s' % (nelements, type(nelements))
         assert nnodes > 0, nnodes
         assert nelements > 0, nelements
 

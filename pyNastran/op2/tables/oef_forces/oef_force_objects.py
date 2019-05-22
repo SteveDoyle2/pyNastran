@@ -2,7 +2,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -193,7 +192,7 @@ class ForceObject(BaseElement):
         for v in table3:
             if isinstance(v, (int, float)):
                 n += 4
-            elif isinstance(v, string_types):
+            elif isinstance(v, str):
                 #print(len(v), v)
                 n += len(v)
             else:

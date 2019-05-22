@@ -39,7 +39,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from copy import deepcopy
 from collections import defaultdict
 from typing import List, Dict, Set, Optional, Any, Tuple
-from six import string_types
 
 import numpy as np
 
@@ -103,7 +102,7 @@ class GetCard(GetMethods):
         if card_types is None:
             card_types = list(self.cards_to_read)
 
-        if isinstance(card_types, string_types):
+        if isinstance(card_types, str):
             card_types = [card_types]
         elif not isinstance(card_types, (list, tuple)):
             raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
@@ -1715,7 +1714,7 @@ class GetCard(GetMethods):
         if map_names is None:
             map_names = allowed_maps
         else:
-            if isinstance(map_names, string_types):
+            if isinstance(map_names, str):
                 map_names = [map_names]
             if not isinstance(map_names, (list, tuple)):
                 msg = 'map_names=%s must be a list or tuple; not %s' % (

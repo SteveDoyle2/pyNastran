@@ -42,7 +42,7 @@ class ResultsWindow(QWidget):
         except:
             raise
             raise RuntimeError('cannot add data=\n%s' % data)
-            #if isinstance(data, string_types):
+            #if isinstance(data, str):
                 #self.addItems(self.model, data)
             #else:
                 #self.addItems(self.model, *tuple(data))

@@ -9,7 +9,6 @@ from struct import unpack
 from collections import defaultdict
 import itertools
 
-from six import string_types
 from numpy import (
     array, vstack, hstack, where, unique, zeros, loadtxt, savetxt, intersect1d, in1d)
 #import numpy as np
@@ -870,7 +869,7 @@ class Tecplot(object):
             msg += '"z"\n'
             if res_types is None:
                 res_types = self.variables
-            elif isinstance(res_types, string_types):
+            elif isinstance(res_types, str):
                 res_types = [res_types]
             result_indices_to_write = []
             if is_results:

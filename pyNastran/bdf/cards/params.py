@@ -1,7 +1,6 @@
 # pylint: disable=C0103,R0902,R0904,R0914
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, integer_types
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -133,14 +132,14 @@ class PARAM(BaseCard):
 
         if value is None:
             # n=2 or blank
-            if isinstance(value1, string_types):
+            if isinstance(value1, str):
                 assert ' ' not in value1, 'PARAM value1=%r' % value1
-            if isinstance(value2, string_types):
+            if isinstance(value2, str):
                 assert ' ' not in value2, 'PARAM value2=%r' % value2
             values = [value1, value2]
         else:
             # n=1
-            if isinstance(value, string_types):
+            if isinstance(value, str):
                 assert ' ' not in value, 'PARAM value=%r' % value
             values = [value]
 
@@ -173,28 +172,28 @@ class PARAM(BaseCard):
         if self.key == 'ACOUT':
             if value1 is None:
                 value1 = 'PEAK'
-            if not isinstance(value1, string_types):
+            if not isinstance(value1, str):
                 msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
         elif self.key == 'ACOWEAK':
             if value1 is None:
                 value1 = 'NO'
-            if not isinstance(value1, string_types):
+            if not isinstance(value1, str):
                 msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
         elif self.key == 'ACSYM':
             if value1 is None:
                 value1 = 'YES'
-            if not isinstance(value1, string_types):
+            if not isinstance(value1, str):
                 msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
         elif self.key == 'ADJMETH':
             if value1 is None:
                 value1 = 0
-            if not isinstance(value1, integer_types):
+            if not isinstance(value1, int):
                 msg = 'key=%s value1=%r must be an integer.' % (self.key, value1)
                 raise TypeError(msg)
 
@@ -204,7 +203,7 @@ class PARAM(BaseCard):
         elif self.key == 'ADSTAT':
             if value1 is None:
                 value1 = 'YES'
-            if not isinstance(value1, string_types):
+            if not isinstance(value1, str):
                 msg = 'key=%s value1=%r must be an string.' % (self.key, value1)
                 raise TypeError(msg)
 
@@ -233,7 +232,7 @@ class PARAM(BaseCard):
                 raise TypeError(msg)
 
         else:
-            if not isinstance(value1, (int, float, string_types)):
+            if not isinstance(value1, (int, float, str)):
                 msg = 'key=%s value1=%r must be an integer, float, or string.' % (self.key, value1)
                 raise TypeError(msg)
 

@@ -1,6 +1,5 @@
 from __future__ import print_function
 from copy import deepcopy
-from six import string_types
 
 class AltGeometry(object):
     representations = ['main', 'toggle', 'wire', 'point', 'surface',
@@ -84,7 +83,7 @@ class AltGeometry(object):
         self.display = display
         assert display in self.displays, 'dislay=%r displays=%s' % (display, self.displays)
 
-        assert isinstance(name, string_types), 'name=%r' % name
+        assert isinstance(name, str), 'name=%r' % name
         assert isinstance(label_actors, list), 'name=%r label_actors=%s' % (name, str(label_actors))
         self._color = None
         if color is not None:

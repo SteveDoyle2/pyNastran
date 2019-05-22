@@ -12,8 +12,6 @@ from io import StringIO
 from collections import defaultdict
 from typing import List, Union, Dict, Tuple, Optional, Any
 
-from six import string_types
-
 import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
 
@@ -443,7 +441,7 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
     TODO: turn this into a decorator?
 
     """
-    assert isinstance(deprecated_version, string_types), type(deprecated_version)
+    assert isinstance(deprecated_version, str), type(deprecated_version)
     assert isinstance(levels, list), type(levels)
     assert old_name != new_name, "'%s' and '%s' are the same..." % (old_name, new_name)
 

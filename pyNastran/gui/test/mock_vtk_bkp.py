@@ -39,7 +39,7 @@ from pyNastran.gui.test.mock_vtk import GeometryProperty
     #def __init__(self):
         #pass
     #def SetInput(self, string):
-        #assert isinstance(string, string_types), 'type(string)=%s' % type(string)
+        #assert isinstance(string, str), 'type(string)=%s' % type(string)
     #def VisibilityOn(self):
         #pass
     #def VisibilityOff(self):

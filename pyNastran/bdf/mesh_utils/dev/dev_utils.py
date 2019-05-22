@@ -15,8 +15,6 @@ from __future__ import print_function
 from collections import defaultdict
 from functools import reduce
 
-from six import string_types
-
 
 import numpy as np
 from numpy import (array, where, hstack, searchsorted, float32, arccos, dot, degrees)

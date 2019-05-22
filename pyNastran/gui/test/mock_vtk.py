@@ -1,6 +1,5 @@
 from __future__ import print_function
 #import sys
-from six import string_types #, integer_types
 from vtk import vtkCamera
 #import vtk.util
 
@@ -129,7 +128,7 @@ from vtk import vtkCamera
     #def __init__(self):
         #pass
     #def SetTitle(self, title):
-        #assert isinstance(title, string_types), 'title=%r' % title
+        #assert isinstance(title, str), 'title=%r' % title
     #def SetLookupTable(self, color_function):
         #assert isinstance(color_function, vtkColorTransferFunction), 'color_function=%r' % color_function
     #def SetOrientationToVertical(self):
@@ -142,7 +141,7 @@ from vtk import vtkCamera
     #def SetWidth(self, width):
         #assert isinstance(width, float), width
     #def SetLabelFormat(self, label_format):
-        #assert isinstance(label_format, string_types), 'label_format=%r' % label_format
+        #assert isinstance(label_format, str), 'label_format=%r' % label_format
     #def SetNumberOfLabels(self, nlabels):
         #assert isinstance(nlabels, int), nlabels
     #def SetMaximumNumberOfColors(self, ncolors):

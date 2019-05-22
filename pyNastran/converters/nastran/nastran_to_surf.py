@@ -9,7 +9,6 @@ defines:
 """
 from __future__ import print_function
 from collections import defaultdict
-from six import string_types
 from numpy import array, allclose, unique, zeros
 from pyNastran.bdf.bdf import read_bdf
 
@@ -33,7 +32,7 @@ def clear_out_solids(bdf_filename, bdf_filename_out=None,
                        bdf_filename_out, renumber, equivalence))
             raise RuntimeError(msg)
 
-    if isinstance(bdf_filename, string_types):
+    if isinstance(bdf_filename, str):
         print('clearing out solids from %s' % bdf_filename)
         model = read_bdf(bdf_filename, xref=False)
     else:
@@ -179,7 +178,7 @@ def nastran_to_surf(bdf_filename, pid_to_element_flags, surf_filename,
     if line_map is None:
         line_map = {}
 
-    if isinstance(bdf_filename, string_types):
+    if isinstance(bdf_filename, str):
         model = read_bdf(bdf_filename, xref=xref)
     else:
         model = bdf_filename

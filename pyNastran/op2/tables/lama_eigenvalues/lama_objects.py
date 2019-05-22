@@ -1,7 +1,6 @@
 from __future__ import print_function
 from math import sqrt
 from struct import pack
-from six  import string_types
 
 import numpy as np
 
@@ -278,7 +277,7 @@ class RealEigenvalues(BaseScalarObject):
         for i, v in enumerate(table3):
             if isinstance(v, (int, float)):
                 n += 4
-            elif isinstance(v, string_types):
+            elif isinstance(v, str):
                 #print(len(v), v)
                 n += len(v)
             else:
@@ -641,7 +640,7 @@ class ComplexEigenvalues(BaseScalarObject):
         for i, v in enumerate(table3):
             if isinstance(v, (int, float)):
                 n += 4
-            elif isinstance(v, string_types):
+            elif isinstance(v, str):
                 #print(len(v), v)
                 n += len(v)
             else:

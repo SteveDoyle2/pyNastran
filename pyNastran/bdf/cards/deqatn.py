@@ -7,7 +7,6 @@ The capitalization of the sub-functions is important.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import exec_
 
 import numpy as np
 from numpy import (
@@ -261,7 +260,7 @@ class DEQATN(BaseCard):  # needs work...
         self.func_str = func_str
         self.func_name = func_name
         try:
-            exec_(func_str)
+            exec(func_str)
         except SyntaxError:
             print(func_str)
             raise
@@ -502,7 +501,7 @@ def fortran_to_python_short(line, unused_default_values):
     func_str = 'def func(args):\n'
     func_str += '    return %s(args)\n' % line.strip()
     local_dict = {}
-    exec_(func_str, globals(), local_dict)
+    exec(func_str, globals(), local_dict)
     return local_dict['func']
 
 def split_to_equations(lines):

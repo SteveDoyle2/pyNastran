@@ -6,7 +6,6 @@ defines:
 """
 from __future__ import print_function
 from io import StringIO
-from six import string_types
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber, get_renumber_starting_ids_from_model
@@ -74,7 +73,7 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
     if not len(bdf_filenames) > 1:
         raise RuntimeError("You can't merge one BDF...bdf_filenames=%s" % str(bdf_filenames))
     for bdf_filename in bdf_filenames:
-        if not isinstance(bdf_filename, (string_types, BDF, StringIO)):
+        if not isinstance(bdf_filename, (str, BDF, StringIO)):
             raise TypeError('bdf_filenames is not a string/BDF...%s' % bdf_filename)
 
         #bdf_filenames = [bdf_filenames]

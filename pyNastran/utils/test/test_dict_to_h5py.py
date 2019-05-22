@@ -1,7 +1,6 @@
 # coding: utf-8
 """tests for dict_to_h5py"""
 import unittest
-from six import text_type, binary_type
 import numpy as np
 
 try:
@@ -72,8 +71,8 @@ class TestDictToH5(unittest.TestCase):
         assert isinstance(new_dict['variable_type_tuple'], tuple)
         assert isinstance(new_dict['five'], np.ndarray)
         assert len(new_dict['five']) == 5
-        assert isinstance(new_dict['str_key_unicode_value'], text_type)
-        assert isinstance(new_dict[u'helló wörld from two'], binary_type), type(new_dict[u'helló wörld from two'])
+        assert isinstance(new_dict['str_key_unicode_value'], str)
+        assert isinstance(new_dict[u'helló wörld from two'], bytes), type(new_dict[u'helló wörld from two'])
         assert new_dict['None'] is None, new_dict['None']
         assert np.isnan(new_dict['nan']), new_dict['nan']
         #str_key_unicode_value

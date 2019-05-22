@@ -14,7 +14,7 @@ from qtpy.QtWidgets import (
 if qt_version == 4:
     QString = QtCore.QString
 elif qt_version == 5:
-    from six import text_type as QString
+    QString =  str
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
 

@@ -1,4 +1,3 @@
-from six import string_types
 from itertools import count
 from numpy import array, zeros, unique, searchsorted, asarray, int64, where
 
@@ -113,7 +112,7 @@ class RBE3(object):
         self.refc[i] = components_or_blank(card, 4, 'refc', 0)
         #iUM = fields.index('UM')
 
-        fields = [field.upper() if isinstance(field, string_types) else field for field in card[5:]]
+        fields = [field.upper() if isinstance(field, str) else field for field in card[5:]]
         iOffset = 5
         iWtMax = len(fields) + iOffset
         try:

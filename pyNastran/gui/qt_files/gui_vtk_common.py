@@ -3,9 +3,7 @@ from __future__ import division, unicode_literals, print_function
 
 from collections import OrderedDict
 
-from six import string_types
 import numpy as np
-
 import vtk
 
 from pyNastran.gui.qt_version import qt_version
@@ -397,7 +395,7 @@ class GuiVTKCommon(GuiQtCommon):
         """
         if except_names is None:
             except_names = []
-        elif isinstance(except_names, string_types):
+        elif isinstance(except_names, str):
             except_names = [except_names]
 
         # hide everything but the main grid
@@ -484,7 +482,7 @@ class GuiVTKCommon(GuiQtCommon):
 
     def post_group_by_name(self, name):
         """posts a group with a specific name"""
-        assert isinstance(name, string_types), name
+        assert isinstance(name, str), name
         group = self.groups[name]
         self.post_group(group, update_groups=False)
 
@@ -495,7 +493,7 @@ class GuiVTKCommon(GuiQtCommon):
             self.groups[name] = group
         eids = group.element_ids
         self.show_eids(eids)
-        assert isinstance(name, string_types), name
+        assert isinstance(name, str), name
         self.group_active = name
 
     def create_group_with_name(self, name, eids, model_name='main'):

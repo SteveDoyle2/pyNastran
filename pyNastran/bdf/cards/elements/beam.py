@@ -5,7 +5,6 @@ defines:
  - BEAMOR
 """
 from __future__ import print_function
-from six import string_types
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
@@ -266,7 +265,7 @@ class CBEAM(LineElement):
             if isinstance(self.offt, integer_types):
                 assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
                 #raise NotImplementedError('invalid offt; offt=%i' % self.offt)
-            elif isinstance(self.offt, string_types):
+            elif isinstance(self.offt, str):
                 check_offt(self)
             else:
                 raise TypeError('invalid offt expected a string of length 3 '
@@ -671,7 +670,7 @@ class CBEAM(LineElement):
         if self.bit is not None:
             assert isinstance(self.bit, float), 'bit=%r type=%s' % (self.bit, type(self.bit))
             return False
-        #assert isinstance(self.offt, string_types), 'offt=%r' % self.offt
+        #assert isinstance(self.offt, str), 'offt=%r' % self.offt
         return True
 
     @property
@@ -851,7 +850,7 @@ def _init_offt_bit(card, unused_eid, offt_default):
     elif isinstance(field8, integer_types):
         bit = None
         offt = field8
-    elif isinstance(field8, string_types):
+    elif isinstance(field8, str):
         bit = None
         offt = field8
         msg = 'invalid offt parameter of CBEAM...offt=%s' % offt

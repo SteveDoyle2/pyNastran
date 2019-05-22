@@ -5,8 +5,6 @@ import sys
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-from six import string_types
-
 from qtpy.QtWidgets import (
     QWidget, QVBoxLayout, QPushButton, QApplication,
     QComboBox, QLabel, QHBoxLayout, QBoxLayout)
@@ -282,7 +280,7 @@ class Sidebar(QWidget):
                     vbox.addWidget(widget_layout)
 
     def update_method(self, method):
-        if isinstance(method, string_types):
+        if isinstance(method, str):
             datai = self.result_method_window.data[0]
             self.result_method_window.data[0] = (method, datai[1], datai[2])
             #print('method=%s datai=%s' % (method, datai))

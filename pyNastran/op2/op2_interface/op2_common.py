@@ -2,7 +2,6 @@
 from __future__ import print_function, unicode_literals
 import copy
 from struct import Struct, unpack
-from six import string_types
 
 import numpy as np
 from numpy import frombuffer, radians, sin, cos, ones, dtype as npdtype
@@ -614,7 +613,7 @@ class OP2Common(Op2Codes, F06Writer):
                                real_vector, complex_vector,
                                node_elem, random_code=None, is_cid=False):
         """Reads a generalized real/complex SORT1/SORT2 table"""
-        assert isinstance(result_name, string_types), 'result_name=%r' % result_name
+        assert isinstance(result_name, str), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
         #print('self.num_wide =', self.num_wide)
         #print('random...%s' % self.isRandomResponse())
@@ -716,7 +715,7 @@ class OP2Common(Op2Codes, F06Writer):
             'node', random_code=self.random_code)
 
         """
-        assert isinstance(result_name, string_types), 'result_name=%r' % result_name
+        assert isinstance(result_name, str), 'result_name=%r' % result_name
         assert isinstance(storage_obj, dict), 'storage_obj=%r' % storage_obj
         #print('self.num_wide =', self.num_wide)
         #print('random...%s' % self.isRandomResponse())
@@ -1349,7 +1348,7 @@ class OP2Common(Op2Codes, F06Writer):
         .. note:: dt can also be load_step depending on the class
 
         """
-        assert not isinstance(class_obj, string_types), 'class_obj=%r' % class_obj
+        assert not isinstance(class_obj, str), 'class_obj=%r' % class_obj
         assert class_obj is not None, class_obj
         if debug:
             print("create Transient Object")
@@ -1848,7 +1847,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _create_table_object(self, result_name, nnodes,
                              slot, slot_object, slot_vector, is_cid=False):
-        assert isinstance(result_name, string_types), result_name
+        assert isinstance(result_name, str), result_name
         assert isinstance(slot, dict), slot
         auto_return = False
         #print('%s nnodes=%s' % (result_name, nnodes))
@@ -1878,7 +1877,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _create_table_vector(self, result_name, nnodes,
                              slot, slot_vector, is_cid=False):
-        assert isinstance(result_name, string_types), result_name
+        assert isinstance(result_name, str), result_name
         assert isinstance(slot, dict), slot
         auto_return = False
         #print('%s nnodes=%s' % (result_name, nnodes))

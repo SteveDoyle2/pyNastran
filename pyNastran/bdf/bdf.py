@@ -16,7 +16,6 @@ import traceback
 from collections import defaultdict
 
 from typing import List, Dict, Sequence, Optional, Union, Set, Any, cast
-from six import string_types
 from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
@@ -791,7 +790,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         if cards is None:
             return
-        elif isinstance(cards, string_types):
+        elif isinstance(cards, str):
             disable_set = set([cards])
         else:
             disable_set = set(cards)
@@ -813,7 +812,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         if cards is None:
             return
-        elif isinstance(cards, string_types):
+        elif isinstance(cards, str):
             enable_set = set([cards])
         else:
             enable_set = set(cards)
@@ -1080,7 +1079,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             bdf_filename = load_file_dialog(title, wildcard_wx, wildcard_qt)[0]
             assert bdf_filename is not None, bdf_filename
 
-        elif isinstance(bdf_filename, string_types):
+        elif isinstance(bdf_filename, str):
             pass
         elif isinstance(bdf_filename, (StringIO, IOBase)):
             self.bdf_filename = bdf_filename
@@ -1483,7 +1482,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #rslot_map = self.get_rslot_map(reset_type_to_slot_map=False)
 
         for key in self.card_count:
-            assert isinstance(key, string_types), 'key=%r' % key
+            assert isinstance(key, str), 'key=%r' % key
             if key not in self._type_to_slot_map:
                 msg = 'add %r to self._type_to_slot_map\n%s' % (key, str(self._type_to_slot_map))
                 raise RuntimeError(msg)
@@ -1546,7 +1545,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
                                    'len(%s)=%s' % (key, len(key)))
-            if not isinstance(key, string_types):
+            if not isinstance(key, str):
                 msg = 'key=%r must be a string.  type=%s' % (key, type(key))
                 raise TypeError(msg)
             self.dict_of_vars[key] = value

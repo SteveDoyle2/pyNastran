@@ -8,7 +8,6 @@ import sys
 import traceback
 from collections import OrderedDict
 
-from six import string_types
 import numpy as np
 import vtk
 from qtpy import QtGui
@@ -1045,7 +1044,7 @@ class GuiAttributes(object):
             self.on_run_script(geom_script)
 
         formats = inputs['format']
-        if isinstance(formats, string_types):
+        if isinstance(formats, str):
             formats = [formats]
         if not formats:
             return

@@ -5,7 +5,6 @@ from __future__ import print_function
 import sys
 import os
 from struct import pack, unpack, Struct
-from six import string_types
 
 import numpy as np
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
@@ -133,7 +132,7 @@ class OP4(object):
         if not os.path.exists(op4_filename):
             raise IOError('cannot find op4_filename=%r' % op4_filename)
 
-        if isinstance(matrix_names, string_types):
+        if isinstance(matrix_names, str):
             matrix_names = [matrix_names]
         #assert isinstance(matrix_names, list), 'type(matrix_names)=%s' % type(matrix_names)
 
@@ -1417,7 +1416,7 @@ class OP4(object):
         #if nR == nC: op4_form = 1   # square
         #else:        op4_form = 2   # rectangular
 
-        if isinstance(op4_filename, string_types):
+        if isinstance(op4_filename, str):
             with open(op4_filename, 'w') as op4:
                 self._write_op4_file(op4, name_order, is_binary, precision, matrices)
         else:
@@ -1428,7 +1427,7 @@ class OP4(object):
         """Helper method for OP4 writing"""
         if name_order is None:
             name_order = sorted(matrices.keys())
-        elif isinstance(name_order, string_types):
+        elif isinstance(name_order, str):
             name_order = [name_order]
         elif isinstance(name_order, bytes):
             name_order = [name_order]
@@ -1517,7 +1516,7 @@ class OP4(object):
         .. note:: form defaults to 2, but 1 can be easily determined.
                   Any others must be specified.
         """
-        assert isinstance(name, string_types), name
+        assert isinstance(name, str), name
         assert isinstance(form, int), form
 
     def _write_dense_matrix_binary(self, op4, name, matrix, form=2,
@@ -1703,7 +1702,7 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
     msg = ''
     if isinstance(name, bytes):
         name = name.decode('ascii')
-    assert isinstance(name, string_types), 'name=%s' % name
+    assert isinstance(name, str), 'name=%s' % name
     #A = A.tolil() # list-of-lists sparse matrix
     #print dir(A)
     matrix_type, nwords_per_value = _get_type_nwv(A.data[0], precision)

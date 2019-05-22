@@ -10,7 +10,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 from typing import List, Dict, Union, Optional, Tuple, Any, cast
 from collections import defaultdict
-from six import string_types
 import numpy as np
 #from pyNastran.bdf.bdf_interface.utils import print_filename
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -27,6 +26,7 @@ class WriteMeshs(WriteMesh):
       - model.write_bdf(...)
       - model.echo_bdf(...)
       - model.auto_reject_bdf(...)
+
     """
     def __init__(self):
         """creates methods for writing cards"""
@@ -584,7 +584,7 @@ class WriteMeshs(WriteMesh):
                         reject2 = reject.rstrip()
                         if reject2:
                             bdf_files[0].write('%s\n' % reject2)
-                elif isinstance(reject_lines, string_types):
+                elif isinstance(reject_lines, str):
                     reject2 = reject_lines.rstrip()
                     if reject2:
                         bdf_files[0].write('%s\n' % reject2)
@@ -772,7 +772,7 @@ def _map_filenames_to_ifile_filname_dict(out_filenames, active_filenames):
     ifile_out_filenames = {}
     unused_out_filename0 = None
     for filename, new_filename in out_filenames.items():
-        assert isinstance(filename, string_types), 'filename=%r' % filename
+        assert isinstance(filename, str), 'filename=%r' % filename
         #print('filename = %r' % filename)
         abs_filename = os.path.abspath(filename)
         #print('abs_filename = %r' % abs_filename)

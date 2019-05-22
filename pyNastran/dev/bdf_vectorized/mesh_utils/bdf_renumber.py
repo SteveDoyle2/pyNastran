@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-from six import string_types
 import numpy as np
 
 from pyNastran.dev.bdf_vectorized.bdf import BDF
@@ -204,7 +203,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
 
     # turn them into variables
     for key, value in sorted(starting_id_dict.items()):
-        #assert isinstance(key, string_types), key
+        #assert isinstance(key, str), key
         assert key in starting_id_dict_default, 'key=%r is invalid' % (key)
         if value is None:
             pass
@@ -291,7 +290,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     suport_map = {}
     suport1_map = {}
 
-    if isinstance(bdf_filename, string_types):
+    if isinstance(bdf_filename, str):
         model = BDF(debug=False)
         model.disable_cards(cards_to_skip)
         model.read_bdf(bdf_filename)

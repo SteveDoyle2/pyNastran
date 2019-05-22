@@ -2,7 +2,6 @@ from __future__ import print_function
 import os
 import sys
 
-from six import string_types
 import pyNastran
 from pyNastran.utils import check_path
 #from gui.formats import format_string
@@ -443,7 +442,7 @@ def _update_argparse_argdict(argdict):
     formats = argdict['format']
     ninput_files = len(input_filenames)
     if formats:
-        if isinstance(formats, string_types):
+        if isinstance(formats, str):
             formats = [formats]
         nformats = len(formats)
         if nformats == 1 and ninput_files > 1:

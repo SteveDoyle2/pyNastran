@@ -21,7 +21,7 @@ Defines:
 """
 import re
 from copy import deepcopy
-from six import string_types
+
 
 class ResultSet(object):
     """
@@ -78,7 +78,7 @@ class ResultSet(object):
 
     def _get_matched_results(self, results):
         """handles expansion of regexs"""
-        if isinstance(results, string_types):
+        if isinstance(results, str):
             results = [results]
         all_matched_results = []
         for result in results:

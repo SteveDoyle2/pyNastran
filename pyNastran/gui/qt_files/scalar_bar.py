@@ -1,6 +1,5 @@
 """interface to the ScalarBar"""
 import numpy as np
-from six import string_types
 import vtk
 
 from pyNastran.gui.utils.colormaps import colormap_dict, RGB_MAPS, HSV_MAPS
@@ -171,7 +170,7 @@ class ScalarBar(object):
                 self.color_function.AddRGBPoint(min_value, 1.0, 0.0, 0.0)  # red
                 self.color_function.AddRGBPoint(max_value, 0.0, 0.0, 1.0)  # blue
         else:
-            if isinstance(colormap, string_types):
+            if isinstance(colormap, str):
                 colormap = colormap_dict[colormap]
             else:
                 assert isinstance(colormap[0][0], float), colormap

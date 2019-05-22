@@ -7,7 +7,6 @@ import sys
 import time
 from traceback import print_exc
 from typing import List, Optional
-from six import string_types
 
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)
@@ -285,7 +284,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
     fname_base = os.path.splitext(op2_filename)[0]
     bdf_filename = fname_base + '.test_op2.bdf'
 
-    if isinstance(subcases, string_types):
+    if isinstance(subcases, str):
         if '_' in subcases:
             subcases = [int(i) for i in subcases.split('_')]
         else:

@@ -3,7 +3,6 @@ from __future__ import print_function, unicode_literals
 import copy
 from itertools import count
 from struct import pack
-from six import string_types
 import numpy as np
 
 from pyNastran import is_release
@@ -41,12 +40,12 @@ class BaseScalarObject(Op2Codes):
         self.table_name = None
         #self.ntimes = 0
         #self.ntotal = 0
-        #assert isinstance(self.name, (text_type, binary_type)), 'name=%s type=%s' % (self.name, type(self.name))
+        #assert isinstance(self.name, (str, bytes)), 'name=%s type=%s' % (self.name, type(self.name))
 
     def object_attributes(self, mode='public', keys_to_skip=None):
         if keys_to_skip is None:
             keys_to_skip = []
-        elif isinstance(keys_to_skip, string_types):
+        elif isinstance(keys_to_skip, str):
             keys_to_skip = [keys_to_skip]
 
         my_keys_to_skip = [

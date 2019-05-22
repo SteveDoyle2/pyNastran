@@ -4,7 +4,6 @@ defines some methods for cleaning up a model
                          remove_pids=True, remove_mids=True)
 """
 from __future__ import print_function
-from six import integer_types
 
 from pyNastran.bdf.bdf import BDF, read_bdf
 #from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
@@ -186,7 +185,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 elem = model.elements[eid]
                 nids_used.update(elem.node_ids)
                 pids_used.add(elem.Pid())
-                if isinstance(elem.theta_mcid, integer_types):
+                if isinstance(elem.theta_mcid, int):
                     cids_used.add(elem.theta_mcid)
         elif card_type in ['CTRIAX6']:
             for eid in ids:
@@ -343,7 +342,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 nids_used.update(elem.node_ids)
                 pids_used.add(elem.Pid())
                 if elem.g0 is not None:
-                    assert isinstance(elem.g0, integer_types), elem.g0
+                    assert isinstance(elem.g0, int), elem.g0
                     nids_used.add(elem.g0)
         elif card_type == 'CFAST':
             for eid in ids:
@@ -356,7 +355,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 nids_used.update(elem.node_ids)
                 pids_used.add(elem.Pid())
                 if elem.g0 is not None:
-                    assert isinstance(elem.G0(), integer_types), elem.G0()
+                    assert isinstance(elem.G0(), int), elem.G0()
                     nids_used.add(elem.G0())
         elif card_type in ['CBUSH1D', 'CBUSH2D']:
             for eid in ids:
@@ -380,7 +379,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 nids_used.update(elem.node_ids)
                 pids_used.add(elem.Pid())
                 if elem.g0 is not None:
-                    assert isinstance(elem.g0, integer_types), elem.g0
+                    assert isinstance(elem.g0, int), elem.g0
                     nids_used.add(elem.g0)
                 # TODO: cid
 

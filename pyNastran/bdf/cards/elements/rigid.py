@@ -11,11 +11,11 @@ All rigid elements are defined in this file.  This includes:
  * RSSCON
 
 All rigid elements are RigidElement and Element objects.
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -654,7 +654,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         if ium > 0:
             assert string(card, ium, 'UM') == 'UM', 'RBE1=%s must contain UM' % str(card)
 
-        #assert isinstance(card[-1], string_types), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
+        #assert isinstance(card[-1], str), 'card[-1]=%r type=%s' %(card[-1], type(card[-1]))
         alpha_last = integer_double_or_string(card, -1, 'alpha_last')
         if isinstance(alpha_last, float):
             alpha = alpha_last
@@ -1231,7 +1231,7 @@ class RBE3(RigidElement):
         refgrid = integer(card, 3, 'refgrid')
         refc = components_or_blank(card, 4, 'refc')
 
-        fields = [field.upper() if isinstance(field, string_types) else field for field in card[5:]]
+        fields = [field.upper() if isinstance(field, str) else field for field in card[5:]]
         ioffset = 5
         iwt_max = len(fields) + ioffset
         try:

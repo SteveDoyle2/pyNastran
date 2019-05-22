@@ -1,6 +1,5 @@
 """helper for results_sidebar.py"""
 from __future__ import print_function
-from six import string_types, integer_types
 
 
 def build_pruned_tree(tree, cases):
@@ -48,6 +47,7 @@ def build_pruned_tree(tree, cases):
             ),],
         ],
     ]
+
     """
     tree_final = []
     is_results, tree_final = _build_pruned_tree(tree, cases, tree_final)
@@ -56,14 +56,14 @@ def build_pruned_tree(tree, cases):
 def _build_pruned_tree(tree, cases, tree2):
     """helper method for ``build_pruned_tree``"""
     is_results = False
-    if isinstance(tree[0], string_types):
+    if isinstance(tree[0], str):
         try:
             name, icase, cases2 = tree
         except ValueError:
             print(tree)
             raise
 
-        if isinstance(icase, integer_types):
+        if isinstance(icase, int):
             assert cases2 == [], tree
             if icase in cases:
                 is_results = True
@@ -121,15 +121,16 @@ def get_cases_from_tree(tree):
     cases = get_cases_from_tree(form)
     >>> cases
     [0, 1, 2, 3, 4, 5, 6, 7, 8]
+
     """
     cases = []
-    if isinstance(tree[0], string_types):
+    if isinstance(tree[0], str):
         try:
             name, icase, cases2 = tree
         except ValueError:  # pragma: no cover
             print(tree)
             raise
-        if isinstance(icase, integer_types):
+        if isinstance(icase, int):
             assert cases2 == [], tree
             cases.append(icase)
         else:

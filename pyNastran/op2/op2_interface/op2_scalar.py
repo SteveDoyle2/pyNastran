@@ -48,7 +48,6 @@ import os
 from struct import Struct, unpack
 from collections import Counter
 from typing import List
-from six import string_types
 
 from numpy import array
 import numpy as np
@@ -730,7 +729,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if debug_file is None:
             self.debug_file = None
         else:
-            assert isinstance(debug_file, string_types), debug_file
+            assert isinstance(debug_file, str), debug_file
             self.debug_file = debug_file
 
         self.op2_reader = OP2Reader(self)
@@ -1783,7 +1782,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if isinstance(matrices, list):
             matrices2 = {}
             for matrix in matrices:
-                assert isinstance(matrix, string_types), 'matrix=%r' % str(matrix)
+                assert isinstance(matrix, str), 'matrix=%r' % str(matrix)
                 matrices2[matrix] = True
             matrices = matrices2
 

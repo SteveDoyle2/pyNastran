@@ -22,7 +22,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import count
 import math
 from typing import List, Union
-from six import string_types
 
 import numpy as np
 
@@ -271,7 +270,7 @@ class AECOMPL(BaseCard):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
-        if isinstance(labels, string_types):
+        if isinstance(labels, str):
             labels = [labels]
         elif not isinstance(labels, (list, tuple)):
             raise TypeError('AECOMPL; type(labels)=%s and must be a list/tuple' % type(labels))
@@ -497,7 +496,7 @@ class AELINK(BaseCard):
         #: linking coefficients (real)
         self.linking_coefficents = linking_coefficents
 
-        if isinstance(aelink_id, string_types):
+        if isinstance(aelink_id, str):
             if aelink_id != 'ALWAYS':
                 raise RuntimeError("The only valid ID that is a string is 'ALWAYS'")
             aelink_id = 0

@@ -26,7 +26,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 from typing import List, Any, Optional
-from six import string_types
 from pickle import load, dump, dumps
 
 import numpy as np
@@ -1017,7 +1016,7 @@ class OP2(OP2_Scalar):
             for isubcase in unique_isubcases:
                 for case_key in case_keys:
                     #print('isubcase=%s case_key=%s' % (isubcase, case_key))
-                    assert not isinstance(case_key, string_types), result_type
+                    assert not isinstance(case_key, str), result_type
                     if isinstance(case_key, integer_types):
                         if isubcase == case_key and case_key not in subcase_key2[isubcase]:
                             subcase_key2[isubcase] = [isubcase]
@@ -1048,7 +1047,7 @@ class OP2(OP2_Scalar):
             if len(result_type_dict) == 0:
                 continue
             for key in result_type_dict:
-                if isinstance(key, string_types):
+                if isinstance(key, str):
                     if table_type not in ['eigenvalues', 'params']:
                         self.log.warning('table_type = %s' % table_type)
                     continue

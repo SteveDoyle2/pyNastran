@@ -3,7 +3,6 @@ Subcase creation/extraction class
 """
 from __future__ import print_function, unicode_literals
 from typing import List, Dict, Any
-from six import string_types
 from numpy import ndarray
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -141,7 +140,7 @@ class Subcase(object):
                                     valuei.encode(encoding) if isinstance(valuei, str) else valuei
                                     for valuei in value]
                                 sub_group.create_dataset('value', data=value_bytes)
-                            elif isinstance(value, (integer_types, float, string_types)):
+                            elif isinstance(value, (integer_types, float, str)):
                                 sub_group.create_dataset('value', data=value)
                             elif hasattr(value, 'export_to_hdf5'):
                                 sub_groupi = sub_group.create_group('object')
@@ -658,7 +657,7 @@ class Subcase(object):
 
         #print("adding isubcase=%s key=%r value=%r options=%r "
               #"param_type=%r" %(self.id, key, value, options, param_type))
-        if isinstance(value, string_types) and value.isdigit():
+        if isinstance(value, str) and value.isdigit():
             value = int(value)
 
         if param_type == 'OBJ-type':

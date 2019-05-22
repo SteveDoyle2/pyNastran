@@ -1,9 +1,9 @@
 """
 Defines:
  - nodes, bars = export_mcids(bdf_filename, csv_filename=None)
+
 """
 from __future__ import print_function
-from six import integer_types
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 
@@ -57,7 +57,7 @@ def export_mcids(bdf_filename, csv_filename=None,
         the "bars" that represent the x/y axes of the coordinate systems
 
     """
-    if isinstance(eids, integer_types):
+    if isinstance(eids, int):
         eids = [eids]
 
 
@@ -232,7 +232,7 @@ def _rotate_mcid(elem, pid_ref, iply, imat, jmat, normal,
         theta_mcid = elem.theta_mcid
         if isinstance(theta_mcid, float):
             thetad = theta_mcid
-        elif isinstance(theta_mcid, integer_types):
+        elif isinstance(theta_mcid, int):
             return imat, jmat
         else:
             msg = 'theta/mcid=%r is not an int/float; type=%s\n%s' % (

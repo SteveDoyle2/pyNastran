@@ -3,8 +3,6 @@ from __future__ import print_function
 import os
 import traceback
 
-from six import string_types
-
 import numpy as np
 import vtk
 
@@ -197,7 +195,7 @@ class ToolActions(object):
         if isinstance(max_value, integer_types):
             max_msg = 'Max:  %i' % max_value
             min_msg = 'Min:  %i' % min_value
-        elif isinstance(max_value, string_types):
+        elif isinstance(max_value, str):
             max_msg = 'Max:  %s' % str(max_value)
             min_msg = 'Min:  %s' % str(min_value)
         else:

@@ -1,8 +1,6 @@
 from __future__ import print_function
 import sys
 from numpy import float32
-from six import integer_types
-
 
 
 def read_lsdyna(key_filename):
@@ -114,7 +112,7 @@ def double(svalue, ifield=-1, fieldname='NA'):
     """
     if isinstance(svalue, (float, float32)):
         return svalue
-    elif isinstance(svalue, integer_types):
+    elif isinstance(svalue, int):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n' % (
             fieldname, svalue, ifield, dtype))

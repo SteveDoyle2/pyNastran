@@ -6,9 +6,9 @@ This file defines the OUG Table, which contains:
    - MPCFORCE = ALL
  * Real Temperature Gradient & Flux
    - FLUX = ALL
+
 """
 from __future__ import print_function
-from six import integer_types
 import numpy as np
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 
@@ -426,7 +426,7 @@ class OQG(OP2Common):
             raise RuntimeError(self.code_information())
             #msg = 'thermal=%s' % self.thermal
             #return self._not_implemented_or_skip(data, ndata, msg)
-        assert isinstance(n, integer_types), 'table_name=%s n=%s' % (self.table_name, n)
+        assert isinstance(n, int), 'table_name=%s n=%s' % (self.table_name, n)
         return n
 
     def _read_oqg_spc_psd(self, data, ndata):

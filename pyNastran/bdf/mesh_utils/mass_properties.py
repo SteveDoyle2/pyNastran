@@ -8,7 +8,6 @@ Defines:
 from __future__ import print_function, unicode_literals
 from itertools import count
 from collections import defaultdict
-from six import string_types
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore
 import numpy as np
@@ -1865,7 +1864,7 @@ def _nsm1_element(model, nsm, nsm_ids, all_eids_pids, area_length, nsm_centroids
 
 def _get_sym_axis(model, sym_axis):
     """update the sym_axis"""
-    if isinstance(sym_axis, string_types):
+    if isinstance(sym_axis, str):
         sym_axis_set = {sym_axis.lower()}
     elif isinstance(sym_axis, (list, tuple)):
         # basically overwrite the existing values on the AERO/AEROS card

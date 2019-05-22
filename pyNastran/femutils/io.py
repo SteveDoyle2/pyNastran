@@ -12,7 +12,6 @@ import sys
 from io import StringIO
 from itertools import count
 
-from six import string_types
 import numpy as np
 from numpy.lib._iotools import _is_string_like
 from numpy.compat import asstr, asunicode#, is_pathlib_path, asunicode
@@ -116,7 +115,7 @@ def loadtxt_nice(filename, delimiter=None, skiprows=0, comments='#', dtype=np.fl
     if isinstance(filename, StringIO):
         lines = filename.getvalue().split('\n')[skiprows:]
         filename = None
-    elif isinstance(filename, string_types):
+    elif isinstance(filename, str):
         with open(_filename(filename), 'r') as file_obj:
             if skiprows:
                 lines = file_obj.readlines()[skiprows:]

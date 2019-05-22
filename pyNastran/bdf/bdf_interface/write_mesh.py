@@ -8,7 +8,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import sys
 from io import StringIO, IOBase
 from typing import List, Dict, Union, Optional, Tuple, Any, cast
-from six import string_types
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -61,7 +60,7 @@ class WriteMesh(BDFAttributes):
         has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
         if has_read_write or isinstance(out_filename, IOBase):
             return out_filename
-        elif not isinstance(out_filename, string_types):
+        elif not isinstance(out_filename, str):
             msg = 'out_filename=%r must be a string; type=%s' % (
                 out_filename, type(out_filename))
             raise TypeError(msg)
@@ -1013,7 +1012,7 @@ class WriteMesh(BDFAttributes):
                         reject2 = reject.rstrip()
                         if reject2:
                             bdf_file.write('%s\n' % reject2)
-                elif isinstance(reject_lines, string_types):
+                elif isinstance(reject_lines, str):
                     reject2 = reject_lines.rstrip()
                     if reject2:
                         bdf_file.write('%s\n' % reject2)

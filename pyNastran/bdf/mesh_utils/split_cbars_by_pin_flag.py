@@ -4,7 +4,6 @@ defines:
        bdf_filename, pin_flags_filename=None, bdf_filename_out=None)
 """
 from __future__ import print_function
-from six import string_types
 from pyNastran.bdf.bdf import read_bdf
 
 
@@ -43,7 +42,7 @@ def split_cbars_by_pin_flag(bdf_filename,
             the bar pin flag
 
     """
-    if isinstance(bdf_filename, string_types):
+    if isinstance(bdf_filename, str):
         model = read_bdf(bdf_filename, xref=False, debug=debug)
     else:
         model = bdf_filename

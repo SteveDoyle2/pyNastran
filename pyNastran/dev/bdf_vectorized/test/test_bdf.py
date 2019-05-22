@@ -15,8 +15,6 @@ import warnings
 import traceback
 #import resource
 
-from six import integer_types
-
 import numpy
 
 from pyNastran.utils import check_path
@@ -85,7 +83,7 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
 
     if size is None:
         sizes = [8]
-    elif isinstance(size, integer_types):
+    elif isinstance(size, int):
         sizes = [size]
     else:
         sizes = size

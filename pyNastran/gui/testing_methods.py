@@ -1,7 +1,6 @@
 from __future__ import print_function
 from collections import OrderedDict
 
-from six import integer_types
 import numpy as np
 from cpylog import get_logger
 
@@ -194,8 +193,8 @@ class FakeGUIMethods(GuiVTKCommon):
 
         #assert hasattr(self, 'gui'), 'gui does not exist for this format'
         assert hasattr(self, 'isubcase_name_map'), 'isubcase_name_map does not exist for this format'
-        assert isinstance(self.nnodes, integer_types), 'nnodes=%r must be an integer' % self.nnodes
-        assert isinstance(self.nelements, integer_types), 'nelements=%r must be an integer' % self.nelements
+        assert isinstance(self.nnodes, int), 'nnodes=%r must be an integer' % self.nnodes
+        assert isinstance(self.nelements, int), 'nelements=%r must be an integer' % self.nelements
 
         assert len(cases) > 0, cases
         if isinstance(cases, OrderedDict):
@@ -206,10 +205,10 @@ class FakeGUIMethods(GuiVTKCommon):
 
         #print('self.case_keys = ', self.case_keys)
         for key in self.case_keys:
-            assert isinstance(key, integer_types), key
+            assert isinstance(key, int), key
             obj, (i, name) = cases[key]
             value = cases[key]
-            if isinstance(value[0], integer_types):
+            if isinstance(value[0], int):
                 raise RuntimeError('old style key is being used.\n key=%s\n type=%s value=%s' % (
                     key, type(value[0]), value))
             #assert len(value) == 2, 'value=%s; len=%s' % (str(value), len(value))

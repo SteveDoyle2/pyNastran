@@ -1,6 +1,3 @@
-from six import string_types
-
-
 def eval_float_from_string(value_str):
     """
     Allows for basic calculator functionality in legend menus.
@@ -8,7 +5,7 @@ def eval_float_from_string(value_str):
     ..note :: I don't really care about the speed since it's for a GUI.
     """
     value_str = str(value_str)
-    if not isinstance(value_str, string_types):
+    if not isinstance(value_str, str):
         raise ValueError('%s  must be a string' % value_str)
     if len(value_str)  > 50:
         raise ValueError('%s must be less than 50 characters' % value_str)

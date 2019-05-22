@@ -159,7 +159,7 @@ class RealBarArray(OES_Object):
         #msg = "i=%s dt=%s eid=%s nodeID=%s fd=%g oxx=%g oyy=%g \ntxy=%g angle=%g major=%g minor=%g ovmShear=%g" % (
             #self.itotal, dt, eid, nodeID, fd, oxx, oyy, txy, angle, majorP, minorP, ovm)
         ##print(msg)
-        #if isinstance(nodeID, string_types):
+        #if isinstance(nodeID, str):
             #nodeID = 0
         ##assert isinstance(nodeID, integer_types), nodeID
         #self.element_node[self.itotal, :] = [eid, nodeID]

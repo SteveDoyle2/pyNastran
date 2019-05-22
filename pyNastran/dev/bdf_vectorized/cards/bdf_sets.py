@@ -35,7 +35,6 @@ The superelement sets start with SE:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
@@ -452,8 +451,8 @@ class SuperABQSet1(Set):
     @classmethod
     def add_op2_data(cls, data, comment=''):
         seid, components, nids = data
-        #assert None not in components, 'Type=%s components=%s' % (self.type, components)
-        assert None not in nids, 'Type=%s nids=%s' % (self.type, nids)
+        #assert None not in components, 'Type=%s components=%s' % (cls.type, components)
+        assert None not in nids, 'Type=%s nids=%s' % (cls.type, nids)
         assert -1 not in nids, 'nids=%s' % (nids.tolist())
         assert 0 not in nids, 'nids=%s' % (nids.tolist())
         return cls(seid, components, nids, comment=comment)
@@ -643,7 +642,7 @@ class SET1(Set):
         is_skin = False
         i = 0
         if len(ids) > 0:
-            if isinstance(ids[0], string_types) and ids[0] == 'SKIN':
+            if isinstance(ids[0], str) and ids[0] == 'SKIN':
                 is_skin = True
                 i += 1
         else:

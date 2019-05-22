@@ -3,7 +3,6 @@ import os
 import sys
 import traceback
 import time as time_module
-from six import string_types
 
 from qtpy.compat import getopenfilename
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv
@@ -36,7 +35,7 @@ class LoadActions(object):
         raise_error : bool; default=True
             stop the code if True
         """
-        assert isinstance(name, string_types), 'name=%r type=%s' % (name, type(name))
+        assert isinstance(name, str), 'name=%r type=%s' % (name, type(name))
         is_failed, out = self._load_geometry_filename(
             geometry_format, infile_name)
         print("is_failed =", is_failed)
@@ -273,7 +272,7 @@ class LoadActions(object):
 
         if out_filename == '':
             return
-        if isinstance(out_filename, string_types):
+        if isinstance(out_filename, str):
             out_filename = [out_filename]
         for out_filenamei in out_filename:
             if not os.path.exists(out_filenamei):

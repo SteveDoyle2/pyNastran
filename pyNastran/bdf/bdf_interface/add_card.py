@@ -10,7 +10,6 @@ That said, there are still a few bugs.
 from __future__ import print_function
 
 from typing import Any, Optional, List, Union
-from six import string_types
 import numpy as np
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -5258,7 +5257,7 @@ class AddCards(AddMethods):
         -----
         the length of components and ids must be the same
         """
-        if isinstance(components, string_types):
+        if isinstance(components, str):
             aset = ASET1(ids, components, comment=comment)
         else:
             aset = ASET(ids, components, comment=comment)
@@ -5290,7 +5289,7 @@ class AddCards(AddMethods):
         -----
         the length of components and ids must be the same
         """
-        if isinstance(components, string_types):
+        if isinstance(components, str):
             bset = BSET1(ids, components, comment=comment)
         else:
             bset = BSET(ids, components, comment=comment)
@@ -5323,7 +5322,7 @@ class AddCards(AddMethods):
         the length of components and ids must be the same
 
         """
-        if isinstance(components, string_types):
+        if isinstance(components, str):
             cset = CSET1(ids, components, comment=comment)
         else:
             cset = CSET(ids, components, comment=comment)
@@ -5354,7 +5353,7 @@ class AddCards(AddMethods):
         #comment : str; default=''
             #a comment for the card
         #"""
-        #if isinstance(components, string_types):
+        #if isinstance(components, str):
             #omit = OMIT1(ids, components, comment=comment)
         #else:
             #omit = OMIT(ids, components, comment=comment)
@@ -5398,7 +5397,7 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        if isinstance(components, string_types):
+        if isinstance(components, str):
             qset = QSET1(ids, components, comment=comment)
         else:
             qset = QSET(ids, components, comment=comment)

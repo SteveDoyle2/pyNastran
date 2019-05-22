@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six import integer_types
 
 import numpy as np
 from pyNastran.utils.mathematics import unique2d
@@ -572,7 +571,7 @@ class Elements(BaseMethods):
         #self.model.log.debug('property_id = %s' % property_id)
         for pid in property_id:
             for Type, pids in self.property_groups.items():
-                if not isinstance(pid, integer_types):
+                if not isinstance(pid, int):
                     self.model.log.debug('pids = %s' % pids)
                     self.model.log.debug('pid  = %s' % pid)
 

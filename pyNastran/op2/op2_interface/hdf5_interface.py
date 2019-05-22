@@ -13,7 +13,6 @@ defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-from six import b, string_types
 import numpy as np
 import h5py
 
@@ -949,7 +948,7 @@ def _load_eigenvalue(h5_result, log):
             datai = _cast(h5_result.get(key))
             if isinstance(datai, bytes):
                 pass
-            elif isinstance(datai, string_types):
+            elif isinstance(datai, str):
                 datai = datai.encode('latin1')
             else:
                 assert not isinstance(datai, bytes), key
@@ -1131,7 +1130,7 @@ def export_matrices(hdf5_file, op2_model):
     if len(op2_model.matrices):
         matrix_group = hdf5_file.create_group('matrices')
         for key, matrix in sorted(op2_model.matrices.items()):
-            matrixi_group = matrix_group.create_group(b(key))
+            matrixi_group = matrix_group.create_group(key.encode('latin-1'))
             if hasattr(matrix, 'export_to_hdf5'):
                 matrix.export_to_hdf5(matrixi_group, op2_model.log)
             else:

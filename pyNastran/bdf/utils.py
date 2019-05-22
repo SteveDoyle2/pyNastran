@@ -8,7 +8,6 @@ Defines various utilities including:
 """
 from __future__ import print_function, unicode_literals
 from copy import deepcopy
-from six import string_types
 from typing import List, Union, Dict, Tuple, Optional
 
 import numpy as np  # type: ignore
@@ -70,9 +69,9 @@ def parse_patran_syntax(node_sets, pound=None):
                   Use parse_patran_syntax_dict to consider the identifier.
 
     """
-    assert isinstance(node_sets, string_types), type(node_sets)
+    assert isinstance(node_sets, str), type(node_sets)
     if pound is not None:
-        assert isinstance(pound, (string_types, integer_types)), type(pound)
+        assert isinstance(pound, (str, integer_types)), type(pound)
         node_sets = node_sets.replace('#', str(pound).strip())
     if len(node_sets) == 0:
         return array([], dtype='int32')

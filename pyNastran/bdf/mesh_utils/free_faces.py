@@ -11,8 +11,6 @@ import sys
 from copy import deepcopy
 from collections import defaultdict
 
-from six import string_types
-
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf import read_bdf
 
@@ -147,7 +145,7 @@ def write_skin_solid_faces(model, skin_filename,
         unused
 
     """
-    if isinstance(model, string_types):
+    if isinstance(model, str):
         model = read_bdf(model, log=log)
     if(len(model.element_ids) == 0 or len(model.material_ids) == 0 or
        len(model.property_ids) == 0):

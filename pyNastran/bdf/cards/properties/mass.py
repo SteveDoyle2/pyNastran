@@ -9,7 +9,6 @@ All mass properties are PointProperty and Property objects.
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
 from pyNastran.bdf.cards.base_card import expand_thru_by, expand_thru, BaseCard, Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_string, double, double_or_blank, string)
@@ -179,7 +178,7 @@ class NSM1x(Property):
 
         if isinstance(ids, integer_types):
             ids = [ids]
-        if isinstance(ids, string_types):
+        if isinstance(ids, str):
             assert ids == 'ALL', 'ids=%r is not ALL' % ids
             ids = [ids]
         else:

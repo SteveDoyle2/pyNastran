@@ -28,7 +28,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 from itertools import count
 import math
 from typing import List, Any
-from six import string_types
 
 import numpy as np
 
@@ -296,7 +295,7 @@ class AELINK(BaseCard):
         #: linking coefficient (real)
         self.Cis = Cis
 
-        if isinstance(aelink_id, string_types):
+        if isinstance(aelink_id, str):
             if aelink_id != 'ALWAYS':
                 raise RuntimeError("The only valid ID that is a string is 'ALWAYS'")
             aelink_id = 0
@@ -3283,8 +3282,8 @@ class FLFACT(BaseCard):
         #self.nf = nf
         #self.fmid = fmid
 
-        # the dumb string_types thing is because we also get floats
-        if len(factors) > 1 and isinstance(factors[1], string_types) and factors[1] == 'THRU':
+        # the dumb str check is because we also get floats
+        if len(factors) > 1 and isinstance(factors[1], str) and factors[1] == 'THRU':
             msg = 'embedded THRUs not supported yet on FLFACT card\n'
             nfactors = len(factors)
             if nfactors == 4:
@@ -3327,7 +3326,7 @@ class FLFACT(BaseCard):
             assert len(card) == 3, 'len(FLFACT card)=%s; card=%s' % (len(card), card)
         elif isinstance(field3, float):
             factors = fields(double, card, 'factors', i=2, j=len(card))
-        elif isinstance(field3, string_types) and field3 == 'THRU':
+        elif isinstance(field3, str) and field3 == 'THRU':
             f1 = double(card, 2, 'f1')
             fnf = double(card, 4, 'fnf')
             nf = integer(card, 5, 'nf')

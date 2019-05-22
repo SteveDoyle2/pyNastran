@@ -3,11 +3,11 @@ defines:
  - expand_thru
  - expand_thru_by
  - expand_thru_exclude
+
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from typing import  List, Union
-from six import string_types
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
@@ -39,13 +39,13 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
         return [int(fields[0])]
 
     fields = [field.upper()
-              if isinstance(field, string_types) else field for field in fields]
+              if isinstance(field, str) else field for field in fields]
 
     out = []
     nfields = len(fields)
     i = 0
     while i < nfields:
-        if isinstance(fields[i], string_types) and fields[i] == 'THRU':
+        if isinstance(fields[i], str) and fields[i] == 'THRU':
             istart = int(fields[i - 1])
             iend = int(fields[i + 1])
 
@@ -102,7 +102,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=True,
 
     # ..todo:  should this be removed...is the field capitalized when read in?
     fields = [field.upper()
-              if isinstance(field, string_types) else field for field in fields]
+              if isinstance(field, str) else field for field in fields]
 
     if len(fields) == 1:
         return [func(fields[0])]
@@ -114,7 +114,7 @@ def expand_thru_by(fields, set_fields=True, sort_fields=True,
         #print('fields[i]=%r' % fields[i])
         is_blank = (
             allow_blanks and (
-                (isinstance(fields[i], string_types) and fields[i].strip() == '') or
+                (isinstance(fields[i], str) and fields[i].strip() == '') or
                 fields[i] is None)
         )
         if is_blank:
@@ -166,7 +166,7 @@ def expand_thru_exclude(fields):
     """
     # ..todo:  should this be removed...is the field capitalized when read in?
     isfields = [interpret_value(field.upper())
-                if isinstance(field, string_types) else field
+                if isinstance(field, str) else field
                 for field in fields]  # type: List[Union[str,int]]
 
     fields_out = []  # type: List[int]

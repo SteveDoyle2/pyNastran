@@ -24,7 +24,6 @@ Multi-segment beams are IntegratedLineProperty objects.
 """
 from __future__ import print_function, absolute_import
 from math import sqrt, ceil
-from six import string_types
 
 from numpy import (float32, float64, complex64, complex128, array, cross,
                    allclose, argmax, argmin, arange)
@@ -295,7 +294,7 @@ def list_print(list_a, tol=1e-8, float_fmt='%-3.2g', zero_fmt='    0'):
         return '[]'
 
     def _print(a):
-        if isinstance(a, string_types):
+        if isinstance(a, str):
             return a
         for i, j in ((float, float_fmt), (float32, float_fmt),
                      (float64, float_fmt), (int, '%3i')):

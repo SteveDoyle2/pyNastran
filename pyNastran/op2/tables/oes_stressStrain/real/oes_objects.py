@@ -1,6 +1,5 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
 import numpy as np
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
@@ -205,7 +204,7 @@ class OES_Object(BaseElement):
         for v in table3:
             if isinstance(v, (int, float)):
                 n += 4
-            elif isinstance(v, string_types):
+            elif isinstance(v, str):
                 n += len(v)
             else:
                 #print('write_table_3', v)

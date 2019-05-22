@@ -13,7 +13,6 @@ Multi-segment beams are IntegratedLineProperty objects.
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import string_types
 import numpy as np
 from numpy import array, unique, argsort, allclose, ndarray
 
@@ -95,7 +94,7 @@ class PBEAM(IntegratedLineProperty):
                 #print('istation=%r idim=%r' % (istation, idim))
                 #print(self)
                 #raise
-        elif isinstance(pname_fid, string_types):
+        elif isinstance(pname_fid, str):
             if '(A)' in pname_fid:
                 i = 0
                 end = '(A)'

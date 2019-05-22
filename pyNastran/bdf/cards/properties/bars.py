@@ -15,7 +15,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from typing import List, Tuple, Union, Any
-from six import integer_types, string_types
 from numpy import pi, array
 import numpy as np
 
@@ -1298,7 +1297,7 @@ class PBARL(LineProperty):
         #15 : 'DIM3',
     #}
     def update_by_pname_fid(self, pname_fid, value):
-        if isinstance(pname_fid, string_types) and pname_fid.startswith('DIM'):
+        if isinstance(pname_fid, str) and pname_fid.startswith('DIM'):
             num = int(pname_fid[3:])
             self.dim[num - 1] = value
         else:
@@ -1387,7 +1386,7 @@ class PBARL(LineProperty):
             raise RuntimeError(msg)
 
         assert len(self.dim) == ndim, 'PBARL ndim=%s len(dims)=%s' % (ndim, len(self.dim))
-        if not isinstance(self.group, string_types):
+        if not isinstance(self.group, str):
             raise TypeError('Invalid group; pid=%s group=%r' % (self.pid, self.group))
         #if self.group != 'MSCBML0':
             #msg = 'Invalid group; pid=%s group=%r expected=[MSCBML0]' % (self.pid, self.group)
@@ -2230,7 +2229,7 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
 
         if so is None:
             so = ['YES', 'YESA', 'YESA']
-        elif isinstance(so, string_types):
+        elif isinstance(so, str):
             so = [so] * 3
         self.so = so
 
@@ -2856,7 +2855,7 @@ class PBEND(LineProperty):
             #: centroid, positive is toward the center of curvature
             delta_n = double_or_blank(card, 22, 'delta_n', 0.)
 
-        elif isinstance(value3, integer_types):  # alternate form
+        elif isinstance(value3, int):  # alternate form
             beam_type = 2
             #: Flag selecting the flexibility and stress intensification
             #: factors. See Remark 3. (Integer = 1, 2, or 3)

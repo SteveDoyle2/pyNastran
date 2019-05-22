@@ -11,7 +11,6 @@ from itertools import chain
 from io import StringIO
 from collections import defaultdict, OrderedDict
 
-from six import string_types
 from pyNastran import __version__
 from pyNastran.op2.result_objects.stress_object import StressObject
 from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
@@ -685,7 +684,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def _get_model_unvectorized(self, bdf_filename, xref_loads=True):
         """Loads the BDF/OP2 geometry"""
         ext = '.bdf'
-        if isinstance(bdf_filename, string_types):
+        if isinstance(bdf_filename, str):
             ext = os.path.splitext(bdf_filename)[1].lower()
         elif isinstance(bdf_filename, BDF):
             model = bdf_filename
@@ -779,7 +778,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             return
 
         #load_geom = True
-        if isinstance(bdf_filename, string_types) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
+        if isinstance(bdf_filename, str) and bdf_filename.lower().endswith(('.bdf', '.dat', '.pch',)): # '.op2'
             # if we're running test_pynastrangui or we have the --test flag on the command line
             # this has (technically) nothing to do with if we're running the tests or not
             if IS_TESTING or self.gui.is_testing_flag:
@@ -6923,7 +6922,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.scalar_bar_actor.VisibilityOn()
         self.scalar_bar_actor.Modified()
 
-        if isinstance(results_filename, string_types):
+        if isinstance(results_filename, str):
             print("trying to read...%s" % results_filename)
             ext = os.path.splitext(results_filename)[1].lower()
 

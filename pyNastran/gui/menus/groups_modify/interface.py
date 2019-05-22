@@ -1,5 +1,4 @@
 from __future__ import print_function
-from six import string_types
 from pyNastran.gui.menus.groups_modify.groups_modify import GroupsModify
 
 def on_set_modify_groups(self):
@@ -22,7 +21,7 @@ def on_set_modify_groups(self):
     print('groups.keys() = %s' % self.groups.keys())
 
     group_active = self.group_active
-    assert isinstance(group_active, string_types), group_active
+    assert isinstance(group_active, str), group_active
     data = {
         'font_size' : self.settings.font_size,
         0 : self.groups['main'],

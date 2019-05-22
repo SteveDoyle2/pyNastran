@@ -1,6 +1,5 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types
 
 # strings
 SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
@@ -993,7 +992,7 @@ class Op2Codes(object):
         msg += "  random_code   = %-3s\n" % (random_code)
 
         if element_type is not None:
-            if isinstance(element_type, string_types):
+            if isinstance(element_type, str):
                 etype = element_type
             else:
                 etype = self.get_element_type(element_type)

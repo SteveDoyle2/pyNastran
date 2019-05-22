@@ -27,7 +27,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from typing import List, Union, Optional, Any
-from six import string_types
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -732,7 +731,7 @@ class GRDSET(BaseCard):
         ps = self.Ps()
         assert isinstance(cp, integer_types), 'cp=%r' % cp
         assert isinstance(cd, integer_types), 'cd=%r' % cd
-        assert isinstance(ps, string_types), 'ps=%r' % ps
+        assert isinstance(ps, str), 'ps=%r' % ps
         assert isinstance(seid, integer_types), 'seid=%r' % seid
 
     def raw_fields(self):
@@ -1292,7 +1291,7 @@ class GRID(BaseCard):
         assert isinstance(nid, integer_types), 'nid=%r' % nid
         assert isinstance(cp, integer_types), 'cp=%r' % cp
         assert isinstance(cd, integer_types), 'cd=%r' % cd
-        assert isinstance(ps, string_types), 'ps=%r' % ps
+        assert isinstance(ps, str), 'ps=%r' % ps
         assert isinstance(seid, integer_types), 'seid=%r' % seid
         if xref:
             pos_xyz = self.get_position()

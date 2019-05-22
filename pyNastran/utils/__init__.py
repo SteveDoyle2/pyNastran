@@ -8,8 +8,6 @@ from itertools import count
 from io import StringIO
 
 from typing import List, Union, Optional
-from six import string_types
-unicode_type = str
 
 
 def ipython_info():
@@ -71,7 +69,7 @@ def is_binary_file(filename):
     that file is binary if it contains null.
 
     .. warning:: this may not work for unicode."""
-    assert isinstance(filename, string_types), '%r is not a valid filename' % filename
+    assert isinstance(filename, str), '%r is not a valid filename' % filename
     check_path(filename)
     with io.open(filename, mode='rb') as fil:
         for chunk in iter(lambda: fil.read(1024), bytes()):

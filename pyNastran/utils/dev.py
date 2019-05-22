@@ -1,7 +1,6 @@
 from __future__ import print_function, absolute_import
 import os
 from typing import List
-from six import string_types
 
 import numpy as np
 
@@ -71,7 +70,7 @@ def list_print(lst, float_fmt='%-4.2f'):
         the clean string representation of the object
     """
     def _print(val):
-        if val is None or isinstance(val, string_types):
+        if val is None or isinstance(val, str):
             return str(val)
         if isinstance(val, float):
             return float_fmt % val

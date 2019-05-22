@@ -3,7 +3,6 @@ defines:
  - MarkActions
 """
 from __future__ import print_function
-from six import string_types
 import numpy as np
 import vtk
 
@@ -407,7 +406,7 @@ def create_marked_node_actors(gui, node_ids, nids, text, xyz_cid0):
 
     """
     i = np.searchsorted(node_ids, nids)
-    if isinstance(text, string_types):
+    if isinstance(text, str):
         text = [text] * len(i)
     else:
         assert len(text) == len(i)

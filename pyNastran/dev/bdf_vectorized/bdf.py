@@ -14,7 +14,6 @@ import traceback
 from pickle import load, dump
 from collections import defaultdict
 
-from six import string_types
 import numpy as np
 from cpylog import get_logger2
 
@@ -540,7 +539,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """
         if cards is None:
             return
-        elif isinstance(cards, string_types):
+        elif isinstance(cards, str):
             disable_set = set([cards])
         else:
             disable_set = set(cards)
@@ -1356,7 +1355,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                                    'len(%s)=%s' % (key, len(key)))
             assert len(key) >= 1, ('min length for key is 1; '
                                    'len(%s)=%s' % (key, len(key)))
-            if not isinstance(key, string_types):
+            if not isinstance(key, str):
                 msg = 'key=%r must be a string.  type=%s' % (key, type(key))
                 raise TypeError(msg)
             self.dict_of_vars[key] = value

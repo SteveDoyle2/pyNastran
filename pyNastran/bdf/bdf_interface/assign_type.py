@@ -4,7 +4,6 @@ Parses Nastran fields
 from __future__ import print_function
 import re
 from typing import Union, Optional
-from six import string_types
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (
     integer_types, integer_float_types, float_types)
@@ -63,7 +62,7 @@ def parse_components(card, ifield, fieldname):
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    assert isinstance(fieldname, str), type(fieldname)
     svalue = card.field(ifield)
     if isinstance(svalue, integer_types):
         pass
@@ -80,7 +79,7 @@ def parse_components(card, ifield, fieldname):
         msg = ('%s = %r (field #%s) on card must be an integer (not %s).\n'
                'card=%s' % (fieldname, svalue, ifield, dtype, card))
         raise SyntaxError(msg)
-    if value > 0 and isinstance(svalue, string_types):
+    if value > 0 and isinstance(svalue, str):
         if '0' in svalue:
             value2 = str(svalue).replace('0', '')
             msg = ('%s = %r (field #%s) on card must contain 0 or %s (not both).\n'
@@ -120,7 +119,7 @@ def components_or_blank(card, ifield, fieldname, default=None):
     """
     #assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    assert isinstance(fieldname, str), type(fieldname)
     svalue = card.field(ifield)
     if svalue is None:
         return default
@@ -149,12 +148,12 @@ def blank(card, ifield, fieldname, default=None):
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    assert isinstance(fieldname, str), type(fieldname)
     svalue = card.field(ifield)
     if svalue is None:
         return default
 
-    if isinstance(svalue, string_types):
+    if isinstance(svalue, str):
         svalue = svalue.strip().upper()
         if len(svalue) == 0:
             return default
@@ -181,7 +180,7 @@ def blank(card, ifield, fieldname, default=None):
     #"""
     #assert isinstance(card, BDFCard), type(card)
     #assert isinstance(ifield, int), type(ifield)
-    #assert isinstance(fieldname, string_types), type(fieldname)
+    #assert isinstance(fieldname, str), type(fieldname)
     #return integer_double_string_or_blank(card, ifield, fieldname, default=None)
 
 def integer_double_string_or_blank(card, ifield, fieldname, default=None):
@@ -245,7 +244,7 @@ def fields(func, card, fieldname, i, j=None):
     .. todo:: improve fieldname
     """
     assert isinstance(card, BDFCard), type(card)
-    assert isinstance(fieldname, string_types), type(fieldname)
+    assert isinstance(fieldname, str), type(fieldname)
     function_values = []
     if j is None:
         j = len(card)
@@ -341,7 +340,7 @@ def integer_or_blank(card, ifield, fieldname, default=None):
         return svalue
     elif svalue is None:
         return default
-    elif isinstance(svalue, string_types):
+    elif isinstance(svalue, str):
         if len(svalue) == 0:
             return default
         elif '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
@@ -455,7 +454,7 @@ def double_or_blank(card, ifield, fieldname, default=None):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
-    elif isinstance(svalue, string_types):
+    elif isinstance(svalue, str):
         svalue = svalue.strip().upper()
         if not svalue:
             return default
@@ -491,7 +490,7 @@ def double_or_string(card, ifield, fieldname):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be an float or string (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
-    elif isinstance(svalue, string_types):
+    elif isinstance(svalue, str):
         svalue = svalue.strip().upper()
 
     if '.' in svalue or '-' in svalue[1:] or '+' in svalue[1:]:
@@ -550,7 +549,7 @@ def double_string_or_blank(card, ifield, fieldname, default=None):
         return svalue
     elif svalue is None:
         return default
-    elif isinstance(svalue, string_types):
+    elif isinstance(svalue, str):
         svalue = svalue.strip().upper()
     elif isinstance(svalue, integer_types):
         dtype = _get_dtype(svalue)
@@ -780,7 +779,7 @@ def _get_dtype(value):
         dtype = 'an integer'
     elif isinstance(value, float):
         dtype = 'a double value=%r' % value
-    elif isinstance(value, string_types):
+    elif isinstance(value, str):
         dtype = 'a string'
     else:
         dtype = str(type(value))
@@ -861,7 +860,7 @@ def string(card, ifield, fieldname):
         the value of the field
     """
     svalue = card.field(ifield)
-    if isinstance(svalue, string_types):
+    if isinstance(svalue, str):
         svalue = svalue.strip()
         if ' ' in svalue:
             raise SyntaxError('%s = %r (field #%s) on card must be a string without a space.\n'
@@ -906,7 +905,7 @@ def string_or_blank(card, ifield, fieldname, default=None):
     svalue = card.field(ifield)
     if svalue is None:
         return default
-    elif isinstance(svalue, string_types):
+    elif isinstance(svalue, str):
         svalue = svalue.strip().upper()
         if ' ' in svalue:
             raise SyntaxError('%s = %r (field #%s) on card must be a string without a space.\n'
@@ -953,7 +952,7 @@ def loose_string_or_blank(card, ifield, fieldname, default=None):
     svalue = card.field(ifield)
     if svalue is None:
         return default
-    elif isinstance(svalue, string_types):
+    elif isinstance(svalue, str):
         svalue = svalue.strip().upper()
         if ' ' in svalue:
             raise SyntaxError('%s = %r (field #%s) on card must be a string without a space.\n'
