@@ -123,8 +123,8 @@ install:
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib pandas; fi
 
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas
-  - pip install python-coveralls
   - source activate test-environment
+  - pip install python-coveralls
   - conda list
   - python setup${NOGUI}.py develop
 
