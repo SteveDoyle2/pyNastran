@@ -1179,7 +1179,7 @@ def load_op2_from_hdf5(hdf5_filename, combine=True, log=None):
 def load_op2_from_hdf5_filename(hdf5_filename, combine=True, log=None):
     """loads an hdf5 file into an OP2 object"""
     check_path(hdf5_filename, 'hdf5_filename')
-    model = OP2(log=None)
+    model = OP2(log=log)
     model.op2_filename = hdf5_filename
 
     log.info('hdf5_op2_filename = %r' % hdf5_filename)

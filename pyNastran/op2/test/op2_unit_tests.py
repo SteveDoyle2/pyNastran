@@ -45,7 +45,7 @@ from pyNastran.op2.tables.geom.geom4 import _read_spcadd_mpcadd
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
-
+OP2_TEST_PATH = os.path.abspath(os.path.join(PKG_PATH, 'op2', 'test', 'examples'))
 
 class TestOP2(Tester):
     """various OP2 tests"""
@@ -306,7 +306,7 @@ class TestOP2(Tester):
             is_sort2=False, is_nx=None, delete_f06=True,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=True,
-            quiet=True, check_memory=False,
+            quiet=True,
             stop_on_failure=True, dev=False)
         with self.assertRaises(NotImplementedError):
             op2.save()
@@ -318,7 +318,7 @@ class TestOP2(Tester):
             is_sort2=False, is_nx=None, delete_f06=True,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=True,
-            quiet=True, check_memory=False,
+            quiet=True,
             stop_on_failure=True, dev=False)
         op2.save()
 
@@ -342,7 +342,7 @@ class TestOP2(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
+                quiet=True,
                 stop_on_failure=True, dev=False)
 
 
@@ -362,7 +362,7 @@ class TestOP2(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
+                quiet=True,
                 stop_on_failure=True, dev=False)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
@@ -385,7 +385,7 @@ class TestOP2(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
+                quiet=True,
                 stop_on_failure=True, dev=False, build_pandas=build_pandas)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
@@ -408,7 +408,7 @@ class TestOP2(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
+                quiet=True,
                 stop_on_failure=True, dev=False, build_pandas=build_pandas)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
@@ -430,7 +430,7 @@ class TestOP2(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
+                quiet=True,
                 stop_on_failure=True, dev=False)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
@@ -458,7 +458,7 @@ class TestOP2(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
+                quiet=True,
                 stop_on_failure=True, dev=False, post=-4)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
@@ -480,7 +480,7 @@ class TestOP2(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
+                quiet=True,
                 stop_on_failure=True, dev=False)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
@@ -505,7 +505,7 @@ class TestOP2(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
+                quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=False)
         #op2 = read_op2_geom(op2_filename, debug=False)
@@ -527,7 +527,7 @@ class TestOP2(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
+                quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=False)
 
@@ -550,7 +550,7 @@ class TestOP2(Tester):
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
-                quiet=True, check_memory=False,
+                quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=False)
         #op2 = read_op2_geom(op2_filename, debug=False)
@@ -637,7 +637,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=True, check_memory=False, stop_on_failure=True,
+            quiet=True, stop_on_failure=True,
             dev=False, build_pandas=True)
         if IS_PANDAS:
             assert op2.displacements[1].data_frame is not None
@@ -660,7 +660,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=True, check_memory=False, stop_on_failure=True,
+            quiet=True, stop_on_failure=True,
             dev=False, build_pandas=True)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
@@ -676,7 +676,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=True, check_memory=False, stop_on_failure=True,
+            quiet=True, stop_on_failure=True,
             dev=False)
         op2.get_op2_stats(short=False)
         op2.get_op2_stats(short=True)
@@ -694,7 +694,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=True, check_memory=False, stop_on_failure=True,
+            quiet=True, stop_on_failure=True,
             dev=False)
 
         f06_filename = os.path.join(folder, 'buckling_solid_shell_bar.test_op2_sort2.f06')
@@ -726,7 +726,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=True, check_memory=False, stop_on_failure=True,
+            quiet=True, stop_on_failure=True,
             dev=True)
         assert len(op2.displacements) == 0, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
@@ -738,7 +738,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=True, check_memory=False, stop_on_failure=True,
+            quiet=True, stop_on_failure=True,
             dev=False)
         assert len(op2.displacements) == 0, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
@@ -750,7 +750,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=subcases, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=True, check_memory=False, stop_on_failure=True,
+            quiet=True, stop_on_failure=True,
             dev=False)
         assert len(op2.displacements) == 1, len(op2.displacements).v
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
@@ -767,7 +767,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=True, check_memory=False, stop_on_failure=True,
+            quiet=True, stop_on_failure=True,
             dev=False, build_pandas=build_pandas)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
@@ -784,7 +784,7 @@ class TestOP2(Tester):
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
-            quiet=True, check_memory=False, stop_on_failure=True,
+            quiet=True, stop_on_failure=True,
             dev=False)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
@@ -1832,7 +1832,7 @@ class TestOP2(Tester):
             write_op2=False, write_hdf5=False, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=False, build_pandas=False, subcases=None,
             exclude=None, short_stats=False, compare=True, debug=False, log=log,
-            binary_debug=True, quiet=True, check_memory=False, stop_on_failure=True,
+            binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
     def test_ogs(self):
@@ -1847,7 +1847,32 @@ class TestOP2(Tester):
             write_op2=False, write_hdf5=True, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=False, build_pandas=True, subcases=None,
             exclude=None, short_stats=False, compare=True, debug=False, log=log,
-            binary_debug=True, quiet=True, check_memory=False, stop_on_failure=True,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_ougv1pat(self):
+        """test OUGV1PAT table"""
+        log = get_logger(level='warning')
+        op2_filename1 = os.path.join(OP2_TEST_PATH, 'ougv1pat', 'winkel_2005r3_ougcord_basic.op2')
+        op2_filename2 = os.path.join(OP2_TEST_PATH, 'ougv1pat', 'winkel_2013.1_ougcord_basic.op2')
+        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        WRITE_OP2 = True
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=IS_PANDAS, subcases=None,
+            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename2, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=IS_PANDAS, subcases=None,
+            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
     def test_spcadd(self):

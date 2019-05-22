@@ -1,10 +1,11 @@
+"""super specific test script to diagnose the memory usage on a single model"""
 import os
 import psutil
 import gc
 import objgraph
 import random
 
-from pyNastran.op2.op2 import read_op2,OP2
+from pyNastran.op2.op2 import read_op2, OP2
 
 # we need to check the memory usage
 is_linux = None
