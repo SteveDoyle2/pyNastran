@@ -184,7 +184,7 @@ def write_dict(openfoam_dict, nbase=0, baseword='name'):
     msg += '%s{\n' % space1
     return msg
 
-class FoamFile(object):
+class FoamFile:
     def __init__(self, filename, log=None):
         self.filename = filename
         self.log = log

@@ -3,7 +3,7 @@ from pyNastran.dev.bdf_vectorized.cards.aero.caero1 import CAERO1
 #from .caero3 import CAERO3
 #from .caero4 import CAERO4
 
-class CAero(object):
+class CAero:
     def __init__(self, model):
         """
         Defines the CAero object.

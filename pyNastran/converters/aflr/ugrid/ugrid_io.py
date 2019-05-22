@@ -18,7 +18,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 from pyNastran.gui.qt_files.colors import RED_FLOAT
 
 
-class UGRID_IO(object):
+class UGRID_IO:
     def __init__(self, gui):
         self.gui = gui
 

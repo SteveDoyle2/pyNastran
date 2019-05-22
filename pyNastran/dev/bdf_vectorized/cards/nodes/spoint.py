@@ -4,7 +4,7 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru
 
 from pyNastran.bdf.bdf_interface.assign_type import integer_or_string
 
-class SPOINT(object):
+class SPOINT:
     type = 'SPOINT'
     def __init__(self, model):
         self.model = model

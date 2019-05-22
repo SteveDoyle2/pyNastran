@@ -9,7 +9,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.dev.openvsp.adb_reader import ADB_Reader
 
 
-class ADB_IO(object):  # pragma: no cover
+class ADB_IO:  # pragma: no cover
     def __init__(self, gui):
         self.gui = gui
 

@@ -109,7 +109,9 @@ class TableArray(ScalarObject):  # displacement style table
         #self.table_name = None
         #self.approach_code = None
         #self.analysis_code = None
-        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)  # no double inheritance
+
+        # no double inheritance
+        ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
         self.is_sort1
         self.is_sort2
         #self.dt = dt
@@ -646,6 +648,7 @@ class RealTableArray(TableArray):
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
             'OQGPSD1',
             'OCRPG', 'OCRUG', 'OUG1',
+            'OUGV1PAT',
         ]
         assert self.table_name in allowed_tables, self.table_name
 

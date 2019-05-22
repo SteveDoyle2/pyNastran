@@ -4,7 +4,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, string_or_blank)
 
 
-class NLPARM(object):
+class NLPARM:
     """
     Defines a set of parameters for nonlinear static analysis iteration
     strategy.

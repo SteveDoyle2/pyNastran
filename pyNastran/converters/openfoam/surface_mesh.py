@@ -6,7 +6,7 @@ from pyNastran.converters.openfoam.openfoam_parser import (
 from pyNastran.bdf.field_writer import print_card_8
 
 
-class Points(object):
+class Points:
     def __init__(self):
         foam_points = FoamFile('points')
         lines = foam_points.read_foam_file()
@@ -40,7 +40,7 @@ class Points(object):
         #f.close()
         return nodes_array
 
-class Faces(object):
+class Faces:
     def __init__(self):
         foam_file = FoamFile('faces')
         lines = foam_file.read_foam_file()

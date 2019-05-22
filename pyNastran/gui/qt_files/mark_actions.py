@@ -10,7 +10,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, create_unstructured_point_grid
 
 
-class MarkActions(object):
+class MarkActions:
     """defines MarkActions"""
     def __init__(self, gui):
         """creates MarkActions"""

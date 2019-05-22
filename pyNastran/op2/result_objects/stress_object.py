@@ -11,7 +11,7 @@ from pyNastran.femutils.utils import pivot_table
     #oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
     #header_dict, keys_map)
 
-class StressObject(object):
+class StressObject:
     def __init__(self, model, key, all_eids, is_stress=True):
         # type: (Any, str, Any, bool) -> None
         #print('--StressObject--')

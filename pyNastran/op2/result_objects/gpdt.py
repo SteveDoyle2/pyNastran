@@ -1,4 +1,4 @@
-class GPDT(object):
+class GPDT:
     def __init__(self, nid_cp_cd_ps, xyz):
         self.nid_cp_cd_ps = nid_cp_cd_ps
         self.xyz = xyz

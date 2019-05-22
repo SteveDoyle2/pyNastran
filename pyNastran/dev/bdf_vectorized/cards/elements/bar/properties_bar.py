@@ -1,7 +1,7 @@
 from pyNastran.dev.bdf_vectorized.cards.elements.bar.pbar import PBAR
 from pyNastran.dev.bdf_vectorized.cards.elements.bar.pbarl import PBARL
 
-class PropertiesBar(object):
+class PropertiesBar:
     def __init__(self, model):
         """
         Defines the PropertiesBar object.

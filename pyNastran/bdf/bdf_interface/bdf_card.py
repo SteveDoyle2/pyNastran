@@ -9,7 +9,7 @@ from pyNastran.bdf.field_writer_16 import print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
 
-class BDFCard(object):
+class BDFCard:
     """
     A BDFCard is a list that has a default value of None for fields out of
     range.

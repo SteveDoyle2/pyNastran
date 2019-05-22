@@ -734,7 +734,7 @@ def get_sort_method_from_table_name(table_name):
     return sort_method
 
 
-class Op2Codes(object):
+class Op2Codes:
     def __init__(self):
         pass
 

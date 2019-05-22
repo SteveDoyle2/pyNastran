@@ -13,7 +13,7 @@ def read_obj(obj_filename, log=None, debug=False):
     model.read_obj(obj_filename)
     return model
 
-class OBJ(object):
+class OBJ:
     def __init__(self, log=None, debug=False):
         self.nodes = []
         self.lines = {}

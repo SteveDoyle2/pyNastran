@@ -14,7 +14,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from numpy import array, zeros, unique, searchsorted, asarray, int64, where
 
 #RigidElement
-class RBE2(object):
+class RBE2:
     type = 'RBE2'
 
     def __init__(self, model):

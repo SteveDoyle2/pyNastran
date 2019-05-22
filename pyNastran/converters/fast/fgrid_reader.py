@@ -11,7 +11,7 @@ def read_fgrid(fgrid_filename, unused_dimension_flag, log=None, debug=False):
     return model
 
 
-class FGridReader(object):
+class FGridReader:
     """FGRID interface class"""
     def __init__(self, log=None, debug=False):
         """

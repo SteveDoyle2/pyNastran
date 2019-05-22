@@ -1209,7 +1209,7 @@ def define_coord_ijk(model, cord2_type, cid, origin, rid=0, i=None, j=None, k=No
     return coord
 
 
-class RectangularCoord(object):
+class RectangularCoord:
     """defines common methods for rectangular coordinate systems"""
     @staticmethod
     def coord_to_xyz(p):
@@ -1259,7 +1259,7 @@ class RectangularCoord(object):
         return global_to_basic_rectangular(self, xyz_global, dtype='float64')
 
 
-class CylindricalCoord(object):
+class CylindricalCoord:
     r"""
     defines common methods for cylindrical coordinate systems
 
@@ -1380,7 +1380,7 @@ class CylindricalCoord(object):
         return global_to_basic_cylindrical(self, xyz_global, dtype='float64')
 
 
-class SphericalCoord(object):
+class SphericalCoord:
     r"""
     defines common methods for spherical coordinate systems
 

@@ -1,4 +1,4 @@
-class NamesStorage(object):
+class NamesStorage:
     def __init__(self):
         self.loaded_names = {}
 

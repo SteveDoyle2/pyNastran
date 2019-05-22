@@ -1,4 +1,4 @@
-class CoordProperties(object):
+class CoordProperties:
     def __init__(self, label, coord_type, is_visible, scale):
         # type: (str, str, bool, float) -> None
         self.label = label

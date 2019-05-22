@@ -12,7 +12,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.converters.dev.obj.obj import read_obj
 
 
-class ObjIO(object):
+class ObjIO:
     """
     Defines the GUI class for OBJ.
     """

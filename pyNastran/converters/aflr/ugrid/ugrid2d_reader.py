@@ -6,7 +6,7 @@ from numpy import array
 from cpylog import get_logger2
 
 
-class UGRID2D_Reader(object):
+class UGRID2D_Reader:
     """
     Interface to the AFLR UGrid2D format.
     """

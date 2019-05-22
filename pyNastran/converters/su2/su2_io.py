@@ -14,7 +14,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
-class SU2_IO(object):
+class SU2_IO:
     def __init__(self, gui):
         self.gui = gui
 

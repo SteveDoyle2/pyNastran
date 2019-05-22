@@ -1,7 +1,7 @@
 #pylint: disable=R0201,C0111
 from struct import Struct
 
-class SuppressLogging(object):
+class SuppressLogging:
     def __init__(self):
         pass
     def debug(self, msg):
@@ -11,7 +11,7 @@ class SuppressLogging(object):
     def flush(self):
         pass
 
-class SuppressFileIO(object):
+class SuppressFileIO:
     def __init__(self):
         pass
     def open(self, fname):
@@ -23,7 +23,7 @@ class SuppressFileIO(object):
     def flush(self):
         pass
 
-class GeomCommon(object):
+class GeomCommon:
     def __init__(self):
         self.card_count = {}
         self.is_debug_file = False

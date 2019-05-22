@@ -36,7 +36,7 @@ def read_stl(stl_filename, remove_elements_with_bad_normals=False,
     return model
 
 
-class STL(object):
+class STL:
     #model_type = 'stl'
     #is_structured = False
     #is_outward_normals = True

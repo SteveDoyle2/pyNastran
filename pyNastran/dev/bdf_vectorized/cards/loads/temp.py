@@ -9,7 +9,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer,
 
 from .loads import VectorizedCardDict
 
-class TEMP(object):
+class TEMP:
     type = 'TEMP'
     def __init__(self, model):
         self.model = model
@@ -73,7 +73,7 @@ class TEMP(object):
             if self.is_default:
                 bdf_file.write('TEMPD*  %16i%s\n' % (self.temp_id, print_float_16(self.default)))
 
-class TEMPP1(object):
+class TEMPP1:
     def __init__(self, model):
         """
         TEMPP1 SID  EID1 TBAR TPRIME T1   T2   NA    NA

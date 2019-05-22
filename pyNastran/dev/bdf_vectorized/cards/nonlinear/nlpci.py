@@ -4,7 +4,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank, blank, string_or_blank)
 
 
-class NLPCI(object):
+class NLPCI:
     type = 'NLPCI'
 
     def __init__(self):

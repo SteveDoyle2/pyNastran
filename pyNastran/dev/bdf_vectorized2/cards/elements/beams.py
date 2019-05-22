@@ -9,7 +9,7 @@ from pyNastran.dev.bdf_vectorized2.cards.elements.bars import init_x_g0
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class BeamElement(object):
+class BeamElement:
     """base class for CBEAM"""
     card_name = ''
     def __init__(self, model):
@@ -367,7 +367,7 @@ class CBEAMv(BeamElement):
         return msg
 
 
-class Beams(object):
+class Beams:
     """Stores CBEAM elements that exist in 3D space"""
     def __init__(self, model):
         self.model = model

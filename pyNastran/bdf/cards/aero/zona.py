@@ -31,7 +31,7 @@ from pyNastran.bdf.cards.aero.utils import (
 from pyNastran.bdf.cards.coordinate_systems import Coord
 
 
-class ZONA(object):
+class ZONA:
     def __init__(self, model):
         self.model = model
         self.caero_to_name_map = {}

@@ -7,7 +7,7 @@ from cpylog import get_logger2
 #from pyNastran.utils import is_binary_file
 
 
-class C3D_Reader(object):
+class C3D_Reader:
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log, debug=debug)
 

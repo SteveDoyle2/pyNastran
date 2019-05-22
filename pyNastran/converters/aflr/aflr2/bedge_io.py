@@ -15,7 +15,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 from pyNastran.gui.qt_files.colors import BLACK_FLOAT
 
-class BEdge_IO(object):
+class BEdge_IO:
     """creates BEdge_IO"""
     def __init__(self, gui):
         self.gui = gui

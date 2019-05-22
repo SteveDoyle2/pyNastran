@@ -20,7 +20,7 @@ def read_degen_geom(degen_geom_csv, log=None, debug=False):
     return model
 
 
-class DegenGeom(object):
+class DegenGeom:
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log=log, debug=debug, encoding='utf-8')
         self.debug = debug
@@ -227,7 +227,7 @@ class DegenGeom(object):
         #self.nNetworks = i
 
 
-class Geom(object):
+class Geom:
     """defines a lifting surfaces"""
     def __init__(self, name, lifting_surface_xyz,
                  lifting_surface_nx, lifting_surface_ny):

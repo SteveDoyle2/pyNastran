@@ -9,7 +9,7 @@ from pyNastran.gui.menus.legend.animation import AnimationWindow
 from pyNastran.utils.numpy_utils import integer_types
 
 
-class LegendObject(object):
+class LegendObject:
     """defines LegendObject, which is an interface to the Legend Window"""
     def __init__(self, gui):
         self.gui = gui

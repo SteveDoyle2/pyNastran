@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from traceback import print_exc
-from typing import List, Optional
+from typing import List, Optional, Tuple, Any
 
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)
@@ -28,7 +28,6 @@ except ImportError:
 #warnings.filterwarnings('error', category=UnicodeWarning)
 
 import pyNastran
-from pyNastran import is_release
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
 from pyNastran.op2.dev.op2_writer import OP2Writer
 #SortCodeError, DeviceCodeError, FortranMarkerError
@@ -193,16 +192,19 @@ def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
     return failed_cases
 
 
-def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
-            write_f06=True, write_op2=False,
-            write_hdf5=True,
-            is_mag_phase=False, is_sort2=False, is_nx=None,
-            delete_f06=False, build_pandas=True,
-            subcases=None, exclude=None, short_stats=False,
-            compare=True, debug=False, log=None, binary_debug=False,
-            quiet=False, check_memory=False, stop_on_failure=True,
-            dev=False, xref_safe=False, post=None, load_as_h5=False):  #    is_nx?                    subcases              exclude              short,compa,debu, log,                   bina, quie, mem,  stop, dev,  xref, post,          load_as_h5
-    # type: str, bool, bool, Optional[bool], bool, boool, bool, bool, bool, Optional[str], bool, bool, Optional[List[int]], Optional[List[str]], bool, bool, bool, Optional[SimpleLogger], str, bool, bool, bool, bool, bool, Optional[int], bool -> OP2
+def run_op2(op2_filename: str, make_geom: bool=False,
+            write_bdf: bool=False, read_bdf: bool=None,
+            write_f06: bool=True, write_op2: bool=False,
+            write_hdf5: bool=True,
+            is_mag_phase: bool=False, is_sort2: bool=False, is_nx: Optional[bool]=None,
+            delete_f06: bool=False, build_pandas: bool=True,
+            subcases: Optional[str]=None, exclude: Optional[str]=None,
+            short_stats: bool=False, compare: bool=True,
+            debug: bool=False, log: Any=None,
+            binary_debug: bool=False, quiet: bool=False,
+            check_memory: bool=False, stop_on_failure: bool=True,
+            dev: bool=False, xref_safe: bool=False,
+            post=None, load_as_h5=False) -> Tuple[OP2, bool]:
     """
     Runs an OP2
 
@@ -262,6 +264,7 @@ def run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=None,
         the op2 object
     is_passed : bool
         did the test pass
+
     """
     assert build_pandas in [True, False]
 
@@ -572,6 +575,7 @@ def get_test_op2_data(argv):
     """defines the docopt interface"""
     from docopt import docopt
     ver = str(pyNastran.__version__)
+    is_release = 'dev' not in ver
 
     msg = "Usage:\n"
     #is_release = True

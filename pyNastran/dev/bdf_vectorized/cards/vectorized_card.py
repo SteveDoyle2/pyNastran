@@ -7,7 +7,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class BaseMethods(object):
+class BaseMethods:
     def object_attributes(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
@@ -28,7 +28,7 @@ class BaseMethods(object):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
 
-class VectorizedCard(object):
+class VectorizedCard:
     type = 'VectorizedCard'
     def __init__(self, model):
         self.model = model

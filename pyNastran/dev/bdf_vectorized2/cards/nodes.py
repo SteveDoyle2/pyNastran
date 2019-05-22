@@ -14,7 +14,7 @@ from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class Nodes(object):
+class Nodes:
     def __init__(self, model):
         self.model = model
         self.grid = model.grid
@@ -209,7 +209,7 @@ class Nodes(object):
         return i
 
 
-class GRIDv(object):
+class GRIDv:
     """
     +------+-----+----+----+----+----+----+----+------+
     |   1  |  2  | 3  | 4  | 5  | 6  |  7 | 8  |  9   |

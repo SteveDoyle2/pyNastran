@@ -4,7 +4,7 @@ from .paero1 import PAERO1
 #from .paero4 import PAERO4
 #from .paero5 import PAERO5
 
-class PAero(object):
+class PAero:
     def __init__(self, model):
         """
         Defines the ShellProperties object.

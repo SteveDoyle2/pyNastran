@@ -50,7 +50,7 @@ def export_obj_to_hdf5_file(hdf5_file, obj, user_custom_types=None, log=None, de
     exporter = HDF5Exporter(hdf5_file, user_custom_types=user_custom_types, log=log, debug=debug)
     exporter._create_dict_group(hdf5_file, obj, exporter.user_custom_types, nlevels=0)
 
-class HDF5Exporter(object):
+class HDF5Exporter:
     def __init__(self, hdf5_file, user_custom_types=None, log=None, debug=False):
         log = get_logger2(log=log, debug=debug, encoding='utf-8')
         if user_custom_types is None:
@@ -245,7 +245,7 @@ def load_obj_from_hdf5_file(model, h5_file, log=None, custom_types_dict=None, de
 
 
 
-class HDF5Importer(object):
+class HDF5Importer:
     def __init__(self, h5_file, custom_types_dict=None, log=None, debug=False):
         self.log = get_logger2(log=log, debug=debug, encoding='utf-8')
         if custom_types_dict is None:

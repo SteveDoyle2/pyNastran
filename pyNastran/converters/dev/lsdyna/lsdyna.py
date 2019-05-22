@@ -8,7 +8,7 @@ def read_lsdyna(key_filename):
     model.read_lsdyna(key_filename)
     return model
 
-class Lsdyna(object):
+class Lsdyna:
     def __init__(self, log=None, debug=False):
         self.log = log
         self.nodes = None

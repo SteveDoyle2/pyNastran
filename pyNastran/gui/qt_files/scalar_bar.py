@@ -5,7 +5,7 @@ import vtk
 from pyNastran.gui.utils.colormaps import colormap_dict, RGB_MAPS, HSV_MAPS
 
 
-class ScalarBar(object):
+class ScalarBar:
     """defines the ScalarBar at the side of the vtk panel"""
     def set_visibility(self, is_visible):
         """show/hide the scalar bar"""

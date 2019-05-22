@@ -3,7 +3,7 @@ from collections import defaultdict
 from docopt import docopt
 import pyNastran
 
-class IGES(object):
+class IGES:
     supported = [106, 110, 112, 114, 124, 126, 128, 142, 144,]
     maybe_supported = [100]
     def __init__(self):

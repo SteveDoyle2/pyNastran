@@ -97,7 +97,7 @@ def read_op4(op4_filename=None, matrix_names=None, precision='default',
     return op4.read_op4(op4_filename, matrix_names, precision)
 
 
-class OP4(object):
+class OP4:
     """
     todo:: add endian checking
     todo:: test on big matrices

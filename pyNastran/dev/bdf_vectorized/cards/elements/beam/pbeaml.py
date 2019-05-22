@@ -8,7 +8,7 @@ from pyNastran.bdf.cards.properties.beam import PBEAML as vPBEAML
 from pyNastran.dev.bdf_vectorized.utils import slice_to_iter
 
 
-class PBEAML(object):
+class PBEAML:
     type = 'PBEAML'
 
     def __iter__(self):

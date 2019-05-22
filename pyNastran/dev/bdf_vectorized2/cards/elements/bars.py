@@ -10,7 +10,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class BarElement(object):
+class BarElement:
     """base class for CBAR"""
     card_name = ''
     def __init__(self, model):
@@ -339,7 +339,7 @@ class CBARv(BarElement):
         return msg
 
 
-class Bars(object):
+class Bars:
     """
     Stores CBAR elements that exist in 3D space
     """

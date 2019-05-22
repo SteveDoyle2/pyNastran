@@ -2,7 +2,7 @@ from __future__ import print_function, unicode_literals
 from typing import List, Dict, Tuple, Union, Set, Any
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 
-class CaseControlCard(object):
+class CaseControlCard:
     """basic card similar to the BaseCard class for the BDF"""
     def __iter__(self):
         """temporary method to emulate the old list access style"""

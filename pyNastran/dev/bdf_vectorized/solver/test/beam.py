@@ -39,7 +39,7 @@ def build_global_stiffness(elements):
 # Ke = integral(B.T*E*B,dV)
 
 
-class Tri(object):
+class Tri:
     def __init__(self):
         pass
 
@@ -108,7 +108,7 @@ def frame3d():
     b8 = Rod(p8, p5, 8, 5, Ab, Jb, Ixb, Iyb)
 
 
-class Rod(object):
+class Rod:
     def __init__(self, pA, pB, a, b, A, J, Ix, Iy):
         self.pA = pA
         self.pB = pB

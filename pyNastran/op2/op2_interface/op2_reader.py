@@ -60,7 +60,7 @@ from pyNastran.op2.result_objects.design_response import (
     WeightResponse, StressResponse, StrainResponse, ForceResponse,
     FlutterResponse, Convergence)
 
-#class MinorTables(object):
+#class MinorTables:
     #def __init__(self, op2_reader):
         #self.op2_reader = op2_reader
 
@@ -74,7 +74,7 @@ DENSE_MATRICES = [
     b'KELMP',
     b'MELMP',
 ]
-class OP2Reader(object):
+class OP2Reader:
     """Stores methods that aren't useful to an end user"""
     def __init__(self, op2):
         #: should an h5_file be created
@@ -3039,7 +3039,7 @@ class OP2Reader(object):
     #------------------------------------------------------------------
     # skip methods
 
-#class OP2Skip(object):
+#class OP2Skip:
     #def __init__(self, op2):
         #self.op2 = op2
 

@@ -5,7 +5,7 @@ def read_ansys(ansys_filename, log=None, debug=False):
     model.read_ansys(ansys_filename)
     return model
 
-class Ansys(object):
+class Ansys:
     def __init__(self, log=None, debug=False):
         pass
 

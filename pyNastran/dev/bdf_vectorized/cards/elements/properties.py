@@ -10,7 +10,7 @@ from pyNastran.utils.mathematics import unique2d
 #from pyNastran.dev.bdf_vectorized.cards.elements.shell.ctria3 import _ctria3_normal_A
 from pyNastran.dev.bdf_vectorized.cards.elements.utils import build_groups #, asarray
 
-class Properties(object):
+class Properties:
     def __init__(self, model):
         """
         Defines the Properties object.

@@ -15,7 +15,7 @@ from pyNastran.bdf.cards.expand_card import  expand_thru, expand_thru_by, expand
 
 #from abc import ABC, abstractmethod
 
-class BaseCard(object):
+class BaseCard:
     """
     Defines a series of base methods for every card class
     (e.g., GRID, CTRIA3) including:

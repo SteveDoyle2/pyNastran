@@ -3,7 +3,7 @@ from numpy import zeros
 from cpylog import get_logger2
 
 
-class Plot3d(object):  # pragma: no cover
+class Plot3d:  # pragma: no cover
     def __init__(self, log=None, debug=False):
         self.x = {}
         self.y = {}

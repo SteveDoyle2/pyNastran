@@ -8,7 +8,7 @@ def read_su2(su2_filename, log=None, debug=False):
     #model.to_cart3d()
     return model, nodes, elements, regions
 
-class SU2Reader(object):
+class SU2Reader:
     etype_nnodes_map = {
         #Line       3
         #Triangle   5

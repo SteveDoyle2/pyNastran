@@ -14,7 +14,7 @@ from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
 from pyNastran.bdf.cards.base_card import expand_thru
 
-class Loads(object):
+class Loads:
     """intializes the Loads"""
     def __init__(self, model):
         """
@@ -187,7 +187,7 @@ class Loads(object):
         return self.repr_indent(indent='')
 
 
-class BaseLoad(object):
+class BaseLoad:
     """base class for FORCE, PLOAD4"""
     card_name = ''
     def __init__(self, model):

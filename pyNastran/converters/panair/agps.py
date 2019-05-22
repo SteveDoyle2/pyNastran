@@ -5,7 +5,7 @@ defines:
 from __future__ import print_function
 import numpy as np
 
-class AGPS(object):
+class AGPS:
     """Interface to the AGPS file"""
     def __init__(self, log=None, debug=False):
         """

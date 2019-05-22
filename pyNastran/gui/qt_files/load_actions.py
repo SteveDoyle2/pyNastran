@@ -11,7 +11,7 @@ from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 
 
-class LoadActions(object):
+class LoadActions:
     """performance mode should be handled in the main gui to minimize flipping"""
     def __init__(self, gui):
         self.gui = gui

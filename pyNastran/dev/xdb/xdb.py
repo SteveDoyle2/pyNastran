@@ -15,7 +15,7 @@ def read_xdb(xdb_filename, etype, nsubcases=1, npload4s=1, debug=False, log=None
     xdb.read_xdb(xdb_filename, etype, nsubcases, npload4s)
     return xdb
 
-class XDB(object):
+class XDB:
     def __init__(self, debug=False, log=None):
         self.n = 0
         self._endian = '<'

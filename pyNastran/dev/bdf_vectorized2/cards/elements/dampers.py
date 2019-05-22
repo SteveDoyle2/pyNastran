@@ -8,7 +8,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class Dampers(object):
+class Dampers:
     """intializes the Dampers"""
     def __init__(self, model):
         self.model = model
@@ -73,7 +73,7 @@ class Dampers(object):
         return self.repr_indent(indent='')
 
 
-class DamperElement(object):
+class DamperElement:
     """base class for CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5"""
     card_name = ''
 

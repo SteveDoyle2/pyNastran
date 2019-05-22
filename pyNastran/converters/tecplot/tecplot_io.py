@@ -13,7 +13,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
-class TecplotIO(object):
+class TecplotIO:
     def __init__(self, gui):
         self.gui = gui
 

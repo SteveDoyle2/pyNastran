@@ -102,7 +102,7 @@ class WriteMeshs(WriteMesh):
         self.log.debug('---starting BDF.write_bdf of %s---' % out_filename)
         encoding = self.get_encoding(encoding)
 
-        #class DevNull(object):
+        #class DevNull:
             #def write(self, *_):
                 #pass
 

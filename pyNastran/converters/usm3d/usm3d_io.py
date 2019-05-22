@@ -17,7 +17,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
-class Usm3dIO(object):
+class Usm3dIO:
     def __repr__(self):
         return '<Usm3dIO class>'
 

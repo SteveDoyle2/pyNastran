@@ -1,7 +1,7 @@
 from __future__ import print_function
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-class GeomMethods(object):
+class GeomMethods:
     def add_hexa(name, ):
         """
         CBRICK, eid, pid, nu, nv, nw,

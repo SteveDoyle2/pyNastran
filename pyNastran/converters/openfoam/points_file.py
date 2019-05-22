@@ -8,7 +8,7 @@ import numpy as np
 from cpylog import get_logger2
 
 
-class PointFile(object):
+class PointFile:
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log, debug=debug)
 

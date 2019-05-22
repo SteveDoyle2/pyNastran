@@ -154,7 +154,7 @@ from pyNastran.dev.bdf_vectorized.cards.loads.rforce import RFORCE
 #-------------------------------------------------------------------------------
 
 
-class BDFAttributes(object):
+class BDFAttributes:
     """defines attributes of the BDF"""
 
     def __init__(self):

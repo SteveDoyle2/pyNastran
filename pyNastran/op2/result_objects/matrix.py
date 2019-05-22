@@ -8,7 +8,7 @@ from pyNastran.utils import object_attributes, object_methods
 from pyNastran.op2.op2_interface.op2_codes import MSC_ELEMENTS
 
 
-class Matrix(object):
+class Matrix:
     """
     Defines a Matrix object that's stored in op2.matrices
 
@@ -152,7 +152,7 @@ class Matrix(object):
         return msg
 
 
-class MatrixDict(object):
+class MatrixDict:
     """storage object for KDICT, MDICT, BDICT, etc. is op2.matdicts"""
     def __init__(self, name):
         self.name = name

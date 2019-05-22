@@ -1,4 +1,4 @@
-class Module(object):
+class Module:
     def __init__(self, gui):
         self.gui = gui
 

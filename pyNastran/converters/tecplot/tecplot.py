@@ -27,7 +27,7 @@ def read_tecplot(tecplot_filename, use_cols=None, dtype=None, log=None, debug=Fa
     return tecplot
 
 
-class Tecplot(object):
+class Tecplot:
     """
     Parses a hexa binary/ASCII Tecplot 360 file.
     Writes an ASCII Tecplot 10 file (no transient support).

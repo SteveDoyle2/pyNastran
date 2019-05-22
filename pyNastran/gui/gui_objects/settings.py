@@ -34,7 +34,7 @@ HIGHLIGHT_OPACITY = 0.9
 HIGHLIGHT_POINT_SIZE = 10.
 HIGHLIGHT_LINE_THICKNESS = 5.
 
-class Settings(object):
+class Settings:
     """storage class for various settings"""
     def __init__(self, parent):
         """

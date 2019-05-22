@@ -8,52 +8,52 @@ from vtk import vtkCamera
 #VTK_UNSIGNED_SHORT = 3
 #VTK_UNSIGNED_INT = 4
 #VTK_VERSION = '7.1.1'
-#class vtkLine(object):
+#class vtkLine:
     #def __init__(self):
         #pass
-#class vtkTriangle(object):
+#class vtkTriangle:
     #def __init__(self):
         #pass
-#class vtkQuad(object):
+#class vtkQuad:
     #def __init__(self):
         #pass
-#class vtkTetra(object):
+#class vtkTetra:
     #def __init__(self):
         #pass
-#class vtkWedge(object):
+#class vtkWedge:
     #def __init__(self):
         #pass
-#class vtkHexahedron(object):
+#class vtkHexahedron:
     #def __init__(self):
         #pass
-#class vtkQuadraticTriangle(object):
+#class vtkQuadraticTriangle:
     #def __init__(self):
         #pass
-#class vtkQuadraticQuad(object):
+#class vtkQuadraticQuad:
     #def __init__(self):
         #pass
-#class vtkQuadraticTetra(object):
+#class vtkQuadraticTetra:
     #def __init__(self):
         #pass
-#class vtkQuadraticWedge(object):
+#class vtkQuadraticWedge:
     #def __init__(self):
         #pass
-#class vtkQuadraticHexahedron(object):
+#class vtkQuadraticHexahedron:
     #def __init__(self):
         #pass
-#class vtkPyramid(object):
+#class vtkPyramid:
     #def __init__(self):
         #pass
 
 
-#class vtkPoints(object):
+#class vtkPoints:
     #def __init__(self):
         #self.npoints = 0
     #def SetNumberOfPoints(self, npoints):
         #assert isinstance(npoints, integer_types), 'npoints=%s type=%s' % (npoints, type(npoints))
         #self.npoints = npoints
 
-#class Arrays(object):
+#class Arrays:
     #def __init__(self):
         #pass
     #def AddArray(self, grid):
@@ -69,7 +69,7 @@ from vtk import vtkCamera
     #def SetActiveVectors(self, name):
         #pass
 
-#class vtkArray(object):
+#class vtkArray:
     #def __init__(self):
         #pass
     #def SetNumberOfComponents(self, ncomp):
@@ -79,30 +79,30 @@ from vtk import vtkCamera
         #Arrays.__init__(self)
     #def GetDataTypeSize(self):
         #return 8
-#class vtkIdTypeArray(object):
+#class vtkIdTypeArray:
     #def __init__(self):
         #pass
     #def GetDataTypeSize(self):
         #return 4
 
 
-#class vtkDataArray(object):
+#class vtkDataArray:
     #def __init__(self):
         #pass
     #def CreateDataArray(self, vtk_array_type):
         #pass
 
-#class vtkGenericRenderWindowInteractor(object):
+#class vtkGenericRenderWindowInteractor:
     #def __init__(self):
         #pass
-#class vtkInteractorStyleRubberBandZoom(object):
+#class vtkInteractorStyleRubberBandZoom:
     #def __init__(self):
         #pass
-#class vtkInteractorStyleTrackballCamera(object):
+#class vtkInteractorStyleTrackballCamera:
     #def __init__(self):
         #pass
 
-#class vtkColorTransferFunction(object):
+#class vtkColorTransferFunction:
     #def __init__(self):
         #pass
     #def SetNanColor(self, red, green, blue):
@@ -124,7 +124,7 @@ from vtk import vtkCamera
         #assert isinstance(min_value, float), min_value
         #assert isinstance(max_value, float), max_value
 
-#class vtkScalarBarActor(object):
+#class vtkScalarBarActor:
     #def __init__(self):
         #pass
     #def SetTitle(self, title):
@@ -151,7 +151,7 @@ from vtk import vtkCamera
     #def Modified(self):
         #pass
 
-class GeometryProperty(object):
+class GeometryProperty:
     def __init__(self):
         pass
     def SetRepresentationToPoints(self):
@@ -166,7 +166,7 @@ class GeometryProperty(object):
     def SetPointSize(self, size):
         assert isinstance(size, int), type(size)
 
-class GridMapper(object):
+class GridMapper:
     def __init__(self):
         pass
     def InterpolateScalarsBeforeMappingOff(self):
@@ -175,7 +175,7 @@ class GridMapper(object):
         pass
 
 
-class vtkRenderer(object):
+class vtkRenderer:
     def __init__(self):
         pass
     def AddActor(self, actor):
@@ -195,13 +195,13 @@ class vtkRenderer(object):
     def SetGradientBackground(self, a):
         pass
 
-class vtkLODActor(object):
+class vtkLODActor:
     def __init__(self):
         pass
     def SetVisibility(self, is_visible):
         pass
 
-#class vtkCamera(object):
+#class vtkCamera:
     #def __init__(self):
         #pass
     #def GetPosition(self):
@@ -215,7 +215,7 @@ class vtkLODActor(object):
     #def GetViewUp(self):
         #return (0., 0., 1.)
 
-class VTKInteractor(object):
+class VTKInteractor:
     def __init__(self):
         pass
     def Render(self):

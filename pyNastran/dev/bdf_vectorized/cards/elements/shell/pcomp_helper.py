@@ -11,7 +11,7 @@ from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class BaseCard(object):
+class BaseCard:
     def __init__(self):
         pass
 
@@ -98,7 +98,7 @@ class ShellProperty(Property_i):
     def __init__(self):
         Property_i.__init__(self)
 
-class DeprecatedCompositeShellProperty(object):
+class DeprecatedCompositeShellProperty:
     def MassPerArea(self, iply='all', method='nplies'):
         return self.get_mass_per_area(iply, method)
 

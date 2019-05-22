@@ -17,7 +17,7 @@ from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.utils.numpy_utils import loadtxt_nice
 
 
-class ToolActions(object):
+class ToolActions:
     def __init__(self, gui):
         self.gui = gui
         self.itext = 0

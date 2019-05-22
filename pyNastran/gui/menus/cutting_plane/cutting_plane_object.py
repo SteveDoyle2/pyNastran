@@ -23,7 +23,7 @@ from pyNastran.gui.menus.cutting_plane.cutting_plane import CuttingPlaneWindow
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
 
 
-class CuttingPlaneObject(object):
+class CuttingPlaneObject:
     def __init__(self, gui):
         self.gui = gui
         self._cutting_plane_window_shown = False

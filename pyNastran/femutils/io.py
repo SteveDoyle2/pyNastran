@@ -408,7 +408,7 @@ def savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
         fmt = asstr(fmt)
     delimiter = asstr(delimiter)
 
-    class WriteWrap(object):
+    class WriteWrap:
         """Convert to unicode in py2 or to bytes on bytestream inputs."""
         def __init__(self, fh, encoding):
             self.fh = fh

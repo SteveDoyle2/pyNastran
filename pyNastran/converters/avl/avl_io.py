@@ -9,7 +9,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.avl.avl import read_avl
 
 
-class AVL_IO(object):
+class AVL_IO:
     def __init__(self, gui):
         self.gui = gui
 

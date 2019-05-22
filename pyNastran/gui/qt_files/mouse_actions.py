@@ -14,7 +14,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
         find_point_id_closest_to_xyz, create_vtk_selection_node_by_cell_ids)
 
 
-class MouseActions(object):
+class MouseActions:
     def __init__(self, gui):
         self.gui = gui
         #self._camera_mode = None

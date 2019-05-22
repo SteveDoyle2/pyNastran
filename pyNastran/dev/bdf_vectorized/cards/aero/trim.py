@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double, double_or_blank, string, string_or_blank)
 
 
-class TRIM(object):
+class TRIM:
     def __init__(self, model):
         self.model = model
 

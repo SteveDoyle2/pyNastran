@@ -1,7 +1,7 @@
 from numpy import array, zeros, searchsorted, unique, argsort
 
 
-class ElementsShell(object):
+class ElementsShell:
     def __init__(self, model):
         """
         Defines the ElementsShell object.

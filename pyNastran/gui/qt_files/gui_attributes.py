@@ -49,7 +49,7 @@ from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 
-class GuiAttributes(object):
+class GuiAttributes:
     """All methods in this class must not require VTK"""
     def __init__(self, **kwds):
         """

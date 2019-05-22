@@ -1,4 +1,4 @@
-class MONPNT1(object):
+class MONPNT1:
     """MONPNT1 table"""
     def __init__(self, frequencies, matrices, comp_matrices):
         self.frequencies = frequencies
@@ -66,7 +66,7 @@ class MONPNT1(object):
         return page_num
 
 
-class MONPNT3(object):
+class MONPNT3:
     """MONPNT3 table"""
     def __init__(self, frequencies, matrix):
         self.name = matrix.name

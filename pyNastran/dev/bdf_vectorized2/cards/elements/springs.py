@@ -8,7 +8,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class Springs(object):
+class Springs:
     """intializes the Springs"""
     def __init__(self, model):
         self.model = model
@@ -57,7 +57,7 @@ class Springs(object):
         return self.repr_indent(indent='')
 
 
-class SpringElement(object):
+class SpringElement:
     """base class for CELAS1, CELAS2, CELAS3, and CELAS4"""
     card_name = ''
 

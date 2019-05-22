@@ -8,7 +8,7 @@ def read_input_cntl(input_cntl_filename, log=None, debug=False):
     return cntl
 
 
-class InputCntlReader(object):
+class InputCntlReader:
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log, debug=debug)
 

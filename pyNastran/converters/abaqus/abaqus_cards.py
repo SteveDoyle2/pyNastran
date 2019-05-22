@@ -8,7 +8,7 @@ from __future__ import print_function
 import numpy as np
 
 
-class SolidSection(object):
+class SolidSection:
     """a SolidSection defines depth and a material"""
     def __init__(self, param_map, data_lines, log):
         self.param_map = param_map
@@ -35,7 +35,7 @@ class SolidSection(object):
         return msg
 
 
-class Material(object):
+class Material:
     """a Material object is a series of nodes & elements (of various types)"""
     def __init__(self, name, sections, density=None, ndepvars=None, ndelete=None):
         self.name = name
@@ -96,7 +96,7 @@ class Material(object):
             abq_file.write('*User Material%s\n  %s,\n' % (nconstants, self.user_material))
         #abq_file.write('** skipping Material %s\n' % self.name)
 
-class Assembly(object):
+class Assembly:
     def __init__(self, element_types, node_sets, element_sets):
         self.element_types = element_types
         self.node_sets = node_sets
@@ -118,7 +118,7 @@ class Assembly(object):
         )
         return msg
 
-class Part(object):
+class Part:
     """a Part object is a series of nodes & elements (of various types)"""
     def __init__(self, name, nids, nodes, element_types, node_sets, element_sets,
                  solid_sections, log):

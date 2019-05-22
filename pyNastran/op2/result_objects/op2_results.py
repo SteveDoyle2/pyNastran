@@ -8,7 +8,7 @@ from pyNastran.op2.op2_interface.random_results import (
     CumulativeRootMeansSquareObjects, NumberOfCrossingsObjects,
 )
 
-class Results(object):
+class Results:
     """storage object for even more op2_results (see op2.op2_results)"""
     def __init__(self):
         self.eqexin = None
@@ -56,7 +56,7 @@ class Results(object):
             base.extend(objs.get_table_types())
         return base
 
-class ModalContribution(object):
+class ModalContribution:
     def __init__(self):
         self.celas1_stress = {}
         self.celas2_stress = {}
@@ -163,7 +163,7 @@ class ModalContribution(object):
         ]
         return ['modal_contribution.' + table for table in tables]
 
-class StrengthRatio(object):
+class StrengthRatio:
     def __init__(self):
         self.cquad4_composite_stress = {}
         self.cquad8_composite_stress = {}

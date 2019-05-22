@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_blank,
     double_or_blank)
 
 
-class RFORCE(object):
+class RFORCE:
     type = 'RFORCE'
     def __init__(self, model):
         """

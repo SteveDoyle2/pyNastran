@@ -11,7 +11,7 @@ from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 
 
 # EDIT ACTOR PROPERTIES
-class EditGeometryPropertiesObject(object):
+class EditGeometryPropertiesObject:
     """defines EditGeometryPropertiesObject"""
     def __init__(self, gui):
         """creates EditGeometryPropertiesObject"""

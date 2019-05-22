@@ -5,11 +5,11 @@ from numpy import array, union1d
 from pyNastran.dev.bdf_vectorized.cards.loads.load import LOAD
 
 
-#class LOAD(object):
+#class LOAD:
     #def __init__(self, model):
         #self.load = defaultdict(list)
 
-class VectorizedCardDict(object):
+class VectorizedCardDict:
     def __len__(self):
         return self.n
 
@@ -105,7 +105,7 @@ class LOADs(VectorizedCardDict):
             for load in self._objs[lid]:
                 load.write_card(bdf_file, size=size, is_double=is_double, load_id=lid)
 
-class Loads(object):
+class Loads:
     def __init__(self, model):
         self.model = model
 

@@ -28,7 +28,7 @@ FILE_MANAGEMENT = (
 EXECUTIVE_CASE_SPACES = tuple(list(FILE_MANAGEMENT) + ['SOL ', 'SET ', 'SUBCASE '])
 
 
-class BDFInputPy(object):
+class BDFInputPy:
     """BDF reader class that only handles lines and not building cards or parsing cards"""
     def __init__(self, read_includes, dumplines, encoding, nastran_format='msc',
                  consider_superelements=True, log=None, debug=False):

@@ -26,7 +26,7 @@ def read_usm3d(basename, log=None, debug=None):
     model.read_usm3d(basename, unused_dimension_flag, read_loads=True)
     return model
 
-class Usm3d(object):
+class Usm3d:
     """
     Usm3d interface class
     """

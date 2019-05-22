@@ -4,7 +4,7 @@ from pyNastran.dev.xdb.enums import SolutionType
 
 
 
-class XDB_obj(object):
+class XDB_obj:
     def __init__(self, table_name, ints, debug=False, log=None):
         self.raw_control = ints[:10]
         self.raw_full = ints

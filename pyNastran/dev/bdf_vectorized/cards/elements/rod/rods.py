@@ -8,7 +8,7 @@ def divide_2d_array_by_column_vector(array_obj, vector):
     vector[:, 2] / vector
     return vector
 
-class ElementsRod(object):
+class ElementsRod:
     def __init__(self, model):
         """
         Defines the ElementsRod object.

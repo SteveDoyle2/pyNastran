@@ -1,7 +1,7 @@
 from numpy import searchsorted, hstack, full, nan, unique, where
 
 
-class PropertiesSolid(object):
+class PropertiesSolid:
     def __init__(self, model):
         """
         Defines the PropertiesSolid object.

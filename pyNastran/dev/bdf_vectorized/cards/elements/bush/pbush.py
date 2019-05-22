@@ -8,7 +8,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import integer
 from pyNastran.bdf.cards.properties.bush import PBUSH as vPBUSH
 
-class PBUSH(object):
+class PBUSH:
     type = 'PBUSH'
 
     def __init__(self, model):

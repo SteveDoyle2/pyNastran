@@ -14,7 +14,7 @@ from pyNastran.op2.result_objects.design_response import Responses
 from pyNastran.op2.result_objects.op2_results import Results
 
 
-class OP2_F06_Common(object):
+class OP2_F06_Common:
     def __init__(self):
         #: a dictionary that maps an integer of the subcaseName to the
         #: subcase_id

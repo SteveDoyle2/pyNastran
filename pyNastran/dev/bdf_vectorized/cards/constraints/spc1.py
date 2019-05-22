@@ -22,7 +22,7 @@ def get_spc1_constraint(card):
     return constraint_id, dofs, node_ids
 
 
-class SPC1(object):
+class SPC1:
     """
     +------+-----+------+--------+--------+--------+--------+--------+-----+
     | SPC1 | SID |  C   |   G1   | G2     |   G3   |   G4   |   G5   | G6  |

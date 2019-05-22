@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class ShearElement(object):
+class ShearElement:
     """base class for CSHEAR"""
     card_name = ''
     def __init__(self, model):
@@ -200,7 +200,7 @@ class CSHEARv(ShearElement):
         return msg
 
 
-class Shears(object):
+class Shears:
     """
     Stores CSHEAR elements that exist in 3D space
     """

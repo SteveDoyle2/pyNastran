@@ -12,7 +12,7 @@ from pyNastran.bdf.utils import parse_patran_syntax #, parse_patran_syntax_dict
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 
 
-class Group(object):
+class Group:
     def __init__(self, name, element_str, elements_pound, editable=True):
         # type: (str, str, int, bool) -> None
         """
@@ -66,7 +66,7 @@ class Group(object):
         return msg
 
 
-class NodeGroup(object):
+class NodeGroup:
     def __init__(self, name, node_str, nodes_pound, editable=True):
         # type: (str, str, int, bool) -> None
         """

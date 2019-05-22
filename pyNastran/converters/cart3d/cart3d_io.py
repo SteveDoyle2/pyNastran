@@ -22,7 +22,7 @@ from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 from pyNastran.converters.cart3d.input_cntl_reader import read_input_cntl
 
 
-class Cart3dIO(object):
+class Cart3dIO:
     """
     Defines the GUI class for Cart3d.
     """

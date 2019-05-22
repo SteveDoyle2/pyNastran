@@ -27,7 +27,7 @@ def get_spc_constraint(card, i):
 
     return constraint_id, node_id, dofs, enforced_motion
 
-class SPC(object):
+class SPC:
     """
     Defines enforced displacement/temperature (static analysis)
     velocity/acceleration (dynamic analysis).

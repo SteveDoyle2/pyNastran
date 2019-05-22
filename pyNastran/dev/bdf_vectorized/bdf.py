@@ -1559,7 +1559,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
     def _make_card_parser(self):
         """creates the card parser variables that are used by add_card"""
-        class Crash(object):
+        class Crash:
             """class for crashing on specific cards"""
             def __init__(self):
                 """dummy init"""

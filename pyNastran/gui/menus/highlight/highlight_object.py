@@ -2,7 +2,7 @@ from __future__ import print_function
 from pyNastran.gui.menus.highlight.highlight import HighlightWindow
 
 
-class HighlightObject(object):
+class HighlightObject:
     def __init__(self, gui):
         self.gui = gui
         self._highlight_window_shown = False

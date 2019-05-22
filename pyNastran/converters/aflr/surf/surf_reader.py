@@ -48,7 +48,7 @@ def combine_surfs(surf_filenames, surf_out_filename=None):
     return surf
 
 
-class SurfReader(object):
+class SurfReader:
     def __init__(self, log=None, debug=False):
         """
         Initializes the SurfReader object
@@ -225,7 +225,7 @@ class SurfReader(object):
         return normals
 
 
-class TagReader(object):
+class TagReader:
     def __init__(self, log=None, debug=False):
         self.log = log
         self.debug = debug

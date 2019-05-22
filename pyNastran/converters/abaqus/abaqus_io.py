@@ -15,7 +15,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.converters.abaqus.abaqus import Abaqus
 
 
-class AbaqusIO(object):
+class AbaqusIO:
     """Defines the GUI class for Abaqus."""
     def __init__(self, gui):
         self.gui = gui

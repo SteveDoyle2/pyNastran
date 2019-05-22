@@ -28,7 +28,7 @@ def read_bedge(bedge_filename, beta_reverse=179.7, log=None, debug=False):
     model.read_bedge(bedge_filename, beta_reverse=beta_reverse)
     return model
 
-class AFLR2(object):
+class AFLR2:
     """defines methods for reading interfacing with AFLR2"""
     def __init__(self, log=None, debug=False):
         """

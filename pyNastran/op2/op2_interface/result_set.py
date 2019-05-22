@@ -23,7 +23,7 @@ import re
 from copy import deepcopy
 
 
-class ResultSet(object):
+class ResultSet:
     """
     This class is private storage interface class.
 

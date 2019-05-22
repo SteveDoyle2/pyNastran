@@ -24,7 +24,7 @@ from pyNastran.utils import check_path
 #CY =  Fx*sin(beta) +Fy*cos(beta)
 
 
-class PanairGrid(object):
+class PanairGrid:
     """defines the PanairGrid class"""
     model_type = 'panair'
 

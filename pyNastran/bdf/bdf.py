@@ -1675,7 +1675,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def _make_card_parser(self):
         # type: () -> None
         """creates the card parser variables that are used by add_card"""
-        class Crash(object):
+        class Crash:
             """class for crashing on specific cards"""
             def __init__(self):
                 # type: () -> None
@@ -1688,7 +1688,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 msg = _format_comment(comment) + str(card)
                 raise UnsupportedCard(msg)
 
-        #class CrashIgnore(object):
+        #class CrashIgnore:
             #"""class for crashing on specific cards"""
             #def __init__(self):
                 #"""dummy init"""

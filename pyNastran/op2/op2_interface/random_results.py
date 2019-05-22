@@ -1,4 +1,4 @@
-class RandomObjects(object):
+class RandomObjects:
     prefix = ''
     postfix = ''
     def __init__(self):
@@ -171,7 +171,7 @@ class NumberOfCrossingsObjects(RandomObjects):
     prefix = 'no.'
     #postfix = ''
 
-class RAECONS(object):
+class RAECONS:
     """storage class for the RAECONS objects"""
     def __init__(self):
         self.ctria3_strain = {}
@@ -185,7 +185,7 @@ class RAECONS(object):
         ]
         return ['RAECONS.' + table for table in tables]
 
-class RASCONS(object):
+class RASCONS:
     """storage class for the RASCONS objects"""
     def __init__(self):
         self.ctetra_stress = {}
@@ -225,7 +225,7 @@ class RASCONS(object):
         ]
         return ['RASCONS.' + table for table in tables]
 
-class RAPCONS(object):
+class RAPCONS:
     """storage class for the RAPCONS objects"""
     def __init__(self):
         self.cquad4_composite_stress = {}
@@ -252,7 +252,7 @@ class RAPCONS(object):
         ]
         return ['RAPCONS.' + table for table in tables]
 
-class RAPEATC(object):
+class RAPEATC:
     """storage class for the RAPEATC objects"""
     def __init__(self):
         self.cquad4_composite_stress = {}
@@ -280,7 +280,7 @@ class RAPEATC(object):
         ]
         return ['RAPEATC.' + table for table in tables]
 
-class RAFCONS(object):
+class RAFCONS:
     """storage class for the RAFCONS objects"""
     def __init__(self):
         self.cbar_force = {}
@@ -295,7 +295,7 @@ class RAFCONS(object):
         ]
         return ['RAFCONS.' + table for table in tables]
 
-class RAGCONS(object):
+class RAGCONS:
     """storage class for the RAGCONS objects"""
     def __init__(self):
         self.grid_point_forces = {}
@@ -305,7 +305,7 @@ class RAGCONS(object):
         ]
         return ['RAGCONS.' + table for table in tables]
 
-class RAGEATC(object):
+class RAGEATC:
     """storage class for the RAGEATC objects"""
     def __init__(self):
         self.grid_point_forces = {}
@@ -317,7 +317,7 @@ class RAGEATC(object):
         return ['RAGEATC.' + table for table in tables]
 
 
-class RANCONS(object):
+class RANCONS:
     """storage class for the RANCONS objects"""
     def __init__(self):
         self.cbar_strain_energy = {}
@@ -334,7 +334,7 @@ class RANCONS(object):
         ]
         return ['RANCONS.' + table for table in tables]
 
-class RADEFFM(object):
+class RADEFFM:
     """storage class for the RADEFFM objects"""
     def __init__(self):
         self.eigenvectors = {}
@@ -345,7 +345,7 @@ class RADEFFM(object):
         return ['RADEFFM.' + table for table in tables]
 
 
-class RADCONS(object):
+class RADCONS:
     def __init__(self):
         self.eigenvectors = {}
 
@@ -356,7 +356,7 @@ class RADCONS(object):
         return ['RADCONS.' + table for table in tables]
 
 
-class RADEATC(object):
+class RADEATC:
     """storage class for the RADEATC objects"""
     def __init__(self):
         self.eigenvectors = {}
@@ -368,7 +368,7 @@ class RADEATC(object):
         return ['RADEATC.' + table for table in tables]
 
 
-class RANEATC(object):
+class RANEATC:
     """storage class for the RANEATC objects"""
     def __init__(self):
         self.cbar_strain_energy = {}
@@ -386,7 +386,7 @@ class RANEATC(object):
         return ['RANEATC.' + table for table in tables]
 
 
-class ROUGV1(object):
+class ROUGV1:
     """storage class for the ROUGV1 objects"""
     def __init__(self):
         self.displacements = {}
@@ -400,7 +400,7 @@ class ROUGV1(object):
         ]
         return ['ROUGV1.' + table for table in tables]
 
-class RAFEATC(object):
+class RAFEATC:
     """storage class for the RAFEATC objects"""
     def __init__(self):
         self.cbar_force = {}
@@ -416,7 +416,7 @@ class RAFEATC(object):
         return ['RAFEATC.' + table for table in tables]
 
 
-class RASEATC(object):
+class RASEATC:
     """storage class for the RASEATC objects"""
     def __init__(self):
         self.chexa_stress = {}
@@ -429,7 +429,7 @@ class RASEATC(object):
         ]
         return ['RASEATC.' + table for table in tables]
 
-class RAEEATC(object):
+class RAEEATC:
     """storage class for the RAEEATC objects"""
     def __init__(self):
         self.chexa_strain = {}

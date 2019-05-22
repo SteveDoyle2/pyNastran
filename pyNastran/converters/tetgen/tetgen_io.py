@@ -13,7 +13,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
-class TetgenIO(object):
+class TetgenIO:
     def __init__(self, gui):
         self.gui = gui
 

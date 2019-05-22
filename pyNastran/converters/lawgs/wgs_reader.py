@@ -14,7 +14,7 @@ import numpy as np
 from numpy import array, radians, dot, zeros
 from cpylog import get_logger2
 
-class Panel(object):
+class Panel:
     """
     Parameters
     ----------
@@ -180,7 +180,7 @@ def read_lawgs(wgs_filename, log=None, debug=False):
     model.read_lawgs(wgs_filename)
     return model
 
-class LaWGS(object):
+class LaWGS:
     """defines a reader for the LaWGS legacy file format"""
     model_type = 'LaWGS'
 

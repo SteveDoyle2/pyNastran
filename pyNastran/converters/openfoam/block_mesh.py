@@ -41,7 +41,7 @@ def get_not_indexes(a, indices):
     return not_indices
 
 
-class BlockMesh(object):
+class BlockMesh:
     """defines BlockMesh"""
     def __init__(self, log=None, debug=False):
         """creates BlockMesh"""

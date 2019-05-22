@@ -9,7 +9,7 @@ def read_panair_out(panair_out_filename='panair.out', log=None, debug=False):
     return model
 
 
-class Ft13Network(object):
+class Ft13Network:
     """Stores network/patch info"""
     def __init__(self, inetwork, data):
         #print(data[0])
@@ -22,7 +22,7 @@ class Ft13Network(object):
     def __repr__(self):
         return '<Ft13Network>; i=%s len=%s' % (self.inetwork, len(self.data))
 
-class Network(object):
+class Network:
     """Stores network/patch info"""
     def __init__(self, line):
         self.line = line
@@ -43,7 +43,7 @@ class Network(object):
         """converts to a numpy array in point order"""
         self.data = np.array(self.data, dtype='float32')#.reshape(jc)
 
-class PanairOut(object):
+class PanairOut:
     """reads the panair.out file"""
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log=log, debug=debug, encoding='utf-8')

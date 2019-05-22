@@ -1,4 +1,4 @@
-class Plotter(object):
+class Plotter:
     """
     +---------+
     | Plotter |

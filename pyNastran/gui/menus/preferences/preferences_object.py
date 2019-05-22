@@ -2,7 +2,7 @@ from __future__ import print_function
 from pyNastran.gui.menus.preferences.preferences import PreferencesWindow
 
 
-class PreferencesObject(object):
+class PreferencesObject:
     def __init__(self, gui):
         self.gui = gui
         self._preferences_window_shown = False

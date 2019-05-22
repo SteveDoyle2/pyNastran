@@ -9,7 +9,7 @@ def print_float(value):  # sInt #string_float_value
     return value.rstrip('0')
 
 
-class PanairPatch(object):
+class PanairPatch:
     """Used for physical surfaces"""
     def __init__(self, inetwork, network_name, kt, cp_norm, xyz, log):
         self.log = log

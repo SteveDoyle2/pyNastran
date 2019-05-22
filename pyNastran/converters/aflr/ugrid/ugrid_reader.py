@@ -51,7 +51,7 @@ def read_ugrid(ugrid_filename=None,
     return ugrid_model
 
 
-class UGRID(object):
+class UGRID:
     """
     Interface to the AFLR UGrid format.
     """

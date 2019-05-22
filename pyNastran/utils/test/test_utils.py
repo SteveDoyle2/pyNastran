@@ -17,7 +17,7 @@ from pyNastran.utils.dev import get_files_of_type
 
 PKG_PATH = pyNastran.__path__[0]
 
-class A1(object):
+class A1:
     def __init__(self):
         self.a = 5
         self._a = self.a**2

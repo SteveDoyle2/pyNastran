@@ -41,7 +41,7 @@ def get_mpc_constraint(card):
     return constraint_id, constraints
 
 
-class MPC(object):
+class MPC:
     """
     Defines enforced displacement/temperature (static analysis)
     velocity/acceleration (dynamic analysis).::

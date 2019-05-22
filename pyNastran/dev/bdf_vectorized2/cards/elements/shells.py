@@ -10,7 +10,7 @@ from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8, set_blank_
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class ShellElement(object):
+class ShellElement:
     """base class for CTRIA3, CQUAD4"""
     card_name = ''
     def __init__(self, model):
@@ -1335,7 +1335,7 @@ class CQUADRv(ShellElement):
         return msg
 
 
-class Shells(object):
+class Shells:
     """
     Stores shell elements that exist in 3D space
     (e.g., not axisysmmetric elements).

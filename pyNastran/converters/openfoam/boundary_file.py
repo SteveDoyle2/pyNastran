@@ -15,7 +15,7 @@ from pyNastran.converters.openfoam.face_file import FaceFile
 from pyNastran.utils import check_path
 
 
-class BoundaryFile(object):
+class BoundaryFile:
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log, debug=debug)
 
@@ -128,7 +128,7 @@ class BoundaryFile(object):
         return boundaries
 
 
-class Boundary(object):
+class Boundary:
     """defines Boundary"""
     def __init__(self, log=None, debug=False):
         """creates a Boundary object"""

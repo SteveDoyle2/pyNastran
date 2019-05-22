@@ -1,4 +1,4 @@
-class EQEXIN(object):
+class EQEXIN:
     def __init__(self, nid, dof, doftype):
         self.nid = nid
         self.dof = dof

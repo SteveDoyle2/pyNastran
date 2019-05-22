@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class Solids(object):
+class Solids:
     def __init__(self, model):
         self.model = model
         self.ctetra4 = model.ctetra4
@@ -78,7 +78,7 @@ class Solids(object):
         return self.repr_indent(indent='')
 
 
-class SolidElement(object):
+class SolidElement:
     """base class for CTETRA4, CPENTA6, CHEXA8, CPYRAM5, CTETRA10, CPENTA15, CHEXA20, CPYRAM13"""
     card_name = ''
     nnodes = 0

@@ -14,7 +14,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 from pyNastran.gui.qt_files.colors import YELLOW_FLOAT
 
 
-class SurfIO(object):
+class SurfIO:
     def __init__(self, gui):
         self.gui = gui
 

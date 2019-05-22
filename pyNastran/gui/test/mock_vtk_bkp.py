@@ -1,7 +1,7 @@
 from pyNastran.gui.test.mock_vtk import GeometryProperty
 
 
-#class Grid(object):
+#class Grid:
     #def Reset(self):
         #pass
     #def Allocate(self, nelements, delta):
@@ -21,7 +21,7 @@ from pyNastran.gui.test.mock_vtk import GeometryProperty
     #def GetPointData(self):
         #return Arrays()
 
-#class vtkTextProperty(object):
+#class vtkTextProperty:
     #def __init__(self):
         #pass
     #def SetFontFamilyToArial(self):
@@ -35,7 +35,7 @@ from pyNastran.gui.test.mock_vtk import GeometryProperty
     #def ShadowOff(self):
         #pass
 
-#class vtkTextActor(object):
+#class vtkTextActor:
     #def __init__(self):
         #pass
     #def SetInput(self, string):
@@ -46,7 +46,7 @@ from pyNastran.gui.test.mock_vtk import GeometryProperty
         #pass
 
 
-class vtkActor(object):
+class vtkActor:
     def __init__(self):
         self._prop = GeometryProperty()
     def GetProperty(self):
@@ -61,15 +61,15 @@ class vtkActor(object):
         pass
 
 
-class vtkArrowSource(object):
+class vtkArrowSource:
     def __init__(self):
         pass
 
-class vtkGlyph3D(object):
+class vtkGlyph3D:
     def SetScaleFactor(self, value):
         pass
 
-class vtkPolyDataMapper(object):
+class vtkPolyDataMapper:
     def __init__(self):
         pass
 

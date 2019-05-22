@@ -5,7 +5,7 @@ from numpy import degrees, array, zeros, vstack, where
 from cpylog import get_logger2
 
 
-class ADB_Reader(object):
+class ADB_Reader:
     def __init__(self, log=None, debug=None, batch=False):
         self.log = get_logger2(log, debug)
         self.debug = debug

@@ -24,7 +24,7 @@ def read_avl(avl_filename, log=None, debug=False):
     avl.read_avl(avl_filename)
     return avl
 
-class AVL(object):
+class AVL:
     """Interface to the AVL (Athena Vortex Lattice) code"""
     def __init__(self, log=None, debug=False):
         self.name = 'model_name'

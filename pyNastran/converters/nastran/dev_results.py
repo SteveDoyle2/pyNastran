@@ -6,7 +6,7 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 
-class TransientElementResults(object):
+class TransientElementResults:
     deflects = False
     def __init__(self, subcase_id, titles, headers, unused_scalars,
                  scales, data_formats=None,

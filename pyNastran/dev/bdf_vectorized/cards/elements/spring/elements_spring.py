@@ -1,5 +1,5 @@
 
-class ElementsSpring(object):
+class ElementsSpring:
     def __init__(self, model):
         """
         Defines the ElementsSpring object.

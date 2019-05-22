@@ -12,7 +12,7 @@ from pyNastran.gui.menus.cutting_plane.shear_moment_torque import ShearMomentTor
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
 
 
-class ShearMomentTorqueObject(object):
+class ShearMomentTorqueObject:
     """wrapper around ShearMomentTorqueWindow"""
     def __init__(self, gui):
         self.gui = gui

@@ -8,7 +8,7 @@ import vtk
 #from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 
 
-class ViewActions(object):
+class ViewActions:
     def __init__(self, gui):
         self.gui = gui
         self.is_wireframe = False

@@ -11,7 +11,7 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 raise NotImplementedError()
 
-class Plot3d_io(object):  # pragma: no cover
+class Plot3d_io:  # pragma: no cover
     def __init__(self, gui):
         self.gui = gui
 

@@ -29,7 +29,7 @@ BEAM_GEOM_TYPES = [
 ]
 
 
-class NastranGuiAttributes(object):
+class NastranGuiAttributes:
     """GUI specific geometry functions that don't involve PyQt/VTK"""
     def __init__(self):
         # new options, no way to access them through the gui

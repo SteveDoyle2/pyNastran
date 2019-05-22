@@ -42,7 +42,7 @@ def _clean_lines(lines):
     return lines2
 
 
-class Abaqus(object):
+class Abaqus:
     """defines the abaqus reader"""
     def __init__(self, log=None, debug=True):
         self.debug = debug

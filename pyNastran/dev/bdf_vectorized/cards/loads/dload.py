@@ -4,7 +4,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer,
     double)
 
 
-class DLOAD(object):
+class DLOAD:
     type = 'DLOAD'
     def __init__(self, model):
         """

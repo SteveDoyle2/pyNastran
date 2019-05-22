@@ -173,7 +173,7 @@ def cart3d_to_openfoam(cart3d_filename, inpt_filename, basepath):
     fcastle.close()
 
 
-class Inpt(object):
+class Inpt:
     def __init__(self):
         # base mesh
         self.xyz_start = (5, 5, 5)

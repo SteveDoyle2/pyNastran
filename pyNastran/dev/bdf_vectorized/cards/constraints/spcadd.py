@@ -15,7 +15,7 @@ def get_spcadd_constraint(card):
     return constraint_id, node_ids
 
 
-class SPCADD(object):
+class SPCADD:
     """
     Defines a single-point constraint set as a union of single-point constraint
     sets defined on SPC or SPC1 entries.

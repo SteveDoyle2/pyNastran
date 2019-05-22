@@ -19,7 +19,7 @@ from .writer.ept import write_ept
 from .writer.mpt import write_mpt
 
 
-class TrashWriter(object):
+class TrashWriter:
     def __init__(self, *args, **kwargs):
         pass
     def write(self, data):
@@ -171,6 +171,7 @@ class OP2Writer(OP2_F06_Common):
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
             'OAGATO2', 'OAGCRM2', 'OAGNO2', 'OAGPSD2', 'OAGRMS2',
             'OUG1',
+            'OUGV1PAT',
 
             'OQG1',
             'OQGV1',

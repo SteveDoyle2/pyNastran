@@ -4,7 +4,7 @@ defines:
 """
 from itertools import cycle
 
-class AnimationCallback(object):
+class AnimationCallback:
     """
     http://www.vtk.org/Wiki/VTK/Examples/Python/Animation
     """

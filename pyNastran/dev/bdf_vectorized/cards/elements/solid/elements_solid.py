@@ -2,7 +2,7 @@ import numpy as np
 from numpy import  zeros, where, searchsorted, argsort, full, nan, unique, array
 
 
-class ElementsSolid(object):
+class ElementsSolid:
     def __init__(self, model):
         """
         Defines the ShellProperties object.

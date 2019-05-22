@@ -9,7 +9,7 @@ from pyNastran.converters.dev.avus.avus_grid import AvusGrid
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
-class AvusIO(object):
+class AvusIO:
     def __init__(self, gui):
         self.gui = gui
 

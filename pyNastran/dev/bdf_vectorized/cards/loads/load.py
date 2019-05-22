@@ -6,7 +6,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.assign_type import integer, double
 
 
-class LOAD(object):
+class LOAD:
     type = 'LOAD'
 
     def allocate(self, ncards):

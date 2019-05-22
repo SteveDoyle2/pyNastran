@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-class Elements(object):
+class Elements:
     """stores all the elements"""
     def __init__(self, model):
         """creates the Elements object that stores all the elements"""

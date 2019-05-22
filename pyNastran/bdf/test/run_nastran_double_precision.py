@@ -12,7 +12,7 @@ from pyNastran.op2.op2 import read_op2
 #except ImportError:
     #is_f06 = False
 
-#class remove_prints(object):
+#class remove_prints:
     #def __init__(self):
         #pass
     #def write(self, msg):

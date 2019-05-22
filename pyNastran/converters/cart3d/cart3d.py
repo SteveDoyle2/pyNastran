@@ -89,7 +89,7 @@ def comp2tri(in_filenames, out_filename,
     model.write_cart3d(out_filename, is_binary=is_binary, float_fmt=float_fmt)
     return model
 
-class Cart3dIO(object):
+class Cart3dIO:
     """
     Cart3d IO class
     """

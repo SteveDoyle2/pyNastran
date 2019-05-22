@@ -20,7 +20,7 @@ if sys.version_info < (2, 7, 7):
     raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (
         IMAJOR, MINOR1, MINOR2))
 
-class FortranFormat(object):
+class FortranFormat:
     """defines basic methods for reading Fortran formatted data files"""
     def __init__(self):
         self.n = 0

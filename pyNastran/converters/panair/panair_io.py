@@ -20,7 +20,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
-class PanairIO(object):
+class PanairIO:
     """Defines the GUI class for Panair."""
     def __init__(self, gui):
         self.gui = gui

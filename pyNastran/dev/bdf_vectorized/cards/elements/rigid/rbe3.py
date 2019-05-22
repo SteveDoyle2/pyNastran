@@ -13,7 +13,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 
 
 #RigidElement
-class RBE3(object):
+class RBE3:
     type = 'RBE3'
 
     def __init__(self, model):

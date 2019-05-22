@@ -1,7 +1,7 @@
 from __future__ import print_function
 from copy import deepcopy
 
-class AltGeometry(object):
+class AltGeometry:
     representations = ['main', 'toggle', 'wire', 'point', 'surface',
                        'bar', 'wire+point', 'wire+surf']
     displays = ['Wireframe', 'Surface', 'point', None]

@@ -9,7 +9,7 @@ from numpy import zeros
 from pyNastran.utils import object_attributes, object_methods
 
 
-class GridPointWeight(object):
+class GridPointWeight:
     def __init__(self):
         """
         .. seealso:: http://www.6dof.com/index.php?option=com_content&view=article&id=298:output-from-the-grid-point-weight-generator&catid=178:courses-and-trainings&Itemid=61

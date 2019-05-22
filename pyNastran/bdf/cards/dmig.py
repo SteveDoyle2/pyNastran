@@ -1153,7 +1153,7 @@ class DMIG(NastranMatrix):
                                finalize=finalize)
 
 
-class DMIAX(object):
+class DMIAX:
     """
     Direct Matrix Input for Axisymmetric Analysis
 

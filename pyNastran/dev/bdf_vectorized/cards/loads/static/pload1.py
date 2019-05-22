@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer,
 
 from pyNastran.dev.bdf_vectorized.cards.loads.vectorized_load import VectorizedLoad
 
-class PLOAD1(object):
+class PLOAD1:
     type = 'PLOAD1'
     valid_types = ['FX', 'FY', 'FZ', 'FXE', 'FYE', 'FZE',
                    'MX', 'MY', 'MZ', 'MXE', 'MYE', 'MZE']

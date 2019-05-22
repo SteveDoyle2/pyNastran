@@ -1,7 +1,7 @@
 from __future__ import print_function
 import numpy as np
 
-class Responses(object):
+class Responses:
     """Defines SOL 200 responses"""
     def __init__(self):
         self.convergence_data = None
@@ -30,7 +30,7 @@ class Responses(object):
                 msg += obj.get_stats(short=short) + '\n'
         return msg
 
-class WeightResponse(object):
+class WeightResponse:
     def __init__(self):
         self.n = 1
         self._n = 0
@@ -160,7 +160,7 @@ class WeightResponse(object):
             return self.__repr__()
 
 
-class GeneralResponse(object):
+class GeneralResponse:
     """common class for StressResponse, StrainResponse, and ForceResponse"""
     def __init__(self):
         self.n = 1
@@ -202,7 +202,7 @@ class StressResponse(GeneralResponse):
 class StrainResponse(GeneralResponse):
     name = 'strain'
 
-class FlutterResponse(object):
+class FlutterResponse:
     name = 'flutter'
     def __init__(self):
         self.n = 1
@@ -242,7 +242,7 @@ class FlutterResponse(object):
         else:
             return self.__repr__()
 
-class Convergence(object):
+class Convergence:
     def __init__(self, ndesign_variables):
         self.n = 1
         self._n = 0

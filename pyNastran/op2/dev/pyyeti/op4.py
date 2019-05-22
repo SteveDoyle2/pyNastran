@@ -17,7 +17,7 @@ import itertools as it
 import numpy as np
 
 
-class OP4(object):
+class OP4:
     """
     Class for reading/writing Nastran output4 (.op4) files.
 

@@ -11,7 +11,7 @@ from pyNastran.converters.lawgs.wgs_reader import read_lawgs
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
-class LaWGS_IO(object):
+class LaWGS_IO:
     def __init__(self, gui):
         self.gui = gui
 

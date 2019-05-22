@@ -13,7 +13,7 @@ from pyNastran.dev.bdf_vectorized.utils import slice_to_iter
     #MAT10, MAT11) #, MATS1)
 
 
-class Materials(object):
+class Materials:
     def __init__(self, model):
         self.model = model
         self.n = 0

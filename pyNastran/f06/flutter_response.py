@@ -18,7 +18,7 @@ from pyNastran.utils.atmosphere import (
 from pyNastran.utils import object_attributes, object_methods
 
 
-class FlutterResponse(object):
+class FlutterResponse:
     """storage object for single subcase SOL 145 results"""
 
     def __init__(self, subcase, configuration, xysym, xzsym, mach, density_ratio, method,

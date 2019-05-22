@@ -22,7 +22,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
 
-class OpenFoamIO(object):
+class OpenFoamIO:
     def __init__(self, gui):
         """creates OpenFoamIO"""
         self.gui = gui

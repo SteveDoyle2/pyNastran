@@ -15,7 +15,7 @@ def read_input_c3d(input_c3d_filename, log=None, debug=False, stack=True):
     model = InputC3dReader(log=log, debug=debug)
     return model.read_input_c3d(input_c3d_filename, stack=stack)
 
-class InputC3dReader(object):
+class InputC3dReader:
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log, debug=debug)
 

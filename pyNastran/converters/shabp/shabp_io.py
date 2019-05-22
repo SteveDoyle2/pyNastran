@@ -16,7 +16,7 @@ from pyNastran.converters.shabp.shabp_results import ShabpOut
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 
-class ShabpIO(object):
+class ShabpIO:
     def __init__(self, gui):
         self.gui = gui
 

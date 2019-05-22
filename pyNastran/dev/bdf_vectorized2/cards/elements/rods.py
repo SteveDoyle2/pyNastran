@@ -8,7 +8,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class Rods(object):
+class Rods:
     """intializes the Rods"""
     def __init__(self, model):
         self.model = model
@@ -51,7 +51,7 @@ class Rods(object):
         return self.repr_indent(indent='')
 
 
-class RodElement(object):
+class RodElement:
     """base class for CONROD, CROD, and CTUBE"""
     card_name = ''
 

@@ -20,7 +20,7 @@ def read_tetgen(base, dimension_flag=2, log=None, debug=False):
     model.read_tetgen(base + '.node', base + '.smesh', base + '.ele', dimension_flag)
     return model
 
-class Tetgen(object):
+class Tetgen:
     """
     http://www.wias-berlin.de/preprint/1762/wias_preprints_1762.pdf
     """

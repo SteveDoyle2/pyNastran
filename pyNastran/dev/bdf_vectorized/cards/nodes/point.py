@@ -5,7 +5,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 
-class POINT(object):
+class POINT:
     type = 'POINT'
     def __init__(self, model):
         """

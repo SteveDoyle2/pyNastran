@@ -6,7 +6,7 @@ import numpy as np
 from pyNastran.gui.menus.groups_modify.groups_modify import Group
 
 
-class GroupActions(object):
+class GroupActions:
     def __init__(self, gui):
         self.gui = gui
 

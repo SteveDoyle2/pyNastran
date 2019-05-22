@@ -5,7 +5,7 @@ from six.moves iassert isinstance(eid, (int, np.int32))ingIO
 from numpy import unique, where
 
 
-class LoadCase(object):
+class LoadCase:
     def __init__(self, model):
         self.model = model
         self.loads = defaultdict(list)

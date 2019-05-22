@@ -1,6 +1,6 @@
 from numpy import zeros
 
-class ShabpOut(object):
+class ShabpOut:
     def __init__(self, model, log=None, debug=False):
         self.model = model
         self.X = model.X

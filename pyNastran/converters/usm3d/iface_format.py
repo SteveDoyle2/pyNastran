@@ -25,7 +25,7 @@ def factors(nraw):
     return [nraw]
 
 
-class IFace(object):
+class IFace:
     def __init__(self, log=None, debug=None):
         self.n = 0
         self.log = log

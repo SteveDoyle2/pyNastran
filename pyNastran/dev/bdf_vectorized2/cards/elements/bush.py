@@ -9,7 +9,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default
 from pyNastran.bdf.cards.base_card import _format_comment
 
 
-class Bushes(object):
+class Bushes:
     """intializes the Bushes"""
     def __init__(self, model):
         self.model = model
@@ -52,7 +52,7 @@ class Bushes(object):
         return self.repr_indent(indent='')
 
 
-class BushElement(object):
+class BushElement:
     """base class for CBUSH, CBUSH1D, CBUSH2D"""
     card_name = ''
 

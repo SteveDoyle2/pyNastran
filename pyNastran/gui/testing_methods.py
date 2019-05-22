@@ -37,7 +37,7 @@ from pyNastran.gui.formats import CLASS_MAP
 
 #from pyNastran.bdf.cards.base_card import deprecated
 
-#class ScalarBar(object):
+#class ScalarBar:
     #def VisibilityOff(self):
         #pass
     #def VisibilityOn(self):
@@ -49,23 +49,23 @@ from pyNastran.gui.formats import CLASS_MAP
         #return True
 
 
-class Button(object):
+class Button:
     def __init__(self):
         pass
     def setChecked(self, is_checked):
         pass
 
-class MockTreeView(object):
+class MockTreeView:
     def __init__(self):
         self.fringe = Button()
         self.vector = Button()
         self.disp = Button()
 
-class MockResultCaseWindow(object):
+class MockResultCaseWindow:
     def __init__(self):
         self.treeView = MockTreeView()
 
-class MockResWidget(object):
+class MockResWidget:
     def __init__(self):
         self.result_case_window = MockResultCaseWindow()
     def update_results(self, form, name):

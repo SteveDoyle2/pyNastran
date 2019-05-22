@@ -2,7 +2,7 @@ from numpy import (concatenate, hstack, unique,
                    array, nan, full, where, isnan)
 
 
-class PropertiesShell(object):
+class PropertiesShell:
     def __init__(self, model):
         """
         Defines the ShellProperties object.
