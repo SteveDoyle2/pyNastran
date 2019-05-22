@@ -124,7 +124,7 @@ install:
 
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas
   - source activate test-environment
-  - pip install python-coveralls
+  - conda install python-coveralls
   - conda list
   - python setup${NOGUI}.py develop
 

@@ -321,6 +321,8 @@ def _validate_dict_list(model, objects_dict):
                     model, obj, error, ifailed, nmax_failed)
 
         if ifailed:
+            #raise exc_type from e
+            #raise exec_value.with_traceback(exc_traceback)
             reraise(exc_type, exc_value, exc_traceback)
 
 def _validate_dict(model, objects):
