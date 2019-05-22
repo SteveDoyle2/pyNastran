@@ -23,16 +23,16 @@ $ BULK DATA SECTION
 BEGIN BULK
 $
 $ WING STRUCTURAL DEFINITION
-INCLUDE 'structure_bah.dat'
+INCLUDE 'structure_bah.inc'
 $
 $ CONSTRAINT SET
 SPC1,101,1246,1
 $
 $AERODYNAMIC DEFINITION
-INCLUDE 'aero_bah.dat'
+INCLUDE 'aero_bah.inc'
 $
 $ STRUCTURE-AERODYNAMIC CONNECTION
-INCLUDE 'interface_bah.dat'
+INCLUDE 'interface_bah.inc'
 $
 $
 $ MODAL ANALYSIS
