@@ -1,0 +1,81 @@
+assign output4='bah_plane_qhh.op4',unit=94,form=formatted,status=unknown
+ID BAH WING
+SOL 145
+TIME 100
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ DMAP - OUTPUT4 QHH
+COMPILE FLUTTER,SOUIN=MSCSOU,LIST,NOREF 
+ALTER 'AMP   '
+OUTPUT4 QHH//0/94
+CEND
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ CASE CONTROL SECTION
+TITLE = BAH WING
+SUBTITLE = FLUTTER ANALYSIS
+LABEL = PK METHOD
+ECHO = NONE
+
+SPC = 101
+METHOD = 401
+SUBCASE 1
+  FMETHOD = 501
+SUBCASE 2
+  FMETHOD = 502
+$
+$OUTPUT
+DISP(plot) = ALL
+SVECTOR(plot) = ALL
+$
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$ BULK DATA SECTION
+BEGIN BULK
+$
+$ WING STRUCTURAL DEFINITION
+INCLUDE 'structure_bah.inc'
+$
+$ CONSTRAINT SET
+SPC1,101,1246,1
+$
+$AERODYNAMIC DEFINITION
+INCLUDE 'aero_bah.inc'
+$
+$ STRUCTURE-AERODYNAMIC CONNECTION
+INCLUDE 'interface_bah.inc'
+$
+$
+$ MODAL ANALYSIS
+EIGR,401,LAN, , , ,8
+$
+$FLUTTER ANALYSIS
+MKAERO1,0.,.2, , , , , , ,+MK100
++MK100,0.001,0.05,0.10,0.20,0.50,1.0,1.2,1.5
+MKAERO1,0.,0.2, , , , , , ,+MK101
++MK101,2.0,3.0,4.0,5.0,6.0,7.0,10.
+$
+FLUTTER, 501, PK, 1, 2, 3, ,
+FLUTTER, 502, PK, 4, 5, 6, ,
+
+FLFACT,1,1. $density
+FLFACT,2,0. $mach
+$velocities
+FLFACT  3       4774.30	4815.56	4856.29	4897.02	4937.21	4976.87	5016.52 +FLFA
++FLFA   5055.64	5074.94	5133.35	5171.40	5209.45	5247.49	5285.01	5321.98 +FLFB
++FLFB   5358.96	5396.47	5434.31	5470.56	5506.56	5542.34 -5542.34
+
+FLFACT,4,1. $density
+FLFACT,5,.2 $mach
+FLFACT,6,30., THRU, 450., 30
+$
+$ STRUCTURAL DAMPING
+TABDMP1,2001, , , , , , , ,+TAB100
++TAB100,0.,0.01,100.,0.005,ENDT
+$
+$ NUMBER OF MODES TO BE USED
+PARAM,LMODES,10
+$
+$ OUTPUT OF AERODYNAMIC DISPLACEMENTS
+PARAM,OPPHIPA,1
+$ OP2
+PARAM,POST,-2
+$
+ENDDATA

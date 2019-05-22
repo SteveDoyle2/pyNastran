@@ -70,6 +70,9 @@ def run_op4(op4_filename, write_op4=True, debug=True,
     #debug = True
     try:
         matrices = read_op4(op4_filename, debug=debug)
+        keys = list(matrices.keys())
+        keys.sort()
+        print('matrices =', keys)
 
         #if 0:
             #matrices2 = op4.read_op4(op4_filename)
