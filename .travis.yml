@@ -144,7 +144,7 @@ script:
 # https://github.com/z4r/python-coveralls
 # Calculate coverage
 after_success:
-  - coveralls
+  - coveralls debug
 #  - codecov
 #after_success:
 #  - coveralls --config_file .coveragerc
