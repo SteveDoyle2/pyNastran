@@ -1180,7 +1180,7 @@ class PBAR(LineProperty):
         msg = ', which is required by PBAR mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1244,7 +1244,7 @@ class PBAR(LineProperty):
                        None, c1, c2, d1, d2, e1, e2, f1, f2, k1, k2, i12]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1451,7 +1451,7 @@ class PBARL(LineProperty):
         msg = ', which is required by PBARL mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1804,7 +1804,7 @@ class PBARL(LineProperty):
                        None, None, None] + self.dim + [self.nsm]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2022,7 +2022,7 @@ class PBRSECT(LineProperty):
             title=class_name + ' pid=%s' % self.pid + formi,
             show=show)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
         self.outp_ref = None
@@ -2089,7 +2089,7 @@ class PBRSECT(LineProperty):
         list_fields = ['PBRSECT', self.pid, self.Mid(), self.form]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         end = write_arbitrary_beam_section(self.inps, self.ts, self.brps, self.nsm, self.outp)
         out = self.comment + print_card_8(card) + end
@@ -2481,7 +2481,7 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
         msg = ', which is required by PBEAM3 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -2522,7 +2522,7 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
                 list_fields += [wi, wyi, wzi]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2930,7 +2930,7 @@ class PBEND(LineProperty):
         msg = ', which is required by PBEND mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -2968,7 +2968,7 @@ class PBEND(LineProperty):
             raise ValueError('only beam_type=1 and 2 supported; beam_type/fsi=%s' % self.beam_type)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

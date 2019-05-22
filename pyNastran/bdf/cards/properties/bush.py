@@ -28,7 +28,7 @@ class BushingProperty(Property):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
 
@@ -340,7 +340,7 @@ class PBUSH(BushingProperty):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -723,7 +723,7 @@ class PBUSH1D(BushingProperty):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -738,7 +738,8 @@ class PBUSH2D(BushingProperty):
         if comment:
             self.comment = comment
         raise NotImplementedError()
-    def write_card(self, size=8, is_double=False):
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         Writes the card with the specified width and precision
 
@@ -858,7 +859,7 @@ class PBUSHT(BushingProperty):
             list_fields += ['KN'] + self.kn_tables
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

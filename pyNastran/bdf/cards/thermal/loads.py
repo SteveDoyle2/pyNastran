@@ -128,7 +128,7 @@ class QVOL(ThermalLoad):
             model.log.warning('failed cross-referencing\n%s' % str(self))
             raise
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.elements = self.element_ids
         self.elements_ref = None
 
@@ -153,7 +153,7 @@ class QVOL(ThermalLoad):
         list_fields = ['QVOL', self.sid, self.qvol, self.control_point] + eids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -298,7 +298,7 @@ class QVECT(ThermalLoad):
         except KeyError:
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eids = self.element_ids
         self.eids_ref = None
 
@@ -327,7 +327,7 @@ class QVECT(ThermalLoad):
             ] + self.vector_tableds + [self.control_id] + eids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -428,7 +428,7 @@ class QBDY1(ThermalLoad):
         except KeyError:
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eids = self.element_ids
         self.eids_ref = None
 
@@ -456,7 +456,7 @@ class QBDY1(ThermalLoad):
         list_fields = ['QBDY1', self.sid, self.qflux] + eids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -562,7 +562,7 @@ class QBDY2(ThermalLoad):  # not tested
         except KeyError:
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eid = self.Eid()
         self.eid_ref = None
 
@@ -581,7 +581,7 @@ class QBDY2(ThermalLoad):  # not tested
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -704,7 +704,7 @@ class QBDY3(ThermalLoad):
         except KeyError:
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eids = self.element_ids
         self.eids_ref = None
 
@@ -737,7 +737,7 @@ class QBDY3(ThermalLoad):
     def get_loads(self):
         return [self]
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -882,7 +882,7 @@ class QHBDY(ThermalLoad):
         except KeyError:
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -892,7 +892,7 @@ class QHBDY(ThermalLoad):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1028,7 +1028,7 @@ class TEMP(ThermalLoad):
     def safe_cross_reference(self, model, debug=True):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -1048,7 +1048,7 @@ class TEMP(ThermalLoad):
     def get_loads(self):
         return [self]
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1121,7 +1121,7 @@ class TEMPP1(BaseCard):
         list_fields = ['TEMPP1', self.sid, self.eid, self.tbar] + self.t_stress
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         list_fields = ['TEMPP1', self.sid, self.eid, self.tbar] + self.t_stress
         return print_card_8(list_fields)
 
@@ -1216,7 +1216,7 @@ class TEMPD(BaseCard):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -1224,7 +1224,7 @@ class TEMPD(BaseCard):
         list_fields = ['TEMPD', self.sid, self.temperature]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)

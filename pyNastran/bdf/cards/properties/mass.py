@@ -133,7 +133,7 @@ class NSMx(Property):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -254,7 +254,7 @@ class NSM1x(Property):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -551,7 +551,7 @@ class NSMADD(BaseCard):
             nsms.append(nsm)
         self.sets_ref = nsms
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.sets = self.nsm_ids
         self.sets_ref = None
 
@@ -559,7 +559,7 @@ class NSMADD(BaseCard):
         fields = ['NSMADD', self.sid] + self.nsm_ids
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -655,7 +655,7 @@ class PMASS(Property):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def _verify(self, xref):
@@ -674,7 +674,7 @@ class PMASS(Property):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

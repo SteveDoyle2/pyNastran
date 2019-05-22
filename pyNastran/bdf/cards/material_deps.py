@@ -227,7 +227,7 @@ class MATS1(MaterialDependence):
         if self.tid:  # then self.h is used
             self.tid_ref = model.Table(self.tid, msg=msg) # TABLES1 or TABLEST
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         if self.tid:
             self.tid = self.Tid()
@@ -247,7 +247,7 @@ class MATS1(MaterialDependence):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -442,7 +442,7 @@ class MATT1(MaterialDependenceThermal):
         self._xref_table(model, 'sc_table', msg=msg)
         self._xref_table(model, 'ss_table', msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         ## TODO: remove refs
 
@@ -507,7 +507,7 @@ class MATT1(MaterialDependenceThermal):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -641,7 +641,7 @@ class MATT2(MaterialDependenceThermal):
         self._xref_table(model, 'sc_table', msg=msg)
         self._xref_table(model, 'ss_table', msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.g11_table = self.G11_table()
         self.g12_table = self.G12_table()
@@ -714,7 +714,7 @@ class MATT2(MaterialDependenceThermal):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -810,7 +810,7 @@ class MATT3(MaterialDependenceThermal):
         if self.ge_table is not None:
             self.ge_table_ref = model.TableM(self.ge_table)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -937,7 +937,7 @@ class MATT3(MaterialDependenceThermal):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1055,7 +1055,7 @@ class MATT4(MaterialDependenceThermal):
         self._xref_table(model, 'mu_table', msg=msg)
         self._xref_table(model, 'hgen_table', msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.k_table = self.K_table()
         self.cp_table = self.Cp_table()
@@ -1097,7 +1097,7 @@ class MATT4(MaterialDependenceThermal):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1239,7 +1239,7 @@ class MATT5(MaterialDependenceThermal):
         self._xref_table(model, 'cp_table', msg=msg)
         self._xref_table(model, 'hgen_table', msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.kxx_table = self.Kxx_table()
         self.kxy_table = self.Kxy_table()
@@ -1294,7 +1294,7 @@ class MATT5(MaterialDependenceThermal):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1457,7 +1457,7 @@ class MATT8(MaterialDependenceThermal):
         if self.s_table is not None:
             self.s_table_ref = model.TableM(self.s_table)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.e1_table = self.E1_table()
         self.e2_table = self.E2_table()
         self.nu12_table = self.Nu12_table()
@@ -1582,7 +1582,7 @@ class MATT8(MaterialDependenceThermal):
                        self.S_table(), self.Ge_table(), self.F12_table()]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         +--------+--------+--------+--------+--------+--------+--------+--------+--------+
         |    1   |   2    |    3   |    4   |    5   |    6   |   7    |    8   |   9    |
@@ -1750,7 +1750,7 @@ class MATT9(MaterialDependenceThermal):
         #if self.e2_table is not None:
             #self.e2_table_ref = model.TableM(self.e2_table)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
         #self.e1_table = self.E1_table()
         #self.e2_table = self.E2_table()
@@ -1802,6 +1802,6 @@ class MATT9(MaterialDependenceThermal):
         ]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         list_fields = self.raw_fields()
         return self.comment + print_card_8(list_fields)

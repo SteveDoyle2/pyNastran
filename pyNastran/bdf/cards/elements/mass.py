@@ -37,7 +37,7 @@ class PointMassElement(Element):
         # type: () -> List[Optional[int, float, str]]
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         # type: (int, bool) -> str
         card = self.repr_fields()
         if size == 8:
@@ -195,7 +195,7 @@ class CMASS1(PointMassElement):
         if missing_nodes:
             model.log.warning(missing_nodes)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = [self.G1(), self.G2()]
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -256,7 +256,7 @@ class CMASS1(PointMassElement):
                   self.G2(), self.c2]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -470,7 +470,7 @@ class CMASS2(PointMassElement):
         if missing_nodes:
             model.log.warning(missing_nodes)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = [self.G1(), self.G2()]
         self.nodes_ref = None
 
@@ -495,7 +495,7 @@ class CMASS2(PointMassElement):
                   self.G2(), self.c2]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -619,7 +619,7 @@ class CMASS3(PointMassElement):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.nodes_ref = None
         self.pid_ref = None
@@ -637,7 +637,7 @@ class CMASS3(PointMassElement):
         fields = ['CMASS3', self.eid, self.Pid(), self.S1(), self.S2()]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -760,7 +760,7 @@ class CMASS4(PointMassElement):
     def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = [self.S1(), self.S2()]
         self.nodes_ref = None
 
@@ -768,7 +768,7 @@ class CMASS4(PointMassElement):
         fields = ['CMASS4', self.eid, self.mass] + self.node_ids
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1042,7 +1042,7 @@ class CONM1(PointMassElement):
         self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg='')
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nid = self.Nid()
         self.cid = self.Cid()
         self.nid_ref = None
@@ -1070,7 +1070,7 @@ class CONM1(PointMassElement):
             list_fields2.append(val)
         return list_fields2
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1487,7 +1487,7 @@ class CONM2(PointMassElement):
         if cid != -1:
             self.cid_ref = model.safe_coord(cid, self.eid, xref_errors, msg='')
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nid = self.Nid()
         self.cid = self.Cid()
         self.nid_ref = None
@@ -1531,7 +1531,7 @@ class CONM2(PointMassElement):
                        [None] + I)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

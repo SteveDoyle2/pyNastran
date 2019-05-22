@@ -135,7 +135,7 @@ class DELAY(BaseCard):
             list_fields += [nidi, comp, delay]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
         node_ids = self.node_ids
         if size == 8:
@@ -241,7 +241,7 @@ class DPHASE(BaseCard):
             list_fields += [nidi, comp, delay]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
         node_ids = self.node_ids
         if size == 8:
@@ -318,7 +318,7 @@ class FREQ(BaseCard):
         list_fields = ['FREQ', self.sid] + list(self.freqs)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -373,7 +373,7 @@ class FREQ1(FREQ):
         assert len(card) <= 5, 'len(FREQ card) = %i\ncard=%s' % (len(card), card)
         return FREQ1(sid, f1, df, ndf, comment=comment)
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -469,7 +469,7 @@ class FREQ3(FREQ):
     def raw_fields(self):
         return ['FREQ3', self.sid, self.f1, self.f2, self.Type, self.nef, self.cluster]
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -531,7 +531,7 @@ class FREQ4(FREQ):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -546,7 +546,7 @@ class FREQ4(FREQ):
             # self.comment = comment
         #raise NotImplementedError()
 
-    #def write_card(self, size=8, is_double=False):
+    #def write_card(self, size: int=8, is_double: bool=False) -> str:
         #card = self.repr_fields()
         #if size == 8:
             #return self.comment + print_card_8(card)
@@ -748,7 +748,7 @@ class NLPARM(BaseCard):
                        rtol_b]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card) # having trouble with double precision...
@@ -802,7 +802,7 @@ class NLPCI(BaseCard):
         #minalr = set_blank_if_default(self.minalr, 0.25)
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -892,7 +892,7 @@ class TF(BaseCard):
             list_fields += [grid, c, a0, a1, a2, None, None, None]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         # double precision?
         card = self.repr_fields()
         if size == 8:
@@ -994,7 +994,7 @@ class TSTEP(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1285,7 +1285,7 @@ class TSTEPNL(BaseCard):
                        max_r, utol, rtol_b, self.min_iter]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

@@ -246,7 +246,7 @@ class DEQATN(BaseCard):  # needs work...
         #self.dtable_ref = self.dtable
         self._setup_equation()
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         del self.model
         del self.func
         del self.f
@@ -273,7 +273,7 @@ class DEQATN(BaseCard):  # needs work...
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         #self.evaluate(1, 2)
         eqs = split_equations(self.eqs)
         equation_line0 = eqs[0]

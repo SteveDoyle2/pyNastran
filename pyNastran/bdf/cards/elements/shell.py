@@ -664,7 +664,7 @@ class CTRIA3(TriShell):
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -760,7 +760,7 @@ class CTRIA3(TriShell):
                        [theta_mcid, zoffset, None] + [None, tflag, T1, T2, T3])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         zoffset = set_blank_if_default(self.zoffset, 0.0)
         tflag = set_blank_if_default(self.tflag, 0)
         theta_mcid = self._get_theta_mcid_repr()
@@ -902,7 +902,7 @@ class CPLSTN3(TriShell):
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -966,7 +966,7 @@ class CPLSTN3(TriShell):
                        [theta])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes + [self.theta]
         msg = ('CPLSTN3 %8i%8i%8i%8i%8i%8s\n' % tuple(data))
@@ -1184,7 +1184,7 @@ class CTRIA6(TriShell):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -1316,7 +1316,7 @@ class CTRIA6(TriShell):
                        [theta_mcid, zoffset, T1, T2, T3, tflag])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment + print_card_8(card)
@@ -1521,7 +1521,7 @@ class CTRIAR(TriShell):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -1603,7 +1603,7 @@ class CTRIAR(TriShell):
                        [theta_mcid, zoffset, None, None, tflag, T1, T2, T3])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 5: # to last node
             msg = self.comment + print_card_8(card)
@@ -1775,7 +1775,7 @@ class QuadShell(ShellElement):
         T4 = set_blank_if_default(self.T4, 1.0)
         return (theta_mcid, zoffset, tflag, T1, T2, T3, T4)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -1952,7 +1952,7 @@ class CSHEAR(QuadShell):
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -2081,8 +2081,7 @@ class CSHEAR(QuadShell):
         # type: () -> List[Union[str, int]]
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
-        # (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         msg = self.comment + print_card_8(card)
         #msg2 = self.write_card(size)
@@ -2613,7 +2612,7 @@ class CQUAD4(QuadShell):
         #dNdeta_mat[0,9] = dNdeta_mat[1,10] = dNdeta_mat[2,11] = dN4deta
         #return dNdeta_mat
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -2714,7 +2713,7 @@ class CQUAD4(QuadShell):
                        [theta_mcid, zoffset, None, tflag, T1, T2, T3, T4])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
 
         row2_data = [self.theta_mcid, self.zoffset,
@@ -2869,7 +2868,7 @@ class CPLSTN4(QuadShell):
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -2929,7 +2928,7 @@ class CPLSTN4(QuadShell):
                        [theta])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes + [print_float_8(self.theta)]
         msg = ('CPLSTN4 %8i%8i%8i%8i%8i%8i%8s\n' % tuple(data))
@@ -3028,7 +3027,7 @@ class CPLSTN6(TriShell):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -3050,7 +3049,7 @@ class CPLSTN6(TriShell):
         return list_fields
 
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8: # to last node
             return self.comment + print_card_8(card)
@@ -3123,7 +3122,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -3235,7 +3234,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
                        [theta])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             msg = self.comment + print_card_8(card)
@@ -3361,7 +3360,7 @@ class CPLSTN8(QuadShell):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -3470,7 +3469,7 @@ class CPLSTN8(QuadShell):
             theta])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8: # to last node
             return self.comment + print_card_8(card)
@@ -3672,7 +3671,7 @@ class CQUADR(QuadShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
         ## TODO: xref coord
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -3745,7 +3744,7 @@ class CQUADR(QuadShell):
                        [theta_mcid, zoffset, None, tflag, T1, T2, T3, T4])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8 or len(card) == 7: # to last node
             msg = self.comment + print_card_8(card)
@@ -3891,7 +3890,7 @@ class CPLSTS3(TriShell):
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -3964,7 +3963,7 @@ class CPLSTS3(TriShell):
                        [theta, None, None] + [None, tflag, T1, T2, T3])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         (theta, tflag, T1, T2, T3) = self._get_repr_defaults()
 
         T1 = set_blank_if_default(self.T1, 1.0)
@@ -4121,7 +4120,7 @@ class CQUAD(QuadShell):
         if isinstance(self.theta_mcid, integer_types):
             self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -4187,7 +4186,7 @@ class CQUAD(QuadShell):
         list_fields = ['CQUAD', self.eid, self.Pid()] + self.node_ids + [self.theta_mcid]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         nodes2 = ['' if node is None else '%8i' % node for node in nodes[4:]]
         theta_mcid = self.theta_mcid
@@ -4409,7 +4408,7 @@ class CQUAD8(QuadShell):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -4527,7 +4526,7 @@ class CQUAD8(QuadShell):
             T1, T2, T3, T4, theta_mcid, zoffset, tflag])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8 or len(card) == 11: # to last node
             return self.comment + print_card_8(card)
@@ -4629,7 +4628,7 @@ class SNORM(BaseCard):
         msg = ', which is required by SNORM nid=%s' % self.nid
         self.cid_ref = model.safe_coord(self.cid, self.nid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -4646,7 +4645,7 @@ class SNORM(BaseCard):
         list_fields = ['SNORM', self.nid, self.Cid()] + list(self.normal)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 5: # to last node
             msg = self.comment + print_card_8(card)

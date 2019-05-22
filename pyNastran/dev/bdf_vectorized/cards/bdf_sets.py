@@ -76,7 +76,7 @@ class Set(BaseCard):
     def __repr__(self):
         return self.comment + print_card_8(self.repr_fields())
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -153,7 +153,7 @@ class ABCQSet(Set):
         msg = ' which is required by %s' % self.type
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ids = self.node_ids
         self.ids_ref = None
 
@@ -225,7 +225,7 @@ class SuperABCQSet(Set):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ids = self.node_ids
         self.ids_ref = None
 
@@ -381,7 +381,7 @@ class ABQSet1(Set):
         msg = ' which is required by %s' % self.type
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ids = self.node_ids
         self.ids_ref = None
 
@@ -469,7 +469,7 @@ class SuperABQSet1(Set):
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ids = self.node_ids
         self.ids_ref = None
 
@@ -709,7 +709,7 @@ class SET1(Set):
         """
         self.xref_type = xref_type
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         skin = []
         if self.is_skin:
             skin = ['SKIN']
@@ -873,7 +873,7 @@ class SET3(Set):
             msg += print_card_8(['SET3', self.sid, self.desc] + ids)
         return msg
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         return str(self)
 
 class SESET(SetSuper):
@@ -935,7 +935,7 @@ class SESET(SetSuper):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
 

@@ -491,7 +491,7 @@ class ACOORD(Coord):  # not done
         """
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def coord_to_xyz(self, p):
@@ -549,7 +549,7 @@ class ACOORD(Coord):  # not done
         list_fields = ['ACOORD', self.cid] + self.origin + [self.delta, self.theta]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -713,7 +713,7 @@ class AESURFZ(BaseCard):
         self.panlst_ref.cross_reference(model)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -776,7 +776,7 @@ class AESURFZ(BaseCard):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         Writes the card with the specified width and precision
 
@@ -1001,7 +1001,7 @@ class AEROZ(Aero):
         self.acsid_ref = model.safe_coord(self.acsid, None, xref_errors, msg=msg)
         self.rcsid_ref = model.safe_coord(self.rcsid, None, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.acsid_ref = None
         self.rcsid_ref = None
 
@@ -1066,7 +1066,7 @@ class AEROZ(Aero):
                        self.cref, self.bref, self.sref] + list(self.xyz_ref)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1154,7 +1154,7 @@ class MKAEROZ(BaseCard):
                        self.save, filename_a, filename_b, self.print_flag] + self.freqs
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1240,7 +1240,7 @@ class PANLST1(Spline):
         list_fields = ['PANLST1', self.eid, self.macro_id, self.box1, self.box2]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1343,7 +1343,7 @@ class PANLST3(Spline):
         list_fields = ['PANLST3', self.eid] + self.panel_groups
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1501,7 +1501,7 @@ class PAFOIL7(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.i_thickness_root_ref = None
         self.i_camber_root_ref = None
         self.i_thickness_tip_ref = None
@@ -1564,7 +1564,7 @@ class PAFOIL7(BaseCard):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1721,7 +1721,7 @@ class BODY7(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.acoord = self.ACoord()
         self.pid_ref = None
@@ -2086,7 +2086,7 @@ class BODY7(BaseCard):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -2286,7 +2286,7 @@ class SEGMESH(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         #self.cp = self.Cp()
         #self.idys = idys_ref
@@ -2337,7 +2337,7 @@ class SEGMESH(BaseCard):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -2669,7 +2669,7 @@ class CAERO7(BaseCard):
 
         self._init_ids()
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         #self.pid = self.Pid()
         self.cp = self.Cp()
         self.lspan = self.get_LSpan()
@@ -2976,7 +2976,7 @@ class CAERO7(BaseCard):
             list(self.p4) + [self.x43, None, None, None, None])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -3142,7 +3142,7 @@ class TRIM_ZONA(BaseCard):
     def safe_cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def convert_to_nastran(self, model):
@@ -3203,7 +3203,7 @@ class TRIM_ZONA(BaseCard):
         list_fields[8] = aeqr
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         return ''
         #card = self.repr_fields()
         #return self.comment + print_card_8(card)
@@ -3292,7 +3292,7 @@ class TRIMLNK(BaseCard):
     def safe_cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def convert_to_nastran(self, model):
@@ -3331,7 +3331,7 @@ class TRIMLNK(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -3417,7 +3417,7 @@ class TRIMVAR(BaseCard):
     def safe_cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def convert_to_nastran(self, model):
@@ -3455,7 +3455,7 @@ class TRIMVAR(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -3597,7 +3597,7 @@ class FLUTTER_ZONA(Spline):
         #except KeyError:
             #pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         return
         #self.panlst_ref = None
         #self.setg_ref = None
@@ -3611,7 +3611,7 @@ class FLUTTER_ZONA(Spline):
                        #self.tabdmp, self.mlist, self.conmlst, self.nkstep]
         #return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -3721,7 +3721,7 @@ class SPLINE1_ZONA(Spline):
         except KeyError:
             pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.panlst_ref = None
         self.setg_ref = None
 
@@ -3776,7 +3776,7 @@ class SPLINE1_ZONA(Spline):
                        self.dz, self.eps]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -3874,7 +3874,7 @@ class SPLINE2_ZONA(Spline):
         self.panlst_ref.safe_cross_reference(model, xref_errors)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.panlst_ref = None
         self.setg_ref = None
 
@@ -3883,7 +3883,7 @@ class SPLINE2_ZONA(Spline):
                        self.dz, self.eps, self.cp, self.curvature]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -3977,7 +3977,7 @@ class SPLINE3_ZONA(Spline):
         self.panlst_ref.safe_cross_reference(model, xref_errors)
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.panlst_ref = None
         self.setg_ref = None
 
@@ -4001,6 +4001,6 @@ class SPLINE3_ZONA(Spline):
                        self.dz, self.eps]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)

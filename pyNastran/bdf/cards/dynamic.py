@@ -153,7 +153,7 @@ class DELAY(BaseCard):
         msg = ', which is required by DELAY sid=%s' % self.sid
         self.nodes_ref = model.Node(self.node_ids, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -186,7 +186,7 @@ class DELAY(BaseCard):
             list_fields += [nidi, comp, delay]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
         node_ids = self.node_ids
         if size == 8:
@@ -310,7 +310,7 @@ class DPHASE(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -344,7 +344,7 @@ class DPHASE(BaseCard):
             list_fields += [nid, comp, delay]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
         node_ids = self.node_ids
         if size == 8:
@@ -447,7 +447,7 @@ class FREQ(BaseCard):
         list_fields = ['FREQ', self.sid] + list(self.freqs)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -533,7 +533,7 @@ class FREQ1(BaseCard):
         list_fields = ['FREQ1', self.sid, self.f1, self.df, self.ndf]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -623,7 +623,7 @@ class FREQ2(BaseCard):
         list_fields = ['FREQ2', self.sid, self.f1, self.f2, self.nf]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -711,7 +711,7 @@ class FREQ3(FREQ):
     def raw_fields(self):
         return ['FREQ3', self.sid, self.f1, self.f2, self.freq_type, self.nef, self.cluster]
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -796,7 +796,7 @@ class FREQ4(FREQ):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -882,7 +882,7 @@ class FREQ5(FREQ):
     def raw_fields(self):
         return ['FREQ5', self.sid, self.f1, self.f2] + list(self.fractions)
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1157,7 +1157,7 @@ class NLPARM(BaseCard):
                        rtol_b]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card) # having trouble with double precision...
@@ -1220,7 +1220,7 @@ class NLPCI(BaseCard):
         #minalr = set_blank_if_default(self.minalr, 0.25)
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1520,7 +1520,7 @@ class ROTORD(BaseCard):
         #print(print_card_8(list_fields))
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         # double precision?
         card = self.repr_fields()
         if size == 8:
@@ -1666,14 +1666,14 @@ class ROTORG(BaseCard):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
         list_fields = ['ROTORG', self.sid] + self.nids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         # double precision?
         card = self.repr_fields()
         if size == 8:
@@ -1781,7 +1781,7 @@ class TF(BaseCard):
             list_fields += [grid, c, a0, a1, a2, None, None, None]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         # double precision?
         card = self.repr_fields()
         if size == 8:
@@ -1912,7 +1912,7 @@ class TSTEP(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2025,7 +2025,7 @@ class TSTEP1(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2349,7 +2349,7 @@ class TSTEPNL(BaseCard):
                        max_r, utol, rtol_b, self.min_iter]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2487,7 +2487,7 @@ class TIC(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -2500,7 +2500,7 @@ class TIC(BaseCard):
     #def repr_fields(self):
         #return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
         node_ids = self.node_ids
         if size == 8:

@@ -200,7 +200,7 @@ class ACSRCE(BaseCard):
         #self.load_ids = load_ids2
         #self.load_ids_ref = self.load_ids
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.power = self.Power()
         self.dphase = self.DPhase()
         self.delay = self.Delay()
@@ -223,7 +223,7 @@ class ACSRCE(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
-    #def uncross_reference(self):
+    #def uncross_reference(self) -> None:
         #self.load_ids = [self.LoadID(load) for load in self.load_ids]
         #del self.load_ids_ref
 
@@ -281,7 +281,7 @@ class ACSRCE(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if size == 16:
             return self.comment + print_card_16(card)
@@ -362,7 +362,7 @@ class DLOAD(LoadCombination):
             dload_ids2.append(dload_id2)
         self.load_ids_ref = dload_ids2
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.load_ids = [self.LoadID(dload) for dload in self.get_load_ids()]
         self.load_ids_ref = None
 
@@ -375,7 +375,7 @@ class DLOAD(LoadCombination):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if size == 16:
             return self.comment + print_card_16(card)
@@ -564,7 +564,7 @@ class RLOAD1(DynamicLoad):
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.tc = self.Tc()
         self.td = self.Td()
         self.delay = self.delay_id
@@ -660,7 +660,7 @@ class RLOAD1(DynamicLoad):
                        self.Tc(), self.Td(), Type]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -885,7 +885,7 @@ class RLOAD2(DynamicLoad):
         if isinstance(self.dphase, integer_types) and self.dphase > 0:
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.tb = self.Tb()
         self.tp = self.Tp()
         self.delay = self.delay_id
@@ -942,7 +942,7 @@ class RLOAD2(DynamicLoad):
                        self.Tb(), self.Tp(), Type]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1128,7 +1128,7 @@ class TLOAD1(DynamicLoad):
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.tid = self.Tid()
         self.delay = self.delay_id
         self.tid_ref = None
@@ -1186,7 +1186,7 @@ class TLOAD1(DynamicLoad):
                        self.Tid(), us0, vs0]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1437,7 +1437,7 @@ class TLOAD2(DynamicLoad):
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
         # TODO: excite_id
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.delay = self.delay_id
         self.delay_ref = None
 
@@ -1467,7 +1467,7 @@ class TLOAD2(DynamicLoad):
                        self.T1, self.T2, frequency, phase, c, b, us0, vs0]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

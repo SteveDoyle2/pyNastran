@@ -44,6 +44,7 @@ from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
 #u = str
+from pyNastran.bdf.bdf_interface.typing import BDFCard, Coord
 
 
 class SEQGP(BaseCard):
@@ -144,7 +145,7 @@ class SEQGP(BaseCard):
             list_fields.append(seqid)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card
 
@@ -223,7 +224,7 @@ class XPoint(BaseCard):
                     lists_fields.append(list_fields)
         return lists_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card
 
@@ -449,7 +450,7 @@ class XPoints(BaseCard):
         points.sort()
         return [self.type] + points
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card
 
@@ -654,7 +655,7 @@ class GRDSET(BaseCard):
         #self.seid = model.SuperElement(self.seid, msg)
         #self.seid_ref = self.seid
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cp = self.Cp()
         self.cd = self.Cd()
         self.cp_ref = None
@@ -765,7 +766,7 @@ class GRDSET(BaseCard):
         list_fields = ['GRDSET', None, cp, None, None, None, cd, ps, seid]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card
 
@@ -912,7 +913,7 @@ class GRIDB(BaseCard):
                        idf]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card
 
@@ -1006,7 +1007,7 @@ class GRID(BaseCard):
     #: allows the get_field method and update_field methods to be used
     _field_map = {1: 'nid', 2:'cp', 6:'cd', 7:'ps', 8:'seid'}
 
-    def _get_field_helper(self, n):
+    def _get_field_helper(self, n: int):
         """
         Gets complicated parameters on the GRID card
 
@@ -1031,7 +1032,7 @@ class GRID(BaseCard):
             raise KeyError('Field %r is an invalid %s entry.' % (n, self.type))
         return value
 
-    def _update_field_helper(self, n, value):
+    def _update_field_helper(self, n: int, value: Any):
         """
         Updates complicated parameters on the GRID card
 
@@ -1078,8 +1079,9 @@ class GRID(BaseCard):
         h5_file.create_dataset('ps', data=ps)
         h5_file.create_dataset('seid', data=seid)
 
-    def __init__(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
-        # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None
+    def __init__(self, nid: int, xyz: Union[None, List[float], np.ndarray],
+                 cp: int=0, cd: int=0, ps: str='', seid: int=0,
+                 comment: str='') -> None:
         """
         Creates the GRID card
 
@@ -1103,7 +1105,7 @@ class GRID(BaseCard):
             a comment for the card
 
         """
-        #Node.__init__(self)
+        BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.nid = nid
@@ -1115,13 +1117,13 @@ class GRID(BaseCard):
         self.cd = cd
         self.ps = ps
         self.seid = seid
-        self.cp_ref = None # type: Any
+        self.cp_ref = None # type: Coord
         self.cd_ref = None # type: Any
         self.elements_ref = None # type: Any
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
-        #type: (List[Union[int, float]], str) -> GRID
+    def add_op2_data(cls, data, comment: str='') -> Any:
+        # (List[Union[int, float]], str) -> GRID
         """
         Adds a GRID card from the OP2.
 
@@ -1146,8 +1148,8 @@ class GRID(BaseCard):
         return GRID(nid, xyz, cp, cd, ps, seid, comment=comment)
 
     @classmethod
-    def add_card(cls, card, comment=''):
-        # type: (Any, str) -> GRID
+    def add_card(cls, card: BDFCard, comment: str='') -> Any:
+        # (Any, str) -> GRID
         """
         Adds a GRID card from ``BDF.add_card(...)``
 
@@ -1189,8 +1191,7 @@ class GRID(BaseCard):
             seid = 0
         return GRID(nid, xyz, cp, cd, ps, seid, comment=comment)
 
-    def validate(self):
-        # type: () -> None
+    def validate(self) -> None:
         assert isinstance(self.cp, integer_types), 'cp=%s' % (self.cp)
         assert self.nid > 0, 'nid=%s' % (self.nid)
         assert self.cp >= 0, 'cp=%s' % (self.cp)
@@ -1198,8 +1199,7 @@ class GRID(BaseCard):
         assert self.seid >= 0, 'seid=%s' % (self.seid)
         assert len(self.xyz) == 3
 
-    def Nid(self):
-        # type: () -> int
+    def Nid(self) -> int:
         """
         Gets the GRID ID
 
@@ -1211,8 +1211,7 @@ class GRID(BaseCard):
         """
         return self.nid
 
-    def Ps(self):
-        # type: () -> str
+    def Ps(self) -> str:
         """
         Gets the GRID-based SPC
 
@@ -1224,8 +1223,7 @@ class GRID(BaseCard):
         """
         return self.ps
 
-    def Cd(self):
-        # type: () -> int
+    def Cd(self) -> int:
         """
         Gets the output coordinate system
 
@@ -1240,8 +1238,7 @@ class GRID(BaseCard):
         return self.cd_ref.cid
 
 
-    def Cp(self):
-        # type: () -> int
+    def Cp(self) -> int:
         """
         Gets the analysis coordinate system
 
@@ -1255,8 +1252,7 @@ class GRID(BaseCard):
             return self.cp
         return self.cp_ref.cid
 
-    def SEid(self):
-        # type: () -> int
+    def SEid(self) -> int:
         """
         Gets the Superelement ID
 
@@ -1270,8 +1266,7 @@ class GRID(BaseCard):
         return self.seid
         #return self.seid.seid
 
-    def _verify(self, xref):
-        # type: (bool) -> None
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -1297,8 +1292,9 @@ class GRID(BaseCard):
             pos_xyz = self.get_position()
             assert isinstance(pos_xyz, np.ndarray), 'pos_xyz=%r' % pos_xyz
 
-    def set_position(self, model, xyz, cid=0, xref=True):
-        # type: (Any, np.ndarray, int) -> None
+    def set_position(self, model: Any, xyz: np.ndarray,
+                     cid: int=0, xref: bool=True) -> None:
+        # (Any, np.ndarray, int) -> None
         """
         Updates the GRID location
 
@@ -1318,8 +1314,8 @@ class GRID(BaseCard):
         if xref:
             self.cp_ref = model.Coord(cid, msg=msg)
 
-    def get_position_no_xref(self, model):
-        # type: (Any) -> np.ndarray
+    def get_position_no_xref(self, model: Any) -> np.ndarray:
+        # (Any) -> np.ndarray
         if self.cp == 0:
             return self.xyz
         assert isinstance(self.cp, integer_types), self.cp
@@ -1327,8 +1323,7 @@ class GRID(BaseCard):
         xyz = coord.transform_node_to_global_no_xref(self.xyz, model)
         return xyz
 
-    def get_position(self):
-        # type: () -> np.ndarray
+    def get_position(self) -> np.ndarray:
         """
         Gets the point in the global XYZ coordinate system.
 
@@ -1447,8 +1442,7 @@ class GRID(BaseCard):
         if self.cd != -1:
             self.cd_ref = model.Coord(self.cd, msg=msg)
 
-    def uncross_reference(self):
-        # type: () -> None
+    def uncross_reference(self) -> None:
         self.cd_ref = None
         self.cp_ref = None
         self.elements_ref = None
@@ -1486,8 +1480,7 @@ class GRID(BaseCard):
                                                                  seid]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card
 
@@ -1821,12 +1814,10 @@ class POINT(BaseCard):
         """
         self.cp_ref = model.Coord(self.cp)
 
-    def uncross_reference(self):
-        # type: () -> None
+    def uncross_reference(self) -> None:
         self.cp_ref = self.Cp()
 
-    def raw_fields(self):
-        # type: () -> List[Union[str, int, float]]
+    def raw_fields(self) -> List[Union[str, int, float, None]]:
         """
         Gets the fields in their unmodified form
 
@@ -1854,8 +1845,7 @@ class POINT(BaseCard):
         list_fields = ['POINT', self.nid, cp] + list(self.xyz)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card
 

@@ -244,7 +244,7 @@ class AERO(Aero):
         # T is the tabular function
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.acsid_ref = None
 
     def update(self, maps):
@@ -287,7 +287,7 @@ class AERO(Aero):
                        self.rho_ref, sym_xz, sym_xy]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         Writes the card with the specified width and precision
 
@@ -450,7 +450,7 @@ class FLFACT(BaseCard):
     def min(self):
         return self.factors.min()
 
-    #def uncross_reference(self):
+    #def uncross_reference(self) -> None:
         #pass
 
     def raw_fields(self):
@@ -466,7 +466,7 @@ class FLFACT(BaseCard):
         list_fields = ['FLFACT', self.sid] + list(self.factors)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -822,7 +822,7 @@ class FLUTTER(BaseCard):
         except KeyError:
             pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.density = self.get_density()
         self.mach = self.get_mach()
         self.reduced_freq_velocity = self.get_rfreq_vel()
@@ -886,7 +886,7 @@ class FLUTTER(BaseCard):
                        self.get_rfreq_vel(), imethod, nvalue, epsilon]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -987,7 +987,7 @@ class GUST(BaseCard):
         #angle = self.wg * self.t * (t-(x-self.x0) / self.V) # T is the tabular
         #return angle
 
-    #def uncross_reference(self):
+    #def uncross_reference(self) -> None:
         #pass
 
     def _verify(self, model, xref):
@@ -1008,7 +1008,7 @@ class GUST(BaseCard):
         list_fields = ['GUST', self.sid, self.dload, self.wg, self.x0, self.V]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1124,7 +1124,7 @@ class MKAERO1(BaseCard):
         list_fields = ['MKAERO1'] + machs + freqs
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         nmachs = len(self.machs)
         nreduced_freqs = len(self.reduced_freqs)
         if nmachs > 8 or nreduced_freqs > 8:
@@ -1263,7 +1263,7 @@ class MKAERO2(BaseCard):
             list_fields += [mach, rfreq]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         cards = []
         list_fields = ['MKAERO2']
         nvalues = 0

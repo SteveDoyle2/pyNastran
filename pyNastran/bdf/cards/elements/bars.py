@@ -130,7 +130,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
 
         return mass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -218,7 +218,7 @@ class BAROR(BaseCard):
         list_fields = ['BAROR', None, None] + self.x.tolist() + [self.offt]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -333,7 +333,7 @@ class CBARAO(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -775,7 +775,7 @@ class CBAR(LineElement):
         else:
             self.g0_vector = self.x
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()
@@ -905,7 +905,7 @@ class CBAR(LineElement):
                        x3, offt, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1029,7 +1029,7 @@ class CBEAM3(LineElement):  # was CBAR
         if self.g0:
             self.g0_ref = model.Node(self.g0, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.gc = self.Gc()
@@ -1201,7 +1201,7 @@ class CBEAM3(LineElement):  # was CBAR
                        twa, twb, twc, self.s[0], self.s[1], self.s[2]]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1486,7 +1486,7 @@ class CBEND(LineElement):
         self.gb_ref = model.Node(self.gb, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         node_ids = self.node_ids
         self.ga = node_ids[0]
         self.gb = node_ids[1]
@@ -1513,7 +1513,7 @@ class CBEND(LineElement):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

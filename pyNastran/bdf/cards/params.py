@@ -247,7 +247,7 @@ class PARAM(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if self.key in INT_STR_WORDS_1:
             return '%sPARAM   %8s%8s\n' % (

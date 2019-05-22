@@ -642,7 +642,7 @@ class DCONSTR(OptConstraint):
         if isinstance(self.uid, integer_types):
             self.uid_ref = model.TableD(self.uid, msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.dresp_id = self.DRespID()
         self.lid = self.Lid()
         self.uid = self.Uid()
@@ -664,7 +664,7 @@ class DCONSTR(OptConstraint):
         list_fields = ['DCONSTR', self.oid, self.DRespID(), lid, uid, lowfq, highfq]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -824,7 +824,7 @@ class DESVAR(OptConstraint):
             msg = ', which is required by DESVAR desvar_id=%r' % self.desvar_id
             self.ddval_ref = model.DDVal(self.ddval, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ddval = self.DDVal()
         self.ddval_ref = None
 
@@ -853,7 +853,7 @@ class DESVAR(OptConstraint):
                        xub, self.delx, self.DDVal()]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -935,7 +935,7 @@ class DDVAL(OptConstraint):
         list_fields = ['DDVAL', self.oid] + self.ddvals
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1066,7 +1066,7 @@ class DOPTPRM(OptConstraint):
             list_fields += [param, val]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1208,7 +1208,7 @@ class DLINK(OptConstraint):
             list_fields += [idv, ci]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1904,7 +1904,7 @@ class DRESP1(OptConstraint):
             msg += str(self)
             raise NotImplementedError(msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.atti = self.atti_values()
         self.atta = self.Atta()
         self.atta_ref = None
@@ -2039,7 +2039,7 @@ class DRESP1(OptConstraint):
                        self.region, self.Atta(), self.attb] + self.atti_values()
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2370,7 +2370,7 @@ class DRESP2(OptConstraint):
         else:
             raise NotImplementedError(self.dequation)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         if hasattr(self, 'func'):
             del self.func
 
@@ -2441,7 +2441,7 @@ class DRESP2(OptConstraint):
         list_fields += self._pack_params()
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2736,7 +2736,7 @@ class DRESP3(OptConstraint):
         #else:
             #raise NotImplementedError(self.dequation)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         if hasattr(self, 'func'):
             del self.func
         self.dtable_ref = {}
@@ -2772,7 +2772,7 @@ class DRESP3(OptConstraint):
         list_fields += self._pack_params()
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2849,7 +2849,7 @@ class DCONADD(OptConstraint):
         """
         self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstr_ids]
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.dconstrs = self.dconstr_ids
         self.dconstrs_ref = None
 
@@ -2882,7 +2882,7 @@ class DCONADD(OptConstraint):
         list_fields = ['DCONADD', self.oid] + self.dconstr_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2957,7 +2957,7 @@ class DSCREEN(OptConstraint):
         list_fields = ['DSCREEN', self.rtype, trs, nstr]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -3157,7 +3157,7 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
             raise NotImplementedError(self.element_type)
         return elem
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eid = self.Eid()
         self.dvids = self.desvar_ids
         self.eid_ref = None
@@ -3189,7 +3189,7 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
             list_fields.append(coeff)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -3426,7 +3426,7 @@ class DVCREL2(DVXREL2):
         assert self.eid_ref.type in self.allowed_elements, self.eid.type
         self.dtable_ref = {}
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eid = self.Eid()
         self.dvids = self.desvar_ids
         self.dequation = self.DEquation()
@@ -3490,7 +3490,7 @@ class DVCREL2(DVXREL2):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -3668,7 +3668,7 @@ class DVMREL1(DVXREL1):
         self.mid_ref = model.Material(self.mid, msg=msg)
         self.dvids_ref = [model.Desvar(dvid, msg) for dvid in self.dvids]
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.dvids = self.desvar_ids
         self.mid_ref = None
@@ -3711,7 +3711,7 @@ class DVMREL1(DVXREL1):
             list_fields.append(coeff)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -4001,7 +4001,7 @@ class DVMREL2(DVXREL2):
 
         #assert self.pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.dvids = self.desvar_ids
         self.dequation = self.DEquation()
@@ -4028,7 +4028,7 @@ class DVMREL2(DVXREL2):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -4288,7 +4288,7 @@ class DVPREL1(DVXREL1):
         assert pid_ref.type not in ['PBEND'], pid_ref
         return pid_ref
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.pid_ref = None
         self.dvids = self.desvar_ids
@@ -4377,7 +4377,7 @@ class DVPREL1(DVXREL1):
             list_fields.append(coeff)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -4672,7 +4672,7 @@ class DVPREL2(DVXREL2):
         assert pid_ref.type not in ['PBEND'], pid_ref
         return pid_ref
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.dvids = self.desvar_ids
         self.dequation = self.DEquation()
@@ -4748,7 +4748,7 @@ class DVPREL2(DVXREL2):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -4870,7 +4870,7 @@ class DVGRID(BaseCard):
             return self.dvid
         return self.dvid_ref.dvid
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nid = self.node_id
         self.cid = self.coord_id
         self.dvid = self.desvar_id
@@ -4883,7 +4883,7 @@ class DVGRID(BaseCard):
             'DVGRID', self.desvar_id, self.node_id, self.coord_id, self.coeff] + list(self.dxyz)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

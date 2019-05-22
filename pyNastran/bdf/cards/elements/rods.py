@@ -152,7 +152,7 @@ class CROD(RodElement):
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -263,7 +263,7 @@ class CROD(RodElement):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -388,7 +388,7 @@ class CTUBE(RodElement):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
         ## TODO: xref coord
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -492,7 +492,7 @@ class CTUBE(RodElement):
         list_fields = ['CTUBE', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -654,7 +654,7 @@ class CONROD(RodElement):
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.mid_ref = model.safe_material(self.mid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.mid = self.Mid()
         self.nodes_ref = None
@@ -788,7 +788,7 @@ class CONROD(RodElement):
             'CONROD', self.eid] + self.node_ids + [self.Mid(), self.A, j, c, nsm]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

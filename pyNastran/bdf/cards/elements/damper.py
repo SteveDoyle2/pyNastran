@@ -215,7 +215,7 @@ class CDAMP1(LineDamper):
         """
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -227,7 +227,7 @@ class CDAMP1(LineDamper):
                   nodes[1], self.c2]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -381,7 +381,7 @@ class CDAMP2(LineDamper):
         """
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -401,7 +401,7 @@ class CDAMP2(LineDamper):
                   nodes[1], self.c2]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -548,7 +548,7 @@ class CDAMP3(LineDamper):
         #self.nodes_ref = model.safe_empty_nodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.pid_ref = None
@@ -563,7 +563,7 @@ class CDAMP3(LineDamper):
         list_fields = ['CDAMP3', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -698,7 +698,7 @@ class CDAMP4(LineDamper):
         #self.nodes_ref = model.safe_empty_nodes(self.node_ids, msg=msg)
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -706,7 +706,7 @@ class CDAMP4(LineDamper):
         list_fields = ['CDAMP4', self.eid, self.b] + self.node_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -848,7 +848,7 @@ class CDAMP5(LineDamper):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -866,7 +866,7 @@ class CDAMP5(LineDamper):
         list_fields = ['CDAMP5', self.eid, self.Pid(), nodes[0], nodes[1]]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -998,7 +998,7 @@ class CVISC(LineDamper):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -1035,6 +1035,6 @@ class CVISC(LineDamper):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)

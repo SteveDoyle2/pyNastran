@@ -400,7 +400,7 @@ class CBUSH(BushElement):
         if self.ocid is not None and self.ocid != -1:
             self.ocid_ref = model.safe_coord(self.ocid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ga = self.Ga()
         self.pid = self.Pid()
         self.cid = self.Cid()
@@ -432,7 +432,7 @@ class CBUSH(BushElement):
                        x + [self.Cid(), s, ocid] + self.si)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -540,7 +540,7 @@ class CBUSH1D(BushElement):
         if self.cid is not None:
             self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.cid = self.Cid()
@@ -587,7 +587,7 @@ class CBUSH1D(BushElement):
                        self.Cid()]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -748,7 +748,7 @@ class CBUSH2D(BushElement):
         if self.cid is not None:
             self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.cid = self.Cid()
@@ -763,6 +763,6 @@ class CBUSH2D(BushElement):
                        self.Cid(), self.plane, self.sptid]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)

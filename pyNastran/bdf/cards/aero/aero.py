@@ -190,7 +190,7 @@ class AECOMP(BaseCard):
             raise NotImplementedError(self.list_type)
         self.lists_ref = lists_ref
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.lists = self.get_lists()
         self.lists_ref = None
 
@@ -216,8 +216,7 @@ class AECOMP(BaseCard):
         list_fields = ['AECOMP', self.name, self.list_type] + self.get_lists()
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -308,15 +307,14 @@ class AECOMPL(BaseCard):
     def safe_cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
         list_fields = ['AECOMPL', self.name] + self.labels
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -421,8 +419,7 @@ class AEFACT(BaseCard):
         list_fields = ['AEFACT', self.sid] + list(self.fractions)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -567,7 +564,7 @@ class AELINK(BaseCard):
         return AELINK(aelink_id, label, independent_labels, linking_coefficents,
                       comment=comment)
 
-    #def uncross_reference(self):
+    #def uncross_reference(self) -> None:
         #pass
 
     def raw_fields(self):
@@ -585,8 +582,7 @@ class AELINK(BaseCard):
             list_fields += [ivar, ival]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -690,7 +686,7 @@ class AELIST(BaseCard):
     def safe_cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def clean_ids(self):
@@ -710,7 +706,7 @@ class AELIST(BaseCard):
         list_fields = ['AELIST', self.sid] + self.elements
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -811,7 +807,7 @@ class AEPARM(BaseCard):
     def safe_cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -827,7 +823,7 @@ class AEPARM(BaseCard):
         list_fields = ['AEPARM', self.aeparm_id, self.label, self.units]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -1065,7 +1061,7 @@ class AESURF(BaseCard):
         if self.tqulim is not None:
             self.tqulim_ref = model.safe_tabled(self.tqulim, self.aesid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid1 = self.Cid1()
         self.cid2 = self.Cid2()
         self.cid1_ref = None
@@ -1131,7 +1127,7 @@ class AESURF(BaseCard):
                        self.tqulim]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         Writes the card with the specified width and precision
 
@@ -1267,7 +1263,7 @@ class AESURFS(BaseCard):
         except KeyError:
             pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.list1 = self.List1()
         self.list2 = self.List2()
         self.list1_ref = None
@@ -1297,7 +1293,7 @@ class AESURFS(BaseCard):
                        self.List2()]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -1755,7 +1751,7 @@ class CAERO1(BaseCard):
 
         self._init_ids()
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.cp = self.Cp()
         self.lchord = self.get_LChord()
@@ -2065,7 +2061,7 @@ class CAERO1(BaseCard):
                        [self.x12] + list(self.p4) + [self.x43])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -2343,7 +2339,7 @@ class CAERO2(BaseCard):
             self.lint_ref = model.safe_aefact(self.lint, self.eid, xref_errors, msg=msg)
         self.ascid_ref = model.safe_acsid(msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.cp = self.Cp()
         if self.nsb == 0:
@@ -2488,7 +2484,7 @@ class CAERO2(BaseCard):
                        [self.x12])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -2648,7 +2644,7 @@ class CAERO3(BaseCard):
         except KeyError:
             model.log.warning('cannot find an aero coordinate system for %s' % msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.cp = self.Cp()
         if self.list_w != self.List_w():
@@ -2807,7 +2803,7 @@ class CAERO3(BaseCard):
                        list(self.p4) + [self.x43])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -2976,7 +2972,7 @@ class CAERO4(BaseCard):
             self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg)
         self._init_ids()
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.cp = self.Cp()
         if self.nspan == 0:
@@ -3130,7 +3126,7 @@ class CAERO4(BaseCard):
                        list(self.p4) + [self.x43])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -3298,7 +3294,7 @@ class CAERO5(BaseCard):
         if self.nspan == 0:
             self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.cp = self.Cp()
         if self.nspan == 0:
@@ -3425,7 +3421,7 @@ class CAERO5(BaseCard):
                        list(self.p4) + [self.x43])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -3545,7 +3541,7 @@ class PAERO5(BaseCard):
         if self.ltaus != 0:
             self.ltaus_ref = model.safe_aefact(self.ltaus_id, self.pid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.lxis = self.lxis_id
         self.ltaus = self.ltaus_id
         self.lxis_ref = None
@@ -3556,7 +3552,7 @@ class PAERO5(BaseCard):
                        self.lxis_id, self.ntaus, self.ltaus_id] + list(self.caoci)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -3701,7 +3697,7 @@ class MONPNT1(BaseCard):
         self.cp_ref = model.safe_coord(self.cp, self.name, xref_errors, msg=msg)
         self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cp = self.Cp()
         self.cd = self.Cd()
         self.cp_ref = None
@@ -3723,7 +3719,7 @@ class MONPNT1(BaseCard):
             self.Cp(),] + list(self.xyz) + [self.Cd()]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         cp = self.Cp()
         x, y, z = self.xyz
         cd = self.Cd()
@@ -3792,7 +3788,7 @@ class MONPNT2(BaseCard):
     def safe_cross_reference(self, model, unused_xref_errors):
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -3801,7 +3797,7 @@ class MONPNT2(BaseCard):
             self.table, self.Type, self.nddl_item, self.eid]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = 'MONPNT2 %-8s%s\n' % (self.name, self.label)
         msg += ('        %-8s%-8s%-8s%-8s\n' % (
             self.table, self.Type, self.nddl_item, self.eid
@@ -3891,7 +3887,7 @@ class MONPNT3(BaseCard):
         self.cp_ref = model.safe_coord(self.cp, self.name, xref_errors, msg=msg)
         self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cp = self.Cp()
         self.cd = self.Cd()
         self.cp_ref = None
@@ -3914,7 +3910,7 @@ class MONPNT3(BaseCard):
             ] + list(self.xyz) + [self.xflag, self.Cd()]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         cp = self.Cp()
         cd = self.Cd()
         if cp == cd:
@@ -4083,7 +4079,7 @@ class PAERO1(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def Bodies(self):
@@ -4103,7 +4099,7 @@ class PAERO1(BaseCard):
         list_fields = ['PAERO1', self.pid] + self.caero_body_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -4339,7 +4335,7 @@ class PAERO2(BaseCard):
         if self.lrib is not None and isinstance(self.lrib, integer_types):
             self.lrib_ref = model.safe_aefact(self.lrib, self.pid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.lrsb = self.Lrsb()
         self.lrib = self.Lrib()
         self.lrsb_ref = None
@@ -4373,7 +4369,7 @@ class PAERO2(BaseCard):
             list_fields += [thi, thn]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -4538,7 +4534,7 @@ class PAERO3(BaseCard):
     def safe_cross_reference(self, model, unused_xref_errors):
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     @property
@@ -4560,7 +4556,7 @@ class PAERO3(BaseCard):
             list_fields += [x, y]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -4702,7 +4698,7 @@ class PAERO4(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -4720,7 +4716,7 @@ class PAERO4(BaseCard):
             list_fields += [doc, caoc, gapoc]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -4931,7 +4927,7 @@ class SPLINE1(Spline):
             model.log.warning('failed to find SETx set_id=%s%s; allowed_sets=%s' % (
                 self.setg, msg, np.unique(list(model.sets.keys()))))
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.caero = self.CAero()
         self.setg = self.Set()
         self.caero_ref = None
@@ -4964,7 +4960,7 @@ class SPLINE1(Spline):
         list_fields = wipe_empty_fields(list_fields)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -5142,7 +5138,7 @@ class SPLINE2(Spline):
         except KeyError:
             pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid = self.Cid()
         self.caero = self.CAero()
         self.setg = self.Set()
@@ -5192,7 +5188,7 @@ class SPLINE2(Spline):
                        None, usage]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -5395,7 +5391,7 @@ class SPLINE3(Spline):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.caero_ref = model.safe_caero(self.caero, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.caero = self.CAero()
         self.nodes = self.node_ids
         self.nodes_ref = None
@@ -5433,7 +5429,7 @@ class SPLINE3(Spline):
             list_fields += [nid, disp_c, coeff, None]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -5645,7 +5641,7 @@ class SPLINE4(Spline):
             msg += str(self.setg_ref)
             raise ValueError(msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.caero = self.CAero()
         self.setg = self.Set()
         self.aelist = self.AEList()
@@ -5680,7 +5676,7 @@ class SPLINE4(Spline):
         list_fields = wipe_empty_fields(list_fields)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -5857,7 +5853,7 @@ class SPLINE5(Spline):
         except KeyError:
             pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid = self.Cid()
         self.caero = self.CAero()
         self.setg = self.Set()
@@ -5890,6 +5886,6 @@ class SPLINE5(Spline):
                        None, usage, self.method, None, self.ftype, self.rcore]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)

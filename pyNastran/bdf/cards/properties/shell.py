@@ -108,7 +108,7 @@ class CompositeShellProperty(Property):
                 self.type, self.pid, z1, z2, t)
             model.log.warning(msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mids_ref = None
 
     def is_symmetrical(self):
@@ -1103,7 +1103,7 @@ class PCOMP(CompositeShellProperty):
             list_fields += [mid, t, theta, str_sout]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1402,7 +1402,7 @@ class PCOMPG(CompositeShellProperty):
             list_fields += [global_ply_id, mid, t, theta, sout, None, None, None]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1512,7 +1512,7 @@ class PLPLANE(Property):
         self.mid_ref = model.HyperelasticMaterial(self.mid, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.cid = self.Cid()
         self.mid_ref = None
@@ -1556,7 +1556,7 @@ class PLPLANE(Property):
                        self.stress_strain_output_location]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1620,8 +1620,7 @@ class PPLANE(Property):
         msg = ', which is required by PPLANE pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)
 
-    def uncross_reference(self):
-        # type: () -> None
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1668,7 +1667,7 @@ class PPLANE(Property):
         list_fields = ['PPLANE', self.pid, self.Mid(), self.t, self.nsm, self.formulation_option]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1793,8 +1792,7 @@ class PSHEAR(Property):
         msg = ', which is required by PSHEAR pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)
 
-    def uncross_reference(self):
-        # type: () -> None
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1846,7 +1844,7 @@ class PSHEAR(Property):
                        self.f1, self.f2]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2359,7 +2357,7 @@ class PSHELL(Property):
                        '-1.5t < zi < 1.5t' % (self.pid, self.z1, self.z2, t))
                 model.log.warning(msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid1 = self.Mid1()
         self.mid2 = self.Mid2()
         self.mid3 = self.Mid3()
@@ -2402,7 +2400,7 @@ class PSHELL(Property):
                        twelveIt3, mid3, tst, nsm, z1, z2, mid4]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

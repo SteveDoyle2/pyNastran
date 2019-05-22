@@ -352,7 +352,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.lid = self.Lid()
         self.tid = self.Tid()
         self.lid_ref = None
@@ -402,7 +402,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -466,7 +466,7 @@ class LOADCYN(Load):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def safe_cross_reference(self, model, xref_errors):
@@ -483,7 +483,7 @@ class LOADCYN(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -620,7 +620,7 @@ class DAREA(BaseCard):
             nids2.append(nid2)
         self.nodes_ref = nids2
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes_ref = None
 
     @property
@@ -635,7 +635,7 @@ class DAREA(BaseCard):
             list_fields = ['DAREA', self.sid, nid, comp, scale]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         msg = self.comment
         for nid, comp, scale in zip(self.node_ids, self.components, self.scales):
             msg += print_card_8(['DAREA', self.sid, nid, comp, scale])
@@ -787,7 +787,7 @@ class SPCD(Load):
         msg = ', which is required by SPCD=%s' % (self.sid)
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -801,7 +801,7 @@ class SPCD(Load):
             fields += [nid, component, enforced]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -909,7 +909,7 @@ class DEFORM(Load):
         msg = ', which is required by DEFORM=%s' % (self.sid)
         self.eid_ref = model.safe_element(self.eid, self.sid, xref_errors, msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eid = self.Eid()
         self.eid_ref = None
 
@@ -924,7 +924,7 @@ class DEFORM(Load):
         fields = ['DEFORM', self.sid, self.Eid(), self.deformation]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -1055,7 +1055,7 @@ class SLOAD(Load):
         #msg = ', which is required by SLOAD=%s' % (self.sid)
         #self.nodes_ref = model.safe_empty_nodes(self.nodes, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -1085,7 +1085,7 @@ class SLOAD(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -1235,7 +1235,7 @@ class RFORCE(Load):
             self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nid = self.Nid()
         self.cid = self.Cid()
         self.nid_ref = None
@@ -1272,7 +1272,7 @@ class RFORCE(Load):
                        list(self.r123) + [self.method, racc, mb, idrf])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1418,7 +1418,7 @@ class RFORCE1(Load):
         self.nid_ref = model.Node(self.nid, msg=msg)
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nid = self.node_id
         self.cid = self.Cid()
         self.nid_ref = None
@@ -1444,7 +1444,7 @@ class RFORCE1(Load):
                                             self.mb, self.group_id])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

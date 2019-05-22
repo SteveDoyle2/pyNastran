@@ -214,7 +214,7 @@ class AEROS(Aero):
         return AEROS(cref, bref, sref, acsid, rcsid, sym_xz, sym_xy,
                      comment=comment)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.acsid_ref = None
         self.rcsid_ref = None
 
@@ -259,7 +259,7 @@ class AEROS(Aero):
                        self.bref, self.sref, sym_xz, sym_xy]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -334,7 +334,7 @@ class AESTAT(BaseCard):
     #def cross_reference(self, model):
         #pass
 
-    #def uncross_reference(self):
+    #def uncross_reference(self) -> None:
         #pass
 
     def raw_fields(self):
@@ -350,7 +350,7 @@ class AESTAT(BaseCard):
         list_fields = ['AESTAT', self.aestat_id, self.label]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -484,7 +484,7 @@ class CSSCHD(Aero):
         self.lmach_ref = model.safe_aefact(self.lmach, self.sid, xref_errors, msg=msg)
         self.lschd_ref = model.safe_aefact(self.lschd, self.sid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.aesid = self.AESid()
         self.lalpha = self.LAlpha()
         self.lmach = self.LMach()
@@ -528,7 +528,7 @@ class CSSCHD(Aero):
                        self.LMach(), self.LSchd()]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -612,14 +612,14 @@ class DIVERG(BaseCard):
     #def cross_reference(self, model):
         #pass
 
-    #def uncross_reference(self):
+    #def uncross_reference(self) -> None:
         #pass
 
     def raw_fields(self):
         list_fields = ['DIVERG', self.sid, self.nroots] + list(self.machs)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -989,7 +989,7 @@ class TRIM(BaseCard):
     def safe_cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     @classmethod
@@ -1064,7 +1064,7 @@ class TRIM(BaseCard):
         list_fields[8] = aeqr
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 

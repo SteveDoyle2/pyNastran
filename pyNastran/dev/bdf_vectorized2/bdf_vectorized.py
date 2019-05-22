@@ -275,7 +275,7 @@ class BDF(BDF_):
             model._parse_all_cards(superelement_line[iminus:], superelement_ilines)
             self.superelement_models[superelement_id] = model
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
     def _prepare_grid(self, card, card_obj, comment=''):
         self.grid.add_card(card_obj, comment=comment)

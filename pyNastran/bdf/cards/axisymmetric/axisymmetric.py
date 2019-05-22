@@ -57,7 +57,7 @@ class AXIC(BaseCard):
         list_fields = ['AXIC', self.nharmonics]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         msg = self.comment + print_card_8(card)
         return msg
@@ -149,7 +149,7 @@ class AXIF(BaseCard):
         list_fields = ['AXIF', self.cid, self.g, self.drho, self.db, self.no_sym, self.f] + self.n
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         msg = self.comment + print_card_8(card)
         return msg
@@ -218,7 +218,7 @@ class POINTAX(BaseCard):
         list_fields = ['POINTAX', self.nid, self.ringax, self.phi]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         msg = self.comment + print_card_8(card)
         return msg
@@ -304,8 +304,7 @@ class RINGFL(BaseCard):
         list_fields = ['RINGFL', self.ringfl, self.xa, self.xb]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -420,8 +419,7 @@ class RINGAX(BaseCard):
                        None, self.ps]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -532,7 +530,7 @@ class CCONEAX(Element):
         #self.rings_ref
         self.pid_ref = model.Property(self.pid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.pid_ref = None
         self.rings_ref = None
@@ -544,7 +542,7 @@ class CCONEAX(Element):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -698,7 +696,7 @@ class PCONEAX(Property):
         if self.mid3 > 0:
             self.mid3_ref = model.Material(self.mid3, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid1 = self.Mid1()
         self.mid2 = self.Mid2()
         self.mid3 = self.Mid3()
@@ -746,7 +744,7 @@ class PCONEAX(Property):
                        self.nsm, self.z1, self.z2] + self.phi
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -815,7 +813,7 @@ class PRESAX(BaseCard):
                        self.phi1, self.phi2]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         msg = self.comment + print_card_8(card)
         return msg
@@ -898,7 +896,7 @@ class TEMPAX(ThermalLoad):
     def safe_cross_reference(self, model, debug=True):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -913,7 +911,7 @@ class TEMPAX(ThermalLoad):
     def get_loads(self):
         return [self]
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

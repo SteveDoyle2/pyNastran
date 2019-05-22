@@ -85,8 +85,7 @@ class BDFCard:
         #return str(self.card)
         return '%r' % self.card
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """prints the card in 8/16/16-double format"""
         return print_card(self.card, size=size, is_double=is_double)
 

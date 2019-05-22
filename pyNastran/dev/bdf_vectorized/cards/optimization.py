@@ -346,7 +346,7 @@ class DCONSTR(OptConstraint):
         list_fields = ['DCONSTR', self.oid, self.dresp_id, lid, uid, lowfq, highfq]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -463,7 +463,7 @@ class DESVAR(OptConstraint):
                        xub, self.delx, self.ddval]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -538,7 +538,7 @@ class DDVAL(OptConstraint):
         list_fields = ['DDVAL', self.oid] + self.ddvals
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -655,7 +655,7 @@ class DOPTPRM(OptConstraint):
             list_fields += [param, val]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -733,7 +733,7 @@ class DLINK(OptConstraint):
             list_fields += [idv, ci]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1414,7 +1414,7 @@ class DRESP1(OptConstraint):
                        self.region, self.atta, self.attb] + self.atti
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1751,7 +1751,7 @@ class DRESP2(OptConstraint):
         list_fields += self._pack_params()
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1949,7 +1949,7 @@ class DRESP3(OptConstraint):
         list_fields += self._pack_params()
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2002,7 +2002,7 @@ class DCONADD(OptConstraint):
         list_fields = ['DCONADD', self.oid] + self.dconstrs
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2054,7 +2054,7 @@ class DSCREEN(OptConstraint):
         list_fields = ['DSCREEN', self.rType, trs, nstr]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2222,7 +2222,7 @@ class DVCREL1(OptConstraint):  # similar to DVMREL1
             list_fields.append(coeff)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2486,7 +2486,7 @@ class DVCREL2(OptConstraint):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2622,7 +2622,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
             list_fields.append(coeff)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2845,7 +2845,7 @@ class DVMREL2(OptConstraint):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -3111,7 +3111,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
             list_fields.append(coeff)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -3384,7 +3384,7 @@ class DVPREL2(OptConstraint):
         self.dequation_ref = self.dequation
         assert pid_ref.type not in ['PBEND', 'PBARL', 'PBEAML'], self.pid
 
-    #def uncross_reference(self):
+    #def uncross_reference(self) -> None:
         #self.pid = self.Pid()
         #self.dequation = self.DEquation()
         #del self.pid_ref, self.dequation_ref
@@ -3420,7 +3420,7 @@ class DVPREL2(OptConstraint):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -3476,7 +3476,7 @@ class DVGRID(OptConstraint):
         #self.dconstrs_ref = [model.dconstrs[oid] for oid in self.dconstr_ids]
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         return
         #self.dconstrs = self.dconstr_ids
         #del self.dconstrs_ref
@@ -3485,7 +3485,7 @@ class DVGRID(OptConstraint):
         list_fields = ['DVGRID', self.dvid, self.nid, self.cid, self.coeff] + list(self.dxyz)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

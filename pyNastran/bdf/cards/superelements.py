@@ -90,14 +90,14 @@ class SEBNDRY(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
         list_fields = ['SEBNDRY', self.seid_a, self.seid_b] + self.ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -184,14 +184,14 @@ class SEELT(BaseCard):
         """
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eids_ref = None
 
     def raw_fields(self):
         list_fields = ['SEELT', self.seid] + self.eids  ## TODO: xref
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -245,7 +245,7 @@ class SELOAD(BaseCard):
         list_fields = ['SELOAD', self.lid_s0, self.seid, self.lid_se]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -306,7 +306,7 @@ class SEEXCLD(BaseCard):
     def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     @property
@@ -317,7 +317,7 @@ class SEEXCLD(BaseCard):
         list_fields = ['SEEXCLD', self.seid_a, self.seid_b, ] + self.node_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -391,7 +391,7 @@ class SEMPLN(BaseCard):
         msg = ', which is required by SEMPLN seid=%s' % self.seid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -403,7 +403,7 @@ class SEMPLN(BaseCard):
         list_fields = ['SEMPLN', self.seid, 'PLANE'] + self.node_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -471,7 +471,7 @@ class SELABEL(BaseCard):
         """
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -480,7 +480,7 @@ class SELABEL(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = 'SELABEL %-8s%s\n' % (self.seid, self.label)
         return self.comment + card
 
@@ -639,7 +639,7 @@ class SELOC(BaseCard):
         xyz_cid0 = xyz_cid0.dot(xform.T) + dorigin
         return xyz_cid0
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes_seid = self.nodes_seid_ids
         self.nodes_0 = self.nodes_0_ids
         self.nodes_0_ref = None
@@ -649,7 +649,7 @@ class SELOC(BaseCard):
         list_fields = ['SELOC', self.seid] + list(self.nodes_seid_ids) + list(self.nodes_0_ids)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -736,14 +736,14 @@ class SETREE(BaseCard):
         """
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
         list_fields = ['SETREE', self.seid] + list(self.superelements)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -825,7 +825,7 @@ class CSUPER(BaseCard):
         msg = ', which is required by CSUPER seid=%s' % self.seid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -837,7 +837,7 @@ class CSUPER(BaseCard):
         list_fields = ['CSUPER', self.seid, self.psid] + self.node_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -913,7 +913,7 @@ class CSUPEXT(BaseCard):
         msg = ', which is required by CSUPEXT eid=%s' % self.seid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -925,7 +925,7 @@ class CSUPEXT(BaseCard):
         list_fields = ['CSUPEXT', self.seid] + self.node_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1036,7 +1036,7 @@ class SEBULK(BaseCard):
         """
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -1045,7 +1045,7 @@ class SEBULK(BaseCard):
             self.loc, self.unitno]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1193,7 +1193,7 @@ class SECONCT(BaseCard):
         self.nodes_a_ref = model.superelement_nodes(self.seid_a, self.nodes_a, msg=msg)
         self.nodes_b_ref = model.superelement_nodes(self.seid_b, self.nodes_b, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes_a = self.node_ids_a
         self.nodes_b = self.node_ids_b
         self.nodes_a_ref = None
@@ -1214,7 +1214,7 @@ class SECONCT(BaseCard):
             list_fields += [nid_a, nid_b]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1270,7 +1270,7 @@ class SENQSET(BaseCard):
         list_fields = ['SENQSET', self.set_id, self.n]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 

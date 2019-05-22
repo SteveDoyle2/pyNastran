@@ -89,7 +89,7 @@ class Property_i(BaseCard):
         self.mid = model.Material(self.mid, msg)
         self.mid_ref = self.mid
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         del self.mid_ref
 
@@ -748,7 +748,7 @@ class PCOMPi(CompositeShellProperty):
             list_fields += [mid, t, theta, sout]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 

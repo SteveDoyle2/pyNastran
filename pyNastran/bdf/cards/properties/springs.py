@@ -21,7 +21,7 @@ class SpringProperty(Property):
     def __init__(self):
         Property.__init__(self)
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -130,7 +130,7 @@ class PELAS(SpringProperty):
         if self.pid in model.pelast:
             self.pelast_ref = model.pelast[self.pid]
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pelast_ref = None
 
     def K(self):

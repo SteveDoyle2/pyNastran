@@ -180,7 +180,7 @@ class PFAST(Property):
         if self.mcid != -1:
             self.mcid_ref = model.Coord(self.Mcid(), msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mcid = self.Mcid()
         #if self.mcid != -1:
         self.mcid_ref = None
@@ -212,7 +212,7 @@ class PFAST(Property):
                   self.kt3, kr1, kr2, kr3, mass, ge]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -386,7 +386,7 @@ class PGAP(Property):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -411,7 +411,7 @@ class PGAP(Property):
                   tmax, mar, trmin]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -428,7 +428,7 @@ class CrackProperty(Property):
             return self.mid_ref.mid
         return self.mid
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -523,7 +523,7 @@ class PRAC2D(CrackProperty):
         msg = ', which is required by PRAC2D pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -609,7 +609,7 @@ class PRAC3D(CrackProperty):
         msg = ', which is required by PRAC3D pid=%s' % self.pid
         self.mid_ref = model.Material(self.mid, msg)  # MAT1, MAT9
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 

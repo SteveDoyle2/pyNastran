@@ -222,7 +222,18 @@ class TestCuttingPlane(unittest.TestCase):
         #bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
                   #encoding=None, size=8, is_double=False, cards_to_skip=None,
                   #log=None, skip_case_control_deck=False)
-
+        for plane_bdf_filename in plane_bdf_filenames:
+            os.remove(plane_bdf_filename)
+        os.remove('thetas.csv')
+        os.remove('equivalent_beam_model.bdf')
+        os.remove('cut_data_vs_span.csv')
+        #os.remove('cut_face.csv')
+        if IS_MATPLOTLIB:
+            os.remove('area_vs_span.png')
+            os.remove('amoi_vs_span.png')
+            #os.remove('normalized_inertia_vs_span.png')
+            os.remove('cg_vs_span.png')
+            os.remove('e_amoi_vs_span.png')
 
     def test_cut_plate_eids(self):
         """recover element ids"""

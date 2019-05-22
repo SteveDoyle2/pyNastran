@@ -218,7 +218,7 @@ class CGEN(BaseCard):
             #self.cd = model.Coord(self.cd, msg=msg)
             #self.cd_ref = self.cd
 
-    #def uncross_reference(self):
+    #def uncross_reference(self) -> None:
         #self.cp = self.Cp()
         #self.cd = self.Cd()
         #del self.cp_ref, self.cd_ref
@@ -253,6 +253,6 @@ class CGEN(BaseCard):
             self.direction, self.th_geom_opt, self.eid, self.eidh] + self.t_abcd
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)

@@ -196,7 +196,7 @@ class SUPORT1(Constraint):
             nids2.append(nid2)
         self.nodes_ref = nids2
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -206,7 +206,7 @@ class SUPORT1(Constraint):
             fields += [nid, c]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -343,7 +343,7 @@ class SUPORT(Constraint):
             nids2.append(nid2)
         self.nodes_ref = nids2
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -353,7 +353,7 @@ class SUPORT(Constraint):
             fields += [nid, c]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -600,7 +600,7 @@ class MPC(Constraint):
             nids2.append(nid2)
         self.nodes_ref = nids2
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -613,7 +613,7 @@ class MPC(Constraint):
                 fields.append(None)
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """see BaseCard.write_card``"""
         if size == 8:
             return self.write_card_8()
@@ -862,7 +862,7 @@ class SPC(Constraint):
             nids2.append(nid2)
         self.nodes_ref = nids2
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -873,7 +873,7 @@ class SPC(Constraint):
             fields += [node_id, constraint, enforced]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -931,14 +931,14 @@ class GMSPC(Constraint):
         #msg = ', which is required by GMSPC=%s' % (self.conid)
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
         fields = ['GMSPC', self.conid, self.component, self.entity, self.entity_id]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -1036,14 +1036,14 @@ class SPCAX(Constraint):
     def safe_cross_reference(self, model):
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
         fields = ['SPCAX', self.conid, self.ringax, self.hid, self.component, self.enforced]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -1199,7 +1199,7 @@ class SPC1(Constraint):
                 ', '.join(missing_nids), self.conid))
         self.nodes_ref = nids2
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -1207,7 +1207,7 @@ class SPC1(Constraint):
         fields = ['SPC1', self.conid, self.components] + self.node_ids
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -1349,7 +1349,7 @@ class SPCOFF(Constraint):
                 ', '.join(missing_nids)))
         self.nodes_ref = nids2
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -1359,7 +1359,7 @@ class SPCOFF(Constraint):
             fields += [gid, constraint]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -1469,7 +1469,7 @@ class SPCOFF1(Constraint):
                 ', '.join(missing_nids)))
         self.nodes_ref = nids2
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -1477,7 +1477,7 @@ class SPCOFF1(Constraint):
         fields = ['SPCOFF1', self.components] + self.node_ids
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -1601,7 +1601,7 @@ class SPCADD(ConstraintAdd):
                 continue
             self.sets_ref.append(spc)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.sets = self.spc_ids
         self.sets_ref = []
 
@@ -1609,7 +1609,7 @@ class SPCADD(ConstraintAdd):
         fields = ['SPCADD', self.conid] + self.spc_ids
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
@@ -1722,7 +1722,7 @@ class MPCADD(ConstraintAdd):
                 continue
             self.sets_ref.append(mpc)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.sets = self.mpc_ids
         self.sets_ref = []
 
@@ -1734,7 +1734,7 @@ class MPCADD(ConstraintAdd):
         fields = ['MPCADD', self.conid] + self.mpc_ids
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 

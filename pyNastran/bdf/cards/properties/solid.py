@@ -137,7 +137,7 @@ class PLSOLID(Property):
         msg = ', which is required by PLSOLID pid=%s' % self.pid
         self.mid_ref = model.HyperelasticMaterial(self.mid, msg) # MATHP, MATHE
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -153,7 +153,7 @@ class PLSOLID(Property):
         fields = ['PLSOLID', self.pid, self.Mid(), stress_strain]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -298,7 +298,7 @@ class PCOMPS(Property):
             mid_ref = model.Material(mid, msg=msg)
             self.mids_ref.append(mid_ref)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mids_ref = None
 
     def raw_fields(self):
@@ -325,7 +325,7 @@ class PCOMPS(Property):
             fields += [glply, mid, t, theta, ft, ift, sout, None]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         # this card has integers & strings, so it uses...
         return self.comment + print_card_8(card)
@@ -589,8 +589,7 @@ class PSOLID(Property):
         msg = ', which is required by PSOLID pid=%s' % (self.pid)
         self.mid_ref = model.Material(self.mid, msg)
 
-    def uncross_reference(self):
-        # type: () -> None
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -635,7 +634,7 @@ class PSOLID(Property):
                   self.stress, self.isop, fctn]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         # this card has integers & strings, so it uses...
         return self.comment + print_card_8(card)

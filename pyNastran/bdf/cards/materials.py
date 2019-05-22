@@ -208,7 +208,7 @@ class CREEP(Material):
         msg = ', which is required by CREEP pid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -241,7 +241,7 @@ class CREEP(Material):
                        self.a, self.b, self.c, self.d, self.e, self.f, self.g]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -346,7 +346,7 @@ class NXSTRAT(BaseCard):
         """
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -645,7 +645,7 @@ class MAT1(IsotropicMaterial):
         if self.mid in model.MATT1:
             self.matt1_ref = model.MATT1[self.mid]  # not using a method...
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mats1_ref = None
         self.matt1_ref = None
 
@@ -702,7 +702,7 @@ class MAT1(IsotropicMaterial):
                            St, Sc, Ss, mcsid]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -990,7 +990,7 @@ class MAT2(AnisotropicMaterial):
         if self.mid in model.MATT2:
             self.matt2_ref = model.MATT2[self.mid]  # not using a method...
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.matt2_ref = None
 
     def _verify(self, xref):
@@ -1079,7 +1079,7 @@ class MAT2(AnisotropicMaterial):
                        self.St, self.Sc, self.Ss, self.mcsid]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1288,7 +1288,7 @@ class MAT3(OrthotropicMaterial):
         if self.mid in model.MATT3:
             self.matt3_ref = model.MATT3[self.mid]  # TODO: not using a method...
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         #self.matt3 = self.Mid()
         self.matt3_ref = None
 
@@ -1319,7 +1319,7 @@ class MAT3(OrthotropicMaterial):
                        ax, ath, az, tref, ge]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1473,7 +1473,7 @@ class MAT4(ThermalMaterial):
                        self.ref_enthalpy, self.tch, self.tdelta, self.qlat]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1622,7 +1622,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         if self.mid in model.MATT5:
             self.matt5_ref = model.MATT5[self.mid]  # not using a method...
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         if self.mid in model.MATT5:
             self.matt5 = self.Matt5()
         self.matt5_ref = None
@@ -1669,7 +1669,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
                        hgen]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1922,7 +1922,7 @@ class MAT8(OrthotropicMaterial):
             self.matt8 = model.MATT8[self.mid]  # not using a method...
             self.matt8_ref = self.matt8
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         #self.matt8 = self.Matt8()
         self.matt8_ref = None
 
@@ -2025,7 +2025,7 @@ class MAT8(OrthotropicMaterial):
                        G2z, rho, a1, a2, tref, Xt, Xc, Yt, Yc, S, ge, F12, strn]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2267,7 +2267,7 @@ class MAT9(AnisotropicMaterial):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def _verify(self, xref):
@@ -2337,7 +2337,7 @@ class MAT9(AnisotropicMaterial):
                        + A + [tref, ge])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2502,7 +2502,7 @@ class MAT10(Material):
         if self.table_gamma is not None:
             self.table_gamma_ref = model.TableD(self.table_gamma, msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         if self.table_bulk is not None:
             del self.table_bulk_ref
         if self.table_rho is not None:
@@ -2565,7 +2565,7 @@ class MAT10(Material):
         ]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2722,7 +2722,7 @@ class MATG(Material):
         list_fields = self.raw_fields()
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -2889,7 +2889,7 @@ class MAT11(Material):
         """
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def _validate_input(self):
@@ -2933,7 +2933,7 @@ class MAT11(Material):
                        a2, a3, tref, ge]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -3017,7 +3017,7 @@ class MAT3D(Material):
         assert len(card) <= 17, 'len(MAT3D card) = %i\ncard=%s' % (len(card), card)
         return MAT3D(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, comment=comment)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def _verify(self, xref):
@@ -3070,7 +3070,7 @@ class MAT3D(Material):
                        rho]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -3426,7 +3426,7 @@ class MATHE(HyperelasticMaterial):
                            nkt, n]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -3675,7 +3675,7 @@ class MATHP(HyperelasticMaterial):
                        None, None, None, self.tabd]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

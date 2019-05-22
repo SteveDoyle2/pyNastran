@@ -249,7 +249,7 @@ class CTRAX3(AxisymmetricTri):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None  # type: Optional[List[Any]]
@@ -271,7 +271,7 @@ class CTRAX3(AxisymmetricTri):
         list_fields = ['CTRAX3', self.eid, self.Pid()] + nodeIDs + [theta]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment + print_card_8(card)
@@ -426,7 +426,7 @@ class CTRAX6(AxisymmetricTri):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -448,7 +448,7 @@ class CTRAX6(AxisymmetricTri):
         list_fields = ['CTRAX6', self.eid, self.Pid()] + nodeIDs + [theta]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment + print_card_8(card)
@@ -619,7 +619,7 @@ class CTRIAX(AxisymmetricTri):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None  # type: Optional[List[Any]]
@@ -641,7 +641,7 @@ class CTRIAX(AxisymmetricTri):
         list_fields = ['CTRIAX', self.eid, self.Pid()] + nodeIDs + [theta_mcid]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment + print_card_8(card)
@@ -767,7 +767,7 @@ class CTRIAX6(TriShell):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.mid_ref = model.safe_material(self.mid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.mid = self.Mid()
         self.nodes_ref = None  # type: Optional[List[Any]]
@@ -915,7 +915,7 @@ class CTRIAX6(TriShell):
         list_fields = ['CTRIAX6', self.eid, self.Mid()] + self.node_ids + [theta]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = wipe_empty_fields(self.repr_fields())
         if size == 8 or len(card) == 8: # to last node
             msg = self.comment + print_card_8(card)
@@ -1041,7 +1041,7 @@ class CQUADX(AxisymmetricQuad):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None  # type: Optional[List[Any]]
@@ -1090,7 +1090,7 @@ class CQUADX(AxisymmetricQuad):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes[:4]
         theta_mcid = set_blank_if_default(self.theta_mcid, 0.0)
@@ -1198,7 +1198,7 @@ class CQUADX4(AxisymmetricQuad):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None  # type: Optional[List[Any]]
@@ -1239,7 +1239,7 @@ class CQUADX4(AxisymmetricQuad):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = ['CQUADX4', self.eid, self.Pid()] + nodes + [self.theta]
         return self.comment + print_card_8(data)
@@ -1346,7 +1346,7 @@ class CQUADX8(AxisymmetricQuad):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None  # type: Optional[List[Any]]
@@ -1394,7 +1394,7 @@ class CQUADX8(AxisymmetricQuad):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         data = [self.eid, self.Pid()] + nodes[:6]
         theta = set_blank_if_default(self.theta, 0.0)

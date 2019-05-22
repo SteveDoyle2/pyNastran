@@ -131,7 +131,7 @@ class RANDPS(RandomLoad):
     def safe_cross_reference(self, model, xref_errors):
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.tid = self.Tid()
         self.tid_ref = None
 
@@ -154,7 +154,7 @@ class RANDPS(RandomLoad):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -243,7 +243,7 @@ class RANDT1(RandomLoad):
     def safe_cross_reference(self, model, xref_errors):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def get_loads(self):
@@ -256,7 +256,7 @@ class RANDT1(RandomLoad):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

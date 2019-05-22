@@ -121,7 +121,7 @@ class DTI(BaseCard):
             raise NotImplementedError('DTI name=%r' % self.name)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -546,7 +546,7 @@ class NastranMatrix(BaseCard):
                 self.GCj[i] = [Gj, Cj]
         return
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         if self.tin in [1, 3]:
             is_double = False
         elif self.tin in [2, 4]:
@@ -1020,7 +1020,7 @@ class DMIG_UACCEL(BaseCard):
         self.write_card()
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         if self.tin in [1, 3]:
             is_double = False
             msg = self.write_card_8()
@@ -2055,7 +2055,7 @@ class DMI(NastranMatrix):
             msg += self._get_real_fields(func)
         return msg
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         if size == 8:
             return self.write_card_8()
         elif is_double:

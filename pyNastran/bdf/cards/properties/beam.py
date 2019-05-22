@@ -924,7 +924,7 @@ class PBEAM(IntegratedLineProperty):
             #assert max(self.j) == 0.0, self.j
             #assert min(self.j) == 0.0, self.j
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1066,7 +1066,7 @@ class PBEAM(IntegratedLineProperty):
         list_fields += footer
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1575,7 +1575,7 @@ class PBEAML(IntegratedLineProperty):
         msg = ', which is required by PBEAML mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1629,7 +1629,7 @@ class PBEAML(IntegratedLineProperty):
         list_fields[3] = group
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """.. todo:: having bug with PBEAML"""
         card = self.repr_fields()
         if size == 8:
@@ -1845,7 +1845,7 @@ class PBMSECT(LineProperty):
             #return self.brp1_ref.sid
         #return self.brp1
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
         self.outp_ref = None
@@ -1912,7 +1912,7 @@ class PBMSECT(LineProperty):
         list_fields = ['PBMSECT', self.pid, self.Mid(), self.form]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = ['PBMSECT', self.pid, self.Mid(), self.form]
         end = write_arbitrary_beam_section(
             self.inps, self.ts, self.brps, self.nsm, self.outp_id, self.core)
@@ -2140,7 +2140,7 @@ class PBCOMP(LineProperty):
             return self.mids
         return [mid.mid for mid in self.mids_ref]
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mids = self.Mids()
         self.mid_ref = None
@@ -2181,7 +2181,7 @@ class PBCOMP(LineProperty):
             list_fields += [yi, zi, ci, mid, None, None, None, None]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

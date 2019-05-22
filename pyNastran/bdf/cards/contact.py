@@ -80,7 +80,7 @@ class BLSEG(BaseCard):
         list_fields = ['BLSEG', self.line_id] + self.nodes
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -151,7 +151,7 @@ class BCONP(BaseCard):
             self.fric_id, self.ptype, self.cid]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -259,7 +259,7 @@ class BSURF(BaseCard):
         ##    fields += [sid, tid, fric, mind, maxd, None, None]
         #return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -347,7 +347,7 @@ class BSURFS(BaseCard):
             fields += [eid, g1, g2, g3]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -437,7 +437,7 @@ class BCTSET(BaseCard):
             fields += [sid, tid, fric, mind, maxd, None, None, None]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -536,7 +536,7 @@ class BCRPARA(BaseCard):
         fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.grid_point]
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -683,7 +683,7 @@ class BCTPARA(BaseCard):
             i += 1
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -755,7 +755,7 @@ class BCTADD(BaseCard):
         fields = ['BCTADD'] + self.contact_sets
         return fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

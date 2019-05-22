@@ -111,8 +111,7 @@ class RADM(ThermalBC):
         list_fields = ['RADM', self.radmid, self.absorb] + self.emissivity
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -228,8 +227,7 @@ class RADBC(ThermalBC):
         list_fields = ['RADBC', self.nodamb, self.famb, cntrlnd] + eids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -342,8 +340,7 @@ class VIEW(BaseCard):
                        self.nbeta, self.ngamma, self.dislin]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -471,8 +468,7 @@ class VIEW3D(BaseCard):
                        self.error_tol, self.zero_tol, self.warp_tol, self.rad_check]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -589,8 +585,7 @@ class RADCAV(ThermalBC):
                        self.prtpch, self.nefci, self.rmax, self.ncomp] + self.sets
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -668,8 +663,7 @@ class RADLST(ThermalBC):
                        #self.prtpch, self.nefci, self.rmax, self.ncomp] + self.sets
         #return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -750,8 +744,7 @@ class RADMTX(ThermalBC):
                        #self.prtpch, self.nefci, self.rmax, self.ncomp] + self.sets
         #return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 

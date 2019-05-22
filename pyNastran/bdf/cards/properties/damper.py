@@ -27,7 +27,7 @@ class DamperProperty(Property):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
 
@@ -120,7 +120,7 @@ class PDAMP(DamperProperty):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -210,7 +210,7 @@ class PDAMP5(DamperProperty):
         """
         self.mid_ref = model.Material(self.mid)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -226,7 +226,7 @@ class PDAMP5(DamperProperty):
         list_fields = ['PDAMP5', self.pid, self.Mid(), self.b]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -309,7 +309,7 @@ class PDAMPT(DamperProperty):
         """
         self.tbid_ref = model.TableD(self.tbid)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.tbid = self.Tbid()
         self.tbid_ref = None
 
@@ -327,7 +327,7 @@ class PDAMPT(DamperProperty):
         list_fields = ['PDAMPT', self.pid, self.Tbid()]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -423,7 +423,7 @@ class PVISC(DamperProperty):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def _verify(self, xref):
@@ -439,7 +439,7 @@ class PVISC(DamperProperty):
         list_fields = ['PVISC', self.pid, self.ce, cr]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

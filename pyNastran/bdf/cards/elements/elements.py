@@ -143,7 +143,7 @@ class CFAST(Element):
         """
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.gs = self.Gs()
         self.ga = self.Ga()
@@ -219,7 +219,7 @@ class CFAST(Element):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -502,7 +502,7 @@ class CGAP(Element):
         if self.cid is not None:
             self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.cid = self.Cid()
@@ -552,7 +552,7 @@ class CGAP(Element):
                        [self.Cid()])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -592,7 +592,7 @@ class CrackElement(Element):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -705,7 +705,7 @@ class CRAC2D(CrackElement):
         list_fields = ['CRAC2D', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -801,7 +801,7 @@ class CRAC3D(CrackElement):
         list_fields = ['CRAC3D', self.eid, self.Pid()] + self.node_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -937,7 +937,7 @@ class PLOTEL(BaseCard):
         """
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -958,7 +958,7 @@ class PLOTEL(BaseCard):
         list_fields = ['PLOTEL', self.eid] + self.node_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
         msg = 'PLOTEL  %8i%8i%8i\n' % (self.eid, nodes[0], nodes[1])
         return self.comment + msg
@@ -1164,7 +1164,7 @@ class GENEL(BaseCard):
         #self.ga_ref = model.Node(self.ga, msg=msg)
         #self.gb_ref = model.Node(self.gb, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ul[:, 0] = self.ul_nodes
         self.ud[:, 0] = self.ud_nodes
         self.ul_nodes_ref = None
@@ -1254,7 +1254,7 @@ class GENEL(BaseCard):
         nodes = _node_ids(self, nodes=self.ud_nodes_ref, allow_empty_nodes=False)
         return nodes
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

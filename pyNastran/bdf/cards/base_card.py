@@ -290,8 +290,7 @@ class BaseCard:
             self.comment = comment
         return msg.rstrip()
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         Writes the card with the specified width and precision
 

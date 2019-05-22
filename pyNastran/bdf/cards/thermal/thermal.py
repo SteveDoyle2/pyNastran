@@ -204,7 +204,7 @@ class CHBDYE(ThermalElement):
     def safe_cross_reference(self, model, xref_errors):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     @property
@@ -264,8 +264,7 @@ class CHBDYE(ThermalElement):
                        self.rad_mid_back]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -476,7 +475,7 @@ class CHBDYG(ThermalElement):
         msg = ', which is required by CHBDYG eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -500,8 +499,7 @@ class CHBDYG(ThermalElement):
                         i_view_back, rad_mid_front, rad_mid_back, None, ] + self.node_ids)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -781,7 +779,7 @@ class CHBDYP(ThermalElement):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.ce_ref = model.safe_coord(self.ce, self.pid, xref_errors, msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.ce = self.Ce()
@@ -834,8 +832,7 @@ class CHBDYP(ThermalElement):
                        gmid, ce, self.e1, self.e2, self.e3]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -843,6 +840,7 @@ class CHBDYP(ThermalElement):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.repr_fields()
         if size == 8:
@@ -1039,7 +1037,7 @@ class PCONV(ThermalProperty):
         msg = 'which is required by PCONV pconid=%s' % self.pconid
         self.ce_ref = model.Coord(self.ce, msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ce = self.Ce()
         self.ce_ref = None
 
@@ -1059,8 +1057,7 @@ class PCONV(ThermalProperty):
                        self.e3]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -1191,7 +1188,7 @@ class PCONVM(ThermalProperty):
     #def cross_reference(self, model):
         #pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -1209,8 +1206,7 @@ class PCONVM(ThermalProperty):
                        self.coef, expr, exppi, exppo]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -1333,7 +1329,7 @@ class PHBDY(ThermalProperty):
     #def cross_reference(self, model):
         #pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):
@@ -1345,8 +1341,7 @@ class PHBDY(ThermalProperty):
         list_fields = ['PHBDY', self.pid, self.af, self.d1, d2]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -1504,7 +1499,7 @@ class CONV(ThermalBC):
         if model._xref == 1:  # True
             assert self.eid_ref.type in ['CHBDYG', 'CHBDYE', 'CHBDYP']
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eid_ref = None
 
     def Eid(self):
@@ -1533,8 +1528,7 @@ class CONV(ThermalBC):
         list_fields = ['CONV', self.Eid(), self.pconid, film_node, cntrlnd] + ta
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -1610,8 +1604,7 @@ class TEMPBC(ThermalBC):
             list_fields.extend([temp, node])
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -1789,8 +1782,7 @@ class CONVM(ThermalBC):
                        self.cntmdot, self.ta1, ta2, mdot]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 

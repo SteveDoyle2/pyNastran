@@ -727,7 +727,7 @@ class CBEAM(LineElement):
         else:
             self.g0_vector = self.x
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()
@@ -826,7 +826,7 @@ class CBEAM(LineElement):
                        w1b, w2b, w3b, sa, sb]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -919,7 +919,7 @@ class BEAMOR(BaseCard):
     def raw_fields(self):
         return ['BEAMOR', None, self.pid, None, None] + list(self.x) + [self.offt]
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

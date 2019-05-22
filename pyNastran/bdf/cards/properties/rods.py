@@ -212,7 +212,7 @@ class PROD(Property):
         msg = ', which is required by PROD mid=%s' % self.mid
         self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         # type: () -> None
         self.mid = self.Mid()
         self.mid_ref = None
@@ -229,7 +229,7 @@ class PROD(Property):
         list_fields = ['PROD', self.pid, self.Mid(), self.A, j, c, nsm]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -403,8 +403,7 @@ class PTUBE(Property):
         msg = ', which is required by PTUBE mid=%s' % self.mid
         self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
-        # type: () -> None
+    def uncross_reference(self) -> None:
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -507,7 +506,7 @@ class PTUBE(Property):
         list_fields = ['PTUBE', self.pid, self.Mid(), self.OD1, t, nsm, OD2]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

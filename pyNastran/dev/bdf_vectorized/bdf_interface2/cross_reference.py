@@ -14,7 +14,7 @@ class CrossReference(BDFAttributes):
     def cross_reference(self, xref=True):
         self.build_loadcase()
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def build_loadcase(self):

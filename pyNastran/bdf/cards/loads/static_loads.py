@@ -217,14 +217,14 @@ class LOAD(LoadCombination):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
         else:
             return self.comment + print_card_16(card)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.load_ids = self.get_load_ids()
         self.load_ids_ref = None
 
@@ -364,7 +364,7 @@ class GRAV(BaseCard):
         msg = ', which is required by GRAV sid=%s' % self.sid
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -395,7 +395,7 @@ class GRAV(BaseCard):
         list_fields = ['GRAV', self.sid, self.Cid(), self.scale] + N + [mb]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -525,7 +525,7 @@ class ACCEL(BaseCard):
         msg = ', which is required by ACCEL sid=%s' % self.sid
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -550,7 +550,7 @@ class ACCEL(BaseCard):
             list_fields += [loc, val]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -675,7 +675,7 @@ class ACCEL1(BaseCard):
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid = self.Cid()
         self.nodes = self.node_ids
         self.nodes_ref = None
@@ -713,7 +713,7 @@ class ACCEL1(BaseCard):
             ] + collapse_thru_by(self.node_ids)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -740,7 +740,7 @@ class ACCEL1(BaseCard):
         #loads = self.F()
         #return(scale_factors, loads)
 
-    #def write_card(self, size=8, is_double=False):
+    #def write_card(self, size: int=8, is_double: bool=False) -> str:
         #card = self.raw_fields()
         #if size == 8:
             #return self.comment + print_card_8(card)
@@ -766,7 +766,7 @@ class ACCEL1(BaseCard):
         #}
         #return(scale_factors, loads)
 
-    #def write_card(self, size=8, is_double=False):
+    #def write_card(self, size: int=8, is_double: bool=False) -> str:
         #card = self.raw_fields()
         #if size == 8:
             #return self.comment + print_card_8(card)
@@ -900,7 +900,7 @@ class Load0(BaseCard):
         self.node_ref = model.Node(self.node, msg=msg)
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -970,7 +970,7 @@ class FORCE(Load0):
         """
         Load0.__init__(self, sid, node, mag, xyz, cid=cid, comment=comment)
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         if size == 8:
             cids = set_string8_blank_if_default(self.Cid(), 0)
             msg = 'FORCE   %8i%8i%8s%8s%8s%8s%8s\n' % (
@@ -1096,7 +1096,7 @@ class Load1(BaseCard):
         self.xyz = self.g2_ref.get_position() - self.g1_ref.get_position()
         normalize(self)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.node = self.node_id
         self.g1 = self.G1()
         self.g2 = self.G2()
@@ -1150,7 +1150,7 @@ class Load1(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1430,7 +1430,7 @@ class Load2(BaseCard):
     def scaled_vector(self):
         return self.xyz * self.mag
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.node = self.node_id
         self.g1 = self.G1()
         self.g2 = self.G2()
@@ -1493,7 +1493,7 @@ class Load2(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1561,7 +1561,7 @@ class MOMENT(Load0):
         """
         Load0.__init__(self, sid, node, mag, xyz, cid=cid, comment=comment)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.node = self.node_id
         self.cid = self.Cid()
         self.node_ref = None
@@ -1589,7 +1589,7 @@ class MOMENT(Load0):
                        self.mag] + list(self.xyz)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         if size == 8:
             scid = set_string8_blank_if_default(self.Cid(), 0)
             msg = 'MOMENT  %8i%8i%8s%8s%8s%8s%8s\n' % (
@@ -1758,7 +1758,7 @@ class GMLOAD(Load):
         msg = ', which is required by GMLOAD sid=%s' % self.sid
         self.cid_ref = model.safe_coord(self.Cid(), self.sid, xref_errors, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -1793,8 +1793,7 @@ class GMLOAD(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -1918,7 +1917,7 @@ class PLOAD(Load):
     def safe_cross_reference(self, model, safe_coord):
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def get_loads(self):
@@ -1931,8 +1930,7 @@ class PLOAD(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -2117,7 +2115,7 @@ class PLOAD1(Load):
     def safe_cross_reference(self, model, safe_coord):
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eid = self.Eid()
         self.eid_ref = None
 
@@ -2137,8 +2135,7 @@ class PLOAD1(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -2258,7 +2255,7 @@ class PLOAD2(Load):
     def safe_cross_reference(self, model, safe_coord):
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eids = self.element_ids
         self.eids_ref = None
 
@@ -2292,8 +2289,7 @@ class PLOAD2(Load):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -2662,7 +2658,7 @@ class PLOAD4(Load):
         if msgi:
             model.log.warning(msgi.rstrip())
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.cid = self.Cid()
         if self.g1 is not None:
             self.g1 = self.G1()
@@ -2806,8 +2802,7 @@ class PLOAD4(Load):
             list_fields.append(line_load_dir)
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -2972,7 +2967,7 @@ class PLOADX1(BaseCard):
     def safe_cross_reference(self, model, safe_coord):
         return self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.eid = self.Eid()
         self.ga = self.Ga()
         self.gb = self.Gb()
@@ -3007,8 +3002,7 @@ class PLOADX1(BaseCard):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         """
         The writer method used by BDF.write_card()
 
@@ -3016,6 +3010,7 @@ class PLOADX1(BaseCard):
         -----------
         size : int; default=8
             the size of the card (8/16)
+
         """
         card = self.raw_fields()
         if size == 8:

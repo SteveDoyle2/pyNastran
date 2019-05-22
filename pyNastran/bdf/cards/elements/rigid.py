@@ -181,7 +181,7 @@ class RROD(RigidElement):
         """
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.nodes = [self.Ga(), self.Gb()]
         self.nodes_ref = None
 
@@ -210,7 +210,7 @@ class RROD(RigidElement):
                        self.cma, self.cmb, alpha]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -407,7 +407,7 @@ class RBAR(RigidElement):
         """
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.ga_ref = None
@@ -434,7 +434,7 @@ class RBAR(RigidElement):
                        self.cma, self.cmb, alpha]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -548,7 +548,7 @@ class RBAR1(RigidElement):
         """
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.ga_ref = None
@@ -563,7 +563,7 @@ class RBAR1(RigidElement):
         list_fields = ['RBAR1', self.eid, self.Ga(), self.Gb(), self.cb, alpha]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -726,7 +726,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
         """
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.Gni = self.Gni_node_ids
         self.Gmi = self.Gmi_node_ids
         self.Gni_ref = None
@@ -792,7 +792,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1057,7 +1057,7 @@ class RBE2(RigidElement):
         self.Gmi_ref, unused_missing_nodes = model.safe_empty_nodes(self.Gmi, msg=msg)
         self.gn_ref = model.Node(self.Gn(), msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.Gmi = self.Gmi_node_ids
         self.gn = self.Gn()
         self.Gmi_ref = None
@@ -1098,7 +1098,7 @@ class RBE2(RigidElement):
         list_fields = ['RBE2', self.eid, self.Gn(), self.cm] + self.Gmi_node_ids + [alpha]
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1415,7 +1415,7 @@ class RBE3(RigidElement):
                 model.log.warning(msgi)
             self.Gijs_ref.append(nodes)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.Gijs = self.Gijs_node_ids
         self.Gmi = self.Gmi_node_ids
         self.refgrid = self.ref_grid_id
@@ -1476,7 +1476,7 @@ class RBE3(RigidElement):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -1600,7 +1600,7 @@ class RSPLINE(RigidElement):
         """
         self.cross_reference(model)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
         #self.Gni = self.Gni_node_ids
         #self.Gmi = self.Gmi_node_ids
@@ -1640,7 +1640,7 @@ class RSPLINE(RigidElement):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1818,7 +1818,7 @@ class RSSCON(RigidElement):
             return self.solid_eid_ref.eid
         return self.solid_eid
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.shell_eid = self.EidShell()
         self.solid_eid = self.EidSolid()
         self.shell_eid_ref = None
@@ -1849,7 +1849,7 @@ class RSSCON(RigidElement):
     def repr_fields(self):
         return self.raw_fields()
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)

@@ -1867,7 +1867,7 @@ class Cord2x(Coord):
         self.e2 = self.origin + self.k
         self.e3 = self.origin + self.i
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
@@ -1893,7 +1893,7 @@ class Cord2x(Coord):
             msg = ', which is required by %s cid=%s' % (self.type, self.cid)
             self.rid_ref = model.Coord(self.rid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         if self.rid == 0:
             return
         self.rid = self.Rid()
@@ -2087,7 +2087,7 @@ class Cord1x(Coord):
         #: grid point 3
         self.g3_ref = model.Node(self.g3, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.g1 = self.G1()
         self.g2 = self.G2()
         self.g3 = self.G3()
@@ -2153,7 +2153,7 @@ class Cord1x(Coord):
         grids = [self.G1(), self.G2(), self.G3()]
         return grids
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -2201,7 +2201,7 @@ class GMCORD(BaseCard):
     def cross_reference(self, model):
         pass
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         pass
 
     def setup(self):
@@ -2211,7 +2211,7 @@ class GMCORD(BaseCard):
         list_fields = ['GMCORD', self.cid, self.entity] + self.gm_ids
         return list_fields
 
-    def write_card(self, size=8, is_double=False):
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
 
@@ -2322,7 +2322,7 @@ class CORD3G(Coord):  # not done
         msg = ', which is required by CORD3G cid=%s' % (self.cid)
         self.rid_ref = model.Coord(self.rid, msg=msg)
 
-    def uncross_reference(self):
+    def uncross_reference(self) -> None:
         self.rid = self.Rid()
         self.rid_ref = None
 
