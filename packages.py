@@ -227,7 +227,7 @@ def get_package_requirements(is_gui=True, python_version=None):
     #if is_travis and not is_windows:
     if is_travis:
         install_requires.append('coverage>=4.4.2')
-        install_requires.append('python-coveralls')
+        install_requires.append('coveralls')
         #install_requires.append('codecov')
         #install_requires.append('coverage')
 
