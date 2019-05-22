@@ -10,6 +10,7 @@ from pyNastran.op4.op4 import OP4, read_op4
 
 import pyNastran.op4.test
 OP4_PATH = pyNastran.op4.test.__path__[0]
+PKG_PATH = pyNastran.__path__[0]
 
 
 class TestOP4(unittest.TestCase):
@@ -22,7 +23,7 @@ class TestOP4(unittest.TestCase):
         ]
         for fname in fnames:
             matrices = read_op4(os.path.join(OP4_PATH, fname))
-            for name, (form, matrix) in sorted(matrices.items()):
+            for unused_name, (unused_form, matrix) in sorted(matrices.items()):
                 #print("name = %s" % (name))
                 if isinstance(matrix, ndarray):
                     pass
@@ -41,7 +42,7 @@ class TestOP4(unittest.TestCase):
         for fname in fnames:
             op4 = OP4()
             matrices = op4.read_op4(os.path.join(OP4_PATH, fname))
-            for name, (form, matrix) in sorted(matrices.items()):
+            for unused_name, (unused_form, matrix) in sorted(matrices.items()):
                 #print("name = %s" % name)
                 if isinstance(matrix, ndarray):
                     #print(matrix)
@@ -146,12 +147,12 @@ class TestOP4(unittest.TestCase):
         op4.write_op4(op4_filename, matrices, name_order='A1', precision='default',
                       is_binary=False)
         with self.assertRaises(ValueError):
-            matrices2 = op4.read_op4(op4_filename, precision='default_bad')
+            op4.read_op4(op4_filename, precision='default_bad')
         with self.assertRaises(IOError):
-            matrices2 = op4.read_op4('op4_filename', precision='default')
+            op4.read_op4('op4_filename', precision='default')
 
         # now the inputs are valid, so this works
-        matrices2 = op4.read_op4(op4_filename, precision='default')
+        unused_matrices2 = op4.read_op4(op4_filename, precision='default')
 
     def test_file_obj_ascii(self):
         """tests ascii writing"""
@@ -197,7 +198,7 @@ class TestOP4(unittest.TestCase):
             'A3': (form3, A3),
         }
 
-        for (is_binary, fname) in [(False, 'small_ascii.op4'), (True, 'small_binary.op4')]:
+        for (unused_is_binary, fname) in [(False, 'small_ascii.op4'), (True, 'small_binary.op4')]:
             op4_filename = os.path.join(OP4_PATH, fname)
             op4.write_op4(op4_filename, matrices, name_order=None, precision='default',
                           is_binary=False)
@@ -222,6 +223,17 @@ class TestOP4(unittest.TestCase):
 
     #def test_compress_column(self):
         #compress_column([14, 15, 16, 20, 21, 22, 26, 27, 28])
+
+    def test_qhh_reading(self):
+        """tests QHH reading"""
+        op4_filename = os.path.join(PKG_PATH, '..', 'models', 'aero',
+                                    'bah_plane', 'bah_plane_qhh.op4')
+        assert os.path.exists(op4_filename), op4_filename
+        matrices = read_op4(op4_filename=op4_filename)
+        forms, unused_qhh = matrices['QHH']
+        assert len(forms) == 30, forms
+        #print('forms=', forms)
+        #print('qhh=', np.dstack(qhh).shape)
 
     def test_main(self):
         """tests various matrices"""
@@ -250,7 +262,7 @@ class TestOP4(unittest.TestCase):
         matrix_names = None
         strings = get_matrices()
 
-        is_big_mat = True
+        unused_is_big_mat = True
         with open('ascii.op4', 'w') as op4_filea, open('binary.op4', 'wb') as op4_fileb:
 
             op4 = OP4(debug=False)
@@ -272,7 +284,7 @@ class TestOP4(unittest.TestCase):
                                         precision='default')
                 #print("keys = %s" % matrices.keys())
                 #print("fname=%s" % fname)
-                for name, (form, matrix) in sorted(matrices.items()):
+                for name, (unused_form, unused_matrix) in sorted(matrices.items()):
                     op4.write_op4(op4_filea, matrices, name_order=name,
                                   is_binary=False)
                     if write_binary:
