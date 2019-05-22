@@ -15,7 +15,7 @@ import traceback
 import warnings
 from itertools import chain
 from typing import List, Any
-from six import StringIO
+from io import StringIO
 import numpy as np
 #warnings.simplefilter('always')
 warnings.simplefilter('default')

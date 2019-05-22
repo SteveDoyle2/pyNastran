@@ -3,7 +3,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from collections import defaultdict
 from typing import List
-from six import StringIO, text_type
+from io import StringIO
 import numpy as np
 
 from pyNastran.utils.dict_to_h5py import (
@@ -642,7 +642,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, encoding, debug=T
                 class_group.attrs['type'] = 'list'
                 param_group = class_group.create_group(h5attr)
                 for i, valuei in enumerate(class_value):
-                    if isinstance(valuei, text_type):
+                    if isinstance(valuei, str):
                         param_group.create_dataset(str(i), data=valuei.encode('ascii'))
                     else:
                         param_group.create_dataset(str(i), data=valuei)
@@ -654,7 +654,7 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, encoding, debug=T
             class_group.attrs['type'] = 'list'
             param_group = class_group.create_group(h5attr)
             for i, valuei in enumerate(class_value):
-                if isinstance(valuei, text_type):
+                if isinstance(valuei, str):
                     param_group.create_dataset(str(i), data=valuei.encode('ascii'))
                 elif valuei is None:
                     param_group.create_dataset(str(i), data=np.nan)
@@ -686,7 +686,7 @@ def _export_list(h5_group, attr, name, values, encoding):
      - constant type to a dataset
      - variable type to a numbered list
     """
-    values2 = [value.encode(encoding) if isinstance(value, text_type) else value
+    values2 = [value.encode(encoding) if isinstance(value, str) else value
                for value in values]
     types = {type(value) for value in values}
     if len(types) == 1:
@@ -832,8 +832,8 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
         value.export_to_hdf5(group, model, encoding)
         return
 
-    if isinstance(keys_write[0], text_type):
-        keys_write = list([key.encode(encoding) if isinstance(key, text_type) else key
+    if isinstance(keys_write[0], str):
+        keys_write = list([key.encode(encoding) if isinstance(key, str) else key
                            for key in list(keys_write)])
 
     sub_group = group.create_group('values')

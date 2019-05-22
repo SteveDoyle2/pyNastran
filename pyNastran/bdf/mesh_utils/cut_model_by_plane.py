@@ -13,7 +13,6 @@ import  os
 import warnings
 from itertools import count
 
-#from six import iterkeys
 import numpy as np
 #from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -59,7 +58,6 @@ def _setup_faces(bdf_filename):
                           #consider_0d=False, consider_0d_rigid=False,
                           #consider_1d=False, consider_2d=True, consider_3d=False)
     #edge_to_eid_map = out['edge_to_eid_map']
-    #faces = iterkeys(edge_to_eid_map)
     return nids, xyz_cid0, faces, face_eids
 
 def cut_face_model_by_coord(bdf_filename, coord, tol,

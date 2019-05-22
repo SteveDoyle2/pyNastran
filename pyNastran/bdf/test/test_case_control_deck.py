@@ -1,8 +1,6 @@
 from __future__ import print_function
 import os
 import unittest
-from codecs import open
-from six import PY2
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF
@@ -92,7 +90,7 @@ class CaseControlTest(unittest.TestCase):
         lines_expected = [
             '$pyNastran: version=msc',
             '$pyNastran: punch=False',
-            '$pyNastran: encoding=ascii' if PY2 else '$pyNastran: encoding=utf-8',
+            '$pyNastran: encoding=utf-8',
             '$pyNastran: nnodes=1',
             '$pyNastran: nelements=0',
             '$EXECUTIVE CONTROL DECK',
@@ -285,7 +283,7 @@ class CaseControlTest(unittest.TestCase):
         lines_expected = [
             '$pyNastran: version=msc\n',
             '$pyNastran: punch=True\n',
-            '$pyNastran: encoding=ascii\n' if PY2 else '$pyNastran: encoding=utf-8\n',
+            '$pyNastran: encoding=utf-8\n',
             '$NODES\n',
             'GRID,100000,,43.91715,-29.,.8712984\n',
         ]

@@ -8,7 +8,7 @@ Defines:
  - OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
    - OP2
 """
-from six.moves.cPickle import dump
+from pickle import dump
 from pyNastran.op2.tables.geom.geom1 import GEOM1
 from pyNastran.op2.tables.geom.geom2 import GEOM2
 from pyNastran.op2.tables.geom.geom3 import GEOM3

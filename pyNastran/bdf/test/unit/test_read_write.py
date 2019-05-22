@@ -1,8 +1,7 @@
 from __future__ import unicode_literals, print_function
 import os
-from codecs import open
 import unittest
-from six import PY2, StringIO
+from io import StringIO
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, get_logger2
@@ -423,7 +422,7 @@ class TestReadWrite(unittest.TestCase):
         lines_expected = [
             '$pyNastran: version=msc',
             '$pyNastran: punch=True',
-            '$pyNastran: encoding=ascii' if PY2 else '$pyNastran: encoding=utf-8\n',
+            '$pyNastran: encoding=utf-8\n',
             '$pyNastran: nnodes=1',
             '$pyNastran: nelements=0',
             '$NODES',

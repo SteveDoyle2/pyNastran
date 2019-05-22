@@ -1,5 +1,5 @@
 from __future__ import print_function, unicode_literals
-from six.moves import StringIO
+from io import StringIO
 import unittest
 from itertools import count
 

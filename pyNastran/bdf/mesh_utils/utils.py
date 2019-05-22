@@ -357,7 +357,7 @@ def cmd_line_mirror(argv=None, quiet=False):
     if bdf_filename_out is None:
         bdf_filename_out = 'mirrored.bdf'
 
-    from six.moves import StringIO
+    from io import StringIO
     from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 

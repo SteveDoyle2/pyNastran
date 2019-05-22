@@ -4,7 +4,6 @@ defines:
 """
 from __future__ import print_function
 from copy import deepcopy
-from codecs import open
 
 import numpy as np
 

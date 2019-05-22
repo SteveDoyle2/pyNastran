@@ -12,7 +12,6 @@ from __future__ import print_function
 #from itertools import count
 #import warnings
 
-from six import iterkeys
 import numpy as np
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -79,7 +78,7 @@ def _setup_edges(bdf_filename):
                           consider_0d=False, consider_0d_rigid=False,
                           consider_1d=False, consider_2d=True, consider_3d=False)
     edge_to_eid_map = out['edge_to_eid_map']
-    edges = iterkeys(edge_to_eid_map)
+    edges = edge_to_eid_map.keys()
     return nids, xyz_cid0, edges
 
 def _cut_model(nids, xyz_cp, edges, view_up, p1, p2, tol,

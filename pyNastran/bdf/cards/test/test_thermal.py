@@ -1,6 +1,6 @@
 from __future__ import print_function
 import unittest
-from six import StringIO
+from io import StringIO
 
 from pyNastran.bdf.bdf import read_bdf, BDF, CHBDYG, CaseControlDeck
 from pyNastran.bdf.cards.test.utils import save_load_deck

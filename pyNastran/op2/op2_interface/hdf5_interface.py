@@ -13,7 +13,7 @@ defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
-from six import b, PY3, binary_type, string_types
+from six import b, string_types
 import numpy as np
 import h5py
 
@@ -947,12 +947,12 @@ def _load_eigenvalue(h5_result, log):
             continue
         else:
             datai = _cast(h5_result.get(key))
-            if isinstance(datai, binary_type):
+            if isinstance(datai, bytes):
                 pass
             elif isinstance(datai, string_types):
                 datai = datai.encode('latin1')
             else:
-                assert not isinstance(datai, binary_type), key
+                assert not isinstance(datai, bytes), key
             setattr(obj, key, datai)
     return obj
 
@@ -1058,8 +1058,7 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
                 print('obj = %s' % obj)
                 print('key=%s datai=%r' % (key, datai))
                 raise
-            if PY3:
-                assert not isinstance(datai, binary_type), 'key=%r data=%s' % (key, datai)
+            assert not isinstance(datai, bytes), 'key=%r data=%s' % (key, datai)
     return obj
 
 def _get_obj_class(objs, class_name, result_name, unused_is_real, log):

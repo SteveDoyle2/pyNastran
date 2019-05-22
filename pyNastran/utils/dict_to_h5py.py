@@ -22,7 +22,6 @@ Limitations:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 #from types import MethodType, FunctionType
-from six import PY2 #, PY3 #, binary_type
 
 import h5py
 import numpy as np
@@ -31,14 +30,8 @@ from cpylog import get_logger2
 from pyNastran.utils import object_attributes, check_path
 from pyNastran.utils.numpy_utils import integer_types, float_types
 
-if PY2:
-    FileNotFoundError = IOError
-    string_types = (str, unicode)
-    #integer_types = (int, long, np.int32, np.int64)
-    #FileNotFoundError = IOError
-else:
-    string_types = (str, bytes)
-    #integer_types = (int, np.int32, np.int64)
+string_types = (str, bytes)
+#integer_types = (int, np.int32, np.int64)
 #float_types = (float, np.float32, np.float64)
 
 

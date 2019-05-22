@@ -1,6 +1,5 @@
 from __future__ import print_function
 from six import string_types
-#from six.moves import StringIO
 
 from pyNastran.bdf.bdf import BDF
 

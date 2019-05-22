@@ -1,7 +1,6 @@
 """defines testing utils"""
 import os
-#from copy import deepcopy
-from six import StringIO
+from io import StringIO
 import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.delete_bad_elements import element_quality

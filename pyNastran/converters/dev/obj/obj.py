@@ -5,7 +5,6 @@ test models can be found at:
   http://people.sc.fsu.edu/~jburkardt/data/obj/obj.html
 """
 from __future__ import print_function
-from codecs import open
 from numpy import array, unique, hstack, zeros
 
 def read_obj(obj_filename, log=None, debug=False):

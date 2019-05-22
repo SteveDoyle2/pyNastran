@@ -3,11 +3,7 @@ from __future__ import print_function
 import os
 import unittest
 
-from six import PY2
 from pyNastran.gui.arg_handling import get_inputs
-
-if PY2:
-    FileNotFoundError = IOError
 
 
 class GuiParsing(unittest.TestCase):

@@ -11,7 +11,6 @@ All dynamic loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import itervalues
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -230,7 +229,7 @@ class ACSRCE(BaseCard):
 
     def Delay(self):
         if self.delay_ref is not None:
-            return next(itervalues(self.delay_ref)).sid
+            return next(self.delay_ref.values()).sid
         elif self.delay in [0, 0.0]:
             return 0
         else:
@@ -238,7 +237,7 @@ class ACSRCE(BaseCard):
 
     def DPhase(self):
         if self.dphase_ref is not None:
-            return next(itervalues(self.delay_ref)).tid
+            return next(self.delay_ref.values()).tid
         elif self.dphase in [0, 0.0]:
             return 0
         else:

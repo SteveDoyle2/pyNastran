@@ -5,8 +5,6 @@ defines:
 from __future__ import print_function
 from collections import defaultdict
 from copy import deepcopy
-from six import PY2
-from codecs import open
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -209,11 +207,7 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
 
     """
     encoding = model.get_encoding(encoding)
-    if PY2:
-        wb = 'wb'
-    else:
-        wb = 'w'
-    with open(skin_filename, wb, encoding=encoding) as bdf_file:
+    with open(skin_filename, 'w', encoding=encoding) as bdf_file:
         bdf_file.write('$ pyNastran: punch=True\n')
         for nid in sorted(nids_to_write):
             if nid is None:
@@ -265,7 +259,6 @@ def _write_skin_solid_faces(model, skin_filename, face_map,
                     #print(elem)
                     #break
 
-                #elem = next(itervalues(model.elements)) # old
                 assert len(eids) == 1, eids
                 elem = model.elements[eids[0]]
                 #pid = next(model.properties.keys())

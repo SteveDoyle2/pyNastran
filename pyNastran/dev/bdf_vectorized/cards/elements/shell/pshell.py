@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six.moves import StringIO
+from io import StringIO
 import numpy as np
 from numpy import array, zeros, searchsorted, unique, where
 

@@ -3,8 +3,6 @@ defines:
  - model = PointFile(log=None, debug=False)
 """
 from __future__ import print_function
-from codecs import open
-
 import numpy as np
 
 from cpylog import get_logger2

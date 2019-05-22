@@ -13,7 +13,6 @@ import struct
 import itertools as it
 import warnings
 
-from six import PY2
 import numpy as np
 
 import pyNastran.op2.dev.pyyeti.n2y as n2y
@@ -330,11 +329,8 @@ class OP2(object):
         """
         Returns a valid variable name from the byte string `bstr`.
         """
-        if PY2:
-            return bstr.strip()
-        else:
-            return ''.join(chr(c) for c in bstr if (
-                47 < c < 58 or 64 < c < 91 or c == 95 or 96 < c < 123))
+        return ''.join(chr(c) for c in bstr if (
+            47 < c < 58 or 64 < c < 91 or c == 95 or 96 < c < 123))
 
     def _read_op2_end_of_table(self):
         """Read Nastran output2 end-of-table marker.

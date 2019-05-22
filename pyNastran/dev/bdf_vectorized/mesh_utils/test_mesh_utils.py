@@ -6,7 +6,6 @@ tests
 from __future__ import print_function
 import os
 import unittest
-from codecs import open
 
 import numpy as np
 from cpylog import SimpleLogger

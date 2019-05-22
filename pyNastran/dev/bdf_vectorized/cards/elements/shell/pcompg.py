@@ -1,4 +1,4 @@
-from six.moves import StringIO
+from io import StringIO
 from numpy import array
 
 #from pyNastran.bdf.field_writer_8 import print_card_8

@@ -10,8 +10,7 @@ defines:
 from __future__ import print_function
 from itertools import chain
 
-import io
-from six import PY2, PY3, StringIO
+from io import StringIO, IOBase
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
@@ -634,9 +633,7 @@ def _write_bdf(model, bdf_filename_out, size=8, is_double=False):
     """helper method"""
     if bdf_filename_out is not None:
         close = True
-        if PY2 and isinstance(bdf_filename_out, (file, StringIO)):
-            close = False
-        elif PY3 and isinstance(bdf_filename_out, io.IOBase):
+        if isinstance(bdf_filename_out, IOBase):
             close = False
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double,
                         interspersed=False, close=close)

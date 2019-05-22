@@ -27,7 +27,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
 from typing import List, Union, Optional, Any
-from six import string_types, PY2
+from six import string_types
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -44,10 +44,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, print_int_
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
-if PY2:
-    u = unicode
-else:
-    u = str
+#u = str
 
 
 class SEQGP(BaseCard):

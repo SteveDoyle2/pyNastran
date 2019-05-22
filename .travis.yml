@@ -7,8 +7,6 @@ git:
   quiet: true
 language: python
 #python:
-#  - '2.7'
-#  #- '3.5'
 #  - '3.6'
 #  - '3.7'
   #  # https://github.com/travis-ci/travis-ci/issues/9815
@@ -18,25 +16,17 @@ language: python
 #  - "nightly" # currently points to 3.6-dev
 
 # numpy:
-#  - 1.11 works for 2.7 (bumped for reqs)
 #  - 1.12 min for 3.6 (bumped for reqs)
 #  - 1.15 min for 3.7
 # scipy:
-#  - 0.18.1 works for 2.7
 #  - 0.19 min for 3.6
 #  - ???  min for 3.7
 # matplotlib:
-#  - 2.1 works for 2.7
 #  - 2.1 min for 3.6
 #  - 2.2 min for 3.7
 matrix:
   include:
       # latest versions of package
-    - name: "Python 2.7"
-      python: '2.7'
-      env:
-      - NUMPY='numpy scipy matplotlib h5py vtk pyqt'
-
     - name: "Python 3.6"
       python: '3.6'
       env:
@@ -46,16 +36,6 @@ matrix:
       python: '3.7'
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt'
-
-      # old versions of packages
-    - name: "Python 2.7 old packages"
-      python: '2.7'
-      env:
-      # - bumped numpy from 1.11 to 1.13 fix unique axis bug
-      # - bumped scipy from 0.18.1 to 0.19 for compatibility with numpy
-      # - bumped matplotlib from 1.5 to 2.0 for compatiblity with numpy 1.13;
-      #   matplotlib 1.5 wants numpy 1.11
-      - NUMPY='numpy=1.13 scipy=0.19 matplotlib=2.0 h5py vtk pyside'
 
       # old versions of packages
     - name: "Python 3.6 old packages"
@@ -139,18 +119,13 @@ install:
   # if line per https://docs.travis-ci.com/user/multi-os/
   - echo "python version=$TRAVIS_PYTHON_VERSION"
 
-  # PY2: numpy 1.14.2: pandas works in 0.20.3; broken in 0.22.0, 0.23.4
-  # PY3: numpy 1.14.2; pandas is fine: 0.22.0
+  # numpy 1.14.2; pandas is fine: 0.22.0
 #  - if [[ "$TRAVIS_JOB_NAME"]]
 
-#  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib pandas=0.20 h5py vtk pyqt; fi
-#  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy       scipy matplotlib pandas      h5py vtk pyqt; fi
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib pandas; fi
 
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas=0.20; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas; fi
@@ -162,8 +137,6 @@ install:
 # Run test
 script:
   #- nosetests --with-cov --cov YOUR_PACKAGE_NAME_HERE --cov-config .coveragerc --logging-level=INFO
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then coverage run pyNastran/all_tests${NOGUI}.py; fi
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.5" ]]; then coverage run pyNastran/all_tests${NOGUI}.py; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]]; then coverage run pyNastran/all_tests${NOGUI}.py; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]]; then coverage run pyNastran/all_tests${NOGUI}.py; fi
   - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then python pyNastran/all_tests_no_gui.py; fi

@@ -8,10 +8,11 @@ import sys
 import getpass
 import inspect
 import warnings
+from io import StringIO
 from collections import defaultdict
 from typing import List, Union, Dict, Tuple, Optional, Any
 
-from six import StringIO, string_types
+from six import string_types
 
 import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError

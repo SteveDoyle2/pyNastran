@@ -9,7 +9,6 @@ import time
 import itertools
 import traceback
 
-from six import PY2
 from docopt import docopt
 
 import pyNastran
@@ -277,13 +276,8 @@ def main():
     sys.stderr.write('%i/%i passed\n' % (npassed, ntotal))
     sys.stderr.write(time_msg)
 
-    if PY2:
-        write = 'wb'
-    else:
-        write = 'w'
-
     if ntotal > 1:
-        with open(failed_cases_filename, write) as failed_cases_file:
+        with open(failed_cases_filename, 'w') as failed_cases_file:
             for fname in failed_files:
                 failed_cases_file.write('%s\n' % fname)
         print(time_msg)

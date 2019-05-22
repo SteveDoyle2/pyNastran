@@ -3,11 +3,10 @@ This file defines:
   - WriteMesh
 """
 from __future__ import print_function
-import io
 import sys
-from codecs import open
+from io import StringIO, IOBase
 
-from six import string_types, StringIO, PY2
+from six import string_types
 from numpy import array, unique, concatenate, intersect1d, where
 
 from pyNastran.bdf.utils import print_filename
@@ -50,20 +49,12 @@ class WriteMesh(BDFAttributes):
             out_filename = save_file_dialog(title, wildcard_wx, wildcard_qt)
             assert out_filename is not None, out_filename
 
-        if PY2:
-            if not(hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, (file, StringIO)):
-                return out_filename
-            elif not isinstance(out_filename, string_types):
-                msg = 'out_filename=%r must be a string; type=%s' % (
-                    out_filename, type(out_filename))
-                raise TypeError(msg)
-        else:
-            if not(hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, io.IOBase):
-                return out_filename
-            elif not isinstance(out_filename, string_types):
-                msg = 'out_filename=%r must be a string; type=%s' % (
-                    out_filename, type(out_filename))
-                raise TypeError(msg)
+        if not(hasattr(out_filename, 'read') and hasattr(out_filename, 'write')) or isinstance(out_filename, IOBase):
+            return out_filename
+        elif not isinstance(out_filename, string_types):
+            msg = 'out_filename=%r must be a string; type=%s' % (
+                out_filename, type(out_filename))
+            raise TypeError(msg)
 
         if size == 8:
             assert is_double is False, 'is_double=%r' % is_double

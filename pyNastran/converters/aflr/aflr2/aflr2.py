@@ -12,7 +12,6 @@ from __future__ import print_function
 import os
 import sys
 from copy import deepcopy
-from codecs import open
 
 import numpy as np
 from numpy import (zeros, array, vstack, hstack, where,

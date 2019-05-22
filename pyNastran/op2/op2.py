@@ -26,8 +26,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 from typing import List, Any, Optional
-from six import PY2, string_types
-from six.moves.cPickle import load, dump, dumps
+from six import string_types
+from pickle import load, dump, dumps
 
 import numpy as np
 
@@ -45,9 +45,6 @@ from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 from pyNastran.op2.op2_interface.transforms import (
     transform_displacement_to_global, transform_gpforce_to_globali)
 from pyNastran.utils import check_path
-
-if PY2:
-    FileNotFoundError = IOError
 
 
 def read_op2(op2_filename=None, combine=True, subcases=None,

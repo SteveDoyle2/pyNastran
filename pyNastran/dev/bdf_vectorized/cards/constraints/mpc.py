@@ -1,4 +1,4 @@
-from six.moves import range, StringIO
+from io import StringIO
 from pyNastran.bdf.bdf_interface.assign_type import (integer, double_or_blank, components_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

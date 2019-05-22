@@ -3,7 +3,7 @@ tests dynamic cards and dynamic load cards
 """
 from __future__ import print_function
 import unittest
-from six.moves import StringIO
+from io import StringIO
 import numpy as np
 
 import pyNastran

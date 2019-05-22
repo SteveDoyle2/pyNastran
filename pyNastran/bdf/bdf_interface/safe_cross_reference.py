@@ -6,7 +6,6 @@ Safe cross-referencing skips failed xref's
 from __future__ import print_function
 from collections import defaultdict
 from typing import List, Dict, Any
-from six import itervalues
 
 import numpy as np
 from numpy import zeros, argsort, arange, array_equal
@@ -233,7 +232,7 @@ class SafeXrefMesh(XrefMesh):
         """
         xref_errors = defaultdict(list)
         missing_safe_xref = set()
-        for elem in itervalues(self.elements):
+        for elem in self.elements.values():
             if hasattr(elem, 'safe_cross_reference'):
                 elem.safe_cross_reference(self, xref_errors)
             else:

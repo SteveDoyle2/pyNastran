@@ -1,6 +1,6 @@
 from __future__ import print_function
 from collections import defaultdict
-from six import string_types, binary_type, text_type
+from six import string_types
 from numpy import unique, int32, int64
 
 from pyNastran import is_release
@@ -915,7 +915,7 @@ class OP2_F06_Common(object):
         """
         def compare(key_value):
             key = key_value[0]
-            if isinstance(key, (int, int32, int64, text_type, binary_type)):
+            if isinstance(key, (int, int32, int64, str, bytes)):
                 return key
             else:
                 #print('key=%s type=%s' % (key, type(key)))

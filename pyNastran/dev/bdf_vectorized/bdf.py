@@ -11,12 +11,10 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 import traceback
-from codecs import open
+from pickle import load, dump
 from collections import defaultdict
 
-from six import string_types, iteritems
-from six.moves.cPickle import load, dump
-
+from six import string_types
 import numpy as np
 from cpylog import get_logger2
 
@@ -507,9 +505,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         loads/spcs (not supported) are tricky because you
         can't replace cards one-to-one...not sure what to do.
         """
-        for nid, node in iteritems(replace_model.nodes):
+        for nid, node in replace_model.nodes.items():
             self.nodes[nid] = node
-        for eid, elem in iteritems(replace_model.elements):
+        for eid, elem in replace_model.elements.items():
             self.elements[eid] = elem
         for eid, elem in replace_model.rigid_elements.items():
             self.rigid_elements[eid] = elem
@@ -579,13 +577,11 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     def validate(self):
         """runs some checks on the input data beyond just type checking"""
         return
-        #for eid, elem in sorted(iteritems(model.elements)):
-            #elem.validate()
-        for nid, node in sorted(iteritems(self.nodes)):
+        for nid, node in sorted(self.nodes.items()):
             node.validate()
         for cid, coord in sorted(self.coords.items()):
             coord.validate()
-        for eid, elem in sorted(iteritems(self.elements)):
+        for eid, elem in sorted(self.elements.items()):
             elem.validate()
         for pid, prop in sorted(self.properties.items()):
             prop.validate()
@@ -2705,7 +2701,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         xyz_cp = np.zeros((nnodes + nspoints, 3), dtype=fdtype)
         nid_cp_cd = np.zeros((nnodes + nspoints, 3), dtype=idtype)
         i = 0
-        for nid, node in sorted(iteritems(self.nodes)):
+        for nid, node in sorted(self.nodes.items()):
             cd = node.Cd()
             cp = node.Cp()
             nids_cd_transform[cp].append(nid)
@@ -2839,7 +2835,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
             return icd_transform
 
-        for nid, node in sorted(iteritems(self.nodes)):
+        for nid, node in sorted(self.nodes.items()):
             cid_d = node.Cd()
             if cid_d:
                 nids_transform[cid_d].append(nid)
@@ -2896,7 +2892,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
             return icd_transform, beta_transforms
 
-        for nid, node in sorted(iteritems(self.nodes)):
+        for nid, node in sorted(self.nodes.items()):
             cid_d = node.Cd()
             if cid_d:
                 nids_transform[cid_d].append(nid)
@@ -3445,7 +3441,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             xref = self._xref
         #for key, card in sorted(self.params.items()):
             #card._verify(xref)
-        for key, card in sorted(iteritems(self.nodes)):
+        for key, card in sorted(self.nodes.items()):
             try:
                 card._verify(xref)
             except:
@@ -3457,7 +3453,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             except:
                 print(str(card))
                 raise
-        for key, card in sorted(iteritems(self.elements)):
+        for key, card in sorted(self.elements.items()):
             try:
                 card._verify(xref)
             except:

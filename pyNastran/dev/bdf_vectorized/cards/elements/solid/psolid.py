@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six.moves import StringIO
+from io import StringIO
 from numpy import zeros, unique, where, searchsorted, asarray, array
 
 from pyNastran.utils.numpy_utils import integer_types

@@ -3,7 +3,7 @@ Subcase creation/extraction class
 """
 from __future__ import print_function, unicode_literals
 from typing import List, Dict, Any
-from six import string_types, PY2, PY3, text_type, binary_type
+from six import string_types
 from numpy import ndarray
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -97,7 +97,7 @@ class Subcase(object):
                     #self.log.debug('%s (%s, %s, %s)' % (key, value, options, param_type))
                     if isinstance(options, list):
                         options = [
-                            option.decode(encoding) if isinstance(option, binary_type) else option
+                            option.decode(encoding) if isinstance(option, bytes) else option
                             for option in options]
 
                     self.params[group_key] = (value, options, param_type)
@@ -138,7 +138,7 @@ class Subcase(object):
                         if value is not None:
                             if isinstance(value, list):
                                 value_bytes = [
-                                    valuei.encode(encoding) if isinstance(valuei, text_type) else valuei
+                                    valuei.encode(encoding) if isinstance(valuei, str) else valuei
                                     for valuei in value]
                                 sub_group.create_dataset('value', data=value_bytes)
                             elif isinstance(value, (integer_types, float, string_types)):
@@ -157,7 +157,7 @@ class Subcase(object):
                     if options is not None:
                         if isinstance(options, list):
                             options_bytes = [
-                                option.encode(encoding) if isinstance(option, text_type) else option
+                                option.encode(encoding) if isinstance(option, str) else option
                                 for option in options]
                             sub_group.create_dataset('options', data=options_bytes)
                         else:
@@ -253,12 +253,11 @@ class Subcase(object):
         assert log is not None, log
         #subtable_name = data_code['subtable_name']
         table_name = data_code['table_name']
-        if (PY2 and isinstance(table_name, str)) or (PY3 and not isinstance(table_name, str)):
-            # PY2 : table_name is a byte string
-            # PY3: table_name is a byte string
+        if not isinstance(table_name, str):
+            # table_name is a byte string
             table_name = table_name.decode('latin1')
         else:
-            raise NotImplementedError('table_name=%r PY2=%s PY3=%s' % (table_name, PY2, PY3))
+            raise NotImplementedError('table_name=%r' % table_name)
 
         table_code = data_code['table_code']
         unused_sort_code = data_code['sort_code']
@@ -519,8 +518,7 @@ class Subcase(object):
             return True
         return False
 
-    def has_parameter(self, *param_names):
-        # type: List[bool]
+    def has_parameter(self, *param_names) -> List[bool]:
         """
         Checks to see if one or more parameter names are in the subcase.
 
@@ -1070,12 +1068,12 @@ def _load_hdf5_param(group, key, encoding):
     if 'options' in sub_group:
         keys.remove('options')
         options = _cast(sub_group['options'])
-        if isinstance(options, (integer_types, text_type)):
+        if isinstance(options, (integer_types, str)):
             pass
         else:
             options = options.tolist()
             options = [
-                option.decode(encoding) if isinstance(option, binary_type) else option
+                option.decode(encoding) if isinstance(option, bytes) else option
                 for option in options]
     else:
         options = None
@@ -1090,9 +1088,9 @@ def _load_hdf5_param(group, key, encoding):
     if 'value' in sub_group:
         keys.remove('value')
         value = _cast(sub_group['value'])
-        if isinstance(value, binary_type):
+        if isinstance(value, bytes):
             value = value.decode(encoding)
-        elif isinstance(value, (integer_types, text_type)):
+        elif isinstance(value, (integer_types, str)):
             pass
         else:
             value = value.tolist()
@@ -1110,7 +1108,7 @@ def _load_hdf5_param(group, key, encoding):
             #print('sub_keys =', sub_groupi, sub_groupi.keys())
 
             options_str = [
-                option.decode(encoding) if isinstance(option, binary_type) else option
+                option.decode(encoding) if isinstance(option, bytes) else option
                 for option in options2]
             use_data = False
 
@@ -1129,10 +1127,10 @@ def _load_hdf5_param(group, key, encoding):
         #print('data_keys =', data_group, data_group.keys())
 
         unused_keys_str = [
-            keyi.decode(encoding) if isinstance(keyi, binary_type) else keyi
+            keyi.decode(encoding) if isinstance(keyi, bytes) else keyi
             for keyi in keys2]
         unused_values_str = [
-            valuei.decode(encoding) if isinstance(valuei, binary_type) else valuei
+            valuei.decode(encoding) if isinstance(valuei, bytes) else valuei
             for valuei in values2]
 
         #print('keys2 =', keys2)

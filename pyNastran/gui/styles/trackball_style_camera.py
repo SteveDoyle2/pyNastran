@@ -6,13 +6,9 @@ class TrackballStyleCamera(vtk.vtkInteractorStyleTrackballCamera):
     def __init__(self, iren, parent):
         self.parent = parent
 
-        # PY2 - worked before...
-        #vtk.vtkInteractorStyleTrackballCamera.__init__(self, iren)
-
         # works
         vtk.vtkInteractorStyleTrackballCamera.__init__(self)
 
-        # PY3
         # TypeError: object.__init__() takes no parameters
         #super(TrackballStyleCamera, self).__init__(self, iren)
 

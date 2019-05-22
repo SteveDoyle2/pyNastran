@@ -5,7 +5,6 @@ defines:
 """
 from __future__ import print_function
 import os
-from codecs import open
 from collections import OrderedDict
 
 import numpy as np

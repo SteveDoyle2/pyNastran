@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import string_types, PY2, PY3
+from six import string_types
 
 # strings
 SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
@@ -1037,16 +1037,13 @@ class Op2Codes(object):
 
         Returns
         -------
-        table_name_str : varies
-            PY2 : unicode
-            PY3 : str
+        table_name_str : str
+            the table name as a string
 
         ..note :: Refers to bytes/str in the Python 3 sense.
         """
         table_name = self.table_name
-        if PY2 and isinstance(self.table_name, str):
-            table_name = self.table_name.decode(self._encoding)
-        elif PY3 and isinstance(table_name, bytes):
+        if isinstance(table_name, bytes):
             table_name = self.table_name.decode(self._encoding)
         return table_name
 

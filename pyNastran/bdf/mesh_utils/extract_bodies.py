@@ -4,7 +4,6 @@ defines:
 """
 from __future__ import print_function
 from collections import defaultdict
-from six import iterkeys
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf, print_card_16
 
@@ -92,8 +91,10 @@ def extract_bodies(bdf_filename, mpc_id=0):
     nids_used = set()
     eids_used = set()
     ibody = 0
-    all_nids_to_check = set(list(nid_to_eid_map.keys()))
-    nids_to_check = set([next(iterkeys(nid_to_eid_map))])
+    keys = list(nid_to_eid_map.keys())
+    all_nids_to_check = set(keys)
+    key0 = keys[0]
+    nids_to_check = set([key0])
     if debug:  # pragma: no cover
         print('all_nids_to_check= ', all_nids_to_check)
     body_eids = {ibody : set()}
@@ -196,4 +197,3 @@ def extract_bodies(bdf_filename, mpc_id=0):
     if nbodies > 1:
         print('nbodies = %i' % nbodies)
     return body_eids2
-

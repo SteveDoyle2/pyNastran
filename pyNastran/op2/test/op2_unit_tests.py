@@ -1601,7 +1601,7 @@ class TestOP2(Tester):
         write_f06 = False
         log = get_logger(level='warning')
         read_op2(op2_filename, log=log)
-        build_pandas = False # IS_TRANSIENT_PANDAS #or PY3
+        build_pandas = False # IS_TRANSIENT_PANDAS
         op2i, unused_is_passed = run_op2(
             op2_filename, make_geom=make_geom, write_bdf=write_bdf,
             write_f06=write_f06,
@@ -1620,7 +1620,7 @@ class TestOP2(Tester):
             # no index 0; fortran 1-based
             acc.extract_xyplot(nids, 0, 'real')
 
-        #if IS_PANDAS and not PY3:
+        #if IS_PANDAS:
             #acc.build_dataframe()
         unused_accx = acc.extract_xyplot(nids, 1, 'real')
         unused_accxi = acc.extract_xyplot(nids, 1, 'imag')

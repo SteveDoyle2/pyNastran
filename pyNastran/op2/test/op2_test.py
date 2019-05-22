@@ -1,7 +1,6 @@
 from __future__ import print_function
 import os
 import sys
-from six import PY2
 
 import pyNastran
 from pyNastran.utils.dev import get_files_of_type
@@ -160,12 +159,7 @@ def run(regenerate=True, make_geom=False, write_bdf=False, build_pandas=True,
                                      compare=compare, short_stats=short_stats,
                                      quiet=quiet, dev=True)
     if save_cases:
-        if PY2:
-            write = 'wb'
-        else:
-            write = 'w'
-
-        with open(failed_cases_filename, write) as failed_cases_file:
+        with open(failed_cases_filename, 'w') as failed_cases_file:
             for op2file in failed_files:
                 failed_cases_file.write('%s\n' % op2file)
 

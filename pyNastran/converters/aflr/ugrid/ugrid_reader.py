@@ -6,8 +6,6 @@ from __future__ import print_function
 import os
 from struct import Struct, unpack
 import sys
-from codecs import open
-
 import numpy as np
 from numpy import zeros, unique, array
 from numpy import arange, hstack, setdiff1d, union1d

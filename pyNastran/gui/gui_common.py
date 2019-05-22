@@ -7,11 +7,8 @@ import datetime
 from collections import OrderedDict
 from math import ceil
 
-from six import string_types, PY2
-if PY2:
-    import cgi as html
-else:
-    import html
+from six import string_types
+import html
 
 
 import numpy as np

@@ -4,9 +4,8 @@ Main OP4 class
 from __future__ import print_function
 import sys
 import os
-from codecs import open
 from struct import pack, unpack, Struct
-from six import string_types, PY3
+from six import string_types
 
 import numpy as np
 from numpy import array, zeros, float32, float64, complex64, complex128, ndarray
@@ -1431,7 +1430,7 @@ class OP4(object):
             name_order = sorted(matrices.keys())
         elif isinstance(name_order, string_types):
             name_order = [name_order]
-        elif PY3 and isinstance(name_order, bytes):
+        elif isinstance(name_order, bytes):
             name_order = [name_order]
 
         is_big_mat = False  ## .. todo:: hardcoded

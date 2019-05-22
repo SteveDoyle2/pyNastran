@@ -72,7 +72,6 @@ from __future__ import print_function
 from collections import defaultdict
 import traceback
 from typing import List, Dict, Any
-from six import iteritems, itervalues
 
 from numpy import zeros, argsort, arange, array_equal, array
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -330,7 +329,7 @@ class XrefMesh(BDFAttributes):
         Links the nodes to coordinate systems
         """
         grdset = self.grdset
-        for node in itervalues(self.nodes):
+        for node in self.nodes.values():
             try:
                 node.cross_reference(self, grdset)
             except:
@@ -357,7 +356,7 @@ class XrefMesh(BDFAttributes):
         Links the elements to nodes, properties (and materials depending on
         the card).
         """
-        for elem in itervalues(self.elements):
+        for elem in self.elements.values():
             try:
                 elem.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
@@ -394,7 +393,7 @@ class XrefMesh(BDFAttributes):
         Links the nodes to all connected elements
         """
         nodes = defaultdict(list)  # type: Dict[int, List[Any]]
-        for element in itervalues(self.elements):
+        for element in self.elements.values():
             #if element.type in ['CONM2']:
             #    pass
             #else:
@@ -407,7 +406,7 @@ class XrefMesh(BDFAttributes):
                         #print(element)
                         #print('node = %s' % str(node))
                         #raise
-        for node in itervalues(self.nodes):
+        for node in self.nodes.values():
             node.elements_ref = nodes[node.nid]
 
     def _cross_reference_masses(self):
@@ -763,14 +762,14 @@ class XrefMesh(BDFAttributes):
         """
         if geom_check:
             if xref:
-                for unused_eid, element in iteritems(self.elements):
+                for unused_eid, element in self.elements.values():
                     #element.Mass()
                     element._verify(xref=True)
                 #if 'GEOMCHECK' in self.params:  # should this be an executive control parameter?
                     #for eid, element in model.elements:
                         #element._verify()
             else:
-                for unused_eid, element in iteritems(self.elements):
+                for unused_eid, element in self.elements.values():
                     element.verify_unique_node_ids()
                     element._verify(xref=False)
 

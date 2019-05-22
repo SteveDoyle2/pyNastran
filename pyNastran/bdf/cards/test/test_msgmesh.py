@@ -1,5 +1,5 @@
 import unittest
-from six import StringIO
+from io import StringIO
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from cpylog import SimpleLogger

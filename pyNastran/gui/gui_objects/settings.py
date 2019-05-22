@@ -251,7 +251,7 @@ class Settings(object):
         font.setPointSize(self.font_size)
         self.parent.setFont(font)
 
-        #if 0 and PY3:
+        #if 0:
             #pos_default = 0, 0
             #pos = settings.value("pos", pos_default)
             #x_pos, y_pos = pos

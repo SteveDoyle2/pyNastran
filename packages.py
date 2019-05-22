@@ -2,12 +2,6 @@
 import os
 import sys
 
-PY2 = False
-PY3 = True
-if sys.version_info < (3, 0):
-    PY2 = True
-    PY3 = False
-
 # features in packages used by pyNastran
 # numpy
 #  - 1.12 min for 3.6
@@ -17,11 +11,9 @@ if sys.version_info < (3, 0):
 #          (used for unicode savetxt using with statement) in Python 3.6
 #  - 1.15: min for Python 3.7? I guess 1.14 is fine for a requirement...
 # scipy:
-#  - 0.18.1: fixed kdtree used by nodal equivalencing; min for Python 2.7
 #  - 0.19:   min for Python 3.6
 #  - 0.19:   min for Python 3.7?; last 0.x release
 # matplotlib:
-#  - 1.5: min for Python 2.7; last 1.x release
 #  - 2.0: adds C0/C1 colors (use colors from default colormap);
 #    min for Python 3.6
 #  - 2.1: adds plt.subplots support (untested?)
@@ -29,13 +21,8 @@ if sys.version_info < (3, 0):
 
 # the packages that change requirements based on python version
 REQS = {
-    '2.7' : {
-        # package : (less than check, required)
-        'numpy' : ('1.13', '>=1.13,<1.17'),
-        'scipy' : ('0.18.1', '>=0.18.1,<1.13'),
-        'matplotlib' : ('1.5', '>=1.5,<3'),
-    },
     '3.6' : {
+        # package : (less than check, required)
         'numpy' : ('1.14', '>=1.14'),
         'scipy' : ('0.19', '>=0.19'),
         'matplotlib' : ('2.0', '>=2.0'),
@@ -50,16 +37,9 @@ REQS = {
 def check_python_version():
     """verifies the python version"""
     imajor, minor1, minor2 = sys.version_info[:3]
-    if sys.version_info < (2, 7, 7):  # 2.7.15 used
-        # makes sure we don't get the following bug:
-        #   Issue #19099: The struct module now supports Unicode format strings.
-        sys.exit('Upgrade your Python to >= 2.7.7 or 3.6+; version=(%s.%s.%s)' % (
+    if sys.version_info < (3, 6, 0):  # 3.7.1 used
+        sys.exit('Upgrade your Python to 3.6+; version=(%s.%s.%s)' % (
             imajor, minor1, minor2))
-
-    if PY3:
-        if sys.version_info < (3, 6, 0):  # 3.7.1 used
-            sys.exit('Upgrade your Python to >= 2.7.7 or 3.6+; version=(%s.%s.%s)' % (
-                imajor, minor1, minor2))
 
 
 def int_version(name, version):
@@ -98,8 +78,7 @@ def get_package_requirements(is_gui=True, python_version=None):
     vreqs = REQS[python_version]
 
     all_reqs = {}
-    py2_packages = []
-    py3_packages = []
+    packages = []
 
 
     is_dev = (
@@ -110,25 +89,16 @@ def get_package_requirements(is_gui=True, python_version=None):
     is_travis = 'TRAVIS' in os.environ
     is_rtd = 'READTHEDOCS' in os.environ
 
-    if is_dev or is_gui:
-        try:
-            import vtk
-            vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
-            all_reqs['vtk'] = vtk_version
-            if vtk_version < '7.0.0':
-                print("vtk.VTK_VERSION = %r < '7.0.0'" % vtk.VTK_VERSION)
-                py2_packages.append('vtk >= 7.0.0')
-        except ImportError:
-            py2_packages.append('vtk >= 7.0.0')  # 8.x used
-
-        py2_packages += [
-            ##'dill'
-        ]
-
-        py3_packages += [
-            #'pillow >= 2.7.0',
-            ##'dill'
-        ]
+    #if is_dev or is_gui:
+        #try:
+            #import vtk
+            #vtk_version = '.'.join(vtk.VTK_VERSION.split('.'))
+            #all_reqs['vtk'] = vtk_version
+            #if vtk_version < '7.0.0':
+                #print("vtk.VTK_VERSION = %r < '7.0.0'" % vtk.VTK_VERSION)
+                #py_packages.append('vtk >= 7.0.0')
+        #except ImportError:
+            #py_packages.append('vtk >= 7.0.0')  # 8.x used
 
     py_packages = []
 
@@ -240,31 +210,6 @@ def get_package_requirements(is_gui=True, python_version=None):
         except ImportError:
             py_packages.append('qtpy >= 1.4.0')  # 1.5.0 used
 
-    if PY2:
-        try:
-            import typing
-        except ImportError:
-            # PY2
-            all_reqs['typing'] = '>= 3.6.4'
-            py_packages.append('typing >= 3.6.4')  # 3.6.6 used
-
-        try:
-            import pathlib2
-        except ImportError:
-            all_reqs['pathlib2'] = '>= 2.3.0'
-            py_packages.append('pathlib2 >= 2.3.0')  # 2.3.2 used
-
-        #try:
-            #import scandir
-            #iver = int_version(scandir.__version__)
-            #all_reqs['scandir'] = str_version(iver)
-            #if sver < [1, 7, 0]:
-                #print("scandir.__version__ = %r < '1.7.0'" % scandir.__version__)
-                #all_reqs['scandir'] = '>= 1.7.0'
-                #py_packages.append('scandir >= 1.7.0')
-        #except ImportError:
-            #py_packages.append('scandir >= 1.7.0')  # 1.9.0 used
-
     if is_rtd:
         pass
     elif is_gui:
@@ -290,10 +235,7 @@ def get_package_requirements(is_gui=True, python_version=None):
         #py_packages.append('codecov')
         #py_packages.append('coverage')
 
-    install_requires = py_packages + [
-        # -*- Extra requirements: -*-
-        ##'cython',
-    ] + py2_packages + py3_packages,
+    install_requires = py_packages
     #print(all_reqs)
     #print(install_requires)
     return all_reqs, install_requires

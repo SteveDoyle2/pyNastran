@@ -2,11 +2,8 @@
 from __future__ import print_function
 import unittest
 
-from six import PY2
 #from pyNastran.gui.arg_handling import get_inputs
 from pyNastran.bdf.test.test_bdf import run_argparse
-if PY2:
-    FileNotFoundError = IOError
 
 
 class TestBDFParsing(unittest.TestCase):

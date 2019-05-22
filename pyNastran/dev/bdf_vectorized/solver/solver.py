@@ -8,7 +8,6 @@ import os
 #import sys
 from datetime import date
 from struct import pack
-from codecs import open
 
 import numpy as np
 from numpy import (array, zeros, ones, arange,

@@ -1,6 +1,6 @@
 from __future__ import print_function
 import unittest
-from six.moves import StringIO
+from io import StringIO
 
 from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, read_bdf#, get_logger2
 from pyNastran.bdf.cards.test.utils import save_load_deck

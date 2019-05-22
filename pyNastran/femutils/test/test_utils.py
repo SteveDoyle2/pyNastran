@@ -6,9 +6,8 @@ __all__ = ['TestMatrix3d', 'TestNumpyUtils', 'TestFemIO']
 
 import os
 import unittest
-from io import open, BytesIO #, StringIO
+from io import StringIO, BytesIO
 
-from six import PY2, StringIO
 import numpy as np
 from numpy.testing import assert_equal, assert_array_equal
 
@@ -23,9 +22,6 @@ from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
 from pyNastran.femutils.test.utils import is_array_close
 
 PKG_PATH = pyNastran.__path__[0]
-
-if PY2:
-    FileNotFoundError = IOError
 
 
 #class TestNan(unittest.TestCase):
@@ -414,16 +410,10 @@ class TestFemIO(unittest.TestCase):
                              header='', footer='', comments='# ')
             os.remove(csv_filename)
 
-        if PY2:
-            with self.assertRaises(IOError):
-                B2 = loadtxt_nice('missing.txt', delimiter=',', skiprows=0, comments='#',
-                                  dtype=np.float64, converters=None,
-                                  usecols=None, unpack=False, ndmin=0)
-        else:
-            with self.assertRaises(FileNotFoundError):
-                B2 = loadtxt_nice('missing.txt', delimiter=',', skiprows=0, comments='#',
-                                  dtype=np.float64, converters=None,
-                                  usecols=None, unpack=False, ndmin=0)
+        with self.assertRaises(FileNotFoundError):
+            B2 = loadtxt_nice('missing.txt', delimiter=',', skiprows=0, comments='#',
+                              dtype=np.float64, converters=None,
+                              usecols=None, unpack=False, ndmin=0)
 
 
 if __name__ == '__main__':  # pragma: no cover

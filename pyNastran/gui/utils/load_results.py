@@ -15,7 +15,6 @@ import os
 #import re
 import sys
 import traceback
-from codecs import open
 from six.moves import urllib
 
 import numpy as np

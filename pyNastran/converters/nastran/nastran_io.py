@@ -8,9 +8,10 @@ import os
 import sys
 import traceback
 from itertools import chain
+from io import StringIO
 from collections import defaultdict, OrderedDict
 
-from six import StringIO, string_types
+from six import string_types
 from pyNastran import __version__
 from pyNastran.op2.result_objects.stress_object import StressObject
 from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm

@@ -1,5 +1,4 @@
 from __future__ import print_function, unicode_literals
-from codecs import open
 from numpy import unique
 
 from pyNastran.bdf.bdf import BDF

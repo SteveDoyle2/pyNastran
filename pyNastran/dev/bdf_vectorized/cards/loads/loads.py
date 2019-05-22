@@ -1,6 +1,6 @@
 from __future__ import print_function
 from collections import defaultdict
-from six.moves import StringIO
+from io import StringIO
 from numpy import array, union1d
 from pyNastran.dev.bdf_vectorized.cards.loads.load import LOAD
 

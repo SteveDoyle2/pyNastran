@@ -3,7 +3,6 @@ Unlinks up the various cards in the BDF.
 """
 from __future__ import print_function
 from typing import List, Dict, Any
-from six import itervalues
 from pyNastran.bdf.bdf_interface.safe_cross_reference import SafeXrefMesh
 
 class UnXrefMesh(SafeXrefMesh):
@@ -40,7 +39,7 @@ class UnXrefMesh(SafeXrefMesh):
     def _uncross_reference_nodes(self):
         # type: () -> None
         """uncross references the GRID objects"""
-        for node in itervalues(self.nodes):
+        for node in self.nodes.values():
             node.uncross_reference()
         for point in self.points.values():
             point.uncross_reference()
@@ -56,7 +55,7 @@ class UnXrefMesh(SafeXrefMesh):
     def _uncross_reference_elements(self):
         # type: () -> None
         """uncross references the element objects"""
-        for element in itervalues(self.elements):
+        for element in self.elements.values():
             try:
                 element.uncross_reference()
             except TypeError:

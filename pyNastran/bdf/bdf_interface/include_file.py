@@ -7,11 +7,7 @@ import os
 import ntpath
 import posixpath
 from typing import List, Tuple, Optional, Any
-from six import PY2
-if PY2:
-    from pathlib2 import PurePosixPath, PureWindowsPath
-else:
-    from pathlib import PurePosixPath, PureWindowsPath
+from pathlib import PurePosixPath, PureWindowsPath
 
 IS_WINDOWS = 'nt' in os.name
 #is_linux = 'posix' in os.name

@@ -11,13 +11,13 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 import os
 import sys
 from copy import deepcopy
-import io
+from io import StringIO, IOBase
 import traceback
 from collections import defaultdict
 
-from typing import List, Dict, Optional, Union, Set, Any, cast
-from six import string_types, iteritems, StringIO
-from six.moves.cPickle import load, dump, dumps  # type: ignore
+from typing import List, Dict, Sequence, Optional, Union, Set, Any, cast
+from six import string_types
+from pickle import load, dump, dumps  # type: ignore
 
 import numpy as np  # type: ignore
 from cpylog import get_logger2
@@ -172,141 +172,8 @@ from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 
-def read_bdf(bdf_filename=None, validate=True, xref=True, punch=False,
-             save_file_structure=False,
-             skip_cards=None, read_cards=None,
-             encoding=None, log=None, debug=True, mode='msc'):
-    # type: (Optional[str], bool, bool, bool, Optional[List[str]], Optional[str], Optional[SimpleLogger], Optional[bool], str) -> BDF
-    """
-    Creates the BDF object
 
-    Parameters
-    ----------
-    bdf_filename : str (default=None -> popup)
-        the bdf filename
-    debug : bool/None
-        used to set the logger if no logger is passed in
-            True:  logs debug/info/error messages
-            False: logs info/error messages
-            None:  logs error messages
-    log : logging module object / None
-        if log is set, debug is ignored and uses the
-        settings the logging object has
-    validate : bool; default=True
-        runs various checks on the BDF
-    xref :  bool; default=True
-        should the bdf be cross referenced
-    punch : bool; default=False
-        indicates whether the file is a punch file
-    save_file_structure : bool; default=False
-        enables the ``write_bdfs`` method
-    skip_cards : List[str]; default=None
-        None : include all cards
-        list of cards to skip
-    read_cards : List[str]; default=None
-        None : include all cards
-        list of cards to read (all the cards)
-    encoding : str; default=None -> system default
-        the unicode encoding
-    mode : str; default='msc'
-        the type of Nastran
-        valid_modes = {'msc', 'nx'}
-
-    Returns
-    -------
-    model : BDF()
-        an BDF object
-
-    .. code-block:: python
-
-       >>> bdf = BDF()
-       >>> bdf.read_bdf(bdf_filename, xref=True)
-       >>> g1 = bdf.Node(1)
-       >>> print(g1.get_position())
-       [10.0, 12.0, 42.0]
-       >>> bdf.write_card(bdf_filename2)
-       >>> print(bdf.card_stats())
-
-       ---BDF Statistics---
-       SOL 101
-       bdf.nodes = 20
-       bdf.elements = 10
-       etc.
-
-    .. note :: this method will change in order to return an object that
-               does not have so many methods
-    .. todo:: finish this
-
-    """
-    model = BDF(log=log, debug=debug, mode=mode)
-    if read_cards and skip_cards:
-        msg = 'read_cards=%s skip_cards=%s cannot be used at the same time'
-        raise NotImplementedError(msg)
-    if skip_cards:
-        model.disable_cards(skip_cards)
-    elif read_cards:
-        model.set_cards(read_cards)
-    model.read_bdf(bdf_filename=bdf_filename, validate=validate,
-                   xref=xref, punch=punch, read_includes=True,
-                   save_file_structure=save_file_structure,
-                   encoding=encoding)
-
-    #if 0:
-        ### TODO: remove all the extra methods
-
-        #keys_to_suppress = []
-        #method_names = model.object_methods(keys_to_skip=keys_to_suppress)
-
-        #methods_to_remove = [
-            #'_process_card', 'read_bdf', 'disable_cards', 'set_dynamic_syntax',
-            #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
-
-            #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
-            #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
-            #'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
-            #'add_DIVERG',
-            #'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
-            #'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
-            #'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
-            #'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
-            #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
-            #'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
-            #'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
-            #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_tempd', 'add_TF', 'add_TRIM',
-            #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
-
-            #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
-            #'add_constraint_MPC', 'add_constraint_MPCADD',
-            #'add_constraint_SPC', 'add_constraint_SPCADD',
-            #'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper',
-            #'add_dload', '_add_dload_entry', 'add_element', 'add_hyperelastic_material',
-            #'add_load', 'add_mass', 'add_material_dependence', 'add_method', 'add_node',
-            #'add_plotel', 'add_property', 'add_property_mass', 'add_random_table',
-            #'add_rigid_element', 'add_structural_material', 'add_suport', 'add_suport1',
-            #'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element',
-            #'add_thermal_load', 'add_thermal_material',
-
-            #'set_as_msc',
-            #'set_as_nx',
-
-            #'pop_parse_errors',
-            ##'pop_xref_errors',
-            #'set_error_storage',
-            #'is_reject',
-        #]
-        #for method_name in method_names:
-            #if method_name not in methods_to_remove + keys_to_suppress:
-                ##print(method_name)
-                #pass
-            #else:
-                ### TODO: doesn't work...
-                ##delattr(model, method_name)
-                #pass
-        #model.get_bdf_stats()
-    return model
-
-
-def load_bdf_object(obj_filename, xref=True, log=None, debug=True):
+def load_bdf_object(obj_filename:str, xref: bool=True, log=None, debug: bool=True):
     model = BDF(log=log, debug=debug)
     model.load(obj_filename=obj_filename)
     model.cross_reference(xref=xref, xref_nodes=True, xref_elements=True,
@@ -336,8 +203,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     #: required for sphinx bug
     #: http://stackoverflow.com/questions/11208997/autoclass-and-instance-attributes
     #__slots__ = ['_is_dynamic_syntax']
-    def __init__(self, debug=True, log=None, mode='msc'):
-        # type: (Optional[bool], SimpleLogger, str) -> None
+    def __init__(self, debug: bool=True, log=None, mode: str='msc') -> None:
+        # SimpleLogger
         """
         Initializes the BDF_ object
 
@@ -736,14 +603,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             del state['_card_parser_prepare']
         return state
 
-    def get_h5attrs(self):
+    def get_h5attrs(self) -> List[str]:
         """helper method for dict_to_h5py"""
         attrs = self.object_attributes(mode='both', keys_to_skip=None)
         #attrs.remove('_card_parser')
         #attrs.remove('log')
         return attrs
 
-    def export_hdf5_filename(self, hdf5_filename):
+    def export_hdf5_filename(self, hdf5_filename:str) -> None:
         """
         Converts the BDF objects into hdf5 object
 
@@ -761,7 +628,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #self.log.info('starting export_hdf5_file of %r' % hdf5_filename)
             self.export_hdf5_file(hdf5_file)
 
-    def export_hdf5_file(self, hdf5_file, exporter=None):
+    def export_hdf5_file(self, hdf5_file, exporter=None) -> None:
         """
         Converts the BDF objects into hdf5 object
 
@@ -776,7 +643,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         from pyNastran.bdf.bdf_interface.hdf5_exporter import export_bdf_to_hdf5_file
         export_bdf_to_hdf5_file(hdf5_file, self)
 
-    def load_hdf5_filename(self, hdf5_filename):
+    def load_hdf5_filename(self, hdf5_filename:str) -> None:
         """
         Loads a BDF object from an hdf5 filename
 
@@ -791,7 +658,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #self.log.info('starting load_hdf5_file of %r' % hdf5_filename)
             self.load_hdf5_file(hdf5_file)
 
-    def load_hdf5_file(self, h5_file):
+    def load_hdf5_file(self, h5_file) -> None:
         """
         Loads a BDF object from an hdf5 object
 
@@ -806,14 +673,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         from pyNastran.bdf.bdf_interface.hdf5_loader import load_bdf_from_hdf5_file
         load_bdf_from_hdf5_file(h5_file, self)
 
-    def saves(self, unxref=True):
+    def saves(self, unxref: bool=True) -> str:
         """Saves a pickled string"""
         if unxref:
             self.uncross_reference()
         return dumps(self)
 
-    def save(self, obj_filename='model.obj', unxref=True):
-        # type: (str, bool) -> None
+    def save(self, obj_filename: str='model.obj', unxref: bool=True) -> None:
         """Saves a pickleable object"""
         #del self.log
         #del self._card_parser, self._card_parser_prepare
@@ -830,8 +696,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         with open(obj_filename, 'wb') as obj_file:
             dump(self, obj_file)
 
-    def load(self, obj_filename='model.obj'):
-        # type: (str) -> None
+    def load(self, obj_filename: str='model.obj') -> None:
         """Loads a pickleable object"""
         #del self.log
         #lines = print(self.case_control_deck)
@@ -875,7 +740,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         for model in self.superelement_models.values():
             model.log = self.log
 
-    def replace_cards(self, replace_model):
+    def replace_cards(self, replace_model) -> None:
         """
         Replaces the common cards from the current (self) model from the
         ones in the new replace_model.  The intention is that you're
@@ -910,8 +775,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         for dvid, dvgrid in replace_model.dvgrids.items():
             self.dvgrids[dvid] = dvgrid
 
-    def disable_cards(self, cards):
-        # type : (Sequence[str]) -> None
+    def disable_cards(self, cards: Sequence[str]) -> None:
         """
         Method for removing broken cards from the reader
 
@@ -933,8 +797,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             disable_set = set(cards)
         self.cards_to_read = self.cards_to_read.difference(disable_set)
 
-    def set_cards(self, cards):
-        # type: (Union[List[str],Set[str]]) -> None
+    def set_cards(self, cards: Union[List[str],Set[str]]) -> None:
         """
         Method for setting the cards that will be processed
 
@@ -956,9 +819,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             enable_set = set(cards)
         self.cards_to_read = enable_set
 
-    def set_error_storage(self, nparse_errors=100, stop_on_parsing_error=True,
-                          nxref_errors=100, stop_on_xref_error=True):
-        # type : (int, bool, int, bool) -> None
+    def set_error_storage(self, nparse_errors: int=100, stop_on_parsing_error: bool=True,
+                          nxref_errors: int=100, stop_on_xref_error: bool=True) -> None:
         """
         Catch parsing errors and store them up to print them out all at once
         (not all errors are caught).
@@ -986,20 +848,19 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._stop_on_parsing_error = stop_on_parsing_error
         self._stop_on_xref_error = stop_on_xref_error
 
-    def validate(self):
-        # type : (None) -> None
+    def validate(self) -> None:
         """runs some checks on the input data beyond just type checking"""
         validate_bdf(self)
 
-    def _verify_bdf(self, xref=None):
-        # type: (Optional[bool]) -> None
+    def _verify_bdf(self, xref: Optional[bool]=None) -> None:
         """Cross reference verification method."""
         if xref is None:
             xref = self._xref
         verify_bdf(self, xref)
 
-    def include_zip(self, bdf_filename=None, encoding=None, make_ilines=True):
-        # type: (Optional[str], Optional[str], bool) -> List[str], Any
+    def include_zip(self, bdf_filename: Optional[str]=None,
+                    encoding: Optional[str]=None,
+                    make_ilines: bool=True) -> (List[str], Any):
         """
         Read a bdf without perform any other operation, except (optionally)
         insert the INCLUDE files in the bdf
@@ -1041,7 +902,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._set_pybdf_attributes(obj, save_file_structure=False)
         return all_lines, ilines
 
-    def _set_pybdf_attributes(self, obj, save_file_structure=False):
+    def _set_pybdf_attributes(self, obj: BDFInputPy,
+                              save_file_structure: bool=False) -> None:
         # type: (BDFInputPy, bool) -> None
         """common method for all functions that use BDFInputPy"""
         # these are include line pairs
@@ -1061,10 +923,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.active_filename = obj.active_filename
         self.include_dir = obj.include_dir
 
-    def read_bdf(self, bdf_filename=None,
-                 validate=True, xref=True, punch=False, read_includes=True,
-                 save_file_structure=False, encoding=None):
-        # type: (Optional[str], bool, bool, bool, bool, bool, Optional[str]) -> None
+    def read_bdf(self, bdf_filename: Optional[str]=None,
+                 validate: bool=True,
+                 xref: bool=True,
+                 punch: bool=False,
+                 read_includes: bool=True,
+                 save_file_structure: bool=False,
+                 encoding: Optional[str]=None) -> None:
         """
         Read method for the bdf files
 
@@ -1154,11 +1019,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         self.log.debug('---finished BDF.read_bdf of %s---' % self.bdf_filename)
 
-    def _add_superelements(self, superelement_lines, superelement_ilines):  # pragma: no cover
+    def _add_superelements(self, superelement_lines: List[str],
+                           superelement_ilines: Any) -> None:  # pragma: no cover
         self.log.warning('_add_superelements should be overwritten')
 
-    def _parse_all_cards(self, bulk_data_lines, bulk_data_ilines):
-        # type: (List[str], Any) -> None
+    def _parse_all_cards(self, bulk_data_lines: List[str], bulk_data_ilines: Any) -> None:
         """creates and loads all the cards the bulk data section"""
         cards_list = []
         cards_dict = {}
@@ -1193,8 +1058,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     del dict_values[value]
             # TODO: redo get_card_ids_by_card_types & card_count
 
-    def _read_bdf_helper(self, bdf_filename, encoding, punch, read_includes):
-        # type: (str, str, bool, bool) -> None
+    def _read_bdf_helper(self, bdf_filename: str, encoding: str,
+                         punch: bool, read_includes: bool):
         """creates the file loading if bdf_filename is None"""
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)
@@ -1217,7 +1082,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         elif isinstance(bdf_filename, string_types):
             pass
-        elif isinstance(bdf_filename, (StringIO, io.IOBase)):
+        elif isinstance(bdf_filename, (StringIO, IOBase)):
             self.bdf_filename = bdf_filename
             self.punch = punch
             return
@@ -1234,8 +1099,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         #: is this a punch file (no executive control deck)
         self.punch = punch
 
-    def pop_parse_errors(self):
-        # type: () -> None
+    def pop_parse_errors(self) -> None:
         """raises an error if there are parsing errors"""
         if self._stop_on_parsing_error:
             if self._iparse_errors == 1 and self._nparse_errors == 0:
@@ -1335,8 +1199,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 print('%s' % msg)
                 raise DuplicateIDsError(msg.rstrip())
 
-    def pop_xref_errors(self):
-        # type: () -> None
+    def pop_xref_errors(self) -> None:
         """raises an error if there are cross-reference errors"""
         is_error = False
         if self._stop_on_xref_error:
@@ -1545,8 +1408,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             card_count[old_card_name] += 1
         return cards_dict, card_count
 
-    def update_solution(self, sol, method, sol_iline):
-        # type: (Optional[int], Optional[str], int) -> None
+    def update_solution(self, sol: int,
+                        method: Optional[str],
+                        sol_iline: int) -> None:
         """
         Updates the overall solution type (e.g. 101,200,600)
 
@@ -1584,8 +1448,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:  # very common
             self.sol_method = None
 
-    def update_card(self, card_name, icard, ifield, value):
-        # type: (str, int, int, Union[int, float, str])
+    def update_card(self, card_name: str, icard: int, ifield: int,
+                    value: Union[int, float, str]) -> None:
         """
         Updates a Nastran card based on standard Nastran optimization names
 
@@ -3225,7 +3089,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         nxyz = nnodes + nspoints + nepoints + ngridb
         xyz_cp = np.zeros((nxyz, 3), dtype=fdtype)
         nid_cp_cd = np.zeros((nxyz, 3), dtype=idtype)
-        for nid, node in sorted(iteritems(self.nodes)):
+        for nid, node in sorted(self.nodes.items()):
             cd = node.Cd()
             cp = node.Cp()
             nids_cp_transform[cp].append(nid)
@@ -3664,7 +3528,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if len(self.coords) == 1:  # was ncoords > 2; changed b/c seems dangerous
             return icd_transform
 
-        for nid, node in sorted(iteritems(self.nodes)):
+        for nid, node in sorted(self.nodes.items()):
             cid_d = node.Cd()
             if cid_d:
                 nids_transform[cid_d].append(nid)
@@ -4385,6 +4249,142 @@ class BDF(BDF_):
             model._parse_all_cards(superelement_line[iminus:], superelement_ilines)
             self.superelement_models[superelement_id] = model
             self.initial_superelement_models.append(superelement_id)
+
+def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=True, punch: bool=False,
+             save_file_structure: bool=False,
+             skip_cards: Optional[List[str]]=None,
+             read_cards: Optional[List[str]]=None,
+             encoding: Optional[str]=None,
+             log=None,
+             debug: bool=True, mode: str='msc') -> BDF:
+    # Optional[SimpleLogger]
+    """
+    Creates the BDF object
+
+    Parameters
+    ----------
+    bdf_filename : str (default=None -> popup)
+        the bdf filename
+    debug : bool/None
+        used to set the logger if no logger is passed in
+            True:  logs debug/info/error messages
+            False: logs info/error messages
+            None:  logs error messages
+    log : logging module object / None
+        if log is set, debug is ignored and uses the
+        settings the logging object has
+    validate : bool; default=True
+        runs various checks on the BDF
+    xref :  bool; default=True
+        should the bdf be cross referenced
+    punch : bool; default=False
+        indicates whether the file is a punch file
+    save_file_structure : bool; default=False
+        enables the ``write_bdfs`` method
+    skip_cards : List[str]; default=None
+        None : include all cards
+        list of cards to skip
+    read_cards : List[str]; default=None
+        None : include all cards
+        list of cards to read (all the cards)
+    encoding : str; default=None -> system default
+        the unicode encoding
+    mode : str; default='msc'
+        the type of Nastran
+        valid_modes = {'msc', 'nx'}
+
+    Returns
+    -------
+    model : BDF()
+        an BDF object
+
+    .. code-block:: python
+
+       >>> bdf = BDF()
+       >>> bdf.read_bdf(bdf_filename, xref=True)
+       >>> g1 = bdf.Node(1)
+       >>> print(g1.get_position())
+       [10.0, 12.0, 42.0]
+       >>> bdf.write_card(bdf_filename2)
+       >>> print(bdf.card_stats())
+
+       ---BDF Statistics---
+       SOL 101
+       bdf.nodes = 20
+       bdf.elements = 10
+       etc.
+
+    .. note :: this method will change in order to return an object that
+               does not have so many methods
+    .. todo:: finish this
+
+    """
+    model = BDF(log=log, debug=debug, mode=mode)
+    if read_cards and skip_cards:
+        msg = 'read_cards=%s skip_cards=%s cannot be used at the same time'
+        raise NotImplementedError(msg)
+    if skip_cards:
+        model.disable_cards(skip_cards)
+    elif read_cards:
+        model.set_cards(read_cards)
+    model.read_bdf(bdf_filename=bdf_filename, validate=validate,
+                   xref=xref, punch=punch, read_includes=True,
+                   save_file_structure=save_file_structure,
+                   encoding=encoding)
+
+    #if 0:
+        ### TODO: remove all the extra methods
+
+        #keys_to_suppress = []
+        #method_names = model.object_methods(keys_to_skip=keys_to_suppress)
+
+        #methods_to_remove = [
+            #'_process_card', 'read_bdf', 'disable_cards', 'set_dynamic_syntax',
+            #'create_card_object', 'create_card_object_fields', 'create_card_object_list',
+
+            #'add_AECOMP', 'add_AEFACT', 'add_AELINK', 'add_AELIST', 'add_AEPARM', 'add_AERO',
+            #'add_AEROS', 'add_AESTAT', 'add_AESURF', 'add_ASET', 'add_BCRPARA', 'add_BCTADD',
+            #'add_BCTPARA', 'add_BCTSET', 'add_BSET', 'add_BSURF', 'add_BSURFS', 'add_CAERO',
+            #'add_DIVERG',
+            #'add_CSET', 'add_CSSCHD', 'add_DAREA', 'add_DCONADD', 'add_DCONSTR', 'add_DDVAL',
+            #'add_DELAY', 'add_DEQATN', 'add_DESVAR', 'add_DLINK', 'add_DMI', 'add_DMIG',
+            #'add_DMIJ', 'add_DMIJI', 'add_DMIK', 'add_DPHASE', 'add_DRESP', 'add_DTABLE',
+            #'add_DVMREL', 'add_DVPREL', 'add_EPOINT', 'add_FLFACT', 'add_FLUTTER', 'add_FREQ',
+            #'add_GUST', 'add_LSEQ', 'add_MKAERO', 'add_MONPNT', 'add_NLPARM', 'add_NLPCI',
+            #'add_PAERO', 'add_PARAM', 'add_PBUSHT', 'add_PDAMPT', 'add_PELAST', 'add_PHBDY',
+            #'add_QSET', 'add_SEBSET', 'add_SECSET', 'add_SEQSET', 'add_SESET', 'add_SET',
+            #'add_SEUSET', 'add_SPLINE', 'add_spoint', 'add_tempd', 'add_TF', 'add_TRIM',
+            #'add_TSTEP', 'add_TSTEPNL', 'add_USET',
+
+            #'add_card', 'add_card_fields', 'add_card_lines', 'add_cmethod', 'add_constraint',
+            #'add_constraint_MPC', 'add_constraint_MPCADD',
+            #'add_constraint_SPC', 'add_constraint_SPCADD',
+            #'add_convection_property', 'add_coord', 'add_creep_material', 'add_damper',
+            #'add_dload', '_add_dload_entry', 'add_element', 'add_hyperelastic_material',
+            #'add_load', 'add_mass', 'add_material_dependence', 'add_method', 'add_node',
+            #'add_plotel', 'add_property', 'add_property_mass', 'add_random_table',
+            #'add_rigid_element', 'add_structural_material', 'add_suport', 'add_suport1',
+            #'add_table', 'add_table_sdamping', 'add_thermal_BC', 'add_thermal_element',
+            #'add_thermal_load', 'add_thermal_material',
+
+            #'set_as_msc',
+            #'set_as_nx',
+
+            #'pop_parse_errors',
+            ##'pop_xref_errors',
+            #'set_error_storage',
+            #'is_reject',
+        #]
+        #for method_name in method_names:
+            #if method_name not in methods_to_remove + keys_to_suppress:
+                ##print(method_name)
+                #pass
+            #else:
+                ### TODO: doesn't work...
+                ##delattr(model, method_name)
+                #pass
+        #model.get_bdf_stats()
+    return model
 
 
 def _prep_comment(comment):

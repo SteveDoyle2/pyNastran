@@ -2,10 +2,9 @@
 from __future__ import print_function
 import os
 import unittest
-from codecs import open
+from io import StringIO
 
 from docopt import DocoptExit
-from six import StringIO
 import numpy as np
 #import pyNastran
 #from pyNastran.bdf.bdf import BDF

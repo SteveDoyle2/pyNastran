@@ -1,4 +1,4 @@
-from six.moves import StringIO
+from io import StringIO
 from numpy import array, zeros, unique
 
 from pyNastran.dev.bdf_vectorized.utils import slice_to_iter

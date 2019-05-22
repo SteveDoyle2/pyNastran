@@ -5,7 +5,6 @@ defines:
                               log=None, debug=False)
 """
 from __future__ import print_function
-from codecs import open
 from numpy import zeros, arange, array, array_equal
 import numpy as np
 

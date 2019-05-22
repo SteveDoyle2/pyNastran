@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from six.moves import StringIO
+from io import StringIO
 
 import numpy as np
 

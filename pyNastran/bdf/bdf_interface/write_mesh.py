@@ -6,12 +6,10 @@ This file defines:
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import sys
-import io
+from io import StringIO, IOBase
 from typing import List, Dict, Union, Optional, Tuple, Any, cast
-from codecs import open
-from six import string_types, iteritems, PY2, StringIO
+from six import string_types
 
-from pyNastran.bdf.bdf_interface.utils import print_filename
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -61,20 +59,12 @@ class WriteMesh(BDFAttributes):
             assert out_filename is not None, out_filename
 
         has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
-        if PY2:
-            if has_read_write or isinstance(out_filename, (file, StringIO)):
-                return out_filename
-            elif not isinstance(out_filename, string_types):
-                msg = 'out_filename=%r must be a string; type=%s' % (
-                    out_filename, type(out_filename))
-                raise TypeError(msg)
-        else:
-            if has_read_write or isinstance(out_filename, io.IOBase):
-                return out_filename
-            elif not isinstance(out_filename, string_types):
-                msg = 'out_filename=%r must be a string; type=%s' % (
-                    out_filename, type(out_filename))
-                raise TypeError(msg)
+        if has_read_write or isinstance(out_filename, IOBase):
+            return out_filename
+        elif not isinstance(out_filename, string_types):
+            msg = 'out_filename=%r must be a string; type=%s' % (
+                out_filename, type(out_filename))
+            raise TypeError(msg)
 
         if size == 8:
             assert is_double is False, 'is_double=%r' % is_double
@@ -150,9 +140,6 @@ class WriteMesh(BDFAttributes):
         has_read_write = hasattr(out_filename, 'read') and hasattr(out_filename, 'write')
         if has_read_write:
             bdf_file = out_filename
-            #if (PY2 and isinstance(out_filename, (file, StringIO)) or
-                #PY3 and isinstance(out_filename, io.IOBase)):
-                #pass
         else:
             self.log.debug('---starting BDF.write_bdf of %s---' % out_filename)
             bdf_file = open(out_filename, 'w', encoding=encoding)
@@ -262,10 +249,10 @@ class WriteMesh(BDFAttributes):
         if self.elements:
             bdf_file.write('$ELEMENTS\n')
             if is_long_ids:
-                for (eid, element) in sorted(iteritems(self.elements)):
+                for (eid, element) in sorted(self.elements.items()):
                     bdf_file.write(element.write_card_16(is_double))
             else:
-                for (eid, element) in sorted(iteritems(self.elements)):
+                for (eid, element) in sorted(self.elements.items()):
                     try:
                         bdf_file.write(element.write_card(size, is_double))
                     except:
@@ -809,10 +796,10 @@ class WriteMesh(BDFAttributes):
             if self.grdset:
                 bdf_file.write(self.grdset.write_card(size))
             if is_long_ids:
-                for (unused_nid, node) in sorted(iteritems(self.nodes)):
+                for (unused_nid, node) in sorted(self.nodes.items()):
                     bdf_file.write(node.write_card_16(is_double))
             else:
-                for (unused_nid, node) in sorted(iteritems(self.nodes)):
+                for (unused_nid, node) in sorted(self.nodes.items()):
                     bdf_file.write(node.write_card(size, is_double))
 
     #def _write_nodes_associated(self, bdf_file, size=8, is_double=False):
@@ -822,7 +809,7 @@ class WriteMesh(BDFAttributes):
         #.. warning:: Sometimes crashes, probably on invalid BDFs.
         #"""
         #associated_nodes = set()
-        #for (eid, element) in iteritems(self.elements):
+        #for (eid, element) in self.elements.items():
             #associated_nodes = associated_nodes.union(set(element.node_ids))
 
         #all_nodes = set(self.nodes.keys())

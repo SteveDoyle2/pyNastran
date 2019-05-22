@@ -2,8 +2,8 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import unittest
+from io import StringIO
 from numpy import allclose, array
-from six import StringIO
 from cpylog import get_logger
 
 import pyNastran

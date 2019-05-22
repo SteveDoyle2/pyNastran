@@ -9,10 +9,10 @@ This includes:
 """
 from __future__ import print_function, absolute_import
 import sys
-from io import open
+from io import StringIO
 from itertools import count
 
-from six import StringIO, string_types
+from six import string_types
 import numpy as np
 from numpy.lib._iotools import _is_string_like
 from numpy.compat import asstr, asunicode#, is_pathlib_path, asunicode

@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six.moves import StringIO
+from io import StringIO
 from numpy import zeros, searchsorted, where, asarray, array
 
 from pyNastran.dev.bdf_vectorized.cards.elements.element import Element

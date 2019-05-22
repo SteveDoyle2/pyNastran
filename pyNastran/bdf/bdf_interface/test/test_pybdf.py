@@ -2,9 +2,8 @@
 # pylint: disable=W0212
 from __future__ import print_function, unicode_literals
 import os
-from io import open
 import unittest
-from six import StringIO
+from io import StringIO
 from cpylog import get_logger
 
 from pyNastran.bdf.bdf_interface.pybdf import BDFInputPy, _show_bad_file, _lines_to_decks

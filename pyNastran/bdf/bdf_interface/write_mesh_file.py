@@ -9,7 +9,6 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
 #import io
 import os
 from typing import List, Dict, Union, Optional, Tuple, Any, cast
-from codecs import open
 from collections import defaultdict
 from six import string_types
 import numpy as np

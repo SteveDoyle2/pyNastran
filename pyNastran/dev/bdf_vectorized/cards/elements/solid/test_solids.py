@@ -1,5 +1,5 @@
 from __future__ import print_function
-from six.moves import StringIO
+from io import StringIO
 import unittest
 
 from pyNastran.dev.bdf_vectorized.bdf import BDF, BDFCard

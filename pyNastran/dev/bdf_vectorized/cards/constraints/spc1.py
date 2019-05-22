@@ -1,4 +1,4 @@
-from six.moves import StringIO
+from io import StringIO
 from collections import defaultdict
 #from itertools import count
 

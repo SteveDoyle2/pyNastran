@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
 import unittest
-from six import StringIO
+from io import StringIO
 from numpy import array, allclose, cross
 import numpy as np
 

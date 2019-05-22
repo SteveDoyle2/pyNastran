@@ -1,7 +1,6 @@
 """tests nodes.py"""
 from __future__ import print_function, unicode_literals
 import unittest
-from six.moves import range
 
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.cards.nodes import GRID, SPOINTs as SPOINT

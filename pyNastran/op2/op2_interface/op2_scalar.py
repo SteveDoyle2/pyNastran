@@ -48,7 +48,7 @@ import os
 from struct import Struct, unpack
 from collections import Counter
 from typing import List
-from six import binary_type, string_types, PY2, PY3
+from six import string_types
 
 from numpy import array
 import numpy as np
@@ -1745,9 +1745,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         failed_keys = []
         keys = list(tables.keys())
         for _key in keys:
-            if PY3:
-                if not isinstance(_key, bytes):
-                    failed_keys.append(_key)
+            if not isinstance(_key, bytes):
+                failed_keys.append(_key)
             if hasattr(self, 'is_nx') and self.is_nx:
                 NX_RESULT_TABLES.append(_key)
             else:
@@ -1789,15 +1788,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             matrices = matrices2
 
         self.additional_matrices = matrices
-        if PY2:
-            self.additional_matrices = matrices
-        else:
-            self.additional_matrices = {}
-            for matrix_name, matrix in matrices.items():
-                if isinstance(matrix_name, binary_type):
-                    self.additional_matrices[matrix_name] = matrix
-                else:
-                    self.additional_matrices[matrix_name.encode('latin1')] = matrix
+        self.additional_matrices = {}
+        for matrix_name, matrix in matrices.items():
+            if isinstance(matrix_name, bytes):
+                self.additional_matrices[matrix_name] = matrix
+            else:
+                self.additional_matrices[matrix_name.encode('latin1')] = matrix
 
     def _finish(self):
         """
@@ -1817,7 +1813,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
 def main():  # pragma: no cover
     """testing pickling"""
-    from six.moves.cPickle import dump, load
+    from pickle import dump, load
     txt_filename = 'solid_shell_bar.txt'
     pickle_file = open(txt_filename, 'wb')
     op2_filename = 'solid_shell_bar.op2'
@@ -1846,8 +1842,6 @@ def create_binary_debug(op2_filename, debug_file, log):
     """helper method"""
     binary_debug = None
     wb = 'w'
-    if PY2:
-        wb = 'wb'
 
     if debug_file is not None:
         #: an ASCII version of the op2 (creates lots of output)

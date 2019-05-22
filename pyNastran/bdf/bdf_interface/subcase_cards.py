@@ -1,6 +1,6 @@
 from __future__ import print_function, unicode_literals
 from typing import List, Dict, Tuple, Union, Set, Any
-from six import string_types, text_type
+from six import string_types
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 
 class CaseControlCard(object):
@@ -575,7 +575,7 @@ class CheckCard(CaseControlCard):
         #print('options* =', self.options)
         if isinstance(self.options, list):
             options_bytes = [
-                option.encode(encoding) if isinstance(option, text_type) else option
+                option.encode(encoding) if isinstance(option, str) else option
                 for option in self.options]
             #print('optins =', options_bytes)
             hdf5_file.create_dataset('options', data=options_bytes)
@@ -594,10 +594,10 @@ class CheckCard(CaseControlCard):
             #print('keys = ', keys)
             #print('values = ', values)
             keys_bytes = [
-                key.encode(encoding) if isinstance(key, text_type) else key
+                key.encode(encoding) if isinstance(key, str) else key
                 for key in keys]
             values_bytes = [
-                value.encode(encoding) if isinstance(value, text_type) else value
+                value.encode(encoding) if isinstance(value, str) else value
                 for value in values]
             data_group.create_dataset('keys', data=keys_bytes)
             data_group.create_dataset('values', data=values_bytes)
@@ -1051,10 +1051,10 @@ class EXTSEOUT(CaseControlCard):
             #print('keys = ', keys)
             #print('values = ', values)
             keys_bytes = [
-                key.encode(encoding) if isinstance(key, text_type) else key
+                key.encode(encoding) if isinstance(key, str) else key
                 for key in keys]
             values_bytes = [
-                value.encode(encoding) if isinstance(value, text_type) else value
+                value.encode(encoding) if isinstance(value, str) else value
                 for value in values]
             data_group.create_dataset('keys', data=keys_bytes)
 

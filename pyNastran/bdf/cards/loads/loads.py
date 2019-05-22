@@ -10,7 +10,7 @@ All static loads are defined in this file.  This includes:
 """
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from six import PY3
+from typing import Any
 import numpy as np
 
 #from pyNastran.bdf.errors import CrossReferenceError
@@ -184,14 +184,8 @@ class LoadCombination(BaseCard):
                 try:
                     loads += load.get_loads()
                 except RuntimeError:
-                    if PY3:
-                        print('recursion error on load=\n%s' % str(load))
-                        raise
-                    try:
-                        msg = 'recursion error on load=\n%s' % str(load)
-                    except RuntimeError:
-                        msg = 'Recursion Error on load=%s Type=%s' % (load.sid, load.type)
-                    raise RuntimeError(msg)
+                    print('recursion error on load=\n%s' % str(load))
+                    raise
             #loads += self.ID  #: :: todo:  what does this mean, was uncommented
         return loads
 

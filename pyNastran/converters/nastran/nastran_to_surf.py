@@ -9,7 +9,6 @@ defines:
 """
 from __future__ import print_function
 from collections import defaultdict
-from codecs import open
 from six import string_types
 from numpy import array, allclose, unique, zeros
 from pyNastran.bdf.bdf import read_bdf

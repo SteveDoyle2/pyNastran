@@ -10,7 +10,7 @@ from io import open
 from collections import defaultdict
 from itertools import count
 from typing import List, Dict, Optional, Union, Set, Any, cast
-from six import StringIO
+from io import StringIO
 
 import numpy as np
 from cpylog import get_logger2

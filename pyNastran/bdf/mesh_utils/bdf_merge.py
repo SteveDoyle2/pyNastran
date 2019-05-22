@@ -5,7 +5,7 @@ defines:
 
 """
 from __future__ import print_function
-from six.moves import StringIO
+from io import StringIO
 from six import string_types
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck

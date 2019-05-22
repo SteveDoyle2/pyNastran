@@ -1,7 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from typing import List, Dict, Union, Optional, Any
-from six import PY2
 
 import numpy as np
 #from numpy import nan, empty, unique
@@ -13,29 +12,6 @@ from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdf_interface.utils import deprecated
 from pyNastran.bdf.cards.expand_card import  expand_thru, expand_thru_by, expand_thru_exclude
-
-
-if PY2:
-    def long_range(start, stop=None, step=1):
-        """Python 2 doesn't handle large values of start/stop well"""
-        if isinstance(stop, long):  # pylint: disable=undefined-variable
-            out = []
-            i = start
-            while i < stop:
-                out.append(i)
-                i += step
-            return out
-        elif stop is None:
-            i = 0
-            out = []
-            while i < start:
-                out.append(i)
-                i += step
-            return out
-        return xrange(start, stop, step)  # pylint: disable=undefined-variable
-    range = long_range  # pylint: disable=redefined-builtin
-else:
-    pass
 
 #from abc import ABC, abstractmethod
 

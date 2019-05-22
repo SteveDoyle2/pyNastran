@@ -2,7 +2,6 @@
 from __future__ import print_function
 import os
 import unittest
-from six import PY2
 
 import numpy as np
 from numpy import ones, reshape, arange
@@ -162,12 +161,8 @@ class TestOP4(unittest.TestCase):
         matrices = {
             'A1': (form1, A1),
         }
-        if PY2:
-            wb = 'wb'
-        else:
-            wb = 'w'
         op4_filename = os.path.join(OP4_PATH, 'file_ascii.op4')
-        with open(op4_filename, wb) as op4_file:
+        with open(op4_filename, 'w') as op4_file:
             op4.write_op4(op4_file, matrices, name_order='A1', precision='default',
                           is_binary=False)
         os.remove(op4_filename)

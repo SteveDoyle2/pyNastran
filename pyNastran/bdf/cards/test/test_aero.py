@@ -7,7 +7,7 @@ from __future__ import print_function
 import os
 from collections import defaultdict
 import unittest
-from six import StringIO
+from io import StringIO
 import numpy as np
 from cpylog import SimpleLogger
 

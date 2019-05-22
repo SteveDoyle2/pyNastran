@@ -1,7 +1,4 @@
-from six.moves import StringIO
-#from itertools import count
-
-#from numpy import array
+from io import StringIO
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

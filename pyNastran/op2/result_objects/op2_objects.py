@@ -3,7 +3,7 @@ from __future__ import print_function, unicode_literals
 import copy
 from itertools import count
 from struct import pack
-from six import text_type, binary_type, PY3, string_types
+from six import string_types
 import numpy as np
 
 from pyNastran import is_release
@@ -301,7 +301,7 @@ class ScalarObject(BaseScalarObject):
                 self.table_name, self.data_code['table_name'])
             raise RuntimeError(msg)
         for key, value in sorted(self.data_code.items()):
-            if PY3 and isinstance(value, bytes):
+            if isinstance(value, bytes):
                 print("  key=%s value=%s; value is bytes" % (key, value))
             self.__setattr__(key, value)
             #print("  key=%s value=%s" %(key, value))
@@ -468,7 +468,7 @@ class ScalarObject(BaseScalarObject):
 
     def _build_dataframe_transient_header(self):
         """builds the header for the Pandas DataFrame/table"""
-        assert isinstance(self.name, (text_type, binary_type)), 'name=%s type=%s' % (self.name, type(self.name))
+        assert isinstance(self.name, (str, bytes)), 'name=%s type=%s' % (self.name, type(self.name))
         #print('self.name = %r' % self.name)
         #name = self.name #data_code['name']
         times = self._times

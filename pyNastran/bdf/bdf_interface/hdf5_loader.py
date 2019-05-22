@@ -2,7 +2,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 from itertools import count
-from six import text_type, binary_type
 import numpy as np
 import h5py
 
@@ -159,7 +158,7 @@ def load_bdf_from_hdf5_file(h5_file, model):
                 #print('group.keys()', list(group.keys()))
                 #raise
 
-            if isinstance(lst[0], text_type):
+            if isinstance(lst[0], str):
                 pass
             else:
                 lst = [line.encode(encoding) for line in lst]
@@ -231,11 +230,11 @@ def _load_minor_attributes(unused_key, group, model, encoding):
         if keyi in ['case_control_lines', 'executive_control_lines',
                     'system_command_lines', 'active_filenames']:
             lst = _cast(sub_group).tolist()
-            if isinstance(lst[0], text_type):
+            if isinstance(lst[0], str):
                 pass
             else:
                 lst = [line.decode(encoding) for line in lst]
-                assert isinstance(lst[0], text_type), type(lst[0])
+                assert isinstance(lst[0], str), type(lst[0])
             setattr(model, keyi, lst)
             continue
         elif keyi == 'reject_lines':
@@ -259,7 +258,7 @@ def _load_minor_attributes(unused_key, group, model, encoding):
                     raise
                 card_name_field0 = line0.split(',', 1)[0].split('\t', 1)[0]
                 card_name = card_name_field0[:8].rstrip().upper().rstrip('*')
-                assert isinstance(comment, text_type), type(comment)
+                assert isinstance(comment, str), type(comment)
 
                 ## TODO: swap out
                 #model.add_card(card_lines, card_name, comment=comment,
@@ -310,11 +309,11 @@ def _load_indexed_list_str(key, group, encoding):
         #print('group.keys() =', list(group.keys()))
         #raise
 
-    if isinstance(value, text_type):
+    if isinstance(value, str):
         pass
     else:
         lst = [line.encode(encoding) for line in lst]
-        assert isinstance(lst[0], text_type), type(lst[0])
+        assert isinstance(lst[0], str), type(lst[0])
     return lst
 
 def hdf5_load_coords(model, coords_group, encoding):
@@ -861,7 +860,7 @@ def hdf5_load_desvars(model, group, encoding):
             for desvari, labeli, xiniti, xlbi, xubi, delxi, ddvali in zip(
                     desvar, label, xinit, xlb, xub, delx, ddval):
                 labeli = labeli.decode(encoding)
-                assert isinstance(labeli, text_type), labeli
+                assert isinstance(labeli, str), labeli
                 model.add_desvar(desvari, labeli, xiniti, xlb=xlbi, xub=xubi,
                                  delx=delxi, ddval=ddvali, comment='')
         else:  # pragma: no cover
@@ -1099,7 +1098,7 @@ def hdf5_load_dresps(model, group, encoding):
                     param_values = _cast(dresp_groupi[str(j)]['values']).tolist()
                     param_key = param_key_j.decode(encoding)
                     #print('  param_values', (i, j), param_values)
-                    param_values2 = [val.decode(encoding) if isinstance(val, binary_type) else val
+                    param_values2 = [val.decode(encoding) if isinstance(val, bytes) else val
                                      for val in param_values]
                     paramsi[(j, param_key)] = param_values2
                 model.log.debug('DRESP2 params = %s' % paramsi)
@@ -1432,12 +1431,12 @@ def _get_casted_value(value, key_to_cast, encoding):
                     print(slot_h5, type(slot_h5))
                     raise NotImplementedError()
 
-                if isinstance(valueii, binary_type):
+                if isinstance(valueii, bytes):
                     valueii = valueii.decode(encoding)
                 elif isinstance(valueii, np.ndarray):
                     valueii = valueii.tolist()
-                    if isinstance(valueii[0], binary_type):
-                        valueii = [val.decode(encoding) if isinstance(val, binary_type) else val
+                    if isinstance(valueii[0], bytes):
+                        valueii = [val.decode(encoding) if isinstance(val, bytes) else val
                                    for val in valueii]
 
                 lst.append(valueii)

@@ -6,7 +6,6 @@ from __future__ import print_function
 import os
 import unittest
 
-#from six import integer_types
 import numpy as np
 from cpylog import get_logger
 

@@ -4,28 +4,13 @@ from types import MethodType, FunctionType
 import os
 import io
 import sys
-from codecs import open
 from itertools import count
+from io import StringIO
 
 from typing import List, Union, Optional
-from six import PY2, string_types, StringIO
+from six import string_types
+unicode_type = str
 
-if PY2:
-    FileNotFoundError = IOError
-    unicode_type = unicode
-else:
-    unicode_type = str
-
-
-#if PY2:
-    #def ChainMap(*keys):
-        #"""Python 2.7 hack to implement ChainMap"""
-        #keys2 = []
-        #for key in keys:
-            #keys2 += list(key)
-        #return keys2
-#else:
-    #from collections import ChainMap
 
 def ipython_info():
     # type: () -> Optional[str]
@@ -37,12 +22,6 @@ def ipython_info():
 
 def is_file_obj(filename):
     """does this object behave like a file object?"""
-    if PY2:
-        return (
-            (hasattr(filename, 'read') and hasattr(filename, 'write'))
-            or isinstance(filename, file)
-            or isinstance(filename, StringIO)
-        )
     return (
         (hasattr(filename, 'read') and hasattr(filename, 'write'))
         or isinstance(filename, io.IOBase)

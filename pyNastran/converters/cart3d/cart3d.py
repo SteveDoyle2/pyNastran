@@ -20,20 +20,14 @@ import sys
 from struct import pack, unpack
 from math import ceil
 from collections import defaultdict
-from codecs import open
 
-from six import PY2
 import numpy as np
 from cpylog import get_logger2
 
 from pyNastran.utils import is_binary_file, _filename, b
 
-if PY2:
-    string_type = unicode
-    bytes_type = str
-else:
-    string_type = str
-    bytes_type = bytes
+string_type = str
+bytes_type = bytes
 WRITE_ASCII = 'wb'
 
 
