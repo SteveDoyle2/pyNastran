@@ -10,49 +10,83 @@ Issues List:     https://github.com/SteveDoyle2/pyNastran/issues
 
 *** Not done....
 
---------------------------------Future--------------------------------
-Overall Notes
+-----------------------v1.2.0 released 2019/5/21-----------------------
+Programmatics:
+ - This is the last Python 2.7 release.
+ - Dropping Python 3.5 support
+ - Supports Python 2.7, 3.6-3.7
+ - GUI is compatible with PyQt4/PyQt5 as well as PySide/PySide2
+ - improved testing of old versions of packages
 
-Added BDF
-   - *** SET2,PEALST,DMI,CONM1
-
-Overall OP2
-   - ***added support for SORT2
-
-BDF Bug Fixes
-BDF API Additions
-
-Removed BDF
-
-Overall OP2
-   - added plotting support for "standard" results (***complex)
-      - ***complex results may plot in real/imag or mag/phase or PSD
-        (power spectral density)
-      - ***no temperature, stress, element forces, energy
-
-
-Overall F06
-F06 Reader
-F06 Writer
-
-Solver
-   - not released
-   - rewriting pyNastran solver (SOL 101)
-      - improved support for 3D
-      - uses case control deck to identify loads/BCs
-      - still uses dense matricies, but layout will be easier to add sparse
-        matricies later
-      - still need to build Kgg/Fg/SPC/MPC matrices, partition matrices,
-        solve, calculate responses
-   - added D matricies for PSHELL, PCOMP, PSOLID
-
------------------------v1.1.1 released 2018/7/xx-----------------------
 BDF:
- - 'SUBCASE=5' supported in addition to 'SUBCASE 5' and 'SUBCASE = 5'
+ - 373 cards supported (up from 343)
+ - added abiltity to write models to separate include files
+     ```python
+     >>> model = BDF()
+     >>> model.read_bdf(bdf_filename, save_file_structure=True)
+
+     out_filenames = {
+         bdf_filename : bdf_filename_new,
+         include_filename : include_filename_new,
+     }
+     >>> model.write_bdfs(out_filenames, relative_dirname=None, is_windows=None)
+     >>> ifile = model.grids[1].ifile
+     ```
+
+ - HDF5 import/export
+      ```python
+     >>> model = read_bdf(bdf_filename)
+     >>> model.export_hdf5_filename(hdf5_filename)
+     >>> model_new = OP2()
+     >>> model_new.load_hdf5_filename(hdf5_filename)
+     ```
+
+ - preliminary superelement support
+     ```python
+     >>> model.read_bdf(bdf_filename)
+     >>> model.superelement_models[1].nodes
+     ```
+
 
 OP2:
- - fixed type of a few random results (i.e., mpc_forces_NO was being slotted into mpc_forces_ATO)
- - when result limiting, you can now use regular expressions
+ - reorganization of random op2 results into op2.results.psd (or ato, no, crm, rms) to aide in finding data
+ - reorganization of op2 class to reduce number of functions in the object.  This affects any custom table reading.
+ - improved optimzation response reading
+ - limited SORT2 support
+ - fixed CD transformation bug for BOUGV1 and BOPHIG1 tables
+ - Improved HDF5 export/import support (e.g., matrices, random results)
+
+ - Can optionally save directly to HDF5 instead of numpy (limited).
+ - Loading OP2s to an HDF5 file to decrease memory usage
+      ```python
+     >>> op2_model = OP2()
+     >>> op2_model.load_as_h5 = True
+     >>> op2_model.read_op2(op2_filename)
+     ```
+
+OP2Geom:
+ - HDF5 support
+ - reading EQEXIN/S, GPT, GPDT, CSTM/S tables (recovery of nodes & coordinate with OP2Geom)
+ - fixed theta/mcid reading for CTRIA3/CQUAD4
+ - fixed CQUAD8 bug
+
+GUI:
+ - sped up HTML logging
+ - much improved groups menu
+ - options for Nastran in preferences menu to speed up loading/limit memory usage
+ - pyNastran BDF pickle reading
+ - pyNastran OP2 HDF5 reading (not MSC's format)
+ - visualization when pickling nodes/elements
+ - min/max labels
+ - highlight menu
+ - Patran-style colors
+ - custom force vectors
+ - AVL support
+
+
+Known issues:
+ - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
+   this is probably pretty easy to fix.
 
 -----------------------v1.1.0 released 2018/6/26-----------------------
 This is a major release.  As in the v1.0 release, the focus has been on testing.

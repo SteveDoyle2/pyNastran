@@ -59,8 +59,10 @@ Using the pyNastran GUI, you can read in Nastran models and quickly view results
 <!--- ## pyNastran v0.8.0 has NOT been released (8/21/2016)   --->
 <!--- [Download pyNastran v0.8] (https://github.com/SteveDoyle2/pyNastran/releases)  --->
 
-<!---
-### pyNastran v1.2.0 has not been released (x/xx/2019)
+
+# News
+
+### pyNastran v1.2.0 has been released (2019/5/21)
 
 I keep saying to myself there's not much to add, but Nastran is huge.  Beyond HDF5
 support in the BDF, I'm a huge fan of the new ability to keep track of which include file a
@@ -69,16 +71,15 @@ in certain cases.  There's a new (still preliminary) superelement capability.  I
 from a superelement expert, but it's probably useful.
 
 The OP2 reader now supports SORT2 along with much improved random results reading.
-If you're using 60+ GB OP2s, you also might have had issues with RAM usage in the past.
+If you're using 60+ GB OP2s, you probably have had issues with RAM usage in the past.
 With the new ability to dump the OP2 directly to HDF5, this should not be an as much of
 an issue.  It's not 100% implemented, so let me know if you need it for another result.
 
-Regarding the GUI, there are also some neat new features.  Groups work a bit better, but 
-aren't quite perect.  Logging has been dramatically sped up so the GUI loads faster and 
-you can load Nastran models even faster if you disable additional results (e.g., element
-quality).
+Regarding the GUI, there are also some new features.  Groups work a bit better, but aren't
+quite perfect.  Logging has been dramatically sped up so the GUI loads faster and you can
+load Nastran models even faster if you disable additional results (e.g., element quality).
 
-Finally, Python 2.7 is end of life.  Numpy, scipy, and matplotlib have all dropped 
+Finally, Python 2.7 is end of life.  Numpy, scipy, and matplotlib have all dropped
 Python 2.7 support.  It's time for pyNastran to as well.  The OP2 reader is 30% faster in
 Python 3.6+ than Python 2.7, so it's not all bad!
 
@@ -95,6 +96,11 @@ BDF:
      ```python
      >>> model = BDF()
      >>> model.read_bdf(bdf_filename, save_file_structure=True)
+
+     out_filenames = {
+         bdf_filename : bdf_filename_new,
+         include_filename : include_filename_new,
+     }
      >>> model.write_bdfs(out_filenames, relative_dirname=None, is_windows=None)
      >>> ifile = model.grids[1].ifile
      ```
@@ -129,7 +135,6 @@ OP2:
      >>> op2_model.load_as_h5 = True
      >>> op2_model.read_op2(op2_filename)
      ```
- - TODO: CD transforms for cylindrical/spherical displacement, velocity, acceleration, forces.  This shouldn't be terrible.
 
 OP2Geom:
  - HDF5 support
@@ -153,23 +158,18 @@ GUI:
 
 Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.  If anyone knows how to use a MultiIndex,
- - CD transforms
-This should be hidden...
+   this is probably pretty easy to fix.
 
-
-### pyNastran v1.3 has not been released (2019/4/15xx)
-OP2:
- - OP2 write support
- - TODO: stress transforms.  This is probably a bit of work.
-
---->
-
-# News
 
 ### pyNastran v1.1.0 has been released (2018/6/26)
 
+|  Version  | Docs  | Status |
+| :--- 	  | :--- 	  | :--- 	  |
+|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](http://pynastran.m4-engineering.com/1.1.0/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.1.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
+|   Master | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=latest)](http://pynastran-git.readthedocs.io/en/latest/?badge=latest) | [![Linux Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/master.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) ![Coverage Status](https://coveralls.io/repos/github/SteveDoyle2/pyNastran/badge.svg?branch=master) |
+
 It's been roughly a year and ~100 tickets closed since the last version, so it's probably
-time for another release!   I want to thank everybody who helped with this release, especially
+time for another release!  I want to thank everybody who helped with this release, especially
 Michael Redmond.  He is working on h5Nastran, which which ties in with pyNastran.  It's not quite
 ready yet, but it offers the possibility of major speedups for large models.
 
@@ -188,7 +188,7 @@ changes (mainly in the BDF) though.  The GUI now also supports PyQt4, PyQt5, and
 with the same API, so it's a bit easier to install from source as simplifying licensing
 issues as PyQt is GPL.
 
-Programmatics
+Programmatics:
  - Dropping Python 3.4 support
  - Supports Python 2.7, 3.5-3.6
  - dropping VTK 5/6 suppoprt for the GUI
@@ -233,88 +233,15 @@ Known issues:
    this is probably pretty easy to fix.
 
 ### pyNastran v1.0.0 has been released (2017/5/25)
-This is a major release.  The focus this time has been on robustness and testing.
-Hopefully, it shows.  The software has also been relicensed to be **BSD-3**, which
-is a more permissive license and is the same one that numpy, scipy, and
-matplotlib use.
-
-Unfortunately, the GUI is more complicated.
- - For open source projects : GPL 2/3
- - For companies that pay a license to Riverbank : proprietary
- - For companies that don't pay a license fee : GPL 2/3
-
-However, you may distribute an unmodified binary.
-
- - Programmatics:
-   - Dropping Python 3.3 support
-   - Adding Python 3.6 support
-   - Supports Python 2.7, 3.4-3.6
-
- - [OP2](http://pynastran-git.readthedocs.io/en/latest/quick_start/op2_demo.html)
-   - preliminary random results (ATO/CRM/PSD/RMS/NO)
-   - improved geometry support
-   - MONPNT1/MONPNT3 reading
-   - MATPOOL matrices
-
- - F06 scripts
-   - added a preliminary flutter (SOL 145) parser
-     - supports multiple subcases
-     - PK and PKNL methods supported
-     - `plot_Vg_Vf(...)`, `plot_Vg(...)`, `plot_root_locus(...)`
-     - input/output units
-     - mode switching not fixed yet
-
- - [GUI](http://pynastran-git.readthedocs.io/en/latest/quick_start/gui.html):
-   - complex displacement support
-   - animation support
-   - vector results (real/complex)
-      - SPC Forces, MPC Forces, Load Vector, Applied Load
-        - minimal control presently
-      - No Grid Point Forces (e.g., freebody loads, interface loads)
-   - signficant speedups
-
- - [BDF](http://pynastran-git.readthedocs.io/en/latest/quick_start/bdf_demo.html)
-   - 312 cards supported
-   - faster node transforms using:
-
-     ```python
-     >>> icd_transform, icp_transform, xyz_cp, nid_cp_cd = get_displacement_index_xyz_cp_cd(dtype='float64, sort_ids=True)
-     >>> xyz_cid0 = transform_xyzcp_to_xyz_cid(xyz_cp, icp_transform, cid=0, in_place=False)
-     ```
-
-   - simplified card adding
-     ```python
-     >>> model.add_grid(nid, xyz=[4.,5.,6.], comment='nid, cp, x, y, z')
-     ```
-
-- comments can now be created without worrying about `$` signs
-
-     ```python
-     >>> model.add_card(['GRID', 10, None, 4.0, 5.0, 6.0], comment='GRID comment\ngrid,nid,cp,x,y,z')
-     ```
-     ```
-     $GRID comment
-     $grid,nid,cp,x,y,z
-     GRID,10,,4.0,5.0,6.0
-     ```
-
-   - unit conversion
-
-- [GUI](http://pynastran-git.readthedocs.io/en/latest/quick_start/gui.html)
-   - buttons for picking, rotation center, distance
-   - PyQt5 support
-   - QScintilla & pygments support for scripting code editor
-
-- [Matlab](http://pynastran-git.readthedocs.io/en/latest/quick_start/matlab.html) integration
-   - pyNastran works with Matlab 2014a+
 
 See [v1.0.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0) for information regarding enhancements.
+
 
 ### pyNastran v0.8.0 has been released (2016/8/21)
 
 |  Version  | Docs  |
 | :--- 	  | :--- 	  |
-|  [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.8)](http://pynastran-git.readthedocs.io/en/v0.8.0/?badge=v0.8.0) |
+|  [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) | [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.8)](http://pynastran-git.readthedocs.io/en/v0.8.0/?badge=v0.8.0) |
 
 <!---
 
@@ -327,6 +254,7 @@ See [v1.0.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v1.0.0) for i
 --->
 
 See [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) for information regarding enhancements.
+
 
 ### pyNastran v0.7.2 has been Released (2015/4/25)
 

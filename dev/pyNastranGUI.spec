@@ -8,7 +8,7 @@ try:
 except ImportError:
     pyInstaller_path = []
 
-pyInstaller_path = [r'F:\work\pyNastran\pyNastran\pyinstaller']
+pyInstaller_path = [r'C:\NASA\dev\pyinstaller']
 IS_H5PY = False
 DEBUG = False
 IS_RELEASE = True
@@ -159,9 +159,15 @@ if sys.platform == 'win32':
             binaries.append(
                 (mkl_dll_base, mkl_dll, 'BINARY')
             )
-
-
+ver = sys.version_info
+python_version = '%i%i' % (ver.major, ver.minor)
+print('python_version', python_version)
 print('python_path', python_path)
+
+if 'Anaconda' not in python_path:
+    binaries.append(
+        ('python%s.dll' % python_version, 'C:\\Python%s\\python%s.dll' % (python_version, python_version), 'BINARY'),
+    )
 
 pathex = pyInstaller_path + [
     python_path,
@@ -423,7 +429,7 @@ excludes = [
 
     # not required...strange...
     'conda', 'conda-env', 'pywin32', 'python', 'vs2008_runtime',
-    'pyqt', 'anaconda',
+    #'pyqt', 'anaconda',
 
     # things we're using
     'libpng',
