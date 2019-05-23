@@ -44,7 +44,7 @@ from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
 #u = str
-from pyNastran.bdf.bdf_interface.typing import BDFCard, Coord
+from pyNastran.bdf.bdf_interface.typing import BDF, BDFCard, Coord, Element
 
 
 class SEQGP(BaseCard):
@@ -186,7 +186,7 @@ class XPoint(BaseCard):
         assert isinstance(nid, integer_types), nid
 
     @classmethod
-    def _export_to_hdf5(cls, h5_file, model, nids):
+    def _export_to_hdf5(cls, h5_file, model: BDF, nids: List[int]) -> None:
         """exports the nodes in a vectorized way"""
         #comments = []
         #for nid in nids:
@@ -1118,8 +1118,8 @@ class GRID(BaseCard):
         self.ps = ps
         self.seid = seid
         self.cp_ref = None # type: Coord
-        self.cd_ref = None # type: Any
-        self.elements_ref = None # type: Any
+        self.cd_ref = None # type: Coord
+        self.elements_ref = None # type: List[Element]
 
     @classmethod
     def add_op2_data(cls, data, comment: str='') -> Any:
@@ -1292,7 +1292,7 @@ class GRID(BaseCard):
             pos_xyz = self.get_position()
             assert isinstance(pos_xyz, np.ndarray), 'pos_xyz=%r' % pos_xyz
 
-    def set_position(self, model: Any, xyz: np.ndarray,
+    def set_position(self, model: BDF, xyz: np.ndarray,
                      cid: int=0, xref: bool=True) -> None:
         # (Any, np.ndarray, int) -> None
         """

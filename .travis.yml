@@ -144,7 +144,12 @@ script:
 # https://github.com/z4r/python-coveralls
 # Calculate coverage
 after_success:
-  - coveralls debug
+  - ls
+    #usage: coveralls [-h] [--coveralls_url COVERALLS_URL] [--base_dir BASE_DIR]
+    #                 [--data_file DATA_FILE] [--config_file CONFIG_FILE]
+    #                 [--coveralls_yaml COVERALLS_YAML] [--ignore-errors]
+    #                 [--merge_file MERGE_FILE] [--nogit] [--skip_ssl_verify]
+  - coveralls --ignore-errors
 #  - codecov
 #after_success:
 #  - coveralls --config_file .coveragerc

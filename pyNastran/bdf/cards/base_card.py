@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from typing import List, Dict, Union, Optional, Any
+from typing import List, Union, Optional, Any
 
 import numpy as np
 #from numpy import nan, empty, unique
@@ -29,8 +29,7 @@ class BaseCard:
      - update_field(self, n, value)
 
     """
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         pass
         #ABC.__init__(self)
 
@@ -49,35 +48,32 @@ class BaseCard:
             msg += '  %-6s : %r\n' % (name, value)
         return msg
 
-    def deprecated(self, old_name, new_name, deprecated_version):
-        # type: (str, str, str) -> None
+    def deprecated(self, old_name: str, new_name: str, deprecated_version: str) -> None:
         """deprecates methods"""
         deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
-    def validate(self):
-        # type: () -> None
+    def validate(self) -> None:
         """card checking method that should be overwritten"""
         pass
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
-        # type: (str, Optional[List[str]]) -> List[str]
+    def object_attributes(self, mode: str='public',
+                          keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []
+        my_keys_to_skip = []  # type: List[str]
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    def object_methods(self, mode='public', keys_to_skip=None):
-        # type: (str, Optional[List[str]]) -> List[str]
+    def object_methods(self, mode: str='public',
+                       keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
-        my_keys_to_skip = []
+        my_keys_to_skip = []  # type: List[str]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     @property
-    def comment(self):
-        # type: () -> str
+    def comment(self) -> str:
         """accesses the comment"""
         # just for testing
         #self.deprecated('comment()', 'comment2()', '0.7')
@@ -86,15 +82,13 @@ class BaseCard:
         return ''
 
     @comment.setter
-    def comment(self, new_comment):
-        # type: (str) -> None
+    def comment(self, new_comment: str) -> None:
         """sets a comment"""
         #comment = new_comment.rstrip()
         #self._comment = comment + '\n' if comment else ''
         self._comment = _format_comment(new_comment)
 
-    def _test_update_fields(self):
-        # type: () -> None
+    def _test_update_fields(self) -> None:
         n = 1
         while 1:
             try:
@@ -104,8 +98,7 @@ class BaseCard:
             except KeyError:
                 return
 
-    def update_field(self, n, value):
-        # type: (int, Optional[Union[int, float, str]]) -> None
+    def update_field(self, n: int, value: Optional[Union[int, float, str]]) -> None:
         """
         Updates a field based on it's field number.
 
@@ -133,7 +126,7 @@ class BaseCard:
         except KeyError:
             self._update_field_helper(n, value)
 
-    def _update_field_helper(self, n, value):
+    def _update_field_helper(self, n: int, value: Optional[Union[int, float, str]]):
         """
         dynamic method for non-standard attributes
         (e.g., node.update_field(3, 0.1) to update z)
@@ -142,13 +135,12 @@ class BaseCard:
         msg = '%s has not overwritten _update_field_helper; out of range' % self.__class__.__name__
         raise IndexError(msg)
 
-    def _get_field_helper(self, n):
+    def _get_field_helper(self, n: int):
         """dynamic method for non-standard attributes (e.g., node.get_field(3, 0.1) to get z)"""
         msg = '%s has not overwritten _get_field_helper; out of range' % self.__class__.__name__
         raise IndexError(msg)
 
-    def get_field(self, n):
-        # type: (int) -> Optional[Union[int, float, str]]
+    def get_field(self, n: int) -> Optional[Union[int, float, str]]:
         """
         Gets a field based on it's field number
 
@@ -177,8 +169,7 @@ class BaseCard:
             value = self._get_field_helper(n)
         return value
 
-    def _verify(self, xref):
-        # type: (bool) -> None
+    def _verify(self, xref: bool) -> None:
         """
         Verifies all methods for this object work
 
@@ -191,8 +182,7 @@ class BaseCard:
         print('# skipping _verify (type=%s) because _verify is '
               'not implemented' % self.type)
 
-    def __eq__(self, card):
-        # type: (Any) -> bool
+    def __eq__(self, card: BDFCard) -> bool:
         """
         Enables functions like:
 
@@ -248,20 +238,17 @@ class BaseCard:
         """
         return self.raw_fields()
 
-    def print_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def print_card(self, size: int=8, is_double: bool=False) -> str:
         """prints the card in 8/16/16-double format"""
         list_fields = self.repr_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
-    def print_repr_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def print_repr_card(self, size: int=8, is_double: bool=False) -> str:
         """prints the card in 8/16/16-double format"""
         list_fields = self.repr_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         """
         Prints a card in the simplest way possible
         (default values are left blank).
@@ -279,8 +266,7 @@ class BaseCard:
                 print("list_fields = ", list_fields)
                 raise
 
-    def rstrip(self):
-        # type: () -> str
+    def rstrip(self) -> str:
         try:
             msg = '%s' % str(self)
         except UnicodeEncodeError:
@@ -429,8 +415,7 @@ class Element(BaseCard):
         else:
             raise NotImplementedError('only required nodes implemented')
 
-    def Pid(self):
-        # type: () -> int
+    def Pid(self) -> int:
         """
         Gets the Property ID of an element
 
@@ -444,8 +429,8 @@ class Element(BaseCard):
             return self.pid
         return self.pid_ref.pid
 
-    def get_node_positions(self, nodes=None):
-        # type: (Any) -> np.ndarray
+    def get_node_positions(self, nodes=None) -> np.ndarray:
+        # type (Any) -> np.ndarray
         """returns the positions of multiple node objects"""
         if nodes is None:
             nodes = self.nodes_ref
@@ -461,8 +446,8 @@ class Element(BaseCard):
                 positions[i, :] = node.get_position()
         return positions
 
-    def get_node_positions_no_xref(self, model, nodes=None):
-        # type: (Any, Any) -> np.ndarray
+    def get_node_positions_no_xref(self, model, nodes=None) -> np.ndarray:
+        # type (Any, Any) -> np.ndarray
         """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
@@ -476,19 +461,17 @@ class Element(BaseCard):
                 positions[i, :] = node.get_position_no_xref(model)
         return positions
 
-    def _node_ids(self, nodes=None, allow_empty_nodes=False, msg=''):
-        # type: (Optional[List[Any]], bool, str) -> List[int]
+    def _node_ids(self, nodes: Optional[List[Any]]=None,
+                  allow_empty_nodes: bool=False, msg: str='') -> List[int]:
         """returns nodeIDs for repr functions"""
         return _node_ids(self, nodes=nodes, allow_empty_nodes=allow_empty_nodes, msg=msg)
 
-    def prepare_node_ids(self, nids, allow_empty_nodes=False):
-        # type: (List[int], bool) -> None
+    def prepare_node_ids(self, nids: List[int], allow_empty_nodes: bool=False) -> None:
         """Verifies all node IDs exist and that they're integers"""
         self.nodes = nids
         self.validate_node_ids(allow_empty_nodes)
 
-    def validate_node_ids(self, allow_empty_nodes=False):
-        # type: (bool) -> None
+    def validate_node_ids(self, allow_empty_nodes: bool=False) -> None:
         if allow_empty_nodes:
             # only put valid nodes in here
             nids2 = [nid for nid in self.nodes]
@@ -527,8 +510,7 @@ class Element(BaseCard):
         self.nodes = nodes2
 
 
-def _format_comment(comment):
-    # type: (str) -> str
+def _format_comment(comment: str) -> str:
     r"""Format a card comment to precede the card using
     nastran-compatible comment character $. The comment
     string can have multiple lines specified as linebreaks.

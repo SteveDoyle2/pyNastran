@@ -1,6 +1,4 @@
-"""
-Parses Nastran fields
-"""
+"""Parses Nastran fields"""
 from __future__ import print_function
 import re
 from typing import Union, Optional
@@ -98,7 +96,7 @@ def parse_components(card, ifield, fieldname):
             raise SyntaxError(msg)
     return svalue3
 
-def components_or_blank(card, ifield, fieldname, default=None):
+def components_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     # type: (BDFCard, int, str, Optional[str]) -> Optional[str]
     """
     Parameters
@@ -132,7 +130,7 @@ def components_or_blank(card, ifield, fieldname, default=None):
         return parse_components(card, ifield, fieldname)
     return default
 
-def blank(card, ifield, fieldname, default=None):
+def blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     # type: (BDFCard, int, str, None) -> None
     """
     Parameters
@@ -183,8 +181,8 @@ def blank(card, ifield, fieldname, default=None):
     #assert isinstance(fieldname, str), type(fieldname)
     #return integer_double_string_or_blank(card, ifield, fieldname, default=None)
 
-def integer_double_string_or_blank(card, ifield, fieldname, default=None):
-    # type: (BDFCard, int, str, Union[int, float, str]) -> Optional[Union[int, float, str]]
+def integer_double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
+    # type (BDFCard, int, str, Union[int, float, str]) -> Optional[Union[int, float, str]]
     """
     Parameters
     ----------
@@ -252,8 +250,7 @@ def fields(func, card, fieldname, i, j=None):
         function_values.append(func(card, ii, fieldname + str(ii)))
     return function_values
 
-def modal_components(card, ifield, fieldname):
-    # type: (BDFCard, int, str) -> int
+def modal_components(card: BDFCard, ifield: int, fieldname: str) -> int:
     """
     Gets the modal components (allows a -1 value); used by TIC
 
@@ -265,6 +262,7 @@ def modal_components(card, ifield, fieldname):
         field number
     fieldname : str
         name of field
+
     """
     value = integer(card, ifield, fieldname)
     if not(-1 <= value <= 6):
@@ -273,8 +271,8 @@ def modal_components(card, ifield, fieldname):
                           'card=%s' % (fieldname, value, ifield, card))
     return value
 
-def modal_components_or_blank(card, ifield, fieldname, default=None):
-    # type: (BDFCard, int, str, Any) -> int
+def modal_components_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
+    # type (BDFCard, int, str, Any) -> int
     """
     Gets the modal components (allows a -1 value); used by TIC
 
@@ -286,6 +284,7 @@ def modal_components_or_blank(card, ifield, fieldname, default=None):
         field number
     fieldname : str
         name of field
+
     """
     value = integer_or_blank(card, ifield, fieldname, default=default)
     if not(-1 <= value <= 6):
@@ -294,8 +293,7 @@ def modal_components_or_blank(card, ifield, fieldname, default=None):
                           'card=%s' % (fieldname, value, ifield, card))
     return value
 
-def integer(card, ifield, fieldname):
-    # type: (BDFCard, int, str) -> int
+def integer(card: BDFCard, ifield: int, fieldname: str) -> int:
     """
     Parameters
     ----------
@@ -319,8 +317,8 @@ def integer(card, ifield, fieldname):
         raise SyntaxError('%s = %r (field #%s) on card must be an integer (not %s).\n'
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
-def integer_or_blank(card, ifield, fieldname, default=None):
-    # type: (BDFCard, int, str, Optional[int]) -> Optional[int]
+def integer_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
+    # type (BDFCard, int, str, Optional[int]) -> Optional[int]
     """
     Parameters
     ----------
@@ -360,8 +358,7 @@ def integer_or_blank(card, ifield, fieldname, default=None):
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
 
-def double(card, ifield, fieldname):
-    # type: (BDFCard, int, str) -> float
+def double(card: BDFCard, ifield: int, fieldname: str) -> float:
     """
     Converts a field into a double
 
@@ -430,8 +427,8 @@ def double(card, ifield, fieldname):
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return value
 
-def double_or_blank(card, ifield, fieldname, default=None):
-    # type: (BDFCard, int, str, Optional[Union[float]]) -> Optional[Union[float]]
+def double_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
+    # type (BDFCard, int, str, Optional[Union[float]]) -> Optional[Union[float]]
     """
     Gets a double/blank value
 
@@ -468,8 +465,7 @@ def double_or_blank(card, ifield, fieldname, default=None):
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
 
-def double_or_string(card, ifield, fieldname):
-    # type: (BDFCard, int, str) -> Union[float, str]
+def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[float, str]:
     """
     Converts a field into a double or a string
 
@@ -522,8 +518,8 @@ def double_or_string(card, ifield, fieldname):
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
 
-def double_string_or_blank(card, ifield, fieldname, default=None):
-    # type: (BDFCard, int, str, Optional[Union[float, str]]) -> Optional[Union[float, str]]
+def double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
+    # type (BDFCard, int, str, Optional[Union[float, str]]) -> Optional[Union[float, str]]
     """
     Parameters
     ----------
@@ -542,6 +538,7 @@ def double_string_or_blank(card, ifield, fieldname, default=None):
         the typed value
 
     :raises SyntaxError: if there is an invalid type
+
     """
     svalue = card.field(ifield)
 
@@ -578,8 +575,7 @@ def double_string_or_blank(card, ifield, fieldname, default=None):
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return svalue
 
-def integer_or_double(card, ifield, fieldname):
-    # type: (BDFCard, int, str) -> Union[int, float]
+def integer_or_double(card: BDFCard, ifield: int, fieldname: str) -> Union[int, float]:
     """
     Converts a field into an integer or double
 
@@ -630,7 +626,7 @@ def integer_or_double(card, ifield, fieldname):
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return value
 
-def integer_double_or_blank(card, ifield, fieldname, default=None):
+def integer_double_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     """
     Parameters
     ----------
@@ -642,6 +638,7 @@ def integer_double_or_blank(card, ifield, fieldname, default=None):
         name of field
     default : int / float / None
         the default value for the field (default=None)
+
     """
     svalue = card.field(ifield)
 
@@ -661,7 +658,7 @@ def integer_double_or_blank(card, ifield, fieldname, default=None):
                               'card=%s' % (fieldname, svalue, ifield, dtype, card))
     return default
 
-def integer_or_string(card, ifield, fieldname):
+def integer_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[int, str]:
     """
     Converts a field into an integer or string
 
@@ -675,6 +672,7 @@ def integer_or_string(card, ifield, fieldname):
         name of field
     default : int / str
         the default value for the field (default=None)
+
     """
     svalue = card.field(ifield)
 
@@ -718,7 +716,7 @@ def integer_or_string(card, ifield, fieldname):
                           'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
 
-def integer_string_or_blank(card, ifield, fieldname, default=None):
+def integer_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     """
     Converts a field into an integer, string or sets the default using a blank value
 
@@ -768,6 +766,7 @@ def _get_dtype(value):
     -------
     dtype : str
         the type of the value
+
     """
     try:
         value = interpret_value(value)
@@ -786,7 +785,7 @@ def _get_dtype(value):
     return dtype
 
 
-def integer_double_or_string(card, ifield, fieldname):
+def integer_double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[int, float, str]:
     """
     Converts a field into an integer, double or a string
 
@@ -803,6 +802,7 @@ def integer_double_or_string(card, ifield, fieldname):
     -------
     value : varies
         the value of the field
+
     """
     svalue = card.field(ifield)
     if isinstance(svalue, integer_float_types):
@@ -841,7 +841,7 @@ def integer_double_or_string(card, ifield, fieldname):
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
 
-def string(card, ifield, fieldname):
+def string(card: BDFCard, ifield: int, fieldname: str) -> str:
     """
     Converts a field into a string
 
@@ -884,7 +884,7 @@ def string(card, ifield, fieldname):
                       'card=%s' % (fieldname, svalue, ifield, dtype, card))
 
 
-def string_or_blank(card, ifield, fieldname, default=None):
+def string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     """
     Parameters
     ----------
@@ -931,7 +931,7 @@ def string_or_blank(card, ifield, fieldname, default=None):
         return str(svalue.upper())
     return default
 
-def loose_string_or_blank(card, ifield, fieldname, default=None):
+def loose_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     """
     Parameters
     ----------
@@ -978,7 +978,7 @@ def loose_string_or_blank(card, ifield, fieldname, default=None):
         return str(svalue.upper())
     return default
 
-def exact_string_or_blank(card, ifield, fieldname, default=None):
+def exact_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     """
     Parameters
     ----------
