@@ -145,11 +145,15 @@ script:
 # Calculate coverage
 after_success:
   - ls
+    # python-coverage
     #usage: coveralls [-h] [--coveralls_url COVERALLS_URL] [--base_dir BASE_DIR]
     #                 [--data_file DATA_FILE] [--config_file CONFIG_FILE]
     #                 [--coveralls_yaml COVERALLS_YAML] [--ignore-errors]
     #                 [--merge_file MERGE_FILE] [--nogit] [--skip_ssl_verify]
-  - coveralls --ignore-errors
+  #- coveralls --ignore-errors
+
+    # coverage
+  - coveralls debug
 #  - codecov
 #after_success:
 #  - coveralls --config_file .coveragerc

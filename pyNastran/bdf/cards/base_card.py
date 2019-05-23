@@ -1,6 +1,6 @@
 from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
-from typing import List, Union, Optional, Any
+from typing import List, Tuple, Union, Optional, Any
 
 import numpy as np
 #from numpy import nan, empty, unique
@@ -388,20 +388,18 @@ class Element(BaseCard):
     """defines the Element class"""
     pid = 0  # CONM2, rigid
 
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         """dummy init"""
         BaseCard.__init__(self)
         #: the list of node IDs for an element (default=None)
         #self.nodes = None
 
-    def verify_unique_node_ids(self):
-        # type: () -> None
+    def verify_unique_node_ids(self) -> None:
         node_ids = self.node_ids
         self._verify_unique_node_ids(node_ids)
 
-    def _verify_unique_node_ids(self, required_node_ids, non_required_node_ids=None):
-        # type: (Any, Any) -> None
+    def _verify_unique_node_ids(self, required_node_ids, non_required_node_ids=None) -> None:
+        # type (Any, Any) -> None
         if required_node_ids:
             if non_required_node_ids:
                 raise NotImplementedError('only required nodes implemented')
@@ -541,7 +539,7 @@ def _format_comment(comment: str) -> str:
                     for comment_line in comment.rstrip().split('\n')])
 
 
-def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
+def _node_ids(card, nodes=None, allow_empty_nodes: bool=False, msg: str='') -> Any:
     try:
         if not nodes:
             nodes = card.nodes
@@ -585,7 +583,7 @@ def _node_ids(card, nodes=None, allow_empty_nodes=False, msg=''):
     raise RuntimeError('huh...')
 
 
-def break_word_by_trailing_integer(pname_fid):
+def break_word_by_trailing_integer(pname_fid: str) -> Tuple[str, str]:
     """
     Splits a word that has a value that is an integer
 
@@ -626,7 +624,7 @@ def break_word_by_trailing_integer(pname_fid):
     assert len(word)+len(num) == len(pname_fid), 'word=%r num=%r pname_fid=%r' % (word, num, pname_fid)
     return word, num
 
-def break_word_by_trailing_parentheses_integer_ab(pname_fid):
+def break_word_by_trailing_parentheses_integer_ab(pname_fid: str) -> Tuple[str, str]:
     """
     Splits a word that has a value that can be A/B as well as an integer
 

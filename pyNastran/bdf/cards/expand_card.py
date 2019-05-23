@@ -155,6 +155,31 @@ def expand_thru_by(fields, set_fields=True, sort_fields=True,
     return out
 
 
+def split_comma_space(datai):
+    if ',' in datai:
+        sline1 = [slinei.strip() for slinei in datai.split(',')]
+        sline = []
+        for slinei in sline1:
+            if ' ' in slinei:
+                sline.extend(slinei.split())
+            else:
+                sline.append(slinei)
+    else:
+        sline = datai.split()
+    return sline
+
+def setup_data(data_in):
+    data = []
+    stype = 'int'
+    for datai in data_in:
+        if isinstance(datai, int):
+            data.append(datai)
+        else:
+            datai = datai.upper()
+            sline = split_comma_space(datai)
+            data.extend(sline)
+    return data, stype
+
 def expand_thru_exclude(fields):
     # type: (List[str]) -> List[int]
     """
