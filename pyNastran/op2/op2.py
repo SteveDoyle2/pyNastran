@@ -25,7 +25,7 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import os
 import sys
-from typing import List, Any, Optional
+from typing import List, Tuple, Any, Optional
 from pickle import load, dump, dumps
 
 import numpy as np
@@ -121,9 +121,10 @@ class OP2(OP2_Scalar):
                    'matrix_tables', 'table_name_str']
 
     def __init__(self,
-                 debug=True, log=None,
-                 debug_file=None, mode=None):
-        # type: (bool, Any, Optional[str], Optional[str]) -> None
+                 debug: bool=True,
+                 log: Any=None,
+                 debug_file: Optional[str]=None,
+                 mode: Optional[str]=None) -> None:
         """
         Initializes the OP2 object
 
@@ -187,8 +188,7 @@ class OP2(OP2_Scalar):
         ]
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    def object_methods(self, mode='public', keys_to_skip=None):
-        # type: (str, Optional[List[str]]) -> List[str]
+    def object_methods(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -222,8 +222,8 @@ class OP2(OP2_Scalar):
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    def __eq__(self, op2_model):
-        # type: (OP2) -> bool
+    def __eq__(self, op2_model) -> bool:
+        # type (OP2) -> bool
         """
         Diffs the current op2 model vs. another op2 model.
         Crashes if they're not equal.
@@ -571,13 +571,14 @@ class OP2(OP2_Scalar):
         #self.ask = ask
 
     @property
-    def is_geometry(self):
-        # type: () -> bool
+    def is_geometry(self) -> bool:
         return False
 
-    def read_op2(self, op2_filename=None, combine=True,
-                 build_dataframe=None, skip_undefined_matrices=False, encoding=None):
-        # type: (Optional[str], bool, Optional[bool], bool, Optional[str]) -> None
+    def read_op2(self, op2_filename: Optional[str]=None,
+                 combine: bool=True,
+                 build_dataframe: Optional[bool]=None,
+                 skip_undefined_matrices: bool=False,
+                 encoding: Optional[str]=None) -> None:
         """
         Starts the OP2 file reading
 
@@ -648,8 +649,7 @@ class OP2(OP2_Scalar):
         self.combine_results(combine=combine)
         self.log.debug('finished reading op2')
 
-    def create_objects_from_matrices(self):
-        # type: () -> None
+    def create_objects_from_matrices(self) -> None:
         """
         creates the following objects:
           - monitor3 : MONPNT3 object from the MP3F matrix
@@ -673,8 +673,7 @@ class OP2(OP2_Scalar):
                 #  :)       ?       :)      :)2     ?       ?
                 ['PMRF', 'PERF', 'PFRF', 'AGRF', 'PGRF', 'AFRF', ])
 
-    def _finalize(self):
-        # type: () -> None
+    def _finalize(self) -> None:
         """internal method"""
         result_types = self.get_table_types()
         for result_type in result_types:
@@ -689,8 +688,7 @@ class OP2(OP2_Scalar):
                         ''.join(obj.get_stats())))
         self.del_structs()
 
-    def build_dataframe(self):
-        # type: () -> None
+    def build_dataframe(self) -> None:
         """
         Converts the OP2 objects into pandas DataFrames
 
@@ -757,14 +755,12 @@ class OP2(OP2_Scalar):
                     self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
 
-    def load_hdf5(self, hdf5_filename, combine=True):
-        # type: (str, bool) -> None
+    def load_hdf5(self, hdf5_filename: str, combine: bool=True) -> None:
         """Loads an h5 file into an OP2 object"""
         self.deprecated('load_hdf5', 'load_hdf5_filename', '1.2')
         return self.load_hdf5_filename(hdf5_filename, combine=True)
 
-    def load_hdf5_filename(self, hdf5_filename, combine=True):
-        # type: (str, bool) -> None
+    def load_hdf5_filename(self, hdf5_filename: str, combine: bool=True) -> None:
         """
         Loads an h5 file into an OP2 object
 
@@ -807,14 +803,12 @@ class OP2(OP2_Scalar):
         load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
         self.combine_results(combine=combine)
 
-    def export_hdf5(self, hdf5_filename):
-        # type: (str) -> None
+    def export_hdf5(self, hdf5_filename: str) -> None:
         """Converts the OP2 objects into hdf5 object"""
         self.deprecated('export_hdf5', 'export_hdf5_filename', '1.2')
         return self.export_hdf5_filename(hdf5_filename)
 
-    def export_hdf5_filename(self, hdf5_filename):
-        # type: (str) -> None
+    def export_hdf5_filename(self, hdf5_filename: str) -> None:
         """
         Converts the OP2 objects into hdf5 object
 
@@ -825,8 +819,8 @@ class OP2(OP2_Scalar):
         from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_filename
         export_op2_to_hdf5_filename(hdf5_filename, self)
 
-    def export_hdf5_file(self, hdf5_file, exporter=None):
-        # type: (file, Any) -> None
+    def export_hdf5_file(self, hdf5_file, exporter=None) -> None:
+        # type (file, Any) -> None
         """
         Converts the OP2 objects into hdf5 object
 
@@ -844,8 +838,7 @@ class OP2(OP2_Scalar):
         from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
         export_op2_to_hdf5_file(hdf5_file, self)
 
-    def combine_results(self, combine=True):
-        # type: (bool) -> None
+    def combine_results(self, combine: str=True) -> None:
         """
         we want the data to be in the same format and grouped by subcase, so
         we take
@@ -882,7 +875,7 @@ class OP2(OP2_Scalar):
                 continue
             result = self.get_result(result_type)
             case_keys = sorted(result.keys())
-            unique_isubcases = []
+            # unique_isubcases = []  # List[int]
             for case_key in case_keys:
                 #print('case_key =', case_key)
                 if isinstance(case_key, tuple):
@@ -959,7 +952,7 @@ class OP2(OP2_Scalar):
                     #print('key0 =', result_type, key0)
                     # res0 = result[key0]
 
-                    isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index = key0
+                    isubcase, analysis_code, unused_sort_code, count, isuperelmemnt_adaptivity_index = key0
                     #isubcase, analysis_code, sort_code, count, isuperelmemnt_adaptivity_index, table_name = key0
                     if not (key1 in result and key2 in result):
                         if key1 in result:
@@ -1095,30 +1088,30 @@ class OP2(OP2_Scalar):
             superelement_adaptivity_indexs.add(superelement_adaptivity_index)
             pval_steps.add(pval_step)
 
-        isubcases = list(isubcases)
-        analysis_codes = list(analysis_codes)
-        sort_methods = list(sort_methods)
-        counts = list(counts)
-        ogss = list(ogss)
-        superelement_adaptivity_indexs = list(superelement_adaptivity_indexs)
-        pval_steps = list(pval_steps)
+        isubcase_list = list(isubcases)
+        analysis_code_list = list(analysis_codes)
+        sort_method_list = list(sort_methods)
+        count_list = list(counts)
+        ogs_list = list(ogss)
+        superelement_adaptivity_index_list = list(superelement_adaptivity_indexs)
+        pval_step_list = list(pval_steps)
 
-        isubcases.sort()
-        analysis_codes.sort()
-        sort_methods.sort()
-        counts.sort()
-        ogss.sort()
-        superelement_adaptivity_indexs.sort()
-        pval_steps.sort()
+        isubcase_list.sort()
+        analysis_code_list.sort()
+        sort_method_list.sort()
+        count_list.sort()
+        ogs_list.sort()
+        superelement_adaptivity_index_list.sort()
+        pval_step_list.sort()
 
-        keys3 = []
-        for isubcase in isubcases:
-            for count in counts:
-                for analysis_code in analysis_codes:
-                    for superelement_adaptivity_index in superelement_adaptivity_indexs:
-                        for pval_step in pval_steps:
-                            for sort_method in sort_methods:
-                                for ogs in ogss:
+        keys3 = []  # type: List[Tuple[int, int, int, int, int, int, str]]
+        for isubcase in isubcase_list:
+            for count in count_list:
+                for analysis_code in analysis_code_list:
+                    for superelement_adaptivity_index in superelement_adaptivity_index_list:
+                        for pval_step in pval_step_list:
+                            for sort_method in sort_method_list:
+                                for ogs in ogs_list:
                                     key = (isubcase, analysis_code, sort_method,
                                            count, ogs, superelement_adaptivity_index, pval_step)
                                     if key not in keys3:
@@ -1284,8 +1277,7 @@ def main():  # pragma: no cover
     _op2_filename = os.path.join(pkg_path, '..', 'models',
                                  'sol_101_elements', 'solid_shell_bar.op2')
 
-    model = OP2()
-    model.read_op2(_op2_filename)
+    model = read_op2(_op2_filename)
     isubcase = 1
 
     # ============displacement================
@@ -1300,8 +1292,8 @@ def main():  # pragma: no cover
 
     # get all the nodes for element 1
     inode1 = data.getNodeIndex([1])    # [itransient, node, t1/t2]
-    datai = data[0, inode1, :]
-    grid_typei = grid_type[inode1]
+    unused_datai = data[0, inode1, :]
+    unused_grid_typei = grid_type[inode1]
 
     # ============solid stress=================
     # same for solid strain
@@ -1314,7 +1306,7 @@ def main():  # pragma: no cover
 
     # get the indexs for cid, element 1
     ielem1 = solid_stress.getElementPropertiesIndex([1])  # element-specific properties
-    datai = cid[ielem1]
+    unused_datai = cid[ielem1]
 
     # get all the nodes for element 1
     ielem1 = solid_stress.getElementIndex([1])

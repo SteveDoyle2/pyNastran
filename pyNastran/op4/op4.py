@@ -1715,8 +1715,8 @@ def _get_start_end_row(A, nrows):
             break
     return (istart, iend)
 
-def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
-                               precision='default'):
+def _write_sparse_matrix_ascii(op4, name, A, form: int=2, is_big_mat: bool=False,
+                               precision: str='default'):
     """
     .. todo:: Does this work for complex matrices?
     """
@@ -1828,7 +1828,7 @@ def _write_sparse_matrix_ascii(op4, name, A, form=2, is_big_mat=False,
     op4.write('%8i%8i%8i\n' % (ncols + 1, 1, 1))
     op4.write(' 1.0000000000000000E+00\n')
 
-def get_big_mat_nrows(nrows):
+def get_big_mat_nrows(nrows: int):
     """
     Parameters
     ----------
@@ -1860,7 +1860,7 @@ def get_big_mat_nrows(nrows):
     return is_big_mat, nrows
 
 
-def get_dtype(matrix_type, precision='default'):
+def get_dtype(matrix_type: int, precision: str='default'):
     """Reset the type if 'default' not selected"""
     if precision == 'single':
         if matrix_type in [1, 2]:
@@ -1884,7 +1884,7 @@ def get_dtype(matrix_type, precision='default'):
     return dtype
 
 
-def _get_type_nwv(A, precision='default'):
+def _get_type_nwv(A, precision: str='default'):
     """
     Determines the Type and number of words per value
     an entry in the matrix takes up.

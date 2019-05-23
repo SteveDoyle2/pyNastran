@@ -7,8 +7,10 @@ Defines:
                  mode='msc', log=None, debug=True, debug_file=None, encoding=None)
  - OP2Geom(make_geom=True, debug=False, log=None, debug_file=None, mode='msc')
    - OP2
+
 """
 from pickle import dump
+from typing import List, Optional, Any
 from pyNastran.op2.tables.geom.geom1 import GEOM1
 from pyNastran.op2.tables.geom.geom2 import GEOM2
 from pyNastran.op2.tables.geom.geom3 import GEOM3
@@ -27,11 +29,16 @@ from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.op2.op2 import OP2, FatalError, SortCodeError, DeviceCodeError, FortranMarkerError
 
 
-def read_op2_geom(op2_filename=None, combine=True, subcases=None,
-                  exclude_results=None, include_results=None,
-                  validate=True, xref=True,
-                  build_dataframe=False, skip_undefined_matrices=True,
-                  mode='msc', log=None, debug=True, debug_file=None, encoding=None):
+def read_op2_geom(op2_filename: Optional[str]=None,
+                  combine: bool=True,
+                  subcases: Optional[List[int]]=None,
+                  exclude_results: Optional[List[str]]=None,
+                  include_results: Optional[List[str]]=None,
+                  validate: bool=True, xref: bool=True,
+                  build_dataframe: bool=False, skip_undefined_matrices: bool=True,
+                  mode: str='msc', log: Any=None, debug: bool=True,
+                  debug_file: Optional[str]=None,
+                  encoding: Optional[str]=None):
     """
     Creates the OP2 object without calling the OP2 class.
 
@@ -101,8 +108,8 @@ def read_op2_geom(op2_filename=None, combine=True, subcases=None,
 
 class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, DYNAMICS):
     """interface for the OP2Geom class for to loading subclasses"""
-    def __init__(self, make_geom=True,
-                 debug=False, log=None, debug_file=None, mode=None):
+    def __init__(self, make_geom: bool=True,
+                 debug: bool=False, log: Any=None, debug_file: Optional[str]=None, mode: Optional[str]=None):
         """
         Initializes the OP2 object
 
@@ -257,8 +264,9 @@ class OP2Geom(BDF, OP2GeomCommon):
                    'is_real', 'is_complex', 'is_random',
                    '_sort_method', 'is_sort1', 'is_sort2',
                    'matrix_tables', 'table_name_str']
-    def __init__(self, make_geom=True,
-                 debug=False, log=None, debug_file=None, mode='msc'):
+    def __init__(self, make_geom: bool=True,
+                 debug: bool=False, log: Any=None,
+                 debug_file: Optional[str]=None, mode: str='msc'):
         """
         Initializes the OP2 object
 
