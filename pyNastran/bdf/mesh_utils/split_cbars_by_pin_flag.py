@@ -2,6 +2,7 @@
 defines:
  - model, pin_flag_map = split_cbars_by_pin_flag(
        bdf_filename, pin_flags_filename=None, bdf_filename_out=None)
+
 """
 from __future__ import print_function
 from pyNastran.bdf.bdf import read_bdf

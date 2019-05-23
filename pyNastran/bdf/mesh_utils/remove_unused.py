@@ -2,6 +2,7 @@
 defines some methods for cleaning up a model
  - model = remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                          remove_pids=True, remove_mids=True)
+
 """
 from __future__ import print_function
 

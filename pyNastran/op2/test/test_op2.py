@@ -465,7 +465,6 @@ def get_test_op2_data(argv):
     is_release = 'dev' not in ver
 
     msg = "Usage:\n"
-    #is_release = True
     options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe] [--post POST] [--load_hdf5]'
     if is_release:
         line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] %s OP2_FILENAME\n" % options
