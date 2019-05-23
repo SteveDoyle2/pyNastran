@@ -1,7 +1,4 @@
 # pylint: disable=R0902,R0904,R0914,C0111
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16

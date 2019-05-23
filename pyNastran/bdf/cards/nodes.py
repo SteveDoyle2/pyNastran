@@ -23,8 +23,6 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 (e.g. an SPOINT card).
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from itertools import count
 from typing import List, Union, Optional, Any
 import numpy as np

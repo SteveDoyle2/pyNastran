@@ -11,9 +11,6 @@ All method cards are defined in this file.  This includes:
 All cards are Method objects.
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -35,9 +32,7 @@ class Method(BaseCard):
 
 
 class EIGB(Method):
-    """
-    Defines data needed to perform buckling analysis
-    """
+    """Defines data needed to perform buckling analysis"""
     type = 'EIGB'
 
     @classmethod

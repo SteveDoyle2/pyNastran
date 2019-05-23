@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from numpy import arange, zeros, unique, dot, array, transpose
 from numpy.linalg import norm  # type: ignore
 

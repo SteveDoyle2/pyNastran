@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from pyNastran.dev.bdf_vectorized.bdf_interface2.attributes import BDFAttributes
 from pyNastran.dev.bdf_vectorized.cards.loads.loadcase import LoadCase
 

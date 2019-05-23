@@ -1,8 +1,8 @@
 """
 defines:
  - AGPS(log=None, debug=False)
+
 """
-from __future__ import print_function
 import numpy as np
 
 class AGPS:
@@ -21,6 +21,7 @@ class AGPS:
         log : logging module object / None
             if log is set, debug is ignored and uses the
             settings the logging object has
+
         """
         self.infilename = None
         self.pressures = {}

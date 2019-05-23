@@ -32,10 +32,8 @@ The superelement sets start with SE:
 +------------+-----------------+
 |  SEBSETi   | BSETi           |
 +------------+-----------------+
-"""
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 
+"""
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, _node_ids, expand_thru
@@ -105,6 +103,7 @@ class ABCQSet(Set):
     +------+-----+----+-----+------+-----+----+-----+----+
     | ASET | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
     +------+-----+----+-----+------+-----+----+-----+----+
+
     """
     type = 'ABCQSet'
     def __init__(self, ids, components, comment=''):
@@ -149,6 +148,7 @@ class ABCQSet(Set):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by %s' % self.type
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -185,6 +185,7 @@ class SuperABCQSet(Set):
     +--------+------+-----+----+-----+------+-----+-----+-----+
     | SEBSET | 100  | 16  |  2 |  23 | 3516 |  1  | 4   |     |
     +--------+------+-----+----+-----+------+-----+-----+-----+
+
     """
     type = 'SuperABCQSet'
     def __init__(self, seid, ids, components, comment=''):
@@ -221,6 +222,7 @@ class SuperABCQSet(Set):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ' which is required by %s seid=%s' % (self.type, self.seid)
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -255,6 +257,7 @@ class ASET(ABCQSet):
     +------+-----+----+-----+------+-----+----+-----+----+
     | ASET | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
     +------+-----+----+-----+------+-----+----+-----+----+
+
     """
     type = 'ASET'
 
@@ -271,6 +274,7 @@ class BSET(ABCQSet):
     +------+-----+----+-----+------+-----+----+-----+----+
     | BSET | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
     +------+-----+----+-----+------+-----+----+-----+----+
+
     """
     type = 'BSET'
 
@@ -288,6 +292,7 @@ class CSET(ABCQSet):
     +------+-----+----+-----+------+-----+----+-----+----+
     | CSET | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
     +------+-----+----+-----+------+-----+----+-----+----+
+
     """
     type = 'CSET'
 

@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from pyNastran.bdf.test.test_utils import TestBdfUtils
 from pyNastran.bdf.test.test_field_writer import Testfield_writer_8
 from pyNastran.bdf.test.bdf_unit_tests import TestBDF

@@ -6,9 +6,8 @@ All mass properties are defined in this file.  This includes:
  * PMASS
 
 All mass properties are PointProperty and Property objects.
+
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from pyNastran.bdf.cards.base_card import expand_thru_by, expand_thru, BaseCard, Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_string, double, double_or_blank, string)

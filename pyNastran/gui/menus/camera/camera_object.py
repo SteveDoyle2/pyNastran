@@ -1,8 +1,8 @@
 """
 defines:
  - CameraObject
+
 """
-from __future__ import print_function
 from copy import deepcopy
 from pyNastran.gui.menus.camera.camera import CameraWindow
 

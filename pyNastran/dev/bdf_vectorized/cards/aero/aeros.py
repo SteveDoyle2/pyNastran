@@ -1,4 +1,3 @@
-from __future__ import print_function
 from numpy import zeros
 from pyNastran.dev.bdf_vectorized.cards.vectorized_card import VectorizedCard
 
@@ -20,6 +19,7 @@ class AEROS(VectorizedCard):
     +-------+-------+-------+------+------+-------+------+-------+
     | AEROS | 10    | 20    | 10.  | 100. | 1000. | 1    |       |
     +-------+-------+-------+------+------+-------+------+-------+
+
     """
     type = 'AEROS'
     _field_map = {

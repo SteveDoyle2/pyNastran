@@ -5,8 +5,7 @@ op2.rdnas2cam.  Adapted from the Yeti version.
 
 @author: Tim Widrick
 """
-from __future__ import print_function
-import math
+=import math
 import sys
 import warnings
 

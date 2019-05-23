@@ -16,8 +16,6 @@ All constraint cards are defined in this file.  This includes:
 The ConstraintObject contain multiple constraints.
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from itertools import count
 
 from pyNastran.utils.numpy_utils import integer_types

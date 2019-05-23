@@ -1,7 +1,4 @@
-"""
-Defines the GUI IO file for Cart3d.
-"""
-from __future__ import print_function
+"""Defines the GUI IO file for Cart3d."""
 import os
 from collections import OrderedDict
 import collections
@@ -23,9 +20,7 @@ from pyNastran.converters.cart3d.input_cntl_reader import read_input_cntl
 
 
 class Cart3dIO:
-    """
-    Defines the GUI class for Cart3d.
-    """
+    """Defines the GUI class for Cart3d."""
     def __init__(self, gui):
         self.gui = gui
         self.data_map = None

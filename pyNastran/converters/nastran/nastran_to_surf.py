@@ -6,8 +6,8 @@ defines:
                    renumber_pids=None, line_map=None,
                    scale=1.0, tol=1e-10,
                    xref=True)
+
 """
-from __future__ import print_function
 from collections import defaultdict
 from numpy import array, allclose, unique, zeros
 from pyNastran.bdf.bdf import read_bdf

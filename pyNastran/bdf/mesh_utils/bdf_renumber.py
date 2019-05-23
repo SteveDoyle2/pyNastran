@@ -6,8 +6,8 @@ defines:
     superelement_renumber(bdf_filename, bdf_filename_out=None, size=8, is_double=False,
                           starting_id_dict=None, cards_to_skip=None,
                           log=None, debug=False)
+
 """
-from __future__ import print_function
 from itertools import chain
 
 from io import StringIO, IOBase

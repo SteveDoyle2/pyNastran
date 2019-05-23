@@ -1,5 +1,4 @@
 """defines the BDF attributes"""
-from __future__ import print_function, unicode_literals
 from collections import defaultdict
 from typing import List, Dict, Optional, Any
 from numpy import array  # type: ignore

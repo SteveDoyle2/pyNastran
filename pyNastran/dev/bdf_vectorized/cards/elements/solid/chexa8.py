@@ -4,8 +4,8 @@ This file defines:
   - CHEXA8 (class)
     - f1
     - f2
+
 """
-from __future__ import print_function
 import numpy as np
 from numpy import arange, cross, abs, searchsorted, array, ones, eye
 from numpy.linalg import norm  # type: ignore

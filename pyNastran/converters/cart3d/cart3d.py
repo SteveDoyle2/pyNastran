@@ -14,8 +14,8 @@ Defines:
 
   - comp2tri(in_filenames, out_filename,
              is_binary=False, float_fmt='%6.7f')
+
 """
-from __future__ import print_function, unicode_literals
 import sys
 from struct import pack, unpack
 from math import ceil

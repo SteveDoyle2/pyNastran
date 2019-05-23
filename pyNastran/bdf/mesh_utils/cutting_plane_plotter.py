@@ -1,5 +1,4 @@
 """Plots a model cutting plane"""
-from __future__ import print_function, unicode_literals
 import numpy as np
 from pyNastran.utils import int_version
 try:

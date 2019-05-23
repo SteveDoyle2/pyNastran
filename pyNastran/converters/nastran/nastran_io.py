@@ -1,9 +1,5 @@
 # pylint: disable=E1101,C1801,C0103
-"""
-Defines the GUI IO file for Nastran.
-"""
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
+"""Defines the GUI IO file for Nastran."""
 import os
 import sys
 import traceback

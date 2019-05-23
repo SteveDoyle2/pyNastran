@@ -1,4 +1,3 @@
-from __future__ import print_function
 from collections import defaultdict
 from itertools import count
 import numpy as np

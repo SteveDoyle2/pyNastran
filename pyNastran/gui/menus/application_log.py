@@ -1,4 +1,3 @@
-from __future__ import print_function
 from pyNastran.gui.qt_version import qt_version, is_pygments
 
 from qtpy.QtCore import Qt

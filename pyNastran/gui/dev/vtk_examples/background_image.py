@@ -7,8 +7,8 @@ tested with:
  - VTK 7.0, Python 3.5
 
 >>> python background_image.py image_filename.jpg
+
 """
-from __future__ import print_function
 import sys
 from vtk import (
     vtkJPEGReader, vtkImageCanvasSource2D, vtkImageActor, vtkPolyDataMapper,

@@ -3,8 +3,8 @@ defines:
  - SolidSection
  - Material
  - Part
+
 """
-from __future__ import print_function
 import numpy as np
 
 
@@ -132,10 +132,8 @@ class Part:
         element_types : Dict[element_type] : node_ids
             element_type : str
                 the element type
-
             bars:
                 r2d2 : (nelements, 2) int ndarray
-
             shells:
                 cpe3 : (nelements, 3) int ndarray
                 cpe4 : (nelements, 4) int ndarray
@@ -145,9 +143,9 @@ class Part:
                 cax3 : (nelements, 3) int ndarray
                 cax4r : (nelements, 4) int ndarray
                 cps4r : (nelements, 4) int ndarray
-
             solids:
                 c3d10h : (nelements, 10) int ndarray
+
         """
         self.name = name
         self.log = log

@@ -9,10 +9,9 @@ defines:
        out_filename, encoding='latin1')
  - A, fmt_dict, names = load_csv(out_filename, encoding='latin1')
  - grid_ids, xyz, bars, tris, quads = load_user_geom(fname, log=None, encoding='latin1')
+
 """
-from __future__ import print_function
 import os
-#import re
 import sys
 import traceback
 from six.moves import urllib

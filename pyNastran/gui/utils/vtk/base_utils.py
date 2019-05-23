@@ -1,5 +1,4 @@
 """defines functions found in VTK that are overwritten for various reasons"""
-from __future__ import print_function
 import sys
 import numpy as np
 import vtk
@@ -31,6 +30,7 @@ def numpy_to_vtkIdTypeArray(num_array, deep=0):
     -----
     This was pulled from VTK and modified to eliminate numpy 1.14 warnings.
     VTK uses a BSD license, so it's OK to do that.
+
     """
     isize = vtk.vtkIdTypeArray().GetDataTypeSize()
     dtype = num_array.dtype
@@ -90,6 +90,7 @@ def numpy_to_vtk(num_array, deep=0, array_type=None):
     -----
     This was pulled from VTK and modified to eliminate numpy 1.14 warnings.
     VTK uses a BSD license, so it's OK to do  that.
+
     """
     z = np.asarray(num_array)
     if not z.flags.contiguous:

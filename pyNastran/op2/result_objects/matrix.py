@@ -1,6 +1,4 @@
 """Defines the Matrix class"""
-from __future__ import print_function
-
 from scipy.sparse import coo_matrix  # type: ignore
 import numpy as np
 from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
@@ -22,6 +20,7 @@ class Matrix:
         data is initialized by setting the matrix.data attribute externally
     is_matpool : bool
         is this a matpool matrix
+
     """
     def __init__(self, name, form, is_matpool=False):
         """
@@ -44,6 +43,7 @@ class Matrix:
         |  6   | Symmetric       |
         |  9   | Pseudo identity |
         +------+-----------------+
+
         """
         self.name = name
         self.data = None

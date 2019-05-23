@@ -1,7 +1,6 @@
 """
 Defines methods for the op2 & hdf5 writer
 """
-from __future__ import print_function, unicode_literals
 from struct import Struct, pack
 import numpy as np
 import scipy.sparse as sp

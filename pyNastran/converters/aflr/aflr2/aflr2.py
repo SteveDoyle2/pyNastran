@@ -7,8 +7,8 @@ defines:
    - write_fixed_points(self, fixed_points_filename)
    - merge_bedge(self, bedge, bedge_filename)
  - export_to_bedge(bedge_filename, nodes, grid_bcs, curves, subcurves, axis=1, log=None)
+
 """
-from __future__ import print_function
 import os
 import sys
 from copy import deepcopy
@@ -44,6 +44,7 @@ class AFLR2:
         log : logging module object / None
             if log is set, debug is ignored and uses the
             settings the logging object has
+
         """
         self.log = get_logger2(log=log, debug=debug)
         self.debug = debug
@@ -439,6 +440,7 @@ def export_to_bedge(bedge_filename,
         the axis to remove (nodes in Nx3)
     log : Logger(); default=None
         a required logging object
+
     """
     log.debug('bedge_filename = %s' % bedge_filename)
     log.debug('grid_bc = %s' % grid_bcs)

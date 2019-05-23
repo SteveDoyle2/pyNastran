@@ -1,5 +1,4 @@
 # pylint: disable=C0103,C0111,E1101
-from __future__ import print_function
 import os
 from collections import OrderedDict
 

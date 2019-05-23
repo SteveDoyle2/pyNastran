@@ -16,9 +16,8 @@ CaseControlDeck:
     add_parameter_to_local_subcase(self, isubcase, param)
     finish_subcases(self)
     convert_to_sol_200(self, model)
+
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import re
 import sys
 import copy

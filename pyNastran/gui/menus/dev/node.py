@@ -5,8 +5,6 @@ https://wiki.python.org/moin/PyQt/Distinguishing%20between%20click%20and%20doubl
 http://www.saltycrane.com/blog/2007/12/pyqt-43-qtableview-qabstracttablemodel/
 http://stackoverflow.com/questions/12152060/how-does-the-keypressevent-method-work-in-this-program
 """
-from __future__ import print_function
-#from PyQt4 import QtCore, QtGui
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.menus.manage_actors import Model, SingleChoiceQTableView
 from pyNastran.gui.qt_version import qt_int as qt_version

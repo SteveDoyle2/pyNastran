@@ -1,6 +1,4 @@
 #pylint disable=C0301
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from itertools import count
 import numpy as np
 from numpy import zeros, searchsorted, allclose

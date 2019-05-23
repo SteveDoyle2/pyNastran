@@ -4,9 +4,8 @@ Defines general coordinate system related functions including:
  - coords = coordinate_system_from_vector_2d_tri(xyz1, xyz2, xyz3)
  - coords = coordinate_system_from_vector_2d_quad(xyz1, xyz2, xyz3, xyz4)
  - coords = coordinate_system_from_vector_2d_tri_theta(xyz1, xyz2, xyz3, theta, dtype=None)
-"""
-from __future__ import print_function, absolute_import, division
 
+"""
 import numpy as np
 from .utils import cross2d, perpendicular_vector2d
 from .matrix3d import axes_stack, normalize_vector2d
@@ -26,6 +25,7 @@ def coords_from_vector_1d(v_array):
     -------
     coords : (n, 3, 3)
         the coordinate systems
+
     """
     v = np.atleast_2d(v_array)
 

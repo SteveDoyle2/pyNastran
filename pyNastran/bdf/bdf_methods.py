@@ -13,8 +13,6 @@ reading/writing/accessing of BDF data.  Such methods include:
       puts all nodes back to original coordinate system
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from collections import defaultdict
 from typing import List, Tuple, Any, Union, Dict
 
@@ -40,6 +38,7 @@ class BDFMethods(BDFAttributes):
             include_grav=False, xyz_cid0=None)
         sum_forces_moments(p0, loadcase_id, include_grav=False,
             xyz_cid0=None)
+
     """
 
     def __init__(self):
@@ -71,6 +70,7 @@ class BDFMethods(BDFAttributes):
             sum the areas for CBAR/CBEAM/CROD/CONROD/CTUBE elements
             True : get the area of the model by property id
             False : only get the cross sectional properties
+
         """
         return get_area_breakdown(self, property_ids=property_ids,
                                   stop_if_no_area=stop_if_no_area, sum_bar_area=sum_bar_area)

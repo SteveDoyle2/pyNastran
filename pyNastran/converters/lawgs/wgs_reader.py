@@ -5,8 +5,6 @@ defines:
  - LaWGS(self, log=None, debug=False)
 
 """
-from __future__ import print_function
-
 import copy
 from math import sin, cos
 
@@ -24,6 +22,7 @@ class Panel:
         translates the patch
     scale : float
         scales the patch
+
     """
     def __init__(self, key, header, lines, log):
         #print("key=%s \nheader=|%s|" % (key, header))   # ,iSymG
@@ -83,6 +82,7 @@ class Panel:
         """
         Form the rotation matrix used for geometrical transformations
         Taken from NASA TM 85767 defining LaWGS.
+
         """
         # rotation angles, degrees
         #r = radians([self.phi,self.theta,self.psi])
@@ -198,6 +198,7 @@ class LaWGS:
         log : logging module object / None
             if log is set, debug is ignored and uses the
             settings the logging object has
+
         """
         self.log = get_logger2(log=log, debug=debug)
         self.panels = {}

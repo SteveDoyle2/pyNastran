@@ -1,4 +1,3 @@
-from __future__ import print_function
 if 0:
     from sympy import Symbol, Matrix, integrate
 

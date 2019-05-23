@@ -6,8 +6,6 @@ Main BDF class.  Defines:
 
 """
 # see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import os
 import sys
 from copy import deepcopy

@@ -1,5 +1,4 @@
 """tests the vectorized BDF class before being used by the GUI"""
-from __future__ import print_function
 import os
 import unittest
 import numpy as np

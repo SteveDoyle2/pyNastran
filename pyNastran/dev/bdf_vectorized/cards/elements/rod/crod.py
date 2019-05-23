@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 from numpy import array, dot, arange, zeros, unique, searchsorted, transpose, int64
 from numpy.linalg import norm  # type: ignore
@@ -21,7 +20,8 @@ class CROD(RodElement):
         Parameters
         ----------
         model : BDF
-           the BDF object
+            the BDF object
+
         """
         RodElement.__init__(self, model)
 

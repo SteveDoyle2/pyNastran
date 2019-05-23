@@ -1,7 +1,4 @@
-"""
-very old code aster converter that was never quite working
-"""
-from __future__ import print_function
+"""very old code aster converter that was never quite working"""
 import os
 from pyNastran.bdf.bdf import BDF
 

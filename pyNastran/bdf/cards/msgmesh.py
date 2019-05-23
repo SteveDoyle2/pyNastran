@@ -1,4 +1,3 @@
-from __future__ import print_function
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.field_writer_8 import print_card_8
 

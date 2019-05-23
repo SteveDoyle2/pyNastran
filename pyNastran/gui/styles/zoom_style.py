@@ -1,7 +1,4 @@
-"""
-defines the ZoomStyle class
-"""
-from __future__ import print_function, division
+"""defines the ZoomStyle class"""
 import vtk
 
 #left_button_down=self._zoom_picker,

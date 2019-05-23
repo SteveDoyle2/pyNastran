@@ -65,10 +65,9 @@ Without cross referencing...
 Cross-referencing allows you to easily jump across cards and also helps
 with calculating things like position, area, and mass.  The BDF is designed
 around the idea of cross-referencing, so it's recommended that you use it.
+
 """
 # pylint: disable=R0902,R0904,R0914
-
-from __future__ import print_function
 from collections import defaultdict
 import traceback
 from typing import List, Dict, Any
@@ -77,9 +76,7 @@ from numpy import zeros, argsort, arange, array_equal, array
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
 class XrefMesh(BDFAttributes):
-    """
-    Links up the various cards in the BDF.
-    """
+    """Links up the various cards in the BDF."""
     def __init__(self):
         # type: () -> None
         """

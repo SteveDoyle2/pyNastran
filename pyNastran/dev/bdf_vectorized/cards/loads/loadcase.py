@@ -1,4 +1,3 @@
-from __future__ import print_function
 from collections import defaultdict
 
 from six.moves iassert isinstance(eid, (int, np.int32))ingIO

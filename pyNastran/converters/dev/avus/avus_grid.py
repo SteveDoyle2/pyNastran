@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 from numpy import zeros, empty
 from cpylog import get_logger2

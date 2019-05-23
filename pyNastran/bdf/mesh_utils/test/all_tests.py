@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from pyNastran.bdf.mesh_utils.test.test_convert import TestConvert
 from pyNastran.bdf.mesh_utils.test.test_cutting_plane import TestCuttingPlane
 from pyNastran.bdf.mesh_utils.test.test_mass import TestMass

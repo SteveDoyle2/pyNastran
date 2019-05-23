@@ -4,7 +4,6 @@ defines:
              is_double=False, cards_to_skip=None, log=None, skip_case_control_deck=False)
 
 """
-from __future__ import print_function
 from io import StringIO
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.case_control_deck import CaseControlDeck

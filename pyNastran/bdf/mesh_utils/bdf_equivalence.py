@@ -9,8 +9,6 @@ defines:
                                   crash_on_collapse=False, log=None, debug=True)
 
 """
-from __future__ import print_function
-
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)

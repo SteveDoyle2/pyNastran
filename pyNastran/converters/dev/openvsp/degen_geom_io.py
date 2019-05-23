@@ -1,4 +1,3 @@
-from __future__ import print_function
 from collections import OrderedDict
 import numpy as np
 from numpy import amax, amin

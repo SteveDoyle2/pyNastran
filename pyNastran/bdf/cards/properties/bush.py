@@ -7,10 +7,8 @@ All bush properties are defined in this file.  This includes:
  *   PBUSHT
 
 All bush properties are BushingProperty and Property objects.
-"""
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 
+"""
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (

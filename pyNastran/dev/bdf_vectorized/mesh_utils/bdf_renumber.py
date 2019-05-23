@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import numpy as np
 
 from pyNastran.dev.bdf_vectorized.bdf import BDF
@@ -146,6 +144,7 @@ def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
     }
     >>> bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
                      starting_ids_dict=starting_ids_dict, round_ids=False)
+
     """
     starting_id_dict_default = {
         'cid' : 1,

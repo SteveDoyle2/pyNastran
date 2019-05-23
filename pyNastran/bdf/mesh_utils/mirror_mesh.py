@@ -11,10 +11,7 @@ This file defines:
         log=None, debug=True)
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from warnings import warn
-
 import numpy as np
 
 from pyNastran.bdf.cards.loads.static_loads import (

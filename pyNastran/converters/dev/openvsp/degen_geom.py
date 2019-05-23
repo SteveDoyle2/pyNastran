@@ -1,8 +1,8 @@
 """
 defines:
  - model = read_degen_geom(degen_geom_csv, log=None, debug=False)
+
 """
-from __future__ import print_function
 from copy import deepcopy
 from collections import defaultdict
 

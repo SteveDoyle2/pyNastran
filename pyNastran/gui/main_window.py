@@ -1,9 +1,6 @@
-"""
-defines the MainWindow class
-"""
+"""defines the MainWindow class"""
 # coding: utf-8
 # pylint: disable=C0111
-from __future__ import division, unicode_literals, print_function
 
 # standard library
 import sys

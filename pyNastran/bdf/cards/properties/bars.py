@@ -11,8 +11,6 @@ All bars are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from itertools import count
 from typing import List, Tuple, Union, Any
 from numpy import pi, array

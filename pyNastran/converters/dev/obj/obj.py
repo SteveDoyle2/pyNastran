@@ -4,7 +4,6 @@ https://en.wikipedia.org/wiki/Wavefront_.obj_file
 test models can be found at:
   http://people.sc.fsu.edu/~jburkardt/data/obj/obj.html
 """
-from __future__ import print_function
 from numpy import array, unique, hstack, zeros
 
 def read_obj(obj_filename, log=None, debug=False):

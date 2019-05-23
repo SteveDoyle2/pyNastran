@@ -1,4 +1,3 @@
-from __future__ import print_function
 from numpy import arange, searchsorted, array
 from numpy.linalg import norm  # type: ignore
 
@@ -18,7 +17,8 @@ class CPENTA15(SolidElement):
         Parameters
         ----------
         model : BDF
-           the BDF object
+            the BDF object
+
         """
         SolidElement.__init__(self, model)
 

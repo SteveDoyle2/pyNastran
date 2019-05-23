@@ -1,5 +1,4 @@
 #pylint: disable=C0301,W0612,C0111,R0201,C0103,W0613,R0914
-from __future__ import print_function
 import numpy as np
 
 def merge(amatrix, bmatrix):

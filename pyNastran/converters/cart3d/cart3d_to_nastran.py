@@ -1,4 +1,3 @@
-from __future__ import print_function, unicode_literals
 from numpy import unique
 
 from pyNastran.bdf.bdf import BDF
@@ -25,6 +24,7 @@ def cart3d_to_nastran_model(cart3d_filename, log=None, debug=False):
     -------
     bdf_model : BDF
         BDF() model object
+
     """
     if isinstance(cart3d_filename, Cart3D):
         cart3d = cart3d_filename

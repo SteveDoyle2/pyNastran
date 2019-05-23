@@ -1,4 +1,3 @@
-from __future__ import print_function, absolute_import
 from collections import defaultdict
 from struct import pack, Struct
 

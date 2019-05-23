@@ -7,7 +7,6 @@ and far less error prone for a user
 That said, there are still a few bugs.
 
 """
-from __future__ import print_function
 
 from typing import Any, Optional, List, Union
 import numpy as np

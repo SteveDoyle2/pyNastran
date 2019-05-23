@@ -6,8 +6,8 @@ defines:
  - equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
                                        pshell_pids_to_remove,
                                        tol=0.01, renumber=True)
+
 """
-from __future__ import print_function
 import os
 from struct import Struct
 from numpy import array, unique #, hstack

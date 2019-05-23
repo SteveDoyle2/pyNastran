@@ -3,8 +3,8 @@
 defines:
  - CBEAM
  - BEAMOR
+
 """
-from __future__ import print_function
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 

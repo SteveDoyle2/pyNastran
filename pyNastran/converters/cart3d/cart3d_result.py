@@ -1,16 +1,14 @@
 """
 defines:
  - Cart3dGeometry
+
 """
-from __future__ import print_function
 from copy import deepcopy
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 
 class Cart3dGeometry(GuiResultCommon):
-    """
-    Stores the cart3d results.
-    """
+    """Stores the cart3d results."""
     def __init__(self, subcase_id, labels,
                  nodes, elements, regions, area, cnormals, colormap='jet',
                  uname='Cart3dGeometry'):

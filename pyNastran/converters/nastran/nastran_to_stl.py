@@ -4,8 +4,8 @@ defines:
                                  log=None)
  - stl = nastran_to_stl(bdf_filename, stl_filename, is_binary=False,
                         log=None, stop_on_failure=False)
+
 """
-from __future__ import print_function
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.converters.stl.stl import STL
@@ -31,6 +31,7 @@ def nastran_to_stl(bdf_filename, stl_filename, is_binary=False, log=None, stop_o
         a Python logging object
     stop_on_failure : bool; default=False
         should the code stop if an error is encountered
+
     """
     if isinstance(bdf_filename, str):
         model = read_bdf(bdf_filename, log=log)

@@ -1,8 +1,8 @@
 """
 This file defines:
   - WriteMesh
+
 """
-from __future__ import print_function
 import sys
 from io import StringIO, IOBase
 

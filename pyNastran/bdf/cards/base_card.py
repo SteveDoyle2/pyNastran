@@ -1,5 +1,3 @@
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from typing import List, Tuple, Union, Optional, Any
 
 import numpy as np

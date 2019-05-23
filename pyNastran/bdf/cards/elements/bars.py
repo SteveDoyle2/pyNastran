@@ -8,8 +8,6 @@ defines:
 
 """
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import numpy as np
 from numpy.linalg import norm
 

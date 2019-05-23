@@ -11,9 +11,6 @@ Defines the following contact cards:
  - BSURFS
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_string_or_blank, double_or_blank,

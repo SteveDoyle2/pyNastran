@@ -7,11 +7,8 @@ defines:
         bdf_filename, coord, tol,
         nodal_result, plane_atol=1e-5)
  - slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5)
-"""
-from __future__ import print_function
-#from itertools import count
-#import warnings
 
+"""
 import numpy as np
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -42,6 +39,7 @@ def cut_edge_model_by_coord(bdf_filename, coord, tol,
         str : write a csv
     header : str
         the header for the csv; x, y, z, and nodal result names
+
     """
     assert isinstance(tol, float), tol
     nids, xyz_cid0, edges = _setup_edges(bdf_filename)
@@ -99,6 +97,7 @@ def _cut_model(nids, xyz_cp, edges, view_up, p1, p2, tol,
         excessive computations
     plane_atol : float; default=1e-5
         the tolerance for a line that's located on the y=0 local plane
+
     """
     #view_up = camera.GetViewUp()
 
@@ -148,6 +147,7 @@ def _cut_edge_model_by_coord(nids, xyz_cid0, edges, coord, tol,
         the result to cut the model with
     plane_atol : float; default=1e-5
         the tolerance for a line that's located on the y=0 local plane
+
     """
     xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
 
@@ -208,6 +208,7 @@ def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5,
         inid, x, y, z, xg, yg, zg, result
     TODO: split result_array, so we don't have mixed int/float/complex
           results being all casted to the highest data type
+
     """
     plane_bdf_filename = 'plane_edge.bdf'
     #fbdf = None
@@ -386,6 +387,7 @@ def _interpolate_bar_to_node(eid_new, nid_new, mid, area, J, fbdf,
 
     Then we just crank the formula where we set the value of "y" to 0.0:
         percent = (0. - y1_local) / (y2_local - y1_local)
+
     """
     #print('edge =', edge)
     y1_local = xyz1_local[1]

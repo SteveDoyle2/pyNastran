@@ -1,8 +1,5 @@
-"""
-defines a colorama log
-"""
+"""defines the make_log function"""
 # coding: utf-8
-from __future__ import print_function, unicode_literals
 import sys
 import platform
 

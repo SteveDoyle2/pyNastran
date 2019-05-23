@@ -4,8 +4,8 @@ This includes:
  - is_array = isfinite(array)
  - is_array = isfinite_and_greater_than(array, value)
  - is_array = isfinite_and_nonzero(array)
+
 """
-from __future__ import print_function, division
 import numpy as np
 
 def isfinite(_array):

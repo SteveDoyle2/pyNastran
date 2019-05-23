@@ -1,8 +1,8 @@
 """
 defines:
  - FakeBDFVectorized
+
 """
-from __future__ import print_function
 from pyNastran.bdf.bdf import BDF as BDF
 
 class FakeBDFVectorized(BDF):
@@ -10,6 +10,7 @@ class FakeBDFVectorized(BDF):
     Renumbers the element ids to be in the same order as the BDFVectorized
 
     Intended for GUI testing, not anything serious.
+
     """
     #def __init__(self, debug=True, log=None, mode='msc'):
         #"""see ``BDF.read_bdf``"""

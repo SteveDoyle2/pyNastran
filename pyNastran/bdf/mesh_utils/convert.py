@@ -4,7 +4,6 @@ defines:
  - convert(model, units_to, units=None)
 
 """
-from __future__ import print_function
 import numpy as np
 from pyNastran.bdf.cards.base_card import break_word_by_trailing_parentheses_integer_ab
 from pyNastran.bdf.bdf import read_bdf

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 from scipy.interpolate import splrep, splev  # type: ignore
 from scipy.integrate import quad  # type: ignore
 
@@ -21,6 +20,7 @@ def build_spline(x, y):
         linear or cubic spline depending on the length of x
 
     .. note:: a 1st order spline is the same as linear interpolation
+
     """
     #return splrep(x, y, k=1) if len(x) < 3 else splrep(x, y)
 

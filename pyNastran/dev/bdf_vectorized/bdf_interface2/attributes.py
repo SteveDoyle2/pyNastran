@@ -1,5 +1,4 @@
 """defines the BDF attributes"""
-from __future__ import print_function
 from collections import defaultdict
 
 from pyNastran.utils import object_attributes, object_methods

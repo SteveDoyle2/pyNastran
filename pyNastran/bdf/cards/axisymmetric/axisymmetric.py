@@ -4,9 +4,6 @@ All axisymmetric shell elements are defined in this file.  This includes:
  * PRESAX
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import (
     set_blank_if_default,

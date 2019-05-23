@@ -1,5 +1,4 @@
 """Parses Nastran fields"""
-from __future__ import print_function
 import re
 from typing import Union, Optional
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -57,6 +56,7 @@ def parse_components(card, ifield, fieldname):
     -------
     components : str
         a string of the dofs '0' or '123456' (not all are required)
+
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
@@ -114,6 +114,7 @@ def components_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None
     -------
     components : str
         a string of the dofs '0' or '123456' (not all are required)
+
     """
     #assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
@@ -143,6 +144,7 @@ def blank(card: BDFCard, ifield: int, fieldname: str, default=None):
         name of field
     default : None
         the default value for the field (default=None)
+
     """
     assert isinstance(card, BDFCard), type(card)
     assert isinstance(ifield, int), type(ifield)
@@ -199,6 +201,7 @@ def integer_double_string_or_blank(card: BDFCard, ifield: int, fieldname: str, d
     -------
     value : int, float, str, None
         the field value
+
     """
     svalue = card.field(ifield)
 
@@ -303,6 +306,7 @@ def integer(card: BDFCard, ifield: int, fieldname: str) -> int:
         field number
     fieldname : str
         name of field
+
     """
     svalue = card.field(ifield)
     if isinstance(svalue, float_types):
@@ -375,6 +379,7 @@ def double(card: BDFCard, ifield: int, fieldname: str) -> float:
     -------
     value : float
         the value from the desired field
+
     """
     svalue = card.field(ifield)
 
@@ -442,6 +447,7 @@ def double_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
         name of field
     default : double, None
         the default value for the field (default=None)
+
     """
     svalue = card.field(ifield)
 
@@ -477,6 +483,7 @@ def double_or_string(card: BDFCard, ifield: int, fieldname: str) -> Union[float,
         field number
     fieldname : str
         name of field
+
     """
     svalue = card.field(ifield)
 
@@ -594,6 +601,7 @@ def integer_or_double(card: BDFCard, ifield: int, fieldname: str) -> Union[int, 
         the value with the proper type
 
     :raises SyntaxError: if there's an invalid type
+
     """
     svalue = card.field(ifield)
 
@@ -730,6 +738,7 @@ def integer_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=
         name of field
     default : int, str, None
         the default value for the field (default=None)
+
     """
     svalue = card.field(ifield)
     if isinstance(svalue, integer_types):
@@ -858,6 +867,7 @@ def string(card: BDFCard, ifield: int, fieldname: str) -> str:
     -------
     value : str
         the value of the field
+
     """
     svalue = card.field(ifield)
     if isinstance(svalue, str):
@@ -901,6 +911,7 @@ def string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
     -------
     value : varies
         the value of the field
+
     """
     svalue = card.field(ifield)
     if svalue is None:
@@ -948,6 +959,7 @@ def loose_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=No
     -------
     value : varies
         the value of the field
+
     """
     svalue = card.field(ifield)
     if svalue is None:
@@ -995,6 +1007,7 @@ def exact_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=No
     -------
     value : varies
         the value of the field
+
     """
     svalue = card.field(ifield)
     if svalue is None:
@@ -1038,6 +1051,7 @@ def interpret_value(value_raw, card=''):
     -------
     value : varies
         the Nastran reprentation of the value
+
     """
     if value_raw is None:
         return None

@@ -1,4 +1,3 @@
-from __future__ import print_function
 from numpy import zeros, where, arange, searchsorted, argsort
 
 from pyNastran.bdf.field_writer_8 import print_card_8

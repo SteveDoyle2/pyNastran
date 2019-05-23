@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, unicode_literals
-
 from numpy import setdiff1d, unique, array, hstack
 
 from qtpy import QtCore

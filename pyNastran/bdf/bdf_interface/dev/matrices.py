@@ -2,8 +2,8 @@
 """
 defines:
   - make_gpwg(Mgg, reference_point, xyz_cid0, log)
+
 """
-from __future__ import print_function
 import numpy as np
 import scipy as sp
 

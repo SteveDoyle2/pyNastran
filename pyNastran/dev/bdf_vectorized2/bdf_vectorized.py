@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF_, LOAD

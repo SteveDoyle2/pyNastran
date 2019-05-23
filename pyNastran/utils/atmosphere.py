@@ -23,7 +23,6 @@ All the default units are in English units because the source equations
 are in English units.
 
 """
-from __future__ import print_function, absolute_import
 import sys
 from math import log, exp
 import numpy as np

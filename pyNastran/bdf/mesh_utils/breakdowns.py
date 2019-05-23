@@ -15,8 +15,9 @@ defines:
  - pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = get_mass_breakdown(
        model, property_ids=None,
        stop_if_no_mass=True, detailed=True)
+
 """
-from __future__ import print_function
+
 
 def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
     """
@@ -28,6 +29,7 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
         the pid to length dictionary
 
     TODO: What about CONRODs?
+
     """
     #skip_elements = [
         #'CTRIA3', 'CTRIA6', 'CTRIAR',

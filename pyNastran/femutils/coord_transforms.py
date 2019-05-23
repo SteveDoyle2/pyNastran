@@ -10,9 +10,9 @@ Defines general coordinate system related functions including:
  - rtp_to_rtz_array(xyz)
 
  - coords = cylindrical_rotation_matrix(thetar, dtype='float64')
+
 """
 # pylint: disable=C0103
-from __future__ import print_function, division
 import numpy as np
 
 # xyz to xxx transforms

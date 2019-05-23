@@ -13,8 +13,8 @@ MODCON           OEFMC         Modal contributions
 FORCE            OEF1X         Element forces with intermediate (CBAR and CBEAM)
                                station forces and forces on nonlinear elements
 FLUX             HOEF1         Element heat flux
+
 """
-from __future__ import print_function
 from struct import Struct
 import numpy as np
 from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros

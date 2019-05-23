@@ -1,6 +1,4 @@
-"""
-Defines the GUI IO file for OBJ.
-"""
+"""Defines the GUI IO file for OBJ."""
 from __future__ import print_function
 from collections import OrderedDict
 
@@ -13,16 +11,12 @@ from pyNastran.converters.dev.obj.obj import read_obj
 
 
 class ObjIO:
-    """
-    Defines the GUI class for OBJ.
-    """
+    """Defines the GUI class for OBJ."""
     def __init__(self, gui):
         self.gui = gui
 
     def get_obj_wildcard_geometry_results_functions(self):
-        """
-        gets the OBJ wildcard loader used in the file load menu
-        """
+        """gets the OBJ wildcard loader used in the file load menu"""
         data = ('obj',
                 'OBJ (*.obj)', self.load_obj_geometry,
                 None, None)

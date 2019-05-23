@@ -21,8 +21,8 @@ Various mathematical functions are defined in this file.  This includes:
 
 All beams are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
+
 """
-from __future__ import print_function, absolute_import
 from math import sqrt, ceil
 
 from numpy import (float32, float64, complex64, complex128, array, cross,

@@ -1,4 +1,3 @@
-from __future__ import print_function
 from copy import deepcopy
 
 class AltGeometry:
@@ -51,6 +50,7 @@ class AltGeometry:
             can you pick a node/cell on this actor
         label_actors : List[annotation]; None -> []
             stores annotations (e.g., for a control surface)
+
         """
         representation_map = {
             'main' : None,
@@ -123,6 +123,7 @@ class AltGeometry:
         """
         0 -> transparent
         1 -> solid
+
         """
         assert 0.0 <= self._opacity <= 1.0, self._opacity
         return self._opacity
@@ -137,6 +138,7 @@ class AltGeometry:
         """
         0 -> solid
         1 -> transparent
+
         """
         assert 0.0 <= self._opacity <= 1.0, self._opacity
         return 1.0 - self._opacity
@@ -189,6 +191,7 @@ class AltGeometry:
         * bar - this can use bar scale
         * wire+point - point (vertex) and wireframe allowed
         * wire+surf - the user can switch between surface and wireframe as a selection
+
         """
         return self._representation
 

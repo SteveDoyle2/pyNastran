@@ -2,8 +2,8 @@
 defines:
  - verify_bdf(model, xref)
  - validate_bdf(model)
+
 """
-from __future__ import print_function
 import sys
 import traceback
 from typing import List, Dict, Any

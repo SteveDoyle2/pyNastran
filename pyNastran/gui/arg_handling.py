@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import sys
 
@@ -6,8 +5,8 @@ import pyNastran
 from pyNastran.utils import check_path
 #from gui.formats import format_string
 
-if sys.version_info < (2, 7, 7):  # pragma: no cover
-    sys.exit("requires Python 2.7.7+...")
+if sys.version_info < (3, 6):  # pragma: no cover
+    sys.exit("requires Python 3.6+...")
 
 SUPPORT_MULTIMODEL = False
 

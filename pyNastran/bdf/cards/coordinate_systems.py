@@ -10,8 +10,6 @@ All coordinate cards are defined in this file.  This includes:
  * CORD2S
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import copy
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
 

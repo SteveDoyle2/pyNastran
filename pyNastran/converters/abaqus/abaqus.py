@@ -1,7 +1,4 @@
-"""
-Defines the Abaqus class
-"""
-from __future__ import print_function
+"""Defines the Abaqus class"""
 import numpy as np
 from cpylog import get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (

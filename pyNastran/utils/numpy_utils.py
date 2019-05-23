@@ -1,6 +1,4 @@
 """Interface to various numpy utilities"""
-from __future__ import absolute_import
-
 import numpy as np
 
 from pyNastran.femutils.io import loadtxt_nice, savetxt_nice

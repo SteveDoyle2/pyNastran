@@ -17,8 +17,6 @@ All aero cards are defined in this file.  This includes:
 All cards are BaseCard objects.
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from itertools import count
 import math
 from typing import List, Union

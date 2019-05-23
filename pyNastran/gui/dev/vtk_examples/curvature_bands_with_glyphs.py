@@ -3,7 +3,6 @@ works in vtk 7; missing surface though
 """
 #!/usr/bin/env python
 
-from __future__ import print_function
 import math
 import vtk
 

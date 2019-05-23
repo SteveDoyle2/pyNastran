@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, absolute_import
 from types import MethodType, FunctionType
 import os
 import io

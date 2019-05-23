@@ -3,7 +3,6 @@ Defines:
  - data_in_material_coord(bdf, op2, in_place=False)
 
 """
-from __future__ import print_function
 import copy
 
 import numpy as np

@@ -2,8 +2,8 @@
 defines:
  - model = Boundary(log=None, debug=False)
  - model = BoundaryFile(log=None, debug=False)
+
 """
-from __future__ import print_function
 import os
 from collections import OrderedDict
 
