@@ -105,14 +105,14 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
                 normal = normals[eid]
                 # a o b = a * b * cos(theta)
                 # cos(theta) = (a o b)/ (a b); where |a| = 1; |b| = 1
-                cos_theta = np.dot(normal, normal_start)
+                cos_theta = normal @ normal_start
                 theta = np.arccos(cos_theta)
                 if theta < theta_tol:
                     eids_next.add(eid)
                     eids_oml.add(eid)
                 elif consider_flippped_normals:
                     # handles flipped normals
-                    cos_theta = np.dot(normal, -normal_start)
+                    cos_theta = normal @ -normal_start
                     theta = np.arccos(cos_theta)
                     if theta < theta_tol:
                         eids_next.add(eid)

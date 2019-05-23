@@ -118,8 +118,8 @@ class TestOP2Matrix(unittest.TestCase):
             -1.0, 2.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0,
             4.0, -1.0, 2.0, 5.0, -1.0, 2.0, 6.0,
         ])
-        BTA = np.dot(B.T, A)
-        ATB = np.dot(A.T, B)
+        BTA = B.T @ A
+        ATB = A.T @ B
         ATB_expected = np.array([
             [35., 18.],
             [18., 100.]
@@ -175,8 +175,8 @@ class TestOP2Matrix(unittest.TestCase):
             -1.0, 2.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0,
             4.0, -1.0, 2.0, 5.0, -1.0, 2.0, 6.0,
         ])
-        BTA = np.dot(B.T, A)
-        ATB = np.dot(A.T, B)
+        BTA = B.T @ A
+        ATB = A.T @ B
         ATB_expected = np.array([
             [35., 18.],
             [18., 100.]

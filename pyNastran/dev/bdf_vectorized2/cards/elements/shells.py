@@ -352,12 +352,12 @@ def ctria3_quality(nelements, xyz_cid0, i123):
 
 
     # TODO: the stuff below needs work...
-    #cos_skew1 = np.dot(e2_p1,  e31) / (np.linalg.norm(e2_p1, axis=1) * np.linalg.norm(e31, axis=1))
-    #cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1, axis=1) * np.linalg.norm(e31, axis=1))
-    #cos_skew3 = np.dot(e3_p2,  e21) / (np.linalg.norm(e3_p2, axis=1) * np.linalg.norm(e21, axis=1))
-    #cos_skew4 = np.dot(e3_p2, -e21) / (np.linalg.norm(e3_p2, axis=1) * np.linalg.norm(e21, axis=1))
-    #cos_skew5 = np.dot(e1_p3,  e32) / (np.linalg.norm(e1_p3, axis=1) * np.linalg.norm(e32, axis=1))
-    #cos_skew6 = np.dot(e1_p3, -e32) / (np.linalg.norm(e1_p3, axis=1) * np.linalg.norm(e32, axis=1))
+    #cos_skew1 = (e2_p1 @  e31) / (np.linalg.norm(e2_p1, axis=1) * np.linalg.norm(e31, axis=1))
+    #cos_skew2 = (e2_p1 @ -e31) / (np.linalg.norm(e2_p1, axis=1) * np.linalg.norm(e31, axis=1))
+    #cos_skew3 = (e3_p2 @  e21) / (np.linalg.norm(e3_p2, axis=1) * np.linalg.norm(e21, axis=1))
+    #cos_skew4 = (e3_p2 @ -e21) / (np.linalg.norm(e3_p2, axis=1) * np.linalg.norm(e21, axis=1))
+    #cos_skew5 = (e1_p3 @  e32) / (np.linalg.norm(e1_p3, axis=1) * np.linalg.norm(e32, axis=1))
+    #cos_skew6 = (e1_p3 @ -e32) / (np.linalg.norm(e1_p3, axis=1) * np.linalg.norm(e32, axis=1))
     #max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([
         #cos_skew1, cos_skew2, cos_skew3,
         #cos_skew4, cos_skew5, cos_skew6], -1., 1.))).min()
@@ -370,9 +370,9 @@ def ctria3_quality(nelements, xyz_cid0, i123):
     #assert len(cos_skew1) == nelements, 'len(cos_skew1)=%s nelements=%s' % (len(cos_skew1), nelements)
     cos_skew1 = None
 
-    #cos_theta1 = np.dot(v21, -v13) / (length21 * length13)
-    #cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
-    #cos_theta3 = np.dot(v13, -v32) / (length13 * length32)
+    #cos_theta1 = (v21 @ -v13) / (length21 * length13)
+    #cos_theta2 = (v32 @ -v21) / (length32 * length21)
+    #cos_theta3 = (v13 @ -v32) / (length13 * length32)
     #thetas = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.))
     thetas = np.array([60.])
     min_thetai = thetas.min()

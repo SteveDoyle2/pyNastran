@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import numpy as np
 from numpy import unique
 
@@ -114,23 +112,23 @@ def transform_force_moment(force_in_local, moment_in_local,
         #  2.  cd_T and coord_out_T.T
         #  3.  reverse it all...
         if 0:
-            force_in_globali = np.dot(cd_T, force_in_locali.T)
-            moment_in_globali = np.dot(cd_T, moment_in_locali.T)
-            force_outi = np.dot(coord_out_T.T, force_in_globali).T
-            moment_outi = np.dot(coord_out_T.T, moment_in_globali).T
+            force_in_globali = cd_T @ force_in_locali.T
+            moment_in_globali = cd_T @ moment_in_locali.T
+            force_outi = (coord_out_T.T @ force_in_globali).T
+            moment_outi = (coord_out_T.T @ moment_in_globali).T
         elif 0:
-            force_in_globali = np.dot(cd_T.T, force_in_locali.T)
-            moment_in_globali = np.dot(cd_T.T, moment_in_locali.T)
-            force_outi = np.dot(coord_out_T, force_in_globali).T
-            moment_outi = np.dot(coord_out_T, moment_in_globali).T
+            force_in_globali = cd_T.T @ force_in_locali.T
+            moment_in_globali = cd_T.T @ moment_in_locali.T
+            force_outi = (coord_out_T @ force_in_globali).T
+            moment_outi = (coord_out_T @ moment_in_globali).T
         else:
             # old
-            force_in_globali = np.dot(force_in_locali, cd_T).T
-            moment_in_globali = np.dot(moment_in_locali, cd_T).T
-            #force_outi = np.dot(coord_out_T, force_in_globali).T
-            #moment_outi = np.dot(coord_out_T, moment_in_globali).T
-            force_outi = np.dot(coord_out_T, force_in_globali).T
-            moment_outi = np.dot(coord_out_T, moment_in_globali).T
+            force_in_globali = (force_in_locali @ cd_T).T
+            moment_in_globali = (moment_in_locali @ cd_T).T
+            #force_outi = (coord_out_T @ force_in_globali).T
+            #moment_outi = (coord_out_T @ moment_in_globali).T
+            force_outi = (coord_out_T @ force_in_globali).T
+            moment_outi = (coord_out_T @ moment_in_globali).T
 
         if debug:
             logger.debug('force_in_locali =%s' % force_in_locali.T)
@@ -152,7 +150,7 @@ def transform_force_moment(force_in_local, moment_in_local,
 
             if debug:
                 logger.debug('rxf = %s' % rxf)
-            rxf_in_cid = np.dot(coord_out_T, rxf.T).T
+            rxf_in_cid = (coord_out_T @ rxf.T).T
             if debug:
                 logger.debug('rxf_in_cid = %s' % rxf_in_cid)
 

@@ -156,7 +156,7 @@ def shape4_to_xyz(p1234, n4):
         p1234[:, 3] * n4[:, 3]
     )
     #xyz = np.matmul(p1234, n4)
-    #xyz = np.dot(p1234, n4)
+    #xyz = p1234 @ n4
     #xyz = np.tensordot(p1234, n4, axes=0)
     #xyz = np.tensordot(p1234, n4, axes=1)
     #xyz = (p1234 * n4)#.sum(axis=3)

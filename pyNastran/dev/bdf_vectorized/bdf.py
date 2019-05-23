@@ -2780,9 +2780,9 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             is_origin = np.abs(coord.origin).max() == 0.
             xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
             if is_beta and is_origin:
-                xyz_cid0[inode, :] = np.dot(xyzi, beta) + coord.origin
+                xyz_cid0[inode, :] = xyzi @ beta + coord.origin
             elif is_beta:
-                xyz_cid0[inode, :] = np.dot(xyzi, beta)
+                xyz_cid0[inode, :] = xyzi @ beta
             else:
                 xyz_cid0[inode, :] = xyzi + coord.origin
 
@@ -2794,7 +2794,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         if is_beta and is_origin:
             xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
         elif is_beta:
-            xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0, beta2.T))
+            xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 @ beta2.T)
         else:
             xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 

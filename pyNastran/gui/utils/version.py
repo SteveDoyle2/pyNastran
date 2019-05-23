@@ -1,4 +1,3 @@
-from __future__ import print_function
 from six.moves import urllib
 
 import pyNastran

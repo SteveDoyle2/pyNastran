@@ -25,10 +25,10 @@ def projected_barycentric_coord(p, q, u, v):
     v = p3 - p1
     """
     n = np.cross(u, v)
-    one_over_4_area_squared = 1.0 / np.dot(n, n)
+    one_over_4_area_squared = 1.0 / (n @ n)
     w = p - q
-    b[2] = np.dot(np.cross(u, w), n) * one_over_4_area_squared
-    b[1] = np.dot(np.cross(w, v), n) * one_over_4_area_squared
+    b[2] = (np.cross(u, w) @ n) * one_over_4_area_squared
+    b[1] = (np.cross(w, v) @ n) * one_over_4_area_squared
     b[0] = 1.0 - b[1] - b[2]
     return b
 
@@ -90,8 +90,8 @@ def project_points_onto_stl(stl, points):
     #w = points_rotated - p1
     n = np.cross(u, v)
     #n2 = 1 / n**2
-    #gamma_a = np.dot(np.cross(u, w), n) / n2
-    #gamma_b = np.dot(np.cross(u, w), n) / n2
+    #gamma_a = (np.cross(u, w) @ n) / n2
+    #gamma_b = (np.cross(u, w) @ n) / n2
     try:
         nmag = np.linalg.norm(n, axis=1)
     except ValueError:

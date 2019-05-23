@@ -58,7 +58,7 @@ def rod_faces(n1, n2, xform, dim1, dim2): # validated
         xyz = np.vstack([x, y, z]).T
         assert xyz.shape == (ntheta, 3), xyz.shape
 
-        pointsi = np.dot(xyz, xform) + nid
+        pointsi = xyz @ xform + nid
         points_list.append(pointsi)
 
         # the tri_cap is made from points that aren't defined yet
@@ -102,14 +102,14 @@ def tube_faces(n1, n2, xform, dim1, dim2):  # validated
         y = radius_out * np.cos(thetas)
         z = radius_out * np.sin(thetas)
         xyz1 = np.vstack([x, y, z]).T
-        points1i = np.dot(xyz1, xform) + nid
+        points1i = xyz1 @ xform + nid
         points_list2.append(points1i)
 
         # inner rod
         y = radius_in * np.cos(thetas)
         z = radius_in * np.sin(thetas)
         xyz2 = np.vstack([x, y, z]).T
-        points2i = np.dot(xyz2, xform) + nid
+        points2i = xyz2 @ xform + nid
         points_list1.append(points2i)
 
     # the main cylinder uses the points defined independent
@@ -165,7 +165,7 @@ def bar_faces(n1, n2, xform, dim1, dim2):  # validaeted
             [0., -h/2,  w/2],   # 2
             [0.,  h/2,  w/2],   # 3
         ])  # 16 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return np.vstack(points_list)
 
@@ -225,7 +225,7 @@ def box_faces(n1, n2, xform, dim1, dim2):  # validated
             [0.,  hbox_in/2, -wbox_in/2], # 6
             [0.,  hbox_in/2,  wbox_in/2], # 7
         ])
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -294,7 +294,7 @@ def i_faces(n1, n2, xform, dim1, dim2):   # validated
             [0., y2, bflange_top/2],   # 10
             [0., y3, bflange_top/2],   # 11
         ])  # 24 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -369,7 +369,7 @@ def i1_faces(n1, n2, xform, dim1, dim2):
             [0., y2, bflange_top/2],   # 10
             [0., y3, bflange_top/2],   # 11
         ])  # 24 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -437,7 +437,7 @@ def h_faces(n1, n2, xform, dim1, dim2):
             [0., hinner/2, -winner/2],     # 10 - upper H left
             [0., hall/2,   -winner/2],     # 11 - upper near left
         ])  # 24 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -511,7 +511,7 @@ def chan_faces(n1, n2, xform, dim1, dim2):
             [0.,  hall/2 - tflange, zsc + bflange], # 6
             [0.,  hall/2,           zsc + bflange], # 7
         ])  # 16 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -571,7 +571,7 @@ def chan1_faces(n1, n2, xform, dim1, dim2):
             [0.,  hall/2 - tflange, zsc + bflange], # 6
             [0.,  hall/2,           zsc + bflange], # 7
         ])  # 16 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -628,7 +628,7 @@ def z_faces(n1, n2, xform, dim1, dim2):
             [0., -hall/2 + tflange, tweb/2],  # 6
             [0., hall/2, tweb/2],             # 7
         ])  # 16 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -674,7 +674,7 @@ def hexa_faces(n1, n2, xform, dim1, dim2):
             [0., 0.,       wall/2], # 4
             [0., hall/2,   wall/2 - wtri], # 5
         ])  # 12 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -704,7 +704,7 @@ def l_faces(n1, n2, xform, dim1, dim2):
             [0., tflange/2,        tweb/2], # 4
             [0., hall - tflange/2, tweb/2], # 5
         ])  # 12 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
 
     faces = [
@@ -785,7 +785,7 @@ def t_faces(n1, n2, xform, dim1, dim2):  # validated
             [0., -tflange/2, bflange/2], # 6
             [0.,  tflange/2, bflange/2], # 7
         ])  # 16 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -842,7 +842,7 @@ def t1_faces(n1, n2, xform, dim1, dim2):  # validated
             [0.,  hall/2,    -tweb/2], # 6
             [0.,  tflange/2, -tweb/2], # 7
         ])  # 16 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -896,7 +896,7 @@ def t2_faces(n1, n2, xform, dim1, dim2):  # validated
             [0., tflange/2,        tweb/2],  # 6
             [0., hweb + tflange/2, tweb/2],  # 7
         ])  # 16 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
@@ -973,6 +973,6 @@ def hat_faces(n1, n2, xform, dim1, dim2):
             [0., y1, z1],  # 1
             [0., y3, z1],  # 0
         ])  # 24 x 3
-        pointsi = np.dot(points, xform) + nid
+        pointsi = points @ xform + nid
         points_list.append(pointsi)
     return faces, np.vstack(points_list)

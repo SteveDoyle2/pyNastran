@@ -517,11 +517,11 @@ class ACOORD(Coord):  # not done
         ct = np.cos(np.radians(self.theta))
         st = np.sin(np.radians(self.theta))
         #if rotation == 1:
-            #p = np.dot(self.rotation_x(ct, st), p)
+            #p = self.rotation_x(ct, st) @ p
         #elif rotation == 2:
-        p = np.dot(self.rotation_y(ct, st), p)
+        p = self.rotation_y(ct, st) @ p
         #elif rotation == 3:
-            #p = np.dot(self.rotation_z(ct, st), p)
+            #p = self.rotation_z(ct, st) @ p
         #else:
             #raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
         return p

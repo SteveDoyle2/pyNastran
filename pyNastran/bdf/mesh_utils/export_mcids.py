@@ -259,7 +259,7 @@ def _rotate_mcid(elem, pid_ref, iply, imat, jmat, normal,
         ], dtype='float64')
 
     element_axes = np.vstack([imat, jmat, normal])
-    rotated_axes = np.dot(theta_rotation, element_axes)  ## TODO: validate
+    rotated_axes = theta_rotation @ element_axes  ## TODO: validate
     imat2 = rotated_axes[0, :]
     jmat2 = rotated_axes[1, :]
     return imat2, jmat2

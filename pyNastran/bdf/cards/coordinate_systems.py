@@ -562,7 +562,7 @@ class Coord(BaseCard):
         matrix = np.vstack([self.i, self.j, self.k])
 
         # rotate point p2 from the local frame to the global frame
-        p3 = np.dot(p, matrix)
+        p3 = p @ matrix
         return p3
 
     def resolve(self):
@@ -599,7 +599,7 @@ class Coord(BaseCard):
         matrix = np.vstack([self.i, self.j, self.k])
 
         # rotate point p2 from the local frame to the global frame
-        p3 = np.dot(p2, matrix)
+        p3 = p2 @ matrix
         return p3
 
     def transform_vector_to_global(self, p):
@@ -647,7 +647,7 @@ class Coord(BaseCard):
         matrix = np.vstack([self.i, self.j, self.k])
 
         # rotate point p2 from the local frame to the global frame
-        p3 = np.dot(p2, matrix)
+        p3 = p2 @ matrix
         return p3
 
     def transform_vector_to_global_array(self, p):
@@ -670,7 +670,7 @@ class Coord(BaseCard):
         matrix = np.vstack([self.i, self.j, self.k])
 
         # rotate point p2 from the local frame to the global frame
-        p3 = np.dot(p2, matrix)
+        p3 = p2 @ matrix
         return p3
 
     def transform_node_to_global(self, xyz):
@@ -852,7 +852,7 @@ class Coord(BaseCard):
 
         """
         beta = self.beta()
-        xyz_coord = np.dot(xyz, beta.T)
+        xyz_coord = xyz @ beta.T
         xyz_local = self.xyz_to_coord(xyz_coord)
         return xyz_local
 
@@ -2352,11 +2352,11 @@ class CORD3G(Coord):  # not done
                 ct = cos(radians(theta))
                 st = sin(radians(theta))
                 if rotation == 1:
-                    p = np.dot(self.rotation_x(ct, st), p)
+                    p = self.rotation_x(ct, st) @ p
                 elif rotation == 2:
-                    p = np.dot(self.rotation_y(ct, st), p)
+                    p = self.rotation_y(ct, st) @ p
                 elif rotation == 3:
-                    p = np.dot(self.rotation_z(ct, st), p)
+                    p = self.rotation_z(ct, st) @ p
                 else:
                     raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
         elif self.method_es == 'S':
@@ -2883,7 +2883,7 @@ def transform_coords_vectorized(cps_to_check0, icp_transform,
         #print('***nids_checked=%s' % nids[inode])
         xyzi = coord.coord_to_xyz_array(xyz_cp[inode, :])
         #try:
-        new = np.dot(xyzi, beta) + origin
+        new = xyzi @ beta + origin
         #except TypeError:
             #msg = 'Bad Math...\n'
             #msg += '%s\n' % coord.rstrip()
@@ -2904,7 +2904,7 @@ def transform_coords_vectorized(cps_to_check0, icp_transform,
             raise ValueError(msg)
 
         #elif is_beta:
-            #xyz_cid0[inode, :] = np.dot(xyzi, beta)
+            #xyz_cid0[inode, :] = xyzi @ beta
         #else:
             #xyz_cid0[inode, :] = xyzi + coord.origin
     #print('nids_checkedA =', nids_checked)

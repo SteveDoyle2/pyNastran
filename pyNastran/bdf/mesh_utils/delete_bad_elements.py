@@ -160,8 +160,8 @@ def get_bad_shells(model, xyz_cid0, nid_map,
             e13 = p34 - p12
             e42 = p23 - p14
 
-            cos_skew1 = np.dot(e13, e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
-            cos_skew2 = np.dot(e13, -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
+            cos_skew1 = (e13 @ e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
+            cos_skew2 = (e13 @ -e42) / (np.linalg.norm(e13) * np.linalg.norm(e42))
             skew = np.pi / 2. - np.abs(np.arccos(np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
             if skew > max_skew:
                 eids_failed.append(eid)
@@ -205,18 +205,18 @@ def get_bad_shells(model, xyz_cid0, nid_map,
             # a x b = ab sin(theta)
             # a x b / ab = sin(theta)
             # sin(theta) < 0. -> normal is flipped
-            n2 = np.sign(np.dot(np.cross(v21, v32), normal))
-            n3 = np.sign(np.dot(np.cross(v32, v43), normal))
-            n4 = np.sign(np.dot(np.cross(v43, v14), normal))
-            n1 = np.sign(np.dot(np.cross(v14, v21), normal))
+            n2 = np.sign(np.cross(v21, v32) @ normal)
+            n3 = np.sign(np.cross(v32, v43) @ normal)
+            n4 = np.sign(np.cross(v43, v14) @ normal)
+            n1 = np.sign(np.cross(v14, v21) @ normal)
             n = np.array([n1, n2, n3, n4])
 
             theta_additional = np.where(n < 0, 2*np.pi, 0.)
 
-            cos_theta1 = np.dot(v21, -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
-            cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-            cos_theta3 = np.dot(v43, -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
-            cos_theta4 = np.dot(v14, -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
+            cos_theta1 = (v21 @ -v14) / (np.linalg.norm(v21) * np.linalg.norm(v14))
+            cos_theta2 = (v32 @ -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
+            cos_theta3 = (v43 @ -v32) / (np.linalg.norm(v43) * np.linalg.norm(v32))
+            cos_theta4 = (v14 @ -v43) / (np.linalg.norm(v14) * np.linalg.norm(v43))
             interior_angle = np.arccos(np.clip(
                 [cos_theta1, cos_theta2, cos_theta3, cos_theta4], -1., 1.))
             theta = n * interior_angle + theta_additional
@@ -271,9 +271,9 @@ def get_bad_shells(model, xyz_cid0, nid_map,
                 model.log.debug('eid=%s failed aspect_ratio check; AR=%s' % (eid, aspect_ratio))
                 continue
 
-            cos_theta1 = np.dot(v21, -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
-            cos_theta2 = np.dot(v32, -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
-            cos_theta3 = np.dot(v13, -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
+            cos_theta1 = (v21 @ -v13) / (np.linalg.norm(v21) * np.linalg.norm(v13))
+            cos_theta2 = (v32 @ -v21) / (np.linalg.norm(v32) * np.linalg.norm(v21))
+            cos_theta3 = (v13 @ -v32) / (np.linalg.norm(v13) * np.linalg.norm(v32))
 
             theta = np.arccos(np.clip(
                 [cos_theta1, cos_theta2, cos_theta3], -1., 1.))
@@ -309,12 +309,12 @@ def get_bad_shells(model, xyz_cid0, nid_map,
             e3_p2 = e3 - p2
             e2_p1 = e2 - p1
             e1_p3 = e1 - p3
-            cos_skew1 = np.dot(e2_p1, e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
-            cos_skew2 = np.dot(e2_p1, -e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
-            cos_skew3 = np.dot(e3_p2, e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
-            cos_skew4 = np.dot(e3_p2, -e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
-            cos_skew5 = np.dot(e1_p3, e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
-            cos_skew6 = np.dot(e1_p3, -e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
+            cos_skew1 = (e2_p1 @ e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
+            cos_skew2 = (e2_p1 @ -e31) / (np.linalg.norm(e2_p1) * np.linalg.norm(e31))
+            cos_skew3 = (e3_p2 @ e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
+            cos_skew4 = (e3_p2 @ -e21) / (np.linalg.norm(e3_p2) * np.linalg.norm(e21))
+            cos_skew5 = (e1_p3 @ e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
+            cos_skew6 = (e1_p3 @ -e32) / (np.linalg.norm(e1_p3) * np.linalg.norm(e32))
             skew = np.pi / 2. - np.abs(np.arccos(
                 np.clip([cos_skew1, cos_skew2, cos_skew3,
                          cos_skew4, cos_skew5, cos_skew6], -1., 1.)
@@ -726,12 +726,12 @@ def tri_quality(p1, p2, p3):
     ne2_p1 = np.linalg.norm(e2_p1)
     ne3_p2 = np.linalg.norm(e3_p2)
     ne1_p3 = np.linalg.norm(e1_p3)
-    cos_skew1 = np.dot(e2_p1, e31) / (ne2_p1 * ne31)
-    cos_skew2 = np.dot(e2_p1, -e31) / (ne2_p1 * ne31)
-    cos_skew3 = np.dot(e3_p2, e21) / (ne3_p2 * ne21)
-    cos_skew4 = np.dot(e3_p2, -e21) / (ne3_p2 * ne21)
-    cos_skew5 = np.dot(e1_p3, e32) / (ne1_p3 * ne32)
-    cos_skew6 = np.dot(e1_p3, -e32) / (ne1_p3 * ne32)
+    cos_skew1 = (e2_p1 @ e31) / (ne2_p1 * ne31)
+    cos_skew2 = (e2_p1 @ -e31) / (ne2_p1 * ne31)
+    cos_skew3 = (e3_p2 @ e21) / (ne3_p2 * ne21)
+    cos_skew4 = (e3_p2 @ -e21) / (ne3_p2 * ne21)
+    cos_skew5 = (e1_p3 @ e32) / (ne1_p3 * ne32)
+    cos_skew6 = (e1_p3 @ -e32) / (ne1_p3 * ne32)
     max_skew = np.pi / 2. - np.abs(np.arccos(np.clip([
         cos_skew1, cos_skew2, cos_skew3,
         cos_skew4, cos_skew5, cos_skew6], -1., 1.))).min()
@@ -750,9 +750,9 @@ def tri_quality(p1, p2, p3):
     else:
         aspect_ratio = lengths.max() / length_min
 
-        cos_theta1 = np.dot(v21, -v13) / (length21 * length13)
-        cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
-        cos_theta3 = np.dot(v13, -v32) / (length13 * length32)
+        cos_theta1 = (v21 @ -v13) / (length21 * length13)
+        cos_theta2 = (v32 @ -v21) / (length32 * length21)
+        cos_theta3 = (v13 @ -v32) / (length13 * length32)
         thetas = np.arccos(np.clip([cos_theta1, cos_theta2, cos_theta3], -1., 1.))
         min_theta = thetas.min()
         max_theta = thetas.max()
@@ -841,8 +841,8 @@ def quad_quality(element, p1, p2, p3, p4):
     e42 = p23 - p14
     ne42 = np.linalg.norm(e42)
     ne13 = np.linalg.norm(e13)
-    cos_skew1 = np.dot(e13, e42) / (ne13 * ne42)
-    cos_skew2 = np.dot(e13, -e42) / (ne13 * ne42)
+    cos_skew1 = (e13 @ e42) / (ne13 * ne42)
+    cos_skew2 = (e13 @ -e42) / (ne13 * ne42)
     max_skew = np.pi / 2. - np.abs(np.arccos(
         np.clip([cos_skew1, cos_skew2], -1., 1.))).min()
     #aspect_ratio = max(p12, p23, p34, p14) / max(p12, p23, p34, p14)
@@ -850,10 +850,10 @@ def quad_quality(element, p1, p2, p3, p4):
     #assert len(lengths) == 3, lengths
     aspect_ratio = lengths.max() / lengths.min()
 
-    cos_theta1 = np.dot(v21, -v14) / (length21 * length14)
-    cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
-    cos_theta3 = np.dot(v43, -v32) / (length43 * length32)
-    cos_theta4 = np.dot(v14, -v43) / (length14 * length43)
+    cos_theta1 = (v21 @ -v14) / (length21 * length14)
+    cos_theta2 = (v32 @ -v21) / (length32 * length21)
+    cos_theta3 = (v43 @ -v32) / (length43 * length32)
+    cos_theta4 = (v14 @ -v43) / (length14 * length43)
     #max_thetai = np.arccos([cos_theta1, cos_theta2, cos_theta3, cos_theta4]).max()
 
     # dot the local normal with the normal vector
@@ -864,10 +864,10 @@ def quad_quality(element, p1, p2, p3, p4):
     # a x b = ab sin(theta)
     # a x b / ab = sin(theta)
     # sin(theta) < 0. -> normal is flipped
-    normal2 = np.sign(np.dot(np.cross(v21, v32), normal))
-    normal3 = np.sign(np.dot(np.cross(v32, v43), normal))
-    normal4 = np.sign(np.dot(np.cross(v43, v14), normal))
-    normal1 = np.sign(np.dot(np.cross(v14, v21), normal))
+    normal2 = np.sign(np.cross(v21, v32) @ normal)
+    normal3 = np.sign(np.cross(v32, v43) @ normal)
+    normal4 = np.sign(np.cross(v43, v14) @ normal)
+    normal1 = np.sign(np.cross(v14, v21) @ normal)
     n = np.array([normal1, normal2, normal3, normal4])
     theta_additional = np.where(n < 0, 2*np.pi, 0.)
 
@@ -883,12 +883,12 @@ def quad_quality(element, p1, p2, p3, p4):
         #v31 = xyz_cid0[p3, :] - xyz_cid0[p1, :]
         #n1a = np.cross(v21, v31) # v21 x v31
         #n1b = np.cross(v31, -v14) # v31 x v41
-        #warp1 = np.dot(n1a, n1b) / (np.linalg.norm(n1a) * np.linalg.norm(n1b))
+        #warp1 = (n1a @ n1b) / (np.linalg.norm(n1a) * np.linalg.norm(n1b))
 
         #v42 = xyz_cid0[p4, :] - xyz_cid0[p2, :]
         #n2a = np.cross(v32, v42) # v32 x v42
         #n2b = np.cross(v42, -v21) # v42 x v12
-        #warp2 = np.dot(n2a, n2b) / (np.linalg.norm(n2a) * np.linalg.norm(n2b))
+        #warp2 = (n2a @ n2b) / (np.linalg.norm(n2a) * np.linalg.norm(n2b))
         #max_warp = max(np.arccos(warp1), np.arccos(warp2))
     out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
            min_theta, max_theta, dideal_theta, min_edge_length)
@@ -912,9 +912,9 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
             length13 = np.linalg.norm(v13)
             min_edge_length = min(length21, length32, length13)
 
-            cos_theta1 = np.dot(v21, -v13) / (length21 * length13)
-            cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
-            cos_theta3 = np.dot(v13, -v32) / (length13 * length32)
+            cos_theta1 = (v21 @ -v13) / (length21 * length13)
+            cos_theta2 = (v32 @ -v21) / (length32 * length21)
+            cos_theta3 = (v13 @ -v32) / (length13 * length32)
             cos_thetas.extend([cos_theta1, cos_theta2, cos_theta3])
             ideal_theta.extend([PIOVER3, PIOVER3, PIOVER3])
         elif len(face) == 4:
@@ -936,10 +936,10 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
             length43 = np.linalg.norm(v43)
             length14 = np.linalg.norm(v14)
             min_edge_length = min(length21, length32, length43, length14)
-            cos_theta1 = np.dot(v21, -v14) / (length21 * length14)
-            cos_theta2 = np.dot(v32, -v21) / (length32 * length21)
-            cos_theta3 = np.dot(v43, -v32) / (length43 * length32)
-            cos_theta4 = np.dot(v14, -v43) / (length14 * length43)
+            cos_theta1 = (v21 @ -v14) / (length21 * length14)
+            cos_theta2 = (v32 @ -v21) / (length32 * length21)
+            cos_theta3 = (v43 @ -v32) / (length43 * length32)
+            cos_theta4 = (v14 @ -v43) / (length14 * length43)
             cos_thetas.extend([cos_theta1, cos_theta2, cos_theta3, cos_theta4])
             ideal_theta.extend([PIOVER2, PIOVER2, PIOVER2, PIOVER2])
         else:

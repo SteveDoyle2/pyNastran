@@ -2483,9 +2483,9 @@ class CQUAD4(QuadShell):
                 #S[3,0] = 1.
                 #S[4,1] = 1.
                 #S[5,2] = 1.
-                #SZ = np.dot(S, Zmat)
+                #SZ = S @ Zmat
                 #Nmat = self.N(etas[l], xis[k])
-                #SN = np.dot(S, Nmat)
+                #SN = S @ Nmat
 
                 ## Calculate the mass per unit length of the element
                 #self.mass += self.rho * Jdet

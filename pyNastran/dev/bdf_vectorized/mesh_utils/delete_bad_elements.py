@@ -116,7 +116,7 @@ def get_bad_cquad4s(model, xyz_cid0, max_theta=175., max_skew=70.,
     e13 = p34 - p12
     e42 = p23 - p14
 
-    #dot_e13_e42 = np.dot(e13, e42)
+    #dot_e13_e42 = e13 @ e42
     norm_e13 = np.linalg.norm(e13, axis=1)
     norm_e42 = np.linalg.norm(e42, axis=1)
     assert norm_e13.size == nelements, 'norm_e13.size=%s nelements=%s' % (norm_e13.size, nelements)

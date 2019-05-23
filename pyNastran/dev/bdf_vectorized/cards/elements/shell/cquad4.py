@@ -455,7 +455,7 @@ class CQUAD4(ShellElement):
                     ], dtype='float64')
                     #print('C =\n', C)
                     #print('thickness =', thickness)
-                    Ki = np.dot(B.T, C.dot(B)) * (thickness * darea)
+                    Ki = (B.T @ C @ B) * (thickness * darea)
                     #print('Ki(%s,%s) =%s\n' % (u, v, Ki))
                     #print('Ki(%s,%s) =\n%s\n' % (u, v, list_print(Ki, '%.4e')))
                     K += Ki
@@ -571,9 +571,9 @@ class CQUAD4(ShellElement):
 
             #print("Lsize = ", Lambda.shape)
             #print("qsize = ", q.shape)
-            u_axial = np.dot(array(Lambda), q_axial)
+            u_axial = array(Lambda) @ q_axial
             du_axial = u_axial[0] - u_axial[1]
-            u_torsion = np.dot(array(Lambda), q_torsion)
+            u_torsion = array(Lambda) @ q_torsion
             du_torsion = u_torsion[0] - u_torsion[1]
 
             #L = self.Length()

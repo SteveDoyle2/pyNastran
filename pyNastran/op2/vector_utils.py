@@ -25,7 +25,6 @@ defines some methods for working with arrays:
                               debug=False, logger=None)
 
 """
-from __future__ import print_function
 from struct import calcsize
 from itertools import count
 
@@ -34,7 +33,6 @@ from numpy import arccos, sqrt, pi, in1d, cos, unique, cross
 
 def filter1d(a, b=None, zero_tol=0.001):
     """
-
     Filters a 1d numpy array of values near 0.
 
     Parameters
@@ -402,8 +400,8 @@ def transform_force(force_in_local,
         # rxF from local_in to global to local_out
         force_in_locali = force_in_local[i, :]
 
-        force_in_globali = np.dot(force_in_locali, cd_T)
-        force_outi = np.dot(coord_out_T, force_in_globali.T).T
+        force_in_globali = force_in_locali @ cd_T
+        force_outi = (coord_out_T @ force_in_globali.T).T
         force_out[i, :] = force_outi
     return -force_out
 

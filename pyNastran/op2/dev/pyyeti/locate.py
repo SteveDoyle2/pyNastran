@@ -89,7 +89,7 @@ def find_subsequence(seq, subseq):
     """
     seq = np.asarray(seq).reshape(-1)
     subseq = np.asarray(subseq).reshape(-1)
-    target = np.dot(subseq, subseq)
+    target = subseq @ subseq
     candidates = np.where(np.correlate(seq, subseq,
                                        mode='valid') == target)[0]
     # some of the candidates entries may be false positives; check:

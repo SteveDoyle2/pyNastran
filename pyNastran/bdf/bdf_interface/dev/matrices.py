@@ -239,7 +239,7 @@ def make_gpwg(Mgg, reference_point, xyz_cid0, grid_cps, coords, log):
         d = np.zeros((6, 6), dtype='float32')
         d[:3, :3] = TiT
         d[3:, 3:] = TiT
-        d[:3, 3:] = np.dot(TiT, Tr)
+        d[:3, 3:] = TiT @ Tr
         D[j:j+6, :] = d
 
     Mo = np.zeros((6, 6), dtype='float32')

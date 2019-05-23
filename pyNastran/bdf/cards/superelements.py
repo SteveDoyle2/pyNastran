@@ -629,7 +629,7 @@ class SELOC(BaseCard):
         # TODO: coord xform:
         #   xform = coord0.T * coord_seid
         #   xform = coord_seid.T * coord0
-        xform = np.dot(coord_0.beta().T, coord_seid.beta())
+        xform = coord_0.beta().T @ coord_seid.beta()
         #print('xform%i:\n%s' % (self.seid, xform))
         dorigin = p123_0[0, :] - p123_seid[0, :] # at least, I'm sure on this...
         del model.coords[cid + 1]

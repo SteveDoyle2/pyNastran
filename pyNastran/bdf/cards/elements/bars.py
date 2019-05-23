@@ -1678,7 +1678,7 @@ def rotate_v_wa_wb(model, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset,
         pass
     elif offt_end_a == 'O':
         # rotate point wa from the local frame to the global frame
-        wa = np.dot(wa, xform_offset)
+        wa = wa @ xform_offset
         #ia = n1 + wa
     else:
         msg = 'offt_end_a=%r is not supported; offt=%s' % (offt_end_a, elem.offt)
@@ -1698,7 +1698,7 @@ def rotate_v_wa_wb(model, elem, xyz1, xyz2, node1, node2, ihat_offset, i_offset,
         pass
     elif offt_end_b == 'O':
         # rotate point wb from the local frame to the global frame
-        wb = np.dot(wb, xform_offset)
+        wb = wb @ xform_offset
         #ib = n2 + wb
     else:
         msg = 'offt_end_b=%r is not supported; offt=%s' % (offt_end_b, elem.offt)

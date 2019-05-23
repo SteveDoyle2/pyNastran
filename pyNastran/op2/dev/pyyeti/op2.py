@@ -2981,7 +2981,7 @@ def read_post_op2(op2_filename, verbose=False, getougv1=False):
                 elif name.find('GEOM1') == 0:
                     if verbose:
                         print("Reading table {0}...".format(name))
-                    cords, sebulk, selist = o2._read_op2_geom1_cord2()
+                    cords, unused_sebulk, selist = o2._read_op2_geom1_cord2()
                     if 0 not in cords:
                         cords[0] = np.array([[0., 1., 0.],
                                              [0., 0., 0.],

@@ -1,4 +1,3 @@
-from __future__ import print_function
 from io import StringIO
 from numpy import (array, searchsorted, array_equal, setdiff1d, int64, argsort,
                    arange, ndarray, asarray)

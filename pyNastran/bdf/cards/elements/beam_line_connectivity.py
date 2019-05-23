@@ -58,7 +58,7 @@ def rod_faces(n1, n2, xform, dim1, dim2): # validated
         xyz = np.vstack([x, y, z]).T
         assert xyz.shape == (ntheta, 3), xyz.shape
 
-        pointsi = np.dot(xyz, xform) + nid
+        pointsi = xyz @ xform + nid
         points_list.append(pointsi)
 
         # the tri_cap is made from points that aren't defined yet
@@ -102,14 +102,14 @@ def tube_faces(n1, n2, xform, dim1, dim2):  # validated
         y = radius_out * np.cos(thetas)
         z = radius_out * np.sin(thetas)
         xyz1 = np.vstack([x, y, z]).T
-        points1i = np.dot(xyz1, xform) + nid
+        points1i = xyz1 @ xform + nid
         points_list2.append(points1i)
 
         # inner rod
         y = radius_in * np.cos(thetas)
         z = radius_in * np.sin(thetas)
         xyz2 = np.vstack([x, y, z]).T
-        points2i = np.dot(xyz2, xform) + nid
+        points2i = xyz2 @ xform + nid
         points_list1.append(points2i)
 
     # the main cylinder uses the points defined independent

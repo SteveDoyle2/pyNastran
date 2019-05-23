@@ -3,8 +3,8 @@ Defines:
  - write_gif(gif_filename, png_filenames, time=2.0, fps=30,
               onesided=True, nrepeat=0,
               delete_images=False, make_gif=True)
+
 """
-from __future__ import print_function
 import os
 import numpy as np
 try:

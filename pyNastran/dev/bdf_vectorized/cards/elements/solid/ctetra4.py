@@ -362,7 +362,7 @@ class CTETRA4(SolidElement):
 
         #print('C =\n', C)
         #print('thickness =', thickness)
-        Ki = np.dot(B.T, C.dot(B))
+        Ki = B.T @ C.dot(B)
         #print('Ki(%s,%s) =%s\n' % (u, v, Ki))
         #print('Ki(%s,%s) =\n%s\n' % (u, v, list_print(Ki, '%.4e')))
         K += Ki

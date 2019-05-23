@@ -5,7 +5,7 @@ op2.rdnas2cam.  Adapted from the Yeti version.
 
 @author: Tim Widrick
 """
-=import math
+import math
 import sys
 import warnings
 
@@ -61,18 +61,18 @@ def rigid_body_geom(grids, refpoint=np.array([[0, 0, 0]])):
     grids = np.reshape(grids, (-1, 3))
     r = np.shape(grids)[0]
     if np.size(refpoint) == 1:
-        shift = np.dot(np.ones((r, 1)), grids[refpoint:refpoint+1])
+        shift = np.ones((r, 1)) @ grids[refpoint:refpoint+1]
         grids = grids - shift
     elif np.any(refpoint != [0, 0, 0]):
-        shift = np.dot(np.ones((r, 1)), np.reshape(refpoint, (1, 3)))
+        shift = np.ones((r, 1)) @ np.reshape(refpoint, (1, 3))
         grids = grids - shift
     rbmodes = np.zeros((r*6, 6))
     rbmodes[1::6, 3] = -grids[:, 2]
-    rbmodes[2::6, 3] =  grids[:, 1]
-    rbmodes[::6, 4]  =  grids[:, 2]
+    rbmodes[2::6, 3] = grids[:, 1]
+    rbmodes[::6, 4]  = grids[:, 2]
     rbmodes[2::6, 4] = -grids[:, 0]
     rbmodes[::6, 5]  = -grids[:, 1]
-    rbmodes[1::6, 5] =  grids[:, 0]
+    rbmodes[1::6, 5] = grids[:, 0]
     for i in range(6):
         rbmodes[i::6, i] = 1.
     return rbmodes
@@ -154,8 +154,8 @@ def rigid_body_geom_uset(uset, refpoint=np.array([[0, 0, 0]])):
             # expand qgrids to include all 6 dof:
             nq = len(qgrids)
             dof = np.arange(1., 7.).reshape(6, 1)
-            qdof = np.dot(dof, np.ones((1, nq)))
-            qgrids = np.dot(np.ones((6, 1)), qgrids.T)
+            qdof = dof @ np.ones((1, nq))
+            qgrids = np.ones((6, 1)) @ qgrids.T
             qgrids = np.hstack((qgrids.reshape(-1, 1),
                                 qdof.reshape(-1, 1)))
 
@@ -181,8 +181,8 @@ def rigid_body_geom_uset(uset, refpoint=np.array([[0, 0, 0]])):
     for j in range(ngrids):
         i = 6*j
         t = grids[i+3:i+6, 3:].T
-        rb2[i:i+3] = np.dot(t, rb[i:i+3])
-        rb2[i+3:i+6] = np.dot(t, rb[i+3:i+6])
+        rb2[i:i+3] = t @ rb[i:i+3]
+        rb2[i+3:i+6] = t @ rb[i+3:i+6]
 
     # fix up cylindrical:
     grid_loc = np.arange(0, grids.shape[0], 6)
@@ -2220,7 +2220,7 @@ def form_rbe3(uset, GRID_dep, DOF_dep, Ind_List, UM_List=None):
     T = rbb[pv]
     rb = rbb[ipv]
     rbw = rb.T * wtdof
-    rbwrb = np.dot(rbw, rb)
+    rbwrb = rbw @ rb
     rbe3 = _solve(rbwrb, rbw)
     rbe3 = np.dot(T, rbe3)[ddof[:, 1]-1]
     if UM_List is None:
@@ -2685,9 +2685,9 @@ def formtran(nas, se, dof, gset=False):
         v = np.nonzero(np.any(gmo, 0))[0]
         if v.size > 0:
             gmo = gmo[:, v]
-            ulvsm[:, t_a] = gm[:, t_n] + np.dot(gmo, got[v])
+            ulvsm[:, t_a] = gm[:, t_n] + gmo @ got[v]
             if cq:
-                ulvsm[:, q_a] = np.dot(gmo, goq[v])
+                ulvsm[:, q_a] = gmo @ goq[v]
         else:
             ulvsm[:, t_a] = gm[:, t_n]
         if cq:
@@ -2787,7 +2787,7 @@ def formulvs(nas, seup, sedn=0, keepcset=True, shortcut=True,
                 ulvs1 = ulvs1[np.ix_(noncrows, nonccols)]
             else:
                 ulvs1 = ulvs1[noncrows]
-        ulvs = np.dot(ulvs, ulvs1)
+        ulvs = ulvs @ ulvs1
         if sedown == sedn:
             return ulvs
         seup = sedown

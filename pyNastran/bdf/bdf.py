@@ -3365,7 +3365,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         xyz_cid = coord2.transform_node_to_local_array(xyz_cid0)
         #xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0 - coord2.origin, beta2.T))
         #elif is_beta:
-            #xyz_cid = coord2.xyz_to_coord_array(np.dot(xyz_cid0, beta2.T))
+            #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 @ beta2.T)
         #else:
             #xyz_cid = coord2.xyz_to_coord_array(xyz_cid0 - coord2.origin)
 

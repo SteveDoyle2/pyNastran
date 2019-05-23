@@ -8,7 +8,6 @@ defines:
     bdf split_cbars_by_pin_flags IN_BDF_FILENAME [-o OUT_BDF_FILENAME]\n'
 
 """
-from __future__ import print_function
 import os
 import sys
 from cpylog import SimpleLogger

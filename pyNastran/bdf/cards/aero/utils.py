@@ -4,7 +4,6 @@ defines:
  - points, elements = points_elements_from_quad_points(p1, p2, p3, p4, x, y, dtype='int32')
 
 """
-from __future__ import print_function
 import numpy as np
 from pyNastran.utils.numpy_utils import float_types
 
