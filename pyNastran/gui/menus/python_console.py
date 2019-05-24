@@ -1,8 +1,7 @@
 from __future__ import print_function
 from pyNastran.gui.qt_version import qt_version, is_pygments
 
-from qtpy.QtCore import Qt
-from qtpy.QtGui import QFont, QFontMetrics, QColor, QCursor
+from qtpy.QtGui import QFont, QFontMetrics, QColor
 from qtpy import QtCore
 #from qtpy.QtCore import QSci
 #import QScintilla
@@ -24,11 +23,18 @@ elif qt_version == 'pyqt5':
         IS_SCINTILLA = True
     except ImportError:
         IS_SCINTILLA = False
-    #import PyQt5.qsci
 elif qt_version in ['pyside', 'pyside2']:
     IS_SCINTILLA = False
 else:
     raise NotImplementedError('qt_version = %r' % qt_version)
+
+# hack for pyinstaller...if QScintilla isn't working in the exe, but it is in
+# gui, enable this print block and diff the outputs
+#
+#import sys
+#with open('modules.txt', 'w') as f:
+    #mods = sorted(sys.modules.keys())
+    #f.write('\n'.join(mods))
 
 
 #class QSyntaxHighlighting(Qsci.QsciScintilla):
@@ -168,6 +174,7 @@ class PythonConsoleWidget(QDockWidget):
         self.setWidget(vbox_widget)
 
     def setup_connections(self):
+        """sets up the callbacks"""
         self.execute_python_button.clicked.connect(self.on_execute_python_button)
         self.execute_and_clear_python_button.clicked.connect(
             self.on_execute_and_clear_python_button)
@@ -226,6 +233,7 @@ class PythonConsoleWidget(QDockWidget):
         #print(4)
 
 def main():  # pragma: no cover
+    """tests function that doesn't bleed over"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal
@@ -234,7 +242,7 @@ def main():  # pragma: no cover
     from qtpy.QtWidgets import QApplication
 
     import sys
-    import pyNastran
+    #import pyNastran
     app = QApplication(sys.argv)
     main_window = PythonConsoleWidget(None)
     main_window.show()

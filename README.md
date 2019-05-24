@@ -20,9 +20,9 @@
 [![Requirements Status](https://img.shields.io/requires/github/SteveDoyle2/pyNastran/master.svg)](https://requires.io/github/SteveDoyle2/pyNastran/requirements/?branch=master)	|
 --->
 
-### v1.2.0
+### v1.2.1
 
-[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2019/5/21)
+[Download GUI](https://sourceforge.net/projects/pynastran/files/?source=navbar) (latest is from 2019/5/24)
 
 Also, check out the:
   * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
@@ -61,7 +61,7 @@ This should be hidden...
 
 --->
 
-### pyNastran v1.2.0 has been released (2019/5/21)
+### pyNastran v1.2.1 has been released (2019/5/24)
 
 I keep saying to myself there's not much to add, but Nastran is huge.  Beyond HDF5
 support in the BDF, I'm a huge fan of the new ability to keep track of which include file a
@@ -159,6 +159,9 @@ Known issues:
  - Transient Pandas Dataframes will fail for newer versions of numpy/pandas.
    If anyone knows how to use a MultiIndex, this is probably pretty easy to fix.
 
+### pyNastran v1.2.0 has been released (2019/5/21)
+
+This result has been superseeded by 1.2.1.  See release notes for details.
 
 ### pyNastran v1.1.0 has been released (2018/6/26)
 

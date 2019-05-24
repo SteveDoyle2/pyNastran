@@ -46,6 +46,10 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
+-----------------------v1.2.1 released 2019/5/24-----------------------
+OP2:
+ - fixed bug with OUGV1PAT table
+
 -----------------------v1.2.0 released 2019/5/21-----------------------
 Programmatics:
  - This is the last Python 2.7 release.
