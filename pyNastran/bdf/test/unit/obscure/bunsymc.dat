@@ -1,0 +1,96 @@
+NASTRAN SYSTEM(20)=0
+ID MSC, BUNSYMC $ CJC 7-JUN-88
+DIAG 8,44 $ Removed DIAG 14-causing dmap to be printed in the f06 file
+DIAG 19
+TIME 5
+$BEGIN $
+SOL 100 
+MALTER 'MALTER:USERDMAP'
+DMIIN DMI,DMINDX/A,B,D,E,IA,IB,ID,IE,,/ $
+$MATPRN  IA,IB,ID,IE// $
+PARAM //'PREC'/S,N,PREC  $  TEST FOR CDC MACHINES
+PARAM //'EQ'/S,N,CDCTST/PREC/1 $ IF CDC SET CDCTST TO -1
+PRTPARM ////1 $ PRINT PARAMETERS
+COND LCDC1,CDCTST $ IF CDCTST JUMP TO END
+$MATPRN   A,B,D,E// $
+LABEL PARLL $
+$ UNSYMMETRIC REAL DOUBLE PRECISION
+DECOMP   A/LA,UA,/ $
+FBS      LA,UA,A/AA $
+MPYAD    A,B,/C/// $
+$MATPRN   AA,C// $
+$ UNSYMMETRIC COMPLEX DOUBLE PRECISION
+DECOMP   D/LD,UD,/ $
+FBS      LD,UD,D/DD $
+MPYAD    D,E,/F/// $
+$MATPRN   DD,F//$
+ADD    AA,IA/AAA//(-1.0,0.0) $
+ADD    C,IB/CCC//(-1.0,0.0) $
+ADD    DD,ID/DDD//(-1.0,0.0) $
+ADD    F,IE/FFF//(-1.0,0.0) $
+MATMOD AAA,CCC,DDD,FFF,,/XYZ,/20////S,N,SUM $ SHOULD BE 0
+PARAM //'STSR'/1/-107 $ TURN ON PARALLEL (PDCOMP) FOR V66
+REPT PARLL,1 $ LOOP ONE TIME
+LABEL LCDC1 $
+CEND
+
+
+TITLE = UNSYMMETRIC COMPLEX TESTER                             BUNSYMC
+SUBTITLE = DOUBLE PRECISION
+LABEL = SHOULD BLOCK PARALLEL DECOMP
+
+
+BEGIN BULK
+$ 6X6 UNSYMMETRIC MATRIX
+DMI     A       0       1       1       2               6       6
+DMI     A       1       1       3.      0.      5       1.      0.
+DMI     A       2       1       -2.     2.      5       -2.     1.
+DMI     A       3       3       1.
+DMI     A       4       4       1.
+DMI     A       5       1       0.      2.      5       -3.     2.
+DMI     A       6       1       -1.     1.      5       -2.     1.
+$ 6X6 IDENTITY MATRIX
+DMI     IA      0       1       1       2               6       6
+DMI     IA      1       1       1.
+DMI     IA      2       2       1.
+DMI     IA      3       3       1.
+DMI     IA      4       4       1.
+DMI     IA      5       5       1.
+DMI     IA      6       6       1.
+$ 6X1 COLUMN MATRIX
+DMI     B       0       2       1       2               6       1
+DMI     B       1       1       -4.     0.      1.      1.      7.      +B1
++B1     -13.
+$ 6X1 UNITY MATRIX
+DMI     IB      0       2       1       2               6       1
+DMI     IB      1       1       1.      1.      1.      1.      1.      +IB1
++IB1    1.
+$ UNSYMMETRIC COMPLEX 6X6 MATRIX
+DMI     D       0       1       3       4               6       6
+DMI     D       1       1       3.      0.      0.      0.      5       +D1
++D1     1.      0.      0.      0.
+DMI     D       2       1       -2.     0.      2.      0.      5       +D2
++D2     -2.     0.      1.      0.
+DMI     D       3       3       0.      1.
+DMI     D       4       4       0.      1.
+DMI     D       5       1       0.      0.      2.      0.      5       +D5
++D5     -3.     0.      2.      0.
+DMI     D       6       1       -1.     0.      1.      0.      5       +D6
++D6     -2.     0.      1.      0.
+$ 6X6 COMPLEX CHECK MATRIX
+DMI     ID      0       1       3       4               6       6
+DMI     ID      1       1       1.      0.
+DMI     ID      2       2       1.      0.
+DMI     ID      3       3       1.      0.
+DMI     ID      4       4       1.      0.
+DMI     ID      5       5       1.      0.
+DMI     ID      6       6       1.      0.
+$ 6X1 COMPLEX COLUMN MATRIX
+DMI     E       0       2       3       4               6       1
+DMI     E       1       1       -4.     0.      0.      0.      0.      +E1
++E1     1.      0.      1.      7.      0.      -13.    0.
+$ 6X1 COMPLEX CHECK MATRIX
+DMI     IE      0       2       3       4               6       1
+DMI     IE      1       1       1.      0.      1.      0.      -1.     +IE1
++IE1    0.      -1.     0.      1.      0.      1.      0.
+ENDDATA
