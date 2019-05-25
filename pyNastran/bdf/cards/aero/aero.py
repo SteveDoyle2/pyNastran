@@ -1659,6 +1659,7 @@ class CAERO1(BaseCard):
                       comment=comment)
 
     def flip_normal(self):
+        """flips the CAERO1 normal vector"""
         self.p1, self.p4 = self.p4, self.p1
         self.x12, self.x43 = self.x43, self.x12
 

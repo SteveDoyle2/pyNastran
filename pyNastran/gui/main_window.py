@@ -32,6 +32,23 @@ from pyNastran.gui.gui_common import GuiCommon
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/help-hint.png
 # http://openiconlibrary.sourceforge.net/gallery2/?./Icons/actions/view-refresh-8.png
 
+try:
+    import qdarkstyle
+    IS_DARK = True
+except ImportError:
+    IS_DARK = False
+
+def get_stylesheet():
+    stylesheet = None
+    if IS_DARK:
+        mapper = {
+            'pyside' : qdarkstyle.load_stylesheet_pyside,
+            'pyside2' : qdarkstyle.load_stylesheet_pyside2,
+            'pyqt4' : qdarkstyle.load_stylesheet_pyqt,
+            'pyqt5' : qdarkstyle.load_stylesheet_pyqt5,
+        }
+        stylesheet = mapper[qt_version]()
+    return stylesheet
 
 class MainWindow(GuiCommon, NastranIO):
     """
@@ -74,6 +91,7 @@ class MainWindow(GuiCommon, NastranIO):
         inputs=None
         """
         html_logging = True
+        self.stylesheet = get_stylesheet()
 
         # these are in alphabetical order except for Nastran
         # this includes the bedge, surf, ugrid line (listed as AFLR in the gui)

@@ -457,6 +457,21 @@ class CaseControlTest(unittest.TestCase):
             deck = CaseControlDeck([groundcheck])
             str(deck)
 
+    def test_sets(self):
+        lines = [
+            'SET 1 = 1,2, 21,THRU,25, 31,THRU,37',
+            'SET 11 = 11, 12, 121 THRU 125, 131 THRU 137',
+        ]
+        lines_expected = [
+            'SET 1 = 1, 2, 21 THRU 25, 31 THRU 37',
+            'SET 11 = 11, 12, 121 THRU 125, 131 THRU 137',
+            'BEGIN BULK',
+        ]
+        deck = CaseControlDeck(lines)
+        deck_msg = '%s' % deck
+        #print('%s' % deck_msg)
+        deck_lines = deck_msg.split('\n')
+        compare_lines(self, deck_lines, lines_expected, has_endline=False)
 
     def test_subcase_equals(self):
         lines = [

@@ -1,5 +1,10 @@
-from __future__ import print_function
-
+"""
+creates:
+ - QTreeView2 - allows for semi-easy access to the QTreeView
+ - RightClickTreeView - adds some right click support for results
+ - GenericRightClickTreeView - used for more general right click support
+"""
+from functools import partial
 from qtpy import QtGui
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QTreeView, QMessageBox, QMenu
@@ -41,6 +46,7 @@ class QTreeView2(QTreeView):
             self.set_rows()
         else:
             QTreeView.keyPressEvent(self, event)
+        return None
 
     def remove_rows(self, rows):
         """
@@ -161,7 +167,7 @@ class QTreeView2(QTreeView):
 
     def on_left_mouse_button(self):
         self.set_rows()
-        valid, keys = self.get_row()
+        unused_valid, unused_keys = self.get_row()
         #if not valid:
             #print('invalid=%s keys=%s' % (valid, keys))
         #else:
@@ -220,7 +226,7 @@ class QTreeView2(QTreeView):
         data = self.data
         for row in self.old_rows:
             try:
-                key = data[row][0]
+                unused_key = data[row][0]
             except IndexError:
                 return False, irow
             irow = data[row][1]
@@ -233,6 +239,63 @@ class QTreeView2(QTreeView):
     def set_single(self, single):
         self.single = single
         self.old_rows = [0]
+
+
+class GenericRightClickTreeView(QTreeView2):
+    """
+    creates a QTreeView with:
+     - all the features of QTreeView2
+     - a right click context menu with:
+       - Clear Active Results
+       - Apply Results to Fringe
+       - Apply Results to Displacement
+       - Apply Results to Vector
+       - Delete Case
+    """
+    def __init__(self, parent, data, choices, actions, **kwargs):
+        QTreeView2.__init__(self, parent, data, choices)
+        #
+        # TODO: create a menu that only has clear/normals/fringe/delete
+        #       if there is no transient result
+        #
+        print(data)
+        print(choices)
+        print('kwargs', kwargs)
+        self.right_click_menu = QMenu()
+
+        def false_callback(callback_func, menu):
+            """dont validate the click"""
+            #print('false')
+            #print('  ', callback_func)
+            #print('  ', menu)
+            callback_func()
+
+        def true_callback(callback_func, menu):
+            """a validated callback returns the row"""
+            #print('true')
+            #print('  ', callback_func)
+            #print('  ', menu)
+            #print('  ', self)
+            unused_is_valid, icase = self.get_row()
+            callback_func(icase)
+
+        for (right_click_msg, callback_func, validate) in actions:
+            action = self.right_click_menu.addAction(right_click_msg)
+
+            true_false_callback = true_callback if validate else false_callback
+            trigger_func = partial(true_false_callback, callback_func)
+            action.triggered.connect(trigger_func)
+            #self.clear = self.right_click_menu.addAction("Clear Results...")
+            #self.clear.triggered.connect(self.on_clear_results)
+
+    def on_right_mouse_button(self):
+        """interfaces with the right click menu"""
+        self.set_rows()
+        is_valid, unused_icase = self.get_row()
+        if not is_valid:
+            return
+        # TODO: check if we should show disp/vector
+        self.right_click_menu.popup(QtGui.QCursor.pos())
 
 
 class RightClickTreeView(QTreeView2):
@@ -292,23 +355,23 @@ class RightClickTreeView(QTreeView2):
 
     def on_fringe(self):
         """applies a fringe result"""
-        is_valid, icase = self.get_row()
+        unused_is_valid, icase = self.get_row()
         self.parent.parent.on_fringe(icase)
 
     def on_disp(self):
         """applies a displacement result"""
-        is_valid, icase = self.get_row()
+        unused_is_valid, icase = self.get_row()
         self.parent.parent.on_disp(icase)
 
     def on_vector(self):
         """applies a vector result"""
-        is_valid, icase = self.get_row()
+        unused_is_valid, icase = self.get_row()
         self.parent.parent.on_vector(icase)
 
     def on_right_mouse_button(self):
         """interfaces with the right click menu"""
         self.set_rows()
-        is_valid, icase = self.get_row()
+        is_valid, unused_icase = self.get_row()
         if not is_valid:
             return
         # TODO: check if we should show disp/vector
@@ -332,13 +395,13 @@ def get_many_cases(data):
     >>> data = [(u'Max Interior Angle', 8, [])]
     [8]
     """
-    name, case, rows = data
+    unused_name, case, rows = data
     if case is None:
         # remove many results
         # (Geometry, None, [results...])
         cases = []
-        for irow, row in enumerate(rows):
-            name, row_id, data2 = row
+        for unused_irow, row in enumerate(rows):
+            unused_name, unused_row_id, unused_data2 = row
             cases += get_many_cases(row)
     else:
         cases = [case]

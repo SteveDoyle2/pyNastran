@@ -37,11 +37,12 @@ class BaseCard:
         card = BDFCard(raw_fields)
         return self.add_card(card)
 
-    def get_stats(self):
-        # type: () -> str
+    def get_stats(self) -> str:
         """Prints out an easy to read summary of the card"""
         msg = '---%s---\n' % self.type
         for name in sorted(self.object_attributes()):
+            #if short and '_ref' in name:
+                #continue
             value = getattr(self, name)
             msg += '  %-6s : %r\n' % (name, value)
         return msg

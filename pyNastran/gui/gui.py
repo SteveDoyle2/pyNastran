@@ -18,7 +18,7 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
 import pyNastran
-from pyNastran.gui.main_window import MainWindow
+from pyNastran.gui.main_window import MainWindow, get_stylesheet
 
 
 def cmd_line():
@@ -60,6 +60,12 @@ def cmd_line():
         #palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(142,45,197).lighter())
         #palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.black)
         #app.setPalette(palette)
+
+    #if 1:
+    stylesheet = get_stylesheet()
+    if stylesheet:
+        app.setStyleSheet(stylesheet)
+
 
     if 0:  # pragma: no cover
         import qtpy.QtGui as QtGui

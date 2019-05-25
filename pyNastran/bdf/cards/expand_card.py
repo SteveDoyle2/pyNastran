@@ -170,7 +170,6 @@ def split_comma_space(datai):
 
 def setup_data(data_in):
     data = []
-    stype = 'int'
     for datai in data_in:
         if isinstance(datai, int):
             data.append(datai)
@@ -178,7 +177,168 @@ def setup_data(data_in):
             datai = datai.upper()
             sline = split_comma_space(datai)
             data.extend(sline)
+
+    stype = 'int'
+    for datai in  data:
+        #print(datai, any(char.isalpha() for char in datai))
+        if isinstance(datai, int) or datai in ['THRU', 'EXCEPT', 'BY'] or isinteger(datai):
+            continue
+        #elif datai.isn
+        elif '.' in datai:
+            stype = 'float'
+            break
+        elif '/' in datai or any(char.isalpha() for char in datai):
+            stype = 'str'
+            break
+        else:
+            raise RuntimeError('datai=%r data=%s' % (datai, data))
+
+    #if stype in ['float', 'str']:
+        #print(data)
     return data, stype
+
+def isinteger(astring):
+    """ Is the given string an integer? """
+    try:
+        int(astring)
+    except ValueError:
+        return False
+    else:
+        return True
+
+def get_except(data, i, ndata, end_value):
+    removed = set()
+    while i < len(data):
+        value = data[i]
+        #print('  exclude?', i, value)
+        if isinstance(value, int):
+            ivalue = value
+        else:
+            ivalue = int(value)
+        #print('  ivalue=%s > end_value=%s' %  (ivalue, end_value))
+        if ivalue > end_value:
+            #print('    break')
+            break
+        removed.add(ivalue)
+        i += 1
+    #print('removed...', removed)
+    #print('*datai =', data[i])
+    return i, removed
+
+def expand(data_in):
+    """new expand method
+
+    Odd behavior:
+     - 1 THRU 10 EXCEPT 4,5,6,11 results in [1,2,3,7,8,9,10,11]
+       the EXCEPT is active while the value is less than the THRU value of 10
+
+    What happens when:
+     - a value is excluded and later added or
+     - a value is included and later excluded
+    """
+    data, stype = setup_data(data_in)
+    if len(data) == 1 and stype == 'str':
+        return data
+
+    #print('***************************')
+    #print('data =', data)
+    if stype in ['float', 'str']:
+        raise NotImplementedError(data_in)
+
+    assert stype == 'int', data
+    ndata = len(data) - 1
+    out = []
+    removed_set = set()
+
+    i = 0
+    is_thru = False
+    while i < len(data):
+        value = data[i]
+        #print('value =', value)
+        if isinstance(value, int):
+            out.append(value)
+            i += 1
+            continue
+
+        if is_thru:
+            is_thru = False
+            continue_after_range = False
+
+            out2 = []
+            #print('*', i, value)
+            value0 = out.pop()
+            end_value = int(value)
+            i += 1
+
+            by_value = 1
+            if i < ndata:
+                next_svalue = data[i]
+                #print('found by?', next_svalue)
+                if next_svalue.isdigit():  # catches integers
+                    continue_after_range = True
+                elif next_svalue == 'BY':
+                    i += 1
+                    next_svalue2 = data[i]
+                    if isinstance(next_svalue2, int):
+                        by_value = next_svalue2
+                    else:
+                        next_svalue2 = next_svalue2.upper()
+                        #print('next_svalue2 =', next_svalue2)
+                        by_value = int(next_svalue2)
+                    #print('by_value =', by_value)
+                elif next_svalue == 'EXCEPT':
+                    i, removed_seti = get_except(data, i+1, ndata, end_value)
+                    removed_set.update(removed_seti)
+                    continue_after_range = True
+                else:
+                    raise RuntimeError('next_svalue=%s data=%s' % (next_svalue, data))
+            rangei = range(value0, end_value + 1, by_value)
+            #print('range(%r, %r, %r) = %s' % (value0, end_value + 1, by_value, rangei))
+            out2.extend(rangei)
+            if end_value != out2[-1]:
+                out2.append(end_value)
+
+            if continue_after_range:
+                #print('continue_after_range')
+                out.extend(out2)
+                continue
+
+            i += 1
+            if i < ndata:
+                exclude_svalue = data[i]
+                #print('found exclude?', exclude_svalue)
+                if exclude_svalue == 'EXCEPT':
+                    i, removed = get_except(data, i, ndata, end_value)
+                    removed_set.update(removed_seti)
+                    asdf
+                    continue
+                else:
+                    not_except
+            else:
+                i -= 1
+
+            out.extend(out2)
+            #print(i, value0, 'THRU', end_value)
+            #print('------------')
+            del by_value
+            i += 1
+        else:
+            #print('add', i, value)
+            assert is_thru is False, data
+            if value == 'THRU':
+                is_thru = True
+            else:
+                ivalue = int(value)
+                out.append(ivalue)
+            i += 1
+    if len(removed_set):
+        #print('data =', data)
+        #print('out =', out)
+        #print('removed_set =', removed_set)
+        out_set = set(out) - removed_set
+        out = list(out_set)
+    out.sort()
+    return out
 
 def expand_thru_exclude(fields):
     # type: (List[str]) -> List[int]

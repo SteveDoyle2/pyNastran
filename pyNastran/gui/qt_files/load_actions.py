@@ -5,6 +5,7 @@ import traceback
 import time as time_module
 
 from qtpy.compat import getopenfilename
+from qtpy.QtWidgets import QFileDialog
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv
 from pyNastran.gui.utils.load_results import create_res_obj
 from pyNastran.utils import print_bad_path
@@ -558,6 +559,20 @@ class LoadActions:
             self.gui.res_widget.update_results(form, 'main')
 
     def create_load_file_dialog(self, qt_wildcard, title, default_filename=None):
+        #options = QFileDialog.Options()
+        #options |= QFileDialog.DontUseNativeDialog
+        #if qt_version == 4:
+            ## works in: pyqt4, pyside
+            ## doesn't work in: pyqt5
+            #fname, wildcard_level = QFileDialog.getOpenFileNameAndFilter(
+                #self, title, default_filename, file_types, options=options)
+            #return str(fname), str(wildcard_level)
+        #else:
+            #fname, flt = QFileDialog.getOpenFileName(
+                #self, title, default_filename, file_types, options=options)
+            ##flt = str(filt).strip()
+        #return fname, flt
+
         if default_filename is None:
             default_filename = self.gui.last_dir
         fname, wildcard_level = getopenfilename(
