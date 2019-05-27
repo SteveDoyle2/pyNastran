@@ -1,6 +1,5 @@
 # encoding: utf8
 # pylint: disable=W0212
-from __future__ import print_function, unicode_literals
 import os
 import unittest
 from io import StringIO

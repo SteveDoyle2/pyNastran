@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 
 from pyNastran.converters.stl.stl import STL, read_stl
@@ -30,6 +29,7 @@ def stl_to_cart3d(stl_filename, cart3d_filename=None, log=None, debug=False,
     -------
     stl : STL()
         an STL object
+
     """
     if isinstance(stl_filename, str):
         stl = read_stl(stl_filename, log=log, debug=debug)

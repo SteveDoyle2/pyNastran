@@ -1,5 +1,4 @@
 """defines cutting plane tests"""
-from __future__ import print_function, unicode_literals
 import os
 from itertools import count
 import unittest

@@ -4,8 +4,6 @@ defines some methods for cleaning up a model
                          remove_pids=True, remove_mids=True)
 
 """
-from __future__ import print_function
-
 from pyNastran.bdf.bdf import BDF, read_bdf
 #from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 

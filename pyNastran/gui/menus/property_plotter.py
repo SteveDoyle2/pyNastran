@@ -1,6 +1,3 @@
-from __future__ import print_function
-
-from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore
 from qtpy.QtWidgets import (
     QVBoxLayout, QWidget, QDockWidget, QComboBox, QGridLayout, QSizePolicy, QLabel, QDialog,

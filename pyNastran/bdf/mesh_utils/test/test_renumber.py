@@ -1,4 +1,4 @@
-from __future__ import print_function
+"""tests bdf_renumber"""
 import os
 import unittest
 from cpylog import SimpleLogger

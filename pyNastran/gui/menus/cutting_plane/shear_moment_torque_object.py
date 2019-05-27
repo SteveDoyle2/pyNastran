@@ -1,8 +1,8 @@
 """
 defines:
  - ShearMomentTorqueObject
+
 """
-from __future__ import print_function
 import numpy as np
 
 from pyNastran.bdf.cards.coordinate_systems import CORD2R

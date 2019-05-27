@@ -16,8 +16,8 @@ defines:
    - update_text_size(self, magnify=1.0)
 
  - repr_settings(settings)
+
 """
-from __future__ import print_function
 import numpy as np
 from qtpy import QtGui
 

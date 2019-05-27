@@ -1,7 +1,4 @@
-"""
-Multi-input/output format converter
-"""
-from __future__ import print_function
+"""Multi-input/output format converter"""
 import sys
 import glob
 

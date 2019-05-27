@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from numpy import array
 
 from pyNastran.utils.numpy_utils import integer_types

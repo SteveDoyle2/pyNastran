@@ -3,8 +3,8 @@ defines:
  - expand_thru_case_control(set_value)
  - write_set(set_id, values, spaces='')
  - write_stress_type(key, options, value, spaces='')
+
 """
-from __future__ import print_function
 from typing import List, Optional, Union, Set, Any
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
@@ -17,7 +17,7 @@ def expand_thru_int(set_value):   # pragma: no cover
     9,THRU,19,EXCEPT,12
     0.1 0.3 0.5 1.0 3.0 5.0 10.0 14.0
     """
-    #packs = []
+    raise RuntimeError('expand_thru_int')
     assert '/' not in set_value, set_value
     values = ','.join(set_value.split()).split(',')
     nvalues = len(values)
@@ -42,7 +42,6 @@ def expand_thru_int(set_value):   # pragma: no cover
             values += range(start, stop, 1)
             i += 3
             continue
-
 
         by_value = values[i + 3].upper()
         if by_value != 'BY':

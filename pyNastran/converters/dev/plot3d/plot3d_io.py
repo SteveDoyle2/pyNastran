@@ -1,4 +1,3 @@
-from __future__ import print_function
 from collections import OrderedDict
 import vtk
 from vtk import vtkQuad

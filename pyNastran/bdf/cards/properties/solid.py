@@ -8,8 +8,6 @@ All solid properties are defined in this file.  This includes:
  All solid properties are Property objects.
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from typing import Dict, Any
 import numpy as np
 

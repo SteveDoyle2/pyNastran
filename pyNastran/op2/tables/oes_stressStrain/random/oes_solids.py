@@ -1,6 +1,4 @@
 # pylint: disable=C0301,R0913,R0914,R0904,C0111,R0201,R0902
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from itertools import count
 
 import numpy as np

@@ -1,7 +1,4 @@
-"""
-Defines the GUI IO file for S/HABP.
-"""
-from __future__ import print_function
+"""Defines the GUI IO file for S/HABP."""
 from collections import OrderedDict, defaultdict
 
 import numpy as np

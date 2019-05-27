@@ -1,5 +1,4 @@
 """tests non-gui related Cart3d class/interface"""
-from __future__ import print_function
 import os
 import unittest
 from numpy import array_equal, allclose

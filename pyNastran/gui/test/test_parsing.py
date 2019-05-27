@@ -1,5 +1,4 @@
 """defines various GUI unit tests"""
-from __future__ import print_function
 import os
 import unittest
 

@@ -7,8 +7,8 @@ defines:
    - read_smesh(self, smesh_filename)
    - read_nodes(self, node_filename)
    - read_ele(self, ele_filename, form_flag='1')
+
 """
-from __future__ import print_function
 from numpy import array, zeros
 from cpylog import get_logger2
 from pyNastran.bdf.field_writer_8 import print_card_8

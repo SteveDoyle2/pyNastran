@@ -41,7 +41,6 @@ Defines various tables that don't fit in other sections:
     - read_results_table(self)
 
 """
-from __future__ import print_function, unicode_literals, division
 import os
 import sys
 from copy import deepcopy

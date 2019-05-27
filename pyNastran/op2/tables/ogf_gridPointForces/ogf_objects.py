@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
 from pyNastran.op2.result_objects.op2_objects import BaseElement

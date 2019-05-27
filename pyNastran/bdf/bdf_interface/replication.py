@@ -1,8 +1,8 @@
 """
 Defines various utilities for replicated BDF parsing including:
  - to_fields
+
 """
-from __future__ import print_function, unicode_literals
 from typing import List, Optional
 
 from pyNastran.bdf.bdf_interface.utils import expand_tabs

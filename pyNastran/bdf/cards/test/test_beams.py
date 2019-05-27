@@ -2,9 +2,8 @@
 tests:
   - CBEAM, PBEAM, PBEAML, PBCOMP, PBMSECT
   - CBEAM3, PBEAM3
+
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import os
 import unittest
 from itertools import count
@@ -31,6 +30,7 @@ class TestBeams(unittest.TestCase):
     tests:
       - CBEAM, PBEAM, PBEAML, PBCOMP, PBMSECT
       - CBEAM3, PBEAM3
+
     """
     def test_pbeam_01(self):
         """tests a nasty PBEAM"""

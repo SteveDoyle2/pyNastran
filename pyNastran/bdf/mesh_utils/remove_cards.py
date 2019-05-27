@@ -1,6 +1,3 @@
-from __future__ import print_function
-
-
 def remap_cards(model, cross_reference=True,
                 remap_nodes=True, remap_elements=True, remap_properties=True,
                 remap_materials=True):

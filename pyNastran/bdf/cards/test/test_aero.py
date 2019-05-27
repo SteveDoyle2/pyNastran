@@ -1,9 +1,6 @@
 # coding: utf-8
 # pylint: disable=R0914
-"""
-tests aero cards
-"""
-from __future__ import print_function
+"""tests aero cards"""
 import os
 from collections import defaultdict
 import unittest

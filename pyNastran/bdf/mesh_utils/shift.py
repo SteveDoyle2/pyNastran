@@ -1,8 +1,8 @@
 """
 defines:
  - model = shift(bdf_filename, dxyz, bdf_filename_out=None)
+
 """
-from __future__ import print_function
 import numpy as np
 
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model

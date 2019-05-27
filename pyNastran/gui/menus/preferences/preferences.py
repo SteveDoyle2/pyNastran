@@ -7,8 +7,8 @@ The preferences menu handles:
  - Annotation Size
  - Clipping Min
  - Clipping Max
+
 """
-from __future__ import print_function
 from math import log10, ceil
 
 #import PySide  # for local testing

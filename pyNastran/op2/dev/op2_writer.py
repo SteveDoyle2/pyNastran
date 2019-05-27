@@ -1,8 +1,4 @@
 #pylint: disable=W0201,C0301,C0111
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-#import sys
-#import copy
 from datetime import date
 from collections import defaultdict
 from struct import pack, Struct

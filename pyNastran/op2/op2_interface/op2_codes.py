@@ -1,6 +1,3 @@
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-
 # strings
 SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
                 b'OESRMS2', b'OESNO2', b'OESXRMS1',

@@ -2,8 +2,8 @@
 Defines:
  - tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True)
  - tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True)
+
 """
-from __future__ import print_function
 from numpy import unique
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused

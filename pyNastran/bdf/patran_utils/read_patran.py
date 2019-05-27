@@ -1,8 +1,8 @@
 """
 defines:
  - nids_array, data_array = read_patran(patran_filename, fdtype='float64', idtype='int32')
+
 """
-from __future__ import print_function
 import os
 from collections import defaultdict
 import numpy as np

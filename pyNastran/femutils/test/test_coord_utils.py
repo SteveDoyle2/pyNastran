@@ -1,7 +1,6 @@
 """tests coordinate system related femutils"""
 # -*- coding: utf-8 -*-
 # pylint: disable=R0201, C0103
-from __future__ import print_function, absolute_import
 import unittest
 
 import numpy as np
@@ -29,6 +28,7 @@ class TestShapeFunction(unittest.TestCase):
         tests:
          - shape4
          - shape4_to_xyz
+
         """
         shape = [0.0, 0.0]
         p1 = [0., 0., 0.]

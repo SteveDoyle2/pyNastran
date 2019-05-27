@@ -21,8 +21,6 @@ Defines the main OP2 class.  Defines:
    - transform_gpforce_to_global(nids_all, nids_transform, i_transform, coords, xyz_cid0=None)
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import os
 import sys
 from typing import List, Tuple, Any, Optional

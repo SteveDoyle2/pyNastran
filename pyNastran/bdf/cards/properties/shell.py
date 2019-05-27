@@ -11,9 +11,7 @@ All shell properties are defined in this file.  This includes:
 All shell properties are Property objects.
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-import  warnings
+import warnings
 from itertools import count
 from typing import List, Optional, Union, Any
 import numpy as np

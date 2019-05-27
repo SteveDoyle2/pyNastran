@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 
 from pyNastran.utils.mathematics import unique2d
@@ -19,6 +18,7 @@ class Properties:
         ----------
         model : BDF
            the BDF object
+
         """
         self.model = model
         self.nproperties = 0

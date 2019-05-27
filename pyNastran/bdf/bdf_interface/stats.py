@@ -1,5 +1,5 @@
-from __future__ import print_function
 from typing import List, Set, Dict, Any, Union
+
 
 def get_bdf_stats(model, return_type='string', word=''):
     # type: (Any, str, str) -> Union[str, List[str]]

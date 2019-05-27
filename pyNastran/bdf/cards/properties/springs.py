@@ -6,10 +6,8 @@ All spring properties are defined in this file.  This includes:
  * PELAST
 
 All spring properties are SpringProperty and Property objects.
-"""
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 
+"""
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (

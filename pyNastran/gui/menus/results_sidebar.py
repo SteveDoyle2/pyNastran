@@ -1,4 +1,3 @@
-from __future__ import print_function
 import sys
 
 # kills the program when you hit Cntl+C from the command line

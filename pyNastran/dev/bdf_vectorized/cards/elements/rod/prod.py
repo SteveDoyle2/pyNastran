@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from numpy import array, zeros, unique, searchsorted, arange
 
 from pyNastran.dev.bdf_vectorized.cards.elements.property import Property
@@ -21,6 +19,7 @@ class PROD(Property):
         model : BDF
            the BDF object
         """
+
         Property.__init__(self, model)
 
     def allocate(self, card_count):

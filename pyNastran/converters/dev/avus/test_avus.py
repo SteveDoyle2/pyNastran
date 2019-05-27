@@ -1,5 +1,4 @@
 """tests non-gui related Avus class/interface"""
-from __future__ import print_function
 import os
 import unittest
 from cpylog import get_logger

@@ -1,7 +1,4 @@
-"""
-defines various GUI unit tests
-"""
-from __future__ import print_function
+"""defines various GUI unit tests"""
 import os
 import unittest
 import numpy as np

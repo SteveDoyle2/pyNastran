@@ -1,7 +1,3 @@
-from __future__ import print_function
-#from struct import unpack #pack
-#from cpylog import get_logger
-
 from pyNastran.converters.tetgen.tetgen import Tetgen
 from pyNastran.converters.usm3d.usm3d_reader import write_usm3d_volume
 

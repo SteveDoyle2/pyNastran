@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import multiprocessing as mp
 from numpy import savetxt, arange, zeros
@@ -9,6 +8,7 @@ def get_n_list(dirname, model_name):
     """
     gets files of the form:
      - modelname + '_xxx.flo'
+
     """
     flo_filenames = os.listdir(dirname)
 
@@ -26,9 +26,7 @@ def get_n_list(dirname, model_name):
     return n_list
 
 def get_flo_files(dirname, model_name, nstart=0, nlimit=None, include_dirname_in_path=True):
-    """
-    get the flo files in ascending order
-    """
+    """get the flo files in ascending order"""
     if dirname == '':
         dirname = os.getcwd()
     n_list = get_n_list(dirname, model_name)

@@ -1,8 +1,6 @@
 """defines various shell element tests"""
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import unittest
-from six.moves import StringIO
+from io import StringIO
 import numpy as np
 from numpy import array
 

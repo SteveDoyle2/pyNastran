@@ -1,7 +1,4 @@
-"""
-Subcase creation/extraction class
-"""
-from __future__ import print_function, unicode_literals
+"""Subcase creation/extraction class"""
 from typing import List, Dict, Any
 from numpy import ndarray
 

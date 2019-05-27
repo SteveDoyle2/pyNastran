@@ -1,5 +1,4 @@
 """defines various GUI unit tests"""
-from __future__ import print_function
 import unittest
 
 #from pyNastran.gui.arg_handling import get_inputs

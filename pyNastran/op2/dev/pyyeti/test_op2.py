@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import unittest
 from pyNastran.op2.dev.op2 import read_post_op2

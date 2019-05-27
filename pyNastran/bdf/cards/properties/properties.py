@@ -6,10 +6,8 @@ All ungrouped properties are defined in this file.  This includes:
  * PRAC2D (CrackProperty)
  * PRAC3D (CrackProperty)
  * PCONEAX (not done)
-"""
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 
+"""
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property

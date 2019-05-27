@@ -1,4 +1,3 @@
-from __future__ import print_function
 from sympy import Symbol, solve
 #from sympy import Matrix
 

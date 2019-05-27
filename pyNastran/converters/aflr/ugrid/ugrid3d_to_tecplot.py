@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from numpy import zeros, array
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID, read_ugrid
 from pyNastran.converters.tecplot.tecplot import Tecplot
@@ -17,6 +15,7 @@ def get_ugrid_model(ugrid_filename, log=None, debug=False):
     -------
     ugrid_model : UGRID()
         the UGRID object
+
     """
     if isinstance(ugrid_filename, str):
         #assert os.path.exists(ugrid_filename), '%r doesnt exist' % ugrid_filename

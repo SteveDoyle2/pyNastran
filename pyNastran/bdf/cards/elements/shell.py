@@ -22,8 +22,6 @@ All tris are TriShell, ShellElement, and Element objects.
 All quads are QuadShell, ShellElement, and Element objects.
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from typing import List, Tuple, Union, Any
 
 import numpy as np

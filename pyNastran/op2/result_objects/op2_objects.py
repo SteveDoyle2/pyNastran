@@ -1,5 +1,4 @@
 #pylint: disable=C0301,C0111
-from __future__ import print_function, unicode_literals
 import copy
 from itertools import count
 from struct import pack
@@ -20,6 +19,7 @@ class BaseScalarObject(Op2Codes):
      - BucklingEigenvalues
      - ComplexEigenvalues
      - ScalarObject
+
     """
     def __init__(self):
         Op2Codes.__init__(self)

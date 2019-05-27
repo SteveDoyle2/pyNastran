@@ -1,7 +1,4 @@
-"""
-Main XDB class
-"""
-from __future__ import print_function
+"""Main XDB class"""
 import os
 import struct
 

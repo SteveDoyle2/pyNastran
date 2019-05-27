@@ -1,4 +1,4 @@
-from six.moves import StringIO
+from io import StringIO
 from math import pi, sqrt
 import unittest
 

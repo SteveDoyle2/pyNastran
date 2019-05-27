@@ -1,8 +1,5 @@
-"""
-Interface for converting OP2 results to the GUI format
-"""
+"""Interface for converting OP2 results to the GUI format"""
 # pylint: disable=C1801, C0103
-from __future__ import print_function
 from copy import deepcopy
 from collections import defaultdict
 
@@ -22,9 +19,7 @@ from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
 
 
 class NastranGuiResults(NastranGuiAttributes):
-    """
-    Defines OP2 specific methods NastranIO
-    """
+    """Defines OP2 specific methods NastranIO"""
     def __init__(self):
         super(NastranGuiResults, self).__init__()
 

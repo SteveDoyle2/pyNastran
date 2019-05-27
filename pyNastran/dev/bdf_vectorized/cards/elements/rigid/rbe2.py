@@ -1,4 +1,3 @@
-from __future__ import print_function
 from itertools import count
 
 from pyNastran.bdf.bdf_interface.assign_type import (integer, integer_or_double, components_or_blank)

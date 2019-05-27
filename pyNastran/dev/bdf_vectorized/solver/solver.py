@@ -3,9 +3,7 @@
 """
 http://slideplayer.com/slide/3330177/
 """
-from __future__ import print_function
 import os
-#import sys
 from datetime import date
 from struct import pack
 

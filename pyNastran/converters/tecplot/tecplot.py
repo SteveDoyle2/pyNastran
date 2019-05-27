@@ -2,7 +2,6 @@
 models from:
     http://people.sc.fsu.edu/~jburkardt/data/tec/tec.html
 """
-from __future__ import print_function
 import sys
 import os
 from struct import unpack

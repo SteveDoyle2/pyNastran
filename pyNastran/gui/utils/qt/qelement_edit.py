@@ -3,9 +3,8 @@ defines:
  - QElementEdit
  - QNodeEdit
  - QNodeElementEdit
-"""
-from __future__ import print_function
 
+"""
 from qtpy import QtCore
 from qtpy.QtGui import QFocusEvent
 from qtpy.QtWidgets import QLineEdit

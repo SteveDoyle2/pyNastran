@@ -1,5 +1,3 @@
-from __future__ import print_function
-from io import open
 from numpy import loadtxt, argsort, allclose, vstack, array, abs, where
 
 

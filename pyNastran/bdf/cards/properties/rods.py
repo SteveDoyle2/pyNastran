@@ -8,9 +8,8 @@ All beam properties are defined in this file.  This includes:
 
 All beams are Property objects.
 Multi-segment beams are IntegratedLineProperty objects.
+
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from numpy import pi
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default

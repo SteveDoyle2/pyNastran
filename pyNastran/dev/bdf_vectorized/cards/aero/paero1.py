@@ -1,4 +1,3 @@
-from __future__ import print_function
 from numpy import searchsorted, arange, zeros
 from pyNastran.dev.bdf_vectorized.cards.vectorized_card import VectorizedCard
 from pyNastran.bdf.field_writer_8 import print_card_8

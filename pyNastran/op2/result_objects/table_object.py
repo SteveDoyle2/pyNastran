@@ -20,8 +20,8 @@ these are used by:
  - ComplexSPCForcesArray
  - ComplexMPCForcesArray
  - ComplexAppliedLoadsArray
+
 """
-from __future__ import print_function, unicode_literals
 import copy
 from struct import Struct, pack
 import warnings

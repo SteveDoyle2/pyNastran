@@ -1,4 +1,3 @@
-from __future__ import print_function
 import sys
 from collections import OrderedDict
 from typing import Tuple, Dict, Union, Any

@@ -1,4 +1,3 @@
-from __future__ import print_function
 import struct
 import numpy as np
 from pyNastran.op2.op2_geom import OP2GeomCommon
@@ -24,6 +23,7 @@ class OP2Geom(OP2GeomCommon, BDF):
             sets the filename that will be written to
         mode : str; default='msc'
             {msc, nx}
+
         """
         BDF.__init__(self, debug=debug, log=log, mode=mode)
         OP2GeomCommon.__init__(self, debug=debug, log=log, debug_file=debug_file, mode=mode)

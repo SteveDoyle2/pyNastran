@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 from pyNastran.converters.panair.assign_type import integer
 

@@ -1,4 +1,3 @@
-from __future__ import print_function
 from numpy import array, allclose, array_equal, cross
 import unittest
 

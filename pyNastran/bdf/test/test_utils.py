@@ -1,4 +1,3 @@
-from __future__ import print_function
 import unittest
 import numpy as np
 
@@ -83,7 +82,7 @@ class TestBdfUtils(unittest.TestCase):
             {
                 'n' : [1, 2, 6, 10, 14],
                 'e' : [1, 2, 6, 10, 14],
-             },
+            },
         )
         assert msg == 'e 1 2 6:14:4 n 1 2 6:14:4', 'msg=%r' % msg
 

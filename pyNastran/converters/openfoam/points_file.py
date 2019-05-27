@@ -1,8 +1,8 @@
 """
 defines:
  - model = PointFile(log=None, debug=False)
+
 """
-from __future__ import print_function
 import numpy as np
 
 from cpylog import get_logger2

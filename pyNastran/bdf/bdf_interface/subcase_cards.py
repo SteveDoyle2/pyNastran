@@ -1,4 +1,3 @@
-from __future__ import print_function, unicode_literals
 from typing import List, Dict, Tuple, Union, Set, Any
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 

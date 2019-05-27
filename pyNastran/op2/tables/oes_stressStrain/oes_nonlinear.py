@@ -1,9 +1,8 @@
 """
 defines:
  - RealNonlinearPlateArray
+
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from math import isnan
 from itertools import cycle
 import numpy as np

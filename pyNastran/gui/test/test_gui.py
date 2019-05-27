@@ -1,8 +1,5 @@
 # coding: latin1
-"""
-defines the command line tool test_gui
-"""
-from __future__ import print_function
+"""defines the command line tool test_gui"""
 import os
 import sys
 import time

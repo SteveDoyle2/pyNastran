@@ -1,7 +1,4 @@
-"""
-tests static load cards
-"""
-from __future__ import print_function
+"""tests static load cards"""
 import os
 import unittest
 import numpy as np

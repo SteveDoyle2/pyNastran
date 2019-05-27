@@ -1,7 +1,4 @@
-"""
-SOL 145 plotter
-"""
-from __future__ import print_function
+"""SOL 145 plotter"""
 from typing import  Optional, Dict, Union
 #import PySide
 try:
@@ -42,6 +39,7 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
         key : int
            subcase_id
         value : FlutterResponse()
+
     """
     f06_units = _get_units(f06_units)
     out_units = _get_units(out_units)

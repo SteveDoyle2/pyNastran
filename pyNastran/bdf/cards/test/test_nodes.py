@@ -1,5 +1,4 @@
 """tests nodes.py"""
-from __future__ import print_function, unicode_literals
 import unittest
 
 from pyNastran.bdf.bdf import BDF, BDFCard

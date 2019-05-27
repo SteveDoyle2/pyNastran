@@ -14,7 +14,7 @@ import imp
 from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore
 from qtpy.QtWidgets import QMessageBox, qApp
-from six.moves import urllib
+import urllib
 
 # 3rd party
 import vtk  # if this crashes, make sure you ran setup.py

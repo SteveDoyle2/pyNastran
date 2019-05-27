@@ -1,8 +1,8 @@
 """
 defines:
  - ScalarTableObject
+
 """
-from __future__ import print_function, unicode_literals
 from struct import Struct, pack
 import warnings
 

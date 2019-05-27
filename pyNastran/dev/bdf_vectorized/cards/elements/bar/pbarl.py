@@ -1,4 +1,3 @@
-from __future__ import print_function
 from itertools import count
 from numpy import array, zeros, arange, searchsorted, unique
 

@@ -1,5 +1,4 @@
 # pylint: disable=C0301,W0201
-from __future__ import print_function, unicode_literals
 import copy
 from struct import Struct, unpack
 

@@ -5,7 +5,6 @@ https://en.wikipedia.org/wiki/Barycentric_coordinate_system
 http://en.wikipedia.org/wiki/Line-plane_intersection
 http://math.stackexchange.com/questions/544946/determine-if-projection-of-3d-point-onto-plane-is-within-a-triangle
 """
-from __future__ import print_function
 import numpy as np
 
 from pyNastran.converters.stl.stl import read_stl

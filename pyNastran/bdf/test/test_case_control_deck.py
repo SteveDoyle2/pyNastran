@@ -1,4 +1,4 @@
-from __future__ import print_function
+"""tests the CaseControlDeck"""
 import os
 import unittest
 

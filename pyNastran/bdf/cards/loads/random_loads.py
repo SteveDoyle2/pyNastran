@@ -7,10 +7,8 @@ All static loads are defined in this file.  This includes:
  * SLOAD
  * RFORCE
  * RANDPS
-"""
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 
+"""
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (

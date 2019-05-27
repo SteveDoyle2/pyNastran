@@ -1,7 +1,4 @@
-"""
-Defines the GUI IO file for Tecplot.
-"""
-from __future__ import print_function
+"""Defines the GUI IO file for Tecplot."""
 from collections import OrderedDict
 
 from numpy import arange, mean, amax, amin, array

@@ -1,7 +1,4 @@
-"""
-Unlinks up the various cards in the BDF.
-"""
-from __future__ import print_function
+"""Unlinks up the various cards in the BDF."""
 from typing import List, Dict, Any
 from pyNastran.bdf.bdf_interface.safe_cross_reference import SafeXrefMesh
 

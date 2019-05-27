@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 from numpy import arange, array, zeros, searchsorted, unique, full, nan, where
 
@@ -20,6 +19,7 @@ class PLOAD4(VectorizedLoad):
         ----------
         model : BDF
            the BDF object
+
         """
         VectorizedLoad.__init__(self, model)
         del self._comments

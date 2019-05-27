@@ -1,6 +1,4 @@
 #pylint: disable=C0301,C0111
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 
 import numpy as np
 from numpy import zeros, concatenate

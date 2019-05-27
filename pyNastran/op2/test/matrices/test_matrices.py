@@ -1,5 +1,4 @@
 """defines OP2 Matrix Test"""
-from __future__ import print_function
 import os
 import unittest
 

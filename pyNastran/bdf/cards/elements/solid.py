@@ -14,8 +14,6 @@ All solid elements are defined in this file.  This includes:
 All solid elements are SolidElement and Element objects.
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from typing import Any
 import numpy as np
 from numpy import dot, cross

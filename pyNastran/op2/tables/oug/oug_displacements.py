@@ -1,11 +1,8 @@
-from __future__ import print_function
 import numpy as np
-
 
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 
 
-#def write_block(f, fascii)
 def make_pack_form(data):
     N = 0
     n = 0

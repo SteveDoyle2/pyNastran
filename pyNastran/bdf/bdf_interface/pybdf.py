@@ -2,11 +2,9 @@
 """
 Main BDF class.  Defines:
   - BDFInputPy
+
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import os
-from io import open
 from collections import defaultdict
 from itertools import count
 from typing import List, Dict, Optional, Union, Set, Any, cast

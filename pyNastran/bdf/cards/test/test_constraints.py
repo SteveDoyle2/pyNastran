@@ -1,4 +1,3 @@
-from __future__ import print_function
 from itertools import count
 import unittest
 from pyNastran.bdf.bdf import BDF, BDFCard, SUPORT, SUPORT1, MPC

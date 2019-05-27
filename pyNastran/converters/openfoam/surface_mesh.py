@@ -1,4 +1,3 @@
-from __future__ import print_function
 from numpy import zeros
 from pyNastran.converters.openfoam.openfoam_parser import (
     #write_dict,

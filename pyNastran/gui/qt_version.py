@@ -6,7 +6,6 @@ Figures out the "optimal" Qt version to use in a way that:
  - selects PySide, PySide2, PyQt5, PyQt4 (in that order)
 
 """
-from __future__ import print_function
 import os
 import sys
 

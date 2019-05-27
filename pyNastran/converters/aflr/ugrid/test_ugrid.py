@@ -1,7 +1,4 @@
-"""
-Defines TestUGrid
-"""
-from __future__ import print_function
+"""Defines TestUGrid"""
 import os
 import unittest
 import numpy as np

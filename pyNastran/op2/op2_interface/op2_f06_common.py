@@ -1,4 +1,3 @@
-from __future__ import print_function
 from collections import defaultdict
 from numpy import unique, int32, int64
 

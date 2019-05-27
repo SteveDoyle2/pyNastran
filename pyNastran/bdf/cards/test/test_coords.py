@@ -1,9 +1,9 @@
 """
 defines:
  - TestCoords
+
 """
 # pylint: disable=R0201,C0103
-from __future__ import print_function
 import unittest
 from io import StringIO
 import numpy as np

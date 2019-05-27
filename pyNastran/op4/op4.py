@@ -1,7 +1,4 @@
-"""
-Main OP4 class
-"""
-from __future__ import print_function
+"""Main OP4 class"""
 import sys
 import os
 from struct import pack, unpack, Struct

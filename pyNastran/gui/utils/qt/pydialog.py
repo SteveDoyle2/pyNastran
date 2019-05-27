@@ -1,9 +1,8 @@
 """
 defines:
  - PyDialog()
-"""
-from __future__ import print_function
 
+"""
 from pyNastran.gui.qt_version import qt_version
 from qtpy.QtCore import Qt
 from qtpy.QtGui import QFont

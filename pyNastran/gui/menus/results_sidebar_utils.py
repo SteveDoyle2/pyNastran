@@ -1,5 +1,4 @@
 """helper for results_sidebar.py"""
-from __future__ import print_function
 
 
 def build_pruned_tree(tree, cases):

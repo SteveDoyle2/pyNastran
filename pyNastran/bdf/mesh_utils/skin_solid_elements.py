@@ -3,7 +3,6 @@ defines:
  - get_solid_skin_faces(model)
 
 """
-from __future__ import print_function
 from collections import defaultdict
 from copy import deepcopy
 

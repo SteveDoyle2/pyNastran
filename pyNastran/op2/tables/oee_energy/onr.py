@@ -1,5 +1,4 @@
 #pylint: disable=C0326,C0301
-from __future__ import print_function, unicode_literals
 from struct import Struct
 import numpy as np
 

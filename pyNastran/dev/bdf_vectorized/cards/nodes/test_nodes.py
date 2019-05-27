@@ -1,4 +1,3 @@
-from __future__ import print_function, unicode_literals
 from io import StringIO
 import unittest
 from itertools import count

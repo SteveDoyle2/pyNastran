@@ -1,5 +1,4 @@
 #pylint:  disable=C0111
-from __future__ import print_function
 import copy
 from struct import unpack, Struct, pack
 from collections import defaultdict
@@ -28,6 +27,7 @@ def read_stl(stl_filename, remove_elements_with_bad_normals=False,
     -------
     model : STL()
        the stl model
+
     """
     model = STL(log=log, debug=debug)
     model.read_stl(stl_filename)

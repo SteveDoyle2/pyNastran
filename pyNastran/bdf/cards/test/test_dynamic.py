@@ -1,7 +1,4 @@
-"""
-tests dynamic cards and dynamic load cards
-"""
-from __future__ import print_function
+"""tests dynamic cards and dynamic load cards"""
 import unittest
 from io import StringIO
 import numpy as np

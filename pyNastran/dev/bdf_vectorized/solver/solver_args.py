@@ -1,4 +1,3 @@
-from __future__ import print_function
 import os
 import sys
 
@@ -39,7 +38,7 @@ def run_arg_parse(mode=''):
     if data['--out']:
         bdf_base = data['--out']
     else:
-        bdf_base, ext = os.path.splitext(bdf_filename)
+        bdf_base = os.path.splitext(bdf_filename)[0]
     data['BDFBASE'] = bdf_base
 
 

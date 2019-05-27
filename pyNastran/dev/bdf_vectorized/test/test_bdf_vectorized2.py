@@ -6,9 +6,8 @@
   - various card methods (e.g. Area) work correctly
 
 As such, ``test_bdf`` is very useful for debugging models.
+
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import os
 import sys
 import numpy

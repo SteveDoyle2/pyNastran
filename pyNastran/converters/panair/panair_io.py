@@ -1,7 +1,4 @@
-"""
-Defines the GUI IO file for Panair.
-"""
-from __future__ import print_function
+"""Defines the GUI IO file for Panair."""
 import os
 from collections import OrderedDict
 

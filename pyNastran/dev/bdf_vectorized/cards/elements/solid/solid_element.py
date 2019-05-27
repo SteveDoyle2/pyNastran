@@ -1,4 +1,3 @@
-from __future__ import print_function
 from io import StringIO
 from numpy import zeros, searchsorted, where, asarray, array
 
@@ -19,6 +18,7 @@ class SolidElement(Element):
          - elements[1:10:2]
          - elements[[1,2,5]]
          - elements[array([1,2,5])]
+
         """
         try:
             i = searchsorted(self.element_id, element_ids)

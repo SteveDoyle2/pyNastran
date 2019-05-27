@@ -1,4 +1,3 @@
-from __future__ import print_function
 from io import StringIO
 from numpy import zeros, unique, where, searchsorted, asarray, array
 
@@ -21,6 +20,7 @@ class PSOLID(Property):
         ----------
         model : BDF
            the BDF object
+
         """
         Property.__init__(self, model)
 

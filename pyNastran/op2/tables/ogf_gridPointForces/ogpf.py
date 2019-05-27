@@ -1,8 +1,8 @@
 """
 Defines the Real/Complex Forces created by:
     GPFORCE = ALL
+
 """
-from __future__ import print_function
 from struct import Struct
 from numpy import frombuffer
 

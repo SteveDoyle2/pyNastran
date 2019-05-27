@@ -1,5 +1,4 @@
 #pylint: disable=R0201
-from __future__ import print_function, unicode_literals
 import unittest
 import numpy as np
 from pyNastran.op2.op2_geom import OP2Geom

@@ -41,10 +41,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
    - _finish()
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import os
-#import sys
 from struct import Struct, unpack
 from collections import Counter
 from typing import List

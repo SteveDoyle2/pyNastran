@@ -7,8 +7,6 @@ All set cards are defined in this file.  This includes:
   * VIEW, VIEW3D
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import warnings
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -21,6 +19,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_string, string_or_blank)
 
 from pyNastran.bdf.cards.thermal.thermal import ThermalBC
+
 
 class RADM(ThermalBC):
     """

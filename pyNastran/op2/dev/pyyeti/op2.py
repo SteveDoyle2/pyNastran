@@ -7,7 +7,6 @@ Can read files in big or little endian format.
 
 @author: Tim Widrick
 """
-from __future__ import print_function
 import sys
 import struct
 import itertools as it

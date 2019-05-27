@@ -1,4 +1,4 @@
-from __future__ import print_function
+"""tests remove_unused"""
 import os
 import unittest
 
