@@ -5,7 +5,6 @@ This file defines functions related to the result updating that are VTK specific
 """
 # coding: utf-8
 # pylint: disable=C0111
-from __future__ import print_function, unicode_literals
 import sys
 from copy import deepcopy
 

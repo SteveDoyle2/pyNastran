@@ -1,6 +1,4 @@
 # coding: utf-8
-from __future__ import print_function#, unicode_literals
-
 from pyNastran.bdf.bdf import BDF
 from pyNastran.op2.op2 import OP2
 from numpy import zeros, searchsorted, arange

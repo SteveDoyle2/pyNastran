@@ -1,4 +1,3 @@
-from __future__ import print_function
 from numpy import dot, array, zeros, unique, searchsorted, transpose, where, arange
 from numpy.linalg import norm  # type: ignore
 

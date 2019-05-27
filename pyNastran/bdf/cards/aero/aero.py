@@ -3777,7 +3777,8 @@ class MONPNT2(BaseCard):
 
         table = string(card, 9, 'table')
         Type = string(card, 10, 'type')
-        nddl_item = integer_or_blank(card, 11, 'nddl_item')
+        nddl_item = string(card, 11, 'nddl_item')
+        #nddl_item = integer_or_blank(card, 11, 'nddl_item')
         eid = integer_or_blank(card, 12, 'eid')
         return MONPNT2(name, label, table, Type, nddl_item, eid, comment=comment)
 

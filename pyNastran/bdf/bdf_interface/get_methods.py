@@ -1,6 +1,4 @@
 """defines various methods to access low level BDF data"""
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from itertools import chain
 import numpy as np
 

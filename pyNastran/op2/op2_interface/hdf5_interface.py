@@ -10,8 +10,6 @@ defines:
  export_op2_to_hdf5_file(hdf5_file, op2_model)
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import os
 import numpy as np
 import h5py

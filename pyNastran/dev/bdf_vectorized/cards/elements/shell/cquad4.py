@@ -1,8 +1,6 @@
 """
 http://ssl.mit.edu/files/website/theses/SM-2011-McLinkoRyan.pdf
 """
-from __future__ import print_function
-
 import numpy as np
 from numpy import array, zeros, arange, searchsorted, unique, cross
 from numpy.linalg import norm  # type: ignore

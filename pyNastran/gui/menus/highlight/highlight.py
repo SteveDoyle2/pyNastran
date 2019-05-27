@@ -2,9 +2,8 @@
 The highlight menu handles:
  - Nodes/Elements
  - Preferences
+
 """
-from __future__ import print_function
-#from math import log10, ceil
 import numpy as np
 
 #import PySide  # for local testing

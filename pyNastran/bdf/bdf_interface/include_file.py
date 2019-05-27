@@ -1,8 +1,8 @@
 """
 Defines utilities for parsing include files:
  - get_include_filename(card_lines, include_dir='', is_windows=None)
+
 """
-from __future__ import print_function, unicode_literals
 import os
 import ntpath
 import posixpath
@@ -30,6 +30,7 @@ def get_include_filename(card_lines, include_dir='', is_windows=None):
     -------
     filename : str
         the INCLUDE filename
+
     """
     if is_windows is None:
         is_windows = IS_WINDOWS

@@ -1,4 +1,3 @@
-from __future__ import print_function
 from pyNastran.gui.menus.highlight.highlight import HighlightWindow
 
 

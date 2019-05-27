@@ -3,8 +3,6 @@ defines the F06Writer class and:
  - write_f06(...)
 """
 #pylint: disable=W0201,C0301,C0111
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import os
 import sys
 import copy

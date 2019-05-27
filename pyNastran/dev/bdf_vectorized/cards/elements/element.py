@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.dev.bdf_vectorized.cards.vectorized_card import VectorizedCard
 

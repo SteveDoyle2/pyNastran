@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function, unicode_literals
-
 from numpy import array, arange
-
 
 from pyNastran.gui.qt_version import qt_version
 from qtpy import QtCore, QtGui

@@ -2,7 +2,6 @@
 creates the pyNastranGUI
 """
 # coding: utf-8
-from __future__ import division, unicode_literals, print_function
 
 # we're intentionally putting this here to validate the imports
 # before doing lots of work

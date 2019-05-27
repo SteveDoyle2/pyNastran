@@ -1,6 +1,4 @@
 # pylint: disable=R0902,R0904,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from math import sin, cos, radians, atan2, sqrt, degrees
 
 import numpy as np
@@ -15,7 +13,7 @@ from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
-    parse_components, interpret_value)
+    parse_components, interpret_value, integer_double_string_or_blank)
 
 
 class DTI(BaseCard):
@@ -105,8 +103,22 @@ class DTI(BaseCard):
                 'temp_stress' : temp_stress
             }
         else:
-            print(card)
-            raise NotImplementedError(card)
+            fields = []
+            field2 = card[2]
+
+            list_fields = []
+            irecord = integer(card, 2, 'record')
+            if irecord == 0:
+                for i in range(3, len(card)):
+                    val = integer_double_string_or_blank(
+                        card, i, 'T%i' % (i-1), default=32767)
+                    list_fields.append(val)
+            else:
+                for i in range(3, len(card)):
+                    val = integer_double_string_or_blank(
+                        card, i, 'T%i' % (i-1), default=None)
+                    list_fields.append(val)
+            fields = {irecord: list_fields,}
         return DTI(name, fields, comment=comment)
 
     def raw_fields(self):
@@ -118,12 +130,25 @@ class DTI(BaseCard):
             temp_stress = self.fields['temp_stress']
             list_fields = ['DTI', self.name, '1', mass, force, length, time, temp_stress]
         else:
-            raise NotImplementedError('DTI name=%r' % self.name)
+            list_fields = []
+            for irecord, fields in sorted(self.fields.items()):
+                nfields = len(fields)
+                list_fields += ['DTI', self.name] + fields
+                nleftover = nfields % 8
+                if nleftover:
+                    list_fields += [None] * nleftover
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
-        card = self.repr_fields()
-        return self.comment + print_card_8(card)
+        if self.name == 'UNITS':
+            card = self.repr_fields()
+            return self.comment + print_card_8(card)
+
+        msg = self.comment
+        for irecord, fields in sorted(self.fields.items()):
+            list_fields = ['DTI', self.name, irecord, ] + fields
+            msg += print_card_8(list_fields)
+        return msg
 
 
 class NastranMatrix(BaseCard):

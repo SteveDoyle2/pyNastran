@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import vtk
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 

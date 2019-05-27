@@ -1,7 +1,4 @@
-"""
-defines the GridPointWeight class
-"""
-from __future__ import print_function
+"""defines the GridPointWeight class"""
 from io import StringIO
 
 from numpy import zeros

@@ -2,7 +2,6 @@
 """
 defines readers for BDF objects in the OP2 DIT/DITS table
 """
-from __future__ import print_function
 from struct import Struct, error as struct_error
 import numpy as np
 

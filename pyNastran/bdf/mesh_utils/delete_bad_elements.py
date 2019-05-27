@@ -7,8 +7,6 @@ defines:
                                    max_aspect_ratio=100., max_taper_ratio=4.0)
 
 """
-
-from __future__ import print_function
 import numpy as np
 
 SIDE_MAP = {}
@@ -480,7 +478,6 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
         max_thetai = np.nan
         #max_thetai = np.nan
         max_skew = np.nan
-        #max_warp = np.nan
         max_warp = np.nan
         aspect_ratio = np.nan
         #areai = np.nan
@@ -503,7 +500,7 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
             p1, p2, p3, p4 = xyz_cid0[inids, :]
             out = quad_quality(elem, p1, p2, p3, p4)
             (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
 
         elif etype == 'CTRIA6':
             nids = elem.nodes
@@ -529,7 +526,7 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
                 p1, p2, p3, p4 = xyz_cid0[inids[:4], :]
             out = quad_quality(elem, p1, p2, p3, p4)
             (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
             #normali = np.cross(p1 - p3, p2 - p4)
 
         elif etype == 'CSHEAR':
@@ -538,7 +535,7 @@ def element_quality(model, nids=None, xyz_cid0=None, nid_map=None):
             p1, p2, p3, p4 = xyz_cid0[inids, :]
             out = quad_quality(elem, p1, p2, p3, p4)
             (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+             min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
 
         elif etype == 'CTETRA':
             nids = elem.nodes
@@ -878,20 +875,36 @@ def quad_quality(element, p1, p2, p3, p4):
     dideal_theta = max(max_theta - PIOVER2, PIOVER2 - min_theta)
     #print('theta_max = ', theta_max)
 
-    #if 0:
-        ## warp
-        #v31 = xyz_cid0[p3, :] - xyz_cid0[p1, :]
-        #n1a = np.cross(v21, v31) # v21 x v31
-        #n1b = np.cross(v31, -v14) # v31 x v41
-        #warp1 = (n1a @ n1b) / (np.linalg.norm(n1a) * np.linalg.norm(n1b))
 
-        #v42 = xyz_cid0[p4, :] - xyz_cid0[p2, :]
-        #n2a = np.cross(v32, v42) # v32 x v42
-        #n2b = np.cross(v42, -v21) # v42 x v12
-        #warp2 = (n2a @ n2b) / (np.linalg.norm(n2a) * np.linalg.norm(n2b))
-        #max_warp = max(np.arccos(warp1), np.arccos(warp2))
+    # warp angle
+    # split the quad and find the normals of each triangl
+    # find the angle between the two triangles
+    #
+    # 4---3
+    # | / |
+    # |/  |
+    # 1---2
+    #
+    v41 = -v14
+    n123 = np.cross(v21, v31)
+    n134 = np.cross(v31, v41)
+    #v1 o v2 = v1 * v2 cos(theta)
+    cos_warp1 = (n123 @ n134) / (np.linalg.norm(n123) * np.linalg.norm(n134))
+
+    # split the quad in the order direction and take the maximum of the two splits
+    # 4---3
+    # | \ |
+    # |  \|
+    # 1---2
+    n124 = np.cross(v21, v41)
+    n234 = np.cross(v32, v42)
+    cos_warp2 = (n124 @ n234) / (np.linalg.norm(n124) * np.linalg.norm(n234))
+
+    max_warp = np.abs(np.arccos(
+        np.clip([cos_warp1, cos_warp2], -1., 1.))).max()
+
     out = (area, taper_ratio, area_ratio, max_skew, aspect_ratio,
-           min_theta, max_theta, dideal_theta, min_edge_length)
+           min_theta, max_theta, dideal_theta, min_edge_length, max_warp)
     return out
 
 def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
@@ -917,6 +930,7 @@ def get_min_max_theta(faces, all_node_ids, nid_map, xyz_cid0):
             cos_theta3 = (v13 @ -v32) / (length13 * length32)
             cos_thetas.extend([cos_theta1, cos_theta2, cos_theta3])
             ideal_theta.extend([PIOVER3, PIOVER3, PIOVER3])
+
         elif len(face) == 4:
             try:
                 node_ids = (all_node_ids[face[0]], all_node_ids[face[1]],

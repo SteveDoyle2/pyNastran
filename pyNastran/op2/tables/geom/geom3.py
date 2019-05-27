@@ -2,7 +2,6 @@
 defines readers for BDF objects in the OP2 GEOM3/GEOM3S table
 """
 #pylint: disable=C0103,C0111,C0301,W0612,R0914,C0326
-from __future__ import print_function
 from struct import Struct
 import numpy as np
 

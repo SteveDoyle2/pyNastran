@@ -65,6 +65,7 @@ class CMASS1(PointMassElement):
     +========+=====+=====+====+====+====+====+
     | CMASS1 | EID | PID | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
+
     """
     type = 'CMASS1'
     _field_map = {
@@ -96,6 +97,7 @@ class CMASS1(PointMassElement):
             DOF for nid1 / nid2
         comment : str; default=''
             a comment for the card
+
         """
         PointMassElement.__init__(self)
         if comment:
@@ -119,6 +121,7 @@ class CMASS1(PointMassElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -140,6 +143,7 @@ class CMASS1(PointMassElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -174,6 +178,7 @@ class CMASS1(PointMassElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CMASS1 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -216,6 +221,7 @@ class CMASS1(PointMassElement):
         """
         Centroid is assumed to be c=(g1+g2)/2.
         If g2 is blank, then the centroid is the location of g1.
+
         """
         factor = 0.
         p1 = np.array([0., 0., 0.])
@@ -273,6 +279,7 @@ class CMASS2(PointMassElement):
     +========+=====+=====+====+====+====+====+
     | CMASS2 | EID |  M  | G1 | C1 | G2 | C2 |
     +--------+-----+-----+----+----+----+----+
+
     """
     type = 'CMASS2'
     _field_map = {
@@ -306,6 +313,7 @@ class CMASS2(PointMassElement):
             DOF for nid1 / nid2
         comment : str; default=''
             a comment for the card
+
         """
         PointMassElement.__init__(self)
         if comment:
@@ -349,6 +357,7 @@ class CMASS2(PointMassElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         mass = double_or_blank(card, 2, 'mass', 0.)
@@ -370,6 +379,7 @@ class CMASS2(PointMassElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         mass = data[1]
@@ -451,6 +461,7 @@ class CMASS2(PointMassElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CMASS2 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
@@ -463,6 +474,7 @@ class CMASS2(PointMassElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CMASS2 eid=%s' % self.eid
         self.nodes_ref, missing_nodes = model.safe_empty_nodes(self.node_ids, msg=msg)
@@ -512,6 +524,7 @@ class CMASS3(PointMassElement):
     +========+=====+=====+====+====+
     | CMASS3 | EID | PID | S1 | S2 |
     +--------+-----+-----+----+----+
+
     """
     type = 'CMASS3'
     _field_map = {
@@ -540,6 +553,7 @@ class CMASS3(PointMassElement):
             SPOINT ids
         comment : str; default=''
             a comment for the card
+
         """
         PointMassElement.__init__(self)
         if comment:
@@ -562,6 +576,7 @@ class CMASS3(PointMassElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         pid = integer_or_blank(card, 2, 'pid', eid)
@@ -581,6 +596,7 @@ class CMASS3(PointMassElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         pid = data[1]
@@ -613,6 +629,7 @@ class CMASS3(PointMassElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CMASS3 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
@@ -655,8 +672,13 @@ class CMASS4(PointMassElement):
     +========+=====+=====+====+====+
     | CMASS4 | EID |  M  | S1 | S2 |
     +--------+-----+-----+----+----+
+
     """
     type = 'CMASS4'
+    #cp_name_map/update_by_cp_name
+    cp_name_map = {
+        'M' : 'mass',
+    }
     _properties = ['node_ids']
     _field_map = {
         1: 'eid', 2:'mass', 3:'s1', 4:'s2',
@@ -683,6 +705,7 @@ class CMASS4(PointMassElement):
             SPOINT ids
         comment : str; default=''
             a comment for the card
+
         """
         PointMassElement.__init__(self)
         if comment:
@@ -714,6 +737,7 @@ class CMASS4(PointMassElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         mass = data[1]
@@ -752,6 +776,7 @@ class CMASS4(PointMassElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CMASS4 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
@@ -790,6 +815,7 @@ class CONM1(PointMassElement):
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
     |        | M54 | M55 | M61 | M62 | M63 | M64 | M65 | M66 |
     +--------+-----+-----+-----+-----+-----+-----+-----+-----+
+
     """
     type = 'CONM1'
     _field_map = {
@@ -896,6 +922,7 @@ class CONM1(PointMassElement):
                 [            M44 M54 M64]
                 [    Sym         M55 M65]
                 [                    M66]
+
         """
         PointMassElement.__init__(self)
         if comment:
@@ -918,6 +945,7 @@ class CONM1(PointMassElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         m = np.zeros((6, 6))
         eid = integer(card, 1, 'eid')
@@ -959,6 +987,7 @@ class CONM1(PointMassElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         m = np.zeros((6, 6))
         (eid, nid, cid, m1, m2a, m2b, m3a, m3b, m3c, m4a, m4b, m4c, m4d,
@@ -1023,6 +1052,7 @@ class CONM1(PointMassElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CONM1 eid=%s' % self.eid
         self.nid_ref = model.Node(self.nid, msg=msg)
@@ -1036,6 +1066,7 @@ class CONM1(PointMassElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CONM1 eid=%s' % self.eid
         self.nid_ref = model.Node(self.nid, msg=msg)
@@ -1089,6 +1120,7 @@ class CONM2(PointMassElement):
     +-------+--------+-------+-------+---------+------+------+------+
     | CONM2 | 501274 | 11064 |       | 132.274 |      |      |      |
     +-------+--------+-------+-------+---------+------+------+------+
+
     """
     type = 'CONM2'
     _field_map = {
@@ -1196,6 +1228,7 @@ class CONM2(PointMassElement):
             I11, I21, I22, I31, I32, I33 = I
         comment : str; default=''
             a comment for the card
+
         """
         PointMassElement.__init__(self)
         if comment:
@@ -1267,6 +1300,7 @@ class CONM2(PointMassElement):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         eid = integer(card, 1, 'eid')
         nid = integer(card, 2, 'nid')
@@ -1301,6 +1335,7 @@ class CONM2(PointMassElement):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         eid = data[0]
         nid = data[1]
@@ -1331,6 +1366,7 @@ class CONM2(PointMassElement):
         """
         Returns the 3x3 inertia matrix
         .. warning:: doesnt handle offsets or coordinate systems
+
         """
         I = self.I
         A = [[I[0], -I[1], -I[3]],
@@ -1418,6 +1454,7 @@ class CONM2(PointMassElement):
         """
         This method seems way more complicated than it needs to be thanks
         to all these little caveats that don't seem to be supported.
+
         """
         cid = self.cid
         nid_ref = model.Node(self.nid)
@@ -1463,6 +1500,7 @@ class CONM2(PointMassElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CONM2 eid=%s' % self.eid
         self.nid_ref = model.Node(self.nid, msg=msg)
@@ -1479,6 +1517,7 @@ class CONM2(PointMassElement):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by CONM2 eid=%s' % self.eid
         self.nid_ref = model.Node(self.nid, msg=msg)

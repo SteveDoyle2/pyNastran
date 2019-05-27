@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.utils import parse_patran_syntax_dict

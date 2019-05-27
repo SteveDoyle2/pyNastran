@@ -2,8 +2,8 @@
 defines:
  - eids_oml = get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
                            is_symmetric=True, consider_flippped_normals=True)
+
 """
-from __future__ import print_function
 from copy import deepcopy
 import numpy as np
 
@@ -29,6 +29,7 @@ def get_oml_eids(bdf_filename, eid_start, theta_tol=30.,
     consider_flippped_normals : bool; default=True
         if you extracted the free faces from tets, you can get flipped normals
         this considers a 180 degree error to be 0.0, which will cause other problems
+
     """
     #ninety = np.radians(90.)
 

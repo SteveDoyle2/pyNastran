@@ -325,7 +325,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PDAMP', 'PDAMP5',
             'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBCOMP', 'PBRSECT', 'PBEND',
             'PBEAML', 'PBMSECT', # not fully supported
-            # 'PBEAM3',
+            'PBEAM3',  # v1.3
 
             'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
             'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',
@@ -603,8 +603,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def get_h5attrs(self) -> List[str]:
         """helper method for dict_to_h5py"""
         attrs = self.object_attributes(mode='both', keys_to_skip=None)
-        #attrs.remove('_card_parser')
-        #attrs.remove('log')
         return attrs
 
     def export_hdf5_filename(self, hdf5_filename:str) -> None:
@@ -2431,15 +2429,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
     def _prepare_dti(self, card_name, card_obj, comment=''):
         """adds a DTI"""
         name = string(card_obj, 1, 'name')
-        if name.upper() == 'UNITS':
-            dti = DTI.add_card(card_obj, comment=comment)
-            self._add_dti_object(dti)
-        else:
-            dti = -1
-            if comment:
-                self.reject_lines.append([_format_comment(comment)])
-            self.reject_cards.append(card_obj)
-            self._write_reject_message(card_name, card_obj, comment=comment)
+        dti = DTI.add_card(card_obj, comment=comment)
+        self._add_dti_object(dti)
         return dti
 
     def _prepare_dmig(self, unused_card, card_obj, comment=''):
@@ -3998,15 +3989,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         sol, method, sol_iline = parse_executive_control_deck(executive_control_lines)
         self.update_solution(sol, method, sol_iline)
 
-        self.case_control_deck = CaseControlDeck(case_control_lines, self.log)
-        self.case_control_deck.solmap_to_value = self._solmap_to_value
-        self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
-
         #self._is_cards_dict = True
         if self._is_cards_dict:
             cards, card_count = self.get_bdf_cards_dict(bulk_data_lines, bulk_data_ilines)
         cards_out = self._parse_cards_hdf5(cards, card_count)
         assert isinstance(cards_out, dict), cards_out
+
+        self.case_control_deck = CaseControlDeck(case_control_lines, log=self.log)
+        self.case_control_deck.solmap_to_value = self._solmap_to_value
+        self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
+
         return cards_out
 
     def _parse_cards_hdf5(self, cards, unused_card_count):

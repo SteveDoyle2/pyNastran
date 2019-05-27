@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import numpy as np
 from pyNastran.utils.mathematics import unique2d
 from pyNastran.dev.bdf_vectorized.utils import slice_to_iter

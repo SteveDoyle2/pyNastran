@@ -3,7 +3,6 @@ Defines:
  - FortranFormat
 
 """
-from __future__ import print_function
 import sys
 from copy import deepcopy
 from struct import unpack

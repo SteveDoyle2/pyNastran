@@ -1101,7 +1101,9 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
     elif sol in [114, 115, 116, 118]:
         # cyclic statics, modes, buckling, frequency
         pass
-    elif sol in [1, 5, 21, 61, 68, 76, 88, 100, 128, 187, 190, 400, 401, 600, 601, 700, 701]:
+    elif sol in [1, 5, 21, 38, 61, 68, 76, 88,
+                 100, 128, 187, 190,
+                 400, 401, 600, 601, 700, 701]:
         pass
     else:
         msg = 'SOL = %s\n' % (sol)

@@ -1,4 +1,3 @@
-from __future__ import print_function
 """
 based on:
  - http://www.vtk.org/Wiki/VTK/Examples/Python/PolyData/ExtractSelectionCells

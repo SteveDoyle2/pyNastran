@@ -5,8 +5,8 @@ defines the LAMA class to read:
  - BucklingEigenvalues
 
 from the OP2
+
 """
-from __future__ import print_function
 from struct import Struct
 
 from pyNastran.op2.op2_interface.op2_common import OP2Common

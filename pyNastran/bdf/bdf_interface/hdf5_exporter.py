@@ -1,6 +1,4 @@
 """Defines various helper functions for exporting a HDF5 BDF file"""
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from collections import defaultdict
 from typing import List
 from io import StringIO

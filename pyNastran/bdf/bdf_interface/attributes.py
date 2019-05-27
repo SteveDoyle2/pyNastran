@@ -666,7 +666,7 @@ class BDFAttributes:
                 'PDAMP', 'PDAMP5',
                 'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP', 'PBRSECT', 'PBMSECT',
                 'PBEAML',  # not fully supported
-                # 'PBEAM3',
+                'PBEAM3',
 
                 'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
                 'PSOLID', 'PLSOLID', 'PVISC', 'PRAC2D', 'PRAC3D',

@@ -1,8 +1,8 @@
 """
 defines:
   - extract_bodies(bdf_filename)
+
 """
-from __future__ import print_function
 from collections import defaultdict
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf, print_card_16

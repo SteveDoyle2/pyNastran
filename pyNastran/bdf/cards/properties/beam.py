@@ -163,7 +163,7 @@ class PBEAM(IntegratedLineProperty):
         mid = 1
         xxb = [0.]
         so = ['YES']
-        area  = [0.]
+        area = [0.]
         i1 = [0.]
         i2 = [0.]
         i12 = [0.]
@@ -1395,20 +1395,49 @@ class PBEAML(IntegratedLineProperty):
                 xxb.append(xxbi)
                 i += 2
 
-            dim = []
-            for ii in range(ndim):
-                field_name = 'istation=%s; ndim=%s; dim%i' % (n, ndim, ii+1)
-                if xxbi == 0.0:
-                    dimi = double(card, i, field_name)
-                elif xxbi == 1.0:
-                    dims0 = dims[0]
-                    dimi = double_or_blank(card, i, field_name, dims0[ii])
-                else:
-                    ## TODO: use linear interpolation
-                    dimi = double(card, i, field_name)
+            # PBARL
+            # 9. For DBOX section, the default value for DIM5 to DIM10 are
+            #    based on the following rules:
+            #     a. DIM5, DIM6, DIM7 and DIM8 have a default value of
+            #        DIM4if not provided.
+            #     b. DIM9 and DIM10 have a default value of DIM6 if not
+            #        provided.
 
-                dim.append(dimi)
-                i += 1
+            #If any of the fields NSM(B), DIMi(B) are blank on the
+            #continuation entry for End B, the values are set to the
+            #values given for end A. For the continuation entries that
+            #have values of X(j)/XB between 0.0 and 1.0 and use the
+            #default option (blank field), a linear interpolation between
+            #the values at ends A and B is performed to obtain the
+            #missing field.
+            dim = []
+            if beam_type == 'DBOX':
+                for ii in range(ndim):
+                    field_name = 'istation=%s; ndim=%s; dim%i' % (n, ndim, ii+1)
+                    if ii in [4, 5, 6, 7]:
+                        dim4 = dim[3]
+                        dimi = double_or_blank(card, i, field_name, default=dim4)
+                    elif ii in [8, 9]:
+                        dim6 = dim[5]
+                        dimi = double_or_blank(card, i, field_name, default=dim6)
+                    else:
+                        dimi = double(card, i, field_name)
+                    dim.append(dimi)
+                    i += 1
+            else:
+                for ii in range(ndim):
+                    field_name = 'istation=%s; ndim=%s; dim%i' % (n, ndim, ii+1)
+                    if xxbi == 0.0:
+                        dimi = double(card, i, field_name)
+                    elif xxbi == 1.0:
+                        dims0 = dims[0]
+                        dimi = double_or_blank(card, i, field_name, dims0[ii])
+                    else:
+                        ## TODO: use linear interpolation
+                        dimi = double(card, i, field_name)
+
+                    dim.append(dimi)
+                    i += 1
             dims.append(dim)
 
             nsmi = double_or_blank(card, i, 'nsm_n=%i' % n, 0.0)

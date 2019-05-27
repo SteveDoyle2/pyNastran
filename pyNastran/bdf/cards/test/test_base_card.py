@@ -2,22 +2,48 @@ from __future__ import (nested_scopes, generators, division, absolute_import,
                         print_function, unicode_literals)
 import unittest
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
-from pyNastran.bdf.cards.expand_card import expand_thru, expand_thru_by, expand #, expand_thru_exclude
+from pyNastran.bdf.cards.expand_card import expand_thru, expand_thru_by, expand
+#, expand_thru_exclude
 
-#expand_thru = expand
+
 class TestBaseCard(unittest.TestCase):
     """Tests methods used by ``BaseCard``"""
+    def test_expand_floats(self):
+        """tests expand"""
+        values1 = expand(['500. 2000.'])
+        values2 = expand([500., 2000.])
+        assert values1 == [500., 2000.], values1
+        assert values2 == [500., 2000.], values2
+
     def test_expand_thru(self):
         """tests expand_thru"""
-        # untested like this and with integers
-        #['1', '2', '21', 'THRU', '25', '31', 'THRU', '37']
+
+        values1 = expand(['include 14,15, include 18 thru 24'])
+        assert values1 == [14, 15, 18, 19, 20, 21, 22, 23, 24], values1
+
+        values1 = expand(['include 10 thru 17 except 14 thru 15, include 43 thru 45'])
+        assert values1 == [10, 11, 12, 13, 16, 17, 43, 44, 45], values1
+
+        values1 = expand(['1', '2', '21', 'THRU', '25', '31', 'THRU', '37'])
+        values2 = expand(['1', '2', '21', 'THRU', '25', '31', 'THRU', '37 '])
+        values3 = expand([1, 2, 21, 'THRU', 25, 31, 'THRU', 37])
+        assert values1 == [1, 2, 21, 22, 23, 24, 25, 31, 32, 33, 34, 35, 36, 37], values1
+        assert values2 == [1, 2, 21, 22, 23, 24, 25, 31, 32, 33, 34, 35, 36, 37], values2
+        assert values3 == [1, 2, 21, 22, 23, 24, 25, 31, 32, 33, 34, 35, 36, 37], values3
+
+        values1 = expand(['1 , 9 THRU 12 , 1040'])
+        values2 = expand(['1 , 9 THRU 12 , 1040'])
+        assert values1 == [1, 9, 10, 11, 12, 1040], values1
+        assert values2 == [1, 9, 10, 11, 12, 1040], values2
 
         values1 = expand_thru(['1', 'THRU', '10'])
         values2 = expand(['1', 'THRU', '10'])
         values3 = expand(['1 THRU 10'])
+        values4 = expand(['1 THRU 10 '])
         assert values1 == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], values1
         assert values2 == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], values2
         assert values3 == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], values3
+        assert values4 == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], values4
 
 
         values1 = expand_thru(['1', 'thru', '10'])
@@ -33,22 +59,26 @@ class TestBaseCard(unittest.TestCase):
         values2 = expand([1, 2, 3, 4, 5])
         values3 = expand(['1, 2, 3, 4, 5'])
         values4 = expand(['1 2 3 4 5'])
+        values5 = expand(['1 2 3 4 5 '])
         assert values1 == [1, 2, 3, 4, 5], values1
         assert values2 == [1, 2, 3, 4, 5], values2
         assert values3 == [1, 2, 3, 4, 5], values3
         assert values4 == [1, 2, 3, 4, 5], values4
+        assert values5 == [1, 2, 3, 4, 5], values5
 
         values1 = expand_thru_by(['1', 'THRU', '10', 'BY', 2])
         values2 = expand(['1', 'THRU', '10', 'BY', 2])
         values3 = expand(['1 THRU 10 BY 2'])
+        values4 = expand(['1 THRU 10 BY 2 '])
         assert values1 == [1, 3, 5, 7, 9, 10], values1
         assert values2 == [1, 3, 5, 7, 9, 10], values2
         assert values3 == [1, 3, 5, 7, 9, 10], values3
+        assert values4 == [1, 3, 5, 7, 9, 10], values4
 
         values1 = expand_thru_by(['1', 'thru', '10', 'by', 2])
         values2 = expand(['1', 'thru', '10', 'by', 2])
         values3 = expand(['1 thru 10 by 2'])
-        values4 = expand(['1 thru 10, by, 2'])
+        values4 = expand(['1 thru 10, by, 2,'])
         assert values1 == [1, 3, 5, 7, 9, 10], values1
         assert values2 == [1, 3, 5, 7, 9, 10], values2
         assert values3 == [1, 3, 5, 7, 9, 10], values3
@@ -61,8 +91,10 @@ class TestBaseCard(unittest.TestCase):
 
         #values = expand_thru_exclude(['1', 'thru', '5', 'exclude', 2])
         #assert values == [1, 3, 4, 5], values
-        values = expand(['1,5,THRU,11,EXCEPT,7,8,13'])
-        assert values == [1, 5, 6, 9, 10, 11, 13], values
+        values1 = expand(['1,5,THRU,11,EXCEPT,7,8,13'])
+        values2 = expand([1, 5, 'THRU', 11, 'EXCEPT', 7, 8, 13])
+        assert values1 == [1, 5, 6, 9, 10, 11, 13], values1
+        assert values2 == [1, 5, 6, 9, 10, 11, 13], values2
 
     def test_collapse_thru(self):
         """

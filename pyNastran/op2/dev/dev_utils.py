@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 from pyNastran.op2.op2 import read_op2
 from pyNastran.bdf.utils import parse_patran_syntax_dict

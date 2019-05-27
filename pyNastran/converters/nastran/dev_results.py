@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from copy import deepcopy
 from numpy import zeros
 from numpy.linalg import norm  # type: ignore
@@ -28,6 +26,7 @@ class TransientElementResults:
             the type of data result (e.g. '%i', '%.2f', '%.3f')
         uname : str
             some unique name for ...
+
         """
         self.subcase_id = subcase_id
         #assert self.subcase_id > 0, self.subcase_id

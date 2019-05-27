@@ -5,8 +5,6 @@ defines:
  - expand_thru_exclude
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from typing import  List, Union
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -156,14 +154,17 @@ def expand_thru_by(fields, set_fields=True, sort_fields=True,
 
 
 def split_comma_space(datai):
+    """normalizes the form of a SET into a comma separated list instead of being mixed"""
     if ',' in datai:
-        sline1 = [slinei.strip() for slinei in datai.split(',')]
-        sline = []
-        for slinei in sline1:
-            if ' ' in slinei:
-                sline.extend(slinei.split())
-            else:
-                sline.append(slinei)
+        # do I need a strip?
+        sline = datai.replace(',', ' ').split()
+        #sline1 = [slinei.strip() for slinei in datai.split(',')]
+        #sline = []
+        #for slinei in sline1:
+            #if ' ' in slinei:
+                #sline.extend(slinei.split())
+            #else:
+                #sline.append(slinei)
     else:
         sline = datai.split()
     return sline
@@ -171,10 +172,10 @@ def split_comma_space(datai):
 def setup_data(data_in):
     data = []
     for datai in data_in:
-        if isinstance(datai, int):
+        if isinstance(datai, (int, float)):
             data.append(datai)
         else:
-            datai = datai.upper()
+            datai = datai.upper().replace('INCLUDE', ' ')
             sline = split_comma_space(datai)
             data.extend(sline)
 
@@ -207,23 +208,46 @@ def isinteger(astring):
         return True
 
 def get_except(data, i, ndata, end_value):
-    removed = set()
+    """helper method for expand that gets the values until the end of an
+    EXCEPT chain"""
+    removed = []
+    ivalue_old = 0
     while i < len(data):
         value = data[i]
         #print('  exclude?', i, value)
         if isinstance(value, int):
             ivalue = value
-        else:
+        elif value.isdigit():
             ivalue = int(value)
+        elif value == 'THRU':
+            ivalue_old = int(data[i-1])
+            ivalue_new = int(data[i+1])
+            rangei = range(ivalue_old, ivalue_new+1)
+            removed.extend(rangei)
+            i += 2
+            continue
+        else:
+            raise NotImplementedError('data[%i] = %s; data=%s' % (i, value, data))
         #print('  ivalue=%s > end_value=%s' %  (ivalue, end_value))
-        if ivalue > end_value:
+
+        if ivalue > end_value and ivalue > ivalue_old:
             #print('    break')
             break
-        removed.add(ivalue)
+        removed.append(ivalue)
+        ivalue_old = ivalue
         i += 1
+
+    removed_set = set(removed)
     #print('removed...', removed)
     #print('*datai =', data[i])
-    return i, removed
+    return i, removed_set
+
+def expand_float(data):
+    out = []
+    for datai in  data:
+        out.append(float(datai))
+    out.sort()
+    return out
 
 def expand(data_in):
     """new expand method
@@ -231,6 +255,7 @@ def expand(data_in):
     Odd behavior:
      - 1 THRU 10 EXCEPT 4,5,6,11 results in [1,2,3,7,8,9,10,11]
        the EXCEPT is active while the value is less than the THRU value of 10
+       and the values are in ascending order
 
     What happens when:
      - a value is excluded and later added or
@@ -242,8 +267,10 @@ def expand(data_in):
 
     #print('***************************')
     #print('data =', data)
+    if stype == 'float':
+        return expand_float(data)
     if stype in ['float', 'str']:
-        raise NotImplementedError(data_in)
+        raise NotImplementedError(data)
 
     assert stype == 'int', data
     ndata = len(data) - 1
@@ -254,13 +281,11 @@ def expand(data_in):
     is_thru = False
     while i < len(data):
         value = data[i]
-        #print('value =', value)
-        if isinstance(value, int):
-            out.append(value)
-            i += 1
-            continue
+        #print('---')
+        #print('i=%s value=%r is_thru=%s' % (i, value, is_thru))
 
         if is_thru:
+            #print('$$$ starting thru')
             is_thru = False
             continue_after_range = False
 
@@ -269,12 +294,14 @@ def expand(data_in):
             value0 = out.pop()
             end_value = int(value)
             i += 1
+            #print('*value0 =', value0)
+            #print('*end_value =', i, end_value)
 
             by_value = 1
-            if i < ndata:
+            if i <= ndata:
                 next_svalue = data[i]
                 #print('found by?', next_svalue)
-                if next_svalue.isdigit():  # catches integers
+                if isinstance(next_svalue, int) or next_svalue.isdigit():  # catches integers
                     continue_after_range = True
                 elif next_svalue == 'BY':
                     i += 1
@@ -292,6 +319,9 @@ def expand(data_in):
                     continue_after_range = True
                 else:
                     raise RuntimeError('next_svalue=%s data=%s' % (next_svalue, data))
+            #else:
+                # out of range
+
             rangei = range(value0, end_value + 1, by_value)
             #print('range(%r, %r, %r) = %s' % (value0, end_value + 1, by_value, rangei))
             out2.extend(rangei)
@@ -299,10 +329,11 @@ def expand(data_in):
                 out2.append(end_value)
 
             if continue_after_range:
-                #print('continue_after_range')
+                #print('continue_after_range; adding %s' % str(out2))
                 out.extend(out2)
                 continue
 
+            #print('looking for except...')
             i += 1
             if i < ndata:
                 exclude_svalue = data[i]
@@ -322,6 +353,12 @@ def expand(data_in):
             #print('------------')
             del by_value
             i += 1
+
+        elif isinstance(value, int):
+            #print('value =', i, value)
+            out.append(value)
+            i += 1
+            continue
         else:
             #print('add', i, value)
             assert is_thru is False, data

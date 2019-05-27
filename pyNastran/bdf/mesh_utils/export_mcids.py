@@ -3,7 +3,6 @@ Defines:
  - nodes, bars = export_mcids(bdf_filename, csv_filename=None)
 
 """
-from __future__ import print_function
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
 

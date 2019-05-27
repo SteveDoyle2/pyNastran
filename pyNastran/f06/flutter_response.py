@@ -1,4 +1,3 @@
-from __future__ import print_function
 from itertools import count
 from typing import  List, Any, Optional, Dict, Union, Tuple
 
@@ -760,7 +759,7 @@ class FlutterResponse:
             nmodes = max(modes)
         return modes, nmodes
 
-    def export_to_f06(self, f06_filename, modes=None, page_stamp=None, page_num=1):
+    def export_to_f06(self, f06_filename, modes=None, page_stamp=None, page_num=1) -> int:
         # type: (str, Optional[List[int]], Optional[str], int) -> None
         if page_stamp is None:
             page_stamp = 'PAGE %i'

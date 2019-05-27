@@ -4155,19 +4155,28 @@ class DVPREL1(DVXREL1):
         prop = self._get_property(model, self.pid)
         try:
             self._update_by_dvprel(prop, value)
-        except AttributeError:
+        except (AttributeError, NotImplementedError):
+            print(self)
+            print(prop)
             raise
-            #raise NotImplementedError('prop_type=%r is not supported in update_model' % self.prop_type)
+            #raise NotImplementedError('prop_type=%r is not supported in '
+                                      #'update_model' % self.prop_type)
 
     def _update_by_dvprel(self, prop, value):
+        print(self.get_stats())
+        if self.prop_type != prop.type:
+            raise RuntimeError('prop_type=%s is not the same as the property type (%s)\n%s%s' % (
+                self.prop_type, prop.type, str(self), str(prop)))
+
         if hasattr(prop, 'update_by_pname_fid'):
             prop.update_by_pname_fid(self.pname_fid, value)
         else:
             try:
                 pname_fid_map = prop.pname_fid_map
             except AttributeError:
-                raise NotImplementedError('prop_type=%r name=%r has not implemented pname_fid_map/update_by_pname_fid' % (
-                    self.prop_type, self.pname_fid))
+                raise NotImplementedError('prop_type=%r name=%r has not implemented '
+                                          'pname_fid_map/update_by_pname_fid' % (
+                                              self.prop_type, self.pname_fid))
 
             try:
                 key = pname_fid_map[self.pname_fid]

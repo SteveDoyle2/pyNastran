@@ -49,8 +49,15 @@ class AddMethods(BDFAttributes):
         # type: (Any, bool) -> None
         """adds an DTI object"""
         name = dti.name
-        self.dti[name] = dti
-        self._type_to_id_map[dti.type].append(name)
+        if name == 'UNITS' or name not in self.dti:
+            self.dti[name] = dti
+            self._type_to_id_map[dti.type].append(name)
+        else:
+            old_dti = self.dti[name]
+            key = list(dti.fields.keys())[0]
+            assert key not in old_dti.fields, 'key=%i old_fields=%s fields=%s' % (key, old_dti.fields, dti.fields)
+            old_dti.fields[key] = dti.fields[key]
+
 
     def _add_param_object(self, param, allow_overwrites=False):
         # type: (Any, bool) -> None

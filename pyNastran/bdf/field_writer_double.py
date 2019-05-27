@@ -1,9 +1,6 @@
 """
 Defines functions for double precision 16 character field writing.
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-
 import sys
 from typing import List, Union
 from pyNastran.utils.numpy_utils import integer_types

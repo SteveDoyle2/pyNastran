@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 def read_dmap(lines):
     lines2 = []
     append_flag = False

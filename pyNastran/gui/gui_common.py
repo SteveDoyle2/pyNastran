@@ -1,7 +1,5 @@
 # coding: utf-8
 # pylint: disable=W0201,C0301
-from __future__ import division, unicode_literals, print_function
-
 import os.path
 import datetime
 from collections import OrderedDict

@@ -1,8 +1,8 @@
 """
 defines:
  - model = FaceFile(log=None, debug=False)
+
 """
-from __future__ import print_function
 from copy import deepcopy
 
 import numpy as np

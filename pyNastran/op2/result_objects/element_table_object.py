@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import numpy as np
 from numpy import zeros, float32, searchsorted, empty
 from numpy import allclose, asarray, vstack

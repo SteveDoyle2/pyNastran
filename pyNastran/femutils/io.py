@@ -6,8 +6,8 @@ This includes:
                 ndmin=0,)
  - savetxt_nice(fname, X, fmt='%.18e', delimiter=' ', newline='\n', header='',
                 footer='', comments='# ')
+
 """
-from __future__ import print_function, absolute_import
 import sys
 from io import StringIO
 from itertools import count

@@ -1,8 +1,6 @@
-from __future__ import print_function
-
 from qtpy import QtGui
 from qtpy.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView
-from pyNastran.gui.utils.qt.qtreeview2 import RightClickTreeView
+from pyNastran.gui.utils.qt.qtreeview2 import RightClickTreeView, GenericRightClickTreeView
 
 
 class ResultsWindow(QWidget):
@@ -10,17 +8,40 @@ class ResultsWindow(QWidget):
     A ResultsWindow creates the box where we actually select our
     results case.  It does not have an apply button.
     """
-    def __init__(self, parent, name, data, choices,
+    def __init__(self, parent, name, data, choices, actions=None,
                  include_clear=True, include_delete=True, include_results=True):
         QWidget.__init__(self)
         self.name = name
         self.data = data
         self.choices = choices
         self.parent = parent
-        self.treeView = RightClickTreeView(
-            self, self.data, choices,
-            include_clear=include_clear, include_delete=include_delete,
-            include_results=include_results)
+
+        def on_modify(icase):
+            print('modify...%i' % icase)
+        def on_case(icase):
+            print('case...%i' % icase)
+        def on_delete():
+            print('delete...')
+
+        if actions:
+            #actions = [
+                ## (right_click_msg, callback, validate?)
+                ##('Clear Results...', self.on_clear_results, False),
+                ##('Apply Results to Fringe...', 'fringe', self.on_fringe, True),
+                ##('Apply Results to Displacement...', self.on_disp, True),
+                ##('Apply Results to Vector...', self.on_vector, True),
+                #('Delete...', on_delete, False),
+                #('Modify...', on_modify, True),
+            #]
+            self.treeView = GenericRightClickTreeView(
+                self, self.data, choices, actions,
+                include_clear=include_clear, include_delete=include_delete,
+                include_results=include_results)
+        else:
+            self.treeView = RightClickTreeView(
+                self, self.data, choices,
+                include_clear=include_clear, include_delete=include_delete,
+                include_results=include_results)
         self.treeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         self.model = QtGui.QStandardItemModel()

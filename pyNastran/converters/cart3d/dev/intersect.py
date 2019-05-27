@@ -1,4 +1,3 @@
-from __future__ import print_function
 from numpy import zeros, cross, dot, allclose, sign
 from numpy.linalg import norm
 

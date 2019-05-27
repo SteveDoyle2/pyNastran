@@ -915,10 +915,22 @@ class CBAR(LineElement):
 
 
 class CBEAM3(LineElement):  # was CBAR
+    _properties = ['node_ids', 'nodes']
     """
     Defines a three-node beam element
 
     """
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        x = None
+        nids = [1, 2, 3]
+        g0 = 4
+        return CBEAM3(eid, pid, nids, x, g0,
+                      wa=None, wb=None, wc=None,
+                      tw=None, s=None, comment='')
+
     type = 'CBEAM3'
     def __init__(self, eid, pid, nids, x, g0,
                  wa=None, wb=None, wc=None, tw=None, s=None, comment=''):
@@ -972,7 +984,7 @@ class CBEAM3(LineElement):  # was CBAR
         pid = integer_or_blank(card, 2, 'pid', eid)
         ga = integer(card, 3, 'ga')
         gb = integer(card, 4, 'gb')
-        gc = integer(card, 5, 'gc')
+        gc = integer_or_blank(card, 5, 'gc')
 
         # card, eid, x1_default, x2_default, x3_default
         x, g0 = init_x_g0(card, eid, 0., 0., 0.)
@@ -1013,7 +1025,8 @@ class CBEAM3(LineElement):  # was CBAR
         msg = ', which is required by CBEAM3 eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
-        self.gc_ref = model.Node(self.gc, msg=msg)
+        if self.gc is not None:
+            self.gc_ref = model.Node(self.gc, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
         if self.g0:
             self.g0_ref = model.Node(self.g0, msg=msg)
@@ -1022,7 +1035,8 @@ class CBEAM3(LineElement):  # was CBAR
         msg = ', which is required by CBEAM3 eid=%s' % (self.eid)
         self.ga_ref = model.Node(self.ga, msg=msg)
         self.gb_ref = model.Node(self.gb, msg=msg)
-        self.gc_ref = model.Node(self.gc, msg=msg)
+        if self.gc is not None:
+            self.gc_ref = model.Node(self.gc, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
         if self.g0:
             self.g0_ref = model.Node(self.g0, msg=msg)
@@ -1040,8 +1054,23 @@ class CBEAM3(LineElement):  # was CBAR
         self.gc_ref = None
         self.pid_ref = None
 
+    def center_of_mass(self):
+        return np.zeros(3)
+    def Centroid(self):
+        return np.zeros(3)
+    def MassPerLength(self):
+        return 0.
+
     def Length(self):
         r"""
+        We'll fit a 2nd order polynomial to the x, y, and z coefficients.
+        We know GA (t=0), GB(t=1), and GC (t=0.5 assumed).
+        This gives us A, for:
+         - y1 = a1*t^2 = b1*t + c1
+
+        where:
+         - yi is for the x, y, and z terms
+
         [xa, xb, xc] = [A][a1, b1, c1].T
         [ya, yb, yc] = [A][a2, b2, c2].T
         [za, zb, zc] = [A][a3, b3, c3].T
@@ -1053,35 +1082,87 @@ class CBEAM3(LineElement):  # was CBAR
         Ainv = [ 2.,  2., -4.]
                [-3., -1.,  4.]
                [ 1.,  0.,  0.]
+
         """
-        xa, ya, za = self.ga_ref.get_position() + self.wa
-        xb, yb, zb = self.gb_ref.get_position() + self.wb
-        xc, yc, zc = self.gc_ref.get_position() + self.wc
-        length = self._integrate(
-            np.array([xa, xb, xc]),
-            np.array([ya, yb, yc]),
-            np.array([za, zb, zc]),
-        )
+        xyza = self.ga_ref.get_position() + self.wa
+        xyzb = self.gb_ref.get_position() + self.wb
+        if self.gc is not None:
+            xyzc = self.gc_ref.get_position() + self.wc
+            xa, ya, za = xyza
+            length = self._integrate(
+                xyza - xa,
+                xyzb - ya,
+                xyzc - za,
+            )
+        else:
+            length = np.linalg.norm(xyzb - xyza)
         return length
 
     def _integrate(self, xabc, yabc, zabc):
+        """
+        We integrate:
+         y = sqrt(x'(t)^2 + y'(t)^2 + z'(t)^2)*dt from 0 to 1
+         y = sqrt(r)
+
+        /where:
+         - x(t) = a*t^2 + b*t + c
+         - x'(t) = 2*a*t + b
+         - x'(t)^2 = 4*(a*t)^2 + 2*a*b*t + b^2
+
+        expanding terms:
+         - x'(t)^2 = 4*(a1*t)^2 + 2*a1*b1*t + b1^2
+         - y'(t)^2 = 4*(a2*t)^2 + 2*a2*b2*t + b2^2
+         - z'(t)^2 = 4*(a3*t)^2 + 2*a3*b3*t + b3^2
+
+        grouping terms:
+         - a = 4 * (a1 ** 2 + a2 ** 2 + a3 ** 2) * t^2
+         - b = 2 * (a1 * b1 + a2 * b2 + a3 * b3) * t
+         - c = b1 ** 2 + b2 ** 2 + b3 ** 2
+         - y = integrate(sqrt(a*t^2 + b*t + t), t, 0., 1.)
+        Looking up integral formulas, we get a really complicated integral.
+
+        for a = 0 (and rewriting):
+         - y = integrate(sqrt(a*t + b), t, 0., 1.)
+         - y = (2*b/3a + 2*t/3) * sqrt(at + b)
+        or:
+         - y = (2*c/3b + 2*t/3) * sqrt(b*t + c)
+        """
+        #print(xabc, yabc, zabc)
         Ainv = np.array([
             [2., 2., -4.],
             [-3., -1., 4.],
-            [1., 0., 0.]])
-        a1, b1, unused_c1 = Ainv * xabc
-        a2, b2, unused_c2 = Ainv * yabc
-        a3, b3, unused_c3 = Ainv * zabc
-        t = 1.
-        a = 4 * (a1 ** 2 + a2 ** 2 + a3 ** 2)
-        b = (b1 ** 2 + b2 ** 2 + b3 ** 2)
-        c = 2 * (a1 * b1 + a2 * b2 + a3 * b3)
-        at2btc = a * t **2 + b * t + c
-        length = (
-            (b + 2 * a * t) / (4 * a) * np.sqrt(at2btc) +
-            (4 * a * c - b ** 2) / (8 * a ** 1.5) * np.log(
-                2*a*t + b + 2*np.sqrt(a*(at2btc)))
-        )
+            [1., 0., 0.],
+        ])
+        a1, b1, unused_c1 = Ainv @ xabc.reshape(3, 1)
+        a2, b2, unused_c2 = Ainv @ yabc.reshape(3, 1)
+        a3, b3, unused_c3 = Ainv @ zabc.reshape(3, 1)
+        #print(x, y, z)
+        #print('---------------------')
+        #print(a1, a2, a3)
+        a = 4 * (a1 ** 2 + a2 ** 2 + a3 ** 2)[0]
+        b = 2 * (a1 * b1 + a2 * b2 + a3 * b3)[0]
+        c = (b1 ** 2 + b2 ** 2 + b3 ** 2)[0]
+        #print(a, b, c)
+        if np.allclose(a, 0) and np.allclose(b, 0.):
+            length = c ** 0.5
+        elif np.allclose(a, 0):
+            #print(self.ga_ref)
+            #print(self.gb_ref)
+            #print(self.gc_ref)
+            # dx = self.gb_ref.get_position() - self.ga_ref.get_position()
+            #coeff = ((2 * b) / (3 * a) + (2 * t) / 3)
+            #length = coeff * np.sqrt(a*t + b)
+            dx = [xabc[1], yabc[1], zabc[1]]
+            length = np.linalg.norm(dx)
+            #print('dx=', dx, length)
+        else:
+            t = 1.
+            at2btc = a * t **2 + b * t + c
+            length = (
+                (b + 2 * a * t) / (4 * a) * np.sqrt(at2btc) +
+                (4 * a * c - b ** 2) / (8 * a ** 1.5) * np.log(
+                    2*a*t + b + 2*np.sqrt(a*(at2btc)))
+            )
         return length
 
     def Area(self):
@@ -1089,19 +1170,45 @@ class CBEAM3(LineElement):  # was CBAR
             msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
             raise RuntimeError(msg)
         A = self.pid_ref.Area()
-        assert isinstance(A, float), A
 
         xa, ya, za = self.ga_ref.get_position() + self.wa
         xb, yb, zb = self.gb_ref.get_position() + self.wb
-        xc, yc, zc = self.gc_ref.get_position() + self.wc
-        Aa, Ab, Ac = self.pid_ref.area
-        A = self._integrate(
-            np.array([Aa * xa, Ab * xb, Ac * xc]),
-            np.array([Aa * ya, Ab * yb, Ac * yc]),
-            np.array([Aa * za, Ab * zb, Ac * zc]),
-        )
-        assert isinstance(A, float), A
-        return A
+        Aa, Ab, Ac = A # self.pid_ref.area
+        L = self.Length()
+        if self.gc is not None:
+            xc, yc, zc = self.gc_ref.get_position() + self.wc
+            area = self._integrate(
+                np.array([Aa * xa, Ab * xb, Ac * xc]) / L,
+                np.array([Aa * ya, Ab * yb, Ac * yc]) / L,
+                np.array([Aa * za, Ab * zb, Ac * zc]) / L,
+            )
+        else:
+            area = np.linalg.norm(xyzb*Ab - xyza*Aa) / L
+        assert isinstance(area, float), area
+        return area
+
+    def Volume(self):
+        if isinstance(self.pid_ref, integer_types):
+            msg = 'Element eid=%i has not been cross referenced.\n%s' % (self.eid, str(self))
+            raise RuntimeError(msg)
+        A = self.pid_ref.Area()
+
+        xyza = self.ga_ref.get_position() + self.wa
+        xyzb = self.gb_ref.get_position() + self.wb
+        Aa, Ab, Ac = A # self.pid_ref.area
+        if self.gc is not None:
+            xa, ya, za = xyza
+            xb, yb, zb = xyzb
+            xc, yc, zc = self.gc_ref.get_position() + self.wc
+            volume = self._integrate(
+                np.array([Aa * xa, Ab * xb, Ac * xc]),
+                np.array([Aa * ya, Ab * yb, Ac * yc]),
+                np.array([Aa * za, Ab * zb, Ac * zc]),
+            )
+        else:
+            volume = np.linalg.norm(xyzb*Ab - xyza*Aa)
+        assert isinstance(volume, float), volume
+        return volume
 
     def Nsm(self):
         if isinstance(self.pid_ref, integer_types):
@@ -1110,15 +1217,21 @@ class CBEAM3(LineElement):  # was CBAR
         nsm = self.pid_ref.Nsm()
         assert isinstance(nsm, float), nsm
 
-        xa, ya, za = self.ga_ref.get_position() + self.wa
-        xb, yb, zb = self.gb_ref.get_position() + self.wb
-        xc, yc, zc = self.gc_ref.get_position() + self.wc
-        nsma, nsmb, nsmc = self.pid_ref.nsm
-        nsm = self._integrate(
-            np.array([nsma * xa, nsmb * xb, nsmc * xc]),
-            np.array([nsma * ya, nsmb * yb, nsmc * yc]),
-            np.array([nsma * za, nsmb * zb, nsmc * zc]),
-        )
+        xyza = self.ga_ref.get_position() + self.wa
+        xyzb = self.gb_ref.get_position() + self.wb
+        if self.gc is not None:
+            xa, ya, za = xyza
+            xb, yb, zb = xyzb
+            xc, yc, zc = self.gc_ref.get_position() + self.wc
+            nsma, nsmb, nsmc = self.pid_ref.nsm
+            L = self.Length()
+            nsm = self._integrate(
+                np.array([nsma * xa, nsmb * xb, nsmc * xc]) / L,
+                np.array([nsma * ya, nsmb * yb, nsmc * yc]) / L,
+                np.array([nsma * za, nsmb * zb, nsmc * zc]) / L,
+            )
+        else:
+            nsm = np.linalg.norm(xyzb*nsmb - xyza*nsmb) / L
         assert isinstance(nsm, float), nsm
         return nsm
 
@@ -1145,6 +1258,10 @@ class CBEAM3(LineElement):  # was CBAR
         if self.g0_ref is None:
             return self.g0
         return self.g0_ref.nid
+
+    @property
+    def nodes(self):
+        return [self.Ga(), self.Gb(), self.Gc()]
 
     @property
     def node_ids(self):

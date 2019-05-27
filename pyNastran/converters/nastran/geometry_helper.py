@@ -4,7 +4,6 @@ defines NastranGuiAttributes, which defines
 GUI specific geometry functions that don't involve PyQt/VTK
 this is no longer true...but should be
 """
-from __future__ import print_function
 import sys
 from collections import defaultdict
 import numpy as np

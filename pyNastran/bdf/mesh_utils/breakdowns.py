@@ -31,14 +31,15 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
     TODO: What about CONRODs?
 
     """
-    #skip_elements = [
+    skip_elements = [
         #'CTRIA3', 'CTRIA6', 'CTRIAR',
         #'CQUAD4', 'CQUAD8',
         #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
         #'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
         #'CBUSH', 'CBUSH1D', 'CBUSH2D',
         #'CRAC2D', 'CRAC3D',
-    #]
+        #'CBEAM3',
+    ]
     skip_props = [
         'PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
         'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
@@ -46,10 +47,13 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
         'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
         'PCOMPS', 'PVISC',
         'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
-        'PBEND',
+
+        # lines - should be included
+        'PBEND', # 'PBEAM3',
     ]
     bar_properties = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML',
-                      'PROD', 'PTUBE', 'PBRSECT', 'PBMSECT', 'PBCOMP']
+                      'PROD', 'PTUBE', 'PBRSECT', 'PBMSECT', 'PBCOMP',
+                      'PBEAM3']
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=stop_if_no_length,
         msg=' which is required by get_length_breakdown')
@@ -125,7 +129,12 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
         'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
         'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
         'PCOMPS', 'PVISC', 'PBCOMP', 'PBEND',
+
+        # lines - should be included
+        'PBEND', # 'PBEAM3',
     ]
+    bar_properties = [
+        'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBEAM3']
 
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=stop_if_no_area,
@@ -145,7 +154,7 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
                     print(prop)
                     print(elem)
                     raise
-        elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
+        elif prop.type in bar_properties:
             for eid in eids:
                 elem = model.elements[eids[0]]
                 area = elem.Area()
@@ -190,6 +199,7 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
     #'PBEAM3',
     #'PBEND',
     #'PIHEX',
+
     """
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=stop_if_no_volume,
@@ -201,7 +211,14 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
         'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
         'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',
         'PVISC', 'PBCOMP', 'PBEND',
+
+        # lines - should be included
+        'PBEND', 'PBEAM3',
     ]
+    bar_properties = [
+        'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', # 'PBEAM3'
+    ]
+
     pids_to_volume = {}
     skipped_eid_pid = set()
     for pid, eids in pid_eids.items():
@@ -226,7 +243,7 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
             thickness = prop.Thickness()
             volumesi = [area * thickness for area in areas]
             volumes.extend(volumesi)
-        elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
+        elif prop.type in bar_properties:
             # TODO: Do I need to consider the offset on length effects for a CBEAM?
             lengths = []
             for eid in eids:
@@ -236,6 +253,11 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
             area = prop.Area()
             volumesi = [area * length for length in lengths]
             volumes.extend(volumesi)
+        elif prop.type in ['PBEAM3']:
+            for eid in eids:
+                elem = model.elements[eid]
+                volumei = elem.Volume()
+                volumes.append(volumei)
         elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID']:
             for eid in eids:
                 elem = model.elements[eid]
@@ -303,6 +325,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
     #'PBEND',
     #'PIHEX',
     #'PCOMPS',
+
     """
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=False,
@@ -323,7 +346,12 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
         'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
         'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
         'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX',
-        'PVISC', 'PBCOMP', 'PBEND', ]
+        'PVISC',
+
+        # lines - should be included
+        'PBCOMP', 'PBEND', 'PBEAM3',
+    ]
+    bar_properties = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']
     for pid, eids in pid_eids.items():
         prop = model.properties[pid]
         masses = []
@@ -355,7 +383,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
                 else:
                     masses.append(elem.Mass())
 
-        elif prop.type in ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']:
+        elif prop.type in bar_properties:
             nsm = prop.nsm # per unit length
             try:
                 rho = prop.Rho()
@@ -371,6 +399,12 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
                     masses_nonstructural.append(length * nsm)
                 else:
                     masses.append(length * (rho * area + nsm))
+        #elif prop.type in ['PBEAM3']:
+            #for eid in eids:
+                #elem = model.elements[eid]
+                #massi = elem.Mass()
+                #volumes.append(massi)
+
         elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID']:
             rho = prop.Rho()
             for eid in eids:

@@ -2,8 +2,8 @@
 defines:
     edges = free_edges(model, eids=None)
     edges = non_paired_edges(model, eids=None)
+
 """
-from __future__ import print_function
 from collections import defaultdict
 
 

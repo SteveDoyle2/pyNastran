@@ -18,9 +18,8 @@ Limitations:
 - May run into problems if you have two classes with the same name,
   but point to different locations.  There is some support for this,
   but hopefully you aren’t using it.
+
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 #from types import MethodType, FunctionType
 
 import h5py

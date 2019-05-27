@@ -10,11 +10,10 @@ defines some half-implemented functions with significant restrictions
                                            theta_tols=40.)
  - joint_nids = get_joints(model, pid_sets)
  - cut_model(model, axis='-y')
+
 """
-from __future__ import print_function
 from collections import defaultdict
 from functools import reduce
-
 
 import numpy as np
 from numpy import (array, where, hstack, searchsorted, float32, arccos, dot, degrees)

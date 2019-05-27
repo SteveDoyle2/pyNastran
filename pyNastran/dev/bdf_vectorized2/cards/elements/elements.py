@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 class Elements:
     """stores all the elements"""
     def __init__(self, model):

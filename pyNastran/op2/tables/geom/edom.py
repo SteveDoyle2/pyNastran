@@ -1,10 +1,6 @@
 """
 defines readers for BDF objects in the OP2 EDOM/EDOMS table
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-
-#from pyNastran import is_release
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 

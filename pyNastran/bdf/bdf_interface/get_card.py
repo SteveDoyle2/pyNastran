@@ -34,8 +34,6 @@ defines various methods to access high level BDF data:
 
 """
 # pylint: disable=C0103
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from copy import deepcopy
 from collections import defaultdict
 from typing import List, Dict, Set, Optional, Any, Tuple

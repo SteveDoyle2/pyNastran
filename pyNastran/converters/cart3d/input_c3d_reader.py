@@ -1,4 +1,3 @@
-from __future__ import print_function
 from collections import defaultdict
 from numpy import array, linspace, vstack
 from pyNastran.bdf.cards.aero.utils import points_elements_from_quad_points

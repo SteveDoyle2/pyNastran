@@ -5,8 +5,8 @@ defines:
  - write_skin_solid_faces(model, skin_filename,
                           write_solids=False, write_shells=True,
                           size=8, is_double=False, encoding=None)
+
 """
-from __future__ import print_function
 import sys
 from copy import deepcopy
 from collections import defaultdict

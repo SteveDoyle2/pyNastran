@@ -1,4 +1,3 @@
-from __future__ import print_function
 from pyNastran.bdf.bdf import BDF
 
 #def get_model(bdf_filename):

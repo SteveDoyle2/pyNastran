@@ -1,4 +1,3 @@
-from __future__ import print_function
 import numpy as np
 
 
@@ -11,6 +10,7 @@ def delete_bad_shells(model, max_theta=175., max_skew=70., max_aspect_ratio=100.
     ----------
     model : BDF ()
         this should be checked
+
     """
     eids_to_delete = get_bad_shells(model, max_theta=max_theta,
                                     max_skew=max_skew, max_aspect_ratio=max_aspect_ratio,
@@ -55,6 +55,7 @@ def get_bad_shells(model, max_theta=175., max_skew=70.,
         element ids that fail the criteria
 
     shells with a edge length=0.0 are automatically added
+
     """
     xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
     max_theta = np.radians(max_theta)
@@ -74,9 +75,7 @@ def get_bad_shells(model, max_theta=175., max_skew=70.,
 
 def get_bad_cquad4s(model, xyz_cid0, max_theta=175., max_skew=70.,
                     max_aspect_ratio=100., max_taper_ratio=4.0):
-    """
-    Get the bad elements
-    """
+    """Get the bad elements"""
     min_theta_quad = 0.1
     min_theta_quad = np.radians(min_theta_quad)
     eids_failed = np.array([])
@@ -231,9 +230,7 @@ def get_bad_cquad4s(model, xyz_cid0, max_theta=175., max_skew=70.,
 
 def get_bad_ctria3s(model, xyz_cid0, max_theta=175., max_skew=70.,
                     max_aspect_ratio=100.):
-    """
-    Get the bad elements
-    """
+    """Get the bad elements"""
     min_theta_tri = 0.1
     min_theta_tri = np.radians(min_theta_tri)
     eids_failed = []

@@ -679,7 +679,7 @@ class Subcase:
                 try:
                     values_check = expand_thru_case_control(value)
                     check = True
-                except RuntimeError:
+                except (RuntimeError, SyntaxError):
                     check = False
                 if check and values2 != values_check:
                    raise RuntimeError('\nvalues2    =%s \n'

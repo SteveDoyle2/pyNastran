@@ -8,9 +8,8 @@ All dynamic loads are defined in this file.  This includes:
  * TLOAD2
  * RLOAD1
  * RLOAD2
+
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types

@@ -1,4 +1,3 @@
-from __future__ import print_function
 from collections import defaultdict
 from docopt import docopt
 import pyNastran

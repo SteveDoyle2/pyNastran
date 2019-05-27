@@ -1,12 +1,10 @@
-from __future__ import print_function
 import os
 
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
     QApplication, QLabel, QPushButton, QLineEdit, QRadioButton,
-    #QWidget, QButtonGroup,
-    QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox, QDoubleSpinBox,
-    QCheckBox, QGroupBox, QComboBox, QFileDialog)
+    QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox,
+    QComboBox, )
 from qtpy.compat import getexistingdirectory
 from qtpy.QtWidgets import QLabel, QTextEdit, QGridLayout, QVBoxLayout, QLineEdit
 
@@ -17,6 +15,21 @@ from pyNastran.gui.menus.results_sidebar_utils import (
     get_cases_from_tree, #build_pruned_tree
 )
 
+field_map = {
+    'CAERO1' : [
+        'eid',
+        'pid',
+        ('lspan', 'nspan'),
+        ('lchord', 'nchord'),
+        ('p1', 'x12'),
+        ('p4', 'x43'),
+    ],
+}
+print(field_map)
+
+class ModifyWindow(PyDialog):
+    def __init__(self, data, win_parent=None):
+        card = data['card']
 
 class ElementWindow(PyDialog):
     """
@@ -362,4 +375,3 @@ def main(): # pragma: no cover
 
 if __name__ == "__main__": # pragma: no cover
     main()
-

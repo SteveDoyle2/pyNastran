@@ -4,8 +4,6 @@ Defines the DEQATN class and sub-functions.
 
 The capitalization of the sub-functions is important.
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from copy import deepcopy
 
 import numpy as np

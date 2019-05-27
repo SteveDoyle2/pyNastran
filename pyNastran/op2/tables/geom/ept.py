@@ -2,8 +2,6 @@
 defines readers for BDF objects in the OP2 EPT/EPTS table
 """
 #pylint: disable=C0103,R0914
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
 from struct import unpack, Struct
 
 import numpy as np

@@ -2,8 +2,8 @@
 defines:
     * nids_close = find_closest_nodes(nodes_xyz, nids, xyz_compare, neq_max, tol)
     * ieq = find_closest_nodes_index(nodes_xyz, xyz_compare, neq_max, tol)
+
 """
-from __future__ import print_function
 from itertools import count
 from typing import List, Optional
 import numpy as np

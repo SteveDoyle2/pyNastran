@@ -2,7 +2,6 @@
 defines GuiAttributes, which defines Gui getter/setter methods
 and is inherited from many GUI classes
 """
-from __future__ import print_function
 import os
 import sys
 import traceback

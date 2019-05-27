@@ -601,8 +601,8 @@ class PCOMP(CompositeShellProperty):
         1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'tref', 7: 'ge', 8:'lam',
     }
     _properties = ['_field_map', 'plies', 'nplies', 'material_ids']
-    def update_by_pname_fid(self, pname_fid, value):
-        # type: (Union[str, int], Union[int, float, str]) -> None
+    def update_by_pname_fid(self, pname_fid: Union[str, int],
+                            value: Union[int, float, str]) -> None:
         if isinstance(pname_fid, int):
             self._update_field_helper(pname_fid, value)
         elif pname_fid == 'Z0':
@@ -1111,19 +1111,42 @@ class PCOMP(CompositeShellProperty):
 
 
 class PCOMPG(CompositeShellProperty):
+    """
+    +--------+----------+------+-----+--------+--------+------+----+-----+
+    |   1    |     2    |   3  |  4  |    5   |    6   |   7  | 8  |  9  |
+    +========+==========+======+=====+========+========+======+====+=====+
+    | PCOMPG |    PID   |  Z0  | NSM |   SB   |   FT   | TREF | GE | LAM |
+    +--------+----------+------+-----+--------+--------+------+----+-----+
+    |        |  GPLYID1 | MID1 |  T1 | THETA1 | SOUT1  |      |    |     |
+    +--------+----------+------+-----+--------+--------+------+----+-----+
+    |        |  GPLYID2 | MID2 |  T2 | THETA2 | SOUT2  |      |    |     |
+    +--------+----------+------+-----+--------+--------+------+----+-----+
+    """
     type = 'PCOMPG'
     _field_map = {
         1: 'pid', 2: 'z0', 3:'nsm', 4:'sb', 5:'ft', 6:'tref',
         7: 'ge', 8:'lam',
     }
+    pname_fid_map = {
+        # 1 based
+        #4 : 't', 'T' : 't',
+        #6 : 'twelveIt3', # no option
+        #8 : 'tst', #'T' : 't',
+    }
     _properties = ['_field_map', 'plies', 'nplies', 'material_ids']
+    def update_by_pname_fid(self, pname_fid: Union[str, int], value):
+        if isinstance(pname_fid, int):
+            self._update_field_helper(pname_fid, value)
+        else:
+            raise NotImplementedError('PCOMPG: pname_fid=%r' % pname_fid)
 
     def _update_field_helper(self, n, value):
-        nnew = n - 9
+        nnew = n - 10
         if nnew <= 0:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-        ilayer = nnew // 5
+        ilayer = nnew // 10
+        #print('ilayer=%s n=%s nnew=%s' % (ilayer, n, nnew))
         try:
             ply = self.plies[ilayer]
         except IndexError:
@@ -1132,8 +1155,24 @@ class PCOMPG(CompositeShellProperty):
             raise IndexError(msg)
 
         #ply = [mid, thickness, theta, sout, global_ply_id]
-        slot = nnew % 5
-        ply[slot] = value
+        slot = nnew % 10
+        #print('ply=', ply, nnew, slot)
+        if slot == 4:
+            self.thicknesses[ilayer] = value
+        elif slot == 5:
+            self.thetas[ilayer] = value
+        else:
+            raise NotImplementedError('On PCOMPG: cannot update n=%s; slot=%i\n'
+                                      '  slot=2: Global Ply ID\n'
+                                      '  slot=3: Material ID\n'
+                                      '  slot=4: Thickness\n'
+                                      '  slot=5: Theta\n'
+                                      '  slot=6: SOUT\n' % (n, slot))
+            #ply[slot] = value
+
+        #for mid, t, theta, sout, global_ply_id in zip(self.mids, self.thicknesses,
+                                                      #self.thetas, self.souts,
+                                                      #self.global_ply_ids):
 
     @property
     def plies(self):

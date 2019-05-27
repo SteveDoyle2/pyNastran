@@ -1,5 +1,4 @@
 """https://gist.github.com/jazzycamel/8abd37bf2d60cce6e01d"""
-from __future__ import print_function
 import os
 import time
 

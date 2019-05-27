@@ -95,11 +95,11 @@ def _parse_entry(lines):
     line_upper = line.upper()
 
     if line_upper.startswith('SUBCASE'):
-        #print("line = |%r|" % line)
+        #print("line = %r" % line)
         line2 = line.replace('=', '')
         sline = line2.split()
         if len(sline) != 2:
-            msg = "trying to parse |%s|..." % line
+            msg = "trying to parse %r..." % line
             raise SyntaxError("Invalid Subcase: %s" % msg)
         (key, isubcase) = sline
         #print("key=%r isubcase=%r" % (key, isubcase))

@@ -1,9 +1,6 @@
 """
 Defines functions for single precision 16 character field writing.
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-
 import sys
 from typing import List, Union, Optional, Any
 from numpy import float32, isnan  # type: ignore

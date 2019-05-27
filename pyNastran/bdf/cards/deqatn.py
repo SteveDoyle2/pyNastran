@@ -5,9 +5,6 @@ Defines the DEQATN class and sub-functions.
 The capitalization of the sub-functions is important.
 
 """
-from __future__ import (nested_scopes, generators, division, absolute_import,
-                        print_function, unicode_literals)
-
 import numpy as np
 from numpy import (
     cos, sin, tan, log, log10, mean, exp, sqrt, square, mod, abs, sum,

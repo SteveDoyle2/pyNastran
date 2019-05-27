@@ -1,4 +1,3 @@
-from __future__ import print_function
 from struct import unpack
 from numpy import zeros
 #from pyNastran.converters.usm3d.usm3d_reader import Usm3d
