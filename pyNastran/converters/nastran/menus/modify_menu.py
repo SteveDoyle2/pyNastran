@@ -65,6 +65,8 @@ class ModifyMenu(PyDialog):
                 box = QSpinBox()
                 box.setValue(value)
                 box.setEnabled(enabled)
+            else:
+                raise NotImplementedError(vartype)
             grid.addWidget(box, i, 1)
             grid_objsi.append(box)
 

@@ -182,8 +182,11 @@ def setup_data(data_in):
     stype = 'int'
     for datai in  data:
         #print(datai, any(char.isalpha() for char in datai))
-        if isinstance(datai, int) or datai in ['THRU', 'EXCEPT', 'BY'] or isinteger(datai):
+        if isinstance(datai, int) or isinteger(datai):
             continue
+        elif datai in ['THRU', 'EXCEPT', 'BY']:
+            stype = 'int_thru'
+            break
         #elif datai.isn
         elif '.' in datai:
             stype = 'float'
@@ -267,12 +270,19 @@ def expand(data_in):
 
     #print('***************************')
     #print('data =', data)
+    if stype == 'int':
+        out = [datai if isinstance(datai, int) else int(datai) for datai in data]
+        out.sort()
+        return out
     if stype == 'float':
         return expand_float(data)
     if stype in ['float', 'str']:
         raise NotImplementedError(data)
 
-    assert stype == 'int', data
+    #-------------------------------------------------------------------
+    #  has a THRU, BY, or EXCEPT
+
+    assert stype == 'int_thru', data
     ndata = len(data) - 1
     out = []
     removed_set = set()
