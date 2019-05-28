@@ -3407,7 +3407,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             max_thetai = np.nan
             #max_thetai = np.nan
             max_skew = np.nan
-            #max_warp = np.nan
             max_warp = np.nan
             aspect_ratio = np.nan
             areai = np.nan
@@ -3440,7 +3439,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p1, p2, p3, p4 = xyz_cid0[inids, :]
                 out = quad_quality(elem, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                 normali = np.cross(p1 - p3, p2 - p4)
                 if isinstance(elem.theta_mcid, float):
                     theta_array[ieid] = elem.theta_mcid
@@ -3488,7 +3487,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nnodes = 8
                 out = quad_quality(elem, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                 normali = np.cross(p1 - p3, p2 - p4)
                 if isinstance(elem.theta_mcid, float):
                     theta_array[ieid] = elem.theta_mcid
@@ -3505,7 +3504,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p1, p2, p3, p4 = xyz_cid0[inids, :]
                 out = quad_quality(elem, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                 normali = np.cross(p1 - p3, p2 - p4)
                 nnodes = 4
                 dim = 2
@@ -5482,7 +5481,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p4 = xyz_cid0[n4, :]
                 out = quad_quality(element, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
 
                 elem = vtkQuad()
                 elem.GetPointIds().SetId(0, n1)
@@ -5508,7 +5507,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p4 = xyz_cid0[n4, :]
                 out = quad_quality(element, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                 if None not in node_ids:
                     elem = vtkQuadraticQuad()
                     elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
@@ -5541,7 +5540,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 p4 = xyz_cid0[n4, :]
                 out = quad_quality(element, p1, p2, p3, p4)
                 (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+                 min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                 if None not in node_ids:
                     elem = vtk.vtkBiQuadraticQuad()
                     elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
@@ -5900,7 +5899,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     p4 = xyz_cid0[n4, :]
                     out = quad_quality(element, p1, p2, p3, p4)
                     (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-                     min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+                     min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                     if element.surface_type == 'AREA4' or None in node_ids:
                         elem = vtkQuad()
                     else:
@@ -6015,7 +6014,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     p4 = xyz_cid0[n4, :]
                     out = quad_quality(element, p1, p2, p3, p4)
                     (areai, taper_ratioi, area_ratioi, max_skew, aspect_ratio,
-                     min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
+                     min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
 
                     elem = vtkQuad()
                     elem.GetPointIds().SetId(0, n1)

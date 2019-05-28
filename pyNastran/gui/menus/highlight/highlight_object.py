@@ -27,6 +27,9 @@ class HighlightObject:
         camera = self.gui.GetCamera()
         min_clip, max_clip = camera.GetClippingRange()
         settings = self.gui.settings
+        if not hasattr(self.gui, 'case_keys'):
+            self.gui.log_error('No model has been loaded.')
+            return
 
         model_name = 'main'
         data = {

@@ -40,14 +40,14 @@ except ImportError:
 
 def get_stylesheet():
     stylesheet = None
-    if IS_DARK:
-        mapper = {
-            'pyside' : qdarkstyle.load_stylesheet_pyside,
-            'pyside2' : qdarkstyle.load_stylesheet_pyside2,
-            'pyqt4' : qdarkstyle.load_stylesheet_pyqt,
-            'pyqt5' : qdarkstyle.load_stylesheet_pyqt5,
-        }
-        stylesheet = mapper[qt_version]()
+    #if IS_DARK:
+        #mapper = {
+            #'pyside' : qdarkstyle.load_stylesheet_pyside,
+            #'pyside2' : qdarkstyle.load_stylesheet_pyside2,
+            #'pyqt4' : qdarkstyle.load_stylesheet_pyqt,
+            #'pyqt5' : qdarkstyle.load_stylesheet_pyqt5,
+        #}
+        #stylesheet = mapper[qt_version]()
     return stylesheet
 
 class MainWindow(GuiCommon, NastranIO):
