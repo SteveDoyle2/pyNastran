@@ -105,6 +105,7 @@ class Sidebar(QWidget):
     +--------------+
     """
     def __init__(self, parent, debug=False, data=None, actions=None,
+                 results_window_title='Case/Results',
                  clear_data=True, name='main', setup_dict=None):
         """
         Creates the buttons in the Sidebar, not the actual layout
@@ -117,6 +118,10 @@ class Sidebar(QWidget):
             flag for debug info
         data : List[tree]
             the tree
+        results_window_title : str
+            the title for "Case/Results"
+        actions : Dict[int] = QWidget, List[QWidget]
+            additional actions
         clear_data : bool; default=True
             ???
         name : str; default='main'
@@ -128,6 +133,7 @@ class Sidebar(QWidget):
         self.parent = parent
         self.debug = debug
         self.setup_dict = setup_dict
+        self.results_window_title = results_window_title
 
         choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
         if data is None:
@@ -142,7 +148,7 @@ class Sidebar(QWidget):
             ]
 
         self.result_case_windows = [
-            ResultsWindow(self, 'Case/Results', data, choices, actions=actions)
+            ResultsWindow(self, self.results_window_title, data, choices, actions=actions)
         ]
         data = [
             ('A', 1, []),
@@ -225,7 +231,8 @@ class Sidebar(QWidget):
         nwindows = len(self.result_case_windows)
         for unused_name in self.names[nwindows:]:
             #print('*creating a window')
-            result_case_window = ResultsWindow(self, 'Case/Results', data, choices)
+            result_case_window = ResultsWindow(
+                self, self.results_window_title, data, choices)
             result_case_window.setVisible(False)
             vbox.addWidget(result_case_window)
             self.result_case_windows.append(result_case_window)
@@ -267,6 +274,15 @@ class Sidebar(QWidget):
             #self.resize(width, height)
 
     def _add_from_setup_dict(self, vbox, irow):
+        """
+        0
+        Name
+        1
+        Case/Results Window
+        3
+        Apply
+        4
+        """
         if self.setup_dict is None:
             return
 

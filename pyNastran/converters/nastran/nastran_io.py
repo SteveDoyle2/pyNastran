@@ -77,6 +77,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     get_numpy_idtype_for_vtk, numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
+
+from pyNastran.converters.nastran.wildcards import IS_H5PY, GEOM_METHODS_BDF
 from pyNastran.converters.nastran.geometry_helper import (
     NastranGeometryHelper, get_material_arrays, get_suport_node_ids)
 from pyNastran.converters.nastran.results_helper import NastranGuiResults, _get_times
@@ -84,11 +86,6 @@ from pyNastran.converters.nastran.displacements import (
     ForceTableResults, ElementalTableResults)
 
 from pyNastran.op2.op2 import OP2
-try:
-    import h5py
-    IS_H5PY = True
-except ImportError:
-    IS_H5PY = False
 #from pyNastran.f06.f06_formatting import get_key0
 from pyNastran.op2.op2_geom import OP2Geom
 
@@ -197,14 +194,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
 
     def get_nastran_wildcard_geometry_results_functions(self):
-        """
-        gets the Nastran wildcard loader used in the file load menu
-        """
-        bdf_h5 = ''
-        if IS_H5PY:
-            bdf_h5 = '*.h5; '
-        geom_methods_bdf = ('Nastran Geometry - BDF (*.bdf; *.dat; *.nas; *.ecd; '
-                            '*.op2; *.pch; %s*.obj)' % bdf_h5)
+        """gets the Nastran wildcard loader used in the file load menu"""
         geom_methods_pch = 'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch)'
         combined_methods_op2 = 'Nastran Geometry + Results - OP2 (*.op2)'
 
@@ -217,7 +207,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         data_geom = (
             'nastran',
-            geom_methods_bdf, self.load_nastran_geometry,
+            GEOM_METHODS_BDF, self.load_nastran_geometry,
             results_fmt, self.load_nastran_results)
 
         data_geom_pch = (

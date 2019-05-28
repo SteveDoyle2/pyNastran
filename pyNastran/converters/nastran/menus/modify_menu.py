@@ -33,24 +33,30 @@ class ModifyMenu(PyDialog):
             grid_objs.append(grid_objsi)
             label = QLabel(var.name + ':')
             vartype = var.vartype
+            enabled = var.enabled
             value = getattr(obj, var.var)
 
+            label.setEnabled(enabled)
             grid.addWidget(label, i, 0)
             if vartype == 'lineedit':
                 if isinstance(value, (list, np.ndarray)):
                     for j, valuei in enumerate(value):
                         box = QLineEdit(str(valuei))
+                        box.setEnabled(enabled)
                         grid.addWidget(box, i, j+1)
                         grid_objsi.append(box)
                     continue
                 else:
                     box = QLineEdit(str(value))
+                    box.setEnabled(enabled)
             elif vartype == 'pulldown':
                 #box = QLineEdit(str(value))
                 pulldown = QComboBox()
                 objs_dict = getattr(model, var.pulldown_objs)
                 for idi, obji in sorted(objs_dict.items()):
                     pulldown.addItem('%s %i' % (obji.type, idi))
+                enabled = enabled and len(objs_dict)
+                pulldown.setEnabled(enabled)
                 grid.addWidget(pulldown, i, 1)
                 grid_objsi.append(pulldown)
                 continue
@@ -58,6 +64,7 @@ class ModifyMenu(PyDialog):
             elif vartype == 'spinner':
                 box = QSpinBox()
                 box.setValue(value)
+                box.setEnabled(enabled)
             grid.addWidget(box, i, 1)
             grid_objsi.append(box)
 

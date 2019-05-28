@@ -1,3 +1,4 @@
+from typing import Tuple
 from pyNastran.gui.qt_version import qt_version
 
 from qtpy.QtWidgets import QFileDialog
@@ -19,6 +20,7 @@ def open_file_dialog(self, title, default_filename,
     file_types : str
         the wildcard
         'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch);;All files (*)'
+
     """
     options = QFileDialog.Options()
     options |= QFileDialog.DontUseNativeDialog
@@ -34,10 +36,9 @@ def open_file_dialog(self, title, default_filename,
         #flt = str(filt).strip()
     return fname, flt
 
-def save_file_dialog(self, title, default_dirname, file_types):
+def save_file_dialog(self, title: str, default_dirname: str, file_types: str) -> Tuple[str, str]:
     """
     Common method for saving files
-
 
     Parameters
     ----------
@@ -50,11 +51,16 @@ def save_file_dialog(self, title, default_dirname, file_types):
     file_types : str
         the wildcard
         'Nastran Geometry - Punch (*.bdf; *.dat; *.nas; *.ecd; *.pch);;All files (*)'
+
     """
-    #asdf
+    assert isinstance(title, str), 'title=%s' % title
+    assert isinstance(default_dirname, str), 'default_dirname=%s' % default_dirname
+    assert isinstance(file_types, str), 'file_types=%s' % file_types
     #if qt_version == 5:
     # hasn't been tested
-    fname, wildcard_level = QFileDialog.getSaveFileName(self, title, default_dirname, file_types)
+    out = QFileDialog.getSaveFileName(parent=self, caption=title,
+                                      directory=default_dirname, filter=file_types)
+    fname, wildcard_level = out
     return str(fname), str(wildcard_level)
     #else:
         #fname, flt = QFileDialog.getOpenFileName(

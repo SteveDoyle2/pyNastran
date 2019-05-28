@@ -4,34 +4,49 @@ import sys
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-from qtpy import QtGui
-from qtpy.QtWidgets import (
-    QWidget, QVBoxLayout, QPushButton, QApplication,
-    QComboBox, QLabel, QHBoxLayout, QBoxLayout, )
+from qtpy.QtWidgets import QApplication, QPushButton
 
+from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.results_window import ResultsWindow
 from pyNastran.converters.nastran.menus.model_sidebar import Sidebar
 from pyNastran.converters.nastran.menus.modify_menu import  ModifyMenu
+from pyNastran.converters.nastran.wildcards import GEOM_BDF_SAVE
 
 class Var:
-    def __init__(self, name, var, vartype='lineedit', pulldown_objs=None):
+    def __init__(self, name, var, vartype='lineedit', pulldown_objs=None, enabled=True):
         self.name = name
         self.var = var
         self.vartype = vartype
         self.pulldown_objs = pulldown_objs
+        self.enabled = enabled
         assert vartype in ['lineedit', 'pulldown', 'spinner'], vartype
 
+MODIFY_MAP = {
+    'CAERO1': [
+        Var('Element ID', 'eid', enabled=False),
+        Var('Property ID', 'pid', vartype='pulldown', pulldown_objs='paeros'),
+        Var('iGroup', 'igroup'),
+        Var('nSpan Boxes', 'nspan', vartype='spinner'),
+        Var('nChord Boxes', 'nchord', vartype='spinner'),
+        Var('AEFACT Span', 'lspan', vartype='pulldown', pulldown_objs='aefacts'),
+        Var('AEFACT Chord', 'lchord', vartype='pulldown', pulldown_objs='aefacts'),
+        Var('Point 1', 'p1'),
+        Var('Distance 12', 'x12'),
+        Var('Point 4', 'p4'),
+        Var('Distance 43', 'x43'),
+    ],
+}
 
 def build_form_from_model(model):
     form = []
     objs = []
 
     i = 0
-    nodes_form = []
-    properties_form = []
-    materials_form = []
+    #nodes_form = []
+    #properties_form = []
+    #materials_form = []
     caeros_form = []
-    splines_form = []
+    #splines_form = []
     import numpy as np
 
     nids = list(model.nodes.keys())
@@ -161,58 +176,64 @@ def main():  # pragma: no cover
     print(model.get_bdf_stats())
     unused_name = 'name'
     #res_widget.update_results(form, name)
-    form, objs = build_form_from_model(model)
     #--------------------------------------------
 
-    modify_map = {
-        'CAERO1': [
-            Var('Element ID', 'eid'),
-            Var('Property ID', 'pid', vartype='pulldown', pulldown_objs='paeros'),
-            Var('iGroup', 'igroup'),
-            Var('nSpan Boxes', 'nspan', vartype='spinner'),
-            Var('nChord Boxes', 'nchord', vartype='spinner'),
-            Var('Point 1', 'p1'),
-            Var('Distance 12', 'x12'),
-            Var('Point 4', 'p4'),
-            Var('Distance 43', 'x43'),
-        ],
-    }
-    def on_print(icase):
-        print(objs[icase])
-    def on_stats(icase):
-        print(objs[icase].get_stats())
-    #def on_short_stats(icase):
-        #print(objs[icase].get_stats(short=True))
-    def on_modify(icase):
-        obj = objs[icase]
-        try:
-            variables = modify_map[obj.type]
-        except KeyError:
-            print(obj)
-            return
-        load_menu(model, obj, variables, win_parent=None)
+    class ModelSidebar(Sidebar):
+        def __init__(self, model):
+            form, objs = build_form_from_model(model)
+            def on_print(icase):
+                """prints the selected card"""
+                print(objs[icase])
+            def on_stats(icase):
+                """prints the stats for the selected card"""
+                print(objs[icase].get_stats())
 
+            def on_modify(icase):
+                """opens a menu to modify a card"""
+                obj = objs[icase]
+                try:
+                    variables = MODIFY_MAP[obj.type]
+                except KeyError:
+                    print(obj)
+                    return
+                load_menu(model, obj, variables, win_parent=None)
 
-    def load_menu(model, obj, variables, win_parent=None):
-        data = {
-            'font_size': 9,
-            'model' : model,
-            'obj' : obj,
-            'variables': variables,
-        }
-        menu = ModifyMenu(data, win_parent=None)
-        menu.show()
-        menu.exec_()
+            def load_menu(model, obj, variables, win_parent=None):
+                data = {
+                    'font_size': 9,
+                    'model' : model,
+                    'obj' : obj,
+                    'variables': variables,
+                }
+                menu = ModifyMenu(data, win_parent=None)
+                menu.show()
+                menu.exec_()
 
-    actions = [
-        ('Print...', on_print, True),
-        ('Stats...', on_stats, True),
-        ('Modify...', on_modify, True),
-    ]
-    res_widget = Sidebar(app, data=form, actions=actions,
-                         clear_data=False, debug=True)
+            right_click_actions = [
+                ('Print...', on_print, True),
+                ('Stats...', on_stats, True),
+                ('Modify...', on_modify, True),
+            ]
+            export_button = QPushButton('Export')
+            export_button.clicked.connect(self.on_export)
+            setup_dict = {
+                4: export_button,
+            }
+            super().__init__(self, data=form, actions=right_click_actions,
+                             results_window_title='Model',
+                             clear_data=False, setup_dict=setup_dict, debug=True)
+            self.apply_button.setVisible(False)
+            self.show()
 
-    res_widget.show()
+        def on_export(self):
+            """exports a modified bdf model"""
+            bdf_filename_base, ext = os.path.splitext(bdf_filename)
+            default_name = bdf_filename_base + '.modified' + ext
+            default_dirname = os.path.dirname(default_name)
+            fname, flt = save_file_dialog(self, 'Save As...', default_dirname, GEOM_BDF_SAVE)
+            model.write_bdf(fname)
+
+    m = ModelSidebar(model)
     sys.exit(app.exec_())
 
 
