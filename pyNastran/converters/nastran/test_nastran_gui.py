@@ -214,7 +214,8 @@ class TestNastranGUI(unittest.TestCase):
     def test_solid_bending(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_ogs.op2')
-        deflection_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node.txt')
+        deflection_filename1 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node.txt')
+        deflection_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node_short.txt')
 
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
@@ -223,8 +224,8 @@ class TestNastranGUI(unittest.TestCase):
         icase = max(test.result_cases)
 
         # these are the two cases we're checking were added
-        test.on_load_custom_results(out_filename=deflection_filename, restype='Deflection')
-        test.on_load_custom_results(out_filename=deflection_filename, restype='Force')
+        test.on_load_custom_results(out_filename=deflection_filename1, restype='Deflection')
+        test.on_load_custom_results(out_filename=deflection_filename1, restype='Force')
         dresult_cases = len(test.result_cases) - nresult_cases
         icase_final = max(test.result_cases)
         dcase = icase_final - icase
@@ -239,6 +240,20 @@ class TestNastranGUI(unittest.TestCase):
         text = 'word'
         test.mark_nodes(nids, icase, text)
         assert len(test.label_actors[icase_final]) == 4, len(test.label_actors[icase_final])
+
+        # test nodal results
+        #'node', 'element', 'deflection', 'force', 'patran_nod',
+        csv_filename1 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_node.csv')
+        csv_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_node_extra.txt')
+        csv_filename3 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_node_short.txt')
+
+        # missing/extra nodes
+        test.on_load_custom_results(out_filename=csv_filename1, restype='node', stop_on_failure=True)
+        test.on_load_custom_results(out_filename=csv_filename2, restype='node', stop_on_failure=True)
+        test.on_load_custom_results(out_filename=csv_filename3, restype='node', stop_on_failure=True)
+
+        # missing nodes
+        test.on_load_custom_results(out_filename=deflection_filename2, restype='Deflection')
 
 
     def test_beam_modes_01(self):

@@ -191,6 +191,7 @@ def load_deflection_csv(out_filename, encoding='latin1'):
     Considers:
       - extension in determining how to load a file (e.g. commas or not)
       - header line of file for information regarding data types
+
     """
     ext = os.path.splitext(out_filename)[1].lower()
     if ext not in ['.csv', '.dat', '.txt']:
@@ -228,12 +229,13 @@ def load_deflection_csv(out_filename, encoding='latin1'):
         raise ValueError(msg)
 
     B = {}
+    nids_index = A[:, 0]
     for i, name in enumerate(names_without_index):
         B[name] = A[:, 1+3*i:1+3*i+3]
 
     assert len(B) == len(fmt_dict_without_index), 'B.keys()=%s fmt_dict.keys()=%s' % (list(B.keys()), list(fmt_dict_without_index.keys()))
     assert len(B) == len(names_without_index), 'B.keys()=%s names.keys()=%s' % (list(B.keys()), names_without_index)
-    return B, fmt_dict_without_index, names_without_index
+    return B, nids_index, fmt_dict_without_index, names_without_index
 
 def load_csv(out_filename, encoding='latin1'):
     """
@@ -249,7 +251,6 @@ def load_csv(out_filename, encoding='latin1'):
 
     with open(_filename(out_filename), 'r', encoding=encoding) as file_obj:
         names, fmt_dict, dtype, delimiter = _load_format_header(file_obj, ext, force_float=False)
-
         try:
             #A = loadtxt(file_obj, dtype=dtype, delimiter=delimiter)
             A = loadtxt_nice(file_obj, dtype=dtype, comments='#', delimiter=delimiter)
@@ -260,8 +261,8 @@ def load_csv(out_filename, encoding='latin1'):
             raise RuntimeError(msg)
     return A, fmt_dict, names
 
-def _load_format_header(file_obj, ext, force_float=False):
-    header_line = file_obj.readline().strip()
+def _check_header_line(ext, header_line):
+    """helper for _load_format_header"""
     if not header_line.startswith('#'):
         msg = 'Expected file of the form:\n'
         if ext in ['.dat', '.txt']:
@@ -284,6 +285,10 @@ def _load_format_header(file_obj, ext, force_float=False):
             msg = 'extension=%r is not supported (use .dat, .txt, or .csv)' % ext
             raise NotImplementedError(msg)
         raise SyntaxError(msg)
+
+def _load_format_header(file_obj, ext, force_float=False):
+    header_line = file_obj.readline().strip()
+    _check_header_line(ext, header_line)
 
     header_line = header_line.lstrip('# \t').strip()
     if ext in ['.dat', '.txt']:

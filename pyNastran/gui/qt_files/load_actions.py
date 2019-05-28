@@ -3,6 +3,7 @@ import sys
 import traceback
 import time as time_module
 
+import numpy as np
 from qtpy.compat import getopenfilename
 from qtpy.QtWidgets import QFileDialog
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv
@@ -15,6 +16,11 @@ class LoadActions:
     """performance mode should be handled in the main gui to minimize flipping"""
     def __init__(self, gui):
         self.gui = gui
+
+    @property
+    def log(self):
+        """links the the GUI's log"""
+        return self.gui.log
 
     def on_load_geometry(self, infile_name=None, geometry_format=None, name='main',
                          plot=True, raise_error=False):
@@ -34,6 +40,7 @@ class LoadActions:
             If you're calling the on_load_results method immediately after, set it to False
         raise_error : bool; default=True
             stop the code if True
+
         """
         assert isinstance(name, str), 'name=%r type=%s' % (name, type(name))
         is_failed, out = self._load_geometry_filename(
@@ -227,6 +234,7 @@ class LoadActions:
         ----------
         out_filename : str / None
             the path to the results file
+
         """
         geometry_format = self.gui.format
         if self.gui.format is None:
@@ -298,12 +306,14 @@ class LoadActions:
             self.gui.out_filename = out_filenamei
             self.gui.log_command("on_load_results(%r)" % out_filenamei)
 
-    def on_load_custom_results(self, out_filename=None, restype=None):
+    def on_load_custom_results(self, out_filename=None, restype=None, stop_on_failure=False):
         """will be a more generalized results reader"""
         is_failed, out_filename, iwildcard = self._on_load_custom_results_load_filename(
             out_filename=out_filename, restype=restype)
 
         if is_failed:
+            if stop_on_failure:  # pragma: no cover
+                raise RuntimeError('failed getting filename')
             return is_failed
         if out_filename == '':
             is_failed = True
@@ -313,14 +323,16 @@ class LoadActions:
         if not os.path.exists(out_filename):
             msg = 'result file=%r does not exist' % out_filename
             self.gui.log_error(msg)
+            if stop_on_failure:  # pragma: no cover
+                raise RuntimeError(msg)
             return is_failed
 
         try:
             if iwildcard == 0:
-                self._on_load_nodal_elemental_results('Nodal', out_filename)
+                self._on_load_nodal_elemental_results('Nodal', out_filename, stop_on_failure=stop_on_failure)
                 restype = 'Node'
             elif iwildcard == 1:
-                self._on_load_nodal_elemental_results('Elemental', out_filename)
+                self._on_load_nodal_elemental_results('Elemental', out_filename, stop_on_failure=stop_on_failure)
                 restype = 'Element'
             elif iwildcard == 2:
                 self._load_deflection(out_filename)
@@ -336,6 +348,8 @@ class LoadActions:
         except:
             msg = traceback.format_exc()
             self.gui.log_error(msg)
+            if stop_on_failure:  # pragma: no cover
+                raise RuntimeError(msg)
             return is_failed
         self.gui.log_command("on_load_custom_results(%r, restype=%r)" % (out_filename, restype))
         is_failed = False
@@ -384,19 +398,26 @@ class LoadActions:
 
     def _load_deflection_force(self, out_filename, is_deflection=False, is_force=False):
         out_filename_short = os.path.basename(out_filename)
-        A, fmt_dict, headers = load_deflection_csv(out_filename)
+        A, nids_index, fmt_dict, headers = load_deflection_csv(out_filename)
         #nrows, ncols, fmts
         header0 = headers[0]
         result0 = A[header0]
         nrows = result0.shape[0]
 
-        assert nrows == self.gui.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.gui.nnodes)
+        nnodes = self.gui.nnodes
+        if nrows != nnodes:
+            #'nrows=%s nnodes=%s' % (nrows, self.gui.nnodes)
+            self.log.warning('The deflection CSV has %i rows, but there are %i nodes in the model.'
+                             "  Verify that the result is for the correct model and that it's "
+                             'not an elemental result.' % (nrows, nnodes))
+            A = _resize_array(A, nids_index, self.gui.node_ids, nrows, nnodes)
+
         result_type = 'node'
         self._add_cases_to_form(A, fmt_dict, headers, result_type,
                                 out_filename_short, update=True, is_scalar=False,
                                 is_deflection=is_deflection, is_force=is_force)
 
-    def _on_load_nodal_elemental_results(self, result_type, out_filename=None):
+    def _on_load_nodal_elemental_results(self, result_type, out_filename=None, stop_on_failure=False):
         """
         Loads a CSV/TXT results file.  Must have called on_load_geometry first.
 
@@ -406,12 +427,15 @@ class LoadActions:
             'Nodal', 'Elemental'
         out_filename : str / None
             the path to the results file
+
         """
         try:
-            self._load_csv(result_type, out_filename)
+            self._load_csv(result_type, out_filename, stop_on_failure=stop_on_failure)
         except:
             msg = traceback.format_exc()
             self.gui.log_error(msg)
+            if stop_on_failure:  # pragma: no cover
+                raise
             #return
             raise
 
@@ -432,7 +456,7 @@ class LoadActions:
                                 out_filename_short, update=True,
                                 is_scalar=True)
 
-    def _load_csv(self, result_type, out_filename):
+    def _load_csv(self, result_type, out_filename, stop_on_failure=False):
         """
         common method between:
           - on_add_nodal_results(filename)
@@ -444,6 +468,7 @@ class LoadActions:
             ???
         out_filename : str
             the CSV filename to load
+
         """
         out_filename_short = os.path.relpath(out_filename)
         A, fmt_dict, headers = load_csv(out_filename)
@@ -453,13 +478,21 @@ class LoadActions:
         nrows = result0.size
 
         if result_type == 'Nodal':
-            assert nrows == self.gui.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.gui.nnodes)
+            nnodes = self.gui.nnodes
+            if nrows != nnodes:
+                self.log.warning('The fringe CSV has %i rows, but there are %i nodes in the '
+                                 'model.  Verify that the result is for the correct model and '
+                                 "that it's not an elemental result." % (nrows, nnodes))
+                A = _resize_array(A, A['index'], self.gui.node_ids, nrows, nnodes)
             result_type2 = 'node'
-            #ids = self.node_ids
         elif result_type == 'Elemental':
-            assert nrows == self.gui.nelements, 'nrows=%s nelements=%s' % (nrows, self.gui.nelements)
+            nelements = self.gui.nelements
+            if nrows != nelements:
+                self.log.warning('The fringe CSV has %i rows, but there are %i elements in the '
+                                 'model.  Verify that the result is for the correct model and '
+                                 "that it's not a nodal result." % (nrows, nelements))
+                A = _resize_array(A, A['index'], self.gui.element_ids, nrows, nelements)
             result_type2 = 'centroid'
-            #ids = self.element_ids
         else:
             raise NotImplementedError('result_type=%r' % result_type)
 
@@ -594,3 +627,72 @@ class LoadActions:
             #wildcard_level = dialog.selectedFilter()
             #return str(wildcard_level), str(fname)
         #return None, None
+
+
+def _resize_array(A, nids_index, node_ids, nrows, nnodes):
+    """
+    Resizes an array to be the right size.
+
+    Let's say we have 5 nodes in the output csv that aren't in the model.
+    We need to filter them out.  Alternatively, we may have extra nodes.
+
+    We need to get the array to have results at all the node ids.
+
+    Parameters
+    ----------
+    A : np.ndarray
+        the dictionary-like results array
+    node_ids : int np.ndarray
+        the node ids in the model
+    nrows : int
+        the number of rows in the csv; same length as nids_index
+    nnodes : int
+        the number of nodes in the real model; same length as node_ids
+
+    Returns
+    -------
+    A2 : np.ndarray
+        the properly sized dictionary-like results array
+
+    """
+    # we might have extra nodes or missing nodes, so
+    # find the list of valid indices
+    inids = np.searchsorted(node_ids, nids_index)
+    iexist = np.where(inids < nnodes)[0]
+
+    A2 = {}
+    for key, Ai in A.items():
+        #print('Ai.shape', Ai.shape, len(iexist))
+        if key == 'index':
+            A2[key] = node_ids
+            continue
+
+        if len(Ai.shape) == 1:
+            if isinstance(Ai[0], (np.float32, np.float64)):
+                new_array = np.full((nnodes, ), np.nan, dtype=Ai.dtype)
+            elif isinstance(Ai[0], (np.int32, np.int64)):
+                new_array = np.full((nnodes, ), -1, dtype=Ai.dtype)
+            else:
+                raise NotImplementedError(Ai[0].dtype)
+            #print('iexist', iexist.shape, Ai.shape)
+            new_array[iexist] = Ai[iexist]
+            A2[key] = new_array
+
+        elif len(Ai.shape) == 2:
+            ncols = Ai.shape[1]
+            if isinstance(Ai[0, 0], (np.float32, np.float64)):
+                new_array = np.full((nnodes, ncols), np.nan, dtype=Ai.dtype)
+            elif isinstance(Ai[0, 0], (np.int32, np.int64)):
+                new_array = np.full((nnodes, ncols), -1, dtype=Ai.dtype)
+            else:
+                raise NotImplementedError(Ai[0].dtype)
+            #print('iexist', iexist.shape, Ai.shape)
+            new_array[iexist] = Ai[iexist]
+            A2[key] = new_array
+        else:
+            raise  NotImplementedError(Ai.shape)
+
+        #A2[key] = Ai[iexist]
+        #print('A2[%s].shape = %s' % (key, A2[key].shape))
+    #print()
+    return A2

@@ -57,6 +57,15 @@ BDF:
    - PCOMPG now supports DVPRELx
    - DTI besides UNITS are now supported
 
+GUI:
+ - enhancements:
+    - Can now load custom fringe/displacement/force results with an incorrect
+      number of nodes/elements.  It's assumed that the node/element id in the
+      first column should be the same as the id for the model.  Thus, you just
+      filter out extra nodes/elements or you set some blank nodes/elements.
+       - For integer results, no masking is applied.
+       - For float results, masking is applied and nan corresponds to no color.
+
 -----------------------v1.2.1 released 2019/5/24-----------------------
 OP2:
  - fixed bug with OUGV1PAT table

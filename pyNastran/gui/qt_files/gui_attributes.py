@@ -1025,10 +1025,10 @@ class GuiAttributes:
         self.load_actions.on_load_results(out_filename=out_filename)
 
     @start_stop_performance_mode
-    def on_load_custom_results(self, out_filename=None, restype=None):
+    def on_load_custom_results(self, out_filename=None, restype=None, stop_on_failure=False):
         """will be a more generalized results reader"""
         self.load_actions.on_load_custom_results(
-            out_filename=out_filename, restype=restype)
+            out_filename=out_filename, restype=restype, stop_on_failure=stop_on_failure)
 
     @start_stop_performance_mode
     def load_patran_nod(self, nod_filename):
