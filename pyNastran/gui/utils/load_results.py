@@ -5,7 +5,7 @@ defines:
        islot, headers, header, A, fmt_dict, result_type,
        is_deflection=False, is_force=False,
        dim_max=None, xyz_cid0=None, colormap='jet')
- - B, fmt_dict_without_index, names_without_index = load_deflection_csv(
+ - B, nids_index, fmt_dict_without_index, names_without_index = load_deflection_csv(
        out_filename, encoding='latin1')
  - A, fmt_dict, names = load_csv(out_filename, encoding='latin1')
  - grid_ids, xyz, bars, tris, quads = load_user_geom(fname, log=None, encoding='latin1')

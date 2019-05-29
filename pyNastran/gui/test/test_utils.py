@@ -55,7 +55,7 @@ class GuiUtils(unittest.TestCase):
     def test_gui_deflection_csv_01b(self):
         """tests solid_bending_multi_deflection_node.txt with deflection loader"""
         csv_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node.txt')
-        A, fmt_dict, headers = load_deflection_csv(csv_filename)
+        A, nids_index, fmt_dict, headers = load_deflection_csv(csv_filename)
         result_type = 'node'
 
         header0 = headers[0]

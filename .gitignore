@@ -103,3 +103,11 @@ nosetests.xml
 
 .mypy_cache
 /pyNastran/env
+.idea/*
+*/.ipynb_checkpoints/*
+*checkpoint.ipynb
+
+# virtualenvs
+*/tcl/*
+*/Include/*
+*/Scripts/*

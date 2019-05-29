@@ -1,5 +1,6 @@
 import unittest
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
+from pyNastran.bdf.bdf_interface.subcase_utils import expand_thru_case_control
 from pyNastran.bdf.cards.expand_card import expand_thru, expand_thru_by, expand
 #, expand_thru_exclude
 
@@ -15,6 +16,24 @@ class TestBaseCard(unittest.TestCase):
 
     def test_expand_thru(self):
         """tests expand_thru"""
+        #str_values = ','.join([str(val) for val in range(1, 10_000)])
+        #import time
+
+        #t0 = time.time()
+        #values1 = expand([str_values])
+        #print('dt (expand) = %s' % (time.time() - t0))
+
+        #t0 = time.time()
+        #values2 = expand_thru(str_values.split(','))
+        #print('dt (expand_thru) = %s' % (time.time() - t0))
+
+        #t0 = time.time()
+        #values3 = expand_thru_case_control(str_values.split(','))
+        #print('dt (expand_thru_case_control) = %s' % (time.time() - t0))
+        #assert  values1 == values2
+        #assert  values1 == values3
+        #print(values1)
+
 
         values1 = expand(['include 14,15, include 18 thru 24'])
         assert values1 == [14, 15, 18, 19, 20, 21, 22, 23, 24], values1
@@ -25,23 +44,31 @@ class TestBaseCard(unittest.TestCase):
         values1 = expand(['1', '2', '21', 'THRU', '25', '31', 'THRU', '37'])
         values2 = expand(['1', '2', '21', 'THRU', '25', '31', 'THRU', '37 '])
         values3 = expand([1, 2, 21, 'THRU', 25, 31, 'THRU', 37])
+        #values4 = expand_thru_case_control([1, 2, 21, 'THRU', 25, 31, 'THRU', 37])
         assert values1 == [1, 2, 21, 22, 23, 24, 25, 31, 32, 33, 34, 35, 36, 37], values1
         assert values2 == [1, 2, 21, 22, 23, 24, 25, 31, 32, 33, 34, 35, 36, 37], values2
         assert values3 == [1, 2, 21, 22, 23, 24, 25, 31, 32, 33, 34, 35, 36, 37], values3
+        #assert values4 == [1, 2, 21, 22, 23, 24, 25, 31, 32, 33, 34, 35, 36, 37], values4
 
         values1 = expand(['1 , 9 THRU 12 , 1040'])
         values2 = expand(['1 , 9 THRU 12 , 1040'])
+        #values3 = expand_thru_case_control(['1 , 9 THRU 12 , 1040'])
+        values4 = expand_thru_case_control(['1', '9 THRU 12', '1040'])
         assert values1 == [1, 9, 10, 11, 12, 1040], values1
         assert values2 == [1, 9, 10, 11, 12, 1040], values2
+        #assert values3 == [1, 9, 10, 11, 12, 1040], values3
+        assert values4 == [1, 9, 10, 11, 12, 1040], values4
 
         values1 = expand_thru(['1', 'THRU', '10'])
         values2 = expand(['1', 'THRU', '10'])
         values3 = expand(['1 THRU 10'])
         values4 = expand(['1 THRU 10 '])
+        values5 = expand_thru_case_control(['1 THRU 10 '])
         assert values1 == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], values1
         assert values2 == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], values2
         assert values3 == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], values3
         assert values4 == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], values4
+        assert values5 == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], values5
 
 
         values1 = expand_thru(['1', 'thru', '10'])
@@ -68,10 +95,12 @@ class TestBaseCard(unittest.TestCase):
         values2 = expand(['1', 'THRU', '10', 'BY', 2])
         values3 = expand(['1 THRU 10 BY 2'])
         values4 = expand(['1 THRU 10 BY 2 '])
+        values5 = expand_thru_case_control(['1 THRU 10 BY 2 '])  #  wrong...
         assert values1 == [1, 3, 5, 7, 9, 10], values1
         assert values2 == [1, 3, 5, 7, 9, 10], values2
         assert values3 == [1, 3, 5, 7, 9, 10], values3
         assert values4 == [1, 3, 5, 7, 9, 10], values4
+        #assert values5 == [1, 3, 5, 7, 9, 10], values5  # wrong...
 
         values1 = expand_thru_by(['1', 'thru', '10', 'by', 2])
         values2 = expand(['1', 'thru', '10', 'by', 2])

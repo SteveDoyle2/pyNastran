@@ -274,10 +274,10 @@ def expand(data_in):
         out = [datai if isinstance(datai, int) else int(datai) for datai in data]
         out.sort()
         return out
-    if stype == 'float':
+    elif stype == 'float':
         return expand_float(data)
-    if stype in ['float', 'str']:
-        raise NotImplementedError(data)
+    elif stype == 'str':
+        return data
 
     #-------------------------------------------------------------------
     #  has a THRU, BY, or EXCEPT
@@ -349,12 +349,13 @@ def expand(data_in):
                 exclude_svalue = data[i]
                 #print('found exclude?', exclude_svalue)
                 if exclude_svalue == 'EXCEPT':
-                    i, removed = get_except(data, i, ndata, end_value)
+                    i, removed_seti = get_except(data, i, ndata, end_value)
                     removed_set.update(removed_seti)
-                    asdf
+                    raise RuntimeError('need a test problem for EXCEPT')
                     continue
                 else:
-                    not_except
+                    raise RuntimeError('need a test problem for skipping EXCEPT; '
+                                       'datai=%s' %  exclude_svalue)
             else:
                 i -= 1
 

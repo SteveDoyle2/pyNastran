@@ -49,13 +49,20 @@ Solver
 -----------------------v???   released 2019/?/??-----------------------
 BDF:
  - bug fixes:
-   - better case control SET parser (can now handle 1,THRU,10,EXCEPT,7,8,
-     which doesn't hae spaces that makes parsing easier)
-   - fixed NDDL bug in MONPNT2
+   - Better case control SET parser (can now handle 1,THRU,10,EXCEPT,7,8,
+     which doesn't have spaces that makes parsing easier).  It's also orders
+     of magnitude faster on large problems.
+   - Fixed NDDL bug in MONPNT2
+   - Added check for DVPRELx to prevent referencing property fields when another
+     similar property is used (e.g., a DVPRELx references a PCOMPG, but the PCOMP
+     field id numbers are used to update the card).
+
  - enhancements:
    - PBARL & PBEAML DBOX now has defaults for DIM5-DIM10
    - PCOMPG now supports DVPRELx
-   - DTI besides UNITS are now supported
+   - new cards:
+     - DTI besides UNITS are now supported
+     - PBEAM3
 
 GUI:
  - enhancements:

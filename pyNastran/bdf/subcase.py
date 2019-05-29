@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf_interface.utils import deprecated
 from pyNastran.bdf.cards.expand_card import expand
 from pyNastran.bdf.bdf_interface.subcase_cards import CLASS_MAP
 from pyNastran.bdf.bdf_interface.subcase_utils import (
-    write_stress_type, write_set, expand_thru_case_control)
+    write_stress_type, write_set)
 
 INT_CARDS = (
     # these are cards that look like:
@@ -671,18 +671,7 @@ class Subcase:
 
             #print("adding isubcase=%s key=%r value=%r options=%r "
                   #"param_type=%r" % (self.id, key, value, options, param_type))
-            try:
-                values2 = expand(value)
-                try:
-                    values_check = expand_thru_case_control(value)
-                    check = True
-                except (RuntimeError, SyntaxError):
-                    check = False
-                if check and values2 != values_check:
-                   raise RuntimeError('\nvalues2    =%s \n'
-                                      'value_check=%s' % (values2, values_check))
-            except NotImplementedError:
-                values2 = expand_thru_case_control(value)
+            values2 = expand(value)
 
             assert isinstance(values2, list), type(values2)
             if isinstance(options, list):
