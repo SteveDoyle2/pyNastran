@@ -8,54 +8,9 @@ defines:
 from typing import List, Optional, Union, Set, Any
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
-from pyNastran.bdf.bdf_interface.assign_type import interpret_value
-
-def expand_thru_int(set_value):   # pragma: no cover
-    """
-    27,35,25,41234,123,thru,134,9701,9901
-    1,thru,9,by,2
-    9,THRU,19,EXCEPT,12
-    0.1 0.3 0.5 1.0 3.0 5.0 10.0 14.0
-    """
-    raise RuntimeError('expand_thru_int')
-    assert '/' not in set_value, set_value
-    values = ','.join(set_value.split()).split(',')
-    nvalues = len(values)
-    i = 0
-    while i < nvalues:
-        start = int(values[i])
-        # A, THRU, B, BY, C
-        if i < (nvalues - 2):
-            values.append(start)
-            i += 1
-            continue
-
-        thru_value = values[i + 1].upper()
-        if thru_value != 'THRU':
-            values.append(start)
-            i += 1
-            continue
-
-        # there is a thru
-        stop = int(values[i + 2])
-        if i < (nvalues - 4):
-            values += range(start, stop, 1)
-            i += 3
-            continue
-
-        by_value = values[i + 3].upper()
-        if by_value != 'BY':
-            values += range(start, stop, 1)
-            i += 3
-            continue
-
-        by = int(values[i+4])
-        values += range(start, stop, by)
-        values.append(by)
-        i += 4
 
 
-def expand_thru_case_control(set_value):
+def expand_thru_case_control(data_in):
     # type: (List[Union[int, float, str]]) -> List[int]
     """
     Expands a case control SET card
@@ -72,137 +27,237 @@ def expand_thru_case_control(set_value):
 
     Examples
     --------
-    **This hasn't been verified**
-    #set_value = 'SET 88 = 1 THRU 5, 20 THRU 30 BY 2'
     set_value = ['1 THRU 5', '20 THRU 30 BY 2']
     >>> values = expand_thru_case_control(set_value)
     [1, 2, 3, 4, 5, 20, 22, 24, 26, 28, 30]
+
+    Odd behavior:
+     - 1 THRU 10 EXCEPT 4,5,6,11 results in [1,2,3,7,8,9,10,11]
+       the EXCEPT is active while the value is less than the THRU value of 10
+       and the values are in ascending order
+
+    What happens when:
+     - a value is excluded and later added or
+     - a value is included and later excluded
     """
-    set_value2 = set()
-    add_mode = True
-    imin_int = 0
-    imax_int = 0
-    #print('set_value = %r' % set_value)
-    for ivalue in set_value:
-        #print('----------')
-        if isinstance(ivalue, integer_types):
-            assert add_mode is True, add_mode
-            set_value2.add(ivalue)
-            continue
+    data, stype = setup_data(data_in)
+    if len(data) == 1 and stype == 'str':
+        return data
 
-        ivalue_str = ivalue.strip()
-        #print('  ivalue=%r; type=%s add=%s' % (ivalue, type(ivalue), add_mode))
-        if '/' in ivalue_str:
-            set_value2.add(ivalue_str)
-        else:
-            #if 'ALL' in ivalue:
-                #msg = ('ALL is not supported on CaseControlDeck '
-                       #'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
-                #raise RuntimeError(msg)
-            #elif 'EXCEPT' in ivalue:
-                #msg = ('EXCEPT is not supported on CaseControlDeck '
-                       #'SET card\nvalue=%r\nset=%r' % (ivalue, set_value))
-                #raise RuntimeError(msg)
+    #print('***************************')
+    #print('data =', data)
+    if stype == 'int':
+        out = [datai if isinstance(datai, int) else int(datai) for datai in data]
+        out.sort()
+        return out
+    elif stype == 'float':
+        return expand_float(data)
+    elif stype == 'str':
+        return data
 
-            ivalue2 = interpret_value(ivalue_str, card=str(set_value)) #  type: Optional[Union[int, float, str]]
-            if isinstance(ivalue2, integer_types):
-                #print('  isdigit')
-                #print('  imin=%s ivalue2=%s imax=%s' % (imin_int, ivalue2, imax_int))
-                #ivalue = int(ivalue)
-                if not imin_int < ivalue2 < imax_int:
-                    add_mode = True
-                    #print('  break...\n')
-                if add_mode:
-                    #print('  adding %s' % ivalue)
-                    set_value2.add(ivalue2)
+    #-------------------------------------------------------------------
+    #  has a THRU, BY, or EXCEPT
+
+    assert stype == 'int_thru', data
+    ndata = len(data) - 1
+    out = []
+    removed_set = set()
+
+    i = 0
+    is_thru = False
+    while i < len(data):
+        value = data[i]
+        #print('---')
+        #print('i=%s value=%r is_thru=%s' % (i, value, is_thru))
+
+        if is_thru:
+            #print('$$$ starting thru')
+            is_thru = False
+            continue_after_range = False
+
+            out2 = []
+            #print('*', i, value)
+            value0 = out.pop()
+            end_value = int(value)
+            i += 1
+            #print('*value0 =', value0)
+            #print('*end_value =', i, end_value)
+
+            by_value = 1
+            if i <= ndata:
+                next_svalue = data[i]
+                #print('found by?', next_svalue)
+                if isinstance(next_svalue, int) or next_svalue.isdigit():  # catches integers
+                    continue_after_range = True
+                elif next_svalue == 'BY':
+                    i += 1
+                    next_svalue2 = data[i]
+                    if isinstance(next_svalue2, int):
+                        by_value = next_svalue2
+                    else:
+                        next_svalue2 = next_svalue2.upper()
+                        #print('next_svalue2 =', next_svalue2)
+                        by_value = int(next_svalue2)
+                    #print('by_value =', by_value)
+                elif next_svalue == 'EXCEPT':
+                    i, removed_seti = get_except(data, i+1, ndata, end_value)
+                    removed_set.update(removed_seti)
+                    continue_after_range = True
                 else:
-                    #print('  removing %s' % ivalue2)
-                    set_value2.remove(ivalue2)
-                    imin_int = int(ivalue2)
-            elif isinstance(ivalue2, float):
-                assert add_mode is True, add_mode
-                set_value2.add(ivalue2)
-            elif isinstance(ivalue2, str):
-                #print('  not digit=%r' % set_value)
-                if set_value == 'EXCLUDE':
-                    msg = ('EXCLUDE is not supported on CaseControlDeck '
-                           'SET card\n')
-                    raise RuntimeError(msg)
-                elif 'THRU' in ivalue2:
-                    set_valuesi, imin_int, imax_int, add_mode = _expand_thru_case_control_string_thru(set_value, ivalue2, add_mode)
-                    set_value2.update(set_valuesi)
+                    raise RuntimeError('next_svalue=%s data=%s' % (next_svalue, data))
+            #else:
+                # out of range
+
+            rangei = range(value0, end_value + 1, by_value)
+            #print('range(%r, %r, %r) = %s' % (value0, end_value + 1, by_value, rangei))
+            out2.extend(rangei)
+            if end_value != out2[-1]:
+                out2.append(end_value)
+
+            if continue_after_range:
+                #print('continue_after_range; adding %s' % str(out2))
+                out.extend(out2)
+                continue
+
+            #print('looking for except...')
+            i += 1
+            if i < ndata:
+                exclude_svalue = data[i]
+                #print('found exclude?', exclude_svalue)
+                if exclude_svalue == 'EXCEPT':
+                    i, removed_seti = get_except(data, i, ndata, end_value)
+                    removed_set.update(removed_seti)
+                    raise RuntimeError('need a test problem for EXCEPT')
+                    #continue
                 else:
-                    assert add_mode is True, add_mode
-                    #print('else...', ivalue)
-                    set_value2.add(ivalue.strip())
+                    raise RuntimeError('need a test problem for skipping EXCEPT; '
+                                       'datai=%s' %  exclude_svalue)
             else:
-                raise NotImplementedError(ivalue2)
+                i -= 1
 
-    list_values = list(set_value2)
-    try:
-        list_values.sort()
-    except TypeError:
-        msg = 'sort error: list_values=%s set_value2=%s'  % (list_values, set_value2)
-        raise TypeError(msg)
+            out.extend(out2)
+            #print(i, value0, 'THRU', end_value)
+            #print('------------')
+            del by_value
+            i += 1
 
-    #print('end of expansion = %s' % list_values)
-    return list_values
-
-def _expand_thru_case_control_string_thru(set_value, svalue, add_mode):
-    # type: (Any, str, bool) -> Any
-    """helper for ``expand_thru_case_control``"""
-    ## type: (List[str], Any, bool) -> (Set[int], bool)
-    set_values_out = set()  # type: Set[int]
-    svalues = svalue.split()  # type: List[str]
-    #print('  set_value=%s' %  set_value)
-    #print('  svalues=%s' % svalues)
-    if len(svalues) == 3:
-        assert add_mode is True, add_mode
-        imin, thru, imax = svalues
-        assert thru == 'THRU', thru
-        imin_int = int(imin)
-        imax_int = int(imax)
-        assert imax_int > imin_int, 'imin=%s imax=%s' % (imin_int, imax_int)
-        for jthru in range(imin_int, imax_int + 1):
-            set_values_out.add(jthru)
-
-    elif len(svalues) == 4:
-        imin, thru, imax, by_except = svalues
-        imin_int = int(imin)
-        imax_int = int(imax)
-        assert imax_int > imin_int, 'imin=%s imax=%s' % (imin_int, imax_int)
-        assert by_except == 'EXCEPT', by_except
-
-        for jthru in range(imin_int, imax_int + 1):
-            set_values_out.add(jthru)
-        add_mode = False
-
-    elif len(svalues) == 5:
-        imin, thru, imax, by_except, increment_except = svalues
-        imin_int = int(imin)
-        imax_int = int(imax)
-        assert imax_int > imin_int, 'imin=%s imax=%s' % (imin_int, imax_int)
-        increment_except_int = int(increment_except)
-        if by_except == 'BY':
-            for jthru in range(imin_int, imax_int + 1, increment_except_int):
-                set_values_out.add(jthru)
-            add_mode = True
-        elif by_except == 'EXCEPT':
-            for jthru in range(imin_int, imax_int + 1):
-                if jthru == increment_except_int:
-                    continue
-                set_values_out.add(jthru)
-            add_mode = False
+        elif isinstance(value, int):
+            #print('value =', i, value)
+            out.append(value)
+            i += 1
+            continue
         else:
-            raise RuntimeError(svalue)
+            #print('add', i, value)
+            assert is_thru is False, data
+            if value == 'THRU':
+                is_thru = True
+            else:
+                ivalue = int(value)
+                out.append(ivalue)
+            i += 1
+    if len(removed_set):
+        #print('data =', data)
+        #print('out =', out)
+        #print('removed_set =', removed_set)
+        out_set = set(out) - removed_set
+        out = list(out_set)
+    out.sort()
+    return out
+
+def split_comma_space(datai):
+    """normalizes the form of a SET into a comma separated list instead of being mixed"""
+    if ',' in datai:
+        # do I need a strip?
+        sline = datai.replace(',', ' ').split()
     else:
-        msg = ('expected data of the form: '
-               '"10 THRU 20" or "10 THRU 20 BY 5"\n'
-               'actual=%r; input=%s' % (svalue.strip(), set_value))
-        raise RuntimeError(msg)
-    #print('  set_values_out =',  set_values_out)
-    #print('---')
-    return set_values_out, imin_int, imax_int, add_mode
+        sline = datai.split()
+    return sline
+
+def setup_data(data_in):
+    """helper method for ``expand_thru_case_control``"""
+    data = []
+    for datai in data_in:
+        if isinstance(datai, (int, float)):
+            data.append(datai)
+        else:
+            datai = datai.upper().replace('INCLUDE', ' ')
+            sline = split_comma_space(datai)
+            data.extend(sline)
+
+    stype = 'int'
+    for datai in  data:
+        #print(datai, any(char.isalpha() for char in datai))
+        if isinstance(datai, int) or isinteger(datai):
+            continue
+        elif datai in ['THRU', 'EXCEPT', 'BY']:
+            stype = 'int_thru'
+            break
+        #elif datai.isn
+        elif '.' in datai:
+            stype = 'float'
+            break
+        elif '/' in datai or any(char.isalpha() for char in datai):
+            stype = 'str'
+            break
+        else:
+            raise RuntimeError('datai=%r data=%s' % (datai, data))
+
+    #if stype in ['float', 'str']:
+        #print(data)
+    return data, stype
+
+def isinteger(astring):
+    """Is the given string an integer?"""
+    try:
+        int(astring)
+    except ValueError:
+        return False
+    else:
+        return True
+
+def get_except(data, i, ndata, end_value):
+    """helper method for expand that gets the values until the end of an
+    EXCEPT chain"""
+    removed = []
+    ivalue_old = 0
+    while i < len(data):
+        value = data[i]
+        #print('  exclude?', i, value)
+        if isinstance(value, int):
+            ivalue = value
+        elif value.isdigit():
+            ivalue = int(value)
+        elif value == 'THRU':
+            ivalue_old = int(data[i-1])
+            ivalue_new = int(data[i+1])
+            rangei = range(ivalue_old, ivalue_new+1)
+            removed.extend(rangei)
+            i += 2
+            continue
+        else:
+            raise NotImplementedError('data[%i] = %s; data=%s' % (i, value, data))
+        #print('  ivalue=%s > end_value=%s' %  (ivalue, end_value))
+
+        if ivalue > end_value and ivalue > ivalue_old:
+            #print('    break')
+            break
+        removed.append(ivalue)
+        ivalue_old = ivalue
+        i += 1
+
+    removed_set = set(removed)
+    #print('removed...', removed)
+    #print('*datai =', data[i])
+    return i, removed_set
+
+
+def expand_float(data):
+    """helper method for ``expand_thru_case_control``"""
+    out = []
+    for datai in  data:
+        out.append(float(datai))
+    out.sort()
+    return out
 
 
 def write_stress_type(key, options, value, spaces=''):

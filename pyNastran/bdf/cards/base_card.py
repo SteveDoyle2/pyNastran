@@ -9,7 +9,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import is_same
 from pyNastran.bdf.bdf_interface.utils import deprecated
-from pyNastran.bdf.cards.expand_card import  expand_thru, expand_thru_by, expand_thru_exclude
+from pyNastran.bdf.cards.expand_card import  expand_thru, expand_thru_by
 
 #from abc import ABC, abstractmethod
 
