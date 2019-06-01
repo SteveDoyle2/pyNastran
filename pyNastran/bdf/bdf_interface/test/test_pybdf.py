@@ -159,5 +159,26 @@ class TestPyBDF(unittest.TestCase):
         bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
         #print('bulk_data_linesC =', bulk_data_lines)
 
+    def _test_no_punch(self):
+        """tests not definng punch"""
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            "GRID,1,,0.,0.,0.\n"
+            'GRID.2,,1.,0.,0.\n'
+            'GRID,3,,1.,1.,0.\n'
+            'GRID,4,,0.,1.,0.\n'
+            'CQUAD4,1,2,3,4,5',
+            #'ENDDATA'
+        )
+        bdf_filename.seek(0)
+        read_includes = True
+        dumplines = True
+        encoding = None
+        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
+                           consider_superelements=False, log=None, debug=False)
+        bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
+        assert len(bulk_data_lines) == 5, bulk_data_lines
+        #print(bulk_data_lines)
+
 if __name__ == '__main__':
     unittest.main()

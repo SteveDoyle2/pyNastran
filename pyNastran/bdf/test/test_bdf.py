@@ -1959,6 +1959,49 @@ def run_argparse(argv=None):
         raise
     return vars(args)
 
+def get_test_bdf_data2(argv):  # pragma: no cover
+    encoding = sys.getdefaultencoding()
+    import argparse
+    parent_parser.add_argument('BDF_FILENAME', help='path to BDF/DAT/NAS file', type=str)
+
+    #nargs : str/int
+    #   * : 0 or more
+    #   + : one or more
+    #   ? : optional
+    #   int : int values
+    #SUPPORT_MULTIMODEL = False
+    #append_nargs = 1 if SUPPORT_MULTIMODEL else 1
+    parent_parser.add_argument('-i', '--input', help='path to input file',
+                               nargs=1, action=append_action)
+    parent_parser.add_argument(
+        '-x', '--xref', action='store_true',
+        help='disables cross-referencing and checks of the BDF (default=True)')
+    parent_parser.add_argument(
+        '--safe', action='store_true',
+        help='Use safe cross-reference (default=False)')
+
+    parent_parser.add_argument(
+        '-p', '--punch', action='store_true')
+        #help='Use safe cross-reference (default=False)')
+    parent_parser.add_argument(
+        '-p', '--punch', action='store_true')
+        #help='Use safe cross-reference (default=False)')
+    parent_parser.add_argument(
+        '-c', '--check', action='store_true')
+        #help='Use safe cross-reference (default=False)')
+    parent_parser.add_argument(
+        '-l', '--large', action='store_true')
+        #help='Use safe cross-reference (default=False)')
+    parent_parser.add_argument(
+        '-d', '--double', action='store_true')
+        #help='Use safe cross-reference (default=False)')
+
+    parent_parser.add_argument(
+        '-L', '--loads', action='store_true')
+        #help='Use safe cross-reference (default=False)')
+
+    #(default=True)', action='store_true'
+
 def get_test_bdf_data(argv):
     """defines the docopt interface"""
     encoding = sys.getdefaultencoding()

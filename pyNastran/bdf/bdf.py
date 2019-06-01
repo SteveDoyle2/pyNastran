@@ -140,7 +140,7 @@ from pyNastran.bdf.cards.bdf_sets import (
 )
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
-from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
+from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, CONVM, TEMPBC)
@@ -431,7 +431,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'GMCORD',
 
             # temperature cards
-            'TEMP', 'TEMPD', 'TEMPAX',
+            'TEMP', 'TEMPD', 'TEMPB3', 'TEMPAX',
             'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
             'CHBDYE', 'CHBDYG', 'CHBDYP',
             'PCONV', 'PCONVM', 'PHBDY',
@@ -2010,6 +2010,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # BCTSET
 
             'TEMP' : (TEMP, self._add_thermal_load_object),
+            'TEMPB3' : (TEMPB3, self._add_thermal_load_object),
             'QBDY1' : (QBDY1, self._add_thermal_load_object),
             'QBDY2' : (QBDY2, self._add_thermal_load_object),
             'QBDY3' : (QBDY3, self._add_thermal_load_object),

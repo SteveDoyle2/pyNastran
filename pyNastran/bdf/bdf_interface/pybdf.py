@@ -24,6 +24,7 @@ FILE_MANAGEMENT = (
     'PROJ ',
 )
 EXECUTIVE_CASE_SPACES = tuple(list(FILE_MANAGEMENT) + ['SOL ', 'SET ', 'SUBCASE '])
+from pyNastran.bdf import BULK_DATA_CARDS, CASE_CONTROL_CARDS, FLAGGED_CARDS
 
 
 class BDFInputPy:
@@ -178,6 +179,7 @@ class BDFInputPy:
         -------
         lines : List[str]
             all the lines packed into a single line stream
+
         """
         #print('bdf_filename_main =', bdf_filename)
         if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
@@ -219,6 +221,7 @@ class BDFInputPy:
                 the [ifile, iline] pair for each line in the file
             if make_ilines = False:
                  ilines = None
+
         """
         nlines = len(lines)
         #bdf_filenames = [self.bdf_filename]
@@ -452,6 +455,7 @@ class BDFInputPy:
             the entire list of lines
         i : int
             the last index to write
+
         """
         with open(_filename(bdf_dump_filename),
                   'w', encoding=self.encoding) as crash_file:
@@ -473,6 +477,7 @@ class BDFInputPy:
             the bdf filename to open
         basename : bool; default=False
             only take the basename of the bdf
+
         """
         if basename:
             bdf_filename_inc = os.path.join(self.include_dir, os.path.basename(bdf_filename))
@@ -526,6 +531,7 @@ class BDFInputPy:
         -------
         bdf_file : file
             a file object
+
         """
         if encoding is None:
             encoding = self.encoding
@@ -566,6 +572,7 @@ class BDFInputPy:
         ------
         RuntimeError : file is active
         IOError : Invalid file type
+
         """
         if check:
             if not os.path.exists(_filename(bdf_filename_inc)):
@@ -588,6 +595,51 @@ class BDFInputPy:
                     bdf_filename_inc, current_fname))
             elif not os.path.isfile(_filename(bdf_filename)):
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
+
+
+def _is_bulk_data_line(text):
+    """
+    Returns True if there is a Bulk Data Deck
+
+    Parameters
+    ----------
+    text : str
+        a line in the deck
+
+    Returns
+    -------
+    is_bulk_line : bool
+        is this a bulk data line
+
+    """
+    #
+    # Stripping the data isn't ideal as a GRID card cannot have a leading space.
+    #
+    # We strip the data because we need to support:
+    # '    SUPORT1 = 10'
+    # if you use text[0:8].strip('* ').upper()
+    # we get:
+    # '    SUPO', which is not a case control card called 'SUPORT1'
+    #
+    text2 = text.split('$')[0].rstrip()
+    #card_name = text2.strip().replace(' ', '')[0:8].split(',')[0].upper().rstrip('*')
+    card_name = text2.strip()[0:8].split(',')[0].upper().rstrip('*')
+    #card_name2 = text2.split(',')[0].upper()
+    #print('card_name =%r' % card_name)
+    #print('card_name2=%r' % card_name2)
+
+    # bulk data cards
+    if card_name in BULK_DATA_CARDS:
+        # case control + bulk data cards
+        if '=' in text2 and card_name in FLAGGED_CARDS or text2.startswith(' '):
+            return False
+        elif card_name == 'PARAM':
+            # The PARAM card can have a comma or tab, but no equals sign.
+            # If there is a PARAM card, we have to assume we're not in the
+            # case control.
+            return False
+        return True
+    return False
 
 
 def _check_pynastran_encoding(bdf_filename, encoding):
@@ -655,6 +707,7 @@ def _clean_comment(comment):
     -------
     updated_comment : str
         the comment
+
     """
     if comment == '':
         pass
@@ -670,9 +723,12 @@ def _clean_comment(comment):
     return comment
 
 
-def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
-                    consider_superelements=False):
-    # type: (List[str], Any, bool, Any, bool, bool) -> Any
+def _lines_to_decks(lines: List[str],
+                    ilines: Any,
+                    punch: bool,
+                    log: Any,
+                    keep_enddata: bool=True,
+                    consider_superelements: bool=False) -> Any:
     """
     Splits the BDF lines into:
      - system lines
@@ -713,6 +769,7 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
         ???
     auxmodel_lines : List[str]
         ???
+
     """
     if punch:
         system_lines = []
@@ -729,7 +786,7 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
             superelement_lines, superelement_ilines)
 
     # typical deck
-    out = _lines_to_decks_main(lines, ilines, keep_enddata=keep_enddata,
+    out = _lines_to_decks_main(lines, ilines, log, keep_enddata=keep_enddata,
                                consider_superelements=consider_superelements)
     (executive_control_lines, case_control_lines,
      bulk_data_lines, bulk_data_ilines,
@@ -768,8 +825,10 @@ def _lines_to_decks(lines, ilines, punch, log, keep_enddata=True,
         bulk_data_lines, bulk_data_ilines,
         superelement_lines, superelement_ilines)
 
-def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelements=False):
-    # type: (List[str], Any, bool, bool) -> Any
+def _lines_to_decks_main(lines: List[str],
+                         ilines: Any, log: Any,
+                         keep_enddata: bool=True,
+                         consider_superelements: bool=False) -> Any:
     """
     Splits the BDF lines into:
      - system lines
@@ -843,7 +902,49 @@ def _lines_to_decks_main(lines, ilines, keep_enddata=True, consider_superelement
     for i, ifile_iline, line in zip(count(), ilines, lines):
         #print('%s %-8s %s' % (ifile_iline, flag_word, line.rstrip()))
         #print('%s %i %s' % (ifile_iline, flag, line.rstrip()))
-        if flag == 1:
+        uline = line.split('$')[0].upper().strip()
+
+        if 0 and flag == 1 and uline.startswith('BEGIN'):
+            section_name_map = {
+                1 : 'executive control',
+                2 : 'case control',
+            }
+            section_name = section_name_map[flag]
+
+            if _is_begin_bulk(uline):
+                #old_flags.append(flag)
+                log.warning('currently in %s deck and skipping directly '
+                            'to bulk data section' % section_name)
+                flag = 3
+                current_ilines = bulk_data_ilines
+                current_lines = bulk_data_lines
+                bulk_data_ilines = _bulk_data_lines_extract(
+                    lines, ilines, bulk_data_lines, i,
+                    make_ilines=make_ilines, keep_enddata=keep_enddata)
+            else:
+                raise RuntimeError('currently in %s deck and unexpectedly found the following '
+                                   'line:\n%s' % (section_name, line))
+            break
+
+        if 0 and flag in [1, 2] and _is_bulk_data_line(line):
+            section_name_map = {
+                1 : 'executive control',
+                2 : 'case control',
+            }
+            section_name = section_name_map[flag]
+            log.warning('currently in %s deck and skipping directly '
+                        'to bulk data section\n%s' % (section_name, line))
+            log.warning(line)
+            flag = 3
+            current_ilines = bulk_data_ilines
+            current_lines = bulk_data_lines
+            bulk_data_ilines = _bulk_data_lines_extract(
+                lines, ilines, bulk_data_lines, i-1,
+                make_ilines=make_ilines, keep_enddata=keep_enddata)
+            break
+
+
+        elif flag == 1:
             # I don't think we need to handle the comment because
             # this uses a startswith
             if line.upper().startswith('CEND'):
@@ -1053,6 +1154,7 @@ def _is_begin_bulk(uline):
       'BEGIN BULK SUPER=2'
       'BEGIN BULK AUXMODEL=2'
       'BEGIN BULK AFPM=2'
+
     """
     is_begin_bulk = 'BULK' in uline and (
         'AUXMODEL' not in uline and
@@ -1167,6 +1269,7 @@ def _break_system_lines(executive_control_lines):
     PROJ      Defines the current or default project identifier.
 
     F:\\Program Files\\Siemens\\NXNastran\\nxn10p1\\nxn10p1\\nast\\tpl\\mdb01.dat
+
     """
     j = None
     sol_line = None
@@ -1261,6 +1364,7 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
         the file encoding
     nlines_previous : int; default=10
         the number of lines to show
+
     """
     lines = []  # type: List[str]
     print('ENCODING - show_bad_file=%r' % encoding)
@@ -1297,6 +1401,7 @@ def _get_auxmodel_id(line, uline):
         BEGIN AUXMODEL=2
         BEGIN BULK AUXMODEL=2
         BEGIN BULK AUXMODEL = 2
+
     """
     #if '=' in uline:
     sline = uline.split('=')
@@ -1321,6 +1426,7 @@ def _get_afpm_id(line, uline):
         BEGIN AFPM=2
         BEGIN BULK AFPM=2
         BEGIN BULK AFPM = 2
+
     """
     sline = uline.split('=')
     try:
@@ -1343,6 +1449,7 @@ def _get_super_id(line, uline):
         BEGIN BULK SUPER=2
         BEGIN BULK SUPER = 2
         BEGIN BULK SUPER 2
+
     """
     if '=' in uline:
         sline = uline.split('=')
@@ -1383,6 +1490,7 @@ def _clean_comment_bulk(comment):
     -------
     updated_comment : str
         the comment
+
     """
     if comment == '':
         pass

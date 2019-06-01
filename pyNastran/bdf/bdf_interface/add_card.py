@@ -123,7 +123,7 @@ from pyNastran.bdf.cards.bdf_sets import (
 )
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
-from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD,
+from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, CONVM, TEMPBC)
@@ -233,6 +233,7 @@ CARD_MAP = {
     'RINGFL' : RINGFL,
     'TEMPAX' : TEMPAX,
     'TEMPD' : TEMPD,
+    'TEMPB3' : TEMPB3,
 
     'CONROD' : CONROD,
     'CROD' : CROD,

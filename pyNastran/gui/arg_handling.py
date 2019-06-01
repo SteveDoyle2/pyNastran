@@ -260,8 +260,9 @@ def run_argparse(argv):
                                help='path to geometry script file (runs before load geometry)')
     parent_parser.add_argument('-p', '--postscript', type=str,
                                help='path to post script file (runs after load geometry)')
-    parent_parser.add_argument('-u', '--points_fname', type=str, action='append',
-                               help='an (nrows, 3) comma/tab/space separated list of points (repeatable)')
+    parent_parser.add_argument(
+        '-u', '--points_fname', type=str, action='append',
+        help='an (nrows, 3) comma/tab/space separated list of points (repeatable)')
     parent_parser.add_argument('--user_geom', type=str, action='append',
                                help='add user specified geometry (repeatable)')
     parent_parser.add_argument('--log', type=str, help='{debug, info, warning, error} msg')

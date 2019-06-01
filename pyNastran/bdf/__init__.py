@@ -37,8 +37,9 @@ FLAGGED_CARDS = {
     # of the form 'LOAD = 5', so 'PARAM,POST,-1' doesn't count
     'LOAD', 'SPC', 'FREQ', 'MPC',  # case control + bulk data cards
     'FORCE', 'TRIM', 'DESVAR', 'TSTEP', 'TSTEPNL', 'NSM', 'CLOAD', 'SUPORT1',
-    'CSSCHD', 'SDAMPING', 'DLOAD',
+    'CSSCHD', 'SDAMPING', 'DLOAD', 'TRIM',
     'SUPORT', # short for SUPORT1
+    'ACCEL',  # short for ACCELERATION
     # 'PARAM', # equals sign is problematic
 }
 
@@ -214,7 +215,7 @@ BULK_DATA_CARDS = {
     'GMCORD',
 
     # temperature cards
-    'TEMP', 'TEMPD', 'TEMPAX',
+    'TEMP', 'TEMPD', 'TEMPB3', 'TEMPAX',
     'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
     'CHBDYE', 'CHBDYG', 'CHBDYP',
     'PCONV', 'PCONVM', 'PHBDY',

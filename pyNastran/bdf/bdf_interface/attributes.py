@@ -735,7 +735,7 @@ class BDFAttributes:
                 'GMLOAD', 'SPCD', 'LOADCYN',
 
                 # thermal
-                'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
+                'TEMP', 'TEMPB3', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
                 'QVOL',
                 ],
             'dloads' : ['DLOAD', ],
