@@ -560,7 +560,7 @@ class CBAR(LineElement):
             raise RuntimeError(msg)
 
         if isinstance(self.offt, integer_types):
-            assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
+            assert self.offt in [1, 2, 21, 22, 41, 42], 'invalid offt; offt=%i' % self.offt
             #raise NotImplementedError('invalid offt; offt=%i' % self.offt)
         elif not isinstance(self.offt, str):
             raise SyntaxError('invalid offt expected a string of length 3 '
@@ -987,7 +987,7 @@ class CBEAM3(LineElement):  # was CBAR
         gc = integer_or_blank(card, 5, 'gc')
 
         # card, eid, x1_default, x2_default, x3_default
-        x, g0 = init_x_g0(card, eid, 0., 0., 0.)
+        x, g0 = init_x_g0_cbeam3(card, eid, 0., 0., 0.)
         wa = np.array([double_or_blank(card, 9, 'w1a', 0.0),
                        double_or_blank(card, 10, 'w2a', 0.0),
                        double_or_blank(card, 11, 'w3a', 0.0)], dtype='float64')
@@ -1267,6 +1267,11 @@ class CBEAM3(LineElement):  # was CBAR
     def node_ids(self):
         return [self.Ga(), self.Gb(), self.Gc()]
 
+
+    def get_edge_ids(self):
+        nids = [self.Ga(), self.Gb()]
+        return [tuple(sorted(nids))]
+
     def get_x_g0_defaults(self):
         """
         X and G0 compete for the same fields, so the method exists to
@@ -1324,6 +1329,29 @@ class CBEAM3(LineElement):  # was CBAR
 
     def _verify(self, xref):
         unused_edges = self.get_edge_ids()
+
+def init_x_g0_cbeam3(card, eid, x1_default, x2_default, x3_default):
+    """reads the x/g0 field for the CBEAM3"""
+    field6 = integer_double_or_blank(card, 6, 'g0_x1', x1_default)
+
+    if isinstance(field6, integer_types):
+        g0 = field6
+        x = None
+    elif isinstance(field6, float):
+        g0 = None
+        x = np.array([field6,
+                      double_or_blank(card, 7, 'x2', x2_default),
+                      double_or_blank(card, 8, 'x3', x3_default)], dtype='float64')
+        if norm(x) == 0.0:
+            msg = 'G0 vector defining plane 1 is not defined.\n'
+            msg += 'G0 = %s\n' % g0
+            msg += 'X  = %s\n' % x
+            raise RuntimeError(msg)
+    else:
+        msg = ('field5 on %s (G0/X1) is the wrong type...id=%s field5=%s '
+               'type=%s' % (card.field(0), eid, field6, type(field6)))
+        raise RuntimeError(msg)
+    return x, g0
 
 
 class CBEND(LineElement):

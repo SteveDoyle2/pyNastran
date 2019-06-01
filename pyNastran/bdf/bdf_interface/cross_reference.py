@@ -77,11 +77,8 @@ from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 
 class XrefMesh(BDFAttributes):
     """Links up the various cards in the BDF."""
-    def __init__(self):
-        # type: () -> None
-        """
-        The main BDF class defines all the parameters that are used.
-        """
+    def __init__(self) -> None:
+        """The main BDF class defines all the parameters that are used."""
         BDFAttributes.__init__(self)
         self._nxref_errors = 100
         self._stop_on_xref_error = True
@@ -95,20 +92,19 @@ class XrefMesh(BDFAttributes):
             # elem.check_unique_nodes()
 
     def cross_reference(self,
-                        xref=True,
-                        xref_nodes=True,
-                        xref_elements=True,
-                        xref_nodes_with_elements=False,
-                        xref_properties=True,
-                        xref_masses=True,
-                        xref_materials=True,
-                        xref_loads=True,
-                        xref_constraints=True,
-                        xref_aero=True,
-                        xref_sets=True,
-                        xref_optimization=True,
-                        word=''):
-        # type: (bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, bool, str) -> None
+                        xref: bool=True,
+                        xref_nodes: bool=True,
+                        xref_elements: bool=True,
+                        xref_nodes_with_elements: bool=False,
+                        xref_properties: bool=True,
+                        xref_masses: bool=True,
+                        xref_materials: bool=True,
+                        xref_loads: bool=True,
+                        xref_constraints: bool=True,
+                        xref_aero: bool=True,
+                        xref_sets: bool=True,
+                        xref_optimization: bool=True,
+                        word: str='') -> None:
         """
         Links up all the cards to the cards they reference
 
@@ -192,8 +188,7 @@ class XrefMesh(BDFAttributes):
                 xref_sets=xref_sets, xref_optimization=xref_optimization,
                 word=' (Superelement %i)' % super_id)
 
-    def _cross_reference_constraints(self):
-        # type: () -> None
+    def _cross_reference_constraints(self) -> None:
         """
         Links the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
@@ -224,8 +219,7 @@ class XrefMesh(BDFAttributes):
         for se_suport in self.se_suport:
             se_suport.cross_reference(self)
 
-    def _cross_reference_coordinates(self):
-        # type: () -> None
+    def _cross_reference_coordinates(self) -> None:
         """
         Links up all the coordinate cards to other coordinate cards and nodes
          - CORD1R, CORD1C, CORD1S
@@ -239,8 +233,7 @@ class XrefMesh(BDFAttributes):
         for coord in self.coords.values():
             coord.setup()
 
-    def _cross_reference_aero(self, check_caero_element_ids=False):
-        # type: (bool) -> None
+    def _cross_reference_aero(self, check_caero_element_ids: bool=False) -> None:
         """
         Links up all the aero cards
           - CAEROx, PAEROx, SPLINEx, AECOMP, AELIST, AEPARAM, AESTAT, AESURF, AESURFS
@@ -320,11 +313,8 @@ class XrefMesh(BDFAttributes):
             #'AESTAT',   ## aestats
             #'AESURF',  ## aesurfs
 
-    def _cross_reference_nodes(self):
-        # type: () -> None
-        """
-        Links the nodes to coordinate systems
-        """
+    def _cross_reference_nodes(self) -> None:
+        """Links the nodes to coordinate systems"""
         grdset = self.grdset
         for node in self.nodes.values():
             try:
@@ -347,8 +337,7 @@ class XrefMesh(BDFAttributes):
         #for param_key, param in self.params:
             #if
 
-    def _cross_reference_elements(self):
-        # type: () -> None
+    def _cross_reference_elements(self) -> None:
         """
         Links the elements to nodes, properties (and materials depending on
         the card).
@@ -377,18 +366,15 @@ class XrefMesh(BDFAttributes):
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._store_xref_error(error, elem)
 
-    def _store_xref_error(self, error, card):
+    def _store_xref_error(self, error, card) -> None:
         self._ixref_errors += 1
         var = traceback.format_exception_only(type(error), error)
         self._stored_xref_errors.append((card, var))
         if self._ixref_errors > self._nxref_errors:
             self.pop_xref_errors()
 
-    def _cross_reference_nodes_with_elements(self):
-        # type: () -> None
-        """
-        Links the nodes to all connected elements
-        """
+    def _cross_reference_nodes_with_elements(self) -> None:
+        """Links the nodes to all connected elements"""
         nodes = defaultdict(list)  # type: Dict[int, List[Any]]
         for element in self.elements.values():
             #if element.type in ['CONM2']:
@@ -406,8 +392,7 @@ class XrefMesh(BDFAttributes):
         for node in self.nodes.values():
             node.elements_ref = nodes[node.nid]
 
-    def _cross_reference_masses(self):
-        # type: () -> None
+    def _cross_reference_masses(self) -> None:
         """
         Links the mass to nodes, properties (and materials depending on
         the card).
@@ -424,19 +409,15 @@ class XrefMesh(BDFAttributes):
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._store_xref_error(error, prop)
 
-    def _cross_reference_properties(self):
-        # type: () -> None
-        """
-        Links the properties to materials
-        """
+    def _cross_reference_properties(self) -> None:
+        """Links the properties to materials"""
         for prop in self.properties.values():
             try:
                 prop.cross_reference(self)
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._store_xref_error(error, prop)
 
-    def _cross_reference_materials(self):
-        # type: () -> None
+    def _cross_reference_materials(self) -> None:
         """
         Links the materials to materials (e.g. MAT1, CREEP)
         often this is a pass statement
@@ -464,11 +445,8 @@ class XrefMesh(BDFAttributes):
                 except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                     self._store_xref_error(error, mat)
 
-    def _cross_reference_loads(self):
-        # type: () -> None
-        """
-        Links the loads to nodes, coordinate systems, and other loads.
-        """
+    def _cross_reference_loads(self) -> None:
+        """Links the loads to nodes, coordinate systems, and other loads."""
         for (unused_lid, load_combinations) in self.load_combinations.items():
             for load_combination in load_combinations:
                 try:
@@ -522,8 +500,7 @@ class XrefMesh(BDFAttributes):
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:
                 self._store_xref_error(error, dphase)
 
-    def _cross_reference_sets(self):
-        # type: () -> None
+    def _cross_reference_sets(self) -> None:
         """cross references the SET objects"""
         for set_obj in self.asets:
             set_obj.cross_reference(self)
@@ -551,8 +528,7 @@ class XrefMesh(BDFAttributes):
         for set_obj in self.se_usets:
             set_obj.cross_reference(self)
 
-    def _cross_reference_optimization(self):
-        # type: () -> None
+    def _cross_reference_optimization(self) -> None:
         """cross references the optimization objects"""
         for unused_key, deqatn in self.dequations.items():
             deqatn.cross_reference(self)
@@ -571,7 +547,7 @@ class XrefMesh(BDFAttributes):
         for unused_key, desvar in self.desvars.items():
             desvar.cross_reference(self)
 
-    def _cross_reference_superelements(self):
+    def _cross_reference_superelements(self) -> None:
         """cross references the superelement objects"""
         for unused_seid, csuper in self.csuper.items():
             csuper.cross_reference(self)
@@ -602,7 +578,8 @@ class XrefMesh(BDFAttributes):
         #'senqset',
         #'se_sets', 'se_usets',
 
-    def _safe_cross_reference_superelements(self, create_superelement_geometry=False):
+    def _safe_cross_reference_superelements(
+            self, create_superelement_geometry: bool=False) -> None:
         xref_errors = {}
         seloc_missing = []
         for seid, seloc in self.seloc.items():
@@ -662,7 +639,7 @@ class XrefMesh(BDFAttributes):
             self.log.error('check superelement_xref.bdf')
             raise
 
-    def _create_superelement_from_sebulk(self, sebulk, seid, rseid):
+    def _create_superelement_from_sebulk(self, sebulk, seid: int, rseid: int) -> None:
         """helper for sebulk"""
         #C:\MSC.Software\MSC.Nastran\msc20051\nast\tpl\see103q4.dat
         ref_model = self.superelement_models[rseid]
@@ -697,7 +674,7 @@ class XrefMesh(BDFAttributes):
             raise NotImplementedError(sebulk)
         return new_model
 
-    def _uncross_reference_superelements(self):
+    def _uncross_reference_superelements(self) -> None:
         """cross references the superelement objects"""
         for unused_seid, csuper in self.csuper.items():
             csuper.uncross_reference()
@@ -725,7 +702,7 @@ class XrefMesh(BDFAttributes):
         for unused_seid, setree in self.setree.items():
             setree.uncross_reference()
 
-    def get_point_grids(self, nodes, msg=''):
+    def get_point_grids(self, nodes: List[Any], msg: str='') -> None:
         """gets GRID, POINT cards"""
         nodes_ref = []
         missing_nids = []
@@ -742,7 +719,7 @@ class XrefMesh(BDFAttributes):
             raise KeyError('missing GRID/POINT nids=%s%s' % (missing_nids, msg))
         return nodes_ref
 
-    def superelement_nodes(self, seid, nodes, msg=''):
+    def superelement_nodes(self, seid: int, nodes: List[Any], msg: str='') -> None:
         if seid == 0:
             return self.Nodes(nodes, msg=msg)
         try:
@@ -752,8 +729,7 @@ class XrefMesh(BDFAttributes):
             raise KeyError('cant find superelement=%i%s; seids=%s' % (seid, msg, keys))
         return superelement.Nodes(nodes, msg=msg)
 
-    def geom_check(self, geom_check, xref):  # pragma: no cover
-        # type: (bool, bool) -> None
+    def geom_check(self, geom_check: bool, xref: bool) -> None:  # pragma: no cover
         """
         what about xref?
         """

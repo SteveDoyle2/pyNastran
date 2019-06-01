@@ -12,14 +12,14 @@ import sys
 API = os.environ.get('QT_API', '').lower()
 if API:
     from qtpy import API as qt_version
-elif 'PyQt5' in sys.modules:
-    qt_version = 'pyqt5'
-elif 'PySide2' in sys.modules:
-    qt_version = 'pyside2'
-elif 'PyQt4' in sys.modules:
-    qt_version = 'pyqt4'
 elif 'PySide' in sys.modules:
     qt_version = 'pyside'
+elif 'PySide2' in sys.modules:
+    qt_version = 'pyside2'
+elif 'PyQt5' in sys.modules:
+    qt_version = 'pyqt5'
+elif 'PyQt4' in sys.modules:
+    qt_version = 'pyqt4'
 else:
     found_gui = False
     try:

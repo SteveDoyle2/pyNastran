@@ -310,13 +310,19 @@ def run_argparse(argv):
             #file = _sys.stdout
         #self._print_message(self.format_help(), file)
 
-    mymsg = usage + arg_msg + examples
     def _print_message(message, file=None):
         """overwrites the argparse print to get a better help message"""
+        mymsg = usage + arg_msg + examples
         if message:
             if file is None:
                 file = sys.stderr
+
+            if 'unrecognized arguments' in message:
+                mymsg = message
+            elif message.strip() == pyNastran.__version__:
+                mymsg = message
             file.write(mymsg)
+
     parent_parser._print_message = _print_message
     args = parent_parser.parse_args(args=argv)
     #args.plugin = True

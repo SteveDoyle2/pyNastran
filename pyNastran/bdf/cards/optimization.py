@@ -4161,7 +4161,6 @@ class DVPREL1(DVXREL1):
                                       #'update_model' % self.prop_type)
 
     def _update_by_dvprel(self, prop, value):
-        print(self.get_stats())
         if self.prop_type != prop.type:
             raise RuntimeError('prop_type=%s is not the same as the property type (%s)\n%s%s' % (
                 self.prop_type, prop.type, str(self), str(prop)))

@@ -567,9 +567,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         self._xref = False
 
-        case_control_cards = {'FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
-                              'TEMP', 'TSTEPNL', 'INCLUDE'}
-        self._unique_bulk_data_cards = self.cards_to_read.difference(case_control_cards)
+        #case_control_cards = {'FREQ', 'GUST', 'MPC', 'SPC', 'NLPARM', 'NSM',
+                              #'TEMP', 'TSTEPNL', 'INCLUDE'}
+        #self._unique_bulk_data_cards = self.cards_to_read.difference(CASE_CONTROL_CARDS)
 
         #: / is the delete from restart card
         self.special_cards = ['DEQATN', '/']

@@ -11,9 +11,11 @@ import sys
 #          (used for unicode savetxt using with statement) in Python 3.6
 #  - 1.15: min for Python 3.7? I guess 1.14 is fine for a requirement...
 # scipy:
+#  - 0.18.1: fixed kdtree used by nodal equivalencing; min for Python 2.7
 #  - 0.19:   min for Python 3.6
 #  - 0.19:   min for Python 3.7?; last 0.x release
 # matplotlib:
+#  - 1.5: min for Python 2.7; last 1.x release
 #  - 2.0: adds C0/C1 colors (use colors from default colormap);
 #    min for Python 3.6
 #  - 2.1: adds plt.subplots support (untested?)
@@ -68,7 +70,7 @@ def str_version(version):
     return '.'.join(str(versioni) for versioni in version)
 
 
-def get_package_requirements(is_gui=True, python_version=None):
+def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
     """gets the requirements for setup.py"""
     if python_version is None:
         python_version = '%s.%s' % sys.version_info[:2]
@@ -103,7 +105,7 @@ def get_package_requirements(is_gui=True, python_version=None):
     if is_rtd:
         install_requires.append('numpy')
     else:
-        version_check, required_version = vreqs['scipy']
+        version_check, required_version = vreqs['numpy']
         try:
             import numpy as np
             sver = np.lib.NumpyVersion(np.__version__)

@@ -1,6 +1,7 @@
 """
 Defines following useful methods:
   - write_include(filename, is_windows=True)
+
 """
 import sys
 from typing import Tuple

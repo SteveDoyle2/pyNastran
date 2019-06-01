@@ -1,29 +1,30 @@
+"""creates a popup that links to the new version of pyNastranGUI"""
 import webbrowser
 
-from pyNastran.gui.qt_version import qt_version
+from pyNastran.gui.qt_version import qt_version, qt_int
 from qtpy import QtCore, QtGui
 from qtpy.QtWidgets import (
     QLabel, QApplication, QDialog, QGridLayout, QHBoxLayout, QVBoxLayout, QPushButton,
 )
 
-if qt_version == 4:
+if qt_int == 4:
     class ClickableQLabel(QLabel):
         def __init(self, parent):
             QLabel.__init__(self, parent)
 
         def mouseReleaseEvent(self, event):
-            if qt_version == 4:
+            if qt_int == 4:
                 self.emit(QtCore.SIGNAL('clicked()'))
             else:
                 # ????
                 pass
-elif qt_version == 5:
+elif qt_int == 5:
     pass
     #class ClickableQLabel(QPushButton):
         #def __init(self, text):
             #QPushButton.__init__(self, text)
             #self.setFlat(True)
-else:
+else:  # pragma: no cover
     raise NotImplementedError('qt_version = %r' % qt_version)
 
 
@@ -65,7 +66,7 @@ class DownloadWindow(QDialog):
 
     def create_widgets(self):
         self.name = QLabel("Version %s is now available." % self.version)
-        if qt_version == 4:
+        if qt_int == 4:
             self.link = ClickableQLabel(self.url)
         else:
             self.link = QPushButton(self.url)
@@ -96,11 +97,9 @@ class DownloadWindow(QDialog):
 
     def set_connections(self):
         """creates the actions for the menu"""
-        if qt_version == 4:
-            self.connect(self.link, QtCore.SIGNAL('clicked()'), self.on_download)
+        if qt_int == 4:
             self.connect(self, QtCore.SIGNAL('triggered()'), self.closeEvent)
-        else:
-            self.link.clicked.connect(self.on_download)
+        self.link.clicked.connect(self.on_download)
 
         #self.link.linkActivated.connect(self.on_download)
         self.close_button.clicked.connect(self.on_cancel)
@@ -125,7 +124,8 @@ class DownloadWindow(QDialog):
         self.close()
 
 
-def main():
+def main():  # pragma: no cover
+    """test for the download menu"""
     # kills the program when you hit Cntl+C from the command line
     # doesn't save the current state as presumably there's been an error
     import signal

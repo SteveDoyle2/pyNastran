@@ -263,7 +263,7 @@ class CBEAM(LineElement):
 
         if self.offt is not None:
             if isinstance(self.offt, integer_types):
-                assert self.offt in [1, 2, 21, 22, 41], 'invalid offt; offt=%i' % self.offt
+                assert self.offt in [1, 2, 21, 22, 41, 42], 'invalid offt; offt=%i' % self.offt
                 #raise NotImplementedError('invalid offt; offt=%i' % self.offt)
             elif isinstance(self.offt, str):
                 check_offt(self)

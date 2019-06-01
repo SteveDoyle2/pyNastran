@@ -22,6 +22,7 @@ class WriteMesh(BDFAttributes):
       - model.write_bdf(...)
       - model.echo_bdf(...)
       - model.auto_reject_bdf(...)
+
     """
     def __init__(self):
         """creates methods for writing cards"""
@@ -111,6 +112,7 @@ class WriteMesh(BDFAttributes):
             flag for writing the pyNastran header
         close : bool; default=True
             should the output file be closed
+
         """
         is_long_ids = False
 
@@ -180,9 +182,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_header(self, bdf_file, encoding, write_header=True):
         # type: (Any, str, bool) -> None
-        """
-        Writes the executive and case control decks.
-        """
+        """Writes the executive and case control decks."""
         if self.punch is None:
             # writing a mesh without using read_bdf
             if self.system_command_lines or self.executive_control_lines or self.case_control_deck:
@@ -226,9 +226,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_case_control_deck(self, bdf_file):
         # type: (Any) -> None
-        """
-        Writes the Case Control Deck.
-        """
+        """Writes the Case Control Deck."""
         if self.case_control_deck:
             msg = '$CASE CONTROL DECK\n'
             if self.superelement_models:
@@ -240,9 +238,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_elements(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool, Optional[bool]) -> None
-        """
-        Writes the elements in a sorted order
-        """
+        """Writes the elements in a sorted order"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.elements:
             bdf_file.write('$ELEMENTS\n')
@@ -267,9 +263,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_nsm(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool, Optional[bool]) -> None
-        """
-        Writes the nsm in a sorted order
-        """
+        """Writes the nsm in a sorted order"""
         if self.nsms or self.nsmadds:
             bdf_file.write('$NSM\n')
             for (unused_id, nsmadds) in sorted(self.nsmadds.items()):
@@ -286,9 +280,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_elements_interspersed(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool, Optional[bool]) -> None
-        """
-        Writes the elements and properties in and interspersed order
-        """
+        """Writes the elements and properties in and interspersed order"""
         missing_properties = []
         if self.properties:
             bdf_file.write('$ELEMENTS_WITH_PROPERTIES\n')
@@ -881,9 +873,7 @@ class WriteMesh(BDFAttributes):
 
     def _write_params(self, bdf_file, size=8, is_double=False, is_long_ids=None):
         # type: (Any, int, bool, Optional[bool]) -> None
-        """
-        Writes the PARAM cards
-        """
+        """Writes the PARAM cards"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
         if self.params or self.dti:
             bdf_file.write('$PARAMS\n')  # type: List[str]
@@ -985,6 +975,7 @@ class WriteMesh(BDFAttributes):
         """
         Writes the rejected (processed) cards and the rejected unprocessed
         cardlines
+
         """
         if size == 8:
             print_func = print_card_8

@@ -483,7 +483,7 @@ class TestMeshUtils(unittest.TestCase):
         os.remove('pin_flags.csv')
         os.remove('pin_flags.bdf')
 
-        argv = ['bdf', 'split_cbars_by_pin_flags',  bdf_filename, '-o', 'pin_flags.bdf', '-p', 'pin_flags.csv']
+        argv = ['bdf', 'split_cbars_by_pin_flags', bdf_filename, '-o', 'pin_flags.bdf', '-p', 'pin_flags.csv']
         cmd_line(argv=argv, quiet=True)
         os.remove('pin_flags.csv')
         os.remove('pin_flags.bdf')
@@ -741,7 +741,7 @@ class TestMeshUtils(unittest.TestCase):
             [0., 0., 1.],
             [1., 0., 0.],
         ])
-        model, mirror_model, nid_offset, eid_offset = bdf_mirror_plane(
+        model, mirror_model, unused_nid_offset, eid_offset = bdf_mirror_plane(
             model, plane, mirror_model=None, log=None, debug=True,
             use_nid_offset=False)
         #for nid, node in sorted(mirror_model.nodes.items()):

@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 from __future__ import absolute_import
 import os
+import sys
 from setuptools import setup, find_packages
 
 import pyNastran
 from packages import check_python_version, get_package_requirements
 
+add_vtk_qt = True
+if 'bdist_wheel' in sys.argv:
+    add_vtk_qt = False
+
 check_python_version()
-install_requires = get_package_requirements(is_gui=True)
+install_requires = get_package_requirements(is_gui=True, add_vtk_qt=add_vtk_qt)
 packages = find_packages() + ['gui/icons/*.*']
 #print("packages = %s" % packages)
 

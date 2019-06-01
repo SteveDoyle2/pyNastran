@@ -39,6 +39,7 @@ def expand_thru_case_control(data_in):
     What happens when:
      - a value is excluded and later added or
      - a value is included and later excluded
+
     """
     data, stype = setup_data(data_in)
     if len(data) == 1 and stype == 'str':
@@ -266,6 +267,7 @@ def write_stress_type(key, options, value, spaces=''):
     writes:
      - STRESS(SORT1) = ALL
      - GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),THRESH=1e-2,DATAREC=NO) = YES
+
     """
     msg = ''
     str_options = ','.join(options)
@@ -343,6 +345,7 @@ def write_set(set_id, values, spaces=''):
     >>> set = write_set(set_id, values, spaces='')
     >>> set
     SET = ALL
+
     """
     values.sort()
     starter = 'SET %s = ' % (set_id)

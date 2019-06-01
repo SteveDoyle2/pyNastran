@@ -681,9 +681,10 @@ def write_function_header(func_header, eq, default_values, comment=''):
     msg += _write_comment(comment)
     msg += _write_variables(variables)
     for builtin in BUILTINS:
-        if builtin in func_line and '_' + builtin not in func_line:
+        ubuiltin = builtin + '_'
+        if builtin in func_line and ubuiltin not in func_line:
             raise RuntimeError('cannot have an equation with %r\n%s' % (builtin, func_line))
-        if builtin in variables and '_' + builtin not in variables:
+        if builtin in variables and ubuiltin not in variables:
             raise RuntimeError('cannot have an equation with %r\n%s' % (builtin, variables))
             #import re
             #eq = 'YIELD_A_YIELD'
