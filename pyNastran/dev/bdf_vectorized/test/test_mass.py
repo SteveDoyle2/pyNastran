@@ -6,8 +6,8 @@ import pyNastran
 from pyNastran.dev.bdf_vectorized.bdf import BDF
 #from pyNastran.utils import object_methods
 
-rootpath = pyNastran.__path__[0]
-testpath = os.path.join(rootpath, 'bdf', 'test', 'unit')
+PKG_PATH = pyNastran.__path__[0]
+TEST_PATH = os.path.join(PKG_PATH, 'bdf', 'mesh_utils')
 
 
 class TestMass(unittest.TestCase):
@@ -79,7 +79,7 @@ class TestMass(unittest.TestCase):
 
     def test_mass_shell_1(self):  # passes
         model = BDF(debug=False, log=None)
-        bdfname = os.path.join(testpath, 'test_mass.dat')
+        bdfname = os.path.join(TEST_PATH, 'test_mass.dat')
         model.read_bdf(bdfname, xref=True)
 
         ###########
@@ -172,7 +172,7 @@ class TestMass(unittest.TestCase):
 
     def test_bad_01(self):
         model = BDF(debug=False, log=None)
-        bdfname = os.path.join(testpath, 'test_mass.dat')
+        bdfname = os.path.join(TEST_PATH, 'test_mass.dat')
         model.read_bdf(bdfname, xref=True)
 
         # this passes silently
@@ -188,7 +188,7 @@ class TestMass(unittest.TestCase):
 
     def test_combo_1(self):
         model = BDF(debug=False, log=None)
-        bdfname = os.path.join(testpath, 'test_mass.dat')
+        bdfname = os.path.join(TEST_PATH, 'test_mass.dat')
         model.read_bdf(bdfname, xref=True)
 
         # these are valid
@@ -219,7 +219,7 @@ class TestMass(unittest.TestCase):
 
     def test_mass_solid_1(self):  # passes
         model = BDF(debug=False, log=None)
-        bdfname = os.path.join(testpath, 'test_mass.dat')
+        bdfname = os.path.join(TEST_PATH, 'test_mass.dat')
         model.read_bdf(bdfname, xref=True)
 
         # hexa - psolid - nsm = 0

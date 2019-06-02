@@ -180,7 +180,7 @@ class AddCard(BDFAttributes):
 
     def _add_aeparm_object(self, aeparam):
         """adds an AEPARM object"""
-        key = aeparam.id
+        key = aeparam.aeparm_id
         assert key not in self.aeparams, '\naeparam=\n%s oldAEPARM=\n%s' % (aeparam, self.aeparams[key])
         assert key >= 0
         self.aeparams[key] = aeparam
@@ -188,7 +188,7 @@ class AddCard(BDFAttributes):
 
     def _add_aestat_object(self, aestat):
         """adds an AESTAT object"""
-        key = aestat.id
+        key = aestat.aestat_id
         assert key not in self.aestats, '\naestat=\n%s old=\n%s' % (
             aestat, self.aestats[key])
         assert key >= 0

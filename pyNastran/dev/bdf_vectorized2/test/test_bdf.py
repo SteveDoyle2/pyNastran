@@ -281,7 +281,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
     fem1, fem2, diff_cards = run_and_compare_fems(
         bdf_model, out_model, debug=debug, xref=xref, check=check,
-        punch=punch, cid=cid, mesh_form=mesh_form,
+        punch=punch, mesh_form=mesh_form,
         print_stats=print_stats, encoding=encoding,
         sum_load=sum_load, size=size, is_double=is_double,
         stop=stop, nastran=nastran, post=post,
@@ -296,7 +296,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
 
 def run_and_compare_fems(
         bdf_model, out_model, debug=False, xref=True, check=True,
-        punch=False, cid=None, mesh_form='combined',
+        punch=False, mesh_form='combined',
         print_stats=False, encoding=None,
         sum_load=True, size=8, is_double=False,
         stop=False, nastran='', post=-1, dynamic_vars=None,
@@ -327,7 +327,7 @@ def run_and_compare_fems(
         #try:
 
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
-                        size, is_double, cid,
+                        size, is_double,
                         run_extract_bodies=run_extract_bodies,
                         encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
                         pickle_obj=pickle_obj, stop=stop)
@@ -475,7 +475,7 @@ def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
         op2 = read_op2(op2_model2)
         print(op2.get_op2_stats())
 
-def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double, cid,
+def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double,
              run_extract_bodies=False, encoding=None, crash_cards=None, safe_xref=True,
              pickle_obj=False, stop=False):
     """
@@ -502,8 +502,6 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
         size flag
     is_double : bool
         double flag
-    cid : int / None
-        cid flag
     safe_xref : bool; default=False
         ???
     run_extract_bodies : bool; default=False

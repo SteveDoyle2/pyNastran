@@ -36,15 +36,15 @@ class TestShells(unittest.TestCase):
         cquad4 = model.elements[eid]
 
         # cquad4 / pshell
-        self.assertEquals(cquad4.get_element_id_by_element_index(), eid)
-        self.assertEquals(cquad4.get_property_id_by_element_index(), pid)
-        #self.assertEquals(cquad4.Mid(), mid)
-        #self.assertEquals(cquad4.Nsm(), nsm)
-        self.assertEquals(cquad4.get_mass_by_element_id(), mass)
+        self.assertEqual(cquad4.get_element_id_by_element_index(), eid)
+        self.assertEqual(cquad4.get_property_id_by_element_index(), pid)
+        #self.assertEqual(cquad4.Mid(), mid)
+        #self.assertEqual(cquad4.Nsm(), nsm)
+        self.assertEqual(cquad4.get_mass_by_element_id(), mass)
         self.assertAlmostEquals(cquad4.get_mass_per_area_by_element_id(), mass / A)
-        self.assertEquals(cquad4.get_area_by_element_id(), A)
-        self.assertEquals(cquad4.get_thickness_by_element_id(), t)
-        #self.assertEquals(cquad4.Rho(), rho)  # removed because of PCOMP
+        self.assertEqual(cquad4.get_area_by_element_id(), A)
+        self.assertEqual(cquad4.get_thickness_by_element_id(), t)
+        #self.assertEqual(cquad4.Rho(), rho)  # removed because of PCOMP
 
     def _make_ctria3(self, model, rho, nu, G, E, t, nsm):
         eid = 10
@@ -90,97 +90,97 @@ class TestShells(unittest.TestCase):
         # ctria3 / pshell
         ctria3 = model.elements[eid]
         mass = A * (t * rho + nsm)
-        self.assertEquals(ctria3.get_element_id_by_element_index(), eid)
-        self.assertEquals(ctria3.get_property_id_by_element_index(), pid)
-        #self.assertEquals(ctria3.Mid(), mid)
-        #self.assertEquals(ctria3.Nsm(), nsm)
-        self.assertEquals(ctria3.get_mass_by_element_id(), mass)
+        self.assertEqual(ctria3.get_element_id_by_element_index(), eid)
+        self.assertEqual(ctria3.get_property_id_by_element_index(), pid)
+        #self.assertEqual(ctria3.Mid(), mid)
+        #self.assertEqual(ctria3.Nsm(), nsm)
+        self.assertEqual(ctria3.get_mass_by_element_id(), mass)
         self.assertAlmostEquals(ctria3.get_mass_per_area_by_element_id(), mass / A)
-        self.assertEquals(ctria3.get_area_by_element_id(), A)
-        self.assertEquals(ctria3.get_thickness_by_element_id(), t)
-        #self.assertEquals(ctria3.MassPerArea(), mass / A)
+        self.assertEqual(ctria3.get_area_by_element_id(), A)
+        self.assertEqual(ctria3.get_thickness_by_element_id(), t)
+        #self.assertEqual(ctria3.MassPerArea(), mass / A)
 
         # removed because of PCOMP
         # also no E, G, J, Nu, for the same reason
         # what about Mid
-        #self.assertEquals(ctria3.Rho(), rho)
+        #self.assertEqual(ctria3.Rho(), rho)
 
 
         # pshell
         pshell = model.properties[pid]
         assert isinstance(pshell, PSHELL), type(pshell)
-        self.assertEquals(pshell.get_property_id_by_property_index(), pid)
-        #self.assertEquals(pshell.Mid(), mid)
-        #self.assertEquals(pshell.Nsm(), nsm)
-        #self.assertEquals(pshell.Thickness(), t)
-        #self.assertEquals(pshell.Rho(), rho)
-        self.assertEquals(pshell.z1[0], -t / 2.)
-        self.assertEquals(pshell.z2[0], t / 2.)
+        self.assertEqual(pshell.get_property_id_by_property_index(), pid)
+        #self.assertEqual(pshell.Mid(), mid)
+        #self.assertEqual(pshell.Nsm(), nsm)
+        #self.assertEqual(pshell.Thickness(), t)
+        #self.assertEqual(pshell.Rho(), rho)
+        self.assertEqual(pshell.z1[0], -t / 2.)
+        self.assertEqual(pshell.z2[0], t / 2.)
 
         # ctria3 / pcomp
         ctria3 = model.elements[eid + 1]
         mass = A * (10 * t * rho + nsm)
-        self.assertEquals(ctria3.get_element_id_by_element_index(), eid + 1)
-        self.assertEquals(ctria3.get_property_id_by_element_id(), pid + 1)
-        #self.assertEquals(ctria3.Mid(), mid)
-        #self.assertEquals(ctria3.Nsm(), nsm)
+        self.assertEqual(ctria3.get_element_id_by_element_index(), eid + 1)
+        self.assertEqual(ctria3.get_property_id_by_element_id(), pid + 1)
+        #self.assertEqual(ctria3.Mid(), mid)
+        #self.assertEqual(ctria3.Nsm(), nsm)
         self.assertAlmostEquals(ctria3.get_mass_by_element_id(), mass)
         self.assertAlmostEquals(ctria3.get_mass_per_area_by_element_id(), mass / A)
-        self.assertEquals(ctria3.get_area_by_element_id(), A)
-        self.assertEquals(ctria3.get_thickness_by_element_id(), 10 * t)
-        #self.assertEquals(ctria3.Rho(), rho)
+        self.assertEqual(ctria3.get_area_by_element_id(), A)
+        self.assertEqual(ctria3.get_thickness_by_element_id(), 10 * t)
+        #self.assertEqual(ctria3.Rho(), rho)
 
         # pcomp
         pcomp_pid = pid + 1
         pcomp = model.properties.properties_shell.pcomp.slice_by_property_id(pcomp_pid)
         #print('pcomp =', type(pcomp))
-        #self.assertEquals(pcomp.get_property_id()[0], pcomp_pid)
-        self.assertEquals(pcomp.get_property_id_by_property_index(), pcomp_pid)
-        self.assertEquals(pcomp.get_nplies_by_property_id(), 4)
-        self.assertEquals(pcomp.get_nplies_by_property_index(), 4)
+        #self.assertEqual(pcomp.get_property_id()[0], pcomp_pid)
+        self.assertEqual(pcomp.get_property_id_by_property_index(), pcomp_pid)
+        self.assertEqual(pcomp.get_nplies_by_property_id(), 4)
+        self.assertEqual(pcomp.get_nplies_by_property_index(), 4)
 
-        self.assertEquals(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 0), mid)
-        self.assertEquals(pcomp.get_nonstructural_mass_by_property_id(), nsm)
-        self.assertEquals(pcomp.get_nonstructural_mass_by_property_index(), nsm)
+        self.assertEqual(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 0), mid)
+        self.assertEqual(pcomp.get_nonstructural_mass_by_property_id(), nsm)
+        self.assertEqual(pcomp.get_nonstructural_mass_by_property_index(), nsm)
 
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.get_material_id_by_property_id_ply(pcomp_pid, -1), mid)
+            self.assertEqual(pcomp.get_material_id_by_property_id_ply(pcomp_pid, -1), mid)
         self.assertTrue(all(pcomp.get_material_ids_by_property_id(pcomp_pid)[0] == [mid] * 4))
-        self.assertEquals(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 0), mid)
-        self.assertEquals(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 1), mid)
-        self.assertEquals(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 2), mid)
-        self.assertEquals(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 3), mid)
+        self.assertEqual(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 0), mid)
+        self.assertEqual(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 1), mid)
+        self.assertEqual(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 2), mid)
+        self.assertEqual(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 3), mid)
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 4), mid)
+            self.assertEqual(pcomp.get_material_id_by_property_id_ply(pcomp_pid, 4), mid)
 
         #with self.assertRaises(IndexError):
-            #self.assertEquals(pcomp.get_thickness_by_property_id_ply(pcomp_pid, -1), t)
-        self.assertEquals(pcomp.get_thickness_by_property_id(), 10 * t)
-        self.assertEquals(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 0), t)
-        self.assertEquals(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 1), 2 * t)
+            #self.assertEqual(pcomp.get_thickness_by_property_id_ply(pcomp_pid, -1), t)
+        self.assertEqual(pcomp.get_thickness_by_property_id(), 10 * t)
+        self.assertEqual(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 0), t)
+        self.assertEqual(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 1), 2 * t)
         self.assertTrue(np.allclose(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 2), 3 * t))
-        self.assertEquals(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 3), 4 * t)
+        self.assertEqual(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 3), 4 * t)
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 4), 5*t)
+            self.assertEqual(pcomp.get_thickness_by_property_id_ply(pcomp_pid, 4), 5*t)
 
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.get_density_by_property_id_ply(pcomp_pid, -1), rho)
-        self.assertEquals(pcomp.get_density_by_property_id_ply(pcomp_pid, 0), rho)
-        self.assertEquals(pcomp.get_density_by_property_id_ply(pcomp_pid, 1), rho)
-        self.assertEquals(pcomp.get_density_by_property_id_ply(pcomp_pid, 2), rho)
-        self.assertEquals(pcomp.get_density_by_property_id_ply(pcomp_pid, 3), rho)
+            self.assertEqual(pcomp.get_density_by_property_id_ply(pcomp_pid, -1), rho)
+        self.assertEqual(pcomp.get_density_by_property_id_ply(pcomp_pid, 0), rho)
+        self.assertEqual(pcomp.get_density_by_property_id_ply(pcomp_pid, 1), rho)
+        self.assertEqual(pcomp.get_density_by_property_id_ply(pcomp_pid, 2), rho)
+        self.assertEqual(pcomp.get_density_by_property_id_ply(pcomp_pid, 3), rho)
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.get_density_by_property_id_ply(pcomp_pid, 4), rho)
+            self.assertEqual(pcomp.get_density_by_property_id_ply(pcomp_pid, 4), rho)
 
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.get_theta_by_property_id_ply(pcomp_pid, -1), 0.)
-        self.assertEquals(pcomp.get_theta_by_property_id_ply(pcomp_pid, 0), 0.)
-        self.assertEquals(pcomp.get_theta_by_property_id_ply(pcomp_pid, 1), 30.)
-        self.assertEquals(pcomp.get_theta_by_property_id_ply(pcomp_pid, 2), 60.)
-        self.assertEquals(pcomp.get_theta_by_property_id_ply(pcomp_pid, 3), 90.)
+            self.assertEqual(pcomp.get_theta_by_property_id_ply(pcomp_pid, -1), 0.)
+        self.assertEqual(pcomp.get_theta_by_property_id_ply(pcomp_pid, 0), 0.)
+        self.assertEqual(pcomp.get_theta_by_property_id_ply(pcomp_pid, 1), 30.)
+        self.assertEqual(pcomp.get_theta_by_property_id_ply(pcomp_pid, 2), 60.)
+        self.assertEqual(pcomp.get_theta_by_property_id_ply(pcomp_pid, 3), 90.)
         with self.assertRaises(IndexError):
-            self.assertEquals(pcomp.get_theta_by_property_id_ply(pcomp_pid, 4), rho)
-        self.assertEquals(pcomp.z0, -10*t/2.)
+            self.assertEqual(pcomp.get_theta_by_property_id_ply(pcomp_pid, 4), rho)
+        self.assertEqual(pcomp.z0, -10*t/2.)
 
     def test_pshell_01(self):
         """tests a CQUAD4 and a PSHELL"""

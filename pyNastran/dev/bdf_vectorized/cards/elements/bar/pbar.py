@@ -1,6 +1,6 @@
 from numpy import array, zeros, arange, searchsorted, unique
 
-from pyNastran.utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.dev.bdf_vectorized.cards.elements.property import Property
 
 from pyNastran.bdf.field_writer_8 import print_card_8

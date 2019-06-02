@@ -6,7 +6,6 @@ Main BDF class.  Defines:
 
 see https://docs.plm.automation.siemens.com/tdoc/nxnastran/10/help/#uid:index
 """
-import os
 import sys
 import traceback
 from pickle import load, dump
@@ -17,10 +16,12 @@ from cpylog import get_logger2
 
 from pyNastran.utils import object_attributes, check_path, _filename
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
-from pyNastran.bdf.utils import (
-    _parse_pynastran_header, to_fields, parse_executive_control_deck, parse_patran_syntax)
+from pyNastran.bdf.bdf_interface.utils import (
+    to_fields, _parse_pynastran_header, parse_executive_control_deck)
 
-#from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.utils import parse_patran_syntax
+
+from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
 from pyNastran.bdf.cards.base_card import _format_comment
@@ -95,7 +96,10 @@ from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL
 #from pyNastran.bdf.cards.loads.loads import (
     #DAREA, #LSEQ, SLOAD, DAREA, RANDPS, RFORCE, RFORCE1, SPCD, LOADCYN
 #)
-from pyNastran.bdf.errors import DuplicateIDsError, CrossReferenceError
+from pyNastran.bdf.errors import DuplicateIDsError, CrossReferenceError, CardParseSyntaxError
+#from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
+                                  #CardParseSyntaxError, UnsupportedCard, DisabledCardError,
+                                  #SuperelementFlagError, ReplicationError)
 
 from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _show_bad_file)
@@ -898,11 +902,14 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         self.log.debug('---starting BDF.read_bdf of %s---' % self.bdf_filename)
 
         #executive_control_lines, case_control_lines, \
-            #bulk_data_lines = self._get_lines(self.bdf_filename, self.punch)
+            #bulk_data_lines = self.get_lines(self.bdf_filename, self.punch)
         obj = BDFInputPy(self.read_includes, self.dumplines, self._encoding,
                          log=self.log, debug=self.debug)
-        out = obj._get_lines(bdf_filename, punch=self.punch)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+        out = obj.get_lines(bdf_filename, punch=self.punch)
+        #system_lines, executive_control_lines, case_control_lines, bulk_data_lines = out
+        (system_lines, executive_control_lines, case_control_lines,
+         bulk_data_lines, bulk_data_ilines,
+         superelement_lines, superelement_ilines) = out
         self._set_pybdf_attributes(obj)
 
 
@@ -947,7 +954,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
     def _set_pybdf_attributes(self, obj):
         """common method for all functions that use BDFInputPy"""
-        self.reject_lines += obj.reject_lines
+        #self.reject_lines += obj.reject_lines
         self.active_filenames += obj.active_filenames
         self.active_filename = obj.active_filename
         self.include_dir = obj.include_dir
@@ -984,30 +991,30 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
     def fill_dmigs(self):
         """fills the DMIx cards with the column data that's been stored"""
         return
-        for name, card_comments in self._dmig_temp.items():
-            card0, comment0 = card_comments[0]
-            card_name = card0[0]
-            card_name = card_name.rstrip(' *').upper()
+        #for name, card_comments in self._dmig_temp.items():
+            #card0, comment0 = card_comments[0]
+            #card_name = card0[0]
+            #card_name = card_name.rstrip(' *').upper()
 
-            if card_name == 'DMIG':
-                # if field2 == 'UACCEL':  # special DMIG card
-                card = self.dmigs[name]
-            elif card_name == 'DMI':
-                card = self.dmis[name]
-            elif card_name == 'DMIJ':
-                card = self.dmijs[name]
-            elif card_name == 'DMIJI':
-                card = self.dmijis[name]
-            elif card_name == 'DMIK':
-                card = self.dmiks[name]
-            else:
-                raise NotImplementedError(card_name)
+            #if card_name == 'DMIG':
+                ## if field2 == 'UACCEL':  # special DMIG card
+                #card = self.dmigs[name]
+            #elif card_name == 'DMI':
+                #card = self.dmis[name]
+            #elif card_name == 'DMIJ':
+                #card = self.dmijs[name]
+            #elif card_name == 'DMIJI':
+                #card = self.dmijis[name]
+            #elif card_name == 'DMIK':
+                #card = self.dmiks[name]
+            #else:
+                #raise NotImplementedError(card_name)
 
-            for (card_obj, comment) in card_comments:
-                card._add_column(card_obj, comment=comment)
-            card.finalize()
+            #for (card_obj, comment) in card_comments:
+                #card._add_column(card_obj, comment=comment)
+            #card.finalize()
 
-        self._dmig_temp = defaultdict(list)
+        #self._dmig_temp = defaultdict(list)
 
     def pop_parse_errors(self):
         """raises an error if there are parsing errors"""
@@ -2310,7 +2317,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             nodes[ngrids+nspoints:] = self.epoint.points
         return nodes
 
-    def get_xyz_in_coord(self, cid=0, fdtype='float64', sort_ids=True):
+    def get_xyz_in_coord(self, cid=0, fdtype='float64', sort_ids=True, dtype='float64'):
         """
         Gets the xyz points (including SPOINTS) in the desired coordinate frame
 
@@ -2390,7 +2397,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
                 class_instance = card_class.add_card(card_obj, comment=comment)
                 add_card_function(class_instance)
             except TypeError:
-                msg = 'problem adding %s' % card_obj
+                #msg = 'problem adding %s' % card_obj
                 raise
                 #raise TypeError(msg)
             except (SyntaxError, AssertionError, KeyError, ValueError) as exception:
@@ -2741,7 +2748,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
         return icd_transform, icp_transform, xyz_cp, nid_cp_cd
 
-    def transform_xyzcp_to_xyz_cid(self, xyz_cp, nids, icp_transform, cid=0):
+    def transform_xyzcp_to_xyz_cid(self, xyz_cp, nids, icp_transform, in_place=False, cid=0):
         """
         Working on faster method for calculating node locations
         Not validated...
@@ -2756,6 +2763,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             coordinate system.
         cid : int; default=0
             the coordinate system to get xyz in
+
         Returns
         -------
         xyz_cid : (n, 3) float ndarray
@@ -3623,4 +3631,3 @@ def _check_valid_deck(flag):
         msg += 'You cannot read a deck that has an Executive Control Deck, but\n'
         msg += 'not a Case Control Deck (or vice versa), even if you have a Bulk Data Deck.\n'
         raise RuntimeError(msg)
-

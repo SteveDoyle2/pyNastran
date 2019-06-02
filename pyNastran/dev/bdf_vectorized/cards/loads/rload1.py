@@ -74,7 +74,7 @@ class RLOAD1(VectorizedLoad):
 
             #: Defines the type of the dynamic excitation. (Integer; character
             #: or blank; Default = 0)
-            self.Type = zeros(ncards, '|S4')
+            self.Type = zeros(ncards, '|U4')
 
             #: Identification number of TABLEDi entry that gives C/D(f). (Integer > 0)
             self.table_cd = zeros((ncards, 2), 'int32')

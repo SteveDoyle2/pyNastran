@@ -1,6 +1,7 @@
 from collections import defaultdict
 
-from six.moves iassert isinstance(eid, (int, np.int32))ingIO
+from io import StringIO
+from pyNastran.utils.numpy_utils import integer_types
 from numpy import unique, where
 
 

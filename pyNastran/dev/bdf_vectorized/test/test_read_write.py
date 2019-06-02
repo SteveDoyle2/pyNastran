@@ -18,7 +18,7 @@ def read_write_compare(bdf_filename, bdf_filename_out):
     vmodel.write_bdf(bdf_filename_out)
     run_and_compare_fems(
         bdf_filename, bdf_filename_out, debug=False, xref=True, check=True,
-        punch=False, cid=None, mesh_form=None,
+        punch=False, mesh_form=None,
         print_stats=False, encoding=None,
         sum_load=True, size=8, is_double=False,
         stop=False, nastran='', post=-1, dynamic_vars=None,
@@ -99,7 +99,7 @@ class TestReadWriteVectorized(unittest.TestCase):
 
         run_and_compare_fems(
             bdf_filename, bdf_filename_outv, debug=False, xref=True, check=True,
-            punch=False, cid=None, mesh_form=None,
+            punch=False, mesh_form=None,
             print_stats=False, encoding=None,
             sum_load=False, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,

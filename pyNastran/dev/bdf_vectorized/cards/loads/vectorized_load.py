@@ -1,5 +1,5 @@
 import numpy as np
-
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.dev.bdf_vectorized.cards.vectorized_card import VectorizedCard
 
 class VectorizedLoad(VectorizedCard):
@@ -10,7 +10,7 @@ class VectorizedLoad(VectorizedCard):
         if load_id is None:
             return np.arange(self.n)
         #msg = ''
-        assert isinstance(load_id, int), load_id
+        assert isinstance(load_id, integer_types), 'load_id=%s type=%s' % (load_id, type(load_id))
         return np.where(self.load_id == load_id)[0]
         #i = self._get_sorted_index(self.load_id, load_id, 'load_id', 'load_id in %s%s' % (self.type, msg), check=True)
 

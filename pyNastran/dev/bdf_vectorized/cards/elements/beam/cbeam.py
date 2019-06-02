@@ -63,7 +63,7 @@ class CBEAM(Element):
             self.x = full((ncards, 3), nan, float_fmt)
             self.is_offt = zeros(ncards, 'bool')
             self.bit = full(ncards, nan, 'int32')
-            self.offt = full(ncards, nan, '|S3')
+            self.offt = full(ncards, nan, '|U3')
             self.pin_flags = zeros((ncards, 2), 'int32')
             self.wa = zeros((ncards, 3), float_fmt)
             self.wb = zeros((ncards, 3), float_fmt)

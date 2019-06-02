@@ -1,5 +1,5 @@
 import numpy as np
-from pyNastran.utils.mathematics import unique2d
+from pyNastran.femutils.utils import unique2d
 from pyNastran.dev.bdf_vectorized.utils import slice_to_iter
 from pyNastran.dev.bdf_vectorized.cards.elements.solid.ctetra4 import volume4
 from pyNastran.dev.bdf_vectorized.cards.elements.solid.chexa8 import quad_area_centroid

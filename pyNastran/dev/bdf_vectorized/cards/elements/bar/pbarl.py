@@ -65,10 +65,10 @@ class PBARL(Property):
             #: Material ID
             self.material_id = zeros(ncards, dtype='int32')
 
-            self.group = zeros(ncards, dtype='|S8')
+            self.group = zeros(ncards, dtype='|U8')
 
             #: Section Type (e.g. 'ROD', 'TUBE', 'I', 'H')
-            self.Type = zeros(ncards, dtype='|S8')
+            self.Type = zeros(ncards, dtype='|U8')
 
             #: non-structural mass
             self.nsm = zeros(ncards, dtype=float_fmt)

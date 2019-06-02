@@ -39,8 +39,7 @@ EXPECTED_HEADER_KEYS_CHECK = [
 EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units']
 
 
-def _to_fields_mntpnt1(card_lines):
-    # type: (List[str]) -> List[str]
+def _to_fields_mntpnt1(card_lines: List[str]) -> List[str]:
     assert len(card_lines) == 2, card_lines
     line1, line2 = card_lines
 
@@ -168,8 +167,7 @@ def _to_fields_mntpnt1(card_lines):
         #fields += new_fields
     #return fields #[field.strip() for field in fields]
 
-def to_fields(card_lines, card_name):
-    # type: (List[str], str) -> List[str]
+def to_fields(card_lines: List[str], card_name: str) -> List[str]:
     """
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.
@@ -266,8 +264,7 @@ def to_fields(card_lines, card_name):
         fields += new_fields
     return fields
 
-def expand_tabs(line):
-    # type: (str) -> str
+def expand_tabs(line: str) -> str:
     """expands the tabs; breaks if you mix commas and tabs"""
     line = line.expandtabs()
     if ',' in line:
@@ -276,8 +273,8 @@ def expand_tabs(line):
         raise CardParseSyntaxError(msg)
     return line
 
-def parse_executive_control_deck(executive_control_lines):
-    # type: (List[str]) -> (Optional[int], Optional[str], Optional[int])
+def parse_executive_control_deck(
+        executive_control_lines: List[str]) -> Tuple[Optional[int], Optional[str], Optional[int]]:
     """Extracts the solution from the executive control deck"""
     sol = None
     method = None
@@ -303,8 +300,7 @@ def parse_executive_control_deck(executive_control_lines):
     return sol, method, sol_iline
 
 
-def _parse_pynastran_header(line):
-    # type: (str) -> (Tuple[Optional[str], Optional[str]])
+def _parse_pynastran_header(line: str) -> Tuple[Optional[str], Optional[str]]:
     """
     Parameters
     ----------
@@ -396,8 +392,7 @@ def _parse_pynastran_header(line):
     #return lines2
 
 
-def print_filename(filename, relpath=True):
-    # type: (str, bool) -> str
+def print_filename(filename: str, relpath: bool=True) -> str:
     """
     Takes a path such as C:/work/fem.bdf and locates the file using
     relative paths.  If it's on another drive, the path is not modified.
@@ -420,8 +415,8 @@ def print_filename(filename, relpath=True):
         return os.path.relpath(filename)
     return filename
 
-def deprecated(old_name, new_name, deprecated_version, levels=None):
-    # type: (str, str, str, Optional[List[int]]) -> None
+def deprecated(old_name: str, new_name: str, deprecated_version: str,
+               levels: Optional[List[int]]=None) -> None:
     """
     Throws a deprecation message and crashes if past a specific version.
 
@@ -483,8 +478,9 @@ def deprecated(old_name, new_name, deprecated_version, levels=None):
         warnings.warn(msg, DeprecationWarning)
 
 
-def _parse_dynamic_syntax(key, dict_of_vars, log):
-    # type: (str, Any, Any) -> Dict[str, Any]
+def _parse_dynamic_syntax(key: str,
+                          dict_of_vars: Dict[str, Any],
+                          log: Any) -> Dict[str, Any]:
     """
     Applies the dynamic syntax for %varName
 
@@ -510,8 +506,7 @@ def _parse_dynamic_syntax(key, dict_of_vars, log):
         raise KeyError(msg)
     return dict_of_vars[key]
 
-def _get_card_name(lines, active_filename):
-    # type: (List[str], str) -> Optional[str]
+def _get_card_name(lines: List[str], active_filename: str) -> Optional[str]:
     """
     Returns the name of the card defined by the provided lines
 

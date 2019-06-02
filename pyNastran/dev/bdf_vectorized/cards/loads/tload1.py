@@ -64,7 +64,7 @@ class TLOAD1(VectorizedLoad):
 
             #: Defines the type of the dynamic excitation. (Integer; character
             #: or blank; Default = 0)
-            self.Type = zeros(ncards, '|S4')
+            self.Type = zeros(ncards, '|U4')
 
             #: Identification number of TABLEDi entry that gives F(t). (Integer > 0)
             self.table_id = zeros(ncards, 'int32')

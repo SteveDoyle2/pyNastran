@@ -60,7 +60,7 @@ class MATS1(Material):
             self.table_id = zeros(ncards, dtype='int32')
             #: Type of material nonlinearity. ('NLELAST' for nonlinear elastic
             #: or 'PLASTIC' for elastoplastic.)
-            self.Type = zeros(ncards, dtype='|S8')
+            self.Type = zeros(ncards, dtype='|U8')
 
             #: Work hardening slope (slope of stress versus plastic strain) in
             #: units of stress. For elastic-perfectly plastic cases, H=0.0.

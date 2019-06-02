@@ -135,8 +135,8 @@ class TestCoords(unittest.TestCase):
 
         size = 8
         card = CORD1R(card)
-        self.assertEquals(card.Cid(), 2)
-        self.assertEquals(card.Rid(), 0)
+        self.assertEqual(card.Cid(), 2)
+        self.assertEqual(card.Rid(), 0)
         card.write_bdf(size, 'dummy')
         card.raw_fields()
 
@@ -163,12 +163,12 @@ class TestCoords(unittest.TestCase):
         model.cross_reference()
 
         cord2r = model.Coord(3)
-        self.assertEquals(cord2r.Cid(), 3)
-        self.assertEquals(cord2r.Rid(), 0)
+        self.assertEqual(cord2r.Cid(), 3)
+        self.assertEqual(cord2r.Rid(), 0)
 
         cord2r = model.Coord(4)
-        self.assertEquals(cord2r.Cid(), 4)
-        self.assertEquals(cord2r.Rid(), 3)
+        self.assertEqual(cord2r.Cid(), 4)
+        self.assertEqual(cord2r.Rid(), 3)
 
         self.assertTrue(allclose(cord2r.i, array([0., 0., 1.])))
         delta = cord2r.j - array([1., 1., 0.]) / 2**0.5
@@ -226,16 +226,16 @@ class TestCoords(unittest.TestCase):
         for card in cards:
             model.add_card(card, card[0], comment='comment', is_list=True)
         c1 = model.Coord(1)
-        self.assertEquals(c1.G1(), 1)
-        self.assertEquals(c1.G2(), 2)
-        self.assertEquals(c1.G3(), 3)
+        self.assertEqual(c1.G1(), 1)
+        self.assertEqual(c1.G2(), 2)
+        self.assertEqual(c1.G3(), 3)
 
         model.cross_reference()
-        self.assertEquals(c1.G1(), 1)
-        self.assertEquals(c1.G2(), 2)
-        self.assertEquals(c1.G3(), 3)
+        self.assertEqual(c1.G1(), 1)
+        self.assertEqual(c1.G2(), 2)
+        self.assertEqual(c1.G3(), 3)
 
-        self.assertEquals(c1.NodeIDs(), [1, 2, 3])
+        self.assertEqual(c1.NodeIDs(), [1, 2, 3])
 
     def test_cord2_bad_01(self):
         model = BDF(debug=False)
@@ -410,8 +410,8 @@ class TestCoords(unittest.TestCase):
 
         size = 8
         card = CORD1C(card)
-        self.assertEquals(card.Cid(), 2)
-        self.assertEquals(card.Rid(), 0)
+        self.assertEqual(card.Cid(), 2)
+        self.assertEqual(card.Rid(), 0)
         card.write_bdf(size, 'dummy')
         card.raw_fields()
 
@@ -422,8 +422,8 @@ class TestCoords(unittest.TestCase):
 
         size = 8
         card = CORD1S(card)
-        self.assertEquals(card.Cid(), 2)
-        self.assertEquals(card.Rid(), 0)
+        self.assertEqual(card.Cid(), 2)
+        self.assertEqual(card.Rid(), 0)
         card.write_bdf(size, 'dummy')
         card.raw_fields()
 

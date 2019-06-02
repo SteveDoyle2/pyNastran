@@ -87,4 +87,4 @@ eblock,10,,,16
 
 """
 
-from pyNastran.converters.dev.ansys import read_ansys
+from pyNastran.converters.dev.ansys.ansys import read_ansys

@@ -126,8 +126,8 @@ class PLOAD4(VectorizedLoad):
 
             self.g1 = full(ncards, nan, 'int32')
             self.g34 = full(ncards, nan, 'int32')
-            self.line_load_dir = full(ncards, nan, '|S4')
-            self.surf_or_line = full(ncards, nan, '|S4')
+            self.line_load_dir = full(ncards, nan, '|U4')
+            self.surf_or_line = full(ncards, nan, '|U4')
             self.cid = zeros(ncards, dtype='int32')
             self.nvector = zeros((ncards, 3), dtype=float_fmt)
         else:

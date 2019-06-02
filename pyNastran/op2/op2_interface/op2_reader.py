@@ -3638,7 +3638,7 @@ class OP2Reader:
 def grids_comp_array_to_index(grids1, comps1, grids2, comps2,
                               make_matrix_symmetric):
     """maps the dofs"""
-    #from pyNastran.utils.mathematics import unique2d
+    #from pyNastran.femutils.utils import unique2d
     ai = np.vstack([grids1, comps1]).T
     bi = np.vstack([grids2, comps2]).T
     #print('grids2 =', grids2)

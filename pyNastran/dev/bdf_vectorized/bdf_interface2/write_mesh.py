@@ -8,7 +8,7 @@ from io import StringIO, IOBase
 
 from numpy import array, unique, concatenate, intersect1d, where
 
-from pyNastran.bdf.utils import print_filename
+from pyNastran.bdf.bdf_interface.utils import print_filename
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.dev.bdf_vectorized.bdf_interface2.attributes import BDFAttributes

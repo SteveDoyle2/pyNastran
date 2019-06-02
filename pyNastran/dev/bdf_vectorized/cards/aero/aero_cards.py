@@ -481,7 +481,7 @@ class AEPARM(BaseCard):
         """
         if comment:
             self.comment = comment
-        self.id = aeparm_id
+        self.aeparm_id = aeparm_id
         self.label = label
         self.units = units
 
@@ -532,7 +532,7 @@ class AEPARM(BaseCard):
         fields : List[int/float/str]
             the fields that define the card
         """
-        list_fields = ['AEPARM', self.id, self.label, self.units]
+        list_fields = ['AEPARM', self.aeparm_id, self.label, self.units]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

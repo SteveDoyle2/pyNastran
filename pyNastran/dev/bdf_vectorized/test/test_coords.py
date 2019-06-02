@@ -102,20 +102,21 @@ class TestCoords(unittest.TestCase):
             [5, 1, -1., 1., 0.],
         ]
 
-        coords = [  # cid, rid, origin,      zaxis          xaxis
-                   [1, 0, [0., 0., 0.], [0., 0., -1.], [-1., 0., 0.]],
-                 ]
+        coords = [
+            # cid, rid, origin,      zaxis          xaxis
+            [1, 0, [0., 0., 0.], [0., 0., -1.], [-1., 0., 0.]],
+        ]
         self._get_nodes(grids, grids_expected, coords)
 
     def test_rid_1(self):
         grids = [
             [1, 2, 10., 5., 3.],  # nid, cid, x,y,z
             [2, 3, 10., 5., 3.],
-         ]
+        ]
         grids_expected = [
-                    [1, 1, 11., 6., 4.],
-                    [2, 1, 11., 6., 4.],
-                 ]
+            [1, 1, 11., 6., 4.],
+            [2, 1, 11., 6., 4.],
+        ]
 
         coords = [
             # cid, rid, origin,     zaxis        xaxis
@@ -125,7 +126,7 @@ class TestCoords(unittest.TestCase):
 
             [3, 0, [1., 1., 1.], [1., 1., 2.], [2., 1., 1.]],  # cid=3
             #[3, 0, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.]],  # cid=3,equiv
-          ]
+        ]
         self._get_nodes(grids, grids_expected, coords)
 
     def test_cord1r_01(self):
@@ -150,8 +151,8 @@ class TestCoords(unittest.TestCase):
 
         size = 8
         coords = model.coords
-        self.assertEquals(coords.get_cid_by_coord_id(2), 2)
-        self.assertEquals(coords.get_rid_by_coord_id(2), 0)
+        self.assertEqual(coords.get_cid_by_coord_id(2), 2)
+        self.assertEqual(coords.get_rid_by_coord_id(2), 0)
 
         bdf_file = StringIO()
         coords.write_card(bdf_file, size=8, is_double=False)
@@ -184,13 +185,13 @@ class TestCoords(unittest.TestCase):
 
         cord2r = model.coords.slice_by_coord_id(3)
         #print(type(cord2r))
-        self.assertEquals(cord2r.get_cid_by_coord_id(), 3)
-        self.assertEquals(cord2r.get_rid_by_coord_id(), 0)
+        self.assertEqual(cord2r.get_cid_by_coord_id(), 3)
+        self.assertEqual(cord2r.get_rid_by_coord_id(), 0)
 
         cord2r = model.coords.slice_by_coord_id(4)
         #print(type(cord2r))
-        self.assertEquals(cord2r.get_cid_by_coord_id(), 4)
-        self.assertEquals(cord2r.get_rid_by_coord_id(), 3)
+        self.assertEqual(cord2r.get_cid_by_coord_id(), 4)
+        self.assertEqual(cord2r.get_rid_by_coord_id(), 3)
 
         i = model.coords.get_coord_index_by_coord_id(4)
         T = model.coords.T[i, :, :].reshape(3, 3)
@@ -250,7 +251,7 @@ class TestCoords(unittest.TestCase):
 
     def test_cord1r_02(self):
         model = BDF(debug=False)
-        card_count = {
+        unused_card_count = {
             'CORD1R' : 1,
             'GRID' : 3,
         }
@@ -264,7 +265,7 @@ class TestCoords(unittest.TestCase):
         for card in cards:
             model.add_card(card, card[0], comment='comment\n', is_list=True)
         model.build()
-        c1 = model.coords.slice_by_coord_id(1)
+        unused_c1 = model.coords.slice_by_coord_id(1)
 
     def test_cord2r_bad_01(self):
         model = BDF(debug=True)
@@ -284,21 +285,26 @@ class TestCoords(unittest.TestCase):
             cards['GRID'].append(('', grid))
 
         coord_cards = [
-            ['CORD2R', 1, 0, 0., 0., 0.,
-                             0., 0., 0.,
-                             0., 0., 0.],  # fails on self.k
-            ['CORD2R', 2, 0, 0., 0., 0.,
-                             1., 0., 0.,
-                             0., 0., 0.],  # fails on normalize self.j
-            ['CORD2R', 3, 0, 0., 0., 0.,
-                             1., 0., 0.,
-                             1., 1., 0.],  # passes
-            ['CORD2R', 4, 0, 0., 1., 0.,
-                             1., 0., 0.,
-                             1., 1., 0.],  # passes
-            ['CORD2R', 5, 4, 0., 1., 0.,
-                             1., 0., 0.,
-                             1., 1., 0.],  # passes
+            [
+                'CORD2R', 1, 0, 0., 0., 0.,
+                0., 0., 0.,
+                0., 0., 0.],  # fails on self.k
+            [
+                'CORD2R', 2, 0, 0., 0., 0.,
+                1., 0., 0.,
+                0., 0., 0.],  # fails on normalize self.j
+            [
+                'CORD2R', 3, 0, 0., 0., 0.,
+                1., 0., 0.,
+                1., 1., 0.],  # passes
+            [
+                'CORD2R', 4, 0, 0., 1., 0.,
+                1., 0., 0.,
+                1., 1., 0.],  # passes
+            [
+                'CORD2R', 5, 4, 0., 1., 0.,
+                1., 0., 0.,
+                1., 1., 0.],  # passes
         ]
         for card in coord_cards:
             card_name = card[0]
@@ -509,8 +515,8 @@ class TestCoords(unittest.TestCase):
         size = 8
         bdf_file = StringIO()
         card = model.coords.slice_by_coord_id(2)
-        self.assertEquals(card.get_cid_by_coord_id(), 2)
-        self.assertEquals(card.get_rid_by_coord_id(), 0)
+        self.assertEqual(card.get_cid_by_coord_id(), 2)
+        self.assertEqual(card.get_rid_by_coord_id(), 0)
         card.write_card(bdf_file, size=8, is_double=False)
 
     def test_cord1s_01(self):
@@ -539,8 +545,8 @@ class TestCoords(unittest.TestCase):
         size = 8
         bdf_file = StringIO()
         card = model.coords.slice_by_coord_id(2)
-        self.assertEquals(card.get_cid_by_coord_id(), 2)
-        self.assertEquals(card.get_rid_by_coord_id(), 0)
+        self.assertEqual(card.get_cid_by_coord_id(), 2)
+        self.assertEqual(card.get_rid_by_coord_id(), 0)
         card.write_card(bdf_file, size=8, is_double=False)
         #card.raw_fields()
 

@@ -101,7 +101,7 @@ class RBE2:
         #: Component numbers of the dependent degrees-of-freedom in the
         #: global coordinate system at grid points GMi. (Integers 1 through
         #: 6 with no embedded blanks.)
-        self.cm = zeros(ncards, '|S6')
+        self.cm = zeros(ncards, '|U6')
 
         #: Grid point identification numbers at which dependent
         #: degrees-of-freedom are assigned. (Integer > 0)

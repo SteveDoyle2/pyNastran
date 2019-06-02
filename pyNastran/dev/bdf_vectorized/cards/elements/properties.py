@@ -1,6 +1,6 @@
 import numpy as np
 
-from pyNastran.utils.mathematics import unique2d
+from pyNastran.femutils.utils import unique2d
 #from pyNastran.dev.bdf_vectorized.cards.elements.solid.ctetra4 import volume4
 #from pyNastran.dev.bdf_vectorized.cards.elements.solid.chexa8 import quad_area_centroid
 #from pyNastran.dev.bdf_vectorized.cards.elements.solid.cpenta6 import tri_area_centroid

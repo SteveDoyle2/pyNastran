@@ -34,7 +34,7 @@ from pyNastran.op2.op2 import OP2
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_spcForces import SPCForcesObject
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_mpcForces import MPCForcesObject
-from pyNastran.f06.dev.tables.oload_resultant import Resultant
+#from pyNastran.f06.dev.tables.oload_resultant import Resultant
 
 # springs
 from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import (
@@ -64,6 +64,11 @@ from pyNastran.op2.tables.opg_appliedLoads.opg_load_vector import (
 def partition_dense_matrix(a, b, c=None):
     raise NotImplementedError('partition_dense_matrix a=%s b=%s c=%s' % (str(a), str(b), str(c)))
 
+
+class Resultant:
+    def __init__(table_name, total_load, subcase_id):
+        pass
+        #Resultant('OLOAD', total_load, self.subcase_id)
 
 class Solver(OP2):
     """

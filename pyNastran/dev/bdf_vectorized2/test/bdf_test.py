@@ -6,7 +6,7 @@ import sys
 import pyNastran
 from pyNastran.bdf.test.bdf_test import remove_marc_files
 from pyNastran.dev.bdf_vectorized2.test.test_bdf import run_lots_of_files
-from pyNastran.op2.test.test_op2 import get_failed_files
+from pyNastran.op2.test.op2_test import get_failed_files
 from pyNastran.op2.test.op2_test import get_all_files
 from pyNastran.utils.dev import get_files_of_type
 PKG_PATH = pyNastran.__path__[0]

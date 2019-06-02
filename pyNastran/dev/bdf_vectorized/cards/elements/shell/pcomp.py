@@ -440,19 +440,19 @@ class PCOMP(Property):
             #: Failure Theory
             #:
             #:   ['HILL', 'HOFF', 'TSAI', 'STRN', '']
-            self.ft = zeros((n, nplies), dtype='|S4') # 'HILL', 'HOFF', 'TSAI', 'STRN'
+            self.ft = zeros((n, nplies), dtype='|U4') # 'HILL', 'HOFF', 'TSAI', 'STRN'
 
             #: Reference Temperature (default=0.0)
             self.tref = zeros(n, dtype=float_fmt)
             self.ge = zeros(n, dtype=float_fmt)
 
             #: symmetric flag - default = No Symmetry (NO)
-            self.lam = zeros(n, dtype='|S8')
+            self.lam = zeros(n, dtype='|U8')
 
             self.material_id = zeros((n, nplies), dtype='int32')
             self.t = zeros((n, nplies), dtype=float_fmt)
             self.theta = zeros((n, nplies), dtype=float_fmt)
-            self.sout = zeros((n, nplies), dtype='|S4') # YES, NO
+            self.sout = zeros((n, nplies), dtype='|U4') # YES, NO
             self.z0 = zeros(n, dtype=float_fmt)
 
             for i, (pid, prop) in enumerate(sorted(self.properties.items())):

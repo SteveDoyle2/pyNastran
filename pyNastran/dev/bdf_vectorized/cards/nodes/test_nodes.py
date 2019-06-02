@@ -2,7 +2,7 @@ from io import StringIO
 import unittest
 from itertools import count
 
-from pyNastran.dev.bdf_vectorized.bdf import BDF, GRID, BDFCard
+from pyNastran.dev.bdf_vectorized.bdf import BDF, BDFCard # GRID,
 
 class TestNodes(unittest.TestCase):
     def test_grid_01(self):

@@ -380,6 +380,7 @@ class BDFAttributes:
         self.bsets = []
         self.csets = []
         self.qsets = []
+        self.omits = []
         self.usets = {}
 
         #: SExSETy

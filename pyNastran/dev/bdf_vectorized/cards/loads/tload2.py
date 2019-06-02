@@ -67,7 +67,7 @@ class TLOAD2(VectorizedLoad):
 
             #: Defines the type of the dynamic excitation. (Integer; character
             #: or blank; Default = 0)
-            self.Type = zeros(ncards, '|S4')
+            self.Type = zeros(ncards, '|U4')
 
             #: Time constant. (Real >= 0.0)
             #: Time constant. (Real; T2 > T1)

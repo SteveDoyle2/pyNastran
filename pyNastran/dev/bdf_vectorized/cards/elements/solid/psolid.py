@@ -34,10 +34,10 @@ class PSOLID(Property):
             #: Material ID
             self.material_id = zeros(ncards, 'int32')
             self.cordm = zeros(ncards, 'int32')
-            self.integ = zeros(ncards, dtype='|S8')
-            self.stress = zeros(ncards, dtype='|S8')
-            self.isop = zeros(ncards, dtype='|S8')
-            self.fctn = zeros(ncards, dtype='|S8')
+            self.integ = zeros(ncards, dtype='|U8')
+            self.stress = zeros(ncards, dtype='|U8')
+            self.isop = zeros(ncards, dtype='|U8')
+            self.fctn = zeros(ncards, dtype='|U8')
 
     def add_card(self, card, comment=''):
         i = self.i
