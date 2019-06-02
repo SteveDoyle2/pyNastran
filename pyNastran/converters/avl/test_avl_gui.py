@@ -39,6 +39,15 @@ class TestAvlGUI(unittest.TestCase):
         test.log = log
         test.on_load_geometry(geometry_filename, geometry_format='avl', raise_error=True)
 
+    def test_avl_geometry_03(self):
+        """tests the bd model"""
+        log = get_logger(level='debug', encoding='utf-8')
+        geometry_filename = os.path.join(MODEL_PATH, 'greff.avl')
+
+        test = AvlGUI()
+        test.log = log
+        test.on_load_geometry(geometry_filename, geometry_format='avl', raise_error=True)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

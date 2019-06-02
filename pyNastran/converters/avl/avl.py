@@ -296,6 +296,7 @@ class AVL:
         self.surfaces = surfaces
 
     def get_nodes_elements(self):
+        self.log.debug('get_nodes_elements')
         dirname = os.path.dirname(self.avl_filename)
         nodes = []
         quad_elements = []
@@ -306,7 +307,7 @@ class AVL:
 
         #print('----')
         for isurface, surface in enumerate(self.surfaces):
-            #print('isurface =', isurface)
+            self.log.debug('isurface = %s' % isurface)
             xyz_scale = np.ones(3)
             if 'scale' in surface:
                 xyz_scale = np.array(surface['scale'])
@@ -320,16 +321,16 @@ class AVL:
                 yduplicate = surface['yduplicate']
 
             if 'name' not in surface:
-                print('no name...%s'  % surface)
+                self.log.debug('no name...%s'  % surface)
 
             name = surface['name']
-            #print("name=%r ipoint=%s" % (name, ipoint))
+            self.log.debug("name=%r ipoint=%s" % (name, ipoint))
             if 'chord' not in surface:
-                print('no chord for %s...' % name)
+                self.log.debug('no chord for %s...' % name)
                 continue
 
             if 'span' not in surface:
-                print('fuselage surface: %s\n' % simplify_surface(surface))
+                self.log.debug('fuselage surface: %s\n' % simplify_surface(surface))
                 if nodes:
                     nodes_temp = np.vstack(nodes)
                     assert nodes_temp.shape[0] == ipoint, 'nodes_temp.shape=%s ipoint=%s' % (nodes_temp.shape, ipoint)
@@ -348,12 +349,14 @@ class AVL:
 
         #def get_wing(isurface, surface, xyz_scale, dxyz, nodes,
                      #quad_elements, surfaces, ipoint):
+            self.log.debug('get_wing')
             nchord, unused_chord_spacing = surface['chord']
             nspan, unused_span_spacing = surface['span']
             sections = surface['sections']
 
 
-            unused_span_stations, airfoil_sections = get_airfoils_from_sections(sections)
+            unused_span_stations, airfoil_sections = get_airfoils_from_sections(sections, self.log)
+            self.log.debug('unused_span_stations %s' % unused_span_stations)
 
 
             #for iairfoil, is_afile in enumerate(surface['is_afile']):
@@ -426,7 +429,11 @@ class AVL:
                 alpha1 = section1['section'][1]
 
                 if airfoil_sections[i] is not None:
-                    unused_interpolated_stations = interp_stations(
+                    if not airfoil_sections[i].shape == airfoil_sections[i+1].shape:
+                        raise RuntimeError('airfoil_sections[%i]=%s airfoil_sections[%i]=%s' % (
+                            i, airfoil_sections[i].shape,
+                            i + 1, airfoil_sections[i+1].shape))
+                    interpolated_stations = interp_stations(
                         y, nspan,
                         airfoil_sections[i], chord0, alpha0, p1,
                         airfoil_sections[i+1], chord1, alpha1, p4, end=end)
@@ -505,16 +512,19 @@ def interp_stations(y, unused_nspan,
     x is t/c (so x)
     y is t/c (so z)
     """
-    import matplotlib.pyplot as plt
+    if not airfoil_section0.shape == airfoil_section1.shape:  # pragma: no cover
+        raise RuntimeError('airfoil_section0=%s airfoil_section1=%s' % (
+            airfoil_section0.shape, airfoil_section1.shape))
+    #import matplotlib.pyplot as plt
     y = np.array([0., 0.5, 1.0])
     # first we scale and rotate the section
     xy0 = airfoil_section0 * chord0
     x0 = xy0[:, 0]
     y0 = xy0[:, 1]
 
-    plt.figure(2)
-    plt.grid(True)
-    plt.plot(x0, y0, 'r')
+    #plt.figure(2)
+    #plt.grid(True)
+    #plt.plot(x0, y0, 'ro')
     x0_rotated = xyz_le0[0] + x0 * np.cos(alpha0) - y0 * np.sin(alpha0)
     y0_rotated = xyz_le0[2] + x0 * np.sin(alpha0) + y0 * np.cos(alpha0)
     #xy0_rotated = np.vstack([x0_rotated, y0_rotated])
@@ -522,14 +532,16 @@ def interp_stations(y, unused_nspan,
     xy1 = airfoil_section1 * chord1
     x1 = xy1[:, 0]
     y1 = xy1[:, 1]
-    plt.plot(x1, y1, 'b-')
+    #plt.plot(x1, y1, 'bo-')
+    #plt.show()
+
     x1_rotated = xyz_le1[0] + x1 * np.cos(alpha1) - y1 * np.sin(alpha1)
     y1_rotated = xyz_le1[2] + x1 * np.sin(alpha1) + y1 * np.cos(alpha1)
 
-    plt.figure(4)
-    plt.plot(x0_rotated, y0_rotated)
-    plt.plot(x1_rotated, y1_rotated)
-    plt.grid(True)
+    #plt.figure(4)
+    #plt.plot(x0_rotated, y0_rotated)
+    #plt.plot(x1_rotated, y1_rotated)
+    #plt.grid(True)
 
     x0_rotated = xyz_le0[0] + x0
     y0_rotated = xyz_le0[2] + y0
@@ -553,21 +565,22 @@ def interp_stations(y, unused_nspan,
     #print(x_final.shape)
     x_final = []
     y_final = []
-    plt.figure(5)
-    plt.grid(True)
+    #plt.figure(5)
+    #plt.grid(True)
     for yi in y:
         x_finali = yi * x0_rotated + (1.-yi) * x1_rotated
         y_finali = yi * y0_rotated + (1.-yi) * y1_rotated
-        plt.plot(x_finali, y_finali)
+        #plt.plot(x_finali, y_finali)
         x_final.append(x_finali)
         y_final.append(y_finali)
     x_final = np.array(x_final)
     y_final = np.array(y_final)
 
+    #plt.show()
     # (nspan, nchord, 2) -> (2, nsan, )
     # (3, 11, 2) -> (2, 3, 11)
     interpolated_stations = np.dstack([x_final, y_final])#.swapaxes(0, 1).swapaxes(0, 2)
-    print(x_final.shape)
+    #print(x_final.shape)
     #print(xy_final.shape)
     return interpolated_stations
 
@@ -637,17 +650,17 @@ def get_lofted_sections(sections):
     elements = np.array(elements, dtype='int32')
     #print(elements)
 
-def get_naca_4_series(naca='2412'):
+def get_naca_4_series(log, naca='2412'):
     """
     m=max_camber=2%
     p=located at 40%
     t=max thickness=12%
     """
-    print('airfoil =', naca)
+    log.debug('naca airfoil=%s' % naca)
     t = int(naca[2:]) / 100.
     m = int(naca[0]) / 100.
     p = int(naca[1]) / 10.
-    #print('t=%s m=%s p=percent_of_max_camber=%s' % (t, m, p))
+    log.debug('t=%s m=%s p=percent_of_max_camber=%s' % (t, m, p))
 
     # setup the x locations
     if p > 0.:
@@ -660,7 +673,7 @@ def get_naca_4_series(naca='2412'):
         x = np.linspace(0., 1., num=100, endpoint=True, retstep=False, dtype=None)
         xa = x
         xb = np.array([])
-    #print('x = ', x)
+    log.debug('x = %s' % x)
 
     # https://en.wikipedia.org/wiki/NACA_airfoil
     # t - max thickness in percent chord (the last 2 digits)
@@ -695,10 +708,10 @@ def get_naca_4_series(naca='2412'):
     #print('x_lower =', x_lower[1:])
     #print('xtotal =', xtotal)
     xy = np.vstack([xtotal, ytotal]).T
-    import matplotlib.pyplot as plt
-    plt.figure(1)
-    plt.plot(xtotal, ytotal)
-    plt.grid(True)
+    #import matplotlib.pyplot as plt
+    #plt.figure(1)
+    #plt.plot(xtotal, ytotal)
+    #plt.grid(True)
     #print(xy)
     return xy
 
@@ -847,11 +860,12 @@ def get_fuselage(dirname, isurface, surface, xyz_scale, dxyz, yduplicate,
 
     return ipoint
 
-def get_airfoils_from_sections(sections):
+def get_airfoils_from_sections(sections, log):
     airfoil_sections = []
     is_airfoil_defined = False
     span_stations = np.arange(len(sections))
     for section in sections:
+        log.debug(section)
         if 'is_afile' in section:
             is_afile = section['is_afile']
             is_airfoil_defined = True
@@ -864,7 +878,7 @@ def get_airfoils_from_sections(sections):
             xy = None
         else:
             naca = section['naca']
-            xy = get_naca_4_series(naca=naca)
+            xy = get_naca_4_series(log, naca=naca)
         airfoil_sections.append(xy)
     return span_stations, airfoil_sections
 
