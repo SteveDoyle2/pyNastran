@@ -2,7 +2,7 @@
 import unittest
 
 #from pyNastran.gui.arg_handling import get_inputs
-from pyNastran.bdf.test.test_bdf import run_argparse
+from pyNastran.bdf.test.test_bdf import test_bdf_argparse
 
 
 class TestBDFParsing(unittest.TestCase):
@@ -15,51 +15,54 @@ class TestBDFParsing(unittest.TestCase):
             pass
 
         args = ['test_bdf', 'fem.bdf']
-        out = run_argparse(argv=args)
-        print(out)
+        out = test_bdf_argparse(argv=args)
+        #print(out)
         #print(out)
 
         #args = ['test_bdf', 'fem.bdf', 'fem2.bdf']
-        #out = run_argparse(argv=args)
+        #out = test_bdf_argparse(argv=args)
         #assert isinstance(out, str), out # error
 
         args = ['test_bdf', 'fem.bdf', '-x']
-        out = run_argparse(argv=args)
+        out = test_bdf_argparse(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--xref']
-        out = run_argparse(argv=args)
+        out = test_bdf_argparse(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--safe']
-        out = run_argparse(argv=args)
+        out = test_bdf_argparse(argv=args)
 
         #args = ['test_bdf', 'fem.bdf', '--safe', '--xref']
-        #out = run_argparse(argv=args)
+        #out = test_bdf_argparse(argv=args)
         #assert isinstance(out, str), out # error
 
         args = ['test_bdf', 'fem.bdf', '-xc']
-        out = run_argparse(argv=args)
+        out = test_bdf_argparse(argv=args)
         #print(out)
 
-        args = ['test_bdf', 'fem.bdf', '-xcldL']
-        out = run_argparse(argv=args)
+        args = ['test_bdf', 'fem.bdf', '-xcdL']
+        out = test_bdf_argparse(argv=args)
+
+        args = ['test_bdf', 'fem.bdf', '-xclL']
+        out = test_bdf_argparse(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--encoding', 'latin1']
-        out = run_argparse(argv=args)
+        out = test_bdf_argparse(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '-e', '100']
-        out = run_argparse(argv=args)
+        out = test_bdf_argparse(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--dumplines']
-        out = run_argparse(argv=args)
+        out = test_bdf_argparse(argv=args)
         args = ['test_bdf', 'fem.bdf', '--dictsort']
-        out = run_argparse(argv=args)
+        out = test_bdf_argparse(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--profile']
-        out = run_argparse(argv=args)
+        out = test_bdf_argparse(argv=args)
         str(out)
 
         #args = ['test_bdf', '-h']
-        #out = run_argparse(argv=args)
+        #out = test_bdf_argparse(argv=args)
         #print(out)
 
 

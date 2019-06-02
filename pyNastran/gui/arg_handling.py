@@ -3,6 +3,8 @@ import sys
 
 import pyNastran
 from pyNastran.utils import check_path
+from pyNastran.utils.arg_handling import argparse_to_dict, swap_key
+
 #from gui.formats import format_string
 
 if sys.version_info < (3, 6):  # pragma: no cover
@@ -461,21 +463,4 @@ def _update_argparse_argdict(argdict):
                     nformats, formats,
                     ninput_files, input_filenames))
             raise RuntimeError(msg)
-    return argdict
-
-def swap_key(mydict, key_orig, key_new, flip=False):
-    """replaces a key in a dictionary"""
-    if flip:
-        mydict[key_new] = not mydict[key_orig]
-    else:
-        mydict[key_new] = mydict[key_orig]
-    del mydict[key_orig]
-
-def argparse_to_dict(args):
-    """converts the argparse output into a dictionary"""
-    argdict = {}
-    for name, value in args._get_args():
-        argdict[name] = value
-    for name, value in args._get_kwargs():
-        argdict[name] = value
     return argdict
