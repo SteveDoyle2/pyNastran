@@ -54,7 +54,7 @@ BDF:
    - PCOMPG now supports DVPRELx
    - new cards:
      - DTI besides UNITS are now supported
-     - PBEAM3
+     - PBEAM3, TEMPB3
 
 GUI:
  - enhancements:

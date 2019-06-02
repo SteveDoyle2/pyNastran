@@ -40,7 +40,7 @@ def export_to_vtk(model):
     export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename)
     model.log.info('finished exporting %s' % vtk_filename)
 
-def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False):
+def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False, log=None):
     with open(vtk_filename, 'w') as vtk_file:
         vtk_file.write('# vtk DataFile Version 3.1\n')
         vtk_file.write('created by pyNastran\n')
@@ -84,9 +84,9 @@ def export_to_vtk_filename(bdf_filename, op2_filename, vtk_filename, debug=False
             #'CHEXA' : 67, # hex
         }
 
-        bdf = BDF(debug=debug)
+        bdf = BDF(debug=debug, log=log)
         bdf.read_bdf(bdf_filename)
-        op2 = OP2(debug=debug)
+        op2 = OP2(debug=debug, log=log)
         op2.read_op2(op2_filename)
 
         out = bdf.get_card_ids_by_card_types()

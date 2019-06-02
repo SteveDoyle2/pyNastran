@@ -645,9 +645,9 @@ class RealDamperForceArray(RealSpringDamperForceArray):
         elif self.element_type == 21:  # CDAMP2
             msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 2 )\n']
         elif self.element_type == 22:  # CDAMP3
-            msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 2 )\n']
+            msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 3 )\n']
         elif self.element_type == 23:  # CDAMP4
-            msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 2 )\n']
+            msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 4 )\n']
         else:
             msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
             raise NotImplementedError(msg)
