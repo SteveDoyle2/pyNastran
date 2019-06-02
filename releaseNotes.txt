@@ -50,6 +50,7 @@ Solver
 BDF:
  - bug fixes:
  - enhancements:
+   - added deck guessing with punch=None
    - PBARL & PBEAML DBOX now has defaults for DIM5-DIM10
    - PCOMPG now supports DVPRELx
    - new cards:

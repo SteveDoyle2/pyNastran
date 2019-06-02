@@ -250,6 +250,7 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
     elements:
        0d : CELAS1, CELAS2, CELAS3, CELAS4, CDAMP1, CDAMP2, CDAMP3, CDAMP4, CDAMP5
             CFAST, CBUSH, CBUSH1D
+       1d:  CROD, CONROD, CTUBE, CBAR, CBEAM, CBEAM3
        2d : CTRIA3, CQUAD4, CTRIA6, CQUAD8, CQUAD, CTRIAR, CQUADR
        3d : ???
        missing : CVISC, CTRIAX, CTRIAX6, CQUADX, CQUADX8, CCONEAX
@@ -325,6 +326,11 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
             elif etype in ['CBAR', 'CBEAM']:
                 nodes = [node_id + nid_offset for node_id in nodes]
                 element2.nodes = nodes
+                g0 = element2.g0 + nid_offset if element2.g0 is not None else None
+                element2.g0 = g0
+            elif etype == 'CBEAM3':
+                element2.ga = nodes[0] + nid_offset
+                element2.gb = nodes[1] + nid_offset
                 g0 = element2.g0 + nid_offset if element2.g0 is not None else None
                 element2.g0 = g0
 
@@ -432,7 +438,9 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
     Considers:
      - PLOAD4
         - no coordinate systems (assumes cid=0)
-     - TEMP, QHBDY, QBDY1, QBDY2, QBDY3
+     - FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2
+     - PLOAD, PLOAD2
+     - TEMP, QVOL, QHBDY, QBDY1, QBDY2, QBDY3
 
     """
     for unused_load_id, loads in model.loads.items():

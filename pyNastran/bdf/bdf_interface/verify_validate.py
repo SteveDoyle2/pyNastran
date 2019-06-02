@@ -7,7 +7,7 @@ defines:
 import sys
 import traceback
 from typing import List, Dict, Any
-from six import reraise
+#from six import reraise
 
 def verify_bdf(model, xref):
     # type: (Any, bool) -> None
@@ -122,7 +122,8 @@ def _validate_traceback(model, obj, unused_error, ifailed, nmax_failed):
     ifailed += 1
     if ifailed > nmax_failed:
         # PY3: raise error from None
-        reraise(exc_type, exc_value, exc_traceback)
+        #reraise(exc_type, exc_value, exc_traceback)
+        raise
     return ifailed, exc_type, exc_value, exc_traceback
 
 def validate_bdf(model):
@@ -323,7 +324,8 @@ def _validate_dict_list(model, objects_dict):
         if ifailed:
             #raise exc_type from e
             #raise exec_value.with_traceback(exc_traceback)
-            reraise(exc_type, exc_value, exc_traceback)
+            #reraise(exc_type, exc_value, exc_traceback)
+            raise
 
 def _validate_dict(model, objects):
     # type : (Any, Dict[Any, Any]) -> None
@@ -338,7 +340,8 @@ def _validate_dict(model, objects):
             ifailed, exc_type, exc_value, exc_traceback = _validate_traceback(
                 model, obj, error, ifailed, nmax_failed)
     if ifailed:
-        reraise(exc_type, exc_value, exc_traceback)
+        #reraise(exc_type, exc_value, exc_traceback)
+        raise
 
 def _validate_list(model, objects):
     # type : (Any, List[Any]) -> None
@@ -353,4 +356,5 @@ def _validate_list(model, objects):
             ifailed, exc_type, exc_value, exc_traceback = _validate_traceback(
                 model, obj, error, ifailed, nmax_failed)
     if ifailed:
-        reraise(exc_type, exc_value, exc_traceback)
+        #reraise(exc_type, exc_value, exc_traceback)
+        raise

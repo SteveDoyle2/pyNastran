@@ -73,6 +73,7 @@ def load_bdf_from_hdf5_file(h5_file, model):
         'dmiks' : hdf5_load_dmigs,
         'dmijis' : hdf5_load_dmigs,
         'dmis' : hdf5_load_dmigs,
+        'dti' : hdf5_load_dti,
 
         'dconstrs' : hdf5_load_dconstrs,
         'dresps' : hdf5_load_dresps,
@@ -973,13 +974,57 @@ def hdf5_load_dconstrs(model, group, encoding):
 
         model.card_count[card_type] = len(keys)
 
+def _cast_strings(group, encoding):
+    bytes_list = _cast(group).tolist()
+    str_list = [bytesi.decode(encoding) for bytesi in bytes_list]
+    return str_list
+
+def hdf5_load_dti(model, group, encoding):
+    """loads the dmigs"""
+    group_keys = group.keys()
+    if len(group_keys) == 0:
+        #model.log.warning('skipping loading %s' % group)
+        raise RuntimeError('error loading %s' % group)
+
+    names = _cast_strings(group['keys'], encoding)
+    values = group['values']
+    for name in names:
+        sub_group = values[name]
+        records = sub_group.keys()
+
+        fields = {}
+        #print('records', records)
+        for irecord in records:
+            sub_groupi = sub_group[irecord]
+            #print(sub_group, sub_groupi)
+            if 'keys' in sub_groupi:
+                lst = _load_indexed_list(irecord, sub_groupi, encoding)
+                lst2 = [val.decode(encoding) if isinstance(val, bytes) else val for val in lst]
+            else:
+                #print(sub_group, sub_groupi, len(sub_groupi.keys()))
+                keys = sub_groupi.keys()
+                #print(keys)
+                lst = []
+                for key in keys:
+                    sub_groupii = sub_groupi[key]
+                    if len(sub_groupii.shape) == 0:
+                        lst.append(None)
+                    else:
+                        lst.append(_cast(sub_groupii))
+                #lst = _cast(sub_groupi)
+                #print(lst)
+                lst2 = lst
+            fields[irecord] = lst2
+        assert len(fields) > 0, fields
+        model.add_dti(name, fields)
+    model.card_count['DTI'] = len(names)
+
 def hdf5_load_usets(model, group, encoding):
     """loads the usets"""
     keys = group.keys()
     if len(keys) == 0:
         #model.log.warning('skipping loading %s' % group)
         raise RuntimeError('error loading %s' % group)
-        #return
 
     for name in keys:
         sub_group = group[name]
@@ -1005,7 +1050,6 @@ def hdf5_load_dresps(model, group, encoding):
     if len(keys) == 0:
         #model.log.warning('skipping loading %s' % group)
         raise RuntimeError('error loading %s' % group)
-        #return
 
     for class_type in group.keys():
         sub_group = group[class_type]

@@ -150,6 +150,7 @@ def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_
     model.log.debug('time_scale = %s' % time_scale)
     model.log.debug('weight_scale = %s' % weight_scale)
     model.log.debug('gravity_scale = %s' % gravity_scale)
+    temperature_scale = 1.
     _set_wtmass(model, gravity_scale)
 
     if convert_nodes:
@@ -168,7 +169,7 @@ def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_
     if convert_constraints:
         _convert_constraints(model, xyz_scale)
     if convert_loads:
-        _convert_loads(model, xyz_scale, weight_scale)
+        _convert_loads(model, xyz_scale, weight_scale, temperature_scale)
     #_convert_sets(model)
     if convert_optimization:
         _convert_optimization(model, xyz_scale, mass_scale, weight_scale)
@@ -381,6 +382,18 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
                 elem.x = [x*xyz_scale for x in elem.x]
             elem.wa *= xyz_scale
             elem.wb *= xyz_scale
+        elif elem_type == 'CBEAM3':
+            #print(elem.get_stats())
+            if elem.x is not None:  # vector
+                elem.x = [x*xyz_scale for x in elem.x]
+            elem.wa *= xyz_scale
+            elem.wb *= xyz_scale
+            elem.wc *= xyz_scale
+            # s
+            # tw
+        elif elem_type == 'CBEND':
+            if elem.x is not None:  # vector
+                elem.x = [x*xyz_scale for x in elem.x]
         elif elem_type == 'CBUSH':
             if elem.x[0] is not None:  # vector
                 elem.x = [x*xyz_scale for x in elem.x]
@@ -520,6 +533,36 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
         elif prop_type == 'PBEAML':
             prop.dim *= xyz_scale
             prop.nsm *= nsm_bar_scale
+        elif prop_type == 'PBEAM3':
+            prop.A = [areai * area_scale for areai in prop.A]
+            # cw
+
+            prop.cy = [ci * xyz_scale for ci in prop.cy]
+            prop.cz = [ci * xyz_scale for ci in prop.cz]
+            prop.dy = [ci * xyz_scale for ci in prop.dy]
+            prop.dz = [ci * xyz_scale for ci in prop.dz]
+            prop.ey = [ci * xyz_scale for ci in prop.ey]
+            prop.ez = [ci * xyz_scale for ci in prop.ez]
+            prop.fy = [ci * xyz_scale for ci in prop.fy]
+            prop.fz = [ci * xyz_scale for ci in prop.fz]
+
+            if prop.i1 is not None:
+                prop.i1 = [i1i * area_moi_scale for i1i in prop.i1]
+            if prop.i2 is not None:
+                prop.i2 = [i2i * area_moi_scale for i2i in prop.i2]
+            if prop.i12 is not None:
+                prop.i12 = [i12i * area_moi_scale for i12i in prop.i12]
+            prop.j = [ji * area_moi_scale for ji in prop.j]
+            prop.nsm = [nsmi * nsm_bar_scale for nsmi in prop.nsm]
+
+            #my
+            #mz
+            #nsiy
+            #nsiyz
+            #nsiz
+            #ny
+            #nz
+            # w
 
         elif prop_type == 'PSHELL':
             prop.t *= xyz_scale
@@ -627,6 +670,8 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
 
             #: transverse stiffness of closed gap
             prop.kt *= stiffness_scale
+        elif prop_type == 'PBEND':
+            model.log.warning('skipping PBEND convert')
         else:
             raise NotImplementedError(prop_type)
 
@@ -806,7 +851,7 @@ def _get_dload_scale(dload, xyz_scale, velocity_scale, accel_scale, force_scale)
         raise RuntimeError(dload)
     return scale
 
-def _convert_loads(model, xyz_scale, weight_scale):
+def _convert_loads(model, xyz_scale, weight_scale, temperature_scale):
     """
     Converts the loads
 
@@ -944,6 +989,13 @@ def _convert_loads(model, xyz_scale, weight_scale):
                     #table.WG *= velocity_scale
                 else:
                     raise NotImplementedError(table)
+            #-------------------------------------------------------------
+            # thermal
+            elif load_type == 'TEMP':
+                #print(load.get_stats())
+                #temperatures : {1901: 100.0}
+                for nid in load.temperatures:
+                    load.temperatures[nid] *= temperature_scale
             else:
                 raise NotImplementedError(load)
 

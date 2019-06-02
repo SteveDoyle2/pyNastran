@@ -7569,16 +7569,8 @@ class AddCards(AddMethods):
 
     def add_dti(self, name, fields, comment=''):
         """Creates a DTI card"""
-        if name.upper() == 'UNITS':
-            dti = DTI(name, fields, comment=comment)
-            self._add_dti_object(dti)
-        else:
-            if comment:
-                #self.reject_lines.append([_format_comment(comment)])
-                msg = "DTI only supports name='UNITS'; name=%r fields=%s" % (name, str(fields))
-            raise NotImplementedError(msg)
-            #self.reject_cards.append(card_obj)
-            #self._write_reject_message(card_name, card_obj, comment=comment)
+        dti = DTI(name, fields, comment=comment)
+        self._add_dti_object(dti)
         return dti
 
     def add_dmig_uaccel(self, tin, ncol, load_sequences, comment=''):

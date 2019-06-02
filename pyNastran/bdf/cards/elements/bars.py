@@ -1171,11 +1171,13 @@ class CBEAM3(LineElement):  # was CBAR
             raise RuntimeError(msg)
         A = self.pid_ref.Area()
 
-        xa, ya, za = self.ga_ref.get_position() + self.wa
-        xb, yb, zb = self.gb_ref.get_position() + self.wb
+        xyza = self.ga_ref.get_position() + self.wa
+        xyzb = self.gb_ref.get_position() + self.wb
         Aa, Ab, Ac = A # self.pid_ref.area
         L = self.Length()
         if self.gc is not None:
+            xa, ya, za = xyza
+            xb, yb, zb = xyzb
             xc, yc, zc = self.gc_ref.get_position() + self.wc
             area = self._integrate(
                 np.array([Aa * xa, Ab * xb, Ac * xc]) / L,
@@ -1382,7 +1384,7 @@ class CBEND(LineElement):
         eid = 1
         pid = 1
         nids = [1, 2]
-        g0 = [4]
+        g0 = 4
         x = None
         geom = 1
         return CBEND(eid, pid, nids, g0, x, geom, comment='')
@@ -1436,6 +1438,8 @@ class CBEND(LineElement):
         self.ga_ref = None
         self.gb_ref = None
         self.pid_ref = None
+        if self.g0 is not None:
+            assert isinstance(self.g0, integer_types), self.get_stats()
 
     @classmethod
     def add_card(cls, card, comment=''):

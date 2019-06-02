@@ -1,3 +1,4 @@
+"""tests PyBDF"""
 # encoding: utf8
 # pylint: disable=W0212
 import os
@@ -5,7 +6,9 @@ import unittest
 from io import StringIO
 from cpylog import get_logger
 
-from pyNastran.bdf.bdf_interface.pybdf import BDFInputPy, _show_bad_file, _lines_to_decks
+from pyNastran.bdf.bdf_interface.pybdf import (
+    BDFInputPy, _show_bad_file, _lines_to_decks, MissingDeckSections)
+
 
 class TestPyBDF(unittest.TestCase):
 
@@ -84,7 +87,7 @@ class TestPyBDF(unittest.TestCase):
              ])
         log = get_logger(log=None, level='debug', encoding='utf-8')
         out = _lines_to_decks(lines, ilines, punch, log,
-                        keep_enddata=False, consider_superelements=False)
+                              keep_enddata=False, consider_superelements=False)
         system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines, superelement_ilines = out
         for line in bulk_data_ilines:
             print(line)
@@ -159,11 +162,11 @@ class TestPyBDF(unittest.TestCase):
         bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
         #print('bulk_data_linesC =', bulk_data_lines)
 
-    def _test_no_punch(self):
+    def test_no_punch(self):
         """tests not definng punch"""
         bdf_filename = StringIO()
         bdf_filename.write(
-            "GRID,1,,0.,0.,0.\n"
+            'GRID,1,,0.,0.,0.\n'
             'GRID.2,,1.,0.,0.\n'
             'GRID,3,,1.,1.,0.\n'
             'GRID,4,,0.,1.,0.\n'
@@ -176,9 +179,29 @@ class TestPyBDF(unittest.TestCase):
         encoding = None
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
                            consider_superelements=False, log=None, debug=False)
-        bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
+        with self.assertRaises(MissingDeckSections):
+            bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
+
+        #pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
+                           #consider_superelements=False, log=None, debug=False)
+        bdf_filename.seek(0)
+        bulk_data_lines = pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)[3]
         assert len(bulk_data_lines) == 5, bulk_data_lines
         #print(bulk_data_lines)
+        # -----------------------------------
+        bdf_filename = StringIO()
+        bdf_filename.write(
+            'CEND\n'
+            'GRID,1,,0.,0.,0.\n'
+            'GRID.2,,1.,0.,0.\n'
+            'GRID,3,,1.,1.,0.\n'
+            'GRID,4,,0.,1.,0.\n'
+            'CQUAD4,1,2,3,4,5',
+            #'ENDDATA'
+        )
+        bdf_filename.seek(0)
+        bulk_data_lines = pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)[3]
+        assert len(bulk_data_lines) == 5, bulk_data_lines
 
 if __name__ == '__main__':
     unittest.main()

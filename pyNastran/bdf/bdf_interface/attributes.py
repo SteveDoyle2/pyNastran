@@ -750,7 +750,7 @@ class BDFAttributes:
             'flutters' : ['FLUTTER'],
             'flfacts' : ['FLFACT'],
             'mkaeros' : ['MKAERO1', 'MKAERO2'],
-            'aecomps' : ['AECOMP'],
+            'aecomps' : ['AECOMP', 'AECOMPL'],
             'aefacts' : ['AEFACT'],
             'aelinks' : ['AELINK'],
             'aelists' : ['AELIST'],

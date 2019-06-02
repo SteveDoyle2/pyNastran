@@ -678,19 +678,25 @@ def _h5_export_class(sub_group, model, key, value, skip_attrs, encoding, debug=T
         #msg = 'key=%s type=%s value=%s=' % (key, value.type, value)
         #print(msg)
 
+#def _export_lists(h5_group, attr, name, values, encoding):
+    #print(name, attr, values)
+
 def _export_list(h5_group, attr, name, values, encoding):
     """
     exports a list of:
      - constant type to a dataset
      - variable type to a numbered list
+
     """
     values2 = [value.encode(encoding) if isinstance(value, str) else value
                for value in values]
     types = {type(value) for value in values}
     if len(types) == 1:
         #print('types =', types)
+        #if isinstance(values[0], list):
+            #return _export_lists(h5_group, attr, name, values, encoding)
+
         if not isinstance(values[0], (integer_types, float_types, string_types)):
-            #print(attr, name)
             raise TypeError('not a base type; %s; %s' % (attr, values2))
         try:
             h5_group.create_dataset(name, data=values2)

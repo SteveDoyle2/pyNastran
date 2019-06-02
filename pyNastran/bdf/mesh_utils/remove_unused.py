@@ -241,8 +241,8 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             for pid in ids:
                 prop = model.properties[pid]
                 mids_thermal_used.add(prop.Mid())
-        elif card_type in ['PBAR', 'PBARL', 'PROD', 'PTUBE', 'PBEAM', 'PBEAML', 'PSHEAR',
-                           'PRAC2D', 'PRAC3D', 'PBEND']:
+        elif card_type in ['PBAR', 'PBARL', 'PROD', 'PTUBE', 'PBEAM', 'PBEAML', 'PBEAM3',
+                           'PSHEAR', 'PRAC2D', 'PRAC3D', 'PBEND']:
             for pid in ids:
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())
@@ -343,6 +343,17 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 if elem.g0 is not None:
                     assert isinstance(elem.g0, int), elem.g0
                     nids_used.add(elem.g0)
+        elif card_type == 'CBEAM3':
+            for eid in ids:
+                elem = model.elements[eid]
+                nids_used.add(elem.Ga())
+                nids_used.add(elem.Gb())
+                if elem.gc is not None:
+                    nids_used.add(elem.gc)
+                pids_used.add(elem.Pid())
+                if elem.g0 is not None:
+                    assert isinstance(elem.g0, int), elem.g0
+
         elif card_type == 'CFAST':
             for eid in ids:
                 elem = model.elements[eid]

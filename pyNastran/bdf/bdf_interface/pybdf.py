@@ -7,15 +7,17 @@ Main BDF class.  Defines:
 import os
 from collections import defaultdict
 from itertools import count
-from typing import List, Dict, Optional, Union, Set, Any, cast
+from typing import List, Dict, Tuple, Optional, Union, Set, Any, cast
 from io import StringIO
 
 import numpy as np
 from cpylog import get_logger2
 from pyNastran.utils import print_bad_path, _filename
+
+from pyNastran.bdf import BULK_DATA_CARDS, CASE_CONTROL_CARDS, FLAGGED_CARDS
+from pyNastran.bdf.errors import MissingDeckSections
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename
-from pyNastran.bdf.errors import MissingDeckSections
 
 FILE_MANAGEMENT = (
     'ACQUIRE ', 'ASSIGN ', 'CONNECT ', 'DBCLEAN ', 'DBDICT ', 'DBDIR ',
@@ -24,15 +26,17 @@ FILE_MANAGEMENT = (
     'PROJ ',
 )
 EXECUTIVE_CASE_SPACES = tuple(list(FILE_MANAGEMENT) + ['SOL ', 'SET ', 'SUBCASE '])
-from pyNastran.bdf import BULK_DATA_CARDS, CASE_CONTROL_CARDS, FLAGGED_CARDS
 
 
 class BDFInputPy:
     """BDF reader class that only handles lines and not building cards or parsing cards"""
-    def __init__(self, read_includes, dumplines, encoding, nastran_format='msc',
-                 consider_superelements=True, log=None, debug=False):
-        # type: (bool, bool, str, str, bool, Any, bool) -> None
+    def __init__(self, read_includes: bool, dumplines: bool,
+                 encoding: str, nastran_format: str='msc',
+                 consider_superelements: bool=True,
+                 log: Any=None, debug: bool=False):
         """
+        BDF reader class that only handles lines and not building cards or parsing cards
+
         Parameters
         ----------
         read_includes : bool
@@ -66,8 +70,9 @@ class BDFInputPy:
         self.debug = debug
         self.log = get_logger2(log, debug)
 
-    def get_lines(self, bdf_filename, punch=False, make_ilines=True):
-        # type: (Union[str, StringIO], bool, bool) -> List[str]
+    def get_lines(self, bdf_filename: Union[str, StringIO],
+                  punch: Optional[bool]=False,
+                  make_ilines: bool=True) -> List[str]:
         """
         Opens the bdf and extracts the lines by group
 
@@ -75,8 +80,9 @@ class BDFInputPy:
         ----------
         bdf_filename : str
             the main bdf_filename
-        punch : bool; default=False
+        punch : bool / None; default=False
             is this a punch file
+            None : guess
             True : no executive/case control decks
             False : executive/case control decks exist
         make_ilines : bool; default=True
@@ -165,8 +171,7 @@ class BDFInputPy:
         system_lines = system_lines
         return bulk_data_lines, bulk_data_ilines, system_lines
 
-    def get_main_lines(self, bdf_filename):
-        # type: (Union[str, StringIO]) -> List[str]
+    def get_main_lines(self, bdf_filename: Union[str, StringIO]) -> List[str]:
         """
         Opens the bdf and extracts the lines
 
@@ -200,8 +205,7 @@ class BDFInputPy:
                 _show_bad_file(self, bdf_filename, encoding=self.encoding)
         return lines
 
-    def lines_to_deck_lines(self, lines, make_ilines=True):
-        # type: (List[str], bool) -> (List[str], int)
+    def lines_to_deck_lines(self, lines: List[str], make_ilines: bool=True) -> Tuple[List[str], int]:
         """
         Merges the includes into the main deck.
 
@@ -397,8 +401,8 @@ class BDFInputPy:
             #print("  *%s" % line.rstrip())
         return lines, nlines, ilines
 
-    def _get_include_lines(self, lines, line, i, nlines):
-        # type: (List[str], str, int, int) -> (int, List[str])
+    def _get_include_lines(self, lines: List[str], line: str,
+                           i: int, nlines: int) -> Tuple[int, List[str]]:
         """
         gets the lines for the include file
 
@@ -442,8 +446,7 @@ class BDFInputPy:
         #print(include_lines)
         return j, include_lines
 
-    def _dump_file(self, bdf_dump_filename, lines, i):
-        # type: (str, List[str], int) -> None
+    def _dump_file(self, bdf_dump_filename: str, lines: List[str], i: int) -> None:
         """
         Writes a BDF up to some failed line index
 
@@ -462,8 +465,7 @@ class BDFInputPy:
             for line in lines[:i]:
                 crash_file.write(line)
 
-    def _open_file_checks(self, bdf_filename, basename=False):
-        # type: (str, bool) -> None
+    def _open_file_checks(self, bdf_filename: str, basename: bool=False) -> None:
         """
         Verifies that the BDF about to be opened:
            1.  Exists
@@ -597,7 +599,7 @@ class BDFInputPy:
                 raise IOError('Not a file: bdf_filename=%r' % bdf_filename)
 
 
-def _is_bulk_data_line(text):
+def _is_bulk_data_line(text: str) -> bool:
     """
     Returns True if there is a Bulk Data Deck
 
@@ -692,8 +694,7 @@ IGNORE_COMMENTS = (
     'PROPERTIES_MASS', 'MASSES')
 
 
-def _clean_comment(comment):
-    # type: (str) -> Optional[str]
+def _clean_comment(comment: str) -> Optional[str]:
     """
     Removes specific pyNastran comment lines so duplicate lines aren't
     created.
@@ -725,7 +726,7 @@ def _clean_comment(comment):
 
 def _lines_to_decks(lines: List[str],
                     ilines: Any,
-                    punch: bool,
+                    punch: Optional[bool],
                     log: Any,
                     keep_enddata: bool=True,
                     consider_superelements: bool=False) -> Any:
@@ -743,7 +744,8 @@ def _lines_to_decks(lines: List[str],
     ilines : None / (nlines, 2) int ndarray
         None : the old behavior
         narray : the [iline, ifile] pair for each line in the file
-    punch : bool
+    punch : bool / None
+        None : guess
         True : starts from the bulk data deck
         False : read the entire deck
     keep_enddata : bool; default=True
@@ -771,7 +773,7 @@ def _lines_to_decks(lines: List[str],
         ???
 
     """
-    if punch:
+    if punch: # True
         system_lines = []
         executive_control_lines = []
         case_control_lines = []
@@ -786,7 +788,8 @@ def _lines_to_decks(lines: List[str],
             superelement_lines, superelement_ilines)
 
     # typical deck
-    out = _lines_to_decks_main(lines, ilines, log, keep_enddata=keep_enddata,
+    out = _lines_to_decks_main(lines, ilines, log, punch=punch,
+                               keep_enddata=keep_enddata,
                                consider_superelements=consider_superelements)
     (executive_control_lines, case_control_lines,
      bulk_data_lines, bulk_data_ilines,
@@ -827,6 +830,7 @@ def _lines_to_decks(lines: List[str],
 
 def _lines_to_decks_main(lines: List[str],
                          ilines: Any, log: Any,
+                         punch: Optional[bool]=False,
                          keep_enddata: bool=True,
                          consider_superelements: bool=False) -> Any:
     """
@@ -843,6 +847,10 @@ def _lines_to_decks_main(lines: List[str],
     ilines : None / (nlines, 2) int ndarray
         None : the old behavior
         narray : the [iline, ifile] pair for each line in the file
+    punch : bool / None; default=False
+        None : guess
+        True : punch file (skipped previously, so this can't be True)
+        False : not a punch file
     keep_enddata : bool; default=True
         True : don't throw away the enddata card
         False : throw away the enddata card
@@ -870,6 +878,7 @@ def _lines_to_decks_main(lines: List[str],
 
     """
     make_ilines = ilines is not None
+    guess_deck_sections = punch is None
 
     executive_control_lines = []
     case_control_lines = []
@@ -899,12 +908,13 @@ def _lines_to_decks_main(lines: List[str],
     if ilines is None:
         ilines = count()
 
+    #print('guess_deck_sections =', guess_deck_sections, punch)
     for i, ifile_iline, line in zip(count(), ilines, lines):
         #print('%s %-8s %s' % (ifile_iline, flag_word, line.rstrip()))
         #print('%s %i %s' % (ifile_iline, flag, line.rstrip()))
         uline = line.split('$')[0].upper().strip()
 
-        if 0 and flag == 1 and uline.startswith('BEGIN'):
+        if guess_deck_sections and flag == 1 and uline.startswith('BEGIN'):
             section_name_map = {
                 1 : 'executive control',
                 2 : 'case control',
@@ -926,7 +936,7 @@ def _lines_to_decks_main(lines: List[str],
                                    'line:\n%s' % (section_name, line))
             break
 
-        if 0 and flag in [1, 2] and _is_bulk_data_line(line):
+        if guess_deck_sections and flag in [1, 2] and _is_bulk_data_line(line):
             section_name_map = {
                 1 : 'executive control',
                 2 : 'case control',
@@ -1119,9 +1129,9 @@ def _lines_to_decks_main(lines: List[str],
     )
     return out
 
-def _bulk_data_lines_extract(lines, ilines, bulk_data_lines, i,
-                             make_ilines=True, keep_enddata=True):
-    # type: (List[str], Any, List[str], int, bool, bool) -> Any
+def _bulk_data_lines_extract(lines: List[str], ilines: Any,
+                             bulk_data_lines: List[str], i: int,
+                             make_ilines: bool=True, keep_enddata: bool=True) -> Any:
     """grabs the bulk data lines and ilines when we're breaking"""
     if keep_enddata:
         for line in lines[i+1:]:
@@ -1145,8 +1155,7 @@ def _bulk_data_lines_extract(lines, ilines, bulk_data_lines, i,
         #raise RuntimeError(msg)
     return bulk_data_ilines
 
-def _is_begin_bulk(uline):
-    # type: (str) -> bool
+def _is_begin_bulk(uline: str) -> bool:
     """
     is this a:
       'BEGIN BULK'
@@ -1239,8 +1248,7 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
         flag, current_lines)
     return out
 
-def _break_system_lines(executive_control_lines):
-    # type: (List[str]) -> (List[str], List[str])
+def _break_system_lines(executive_control_lines: List[str]) -> Tuple[List[str], List[str]]:
     """
     Extracts the Nastran system lines.
     System lines may be interspersed with executive lines.
@@ -1320,7 +1328,7 @@ def _break_system_lines(executive_control_lines):
     return system_lines2, executive_control_lines2
 
 
-def _check_valid_deck(flag, old_flags):
+def _check_valid_deck(flag: int, old_flags: List[int]) -> None:
     """Crashes if the flag is set wrong"""
     if flag != 3:
         if flag == 1:
@@ -1393,8 +1401,7 @@ def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
             iline += 1
             lines.append(line)
 
-def _get_auxmodel_id(line, uline):
-    # type: (str, str) -> int
+def _get_auxmodel_id(line: str, uline: str) -> int:
     """
     parses the superelement header::
 
@@ -1418,8 +1425,7 @@ def _get_auxmodel_id(line, uline):
             auxmodel_id, line))
     return auxmodel_id
 
-def _get_afpm_id(line, uline):
-    # type: (str, str) -> int
+def _get_afpm_id(line: str, uline: str) -> int:
     """
     parses the superelement header::
 
@@ -1440,8 +1446,7 @@ def _get_afpm_id(line, uline):
             afpm_id, line))
     return afpm_id
 
-def _get_super_id(line, uline):
-    # type: (str, str) -> int
+def _get_super_id(line: str, uline: str) -> int:
     """
     parses the superelement header::
 
@@ -1475,8 +1480,7 @@ def _get_super_id(line, uline):
             super_id, line))
     return super_id
 
-def _clean_comment_bulk(comment):
-    # type: (str) -> str
+def _clean_comment_bulk(comment: str) -> str:
     """
     Removes specific pyNastran comment lines so duplicate lines aren't
     created.

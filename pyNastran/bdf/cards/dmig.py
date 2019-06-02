@@ -56,6 +56,38 @@ class DTI(BaseCard):
         #          for valuei in values]
         self.fields = {key : value for key, value in zip(keys, values_str)}
 
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, encoding):
+        """exports the elements in a vectorized way"""
+        from pyNastran.bdf.bdf_interface.hdf5_exporter import _export_list
+        for name, dti in sorted(model.dti.items()):
+            if name == 'UNITS':
+                i = 0
+                for key, value in sorted(dti.fields.items()):
+                    #print(key, value)
+                    h5_group = h5_file.create_group(str(key))
+                    if value is None:
+                        h5_group.create_dataset(str(i), data=np.nan)
+                    else:
+                        h5_group.create_dataset(str(i), data=value)
+                    i += 1
+                #fields = {
+                    #'mass' : mass,
+                    #'force' : force,
+                    #'length' : length,
+                    #'time' : time,
+                    #'temp_stress' : temp_stress
+                #}
+            else:
+                for irecord, fields in sorted(dti.fields.items()):
+                    #h5_group = h5_file.create_group(str(irecord))
+                    attr = 'irecord=%s' % irecord
+                    namei = str(irecord)
+                    values = fields
+                    _export_list(h5_file, attr, namei, values, encoding)
+                    #print(h5_group)
+                    #print(irecord, fields)
+
     def __init__(self, name, fields, comment=''):
         """
         Creates a DTI card
@@ -73,6 +105,7 @@ class DTI(BaseCard):
             self.comment = comment
         self.name = name
         self.fields = fields
+        assert len(fields) > 0, fields
 
     @classmethod
     def add_card(cls, card, comment):
@@ -104,7 +137,7 @@ class DTI(BaseCard):
             }
         else:
             fields = []
-            field2 = card[2]
+            #field2 = card[2]
 
             list_fields = []
             irecord = integer(card, 2, 'record')

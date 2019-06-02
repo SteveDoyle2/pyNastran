@@ -1905,6 +1905,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.op2')
         model = read_bdf(bdf_filename, debug=False)
+        save_load_deck(model)
 
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
