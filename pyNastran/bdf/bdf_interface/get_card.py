@@ -594,6 +594,7 @@ class GetCard(GetMethods):
                 the SPCD load application
 
         """
+        #self.log.debug('get_load_arrays')
         if nid_map is None:
             nid_map = self.nid_map
         nnodes = len(node_ids)
@@ -620,6 +621,7 @@ class GetCard(GetMethods):
             except KeyError:
                 # print('no %s for isubcase=%s' % (key, subcase_id))
                 continue
+            #self.log.debug('key=%s load_case_id=%s' % (key, load_case_id))
             try:
                 load_case = self.get_reduced_loads(
                     load_case_id, scale=1.,

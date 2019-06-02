@@ -403,6 +403,14 @@ def get_suport_node_ids(model, suport_id):
                 node_ids.append(suport_id)
     return np.unique(node_ids)
 
+def _get_material(materials, thermal_materials, mid):
+    """gets a structural or thermal material"""
+    try:
+        mat = materials[mid]
+    except KeyError:
+        mat = thermal_materials[mid]
+    return mat
+
 def get_material_arrays(model, mids):
     """gets e11, e22, e33"""
     #e11 = np.zeros(mids.shape, dtype='float32')
@@ -423,8 +431,11 @@ def get_material_arrays(model, mids):
     #has_mat10 = False
     has_mat11 = False
     materials = model.materials
+    thermal_materials = model.thermal_materials
     for superelement in model.superelement_models.values():
         materials.update(superelement.materials)
+        thermal_materials.update(superelement.thermal_materials)
+
     for umid in np.unique(mids):
         if umid == 0:
             continue
@@ -433,13 +444,12 @@ def get_material_arrays(model, mids):
         bulki = 0.
         speed_of_soundi = 0.
         try:
-            mat = materials[umid]
+            mat = _get_material(materials, thermal_materials, umid)
         except KeyError:
             print("can't find mid=%s" % umid)
             print('  mids = %s' % mids)
             print('  mids = %s' % materials.keys())
             continue
-            #raise
         if mat.type == 'MAT1':
             e11i = e22i = e33i = mat.e
             rhoi = mat.rho

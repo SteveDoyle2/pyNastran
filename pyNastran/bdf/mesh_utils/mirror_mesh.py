@@ -280,7 +280,8 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
     eid_offset = max(eid_max_elements, eid_max_masses, eid_max_rigid)
 
     if model.elements:
-        shells = {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUAD', 'CTRIAR', 'CQUADR'}
+        shells = {'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR'}
+        shell_nones = {'CTRIA6', 'CQUAD8', 'CQUAD', }
         rods = {'CROD', 'CONROD', 'CTUBE'}
         spring_dampers = {
             'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -315,9 +316,15 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
             fields[1] = eid_mirror
             mirror_model.add_card(fields, etype)
             element2 = mirror_model.elements[eid_mirror]
+            #print(element.get_stats())
 
             if etype in shells:
                 nodes = [node_id + nid_offset for node_id in nodes]
+                element2.nodes = nodes
+                element.flip_normal() # nodes = nodes[::-1]
+            elif etype in shell_nones:
+                nodes = [node_id + nid_offset if node_id is not None else None
+                         for node_id in nodes]
                 element2.nodes = nodes
                 element.flip_normal() # nodes = nodes[::-1]
             elif etype in rods:

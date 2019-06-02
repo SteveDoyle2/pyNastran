@@ -494,13 +494,9 @@ class OES(OP2Common):
         #return new_func
 
     def _print_obj_name_on_crash(func):
-        """
-        Debugging function to print the object name and an needed parameters
-        """
+        """Debugging function to print the object name and an needed parameters"""
         def new_func(self, data):
-            """
-            The actual function exec'd by the decorated function.
-            """
+            """The actual function exec'd by the decorated function."""
             try:
                 n = func(self, data)
             except NameError:

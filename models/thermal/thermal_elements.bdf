@@ -1,0 +1,28 @@
+SOL 153
+CEND
+TITLE = MSC.Nastran job
+ECHO = NONE
+$ Direct Text Input for Global Case Control Data
+SUBCASE 1
+  ANALYSIS = HEAT
+  SUBTITLE=Default
+  TEMPERATURE(INITIAL) = 1
+  NLPARM = 1
+  SPC = 1
+  THERMAL(SORT1,PRINT)=ALL
+  FLUX(SORT1,PRINT)=ALL
+BEGIN BULK
+PARAM    POST    -1
+PARAM    SIGMA  1.714-9
+NLPARM   1       0               AUTO    5       25      PW      NO
+                .001    1.-7
+MAT4     1      1.24    200.    30.
+SPC	1	1	1	1300.
+$
+$FORCE	10000	13	0	10000.	0.	0.	1.
+TEMP	1	13	1300.
+TEMPD	1	100.
+$
+MAT1     1      2.9+7   1.1+7   .32     .283
+INCLUDE '../elements/geom.inc'
+ENDDATA 58e050da

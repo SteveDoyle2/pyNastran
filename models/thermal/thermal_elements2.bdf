@@ -1,0 +1,246 @@
+$pyNastran: version=msc
+$pyNastran: punch=False
+$pyNastran: encoding=utf-8
+$pyNastran: nnodes=40
+$pyNastran: nelements=45
+$EXECUTIVE CONTROL DECK
+SOL 153
+CEND
+$CASE CONTROL DECK
+ECHO = NONE
+TITLE = MSC.Nastran job
+SUBCASE 1
+    ANALYSIS = HEAT
+    FLUX(SORT1,PRINT) = ALL
+    NLPARM = 1
+    SPC = 1
+    SUBTITLE = Default
+    TEMPERATURE(INITIAL) = 1
+    THERMAL(SORT1,PRINT) = ALL
+BEGIN BULK
+$PARAMS
+PARAM       POST      -1
+PARAM      SIGMA 1.714-9
+$SPOINTS
+$$ INCLUDE processed:  C:\NASA\m4\formats\git\pyNastran\models\thermal\..\elements\geom.inc
+SPOINT       100     101     102
+$EPOINTS
+EPOINT       103    THRU     107
+$NODES
+GRID           1              0.      0.      0.
+GRID           2              1.      0.      0.
+GRID           3              1.      1.      0.
+GRID           4              0.      1.      0.
+GRID           5              1.      1.      1.
+GRID           6              0.      1.      1.
+GRID           7              0.      0.      1.
+GRID           8              1.      0.      1.
+GRID           9              1.      1.      2.
+GRID          10              0.      1.      2.
+GRID          11              1.      0.      2.
+GRID          12              0.      0.      2.
+GRID          13              .5      .5      3.
+GRID          14              0.      0.     -1.
+GRID          15              0.      1.     -1.
+GRID          16              1.      1.     -1.
+GRID          17              1.      0.     -1.
+GRID          18              0.      0.     -2.
+GRID          19              0.      1.     -2.
+GRID          20              1.      1.     -2.
+GRID          21              1.      0.     -2.
+GRID          22              0.      0.     -3.
+GRID          23              0.      1.     -3.
+GRID          24              1.      1.     -3.
+GRID          25              1.      0.     -3.
+GRID          26              0.      0.     -4.
+GRID          27              0.      1.     -4.
+GRID          28              1.      1.     -4.
+GRID          29              1.      0.     -4.
+GRID          30             -1.      0.     -3.
+$ ctube
+GRID          31              2.      0.     -3.
+$CDAMP1	41	12	25	3	31	3
+$CDAMP1	42	12	25	5	31	5
+$CDAMP1	43	12	25	6	31	6
+$PDAMP	12	2.
+$CDAMP2	44	12.	22	6	30	6
+$ visc
+GRID          32             -1.      0.     -2.
+GRID          33              2.      0.     -2.
+$GRID     4               0.     1.       0.
+$GRID     15              0.     1.      -1.
+GRID          60             -1.      1.      0.
+GRID          61             -1.      1.     -1.
+GRID          62             -1.      1.     -.5
+$ 15-62
+GRID          63             -.5      1.     -1.
+GRID          64             -.5      1.      .5
+GRID          65             -.5      1.      0.
+$ bend
+$ 21
+$ |
+$ |
+$ 31-----G0
+$GRID     21             1.       0.     -2.
+$GRID     31              2.      0.     -3.
+$GRID     33              2.	0.	-2.
+GRID          70             1.5      0.    -2.6
+$ELEMENTS
+CHEXA          1       2       2       3       4       1       8       5
+               6       7
+CPENTA         2       2       6       8       5      10      11       9
+CPENTA         3       2       6       7       8      10      12      11
+CTETRA         4       2      10      11       9      13
+CTETRA         5       2      10      12      11      13
+$ pshells
+CQUAD4         6       4       4       1      14      15
+CQUAD4         7       4       3       2      17      16
+CTRIA3         8       4       4       3      16
+CTRIA3         9       4      16      15       4
+CTRIA3        10       4       1       2      17
+CTRIA3        11       4      17      14       1
+CBEAM         12       5      25      26      0.      1.      0.
+CBAR          13       1      23      27      0.      1.      0.
+$ rods
+CROD          14       3      24      28
+CROD          15       3      25      29
+$ pcomp
+$CQUAD4   16      6      14      15       19      18
+$CQUAD4        17       7      17      16      20      21
+$CTRIA3        18       6      18      14      17
+$CTRIA3        19       6      18      17      21
+$CTRIA3        20       7      19      15      16
+$CTRIA3        21       7      19      16      20
+$ shear
+CSHEAR        22       8      19      20      24      23
+$ pcompg
+$CQUAD4        23       9      18      21      25      22
+$ drilling
+$CQUADR        24       9      18      19      23      22
+$CTRIAR        25       9      21      25      20
+$ conrod
+CONROD        26      25      30       1      1.      2.
+CTUBE         28      10      25      31
+$ celas
+CELAS1        30      11      25       2      31       2
+CELAS1        31      11      25       3      31       3
+CELAS1        32      11      25       5      31       5
+CELAS1        33      11      25       6      31       6
+CELAS2        34    100.      22       6      30       6
+CDAMP1        40      12      25       2      31       2
+CDAMP1        41      12      25       3      31       3
+CDAMP1        42      12      25       5      31       5
+CDAMP1        43      12      25       6      31       6
+CDAMP2        44     12.      22       6      30       6
+CDAMP3        45      13     101     102
+CELAS3        46      14     101     102
+CDAMP4        47     15.     102
+CELAS4        48     16.     102
+CELAS2        49     17.      25       1     101       0
+$
+CVISC         50      50      14      32
+CVISC         51      51      17      33
+$ cquad8/ctria6
+$  4--- x----60
+$  |         |
+$  |         62
+$  |         |
+$  15---63---61
+$	eid	pid	n1	n2	n3	n4	n5	n6
+$	n7	n8
+CQUAD8        60       4       4      15      61      60              63
+              62      65
+$	eid	pid	n1	n2	n3	n4	n5	n6
+CTRIA6        61       4       6       4      60              65      64
+$PROPERTIES
+PBAR           1       1     .25.0052083.0052083.0088021
+PSOLID         2       1
+PROD           3       1      .1.0088021      1.
+PSHELL         4       1     .25       1               1
+$	SHOCKA	TABLE	2.2	1.2	1.		200
+PBEAM          5       1     .25.0052083.0052083        .0087949
+            -.25    -.25     .25    -.25     .25     .25    -.25     .25
+             YES      1.     .25 .005208 .005208        .0087949
+        .0087949            -.25    -.25     .25    -.25     .25     .25
+         .850116 .850116
+PCOMP          6
+               1      .1      0.               1      .2      0.
+               1      .3      0.               1      .4      0.
+PCOMP          7
+               1      .1      0.               1      .2      0.
+               1      .3      0.               1      .4      0.
+               1      .5      0.
+PSHEAR         8       1      .1      0.      0.      0.
+PCOMPG         9
+               1       1      .1      0.
+               2       1      .2      0.
+               4       1      .3      0.
+               3       1      .4      0.
+PTUBE         10       1      .1
+PELAS         11    100.
+PDAMP         12      2.
+PDAMP         13     13.
+PELAS         14     14.
+PVISC         50      1.      2.
+PVISC         51      3.      4.
+$	EID	PID	GA	GB	X1	X2	X3	GEOM
+$CBEND	70	70	21	31	70			1
+$CBEND	70	70	21	31	0.	0.	1.	1
+$	PID	MID	A	I1	I2	J	RB THETAB
+PBEND         70       1      1.      1.      .1      .1      0.     45.
+              0.      0.      0.      0.      0.      0.      0.      0.
+                              0.      0.      0.      0.
+$ bush
+$CBUSH1D	70	71	19	32
+PBUSH1D       71   3000.    200.    300.              0.      0.
+PELAST        11       0       0      42
+$MATERIALS
+MAT1           1   2.9+7   1.1+7     .32    .283
+$MASSES
+CONM2         50      32              1.
+CONM2         51      33              1.
+$PLOT ELEMENTS
+PLOTEL        13       1      23
+$LOADS
+$FORCE	10000	13	0	10000.	0.	0.	1.
+TEMP           1      13   1300.
+TEMPD          1    100.
+$DYNAMIC
+NLPARM         1       0
+                    .001.0000001
+$THERMAL MATERIALS
+MAT4           1    1.24    200.     30.
+$SPCs
+SPC            1       1       1   1300.
+$OPTIMIZATION
+DESVAR         1     T4       1.    .001   1000.
+$DVPRE	ID	TYPE	PID	PNAME	PMIN	PMAX	C0
+$        DVID1	COEF1	DVID2	COEF2	DVID3	-etc.-
+DVPREL1    10000  PSHELL       4       T
+               1      1.
+$TABLES
+TABLED1       42  LINEAR  LINEAR
+              0.      0.      5.    100.     12.    200.     30.    400.
+            ENDT
+TABLED2       43      0.
+              0.      0.      5.    100.     12.    200.     30.    400.
+            ENDT
+TABLED3       44      0.      .1
+              0.      0.      5.    100.     12.    200.     30.    400.
+            ENDT
+TABLED4       45      0.      .1      0.      1.
+              0.      0.      5.    100.     12.    200.     30.    400.
+            ENDT
+TABLEM1       42
+              0.      0.      5.    100.     12.    200.     30.    400.
+            ENDT
+TABLEM2       43      0.
+              0.      0.      5.    100.     12.    200.     30.    400.
+            ENDT
+TABLEM3       44      0.      .1
+              0.      0.      5.    100.     12.    200.     30.    400.
+            ENDT
+TABLEM4       45      0.      .1      0.      1.
+              0.      0.      5.    100.     12.    200.     30.    400.
+            ENDT
+ENDDATA

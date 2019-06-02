@@ -33,6 +33,8 @@ from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
 
 from pyNastran.bdf.test.bdf_unit_tests import Tester
+from pyNastran.bdf.cards.test.utils import save_load_deck
+
 #from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     #RealPlateBilinearForceArray, RealPlateForceArray)
 #from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray
@@ -543,6 +545,29 @@ class TestOP2(Tester):
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
+
+    def test_bdf_op2_thermal_04(self):
+        """checks time_thermal_elements.bdf"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'thermal', 'thermal_elements2.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'thermal', 'thermal_elements2.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log)
+        save_load_deck(model)
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=IS_PANDAS, log=log)
 
     def test_bdf_op2_other_01(self):
         """checks ofprand1.bdf"""
@@ -1900,11 +1925,10 @@ class TestOP2(Tester):
 
     def test_cbeam3_cbend(self):
         """test CBEAM3/CBEND"""
-        from pyNastran.bdf.cards.test.utils import save_load_deck
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.op2')
-        model = read_bdf(bdf_filename, debug=False)
+        model = read_bdf(bdf_filename, debug=False, log=log)
         save_load_deck(model)
 
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
