@@ -209,18 +209,6 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     return failed_files
 
 
-def memory_usage_psutil():
-    # return the memory usage in MB
-    try:
-        import psutil  # type: ignore
-
-    except ImportError:
-        return '???'
-    process = psutil.Process(os.getpid())
-    mem = process.get_memory_info()[0] / float(2 ** 20)
-    return mem
-
-
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
             mesh_form='separate', is_folder=False, print_stats=False,
             encoding=None, sum_load=True, size=8, is_double=False,
@@ -1886,7 +1874,7 @@ def compare(fem1, fem2, xref=True, check=True, print_stats=True, quiet=False):
     #compute(fem1.params, fem2.params)
 
 
-def test_bdf_argparse(argv):
+def test_bdf_argparse(argv=None):
     """test_bdf argument parser"""
     if argv is None:
         argv = sys.argv[1:]  # same as argparse
@@ -1968,7 +1956,7 @@ def test_bdf_argparse(argv):
     parent_parser.add_argument('--hdf5', action='store_true',
                                help='Save/load the BDF in HDF5 format')
 
-    usage, args, examples = _get_usage_args_examples(encoding)
+    usage, args, examples = get_test_bdf_usage_args_examples(encoding)
 
     # --------------------------------------------------------------------------
 
@@ -2017,7 +2005,7 @@ def test_bdf_argparse(argv):
 #version      = False
 #xref         = True
 
-def _get_usage_args_examples(encoding):
+def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
     options = '[-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort] [--crash C] [--pickle] [--profile] [--hdf5] '
     usage = (
@@ -2080,28 +2068,6 @@ def _get_usage_args_examples(encoding):
     )
     return usage, args, examples
 
-def test_bdf_argparse_old(argv):  # pragma: no cover
-    """defines the docopt interface"""
-    encoding = sys.getdefaultencoding()
-
-    from pyNastran.utils.docopt_types import docopt_types
-    usage, args, examples = _get_usage_args_examples(encoding)
-    msg = usage + '\n' + args + examples
-    if len(argv) == 1:
-        sys.exit(msg)
-
-    ver = str(pyNastran.__version__)
-    type_defaults = {
-        '--nerrors' : [int, 100],
-    }
-    data = docopt_types(msg, version=ver, argv=argv[1:], type_defaults=type_defaults)
-
-    data['--xref'] = not data['--xref']
-    data['--loads'] = not data['--loads']
-    if not data['--encoding']:
-        data['--encoding'] = None
-
-    return data
 
 def main(argv=None):
     """The main function for the command line ``test_bdf`` script."""

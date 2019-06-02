@@ -4,14 +4,14 @@
   - card field types are correct (e.g. node_ids are integers)
   - various card methods (e.g. Area) work correctly
 
-As such, ``test_bdf`` is very useful for debugging models.
+As such, ``test_bdfv`` is very useful for debugging models.
+
 """
 import os
 import sys
 import traceback
 import warnings
-from itertools import chain
-from typing import List, Tuple, Optional
+from typing import List
 import numpy as np
 warnings.simplefilter('always')
 
@@ -19,11 +19,14 @@ np.seterr(all='raise')
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils import check_path
+from pyNastran.utils.arg_handling import argparse_to_dict, swap_key, update_message
+
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections)
 from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF, read_bdf
-from pyNastran.bdf.test.test_bdf import divide, get_matrix_stats, compare_card_content
+from pyNastran.bdf.test.test_bdf import (divide, get_matrix_stats,
+                                         compare_card_content, get_test_bdf_usage_args_examples)
 
 import pyNastran.bdf.test
 TEST_PATH = pyNastran.bdf.test.__path__[0]
@@ -185,20 +188,8 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
     return failed_files
 
 
-def memory_usage_psutil():
-    # return the memory usage in MB
-    try:
-        import psutil  # type: ignore
-
-    except ImportError:
-        return '???'
-    process = psutil.Process(os.getpid())
-    mem = process.get_memory_info()[0] / float(2 ** 20)
-    return mem
-
-
 def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=False,
-            cid=None, mesh_form='combined', is_folder=False, print_stats=False,
+            mesh_form='combined', is_folder=False, print_stats=False,
             encoding=None, sum_load=True, size=8, is_double=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
             quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
@@ -530,8 +521,8 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                     read_bdf(skin_filename, log=fem1.log)
                     os.remove(skin_filename)
             if xref:
-                if run_extract_bodies:
-                    extract_bodies(fem1)
+                #if run_extract_bodies:
+                    #extract_bodies(fem1)
 
                 # 1. testing that these methods word without xref
                 #fem1._get_rigid()
@@ -762,8 +753,7 @@ def require_cards(card_names, log, soltype, sol, subcase):
             nerrors += 1
     return nerrors
 
-def test_get_cards_by_card_types(model):
-    # type: (BDF) -> None
+def test_get_cards_by_card_types(model: BDF) -> None:
     """
     Verifies the ``model.get_cards_by_card_types`` method works
     """
@@ -800,11 +790,9 @@ def test_get_cards_by_card_types(model):
                 raise RuntimeError(msg)
 
 
-def compare_card_count(fem1, fem2, print_stats=False, quiet=False):
-    # type: (BDF, BDF, bool, bool) -> List[str]
-    """
-    Checks that no cards from fem1 are lost when we write fem2
-    """
+def compare_card_count(fem1: BDF, fem2: BDF,
+                       print_stats: bool=False, quiet: bool=False) -> List[str]:
+    """Checks that no cards from fem1 are lost when we write fem2"""
     cards1 = fem1.card_count
     cards2 = fem2.card_count
     for key in cards1:
@@ -929,81 +917,123 @@ def compare(fem1, fem2, xref=True, check=True, print_stats=True, quiet=False):
     return diff_cards
 
 
-def get_test_bdf_data():
-    """defines the docopt interface"""
+def test_bdfv_argparse(argv=None):
+    """test_bdf argument parser"""
+    if argv is None:
+        argv = sys.argv[1:]  # same as argparse
+        #print('get_inputs; argv was None -> %s' % argv)
+    else:
+        # drop the pyNastranGUI; same as argparse
+        argv = argv[1:]
+
     encoding = sys.getdefaultencoding()
+    import argparse
+    parent_parser = argparse.ArgumentParser()
+    parent_parser.add_argument('BDF_FILENAME', help='path to BDF/DAT/NAS file',
+                               type=str)
+    parent_parser.add_argument('-v', '--version', action='version',
+                               version=pyNastran.__version__)
 
-    from pyNastran.utils.docopt_types import docopt_types
-    options = '[-e E] [--encoding ENCODE] [-q] [-D] [-i] [--crash C] [-k] [-f] '
-    msg = (
-        "Usage:\n"
-        '  test_bdfv [-x | --safe] [-p] [-c] [-L]      %sBDF_FILENAME\n' % options +
-        '  test_bdfv [-x | --safe] [-p] [-c] [-L] [-d] %sBDF_FILENAME\n' % options +
-        '  test_bdfv [-x | --safe] [-p] [-c] [-L] [-l] %sBDF_FILENAME\n' % options +
-        '  test_bdfv               [-p]                %sBDF_FILENAME\n' % options +
-        '  test_bdfv [-x | --safe] [-p] [-s]           %sBDF_FILENAME\n' % options +
+    #nargs : str/int
+    #   * : 0 or more
+    #   + : one or more
+    #   ? : optional
+    #   int : int values
+    # --------------------------------------------------------------------------
+    # Options
+    xref_safe_group = parent_parser.add_mutually_exclusive_group()
+    xref_safe_group.add_argument(
+        '-x', '--xref', action='store_false',
+        help='disables cross-referencing and checks of the BDF (default=True -> on)')
+    xref_safe_group.add_argument(
+        '--safe', action='store_true',
+        help='Use safe cross-reference (default=False)')
 
-        #"  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n"
-        '  test_bdfv -h | --help\n'
-        '  test_bdfv -v | --version\n'
-        '\n'
+    parent_parser.add_argument(
+        '-p', '--punch', action='store_true',
+        help='disables reading the executive and case control decks in the BDF\n'
+        '(default=False -> reads entire deck)')
 
-        'Positional Arguments:\n'
-        '  BDF_FILENAME   path to BDF/DAT/NAS file\n'
-        '\n'
-
-        'Options:\n'
-        '  -x, --xref     disables cross-referencing and checks of the BDF\n'
-        '                 (default=True -> on)\n'
-        '  --safe         Use safe cross-reference (default=False)\n'
-        '  -p, --punch    disables reading the executive and case control decks in the BDF\n'
-        '                 (default=False -> reads entire deck)\n'
-        '  -c, --check    disables BDF checks.  Checks run the methods on \n'
+    stop_check_group = parent_parser.add_mutually_exclusive_group()
+    stop_check_group.add_argument(
+        '-c', '--check', action='store_true',
+        help='disables BDF checks.  Checks run the methods on \n'
         '                 every element/property to test them.  May fails if a \n'
-        '                 card is fully not supported (default=False)\n'
-        '  -l, --large    writes the BDF in large field, single precision format (default=False)\n'
-        '  -d, --double   writes the BDF in large field, double precision format (default=False)\n'
-        '  -L, --loads    Disables forces/moments summation for the different subcases (default=True)\n'
-        '  -e E, --nerrors E  Allow for cross-reference errors (default=100)\n'
-        '  --encoding ENCODE  the encoding method (default=None -> %r)\n' % encoding +
-        '  -q, --quiet        prints debug messages (default=False)\n'
+        '                 card is fully not supported (default=False)')
+    stop_check_group.add_argument('--stop', action='store_true', # dev
+                                  help='Stop after first read/write (default=False)\n')
 
-        '\n'
-        'Developer:\n'
-        '  --crash C,       Crash on specific cards (e.g. CGEN,EGRID)\n'
-        '  -D, --dumplines  Writes the BDF exactly as read with the INCLUDES processed\n'
-        '                   (pyNastran_dump.bdf)\n'
-        '  -i, --dictsort   Writes the BDF with exactly as read with the INCLUDES processed\n'
-        '                   (pyNastran_dict.bdf)\n'
-        '  -f, --profile    Profiles the code (default=False)\n'
-        '  -s, --stop       Stop after first read/write (default=False)\n'
-        '  -k, --pickle     Pickles the data objects (default=False)\n'
-        '\n'
-        'Info:\n'
-        '  -h, --help     show this help message and exit\n'
-        "  -v, --version  show program's version number and exit\n"
-    )
-    if len(sys.argv) == 1:
-        sys.exit(msg)
+    width_group = parent_parser.add_mutually_exclusive_group()
+    width_group.add_argument(
+        '-l', '--large', action='store_true',
+        help='writes the BDF in large field, single precision format (default=False)')
+    width_group.add_argument(
+        '-d', '--double', action='store_true',
+        help='writes the BDF in large field, double precision format (default=False)')
 
-    ver = str(pyNastran.__version__)
-    type_defaults = {
-        '--nerrors' : [int, 100],
-    }
-    data = docopt_types(msg, version=ver, type_defaults=type_defaults)
+    parent_parser.add_argument(
+        '-L', '--loads', action='store_false',
+        help='Disables forces/moments summation for the different subcases (default=True)')
 
-    data['--xref'] = not data['--xref']
-    data['--loads'] = not data['--loads']
-    if not data['--encoding']:
-        data['--encoding'] = None
+    parent_parser.add_argument('-e', '--nerrors', nargs=1, default=100,
+                               help='Allow for cross-reference errors (default=100)')
+    parent_parser.add_argument('--encoding', nargs=1, default=encoding,
+                               help='the encoding method (default=%r)\n' % encoding)
+    parent_parser.add_argument('-q', '--quiet', action='store_true',
+                               help='prints debug messages (default=False)')
+    # --------------------------------------------------------------------------
+    #'Developer:\n'
+    parent_parser.add_argument('--crash', nargs=1, type=str,
+                               help='Crash on specific cards (e.g. CGEN,EGRID)')
 
-    return data
+    parent_parser.add_argument('--dumplines', action='store_true',
+                               help='Writes the BDF exactly as read with the INCLUDEs processed\n'
+                               '(pyNastran_dump.bdf)')
+    parent_parser.add_argument('--dictsort', action='store_true',
+                               help='Writes the BDF exactly as read with the INCLUDEs processed\n'
+                               '(pyNastran_dict.bdf)')
+    parent_parser.add_argument('--profile', action='store_true',
+                               help='Profiles the code (default=False)\n')
+    parent_parser.add_argument('--pickle', action='store_true',
+                               help='Pickles the data objects (default=False)\n')
+    parent_parser.add_argument('--hdf5', action='store_true',
+                               help='Save/load the BDF in HDF5 format')
+
+    usage, args, examples = get_test_bdf_usage_args_examples(encoding)
+
+    # --------------------------------------------------------------------------
+
+    #argv
+    #print(argv)
+    usage, args, examples = get_test_bdf_usage_args_examples(encoding)
+    usage = usage.replace('test_bdf', 'test_bdfv')
+    examples = examples.replace('test_bdf', 'test_bdfv')
+    msg = usage + args + examples
+    update_message(parent_parser, usage, args, examples)
+
+    #try:
+        #args = parent_parser.parse_args(args=argv)
+    #except SystemExit:
+        #fobj = StringIO()
+        ##args = parent_parser.format_usage()
+        #parent_parser.print_usage(file=fobj)
+        #args = fobj.getvalue()
+        #raise
+    args = parent_parser.parse_args(args=argv)
+
+    args2 = argparse_to_dict(args)
+    optional_args = [
+        'double', 'large', 'crash', 'quiet', 'profile',
+        'xref', 'safe', 'check', 'punch', 'loads', 'stop', 'encoding',
+        'dumplines', 'dictsort', 'nerrors', 'pickle', 'hdf5',
+    ]
+    for arg in optional_args:
+        swap_key(args2, arg, '--' + arg)
+    return args2
 
 def main():
-    """
-    The main function for the command line ``test_bdfv`` script.
-    """
-    data = get_test_bdf_data()
+    """The main function for the command line ``test_bdfv`` script."""
+    data = test_bdfv_argparse()
     for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
