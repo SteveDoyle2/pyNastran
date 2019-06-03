@@ -3,7 +3,7 @@ import sys
 
 import pyNastran
 from pyNastran.utils import check_path
-from pyNastran.utils.arg_handling import argparse_to_dict, swap_key
+from pyNastran.utils.arg_handling import argparse_to_dict, swap_key, update_message
 
 #from gui.formats import format_string
 
@@ -274,11 +274,13 @@ def run_argparse(argv):
         parent_parser.add_argument('--qt', type=str, help='{pyqt4, pyqt5, pyside, pyside2} msg')
         parent_parser.add_argument('--test', help='test msg', action='store_true')
         parent_parser.add_argument('--noupdate', help='noupdate msg', action='store_true')
+        parent_parser.add_argument('--plugin', help='disables the format check',
+                                   action='store_true')
+
     if GROUPS_DEFAULT:
         parent_parser.add_argument('--groups', help='enables groups', action='store_true')
     else:
         parent_parser.add_argument('--nogroups', help='disables groups', action='store_false')
-    parent_parser.add_argument('--plugin', help='disables the format check', action='store_true')
 
     parent_parser.add_argument('-q', '--quiet',
                                help='prints debug messages (default=True)', action='store_true')
@@ -313,20 +315,7 @@ def run_argparse(argv):
             #file = _sys.stdout
         #self._print_message(self.format_help(), file)
 
-    def _print_message(message, file=None):
-        """overwrites the argparse print to get a better help message"""
-        mymsg = usage + arg_msg + examples
-        if message:
-            if file is None:
-                file = sys.stderr
-
-            if 'unrecognized arguments' in message:
-                mymsg = message
-            elif message.strip() == pyNastran.__version__:
-                mymsg = message
-            file.write(mymsg)
-
-    parent_parser._print_message = _print_message
+    update_message(parent_parser, usage, arg_msg, examples)
     args = parent_parser.parse_args(args=argv)
     #args.plugin = True
     argdict = argparse_to_dict(args)

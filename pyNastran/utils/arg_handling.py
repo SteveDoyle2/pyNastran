@@ -30,10 +30,17 @@ def update_message(parser, usage, arg_msg, examples):
 
             #file.write(message)
             #return
-            if 'unrecognized arguments' in message or 'ignored explicit argument' in message:
+            is_error = (
+                'unrecognized arguments' in message or         # pyNastranGUI --at
+                'ignored explicit argument' in message or      # ???
+                'ambiguous option' in message or               # pyNastranGUI --q  (--qt, --quiet)
+                'following arguments are required' in message) # test_bdf <no_args>
+            if is_error:
                 mymsg = message
             elif message.strip() == pyNastran.__version__:
                 mymsg = message
+            #else:
+                #mymsg = message
             file.write(mymsg)
 
     parser._print_message = _print_message

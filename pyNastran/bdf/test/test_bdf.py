@@ -1933,7 +1933,7 @@ def test_bdf_argparse(argv=None):
 
     parent_parser.add_argument('-e', '--nerrors', nargs=1, default=100,
                                help='Allow for cross-reference errors (default=100)')
-    parent_parser.add_argument('--encoding', nargs=1, default=encoding,
+    parent_parser.add_argument('--encoding', default=encoding, type=str,
                                help='the encoding method (default=%r)\n' % encoding)
     parent_parser.add_argument('-q', '--quiet', action='store_true',
                                help='prints debug messages (default=False)')
