@@ -80,7 +80,6 @@ class ComplexShearArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
-        headers = self.headers
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
                                    major_axis=self.element, minor_axis=self.headers).to_frame()
@@ -101,8 +100,8 @@ class ComplexShearArray(OES_Object):
                     for ieid, eid in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
-                        (tx1, ty1, tz1, rx1, ry1, rz1) = t1
-                        (tx2, ty2, tz2, rx2, ry2, rz2) = t2
+                        (tx1, ty1, unused_tz1, unused_rx1, unused_ry1, unused_rz1) = t1
+                        (tx2, ty2, unused_tz2, unused_rx2, unused_ry2, unused_rz2) = t2
                         d = t1 - t2
                         if not np.allclose([tx1.real, tx1.imag, ty1.real, ty1.imag],
                                            [tx2.real, tx2.imag, ty2.real, ty2.imag], atol=0.0001):
@@ -146,10 +145,11 @@ class ComplexShearArray(OES_Object):
         #ntotal = self.ntotal
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements, nnodes))
+            msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i; table_name=%r\n' % (
+                self.__class__.__name__, ntimes, nelements, nnodes, self.table_name))
         else:
-            msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
+            msg.append('  type=%s nelements=%i nnodes=%i; table_name=%r\n' % (
+                self.__class__.__name__, nelements, nnodes, self.table_name))
         msg.append('  data: [ntimes, nnodes, 2] where 2=[%s]\n' % str(', '.join(self._get_headers())))
         msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))

@@ -126,8 +126,8 @@ class ComplexRodArray(OES_Object):
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n'
-                       % (self.__class__.__name__, ntimes, nelements, self.table_name))
+            msg.append('  type=%s ntimes=%i nelements=%i; table_name=%r\n' % (
+                self.__class__.__name__, ntimes, nelements, self.table_name))
             ntimes_word = 'ntimes'
         else:
             msg.append('  type=%s nelements=%i; table_name=%r\n'

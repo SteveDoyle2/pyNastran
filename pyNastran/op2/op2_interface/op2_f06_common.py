@@ -373,9 +373,7 @@ class OP2_F06_Common:
         self.ctetra_pressure_force = {}
 
         self.cvisc_force = {}
-        self.force_VU = {}
 
-        #self.force_VU_2D = {}
         self.vu_quad_force = {}
         self.vu_tria_force = {}
 
@@ -719,8 +717,6 @@ class OP2_F06_Common:
             'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
             'cvisc_force',
 
-            'force_VU',
-            #'force_VU_2D',
             'vu_quad_force', 'vu_tria_force',
 
             #OEF - Fluxes - tCode=4 thermal=1

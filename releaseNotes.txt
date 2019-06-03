@@ -60,7 +60,14 @@ BDF:
      - DTI besides UNITS are now supported
      - PBEAM3, TEMPB3
 
+OP2:
+ - bug fixes:
+   - more hdf5 results
+ - enhancements:
+
 GUI:
+ - bug fixes:
+   - better argument handling
  - enhancements:
     - Can now load custom fringe/displacement/force results with an incorrect
       number of nodes/elements.  It's assumed that the node/element id in the

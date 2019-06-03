@@ -80,7 +80,8 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_composite_plates import Ra
 
 
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
-    GridPointSurfaceStressesArray, GridPointStressesVolumeDirectArray, GridPointStressesVolumePrincipalArray)
+    GridPointSurfaceStressesArray, GridPointStressesVolumeDirectArray, GridPointStressesVolumePrincipalArray,
+    GridPointStressesSurfaceDiscontinutiesArray)
 
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
@@ -97,7 +98,7 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexCBendForceArray, ComplexCBushForceArray, ComplexCShearForceArray,
     ComplexDamperForceArray, ComplexPlate2ForceArray, ComplexPlateForceArray,
     ComplexRodForceArray, ComplexSolidPressureForceArray, ComplexSpringForceArray,
-    ComplexViscForceArray,
+    ComplexViscForceArray, ComplexForceVU_2DArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     RealChbdyHeatFluxArray, RealConvHeatFluxArray,
@@ -106,6 +107,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     RealHeatFluxVUBeamArray,
     RealHeatFluxVU3DArray,
     RealHeatFlux_2D_3DArray,
+    RealHeatFluxVUShellArray,
 )
 #from pyNastran.op2.tables.oqg_constraintForces.oqg_thermal_gradient_and_flux import RealTemperatureGradientAndFluxArray
 from pyNastran.utils import check_path
@@ -860,6 +862,7 @@ TABLE_OBJ_MAP = {
     'grid_point_surface_stresses' : (GridPointSurfaceStressesArray, ),
     'grid_point_stresses_volume_direct' : (GridPointStressesVolumeDirectArray, ),
     'grid_point_stresses_volume_principal' : (GridPointStressesVolumePrincipalArray, ),
+    'grid_point_stress_discontinuities' : (GridPointStressesSurfaceDiscontinutiesArray, ), ## TODO: fix
 
     # ----------------------------------------------------------
     'crod_thermal_load' :  (Real1DHeatFluxArray, ),
@@ -885,6 +888,7 @@ TABLE_OBJ_MAP = {
     'chbdyg_thermal_load' : (RealChbdyHeatFluxArray, ),
     'thermalLoad_VU_3D' : (RealHeatFluxVU3DArray, ),
     'vu_beam_thermal_load' : (RealHeatFluxVUBeamArray, ),
+    'thermalLoad_VU' : (RealHeatFluxVUShellArray, ),
 
     # ----------------------------------------------------------
     'crod_thermal_load_flux' :  (Real1DHeatFluxArray, ),
@@ -910,8 +914,8 @@ TABLE_OBJ_MAP = {
     'chbdyg_thermal_load_flux' : (RealChbdyHeatFluxArray, ),
     # ----------------------------------------------------------
 
-    'vu_tria_force' : (RealForceVU2DArray, ),
-    'vu_quad_force' : (RealForceVU2DArray, ),
+    'vu_tria_force' : (RealForceVU2DArray, ComplexForceVU_2DArray),
+    'vu_quad_force' : (RealForceVU2DArray, ComplexForceVU_2DArray),
 
     'temperatures' : (RealTemperatureArray, ),
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),
@@ -1264,13 +1268,13 @@ def _read_h5_matrix(h5_file, model, key, log):
                 #shape=(mrows, ncols), dtype=dtype)
 
             skip_keys = ['name', 'form', 'is_matpool', 'shape_str']
-            for key in h5_matrix.keys():
-                if key in skip_keys:
+            for keyi in h5_matrix.keys():
+                if keyi in skip_keys:
                     continue
-                h5_result_attr = h5_matrix.get(key)
+                h5_result_attr = h5_matrix.get(keyi)
                 value = _cast(h5_result_attr)
                 #print('    %s = %r' % (key, value))
-                setattr(matrix_obj, key, value)
+                setattr(matrix_obj, keyi, value)
             model.matrices[name] = matrix_obj
             matrix_names.append(matrix_name)
 

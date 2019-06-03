@@ -388,6 +388,7 @@ class RealHeatFluxVU3DArray(BaseElement):
             '             VUGRID      X-GRADIENT       Y-GRADIENT       Z-GRADIENT        X-FLUX           Y-FLUX           Z-FLUX    \n'
             #'          111005001     2.000000E+01    -4.799646E-14     0.000000E+00    -4.080000E+03     9.791279E-12     0.000000E+00\n'
         ]
+        #vu3d
         ntimes = self.data.shape[0]
 
         #eids = self.element
@@ -597,7 +598,7 @@ class RealHeatFluxVUBeamArray(BaseElement):  # 191-VUBEAM
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        #asdf
+        #vubeam
         msg_temp = [
             '                T E M P E R A T U R E   G R A D I E N T S   A N D   F L U X E S   I N   B E A M   P - E L E M E N T S\n'
             '                    VU-ELEMENT ID=  100005001, P-ELEMENT ID =       5, OUTPUT COORD. ID= (LOCAL), P OF EDGES =  2\n'
@@ -1237,3 +1238,7 @@ class RealHeatFluxVUShellArray(BaseElement):
         #self.element_data_type[self.itotal] = etype
         self.data[self.itime, self.itotal, :] = [xgrad, ygrad, zgrad, xflux, yflux, zflux]
         self.itotal += 1
+
+    #def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  #page_num=1, is_mag_phase=False, is_sort1=True):
+        #pass

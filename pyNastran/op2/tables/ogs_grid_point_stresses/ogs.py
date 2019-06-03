@@ -13,7 +13,7 @@ class OGS(OP2Common):
         OP2Common.__init__(self)
 
     def _read_ogs1_3(self, data, ndata):
-        three = self.parse_approach_code(data)
+        unused_three = self.parse_approach_code(data)
         self.words = [
             'aCode', 'tCode', '???', 'isubcase',
             '???', '???', '???', 'dLoadID',
@@ -196,7 +196,7 @@ class OGS(OP2Common):
         else:
             s = Struct(self._endian + b'i14f')
             #nelements = ndata // 60  # 15*4
-            for i in range(nelements):
+            for unused_i in range(nelements):
                 edata = data[n:n+60]
                 out = s.unpack(edata)
                 (eid_device, lxa, lxb, lxc, lya, lyb, lyc, lza, lzb, lzc, sa, sb, sc, epr, ovm) = out
@@ -268,7 +268,7 @@ class OGS(OP2Common):
         else:
             s = Struct(self._endian + b'2i4s8f')
             nelements = ndata // 44  # 11*4
-            for i in range(nelements):
+            for unused_i in range(nelements):
                 edata = data[n:n+44]
                 out = s.unpack(edata)
                 (nid_device, eid, fiber, nx, ny, txy, angle, major, minor, tmax, ovm) = out
@@ -355,7 +355,7 @@ class OGS(OP2Common):
             n = ndata
         else:
             s = Struct(self._endian + b'i8f')
-            for i in range(nelements):
+            for unused_i in range(nelements):
                 edata = data[n:n+36]
                 out = s.unpack(edata)
                 (nid_device, nx, ny, nz, txy, tyz, txz, pressure, ovm) = out
@@ -422,7 +422,7 @@ class OGS(OP2Common):
             else:
                 s = Struct(self._endian + b'i5f')
                 nelements = ndata // 24  # 6*4
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     out = s.unpack(data[n:n+24])
                     (nid_device, nx, ny, nz, txy, pressure) = out
                     nid = nid_device // 10

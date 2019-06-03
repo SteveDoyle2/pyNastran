@@ -331,6 +331,10 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         self.data[self.itime, self.itotal, :] = [lxa, lxb, lxc, lya, lyb, lyc, lza, lzb, lzc, sa, sb, sc, epr, ovm]
         self.itotal += 1
 
+    #def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
+                  #page_num=1, is_mag_phase=False, is_sort1=True):
+        #pass
+
 
 class GridPointStressesVolumeDirectArray(ScalarObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
