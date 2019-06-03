@@ -64,7 +64,7 @@ class OP2Writer(OP2_F06_Common):
         return make_stamp(title, today)
 
     def write_op2(self, op2_outname, obj=None, #is_mag_phase=False,
-                  post=-1, endian=b'<'):
+                  post=-1, endian=b'<', skips=None):
         """
         Writes an OP2 file based on the data we have stored in the object
 
@@ -79,6 +79,11 @@ class OP2Writer(OP2_F06_Common):
             #instead of Real/Imaginary (default=False; Real/Imag)
             #Real objects don't use this parameter.
         """
+        if skips is None:
+            skips = set([])
+        else:
+            skips = set(skips)
+
         #print('writing %s' % op2_outname)
         struct_3i = Struct(endian + b'3i')
 
@@ -134,11 +139,12 @@ class OP2Writer(OP2_F06_Common):
         write_mpt(fop2, fop2_ascii, obj)
         #write_dit(fop2, fop2_ascii, obj)
         #write_dynamic(fop2, fop2_ascii, obj)
-        if obj.grid_point_weight.reference_point is not None:
-            if hasattr(obj.grid_point_weight, 'write_op2'):
-                obj.grid_point_weight.write_op2(fop2, endian=endian)
-            else:
-                raise NotImplementedError("*op2 - grid_point_weight not written")
+        if 'grid_point_weight' not in skips:
+            if obj.grid_point_weight.reference_point is not None:
+                if hasattr(obj.grid_point_weight, 'write_op2'):
+                    obj.grid_point_weight.write_op2(fop2, endian=endian)
+                else:
+                    raise NotImplementedError("*op2 - grid_point_weight not written")
 
         #is_mag_phase = False
         # we writte all the other tables
@@ -154,10 +160,10 @@ class OP2Writer(OP2_F06_Common):
             ##self.show(100)
             #data = self._read_record()
 
-        case_count = self._write(obj, fop2, fop2_ascii, struct_3i, endian)
+        case_count = self._write(obj, fop2, fop2_ascii, struct_3i, endian, skips)
         return case_count
 
-    def _write(self, obj, fop2, fop2_ascii, struct_3i, endian):
+    def _write(self, obj, fop2, fop2_ascii, struct_3i, endian, skips):
         res_categories2 = defaultdict(list)
         table_order = [
             'OUGV1',
@@ -214,8 +220,9 @@ class OP2Writer(OP2_F06_Common):
             'OGS1',
         ]
         for table_type in obj.get_table_types():
-            if table_type in ['gpdt', 'eqexin']:
+            if table_type in ['gpdt', 'eqexin'] or table_type in skips:
                 continue
+
             res_dict = obj.get_result(table_type)
             for unused_key, res in res_dict.items():
                 if hasattr(res, 'table_name_str'): # params
@@ -227,8 +234,9 @@ class OP2Writer(OP2_F06_Common):
 
         total_case_count = 0
         pretables = ['LAMA', 'BLAMA', ] # 'CLAMA'
-        for unused_title, eigenvalue in obj.eigenvalues.items():
-            res_categories2[eigenvalue.table_name].append(eigenvalue)
+        if 'eigenvalues' not in skips:
+            for unused_title, eigenvalue in obj.eigenvalues.items():
+                res_categories2[eigenvalue.table_name].append(eigenvalue)
 
         for table_name in pretables + table_order:
             if table_name not in res_categories2:

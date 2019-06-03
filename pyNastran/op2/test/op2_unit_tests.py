@@ -279,17 +279,28 @@ class TestOP2(Tester):
     def test_beam_modes(self):
         """tests the eigenvalue table reading"""
         log = get_logger(level='warning')
-        f06_filename = os.path.abspath(os.path.join(
-            MODEL_PATH, 'beam_modes', 'model1_sim1-solution_1.test_op2.f06'))
-        op2_filename_m1 = os.path.abspath(os.path.join(
-            MODEL_PATH, 'beam_modes', 'beam_modes_m1.op2'))
-        op2_filename_m2 = os.path.abspath(os.path.join(
-            MODEL_PATH, 'beam_modes', 'beam_modes_m2.op2'))
+        dirname = os.path.abspath(os.path.join(
+            MODEL_PATH, 'beam_modes'))
+        f06_filename = os.path.join(dirname, 'model1_sim1-solution_1.test_op2.f06')
+        op2_filename_m1 = os.path.join(dirname, 'beam_modes_m1.op2')
+        op2_filename_m2 = os.path.join(dirname, 'beam_modes_m2.op2')
+
+        op2_filename_m1_out = os.path.join(dirname, 'beam_modes_m1_out.op2')
+        op2_filename_m2_out = os.path.join(dirname, 'beam_modes_m2_out.op2')
         op2_1 = read_op2(op2_filename_m1, debug=False, log=log)
-        unused_op2_2 = read_op2_geom(op2_filename_m2, debug=False, debug_file='temp.debug', log=log)
+        op2_2 = read_op2_geom(op2_filename_m2, debug=False, debug_file='temp.debug', log=log)
         op2_1.write_f06(f06_filename)
+
+        from pyNastran.op2.dev.op2_writer import OP2Writer
+        op2w_1 = OP2Writer(op2_1)
+        op2w_1.write_op2(op2_filename_m1_out, obj=op2_1, skips=['grid_point_weight']) #, is_mag_phase=False)
+
+        op2w_2 = OP2Writer(op2_2)
+        op2w_2.write_op2(op2_filename_m2_out, obj=op2_2, skips=['grid_point_weight']) #, is_mag_phase=False)
         os.remove(f06_filename)
         os.remove('temp.debug')
+        os.remove(op2_filename_m1_out)
+        os.remove(op2_filename_m2_out)
 
     def test_bdf_op2_elements_01(self):
         """tests a large number of elements and results in SOL 101"""
