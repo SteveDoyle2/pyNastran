@@ -592,6 +592,30 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=IS_PANDAS, log=log)
 
+
+    def test_cbar100(self):
+        """tests a CBAR-100 model"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_bar_100.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_bar_100.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log)
+        save_load_deck(model)
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=IS_PANDAS, log=log)
+
     def test_bdf_op2_other_01(self):
         """checks ofprand1.bdf"""
         log = get_logger(level='warning')
