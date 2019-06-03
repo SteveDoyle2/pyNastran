@@ -2,6 +2,7 @@
 import os
 from io import StringIO
 import numpy as np
+from cpylog import get_logger
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.delete_bad_elements import element_quality
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
@@ -9,6 +10,7 @@ from pyNastran.bdf.mesh_utils.convert import convert
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_breakdown
+from pyNastran.bdf.test.test_bdf import run_bdf as test_bdf
 
 try:
     import h5py
@@ -19,7 +21,8 @@ except ImportError:  # pragma: no cover
 def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                    run_convert=True, run_renumber=True, run_mirror=True,
                    run_save_load=True, run_quality=True, write_saves=True,
-                   run_save_load_hdf5=True, run_mass_properties=True, run_loads=True):
+                   run_save_load_hdf5=True, run_mass_properties=True, run_loads=True,
+                   run_test_bdf=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.validate()
     model.pop_parse_errors()
@@ -52,6 +55,13 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
     model2.pop_parse_errors()
     model2.get_bdf_stats()
     model2.write_bdf('model2.bdf')
+    if run_test_bdf:
+        folder = ''
+        log_error = get_logger(log=None, level='error', encoding='utf-8')
+        test_bdf(folder, 'model2.bdf', stop_on_failure=True,
+                 punch=punch,
+                 quiet=True, log=log_error)
+
     nelements = len(model2.elements) + len(model2.masses)
     nnodes = len(model2.nodes) + len(model2.spoints) + len(model2.epoints)
 

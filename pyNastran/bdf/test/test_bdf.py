@@ -286,8 +286,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
     if crash_cards is None:
         crash_cards = []
 
-    # TODO: why do we need this?
-    bdf_model = str(bdf_filename)
+    bdf_model = bdf_filename
     if not quiet:
         print("bdf_model = %s" % bdf_model)
     if is_folder:

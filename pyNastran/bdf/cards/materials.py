@@ -2372,7 +2372,7 @@ class MAT10(Material):
     _field_map = {
         1: 'mid', 2:'bulk', 3:'rho', 4:'c', 5:'ge', 6:'gamma',
     }
-
+    mp_name_map = {'RHO' : 'rho',}
     @classmethod
     def _init_from_empty(cls):
         mid = 1

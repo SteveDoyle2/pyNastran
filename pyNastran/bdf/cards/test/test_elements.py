@@ -194,7 +194,7 @@ class TestElements(unittest.TestCase):
 
         #model.pop_parse_errors()
         #model.cross_reference()
-        save_load_deck(model, run_convert=False, xref=False, run_renumber=False)
+        save_load_deck(model, run_convert=False, xref=False, run_renumber=False, run_test_bdf=False)
 
     def test_crac2d(self):
         model = BDF(debug=False)

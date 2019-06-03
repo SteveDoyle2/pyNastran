@@ -111,12 +111,18 @@ class PBEAM(IntegratedLineProperty):
             else:
                 raise NotImplementedError(pname_fid)
 
-            if pname_fid.startswith('I1'):
+            if pname_fid.startswith('I12'):
+                self.i12[i] = value
+                word = 'I12'
+            elif pname_fid.startswith('I1'):
                 self.i1[i] = value
                 word = 'I1'
             elif pname_fid.startswith('I2'):
                 self.i2[i] = value
                 word = 'I2'
+            elif pname_fid.startswith('J'):
+                self.j[i] = value
+                word = 'J'
             elif pname_fid.startswith('A'):
                 self.A[i] = value
                 word = 'A'
@@ -145,13 +151,14 @@ class PBEAM(IntegratedLineProperty):
                 self.f2[i] = value
                 word = 'F2'
             else:
-                msg = "property_type='PBEAM' has not implemented %r in pname_map; word=%r" % (
-                    pname_fid, word)
+                msg = "property_type='PBEAM' has not implemented %r in pname_map" % (
+                    pname_fid)
                 raise NotImplementedError(msg)
 
             expected_word = word + end
             if pname_fid != expected_word:
-                raise RuntimeError('%r is invalid' % expected_word)
+                raise RuntimeError('pname_fid=%r expected_word=%r is invalid' % (
+                    pname_fid, expected_word))
         else:
             msg = "property_type='PBEAM' has not implemented %r in pname_map; type=%s" % (
                 pname_fid, type(pname_fid))

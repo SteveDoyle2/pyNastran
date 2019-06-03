@@ -166,7 +166,7 @@ class TestBars(unittest.TestCase):
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_cbar_g0(self):
         """modification of test_cbeam_01"""
@@ -188,8 +188,8 @@ class TestBars(unittest.TestCase):
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
         model.add_grid(10, [0., 0., 0.])
-        model.add_grid(20, [0., 0., 0.])
-        model.add_grid(30, [0., 1., 0.])
+        model.add_grid(20, [0., 1., 0.])
+        model.add_grid(30, [0., 2., 0.])
         model.cross_reference()
 
         save_load_deck(model)
@@ -265,7 +265,7 @@ class TestBars(unittest.TestCase):
         x = [0.2, 0.4, 0.6, 0.8]
         model.add_cbarao(eid, scale, x, comment='cbarao')
         model.add_card(['CBARAO', eid+1, 'RF', 6, 0.1, 0.2], 'CBARAO')
-        save_load_deck(model, run_quality=False, run_save_load_hdf5=True)
+        save_load_deck(model, run_quality=False, run_test_bdf=False)
 
     def test_bar_mass_1(self):
         """tests CBAR/PBAR mass"""

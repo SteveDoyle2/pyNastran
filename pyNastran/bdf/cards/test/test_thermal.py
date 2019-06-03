@@ -202,7 +202,8 @@ class TestThermal(unittest.TestCase):
         bdf_filename2.seek(0)
         model2 = read_bdf(bdf_filename2, xref=False, log=log, debug=False)
         model2.safe_cross_reference()
-        save_load_deck(model, punch=False, run_convert=False, run_renumber=False)
+        save_load_deck(model, punch=False, run_convert=False, run_renumber=False,
+                       run_test_bdf=False)
 
 
 if __name__ == '__main__':

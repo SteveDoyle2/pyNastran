@@ -1283,7 +1283,7 @@ class TestAero(unittest.TestCase):
 
         read_bdf(bdf_filename, xref=False, punch=True, debug=False)
         model.safe_cross_reference()
-        save_load_deck(model, run_convert=False, run_renumber=False, run_save_load_hdf5=True)
+        save_load_deck(model, run_convert=False, run_renumber=False, run_test_bdf=False)
 
 
         #caero5.raw_fields()
@@ -2225,7 +2225,8 @@ class TestAero(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
-                       run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False)
+                       run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
+                       run_test_bdf=False)
         with self.assertRaises(NotImplementedError):
             model.zona.convert_to_nastran()
 
@@ -2237,7 +2238,8 @@ class TestAero(unittest.TestCase):
         model.safe_cross_reference()
         save_load_deck(model, xref='safe',
                        run_renumber=False, run_convert=False, run_remove_unused=False,
-                       run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False)
+                       run_save_load=False, run_save_load_hdf5=False, run_mass_properties=False,
+                       run_test_bdf=False)
         model.zona.convert_to_nastran()
 
     def test_zona_3(self):

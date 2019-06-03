@@ -48,6 +48,9 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
         'PCOMPS', 'PVISC',
         'PSHELL', 'PCOMP', 'PCOMPG', 'PSHEAR',
 
+        # Nastran 95
+        'PIHEX',
+
         # lines - should be included
         'PBEND', # 'PBEAM3',
     ]
@@ -129,6 +132,9 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
         'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
         'PFAST', 'PGAP', 'PRAC2D', 'PRAC3D', 'PCONEAX', 'PLSOLID',
         'PCOMPS', 'PVISC', 'PBCOMP', 'PBEND',
+
+        # Nastran 95
+        'PIHEX',
 
         # lines - should be included
         'PBEND', # 'PBEAM3',
@@ -258,7 +264,7 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
                 elem = model.elements[eid]
                 volumei = elem.Volume()
                 volumes.append(volumei)
-        elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID']:
+        elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID', 'PIHEX']:
             for eid in eids:
                 elem = model.elements[eid]
                 if elem.type in ['CTETRA', 'CPENTA', 'CHEXA']:
@@ -405,7 +411,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
                 #massi = elem.Mass()
                 #volumes.append(massi)
 
-        elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID']:
+        elif prop.type in ['PSOLID', 'PCOMPS', 'PLSOLID', 'PIHEX']:
             rho = prop.Rho()
             for eid in eids:
                 elem = model.elements[eid]

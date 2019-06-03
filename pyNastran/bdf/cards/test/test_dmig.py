@@ -434,7 +434,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         #dmi = model.add_dmi(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi,
                             #reals, Complex=None, comment='dmi')
 
-        save_load_deck(model)
+        save_load_deck(model, run_test_bdf=False)
 
     def test_dmig_13(self):
         """tests the add card method with a complex DMIG"""

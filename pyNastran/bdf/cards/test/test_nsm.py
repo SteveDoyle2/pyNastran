@@ -184,7 +184,7 @@ class TestNsm(unittest.TestCase):
             #print('mass[%s] = %s' % (nsm_id, mass))
             #print('----------------------------------------------')
 
-        model2 = save_load_deck(model)
+        model2 = save_load_deck(model, run_test_bdf=False)
         model2.reset_rslot_map()
         #print(model2._type_to_slot_map)
         model2.elements = {}

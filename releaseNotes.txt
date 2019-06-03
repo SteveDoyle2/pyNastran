@@ -49,6 +49,9 @@ Solver
 -----------------------v???   released 2019/?/??-----------------------
 BDF:
  - bug fixes:
+   - added AECOMPL, DEFORM to bdf attributes
+   - added I12, J to PBEAM updater; fixed error message
+   - added RHO to MAT10 updater
  - enhancements:
    - added deck guessing with punch=None
    - PBARL & PBEAML DBOX now has defaults for DIM5-DIM10

@@ -973,7 +973,7 @@ class TestShells(unittest.TestCase):
 
         model.uncross_reference()
         model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_test_bdf=False)
         #model.mass_properties()
 
     def test_shear(self):
@@ -1195,7 +1195,7 @@ class TestShells(unittest.TestCase):
 
         model.cross_reference()
         model.pop_xref_errors()
-        save_load_deck(model)
+        save_load_deck(model, run_test_bdf=False)
 
     def test_shell_mcid(self):
         """tests that mcids=0 are correctly identified as not 0.0 and thus not dropped"""

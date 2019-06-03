@@ -541,6 +541,9 @@ class CBEAM(LineElement):
 
         """
         #TODO: not integrated with CBAR yet...
+        if self.bit is not None:
+            print(self.get_stats())
+            return False, None
 
         check_offt(self)
         is_failed = True

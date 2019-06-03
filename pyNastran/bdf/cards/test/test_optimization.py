@@ -199,11 +199,24 @@ class TestOpt(unittest.TestCase):
         """tests a DLINK"""
         model = BDF(debug=False)
         oid = 10 # optimization id
-        ddvid = 11 # dlink id?
+        dvid = 11 # dlink id?
         IDv = [20, 21, 22]
         Ci = [1.0, 1.0, 1.0]
-        dlink = model.add_dlink(oid, ddvid, IDv, Ci, c0=0., cmult=1.,
+        dlink = model.add_dlink(oid, dvid, IDv, Ci, c0=0., cmult=1.,
                                 comment='dlink')
+
+        xinit = 0.1
+
+        desvar_id = 11
+        model.add_desvar(desvar_id, 'DV1', xinit, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
+
+        desvar_id = 20
+        model.add_desvar(desvar_id, 'DV1', xinit, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
+        desvar_id = 21
+        model.add_desvar(desvar_id, 'DV1', xinit, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
+        desvar_id = 22
+        model.add_desvar(desvar_id, 'DV1', xinit, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
+
         dlink.raw_fields()
         dlink.comment = ''
         msg = dlink.write_card(size=8)
@@ -648,12 +661,20 @@ class TestOpt(unittest.TestCase):
 
     def test_dvgrid(self):
         """tests DVGRID"""
-        dvid = 1
+        desvar_id = 1
         nid = 2
         dxyz = [1., 2., 3.]
         cid = 1
         model = BDF(debug=False)
-        dvgrid = model.add_dvgrid(dvid, nid, dxyz, cid=cid, coeff=1.0, comment='')
+        dvgrid = model.add_dvgrid(desvar_id, nid, dxyz, cid=cid, coeff=1.0, comment='')
+        model.add_grid(nid, [0., 0., 0.])
+
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        model.add_cord2r(cid, origin, zaxis, xzplane)
+        xinit = 0.1
+        model.add_desvar(desvar_id, 'DV1', xinit, xlb=-1e20, xub=1e20, delx=None, ddval=None, comment='')
         dvgrid.raw_fields()
         model.pop_parse_errors()
         model.cross_reference()
