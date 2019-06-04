@@ -367,13 +367,14 @@ class OP2_F06_Common:
 
         self.cgap_force = {}
 
-        #self.solidPressureForces = {}
+        # solidPressureForces
         self.chexa_pressure_force = {}
         self.cpenta_pressure_force = {}
         self.ctetra_pressure_force = {}
 
         self.cvisc_force = {}
 
+        # VU force
         self.vu_quad_force = {}
         self.vu_tria_force = {}
 
@@ -388,7 +389,7 @@ class OP2_F06_Common:
         self.chbdyg_thermal_load_flux = {}
         self.chbdyp_thermal_load_flux = {}
 
-        #self.thermalLoad_1D = {}
+        #self.thermalLoad_1D
         self.crod_thermal_load = {}
         self.cbeam_thermal_load = {}
         self.ctube_thermal_load = {}
@@ -402,7 +403,7 @@ class OP2_F06_Common:
         self.cbar_thermal_load_flux = {}
         self.cbend_thermal_load_flux = {}
 
-        #self.thermalLoad_2D_3D = {}
+        #self.thermalLoad_2D_3D
         self.cquad4_thermal_load = {}
         self.ctriax6_thermal_load = {}
         self.cquad8_thermal_load = {}
@@ -486,7 +487,7 @@ class OP2_F06_Common:
 
         #: OPG - summation of loads for each element
         self.load_vectors = {}       # OPG1; tCode=2  thermal=0
-        self.load_vectors_v = {}     # OPGV!
+        self.load_vectors_v = {}     # OPGV1
         self.thermal_load_vectors = {}  # tCode=2  thermal=1
         self.applied_loads = {}       # tCode=19 thermal=0
         self.force_vectors = {}       # tCode=12 thermal=0
@@ -967,7 +968,7 @@ class OP2_F06_Common:
         else:
             for table_type in table_types:
                 table = self.get_result(table_type)
-                if table_type in ['params']:
+                if table_type == 'params':
                     msg.extend(_write_params(self.params))
                     continue
                 elif table_type in ['gpdt', 'eqexin']:

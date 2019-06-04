@@ -1,0 +1,81 @@
+ID MSC, CC188B $  GKN/MAR   7-NOV-1985
+TIME    10 $ MINUTES
+SOL     66 $ NONLINEAR STATIC   D01=SCRATCH
+CEND
+TITLE=GEOMETRIC NON-LINEAR BEAM                                CC188B
+  ECHO  = UNSORT
+  SEALL = ALL
+  LOAD  = 202 $ 8.+4
+  NLPAR = 301
+OUTPUT
+  DISPL = ALL
+  SPCFO = ALL
+  ELFOR = ALL
+  ELSTR = ALL
+  STRAIN = ALL
+BEGIN BULK
+PARAM,POST,-1
+CORD2R  1000            0.      0.      0.      1.      3.      5.      +C3
++C3     7.      9.      11.
+GRDSET          1000                            1000
+LOAD    201     1.      7.+4    200
+LOAD    202     1.      8.+4    200
+LOAD    203     1.      9.+4    200
+NLPARM  301     1               ITER    5       30      P       YES
+PARAM   NEWSEQ  -1
+PARAM   LGDISP  1
+GRID    101             0.              0.              123456
+GRID    102             20.             5.              12456
+CROD    101     1       101     102
+PROD    1       1       36.
+MAT1    1       1.+6            0.3             1.-4    0.              +M1
++M1     1.+4    1.+4
+FORCE   200     102     1000    1.                      -1.
+GRID    201             0.              0.              1234
+GRID    202             20.             5.              12
+CBEAM   201     2       201     202                     1.
+PBCOMP  2       2       36.                             500.            +P2A
++P2A                                                    1               +P2B
++P2B    0.      2.82843 .0625   2       YES                             +P2C
++P2C    2.0     2.0     .125                                            +P2D
++P2D    2.82843 0.0     .0625
+MAT1    2       1.+6            0.3                                     +M2
++M2     1.+4    1.+4
+FORCE   200     202     1000    1.                      -1.
+GRID    301             0.              0.              123456
+GRID    302             20.             5.              12456
+CTUBE   301     3       301     302
+PTUBE   3       3       6.7702753.385
+MAT1    3       1.+6            0.3             1.-4    0.              +M3
++M3     1.+4    1.+4
+FORCE   200     302     1000    1.                      -1.
+GRID    1001            0.              0.              123456
+GRID    1002            20.             5.              12456
+CONROD  1001    1001    1002    10      36.
+MAT1    10      1.+6            0.3             1.-4    0.              +M10
++M10    1.+4    1.+4
+FORCE   200     1002    1000    1.                      -1.
+GRID    3301            0.      -7.5    0.              1236
+GRID    3302            20.     -7.5    5.              126
+GRID    3303            20.     +7.5    5.              16
+GRID    3304            0.      +7.5    0.              136
+CQUAD4  3301    33      3301    3302    3303    3304
+PSHELL  33      33      2.4     33
+MAT1    33      1.+6            0.3             1.-4    0.              +M33
++M33    1.+4    1.+4
+FORCE   200     3302    1000    1.                      -.5
+FORCE   200     3303    1000    1.                      -.5
+GRID    3801            0.              0.              123456
+GRID    3802            20.             5.              12456
+CGAP    3801    38      3801    3802                    1.
+PGAP    38      .2061553360000.0349251.31746257.0.0
+FORCE   200     3802    1000    1.                      -1.
+GRID    7401            0.      -7.5    0.              1236
+GRID    7402            20.     -7.5    5.              126
+GRID    7403            0.      +7.5    0.              136
+CTRIA3  7401    74      7401    7402    7403
+PSHELL  74      74      2.4     74
+MAT1    74      1.+6            0.3             1.-4    0.              +M74
++M74    1.+4    1.+4
+FORCE   200     7402    1000    1.                      -.5
+ENDDATA

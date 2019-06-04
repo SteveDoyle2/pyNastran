@@ -1264,7 +1264,6 @@ class OP2(OP2_Scalar):
                                              icd_transform, coords, xyz_cid0, self.log)
 
         self.log.debug('-----------')
-        return
 
 
 def main():  # pragma: no cover
@@ -1309,12 +1308,12 @@ def main():  # pragma: no cover
     # get all the nodes for element 1
     ielem1 = solid_stress.getElementIndex([1])
     # [itransient, elem*node, oxx/oyy, etc.]
-    datai = data[0, ielem1, :]
+    unused_datai = data[0, ielem1, :]
 
     # get all the nodes for element 1
     ielem1 = solid_stress.getElementIndex([1])
     # [itransient, elem*node, oxx/oyy, etc.]
-    datai = data[0, ielem1, :]
+    unused_datai = data[0, ielem1, :]
 
     # get all the nodes for element 4 and 5
     ielem45 = solid_stress.getElementIndex([[1, 4, 5]])

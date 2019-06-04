@@ -90,9 +90,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
         points_list = []
 
         bar_types = {
-            # PBAR
-            'bar' : [],
-
             # PBEAML/PBARL
             "ROD": [],
             "TUBE": [],
@@ -116,8 +113,9 @@ class NastranGeometryHelper(NastranGuiAttributes):
             "HAT1": [],
             "DBOX": [],  # was 12
 
-            # PBEAM
-            'beam' : [],
+            'bar' : [], # PBAR
+            'beam' : [], # PBEAM
+            'pbcomp' : [], # PBCOMP
 
             # PBEAML specfic
             "L" : [],
@@ -125,7 +123,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
         allowed_types = [
             'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
             'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
-            'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z', 'bar', 'beam',
+            'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z',
+            'bar', 'beam', 'pbcomp',
         ]
 
         # bar_types['bar'] = [ [...], [...], [...] ]
@@ -345,11 +344,15 @@ def _get_bar_type(ptype, pid_ref):
     """helper method for _get_bar_yz_arrays"""
     if ptype in ['PBAR', 'PBEAM']:
         bar_type = 'bar'
-    elif ptype in ['PBEAM']:
-        bar_type = 'beam'
+    #if ptype == 'PBAR':
+        #bar_type = 'pbar'
+    #elif ptype == 'PBEAM':
+        #bar_type = 'pbeam'
     elif ptype in ['PBARL', 'PBEAML']:
         bar_type = pid_ref.Type
-    else:
+    elif ptype == 'PBCOMP':
+        bar_type = 'pbcomp'
+    else:  # pragma: no cover
         raise NotImplementedError(pid_ref)
     return bar_type
 

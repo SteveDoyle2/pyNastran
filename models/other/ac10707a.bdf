@@ -1,0 +1,85 @@
+ID MSC, AC10707A $ KLK 13-MAR-1996 V69
+SOL 107 $ COMPLEX FREQUENCY RESPONSE
+TIME 100
+DIAG 8,12 $ PRINT EXTRA STUFF
+CEND
+TITLE=RECT.VOLUME (1X1X1)-3 SIDES FIXED,MODAL REDUCTION ON BOT AC10707A
+SUBTITLE= FLUID-STRUCTURE INTERACTION,4TH SIDE ON BEAM ON ELAST. FOUND.
+LABEL= RESIDUAL ONLY- DYNAMIC LOADING-MODAL FREQ. RESP.
+FREQ=200
+PARAM,USETPRT,0
+PARAM,DDRMM,-1
+DISP(SORT2)=ALL
+STRESS = ALL
+STRAIN = ALL
+FORCE = ALL
+SPC =1313
+CMETHOD=99
+BEGIN BULK
+param,gfl,.1
+cmass2,941,.0001,941,3
+cmass2,945,.0001,945,3
+cmass2,961,.0001,961,3
+cmass2,965,.0001,965,3
+eigc,99,hess,,,,,32
+param,coupmass,1
+FREQ1   200     0.0     1.0     100
+EIGC    10      CLAN    MAX                     1.E-12
+        0.0     0.0                                     5
+        0.0      5.0                                    5
+        0.0     10.0                                    5
+        5.0      5.0                                    5
+        0.0     20.0                                    5
+        20.0    10.0                                    5
+        10.0    10.0                                    5
+EIGR    30      GIV                             50
+GRID    41              0.0     0.0     0.0
+GRID    45              1.0     0.0     0.0
+GRID    61              0.0     0.20    0.0
+GRID    65              1.0     0.20    0.0
+grid    941             0.0     0.0     0.01    
+grid    945             1.0     0.0     0.01    
+grid    961             0.0     0.2     0.01    
+grid    965             1.0     0.2     0.01    
+chacab,99,11,41,45,65,61,941,945
+,965,961
+pacabs  11              101     102     103     1.      500.
+tabled1 101
+        50.0    8.24    60.     7.32    70.     7.1     80.     5.6
+        90.     5.38    100.    4.88    200.    3.2     300.    2.65
+        400.    1.98    500.    1.22    endt
+tabled1 102
+        50.0    -21.02  60.     -22.67  70.     -19.72  80.     -16.91
+        90.     -14.14  100.    -12.67  200.    -6.27   300.    -4.25
+        400.    -3.51   500.    -2.36   endt
+tabled1 103
+        50.0    1.0     60.     1.0     70.     1.0     80.     1.0
+        90.     1.0     100.    1.0     200.    1.0     300.    1.0
+        400.    1.0     500.    1.0     endt
+CQUAD4  100     4444    41      45      65      61
+PSHELL  4444    77      .05     77      1.0
+MAT1    77      100.            .333    1.000
+GRID    200             0.0     0.2     0.01    -1
+GRID    204             1.0     0.2     .01     -1
+GRID    220             0.0     0.2     1.0     -1
+GRID    224             1.0     0.2     1.0     -1
+GRID    100             0.0     0.0     0.01    -1
+GRID    104             1.0     0.0     .01     -1
+GRID    120             0.0     0.0     1.0     -1
+GRID    124              1.0    0.0     1.0     -1
+CHEXA   1000    15      100     104     124     120     200     204
+        224     220
+PSOLID  15      25                              1       PFLUID
+MAT10   25      1.      0.1
+CELAS2  1007    .25     61      3
+CELAS2  1008    .25     65      3
+CELAS2  1009    .25     41      3
+CELAS2  1010    .25     45      3
+SPC1    1313    1246    41      THRU    65
+SPC1    1313    5       41      61      65      45
+acmodl  ident   ALL     1111    3333    .001
+set1    1111    100     thru    224
+set1    2222    1       thru    65      941     thru    965
+set1    3333    941     thru    965
+PARAM,POST,-1
+ENDDATA

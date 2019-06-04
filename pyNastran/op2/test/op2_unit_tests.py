@@ -654,6 +654,78 @@ class TestOP2(Tester):
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
 
+    def test_bdf_op2_other_02(self):
+        """checks ac10707a.bdf, which is an acoustic problem"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'ac10707a.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'ac10707a.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, xref=False, log=log)
+        model.safe_cross_reference()
+        save_load_deck(model)
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=IS_PANDAS, log=log)
+
+    def test_bdf_op2_other_03(self):
+        """checks ac10901a.bdf, which is an acoustic problem"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'ac10901a.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'ac10901a.op2')
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        #model = read_bdf(bdf_filename, debug=False, xref=False, log=log)
+        #model.safe_cross_reference()
+        #save_load_deck(model)
+
+        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
+
+    def test_bdf_op2_other_04(self):
+        """checks v10111.bdf, which is an conical problem"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10111.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'v10111.op2')
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        #model = read_bdf(bdf_filename, debug=False, log=log)
+        #model.safe_cross_reference()
+        #save_load_deck(model)
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=IS_PANDAS, log=log)
+
     def test_set_results(self):
         """tests setting only a subset of results"""
         log = get_logger(level='warning')
@@ -1855,6 +1927,29 @@ class TestOP2(Tester):
 
         assert os.path.exists(debug_file), os.listdir(os.path.dirname(op2_filename))
         os.remove(debug_file)
+
+    def test_cgap_01(self):
+        """checks cc188b.bdf"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'cc188b.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'cc188b.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log)
+        save_load_deck(model)
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=IS_PANDAS, log=log)
 
     @unittest.expectedFailure
     def test_set_times_01(self):

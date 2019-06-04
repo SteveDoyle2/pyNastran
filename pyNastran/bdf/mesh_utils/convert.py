@@ -369,8 +369,16 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             elem.A *= area_scale # area
             elem.nsm *= nsm_bar_scale
         elif elem_type == 'CGAP':
-            if elem.x is not None:  # vector
+            if elem.g0 is None and None in elem.x:
+                pass
+            elif elem.x is not None:  # vector
                 elem.x = [x*xyz_scale for x in elem.x]
+
+            #g0 = None
+            #x = [None, None, None]
+            #if elem.g0 is None and :  # vector
+                #print(elem.get_stats())
+                #elem.x = [x*xyz_scale for x in elem.x]
 
         elif elem_type == 'CBAR':
             if elem.x is not None:  # vector
@@ -670,8 +678,8 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
 
             #: transverse stiffness of closed gap
             prop.kt *= stiffness_scale
-        elif prop_type == 'PBEND':
-            model.log.warning('skipping PBEND convert')
+        elif prop_type in ['PBEND', 'PBCOMP']:
+            model.log.warning('skipping %s convert' % prop_type)
         else:
             raise NotImplementedError(prop_type)
 
@@ -813,6 +821,8 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             #mat.a3 = a3
             mat.tref *= temp_scale
             #mat.ge = ge
+        elif mat.type == 'MAT10':
+            model.log.warning('skipping %s convert' % mat.type)
         else:
             raise NotImplementedError(mat)
 

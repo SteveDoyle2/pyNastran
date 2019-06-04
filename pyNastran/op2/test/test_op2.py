@@ -371,6 +371,8 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         #pass
     #except ValueError:
         #pass
+    #except IndexError:
+        #pass
     #except FortranMarkerError:
         #pass
     except IOError: # missing file; this block should be uncommented
