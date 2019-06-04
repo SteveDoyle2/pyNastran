@@ -837,7 +837,10 @@ def run_fem2(bdf_model, out_model, xref, punch,
 
     if mesh_form is not None:
         fem2.write_bdf(out_model_2, interspersed=False, size=size, is_double=is_double)
-        os.remove(out_model_2)
+        try:
+            os.remove(out_model_2)
+        except PermissionError:  # pragma: no cover
+            fem2.log.warning('cannot remove %s due to a permissions error' % out_model_2)
     #fem2.write_as_ctria3(out_model_2)
     return fem2
 

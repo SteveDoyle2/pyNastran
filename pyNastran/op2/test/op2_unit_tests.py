@@ -1949,7 +1949,7 @@ class TestOP2(Tester):
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=IS_PANDAS, log=log)
+                build_pandas=False, log=log)
 
     @unittest.expectedFailure
     def test_set_times_01(self):
