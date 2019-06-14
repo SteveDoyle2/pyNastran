@@ -527,10 +527,10 @@ def _bar_areaL(class_name, beam_type, dim, prop):
         #k2 = 2 * tf * bf / A
         #zna = zc + zs
         hweb = dim2 - 2 * tf
-        A1 = 2 * tf * bf + hweb * tweb
+        A1 = 2 * tf * dim1 + hweb * tweb
 
         #A2 = 2. * bf * tf + (dim2 - 2. * dim4) * tweb
-        A2 = 2. * tf * bf + (dim2 - 2. * dim4) * tweb
+        A2 = 2. * tf * dim1 + (dim2 - 2. * dim4) * tweb
         A0 = A1
         assert np.allclose(A0, A2), 'A0=%s A1=%s A2=%s' % (A0, A2, A2)
         assert np.allclose(A1, A2), 'A0=%s A1=%s A2=%s' % (A0, A1, A2)
