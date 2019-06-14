@@ -71,7 +71,8 @@ class RealBush1DStressArray(OES_Object):
         self.is_built = True
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
-            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
+            #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements,
+            #self.ntotal))
         dtype = 'float32'
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
@@ -113,14 +114,14 @@ class RealBush1DStressArray(OES_Object):
                         t2 = table.data[itime, ieid, :]
                         #i_not_nan = np.isnp.where(t1 != np.nan)[0]
                         i_not_nan = np.isfinite(t1)
-                        (axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1) = t1
-                        (axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2) = t2
+                        (axial_stress1, equiv_stress1, total_strain1, eff_plastic_creep_strain1, eff_creep_strain1, linear_torsional_stress1) = t1
+                        (axial_stress2, equiv_stress2, total_strain2, eff_plastic_creep_strain2, eff_creep_strain2, linear_torsional_stress2) = t2
                         if not np.allclose(t1[i_not_nan], t2[i_not_nan]):
                         #if not np.array_equal(t1, t2):
                             msg += '%s\n  (%s, %s, %s, %s, %s, %s)\n  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid,
-                                axial_stress1, equiv_stress1, total_strain1, effective_plastic_creep_strain1, effective_creep_strain1, linear_torsional_stress1,
-                                axial_stress2, equiv_stress2, total_strain2, effective_plastic_creep_strain2, effective_creep_strain2, linear_torsional_stress2)
+                                axial_stress1, equiv_stress1, total_strain1, eff_plastic_creep_strain1, eff_creep_strain1, linear_torsional_stress1,
+                                axial_stress2, equiv_stress2, total_strain2, eff_plastic_creep_strain2, eff_creep_strain2, linear_torsional_stress2)
                             i += 1
                         if i > 10:
                             print(msg)
@@ -214,12 +215,16 @@ class RealBush1DStressArray(OES_Object):
             plastic_strain = self.data[itime, :, 5]
             is_failed = self.is_failed[itime, :, 0]
 
-            for (i, eid, element_forcei, axial_displacementi, axial_velocityi, axial_stressi, axial_straini, plastic_straini, is_failedi) in zip(
-                count(), eids, element_force, axial_displacement, axial_velocity, axial_stress, axial_strain, plastic_strain, is_failed):
+            for (i, eid, element_forcei, axial_displacementi, axial_velocityi, axial_stressi,
+                 axial_straini, plastic_straini, is_failedi) in zip(
+                    count(), eids, element_force, axial_displacement, axial_velocity,
+                    axial_stress, axial_strain, plastic_strain, is_failed):
 
-                vals = [element_forcei, axial_displacementi, axial_velocityi, axial_stressi, axial_straini, plastic_straini, is_failedi]
+                vals = [element_forcei, axial_displacementi, axial_velocityi, axial_stressi,
+                        axial_straini, plastic_straini, is_failedi]
                 vals2 = write_floats_13e(vals)
-                [element_forcei, axial_displacementi, axial_velocityi, axial_stressi, axial_straini, plastic_straini, is_failedi] = vals2
+                [element_forcei, axial_displacementi, axial_velocityi, axial_stressi,
+                 axial_straini, plastic_straini, is_failedi] = vals2
                 f06_file.write(
                     '0%8i   %-13s  %-13s  %-13s  %-13s  %-13s  %-13s  %s\n'
                     % (eid, element_forcei, axial_displacementi, axial_velocityi, axial_stressi,

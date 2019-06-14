@@ -153,23 +153,27 @@ class LoadCombination(BaseCard):
         supported_loads = [
             'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'GRAV', 'SPCD', 'GMLOAD',
-            'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2', 'PLOADX1',
+            'RLOAD1', 'RLOAD2', 'TLOAD1', 'TLOAD2', 'PLOADX1', 'LOAD',
             'RFORCE', 'RFORCE1', #'RFORCE2'
             'ACCEL', 'ACCEL1', 'SLOAD', 'ACSRCE',
         ]
         for loads in self.load_ids_ref:
+            load_idsi = []
             for load in loads:
                 if isinstance(load, integer_types):
                     load_ids.append(load)
-                elif load.type == 'LOAD':
-                    load_ids.append(load.sid)
+                #elif load.type == 'LOAD':
+                    #load_ids.append(load.sid)
                 elif load.type in supported_loads:
-                    load_ids.append(load.sid)
+                    load_idsi.append(load.sid)
                 else:
                     msg = ('The get_load_ids method doesnt support %s cards.\n'
                            '%s' % (load.__class__.__name__, str(load)))
                     raise NotImplementedError(msg)
-                break
+
+                load_idi = list(set(load_idsi))
+                assert len(load_idi) == 1, load_idsi
+            load_ids.append(load_idi[0])
         return load_ids
 
     def get_loads(self):
@@ -352,6 +356,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.lid = self.Lid()
         self.tid = self.Tid()
         self.lid_ref = None
@@ -466,6 +471,7 @@ class LOADCYN(Load):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def safe_cross_reference(self, model, xref_errors):
@@ -620,6 +626,7 @@ class DAREA(BaseCard):
         self.nodes_ref = nids2
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes_ref = None
 
     @property
@@ -787,6 +794,7 @@ class SPCD(Load):
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -909,6 +917,7 @@ class DEFORM(Load):
         self.eid_ref = model.safe_element(self.eid, self.sid, xref_errors, msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.eid = self.Eid()
         self.eid_ref = None
 
@@ -1055,6 +1064,7 @@ class SLOAD(Load):
         #self.nodes_ref = model.safe_empty_nodes(self.nodes, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -1235,6 +1245,7 @@ class RFORCE(Load):
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nid = self.Nid()
         self.cid = self.Cid()
         self.nid_ref = None
@@ -1418,6 +1429,7 @@ class RFORCE1(Load):
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nid = self.node_id
         self.cid = self.Cid()
         self.nid_ref = None

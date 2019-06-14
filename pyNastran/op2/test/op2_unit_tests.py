@@ -726,6 +726,54 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=IS_PANDAS, log=log)
 
+    def test_bdf_op2_other_05(self):
+        """checks ar29sadl.bdf, which is an CBUSH1D problem"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'ar29sadl.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'ar29sadl.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log)
+        model.safe_cross_reference()
+        save_load_deck(model)
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=IS_PANDAS, log=log)
+
+    def test_bdf_op2_other_06(self):
+        """checks randvar2.bdf, which is an CTRIAX problem"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'randvar2.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'randvar2.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log)
+        model.safe_cross_reference()
+        #save_load_deck(model)
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=IS_PANDAS, log=log)
+
     def test_set_results(self):
         """tests setting only a subset of results"""
         log = get_logger(level='warning')

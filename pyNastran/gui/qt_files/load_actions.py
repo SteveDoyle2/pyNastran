@@ -6,9 +6,11 @@ import time as time_module
 import numpy as np
 from qtpy.compat import getopenfilename
 from qtpy.QtWidgets import QFileDialog
+from pyNastran.bdf.patran_utils.read_patran_custom_results import load_patran_nod
+from pyNastran.utils import print_bad_path
+
 from pyNastran.gui.utils.load_results import load_csv, load_deflection_csv
 from pyNastran.gui.utils.load_results import create_res_obj
-from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 
 
@@ -447,7 +449,6 @@ class LoadActions:
 
     def load_patran_nod(self, nod_filename):
         """reads a Patran formatted *.nod file"""
-        from pyNastran.bdf.patran_utils.read_patran import load_patran_nod
         A, fmt_dict, headers = load_patran_nod(nod_filename, self.gui.node_ids)
 
         out_filename_short = os.path.relpath(nod_filename)

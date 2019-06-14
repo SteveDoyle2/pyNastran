@@ -1,3 +1,15 @@
+"""
+defines:
+ - collapse_thru_by(fields, get_packs=False)
+ - collapse_thru_by_float(fields)
+ - collapse_thru(fields, nthru=None)
+ - collapse_thru_packs(fields)
+ - collapse_colon_packs(fields, thru_split=3)
+ - condense(value_list)
+ - build_thru_packs(packs, max_dv=1, thru_split=3)
+ - build_thru(packs, max_dv=None, nthru=None)
+ - build_thru_float(packs, max_dv=None)
+"""
 from collections import Counter
 
 

@@ -107,6 +107,7 @@ class CompositeShellProperty(Property):
             model.log.warning(msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mids_ref = None
 
     def is_symmetrical(self):
@@ -1550,6 +1551,7 @@ class PLPLANE(Property):
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.cid = self.Cid()
         self.mid_ref = None
@@ -1658,6 +1660,7 @@ class PPLANE(Property):
         self.mid_ref = model.Material(self.mid, msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1830,6 +1833,7 @@ class PSHEAR(Property):
         self.mid_ref = model.Material(self.mid, msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -2395,6 +2399,7 @@ class PSHELL(Property):
                 model.log.warning(msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid1 = self.Mid1()
         self.mid2 = self.Mid2()
         self.mid3 = self.Mid3()

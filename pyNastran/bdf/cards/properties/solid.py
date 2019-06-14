@@ -136,6 +136,7 @@ class PLSOLID(Property):
         self.mid_ref = model.HyperelasticMaterial(self.mid, msg) # MATHP, MATHE
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -297,6 +298,7 @@ class PCOMPS(Property):
             self.mids_ref.append(mid_ref)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mids_ref = None
 
     def raw_fields(self):
@@ -588,6 +590,7 @@ class PSOLID(Property):
         self.mid_ref = model.Material(self.mid, msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 

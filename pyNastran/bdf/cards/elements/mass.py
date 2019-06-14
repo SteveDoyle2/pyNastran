@@ -200,6 +200,7 @@ class CMASS1(PointMassElement):
             model.log.warning(missing_nodes)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = [self.G1(), self.G2()]
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -482,6 +483,7 @@ class CMASS2(PointMassElement):
             model.log.warning(missing_nodes)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = [self.G1(), self.G2()]
         self.nodes_ref = None
 
@@ -636,6 +638,7 @@ class CMASS3(PointMassElement):
         self.pid_ref = model.PropertyMass(self.pid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         self.nodes_ref = None
         self.pid_ref = None
@@ -785,6 +788,7 @@ class CMASS4(PointMassElement):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = [self.S1(), self.S2()]
         self.nodes_ref = None
 
@@ -1073,6 +1077,7 @@ class CONM1(PointMassElement):
         self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg='')
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nid = self.Nid()
         self.cid = self.Cid()
         self.nid_ref = None
@@ -1526,6 +1531,7 @@ class CONM2(PointMassElement):
             self.cid_ref = model.safe_coord(cid, self.eid, xref_errors, msg='')
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nid = self.Nid()
         self.cid = self.Cid()
         self.nid_ref = None

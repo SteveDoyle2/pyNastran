@@ -126,6 +126,7 @@ class QVOL(ThermalLoad):
             raise
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.elements = self.element_ids
         self.elements_ref = None
 
@@ -297,6 +298,7 @@ class QVECT(ThermalLoad):
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.eids = self.element_ids
         self.eids_ref = None
 
@@ -427,6 +429,7 @@ class QBDY1(ThermalLoad):
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.eids = self.element_ids
         self.eids_ref = None
 
@@ -561,6 +564,7 @@ class QBDY2(ThermalLoad):  # not tested
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.eid = self.Eid()
         self.eid_ref = None
 
@@ -703,6 +707,7 @@ class QBDY3(ThermalLoad):
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.eids = self.element_ids
         self.eids_ref = None
 
@@ -881,6 +886,7 @@ class QHBDY(ThermalLoad):
             model.log.warning('failed cross-referencing\n%s' % str(self))
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):
@@ -1027,6 +1033,7 @@ class TEMP(ThermalLoad):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):
@@ -1140,14 +1147,19 @@ class TEMPB3(BaseCard):
     """
     type = 'TEMPB3'
 
-    #@classmethod
-    #def _init_from_empty(cls):
-        #sid = 1
-        #eid = 1
-        #tbar = 2.0
-        #tprime = 1.0
-        #t_stress = 10.
-        #return TEMPP1(sid, eid, tbar, tprime, t_stress, comment='')
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        eid = 1
+        t = [0., 0.]
+        tpy = [0., 0.]
+        tpz = [0., 0.]
+        tc = [0., 0.]
+        td = [0., 0.]
+        te = [0., 0.]
+        tf = [0., 0.]
+        eids = [1, 2]
+        return TEMPB3(sid, eid, t, tpy, tpz, tc, td, te, tf, eids, comment='')
 
     def __init__(self, sid, eid, t, tpy, tpz, tc, td, te, tf, eids, comment=''):
         BaseCard.__init__(self)
@@ -1216,10 +1228,9 @@ class TEMPB3(BaseCard):
             ifield += 4
         ifield += 1 # skip the None
 
-        fields = card[ifield:]
-        eids = expand_thru_by(fields, set_fields=True, sort_fields=True,
+        list_fields = card[ifield:]
+        eids = expand_thru_by(list_fields, set_fields=True, sort_fields=True,
                               require_int=True, allow_blanks=False)
-        print(fields)
         return TEMPB3(sid, eid, t, tpy, tpz, tc, td, te, tf, eids, comment=comment)
 
     def cross_reference(self, model):
@@ -1227,6 +1238,7 @@ class TEMPB3(BaseCard):
         self.eids_ref = model.Elements(self.eids)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.eid_ref = None
         self.eids_ref = None
 
@@ -1344,6 +1356,7 @@ class TEMPD(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):

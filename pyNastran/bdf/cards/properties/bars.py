@@ -184,7 +184,7 @@ def _IAreaL(prop, dim):
         Iyz = 0.  #: .. todo:: is the Ixy of a bar 0 ???
 
     else:
-        msg = 'beam_type=%s is not supported for %s class...' % (
+        msg = 'beam_type=%r is not supported for %s class...' % (
             beam_type, prop.type)
         raise NotImplementedError(msg)
     return (A, Iyy, Izz, Iyz)
@@ -258,7 +258,8 @@ class LineProperty(Property):
         """gets the material Poisson's ratio"""
         return self.mid_ref.nu
 
-def I1_I2_I12(prop, dim):
+
+def A_I1_I2_I12(prop, beam_type, dim):
     r"""
     ::
 
@@ -278,21 +279,85 @@ def I1_I2_I12(prop, dim):
 
     .. math:: I_2 = \frac{1}{12} h b^3
     """
-    if prop.beam_type == 'ROD':
+    if beam_type == 'ROD':
         R = dim[0]
         A = pi * R ** 2
         I1 = A * R ** 2 / 4.
         I2 = I1
         I12 = 0.
-    elif prop.beam_type == 'BAR':
-        I1 = 1 / 12. * dim[0] * dim[1] ** 3
-        I2 = 1 / 12. * dim[1] * dim[0] ** 3
+    elif beam_type == 'TUBE':
+        r_outer, r_inner = dim
+        A = pi * (r_outer ** 2 - r_inner ** 2)
+        assert r_outer > r_inner, 'TUBE; r_outer=%s r_inner=%s' % (r_outer, r_inner)
+        I1 = pi * (r_outer ** 4 - r_inner ** 4) / 4.
+        I2 = I1
         I12 = 0.
+
+    elif beam_type == 'BAR':
+        b, h = dim
+        A = b * h
+        I1 = 1 / 12. * b * h ** 3
+        I2 = 1 / 12. * h * b ** 3
+        I12 = 0.
+    elif beam_type == 'BOX':
+        dim1, dim2, dim3, dim4 = dim
+        assert dim1 > 2.*dim4, 'BOX; required: dim1 > 2*dim4; dim1=%s dim4=%s\n%s' % (dim1, dim4, prop)
+        assert dim2 > 2.*dim3, 'BOX; required: dim2 > 2*dim3; dim2=%s dim3=%s\n%s' % (dim2, dim3, prop)
+
+        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+        b = dim1
+        h = dim2
+        t1 = dim3
+        t2 = dim4
+        bi = b - 2 * t2
+        hi = h - 2 * t1
+        A = b * h - bi * hi
+
+        I1 = 1 / 12. * (b * h ** 3 - bi * hi ** 3)
+        I2 = 1 / 12. * (h * b ** 3 - bi * hi ** 3)
+        I12 = 0.
+    elif beam_type == 'L':
+        dim1, dim2, dim3, dim4 = dim
+        t1 = dim3
+        t2 = dim4
+        A0 = (dim1*t1) + t2*(dim2-t1)
+
+        b = dim1 - 0.5 * t2
+        h = dim2 - 0.5 * t1
+        h2 = dim2 - t1
+        b1 = dim1 - t2
+        A = (b + 0.5 * t2) * t1 + h2 * t2
+        assert np.allclose(A0, A), 'A0=%s A=%s' % (A0, A)
+        yc = t2*h2 * (h2 + t1) / (2 * A)
+        zc = t1*b1 * (b1 + t2) / (2 * A)
+        I1 = (
+            t1 ** 3 * (b + 0.5 * t2) / 12. +
+            t1 * (b + 0.5 * t2) * yc ** 2 +
+            t2 * h ** 3 / 12 +
+            h2 * t2 * (0.5 * (h2 + t1) - yc) ** 2
+        )
+        I2 = (
+            t2 ** 3 * h2 / 12 +
+            t1*(b + 0.5 * t2) ** 3 / 12 +
+            t1*(b + 0.5 * t2) * (0.5 * b1 - zc) ** 2  # zc is z2 in the docs...
+        )
+        I12 = (
+            zc * yc * t1 * t2
+            - b1 * t1 * yc * (0.5 * (b1 + t2) - zc)
+            - h2 * t2 * zc * (0.5 * (h2 + t1) - yc)
+        )
+        #j = 1/3 * (t1**3*b + t2**3 * h)
+        #k1 = h2 * t2 / A
+        #k2 = b1 * t1 / A
+        #yna = yc
+        #zna = zc
+
     else:
-        msg = 'I1_I2_I12; beam_type=%s is not supported for %s class...' % (
-            prop.beam_type, prop.type)
+        msg = 'A_I1_I2_I12; beam_type=%s is not supported for %s class...' % (
+            beam_type, prop.type)
         raise NotImplementedError(msg)
-    return(I1, I2, I12)
+    assert A == prop.Area(), prop
+    return(A, I1, I2, I12)
 
 def _bar_areaL(class_name, beam_type, dim, prop):
     # type: (str, str, List[float], Any) -> float
@@ -444,65 +509,49 @@ def _bar_areaL(class_name, beam_type, dim, prop):
         (dim1, dim2, dim3, dim4) = dim
         t1 = dim3
         t2 = dim4
+        A0 = (dim1*t1) + t2*(dim2-t1)
+
         b = dim1 - 0.5 * t2
         h = dim2 - 0.5 * t1
         h2 = dim2 - t1
         #b1 = dim1 - t2
         A = (b + 0.5 * t2) * t1 + h2 * t2
-        #yc = t2*h2 * (h2 + t1) / (2 * A)
-        #zc = t1*b1 * (b1 + t2) / (2 * A)
-        #i1 = (
-        #    t1 ** 3 * (b + 0.5 * t2) / 12. +
-        #    t1 * (b + 0.5 * t2) * yc ** 2 +
-        #    t2 * h ** 3 / 12 +
-        #    h2 * t2 * (0.5 * (h2 + t1) - yc) ** 2
-        #)
-        #i2 = (
-        #    t2 ** 3 * h2 / 12 +
-        #    t1*(b + 0.5 * t2) ** 3 / 12 +
-        #    t1*(b + 0.5 * t2) * (0.5 * b1 - zc) ** 2  # zc is z2 in the docs...
-        #)
-        #i12 = (
-        #    zc * yc * t1 * t2
-        #    - b1 * t1 * yc * (0.5 * (b1 + t2) - zc)
-        #    - h2 * t2 * zc * (0.5 * (h2 + t1) - yc)
-        #)
-        #j = 1/3 * (t1**3*b + t2**3 * h)
-        #k1 = h2 * t2 / A
-        #k2 = b1 * t1 / A
-        #yna = yc
-        #zna = zc
+        assert np.allclose(A0, A), 'A0=%s A=%s' % (A0, A)
 
     #CHAN = 2*(DIM1*DIM4) + (DIM2-(2*DIM4))*DIM3
     elif beam_type == 'CHAN':
         #
         # +-+----+   ^  ^
-        # | |    |   |  | d4
+        # | |    |   |  | d4 = tf
         # | +----+   |  v
-        # | |        |
-        # | |<-- d3  |
-        # | |        | d2
-        # | |        |
-        # | +----+   |
+        # | |        |         ^
+        # | |<-- d3  |         |
+        # | |    tw  | d2 = h  | hw
+        # | |        |         |
+        # | +----+   |         v
         # | |    |   |
         # +-+----+   v
-        #
+        #   <-bf->
         # <--d1-->
         #
 
         dim1, dim2, dim3, dim4 = dim
-        tweb = dim3
-        tf = dim4
+        tw = tweb = dim3
+        tf = tflange = dim4
+        bflange_tweb = dim1
 
-        bf = dim1
+        bflange = bflange_tweb - tweb
+        hweb_all = dim2
+        hweb = dim2 - 2. * tf
+        #print(f'tflange={tflange} bflage={bflange} hweb_all={hweb_all} hweb={hweb} tweb={tweb}')
+        A0 = 2 * (tflange * bflange) + tweb * hweb_all
+
         d = dim2 - 2 * tf
 
         # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
-        tw = dim3
-        tf = dim4
         #b = dim1 - 0.5 * tw
-        h = dim2 - tf
-        bf = dim1 - tw
+        #h = dim2 - tf
+        #bf = dim1 - tw
         #hw = dim2 - 2 * tf
 
         #A = 2 * tf * bf + (h + tf) * tweb  # I think tt is tf...
@@ -528,24 +577,38 @@ def _bar_areaL(class_name, beam_type, dim, prop):
         #zna = zc + zs
         hweb = dim2 - 2 * tf
         A1 = 2 * tf * dim1 + hweb * tweb
-
-        #A2 = 2. * bf * tf + (dim2 - 2. * dim4) * tweb
-        A2 = 2. * tf * dim1 + (dim2 - 2. * dim4) * tweb
-        A0 = A1
-        assert np.allclose(A0, A2), 'A0=%s A1=%s A2=%s' % (A0, A2, A2)
-        assert np.allclose(A1, A2), 'A0=%s A1=%s A2=%s' % (A0, A1, A2)
         A = A1
 
     #CHAN1 = DIM2*DIM3 + (DIM4-DIM3)*(DIM1+DIM2)
     elif beam_type == 'CHAN1':
-        h2 = dim[2]
-        w2 = dim[1]
-
-        h1 = dim[3] - h2
-        w1 = dim[0] + w2
-        A = h1 * w1 + h2 * w2
+        #
+        # +--------+  ^
+        # |        |  |
+        # +---+----+  |
+        # |   |       |         ^
+        # |   |       |         |
+        # |   |       | d4 = h  | d3 = hw = h2
+        # |   |       |         |
+        # +---+----+  |         v
+        # |        |  |
+        # +--------+  v
+        # <---w1--->
+        # <--><---->
+        # dim2 dim1
+        # tw    bf
         dim1, dim2, dim3, dim4 = dim
-        A2 = dim2 * dim3 + (dim4 - dim3) * (dim1 + dim2)
+        tweb = dim2
+        bflange = dim1
+        h_all = dim4
+        h_inner = dim3
+
+        h1 = h_all - h_inner  # 2*tflange
+        assert h_all > h_inner, f'h_all(dim4)={h_all} h_inner(dim3)={h_inner}'
+        tflange = h1 / 2.
+        w_all = bflange + tweb  # bf + tw
+        A = h1 * w_all + h_inner * tweb
+        #print(f'h_all={h_all} h_inner={h_inner} tweb={tweb} tflange={tflange} bflange={bflange}')
+        A2 = dim2 * dim3 + (h_all - dim3) * (dim1 + dim2)
         assert np.allclose(A, A2), 'A=%s A2=%s' % (A, A2)
 
     #CHAN2 = 2*(DIM1*DIM3)+((DIM4-(2*DIM1))*DIM2)
@@ -581,28 +644,29 @@ def _bar_areaL(class_name, beam_type, dim, prop):
     #T = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
     elif beam_type == 'T':
         # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
-        #           ^ y
-        #           |
-        #           |
-        # ^    +-----------+ ^
-        # | d3 |           | |  ----> z
-        # v    +---+  +----+ |
-        #          |  |      |
-        #          |  |      | d2
-        #          |  |      |
-        #          |  |      |
-        #          +--+      v
+        #       ^ y
+        #       |
+        #       |
+        #  <----d1=d--->
+        #  +-----------+ ^     ^
+        #  | 1         | |     | d3=tf ----> z
+        #  +---+  +----+ |     v
+        #      |  |      |     ^
+        #      |  |      | d2  |
+        #      |  |      |     | hw
+        #      |  |      |     |
+        #      +--+      v     v
         #
-        #          <--> d4
+        #      <--> d4=tw
         #
         dim1, dim2, dim3, dim4 = dim
-        d = dim1
+        d = dim1 # bf
         tf = dim3
         tw = dim4
         h = dim2 - 0.5 * tf
         hw = dim2 - tf
-        h1 = dim[2]
-        w1 = dim[0]
+        #print('tf=%s tw=%s bf=%s' % (tf, tw, bf))
+        #print('h=%s hw=%s' % (h, hw))
 
         A = d*tf + hw*tw
         #yna = hw*tw*(hw+tf)/(2*A)
@@ -625,12 +689,31 @@ def _bar_areaL(class_name, beam_type, dim, prop):
 
     #T2 = (DIM1*DIM3)+((DIM2-DIM3)*DIM4)
     elif beam_type == 'T2':
-        h1 = dim[3]
-        w1 = dim[1]
-
-        h2 = h1 - dim[2]
-        w2 = dim[0]
-        A = h1 * w1 + h2 * w2
+        #       ^ y
+        #       |
+        #       |
+        #      +--+      ^     v
+        #      |  |      |     ^
+        #      |1 |      | d2  |
+        #      |  |      |     | hw=bweb
+        #      |  |      |     |
+        #  +---+  +----+ |     v
+        #  | 2 |  |    | |     | d3=tf ----> z
+        #  +---+--+----+ v     v
+        #  <----d1=d--->
+        #
+        #      <--> d4=tweb
+        #
+        dim1, dim2, dim3, dim4 = dim
+        ball = dim1
+        hall = dim2
+        tflange = dim3
+        tweb = dim4
+        bweb = hall - tflange
+        bflange = ball - tweb
+        assert hall - tflange > 0, f'bweb={bweb} hall(dim2)={hall} tflange(dim3)={tflange}'
+        assert ball - tweb > 0, f'bflange={bflange} ball(dim1)={hall} tweb(dim4)={tweb}'
+        A = tweb * bweb + tflange * bflange
 
     #BOX = 2*(DIM1*DIM3)+2*((DIM2-(2*DIM3))*DIM4)
     elif beam_type == 'BOX':
@@ -646,14 +729,8 @@ def _bar_areaL(class_name, beam_type, dim, prop):
         # <----d1---->
         #
         dim1, dim2, dim3, dim4 = dim
-        #h1 = dim3
-        #w1 = dim1
-
-        #h2 = dim2 - 2 * h1
-        #w2 = dim4
         assert dim1 > 2.*dim4, 'BOX; required: dim1 > 2*dim4; dim1=%s dim4=%s\n%s' % (dim1, dim4, prop)
         assert dim2 > 2.*dim3, 'BOX; required: dim2 > 2*dim3; dim2=%s dim3=%s\n%s' % (dim2, dim3, prop)
-        #A = 2 * (h1 * w1 + h2 * w2)
 
         # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
         b = dim1
@@ -842,6 +919,7 @@ def _bar_areaL(class_name, beam_type, dim, prop):
     assert A > 0, 'beam_type=%r dim=%r A=%s\n%s' % (beam_type, dim, A, prop)
     #A = 1.
     return A
+
 
 class IntegratedLineProperty(LineProperty):
     def __init__(self):
@@ -1067,6 +1145,7 @@ class PBAR(LineProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
@@ -1160,6 +1239,7 @@ class PBAR(LineProperty):
         Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
 
         .. math:: \frac{m}{L} = \rho A + nsm
+
         """
         A = self.Area()
         rho = self.Rho()
@@ -1174,11 +1254,13 @@ class PBAR(LineProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by PBAR mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1262,6 +1344,7 @@ class PBARL(LineProperty):
     +-------+------+------+-------+------+------+------+------+------+
     |       | DIM9 | etc. |  NSM  |      |      |      |      |      |
     +-------+------+------+-------+------+------+------+------+------+
+
     """
     type = 'PBARL'
     _properties = ['Type', 'valid_types']
@@ -1348,6 +1431,7 @@ class PBARL(LineProperty):
            - Type = BOX1
            - Type = HAT, HAT1
            - Type = DBOX
+
         """
         LineProperty.__init__(self)
         if comment:
@@ -1407,6 +1491,7 @@ class PBARL(LineProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
@@ -1471,11 +1556,13 @@ class PBARL(LineProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by PBARL mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1533,24 +1620,24 @@ class PBARL(LineProperty):
     def I1(self):
         # type: () -> float
         """gets the section I1 moment of inertia"""
-        I = self.I1_I2_I12()
-        return I[0]
+        I = A_I1_I2_I12(self, self.beam_type, self.dim)
+        return I[1]
 
     def I2(self):
         # type: () -> float
         """gets the section I2 moment of inertia"""
-        I = self.I1_I2_I12()
-        return I[1]
+        I = A_I1_I2_I12(self, self.beam_type, self.dim)
+        return I[2]
 
     def I12(self):
         # type: () -> float
         """gets the section I12 moment of inertia"""
         try:
-            I = self.I1_I2_I12()
+            I = A_I1_I2_I12(self, self.beam_type, self.dim)
         except:
             print(str(self))
             raise
-        return I[2]
+        return I[3]
 
     #def I1_I2_I12(self):
         #"""gets the section I1, I2, I12 moment of inertia"""
@@ -1949,6 +2036,7 @@ class PBRSECT(LineProperty):
             this card is special and is not a ``BDFCard`` like other cards
         comment : str; default=''
             a comment for the card
+
         """
         line0 = card[0]
         if '\t' in line0:
@@ -2005,6 +2093,7 @@ class PBRSECT(LineProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by PBMSECT mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
@@ -2031,6 +2120,7 @@ class PBRSECT(LineProperty):
             the figure id
         show : bool; default=False
             show the figure when done
+
         """
         class_name = self.__class__.__name__
         form_map = {
@@ -2047,6 +2137,7 @@ class PBRSECT(LineProperty):
             show=show)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
         self.outp_ref = None
@@ -2167,7 +2258,7 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
         pid = 1
         mid = 2
         A = 3.
-        iz =4.
+        iz = 4.
         iy = 5.
         return PBEAM3(pid, mid, A, iz, iy,
                       iyz=None, j=None, nsm=0.,
@@ -2229,6 +2320,7 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
             Gradients of warping function in the local (y, z) coordinate
             system at stress recovery points
             None : array of 0.0
+
         """
         LineProperty.__init__(self)
         if comment:
@@ -2256,7 +2348,6 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
                 if value is None:
                     values[i + 1] = station_a_value
             return values
-
 
         self.pid = pid
         self.mid = mid
@@ -2518,11 +2609,13 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by PBEAM3 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -2967,11 +3060,13 @@ class PBEND(LineProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by PBEND mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 

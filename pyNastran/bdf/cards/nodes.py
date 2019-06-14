@@ -273,6 +273,9 @@ class SPOINT(XPoint):
         """
         XPoint.__init__(self, nid, comment)
 
+    def get_position(self):
+        return np.zeros(3)
+
 
 class EPOINT(XPoint):
     """defines the EPOINT class"""
@@ -654,6 +657,7 @@ class GRDSET(BaseCard):
         #self.seid_ref = self.seid
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cp = self.Cp()
         self.cd = self.Cd()
         self.cp_ref = None
@@ -1441,6 +1445,7 @@ class GRID(BaseCard):
             self.cd_ref = model.Coord(self.cd, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cd_ref = None
         self.cp_ref = None
         self.elements_ref = None
@@ -1813,6 +1818,7 @@ class POINT(BaseCard):
         self.cp_ref = model.Coord(self.cp)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cp_ref = self.Cp()
 
     def raw_fields(self) -> List[Union[str, int, float, None]]:

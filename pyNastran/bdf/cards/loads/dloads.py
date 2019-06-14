@@ -200,6 +200,7 @@ class ACSRCE(BaseCard):
         #self.load_ids_ref = self.load_ids
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.power = self.Power()
         self.dphase = self.DPhase()
         self.delay = self.Delay()
@@ -362,6 +363,7 @@ class DLOAD(LoadCombination):
         self.load_ids_ref = dload_ids2
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.load_ids = [self.LoadID(dload) for dload in self.get_load_ids()]
         self.load_ids_ref = None
 
@@ -564,6 +566,7 @@ class RLOAD1(DynamicLoad):
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.tc = self.Tc()
         self.td = self.Td()
         self.delay = self.delay_id
@@ -885,6 +888,7 @@ class RLOAD2(DynamicLoad):
             self.dphase_ref = model.DPHASE(self.dphase, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.tb = self.Tb()
         self.tp = self.Tp()
         self.delay = self.delay_id
@@ -1128,6 +1132,7 @@ class TLOAD1(DynamicLoad):
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.tid = self.Tid()
         self.delay = self.delay_id
         self.tid_ref = None
@@ -1437,6 +1442,7 @@ class TLOAD2(DynamicLoad):
         # TODO: excite_id
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.delay = self.delay_id
         self.delay_ref = None
 

@@ -173,12 +173,15 @@ class PFAST(Property):
         ----------
         model : BDF()
             the BDF object
+
         """
         msg = ', which is required by PFAST pid=%s' % self.pid
         if self.mcid != -1:
             self.mcid_ref = model.Coord(self.Mcid(), msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        """Removes cross-reference links"""
         self.mcid = self.Mcid()
         #if self.mcid != -1:
         self.mcid_ref = None
@@ -385,6 +388,7 @@ class PGAP(Property):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):
@@ -522,6 +526,7 @@ class PRAC2D(CrackProperty):
         self.mid_ref = model.Material(self.mid, msg)  # MAT1, MAT2, MAT8
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -608,6 +613,7 @@ class PRAC3D(CrackProperty):
         self.mid_ref = model.Material(self.mid, msg)  # MAT1, MAT9
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 

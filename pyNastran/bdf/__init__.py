@@ -1,38 +1,8 @@
 """defines a list of cards used by the bdf reader"""
 
-CASE_CONTROL_INT_CARDS = {
-    # these are cards that look like:
-    #    LOAD = 6
-    'SPC', 'MPC', 'TRIM', 'FMETHOD', 'METHOD', 'LOAD',
-    'SUPORT', 'SUPORT1', 'TEMPERATURE(INITIAL)', 'TEMPERATURE(LOAD)',
-    'DLOAD', 'MFLUID', 'CLOAD', 'NLPARM', 'CMETHOD',
-    'FREQUENCY', 'TSTEP', 'TSTEPNL', 'SDAMPING', 'DESOBJ',
-    'TEMPERATURE(INIT)', 'RANDOM', 'DESSUB', 'ADAPT', 'MAXLINES',
-    'TFL', 'DESGLB', 'SMETHOD', 'DYNRED', 'GUST', 'TEMPERATURE(MATE)',
-    'OTIME', 'NONLINEAR', 'AUXM', 'IC', 'BC', 'OUTRCV', 'DIVERG',
-    'DATAREC', 'TEMPERATURE(BOTH)', 'DEFORM', 'MODES', 'CASE',
-    'SEDR', 'SELG', 'SEFINAL', 'SEKR', 'TEMPERATURE(ESTIMATE)',
-    'GPSDCON', 'AUXMODEL',
-    'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
-    'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR',
-    'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
-}
+#CASE_CONTROL_CARDS = CASE_CONTROL_INT_CARDS.union(CASE_CONTROL_PLOTTABLE_TYPES)
 
-CASE_CONTROL_PLOTTABLE_TYPES = {
-    # these are types that look like:
-    #    STRESS(PLOT,PRINT,PUNCH,SORT1) = ALL
-    # they all support PLOT
-    'STRESS', 'STRAIN', 'SPCFORCES', 'DISPLACEMENT', 'MPCFORCES', 'SVECTOR',
-    'VELOCITY', 'ACCELERATION', 'FORCE', 'ESE', 'OLOAD', 'SEALL', 'GPFORCE',
-    'GPSTRESS', 'GPSTRAIN', 'FLUX', 'AEROF', 'THERMAL', 'STRFIELD',
-    'NOUTPUT', 'SEDV', 'APRES', 'HTFLOW', 'NLSTRESS', 'GPKE',
-    'SACCELERATION', 'SDISPLACEMENT', 'SEMG', 'HARMONICS', 'PRESSURE', 'VUGRID',
-    'ELSUM', 'SVELOCITY', 'STRFIELD REAL', 'SENSITY', 'MONITOR',
-    'NLLOAD', 'GPSDCON', 'BOUTPUT',
-}
-
-CASE_CONTROL_CARDS = CASE_CONTROL_INT_CARDS.union(CASE_CONTROL_PLOTTABLE_TYPES)
-
+# case control cards that are also bulk data cards
 FLAGGED_CARDS = {
     # of the form 'LOAD = 5', so 'PARAM,POST,-1' doesn't count
     'LOAD', 'SPC', 'FREQ', 'MPC',  # case control + bulk data cards

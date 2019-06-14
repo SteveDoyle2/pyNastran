@@ -52,13 +52,26 @@ BDF:
    - added AECOMPL, DEFORM to bdf attributes
    - added I12, J to PBEAM updater; fixed error message
    - added RHO to MAT10 updater
+   - fixed Area calculation for PBARL/CHAN
+   - fixed missing variable in mass properties error message
+ - new cards:
+   - DTI besides UNITS are now supported
+   - PBEAM3, TEMPB3
  - enhancements:
    - added deck guessing with punch=None
-   - PBARL & PBEAML DBOX now has defaults for DIM5-DIM10
+   - better parser for test_bdf
    - PCOMPG now supports DVPRELx
-   - new cards:
-     - DTI besides UNITS are now supported
-     - PBEAM3, TEMPB3
+   - added get_position for SPOINT
+   - added inertia for PBARL/L
+ - minor enhancements:
+   - handling ;; in DEQATN
+   - PBARL & PBEAML DBOX now has defaults for DIM5-DIM10
+   - support for SURF cid=None in _get_forces_moments_array
+   - added check for number of loads = nscale factors for LOAD
+   - more PARAM validation
+- changes:
+   - warning on RBAR dof check instead of RuntimeError
+   - more test for PBARL properties
 
 OP2:
  - bug fixes:

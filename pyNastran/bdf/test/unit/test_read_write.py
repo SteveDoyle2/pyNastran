@@ -10,7 +10,7 @@ from pyNastran.bdf.bdf_interface.include_file import (
     PurePosixPath, PureWindowsPath,
 ) # ,_split_to_tokens
 from pyNastran.utils import print_bad_path
-from pyNastran.bdf.test.test_case_control_deck import compare_lines
+from pyNastran.bdf.bdf_interface.test.test_case_control_deck import compare_lines
 
 ROOT_PATH = pyNastran.__path__[0]
 TEST_PATH = os.path.join(ROOT_PATH, 'bdf', 'test', 'unit')

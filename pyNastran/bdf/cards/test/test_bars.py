@@ -649,5 +649,37 @@ class TestBars(unittest.TestCase):
         model.pop_xref_errors()
         assert pbeam3 == model.properties[pid]
 
+    def test_bar_area(self):
+        """tests the PBARL"""
+        model = BDF(log=None, debug=False)
+        mid = 40
+        group = 'group'
+        nsm = 0.0
+
+        shape_dims_area = [
+            ('ROD', [2.], 4. * np.pi, 0.),
+            ('TUBE', [5., 1.], 24. * np.pi, 0.),
+            ('BAR', [2., 3.], 6., 0.),
+            ('BOX', [2., 3., 0.5, 0.5], 4., 0.),
+            ('T', [10., 10., 3., 0.5], 33.5, None),
+            ('T2', [10., 5., 0.5, 2.0], 13., None), #  ball,hall,tflange,tweb
+
+            ('L', [2., 3., 1., 1.], 4., 0.),
+            ('CHAN', [10., 10., 1., 1.], 28., None),
+            ('CHAN1', [9., 0.1, 8., 10.], 19., None),
+            ('CHAN2', [1, 1., 9., 10.], 26., None),
+        ]
+        pid = 1
+        for bar_type, dims, areai, i1 in shape_dims_area:
+            pbarl = PBARL(pid, mid, bar_type, dims, group=group, nsm=nsm, comment='comment')
+            pbarl.validate()
+            area2 = pbarl.Area()
+            if i1 is not None:
+                pbarl.I1()
+                pbarl.I2()
+                pbarl.I12()
+            assert np.allclose(areai, area2), 'bar_type=%r dims=%s area=%s area_expected=%s' % (bar_type, dims, area2, areai)
+            pid += 1
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

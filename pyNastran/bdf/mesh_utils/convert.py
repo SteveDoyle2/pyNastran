@@ -359,8 +359,11 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
             if elem.tflag == 0:
                 if elem.T1 is not None:
                     elem.T1 *= xyz_scale
+                if elem.T2 is not None:
                     elem.T2 *= xyz_scale
+                if elem.T3 is not None:
                     elem.T3 *= xyz_scale
+                if elem.T4 is not None:
                     elem.T4 *= xyz_scale
             # nsm
             #elem.nsm *= nsm_scale
@@ -948,6 +951,7 @@ def _convert_loads(model, xyz_scale, weight_scale, temperature_scale):
         tabled = model.TableD(tid)
         tabled.y *= scale
 
+    skip_cards = ['PLOADX1']
     for loads in model.loads.values():
         assert isinstance(loads, list), loads
         for load in loads: # list
@@ -1006,6 +1010,8 @@ def _convert_loads(model, xyz_scale, weight_scale, temperature_scale):
                 #temperatures : {1901: 100.0}
                 for nid in load.temperatures:
                     load.temperatures[nid] *= temperature_scale
+            elif load_type in  skip_cards:
+                model.log.warning('skipping %s' % load)
             else:
                 raise NotImplementedError(load)
 

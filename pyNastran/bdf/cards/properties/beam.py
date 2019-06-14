@@ -875,16 +875,17 @@ class PBEAM(IntegratedLineProperty):
 
     def get_optimization_value(self, name_str):
         if name_str == 'I1(A)':
-            return self.i1[0]
+            out = self.i1[0]
         elif name_str == 'I1(B)':
-            return self.i1[-1]
+            out = self.i1[-1]
 
         elif name_str == 'I2(A)':
-            return self.i2[-1]
+            out = self.i2[-1]
         elif name_str == 'I2(B)':
-            return self.i2[-1]
+            out = self.i2[-1]
         else:
             raise NotImplementedError(name_str)
+        return out
 
     #def Area(self):
        #""".. warning:: area field not supported fully on PBEAM card"""
@@ -931,6 +932,7 @@ class PBEAM(IntegratedLineProperty):
             #assert min(self.j) == 0.0, self.j
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1611,6 +1613,7 @@ class PBEAML(IntegratedLineProperty):
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -1881,6 +1884,7 @@ class PBMSECT(LineProperty):
         #return self.brp1
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
         self.outp_ref = None
@@ -2176,6 +2180,7 @@ class PBCOMP(LineProperty):
         return [mid.mid for mid in self.mids_ref]
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mids = self.Mids()
         self.mid_ref = None

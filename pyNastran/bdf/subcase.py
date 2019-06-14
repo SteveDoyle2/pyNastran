@@ -11,6 +11,7 @@ from pyNastran.bdf.bdf_interface.subcase_cards import CLASS_MAP
 from pyNastran.bdf.bdf_interface.subcase_utils import (
     write_stress_type, write_set, expand_thru_case_control)
 
+
 INT_CARDS = (
     # these are cards that look like:
     #    LOAD = 6
@@ -25,7 +26,7 @@ INT_CARDS = (
     'SEDR', 'SELG', 'SEFINAL', 'SEKR', 'TEMPERATURE(ESTIMATE)',
     'GPSDCON', 'AUXMODEL',
     'MODTRAK', 'OFREQ', 'DRSPAN', 'OMODES', 'ADACT', 'SERESP', 'STATSUB',
-    'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR', ''
+    'CURVESYM', 'ELSDCON', 'CSSCHD', 'NSM', 'TSTRU', 'RANDVAR',
     'RGYRO', 'SELR', 'TEMPERATURE(ESTI)', 'RCROSS', 'SERE', 'SEMR',
 )
 

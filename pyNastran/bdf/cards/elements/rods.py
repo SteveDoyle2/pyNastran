@@ -151,6 +151,7 @@ class CROD(RodElement):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -387,6 +388,7 @@ class CTUBE(RodElement):
         ## TODO: xref coord
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -653,6 +655,7 @@ class CONROD(RodElement):
         self.mid_ref = model.safe_material(self.mid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.mid = self.Mid()
         self.nodes_ref = None

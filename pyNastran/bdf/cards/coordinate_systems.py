@@ -1892,6 +1892,7 @@ class Cord2x(Coord):
             self.rid_ref = model.Coord(self.rid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         if self.rid == 0:
             return
         self.rid = self.Rid()
@@ -2086,6 +2087,7 @@ class Cord1x(Coord):
         self.g3_ref = model.Node(self.g3, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.g1 = self.G1()
         self.g2 = self.G2()
         self.g3 = self.G3()
@@ -2200,6 +2202,7 @@ class GMCORD(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def setup(self):
@@ -2321,6 +2324,7 @@ class CORD3G(Coord):  # not done
         self.rid_ref = model.Coord(self.rid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.rid = self.Rid()
         self.rid_ref = None
 

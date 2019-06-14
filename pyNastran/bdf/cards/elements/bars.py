@@ -129,6 +129,7 @@ class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
         return mass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -774,6 +775,7 @@ class CBAR(LineElement):
             self.g0_vector = self.x
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()
@@ -1042,6 +1044,7 @@ class CBEAM3(LineElement):  # was CBAR
             self.g0_ref = model.Node(self.g0, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.gc = self.Gc()
@@ -1634,6 +1637,7 @@ class CBEND(LineElement):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         node_ids = self.node_ids
         self.ga = node_ids[0]
         self.gb = node_ids[1]

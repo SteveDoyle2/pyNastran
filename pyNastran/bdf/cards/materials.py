@@ -207,6 +207,7 @@ class CREEP(Material):
         self.mid_ref = model.Material(self.mid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 
@@ -644,6 +645,7 @@ class MAT1(IsotropicMaterial):
             self.matt1_ref = model.MATT1[self.mid]  # not using a method...
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mats1_ref = None
         self.matt1_ref = None
 
@@ -989,6 +991,7 @@ class MAT2(AnisotropicMaterial):
             self.matt2_ref = model.MATT2[self.mid]  # not using a method...
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.matt2_ref = None
 
     def _verify(self, xref):
@@ -1287,6 +1290,7 @@ class MAT3(OrthotropicMaterial):
             self.matt3_ref = model.MATT3[self.mid]  # TODO: not using a method...
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         #self.matt3 = self.Mid()
         self.matt3_ref = None
 
@@ -1621,6 +1625,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
             self.matt5_ref = model.MATT5[self.mid]  # not using a method...
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         if self.mid in model.MATT5:
             self.matt5 = self.Matt5()
         self.matt5_ref = None
@@ -1921,6 +1926,7 @@ class MAT8(OrthotropicMaterial):
             self.matt8_ref = self.matt8
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         #self.matt8 = self.Matt8()
         self.matt8_ref = None
 
@@ -2266,6 +2272,7 @@ class MAT9(AnisotropicMaterial):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def _verify(self, xref):
@@ -2501,6 +2508,7 @@ class MAT10(Material):
             self.table_gamma_ref = model.TableD(self.table_gamma, msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         if self.table_bulk is not None:
             del self.table_bulk_ref
         if self.table_rho is not None:
@@ -2888,6 +2896,7 @@ class MAT11(Material):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def _validate_input(self):
@@ -3016,6 +3025,7 @@ class MAT3D(Material):
         return MAT3D(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23, rho, comment=comment)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def _verify(self, xref):

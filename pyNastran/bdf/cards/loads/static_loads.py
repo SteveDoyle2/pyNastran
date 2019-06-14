@@ -208,6 +208,7 @@ class LOAD(LoadCombination):
             msg = 'load_ids=%s\n' % (load_ids)
             msg += 'scale_factors=%s\n' % (self.scale_factors)
             msg += print_card_8(list_fields)
+            msg += str(self.get_stats())
             raise IndexError(msg)
         return list_fields
 
@@ -222,6 +223,7 @@ class LOAD(LoadCombination):
             return self.comment + print_card_16(card)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.load_ids = self.get_load_ids()
         self.load_ids_ref = None
 
@@ -362,6 +364,7 @@ class GRAV(BaseCard):
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -523,6 +526,7 @@ class ACCEL(BaseCard):
         self.cid_ref = model.Coord(self.cid, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -673,6 +677,7 @@ class ACCEL1(BaseCard):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid = self.Cid()
         self.nodes = self.node_ids
         self.nodes_ref = None
@@ -898,6 +903,7 @@ class Load0(BaseCard):
         self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -1094,6 +1100,7 @@ class Load1(BaseCard):
         normalize(self)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.node = self.node_id
         self.g1 = self.G1()
         self.g2 = self.G2()
@@ -1428,6 +1435,7 @@ class Load2(BaseCard):
         return self.xyz * self.mag
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.node = self.node_id
         self.g1 = self.G1()
         self.g2 = self.G2()
@@ -1559,6 +1567,7 @@ class MOMENT(Load0):
         Load0.__init__(self, sid, node, mag, xyz, cid=cid, comment=comment)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.node = self.node_id
         self.cid = self.Cid()
         self.node_ref = None
@@ -1756,6 +1765,7 @@ class GMLOAD(Load):
         self.cid_ref = model.safe_coord(self.Cid(), self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -1915,6 +1925,7 @@ class PLOAD(Load):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def get_loads(self):
@@ -2113,6 +2124,7 @@ class PLOAD1(Load):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.eid = self.Eid()
         self.eid_ref = None
 
@@ -2253,6 +2265,7 @@ class PLOAD2(Load):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.eids = self.element_ids
         self.eids_ref = None
 
@@ -2656,6 +2669,7 @@ class PLOAD4(Load):
             model.log.warning(msgi.rstrip())
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid = self.Cid()
         if self.g1 is not None:
             self.g1 = self.G1()
@@ -2965,6 +2979,7 @@ class PLOADX1(BaseCard):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.eid = self.Eid()
         self.ga = self.Ga()
         self.gb = self.Gb()

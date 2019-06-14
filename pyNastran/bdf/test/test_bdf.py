@@ -12,7 +12,7 @@ import sys
 import traceback
 import warnings
 from itertools import chain
-from typing import List, Any
+from typing import List, Any, Optional, Union
 from io import StringIO
 import numpy as np
 #warnings.simplefilter('always')
@@ -48,12 +48,21 @@ TEST_PATH = pyNastran.bdf.test.__path__[0]
 #warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
-                      write_hdf5=True,
-                      punch=False, nastran='', encoding=None,
-                      size=None, is_double=None, post=None, sum_load=True, dev=True,
-                      crash_cards=None, pickle_obj=True, quiet=False):
-    # type: (List[str], str, bool, bool, bool, bool, bool, str, Any, Any, Any, Any, bool, bool, Any, bool, bool) -> List[str]
+def run_lots_of_files(filenames: List[str], folder: str='',
+                      debug: bool=False,
+                      xref: bool=True,
+                      check: bool=True,
+                      write_hdf5: bool=True,
+                      punch: bool=False,
+                      nastran: str='',
+                      encoding: Optional[str]=None,
+                      size: Union[int, List[int], None]=None,
+                      post: Union[int, List[int], None]=None,
+                      is_double: Union[bool, List[bool], None]=None,
+                      sum_load: bool=True,
+                      dev: bool=True,
+                      crash_cards: Optional[List[str]]=None,
+                      pickle_obj: bool=True, quiet: bool=False) -> List[str]:
     """
     Runs multiple BDFs
 
@@ -73,8 +82,6 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
         validate cards for things like mass, area, etc. (default=True)
     punch : bool / List[bool], optional
         this is a PUNCH file (no executive/case control decks; default=False)
-    cid : int / None, optional
-        convert the model grids to an alternate coordinate system (default=None; no conversion)
     size : int / List[int], optional
         The field width of the model (8/16)
     is_double : bool / List[bool], optional
@@ -178,9 +185,18 @@ def run_lots_of_files(filenames, folder='', debug=False, xref=True, check=True,
             #pass
         #except RuntimeError:  # only temporarily uncomment this when running lots of tests
             #pass
+        #except SyntaxError:  # only temporarily uncomment this when running lots of tests
+            #pass
+
         #except AttributeError:  # only temporarily uncomment this when running lots of tests
             #pass
-        #except SyntaxError:  # only temporarily uncomment this when running lots of tests
+        #except KeyError:  # only temporarily uncomment this when running lots of tests
+            #pass
+        #except AssertionError:  # only temporarily uncomment this when running lots of tests
+            #pass
+        #except IndexError:  # only temporarily uncomment this when running lots of tests
+            #pass
+        #except ValueError:  # only temporarily uncomment this when running lots of tests
             #pass
         except ReplicationError:
             if not dev:
@@ -239,8 +255,6 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         validate cards for things like mass, area, etc.
     punch : bool, optional
         this is a PUNCH file (no executive/case control decks)
-    cid : int / None, optional
-        convert the model grids to an alternate coordinate system (default=None; no conversion)
     mesh_form : str, optional, {'combined', 'separate'}
         'combined' : interspersed=True
         'separate' : interspersed=False
@@ -462,8 +476,8 @@ def run_and_compare_fems(
     return (fem1, fem2, diff_cards)
 
 
-def run_nastran(bdf_model, nastran, post=-1, size=8, is_double=False):
-    # type: (BDF, str, int, int, bool) -> None
+def run_nastran(bdf_model: BDF, nastran: str, post: int=-1,
+                size: int=8, is_double: bool=False) -> None:
     """
     Verifies that a valid bdf was written by running nastran and parsing
     the OP2.  Many cards do not support double precision and since there
@@ -701,7 +715,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
     return fem1
 
 
-def remake_model(bdf_model, fem1, pickle_obj):
+def remake_model(bdf_model: BDF, fem1: BDF, pickle_obj: bool) -> None:
     """reloads the model if we're testing pickling"""
     remake = pickle_obj
     if remake:
@@ -728,8 +742,7 @@ def remake_model(bdf_model, fem1, pickle_obj):
         fem1._xref = True
     return fem1
 
-def check_for_cd_frame(fem1):
-    # type: (BDF) -> None
+def check_for_cd_frame(fem1: BDF) -> None:
     """
     A cylindrical/spherical CD frame will cause problems with the
     grid point force transformation
@@ -858,8 +871,10 @@ def _assert_has_spc(subcase, fem):
                 break
         assert subcase.has_parameter('SPC', 'STATSUB') or has_ps, subcase
 
-def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, unused_sol_200_map,
-                          stop_on_failure=True, ierror=0, nerrors=100):
+def validate_case_control(fem2: BDF, p0: Any, sol_base: int, subcase_keys: List[int],
+                          subcases: Any, unused_sol_200_map: Any,
+                          stop_on_failure: bool=True,
+                          ierror: int=0, nerrors: int=100) -> None:
     for isubcase in subcase_keys[1:]:  # drop isubcase = 0
         subcase = subcases[isubcase]
         str(subcase)
@@ -878,7 +893,7 @@ def validate_case_control(fem2, p0, sol_base, subcase_keys, subcases, unused_sol
             ierror=ierror, nerrors=nerrors, stop_on_failure=stop_on_failure)
     return ierror
 
-def check_for_flag_in_subcases(fem2, subcase, parameters):
+def check_for_flag_in_subcases(fem2: BDF, subcase: Any, parameters: List[str]) -> None:
     """
     For a multi-subcase deck, you can define specific required cards
     (e.g., TSTEP) in secondary cases, but not primary cases.  This
@@ -904,16 +919,15 @@ def check_for_flag_in_subcases(fem2, subcase, parameters):
                 msg += str(subcasei)
             raise RuntimeError(msg)
 
-def stop_if_max_error(msg, error, ierror, nerrors):
-    # type: (str, Any, int, int) -> int
+def stop_if_max_error(msg: str, error: Any, ierror: int, nerrors: int) -> int:
     """if the error count is greater than nerrors, stop"""
     if ierror == nerrors:
         raise error(msg)
     ierror += 1
     return ierror
 
-def check_for_optional_param(keys, subcase, msg, error, log, ierror, nerrors):
-    # type: (List[str], Any, str, Any, Any, int, int) -> int
+def check_for_optional_param(keys: List[str], subcase: Any,
+                             msg: str, error: Any, log: Any, ierror: int, nerrors: int) -> int:
     """one or more must be True"""
     if not any(subcase.has_parameter(*keys)):
         msg = 'Must have one of %s\n%s' % (str(keys), msg)
@@ -923,7 +937,11 @@ def check_for_optional_param(keys, subcase, msg, error, log, ierror, nerrors):
         ierror += 1
     return ierror
 
-def check_sol(sol, subcase, allowed_sols, case_control_key, log, ierror, nerrors):
+def check_sol(sol: int,
+              subcase: Any,
+              allowed_sols: List[int],
+              case_control_key: str,
+              log: Any, ierror: int, nerrors: int) -> int:
     """Checks that the solution is valid"""
     if sol not in allowed_sols:
         msg = '%s is not valid in sol=%s allowed_sols=%s\n%s' % (
@@ -1104,8 +1122,8 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         stop_on_failure=stop_on_failure)
     return ierror
 
-def _check_static_aero_case(fem2, log, sol, subcase, ierror, nerrors):
-    # type: (BDF, Any, int, Any, int, int) -> int
+def _check_static_aero_case(fem2: BDF, log: Any, sol: int,
+                            subcase: Any, ierror: int, nerrors: int) -> int:
     """checks that TRIM/DIVERG is valid"""
     if not any(subcase.has_parameter('TRIM', 'DIVERG')):
         msg = 'A TRIM or DIVERG card is required for STATIC AERO - SOL %i\n%s' % (
@@ -1319,32 +1337,40 @@ def require_cards(card_names, log, soltype, sol, subcase,
             ierror += 1
     return ierror
 
+def _tstep_msg(fem, subcase, tstep_id, tstep_type=''):
+    """writes the TSTEP/TSTEPNL info"""
+    msg = (
+        'tstep%s_id=%s\n'
+        'tsteps=%s\n'
+        'tstepnls=%s\n'
+        #'tstep1s=%s\n'
+        'subcase:\n%s' % (
+            tstep_type, tstep_id,
+            str(fem.tsteps),
+            str(fem.tstepnls),
+            #str(fem.tstep1s),
+            str(subcase))
+    )
+    return msg
+
+
 def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
                            ierror=0, nerrors=100, stop_on_failure=True):
     """helper method for ``check_case``"""
     log = fem2.log
     if any(subcase.has_parameter('TIME', 'TSTEP')):
         if 'TIME' in subcase:
-            time_tstep_id = subcase.get_parameter('TIME')[0]
+            tstep_id = subcase.get_parameter('TIME')[0]
         elif 'TSTEP' in subcase:
-            time_tstep_id = subcase.get_parameter('TSTEP')[0]
+            tstep_id = subcase.get_parameter('TSTEP')[0]
         else:
             raise NotImplementedError(subcase)
-        if time_tstep_id not in fem2.tsteps:
-            msg = (
-                'time_tstep_id=%s\n'
-                'tsteps=%s\n'
-                #'tstep1s=%s\n'
-                'subcase:\n%s' % (
-                    time_tstep_id,
-                    str(fem2.tsteps),
-                    #str(fem2.tstep1s),
-                    str(subcase)))
-            raise RuntimeError(msg)
+        if tstep_id not in fem2.tsteps:
+            raise RuntimeError(_tstep_msg(fem2, subcase, tstep_id))
 
     if 'TSTEPNL' in subcase:
         tstepnl_id = subcase.get_parameter('TSTEPNL')[0]
-        assert tstepnl_id in fem2.tstepnls, 'tstepnl_id=%s\n tstepnls=%s\n subcase:\n%s' % (tstepnl_id, str(fem2.tstepnls), str(subcase))
+        assert tstepnl_id in fem2.tstepnls, _tstep_msg(fem2, subcase, tstepnl_id, tstep_type='nl')
 
     if 'SUPORT1' in subcase:
         suport1_id = subcase.get_parameter('SUPORT1')[0]
@@ -1582,8 +1608,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
     return ierror
 
 
-def divide(value1, value2):
-    # type: (int, int) -> float
+def divide(value1: int, value2: int) -> float:
     """
     Used to divide the number of cards to check that nothing was lost.
     Handles division by 0 by returning 0, which is the reciprocal.
@@ -1599,8 +1624,7 @@ def divide(value1, value2):
     return div_value
 
 
-def test_get_cards_by_card_types(model):
-    # type: (BDF) -> None
+def test_get_cards_by_card_types(model: BDF) -> None:
     """Verifies the ``model.get_cards_by_card_types`` method works"""
     # setup to remove hackish cards
     card_types = list(model.card_count.keys())
@@ -1635,8 +1659,8 @@ def test_get_cards_by_card_types(model):
                 raise RuntimeError(msg)
 
 
-def compare_card_count(fem1, fem2, print_stats=False, quiet=False):
-    # type: (BDF, BDF, bool, bool) -> List[str]
+def compare_card_count(fem1: BDF, fem2: BDF,
+                       print_stats: bool=False, quiet: bool=False) -> List[str]:
     """Checks that no cards from fem1 are lost when we write fem2"""
     cards1 = fem1.card_count
     cards2 = fem2.card_count
@@ -1796,8 +1820,7 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
     assert np.allclose(inertia1, inertia2, atol=1e-5), 'reference_point=[10., 10., 10.]; mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
 
 
-def get_matrix_stats(fem1, unused_fem2):
-    # type: (BDF, BDF) -> None
+def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
     """Verifies the dmig.get_matrix() method works."""
     for (unused_key, dmig) in sorted(fem1.dmigs.items()):
         try:
@@ -1934,7 +1957,7 @@ def test_bdf_argparse(argv=None):
         '-L', '--loads', action='store_false',
         help='Disables forces/moments summation for the different subcases (default=True)')
 
-    parent_parser.add_argument('-e', '--nerrors', nargs=1, default=100,
+    parent_parser.add_argument('-e', '--nerrors', default=100, type=int,
                                help='Allow for cross-reference errors (default=100)')
     parent_parser.add_argument('--encoding', default=encoding, type=str,
                                help='the encoding method (default=%r)\n' % encoding)
@@ -1978,13 +2001,13 @@ def test_bdf_argparse(argv=None):
     args = parent_parser.parse_args(args=argv)
 
     args2 = argparse_to_dict(args)
-    optional_args = [
-        'double', 'large', 'crash', 'quiet', 'profile',
-        'xref', 'safe', 'check', 'punch', 'loads', 'stop', 'encoding',
-        'dumplines', 'dictsort', 'nerrors', 'pickle', 'hdf5',
-    ]
-    for arg in optional_args:
-        swap_key(args2, arg, '--' + arg)
+    #optional_args = [
+        #'double', 'large', 'crash', 'quiet', 'profile',
+        #'xref', 'safe', 'check', 'punch', 'loads', 'stop', 'encoding',
+        #'dumplines', 'dictsort', 'nerrors', 'pickle', 'hdf5',
+    #]
+    #for arg in optional_args:
+        #swap_key(args2, arg, '--' + arg)
     return args2
 # defaults
 #check        = False
@@ -2009,19 +2032,21 @@ def test_bdf_argparse(argv=None):
 
 def get_test_bdf_usage_args_examples(encoding):
     """helper method"""
-    options = '[-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort] [--crash C] [--pickle] [--profile] [--hdf5] '
+    options = (
+        '\n  [options] = [-e E] [--encoding ENCODE] [-q] [--dumplines] [--dictsort]\n'
+        '              [--crash C] [--pickle] [--profile] [--hdf5]\n')
     usage = (
         "Usage:\n"
-        '  test_bdf [-x | --safe] [-p] [-c] [-L]      BDF_FILENAME%s\n' % options +
-        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-d] BDF_FILENAME%s\n' % options +
-        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-l] BDF_FILENAME%s\n' % options +
-        '  test_bdf               [-p]                BDF_FILENAME%s\n' % options +
-        '  test_bdf [-x | --safe] [-p] [-stop]        BDF_FILENAME%s\n' % options +
-        #'  [options] = %s\n' % options +
+        '  test_bdf [-x | --safe] [-p] [-c] [-L]      BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-d] BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [-c] [-L] [-l] BDF_FILENAME [options]\n'
+        '  test_bdf               [-p]                BDF_FILENAME [options]\n'
+        '  test_bdf [-x | --safe] [-p] [--stop]       BDF_FILENAME [options]\n'
+        '  test_bdf -h | --help\n'
+        '  test_bdf -v | --version\n' +
+        options
 
         #"  test_bdf [-q] [-p] [-o [<VAR=VAL>]...] BDF_FILENAME\n"
-        '  test_bdf -h | --help\n'
-        '  test_bdf -v | --version\n'
     )
     args = (
         '\n'
@@ -2084,23 +2109,23 @@ def main(argv=None):
     time0 = time.time()
 
     is_double = False
-    if data['--double']:
+    if data['double']:
         size = 16
         is_double = True
-    elif data['--large']:
+    elif data['large']:
         size = 16
     else:
         size = 8
 
     crash_cards = []
-    if data['--crash']:
-        crash_cards = data['--crash'].split(',')
+    if data['crash']:
+        crash_cards = data['crash'].split(',')
 
     #print(data)
     debug = True
-    if data['--quiet']:
+    if data['quiet']:
         debug = None
-    if data['--profile']:
+    if data['profile']:
         import pstats
 
         import cProfile
@@ -2110,23 +2135,23 @@ def main(argv=None):
             '.',
             data['BDF_FILENAME'],
             debug=debug,
-            xref=['--xref'],
-            check=not(data['--check']),
-            punch=data['--punch'],
+            xref=data['xref'],
+            check=not(data['check']),
+            punch=data['punch'],
             size=size,
             is_double=is_double,
-            sum_load=data['--loads'],
-            stop=data['--stop'],
-            quiet=data['--quiet'],
-            dumplines=data['--dumplines'],
-            dictsort=data['--dictsort'],
-            nerrors=data['--nerrors'],
-            encoding=data['--encoding'],
+            sum_load=data['loads'],
+            stop=data['stop'],
+            quiet=data['quiet'],
+            dumplines=data['dumplines'],
+            dictsort=data['dictsort'],
+            nerrors=data['nerrors'],
+            encoding=data['encoding'],
             crash_cards=crash_cards,
             run_extract_bodies=False,
-            pickle_obj=data['--pickle'],
-            safe_xref=data['--safe'],
-            hdf5=data['--hdf5'],
+            pickle_obj=data['pickle'],
+            safe_xref=data['safe'],
+            hdf5=data['hdf5'],
             print_stats=True,
             stop_on_failure=False,
         )
@@ -2154,24 +2179,24 @@ def main(argv=None):
             '.',
             data['BDF_FILENAME'],
             debug=debug,
-            xref=data['--xref'],
-            # xref_safe=data['--xref_safe'],
-            check=not(data['--check']),
-            punch=data['--punch'],
+            xref=data['xref'],
+            # xref_safe=data['xref_safe'],
+            check=not(data['check']),
+            punch=data['punch'],
             size=size,
             is_double=is_double,
-            sum_load=data['--loads'],
-            stop=data['--stop'],
-            quiet=data['--quiet'],
-            dumplines=data['--dumplines'],
-            dictsort=data['--dictsort'],
-            nerrors=data['--nerrors'],
-            encoding=data['--encoding'],
+            sum_load=data['loads'],
+            stop=data['stop'],
+            quiet=data['quiet'],
+            dumplines=data['dumplines'],
+            dictsort=data['dictsort'],
+            nerrors=data['nerrors'],
+            encoding=data['encoding'],
             crash_cards=crash_cards,
             run_extract_bodies=False,
-            pickle_obj=data['--pickle'],
-            safe_xref=data['--safe'],
-            hdf5=data['--hdf5'],
+            pickle_obj=data['pickle'],
+            safe_xref=data['safe'],
+            hdf5=data['hdf5'],
             print_stats=True,
             stop_on_failure=False,
         )

@@ -189,6 +189,7 @@ class AECOMP(BaseCard):
         self.lists_ref = lists_ref
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.lists = self.get_lists()
         self.lists_ref = None
 
@@ -306,6 +307,7 @@ class AECOMPL(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):
@@ -402,6 +404,7 @@ class AEFACT(BaseCard):
         #pass
 
     #def uncross_reference(self):
+        #"""Removes cross-reference links"""
         #pass
 
     def raw_fields(self):
@@ -563,6 +566,7 @@ class AELINK(BaseCard):
                       comment=comment)
 
     #def uncross_reference(self) -> None:
+        #"""Removes cross-reference links"""
         #pass
 
     def raw_fields(self):
@@ -685,6 +689,7 @@ class AELIST(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def clean_ids(self):
@@ -806,6 +811,7 @@ class AEPARM(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):
@@ -1060,6 +1066,7 @@ class AESURF(BaseCard):
             self.tqulim_ref = model.safe_tabled(self.tqulim, self.aesid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid1 = self.Cid1()
         self.cid2 = self.Cid2()
         self.cid1_ref = None
@@ -1262,6 +1269,7 @@ class AESURFS(BaseCard):
             pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.list1 = self.List1()
         self.list2 = self.List2()
         self.list1_ref = None
@@ -1751,6 +1759,7 @@ class CAERO1(BaseCard):
         self._init_ids()
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         self.cp = self.Cp()
         self.lchord = self.get_LChord()
@@ -2339,6 +2348,7 @@ class CAERO2(BaseCard):
         self.ascid_ref = model.safe_acsid(msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         self.cp = self.Cp()
         if self.nsb == 0:
@@ -2644,6 +2654,7 @@ class CAERO3(BaseCard):
             model.log.warning('cannot find an aero coordinate system for %s' % msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         self.cp = self.Cp()
         if self.list_w != self.List_w():
@@ -2972,6 +2983,7 @@ class CAERO4(BaseCard):
         self._init_ids()
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         self.cp = self.Cp()
         if self.nspan == 0:
@@ -3294,6 +3306,7 @@ class CAERO5(BaseCard):
             self.lspan_ref = model.safe_aefact(self.lspan, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         self.cp = self.Cp()
         if self.nspan == 0:
@@ -3541,6 +3554,7 @@ class PAERO5(BaseCard):
             self.ltaus_ref = model.safe_aefact(self.ltaus_id, self.pid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.lxis = self.lxis_id
         self.ltaus = self.ltaus_id
         self.lxis_ref = None
@@ -3697,6 +3711,7 @@ class MONPNT1(BaseCard):
         self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cp = self.Cp()
         self.cd = self.Cd()
         self.cp_ref = None
@@ -3789,6 +3804,7 @@ class MONPNT2(BaseCard):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):
@@ -4080,6 +4096,7 @@ class PAERO1(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def Bodies(self):
@@ -4336,6 +4353,7 @@ class PAERO2(BaseCard):
             self.lrib_ref = model.safe_aefact(self.lrib, self.pid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.lrsb = self.Lrsb()
         self.lrib = self.Lrib()
         self.lrsb_ref = None
@@ -4535,6 +4553,7 @@ class PAERO3(BaseCard):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     @property
@@ -4699,6 +4718,7 @@ class PAERO4(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):
@@ -4928,6 +4948,7 @@ class SPLINE1(Spline):
                 self.setg, msg, np.unique(list(model.sets.keys()))))
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.caero = self.CAero()
         self.setg = self.Set()
         self.caero_ref = None
@@ -5139,6 +5160,7 @@ class SPLINE2(Spline):
             pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid = self.Cid()
         self.caero = self.CAero()
         self.setg = self.Set()
@@ -5392,6 +5414,7 @@ class SPLINE3(Spline):
         self.caero_ref = model.safe_caero(self.caero, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.caero = self.CAero()
         self.nodes = self.node_ids
         self.nodes_ref = None
@@ -5642,6 +5665,7 @@ class SPLINE4(Spline):
             raise ValueError(msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.caero = self.CAero()
         self.setg = self.Set()
         self.aelist = self.AEList()
@@ -5854,6 +5878,7 @@ class SPLINE5(Spline):
             pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid = self.Cid()
         self.caero = self.CAero()
         self.setg = self.Set()

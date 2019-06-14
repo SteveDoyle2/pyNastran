@@ -213,6 +213,7 @@ class AEROS(Aero):
                      comment=comment)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.acsid_ref = None
         self.rcsid_ref = None
 
@@ -483,6 +484,7 @@ class CSSCHD(Aero):
         self.lschd_ref = model.safe_aefact(self.lschd, self.sid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.aesid = self.AESid()
         self.lalpha = self.LAlpha()
         self.lmach = self.LMach()
@@ -988,6 +990,7 @@ class TRIM(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     @classmethod

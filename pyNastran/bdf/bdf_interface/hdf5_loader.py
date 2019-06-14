@@ -1001,19 +1001,23 @@ def hdf5_load_dti(model, group, encoding):
                 lst = _load_indexed_list(irecord, sub_groupi, encoding)
                 lst2 = [val.decode(encoding) if isinstance(val, bytes) else val for val in lst]
             else:
-                #print(sub_group, sub_groupi, len(sub_groupi.keys()))
-                keys = sub_groupi.keys()
-                #print(keys)
-                lst = []
-                for key in keys:
-                    sub_groupii = sub_groupi[key]
-                    if len(sub_groupii.shape) == 0:
-                        lst.append(None)
-                    else:
-                        lst.append(_cast(sub_groupii))
-                #lst = _cast(sub_groupi)
-                #print(lst)
-                lst2 = lst
+                if isinstance(sub_groupi, h5py._hl.dataset.Dataset):
+                    #print(sub_group, sub_groupi)
+                    lst2 = _cast(sub_groupi).tolist()
+                else:
+                    #print(sub_group, sub_groupi, len(sub_groupi.keys()))
+                    keys = sub_groupi.keys()
+                    #print(keys)
+                    lst = []
+                    for key in keys:
+                        sub_groupii = sub_groupi[key]
+                        if len(sub_groupii.shape) == 0:
+                            lst.append(None)
+                        else:
+                            lst.append(_cast(sub_groupii))
+                    #lst = _cast(sub_groupi)
+                    #print(lst)
+                    lst2 = lst
             fields[irecord] = lst2
         assert len(fields) > 0, fields
         model.add_dti(name, fields)

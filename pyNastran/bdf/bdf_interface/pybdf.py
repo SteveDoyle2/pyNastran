@@ -14,7 +14,7 @@ import numpy as np
 from cpylog import get_logger2
 from pyNastran.utils import print_bad_path, _filename
 
-from pyNastran.bdf import BULK_DATA_CARDS, CASE_CONTROL_CARDS, FLAGGED_CARDS
+from pyNastran.bdf import BULK_DATA_CARDS, FLAGGED_CARDS
 from pyNastran.bdf.errors import MissingDeckSections
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
 from pyNastran.bdf.bdf_interface.include_file import get_include_filename

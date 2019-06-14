@@ -400,6 +400,7 @@ class CBUSH(BushElement):
             self.ocid_ref = model.safe_coord(self.ocid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ga = self.Ga()
         self.pid = self.Pid()
         self.cid = self.Cid()
@@ -540,6 +541,7 @@ class CBUSH1D(BushElement):
             self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.cid = self.Cid()
@@ -748,6 +750,7 @@ class CBUSH2D(BushElement):
             self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.cid = self.Cid()

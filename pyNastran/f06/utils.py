@@ -1,9 +1,13 @@
 """
 defines:
  - cmd_line_plot_flutter()
+
 """
-#import  matplotlib
+#import matplotlib
 #matplotlib.use('Qt5Agg')
+#from pyNastran.gui.matplotlib_backend import  matplotlib_backend
+#print(matplotlib_backend)
+#matplotlib.use(matplotlib_backend)
 #from pyNastran.gui.qt_version import qt_version
 
 def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):

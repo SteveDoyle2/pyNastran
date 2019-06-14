@@ -243,6 +243,7 @@ class AERO(Aero):
         #angle = self.wg*self.t*(t-(x-self.x0)/self.V)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.acsid_ref = None
 
     def update(self, maps):
@@ -821,6 +822,7 @@ class FLUTTER(BaseCard):
             pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.density = self.get_density()
         self.mach = self.get_mach()
         self.reduced_freq_velocity = self.get_rfreq_vel()

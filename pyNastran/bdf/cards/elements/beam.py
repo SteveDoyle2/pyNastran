@@ -731,6 +731,7 @@ class CBEAM(LineElement):
             self.g0_vector = self.x
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         self.ga = self.Ga()
         self.gb = self.Gb()

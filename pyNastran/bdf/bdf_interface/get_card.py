@@ -1050,7 +1050,9 @@ class GetCard(GetMethods):
                             if np.linalg.norm(load.nvector) != 0.0 or load.Cid() != 0:
                                 normal = load.nvector / np.linalg.norm(load.nvector)
                                 cid = load.Cid()
-                                if cid != 0:
+                                if cid is None:
+                                    pass
+                                elif cid != 0:
                                     msg = 'cid=%r on a PLOAD4 is not supported\n%s' % (cid, str(load))
                                     raise NotImplementedError(msg)
                         else:

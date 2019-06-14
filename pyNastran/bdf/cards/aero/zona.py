@@ -491,6 +491,7 @@ class ACOORD(Coord):  # not done
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def coord_to_xyz(self, p):
@@ -713,6 +714,7 @@ class AESURFZ(BaseCard):
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid = self.Cid()
         self.cid_ref = None
 
@@ -1001,6 +1003,7 @@ class AEROZ(Aero):
         self.rcsid_ref = model.safe_coord(self.rcsid, None, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.acsid_ref = None
         self.rcsid_ref = None
 
@@ -1501,6 +1504,7 @@ class PAFOIL7(BaseCard):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.i_thickness_root_ref = None
         self.i_camber_root_ref = None
         self.i_thickness_tip_ref = None
@@ -1721,6 +1725,7 @@ class BODY7(BaseCard):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         self.acoord = self.ACoord()
         self.pid_ref = None
@@ -2286,6 +2291,7 @@ class SEGMESH(BaseCard):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         #self.cp = self.Cp()
         #self.idys = idys_ref
@@ -2669,6 +2675,7 @@ class CAERO7(BaseCard):
         self._init_ids()
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         #self.pid = self.Pid()
         self.cp = self.Cp()
         self.lspan = self.get_LSpan()
@@ -3142,6 +3149,7 @@ class TRIM_ZONA(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def convert_to_nastran(self, model):
@@ -3292,6 +3300,7 @@ class TRIMLNK(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def convert_to_nastran(self, model):
@@ -3417,6 +3426,7 @@ class TRIMVAR(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def convert_to_nastran(self, model):
@@ -3597,6 +3607,7 @@ class FLUTTER_ZONA(Spline):
             #pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         return
         #self.panlst_ref = None
         #self.setg_ref = None
@@ -3721,6 +3732,7 @@ class SPLINE1_ZONA(Spline):
             pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.panlst_ref = None
         self.setg_ref = None
 
@@ -3874,6 +3886,7 @@ class SPLINE2_ZONA(Spline):
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.panlst_ref = None
         self.setg_ref = None
 
@@ -3977,6 +3990,7 @@ class SPLINE3_ZONA(Spline):
         self.aero_element_ids = self.panlst_ref.aero_element_ids
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.panlst_ref = None
         self.setg_ref = None
 

@@ -1046,7 +1046,7 @@ def _get_cbeam_mass_no_nsm(model, elem, mass, cg, inertia, reference_point):
     nsm = nsm_per_length * length
     if (m + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
         msg = 'CBEAM; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
-            eid, pid, prop.type, mass_per_length, nsm_per_length, length)
+            elem.eid, pid, prop.type, mass_per_length, nsm_per_length, length)
         msg += 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
         msg += 'centroid_new=%s centroid_old=%s\n%s' % (
             str(centroid), str(elem.Centroid()), str(elem))

@@ -196,16 +196,21 @@ class BDFMethods(BDFAttributes):
         >>> pids = list(model.pids.keys())
         >>> pid_eids = self.get_element_ids_dict_with_pids(pids)
         >>> for pid, eids in sorted(pid_eids.items()):
-        >>>     mass, cg, I = model.mass_properties(element_ids=eids)
+        >>>     mass, cg, inertia = model.mass_properties(element_ids=eids)
 
         """
-        mass, cg, I = mass_properties(
+        self.deprecated(
+            'mass, cg, inertia = model.mass_properties(...)',
+            'from pyNastran.bdf.mesh_utils.mass_properties import mass_properties\n'
+            'mass, cg, inertia = mass_properties(model, ...)',
+            '1.3')
+        mass, cg, inertia = mass_properties(
             self,
             element_ids=element_ids, mass_ids=mass_ids,
             reference_point=reference_point,
             sym_axis=sym_axis, scale=scale,
             inertia_reference=inertia_reference)
-        return mass, cg, I
+        return mass, cg, inertia
 
     def mass_properties_no_xref(self, element_ids=None, mass_ids=None,
                                 reference_point=None,
@@ -281,6 +286,11 @@ class BDFMethods(BDFAttributes):
         >>>     mass, cg, inertia = model.mass_properties(element_ids=eids)
 
         """
+        self.deprecated(
+            'mass, cg, inertia = model.mass_properties_no_xref(...)',
+            'from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_no_xref\n'
+            'mass, cg, inertia = mass_properties_no_xref(model, ...)',
+            '1.3')
         mass, cg, inertia = mass_properties_no_xref(
             self, element_ids=element_ids, mass_ids=mass_ids,
             reference_point=reference_point,
@@ -377,6 +387,11 @@ class BDFMethods(BDFAttributes):
            will be considered, even if not included in the element set
 
         """
+        self.deprecated(
+            'mass, cg, inertia = model.mass_properties_nsm(...)',
+            'from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_nsm\n'
+            'mass, cg, inertia = mass_properties_nsm(model, ...)',
+            '1.3')
         mass, cg, inertia = mass_properties_nsm(
             self, element_ids=element_ids, mass_ids=mass_ids, nsm_id=nsm_id,
             reference_point=reference_point,
@@ -474,6 +489,11 @@ class BDFMethods(BDFAttributes):
         .. todo:: not done...
 
         """
+        self.deprecated(
+            'forces, moments = model.sum_forces_moments_elements(...)',
+            'from pyNastran.bdf.mesh_utils.loads import sum_forces_moments_elements\n'
+            'forces, moments = sum_forces_moments_elements(model, ...)',
+            '1.3')
         forces, moments = sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
                                                       include_grav=include_grav, xyz_cid0=xyz_cid0)
         return forces, moments
@@ -516,6 +536,11 @@ class BDFMethods(BDFAttributes):
         Pressure acts in the normal direction per model/real/loads.bdf and loads.f06
 
         """
+        self.deprecated(
+            'forces, moments = model.sum_forces_moments(...)',
+            'from pyNastran.bdf.mesh_utils.loads import sum_forces_moments\n'
+            'forces, moments = sum_forces_moments(model, ...)',
+            '1.3')
         forces, moments = sum_forces_moments(self, p0, loadcase_id,
                                              include_grav=include_grav, xyz_cid0=xyz_cid0)
         return forces, moments
@@ -587,7 +612,12 @@ class BDFMethods(BDFAttributes):
             the string encoding
 
         """
-        return write_skin_solid_faces(
+        self.deprecated(
+            'model.write_skin_solid_faces(...)',
+            'from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces\n'
+            'write_skin_solid_faces(model, ...)',
+            '1.3')
+        write_skin_solid_faces(
             self, skin_filename,
             write_solids=write_solids, write_shells=write_shells,
             size=size, is_double=is_double, encoding=encoding)

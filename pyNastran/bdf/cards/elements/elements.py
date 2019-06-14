@@ -142,6 +142,7 @@ class CFAST(Element):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.pid = self.Pid()
         self.gs = self.Gs()
         self.ga = self.Ga()
@@ -501,6 +502,7 @@ class CGAP(Element):
             self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ga = self.Ga()
         self.gb = self.Gb()
         self.cid = self.Cid()
@@ -591,6 +593,7 @@ class CrackElement(Element):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -936,6 +939,7 @@ class PLOTEL(BaseCard):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -1163,6 +1167,7 @@ class GENEL(BaseCard):
         #self.gb_ref = model.Node(self.gb, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ul[:, 0] = self.ul_nodes
         self.ud[:, 0] = self.ud_nodes
         self.ul_nodes_ref = None

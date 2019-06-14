@@ -195,6 +195,7 @@ class SUPORT1(Constraint):
         self.nodes_ref = nids2
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -342,6 +343,7 @@ class SUPORT(Constraint):
         self.nodes_ref = nids2
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -599,6 +601,7 @@ class MPC(Constraint):
         self.nodes_ref = nids2
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -861,6 +864,7 @@ class SPC(Constraint):
         self.nodes_ref = nids2
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -930,6 +934,7 @@ class GMSPC(Constraint):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):
@@ -1035,6 +1040,7 @@ class SPCAX(Constraint):
         self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):
@@ -1198,6 +1204,7 @@ class SPC1(Constraint):
         self.nodes_ref = nids2
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -1348,6 +1355,7 @@ class SPCOFF(Constraint):
         self.nodes_ref = nids2
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -1468,6 +1476,7 @@ class SPCOFF1(Constraint):
         self.nodes_ref = nids2
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -1600,6 +1609,7 @@ class SPCADD(ConstraintAdd):
             self.sets_ref.append(spc)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.sets = self.spc_ids
         self.sets_ref = []
 
@@ -1721,6 +1731,7 @@ class MPCADD(ConstraintAdd):
             self.sets_ref.append(mpc)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.sets = self.mpc_ids
         self.sets_ref = []
 

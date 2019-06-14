@@ -221,6 +221,7 @@ class CELAS1(SpringElement):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -409,6 +410,7 @@ class CELAS2(SpringElement):
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -579,6 +581,7 @@ class CELAS3(SpringElement):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -763,6 +766,7 @@ class CELAS4(SpringElement):
         #self.nodes_ref = model.safe_empty_nodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 

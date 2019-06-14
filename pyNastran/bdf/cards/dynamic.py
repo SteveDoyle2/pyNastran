@@ -152,6 +152,7 @@ class DELAY(BaseCard):
         self.nodes_ref = model.Node(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -309,6 +310,7 @@ class DPHASE(BaseCard):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 
@@ -1665,6 +1667,7 @@ class ROTORG(BaseCard):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
     def raw_fields(self):
@@ -2486,6 +2489,7 @@ class TIC(BaseCard):
         return self.cross_reference(model)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.nodes_ref = None
 

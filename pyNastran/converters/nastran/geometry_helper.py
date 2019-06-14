@@ -186,6 +186,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
             if elem.pb != 0:
                 nid_release_map[nid2].append((eid, elem.pb))
 
+            if isinstance(elem.offt, int):
+                continue
             unused_v, wa, wb, xform = rotate_v_wa_wb(
                 model, elem,
                 n1, n2, node1, node2,

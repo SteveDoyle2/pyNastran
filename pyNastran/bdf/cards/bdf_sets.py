@@ -163,6 +163,7 @@ class ABCQSet(Set):
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ids = self.node_ids
         self.ids_ref = None
 
@@ -256,6 +257,7 @@ class SuperABCQSet(Set):
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ids = self.node_ids
         self.ids_ref = None
 
@@ -528,6 +530,7 @@ class ABQSet1(Set):
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ids = self.node_ids
         self.ids_ref = None
 
@@ -640,6 +643,7 @@ class SuperABQSet1(Set):
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ids = self.node_ids
         self.ids_ref = None
 
@@ -876,6 +880,7 @@ class CSET1(Set):
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ids = self.node_ids
         self.ids_ref = None
 
@@ -1114,6 +1119,7 @@ class SET1(Set):
         self.xref_type = xref_type
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         if self.xref_type in ['Node', 'Point']:
             self.ids = self.get_ids()
             self.xref_type = None
@@ -1421,6 +1427,7 @@ class SESET(SetSuper):
         pass
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         pass
 
 
@@ -1814,6 +1821,7 @@ class USET(Set):
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ids = self.node_ids
         self.ids_ref = None
 
@@ -1930,6 +1938,7 @@ class USET1(ABQSet1):
         self.ids_ref = model.EmptyNodes(self.node_ids, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.ids = self.node_ids
         self.ids_ref = None
 

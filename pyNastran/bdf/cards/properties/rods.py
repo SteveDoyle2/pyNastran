@@ -212,6 +212,7 @@ class PROD(Property):
         self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         # type: () -> None
         self.mid = self.Mid()
         self.mid_ref = None
@@ -403,6 +404,7 @@ class PTUBE(Property):
         self.mid_ref = model.safe_material(self.mid, self.pid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.mid = self.Mid()
         self.mid_ref = None
 

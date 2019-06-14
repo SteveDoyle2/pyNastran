@@ -2879,6 +2879,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     if pid is None:
                         print('pid is None in _fill_spc...')
                         continue
+                    if pid < 0:
+                        print('pid=%s in _fill_spc...' % pid)
+                        continue
                     prop = model.properties[pid]
                     if prop.type not in ['PSOLID', 'PLSOLID']:
                         plot_node = True
@@ -4919,16 +4922,19 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #xyz2 = xyz_cid0[n2, :]
                 eid_to_nid_map[eid] = node_ids
 
-                g0 = element.g0 #_vector
-                if not isinstance(g0, integer_types):
-                    msg = 'CBEND: g0 must be an integer; g0=%s x=%s\n%s' % (
-                        g0, element.x, element)
-                    raise NotImplementedError(msg)
-                # only supports g0 as an integer
-                elem = vtk.vtkQuadraticEdge()
+                if 0:
+                    g0 = element.g0 #_vector
+                    if not isinstance(g0, integer_types):
+                        msg = 'CBEND: g0 must be an integer; g0=%s x=%s\n%s' % (
+                            g0, element.x, element)
+                        raise NotImplementedError(msg)
+                    # only supports g0 as an integer
+                    elem = vtk.vtkQuadraticEdge()
+                    elem.GetPointIds().SetId(2, nid_map[g0])
+                else:
+                    elem = vtk.vtkLine()
                 elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
                 elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
-                elem.GetPointIds().SetId(2, nid_map[g0])
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
             elif etype == 'CHBDYG':
@@ -5037,6 +5043,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #msg += 'side_nodes = %s\n' % side_nodes
                     raise NotImplementedError(msg)
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            elif etype == 'GENEL':
+                node_ids = element.node_ids
+                pid = 0
+                elem = vtk.vtkLine()
+                elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
+                elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
             else:
                 self.log.warning('removing\n%s' % (element))
                 self.log.warning('removing eid=%s; %s' % (eid, element.type))

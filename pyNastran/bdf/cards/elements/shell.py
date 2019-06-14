@@ -663,6 +663,7 @@ class CTRIA3(TriShell):
             self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -901,6 +902,7 @@ class CPLSTN3(TriShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -1183,6 +1185,7 @@ class CTRIA6(TriShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -1520,6 +1523,7 @@ class CTRIAR(TriShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -1774,6 +1778,7 @@ class QuadShell(ShellElement):
         return (theta_mcid, zoffset, tflag, T1, T2, T3, T4)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -1951,6 +1956,7 @@ class CSHEAR(QuadShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -2611,6 +2617,7 @@ class CQUAD4(QuadShell):
         #return dNdeta_mat
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -2867,6 +2874,7 @@ class CPLSTN4(QuadShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -3026,6 +3034,7 @@ class CPLSTN6(TriShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -3121,6 +3130,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -3359,6 +3369,7 @@ class CPLSTN8(QuadShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -3670,6 +3681,7 @@ class CQUADR(QuadShell):
         ## TODO: xref coord
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -3889,6 +3901,7 @@ class CPLSTS3(TriShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.nodes_ref = None
@@ -4119,6 +4132,7 @@ class CQUAD(QuadShell):
             self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -4407,6 +4421,7 @@ class CQUAD8(QuadShell):
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.nodes = self.node_ids
         self.pid = self.Pid()
         self.theta_mcid = self.Theta_mcid()
@@ -4627,6 +4642,7 @@ class SNORM(BaseCard):
         self.cid_ref = model.safe_coord(self.cid, self.nid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
         self.cid = self.Cid()
         self.cid_ref = None
 
