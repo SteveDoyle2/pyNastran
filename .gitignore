@@ -25,6 +25,7 @@ htmlcov
 *.pdf
 *.h5
 *.gz
+*.json
 
 # C extensions
 *.so
