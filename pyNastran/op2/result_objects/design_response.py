@@ -174,6 +174,7 @@ class GeneralResponse:
 
     def append(self, internal_id, dresp_id, response_label, region, subcase, type_flag, seid,
                item_code, pid):
+        assert isinstance(response_label, str), response_label
         self.internal_id.append(internal_id)
         self.response_label.append(response_label)
         self.subcase.append(subcase)
@@ -184,8 +185,11 @@ class GeneralResponse:
     def __repr__(self):
         name = self.__class__.__name__
         msg = 'responses.%s()\n' % name
-        msg += '  item_code=%s\n' % (self.item_code)
-        msg += '  pid=%s\n' % (self.pid)
+        msg += '  internal_id = %s\n' % np.array(self.internal_id)
+        msg += '  response_label = %s\n' % np.array(self.response_label)
+        msg += '  subcase = %s\n' % np.array(self.subcase)
+        msg += '  item_code = %s\n' % np.array(self.item_code)
+        msg += '  pid = %s\n' % np.array(self.pid)
         return msg
 
     def get_stats(self, short=False):
@@ -232,7 +236,7 @@ class FlutterResponse:
 
     def __repr__(self):
         msg = 'FlutterResponse()\n'
-        msg += '  velocity=%s\n' % (self.velocity)
+        msg += '  velocity=%s\n' % np.array(self.velocity)
         return msg
 
     def get_stats(self, short=False):
