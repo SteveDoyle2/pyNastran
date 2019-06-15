@@ -3,38 +3,6 @@ import numpy as np
 from pyNastran.op2.result_objects.table_object import RealTableArray, ComplexTableArray
 
 
-def make_pack_form(data):
-    N = 0
-    n = 0
-    #Form = ''
-    fold = None
-    old = None
-    for d in data:
-        if isinstance(d, str):
-            n = len(d)
-            f = 's'
-        elif isinstance(d, int):
-            n = 4
-            f = 'i'
-        elif isinstance(d, float):
-            n = 4
-            f = 'f'
-        else:
-            raise NotImplementedError(type(d))
-        if old and f != fold:
-            form = str(N) + fold
-            #Form += form
-            N = n
-        else:
-            N += n
-        old = d
-        fold = f
-    if N:
-        form = str(N) + f
-        #Form += form
-    return form
-
-
 class RealDisplacementArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)

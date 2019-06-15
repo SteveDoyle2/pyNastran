@@ -27,7 +27,7 @@ packages = find_packages(exclude=['ez_setup', 'examples', 'tests'] + exclude_wor
 for exclude_word in exclude_words:
     packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
-all_reqs, install_requires = get_package_requirements(is_gui=False)
+all_reqs, install_requires = get_package_requirements(is_gui=True)
 
 setup(
     name='pyNastran',
@@ -82,3 +82,6 @@ setup(
     },
     test_suite='pyNastran.all_tests',
 )
+print()
+for package in install_requires:
+    print('did not install %s' % package)
