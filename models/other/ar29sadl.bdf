@@ -1,0 +1,63 @@
+ID MSC, ar29sadl $ V705 KLK 16-JAN-1998
+TIME 10  $
+SOL 129 $
+CEND
+TITLE=single dof linear spring and damper forced through nonl. ar29sadl
+SUBTITLE= compare CELAS, CROD, CVISC and new CBUSH1D
+ECHO=BOTH
+SET 1 = 2, 12, 22
+SET 2 = 101, 102, 111, 112, 104
+DISP=1
+STRESS=2
+spc= 4
+SUBCASE 1
+  DLOAD=100
+  TSTEPNL=100
+OUTPUT(XYPLOT)
+   XTITLE = TIME IN SECS
+   XGRID LINES = YES
+   YGRID LINES = YES
+   YTITLE = DISPLACEMENT 
+   XYPLOT DISP RESP/2(T1), 12(T1), 22(T1)
+   YTITLE = STRESS IN ROD
+   XYPLOT STRESS RESP /102(2), 104(2) 
+BEGIN BULK
+grid, 1, , 0., 0., 0.
+grid, 2, , 1., 0., 0.
+grid,11, , 0., 1., 0.
+grid,12, , 1., 1., 0.
+grid,21, , 0., 2., 0.
+grid,22, , 1., 2., 0.
+spc1, 4, 123456, 1, 11, 21 
+spc1, 4, 23456,  2, 12, 22
+conm2, 51,  2, , 1000.
+conm2, 52, 12, , 1000.
+conm2, 53, 22, , 1000.
+celas1, 101, 201, 1, 1, 2, 1
+pelas, 201, 1.e+5 
+cvisc, 111, 310, 1, 2
+crod, 102, 202, 11, 12
+prod, 202, 222, 1.  
+mat1, 222, 1.e+5
+mats1, 222, , plastic, 0., 1, 1, 1.e+8
+cvisc, 112, 310, 11, 12
+pvisc, 310, 1000.  
+cbush1d, 104, 204, 21, 22
+pbush1d, 204, 1.e+5, 1000., , , , , , +pb1
++pb1, spring, table, 205, , , , , , +pb2
++pb2, damper, table, 206
+tabled1, 205, , , , , , , ,+tb1
++tb1, 0., 0., 1., 1.e+5, endt 
+tabled1, 206, , , , , , , ,+tb2
++tb2, 0., 0., 1., 1.e+3, endt 
+TSTEPNL, 100, 100, .02, , adapt, , , , +TSP100
++TSP100, , , , , , , , , +TSP100
++TSP100, , 0
+DAREA   100     2       1       1000.     
+DAREA   100     12      1       1000.     
+DAREA   100     22      1       1000.     
+TLOAD1  100     100             0       100
+TABLED1 100                                                             +ABC
++ABC    0.      1.      10.     1.      ENDT
+PARAM,POST,-1
+ENDDATA
