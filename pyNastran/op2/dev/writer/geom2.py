@@ -35,6 +35,38 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
     if nplotels:
         out['PLOTEL'] = list(obj.plotels.keys())
 
+    mapper = {
+        # key, spack, nfields
+        'PLOTEL' : ((5201, 52, 11), b'3i', 3),
+        'CTUBE' : ((3701, 37, 49), b'4i', 4),
+        'CSHEAR' : ((3101, 31, 61), b'6i', 6),
+        'CQUAD4' : ((2958, 51, 177), b'6iffii4f', 14),
+        'CTRIA3' : ((5959, 59, 282), b'5iff3i3f', 13),
+        'CQUADR' : ((8009, 80, 367), b'6iffii4f', 14),  # same as CQUAD4
+        'CTRIAR' : ((9200, 92, 385), b'5iff3i3f', 13),  # same as CTRIA3
+        'CQUAD8' : ((4701, 47, 326), b'10i 6f i', 17),  # current; not 2001
+        'CTRIA6' : ((4801, 48, 327), b'8i 5f i', 14),  # current; not 2001
+        'CTRIAX6' : ((6108, 61, 107), b'8i f ii', 11),
+        'CQUAD' : ((9108, 91, 507), b'11i', 11),
+        'CQUADX' : ((9008, 90, 508), b'11i', 11),  # same as CQUAD
+        'CROD' : ((3001, 30, 48), b'4i', 4),
+        'CONROD' : ((1601, 16, 47), b'4i4f', 8),
+
+        'CDAMP1' : ((201, 2, 69), b'6i', 6),
+        'CDAMP2' : ((301, 3, 70), b'if4i', 6),
+        'CDAMP3' : ((401, 4, 71), b'4i', 4),
+        'CDAMP4' : ((501, 5, 72), b'ifii', 4),
+        'CDAMP5' : ((10608, 106, 404), b'ifii', 4),
+
+        'CELAS1' : ((601, 6, 73), b'6i', 6),
+        'CELAS2' : ((701, 7, 74), b'if4iff', 8),
+        'CELAS3' : ((801, 8, 75), b'4i', 4),
+        'CELAS4' : ((901, 9, 76), b'ifii', 4),
+
+        'CVISC' : ((3901, 39, 50), b'4i', 4),
+        #'PLOTEL' : (, , ),
+    }
+
     for name, eids in sorted(out.items()):
         nelements = len(eids)
         if name in etypes_to_skip:
@@ -63,14 +95,10 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
             nfields = nnodes + 2
             spack = Struct(endian + b'%ii' % (nfields))
 
-        elif name == 'PLOTEL':
-            key = (5201, 52, 11)
-            spack = Struct(endian + b'3i')
-            nfields = 3
-        elif name == 'CTUBE':
-            key = (3701, 37, 49)
-            spack = Struct(endian + b'4i')
-            nfields = 4
+        elif name in mapper:
+            key, spacki, nfields = mapper[name]
+            spack = Struct(endian + spacki)
+            #print(name, spacki)
         elif name == 'CBAR':
             key = (2408, 24, 180)
             spack = None
@@ -79,92 +107,6 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
             key = (5408, 54, 261)
             spack = None
             nfields = 18
-        elif name == 'CSHEAR':
-            key = (3101, 31, 61)
-            spack = Struct(endian + b'6i')
-            nfields = 6
-        elif name == 'CQUAD4':
-            key = (2958, 51, 177)
-            spack = Struct(endian + b'6iffii4f')
-            nfields = 14
-        elif name == 'CTRIA3':
-            key = (5959, 59, 282)
-            spack = Struct(endian + b'5iff3i3f')
-            nfields = 13
-        elif name == 'CQUADR':  # same as CQUAD4
-            key = (8009, 80, 367)
-            spack = Struct(endian + b'6iffii4f')
-            nfields = 14
-        elif name == 'CTRIAR':  # same as CTRIA3
-            key = (9200, 92, 385)
-            spack = Struct(endian + b'5iff3i3f')
-            nfields = 13
-        elif name == 'CQUAD8':  # current; not 2001
-            key = (4701, 47, 326)
-            spack = Struct(endian + b'10i 6f i')
-            nfields = 17
-        elif name == 'CTRIA6':  # current; not 2001
-            key = (4801, 48, 327)
-            spack = Struct(endian + b'8i 5f i')
-            nfields = 14
-        elif name == 'CTRIAX6':
-            key = (6108, 61, 107)
-            spack = Struct(endian + b'8i f ii')
-            nfields = 11
-        elif name == 'CQUAD':
-            key = (9108, 91, 507)
-            spack = Struct(endian + b'11i')
-        elif name == 'CQUADX':  # same as CQUAD
-            key = (9008, 90, 508)
-            spack = Struct(endian + b'11i')
-        elif name == 'CROD':
-            key = (3001, 30, 48)
-            spack = Struct(endian + b'4i')
-            nfields = 4
-        elif name == 'CONROD':
-            key = (1601, 16, 47)
-            spack = Struct(endian + b'4i4f')
-            nfields = 8
-        elif name == 'CELAS1':
-            spack = Struct(endian + b'6i')
-            key = (601, 6, 73)
-            nfields = 6
-        elif name == 'CELAS2':
-            key = (701, 7, 74)
-            spack = Struct(endian + b'if4iff')
-            nfields = 8
-        elif name == 'CELAS3':
-            key = (801, 8, 75)
-            spack = Struct(endian + b'4i')
-            nfields = 4
-        elif name == 'CELAS4':
-            key = (901, 9, 76)
-            spack = Struct(endian + b'ifii')
-            nfields = 4
-        elif name == 'CDAMP1':
-            key = (201, 2, 69)
-            spack = Struct(endian + b'6i')
-            nfields = 6
-        elif name == 'CDAMP2':
-            key = (301, 3, 70)
-            spack = Struct(endian + b'if4i')
-            nfields = 6
-        elif name == 'CDAMP3':
-            key = (401, 4, 71)
-            spack = Struct(endian + b'4i')
-            nfields = 4
-        elif name == 'CDAMP4':
-            key = (501, 5, 72)
-            spack = Struct(endian + b'ifii')
-            nfields = 4
-        elif name == 'CDAMP5':
-            key = (10608, 106, 404)
-            spack = Struct(endian + b'ifii')
-            nfields = 4
-        elif name == 'CVISC':
-            key = (3901, 39, 50)
-            spack = Struct(endian + b'4i')
-            nfields = 4
         elif name == 'CBUSH':
             key = (2608, 26, 60)
             spack = None
@@ -424,7 +366,6 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             elem = obj.elements[eid]
             nids = elem.node_ids
             pid = elem.pid
-            #print(elem.get_stats())
             #(eid, pid, n1, n2, n3, n4, theta, zoffs, blank, tflag,
              #t1, t2, t3, t4) = out
             theta = get_theta_from_theta_mcid(elem.theta_mcid)
@@ -443,7 +384,6 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             nids = [nid if nid is not None else 0
                     for nid in elem.node_ids]
             pid = elem.pid
-            #print(elem.get_stats())
              #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, t1, t2,
               #t3, t4, theta, zoffs, tflag) = out # current
             #(eid, pid, n1, n2, n3, n4, n5, n6, n7, n8,
@@ -468,7 +408,6 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             nids = [nid if nid is not None else 0
                     for nid in elem.node_ids]
             pid = elem.pid
-            #print(elem.get_stats())
             #(eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, tflag) = out
             theta = get_theta_from_theta_mcid(elem.theta_mcid)
             t1 = elem.T1 if elem.T1 is not None else -1.
@@ -487,7 +426,6 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             nids = [nid if nid is not None else 0
                     for nid in elem.node_ids]
             mid = elem.mid
-            #print(elem.get_stats())
             #eid, mid, n1, n2, n3, n4, n5, n6, theta, unused_undef1, unused_undef2 = data
             data = [eid, mid] + nids + [elem.theta, 0, 0]
             assert None not in data, '%s data=%s' % (name, data)
@@ -512,7 +450,6 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             elem = obj.elements[eid]
             nids = elem.node_ids
             pid = elem.pid
-            #print(elem.get_stats())
             theta = get_theta_from_theta_mcid(elem.theta_mcid)
             #eid, pid, n1, n2, n3, theta_mcid, zoffs, blank1, blank2, tflag, t1, t2, t3
             data = [eid, pid] + nids + [theta, elem.zoffset, 0, 0,
@@ -540,11 +477,9 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
     elif name in ['CELAS1', 'CDAMP1']:
         for eid in sorted(eids):
             elem = obj.elements[eid]
-            n1, n2 = elem.node_ids
+            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
             pid = elem.pid
             #(eid, pid, g1, g2, c1, c2)
-            if n2 is None:
-                n2 = 0
             data = [eid, pid, n1, n2, elem.c1, elem.c2]
             #print(name, data)
             op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, n1, n2))
@@ -552,12 +487,8 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
     elif name == 'CELAS2':
         for eid in sorted(eids):
             elem = obj.elements[eid]
-            n1, n2 = elem.node_ids
+            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
             #(eid, k, g1, g2, c1, c2, ge, s) = out
-            if n1 is None:
-                n1 = 0
-            if n2 is None:
-                n2 = 0
             c2 = elem.c2 if elem.c2 is not None else 0
             data = [eid, elem.k, n1, n2, elem.c1, c2, elem.ge, elem.s]
             #print('CELAS2', data)
@@ -566,12 +497,8 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
     elif name in ['CELAS3', 'CDAMP3', 'CDAMP5']:
         for eid in sorted(eids):
             elem = obj.elements[eid]
-            n1, n2 = elem.node_ids
+            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
             pid = elem.pid
-            if n1 is None:
-                n1 = 0
-            if n2 is None:
-                n2 = 0
             #(eid, pid, s1, s2) = out
             data = [eid, pid, n1, n2]
             #print(name, data)
@@ -580,11 +507,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
     elif name == 'CELAS4':
         for eid in sorted(eids):
             elem = obj.elements[eid]
-            n1, n2 = elem.node_ids
-            if n1 is None:
-                n1 = 0
-            if n2 is None:
-                n2 = 0
+            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
             #(eid, k, s1, s2) = out
             data = [eid, elem.k, n1, n2]
             #print(data)
@@ -593,10 +516,8 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
     elif name == 'CDAMP2':
         for eid in sorted(eids):
             elem = obj.elements[eid]
-            n1, n2 = elem.node_ids
+            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
             #(eid, bdamp, g1, g2, c1, c2) = out
-            if n2 is None:
-                n2 = 0
             c1 = elem.c1 if elem.c1 is not None else 0
             c2 = elem.c2 if elem.c2 is not None else 0
             data = [eid, elem.b, n1, n2, c1, c2]
@@ -606,11 +527,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
     elif name == 'CDAMP4':
         for eid in sorted(eids):
             elem = obj.elements[eid]
-            n1, n2 = elem.node_ids
-            if n1 is None:
-                n1 = 0
-            if n2 is None:
-                n2 = 0
+            n1, n2 = [nid if nid else 0 for nid in elem.node_ids]
             #(eid, b, s1, s2) = out
             data = [eid, elem.b, n1, n2]
             #print(name, data)
