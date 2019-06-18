@@ -56,9 +56,9 @@ class TestOUG(unittest.TestCase):
         nmodes = 3
         data = np.zeros((nmodes, 10, 6), dtype='float32')
 
-        modes = np.arange(nmodes)
-        eigenvalues = np.zeros(nmodes)
-        mode_cycles = np.zeros(nmodes)
+        modes = np.arange(nmodes, dtype='int32')
+        eigenvalues = np.zeros(nmodes, dtype='float32')
+        mode_cycles = np.zeros(nmodes, dtype='float32')
         eig = RealEigenvectorArray.add_modal_case(
             table_name, node_gridtype, data, isubcase,
             modes, eigenvalues, mode_cycles, is_sort1=True)
@@ -81,7 +81,7 @@ class TestOUG(unittest.TestCase):
         """tests transient displacements"""
         table_name = 'OUGV1'
         node_gridtype = np.zeros((10, 2), dtype='int32')
-        node_gridtype[:, 0] = np.arange(1, 11)
+        node_gridtype[:, 0] = np.arange(1, 11, dtype='int32')
         isubcase = 1
 
         ntimes = 3
