@@ -46,6 +46,7 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         'CTRIAR' : ((9200, 92, 385), b'5iff3i3f', 13),  # same as CTRIA3
         'CQUAD8' : ((4701, 47, 326), b'10i 6f i', 17),  # current; not 2001
         'CTRIA6' : ((4801, 48, 327), b'8i 5f i', 14),  # current; not 2001
+        'CTRIAX' : ((10108, 101, 512), b'9i', 9),
         'CTRIAX6' : ((6108, 61, 107), b'8i f ii', 11),
         'CQUAD' : ((9108, 91, 507), b'11i', 11),
         'CQUADX' : ((9008, 90, 508), b'11i', 11),  # same as CQUAD
@@ -64,9 +65,12 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         'CELAS4' : ((901, 9, 76), b'ifii', 4),
 
         'CVISC' : ((3901, 39, 50), b'4i', 4),
+        'CTRAX3' : ((6111, 61, 996), b'5if', 6),
+        'CQUADX4' : ((6112, 61, 997), b'6if', 7),
+        'CQUADX8' : ((6114,61,999),  b'10if', 11),
+        'CTRAX6' : ((6113, 61, 998), b'8if', 9),
         #'PLOTEL' : (, , ),
     }
-
     for name, eids in sorted(out.items()):
         nelements = len(eids)
         if name in etypes_to_skip:
@@ -79,7 +83,7 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
             #obj.log.warning('skipping GEOM2-%s' % name)
             #continue
 
-        if name in ['CTETRA', 'CHEXA', 'CPENTA']:
+        if name in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM']:
             if name == 'CTETRA':
                 key = (5508, 55, 217)
                 nnodes = 10
@@ -90,6 +94,9 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
             elif name == 'CPENTA':
                 key = (4108, 41, 280)
                 nnodes = 15
+            elif name == 'CPYRAM':
+                key = (17200, 172, 1000)
+                nnodes = 13
             else:  # pragma: no cover
                 raise NotImplementedError(name)
             nfields = nnodes + 2
@@ -123,8 +130,11 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
             key = (5551, 49, 105)
             spack = None
             nfields = 1
-        else:  # pragma: no cover
-            raise NotImplementedError(name)
+        else:
+            obj.log.warning('skipping %s' % name)
+            continue
+        #else:  # pragma: no cover
+            #raise NotImplementedError(name)
 
         #if self.is_debug_file:
             #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
@@ -160,13 +170,15 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
 
 def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
     op2_ascii.write('GEOM2-%s\n' % name)
-    if name in ['CTETRA', 'CHEXA', 'CPENTA']:
+    if name in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM']:
         if name == 'CTETRA':
             nnodes = 10
         elif name == 'CHEXA':
             nnodes = 20
         elif name == 'CPENTA':
             nnodes = 15
+        elif name == 'CPYRAM':
+            nnodes = 13
         else:  # pragma: no cover
             raise NotImplementedError(name)
 
@@ -250,10 +262,20 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             pid = elem.pid
             ga, gb = elem.node_ids
             cid = elem.cid
+            #print(elem.get_stats())
             if cid is None:
                 cid = -1
 
-            if elem.x[0] is not None:
+            if elem.x[0] is not None and elem.g0 is None:
+                f = 1
+                x1, x2, x3 = elem.x
+                data = [eid, pid, ga, gb, x1, x2, x3, f, cid]
+                op2.write(structf.pack(*data))
+            elif elem.x[0] is None and elem.g0 is None:
+                f = 1
+                data = [eid, pid, ga, gb, 1., 0., 0., f, cid]
+                op2.write(structf.pack(*data))
+            elif elem.x[0] is not None:
                 f = 1
                 x1, x2, x3 = elem.x
                 data = [eid, pid, ga, gb, x1, x2, x3, f, cid]
@@ -263,7 +285,7 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                 f = 2
                 g0 = elem.g0
                 data = [eid, pid, ga, gb, g0, 0, 0, f, cid]
-                #print('CGAP g0; x=%s data=%s' % (g0, data))
+                print('CGAP g0; x=%s gab0=%s data=%s' % (g0, [ga, gb, g0], data))
                 op2.write(structi.pack(*data))
 
     elif name == 'CBAR':
@@ -372,11 +394,16 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             tflag = elem.tflag
             #if tflag is None:
                 #tflag =
+            t1 = elem.T1 if elem.T1 is not None else -1.
+            t2 = elem.T2 if elem.T2 is not None else -1.
+            t3 = elem.T3 if elem.T3 is not None else -1.
+            t4 = elem.T4 if elem.T4 is not None else -1.
             data = [eid, pid] + nids + [theta, elem.zoffset, 0,
-                                        tflag, elem.T1, elem.T2, elem.T3, elem.T4]
+                                        tflag, t1, t2, t3, t4]
             assert tflag in [0, 1], elem.get_stats()
             #print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
             op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+            assert None not in data, '  %s eid=%s pid=%s nids=%s\n%s' % (name, eid, pid, str(nids), data)
             op2.write(spack.pack(*data))
     elif name == 'CQUAD8':  # current; not 2001
         for eid in sorted(eids):
@@ -390,11 +417,11 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             #t1, t2, t3, t4, theta, zoffs) = out  # cquad8; 2001
             theta = get_theta_from_theta_mcid(elem.theta_mcid)
             tflag = elem.tflag if elem.tflag is not None else 0
-            #t1 = elem.T1 if elem.T1 is not None else -1.
-            #t2 = elem.T2 if elem.T2 is not None else -1.
-            #t3 = elem.T3 if elem.T3 is not None else -1.
-            #t4 = elem.T4 if elem.T4 is not None else -1.
-            data = [eid, pid] + nids + [elem.T1, elem.T2, elem.T3, elem.T4,
+            t1 = elem.T1 if elem.T1 is not None else -1.
+            t2 = elem.T2 if elem.T2 is not None else -1.
+            t3 = elem.T3 if elem.T3 is not None else -1.
+            t4 = elem.T4 if elem.T4 is not None else -1.
+            data = [eid, pid] + nids + [t1, t2, t3, t4,
                                         theta, elem.zoffset, tflag]
             assert None not in data, '%s data=%s' % (name, data)
             assert isinstance(elem.tflag, int), elem.get_stats()
@@ -420,6 +447,19 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             #print('  CQUAD4 eid=%s pid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
             op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
             op2.write(spack.pack(*data))
+    elif name == 'CTRIAX':
+        for eid in sorted(eids):
+            elem = obj.elements[eid]
+            nids = [nid if nid is not None else 0
+                    for nid in elem.node_ids]
+            pid = elem.pid
+            #eid, pid, n1, n2, n3, n4, n5, n6, unused_undef1 = data
+            data = [eid, pid] + nids + [0]
+            assert None not in data, '%s data=%s' % (name, data)
+            #print('  CTRIAX eid=%s mid=%s nids=%s data=%s\n' % (eid, pid, str(nids), data[6:]))
+            op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+            op2.write(spack.pack(*data))
+
     elif name == 'CTRIAX6':
         for eid in sorted(eids):
             elem = obj.elements[eid]
@@ -451,12 +491,27 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             nids = elem.node_ids
             pid = elem.pid
             theta = get_theta_from_theta_mcid(elem.theta_mcid)
+            t1 = elem.T1 if elem.T1 is not None else -1.
+            t2 = elem.T2 if elem.T2 is not None else -1.
+            t3 = elem.T3 if elem.T3 is not None else -1.
             #eid, pid, n1, n2, n3, theta_mcid, zoffs, blank1, blank2, tflag, t1, t2, t3
             data = [eid, pid] + nids + [theta, elem.zoffset, 0, 0,
-                                        elem.tflag, elem.T1, elem.T2, elem.T3]
+                                        elem.tflag, t1, t2, t3]
             assert elem.tflag in [0, 1], elem.get_stats()
             op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
             op2.write(spack.pack(*data))
+    elif name in ['CTRAX3', 'CTRAX6', 'CQUADX4', 'CQUADX8']:
+        for eid in sorted(eids):
+            elem = obj.elements[eid]
+            nids = elem.node_ids
+            pid = elem.pid
+            data = [eid, pid] + nids + [elem.theta]
+            assert None not in data, '  eid=%s pid=%s nids=%s theta=%r\n' % (eid, pid, str(nids), elem.theta)
+            #print('  eid=%s pid=%s nids=%s theta=%r\n' % (eid, pid, str(nids), elem.theta))
+            op2_ascii.write('  eid=%s pid=%s nids=%s theta=%r\n' % (eid, pid, str(nids), elem.theta))
+            op2.write(spack.pack(*data))
+
+
     elif name in ['CROD', 'CTUBE', 'CVISC', 'CSHEAR']:
         for eid in sorted(eids):
             elem = obj.elements[eid]

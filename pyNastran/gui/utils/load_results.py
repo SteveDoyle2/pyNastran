@@ -14,7 +14,8 @@ defines:
 import os
 import sys
 import traceback
-import urllib
+import urllib.request
+import urllib.error
 
 import numpy as np
 import pyNastran

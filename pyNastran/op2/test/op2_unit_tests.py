@@ -1986,9 +1986,6 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log)
-        save_load_deck(model)
-
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
@@ -1998,6 +1995,9 @@ class TestOP2(Tester):
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
+
+        model = read_bdf(bdf_filename, debug=False, log=log)
+        save_load_deck(model)
 
     @unittest.expectedFailure
     def test_set_times_01(self):

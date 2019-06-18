@@ -428,6 +428,7 @@ class CGAP(Element):
         x2 = data[6]
         x3 = data[7]
         x = [x1, x2, x3]
+        print('x=', x)
         cid = data[8]
         if cid == -1:
             cid = None

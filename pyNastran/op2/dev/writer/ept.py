@@ -118,8 +118,14 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             key = (1302, 13, 34)
             nfields = 4
             spack = Struct(endian + b'4i')
-        else:  # pragma: no cover
-            raise NotImplementedError(name)
+        elif name == 'PIHEX':
+            obj.log.warning('skipping PIHEX')
+            continue
+        else:
+            obj.log.warning('skipping %s' % name)
+            continue
+        #else:  # pragma: no cover
+            #raise NotImplementedError(name)
 
         nvalues = nfields * nproperties + 3 # +3 comes from the keys
         nbytes = nvalues * 4
@@ -213,7 +219,12 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             nfieldsi = 0
             prop = obj.properties[pid]
             nsegments = len(prop.xxb)
-            if nsegments == 2:
+            if nsegments == 1:
+                #  ccf = constant cross section flag
+                ccf = 1 # True
+                #print(prop.get_stats())
+            elif nsegments == 2:
+                #  ccf = constant cross section flag
                 ccf = 1 # True
             elif nsegments > 2:
                 ccf = 0 # False
@@ -254,6 +265,8 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
                     if so_str == 'NO':
                         soi = 0.0
                     elif so_str == 'YES':
+                        soi = 1.0
+                    elif so_str == 'YESA':  # TODO: not sure...
                         soi = 1.0
                     else:
                         try:
@@ -317,7 +330,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             ## stress : int, string, or blank
             ##    blank/GRID
             ##    1-GAUSS
-            if prop.stress == 'GRID':
+            if prop.stress == 'GRID' or prop.stress is None:
                 stress = 0
             elif prop.stress == 'GAUSS':
                 stress = 1
@@ -332,13 +345,17 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
                 integ = 2
             elif prop.integ == 'THREE':
                 integ = 3
+            elif  prop.integ is None:  # TODO: not sure
+                integ = 0
             else:
-                raise NotImplementedError('prop.stress=%s and must be [0, 1, 2, 3]' % prop.integ)
+                raise NotImplementedError('prop.integ=%s and must be [0, 1, 2, 3]' % prop.integ)
 
             if prop.isop == 'REDUCED':
                 isop = 0
             elif prop.isop == 'FULL':
                 isop = 1
+            elif  prop.isop is None:  # TODO: not sure
+                isop = 0
             else:
                 raise NotImplementedError('isop=%s and must be [0, 1]' % prop.isop)
 
@@ -363,13 +380,17 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
         for pid in sorted(pids):
             #(pid, mid1, t, mid2, bk, mid3, ts, nsm, z1, z2, mid4) = out
             prop = obj.properties[pid]
-            mid2 = prop.mid2 if prop.mid2 is not None else 0
-            data = [pid, prop.mid1, prop.t, mid2, prop.twelveIt3, prop.mid3,
-                    prop.tst, prop.nsm, prop.z1, prop.z2, prop.mid4]
+            mid1 = 0 if prop.mid1 is None else prop.mid1
+            mid2 = 0 if prop.mid2 is None else prop.mid2
+            mid3 = 0 if prop.mid3 is None else prop.mid3
+            mid4 = 0 if prop.mid4 is None else prop.mid4
+            data = [pid, mid1, prop.t, mid2, prop.twelveIt3, mid3,
+                    prop.tst, prop.nsm, prop.z1, prop.z2, mid4]
             #print('PSHELL', data)
             #print(prop.mid1, mid2, prop.mid3, prop.mid4)
 
             op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid1, data[2:]))
+            assert None not in data, '  %s pid=%s mid=%s data=%s\n' % (name, pid, prop.mid1, data[2:])
             op2.write(spack.pack(*data))
     elif name == 'PLPLANE':
         #NX 10

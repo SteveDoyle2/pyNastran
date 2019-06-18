@@ -1252,7 +1252,7 @@ class TestLoads(unittest.TestCase):
         model2.write_skin_solid_faces('skin.bdf', write_solids=False,
                                       write_shells=True)
         os.remove('skin.bdf')
-        save_load_deck(model2)
+        save_load_deck(model2, run_op2_writer=False)
 
     def test_load(self):
         """makes sure LOAD cards don't get sorted"""

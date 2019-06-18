@@ -191,7 +191,7 @@ class TestMaterials(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
         matt2.write_card(size=16, is_double=False)
-        save_load_deck(model)
+        save_load_deck(model, run_op2_writer=False)
 
     def test_mat3_01(self):
         """tests MAT3"""
@@ -244,7 +244,7 @@ class TestMaterials(unittest.TestCase):
         model.pop_xref_errors()
         #matt3.write_card(size=16, is_double=False)
 
-        save_load_deck(model)
+        save_load_deck(model, run_op2_writer=False)
 
     def test_mat4_01(self):
         """tests MAT4, MATT4"""
@@ -438,7 +438,7 @@ class TestMaterials(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
         matt8.write_card(size=16, is_double=False)
-        save_load_deck(model)
+        save_load_deck(model, run_op2_writer=False)
 
     def test_mat9(self):
         """tests MAT9"""
@@ -509,6 +509,21 @@ class TestMaterials(unittest.TestCase):
         g12 = 112.
         g13 = 113.
         g23 = 123.
+        save_load_deck(model, xref='standard', punch=True,
+                       run_remove_unused=False)
+
+    def test_mat3d(self):
+        """tests MAT3D"""
+        mid = 10
+        e1 = 1.
+        e2 = 2.
+        e3 = 3.
+        nu12 = 12.
+        nu13 = 13.
+        nu23 = 23.
+        g12 = 112.
+        g13 = 113.
+        g23 = 123.
         model = BDF(debug=False)
         mat3d = model.add_mat3d(
             mid,
@@ -519,7 +534,7 @@ class TestMaterials(unittest.TestCase):
         mat3d.write_card(size=16, is_double=False)
         mat3d.write_card(size=16, is_double=True)
         save_load_deck(model, xref='standard', punch=True,
-                       run_remove_unused=False)
+                       run_remove_unused=False, run_op2_writer=False)
         #mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
                     #rho=0.0, a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='')
 

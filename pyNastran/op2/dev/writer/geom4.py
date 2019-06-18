@@ -44,18 +44,19 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<'):
         for mpcadd in mpcadds:
             loads_by_type[mpcadd.type].append(mpcadd)
 
-    for unused_load_id, load in obj.tempds.items():
-        loads_by_type[load.type].append(load)
+    #for unused_load_id, load in obj.tempds.items():
+        #loads_by_type[load.type].append(load)
 
     # return if no supported cards are found
     skip_cards = [
         'MPC', 'SPC1', 'SPCADD', 'SPC',
 
         # rigid elements
-        'RBE1', 'RBE2', 'RBE3', 'RBAR', 'RROD',
+        'RBE1', 'RBE2', 'RBE3', 'RBAR', 'RROD', 'RSSCON',
 
         # sets
-        'ASET', 'ASET1', 'QSET', 'QSET1', 'OMIT1', 'USET',
+        'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
+        'QSET', 'QSET1', 'OMIT1', 'USET', 'USET1',
     ]
     supported_cards = [
     ]
@@ -113,6 +114,17 @@ def write_card(op2, op2_ascii, card_type, cards, endian):
         #for load in cards:
             #data = [load.sid, load.node_id, load.Cid(), load.mag] + list(load.xyz)
             #op2_ascii.write('  MPC data=%s\n' % str(data))
+            #op2.write(spack.pack(*data))
+    #elif card_type == 'TEMPD':
+        #key = (5641, 65, 98)
+        #nfields = 6
+        #spack = Struct(endian + b'if')
+        #nbytes = write_header(card_type, nfields, ncards, key, op2, op2_ascii)
+        #for load in cards:
+            #print(load.get_stats())
+            ##sid, T = data
+            #data = [load.sid, load.temperature]
+            #op2_ascii.write('  TEMPD data=%s\n' % str(data))
             #op2.write(spack.pack(*data))
     else:  # pragma: no cover
         card0 = cards[0]

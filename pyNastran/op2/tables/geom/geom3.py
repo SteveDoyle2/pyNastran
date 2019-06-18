@@ -12,7 +12,7 @@ from pyNastran.bdf.cards.loads.static_loads import (
     PLOAD4, PLOADX1)  # PLOAD3,
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, RFORCE #, DAREA, RANDPS, RFORCE1, LOADCYN
 from pyNastran.bdf.cards.thermal.loads import (
-    QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1, QVOL)
+    QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1, QVOL, QHBDY)
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 
@@ -641,8 +641,31 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_qhbdy(self, data, n):
-        self.log.info('skipping QHBDY in GEOM3')
-        return len(data)
+        """
+        (4309,43,233)
+
+        Word Name Type Description
+        1 SID   I Load set identification number
+        2 FLAG  I Face type
+        3 Q0   RS Magnitude of thermal flux into face
+        4 AF   RS Area factor
+        5 G(8)  I Grid point identification numbers
+        """
+        ntotal = 8  # 2*4
+        nentries = (len(data) - n) // ntotal
+        struct_if = Struct('2i2f 8i')
+        for i in range(nentries):
+            edata = data[n:n + ntotal]
+            out = struct_if.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  QHBDY=%s\n' % str(out))
+            #(sid, T) = out
+            load = QHBDY.add_op2_data(out)
+            #self.add_thermal_load(load)
+            self._add_load_object(load)
+            n += ntotal
+        self.card_count['QHBDY'] = nentries
+        return n
 
     def _read_qvect(self, data, n):
         self.log.info('skipping QVECT in GEOM3')

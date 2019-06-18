@@ -2,6 +2,7 @@
 from datetime import date
 from collections import defaultdict
 from struct import pack, Struct
+from cpylog import get_logger2
 
 import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
@@ -50,8 +51,8 @@ def make_stamp(title, today=None):
 
 
 class OP2Writer(OP2_F06_Common):
-    def __init__(self, op2):
-        self.log = op2.log
+    def __init__(self, log=None, debug=False):
+        self.log = get_logger2(log, debug)
         OP2_F06_Common.__init__(self)
         self.card_count = {}
 
@@ -78,6 +79,7 @@ class OP2Writer(OP2_F06_Common):
             #should complex data be written using Magnitude/Phase
             #instead of Real/Imaginary (default=False; Real/Imag)
             #Real objects don't use this parameter.
+
         """
         if skips is None:
             skips = set([])
@@ -89,6 +91,7 @@ class OP2Writer(OP2_F06_Common):
 
         if obj is None:
             obj = self
+        assert obj is not None
         if isinstance(op2_outname, str):
             fop2 = open(op2_outname, 'wb')
             #fop2_ascii = open(op2_outname + '.txt', 'w')

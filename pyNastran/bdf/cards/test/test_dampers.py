@@ -228,7 +228,7 @@ class TestDampers(unittest.TestCase):
         model.cross_reference()
         model.update_model_by_desvars()
 
-        save_load_deck(model)
+        save_load_deck(model, run_op2_writer=False)
 
     def test_pbusht(self):
         """tests CBUSH, PBUSH, PBUSHT"""
@@ -260,7 +260,7 @@ class TestDampers(unittest.TestCase):
         model._verify_bdf()
         model.cross_reference()
         model._verify_bdf()
-        save_load_deck(model, xref='standard', punch=True)
+        save_load_deck(model, xref='standard', punch=True, run_op2_writer=False)
 
 
     def test_pdamp(self):

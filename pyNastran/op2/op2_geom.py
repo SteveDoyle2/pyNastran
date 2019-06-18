@@ -380,3 +380,47 @@ class OP2Geom(BDF, OP2GeomCommon):
         #op2_model = self
         OP2GeomCommon.export_hdf5_file(self, hdf5_file)
         BDF.export_hdf5_file(self, hdf5_file)
+
+def attach_op2_results_to_bdf(bdf_model: BDF, op2_model: Optional[OP2]=None) -> OP2Geom:
+    """We're up-coverting a BDF and an OP2 result into an OP2Geom object."""
+    assert bdf_model is not None
+    #assert op2_model is not None
+    #assert bdf_model.bdf_filename is not None
+    debug = bdf_model.debug
+    if debug is None:
+        debug = True
+    op2_geom_model = OP2Geom(make_geom=True, debug=debug, log=bdf_model.log,
+                             debug_file=None,
+                             mode='msc')
+
+    # apply data from our 2 models to the new model
+    _properties = bdf_model._properties
+    keys_to_skip = _properties + ['_properties', 'npoints']
+    for key in bdf_model.object_attributes(mode='both', keys_to_skip=keys_to_skip):
+        value = getattr(bdf_model, key)
+        #if isinstance(value, (dict, list)) and len(value) == 0:
+            #continue
+        #print(key, value)
+        try:
+            setattr(op2_geom_model, key, value)
+        except AttributeError:
+            op2_geom_model.log.error('cant set %r to %r' % (key, value))
+            raise
+
+    if op2_model is None:
+        return op2_geom_model
+
+    #op2_geom_model.nodes = bdf_model.nodes
+    #op2_geom_model.elements = bdf_model.elements
+    if hasattr(op2_model, 'op2_filename'):
+        op2_geom_model.op2_filename = op2_model.op2_filename
+    if hasattr(op2_model, 'eigenvalues'):
+        op2_geom_model.eigenvalues = op2_model.eigenvalues
+    if hasattr(op2_model, 'eigenvectors'):
+        op2_geom_model.eigenvectors = op2_model.eigenvectors
+    if hasattr(op2_model, 'matrices'):
+        op2_geom_model.matrices = op2_model.matrices
+
+    assert len(op2_geom_model.nodes) > 0, op2_geom_model.get_bdf_stats()
+
+    return op2_geom_model

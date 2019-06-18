@@ -325,6 +325,57 @@ def write_card(op2, op2_ascii, load_type, loads, endian):
             data = [load.sid, load.eid, load.tbar, load.tprime] + load.t_stress
             op2_ascii.write('  TEMPP1 data=%s\n' % str(data))
             op2.write(spack.pack(*data))
+    elif load_type == 'TEMPD':
+        key = (5641, 65, 98)
+        nfields = 6
+        spack = Struct(endian + b'if')
+        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+        for load in loads:
+            #print(load.get_stats())
+            #sid, T = data
+            data = [load.sid, load.temperature]
+            op2_ascii.write('  TEMPD data=%s\n' % str(data))
+            op2.write(spack.pack(*data))
+
+            #struct_if = Struct('if')
+            #for i in range(nentries):
+                #edata = data[n:n + ntotal]
+                #out = struct_if.unpack(edata)
+                #if self.is_debug_file:
+                    #self.binary_debug.write('  TEMPD=%s\n' % str(out))
+                #(sid, T) = out
+                #load = TEMPD.add_op2_data(out)
+                ##self.add_thermal_load(load)
+                #n += ntotal
+            #self.card_count['TEMPD'] = nentries
+
+    elif load_type == 'QHBDY':
+        key = (4309, 43, 233)
+        nfields = 12
+        spack = Struct(endian + b'2i 2f 8i')
+        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+        for load in loads:
+            #1 SID   I Load set identification number
+            #2 FLAG  I Face type
+            #3 Q0   RS Magnitude of thermal flux into face
+            #4 AF   RS Area factor
+            #5 G(8)  I Grid point identification numbers
+            #print(load.get_stats())
+
+            #nids = load.grids
+            nids = [0] * 8
+            if load.flag == 'POINT':
+                flag = 0
+            else:
+                raise NotImplementedError(load.get_stats())
+
+            data = [
+                load.sid, flag, load.q0,
+                0.0 if load.af is None else load.af,
+                ] + nids
+            op2_ascii.write('  QHBDY data=%s\n' % str(data))
+            op2.write(spack.pack(*data))
+
     #elif load_type == 'ACCEL1':
         #key = (7401,74,601)
         #nfields = 3

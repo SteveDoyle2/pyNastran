@@ -22,7 +22,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                    run_convert=True, run_renumber=True, run_mirror=True,
                    run_save_load=True, run_quality=True, write_saves=True,
                    run_save_load_hdf5=True, run_mass_properties=True, run_loads=True,
-                   run_test_bdf=True):
+                   run_test_bdf=True, run_op2_writer=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.validate()
     model.pop_parse_errors()
@@ -107,6 +107,27 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
 
     if model.elements and run_quality:
         element_quality(model)
+
+    if run_op2_writer:
+        from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
+        from pyNastran.op2.op2_geom import attach_op2_results_to_bdf
+
+        op2_geom_model = attach_op2_results_to_bdf(model, op2_model=None)
+        from pyNastran.op2.dev.op2_writer import OP2Writer
+
+        table_name = 'OUGV1'
+        node_gridtype = np.zeros((10, 2), dtype='int32')
+        node_gridtype[:, 0] = np.arange(1, 11)
+        data = np.zeros((1, 10, 6), dtype='float32')
+        isubcase = 1
+        disp = RealDisplacementArray.add_static_case(
+            table_name, node_gridtype, data, isubcase, is_sort1=True)
+        op2_geom_model.displacements[isubcase] = disp
+
+
+        op2w = OP2Writer()
+        op2_filename = 'spike.op2'
+        op2w.write_op2(op2_filename, obj=op2_geom_model, post=-1, endian=b'<', skips=None)
     return model3
 
 def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):

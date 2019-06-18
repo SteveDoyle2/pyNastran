@@ -9,7 +9,7 @@ from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
-from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX, CTRIAX6
+from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX, CTRIAX6, CTRAX6, CQUADX8
 from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
                                                 CQUADR, CTRIAR,
                                                 CQUAD8, CQUAD,
@@ -132,11 +132,14 @@ class GEOM2(GeomCommon):
             (5959, 59, 282): ['CTRIA3', self._read_ctria3],   # record 94
             (16200, 162, 9999) : ['CTRIA3FD', self._read_fake],  # record 95
             (4801, 48, 327): ['CTRIA6', self._read_ctria6],   # record 96 - buggy
+            (6113, 61, 998): ['CTRAX6', self._read_ctrax6],
+
             # : ['RADBC', self._read_fake],  record 97
             # : ['RADBC', self._read_fake],  record 98
             (9200, 92, 385): ['CTRIAR', self._read_ctriar],   # record 99  - not done
             # : ['RADBC', self._read_fake],  record 100
-            (6108, 61, 107): ['CTRIAX6', self._read_ctriax6], # record 101 - not done
+            (10108, 101, 512) : ['CTRIAX', self._read_ctriax],
+            (6108, 61, 107) : ['CTRIAX6', self._read_ctriax6], # record 101 - not done
             (16700, 167, 9999) : ['CTRIA6FD', self._read_fake],  # record 102
             (11301, 113, 9015) : ['CTRIAP', self._read_fake],  # record 103
             (3701, 37, 49): ['CTUBE', self._read_ctube],      # record 104
@@ -226,7 +229,7 @@ class GEOM2(GeomCommon):
             (5701, 57, 981) : ['CPLSTN4', self._read_fake],  # record
             (5801, 58, 982) : ['CPLSTN6', self._read_fake],  # record
             (1801, 18, 986) : ['CPLSTS6', self._read_fake],  # record
-            (6111, 61, 996) : ['CTRAX3', self._read_trax3],  # record
+            (6111, 61, 996) : ['CTRAX3', self._read_ctrax3],  # record
             (6112, 61, 997) : ['CQUADX4', self._read_cquadx4],  # record
             (6113, 61, 998) : ['CTRAX6', self._read_ctrax6],  # record
             (6114, 61, 999) : ['CQUADX8', self._read_cquadx8],  # record
@@ -886,7 +889,15 @@ class GEOM2(GeomCommon):
             else:
                 assert f == 1, 'CGAP - f=%r f2=%r' % (f, f2)
                 assert f2 == 1, 'CGAP - f=%r f2=%r' % (f, f2)
+                if self.is_debug_file:
+                    self.binary_debug.write('  CGAP eid=%s pid=%s gab0=[%s,%s,%s] x123=[%s,%s,%s] '
+                                            'cid=%s f=%s\n' % (eid, pid, ga, gb,
+                                                               g0, x1, x2, x3, cid, f))
                 #raise NotImplementedError('CGAP - f=%r f2=%r' % (f, f2))
+            #print('  CGAP eid=%s pid=%s gab0=[%s,%s,%s] x123=[%s,%s,%s] '
+                  #'cid=%s f=%s\n' % (eid, pid, ga, gb,
+                                     #g0, x1, x2, x3, cid, f))
+
             data_in = [eid, pid, ga, gb, g0, x1, x2, x3, cid]
             elem = CGAP.add_op2_data(data_in)
             self.add_op2_element(elem)
@@ -1880,9 +1891,21 @@ class GEOM2(GeomCommon):
         self.card_count['CTRIAR'] = nelements
         return n
 
-    def _read_ctriax(self, data, n): # 100
-        self.log.info('skipping CTRIAX in GEOM2')
-        return len(data)
+    def _read_ctriax(self, data, n):
+        """(10108, 101, 512)"""
+        ntotal = 36  # 9*4
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(self._endian + b'9i')
+        for unused_i in range(nentries):
+            edata = data[n:n + 36]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            elem = CTRIAX.add_op2_data(out)
+            self.add_op2_element(elem)
+            n += 36
+        self.card_count['CTRIAX'] = nentries
+        return n
 
     def _read_ctriax6(self, data, n):  # 101
         """(6108, 61, 107)"""
@@ -2023,21 +2046,84 @@ class GEOM2(GeomCommon):
 # VUQUAD4
 # WELDP
 
-    def _read_trax3(self, data, n):
-        self.log.info('skipping CTRAX3 in GEOM2')
-        return len(data)
+    def _read_ctrax3(self, data, n):
+        """
+        RECORD - CTRAX3(6111,61,996)
+
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 PID    I Property identification number
+        3 G(3)   I Grid point identification numbers of connection points
+        4 THETA RS Material property orientation angle
+        """
+        ntotal = 24  # 6*4
+        s = Struct(self._endian + b'5if')
+        nelements = (len(data) - n)// 24  # 6*4
+        for unused_i in range(nelements):
+            edata = data[n:n+24]
+            out = s.unpack(edata)
+            (eid, pid, n1, n2, n3, theta) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRAX3=%s\n' % str(out))
+            #data_in = [eid, pid, n1, n2, n3, theta]
+            elem = CTRAX6(eid, pid, [n1, n2, n3], theta)
+            n += ntotal
+        self.card_count['CTRAX3'] = nelements
+        return n
 
     def _read_cquadx4(self, data, n):
         self.log.info('skipping CQUADX4 in GEOM2')
         return len(data)
 
     def _read_ctrax6(self, data, n):
-        self.log.info('skipping CTRAX6 in GEOM2')
-        return len(data)
+        """
+        RECORD - CTRAX6(6113, 61, 998)
+
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 PID    I Property identification number
+        3 G(6)   I Grid point identification numbers of connection points
+        4 THETA RS Material property orientation angle
+        """
+        ntotal = 36  # 9*4
+        s = Struct(self._endian + b'8if')
+        nelements = (len(data) - n)// 36  # 9*4
+        for unused_i in range(nelements):
+            edata = data[n:n+36]
+            out = s.unpack(edata)
+            (eid, pid, n1, n2, n3, n4, n5, n6, theta) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRAX6=%s\n' % str(out))
+            #data_in = [eid, pid, n1, n2, n3, n4, n5, n6, theta]
+            elem = CTRAX6(eid, pid, [n1, n2, n3, n4, n5, n6], theta)
+            n += ntotal
+        self.card_count['CTRAX6'] = nelements
+        return n
 
     def _read_cquadx8(self, data, n):
-        self.log.info('skipping CQUADX8 in GEOM2')
-        return len(data)
+        """
+        RECORD - CQUADX8(6114, 61, 999)
+
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 PID    I Property identification number
+        3 G(8)   I Grid point identification numbers of connection points
+        4 THETA RS Material property orientation angle
+        """
+        ntotal = 44  # 11*4
+        s = Struct(self._endian + b'10if')
+        nelements = (len(data) - n)// 44  # 9*4
+        for unused_i in range(nelements):
+            edata = data[n:n+44]
+            out = s.unpack(edata)
+            (eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  CQUADX8=%s\n' % str(out))
+            #data_in = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta]
+            elem = CQUADX8(eid, pid, [n1, n2, n3, n4, n5, n6, n7, n8], theta)
+            n += ntotal
+        self.card_count['CQUADX8'] = nelements
+        return n
 
 def convert_theta_to_mcid(theta):
     """odd function..."""

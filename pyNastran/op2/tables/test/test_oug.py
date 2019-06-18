@@ -1,3 +1,4 @@
+import os
 import unittest
 import numpy as np
 
@@ -41,6 +42,9 @@ class TestOUG(unittest.TestCase):
         with open('disp.op2', 'wb') as op2_file, open('disp.txt', 'w') as fascii:
             disp.write_op2(op2_file, fascii, itable, new_result,
                   date, is_mag_phase=False, endian=b'<')
+        os.remove('disp.f06')
+        os.remove('disp.op2')
+        os.remove('disp.txt')
 
     def test_eigenvectors(self):
         """tests real displacements"""
@@ -69,6 +73,9 @@ class TestOUG(unittest.TestCase):
         with open('eig.op2', 'wb') as op2_file, open('eig.txt', 'w') as fascii:
             eig.write_op2(op2_file, fascii, itable, new_result,
                   date, is_mag_phase=False, endian=b'>')
+        os.remove('eig.f06')
+        os.remove('eig.op2')
+        os.remove('eig.txt')
 
     def test_transient(self):
         """tests transient displacements"""
@@ -96,6 +103,9 @@ class TestOUG(unittest.TestCase):
         with open('tdisp.op2', 'wb') as op2_file, open('tdisp.txt', 'w') as fascii:
             tdisp.write_op2(op2_file, fascii, itable, new_result,
                   date, is_mag_phase=False, endian=b'<')
+        os.remove('tdisp.f06')
+        os.remove('tdisp.op2')
+        os.remove('tdisp.txt')
 
     def test_freq(self):
         """tests complex displacements"""
@@ -123,6 +133,9 @@ class TestOUG(unittest.TestCase):
         with open('cdisp.op2', 'wb') as op2_file, open('cdisp.txt', 'w') as fascii:
             cdisp.write_op2(op2_file, fascii, itable, new_result,
                   date, is_mag_phase=False, endian=b'<')
+        os.remove('cdisp.f06')
+        os.remove('cdisp.op2')
+        os.remove('cdisp.txt')
 
 if __name__ == '__main__':
     unittest.main()

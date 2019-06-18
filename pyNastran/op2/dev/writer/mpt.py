@@ -128,12 +128,21 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 #print(mat.get_stats())
                 #(mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
                  #tref, ge, St, Sc, Ss, mcsid) = out
-                data = [mid, mat.G11, mat.G12, mat.G13, mat.G22, mat.G23, mat.G33,
-                        mat.rho, mat.a1, mat.a2, mat.a3, mat.tref,
-                        mat.ge, mat.St, mat.Sc, mat.Ss, mat.mcsid]
+                data = [
+                    mid, mat.G11, mat.G12, mat.G13, mat.G22, mat.G23, mat.G33,
+                    mat.rho,
+                    0.0 if mat.a1 is None else mat.a1,
+                    0.0 if mat.a2 is None else mat.a2,
+                    0.0 if mat.a3 is None else mat.a3,
+                    mat.tref, mat.ge,
+                    0.0 if mat.St is None else mat.St,
+                    0.0 if mat.Sc is None else mat.Sc,
+                    0.0 if mat.Ss is None else mat.Ss,
+                    0 if mat.mcsid is None else mat.mcsid]
 
                 #print(data)
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
+                assert None not in data, 'MAT2 %s' % data
                 op2.write(spack.pack(*data))
         elif name == 'MAT3':
             for mid in sorted(mids):
@@ -144,9 +153,11 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 data = [
                     mid,
                     mat.ex, mat.eth, mat.ez, mat.nuxth, mat.nuthz, mat.nuzx,
-                    mat.rho, mat.gzx, 0, mat.ax, mat.ath, mat.az, mat.tref,
+                    mat.rho,
+                    0.0 if mat.gzx is None else mat.gzx,
+                    0, mat.ax, mat.ath, mat.az, mat.tref,
                     mat.ge, 0]
-
+                assert None not in data, 'MAT3 %s' % data
                 #print(data)
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
@@ -156,8 +167,16 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
                 data = [
                     mid,
-                    mat.k, mat.cp, mat.rho, mat.H, mat.mu, mat.hgen,
-                    mat.ref_enthalpy, mat.tch, mat.tdelta, mat.qlat,
+                    mat.k, mat.cp, mat.rho,
+                    #  not sure
+                    0.0 if mat.H is None else mat.H,
+                    0.0 if mat.mu is None else mat.mu,
+                    mat.hgen,
+                    #  not sure
+                    0.0 if mat.ref_enthalpy is None else mat.ref_enthalpy,
+                    0.0 if mat.tch is None else mat.tch,
+                    0.0 if mat.tdelta is None else mat.tdelta,
+                    0.0 if mat.qlat is None else mat.qlat,
                 ]
                 #print('MAT4 -', data)
                 #print(data)
@@ -235,8 +254,16 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 else:
                     raise RuntimeError('Invalid Type:  Type=%s; must be 1=NLELAST '
                                        'or 2=PLASTIC' % (mat.Type))
-                data = [mid, mat.tid, Type, mat.h, mat.yf, mat.hr, mat.limit1,
-                        mat.limit2, a, bmat, c]
+                data = [mid,
+                        # not sure
+                        0 if mat.tid is None else mat.tid,
+                        Type,
+                        0.0 if mat.h is None else mat.h,
+                        0 if mat.yf is None else mat.yf,
+                        0 if mat.hr is None else mat.hr,
+                        0.0 if mat.limit1 is None else mat.limit1,
+                        0.0 if mat.limit2 is None else mat.limit2,
+                        a, bmat, c]
                 assert None not in data, 'MATS1 %s' % data
                 assert len(data) == nfields
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
