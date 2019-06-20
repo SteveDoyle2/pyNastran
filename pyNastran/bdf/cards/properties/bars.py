@@ -709,11 +709,12 @@ def _bar_areaL(class_name, beam_type, dim, prop):
         hall = dim2
         tflange = dim3
         tweb = dim4
-        bweb = hall - tflange
+        # bweb = hall - tflange
         bflange = ball - tweb
-        assert hall - tflange > 0, f'bweb={bweb} hall(dim2)={hall} tflange(dim3)={tflange}'
+        #print(f'hall={hall} ball={ball} tweb={tweb} bflange={bflange}')
+        assert hall - tflange > 0, f'bweb={hall-tflange} hall(dim2)={hall} tflange(dim3)={tflange}'
         assert ball - tweb > 0, f'bflange={bflange} ball(dim1)={hall} tweb(dim4)={tweb}'
-        A = tweb * bweb + tflange * bflange
+        A = tweb * hall + tflange * bflange
 
     #BOX = 2*(DIM1*DIM3)+2*((DIM2-(2*DIM3))*DIM4)
     elif beam_type == 'BOX':
@@ -799,31 +800,45 @@ def _bar_areaL(class_name, beam_type, dim, prop):
 
     #Z = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
     elif beam_type == 'Z':
-        #dim1, dim2, dim3, dim4 = dim
-        h2 = dim[2]
-        w2 = dim[1]
-
-        h1 = dim[3] - h2
-        w1 = dim[0]
-        A = h1 * w1 + h2 * w2
+        #  bflange bweb
+        # <--d1-><--d2-->
+        # +-------------+            ^
+        # |             |            |
+        # +------+      |  ^         |
+        #        |      |  |         |
+        #        |      |  | d3=hweb |  d4 = hall
+        #        |      |  v         |
+        #        |      +---------+  |
+        #        |                |  |
+        #        +----------------+  v
+        #
+        dim1, dim2, dim3, dim4 = dim
+        bflange = dim1
+        bweb = dim2
+        hweb = dim3
+        hall = dim4
+        tflange = hall - hweb # actually 2*tflange
+        A = bflange * tflange + hall * bweb
 
     #HEXA = ((DIM2-(2*DIM1))*DIM3)+(DIM3*DIM1)
     elif beam_type == 'HEXA':
         #     _______
         #   /        \     ^
         #  /          \    |
-        # *            *   |  d3
+        # *            *   |  d3 = h
         #  \          /    |
         #   \        /     |
         #    \______/      v
-        #           |d1|
-        # <-----d2---->
+        #           |d1| = wtri
+        # <-----d2----> = wall
         #
         dim1, dim2, dim3 = dim
         hbox = dim3
-        wbox = dim2
+        wall = dim2
         wtri = dim1
-        A = hbox * wbox - 2. * wtri * hbox
+        wbox = wall - 2 * wtri
+        assert wbox > 0, 'wbox=%s' % (wbox)
+        A = hbox * wbox + hbox * wtri
         #print('hbox=%s wbox=%s hbox*wbox=%s 2*wtri*hbox=%s A=%s' % (
             #hbox, wbox, hbox*wbox, 2*wtri*hbox, A))
 
