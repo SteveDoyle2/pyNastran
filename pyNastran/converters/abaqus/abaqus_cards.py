@@ -14,14 +14,17 @@ class SolidSection:
         self.param_map = param_map
         self.data_lines = data_lines
         self.material = param_map['material']
-        assert len(data_lines) == 1., data_lines
-        line0 = data_lines[0]
-        assert len(line0) == 1., data_lines
+        if len(data_lines) == 0:
+            pass
+        elif len(data_lines) == 1:
+            assert len(data_lines) == 1, data_lines
+            line0 = data_lines[0]
+            assert len(line0) == 1, data_lines
 
-        try:
-            self.thickness = float(line0[0])
-        except ValueError:
-            self.thickness = 0.
+            try:
+                self.thickness = float(line0[0])
+            except ValueError:
+                self.thickness = 0.
 
         for line in data_lines:
             log.info('solid - %r' % line)

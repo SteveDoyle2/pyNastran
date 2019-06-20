@@ -74,6 +74,10 @@ class Abaqus:
         nassembly = 0
         istep = 1
 
+        node_sets = {}
+        element_sets = {}
+        solid_sections = []
+
         while iline < nlines:
             # not handling comments right now
             line0 = lines[iline].strip().lower()
@@ -118,7 +122,7 @@ class Abaqus:
                         self.log.debug('-------------------------------------')
                 elif 'section controls' in word:
                     # TODO: skips header parsing
-                    data_lines, iline, line0 = self._read_star_block(lines, iline, line0)
+                    data_lines, iline, line0 = _read_star_block(lines, iline, line0, self.log, )
 
                 elif word.startswith('amplitude'):
                     param_map = get_param_map(iline, word)
@@ -162,7 +166,7 @@ class Abaqus:
                     iline, line0 = self.read_step(lines, iline, line0, istep)
                     istep += 1
                 elif word.startswith('initial conditions'):
-                    data_lines, iline, line0 = self._read_star_block(lines, iline, line0)
+                    data_lines, iline, line0 = _read_star_block(lines, iline, line0, self.log, )
                     for line in data_lines:
                         self.log.debug(line)
                     self.log.debug('line_end_of_IC = %s' % line0)
@@ -215,15 +219,27 @@ class Abaqus:
                         #line0 = lines[iline].strip().lower()
                     #self.log.debug(line0)
 
+                #  part...
+                elif word.startswith('node'):
+                    iline, line0, nids, nodes = read_node(lines, iline, self.log, skip_star=True)
+                elif word.startswith('nset'):
+                    iline, line0, set_name, set_ids = read_nset(lines, iline, word, self.log,
+                                                                is_instance=False)
+                    node_sets[set_name] = set_ids
+                elif '*solid section' in line0:
+                    iline, solid_section = read_solid_section(line0, lines, iline, self.log)
+                    solid_sections.append(solid_section)
+                elif '*hourglass stiffness' in line0:
+                    iline, hourglass_stiffness = read_hourglass_stiffness(line0, lines, iline, self.log)
                 else:
-                    raise NotImplementedError(word)
+                    raise NotImplementedError('word=%r line0=%r' % (word, line0))
             else:
                 pass
                 #raise NotImplementedError('this shouldnt happen; line=%r' % line0)
             iline += 1
 
-            if self.debug:
-                self.log.debug('')
+            #if self.debug:
+                #self.log.debug('')
 
         self.log.debug('nassembly = %s' % nassembly)
         for part_name, part in sorted(self.parts.items()):
@@ -231,45 +247,6 @@ class Abaqus:
             part.check_materials(self.materials)
         for unused_mat_name, mat in sorted(self.materials.items()):
             self.log.debug(str(mat))
-
-    def _read_star_block(self, lines, iline, line0, debug=False):
-        """
-        because this uses file streaming, there are 30,000 places where a try except
-        block is needed, so this should probably be used all over.
-        """
-        data_lines = []
-        try:
-            iline += 1
-            line0 = lines[iline].strip().lower()
-            while not line0.startswith('*'):
-                data_lines.append(line0.split(','))
-                iline += 1
-                line0 = lines[iline].strip().lower()
-                #self.log.debug('line = %r' % line0)
-            iline -= 1
-            line0 = lines[iline].strip().lower()
-        except IndexError:
-            pass
-        if debug:
-            for line in data_lines:
-                self.log.debug(line)
-        return data_lines, iline, line0
-
-    def _read_star_block2(self, lines, iline, line0, debug=False):
-        """
-        because this uses file streaming, there are 30,000 places where a try except
-        block is needed, so this should probably be used all over.
-        """
-        line0 = lines[iline].strip().lower()
-        data_lines = []
-        while not line0.startswith('*'):
-            data_lines.append(line0.strip(', ').split(','))
-            iline += 1
-            line0 = lines[iline].strip().lower()
-        if debug:
-            for line in data_lines:
-                self.log.debug(line)
-        return data_lines, iline, line0
 
     def read_material(self, lines, iline, word):
         """reads a Material card"""
@@ -324,7 +301,7 @@ class Abaqus:
                     assert len(sline) in [1, 2], sline
                 else:
                     raise NotImplementedError(sline)
-                data_lines, iline, line0 = self._read_star_block2(lines, iline, line0, debug=False)
+                data_lines, iline, line0 = _read_star_block2(lines, iline, line0, self.log, debug=False)
                 #print(data_lines)
             elif word == 'density':
                 key = 'density'
@@ -541,12 +518,8 @@ class Abaqus:
                     iline += 1
                     line0 = lines[iline].strip().lower()
             elif word.startswith('nset'):
-                # TODO: skips header parsing
-                params_map = get_param_map(iline, word, required_keys=['instance'])
-                set_name = params_map['nset']
-                iline += 1
-                line0 = lines[iline].strip().lower()
-                set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+                iline, line0, set_name, set_ids = read_nset(lines, iline, word, self.log,
+                                                            is_instance=True)
                 node_sets[set_name] = set_ids
             elif word.startswith('elset'):
                 # TODO: skips header parsing
@@ -557,15 +530,7 @@ class Abaqus:
                 set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
                 element_sets[set_name] = set_ids
             elif word == 'node':
-                self.log.debug('  skipping assembly *node')
-                node_output = []
-                iline += 1
-                line0 = lines[iline].strip().lower()
-                while '*' not in line0:
-                    sline = line0.split(',')
-                    node_output += sline
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
+                iline, line0, nids, nodes = read_node(lines, iline, self.log, skip_star=True)
             elif '*element' in line0:
                 #iline += 1
                 #line0 = lines[iline].strip().lower()
@@ -583,7 +548,7 @@ class Abaqus:
     def read_part(self, lines, iline, line0, word):
         """reads a Part object"""
         sline2 = word.split(',', 1)[1:]
-        #aq
+
         assert len(sline2) == 1, 'looking for part_name; word=%r sline2=%s' % (word, sline2)
         name_slot = sline2[0]
         assert 'name' in name_slot, name_slot
@@ -617,36 +582,8 @@ class Abaqus:
             unused_iword = line0.strip('*').lower()
             #self.log.info('part: %s' % iword)
             if '*node' in line0:
-                #print('  Node iline=%s' % iline)
-                line0 = lines[iline].strip().lower()
-                #print('  node line0 =', line0)
-                is_failed = False
-                #if len(nids) > 0:
-                    #nids0 = copy.deepcopy(nids)
-                    #nids = []
-                    #is_failed = False
-
-                #print('  ', line0)
-                while not line0.startswith('*'):
-                    sline = line0.split(',')
-                    nids.append(sline[0])
-                    nsline = len(sline)
-                    if nsline == 3:
-                        sline.append(0.)
-                        nodes.append(sline[1:])
-                    elif nsline == 4:
-                        nodes.append(sline[1:])
-                    else:
-                        raise NotImplementedError(sline)
-
-                    iline += 1
-                    line0 = lines[iline].strip().lower()
-                unused_nnodes = len(nids)
-                if is_failed:
-                    msg = 'nids will overwrite nids0!\n'
-                    #msg += 'nids0 = %s\n' % nids0
-                    msg += 'nids = %s\n' % nids
-                    raise RuntimeError(msg)
+                assert len(nids) == 0, nids
+                iline, line0, nids, nodes = read_node(lines, iline, self.log)
 
             elif '*element' in line0:
                 line0, iline, etype, elements = self._read_elements(lines, line0, iline)
@@ -680,16 +617,7 @@ class Abaqus:
                     line0 = lines[iline].strip().lower()
 
             elif '*solid section' in line0:
-                # TODO: skips header parsing
-                #iline += 1
-                word2 = line0.strip('*').lower()
-                params_map = get_param_map(iline, word2, required_keys=['material'])
-                self.log.debug('    param_map = %s' % params_map)
-                #line0 = lines[iline].strip().lower()
-                data_lines, iline, line0 = self._read_star_block2(lines, iline, line0)
-                #for line in data_lines:
-                    #print(line)
-                solid_section = SolidSection(params_map, data_lines, self.log)
+                iline, solid_section = read_solid_section(line0, lines, iline, self.log)
                 solid_sections.append(solid_section)
 
             elif '*cohesive section' in line0:
@@ -849,12 +777,12 @@ class Abaqus:
             elif word.startswith('temperature'):
                 iline -= 1
                 line0 = lines[iline].strip().lower()
-                unused_data_lines, iline, line0 = self._read_star_block(
-                    lines, iline, line0, debug=True)
+                unused_data_lines, iline, line0 = _read_star_block(
+                    lines, iline, line0, self.log, debug=True)
                 iline += 1
             elif word.startswith('controls'):
                 #self.log.debug('      controls')
-                unused_data_lines, iline, line0 = self._read_star_block(lines, iline, line0)
+                unused_data_lines, iline, line0 = _read_star_block(lines, iline, line0, self.log, )
                 iline += 1
                 line0 = lines[iline].strip().lower()
                 #for line in data_lines:
@@ -929,6 +857,127 @@ class Abaqus:
             for unused_mat_name, mat in self.materials.items():
                 mat.write(abq_file)
 
+def read_node(lines, iline, log, skip_star=False):
+    """reads *node"""
+    if skip_star:
+        iline += 1
+
+    nids = []
+    nodes = []
+    #print('  Node iline=%s' % iline)
+    line0 = lines[iline].strip().lower()
+    assert '*' not in line0, line0
+    #print('  node line0 =', line0)
+    is_failed = False
+    #if len(nids) > 0:
+        #nids0 = copy.deepcopy(nids)
+        #nids = []
+        #is_failed = False
+
+    while not line0.startswith('*'):
+        sline = line0.split(',')
+        nids.append(sline[0])
+        nsline = len(sline)
+        if nsline == 3:
+            sline.append(0.)
+            nodes.append(sline[1:])
+        elif nsline == 4:
+            nodes.append(sline[1:])
+        else:
+            raise NotImplementedError(sline)
+        iline += 1
+        line0 = lines[iline].strip().lower()
+    unused_nnodes = len(nids)
+
+    if is_failed:
+        msg = 'nids will overwrite nids0!\n'
+        #msg += 'nids0 = %s\n' % nids0
+        msg += 'nids = %s\n' % nids
+        raise RuntimeError(msg)
+    return iline, line0, nids, nodes
+
+def read_nset(lines, iline, word, log, is_instance=True):
+    """reads *nset"""
+    # TODO: skips header parsing
+    required_keys = ['instance'] if is_instance else []
+    params_map = get_param_map(iline, word, required_keys=required_keys)
+    set_name = params_map['nset']
+    iline += 1
+    line0 = lines[iline].strip().lower()
+    set_ids, iline, line0 = read_set(lines, iline, line0, params_map)
+    return iline, line0, set_name, set_ids
+
+def read_solid_section(line0, lines, iline, log):
+    """reads *solid section"""
+    # TODO: skips header parsing
+    #iline += 1
+    word2 = line0.strip('*').lower()
+    params_map = get_param_map(iline, word2, required_keys=['material'])
+    log.debug('    param_map = %s' % params_map)
+    #line0 = lines[iline].strip().lower()
+    data_lines, iline, line0 = _read_star_block2(lines, iline, line0, log)
+    #for line in data_lines:
+        #print(line)
+    solid_section = SolidSection(params_map, data_lines, log)
+    return iline, solid_section
+
+def read_hourglass_stiffness(line0, lines, iline, log):
+    """reads *hourglass stiffness"""
+    # TODO: skips header parsing
+    #iline += 1
+    word2 = line0.strip('*').lower()
+    iline += 1
+    #params_map = get_param_map(iline, word2, required_keys=['material'])
+    #log.debug('    param_map = %s' % params_map)
+    #line0 = lines[iline].strip().lower()
+    data_lines, iline, line0 = _read_star_block2(lines, iline, line0, log)
+    assert len(data_lines) == 1, data_lines
+    #for line in data_lines:
+        #print(line)
+    #solid_section = SolidSection(params_map, data_lines, log)
+    hourglass_stiffness = None
+    return iline, hourglass_stiffness
+
+
+def _read_star_block(lines, iline, line0, log, debug=False):
+    """
+    because this uses file streaming, there are 30,000 places where a try except
+    block is needed, so this should probably be used all over.
+    """
+    data_lines = []
+    try:
+        iline += 1
+        line0 = lines[iline].strip().lower()
+        while not line0.startswith('*'):
+            data_lines.append(line0.split(','))
+            iline += 1
+            line0 = lines[iline].strip().lower()
+            #log.debug('line = %r' % line0)
+        iline -= 1
+        line0 = lines[iline].strip().lower()
+    except IndexError:
+        pass
+    if debug:
+        for line in data_lines:
+            log.debug(line)
+    return data_lines, iline, line0
+
+
+def _read_star_block2(lines, iline, line0, log, debug=False):
+    """
+    because this uses file streaming, there are 30,000 places where a try except
+    block is needed, so this should probably be used all over.
+    """
+    line0 = lines[iline].strip().lower()
+    data_lines = []
+    while not line0.startswith('*'):
+        data_lines.append(line0.strip(', ').split(','))
+        iline += 1
+        line0 = lines[iline].strip().lower()
+    if debug:
+        for line in data_lines:
+            log.debug(line)
+    return data_lines, iline, line0
 
 def read_set(lines, iline, line0, params_map):
     """reads a set"""

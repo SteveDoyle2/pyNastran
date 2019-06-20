@@ -9,7 +9,7 @@ from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
-from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX, CTRIAX6, CTRAX6, CQUADX8
+from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX, CTRIAX6, CTRAX6, CQUADX8, CTRIAX
 from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
                                                 CQUADR, CTRIAR,
                                                 CQUAD8, CQUAD,
@@ -2067,6 +2067,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CTRAX3=%s\n' % str(out))
             #data_in = [eid, pid, n1, n2, n3, theta]
             elem = CTRAX6(eid, pid, [n1, n2, n3], theta)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CTRAX3'] = nelements
         return n
@@ -2096,6 +2097,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CTRAX6=%s\n' % str(out))
             #data_in = [eid, pid, n1, n2, n3, n4, n5, n6, theta]
             elem = CTRAX6(eid, pid, [n1, n2, n3, n4, n5, n6], theta)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CTRAX6'] = nelements
         return n
@@ -2121,6 +2123,7 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  CQUADX8=%s\n' % str(out))
             #data_in = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta]
             elem = CQUADX8(eid, pid, [n1, n2, n3, n4, n5, n6, n7, n8], theta)
+            self.add_op2_element(elem)
             n += ntotal
         self.card_count['CQUADX8'] = nelements
         return n

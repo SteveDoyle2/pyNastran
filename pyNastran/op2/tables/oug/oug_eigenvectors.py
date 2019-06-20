@@ -36,16 +36,16 @@ class ComplexEigenvectorArray(ComplexTableArray):
 class RealEigenvectorArray(RealTableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt, f06_flag=False):
         RealTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        assert f06_flag is False, f06_flag
+        #if f06_flag:
+            #self.itime = -1
+            #self._times = []
+            #self.data = []
+            #self.node_gridtype = []
 
-        if f06_flag:
-            self.itime = -1
-            self._times = []
-            self.data = []
-            self.node_gridtype = []
-
-            self.data_code = data_code
-            self.apply_data_code()
-            self.set_data_members()
+            #self.data_code = data_code
+            #self.apply_data_code()
+            #self.set_data_members()
 
     def get_phi(self):
         """
@@ -77,58 +77,58 @@ class RealEigenvectorArray(RealTableArray):
         """(ndof, nmodes) -> (nmodes, nnodes, 6)"""
         self.data = self.phi_to_data(phi)
 
-    def build_f06_vectorization(self):
-        self.data = array(self.data, dtype='float32')
-        self.node_gridtype = array(self.node_gridtype)
-        self._times = array(self._times)
+    #def build_f06_vectorization(self):
+        #self.data = array(self.data, dtype='float32')
+        #self.node_gridtype = array(self.node_gridtype)
+        #self._times = array(self._times)
 
-    def add_new_f06_mode(self, imode):
-        self._times.append(imode)
-        self.itime += 1
-        self.ntimes += 1
-        self.data.append([])
-        self.node_gridtype = []
+    #def add_new_f06_mode(self, imode):
+        #self._times.append(imode)
+        #self.itime += 1
+        #self.ntimes += 1
+        #self.data.append([])
+        #self.node_gridtype = []
 
-    def update_f06_mode(self, data_code, imode):
-        """
-        this method is called if the object
-        already exits and a new time step is found
-        """
-        #assert mode >= 0.
-        self.data_code = data_code
-        self.apply_data_code()
-        #self.caseVal = imode
-        self.add_new_f06_mode(imode)
-        self.set_data_members()
+    #def update_f06_mode(self, data_code, imode):
+        #"""
+        #this method is called if the object
+        #already exits and a new time step is found
+        #"""
+        ##assert mode >= 0.
+        #self.data_code = data_code
+        #self.apply_data_code()
+        ##self.caseVal = imode
+        #self.add_new_f06_mode(imode)
+        #self.set_data_members()
 
-    def read_f06_data(self, data_code, lines):
-        """
-        it is assumed that all data coming in is correct, so...
+    #def read_f06_data(self, data_code, lines):
+        #"""
+        #it is assumed that all data coming in is correct, so...
 
-           [node_id, grid_type, t1, t2, t3, r1, r2, r3]
-           [100, 'G', 1.0, 2.0, 3.0, 4.0, 5.0, 6.0] #  valid
+           #[node_id, grid_type, t1, t2, t3, r1, r2, r3]
+           #[100, 'G', 1.0, 2.0, 3.0, 4.0, 5.0, 6.0] #  valid
 
-           [101, 'S', 1.0, 2.0] #  invalid
-           [101, 'S', 1.0, 0.0, 0.0, 0.0, 0.0, 0.0] #  valid
-           [102, 'S', 2.0, 0.0, 0.0, 0.0, 0.0, 0.0] #  valid
-        """
-        imode = data_code['mode']
-        if imode not in self._times:
-            self.update_f06_mode(data_code, imode)
+           #[101, 'S', 1.0, 2.0] #  invalid
+           #[101, 'S', 1.0, 0.0, 0.0, 0.0, 0.0, 0.0] #  valid
+           #[102, 'S', 2.0, 0.0, 0.0, 0.0, 0.0, 0.0] #  valid
+        #"""
+        #imode = data_code['mode']
+        #if imode not in self._times:
+            #self.update_f06_mode(data_code, imode)
 
-        itime = self.itime
-        datai = self.data[itime]
+        #itime = self.itime
+        #datai = self.data[itime]
 
-        for line in lines:
-            if len(line) != 8:
-                msg = 'invalid length; even spoints must be in \n'
-                msg += '[nid, type, t1, t2, t3, r1, r2, t3] format\nline=%s\n' % line
-                msg += 'expected length=8; length=%s' % len(line)
-                raise RuntimeError(msg)
-            (node_id, grid_type, t1, t2, t3, r1, r2, r3) = line
-            self.node_gridtype.append([node_id, self.cast_grid_type(grid_type)])
-            datai.append([t1, t2, t3, r1, r2, r3])
-        assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
+        #for line in lines:
+            #if len(line) != 8:
+                #msg = 'invalid length; even spoints must be in \n'
+                #msg += '[nid, type, t1, t2, t3, r1, r2, t3] format\nline=%s\n' % line
+                #msg += 'expected length=8; length=%s' % len(line)
+                #raise RuntimeError(msg)
+            #(node_id, grid_type, t1, t2, t3, r1, r2, r3) = line
+            #self.node_gridtype.append([node_id, self.cast_grid_type(grid_type)])
+            #datai.append([t1, t2, t3, r1, r2, r3])
+        #assert self.eigrs[-1] == data_code['eigr'], 'eigrs=%s\ndata_code[eigrs]=%s' %(self.eigrs, data_code['eigr'])
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):

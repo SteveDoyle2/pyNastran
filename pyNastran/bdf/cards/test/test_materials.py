@@ -499,16 +499,6 @@ class TestMaterials(unittest.TestCase):
             msg += 'expected =  %r' % expected
             self.assertEqual(actual, expected, msg)
 
-        mid = 10
-        e1 = 1.
-        e2 = 2.
-        e3 = 3.
-        nu12 = 12.
-        nu13 = 13.
-        nu23 = 23.
-        g12 = 112.
-        g13 = 113.
-        g23 = 123.
         save_load_deck(model, xref='standard', punch=True,
                        run_remove_unused=False)
 
