@@ -294,64 +294,11 @@ def A_I1_I2_I12(prop, beam_type, dim):
         I12 = 0.
 
     elif beam_type == 'BAR':
-        b, h = dim
-        A = b * h
-        I1 = 1 / 12. * b * h ** 3
-        I2 = 1 / 12. * h * b ** 3
-        I12 = 0.
+        A, I1, I2, I12 = bar(prop.type, beam_type, dim, prop)
     elif beam_type == 'BOX':
-        dim1, dim2, dim3, dim4 = dim
-        assert dim1 > 2.*dim4, 'BOX; required: dim1 > 2*dim4; dim1=%s dim4=%s\n%s' % (dim1, dim4, prop)
-        assert dim2 > 2.*dim3, 'BOX; required: dim2 > 2*dim3; dim2=%s dim3=%s\n%s' % (dim2, dim3, prop)
-
-        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
-        b = dim1
-        h = dim2
-        t1 = dim3
-        t2 = dim4
-        bi = b - 2 * t2
-        hi = h - 2 * t1
-        A = b * h - bi * hi
-
-        I1 = 1 / 12. * (b * h ** 3 - bi * hi ** 3)
-        I2 = 1 / 12. * (h * b ** 3 - bi * hi ** 3)
-        I12 = 0.
+        A, I1, I2, I12 = box(prop.type, beam_type, dim, prop)
     elif beam_type == 'L':
-        dim1, dim2, dim3, dim4 = dim
-        t1 = dim3
-        t2 = dim4
-        A0 = (dim1*t1) + t2*(dim2-t1)
-
-        b = dim1 - 0.5 * t2
-        h = dim2 - 0.5 * t1
-        h2 = dim2 - t1
-        b1 = dim1 - t2
-        A = (b + 0.5 * t2) * t1 + h2 * t2
-        assert np.allclose(A0, A), 'A0=%s A=%s' % (A0, A)
-        yc = t2*h2 * (h2 + t1) / (2 * A)
-        zc = t1*b1 * (b1 + t2) / (2 * A)
-        I1 = (
-            t1 ** 3 * (b + 0.5 * t2) / 12. +
-            t1 * (b + 0.5 * t2) * yc ** 2 +
-            t2 * h ** 3 / 12 +
-            h2 * t2 * (0.5 * (h2 + t1) - yc) ** 2
-        )
-        I2 = (
-            t2 ** 3 * h2 / 12 +
-            t1*(b + 0.5 * t2) ** 3 / 12 +
-            t1*(b + 0.5 * t2) * (0.5 * b1 - zc) ** 2  # zc is z2 in the docs...
-        )
-        I12 = (
-            zc * yc * t1 * t2
-            - b1 * t1 * yc * (0.5 * (b1 + t2) - zc)
-            - h2 * t2 * zc * (0.5 * (h2 + t1) - yc)
-        )
-        #j = 1/3 * (t1**3*b + t2**3 * h)
-        #k1 = h2 * t2 / A
-        #k2 = b1 * t1 / A
-        #yna = yc
-        #zna = zc
-
+        A, I1, I2, I12 = lsection(prop.type, beam_type, dim, prop)
     else:
         msg = 'A_I1_I2_I12; beam_type=%s is not supported for %s class...' % (
             beam_type, prop.type)
@@ -493,30 +440,8 @@ def _bar_areaL(class_name, beam_type, dim, prop):
         A = 2. * (h1 * w1) + h2 * w2
 
     elif beam_type == 'L':
-        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
-        #
-        #  D4
-        # F---C      ^
-        # |   |      |
-        # | 2 |      |
-        # |   |      | D2
-        # +---+---+  |
-        # |1   D3 |  |
-        # E-------D  v
-        #
-        # <------> D1
-        #
-        (dim1, dim2, dim3, dim4) = dim
-        t1 = dim3
-        t2 = dim4
-        A0 = (dim1*t1) + t2*(dim2-t1)
+        A, I1, I2, I12 = lsection(class_name, beam_type, dim, prop)
 
-        b = dim1 - 0.5 * t2
-        h = dim2 - 0.5 * t1
-        h2 = dim2 - t1
-        #b1 = dim1 - t2
-        A = (b + 0.5 * t2) * t1 + h2 * t2
-        assert np.allclose(A0, A), 'A0=%s A=%s' % (A0, A)
 
     #CHAN = 2*(DIM1*DIM4) + (DIM2-(2*DIM4))*DIM3
     elif beam_type == 'CHAN':
@@ -716,37 +641,9 @@ def _bar_areaL(class_name, beam_type, dim, prop):
         assert ball - tweb > 0, f'bflange={bflange} ball(dim1)={hall} tweb(dim4)={tweb}'
         A = tweb * hall + tflange * bflange
 
-    #BOX = 2*(DIM1*DIM3)+2*((DIM2-(2*DIM3))*DIM4)
     elif beam_type == 'BOX':
-        #
-        # +----------+ ^     ^
-        # |          | | d3  |
-        # |  +----+  | v     |
-        # |  |    |  |       |  d2
-        # |  +----+  |       |
-        # |          |       |
-        # +----------+       v
-        #          <-> d4
-        # <----d1---->
-        #
-        dim1, dim2, dim3, dim4 = dim
-        assert dim1 > 2.*dim4, 'BOX; required: dim1 > 2*dim4; dim1=%s dim4=%s\n%s' % (dim1, dim4, prop)
-        assert dim2 > 2.*dim3, 'BOX; required: dim2 > 2*dim3; dim2=%s dim3=%s\n%s' % (dim2, dim3, prop)
+        A, I1, I2, I12 = box(class_name, beam_type, dim, prop)
 
-        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
-        b = dim1
-        h = dim2
-        t1 = dim3
-        t2 = dim4
-        bi = b - 2 * t2
-        hi = h - 2 * t1
-        A = b * h - bi * hi
-        #i1 = (b*h**3 * bi*hi**3) / 12.
-        #i2 = (h*b**3 * hi*bi**3) / 12.
-        #i12 = 0.
-        #j = (2*t2*t1*(b-t2)**2*(h-t1)**2)/(b*t2+h*t1-t2**2-t1**2)
-
-    #BOX1 = (DIM2*DIM6)+(DIM2*DIM5)+((DIM1-DIM5-DIM6)*DIM3)+((DIM1-DIM5-DIM6)*DIM4)
     elif beam_type == 'BOX1':
         h1 = dim[2]  # top
         w1 = dim[0]
@@ -763,33 +660,11 @@ def _bar_areaL(class_name, beam_type, dim, prop):
 
     #BAR   = DIM1*DIM2
     elif beam_type == 'BAR':
-        #per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
-        # <------> D1
-        #
-        # F------C  ^
-        # |      |  |
-        # |      |  | D2
-        # |      |  |
-        # E------D  v
-        dim1, dim2 = dim
-        b = dim1
-        h = dim2
-        A = b * h
-        #i1 = b*h**3/12.
-        #i2 = b**3*h/12.
-        #i12 = 0.
-        #J = b*h**3*(1/3. - 0.21*h/b*(1-h**4/(12*b**4)))
+        A, I1, I2, I12 = bar(prop.type, beam_type, dim, prop)
 
-    #CROSS = (DIM2*DIM3)+2*((0.5*DIM1)*DIM4)
     elif beam_type == 'CROSS':
-        h1 = dim[2]
-        w1 = dim[1]
+        A, I1, I2, I12 = cross(prop.type, beam_type, dim, prop)
 
-        h2 = dim[3]
-        w2 = dim[0]
-        A = h1 * w1 + h2 * w2
-
-    #H = 2*((0.5*DIM2)*DIM3)+(DIM1*DIM4)
     elif beam_type == 'H':
         h1 = dim[2]
         w1 = dim[1]
@@ -798,135 +673,17 @@ def _bar_areaL(class_name, beam_type, dim, prop):
         w2 = dim[0]
         A = h1 * w1 + h2 * w2
 
-    #Z = (DIM2*DIM3)+((DIM4-DIM3)*(DIM1+DIM2))
     elif beam_type == 'Z':
-        #  bflange bweb
-        # <--d1-><--d2-->
-        # +-------------+            ^
-        # |             |            |
-        # +------+      |  ^         |
-        #        |      |  |         |
-        #        |      |  | d3=hweb |  d4 = hall
-        #        |      |  v         |
-        #        |      +---------+  |
-        #        |                |  |
-        #        +----------------+  v
-        #
-        dim1, dim2, dim3, dim4 = dim
-        bflange = dim1
-        bweb = dim2
-        hweb = dim3
-        hall = dim4
-        tflange = hall - hweb # actually 2*tflange
-        A = bflange * tflange + hall * bweb
+        A, I1, I2 = zee(class_name, beam_type, dim, prop)
 
-    #HEXA = ((DIM2-(2*DIM1))*DIM3)+(DIM3*DIM1)
     elif beam_type == 'HEXA':
-        #     _______
-        #   /        \     ^
-        #  /          \    |
-        # *            *   |  d3 = h
-        #  \          /    |
-        #   \        /     |
-        #    \______/      v
-        #           |d1| = wtri
-        # <-----d2----> = wall
-        #
-        dim1, dim2, dim3 = dim
-        hbox = dim3
-        wall = dim2
-        wtri = dim1
-        wbox = wall - 2 * wtri
-        assert wbox > 0, 'wbox=%s' % (wbox)
-        A = hbox * wbox + hbox * wtri
-        #print('hbox=%s wbox=%s hbox*wbox=%s 2*wtri*hbox=%s A=%s' % (
-            #hbox, wbox, hbox*wbox, 2*wtri*hbox, A))
-
-    #HAT = (DIM2*DIM3)+2*((DIM1-DIM2)*DIM2)+2*(DIM2*DIM4)
+        A, I1, I2 = hexa(class_name, beam_type, dim, prop)
     elif beam_type == 'HAT':
-        #
-        #        <--------d3------->
-        #
-        #        +-----------------+              ^
-        #   d4   |        A        |   d4         |
-        # <----> +-d2-+-------+-d2-+ <---->       |
-        #        | B  |       |  B |              | d1
-        # +------+----+       +----+------+       |
-        # |     C     |       |     C     | t=d2  |
-        # +-----------+       +-----------+       v
-        dim1, dim2, dim3, dim4 = dim
-        assert dim3 > 2.*dim2, 'HAT; required: dim3 > 2*dim2; dim2=%s dim3=%s; delta=%s\n%s' % (dim2, dim3, dim3-2*dim2, prop)
-        #DIM3, CAN NOT BE LESS THAN THE SUM OF FLANGE
-            #THICKNESSES, 2*DIM2
-        t = dim[1]
-        wa = dim[2]
-        hb = dim[0] - 2. * t
-        wc = dim[3] + t
-        A = wa * t + (2. * wc * t) + (2. * hb * t)
-
-    #HAT1 = (DIM1*DIM5)+(DIM3*DIM4)+((DIM1-DIM3)*DIM4)+2*((DIM2-DIM5-DIM4)*DIM4)
+        A, I1, I2 = hat(class_name, beam_type, dim, prop)
     elif beam_type == 'HAT1':
-        # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
-        w = dim[3]
-
-        h0 = dim[4]         # btm bar
-        w0 = dim[0] / 2.
-
-        h2 = dim[1] - h0 - 2 * w  # vertical bar
-        w2 = w
-
-        h3 = w              # top bar
-        w3 = dim[2] / 2.
-
-        dim1, dim2, dim3, dim4, dim5 = dim
-        assert dim2 > dim4+dim5, 'HAT1; required: dim2 > dim4+dim5; dim2=%s dim4=%s; dim5=%s\n%s' % (dim2, dim4, dim5, prop)
-        #*DIM4+DIM5, CAN NOT BE LARGER THAN THE HEIGHT OF
-            #THE HAT, DIM2.
-
-
-        h1 = w              # upper, horizontal lower bar (see HAT)
-        w1 = w0 - w3
-        A = 2. * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
-    #DBOX = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
-    #       (((DIM1-DIM3)*DIM2)-((DIM2-(DIM9+DIM10))*(DIM1-DIM3-(0.5*DIM5)-DIM6)))
+        A, I1, I2 = hat1(class_name, beam_type, dim, prop)
     elif beam_type == 'DBOX':
-        #
-        #  |--2------5----
-        #  |     |       |
-        #  1     3       6
-        #  |     |       |
-        #  |--4--|---7---|
-        #
-
-        #0,1,2,6,11
-        #1,2,3,7,12
-
-        htotal = dim[1]
-        wtotal = dim[0]
-
-        h2 = dim[6]
-        w2 = dim[3]
-
-        h4 = dim[7]
-        w4 = w2
-
-        h1 = htotal - h2 - h4
-        w1 = dim[3]
-
-        h5 = dim[8]
-        w5 = wtotal - w2
-
-        h7 = dim[9]
-        w7 = w5
-
-        h6 = htotal - h5 - h7
-        w6 = dim[5]
-
-        h3 = (h1 + h6) / 2.
-        w3 = dim[4]
-
-        A = (h1 * w1 + h2 * w2 + h3 * w3 + h4 * w4 +
-             h5 * w5 + h6 * w6 + h7 * w7)
+        A, I1, I2 = dbox(class_name, beam_type, dim, prop)
     else:
         msg = 'areaL; beam_type=%s is not supported for %s class...' % (
             beam_type, class_name)
@@ -934,6 +691,338 @@ def _bar_areaL(class_name, beam_type, dim, prop):
     assert A > 0, 'beam_type=%r dim=%r A=%s\n%s' % (beam_type, dim, A, prop)
     #A = 1.
     return A
+
+def bar(class_type, beam_type, dim, prop):
+    #per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+    # <------> D1
+    #
+    # F------C  ^
+    # |      |  |
+    # |      |  | D2
+    # |      |  |
+    # E------D  v
+    b, h = dim
+    A = b * h
+    I1 = b * h ** 3 / 12
+    I2 = h * b ** 3 / 12
+    I12 = 0.
+    #J = b*h**3*(1/3. - 0.21*h/b*(1-h**4/(12*b**4)))
+
+    return A, I1, I2, I12
+
+def box(class_name, beam_type, dim, prop):
+    #
+    # +----------+ ^     ^
+    # |          | | d3  |
+    # |  +----+  | v     |
+    # |  |    |  |       |  d2
+    # |  +----+  |       |
+    # |          |       |
+    # +----------+       v
+    #          <-> d4
+    # <----d1---->
+    #
+    dim1, dim2, dim3, dim4 = dim
+    assert dim1 > 2.*dim4, 'BOX; required: dim1 > 2*dim4; dim1=%s dim4=%s\n%s' % (dim1, dim4, prop)
+    assert dim2 > 2.*dim3, 'BOX; required: dim2 > 2*dim3; dim2=%s dim3=%s\n%s' % (dim2, dim3, prop)
+
+    dim1, dim2, dim3, dim4 = dim
+    assert dim1 > 2.*dim4, 'BOX; required: dim1 > 2*dim4; dim1=%s dim4=%s\n%s' % (dim1, dim4, prop)
+    assert dim2 > 2.*dim3, 'BOX; required: dim2 > 2*dim3; dim2=%s dim3=%s\n%s' % (dim2, dim3, prop)
+
+    # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+    b = dim1
+    h = dim2
+    t1 = dim3
+    t2 = dim4
+    bi = b - 2 * t2
+    hi = h - 2 * t1
+    A = b * h - bi * hi
+
+    I1 = (b * h ** 3 - bi * hi ** 3) / 12
+    I2 = (h * b ** 3 - bi * hi ** 3) / 12
+    I12 = 0.
+    #j = (2*t2*t1*(b-t2)**2*(h-t1)**2)/(b*t2+h*t1-t2**2-t1**2)
+    return A, I1, I2, I12
+
+def cross(class_type, beam_type, dim, prop):
+    h1 = dim[2]
+    w1 = dim[1]
+
+    h2 = dim[3]
+    w2 = dim[0]
+    A = h1 * w1 + h2 * w2
+    return A, None, None, None
+
+def zee(class_name, beam_type, dim, prop):
+    #  bflange bweb
+    # <--d1-><--d2-->
+    # +-------------+            ^
+    # |             |            |
+    # +------+      |  ^         |
+    #        |      |  |         |
+    #        |      |  | d3=hweb |  d4 = hall
+    #        |      |  v         |
+    #        |      +---------+  |
+    #        |                |  |
+    #        +----------------+  v
+    #
+    dim1, dim2, dim3, dim4 = dim
+    bflange = dim1
+    bweb = dim2
+    hweb = dim3
+    hall = dim4
+    tflange = hall - hweb # actually 2*tflange
+    A = bflange * tflange + hall * bweb
+    return A, None, None
+
+def hexa(class_name, beam_type, dim, prop):
+    #     _______
+    #   /        \     ^
+    #  /          \    |
+    # *            *   |  d3 = h
+    #  \          /    |
+    #   \        /     |
+    #    \______/      v
+    #           |d1| = wtri
+    # <-----d2----> = wall
+    #
+    dim1, dim2, dim3 = dim
+    hbox = dim3
+    wall = dim2
+    wtri = dim1
+    wbox = wall - 2 * wtri
+    assert wbox > 0, 'wbox=%s' % (wbox)
+    A = hbox * wbox + hbox * wtri
+    #print('hbox=%s wbox=%s hbox*wbox=%s 2*wtri*hbox=%s A=%s' % (
+        #hbox, wbox, hbox*wbox, 2*wtri*hbox, A))
+    return A, None, None
+
+def hat(class_name, beam_type, dim, prop):
+    #
+    #        <--------d3------->
+    #
+    #        +-----------------+              ^
+    #   d4   |        A        |   d4         |
+    # <----> +-d2-+-------+-d2-+ <---->       |
+    #        | B  |       |  B |              | d1
+    # +------+----+       +----+------+       |
+    # |     C     |       |     C     | t=d2  |
+    # +-----------+       +-----------+       v
+    dim1, dim2, dim3, dim4 = dim
+    assert dim3 > 2.*dim2, 'HAT; required: dim3 > 2*dim2; dim2=%s dim3=%s; delta=%s\n%s' % (dim2, dim3, dim3-2*dim2, prop)
+    #DIM3, CAN NOT BE LESS THAN THE SUM OF FLANGE
+        #THICKNESSES, 2*DIM2
+    t = dim[1]
+    wa = dim[2]
+    hb = dim[0] - 2. * t
+    wc = dim[3] + t
+    A = wa * t + (2. * wc * t) + (2. * hb * t)
+    return A, None, None
+
+def hat1(class_name, beam_type, dim, prop):
+    # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+    #
+    #        <-----d3=wmid----->
+    #
+    #        +-----------------+              ^
+    #   d4   |                 |              |
+    #        +----+-------+-d4-+  d4=t        |
+    #        |    |       |    |              | d2=hall
+    # +------+----+   x   +----+------+       |
+    # |           |       |           | t=d2  |
+    # +-----------+-------+-----------+       |  ^
+    # |                               |       |  |
+    # |                               |       |  | d5=hbox
+    # +-------------------------------+       v  v
+    #
+    # <------------d1=wbox------------>
+    dim1, dim2, dim3, dim4, dim5 = dim
+    wbox = dim1
+    hall = dim2
+    unused_wmid = dim3
+    t = dim4
+    hbox = dim5
+    hweb = hall - hbox - t
+    assert hweb > 0, hweb
+
+    Abox = hbox * wbox
+    # we do a first pass assuming the hat is flat and then
+    # add the leftover web sections
+    Ahat = wbox * t + 2 * hweb * t
+    A = Abox + Ahat
+
+    b1 = dim1
+    h = dim2
+    b2 = dim3
+    t2 = dim4
+    t1 = dim5
+    A0 = b1 * t1 + t2 * (b1 - b2) + 2 * t2 * (h - t1) + t2 * (b2 - 2 * t2)
+    assert np.allclose(A, A0), 'A=%s A0=%s' % (A, A0)
+    #assert dim2 > dim4+dim5, 'HAT1; required: dim2 > dim4+dim5; dim2=%s dim4=%s; dim5=%s\n%s' % (dim2, dim4, dim5, prop)
+    #*DIM4+DIM5, CAN NOT BE LARGER THAN THE HEIGHT OF
+        #THE HAT, DIM2.
+
+
+    #h1 = w              # upper, horizontal lower bar (see HAT)
+    #w1 = w0 - w3
+    #A = 2. * (h0 * w0 + h1 * w1 + h2 * w2 + h3 * w3)
+    I1 = None
+    I2 = None
+    return A, I1, I2
+
+def lsection(class_type, beam_type, dim, prop):
+    # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+    #
+    #  D4
+    # F---C      ^
+    # |   |      |
+    # | 2 |      |
+    # |   |      | D2
+    # +---+---+  |
+    # |1   D3 |  |
+    # E-------D  v
+    #
+    # <------> D1
+    #
+    dim1, dim2, dim3, dim4 = dim
+    t1 = dim3
+    t2 = dim4
+    A0 = (dim1*t1) + t2*(dim2-t1)
+
+    b = dim1 - 0.5 * t2
+    h = dim2 - 0.5 * t1
+    h2 = dim2 - t1
+    b1 = dim1 - t2
+    A = (b + 0.5 * t2) * t1 + h2 * t2
+    assert np.allclose(A0, A), 'A0=%s A=%s' % (A0, A)
+
+    yc = t2*h2 * (h2 + t1) / (2 * A)
+    zc = t1*b1 * (b1 + t2) / (2 * A)
+    I1 = (
+        t1 ** 3 * (b + 0.5 * t2) / 12. +
+        t1 * (b + 0.5 * t2) * yc ** 2 +
+        t2 * h ** 3 / 12 +
+        h2 * t2 * (0.5 * (h2 + t1) - yc) ** 2
+    )
+    I2 = (
+        t2 ** 3 * h2 / 12 +
+        t1*(b + 0.5 * t2) ** 3 / 12 +
+        t1*(b + 0.5 * t2) * (0.5 * b1 - zc) ** 2  # zc is z2 in the docs...
+    )
+    I12 = (
+        zc * yc * t1 * t2
+        - b1 * t1 * yc * (0.5 * (b1 + t2) - zc)
+        - h2 * t2 * zc * (0.5 * (h2 + t1) - yc)
+    )
+    #j = 1/3 * (t1**3*b + t2**3 * h)
+    #k1 = h2 * t2 / A
+    #k2 = b1 * t1 / A
+    #yna = yc
+    #zna = zc
+    return A, I1, I2, I12
+
+def dbox(class_name, beam_type, dim, prop):
+    #DBOX = ((DIM2*DIM3)-((DIM2-DIM7-DIM8)*(DIM3-((0.5*DIM5)+DIM4)))) +
+    #       (((DIM1-DIM3)*DIM2)-((DIM2-(DIM9+DIM10))*(DIM1-DIM3-(0.5*DIM5)-DIM6)))
+    #
+    #  |--2--|---5---|
+    #  |     |       |
+    #  1     3       6
+    #  |     |       |
+    #  |--4--|---7---|
+    #
+    dim1, dim2, dim3, dim4, dim5, dim6, dim7, dim8, dim9, dim10 = dim
+
+    #0,1,2,6,11
+    #1,2,3,7,12
+
+    htotal = dim2
+    wtotal = dim1
+
+    wleft = dim3 - dim4 - dim5 / 2.
+    wright = dim1 - dim3 - dim6 - dim5 / 2.
+    assert wleft > 0, wleft
+    #assert wright > 0, wright
+
+    #A1 = dim4 * htotal
+    #A2 = dim7 * wleft
+    #A3 = dim5 * htotal
+    #A4 = dim8 * wleft
+    #A5 = dim9 * wright
+    #A6 = dim6 * htotal
+    #A7 = dim10 * wright
+    #A = A1 + A2 + A3 + A4 + A5 + A6 + A7
+
+    A1 = dim4 * htotal
+    A2 = wleft * dim7
+    A3 = dim5 * htotal
+    A4 = wleft * dim8
+    A5 = wright * dim9
+    A6 = dim6 * htotal
+    A7 = wright * dim10
+    A = A1 + A2 + A3 + A4 + A5 + A6 + A7
+
+    z1 = dim4 / 2
+    z2 = dim4 + wleft / 2
+    z3 = dim3
+    z4 = z2
+    z5 = dim3 + dim5 / 2 + wright / 2
+    z6 = dim1 - dim6 / 2
+    z7 = z5
+
+    y1 = htotal / 2
+    y2 = htotal - dim7 / 2
+    y3 = y1
+    y4 = dim8 / 2
+    y5 = htotal - dim9 / 2.
+    y6 = y1
+    y7 = dim10 / 2
+
+    cg_y = (A1 * y1 + A2 * y2 + A3 * y3 + A4 * y4 + A5 * y5 + A6 * y6 + A7 * y7) / A
+    cg_z = (A1 * z1 + A2 * z2 + A3 * z3 + A4 * z4 + A5 * z5 + A6 * z6 + A7 * z7) / A
+
+    dy1 = y1 - cg_y
+    dy2 = y2 - cg_y
+    dy3 = y3 - cg_y
+    dy4 = y4 - cg_y
+    dy5 = y5 - cg_y
+    dy6 = y6 - cg_y
+    dy7 = y7 - cg_y
+
+    dz1 = z1 - cg_z
+    dz2 = z2 - cg_z
+    dz3 = z3 - cg_z
+    dz4 = z4 - cg_z
+    dz5 = z5 - cg_z
+    dz6 = z6 - cg_z
+    dz7 = z7 - cg_z
+    assert dz1 < 0., dz1
+    assert dy2 > 0., dy2
+
+    # inertia taken about the centroid
+    # 1/12 * b * h^3 = 1/12 * A * h^2
+    Iy1 = A1 * htotal ** 2
+    Iy2 = A2 * dim7 ** 2
+    Iy3 = A3 * htotal ** 2
+    Iy4 = A4 * dim8 ** 2
+    Iy5 = A5 * dim9 ** 2
+    Iy6 = A6 * htotal ** 2
+    Iy7 = A7 * dim10 ** 2
+    dI1 = A1 * dy1 + A2 * dy2 + A3 * dy3 + A4 * dy4 + A5 * dy5 + A6 * dy6 + A7 * dy7
+    I1 = (Iy1 + Iy2 + Iy3 + Iy4 + Iy5 + Iy6 + Iy7) / 12. + dI1
+
+    # 1/12 * b^3 * h = 1/12 * A * b^2
+    Iz1 = A1 * dim4 ** 2
+    Iz2 = A2 * wleft ** 2
+    Iz3 = A3 * dim5 ** 2
+    Iz4 = A4 * wleft ** 2
+    Iz5 = A5 * wright ** 2
+    Iz6 = A6 * dim6 ** 2
+    Iz7 = A7 * wright ** 2
+    dI2 = A1 * dz1 + A2 * dz2 + A3 * dz3 + A4 * dz4 + A5 * dz5 + A6 * dz6 + A7 * dz7
+    I2 = (Iz1 + Iz2 + Iz3 + Iz4 + Iz5 + Iz6 + Iz7) / 12. + dI2
+    return A, I1, I2
 
 
 class IntegratedLineProperty(LineProperty):
@@ -1769,24 +1858,24 @@ class PBARL(LineProperty):
 
     def J(self):
         # type: () -> float
-        if self.beam_type in ['ROD']:
+        if self.beam_type == 'ROD':
             r = self.dim[0]
             Ixx = pi * r**4 / 4.
             Iyy = Ixx
             unused_Ixy = 0.
-        elif self.beam_type in ['TUBE']:
+        elif self.beam_type == 'TUBE':
             rout, rin = self.dim
             #rin = rout - 2*t
             Ixx = pi * (rout**4 - rin**4) / 4.
             Iyy = Ixx
             unused_Ixy = 0.
-        elif self.beam_type in ['TUBE2']:
+        elif self.beam_type == 'TUBE2':
             rout, t = self.dim
             rin = rout - 2*t
             Ixx = pi * (rout**4 - rin**4) / 4.
             Iyy = Ixx
             unused_Ixy = 0.
-        elif self.beam_type in ['BOX']:
+        elif self.beam_type == 'BOX':
             (d1, d2, d3, d4) = self.dim
             hout = d2
             wout = d1
