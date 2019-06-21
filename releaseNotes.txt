@@ -52,7 +52,7 @@ BDF:
    - added AECOMPL, DEFORM to bdf attributes
    - added I12, J to PBEAM updater; fixed error message
    - added RHO to MAT10 updater
-   - fixed Area calculation for PBARL/CHAN
+   - fixed Area calculation for PBARL/CHAN, HAT1, DBOX
    - fixed missing variable in mass properties error message
  - new cards:
    - DTI besides UNITS are now supported
@@ -77,6 +77,8 @@ OP2:
  - bug fixes:
    - more hdf5 results
  - enhancements:
+   - a few more cards supported in the OP2 geometry reader
+   - adding op2 writer (includes geometry support)
 
 GUI:
  - bug fixes:
