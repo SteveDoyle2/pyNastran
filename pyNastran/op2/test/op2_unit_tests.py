@@ -830,6 +830,11 @@ class TestOP2(Tester):
                       debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
                       build_pandas=build_pandas, log=log)[0]
         assert os.path.exists(debug_file), os.listdir(folder)
+
+        op2.save('op2_model.obj')
+        op2_load = OP2()
+        op2_load.load('op2_model.obj')
+        os.remove('op2_model.obj')
         os.remove(debug_file)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)

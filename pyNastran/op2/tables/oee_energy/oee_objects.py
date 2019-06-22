@@ -625,7 +625,7 @@ class RealStrainEnergyArray(BaseElement):
         ftable3 = set_table3_field(ftable3, 6, b'4s') # field 7
         element_name0 = element_name[:4]
         element_name1 = element_name[4:]
-        print(str(self))
+        #str(self)
         table3 = [
             approach_code, table_code, 0, isubcase, field5,
             element_name0, element_name1, load_set, format_code, num_wide,

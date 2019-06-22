@@ -24,7 +24,7 @@ class TrashWriter:
     def close(self):
         pass
 
-def make_stamp(title, today=None):
+def make_stamp(title: str, today=None) -> str:
     if 'Title' is None:
         title = ''
 
@@ -41,7 +41,7 @@ def make_stamp(title, today=None):
         str_today = '%-9s %2s, %4s' % (str_month, day, year)
     str_today = str_today  #.strip()
 
-    release_date = '02/08/12'  # pyNastran.__releaseDate__
+    #release_date = '02/08/12'  # pyNastran.__releaseDate__
     release_date = ''
     build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
     if title is None:
@@ -64,8 +64,8 @@ class OP2Writer(OP2_F06_Common):
         """If this class is inherited, the PAGE stamp may be overwritten"""
         return make_stamp(title, today)
 
-    def write_op2(self, op2_outname, obj=None, #is_mag_phase=False,
-                  post=-1, endian=b'<', skips=None):
+    def write_op2(self, op2_outname: str, obj=None, #is_mag_phase=False,
+                  post: int=-1, endian: bytes=b'<', skips=None):
         """
         Writes an OP2 file based on the data we have stored in the object
 
@@ -86,6 +86,7 @@ class OP2Writer(OP2_F06_Common):
         else:
             skips = set(skips)
 
+        nastran_format ='nx'
         #print('writing %s' % op2_outname)
         struct_3i = Struct(endian + b'3i')
 
@@ -134,14 +135,22 @@ class OP2Writer(OP2_F06_Common):
         else:
             raise RuntimeError('post = %r; use -1 or -2' % post)
 
-        write_geom1(fop2, fop2_ascii, obj)
-        write_geom2(fop2, fop2_ascii, obj)
-        write_geom3(fop2, fop2_ascii, obj)
-        write_geom4(fop2, fop2_ascii, obj)
-        write_ept(fop2, fop2_ascii, obj)
-        write_mpt(fop2, fop2_ascii, obj)
-        #write_dit(fop2, fop2_ascii, obj)
-        #write_dynamic(fop2, fop2_ascii, obj)
+        if 'GEOM1' not in skips:
+            write_geom1(fop2, fop2_ascii, obj, endian=endian)
+        if 'GEOM2' not in skips:
+            write_geom2(fop2, fop2_ascii, obj, endian=endian)
+        if 'GEOM3' not in skips:
+            write_geom3(fop2, fop2_ascii, obj, endian=endian)
+        if 'GEOM4' not in skips:
+            write_geom4(fop2, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+        if 'EPT' not in skips:
+            write_ept(fop2, fop2_ascii, obj, endian=endian)
+        if 'MPT' not in skips:
+            write_mpt(fop2, fop2_ascii, obj, endian=endian)
+        #if 'DIT' not in skips:
+            #write_dit(fop2, fop2_ascii, obj)
+        #if 'DYNAMIC' not in skips:
+            #write_dynamic(fop2, fop2_ascii, obj)
         if 'grid_point_weight' not in skips:
             if obj.grid_point_weight.reference_point is not None:
                 if hasattr(obj.grid_point_weight, 'write_op2'):

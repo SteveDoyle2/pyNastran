@@ -3,6 +3,7 @@ from struct import pack, Struct
 from collections import defaultdict
 
 from .geom1 import write_geom_header, close_geom_table
+from .geom4 import write_header, write_header_nvalues
 
 def write_geom3(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'loads') and not hasattr(obj, 'load_combinations'):
@@ -18,19 +19,22 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<'):
         loads_by_type[load.type].append(load)
 
     # return if no supported cards are found
-    cards_to_skip = ['LOAD']
+    cards_to_skip = [
+    ]
     supported_cards = [
         'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
         'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
         'GRAV', 'SLOAD', 'RFORCE',
         #'ACCEL', 'ACCEL1',
         'TEMP', 'TEMPP1', 'QBDY1', 'QBDY2', 'QBDY3', 'QVOL',
+        'LOAD',
     ]
     is_loads = False
     for load_type in sorted(loads_by_type.keys()):
         if load_type in supported_cards:
             is_loads = True
-            break
+            continue
+            #break
         elif load_type in cards_to_skip:
             continue
         obj.log.warning('skipping GEOM3-%s' % load_type)
@@ -392,17 +396,25 @@ def write_card(op2, op2_ascii, load_type, loads, endian):
                 #data = [load.sid, nid, mag]
                 #op2_ascii.write('  SLOAD data=%s\n' % str(data))
                 #op2.write(spack.pack(*data))
+    elif load_type == 'LOAD':
+        key = (4551, 61, 84)
+        fmt = endian
+        data = []
+        for load in loads:
+            nscales = len(load.scale_factors)
+            fmt += b'if' + b'fi' * nscales + b'ii'
+            datai = [load.sid, load.scale, ]
+            for scale, load_id in zip(load.scale_factors, load.load_ids):
+                datai.append(scale)
+                datai.append(load_id)
+            datai += [-1, -1]
+            op2_ascii.write('  LOAD data=%s\n' % str(datai))
+            data += datai
+        nfields = len(data)
+        nbytes = write_header_nvalues(load_type, nfields, key, op2, op2_ascii)
+        op2.write(pack(fmt, *data))
+
     else:  # pragma: no cover
         load0 = loads[0]
         raise NotImplementedError(load0)
-    return nbytes
-
-def write_header(name, nfields, nloads, key, op2, op2_ascii):
-    nvalues = nfields * nloads + 3 # +3 comes from the keys
-    nbytes = nvalues * 4
-    op2.write(pack('3i', *[4, nvalues, 4]))
-    op2.write(pack('i', nbytes)) #values, nbtyes))
-
-    op2.write(pack('3i', *key))
-    op2_ascii.write('%s %s\n' % (name, str(key)))
     return nbytes

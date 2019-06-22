@@ -1182,7 +1182,7 @@ class DYNAMICS(GeomCommon):
 
     def _read_tstep(self, data, n):
         """TSTEP(8307,83,142) - Record 38"""
-        self.log.info('skipping TSTEP in DYNAMICS\n')
+        self.log.info('skipping TSTEP in DYNAMICS')
         if self.is_debug_file:
             self.binary_debug.write('skipping TSTEP in DYNAMICS\n')
         return len(data)

@@ -35,29 +35,29 @@ def Iyy_beam(b, h):
     return 1 / 12. * b * h ** 3
 
 
-def I_beam(b, h):
-    # type: (float, float) -> Tuple[float, float, float]
-    """gets the Iyy, Izz, Iyz for a solid beam"""
-    f = 1 / 12. * b * h
-    Iyy = f * h * h  # 1/12.*b*h**3
-    Izz = f * b * b  # 1/12.*h*b**3
-    Iyz = 0.
-    return (Iyy, Izz, Iyz)
+#def I_beam(b, h):
+    ## type: (float, float) -> Tuple[float, float, float]
+    #"""gets the Iyy, Izz, Iyz for a solid beam"""
+    #f = 1 / 12. * b * h
+    #Iyy = f * h * h  # 1/12.*b*h**3
+    #Izz = f * b * b  # 1/12.*h*b**3
+    #Iyz = 0.
+    #return (Iyy, Izz, Iyz)
 
 
-def I_beam_offset(b, h, y, z):
-    # type: (float, float, float, float) -> Tuple[float, float, float]
-    A = b * h
-    f = 1. / 12. * A
+#def I_beam_offset(b, h, y, z):
+    ## type: (float, float, float, float) -> Tuple[float, float, float]
+    #A = b * h
+    #f = 1. / 12. * A
 
-    Iyy = f * h * h  # 1/12.*b*h**3
-    Izz = f * b * b  # 1/12.*h*b**3
-    Iyz = 0.
+    #Iyy = f * h * h  # 1/12.*b*h**3
+    #Izz = f * b * b  # 1/12.*h*b**3
+    #Iyz = 0.
 
-    Iyy += A * y * y
-    Izz += A * z * z
-    Iyz += A * y * z
-    return (Iyy, Izz, Iyz)
+    #Iyy += A * y * y
+    #Izz += A * z * z
+    #Iyz += A * y * z
+    #return (Iyy, Izz, Iyz)
 
 
 def get_inertia_rectangular(sections):
@@ -109,34 +109,11 @@ def _IAreaL(prop, dim):
     # type: (Any, List[float]) -> Tuple[float, float, float, float]
     beam_type = prop.beam_type
     if beam_type == 'ROD':
-        R = dim[0]
-        A = pi * R ** 2
-        Iyy = A * R ** 2 / 4.
-        Izz = Iyy
-        Iyz = 0.
+        A, I1, I2, I12 = rod_section(prop.type, prop.beam_type, dim, prop)
     elif beam_type == 'TUBE':
-        R1 = dim[0]
-        R2 = dim[1]
-        A1 = pi * R1 ** 2
-        Iyy1 = A1 * R1 ** 2 / 4.
-        A2 = pi * R2 ** 2
-        Iyy2 = A2 * R2 ** 2 / 4.
-        A = A1 - A2
-        Iyy = Iyy1 - Iyy2
-        Izz = Iyy
-        Iyz = 0.
+        A, I1, I2, I12 = tube_section(prop.type, prop.beam_type, dim, prop)
     elif beam_type == 'TUBE2':
-        R1 = dim[0]
-        t = dim[1]
-        R2 = R1 - t
-        A1 = pi * R1 ** 2
-        Iyy1 = A1 * R1 ** 2 / 4.
-        A2 = pi * R2 ** 2
-        Iyy2 = A2 * R2 ** 2 / 4.
-        A = A1 - A2
-        Iyy = Iyy1 - Iyy2
-        Izz = Iyy
-        Iyz = 0.
+        A, I1, I2, I12 = tube2_section(prop.type, prop.beam_type, dim, prop)
 
     elif beam_type == 'I':
         # |  ------------
@@ -213,33 +190,28 @@ class LineProperty(Property):
     #def D_shear(self):
         #pass
 
-    def Area(self):
-        # type: () -> float
+    def Area(self) -> float:
         """gets area"""
         return self.A
 
-    def Nsm(self):
+    def Nsm(self) -> float:
         # type: () -> float
         """gets nonstructural mass per unit length"""
         return self.nsm
 
-    def J(self):
-        # type: () -> float
+    def J(self) -> float:
         """gets J"""
         return self.j
 
-    def I11(self):
-        # type: () -> float
+    def I11(self) -> float:
         """gets I11"""
         return self.i1
 
-    def I22(self):
-        # type: () -> float
+    def I22(self) -> float:
         """gets I22"""
         return self.i2
 
-    def Rho(self):
-        # type: () -> float
+    def Rho(self) -> float:
         """gets the material density"""
         return self.mid_ref.rho
 
@@ -248,18 +220,17 @@ class LineProperty(Property):
         """gets the material Young's ratio"""
         return self.mid_ref.E
 
-    def G(self):
-        # type: () -> float
+    def G(self) -> float:
         """gets the material Shear ratio"""
         return self.mid_ref.G
 
-    def Nu(self):
-        # type: () -> float
+    def Nu(self) -> float:
         """gets the material Poisson's ratio"""
         return self.mid_ref.nu
 
 
-def A_I1_I2_I12(prop, beam_type, dim):
+def A_I1_I2_I12(prop, beam_type: str,
+                dim: List[float]) -> Tuple[float, float, float, float]:
     r"""
     ::
 
@@ -290,7 +261,7 @@ def A_I1_I2_I12(prop, beam_type, dim):
         A, I1, I2, I12 = box_section(prop.type, beam_type, dim, prop)
     elif beam_type == 'L':
         A, I1, I2, I12 = l_section(prop.type, beam_type, dim, prop)
-    else:
+    else:  # pragma: no cover
         msg = 'A_I1_I2_I12; beam_type=%s is not supported for %s class...' % (
             beam_type, prop.type)
         raise NotImplementedError(msg)
@@ -1733,8 +1704,7 @@ class PBARL(LineProperty):
         """sets Type"""
         self.beam_type = beam_type
 
-    def Area(self):
-        # type: () -> float
+    def Area(self) -> float:
         """Gets the area :math:`A` of the CBAR."""
         return _bar_areaL('PBARL', self.beam_type, self.dim, self)
 
@@ -1755,22 +1725,22 @@ class PBARL(LineProperty):
 
     def I1(self) -> float:
         """gets the section I1 moment of inertia"""
-        I = A_I1_I2_I12(self, self.beam_type, self.dim)
-        return I[1]
+        I1 = A_I1_I2_I12(self, self.beam_type, self.dim)
+        return I1
 
     def I2(self) -> float:
         """gets the section I2 moment of inertia"""
-        I = A_I1_I2_I12(self, self.beam_type, self.dim)
-        return I[2]
+        I2 = A_I1_I2_I12(self, self.beam_type, self.dim)[2]
+        return I2
 
     def I12(self) -> float:
         """gets the section I12 moment of inertia"""
         try:
-            I = A_I1_I2_I12(self, self.beam_type, self.dim)
+            I12 = A_I1_I2_I12(self, self.beam_type, self.dim)
         except:
             print(str(self))
             raise
-        return I[3]
+        return I12
 
     #def I1_I2_I12(self):
         #"""gets the section I1, I2, I12 moment of inertia"""
@@ -1818,7 +1788,7 @@ class PBARL(LineProperty):
                 [-x1, y4],  # p12
             ]
             Area = d2*d3 + 2*d1*d4
-        elif beam_type in ['HEXA']:
+        elif beam_type == 'HEXA':
             (d1, d2, d3) = dim
             x1 = d2 / 2. - d1
             x2 = d2 / 2.
@@ -1835,11 +1805,11 @@ class PBARL(LineProperty):
             ]
             Area = d1 * (d2 + 2 * d3)
 
-        elif beam_type in ['I']:
+        elif beam_type == 'I':
             (d1, d2, d3) = dim
             raise NotImplementedError('PBARL beam_type=%r' % beam_type)
 
-        elif beam_type in ['H']:
+        elif beam_type == 'H':
             (d1, d2, d3, d4) = dim
             x1 = d1 / 2.
             x2 = (d1 + d2) / 2.
@@ -1864,7 +1834,7 @@ class PBARL(LineProperty):
             ]
             Area = d2 * d3 + d1 * d4
 
-        elif beam_type in ['T2']:
+        elif beam_type == 'T2':
             d1, d2, d3, d4 = dim  # check origin, y3 at bottom, x1 innner
             x1 = d4 / 2.
             x2 = d1 / 2.
@@ -1883,69 +1853,32 @@ class PBARL(LineProperty):
             ]
             Area = d1*d3 + (d2-d3)*d4
         else:
-            msg = '_points for beam_type=%r dim=%r on PBARL is not supported' % (self.beam_type, self.dim)
+            msg = '_points for beam_type=%r dim=%r on PBARL is not supported' % (beam_type, self.dim)
             raise NotImplementedError(msg)
         return array(points), Area
 
     def J(self) -> float:
-        if self.beam_type == 'ROD':
-            r = self.dim[0]
-            Ixx = pi * r**4 / 4.
-            Iyy = Ixx
-            unused_Ixy = 0.
-        elif self.beam_type == 'TUBE':
-            rout, rin = self.dim
-            #rin = rout - 2*t
-            Ixx = pi * (rout**4 - rin**4) / 4.
-            Iyy = Ixx
-            unused_Ixy = 0.
-        elif self.beam_type == 'TUBE2':
-            rout, t = self.dim
-            rin = rout - 2*t
-            Ixx = pi * (rout**4 - rin**4) / 4.
-            Iyy = Ixx
-            unused_Ixy = 0.
-        elif self.beam_type == 'BOX':
-            (d1, d2, d3, d4) = self.dim
-            hout = d2
-            wout = d1
-            hin = d2 - 2. * d3
-            win = d1 - 2. * d4
-            points, unused_Area = self._points('BAR', [hout, wout])
-            yi = points[0, :-1]
-            yip1 = points[0, 1:]
-            xi = points[1, :-1]
-            xip1 = points[1, 1:]
+        beam_type = self.beam_type
+        if beam_type == 'ROD':
+            A, I1, I2, I12 = rod_section(self.type, beam_type, self.dim, self)
+            #r = self.dim[0]
+            #Ixx = pi * r**4 / 4.
+            #Iyy = Ixx
+            #unused_Ixy = 0.
+        elif beam_type == 'TUBE':
+            A, I1, I2, I12 = tube_section(self.type, beam_type, self.dim, self)
+        elif beam_type == 'TUBE2':
+            A, I1, I2, I12 = tube2_section(self.type, beam_type, self.dim, self)
+        elif beam_type == 'BOX':
+            A, I1, I2, I12 = box_section(self.type, beam_type, self.dim, self)
 
-            #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
-            ai = xi*yip1 - xip1*yi
-            Ixx1 = 1/12 * sum((yi**2 + yi * yip1 + yip1**2)*ai)
-            Iyy1 = 1/12 * sum((xi**2 + xi * xip1 + xip1**2)*ai)
-            #Ixy1 = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
-
-            points, unused_Area = self._points('BAR', [hin, win])
-            yi = points[0, :-1]
-            yip1 = points[0, 1:]
-            xi = points[1, :-1]
-            xip1 = points[1, 1:]
-
-            #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
-            ai = xi*yip1 - xip1*yi
-            Ixx2 = 1/12*sum((yi**2 + yi*yip1+yip1**2)*ai)
-            Iyy2 = 1/12*sum((xi**2 + xi*xip1+xip1**2)*ai)
-            #Ixy2 = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
-
-            Ixx = Ixx1 - Ixx2
-            Iyy = Iyy1 - Iyy2
-            #Ixy = Ixy1 - Ixy2
-
-        #elif self.beam_type in ['BAR']:
+        #elif beam_type in ['BAR']:
             #assert len(self.dim) == 2, 'dim=%r' % self.dim
             #b, h = self.dim
-            #(Ix, Iy, Ixy) = self.I1_I2_I12()
+            #(A, Ix, Iy, Ixy) = self.A_I1_I2_I12()
             #J = Ix + Iy
-        elif self.beam_type in ['BAR', 'CROSS', 'HEXA', 'T2', 'H']:
-            points, unused_Area = self._points(self.beam_type, self.dim)
+        elif beam_type in ['BAR', 'CROSS', 'HEXA', 'T2', 'H']:
+            points, unused_Area = self._points(beam_type, self.dim)
             yi = points[0, :-1]
             yip1 = points[0, 1:]
 
@@ -1954,10 +1887,10 @@ class PBARL(LineProperty):
 
             #: .. seealso:: http://en.wikipedia.org/wiki/Area_moment_of_inertia
             ai = xi*yip1 - xip1*yi
-            Ixx = 1/12 * sum((yi**2 + yi*yip1+yip1**2)*ai)
-            Iyy = 1/12 * sum((xi**2 + xi*xip1+xip1**2)*ai)
-            #Ixy = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
-        elif self.beam_type == 'I':
+            I1 = 1/12 * sum((yi**2 + yi*yip1+yip1**2)*ai)
+            I2 = 1/12 * sum((xi**2 + xi*xip1+xip1**2)*ai)
+            #I12 = 1/24*sum((xi*yip1 + 2*xi*yi + 2*xip1*yip1 + xip1*yi)*ai)
+        elif beam_type == 'I':
             # http://www.efunda.com/designstandards/beams/SquareIBeam.cfm
             # d - outside height
             # h - inside height
@@ -1971,18 +1904,18 @@ class PBARL(LineProperty):
             (d, b1, b2, t, s1, s2) = self.dim
             if b1 != b2:
                 msg = 'J for beam_type=%r dim=%r on PBARL b1 != b2 is not supported' % (
-                    self.beam_type, self.dim)
+                    beam_type, self.dim)
                 raise NotImplementedError(msg)
             if s1 != s2:
                 msg = 'J for beam_type=%r dim=%r on PBARL s1 != s2 is not supported' % (
-                    self.beam_type, self.dim)
+                    beam_type, self.dim)
                 raise NotImplementedError(msg)
             h = d - b1 - b2
             s = s1
             b = b1
-            Ixx = (b*d**3-h**3*(b-t)) / 12.
-            Iyy = (2.*s*b**3 + h*t**3) / 12.
-        #elif self.beam_type == 'T': # test
+            I1 = (b*d**3-h**3*(b-t)) / 12.
+            I2 = (2.*s*b**3 + h*t**3) / 12.
+        #elif beam_type == 'T': # test
             # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
             # http://www.amesweb.info/SectionalPropertiesTabs/SectionalPropertiesTbeam.aspx
             # d - outside height
@@ -1995,11 +1928,11 @@ class PBARL(LineProperty):
             #(b, d, s, t) = self.dim
             #if b1 != b2:
                 #msg = 'J for beam_type=%r dim=%r on PBARL b1 != b2 is not supported' % (
-                    #self.beam_type, self.dim)
+                    #beam_type, self.dim)
                 #raise NotImplementedError(msg)
             #if s1 != s2:
                 #msg = 'J for beam_type=%r dim=%r on PBARL s1 != s2 is not supported' % (
-                    #self.beam_type, self.dim)
+                    #beam_type, self.dim)
                 #raise NotImplementedError(msg)
             #h = d - b1 - b2
             #s = s1
@@ -2007,11 +1940,11 @@ class PBARL(LineProperty):
 
             # http://www.engineersedge.com/material_science/moment-inertia-gyration-6.htm
             #y = d**2*t+s**2*(b-t)/(2*(b*s+h*t))
-            #Ixx = (t*y**3 + b*(d-y)**3 - (b-t)*(d-y-s)**3)/3.
-            #Iyy = t**3*(h-s)/12. + b**3*s/12.
+            #I1 = (t*y**3 + b*(d-y)**3 - (b-t)*(d-y-s)**3)/3.
+            #I2 = t**3*(h-s)/12. + b**3*s/12.
             #A = b*s + h*t
 
-        elif self.beam_type == 'C':
+        elif beam_type == 'C':
             # http://www.efunda.com/math/areas/squarechannel.cfm
             # d - outside height
             # h - inside height
@@ -2022,14 +1955,14 @@ class PBARL(LineProperty):
             h = d - 2 * s
             #cx = (2.*b**2*s + h*t**2)/(2*b*d - 2*h*(b-t))
             #cy = d / 2.
-            Ixx = (b * d**3 - h **3 * (b-t)) / 12.
-            #Iyx = (2.*s*b**3 + h*t**3)/3 - A*cx**2
+            I1 = (b * d**3 - h **3 * (b-t)) / 12.
+            #I12 = (2.*s*b**3 + h*t**3)/3 - A*cx**2
         else:
-            msg = 'J for beam_type=%r dim=%r on PBARL is not supported' % (self.beam_type, self.dim)
+            msg = 'J for beam_type=%r dim=%r on PBARL is not supported' % (beam_type, self.dim)
             raise NotImplementedError(msg)
 
         #: .. seealso:: http://en.wikipedia.org/wiki/Perpendicular_axis_theorem
-        J = Ixx + Iyy
+        J = I1 + I2
         return J
 
     def raw_fields(self):

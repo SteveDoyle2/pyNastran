@@ -237,28 +237,24 @@ class GEOM3(GeomCommon):
                 self.binary_debug.write('  LOAD=%s\n' % str(out))
             Si = [si]
             L1 = [l1]
-            #print(Si, L1)
             while 1:
                 edata = data[n:n+8]
                 n += 8
                 (si, l1) = struct_fi.unpack(edata)
-                siTest, = self.struct_i.unpack(edata[0:4])
-                #print(si, siTest, l1)
+                si_test, = self.struct_i.unpack(edata[0:4])
 
-                if [siTest, l1] == [-1, -1]:
+                if [si_test, l1] == [-1, -1]:
                     break
                 Si.append(si)
                 L1.append(l1)
                 if self.is_debug_file:
                     self.binary_debug.write('       [%s,%s]\n' % (si, l1))
-                #print(Si, L1)
 
-            data_in = [sid, s, Si, L1]
             load = LOAD(sid, s, Si, L1)
             self._add_load_combination_object(load)
             count += 1
-            if count > 1000:
-                raise RuntimeError('Iteration limit...probably have a bug.')
+            #if count > 1000:
+                #raise RuntimeError('Iteration limit...probably have a bug.')
         self.card_count['LOAD'] = nentries
         return n
 

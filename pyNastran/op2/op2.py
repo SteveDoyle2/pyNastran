@@ -486,12 +486,45 @@ class OP2(OP2_Scalar):
             'modal_participation_factors',
             'modal_effective_mass',
             'modal_effective_weight',
+
+            'ask',
+            'binary_debug',
+            '_close_op2',
+            '_count',
+            '_results',
+            '_table_mapper',
+            'additional_matrices',
+            'apply_symmetry',
+            'debug_file',
+            'expected_times',
+            'f',
+            'generalized_tables',
+            'is_all_subcases',
+            'is_debug_file',
+            'is_geometry',
+            'is_vectorized',
+            'isubcase',
+            'log',
+            'matrix_tables',
+            'mode',
+            'n',
+            'ntotal',
+            'num_wide',
+            'op2_reader',
+            'table_name',
+            'table_name_str',
+            'use_vector',
+            'words',
         ]
         for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
             if key.startswith('__') and key.endswith('__'):
                 continue
 
-            val = getattr(obj, key)
+            try:
+                val = getattr(obj, key)
+            except NameError:
+                self.log.warning('key=%r val=%s' % (key, val))
+                continue
             #print(key)
             #if isinstance(val, types.FunctionType):
                 #continue

@@ -1,7 +1,7 @@
 from collections import defaultdict
 from struct import pack, Struct
 
-def write_geom1(op2, op2_ascii, obj):
+def write_geom1(op2, op2_ascii, obj, endian=b'<'):
     #if not hasattr(obj, 'nodes'):
         #return
     if not hasattr(obj, 'nodes'):
