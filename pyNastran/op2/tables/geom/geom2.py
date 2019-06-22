@@ -9,7 +9,7 @@ from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
-from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX, CTRIAX6, CTRAX6, CQUADX8, CTRIAX
+from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX, CTRIAX6, CTRAX3, CTRAX6, CQUADX8, CTRIAX
 from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
                                                 CQUADR, CTRIAR,
                                                 CQUAD8, CQUAD,
@@ -1629,7 +1629,7 @@ class GEOM2(GeomCommon):
         """
         CQUADX(9008,90,508)  - the marker for Record 76
         """
-        return self.run_cquad4(data, n, CQUADX)
+        return self.run_cquad(data, n, CQUADX)
 
 # CRBAR
 # CRBE1
@@ -1901,7 +1901,9 @@ class GEOM2(GeomCommon):
             out = struc.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  CTRIAX=%s\n' % str(out))
-            elem = CTRIAX.add_op2_data(out)
+            eid, pid, n1, n2, n3, n4, n5, n6, unused_undef1 = out
+            nids = [n1, n2, n3, n4, n5, n6]
+            elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='no theta set')
             self.add_op2_element(elem)
             n += 36
         self.card_count['CTRIAX'] = nentries
@@ -2066,7 +2068,7 @@ class GEOM2(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CTRAX3=%s\n' % str(out))
             #data_in = [eid, pid, n1, n2, n3, theta]
-            elem = CTRAX6(eid, pid, [n1, n2, n3], theta)
+            elem = CTRAX3(eid, pid, [n1, n2, n3], theta)
             self.add_op2_element(elem)
             n += ntotal
         self.card_count['CTRAX3'] = nelements

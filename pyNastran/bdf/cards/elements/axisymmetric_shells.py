@@ -302,7 +302,7 @@ class CTRAX6(AxisymmetricTri):
         self.pid = pid
         self.theta = theta
         self.nodes = nids
-        assert len(nids) == 6, 'error on CTRAX6'
+        assert len(nids) == 6, f'nids={nids}'
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, eids):
@@ -1011,10 +1011,32 @@ class CQUADX(AxisymmetricQuad):
             integer_or_blank(card, 8, 'n6'),
             integer_or_blank(card, 9, 'n7'),
             integer_or_blank(card, 10, 'n8'),
-            integer_or_blank(card, 11, 'n9')
+            integer_or_blank(card, 11, 'n9'),
         ]
         theta_mcid = integer_double_or_blank(card, 12, 'theta/mcid', 0.)
         assert len(card) <= 13, 'len(CQUADX card) = %i\ncard=%s' % (len(card), card)
+        return CQUADX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CQUADX card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = data[0]
+        pid = data[1]
+        nids = data[2:11]
+        if len(data) == 11:
+            theta_mcid = 0. #  msc specific
+        else:
+            raise RuntimeError(f'theta_mcid is defined; data={data}')
         return CQUADX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
     def cross_reference(self, model):

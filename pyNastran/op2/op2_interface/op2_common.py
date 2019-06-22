@@ -1580,10 +1580,14 @@ class OP2Common(Op2Codes, F06Writer):
 
         #: what solution was run (e.g. Static/Transient/Modal)
         self.analysis_code = (approach_code - self.device_code) // 10
+
         self.data_code['analysis_code'] = self.analysis_code
 
-        #print('parse_approach_code - approach_code=%s tCode=%s int3=%s isubcase=%s' % (approach_code, tCode, int3, isubcase))
-        #print('                 so - analysis_code=%s device_code=%s table_code=%s sort_code=%s\n' % (self.analysis_code, self.device_code, self.table_code, self.sort_code))
+        #print(
+            #f'parse_approach_code - approach_code={approach_code} tCode={tCode} int3={int3} isubcase={isubcase}\n'
+            #f'                 so - analysis_code={self.analysis_code} device_code={self.device_code} '
+            #f'table_code={self.table_code} sort_code={self.sort_code}\n'
+        #)
         if 0:
             if self.device_code == 3:
                 #sys.stderr.write('The op2 may be inconsistent...\n')

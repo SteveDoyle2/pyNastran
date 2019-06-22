@@ -108,7 +108,7 @@ def oug_data_code(table_name, analysis_code,
     sort1_sort_bit = 0 if is_sort1 else 1
     random_sort_bit = 1 if is_random else 0
     sort_method = 1 if is_sort1 else 2
-
+    assert analysis_code != 0, analysis_code
     #if format_code == 1:
         #format_word = "Real"
     #elif format_code == 2:
@@ -131,9 +131,13 @@ def oug_data_code(table_name, analysis_code,
     #table_code = tCode % 1000
     #sort_code = tCode // 1000
     tCode = table_code * 1000 + sort_code
+
+    device_code = 2  # Plot
+    approach_code = analysis_code * 10 + device_code
+    #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
     data_code = {
         'nonlinear_factor': None,
-        'approach_code' : 0, # ???
+        'approach_code' : approach_code,
         'analysis_code' : analysis_code,
         'sort_bits': [0, sort1_sort_bit, random_sort_bit], # real, sort1, random
         'sort_method' : sort_method,
@@ -142,7 +146,7 @@ def oug_data_code(table_name, analysis_code,
         'table_code': table_code,
         'tCode': tCode,
         'table_name': table_name, ## TODO: should this be a string?
-        'device_code' : 2,  # Plot
+        'device_code' : device_code,
         'random_code' : random_code,
         'thermal': 0,
         'title' : title,

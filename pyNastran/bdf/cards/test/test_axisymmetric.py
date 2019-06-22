@@ -51,7 +51,7 @@ class TestAxi(unittest.TestCase):
         model.cross_reference()
         model.uncross_reference()
         model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_op2_reader=False)
 
     def test_pconeax(self):
         """PCONEAX"""

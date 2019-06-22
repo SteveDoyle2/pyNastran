@@ -959,7 +959,7 @@ class TestLoads(unittest.TestCase):
         model2 = read_bdf('ploadx1.temp', debug=None)
         model2._verify_bdf()
         os.remove('ploadx1.temp')
-        save_load_deck(model2, run_convert=False, run_mass_properties=False)
+        save_load_deck(model2, run_convert=False, run_mass_properties=False, run_op2_reader=False)
 
     def test_loads_combo(self):
         r"""
@@ -1308,7 +1308,7 @@ class TestLoads(unittest.TestCase):
                                                               include_grav=True, xyz_cid0=None)
         assert np.array_equal(forces1, forces2)
         assert np.array_equal(moments1, moments2)
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model, run_convert=False, run_op2_reader=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

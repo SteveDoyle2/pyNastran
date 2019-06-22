@@ -148,7 +148,7 @@ class OUG(OP2Common):
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
         else:
-            msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
+            msg = f'invalid analysis_code...analysis_code={self.analysis_code}\ndata={self.data_code}'
             raise RuntimeError(msg)
 
         #print self.code_information()

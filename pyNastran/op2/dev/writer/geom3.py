@@ -5,7 +5,7 @@ from collections import defaultdict
 from .geom1 import write_geom_header, close_geom_table
 from .geom4 import write_header, write_header_nvalues
 
-def write_geom3(op2, op2_ascii, obj, endian=b'<'):
+def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     if not hasattr(obj, 'loads') and not hasattr(obj, 'load_combinations'):
         return
     loads_by_type = defaultdict(list)
@@ -57,7 +57,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<'):
 
         try:
             nbytes = write_card(op2, op2_ascii, load_type, loads, endian)
-        except:
+        except:  # pragma: no cover
             obj.log.error('failed GEOM3-%s' % load_type)
             raise
         op2.write(pack('i', nbytes))
@@ -76,7 +76,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<'):
 
     #-------------------------------------
 
-def write_card(op2, op2_ascii, load_type, loads, endian):
+def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx'):
     nloads = len(loads)
     if load_type == 'FORCE':
         key = (4201, 42, 18)
@@ -189,43 +189,79 @@ def write_card(op2, op2_ascii, load_type, loads, endian):
                 op2.write(spack.pack(*data))
     elif load_type == 'PLOAD4': # msc
         key = (7209, 72, 299)
-        nfields = 16
-        spack = Struct(endian + b'2i 4f 3i 3f 8s 8s')
-        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+
+        nloads = 0
         for load in loads:
-            #surf_or_line = surf_or_line.rstrip().decode('latin1')
-            #line_load_dir = line_load_dir.rstrip().decode('latin1')
-            #if line_load_dir == '':
-                ## TODO: not 100%
-                #line_load_dir = 'NORM'
+            nloads += len(load.eids)
 
-            ## forces NX pload4 function to get called if it should be
-            #assert surf_or_line in ['SURF', 'LINE']
-            #assert line_load_dir in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM'], 'line_load_dir=%r' % line_load_dir
+        if nastran_format == 'msc':
+            nfields = 16
+            spack = Struct(endian + b'2i 4f 3i 3f 8s 8s')
+            nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+            for load in loads:
+                #surf_or_line = surf_or_line.rstrip().decode('latin1')
+                #line_load_dir = line_load_dir.rstrip().decode('latin1')
+                #if line_load_dir == '':
+                    ## TODO: not 100%
+                    #line_load_dir = 'NORM'
 
-            #self.pressures = np.asarray(pressures, dtype='float64')
-            #self.nvector = nvector
-            #self.surf_or_line = surf_or_line
-            #self.line_load_dir = line_load_dir
-            pressures = list(load.pressures)
-            g1 = load.g1 if load.g1 is not None else 0
-            g34 = load.g34 if load.g34 is not None else 0
-            cid = load.cid if load.cid is not None else 0
-            nids_cid = [g1, g34, cid]
-            nvector = list(load.nvector)
-            assert len(load.pressures) == 4, load.pressures
-            assert None not in nids_cid, nids_cid
+                ## forces NX pload4 function to get called if it should be
+                #assert surf_or_line in ['SURF', 'LINE']
+                #assert line_load_dir in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM'], 'line_load_dir=%r' % line_load_dir
 
-            pnn = pressures + nids_cid + nvector
-            for eid in load.eids:
-                #(sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3, surf_or_line, line_load_dir) = out
-                surf_or_line = load.surf_or_line.encode('ascii')
-                line_load_dir = load.line_load_dir.encode('ascii')
-                data = [load.sid, eid] + pnn + [surf_or_line, line_load_dir]
+                #self.pressures = np.asarray(pressures, dtype='float64')
+                #self.nvector = nvector
+                #self.surf_or_line = surf_or_line
+                #self.line_load_dir = line_load_dir
+                pressures = list(load.pressures)
+                g1 = load.g1 if load.g1 is not None else 0
+                g34 = load.g34 if load.g34 is not None else 0
+                cid = load.cid if load.cid is not None else 0
+                nids_cid = [g1, g34, cid]
+                nvector = list(load.nvector)
+                assert len(load.pressures) == 4, load.pressures
+                assert None not in nids_cid, nids_cid
 
-                assert None not in data, data
-                op2_ascii.write('  PLOAD4 data=%s\n' % str(data))
-                op2.write(spack.pack(*data))
+                pnn = pressures + nids_cid + nvector
+                for eid in load.eids:
+                    #(sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3, surf_or_line, line_load_dir) = out
+                    surf_or_line = load.surf_or_line.encode('ascii')
+                    line_load_dir = load.line_load_dir.encode('ascii')
+                    data = [load.sid, eid] + pnn + [surf_or_line, line_load_dir]
+                    assert None not in data, data
+                    op2_ascii.write('  PLOAD4 data=%s\n' % str(data))
+                    op2.write(spack.pack(*data))
+        elif nastran_format == 'nx':
+            #Word Name Type Description
+            #1 SID          I Load set identification number
+            #2 EID          I Element identification number
+            #3 P(4)        RS Pressures
+            #7 G1           I Grid point identification number at a corner of the face
+            #8 G34          I Grid point identification number at a diagonal from G1 or CTETRA corner
+            #9  CID         I Coordinate system identification number
+            #10 N(3)       RS Components of a vector coordinate system defined by CID
+            nfields = 12
+            spack = Struct(endian + b'2i 4f 3i 3f')
+            nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+            for load in loads:
+                pressures = list(load.pressures)
+                g1 = load.g1 if load.g1 is not None else 0
+                g34 = load.g34 if load.g34 is not None else 0
+                cid = load.cid if load.cid is not None else 0
+                nids_cid = [g1, g34, cid]
+                nvector = list(load.nvector)
+                assert len(load.pressures) == 4, load.pressures
+                assert None not in nids_cid, nids_cid
+
+                pnn = pressures + nids_cid + nvector
+                for eid in load.eids:
+                    #(sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3) = out
+                    data = [load.sid, eid] + pnn
+
+                    assert None not in data, data
+                    op2_ascii.write('  PLOAD4 data=%s\n' % str(data))
+                    op2.write(spack.pack(*data))
+
     elif load_type == 'PLOADX1':
         key = (7309, 73, 351)
         nfields = 7

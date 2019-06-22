@@ -568,7 +568,7 @@ class TestOP2(Tester):
         assert len(diff_cards2) == 0, diff_cards2
 
         model = read_bdf(bdf_filename, debug=False, log=log)
-        save_load_deck(model)
+        save_load_deck(model, run_op2_reader=False)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
                 write_f06=True, write_op2=False,
@@ -831,10 +831,10 @@ class TestOP2(Tester):
                       build_pandas=build_pandas, log=log)[0]
         assert os.path.exists(debug_file), os.listdir(folder)
 
-        op2.save('op2_model.obj')
-        op2_load = OP2()
-        op2_load.load('op2_model.obj')
-        os.remove('op2_model.obj')
+        #op2.save('op2_model.obj')
+        #op2_load = OP2()
+        #op2_load.load('op2_model.obj')
+        #os.remove('op2_model.obj')
         os.remove(debug_file)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
@@ -2002,7 +2002,7 @@ class TestOP2(Tester):
                 build_pandas=False, log=log)
 
         model = read_bdf(bdf_filename, debug=False, log=log)
-        save_load_deck(model)
+        save_load_deck(model, run_op2_reader=False)
 
     @unittest.expectedFailure
     def test_set_times_01(self):
@@ -2135,7 +2135,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.op2')
         model = read_bdf(bdf_filename, debug=False, log=log)
-        save_load_deck(model)
+        save_load_deck(model, run_op2_reader=False)
 
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)

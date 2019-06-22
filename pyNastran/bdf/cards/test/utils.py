@@ -1,6 +1,7 @@
 """defines testing utils"""
 import os
 from io import StringIO
+import inspect
 import numpy as np
 from cpylog import get_logger
 from pyNastran.bdf.bdf import BDF
@@ -12,6 +13,10 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_breakdown
 from pyNastran.bdf.test.test_bdf import run_bdf as test_bdf
 
+from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
+from pyNastran.op2.op2_geom import attach_op2_results_to_bdf
+
+
 try:
     import h5py
     IS_H5PY = True
@@ -22,7 +27,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                    run_convert=True, run_renumber=True, run_mirror=True,
                    run_save_load=True, run_quality=True, write_saves=True,
                    run_save_load_hdf5=True, run_mass_properties=True, run_loads=True,
-                   run_test_bdf=True, run_op2_writer=True):
+                   run_test_bdf=True, run_op2_writer=True, run_op2_reader=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.validate()
     model.pop_parse_errors()
@@ -109,11 +114,9 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         element_quality(model)
 
     if run_op2_writer:
-        from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
-        from pyNastran.op2.op2_geom import attach_op2_results_to_bdf
-
         op2_geom_model = attach_op2_results_to_bdf(model, op2_model=None)
         from pyNastran.op2.dev.op2_writer import OP2Writer
+        from pyNastran.op2.op2_geom import read_op2_geom
 
         table_name = 'OUGV1'
         node_gridtype = np.zeros((10, 2), dtype='int32')
@@ -127,7 +130,13 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
 
         op2w = OP2Writer()
         op2_filename = 'spike.op2'
-        op2w.write_op2(op2_filename, obj=op2_geom_model, post=-1, endian=b'<', skips=None)
+        op2w.write_op2(op2_filename, obj=op2_geom_model, post=-1, endian=b'<', skips=None, nastran_format='nx')
+        if run_op2_reader:
+            op2r = read_op2_geom(op2_filename, log=op2_geom_model.log, xref=False)
+        else:
+            frame = inspect.currentframe()
+            call_frame = inspect.getouterframes(frame, 2)
+            op2_geom_model.log.warning('skipping op2 reader for %s' % call_frame[1][3])
     return model3
 
 def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):

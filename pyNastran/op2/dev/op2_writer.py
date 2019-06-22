@@ -65,7 +65,7 @@ class OP2Writer(OP2_F06_Common):
         return make_stamp(title, today)
 
     def write_op2(self, op2_outname: str, obj=None, #is_mag_phase=False,
-                  post: int=-1, endian: bytes=b'<', skips=None):
+                  post: int=-1, endian: bytes=b'<', skips=None, nastran_format='nx'):
         """
         Writes an OP2 file based on the data we have stored in the object
 
@@ -86,7 +86,6 @@ class OP2Writer(OP2_F06_Common):
         else:
             skips = set(skips)
 
-        nastran_format ='nx'
         #print('writing %s' % op2_outname)
         struct_3i = Struct(endian + b'3i')
 
@@ -140,7 +139,7 @@ class OP2Writer(OP2_F06_Common):
         if 'GEOM2' not in skips:
             write_geom2(fop2, fop2_ascii, obj, endian=endian)
         if 'GEOM3' not in skips:
-            write_geom3(fop2, fop2_ascii, obj, endian=endian)
+            write_geom3(fop2, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
         if 'GEOM4' not in skips:
             write_geom4(fop2, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
         if 'EPT' not in skips:

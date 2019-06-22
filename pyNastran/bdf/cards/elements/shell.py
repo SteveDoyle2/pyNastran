@@ -4099,6 +4099,28 @@ class CQUAD(QuadShell):
         assert len(card) <= 13, 'len(CQUAD card) = %i\ncard=%s' % (len(card), card)
         return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds a CQUAD card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        """
+        eid = data[0]
+        pid = data[1]
+        nids = data[2:11]
+        if len(data) == 11:
+            theta_mcid = 0. #  msc specific
+        else:
+            raise RuntimeError(f'theta_mcid is defined; data={data}')
+        return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly

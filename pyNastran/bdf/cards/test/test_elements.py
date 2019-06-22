@@ -178,7 +178,7 @@ class TestElements(unittest.TestCase):
 
         model.pop_parse_errors()
         model.cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_op2_reader=False)
 
     def test_cbush2d(self):
         model = BDF(debug=False)
