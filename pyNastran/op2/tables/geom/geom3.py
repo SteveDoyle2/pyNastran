@@ -710,6 +710,7 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_sload(self, data, n):
+        """SLOAD(5401, 54, 25)"""
         ntotal =  12  # 3*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'2i f')

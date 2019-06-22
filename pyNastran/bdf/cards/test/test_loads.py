@@ -13,7 +13,7 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.cards.test.utils import save_load_deck
 #from pyNastran.bdf.errors import DuplicateIDsError
 
-from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2 import OP2, read_op2
 
 bdf = BDF(debug=False)
 TEST_PATH = pyNastran.__path__[0]
@@ -24,7 +24,7 @@ log = get_logger(level='warning')
 class TestLoads(unittest.TestCase):
     def test_force(self):
         """tests CONROD, FORCE"""
-        model = BDF(debug=False)
+        model = BDF(log=log)
         eid = 1
         mid = 100
         nids = [10, 11]
@@ -53,7 +53,7 @@ class TestLoads(unittest.TestCase):
 
     def test_moment(self):
         """tests CONROD, MOMENT"""
-        model = BDF(debug=False)
+        model = BDF(log=log)
         eid = 1
         mid = 100
         nids = [10, 11]
@@ -82,7 +82,7 @@ class TestLoads(unittest.TestCase):
 
     def test_accel1(self):
         """tests ACCEL1"""
-        model = BDF(debug=False)
+        model = BDF(log=log)
         sid = 42
         N = [0., 0., 1.]
         nodes = [10, 11]
@@ -141,7 +141,7 @@ class TestLoads(unittest.TestCase):
         fields = expand_thru_by(fields, set_fields=True, sort_fields=True)
         assert collapse_thru_by(fields) == [14, 'THRU', 24, 'BY', 2], collapse_thru_by(fields)
 
-        model = BDF(debug=False)
+        model = BDF(log=log)
         for nid in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 23, 24]:
             model.add_grid(nid, [0., 0., 0.])
 
@@ -156,7 +156,7 @@ class TestLoads(unittest.TestCase):
 
     def test_accel(self):
         """tests ACCEL"""
-        model = BDF(debug=False)
+        model = BDF(log=log)
         sid = 42
         N = [0., 0., 1.]
         #nodes = [10, 11]
@@ -199,7 +199,7 @@ class TestLoads(unittest.TestCase):
 
     def test_grav(self):
         """tests a GRAV"""
-        model = BDF(debug=False)
+        model = BDF(log=log)
         sid = 1
         scale = 1.0
         N = [1., 2., 3.]
@@ -257,7 +257,7 @@ class TestLoads(unittest.TestCase):
 
     def test_gmload(self):
         """tests GMLOAD"""
-        model = BDF(debug=False)
+        model = BDF(log=log)
         sid = 1
         normal = [1., 2., 3.]
         entity = 'cat'
@@ -298,7 +298,7 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 LINE option"""
         #PLOAD4        10      10      0.819.2319
         #0      1.      0.      0.    LINE    NORM
-        model = BDF(debug=False, log=None, mode='msc')
+        model = BDF(log=log, mode='msc')
 
         sid = 1
         eids = 1
@@ -411,11 +411,9 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CPENTA"""
         bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'cpenta.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'pload4', 'cpenta.op2')
-        op2 = OP2(debug=False, log=log)
-        op2.read_op2(op2_filename)
+        op2 = read_op2(op2_filename, log=log)
 
-        model = BDF(debug=False)
-        model.read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, log=log)
         # p0 = (model.nodes[21].xyz + model.nodes[22].xyz + model.nodes[23].xyz) / 3.
         p0 = model.nodes[21].xyz
         angles = [
@@ -481,13 +479,13 @@ class TestLoads(unittest.TestCase):
             fm = -case.data[0, :3, :].sum(axis=0)
             assert len(fm) == 6, fm
             if not allclose(forces1[0], fm[0]):
-                model.log.errror('subcase=%-2i Fx f=%s fexpected=%s face=%s' % (
+                model.log.error('subcase=%-2i Fx f=%s fexpected=%s face=%s' % (
                     isubcase, forces1.tolist(), fm.tolist(), face))
             if not allclose(forces1[1], fm[1]):
-                model.log.errror('subcase=%-2i Fy f=%s fexpected=%s face=%s' % (
+                model.log.error('subcase=%-2i Fy f=%s fexpected=%s face=%s' % (
                     isubcase, forces1.tolist(), fm.tolist(), face))
             if not allclose(forces1[2], fm[2]):
-                model.log.errror('subcase=%-2i Fz f=%s fexpected=%s face=%s' % (
+                model.log.error('subcase=%-2i Fz f=%s fexpected=%s face=%s' % (
                     isubcase, forces1.tolist(), fm.tolist(), face))
             # if not allclose(moments1[0], fm[3]):
                 # print('%i Mx m=%s fexpected=%s' % (isubcase, moments1, fm))
@@ -508,11 +506,9 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CTRIA3"""
         bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'ctria3.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'pload4', 'ctria3.op2')
-        op2 = OP2(debug=False, log=log)
-        op2.read_op2(op2_filename)
+        op2 = read_op2(op2_filename, log=log)
 
-        model = BDF(debug=False)
-        model.read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, log=log)
         # p0 = (model.nodes[21].xyz + model.nodes[22].xyz + model.nodes[23].xyz) / 3.
         p0 = model.nodes[21].xyz
 
@@ -560,11 +556,9 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CQUAD4"""
         bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'cquad4.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'pload4', 'cquad4.op2')
-        op2 = OP2(debug=False, log=log)
-        op2.read_op2(op2_filename)
+        op2 = read_op2(op2_filename, log=log)
 
-        model = BDF(debug=False)
-        model.read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, log=log)
         # p0 = (model.nodes[21].xyz + model.nodes[22].xyz + model.nodes[23].xyz) / 3.
         p0 = model.nodes[21].xyz
 
@@ -615,11 +609,9 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CTETRA"""
         bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'ctetra.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'pload4', 'ctetra.op2')
-        op2 = OP2(debug=False, log=log)
-        op2.read_op2(op2_filename)
+        op2 = read_op2(op2_filename, log=log)
 
-        model = BDF(debug=False)
-        model.read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, log=log)
         p0 = model.nodes[21].xyz
 
         nx_plus = [ # 21, 24, 23
@@ -712,11 +704,9 @@ class TestLoads(unittest.TestCase):
         """tests a PLOAD4 with a CHEXA"""
         bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'chexa.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'pload4', 'chexa.op2')
-        op2 = OP2(debug=False, log=log)
-        op2.read_op2(op2_filename)
+        op2 = read_op2(op2_filename, log=log)
 
-        model = BDF(debug=False)
-        model.read_bdf(bdf_filename)
+        model = read_bdf(bdf_filename, log=log)
         p0 = model.nodes[21].xyz
         nx_minus = [
             (22, 27), (27, 22),
@@ -959,7 +949,7 @@ class TestLoads(unittest.TestCase):
         model2 = read_bdf('ploadx1.temp', debug=None)
         model2._verify_bdf()
         os.remove('ploadx1.temp')
-        save_load_deck(model2, run_convert=False, run_mass_properties=False, run_op2_reader=False)
+        save_load_deck(model2, run_convert=False, run_mass_properties=False, run_op2_reader=True)
 
     def test_loads_combo(self):
         r"""
@@ -1280,12 +1270,15 @@ class TestLoads(unittest.TestCase):
 
     def test_sload(self):
         """tests SLOAD"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_spoint([11, 12])
         sid = 14
         nids = 11 # SPOINT
         mags = 20.
-        unused_sload = model.add_sload(sid, nids, mags, comment='an sload')
+        sload = model.add_sload(sid, nids, mags, comment='an sload')
+        sload.raw_fields()
+        sload.repr_fields()
 
         sid = 14
         nids = [11, 12] # SPOINT, GRID
@@ -1308,7 +1301,7 @@ class TestLoads(unittest.TestCase):
                                                               include_grav=True, xyz_cid0=None)
         assert np.array_equal(forces1, forces2)
         assert np.array_equal(moments1, moments2)
-        save_load_deck(model, run_convert=False, run_op2_reader=False)
+        save_load_deck(model, run_convert=False, run_op2_reader=True)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

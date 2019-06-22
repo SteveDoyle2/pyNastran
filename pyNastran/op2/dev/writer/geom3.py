@@ -274,15 +274,18 @@ def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx
             op2.write(spack.pack(*data))
     elif load_type == 'SLOAD':
         key = (5401, 54, 25)
-        nfields = 3
-        spack = Struct(endian + b'2i f')
-        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+        data = []
         for load in loads:
             for nid, mag in zip(load.nodes, load.mags):
                 #(sid, nid, scale_factor) = out
-                data = [load.sid, nid, mag]
-                op2_ascii.write('  SLOAD data=%s\n' % str(data))
-                op2.write(spack.pack(*data))
+                datai = [load.sid, nid, mag]
+                op2_ascii.write('  SLOAD data=%s\n' % str(datai))
+                data += datai
+        nfields = len(data)
+        nloads = nfields // 3
+        spack = Struct(endian + b'iif' * nloads)
+        nbytes = write_header_nvalues(load_type, nfields, key, op2, op2_ascii)
+        op2.write(spack.pack(*data))
     elif load_type == 'RFORCE':
         key = (5509, 55, 190)
         nfields = 10
