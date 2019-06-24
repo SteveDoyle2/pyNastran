@@ -2,7 +2,7 @@
 import numpy as np
 from cpylog import get_logger2
 from pyNastran.converters.abaqus.abaqus_cards import (
-    Assembly, Material, Part, SolidSection)
+    Assembly, Material, Part, SolidSection, allowed_element_types)
 
 
 def read_abaqus(abaqus_inp_filename, log=None, debug=False):
@@ -673,12 +673,6 @@ class Abaqus:
         """
         #print('------------------')
         sline = line0.split(',')[1:]
-        allowed_element_types = [
-            'r2d2', 'conn2d2',
-            'cpe3', 'cpe4', 'cpe4r', 'coh2d4', 'c3d10h', 'cohax4',
-            'cax3', 'cax4r', 'cps4r', 'mass', 'rotaryi', 't2d2', 'c3d8r',
-            'cps3',
-        ]
         if len(sline) < 1:
             raise RuntimeError("looking for element_type (e.g., '*Element, type=R2D2')\n"
                                "line0=%r\nsline=%s; allowed:\n[%s]" % (

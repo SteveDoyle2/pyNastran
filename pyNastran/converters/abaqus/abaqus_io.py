@@ -91,11 +91,16 @@ class AbaqusIO:
 
             add_quads(grid, nidsi, part.cpe4, nid_offset)
             add_quads(grid, nidsi, part.cpe4r, nid_offset)
+
+            add_quads(grid, nidsi, part.cps4, nid_offset)
+            add_quads(grid, nidsi, part.cps4r, nid_offset)
+
             add_quads(grid, nidsi, part.coh2d4, nid_offset)
             add_quads(grid, nidsi, part.cohax4, nid_offset)
 
-            add_quads(grid, nidsi, part.cax4r, nid_offset)
             add_tris(grid, nidsi, part.cax3, nid_offset)
+            #add_quads(grid, nidsi, part.cax4, nid_offset)
+            add_quads(grid, nidsi, part.cax4r, nid_offset)
 
             # solids
             add_tetras(grid, nidsi, part.c3d10h, nid_offset)
@@ -178,14 +183,20 @@ class AbaqusIO:
         return form, cases, icase, node_ids, element_ids
 
 
-def get_nodes_nnodes_nelements(model):
+def get_nodes_nnodes_nelements(model, stop_for_no_elements=True):
     """helper method"""
     n_r2d2 = 0
 
-    n_cps3 = 0
+    # plane strain
     n_cpe3 = 0
     n_cpe4 = 0
     n_cpe4r = 0
+
+    # plane stress
+    n_cps3 = 0
+    n_cps4 = 0
+    n_cps4r = 0
+
     n_coh2d4 = 0
     n_c3d10h = 0
 
@@ -206,17 +217,24 @@ def get_nodes_nnodes_nelements(model):
             n_r2d2 += part.r2d2.shape[0]
 
         # shells
-        if part.cps3 is not None:
-            n_cps3 += part.cps3.shape[0]
+        # plane strain
         if part.cpe3 is not None:
             n_cpe3 += part.cpe3.shape[0]
         if part.cpe4 is not None:
             n_cpe4 += part.cpe4.shape[0]
         if part.cpe4r is not None:
             n_cpe4r += part.cpe4r.shape[0]
+
+        # plane stress
+        if part.cps3 is not None:
+            n_cps3 += part.cps3.shape[0]
+        if part.cps4 is not None:
+            n_cps4 += part.cps4.shape[0]
+        if part.cps4r is not None:
+            n_cps4r += part.cps4r.shape[0]
+
         if part.coh2d4 is not None:
             n_coh2d4 += part.coh2d4.shape[0]
-
         if part.cohax4 is not None:
             n_cohax4 += part.cohax4.shape[0]
         if part.cax3 is not None:
@@ -232,9 +250,12 @@ def get_nodes_nnodes_nelements(model):
         all_nodes.append(nodes)
     nelements += (
         n_r2d2 +
-        n_cps3 + n_cpe3 + n_cpe4 + n_cpe4r +
+        n_cpe3 + n_cpe4 + n_cpe4r +
+        n_cps3 + n_cps4 + n_cps4r +
         n_coh2d4 + n_c3d10h + n_cohax4 + n_cax3 + n_cax4r + n_c3d8r
     )
+    if nelements == 0 and stop_for_no_elements:
+        raise RuntimeError('nelements=0')
     return nnodes, all_nodes, nelements
 
 def add_lines(grid, nids, eids_lines, nid_offset):

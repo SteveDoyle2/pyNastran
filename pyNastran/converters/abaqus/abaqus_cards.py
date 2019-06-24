@@ -7,6 +7,14 @@ defines:
 """
 import numpy as np
 
+allowed_element_types = [
+    'r2d2', 'conn2d2',
+    'cpe3', 'cpe4', 'cpe4r',
+    'cps3', 'cps4', 'cps4r',
+
+    'coh2d4', 'c3d10h', 'cohax4',
+    'cax3', 'cax4r', 'mass', 'rotaryi', 't2d2', 'c3d8r',
+]
 
 class SolidSection:
     """a SolidSection defines depth and a material"""
@@ -141,11 +149,13 @@ class Part:
                 cpe3 : (nelements, 3) int ndarray
                 cpe4 : (nelements, 4) int ndarray
                 cpe4r : (nelements, 4) int ndarray
+                cps3 : (nelements, 3) int ndarray
+                cps4 : (nelements, 4) int ndarray
+                cps4r : (nelements, 4) int ndarray
                 coh2d4 : (nelements, 4) int ndarray
                 cohax4 : (nelements, 4) int ndarray
                 cax3 : (nelements, 3) int ndarray
                 cax4r : (nelements, 4) int ndarray
-                cps4r : (nelements, 4) int ndarray
             solids:
                 c3d10h : (nelements, 10) int ndarray
 
@@ -180,16 +190,22 @@ class Part:
         # bars
         self.r2d2 = None
 
-        # shells
-        self.cps3 = None
+        # ---shells---
+        # plane strain
         self.cpe3 = None
         self.cpe4 = None
         self.cpe4r = None
+
+        # plane stress
+        self.cps3 = None
+        self.cps4 = None
+        self.cps4r = None
+
+        # other
         self.coh2d4 = None
         self.cohax4 = None
         self.cax3 = None
         self.cax4r = None
-        self.cps4r = None
 
         # solids
         self.c3d10h = None
@@ -198,10 +214,14 @@ class Part:
         # eids
         self.r2d2_eids = None
 
-        self.cps3_eids =  None
         self.cpe3_eids = None
         self.cpe4_eids = None
         self.cpe4r_eids = None
+
+        self.cps3_eids = None
+        self.cps4_eids = None
+        self.cps4r_eids = None
+
         self.coh2d4_eids = None
         self.cohax4_eids = None
         self.cax3_eids = None
@@ -218,15 +238,18 @@ class Part:
             ('r2d2', 2),  #  similar to a CBAR
 
             #  shells
-            ('cps3', 3),
             ('cpe3', 3),
             ('cpe4', 4),
             ('cpe4r', 4),
+
+            ('cps3', 3),
+            ('cps4', 4),
+            ('cps4r', 4), # quad, plane stress, reduced
+
             ('coh2d4', 4), #  cohesive zone
             ('cohax4', 4), #  cohesive zone
             ('cax3', 3),
             ('cax4r', 4),
-            ('cps4r', 4),
 
             #  solids
             ('c3d10h', 10),  #  tet10
@@ -278,29 +301,41 @@ class Part:
         nnodes = self.nodes.shape[0]
         n_r2d2 = 0
 
-        n_cps3 = 0
+        # plane strain
         n_cpe3 = 0
         n_cpe4 = 0
         n_cpe4r = 0
+
+        # plane stress
+        n_cps3 = 0
+        n_cps4 = 0
+        n_cps4r = 0
+
         n_coh2d4 = 0
         n_c3d10h = 0
 
         n_cohax4 = 0
         n_cax3 = 0
         n_cax4r = 0
-        n_cps4r = 0
         if self.r2d2 is not None:
             n_r2d2 = self.r2d2.shape[0]
 
-        if self.cps3 is not None:
-            n_cps3 = self.cps3.shape[0]
-
+        # plane strain
         if self.cpe3 is not None:
             n_cpe3 = self.cpe3.shape[0]
         if self.cpe4 is not None:
             n_cpe4 = self.cpe4.shape[0]
         if self.cpe4r is not None:
             n_cpe4r = self.cpe4r.shape[0]
+
+        # plane stress
+        if self.cps3 is not None:
+            n_cps3 = self.cps3.shape[0]
+        if self.cps4 is not None:
+            n_cps4 = self.cps4.shape[0]
+        if self.cps4r is not None:
+            n_cps4r = self.cps4r.shape[0]
+
         if self.coh2d4 is not None:
             n_coh2d4 = self.coh2d4.shape[0]
         if self.c3d10h is not None:
@@ -315,8 +350,11 @@ class Part:
         if self.cps4r is not None:
             n_cps4r = self.cps4r.shape[0]
 
-        neids = (n_r2d2 + n_cps3 + n_cpe3 + n_cpe4 + n_cpe4r + n_coh2d4 +
-                 n_c3d10h + n_cohax4 + n_cax3 + n_cax4r + n_cps4r)
+        neids = (n_r2d2 + 
+                 n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
+                 n_cps3 + n_cps4 + n_cps4r +  # plane stress
+                 n_coh2d4 +
+                 n_c3d10h + n_cohax4 + n_cax3 + n_cax4r)
         msg = (
             'Part(name=%r, nnodes=%i, neids=%i,\n'
             '     n_r2d2=%i, n_cps3=%i, n_cpe3=%i, n_cpe4=%i, n_cpe4r=%i, n_coh2d4=%i,\n'
@@ -340,10 +378,16 @@ class Part:
         """simplified way to access all the elements as a dictionary"""
         element_types = {}
         element_types['r2d2'] = (self.r2d2_eids, self.r2d2)
-        element_types['cps3'] = (self.cps3_eids, self.cps3)
-        element_types['cpe3'] = (self.cpe3_eids, self.cpe3)
+
+        # plane strain        element_types['cpe3'] = (self.cpe3_eids, self.cpe3)
         element_types['cpe4'] = (self.cpe4_eids, self.cpe4)
         element_types['cpe4r'] = (self.cpe4r_eids, self.cpe4r)
+
+        # plane stress
+        element_types['cps3'] = (self.cps3_eids, self.cps3)
+        element_types['cps4'] = (self.cps4_eids, self.cps4)
+        element_types['cps4r'] = (self.cps4r_eids, self.cps4r)
+
         element_types['cohax4'] = (self.cohax4_eids, self.cohax4)
         element_types['coh2d4'] = (self.coh2d4_eids, self.coh2d4)
         element_types['cax3'] = (self.cax3_eids, self.cax3)
