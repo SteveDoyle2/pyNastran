@@ -1466,6 +1466,7 @@ class OP2Common(Op2Codes, F06Writer):
                     if msg == '':
                         self.log.warning(self.code_information())
                     self.log.warning(msg)
+                    #ddd
                     #if not('VUHEXA' in msg or 'VUPENTA' in msg or 'VUTETRA' in msg
                            #or 'Element Stress' in self.code_information()
                            #or 'Element Strain' in self.code_information()):

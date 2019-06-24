@@ -682,7 +682,8 @@ class TestOpt(unittest.TestCase):
 
     def test_rod_dvprel(self):
         """tests CROD and DVPREL1"""
-        model = BDF(debug=True, log=None, mode='msc')
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
 
@@ -741,7 +742,8 @@ class TestOpt(unittest.TestCase):
 
     def test_cbar_dvprel(self):
         """tests CBAR and DVPREL1"""
-        model = BDF(debug=True, log=None, mode='msc')
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [0., 0., 1.])
@@ -839,7 +841,8 @@ class TestOpt(unittest.TestCase):
 
     def test_shell_dvprel(self):
         """tests CBAR and DVPREL1"""
-        model = BDF(debug=True, log=None, mode='msc')
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])

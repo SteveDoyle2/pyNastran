@@ -159,8 +159,8 @@ class OES_Object(BaseElement):
             #if hasattr(self, 'eigns'):
             if hasattr(self, 'eigens'):
                 field6 = self.eigns[itime]
-            #elif hasattr(self, 'eigrs'):
-                #field6 = self.eigrs[itime]
+            elif hasattr(self, 'eigrs'):
+                field6 = self.eigrs[itime]
             else:  # pragma: no cover
                 print(self.get_stats())
                 raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')

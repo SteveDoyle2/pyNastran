@@ -435,11 +435,11 @@ class MPT(GeomCommon):
         return n
 
     def _read_matt2(self, data, n):
-        self.log.info('skipping MATT2 in MPT')
+        self.log.warning('skipping MATT2 in MPT')
         return len(data)
 
     def _read_matt3(self, data, n):
-        self.log.info('skipping MATT3 in MPT')
+        self.log.warning('skipping MATT3 in MPT')
         return len(data)
 
     def _read_matt4(self, data, n):
@@ -484,15 +484,15 @@ class MPT(GeomCommon):
 
 # MATT8 - unused
     def _read_matt8(self, data, n):
-        self.log.info('skipping MATT8 in MPT')
+        self.log.warning('skipping MATT8 in MPT')
         return len(data)
 
     def _read_matt9(self, data, n):
-        self.log.info('skipping MATT9 in MPT')
+        self.log.warning('skipping MATT9 in MPT')
         return len(data)
 
     def _read_matt11(self, data, n):
-        self.log.info('skipping MATT11 in MPT')
+        self.log.warning('skipping MATT11 in MPT')
         return len(data)
 
 # MBOLT
@@ -567,9 +567,7 @@ class MPT(GeomCommon):
         return len(data)
 
     def _read_tstepnl(self, data, n):
-        """
-        TSTEPNL(3103,31,337) - record 29
-        """
+        """TSTEPNL(3103,31,337) - record 29"""
         ntotal = 88  # 19*4
         s = Struct(self._endian + b'iif5i3f3if3i4f')
         nentries = (len(data) - n) // ntotal

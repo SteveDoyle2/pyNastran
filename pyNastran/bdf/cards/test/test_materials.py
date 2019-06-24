@@ -2,6 +2,7 @@
 import unittest
 import numpy as np
 
+from cpylog import get_logger
 from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT11
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.test.utils import save_load_deck
@@ -43,7 +44,8 @@ class TestMaterials(unittest.TestCase):
 
     def test_mat1_02(self):
         """tests MAT1, MATT1"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         mid = 10
         #k = 1000.
         E = 3.0e7
@@ -97,7 +99,8 @@ class TestMaterials(unittest.TestCase):
 
     def test_creep(self):
         """tests MAT1/CREEP"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         mid = 10
         #k = 1000.
         E = 3.0e7
@@ -134,7 +137,8 @@ class TestMaterials(unittest.TestCase):
 
     def test_mat2_01(self):
         """tests MAT2, MATT2"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         mid = 10
         G11 = G22 = G12 = G13 = G22 = G23 = G33 = 1.0
         #nuxth = nuthz = nuzx = 0.3
@@ -191,11 +195,12 @@ class TestMaterials(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
         matt2.write_card(size=16, is_double=False)
-        save_load_deck(model, run_op2_writer=False)
+        save_load_deck(model, run_op2_writer=True)
 
     def test_mat3_01(self):
         """tests MAT3"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         mid = 10
         ex = 3.0e7
         eth = 6.0e7
@@ -248,7 +253,8 @@ class TestMaterials(unittest.TestCase):
 
     def test_mat4_01(self):
         """tests MAT4, MATT4"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         mid = 10
         k = 1000.
         mat4 = model.add_mat4(mid, k, cp=0.0, rho=1.0, H=None, mu=None,
@@ -301,7 +307,8 @@ class TestMaterials(unittest.TestCase):
         #
         #MAT5           1    700.    300.    900.    400.    200.    600.     90.+
         #+             .1
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         mid = 10
         mat5 = model.add_mat5(mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0.,
                               kzz=0., cp=0.,
@@ -372,7 +379,8 @@ class TestMaterials(unittest.TestCase):
             '*',
         ]
 
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         card = model._process_card(lines)
         #print(print_card_8(card))
         cardi = BDFCard(card)
@@ -395,7 +403,8 @@ class TestMaterials(unittest.TestCase):
 
     def test_mat8_02(self):
         """tests MAT8, MATT8"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         mid = 10
         e11 = 3.0e7
         e22 = 6.0e7
@@ -438,11 +447,12 @@ class TestMaterials(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
         matt8.write_card(size=16, is_double=False)
-        save_load_deck(model, run_op2_writer=False)
+        save_load_deck(model)
 
     def test_mat9(self):
         """tests MAT9"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         mid = 10
         #e11 = 3.0e7
         #e22 = 6.0e7
@@ -468,6 +478,8 @@ class TestMaterials(unittest.TestCase):
 
     def test_mat11_01(self):
         """tests MAT11"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         lines = [
             'MAT11          1    1.+75000000. 700000.      .1     .13     .267000000.+',
             '+       9000000.3000000.      .1    1.-5    7.-6    8.-6     50.',
@@ -476,7 +488,6 @@ class TestMaterials(unittest.TestCase):
             'MAT11          1    1.+75000000. 700000.      .1     .13     .267000000.',
             '        9000000.3000000.      .1  .00001 .000007 .000008     50.'
         ]
-        model = BDF(debug=False)
         card = model._process_card(lines)
         cardi = BDFCard(card)
         mat = MAT11.add_card(cardi)
@@ -504,6 +515,8 @@ class TestMaterials(unittest.TestCase):
 
     def test_mat3d(self):
         """tests MAT3D"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         mid = 10
         e1 = 1.
         e2 = 2.
@@ -514,7 +527,6 @@ class TestMaterials(unittest.TestCase):
         g12 = 112.
         g13 = 113.
         g23 = 123.
-        model = BDF(debug=False)
         mat3d = model.add_mat3d(
             mid,
             e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
@@ -530,7 +542,8 @@ class TestMaterials(unittest.TestCase):
 
     def test_mats1(self):
         """tests MATS1"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         mid = 10
         E = 3.0e7
         G = None
@@ -550,7 +563,8 @@ class TestMaterials(unittest.TestCase):
 
     def test_multiple_materials(self):
         """tests multiple materials"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         E = 3.0e7
         G = None
         nu = 0.3
@@ -631,7 +645,8 @@ class TestMaterials(unittest.TestCase):
             'G' : 7,
             'H' : 8,
         }
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         nxstrat = model.add_nxstrat(42, params)
         nxstrat.raw_fields()
         save_load_deck(model) # , run_remove_unused=False

@@ -35,6 +35,7 @@ from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     RealHeatFluxVUShellArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_force_objects import (
+    FailureIndicesArray,
     RealRodForceArray, RealViscForceArray,
     RealCBarForceArray, RealCBar100ForceArray,
     RealCBushForceArray,
@@ -2583,41 +2584,25 @@ class OEF(OP2Common):
         slot = self.get_result(result_name)
 
         n = 0
-        if self.format_code == 1 and self.num_wide == 9 and self.read_mode == 1:  # real
-            if self.read_mode == 1:
-                return ndata, None, None
+        if self.format_code == 1 and self.num_wide == 9:  # real
+            ntotal = 36 # 9 * 4
+            nelements = ndata // ntotal
+
+
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, FailureIndicesArray)
+            #print('read_mode ', self.read_mode, auto_return, is_vectorized)
+            if auto_return:
+                #self._data_factor = nnodes_all
+                return nelements * self.num_wide * 4, None, None
+
+            obj = self.obj
+
             ntotal = 36
             nelements = ndata // ntotal
 
-            s1 = Struct(self._endian + b'i8sifffif')
-            s2 = Struct(self._endian + b'i8sifffff')
-            for unused_i in range(nelements):
-                edata = data[n:n+ntotal]  # 4*9
-                out = s1.unpack(edata)
-
-                # i    8s              i        f
-                (unused_eid, unused_failure_theory, unused_ply_id, unused_failure_index_for_ply,
-                 unused_six, unused_seven, flag, unused_nine,
-                 #failure_index_for_bonding,
-                 #failure_index_for_element,
-                 #flag,
-                 #direct_stress_or_strain,
-                 #interlaminar_stress,
-                 #max_of_fb_fp_for_all_plies
-                ) = out
-                if flag != -1:
-                    out = s2.unpack(edata)
-                #print(out)
-                n += 36
-
 
             ## TODO: add
-            #return ndata
-            #print self.code_information()
-            #self.create_transient_object(self.compositePlateForces, RealCompositePlateForce)  # undefined
-            ##return
-            #ntotal = 9 * 4
-            #nelements = ndata // ntotal
             #if self.is_debug_file:
                 #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
                 #self.binary_debug.write('  cap = %i  # assume 1 cap when there could have been multiple\n' % ndata)
@@ -2625,6 +2610,58 @@ class OEF(OP2Common):
                 ##self.binary_debug.write('  #                                fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,)]\n')
                 ##self.binary_debug.write('  #nodeji = [eid, ilayer, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)]\n')
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
+
+            #                                5 6  7 8-i/f 9
+            s1 = Struct(self._endian + b'i8sif 4s f i     4s')
+            s2 = Struct(self._endian + b'i8sif 4s f f     4s')
+            eid_old = None
+            for unused_i in range(nelements):
+                #2 THEORY(2) CHAR4 Theory
+                #4 LAMID     I Lamina number
+                #5 FP       RS Failure index for direct stresses
+                #6 FM       RS Failure mode for maximum strain theory
+                #7 FB       RS Failure index for interlaminar shear stress or -1
+                #8 FMAX     RS Maximum of FP and FB or -1.
+                #9 FFLAG CHAR4 Failure flag
+                edata = data[n:n+ntotal]  # 4*9
+                out = s1.unpack(edata)
+
+                # failure_stress_for_ply = failure_strain_for_ply = failure_index_for_ply???
+                # i    8s               i      f
+                (eid, failure_theoryb, ply_id, failure_stress_for_ply,
+                 # 4s   7-f/i                8-f/i      9-4s
+                 flagb, interlaminar_stress, max_value, failure_flagb,
+                 #failure_index_for_bonding,
+                 #failure_index_for_element,
+                 #flag,
+                 #direct_stress_or_strain,
+                 #interlaminar_stress,
+                 #max_of_fb_fp_for_all_plies
+                ) = out
+                failure_theory = failure_theoryb.decode('latin1').strip()
+                flag = flagb.decode('latin1').strip()
+                failure_flag = failure_flagb.decode('latin1').strip()
+
+                if max_value == -1:
+                    max_value = np.nan
+                else:
+                    max_value = s2.unpack(edata)[6]
+
+                if eid == -1:
+                    #print(f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply} '
+                          #f'flag={flag} interlaminar_stress={interlaminar_stress} max_value={max_value} failure_flag={failure_flag}')
+                    eid = eid_old
+                else:
+                    #print(f"eid={eid} ft='{failure_theory}'\n"
+                          #f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply} '
+                          #f'flag={flag} interlaminar_stress={interlaminar_stress} max_value={max_value} failure_flag={failure_flag}')
+                    eid_old = eid
+                assert flag in ['', '-1', '-2', '-12'], 'flag=%r' % flag
+                assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', ''], 'failure_theory=%r' % failure_theory
+                assert  failure_flag in ['', '***'], 'failure_flag=%r' % failure_flag
+                obj.add_sort1(dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
+                              interlaminar_stress, max_value, failure_flag)
+                n += 36
 
             #s = Struct(self._endian + b'i8si4f4s')
             #for i in range(nelements):

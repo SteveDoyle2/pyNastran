@@ -260,8 +260,10 @@ class OP2Writer(OP2_F06_Common):
                 new_result = True
                 if hasattr(result, 'element_name'):
                     element_name = ' - ' + result.element_name
+                    #print(element_name)
 
                 if hasattr(result, 'write_op2'):
+                    fop2_ascii.write('-' * 60 + '\n')
                     #if hasattr(result, 'is_bilinear') and result.is_bilinear():
                         #obj.log.warning("  *op2 - %s (%s) not written" % (
                             #result.__class__.__name__, result.element_name))
@@ -279,6 +281,10 @@ class OP2Writer(OP2_F06_Common):
                         print(' %s - isubcase=%s%s' % (result.__class__.__name__,
                                                        isubcase, element_name))
                         raise
+                elif hasattr(result, 'element_name'):
+                    if result.element_name in ['CBAR', 'CBEND']:
+                        obj.log.warning('skipping:\n%s' % result)
+                        continue
                 else:
                     raise NotImplementedError("  *op2 - %s not written" % (
                         result.__class__.__name__))

@@ -61,6 +61,7 @@ def export_to_hdf5(self, group, log):
     names = self.object_attributes()
     dynamic_string = [
         'headers', 'data_names', 'words', 'gridtype_str', 'element_data_type', 'location',
+        'failure_theory',
     ]
 
     for name in names:

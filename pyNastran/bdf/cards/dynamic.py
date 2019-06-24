@@ -2260,6 +2260,8 @@ class TSTEPNL(BaseCard):
 
         if conv == 1:
             conv = 'W'
+        #elif conv == 2:  # guess based on format
+            #conv = 'P'
         elif conv == 3:
             conv = 'PW'
         elif conv == 4:

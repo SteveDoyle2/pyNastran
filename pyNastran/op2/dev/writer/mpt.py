@@ -2,6 +2,7 @@ from collections import defaultdict
 from struct import pack, Struct
 
 from .geom1 import write_geom_header, close_geom_table
+from .geom4 import write_header
 
 def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'materials'):
@@ -39,7 +40,7 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
 
 
     for name, mids in sorted(out.items()):
-        #print('MPT', name, mids)
+        #obj.log.debug('MPT %s %s' % (name, mids))
         nmaterials = len(mids)
         if name in materials_to_skip:
             obj.log.warning('skipping MPT-%s' % name)
@@ -47,85 +48,25 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
 
         #if nmaterials == 0:
             #continue
-
         if name == 'MAT1':
             key = (103, 1, 77)
             nfields = 12
             spack = Struct(endian + b'i10fi')
-            # mid, E, G, nu, rho, A, tref, ge, St, Sc, Ss, mcsid
-        elif name == 'MAT2':
-            key = (203, 2, 78)
-            nfields = 17
-            spack = Struct(endian + b'i15fi')
-            #(mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
-             #tref, ge, St, Sc, Ss, mcsid) = out
-        elif name == 'MAT3':
-            key = (1403, 14, 122)
-            nfields = 16
-            spack = Struct(endian + b'i8fi5fi')
-        elif name == 'MAT4':
-            key = (2103, 21, 234)
-            nfields = 11
-            spack = Struct(endian + b'i10f')
-        elif name == 'MAT5':
-            key = (2203, 22, 235)
-            nfields = 10
-            spack = Struct(endian + b'i9f')
-        elif name == 'MAT8':
-            key = (2503, 25, 288)
-            nfields = 19
-            spack = Struct(endian + b'i18f')
-            #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
-            # tref, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
-        elif name == 'MAT9':
-            key = (2603, 26, 300)
-            nfields = 35
-            spack = Struct(endian + b'i 30f 4i')
-        elif name == 'MAT10':
-            key = (2801, 28, 365)
-            nfields = 5
-            spack = Struct(endian + b'i4f')
-        elif name == 'MATS1':
-            key = (503, 5, 90)
-            nfields = 11
-            spack = Struct(endian + b'3ifiiff3i')
-        elif name == 'MATT1':
-            key = (703, 7, 91)
-            nfields = 12
-            spack = Struct(endian + b'12i')
-        elif name == 'MATT4':
-            key = (2303, 23, 237)
-            nfields = 7
-            spack = Struct(endian + b'7i')
-        elif name == 'MATT5':
-            key = (2403, 24, 238)
-            nfields = 10
-            spack = Struct(endian + b'10i')
-        else:  # pragma: no cover
-            raise NotImplementedError(name)
-
-        nvalues = nfields * nmaterials + 3 # +3 comes from the keys
-        nbytes = nvalues * 4
-        op2.write(pack('3i', *[4, nvalues, 4]))
-        op2.write(pack('i', nbytes)) #values, nbtyes))
-
-        op2.write(pack('3i', *key))
-        op2_ascii.write('%s %s\n' % (name, str(key)))
-
-        if name == 'MAT1':
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.materials[mid]
                 #mid, E, G, nu, rho, A, tref, ge, St, Sc, Ss, mcsid
                 data = [mid, mat.e, mat.g, mat.nu, mat.rho, mat.a, mat.tref,
                         mat.ge, mat.St, mat.Sc, mat.Ss, mat.mcsid]
-
-                #print(data)
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         elif name == 'MAT2':
+            key = (203, 2, 78)
+            nfields = 17
+            spack = Struct(endian + b'i15fi')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.materials[mid]
-                #print(mat.get_stats())
                 #(mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
                  #tref, ge, St, Sc, Ss, mcsid) = out
                 data = [
@@ -143,8 +84,13 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 #print(data)
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 assert None not in data, 'MAT2 %s' % data
+                #print('MAT2', data)
                 op2.write(spack.pack(*data))
         elif name == 'MAT3':
+            key = (1403, 14, 122)
+            nfields = 16
+            spack = Struct(endian + b'i8fi5fi')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.materials[mid]
                 #(mid, ex, eth, ez, nuxth, nuthz, nuzx, rho, gzx,
@@ -158,10 +104,13 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                     0, mat.ax, mat.ath, mat.az, mat.tref,
                     mat.ge, 0]
                 assert None not in data, 'MAT3 %s' % data
-                #print(data)
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         elif name == 'MAT4':
+            key = (2103, 21, 234)
+            nfields = 11
+            spack = Struct(endian + b'i10f')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.thermal_materials[mid]
                 #(mid, k, cp, rho, h, mu, hgen, refenth, tch, tdelta, qlat) = out
@@ -183,6 +132,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         elif name == 'MAT5':
+            key = (2203, 22, 235)
+            nfields = 10
+            spack = Struct(endian + b'i9f')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.thermal_materials[mid]
                 #(mid, k1, k2, k3, k4, k5, k6, cp, rho, hgen) = out
@@ -196,8 +149,14 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 op2.write(spack.pack(*data))
 
         elif name == 'MAT8':
+            key = (2503, 25, 288)
+            nfields = 19
+            spack = Struct(endian + b'i18f')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.materials[mid]
+                #(mid, E1, E2, nu12, G12, G1z, G2z, rho, a1, a2,
+                # tref, Xt, Xc, Yt, Yc, S, ge, f12, strn) = out
                 data = [mid, mat.e11, mat.e22, mat.nu12, mat.g12, mat.g1z, mat.g2z,
                         mat.rho, mat.a1, mat.a2, mat.tref,
                         mat.Xt, mat.Xc, mat.Yt, mat.Yc, mat.S,
@@ -207,6 +166,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         elif name == 'MAT9':
+            key = (2603, 26, 300)
+            nfields = 35
+            spack = Struct(endian + b'i 30f 4i')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.materials[mid]
                 #(mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
@@ -230,6 +193,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         elif name == 'MAT10':
+            key = (2801, 28, 365)
+            nfields = 5
+            spack = Struct(endian + b'i4f')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.materials[mid]
                 #(mid, bulk, rho, c, ge) = out
@@ -240,6 +207,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         elif name == 'MATS1':
+            key = (503, 5, 90)
+            nfields = 11
+            spack = Struct(endian + b'3ifiiff3i')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.MATS1[mid]
                 #(mid, tid, Type, h, yf, hr, limit1, limit2, a, bmat, c) = out
@@ -269,6 +240,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         elif name == 'MATT1':
+            key = (703, 7, 91)
+            nfields = 12
+            spack = Struct(endian + b'12i')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.MATT1[mid]
                 #(mid, E_table, G_table, nu_table, rho_table, A_table, dunno_a, ge_table,
@@ -301,7 +276,51 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 assert len(data) == nfields
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
+        elif name == 'MATT2':
+            #Record – MATT2(803,8,102)
+            #Word Name Type Description
+            #1 MID I Material identification number
+            #2 TID(15) I TABLEMi entry identification numbers
+            #17 UNDEF None
+            key = (803, 8, 102)
+            nfields = 17
+            spack = Struct(endian + b'17i')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+            for mid in sorted(mids):
+                mat = obj.MATT2[mid]
+                data = [
+                    mat.mid,
+                    mat.g11_table,
+                    mat.g12_table,
+                    mat.g13_table,
+
+                    mat.g22_table,
+                    mat.g23_table,
+                    mat.g33_table,
+                    mat.rho_table,
+
+                    mat.a1_table,
+                    mat.a2_table,
+                    mat.a3_table,
+                    0,
+
+                    mat.ge_table,
+                    mat.st_table,
+                    mat.sc_table,
+                    mat.ss_table,
+                    0,
+                ]
+                assert None not in data, data
+                #print('MATT2', data, len(data))
+                assert len(data) == nfields, len(data)
+                op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
+                op2.write(spack.pack(*data))
+
         elif name == 'MATT4':
+            key = (2303, 23, 237)
+            nfields = 7
+            spack = Struct(endian + b'7i')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.MATT4[mid]
                 k_table = mat.k_table if mat.k_table is not None else 0
@@ -317,6 +336,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         elif name == 'MATT5':
+            key = (2403, 24, 238)
+            nfields = 10
+            spack = Struct(endian + b'10i')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
             for mid in sorted(mids):
                 mat = obj.MATT5[mid]
                 kxx_table = mat.kxx_table if mat.kxx_table is not None else 0
@@ -331,10 +354,52 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 #mu_table = mat.mu_table if mat.mu_table is not None else 0
                 hgen_table = mat.hgen_table if mat.hgen_table is not None else 0
 
+
                 #(mid, tk1, tk2, tk3, tk4, tk5, tk6, tcp, null, thgen) = out
                 data = [mid, kxx_table, kxy_table, kxz_table, kyy_table, kyy_table, kzz_table,
                         cp_table, 0, hgen_table]
                 assert None not in data, 'MATT4 %s' % data
+                assert len(data) == nfields
+                op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
+                op2.write(spack.pack(*data))
+        elif  name == 'MATT8':
+            key = (903, 9, 336)
+            nfields = 19
+            # nx
+            # Record – MATT8(903,9,336)
+            # Word Name Type Description
+            # 1 MID I
+            # 2 TID(9) I TABLEMi entry identification numbers
+            # 11 UNDEF None
+            # 12 TID(7) I TABLEMi entry identification numbers
+            # 19 UNDEF None
+            spack = Struct(endian + b'19i')
+            nbytes = write_header(name, nfields, nmaterials, key, op2, op2_ascii)
+            for mid in sorted(mids):
+                mat = obj.MATT8[mid]
+                #mat.uncross_reference()
+                #print(mat.get_stats())
+                data = [
+                    mat.mid,
+                    mat.e1_table, mat.e2_table, mat.nu12_table,
+                    mat.g12_table, mat.g1z_table, mat.g2z_table,
+                    mat.rho_table,
+                    mat.a1_table, mat.a2_table,
+                    0,
+                    mat.xt_table, mat.xc_table,
+                    mat.yt_table, mat.yc_table,
+                    mat.s_table,
+                    mat.ge_table,
+                    mat.f12_table,
+                    0,
+                ]
+                assert None not in data, 'MATT8 data=%s' % data
+                #k_table = mat.k_table if mat.k_table is not None else 0
+                #cp_table = mat.cp_table if mat.cp_table is not None else 0
+                #h_table = mat.h_table if mat.h_table is not None else 0
+                #mu_table = mat.mu_table if mat.mu_table is not None else 0
+                #hgen_table = mat.hgen_table if mat.hgen_table is not None else 0
+
                 assert len(data) == nfields
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))

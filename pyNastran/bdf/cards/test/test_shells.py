@@ -4,6 +4,7 @@ from io import StringIO
 import numpy as np
 from numpy import array
 
+from cpylog import get_logger
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
@@ -17,7 +18,8 @@ except ImportError:
 
 class TestShells(unittest.TestCase):
     def test_pshell(self):
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         pid = 10
         pshell = model.add_pshell(pid, mid1=1, mid2=2, mid3=3, mid4=4, tst=3.14)
         assert ' 3.14' in pshell.rstrip(), pshell.rstrip()
@@ -234,7 +236,8 @@ class TestShells(unittest.TestCase):
         self._make_ctria3(model, rho, nu, G, E, t, nsm)
 
     def test_cquad4_01(self):
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         eid = 10
         pid = 20
         mid = 30
@@ -570,7 +573,8 @@ class TestShells(unittest.TestCase):
 
     def test_cshear(self):
         """tests a PSHEAR/CSHEAR"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -621,7 +625,8 @@ class TestShells(unittest.TestCase):
 
     def test_shells(self):
         """tests a CTRIA3/CQUAD4/PSHELL and CTRIA6/CQUAD8/CQUAD/PCOMP"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -721,7 +726,8 @@ class TestShells(unittest.TestCase):
 
     def test_trax(self):
         """tests a CTRAX3/CTRAX6/???"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -798,7 +804,8 @@ class TestShells(unittest.TestCase):
 
     def test_ctriar_cquadr(self):
         """tests a CTRIAR/PSHELL/MAT8"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -842,7 +849,8 @@ class TestShells(unittest.TestCase):
 
     def test_cplstn34(self):
         """tests a CPLSTN3, CPLSTN4/PSHELL/MAT8"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -889,7 +897,8 @@ class TestShells(unittest.TestCase):
 
     def test_cplstn68(self):
         """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(5, [.5, 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -934,7 +943,8 @@ class TestShells(unittest.TestCase):
 
     def test_ctrishell68(self):
         """tests a CPLSTN6, CPLSTN8/PSHELL/MAT8"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(5, [.5, 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -982,7 +992,8 @@ class TestShells(unittest.TestCase):
         pid_pshell = 11
 
         mid = 100
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])
@@ -1048,7 +1059,8 @@ class TestShells(unittest.TestCase):
 
     def test_cquadx4(self):
         """tests a CQUADX4"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         eid = 1
         pid = 2
         mid = 3
@@ -1079,7 +1091,8 @@ class TestShells(unittest.TestCase):
 
     def test_ctria6_cquad8_cquad9(self):
         """tests a CQUAD8 and CQUAD9"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         eid = 1
         pid = 10
         mid = 100
@@ -1157,7 +1170,8 @@ class TestShells(unittest.TestCase):
 
     def test_cquadx8(self):
         """tests a CQUADX, CTRIAX, CTRIAX6"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         eid = 1
         pid = 10
         mid = 100
@@ -1199,7 +1213,8 @@ class TestShells(unittest.TestCase):
 
     def test_shell_mcid(self):
         """tests that mcids=0 are correctly identified as not 0.0 and thus not dropped"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0., 1., 0.])
         model.add_grid(3, [0., 1., 1.])
@@ -1248,7 +1263,8 @@ class TestShells(unittest.TestCase):
 
     def test_abd(self):
         """tests some ABD matrix functionality for a PCOMP"""
-        model = BDF(debug=False, log=None, mode='msc')
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 1., 0.])

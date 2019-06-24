@@ -226,8 +226,8 @@ class GEOM3(GeomCommon):
         ntotal = 16  # 4*4
         nentries = (len(data) - n) // ntotal
         count = 0
-        struct_i2fi = Struct('iffi')
-        struct_fi = Struct('fi')
+        struct_i2fi = Struct(self._endian + b'iffi')
+        struct_fi = Struct(self._endian + b'fi')
         while (len(data) - n) >= 16:
             edata = data[n:n+16]
             n += 16
@@ -391,7 +391,7 @@ class GEOM3(GeomCommon):
         """
         ntotal = 12  # 3*4
         nentries = (len(data) - n) // ntotal
-        struct_ifi = Struct('ifi')
+        struct_ifi = Struct(self._endian + b'ifi')
         for i in range(nentries):
             edata = data[n:n + 12]
             out = struct_ifi.unpack(edata)
@@ -410,7 +410,7 @@ class GEOM3(GeomCommon):
         """
         ntotal = 20  # 5*4
         nentries = (len(data) - n) // ntotal
-        s = Struct('if3i')
+        s = Struct(self._endian + b'if3i')
         for i in range(nentries):
             edata = data[n:n + 20]
             out = s.unpack(edata)
@@ -454,7 +454,7 @@ class GEOM3(GeomCommon):
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         loads = []
-        s = Struct('2i 4f 3i 3f 8s 8s')
+        s = Struct(self._endian + b'2i 4f 3i 3f 8s 8s')
         for i in range(nentries):
             edata = data[n:n + 64]
             out = s.unpack(edata)
@@ -498,7 +498,7 @@ class GEOM3(GeomCommon):
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0
         loads = []
-        s = Struct('2i 4f 3i 3f')
+        s = Struct(self._endian + b'2i 4f 3i 3f')
         for i in range(nentries):
             edata = data[n:n + 48]
             out = s.unpack(edata)
@@ -518,10 +518,46 @@ class GEOM3(GeomCommon):
         return n, loads
 
     def _read_ploadx(self, data, n):
-        self.log.info('skipping PLOADX in GEOM3')
-        return len(data)
+        """
+        Record - PLOADX(7001,70,278)
+        This record is obsolete
+
+        Word Name Type Description
+        1 SID   I Load set identification number
+        2 P(2) RS Pressure
+        4 G(3)  I Grid point identification numbers
+        """
+        from pyNastran.bdf.field_writer_16 import print_card_16
+        ntotal = 24  # 6*4
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(self._endian + b'iff3i')
+        for i in range(nentries):
+            edata = data[n:n + 24]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  PLOADX=%s\n' % str(out))
+            fields = ['PLOADX'] + list(out)
+            self.reject_lines.append(print_card_16(fields))
+            #load = PLOADX.add_op2_data(out)
+            #self._add_load_object(load)
+            n += 28
+        self.card_count['PLOADX'] = nentries
+        return n
+        #self.log.info('skipping PLOADX in GEOM3')
+        #return len(data)
 
     def _read_ploadx1(self, data, n):
+        """
+        Record - PLOADX1(7309,73,351)
+
+        Word Name Type Description
+        1 SID    I Load set identification number
+        2 EID    I Element identification number
+        3 PA    RS Surface traction at grid point GA
+        4 PB    RS Surface traction at grid point GB
+        5 G(2)   I Corner grid point identification numbers
+        7 THETA RS Angle between surface traction and inward normal
+        """
         ntotal = 28  # 7*4
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'2i2f iif')
@@ -544,7 +580,7 @@ class GEOM3(GeomCommon):
         """
         ntotal = 12  # 3*4
         nentries = (len(data) - n) // ntotal
-        struct_ifi = Struct('ifi')
+        struct_ifi = Struct(self._endian + b'ifi')
         for i in range(nentries):
             edata = data[n:n + 12]
             out = struct_ifi.unpack(edata)
@@ -563,7 +599,7 @@ class GEOM3(GeomCommon):
         """
         ntotal = 40  # 10*4
         nentries = (len(data) - n) // ntotal
-        struct_2i8f = Struct('ii8f')
+        struct_2i8f = Struct(self._endian + b'ii8f')
         for i in range(nentries):
             edata = data[n:n + 40]
             out = struct_2i8f.unpack(edata)
@@ -582,7 +618,7 @@ class GEOM3(GeomCommon):
         """
         ntotal = 16  # 4*4
         nentries = (len(data) - n) // ntotal
-        struct_if2i = Struct('ifii')
+        struct_if2i = Struct(self._endian + b'ifii')
         for i in range(nentries):
             edata = data[n:n + 16]
             out = struct_if2i.unpack(edata)
@@ -600,7 +636,7 @@ class GEOM3(GeomCommon):
         """
         ntotal = 12  # 3*4
         nentries = (len(data) - n) // ntotal
-        struct_2if = Struct('iif')
+        struct_2if = Struct(self._endian + b'iif')
         for i in range(nentries):
             edata = data[n:n + 12]
             out = struct_2if.unpack(edata)
@@ -623,7 +659,7 @@ class GEOM3(GeomCommon):
         """
         ntotal = 8  # 2*4
         nentries = (len(data) - n) // ntotal
-        struct_if = Struct('if')
+        struct_if = Struct(self._endian + b'if')
         for i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_if.unpack(edata)
@@ -647,9 +683,9 @@ class GEOM3(GeomCommon):
         4 AF   RS Area factor
         5 G(8)  I Grid point identification numbers
         """
-        ntotal = 8  # 2*4
+        ntotal = 48  # 12*4
         nentries = (len(data) - n) // ntotal
-        struct_if = Struct('2i2f 8i')
+        struct_if = Struct(self._endian + b'2i2f 8i')
         for i in range(nentries):
             edata = data[n:n + ntotal]
             out = struct_if.unpack(edata)

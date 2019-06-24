@@ -58,6 +58,7 @@ class DYNAMICS(GeomCommon):
             (7107, 71, 138): ['TLOAD1', self._read_tload1],  # 37
             (7207, 72, 139): ['TLOAD2', self._read_tload2],  # 38
             (8307, 83, 142): ['TSTEP', self._read_tstep],  # 39
+            (17500, 175, 618): ['TSTEP', self._read_tstep1],
 
             (10701, 107, 117) : ['RGYRO', self._read_rgyro],
             (10801, 108, 242) : ['ROTORG', self._read_fake],
@@ -1181,10 +1182,66 @@ class DYNAMICS(GeomCommon):
         return n
 
     def _read_tstep(self, data, n):
-        """TSTEP(8307,83,142) - Record 38"""
-        self.log.info('skipping TSTEP in DYNAMICS')
+        """TSTEP(8307,83,142) - Record 38
+
+        Word Name Type Description
+        1 SID  I Set identification number
+        2 N    I Number of time steps of value DTi
+        3 DT  RS Time increment
+        4 NO   I Skip factor for output
+        Words 2 through 4 repeat until (-1,-1,-1) occurs
+        """
+        #self.show_data(data)
+        ndata = len(data)
+        nfields = (ndata - n) // 4
+        datan = data[n:]
+        ints = unpack(self._endian + b'%ii' % nfields, datan)
+        floats = unpack(self._endian + b'%if' % nfields, datan)
+        # strings = unpack(self._endian + b'4s'* nfields, datan)
+
+        i = 0
+        nentries = 0
+        ntimes = []
+        dt = []
+        no = []
+        while i < nfields:
+            sid = ints[i]
+            ntimesi = ints[i + 1]
+            dti = ints[i + 1]
+            noi = ints[i + 3]
+            dtf =  floats[i + 2]
+            i += 4
+            n += 16
+            while (ntimesi, dti, noi) != (-1, -1, -1):
+                ntimes.append(ntimesi)
+                dt.append(dtf)
+                no.append(noi)
+                #print('sid=%s ntimes=%s dt=%s no=%s' % (sid, ntimes, dt, no))
+                ntimesi = ints[i]
+                dti = ints[i + 1]
+                noi = ints[i + 2]
+                dtf =  floats[i + 1]
+                i += 3
+                n += 12
+            #print('sid=%s ntimes=%s dt=%s no=%s' % (sid, ntimes, dt, no))
+            self.add_tstep(sid, ntimes, dt, no)
+        return n
+
+    def _read_tstep1(self, data, n):
+        """
+        Record - TSTEP1(17500,175,618)
+
+        Word Name Type Description
+        1 SID   I Set identification number
+        2 TEND RS End time
+        3 NINC  I Number of load increments
+        4 NOUT  I >0, output at each NOUT; =-1, YES; =-2, END;
+        =-3, ALL
+        Words 2 through 4 repeat until (-1,-1,-1) occurs
+        """
+        self.log.info('skipping TSTEP1 in DYNAMICS')
         if self.is_debug_file:
-            self.binary_debug.write('skipping TSTEP in DYNAMICS\n')
+            self.binary_debug.write('skipping TSTEP1 in DYNAMICS\n')
         return len(data)
 
 #UNBALNC

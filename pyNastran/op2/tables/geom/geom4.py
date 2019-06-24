@@ -628,7 +628,45 @@ class GEOM4(GeomCommon):
         return len(data)
 
     def _read_release(self, data, n):
-        self.log.info('skipping RELEASE in GEOM4')
+        """
+        Record - RELEASE(1310,13,247)
+
+        Word Name Type Description
+        1 SEID     I Superelement identification number
+        2 C        I Component numbers
+        3 THRUFLAG I Thru range flag
+        THRUFLAG=0 No
+            4 ID I Grid or scalar point identification number
+            Word 4 repeats until End of Record
+        THRUFLAG=1 Yes
+            4 ID1 I First grid or scalar point identification number
+            5 ID2
+        """
+        #[1310, 13, 247,
+         #10, 456, 0, 10, -1,
+         #20, 456, 0, 11, -1]
+        from pyNastran.bdf.field_writer_16 import print_card_16
+        ints = np.frombuffer(data[n:], self.idtype).copy()
+        nfields = len(ints)
+        i = 0
+        while i < nfields:
+            seid = ints[i]
+            comp = ints[i + 1]
+            thru_flag = ints[i + 2]
+            i += 3
+            if thru_flag == 0:
+                value = ints[i]
+                values = []
+                i += 1
+                while value != -1:
+                    values.append(value)
+                    value = ints[i]
+                    i += 1
+                assert len(values) > 0, 'seid=%s comp=%s thru_flag=%s values=%s' % (seid, comp, thru_flag, values)
+                fields = ['RELEASE', seid, comp] + values
+                self.reject_lines.append(print_card_16(fields))
+            else:
+                raise NotImplementedError(thru_flag)
         return len(data)
 
     def _read_rpnom(self, data, n):

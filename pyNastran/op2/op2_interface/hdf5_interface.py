@@ -87,6 +87,7 @@ from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
 from pyNastran.op2.tables.ogf_gridPointForces.ogf_objects import RealGridPointForcesArray, ComplexGridPointForcesArray
 from pyNastran.op2.tables.oef_forces.oef_force_objects import (
+    FailureIndicesArray,
     RealBendForceArray, RealCBar100ForceArray, RealCBarForceArray, RealCBeamForceArray,
     RealCBeamForceVUArray, RealCBushForceArray, RealCGapForceArray, RealConeAxForceArray,
     RealCShearForceArray, RealDamperForceArray, RealForceVU2DArray, RealPlateBilinearForceArray,
@@ -250,6 +251,8 @@ TABLE_OBJ_MAP = {
     'rms.celas4_strain' : (RealSpringStrainArray, ),
     'no.celas4_strain' : (RealSpringStrainArray, ),
     'modal_contribution.celas4_strain' : (RealSpringStrainArray, ComplexSpringStrainArray, ),
+
+    'cquad4_composite_force_failure_indicies': (FailureIndicesArray, ),
 
     'celas1_force' : (RealSpringForceArray, ComplexSpringForceArray),
     'ato.celas1_force' : (RealSpringForceArray, ),

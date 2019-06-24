@@ -144,7 +144,14 @@ class ForceObject(BaseElement):
         elif self.analysis_code == 7:  # pre-buckling
             field5 = self.loadIDs[itime] # load set number
         elif self.analysis_code == 8:  # post-buckling
-            field5 = self.lsdvmns[itime] # load set number
+            if hasattr(self, 'lsdvmns'):
+                field5 = self.lsdvmns[itime] # load set number
+            elif hasattr(self, 'loadIDs'):
+                field5 = self.loadIDs[itime]
+            else:  # pragma: no cover
+                print(self.get_stats())
+                raise NotImplementedError('cant find lsdvmns or loadIDs on analysis_code=8')
+
             if hasattr(self, 'eigns'):
                 field6 = self.eigns[itime]
             elif hasattr(self, 'eigrs'):
@@ -219,7 +226,59 @@ class RealForceObject(ForceObject):
         return False
 
 
-class FailureIndices(RealForceObject):
+"""
+          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 3 )
+   ELEMENT  FAILURE    PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG
+     ID      THEORY     ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES
+         3   STRAIN      1        20345.4805   -2
+                                                                       7.1402
+                         2            0.9025   -12
+                                                                       7.1402
+                         3        20342.2461   -2
+                                                                                                 20345.4805             ***
+         4   STRAIN      1        16806.9277   -2
+                                                                      38.8327
+                         2            0.9865   -2
+                                                                      38.8327
+                         3        16804.4199   -2
+
+          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )
+   ELEMENT  FAILURE    PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG
+     ID      THEORY     ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES
+         5   STRAIN      1        21850.3184   -2
+                                                                  166984.4219
+                         2            0.7301   -2
+                                                                  166984.4219
+                         3        21847.9902   -2
+                                                                                                166984.4219             ***
+         6   STRAIN      1        18939.8340   -2
+                                                                  130371.3828
+                         2            0.7599   -1
+                                                                  130371.3828
+                         3        18937.7734   -2
+          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 4 )
+   ELEMENT  FAILURE    PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG
+     ID      THEORY     ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES
+         1   STRAIN      1        18869.6621   -2
+                                                                      16.2471
+                         2            1.0418   -2
+                                                                      16.2471
+                         3        18866.6074   -2
+                                                                                                 18869.6621             ***
+1   CC227: CANTILEVERED COMPOSITE PLATE 3 LAYER SYMM PLY    CC227          DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    15
+      FAILURE CRITERION IS STRAIN, STRESS ALLOWABLES, LIST STRESSES
+0
+
+          F A I L U R E   I N D I C E S   F O R   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D 8 )
+   ELEMENT  FAILURE    PLY   FP=FAILURE INDEX FOR PLY    FB=FAILURE INDEX FOR BONDING   FAILURE INDEX FOR ELEMENT      FLAG
+     ID      THEORY     ID  (DIRECT STRESSES/STRAINS)     (INTER-LAMINAR STRESSES)      MAX OF FP,FB FOR ALL PLIES
+         2   STRAIN      1        14123.7451   -2
+                                                                      31.4861
+                         2            1.0430   -2
+                                                                      31.4861
+                         3        14122.1221   -2
+"""
+class FailureIndicesArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
@@ -247,10 +306,11 @@ class FailureIndices(RealForceObject):
         if isinstance(self.nonlinear_factor, integer_types):
             dtype = 'int32'
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.failure_theory = np.full(self.nelements, '', dtype='U8')
+        self.element_layer = zeros((self.nelements, 2), dtype='int32')
 
-        #[force]
-        self.data = zeros((self.ntimes, self.nelements, 1), dtype='float32')
+        #[failure_stress_for_ply, interlaminar_stress, max_value]
+        self.data = zeros((self.ntimes, self.nelements, 3), dtype='float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -267,12 +327,25 @@ class FailureIndices(RealForceObject):
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def add_sort1(self, dt, eid, force):
+
+    def get_headers(self):
+        #headers = ['eid', 'failure_theory', 'ply', 'failure_index_for_ply (direct stress/strain)',
+                   #'failure_index_for_bonding (interlaminar stresss)', 'failure_index_for_element', 'flag']
+        headers = ['failure_index_for_ply (direct stress/strain)',
+                   'failure_index_for_bonding (interlaminar stresss)',]
+        return headers
+
+    def __eq__(self, table):
+        return True
+
+    def add_sort1(self, dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
+                  interlaminar_stress, max_value, nine):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
-        self.element[self.ielement] = eid
-        self.data[self.itime, self.ielement, :] = [force]
+        self.element_layer[self.ielement] = [eid, ply_id]
+        self.failure_theory[self.ielement] = failure_theory
+        self.data[self.itime, self.ielement, :] = [failure_stress_for_ply, interlaminar_stress, max_value]
         self.ielement += 1
 
     def get_stats(self, short=False):
@@ -306,14 +379,17 @@ class FailureIndices(RealForceObject):
         return msg
 
     def get_f06_header(self, is_mag_phase=True, is_sort1=True):
-        raise NotImplementedError('this should be overwritten by %s' % (self.__class__.__name__))
+        return [] # raise NotImplementedError('this should be overwritten by %s' % (self.__class__.__name__))
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase=is_mag_phase, is_sort1=is_sort1)
-        NotImplementedError(self.code_information())
+        f06_file.write('skipping FailureIndices f06\n')
+
+        return page_num
+        #NotImplementedError(self.code_information())
         #asd
         #if self.is_sort1:
             #page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg_temp)
@@ -3148,6 +3224,103 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
                         eid, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi))
             f06_file.write(page_stamp % page_num)
         return page_num
+
+    def write_op2(self, op2, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian='>'):
+        """writes an OP2"""
+        import inspect
+        from struct import Struct, pack
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if itable == -1:
+            self._write_table_header(op2, op2_ascii, date)
+            itable = -3
+
+        #if isinstance(self.nonlinear_factor, float):
+            #op2_format = '%sif' % (7 * self.ntimes)
+            #raise NotImplementedError()
+        #else:
+            #op2_format = 'i21f'
+        #s = Struct(op2_format)
+
+        eids = self.element
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        nelements = self.data.shape[1]
+
+        # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
+        #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
+
+        ntotali = self.num_wide
+        ntotal = ntotali * nelements
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert self.ntimes == 1, self.ntimes
+
+        device_code = self.device_code
+        op2_ascii.write('  ntimes = %s\n' % self.ntimes)
+
+        eids_device = self.element * 10 + self.device_code
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #assert ntotal == 193, ntotal
+
+        if self.is_sort1:
+            struct1 = Struct(endian + b'i2f')
+        else:
+            raise NotImplementedError('SORT2')
+
+        op2_ascii.write('%s-nelements=%i\n' % (self.element_name, nelements))
+        eids = self.element
+        #f.write(''.join(words))
+
+        ntimes = self.data.shape[0]
+        struct1 = Struct(endian + b'i7f')
+        for itime in range(self.ntimes):
+            self._write_table_3(op2, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            #print('stress itable = %s' % itable)
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2.write(pack('%ii' % len(header), *header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+            op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
+
+            # sd, bm1, bm2, ts1, ts2, af, trq
+            sd = self.data[itime, :, 0]
+            bm1 = self.data[itime, :, 1]
+            bm2 = self.data[itime, :, 2]
+            ts1 = self.data[itime, :, 3]
+            ts2 = self.data[itime, :, 4]
+            af = self.data[itime, :, 5]
+            trq = self.data[itime, :, 6]
+            for eid, eid_device, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi in zip(
+                    eids, eids_device, sd, bm1, bm2, ts1, ts2, af, trq):
+                [sbm1i, sbm2i, sts1i, sts2i, safi, strqi] = write_floats_13e([
+                    bm1i, bm2i, ts1i, ts2i, afi, trqi])
+                op2_ascii.write(
+                    '     %8i   %4.3f  %-13s  %-13s     %-13s  %-13s         %-13s      %s\n' % (
+                        eid, sdi, sbm1i, sbm2i, sts1i, sts2i, safi, strqi))
+                data = [eid_device, sdi, bm1i, bm2i, ts1i, ts2i, afi, trqi]
+                op2.write(struct1.pack(*data))
+
+            itable -= 1
+            header = [4 * ntotal,]
+            op2.write(pack('i', *header))
+            op2_ascii.write('footer = %s\n' % header)
+            new_result = False
+        return itable
 
     def __eq__(self, table):
         self._eq_header(table)

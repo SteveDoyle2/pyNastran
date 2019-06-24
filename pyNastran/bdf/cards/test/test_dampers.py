@@ -1,6 +1,7 @@
 import unittest
 from io import StringIO
 
+from cpylog import get_logger
 from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, read_bdf#, get_logger2
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.test.test_shells import (
@@ -13,7 +14,8 @@ class TestDampers(unittest.TestCase):
     def test_damper_01(self):
         """tests PDAMP"""
         lines = ['pdamp, 201, 1.e+5']
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         card = model._process_card(lines)
         card = BDFCard(card)
 
@@ -33,7 +35,8 @@ class TestDampers(unittest.TestCase):
 
     def test_damper_02(self):
         """tests CDAMP1, CDAMP2, PDAMP, PDAMPT, GRID"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         eid = 1
         pid = 2
         nids = [3, 4]
@@ -73,7 +76,8 @@ class TestDampers(unittest.TestCase):
 
     def test_damper_03(self):
         """tests the CDAMP4, PDAMP, CDAMP4, SPOINT"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         eid = 3
         pid = 2
         s1 = 3
@@ -232,7 +236,7 @@ class TestDampers(unittest.TestCase):
 
     def test_pbusht(self):
         """tests CBUSH, PBUSH, PBUSHT"""
-        model = BDF(debug=True, log=None, mode='msc')
+        model = BDF(debug=False, log=None, mode='msc')
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(11, [0., 0., 0.])
 
@@ -265,7 +269,8 @@ class TestDampers(unittest.TestCase):
 
     def test_pdamp(self):
         """PDAMP"""
-        model = BDF()
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         eid1 = 10
         eid2 = 20
         eid3 = 30

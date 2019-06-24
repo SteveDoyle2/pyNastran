@@ -814,7 +814,7 @@ class QHBDY(ThermalLoad):
         #: (Integer > 0 or blank)
         self.grids = grids
 
-        assert flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], self
+        assert flag in ['POINT', 'LINE', 'REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], str(self)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -870,7 +870,17 @@ class QHBDY(ThermalLoad):
         flag = data[1]
         q0 = data[2]
         af = data[3]
-        grids = data[4:]
+        if flag == 1:
+            flag = 'POINT'
+        elif flag == 2:
+            flag = 'LINE'
+        elif flag == 5:
+            flag = 'AREA4'
+        elif flag == 9:
+            flag = 'AREA8'
+        else:
+            raise NotImplementedError('QHBDY sid=%s flag=%s data=%s' % (sid, flag, data[2:]))
+        grids = list(data[4:])
         return QHBDY(sid, flag, q0, grids, af=af, comment=comment)
 
     def get_loads(self):

@@ -1369,35 +1369,90 @@ class GEOM2(GeomCommon):
         197, 200, 0, 50000, 99999, 99999, 1.0,
         198, 200, 0, 50000, 99999, 99999, 1.0,
         199, 200, 0, 50000, 99999, 99999, 1.0]
+
+        [8908, 89, 422,
+        101, 101, 0, 50000, 99999, 99999, 1.0,
+        102, 102, 0, 50001, 99999, 99999, 1.0,
+        103, 102, 0, 50001, 99999, 99999, 1.0,
+        104, 104, 0, 50002, 99999, 99999, 1.0,
+        105, 105, 0, 50003, 99999, 99999, 1.0,
+        CONVM EID PCONID FLMND CNTMDOT TA1 TA2
+        106, 105, 0,     50003, 99999, 99999, 1.0)
         """
         #C:\Users\sdoyle\Dropbox\move_tpl\ht15330.op2
-        ntotal = 24  # 7*4
-        struct_6i = Struct(self._endian + b'6i')
+        ntotal6 = 24  # 6*4
+        ntotal7 = 28  # 7*4
         ndata = len(data)
-        nelements = (ndata - n) // ntotal
-        if (ndata - n) % ntotal != 0:
-            msg = 'CONVM error; ndata-n=%s ntotal=%s ndata-n/ntotal=%s' % (
-                ndata-n, ntotal, (ndata-n)/float(ntotal))
-            self.log.error(msg)
-            return n + ndata
+        nelements6 = (ndata - n) // ntotal6
+        nelements7 = (ndata - n) // ntotal7
 
+        is_six = (ndata - n) % ntotal6 == 0
+        is_seven = (ndata - n) % ntotal7 == 0
+
+        if is_six and is_seven:
+            try:
+                self.log.warning('CONVM: assuming 6 fields')
+                elements, n = self.read_convm6(data, nelements6, n)
+                self.log.debug('CONVM: 6 fields')
+            except RuntimeError:  # eid < 0
+                self.log.warning('CONVM: assuming 7 fields')
+                elements, n = self.read_convm7(data, nelements7, n)
+                self.log.debug('CONVM: 7 fields')
+        elif is_six:
+            elements, n = self.read_convm6(data, nelements6, n)
+        elif is_seven:
+            elements, n = self.read_convm7(data, nelements7, n)
+        else:  # pragma: no cover
+            raise RuntimeError('CONVM is_six=%s is_seven=%s' % (is_six, is_seven))
+        nelements = len(elements)
+        for element in elements:
+            self._add_thermal_bc_object(element, element.eid)
+        self.card_count['CONVM'] = nelements
+        return n
+
+    def read_convm6(self, data, nelements, n):
+        structi = Struct(self._endian + b'6i')
+        elements = []
         for unused_i in range(nelements):
             edata = data[n:n+24]
-            out = struct_6i.unpack(edata)
+            out = structi.unpack(edata)
+            print(out)
             if self.is_debug_file:
                 self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2) = out
-            if eid <= 0:
+            #if eid <= 0:
+            if eid <= 0 or pcon_id <= 0 or flmnd < 0 or cntrlnd <= 0 or ta1 <= 0 or ta2 <= 0:
                 self.show_data(data, 'if')
-                # TODO: I'm not sure that this really has 7 fields...
-                raise RuntimeError('eid=%s < 0' % eid)
+                # TODO: I'm not sure that this really has 6 fields...
+                raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} cntrlnd={cntrlnd} ta1={ta1} ta2={ta2} < 0')
             mdot = 0.
             data_in = [eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot]
             elem = CONVM.add_op2_data(data_in)
-            self._add_thermal_bc_object(elem, elem.eid)
-            n += ntotal
-        self.card_count['CONVM'] = nelements
-        return n
+            n += 24
+            elements.append(elem)
+        return elements, n
+
+    def read_convm7(self, data, nelements, n):
+        structi = Struct(self._endian + b'6if')
+        elements = []
+        for unused_i in range(nelements):
+            edata = data[n:n+28]
+            out = structi.unpack(edata)
+            #print(out)
+            if self.is_debug_file:
+                self.binary_debug.write('  CONVM=%s\n' % str(out))
+            (eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot) = out
+            #if eid <= 0:
+            if eid <= 0 or pcon_id <= 0 or flmnd < 0 or cntrlnd <= 0 or ta1 <= 0 or ta2 <= 0:
+                self.show_data(data, 'if')
+                # TODO: I'm not sure that this really has 7 fields...
+                raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} cntrlnd={cntrlnd} ta1={ta1} ta2={ta2} < 0')
+                #raise RuntimeError('eid=%s < 0' % eid)
+            data_in = [eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot]
+            elem = CONVM.add_op2_data(data_in)
+            n += 28
+            elements.append(elem)
+        return elements, n
 
     def _read_cpyram(self, data, n):
         """

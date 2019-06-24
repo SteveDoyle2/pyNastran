@@ -2,6 +2,7 @@
 """tests aero cards"""
 import unittest
 
+from cpylog import get_logger
 from pyNastran.bdf.bdf import BDF
 #from pyNastran.bdf.test.test_bdf import run_bdf
 from pyNastran.bdf.cards.test.utils import save_load_deck
@@ -15,7 +16,8 @@ class TestAxi(unittest.TestCase):
 
     """
     def test_cquadx(self):
-        model = BDF(debug=True, log=None, mode='msc')
+        log = get_logger(level='warning')
+        model = BDF(debug=False, log=log, mode='msc')
         model.add_grid(11, [0., 0., 0.])
         model.add_grid(12, [0., 0., 0.])
         model.add_grid(13, [0., 0., 0.])
@@ -55,7 +57,8 @@ class TestAxi(unittest.TestCase):
 
     def test_pconeax(self):
         """PCONEAX"""
-        model = BDF(debug=False)
+        log = get_logger(level='warning')
+        model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
         pid = 100
         mid1 = 1000

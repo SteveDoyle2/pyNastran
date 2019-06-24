@@ -25,7 +25,8 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
         'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'PLOADX1',
         'GRAV', 'SLOAD', 'RFORCE',
-        #'ACCEL', 'ACCEL1',
+        #'ACCEL',
+        'ACCEL1',
         'TEMP', 'TEMPP1', 'QBDY1', 'QBDY2', 'QBDY3', 'QVOL',
         'LOAD',
     ]
@@ -447,6 +448,30 @@ def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx
                 datai.append(scale)
                 datai.append(load_id)
             datai += [-1, -1]
+            op2_ascii.write('  LOAD data=%s\n' % str(datai))
+            data += datai
+        nfields = len(data)
+        nbytes = write_header_nvalues(load_type, nfields, key, op2, op2_ascii)
+        op2.write(pack(fmt, *data))
+    elif load_type == 'ACCEL1':
+        """
+        ACCEL1(7401,74,601)
+
+        1 SID    I Load set identification number
+        2 CID    I Coordinate system identification number
+        3 A     RS Acceleration vector scale factor
+        4 N(3)  RS Components of a vector coordinate system defined by CID
+        7 GRIDID I Grid ID or THRU or BY code
+        Words 7 repeats until (-1) occurs.
+        NX/MSC
+        """
+        key = (7401, 74, 601)
+        fmt = endian
+        data = []
+        for load in loads:
+            nids = load.node_ids
+            fmt += b'iif%ii' % (len(nids) + 1)
+            datai = [load.sid, load.Cid(), load.scale] + nids + [-1]
             op2_ascii.write('  LOAD data=%s\n' % str(datai))
             data += datai
         nfields = len(data)
