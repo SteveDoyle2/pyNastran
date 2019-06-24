@@ -1131,7 +1131,8 @@ class SPC1(Constraint):
 
         """
         conid = integer(card, 1, 'conid')
-        components = parse_components(card, 2, 'components')  # 246 = y; dx, dz dir
+        components = components_or_blank(card, 2, 'components', 0)  # 246 = y; dx, dz dir
+        #nodes = [node for node in card.fields(3) if node is not None]
         nodes = card.fields(3)
         return SPC1(conid, components, nodes, comment=comment)
 

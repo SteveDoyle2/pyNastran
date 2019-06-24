@@ -178,12 +178,13 @@ for param in PARAMS:
     value = param[1]
     nparam = len(param)
     if isinstance(value, str):
-        allowed = param[1]
+        allowed = param[2]
         string_params[key] = (value, allowed)
     elif isinstance(value, int):
         if nparam == 2:
             int_params[key] = value
-        else:
+        else: # 3
+            allowed = param[2]
             int_params_allowed[key] = (value, allowed)
     elif isinstance(value, float):
         float_params[key] = value
@@ -194,17 +195,18 @@ for param in PARAMS:
             float2_params[key] = value
         else:
             raise RuntimeError(param)
+del allowed
 
 STR_WORDS_1 = {
     'POSTEXT', 'PRTMAXIM', 'AUTOSPC', 'OGEOM', 'PRGPST',
-    'RESVEC', 'RESVINER', 'ALTRED', 'OGPS', 'OIBULK', 'OMACHPR',
+    'RESVEC', 'RESVINER', 'OGPS', 'OIBULK', 'OMACHPR',
     'UNITSYS', 'F56', 'OUGCORD', 'OGEM', 'EXTSEOUT',
 
     'AUTOSPC', 'CDIF', 'EXTDROUT', 'OGEOM', 'OMID', 'PRTMAXIM', 'PRGPST',
     'POSTEXT', 'RESVEC', 'SUPAERO', 'SHLDAMP', 'ZROCMAS',
     'ALTRED', 'OUGCORD', 'RSCON', 'RESVINER', 'MESH', 'SKINOUT', 'VUPENTA',
     'DYNSEN', 'PRTGPL', 'PRTEQXIN', 'PRTGPDT', 'PRTCSTM', 'PRTBGPDT', 'PRTGPTT',
-    'PRTMGG', 'PRTPG', 'ALTRED', 'FOLLOWK', 'DBCCONV', 'COMPMATT', 'ADB', 'HEATSTAT',
+    'PRTMGG', 'PRTPG', 'FOLLOWK', 'DBCCONV', 'COMPMATT', 'ADB', 'HEATSTAT',
     'AUTOSPCR', 'CHECKOUT', 'EPSILONT', 'RMS', 'RESPATH', 'AUTOMSET', 'COMPMATT',
     'F56', 'METHFL', 'DMIGNRG', 'METHT', 'AEDB', 'SAVEOFP', 'DBDN', 'DBCONV',
     'ASCOUP', 'DBUP', 'VUHEXA', 'FLEXINCR', 'SRCOMPS', 'VUTETRA', 'DYNSPCF',
@@ -346,8 +348,6 @@ class PARAM(BaseCard):
             value = string_or_blank(card, 2, 'value', 'PEAK')
         elif key == 'ACOWEAK':
             value = string_or_blank(card, 2, 'value', 'NO')
-        elif key == 'ACSYM':
-            value = string_or_blank(card, 2, 'value', 'YES')
         elif key == 'ADJMETH':
             value = integer_or_blank(card, 2, 'value', 0)
         elif key == 'ADPCON':
@@ -363,15 +363,8 @@ class PARAM(BaseCard):
             assert value in ['SELECT', 'AUTO', 'DIRECT', 'RITZ', 'ITER'], 'value=%s' % value
         elif key == 'AESTOL':
             value = double_or_blank(card, 2, 'value', 1e-10)
-        elif key == 'ADSTAT':
-            value = string_or_blank(card, 2, 'value', 'YES')
-        elif key in ['ALPHA1', 'ALPHA2', 'ALPHA1FL', 'ALPHA2FL']:  # check alpha1/alpha1FL
+        elif key in ['ALPHA1FL', 'ALPHA2FL']:  # check alpha1/alpha1FL
             value1 = double_or_blank(card, 2, 'value1', 0.0)
-            value2 = double_or_blank(card, 3, 'value2', 0.0)
-            n = 2
-        elif key in ['CB1', 'CB2', 'CK1', 'CK2', 'CK3', 'CK41', 'CK42',
-                     'CM1', 'CM2', 'CP1', 'CP2']:
-            value1 = double_or_blank(card, 2, 'value1', 1.0)
             value2 = double_or_blank(card, 3, 'value2', 0.0)
             n = 2
         elif key == 'POST':
@@ -390,7 +383,7 @@ class PARAM(BaseCard):
             default = int_params[key]
             value = integer_or_blank(card, 2, 'value', default=default)
         elif key in int_params_allowed:
-            default, allowed = int_params_allowed[key]
+            default, allowed_values = int_params_allowed[key]
             value = integer_or_blank(card, 2, 'value', default=default)
             assert value in allowed_values, 'value=%s allowed=%s' % (value, allowed_values)
 
