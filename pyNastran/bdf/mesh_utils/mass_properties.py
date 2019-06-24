@@ -1046,7 +1046,7 @@ def _get_cbeam_mass_no_nsm(model, elem, mass, cg, inertia, reference_point):
     nsm = nsm_per_length * length
     if (m + nsm) != elem.Mass() or not np.array_equal(centroid, elem.Centroid()):  # pragma: no cover
         msg = 'CBEAM; eid=%s; %s pid=%s; m/L=%s nsm/L=%s; length=%s\n' % (
-            elem.eid, pid, prop.type, mass_per_length, nsm_per_length, length)
+            elem.eid, elem.pid, prop.type, mass_per_length, nsm_per_length, length)
         msg += 'mass_new=%s mass_old=%s\n' % (m, elem.Mass())
         msg += 'centroid_new=%s centroid_old=%s\n%s' % (
             str(centroid), str(elem.Centroid()), str(elem))
@@ -1218,9 +1218,6 @@ def _get_quad_mass(model, xyz, element_ids, all_eids,
             #msg += prop.get_stats()
             #msg += prop.mid_ref.get_stats()
             #raise RuntimeError(msg)
-
-        #print(elem)
-        #print(prop)
         #print('eid=%s type=%s mass=%s; area=%s mpa=%s'  % (elem.eid, elem.type, m, area, mpa))
         if eid in element_ids:
             mass = _increment_inertia(centroid, reference_point, m, mass, cg, inertia)
@@ -1273,7 +1270,6 @@ def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
         nsm_centroidsi = np.array(nsm_centroids_area[ptype])
         nsm_centroids.append(nsm_centroidsi)
         assert len(eids_pids) == len(nsm_centroids_area[ptype]), ptype
-        #print(areasi)
         area_length.append(areasi)
         is_area += [True] * len(areasi)
         #is_data = True
@@ -1288,7 +1284,6 @@ def _setup_apply_nsm(area_eids_pids, areas, nsm_centroids_area,
         nsm_centroidsi = np.array(nsm_centroids_length[ptype])
         nsm_centroids.append(nsm_centroidsi)
         assert len(eids_pids) == len(nsm_centroids_length[ptype]), ptype
-        #print(lengthsi)
         area_length.append(lengthsi)
         is_area += [False] * len(lengthsi)
         #is_data = True
@@ -1489,7 +1484,6 @@ def _apply_nsm(model, nsm_id,
         'CONROD' : 'CONROD',
         'ELEMENT' : 'ELEMENT',
     }
-
     #all_eid_nsms = []
     if len(nsms) == 0:
         model.log.warning('no nsm...')
@@ -1737,7 +1731,6 @@ def _get_nsml1_prop(
     areas_ipids = []
     for upid in pids_to_apply:
         ipid = np.where(all_pids == upid)[0]
-        #print('ipid =', ipid)
         eids = eids_pids[ipid, 0]
         area = area_all[ipid]
 
@@ -2027,7 +2020,6 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             g0_dict[etype].append(-1 if elem.g0 is None else elem.g0)
             x_dict[etype].append(nan if elem.g0 is not None else elem.x)
             offt_dict[etype].append(elem.offt)
-            #print(elem.get_stats())
         elif etype == 'CBAR':
             nids_dict[etype].append(elem.nodes)
             pids_dict[etype].append(elem.pid)
@@ -2059,7 +2051,8 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
     nmasses = len(model.masses)
     eids_mass = []
-    data_mass = np.zeros((nmasses, 24), dtype='float64')
+    # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+    data_mass = np.zeros((nmasses, 12), dtype='float64')
     ieid = 0
     for eid, elem in sorted(model.masses.items()):
         etype = elem.type
@@ -2101,12 +2094,15 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
     (pids_per_length_dict, mass_per_length_dict, nsm_per_length_dict,
      pids_per_area_dict, mass_per_area_dict, nsm_per_area_dict, thickness_dict,
      pids_per_volume_dict, mass_per_volume_dict,
-     e2_dict, e3_dict, ) = dicts
+     #e2_dict, e3_dict,
+     ) = dicts
 
     xaxis = np.array([1., 0., 0.])
     yaxis = np.array([0., 1., 0.])
     zaxis = np.array([0., 0., 1.])
-    data = np.zeros((nelements, 24), dtype='float64')
+
+    # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
+    data = np.zeros((nelements, 12), dtype='float64')
     for etype, nids_list in nids_dict.items():
         eids = np.hstack(eids_dict[etype])
         ieids = np.searchsorted(all_eids, eids)
@@ -2133,9 +2129,9 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             centroid = (p1 + p2) / 2.
             assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
 
-            e2i = np.array(e2_dict['rod'], dtype='float64')
-            e2 = e2i[ipids, :, :]
-            exx = eyy = ezz = 1. / e2[:, 0, 0]
+            #e2i = np.array(e2_dict['rod'], dtype='float64')
+            #e2 = e2i[ipids, :, :]
+            #exx = eyy = ezz = 1. / e2[:, 0, 0]
 
             mpl = mass_per_length[ipids]
             npl = nsm_per_length[ipids]
@@ -2161,7 +2157,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             #e2i = np.array(e2_dict['rod'], dtype='float64')
             #e2 = e2i[imids, :, :]
             #exx = eyy = ezz = 1. / e2[:, 0, 0]
-            exx = eyy = ezz = 1.
+            #exx = eyy = ezz = 1.
 
             mpl = npl = 0.
             #mpl = mass_per_length[imids]
@@ -2184,9 +2180,9 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             length = np.linalg.norm(iaxis, axis=1)
             centroid = (p1 + p2) / 2.
             assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
-            e2i = np.array(e2_dict['tube'], dtype='float64')
-            e2 = e2i[ipids, :, :]
-            exx = eyy = ezz = 1. / e2[:, 0, 0]
+            #e2i = np.array(e2_dict['tube'], dtype='float64')
+            #e2 = e2i[ipids, :, :]
+            #exx = eyy = ezz = 1. / e2[:, 0, 0]
 
             mpl = mass_per_length[ipids]
             npl = nsm_per_length[ipids]
@@ -2215,23 +2211,22 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             centroid = (p1 + p2) / 2.
             assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
 
-            zaxis = np.cross(iaxis, jaxis)
-            telem = np.zeros((nelementsi, 3, 3), dtype='float64')
-            telem[:, 0, :] = iaxis
-            telem[:, 1, :] = jaxis
-            telem[:, 2, :] = zaxis
+            #zaxis = np.cross(iaxis, jaxis)
+            #telem = np.zeros((nelementsi, 3, 3), dtype='float64')
+            #telem[:, 0, :] = iaxis
+            #telem[:, 1, :] = jaxis
+            #telem[:, 2, :] = zaxis
 
             # e2i is (npids,3,3)
             # e2 is (nelementsi,3,3)
-            e2i = np.array(e2_dict['bar'], dtype='float64')
-            e2 = e2i[ipids, :, :]
-            assert e2.shape[0] == nelementsi
-
+            #e2i = np.array(e2_dict['bar'], dtype='float64')
+            #e2 = e2i[ipids, :, :]
+            #assert e2.shape[0] == nelementsi
 
             #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
             # [T^T][e][T]
             #print(e2.shape, telem.shape)
-            exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+            #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
 
             mpl = mass_per_length[ipids]
             npl = nsm_per_length[ipids]
@@ -2261,25 +2256,25 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             centroid = (p1 + p2) / 2.
             assert len(length) == nelementsi, 'len(length)=%s nelementsi=%s' % (len(length), nelementsi)
 
-            zaxis = np.cross(iaxis, jaxis)
-            telem = np.zeros((nelementsi, 3, 3), dtype='float64')
-            telem[:, 0, :] = iaxis
-            telem[:, 1, :] = jaxis
-            telem[:, 2, :] = zaxis
+            #zaxis = np.cross(iaxis, jaxis)
+            #telem = np.zeros((nelementsi, 3, 3), dtype='float64')
+            #telem[:, 0, :] = iaxis
+            #telem[:, 1, :] = jaxis
+            #telem[:, 2, :] = zaxis
 
             # e2i is (npids,3,3)
             # e2 is (nelementsi,3,3)
             #print(e2_dict)
-            e2i = np.array(e2_dict['beam'], dtype='float64')
-            assert len(e2i) > 0, e2_dict
-            e2 = e2i[ipids, :, :]
-            assert e2.shape[0] == nelementsi
+            #e2i = np.array(e2_dict['beam'], dtype='float64')
+            #assert len(e2i) > 0, e2_dict
+            #e2 = e2i[ipids, :, :]
+            #assert e2.shape[0] == nelementsi
 
 
             #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
             # [T^T][e][T]
             #print(e2.shape, telem.shape)
-            exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+            #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
 
             mpl = mass_per_length[ipids]
             npl = nsm_per_length[ipids]
@@ -2315,14 +2310,14 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
             # e2i is (npids,3,3)
             # e2 is (nelementsi,3,3)
-            e2i = np.array(e2_dict['shell'], dtype='float64')
-            e2 = e2i[ipids, :, :]
-            assert e2.shape[0] == nelementsi
+            #e2i = np.array(e2_dict['shell'], dtype='float64')
+            #e2 = e2i[ipids, :, :]
+            #assert e2.shape[0] == nelementsi
 
             # [T^T][e][T]
-            theta_mcid = theta_mcid_dict[etype]
-            telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
-            exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+            #theta_mcid = theta_mcid_dict[etype]
+            #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
             #exx = eyy = ezz = 1.
             mpa = mass_per_area[ipids]
             npa = nsm_per_area[ipids]
@@ -2356,14 +2351,14 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
             # e2i is (npids,3,3)
             # e2 is (nelementsi,3,3)
-            e2i = np.array(e2_dict['shear'], dtype='float64')
-            e2 = e2i[ipids, :, :]
-            assert e2.shape[0] == nelementsi
+            #e2i = np.array(e2_dict['shear'], dtype='float64')
+            #e2 = e2i[ipids, :, :]
+            #assert e2.shape[0] == nelementsi
 
             # [T^T][e][T]
             #theta_mcid = theta_mcid_dict[etype]
             #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
-            exx = eyy = ezz = 1.
+            #exx = eyy = ezz = 1.
             #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
             mpa = mass_per_area[ipids]
             npa = nsm_per_area[ipids]
@@ -2408,15 +2403,15 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
             # e2i is (npids,3,3)
             # e2 is (nelementsi,3,3)
-            e2i = np.array(e2_dict['shell'], dtype='float64')
-            e2 = e2i[ipids, :, :]
-            assert e2.shape[0] == nelementsi
+            #e2i = np.array(e2_dict['shell'], dtype='float64')
+            #e2 = e2i[ipids, :, :]
+            #assert e2.shape[0] == nelementsi
 
             # [T^T][e][T]
-            theta_mcid = theta_mcid_dict[etype]
-            telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #theta_mcid = theta_mcid_dict[etype]
+            #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
             #exx = eyy = ezz = 1.
-            exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+            #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
             mpa = mass_per_area[ipids]
             npa = nsm_per_area[ipids]
             mass = mpa * area
@@ -2450,8 +2445,8 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             volume = -np.einsum('ij,ij->i', a, b) / 6.
             mass = rho * volume
             nsm = np.zeros(nelementsi, dtype='float64')
-            exx = eyy = ezz = 1.
-            e2 = None
+            #exx = eyy = ezz = 1.
+            #e2 = None
         elif etype == 'CHEXA':
             nids2 = nids[:, :8]
             pids = np.array(pids_dict[etype], dtype='int32')
@@ -2489,8 +2484,8 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
             mass = rho * volume
             nsm = np.zeros(nelementsi, dtype='float64')
-            exx = eyy = ezz = 1.
-            e2 = None
+            #exx = eyy = ezz = 1.
+            #e2 = None
         elif etype == 'CPENTA':
             nids2 = nids[:, :6]
             pids = np.array(pids_dict[etype], dtype='int32')
@@ -2517,8 +2512,8 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
             mass = rho * volume
             nsm = np.zeros(nelementsi, dtype='float64')
-            exx = eyy = ezz = 1.
-            e2 = None
+            #exx = eyy = ezz = 1.
+            #e2 = None
         elif etype == 'CPYRAM':
             nids2 = nids[:, :5]
             pids = np.array(pids_dict[etype], dtype='int32')
@@ -2547,31 +2542,29 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             #return abs(volume)
             mass = rho * volume
             nsm = np.zeros(nelementsi, dtype='float64')
-            exx = eyy = ezz = 1.
-            e2 = None
+            #exx = eyy = ezz = 1.
+            #e2 = None
 
         else:
             model.log.warning('skipping mass_properties_breakdown for %s' % etype)
             continue
+
+        # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
         data[ieids, 0] = mass + nsm # total mass
         data[ieids, 1] = mass
         data[ieids, 2] = nsm
 
         # 0         1     2    3  4  5  6     7    8    9    10   11   12
-        #
         #total_mass, mass, nsm, x, y, z, [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
         data[ieids, 3:6] = centroid
         #data[ieids, 6:11] = inertia
-        data[ieids, 12] = exx
-        data[ieids, 13] = eyy
-        data[ieids, 14] = ezz
-        #print(ieids, Ax)
-        data[ieids, 15] = Ax
-        data[ieids, 16] = Ay
-        data[ieids, 17] = Az
-        del exx, eyy, ezz, nelementsi # , pids # , ipids, e2, telem
+        #data[ieids, 12] = Ax
+        #data[ieids, 13] = Ay
+        #data[ieids, 14] = Az
+        del nelementsi # , pids # , ipids, e2, telem
 
     if nmasses and nelements:
+        # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
         data = np.vstack([data, data_mass])
     elif nmasses:
         data = data_mass
@@ -2606,25 +2599,15 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
     mass = data[:, :3]
     cg = data[:, 3:6]
     inertia = data[:, 6:12]
-    exyz = data[:, 12:15]
-    axyz = data[:, 15:18]
-    aixyz = data[:, 18:24]
+    #axyz = data[:, 12:15]
     assert mass.shape[1] == 3
     assert cg.shape[1] == 3
     assert inertia.shape[1] == 6
-    assert exyz.shape[1] == 3, exyz.shape[1]
-    assert axyz.shape[1] == 3, axyz.shape[1]
 
-    #  area moi
-    ax = axyz[:, 0]
-    ay = axyz[:, 1]
-    az = axyz[:, 2]
-    aixyz[:, 0] = ax * (y2 + z2) # ixx
-    aixyz[:, 1] = ay * (x2 + z2) # iyy
-    aixyz[:, 2] = az* (x2 + y2) # izz
-    aixyz[:, 3] = az * (x * y) # ixy
-    aixyz[:, 4] = ay * (x * z) # ixz
-    aixyz[:, 5] = ax * (y * z) # iyz
+    #  area
+    #ax = axyz[:, 0]
+    #ay = axyz[:, 1]
+    #az = axyz[:, 2]
 
     # only transform if we're calculating the inertia about the cg
     total_mass_overall = total_mass.sum()
@@ -2647,50 +2630,28 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
     make_plot = False
     if make_plot:
-        plot_inertia(total_mass, cg, inertia, exyz, axyz)
+        plot_inertia(total_mass, cg, inertia)
     return total_mass_overall, cg_overall, inertia_overall, mass, cg, inertia
 
-def plot_inertia(total_mass, cg, inertia, exyz, axyz):  # pragma: no cover
+def plot_inertia(total_mass, cg, inertia):  # pragma: no cover
     ycg = cg[:, 1]
     ixx = inertia[:, 0]
     iyy = inertia[:, 1]
     izz = inertia[:, 2]
-    exx = exyz[:, 0]
-    eyy = exyz[:, 1]
-    ezz = exyz[:, 2]
     isort = np.argsort(ycg)
     ycg2 = ycg[isort]
 
     mass2 = total_mass[isort]
-    exx2 = exx[isort]
-    eyy2 = eyy[isort]
-    ezz2 = ezz[isort]
-
     ixx2 = ixx[isort]
     iyy2 = iyy[isort]
     izz2 = izz[isort]
 
-    ax = axyz[:, 0]
-    ay = axyz[:, 1]
-    az = axyz[:, 2]
-
-    ixxe2 = ixx[isort] * exx2
-    iyye2 = iyy[isort] * eyy2
-    izze2 = izz[isort] * ezz2
     # cumulative moi; we integrate from the right side (the iyy2[::-1]
     # and then reverse it with cumsum(...)[::-1]
     cmass = np.cumsum(mass2[::-1])[::-1]
     cixx = np.cumsum(ixx2[::-1])[::-1]
     ciyy = np.cumsum(iyy2[::-1])[::-1]
     cizz = np.cumsum(izz2[::-1])[::-1]
-
-    cixxe = np.cumsum(ixxe2[::-1])[::-1]
-    ciyye = np.cumsum(iyye2[::-1])[::-1]
-    cizze = np.cumsum(izze2[::-1])[::-1]
-
-    cax = np.cumsum(ax[::-1])[::-1]
-    cay = np.cumsum(ay[::-1])[::-1]
-    caz = np.cumsum(az[::-1])[::-1]
 
     #import matplotlib
     #matplotlib.use('Qt5cairo')
@@ -2700,9 +2661,6 @@ def plot_inertia(total_mass, cg, inertia, exyz, axyz):  # pragma: no cover
     fig = plt.figure(figsize=figsize, dpi=dpi)
     ax = fig.gca()
     ax.plot(ycg2, cmass / cmass[0], label='mass=%g' % cmass[0])
-    #ax.plot(ycg2, exx2 / exx2.max(), label='exx')
-    #ax.plot(ycg2, eyy2 / eyy2.max(), label='eyy')
-    #ax.plot(ycg2, ezz2 / ezz2.max(), label='ezz')
     ax.plot(ycg2, cixx / cixx[0], label='Ixx=%.3e' % cixx[0])
     ax.plot(ycg2, ciyy / ciyy[0], label='Iyy=%.3e' % ciyy[0])
     ax.plot(ycg2, cizz / cizz[0], label='Izz=%.3e' % cizz[0])
@@ -2712,19 +2670,6 @@ def plot_inertia(total_mass, cg, inertia, exyz, axyz):  # pragma: no cover
     ax.set_title('Mass Moment of Inertia vs Span')
     ax.grid(True)
     fig.savefig('moi vs span.png')
-
-    fig = plt.figure(figsize=figsize, dpi=dpi)
-    ax = fig.gca()
-    ax.plot(ycg2, cax / cax[0], label='Ixx=%.3e' % cax[0])
-    ax.plot(ycg2, cay / cay[0], label='Iyy=%.3e' % cay[0])
-    ax.plot(ycg2, caz / caz[0], label='Izz=%.3e' % caz[0])
-    ax.legend()
-    ax.set_xlabel('y')
-    ax.set_ylabel('Area Moment of Inertia')
-    ax.set_title('Area Moment of Inertia vs Span')
-    ax.grid(True)
-    fig.savefig('moi vs span.png')
-
     #plt.show()
 
 def _breakdown_property_dicts(model):
@@ -2740,8 +2685,8 @@ def _breakdown_property_dicts(model):
 
     pids_per_volume_dict = defaultdict(list)
     mass_per_volume_dict = defaultdict(list)
-    e2_dict = defaultdict(list)
-    e3_dict = defaultdict(list)
+    #e2_dict = defaultdict(list)
+    #e3_dict = defaultdict(list)
     for pid, prop in sorted(model.properties.items()):
         ptype = prop.type
         if ptype in NO_MASS:
@@ -2749,15 +2694,15 @@ def _breakdown_property_dicts(model):
         elif ptype in 'PROD':
             pids_per_length_dict[ptype].append(pid)
             mid_ref = prop.mid_ref
-            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
-            e2_dict['rod'].append(Sei2)
+            #Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
+            #e2_dict['rod'].append(Sei2)
             nsm_per_length_dict[ptype].append(prop.nsm)
             mass_per_length_dict[ptype].append(mid_ref.rho * prop.A)
         elif ptype in 'PTUBE':
             pids_per_length_dict[ptype].append(pid)
             mid_ref = prop.mid_ref
-            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
-            e2_dict['tube'].append(Sei2)
+            #Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
+            #e2_dict['tube'].append(Sei2)
             nsm_per_length_dict[ptype].append(prop.nsm)
             mass_per_length_dict[ptype].append(mid_ref.rho * prop.Area())
 
@@ -2767,8 +2712,8 @@ def _breakdown_property_dicts(model):
             rhoi = prop.Rho()
             areai = prop.Area()
             nsmi = prop.Nsm()
-            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
-            e2_dict['bar'].append(Sei2)
+            #Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
+            #e2_dict['bar'].append(Sei2)
             nsm_per_length_dict['bar'].append(nsmi)
             mass_per_length_dict['bar'].append(areai * rhoi)
         elif ptype == 'PBARL':
@@ -2777,8 +2722,8 @@ def _breakdown_property_dicts(model):
             rhoi = prop.Rho()
             areai = prop.Area()
             nsmi = prop.Nsm()
-            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
-            e2_dict['bar'].append(Sei2)
+            #Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
+            #e2_dict['bar'].append(Sei2)
             nsm_per_length_dict['bar'].append(nsmi)
             mass_per_length_dict['bar'].append(areai * rhoi)
 
@@ -2788,8 +2733,8 @@ def _breakdown_property_dicts(model):
             rhoi = prop.Rho()
             areai = prop.Area()
             nsmi = prop.Nsm()
-            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
-            e2_dict['beam'].append(Sei2)
+            #Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
+            #e2_dict['beam'].append(Sei2)
             nsm_per_length_dict['beam'].append(nsmi)
             mass_per_length_dict['beam'].append(areai * rhoi)
         elif ptype == 'PBEAML':
@@ -2798,8 +2743,8 @@ def _breakdown_property_dicts(model):
             rhoi = prop.Rho()
             areai = prop.Area()
             nsmi = prop.Nsm()
-            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
-            e2_dict['beam'].append(Sei2)
+            #Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
+            #e2_dict['beam'].append(Sei2)
             nsm_per_length_dict['beam'].append(nsmi)
             mass_per_length_dict['beam'].append(areai * rhoi)
         elif prop.type == 'PBCOMP':
@@ -2810,8 +2755,8 @@ def _breakdown_property_dicts(model):
             #nsm_n1 = (p1 + jhat * prop.m1 + khat * prop.m2)
             #nsm_n2 = (p2 + jhat * prop.m1 + khat * prop.m2)
             #nsm_centroid = (nsm_n1 + nsm_n2) / 2.
-            Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
-            e2_dict['beam'].append(Sei2)
+            #Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
+            #e2_dict['beam'].append(Sei2)
             nsm_per_length_dict['beam'].append(nsm_per_length)
             mass_per_length_dict['beam'].append(mass_per_length)
 
@@ -2819,10 +2764,10 @@ def _breakdown_property_dicts(model):
             pids_per_area_dict['shell'].append(pid)
             mid_ref = prop.mid_ref
             rhoi = mid_ref.Rho()
-            ei2, ei3 = get_mat_props_S(mid_ref)
+            #ei2, ei3 = get_mat_props_S(mid_ref)
 
-            e2_dict['shell'].append(ei2)
-            e3_dict['shell'].append(ei3)
+            #e2_dict['shell'].append(ei2)
+            #e3_dict['shell'].append(ei3)
 
             # doesn't consider tflag
             #thickness = self.Thickness(tflag=tflag, tscales=tscales)
@@ -2835,10 +2780,9 @@ def _breakdown_property_dicts(model):
             pids_per_area_dict['shear'].append(pid)
             mid_ref = prop.mid_ref
             rhoi = mid_ref.Rho()
-            ei2, ei3 = get_mat_props_S(mid_ref)
-
-            e2_dict['shear'].append(ei2)
-            e3_dict['shear'].append(ei3)
+            #ei2, ei3 = get_mat_props_S(mid_ref)
+            #e2_dict['shear'].append(ei2)
+            #e3_dict['shear'].append(ei3)
 
             # doesn't consider tflag
             #thickness = self.Thickness(tflag=tflag, tscales=tscales)
@@ -2851,10 +2795,9 @@ def _breakdown_property_dicts(model):
             pids_per_area_dict['shell'].append(pid)
             mid_ref = prop.mid_ref
             rhoi = mid_ref.Rho()
-            ei2, ei3 = get_mat_props_S(mid_ref)
-
-            e2_dict['shell'].append(ei2)
-            e3_dict['shell'].append(ei3)
+            #ei2, ei3 = get_mat_props_S(mid_ref)
+            #e2_dict['shell'].append(ei2)
+            #e3_dict['shell'].append(ei3)
 
             # doesn't consider tflag
             #thickness = self.Thickness(tflag=tflag, tscales=tscales)
@@ -2867,10 +2810,9 @@ def _breakdown_property_dicts(model):
             pids_per_area_dict['shell'].append(pid)
             mid_ref = prop.mid_ref
             rhoi = mid_ref.Rho()
-            ei2, ei3 = get_mat_props_S(mid_ref)
-
-            e2_dict['shell'].append(ei2)
-            e3_dict['shell'].append(ei3)
+            #ei2, ei3 = get_mat_props_S(mid_ref)
+            #e2_dict['shell'].append(ei2)
+            #e3_dict['shell'].append(ei3)
 
             thickness = prop.Thickness()
             thickness_dict['shell'].append(thickness)
@@ -2910,22 +2852,22 @@ def _breakdown_property_dicts(model):
             # the material matrix [S] rotated into the element frame
             # T = [t][t]^T
             # [Sbar] = [T_inv][S][T_inv^T]
-            S02 = np.zeros((3, 3), dtype='float64')
-            for mid_ref, sti, cti in zip(prop.mids_ref, st, ct):
-                ti = np.array([
-                    [cti, sti, 0.],
-                    [-sti, cti, 0.],
-                    [0., 0., 1.],
-                ])
+            #S02 = np.zeros((3, 3), dtype='float64')
+            #for mid_ref, sti, cti in zip(prop.mids_ref, st, ct):
+                #ti = np.array([
+                    #[cti, sti, 0.],
+                    #[-sti, cti, 0.],
+                    #[0., 0., 1.],
+                #])
                 # T = [t][t]^T
-                T = ti.dot(ti.T)
+                #T = ti.dot(ti.T)
                 #print(ti)
                 #print(T)
-                Tinv = np.linalg.inv(T)
-                Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
+                #Tinv = np.linalg.inv(T)
+                #Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
 
                 # [Sbar] = [T_inv][S][T_inv^T]
-                S02 += Tinv.dot(Sei2.dot(Tinv.T))
+                #S02 += Tinv.dot(Sei2.dot(Tinv.T))
 
                 #Q2 = np.linalg.inv(Sei2)
                 #Q3 = np.linalg.inv(Sei3)
@@ -2934,7 +2876,7 @@ def _breakdown_property_dicts(model):
             #thickness = self.Thickness(tflag=tflag, tscales=tscales)
             #thickness = prop.thickness
 
-            e2_dict['shell'].append(S02)
+            #e2_dict['shell'].append(S02)
             mass_per_area_dict['shell'].append(sum(mpai))
             nsm_per_area_dict['shell'].append(prop.nsm)
             thickness_dict['shell'].append(thickness)
@@ -2963,7 +2905,7 @@ def _breakdown_property_dicts(model):
         pids_per_length_dict, mass_per_length_dict, nsm_per_length_dict,
         pids_per_area_dict, mass_per_area_dict, nsm_per_area_dict, thickness_dict,
         pids_per_volume_dict, mass_per_volume_dict,
-        e2_dict, e3_dict,
+        #e2_dict, e3_dict,
     )
     return dicts
 
@@ -3089,28 +3031,27 @@ def _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p
     #K2[0, 0] = K2[0, 1]
     #K2[0, 1] = K2[0, 2]
     #K2[0, 2] = K2[0, 0]
-
     return telem
 
-def _breakdown_transform_shell(e2, telem):
-    """helper method for the breakdown"""
+#def _breakdown_transform_shell(e2, telem):
+    #"""helper method for the breakdown"""
     # https://www.brown.edu/Departments/Engineering/Courses/EN224/anis_general/anis_general.htm
-    et = np.einsum('nij,njk->nik', e2, telem)
-    tet = np.einsum('nij,njk->nik', telem, et)
+    #et = np.einsum('nij,njk->nik', e2, telem)
+    #tet = np.einsum('nij,njk->nik', telem, et)
     #print(tet[0, :, :])
 
-    exx_inv = tet[:, 0, 0]
-    eyy_inv = tet[:, 1, 1]
-    ezz_inv = tet[:, 2, 2]
-    exx = np.zeros(exx_inv.shape, dtype=exx_inv.dtype)
-    eyy = np.zeros(eyy_inv.shape, dtype=eyy_inv.dtype)
-    ezz = np.zeros(ezz_inv.shape, dtype=ezz_inv.dtype)
-    assert abs(exx_inv.max()) >= 0., exx_inv
-    iexx = np.where(exx_inv > 0)[0]
-    ieyy = np.where(eyy_inv > 0)[0]
-    iezz = np.where(ezz_inv > 0)[0]
-    exx[iexx] = 1 / exx_inv[iexx]
-    eyy[ieyy] = 1 / eyy_inv[ieyy]
-    ezz[iezz] = 1 / ezz_inv[iezz]
+    #exx_inv = tet[:, 0, 0]
+    #eyy_inv = tet[:, 1, 1]
+    #ezz_inv = tet[:, 2, 2]
+    #exx = np.zeros(exx_inv.shape, dtype=exx_inv.dtype)
+    #eyy = np.zeros(eyy_inv.shape, dtype=eyy_inv.dtype)
+    #ezz = np.zeros(ezz_inv.shape, dtype=ezz_inv.dtype)
+    #assert abs(exx_inv.max()) >= 0., exx_inv
+    #iexx = np.where(exx_inv > 0)[0]
+    #ieyy = np.where(eyy_inv > 0)[0]
+    #iezz = np.where(ezz_inv > 0)[0]
+    #exx[iexx] = 1 / exx_inv[iexx]
+    #eyy[ieyy] = 1 / eyy_inv[ieyy]
+    #ezz[iezz] = 1 / ezz_inv[iezz]
     #print(exx.tolist())
-    return exx, eyy, ezz
+    #return exx, eyy, ezz

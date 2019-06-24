@@ -436,7 +436,7 @@ class TestCuttingPlane(unittest.TestCase):
         assert np.array_equal(iedges, [[0, 1, 2, 3, 0], [4, 5, 6, 7, 4]]), 'iedges=%s' % iedges
 
 
-def plot_inertia(y, A, I, EI, avg_centroid, ifig=1, show=True):  # pragma: no cover
+def plot_inertia(y, A, I, EI, avg_centroid, ifig=1, show=True):
     """hepler method for test"""
     #plt.plot(y, I[:, 0] / I[:, 0].max(), 'ro-', label='Qxx')
     #plt.plot(y, I[:, 1] / I[:, 1].max(), 'bo-', label='Qyy')
