@@ -316,23 +316,26 @@ class FailureIndicesArray(RealForceObject):
         """creates a pandas dataframe"""
         import pandas as pd
         headers = self.get_headers()
+
+        element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
+                                       major_axis=element_layer, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
         else:
             self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
+                                       major_axis=element_layer, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Item']
+            self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
 
 
     def get_headers(self):
         #headers = ['eid', 'failure_theory', 'ply', 'failure_index_for_ply (direct stress/strain)',
                    #'failure_index_for_bonding (interlaminar stresss)', 'failure_index_for_element', 'flag']
         headers = ['failure_index_for_ply (direct stress/strain)',
-                   'failure_index_for_bonding (interlaminar stresss)',]
+                   'failure_index_for_bonding (interlaminar stresss)', 'max_value']
         return headers
 
     def __eq__(self, table):

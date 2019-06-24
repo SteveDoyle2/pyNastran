@@ -79,6 +79,7 @@ OP2:
  - enhancements:
    - a few more cards supported in the OP2 geometry reader
    - adding op2 writer (includes geometry support)
+   - adding composite failure indicies (OEFIT)
 
 GUI:
  - bug fixes:
