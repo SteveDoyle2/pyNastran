@@ -76,7 +76,7 @@ PARAMS = (
     # CNSTRT
     ('CNTASET', 'NO', ['YES', 'NO']),
     ('COLPHEXA', 'NO', ['YES', 'NO']),
-    ('COMPMATT', 'NO', ['YES', 'NO']),
+    #('COMPMATT', 'NO', ['YES', 'NO', 'NONSMEAR']), # MSC only: 'NONSMEAR'
     ('CONFAC', 1E-5),
     ('CORROPT', 'NO', ['YES', 'NO']),
     ('COUPMASS', -1),
@@ -367,18 +367,28 @@ class PARAM(BaseCard):
             value1 = double_or_blank(card, 2, 'value1', 0.0)
             value2 = double_or_blank(card, 3, 'value2', 0.0)
             n = 2
+        elif key == 'COMPMATT':
+            #('COMPMATT', 'NO', ['YES', 'NO', 'NONSMEAR']), # MSC only: 'NONSMEAR'
+            value = string_or_blank(card, 2, 'value1', 'NO')
+            if value == 'NONS':  # assume
+                value = 'NONSMEAR'
+            if value == 'SMEAR':  # assume
+                value = 'YES'
+            assert value in ['YES', 'NO', 'NONSMEAR'], 'value=%r' % value
+
         elif key == 'POST':
             value = integer_or_blank(card, 2, 'value', 1)
         elif key == 'UNITSYS':
             value = string(card, 2, 'value')
 
         #-------------------------------------------------------------
-        # new
+        # strings; has defaults
         elif key in string_params:
             default, allowed_values = string_params[key]
             value = string_or_blank(card, 2, 'value', default=default)
             assert value in allowed_values, 'value=%s allowed=%s' % (value, allowed_values)
 
+        # ints; has defaults
         elif key in int_params:
             default = int_params[key]
             value = integer_or_blank(card, 2, 'value', default=default)
@@ -387,6 +397,7 @@ class PARAM(BaseCard):
             value = integer_or_blank(card, 2, 'value', default=default)
             assert value in allowed_values, 'value=%s allowed=%s' % (value, allowed_values)
 
+        # floats; has defaults
         elif key in float_params:
             default = float_params[key]
             value = double_or_blank(card, 2, 'value', default=default)
@@ -394,7 +405,9 @@ class PARAM(BaseCard):
             defaults = float2_params[key]
             value = double_or_blank(card, 2, 'value', default=defaults[0])
             value = double_or_blank(card, 2, 'value', default=defaults[1])
+            n = 2
 
+        # unchecked catch all
         elif key in STR_WORDS_1:
             value = string(card, 2, 'value')
         elif key in INT_WORDS_1:
@@ -405,6 +418,7 @@ class PARAM(BaseCard):
             value1 = double(card, 2, 'value1')
             value2 = double(card, 3, 'value2')
             values = [value1, value2]
+            n = 2
 
         #-------------------------------------------------------------
         else:

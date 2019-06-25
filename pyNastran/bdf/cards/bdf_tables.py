@@ -983,7 +983,10 @@ class TABLEM2(Table):
             a comment for the card
         """
         table_id = integer(card, 1, 'tid')
-        x1 = double(card, 2, 'x1')
+        # defined in MSC as an integer and used as a float...int > 0
+        # defined in NX as a float; real
+        # no default given in either, but from context, let's assume 0.0
+        x1 = double_or_blank(card, 2, 'x1', 0.0)
         extrap = integer_or_blank(card, 3, 'EXTRAP', default=0)
         x, y = read_table(card, table_id, 'TABLEM2')
         return TABLEM2(table_id, x1, x, y, extrap=extrap, comment=comment)

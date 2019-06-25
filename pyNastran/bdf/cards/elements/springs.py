@@ -643,6 +643,7 @@ class CELAS4(SpringElement):
     _field_map = {
         1: 'eid', 2:'k', #4:'s1', 6:'s2',
     }
+    cp_name_map = {'K': 'k',}
 
     def __init__(self, eid, k, nodes, comment=''):
         """
