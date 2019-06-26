@@ -1003,12 +1003,12 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('TSTEP', 'TSTEPNL'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
-    elif sol == 101:
+    elif sol in [1, 101]:
         _assert_has_spc(subcase, fem2)
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'P2G'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
-    elif sol == 103:
+    elif sol in [3, 103]:
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('METHOD', 'RSMETHOD', 'RIGID', 'BOLTID'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
@@ -1040,7 +1040,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         msg = 'sol=%s\n%s' % (sol, subcase)
         ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
-    elif sol == 108: # freq
+    elif sol in [8, 108]: # freq
         assert 'FREQUENCY' in subcase, subcase
     elif sol == 109:  # time
         check_for_flag_in_subcases(fem2, subcase, ('TIME', 'TSTEP', 'TSTEPNL'))
@@ -1108,9 +1108,9 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
     elif sol in [114, 115, 116, 118]:
         # cyclic statics, modes, buckling, frequency
         pass
-    elif sol in [1, 5, 21, 38, 61, 68, 76, 88,
+    elif sol in [5, 21, 26, 38, 47, 61, 68, 76, 78, 81, 88,
                  100, 128, 187, 190,
-                 400, 401, 600, 601, 700, 701]:
+                 400, 401, 600, 601, 700, 701, 'AEDB2XDB', 'UPWARD']:
         pass
     else:
         msg = 'SOL = %s\n' % (sol)

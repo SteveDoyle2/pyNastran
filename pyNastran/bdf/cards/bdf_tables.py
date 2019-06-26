@@ -983,6 +983,7 @@ class TABLEM2(Table):
             a comment for the card
         """
         table_id = integer(card, 1, 'tid')
+
         # defined in MSC as an integer and used as a float...int > 0
         # defined in NX as a float; real
         # no default given in either, but from context, let's assume 0.0

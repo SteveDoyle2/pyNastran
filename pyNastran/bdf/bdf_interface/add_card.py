@@ -3575,7 +3575,7 @@ class AddCards(AddMethods):
         self._add_dload_object(load)
         return load
 
-    def add_darea(self, sid, p, c, scale, comment=''):
+    def add_darea(self, sid, nid, component, scale, comment=''):
         """
         Creates a DAREA card
 
@@ -3583,15 +3583,15 @@ class AddCards(AddMethods):
         ----------
         sid : int
             darea id
-        Pi : int
+        nid : int
             GRID, EPOINT, SPOINT id
-        c : str
+        component : str
             Component number. (0-6; 0-EPOINT/SPOINT; 1-6 GRID)
         scale : float
             Scale (area) factor
 
         """
-        darea = DAREA(sid, p, c, scale, comment=comment)
+        darea = DAREA(sid, nid, component, scale, comment=comment)
         self._add_darea_object(darea)
 
     def add_tload1(self, sid, excite_id, tid, delay=0, Type='LOAD', us0=0.0, vs0=0.0,

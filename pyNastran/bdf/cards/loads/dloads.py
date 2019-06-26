@@ -510,29 +510,6 @@ class RLOAD1(DynamicLoad):
         assert len(card) <= 8, 'len(RLOAD1 card) = %i\ncard=%s' % (len(card), card)
         return RLOAD1(sid, excite_id, delay, dphase, tc, td, Type, comment=comment)
 
-    #def _cross_reference_excite_id(self, model, msg):
-        #"""not quite done...not sure how to handle the very odd xref"""
-        #case_control = model.case_control_deck
-        #if case_control is not None:
-            ##print('cc = %r' % case_control)
-            ##print('asdf')
-            #for key, subcase in sorted(model.case_control_deck.subcases.items()):
-                #print(subcase, type(subcase))
-                #if 'LOADSET' in subcase:
-                    #lseq_id = subcase['LOADSET'][0]
-                    #lseq = model.Load(lseq_id, consider_load_combinations=False, msg=msg)[0]
-                    #self.excite_id_ref = lseq
-                    ##self.dload_id = lseq.
-                #elif 'DLOAD' in subcase:
-                    ##dload_id = subcase['DLOAD'][0]
-                    #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
-                #else:
-                    #msg = ('LOADSET and DLOAD are not found in the case control deck\n%s' %
-                           #str(model.case_control_deck))
-                    #raise RuntimeError(msg)
-        #else:
-            #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -543,7 +520,7 @@ class RLOAD1(DynamicLoad):
             the BDF object
         """
         msg = ', which is required by RLOAD1 sid=%s' % (self.sid)
-        #self._cross_reference_excite_id(model, msg)
+        _cross_reference_excite_id(self, model, msg)
         if isinstance(self.tc, integer_types) and self.tc:
             self.tc_ref = model.TableD(self.tc, msg=msg)
         if isinstance(self.td, integer_types) and self.td:
@@ -555,7 +532,7 @@ class RLOAD1(DynamicLoad):
 
     def safe_cross_reference(self, model, xref_errors, ):
         msg = ', which is required by RLOAD1 sid=%s' % (self.sid)
-        #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
+        _cross_reference_excite_id(self, model, msg)
         if isinstance(self.tc, integer_types) and self.tc:
             self.tc_ref = model.TableD(self.tc, msg=msg)
         if isinstance(self.td, integer_types) and self.td:
@@ -670,6 +647,48 @@ class RLOAD1(DynamicLoad):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+
+def _cross_reference_excite_id(self, model, msg):
+    """not quite done...not sure how to handle the very odd xref
+
+    EXCITEID may refer to one or more static load entries (FORCE, PLOADi, GRAV, etc.).
+    """
+    excite_id_ref = []
+    case_control = model.case_control_deck
+    if case_control is not None:
+        #print('cc = %r' % case_control)
+        for key, subcase in sorted(model.case_control_deck.subcases.items()):
+            #print(subcase, type(subcase))
+            #if 'LOADSET' in subcase:
+                #lseq_id = subcase['LOADSET'][0]
+                #lseq = model.Load(lseq_id, consider_load_combinations=False, msg=msg)[0]
+                #self.excite_id_ref = lseq
+                ##self.dload_id = lseq.
+            if 'DLOAD' in subcase:
+                print('excite_id = %s' % self.excite_id)
+                print('  loads  =', list(model.loads.keys()))
+                print('  dareas =', list(model.dareas.keys()))
+                print('  dloads =', list(model.dloads.keys()))
+                print('  dload_entries =', list(model.dload_entries.keys()))
+                if self.excite_id in model.loads:
+                    model.log.debug('excite_id load = %s' % self.excite_id)
+                    #print('  dloads =', list(model.dloads.keys()))
+                    #print('  dareas =', list(model.dareas.keys()))
+                    excite_id_ref += model.loads[self.excite_id]
+                if self.excite_id in model.dareas:
+                    model.log.debug('excite_id darea = %s' % self.excite_id)
+                    darea_ref = model.DAREA(self.excite_id, msg=msg)
+                    excite_id_ref.append(darea_ref)
+            #else:
+                #msg = ('LOADSET and DLOAD are not found in the case control deck\n%s' %
+                       #str(model.case_control_deck))
+                #raise RuntimeError(msg)
+    #else:
+        #model.log.warning('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
+        #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
+    if len(excite_id_ref) == 0:
+        model.log.warning('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
+        raise RuntimeError('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
 
 class RLOAD2(DynamicLoad):
     r"""
@@ -867,6 +886,7 @@ class RLOAD2(DynamicLoad):
             the BDF object
         """
         msg = ', which is required by RLOAD2=%s' % (self.sid)
+        _cross_reference_excite_id(self, model, msg)
         if isinstance(self.tb, integer_types) and self.tb:
             self.tb_ref = model.TableD(self.tb, msg=msg)
         if isinstance(self.tp, integer_types) and self.tp:
@@ -878,6 +898,7 @@ class RLOAD2(DynamicLoad):
 
     def safe_cross_reference(self, model, xref_errors, ):
         msg = ', which is required by RLOAD2=%s' % (self.sid)
+        _cross_reference_excite_id(self, model, msg)
         if isinstance(self.tb, integer_types) and self.tb:
             self.tb_ref = model.TableD(self.tb, msg=msg)
         if isinstance(self.tp, integer_types) and self.tp:
@@ -1117,6 +1138,7 @@ class TLOAD1(DynamicLoad):
             the BDF object
         """
         msg = ', which is required by TLOAD1=%s' % (self.sid)
+        _cross_reference_excite_id(self, model, msg)
         if self.tid:
             self.tid_ref = model.TableD(self.tid, msg=msg)
         if isinstance(self.delay, integer_types) and self.delay > 0:
@@ -1124,6 +1146,7 @@ class TLOAD1(DynamicLoad):
 
     def safe_cross_reference(self, model, debug=True):
         msg = ', which is required by TLOAD1=%s' % (self.sid)
+        _cross_reference_excite_id(self, model, msg)
         if self.tid:
             #try:
             self.tid_ref = model.TableD(self.tid, msg=msg)
@@ -1431,12 +1454,14 @@ class TLOAD2(DynamicLoad):
             the BDF object
         """
         msg = ', which is required by TLOAD2 sid=%s' % (self.sid)
+        _cross_reference_excite_id(self, model, msg)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
         # TODO: excite_id
 
     def safe_cross_reference(self, model, xref_errors, debug=True):
         msg = ', which is required by TLOAD2 sid=%s' % (self.sid)
+        _cross_reference_excite_id(self, model, msg)
         if isinstance(self.delay, integer_types) and self.delay > 0:
             self.delay_ref = model.DELAY(self.delay_id, msg=msg)
         # TODO: excite_id

@@ -7,7 +7,7 @@ from cpylog import get_logger
 set_printoptions(suppress=True, precision=3)
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf, RROD
+from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf, RROD, CaseControlDeck
 from pyNastran.bdf.cards.base_card import expand_thru_by
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.cards.test.utils import save_load_deck
@@ -1302,6 +1302,175 @@ class TestLoads(unittest.TestCase):
         assert np.array_equal(forces1, forces2)
         assert np.array_equal(moments1, moments2)
         save_load_deck(model, run_convert=False, run_op2_reader=True)
+
+    def test_loads_nonlinear(self):
+        """tests a nonlinear variation on a FORCE and PLOAD4"""
+        model = BDF()
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        eid = 10
+        pid = 100
+        mid = 1000
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(eid, pid, nids)
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=mid)
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        spc_id = 10000
+        model.add_spc1(spc_id, 123456, [1, 2])
+        pload4_sid = 20000
+        eids = 10
+        pressures = 100.
+        model.add_pload4(pload4_sid, eids, pressures)
+
+        table_id = 30000
+        theta = np.linspace(0., 1., num=50, endpoint=True, retstep=False, dtype=None, axis=0)
+        y = np.sin(theta)
+        x = theta
+        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+
+
+        dload_id = 40000
+        scale = 1.
+        scale_factors = 1.
+        load_ids = [40001]
+        model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
+        #model.add_darea(sid, p, c, scale)
+
+        sid = 40001
+        excite_id = pload4_sid
+        model.add_rload1(sid, excite_id, delay=0, dphase=0, tc=table_id, td=0, Type='LOAD', comment='rload')
+
+        lines = [
+            'SUBCASE 1',
+            '  DLOAD = %s' % dload_id,
+        ]
+        cc = CaseControlDeck(lines, log=model.log)
+        model.case_control_deck = cc
+        model.validate()
+        model.cross_reference()
+
+    def test_loads_nonlinear2(self):
+        """tests a nonlinear variation on a FORCE and PLOAD4"""
+        model = BDF()
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        eid = 10
+        pid = 100
+        mid = 1000
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(eid, pid, nids)
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=mid)
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        spc_id = 10000
+        model.add_spc1(spc_id, 123456, [1, 2])
+        #pload4_sid = 20000
+        #eids = 10
+        #pressures = 100.
+        #model.add_pload4(pload4_sid, eids, pressures)
+
+        table_id = 30000
+        theta = np.linspace(0., 1., num=50, endpoint=True, retstep=False, dtype=None, axis=0)
+        y = np.sin(theta)
+        x = theta
+        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+
+
+        dload_id = 40000
+        scale = 1.
+        scale_factors = 1.
+        load_ids = [40001]
+        model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
+        #model.add_darea(sid, p, c, scale)
+
+        tload_id = 40001
+        darea_id = 40002
+        excite_id = darea_id
+        model.add_tload1(tload_id, excite_id, table_id, delay=0, Type='LOAD', us0=0.0, vs0=0.0, comment='tload1')
+
+        nid = 4
+        component = 3
+        scale = 2.0
+        model.add_darea(darea_id, nid, component, scale, comment='darea')
+        lines = [
+            'SUBCASE 1',
+            '  DLOAD = %s' % dload_id,
+        ]
+        cc = CaseControlDeck(lines, log=model.log)
+        model.case_control_deck = cc
+        model.validate()
+        model.cross_reference()
+
+    def test_loads_nonlinear3(self):
+        """tests a nonlinear variation on a FORCE and PLOAD4"""
+        model = BDF()
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        eid = 10
+        pid = 100
+        mid = 1000
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(eid, pid, nids)
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=mid)
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        spc_id = 10000
+        model.add_spc1(spc_id, 123456, [1, 2])
+        #pload4_sid = 20000
+        #eids = 10
+        #pressures = 100.
+        #model.add_pload4(pload4_sid, eids, pressures)
+
+        table_id = 30000
+        theta = np.linspace(0., 1., num=50, endpoint=True, retstep=False, dtype=None, axis=0)
+        y = np.sin(theta)
+        x = theta
+        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+
+
+        #dload_id = 40000
+        #scale = 1.
+        #scale_factors = 1.
+        #load_ids = [40001]
+        #model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
+        #model.add_darea(sid, p, c, scale)
+
+        tload_id = 40001
+        darea_id = 40002
+        excite_id = darea_id
+        model.add_tload1(tload_id, excite_id, table_id, delay=0, Type='LOAD', us0=0.0, vs0=0.0, comment='tload1')
+
+        nid = 4
+        component = 3
+        scale = 2.0
+        model.add_darea(darea_id, nid, component, scale, comment='darea')
+        lines = [
+            'SUBCASE 1',
+            '  DLOAD = %s' % tload_id,
+        ]
+        cc = CaseControlDeck(lines, log=model.log)
+        model.case_control_deck = cc
+        model.validate()
+        model.cross_reference()
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

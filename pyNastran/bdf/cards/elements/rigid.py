@@ -260,6 +260,7 @@ class RBAR(RigidElement):
             coefficient of thermal expansion
         comment : str; default=''
             a comment for the card
+
         """
         RigidElement.__init__(self)
         if comment:
@@ -267,16 +268,33 @@ class RBAR(RigidElement):
         self.eid = eid
         self.ga = nids[0]
         self.gb = nids[1]
-        if cna == '0':
-            cna = ''
-        if cnb == '0':
-            cnb = ''
-        if cma == '0':
-            cma = ''
-        if cmb == '0':
-            cmb = ''
+        #print(f'cna={cna} cnb={cnb}')
+
+        #if cna == '0':
+            #cna = ''
+        #if cnb == '0':
+            #cnb = ''
+        #if cma == '0':
+            #cma = ''
+        #if cmb == '0':
+            #cmb = ''
+
+        #if (cna, cnb) == ('', ''):
+            #cna = '0'
+            #cnb = '0'
+
+        # If both CNA and CNB are blank, then CNA = 123456.
+        if (cna, cnb) == ('', ''):
+            cna = '123456'
+            #cnb = ''
+
         self.cna = cna
         self.cnb = cnb
+
+        #  If both CMA and CMB are zero or blank, all of the degrees-of-freedom
+        #  not in CNA and CNB will be made dependent.
+        #
+        # TODO: not done...
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
@@ -286,19 +304,41 @@ class RBAR(RigidElement):
     def validate(self):
         ncna = len(self.cna)
         ncnb = len(self.cnb)
+        ncma = len(self.cma)
+        ncmb = len(self.cmb)
+
         nindependent = ncna + ncnb
+        ndependent = ncma + ncmb
         independent = self.cna + self.cnb
+        dependent = self.cma + self.cmb
+
+        msgi = ''
+        msg1 = ''
         if nindependent != 6:
-            msg = 'nindependent=%s; cna=%s (%s) cnb=%s (%s)' % (
+            msg = 'nindependent=%s; cna=%r (%s) cnb=%r (%s)\n' % (
                 nindependent, self.cna, ncna, self.cnb, ncnb)
             raise RuntimeError(msg)
         for comp in '123456':
-            msgi = ''
             if comp not in independent:
                 msgi += '  comp=%s is not independent\n' % (comp)
         if msgi:
-            msg = 'cna=%s cnb=%s\n%s' % (self.cna, self.cnb, msgi)
-            warnings.warn(msg)
+            msg1 = 'cna=%s cnb=%s\n%s' % (self.cna, self.cnb, msgi)
+
+        msgi2 = ''
+        msg2 = ''
+        if nindependent != 6:
+            msg = 'ndependent=%s; cma=%r (%s) cmb=%r (%s)\n' % (
+                ndependent, self.cma, ncma, self.cmb, ncmb)
+            raise RuntimeError(msg)
+        for comp in '123456':
+            if comp not in dependent:
+                msgi2 += '  comp=%s is not dependent\n' % (comp)
+        if msgi2:
+            msg2 = 'cma=%s cmb=%s\n%s' % (self.cma, self.cmb, msgi2)
+
+        msg = msg1 + msg2
+        if msg:
+            raise RuntimeError(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):
