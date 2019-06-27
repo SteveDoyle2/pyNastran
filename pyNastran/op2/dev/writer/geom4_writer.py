@@ -3,7 +3,7 @@ from struct import pack, Struct
 from collections import defaultdict
 
 from pyNastran.bdf.cards.collpase_card import collapse_thru_packs
-from .geom1 import write_geom_header, close_geom_table
+from .geom1_writer import write_geom_header, close_geom_table
 
 def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     if not hasattr(obj, 'rigid_elements'):

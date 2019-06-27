@@ -11,7 +11,6 @@ This file defines:
         log=None, debug=True)
 
 """
-from warnings import warn
 import numpy as np
 
 from pyNastran.bdf.cards.loads.static_loads import (
@@ -400,6 +399,7 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
 
     if model.rigid_elements:
         for eid, rigid_element in sorted(model.rigid_elements.items()):
+            eid_mirror = eid + eid_offset
             if rigid_element.type == 'RBE2':
                 Gmi_node_ids = rigid_element.Gmi_node_ids
                 Gn = rigid_element.Gn()
@@ -410,12 +410,25 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
                 Gijs = rigid_element.Gijs
                 ref_grid_id = rigid_element.ref_grid_id
                 Gn = None
+            elif rigid_element.type == 'RROD':
+                node_ids_mirror = [node_id + nid_offset for node_id in rigid_element.nodes]
+                model.add_rrod(eid_mirror, node_ids_mirror,
+                               cma=rigid_element.cma, cmb=rigid_element.cmb,
+                               alpha=rigid_element.alpha, comment='')
+                continue
+            elif rigid_element.type == 'RBAR':
+                node_ids_mirror = [node_id + nid_offset for node_id in rigid_element.nodes]
+                model.add_rbar(eid_mirror, node_ids_mirror,
+                               rigid_element.cna, rigid_element.cnb,
+                               rigid_element.cma, rigid_element.cmb,
+                               alpha=rigid_element.alpha, comment='')
+                continue
             else:
-                msg = '_write_elements_symmetric: %s not implemented' % rigid_element.type
-                warn(msg)
+                model.log.warning('_write_elements_symmetric: %s not implemented' % rigid_element.type)
                 continue
                 #raise NotImplementedError(msg)
 
+            #if rigid_element.type in ['RBE2', 'RBE3']:
             Gmi_node_ids_mirror = [node_id + nid_offset for node_id in Gmi_node_ids]
             if Gn:
                 Gn_mirror = Gn + nid_offset
@@ -424,7 +437,6 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
             if ref_grid_id:
                 ref_grid_id_mirror = ref_grid_id + nid_offset
 
-            eid_mirror = eid + eid_offset
             if rigid_element.type == 'RBE2':
                 rigid_element2 = mirror_model.add_rbe2(eid_mirror, Gn_mirror, rigid_element.cm,
                                                        Gmi_node_ids_mirror)

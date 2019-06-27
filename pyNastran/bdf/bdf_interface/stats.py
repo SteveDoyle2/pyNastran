@@ -181,6 +181,8 @@ def get_bdf_stats(model, return_type='string', word=''):
         msg.append('SOL %s\n' % model.sol)
     msg.extend(_get_bdf_stats_loads(model))
 
+    # load_combinations / loads: handled below
+
     # dloads
     for (lid, loads) in sorted(model.dloads.items()):
         msg.append('bdf.dloads[%s]' % lid)

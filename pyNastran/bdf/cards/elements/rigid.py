@@ -230,7 +230,7 @@ class RBAR(RigidElement):
     +------+-----+----+----+--------+-----+-----+-----+-------+
     """
     type = 'RBAR'
-    _properties = ['dependent_nodes', 'independent_nodes']
+    _properties = ['dependent_nodes', 'independent_nodes', 'nodes']
 
     @classmethod
     def _init_from_empty(cls):
@@ -293,8 +293,13 @@ class RBAR(RigidElement):
 
         #  If both CMA and CMB are zero or blank, all of the degrees-of-freedom
         #  not in CNA and CNB will be made dependent.
-        #
-        # TODO: not done...
+        if (cma, cmb) == ('', ''):
+            for comp in '123456':
+                if comp not in cna:
+                    cma += comp
+                if comp not in cnb:
+                    cmb += comp
+
         self.cma = cma
         self.cmb = cmb
         self.alpha = alpha
@@ -322,7 +327,7 @@ class RBAR(RigidElement):
             if comp not in independent:
                 msgi += '  comp=%s is not independent\n' % (comp)
         if msgi:
-            msg1 = 'cna=%s cnb=%s\n%s' % (self.cna, self.cnb, msgi)
+            msg1 = 'cna=%r cnb=%r\n%s' % (self.cna, self.cnb, msgi)
 
         msgi2 = ''
         msg2 = ''
@@ -334,7 +339,7 @@ class RBAR(RigidElement):
             if comp not in dependent:
                 msgi2 += '  comp=%s is not dependent\n' % (comp)
         if msgi2:
-            msg2 = 'cma=%s cmb=%s\n%s' % (self.cma, self.cmb, msgi2)
+            msg2 = 'cma=%r cmb=%r\n%s' % (self.cma, self.cmb, msgi2)
 
         msg = msg1 + msg2
         if msg:
@@ -422,6 +427,10 @@ class RBAR(RigidElement):
         if self.gb_ref is not None:
             return self.gb_ref.nid
         return self.gb
+
+    @property
+    def nodes(self):
+        return [self.Ga(), self.Gb()]
 
     def cross_reference(self, model):
         """

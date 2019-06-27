@@ -1472,5 +1472,62 @@ class TestLoads(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
+    def test_loads_nonlinear_thermal1(self):
+        """tests a nonlinear variation on a FORCE and PLOAD4"""
+        model = BDF()
+
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+
+        eid = 10
+        pid = 100
+        mid = 1000
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(eid, pid, nids)
+        model.add_pshell(pid, mid1=mid, t=0.1, mid2=mid)
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu)
+        spc_id = 10000
+        model.add_spc1(spc_id, 123456, [1, 2])
+        #pload4_sid = 20000
+        #eids = 10
+        #pressures = 100.
+        #model.add_pload4(pload4_sid, eids, pressures)
+
+        table_id = 30000
+        theta = np.linspace(0., 1., num=50, endpoint=True, retstep=False, dtype=None, axis=0)
+        y = np.sin(theta)
+        x = theta
+        model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
+
+
+        #dload_id = 40000
+        #scale = 1.
+        #scale_factors = 1.
+        #load_ids = [40001]
+        #model.add_dload(dload_id, scale, scale_factors, load_ids, comment='dload')
+        #model.add_darea(sid, p, c, scale)
+
+        tload_id = 40001
+        qvect_id = 40002
+        excite_id = qvect_id
+        model.add_tload1(tload_id, excite_id, table_id, delay=0, Type='LOAD', us0=0.0, vs0=0.0, comment='tload1')
+        #nid = 4
+        eids = [eid]
+        q0 = 2.0
+        model.add_qvect(qvect_id, q0, eids, t_source=None, ce=0, vector_tableds=None, control_id=0, comment='qvect')
+        lines = [
+            'SUBCASE 1',
+            '  DLOAD = %s' % tload_id,
+        ]
+        cc = CaseControlDeck(lines, log=model.log)
+        model.case_control_deck = cc
+        model.validate()
+        model.cross_reference()
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

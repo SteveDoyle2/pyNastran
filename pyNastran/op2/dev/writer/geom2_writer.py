@@ -1,7 +1,7 @@
 from collections import defaultdict
 from struct import pack, Struct
 
-from .geom1 import write_geom_header, close_geom_table
+from .geom1_writer import write_geom_header, close_geom_table
 integer_types = int
 
 def write_geom2(op2, op2_ascii, obj, endian=b'<'):

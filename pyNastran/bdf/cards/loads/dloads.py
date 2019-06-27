@@ -648,7 +648,7 @@ class RLOAD1(DynamicLoad):
         return self.comment + print_card_16(card)
 
 
-def _cross_reference_excite_id(self, model, msg):
+def _cross_reference_excite_id_backup(self, model, msg):
     """not quite done...not sure how to handle the very odd xref
 
     EXCITEID may refer to one or more static load entries (FORCE, PLOADi, GRAV, etc.).
@@ -664,13 +664,10 @@ def _cross_reference_excite_id(self, model, msg):
                 #lseq = model.Load(lseq_id, consider_load_combinations=False, msg=msg)[0]
                 #self.excite_id_ref = lseq
                 ##self.dload_id = lseq.
-            if 'DLOAD' in subcase:
-                print('excite_id = %s' % self.excite_id)
-                print('  loads  =', list(model.loads.keys()))
-                print('  dareas =', list(model.dareas.keys()))
-                print('  dloads =', list(model.dloads.keys()))
-                print('  dload_entries =', list(model.dload_entries.keys()))
+            #if 'DLOAD' in subcase:
                 if self.excite_id in model.loads:
+                    # FORCE, FORCE1, FORCE2, PLOAD4, GRAV
+                    # changes the magnitudes of the load, not the direction
                     model.log.debug('excite_id load = %s' % self.excite_id)
                     #print('  dloads =', list(model.dloads.keys()))
                     #print('  dareas =', list(model.dareas.keys()))
@@ -679,6 +676,13 @@ def _cross_reference_excite_id(self, model, msg):
                     model.log.debug('excite_id darea = %s' % self.excite_id)
                     darea_ref = model.DAREA(self.excite_id, msg=msg)
                     excite_id_ref.append(darea_ref)
+                if self.excite_id in model.dload_entries:
+                    # this is probably wrong...
+                    # it was added to pass TestLoads.test_loads_nonlinear_thermal1, but
+                    # I think QVECT should be in self.loads, not self.dload_entries...
+                    model.log.debug('excite_id dload_entries = %s' % self.excite_id)
+                    excite_id_ref += model.dload_entries
+                #  what about TEMPBC?
             #else:
                 #msg = ('LOADSET and DLOAD are not found in the case control deck\n%s' %
                        #str(model.case_control_deck))
@@ -687,6 +691,88 @@ def _cross_reference_excite_id(self, model, msg):
         #model.log.warning('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
         #self.excite_id_ref = model.DAREA(self.excite_id, msg=msg)
     if len(excite_id_ref) == 0:
+        print('excite_id = %s' % self.excite_id)
+        print('  loads  =', list(model.loads.keys()))
+        print('  dareas =', list(model.dareas.keys()))
+        print('  dloads =', list(model.dloads.keys()))
+        print('  dload_entries =', list(model.dload_entries.keys()))
+        model.log.warning('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
+        raise RuntimeError('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
+
+def _cross_reference_excite_id(self, model, msg):
+    """not quite done...not sure how to handle the very odd xref
+
+    EXCITEID may refer to one or more static load entries (FORCE, PLOADi, GRAV, etc.).
+    """
+    from collections import defaultdict
+
+    # get the lseqs that correspond to the correct EXCITE_ID id
+    lseqs = defaultdict(list)
+    for sid, loads in model.load_combinations.items():
+        for load in loads:
+            if load.type == 'LSEQ':
+                if self.excite_id == load.excite_id:
+                    lseqs[sid].append(load)
+    #for sid, loads in lseqs.items():
+        #print(sid, loads)
+
+    # find all the LOADSETs in the model
+    # LOADSETs reference LSEQs by sid
+    valid_lseqs = []
+    if lseqs:
+        # get the sid for the LSEQ
+        case_control = model.case_control_deck
+        if case_control is not None:
+            #print('cc = %r' % case_control)
+            for key, subcase in sorted(model.case_control_deck.subcases.items()):
+                if 'LOADSET' in subcase:
+                    lseq_id = subcase['LOADSET'][0]
+                    valid_lseqs.append(lseq_id)
+        valid_lseqs = list(set(valid_lseqs))
+        valid_lseqs.sort()
+        #print('valid_lseqs =', valid_lseqs)
+        assert len(valid_lseqs) == 1, 'valid_lseqs=%s' % valid_lseqs
+
+    excite_id_ref = []
+    if self.excite_id in model.loads:
+        # FORCE, FORCE1, FORCE2, PLOAD4, GRAV
+        # changes the magnitudes of the load, not the direction
+        model.log.debug('excite_id load = %s' % self.excite_id)
+        #print('  dloads =', list(model.dloads.keys()))
+        #print('  dareas =', list(model.dareas.keys()))
+        excite_id_ref += model.loads[self.excite_id]
+
+    if self.excite_id in model.dareas:
+        model.log.debug('excite_id darea = %s' % self.excite_id)
+        darea_ref = model.DAREA(self.excite_id, msg=msg)
+        excite_id_ref.append(darea_ref)
+
+    if self.excite_id in model.dload_entries:  #  this is probably wrong...
+        # this is probably wrong...
+        # it was added to pass TestLoads.test_loads_nonlinear_thermal1, but
+        # I think QVECT should be in self.loads, not self.dload_entries...
+        model.log.debug('excite_id dload_entries = %s' % self.excite_id)
+        excite_id_ref += model.dload_entries
+
+    #  handles LSEQ
+    if valid_lseqs:
+        lseq_id = valid_lseqs[0]
+        excite_id_ref += lseqs[lseq_id]
+        #print("*******")
+
+    #  what about SPCD?
+
+    if len(excite_id_ref) == 0:
+        print('excite_id = %s' % self.excite_id)
+        print('  loads  =', list(model.loads.keys()))
+        print('  dareas =', list(model.dareas.keys()))
+        print('  dloads =', list(model.dloads.keys()))
+        print('  dload_entries =', list(model.dload_entries.keys()))
+        print('  load_combinations =', list(model.load_combinations.keys())) #  what about LSEQ
+        if lseqs:
+            print('  lseqs = [%s]; sids=%s' % (self.excite_id, list(lseqs.keys())))
+        else:
+            print('  lseqs = []')
         model.log.warning('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
         raise RuntimeError('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
 

@@ -8,12 +8,12 @@ import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.write_utils import _write_markers
 from pyNastran.op2.errors import FatalError
-from .writer.geom1 import write_geom1
-from .writer.geom2 import write_geom2
-from .writer.geom3 import write_geom3
-from .writer.geom4 import write_geom4
-from .writer.ept import write_ept
-from .writer.mpt import write_mpt
+from .writer.geom1_writer import write_geom1
+from .writer.geom2_writer import write_geom2
+from .writer.geom3_writer import write_geom3
+from .writer.geom4_writer import write_geom4
+from .writer.ept_writer import write_ept
+from .writer.mpt_writer import write_mpt
 
 
 class TrashWriter:
@@ -229,6 +229,7 @@ class OP2Writer(OP2_F06_Common):
             'OGPFB1',
             'ONRGY1',
             'OGS1',
+            'OEFIT',
         ]
         for table_type in obj.get_table_types():
             if table_type in ['gpdt', 'eqexin'] or table_type in skips:

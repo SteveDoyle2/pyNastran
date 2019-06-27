@@ -1,8 +1,8 @@
 from collections import defaultdict
 from struct import pack, Struct
 
-from .geom1 import write_geom_header, close_geom_table
-from .geom4 import write_header
+from .geom1_writer import write_geom_header, close_geom_table
+from .geom4_writer import write_header
 
 def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'materials'):

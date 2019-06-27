@@ -2,8 +2,8 @@ from __future__ import absolute_import
 from struct import pack, Struct
 from collections import defaultdict
 
-from .geom1 import write_geom_header, close_geom_table
-from .geom4 import write_header, write_header_nvalues
+from .geom1_writer import write_geom_header, close_geom_table
+from .geom4_writer import write_header, write_header_nvalues
 
 def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     if not hasattr(obj, 'loads') and not hasattr(obj, 'load_combinations'):
@@ -453,9 +453,37 @@ def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx
         nfields = len(data)
         nbytes = write_header_nvalues(load_type, nfields, key, op2, op2_ascii)
         op2.write(pack(fmt, *data))
+    elif load_type == 'ACCEL':
+        """
+        ACCEL(7401, 74, 601) - NX  (uses CHAR1)
+        ACCEL(11302,113,600) - MSC (uses CHAR4)
+
+        Word Name Type Description
+        1 SID     I Load set identification number
+        2 CID     I Coordinate system identification number
+        3 N(3)   RS Components of a vector coordinate system defined by CID
+        6 DIR CHAR1 Component direction of acceleration variation
+        7 LOCi   RS Location along direction DIR in coordinate system
+        8 VALi   RS The load scale factor associated with location LOCi
+        Words 7 through 8 repeat until (-1,-1) occurs.
+        """
+        raise NotImplementedError(load_type)
+        key = (7401, 74, 601)
+        fmt = endian
+        data = []
+        for load in loads:
+            nids = load.node_ids
+            fmt += b'iif%ii' % (len(nids) + 1)
+            datai = [load.sid, load.Cid(), load.scale] + nids + [-1]
+            op2_ascii.write('  LOAD data=%s\n' % str(datai))
+            data += datai
+        nfields = len(data)
+        nbytes = write_header_nvalues(load_type, nfields, key, op2, op2_ascii)
+        op2.write(pack(fmt, *data))
     elif load_type == 'ACCEL1':
         """
-        ACCEL1(7401,74,601)
+        ACCEL1(7501, 75, 602) - NX
+        ACCEL1(11402,114,601) - MSC
 
         1 SID    I Load set identification number
         2 CID    I Coordinate system identification number
@@ -465,7 +493,7 @@ def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx
         Words 7 repeats until (-1) occurs.
         NX/MSC
         """
-        key = (7401, 74, 601)
+        key = (7501, 75, 602)
         fmt = endian
         data = []
         for load in loads:
