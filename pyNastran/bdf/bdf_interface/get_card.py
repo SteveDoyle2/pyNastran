@@ -1252,17 +1252,18 @@ class GetCard(GetMethods):
             'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
             'GRAV', 'ACCEL', 'ACCEL1', 'GMLOAD',
             'ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
-            'RFORCE', 'RFORCE1', 'SPCD',
+            'RFORCE', 'RFORCE1', 'SPCD', 'DEFORM',
         ]
         for load, scale in zip(loads, scale_factors):
+            if load.type in skip_loads:
+                continue
+
             assert scale == 1.0, str(load)
             if load.type == 'TEMP':
                 temps_dict = load.temperatures
                 for nid, val in temps_dict.items():
                     nidi = nid_map[nid]
                     temperatures[nidi] = val
-            elif load.type in skip_loads:
-                pass
             else:
                 self.log.debug(load.rstrip())
         return is_temperatures, temperatures

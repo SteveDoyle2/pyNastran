@@ -29,6 +29,8 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                    run_save_load_hdf5=True, run_mass_properties=True, run_loads=True,
                    run_test_bdf=True, run_op2_writer=True, run_op2_reader=True):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
+    model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
+                            nxref_errors=0, stop_on_xref_error=True)
     model.validate()
     model.pop_parse_errors()
     model.pop_xref_errors()

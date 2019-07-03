@@ -3,7 +3,6 @@ import copy
 from struct import Struct, unpack
 
 import numpy as np
-from numpy import frombuffer, radians, sin, cos, ones, dtype as npdtype
 
 from pyNastran import is_release
 from pyNastran.f06.f06_writer import F06Writer
@@ -211,7 +210,7 @@ class OP2Common(Op2Codes, F06Writer):
             pass
         #elif self.analysis_code==3: # differential stiffness
         #elif self.analysis_code==4: # differential stiffness
-        elif self.analysis_code == 5:   # frequency
+        elif self.analysis_code == 5:  # frequency
             pass
         elif self.analysis_code == 6:  # transient
             pass
@@ -824,8 +823,8 @@ class OP2Common(Op2Codes, F06Writer):
             n = nnodes * 4 * 8
             itotal2 = obj.itotal + nnodes
             #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
-            ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj._times[obj.itime] = dt
             #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
             #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
@@ -883,13 +882,13 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+                ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj.data[obj.itime, obj.itotal:itotal2, 0] = floats[:, 2].copy()
             assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
             obj._times[itime] = dt
@@ -929,14 +928,14 @@ class OP2Common(Op2Codes, F06Writer):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+                ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
                 #nids = ints[:, 0] // 10
-                nids = ones(nnodes, dtype='int32') * eid
+                nids = np.ones(nnodes, dtype='int32') * eid
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8).copy()
+            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8).copy()
             obj._times[itime] = floats[:, 0]
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2]
             assert np.abs(floats[:, 3:]).max() == 0, '%s is not a scalar result...' % obj.__class__.__name__
@@ -977,8 +976,8 @@ class OP2Common(Op2Codes, F06Writer):
             n = nnodes * 4 * 8
             itotal2 = obj.itotal + nnodes
             #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
-            ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj._times[obj.itime] = dt
             #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
             #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
@@ -1026,14 +1025,14 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+                ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
 
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:].copy()
             obj._times[itime] = dt
             obj.itotal = itotal2
@@ -1071,17 +1070,19 @@ class OP2Common(Op2Codes, F06Writer):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
-            obj.node_gridtype[itime, 0] = nid
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8).copy()
-            ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8).copy()
+            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
 
-            if obj.itime == 0:
-                if self._analysis_code_fmt == b'i':
-                    times = ints[:, 0]
-                else:
-                    assert self._analysis_code_fmt == b'f'
-                    times = floats[:, 0]
-                obj._times = times
+            self._set_sort2_time(obj, self._analysis_code_fmt, ints, floats)
+        #def _set_sort2_time(self, obj, self._analysis_code_fmt, ints, floats):
+            #if obj.itime == 0:
+                #if self._analysis_code_fmt == b'i':
+                    #times = ints[:, 0]
+                #else:
+                    #assert self._analysis_code_fmt == b'f'
+                    #times = floats[:, 0]
+                #obj._times = times
+            obj.node_gridtype[itime, 0] = nid
             obj.node_gridtype[itime, 1] = ints[0, 1].copy()
             obj.data[itotal:itotal2, obj.itime, :] = floats[:, 2:]
             obj.itotal = itotal2
@@ -1099,8 +1100,8 @@ class OP2Common(Op2Codes, F06Writer):
                 out = structi.unpack(edata)
                 (dt, grid_type, tx, ty, tz, rx, ry, rz) = out
                 if self.is_debug_file:
-                    self.binary_debug.write('  nid=%s dt=%s=%i (%s); %s\n' % (
-                        nid, flag, dt, type(dt), str(out)))
+                    self.binary_debug.write(
+                        f'  nid={nid} {flag}={dt} ({type(dt)}); {str(out)}\n')
                 obj.add_sort2(dt, nid, grid_type, tx, ty, tz, rx, ry, rz)
                 n += 32
         #if self.table_name_str == 'OQMRMS1':
@@ -1108,38 +1109,53 @@ class OP2Common(Op2Codes, F06Writer):
             #print('------------')
         return n
 
+    def _set_sort2_time(self, obj, analysis_code_fmt, ints, floats):
+        if obj.itime == 0:
+            if analysis_code_fmt == b'i':
+                times = ints[:, 0]
+            else:
+                assert analysis_code_fmt == b'f'
+                times = floats[:, 0]
+            obj._times = times
+
     def _read_complex_table_sort1_mag(self, data, is_vectorized, nnodes, result_name, flag):
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table_sort1_mag\n')
+
+        #force_flux = self.get_force_flux(self.thermal)
+        #disp_temp = self.get_disp_temp(self.thermal)
+        #self.log.info('_read_complex_table_sort1_mag - %s; %s\n' % (
+            #self.code, self.get_table_code_name(disp_temp, force_flux, stress_word='')))
         assert flag in ['node', 'elem'], flag
         dt = self.nonlinear_factor
 
         n = 0
         obj = self.obj
-        s = Struct(self._endian + b'2i12f')
-
         if self.use_vector and is_vectorized:
             n = nnodes * 4 * 14
             itotal2 = obj.itotal + nnodes
 
+            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+            #print('ints[:, 0] =', ints[:, 0], ints[:, 0] // 10)
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+                ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[obj.itotal:itotal2, 0] = nids
                 obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1].copy()
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
+            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
             mag = floats[:, 2:8]
             phase = floats[:, 8:]
-            rtheta = radians(phase)
-            real_imag = mag * (cos(rtheta) + 1.j * sin(rtheta))
+            rtheta = np.radians(phase)
+            real_imag = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
             #abs(real_imag), angle(real_imag, deg=True)
 
             obj._times[obj.itime] = dt
             obj.data[obj.itime, obj.itotal:itotal2, :] = real_imag
             obj.itotal = itotal2
         else:
+            s = Struct(self._endian + b'2i12f')
             for inode in range(nnodes):
                 out = s.unpack(data[n:n+56])
                 (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
@@ -1161,6 +1177,7 @@ class OP2Common(Op2Codes, F06Writer):
                                        unused_result_name, flag):
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table_sort1_imag\n')
+        self.log.info('_read_complex_table_sort1_imag')
         #assert flag in ['node', 'elem'], flag
         dt = self.nonlinear_factor
         obj = self.obj
@@ -1171,14 +1188,14 @@ class OP2Common(Op2Codes, F06Writer):
             itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+                ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
                 #print(ints[:, :2])
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
+            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
             real = floats[:, 2:8]
             imag = floats[:, 8:]
 
@@ -1186,7 +1203,6 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[obj.itime, itotal:itotal2, :] = real + 1.j * imag
             obj.itotal = itotal2
         else:
-        #if 1:
             n = 0
             s = Struct(self._endian + b'2i12f')
 
@@ -1241,19 +1257,37 @@ class OP2Common(Op2Codes, F06Writer):
 
     def _read_complex_table_sort2_mag(self, data, is_vectorized, nnodes, result_name, flag):
         if self.is_debug_file:
-            self.binary_debug.write('  _read_complex_table\n')
+            self.binary_debug.write('  _read_complex_table_sort2_mag\n')
+        self.log.info('_read_complex_table_sort2_mag')
         assert flag in ['node', 'elem'], flag
         flag, flag_type = self.get_oug2_flag()
         node_id = self.nonlinear_factor
 
         #ntotal = 56  # 14 * 4
-
         assert self.obj is not None
         assert nnodes > 0
         #assert ndata % ntotal == 0
 
-        if self.use_vector and is_vectorized and 0:
-            pass
+        obj = self.obj
+        if self.use_vector and is_vectorized:
+            itime = obj.itime
+            n = nnodes * 4 * 14
+            itotal = obj.itotal
+            itotal2 = itotal + nnodes
+
+            floats =np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
+            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+
+            self._set_sort2_time(obj, self._analysis_code_fmt, ints, floats)
+            obj.node_gridtype[itime, 0] = node_id
+            obj.node_gridtype[itime, 1] = ints[0, 1].copy()
+
+            mag = floats[:, 2:8]
+            phase = floats[:, 8:]
+            rtheta = np.radians(phase)
+            real_imag = mag * (np.cos(rtheta) + 1.j * np.sin(rtheta))
+            obj.data[itotal:itotal2, obj.itime, :] = real_imag
+            obj.itotal = itotal2
         else:
             n = 0
             s = Struct(self._endian + self._analysis_code_fmt + b'i12f')
@@ -1272,7 +1306,7 @@ class OP2Common(Op2Codes, F06Writer):
                 rx = polar_to_real_imag(rxr, rxi)
                 ry = polar_to_real_imag(ryr, ryi)
                 rz = polar_to_real_imag(rzr, rzi)
-                self.obj.add_sort2(freq, node_id, grid_type, tx, ty, tz, rx, ry, rz)
+                obj.add_sort2(freq, node_id, grid_type, tx, ty, tz, rx, ry, rz)
                 n += 56
         return n
 
@@ -1285,13 +1319,30 @@ class OP2Common(Op2Codes, F06Writer):
 
         """
         if self.is_debug_file:
-            self.binary_debug.write('  _read_complex_table\n')
+            self.binary_debug.write('  _read_complex_table_sort2_imag\n')
+        self.log.info('_read_complex_table_sort2_imag')
+
         assert flag in ['node', 'elem'], flag
         flag, flag_type = self.get_oug2_flag()
         node_id = self.nonlinear_factor
 
-        if self.use_vector and is_vectorized and 0:
-            pass
+        if self.use_vector and is_vectorized:
+            itime = obj.itime
+            n = nnodes * 4 * 14
+            itotal = obj.itotal
+            itotal2 = itotal + nnodes
+
+            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
+            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+
+            self._set_sort2_time(obj, self._analysis_code_fmt, ints, floats)
+            obj.node_gridtype[itime, 0] = node_id
+            obj.node_gridtype[itime, 1] = ints[0, 1].copy()
+
+            real = floats[:, 2:8]
+            imag = floats[:, 8:]
+            obj.data[itotal:itotal2, obj.itime, :] = real + 1.j * imag
+            obj.itotal = itotal2
         else:
             n = 0
             #ntotal = 56  # 14 * 4
@@ -2018,13 +2069,13 @@ class OP2Common(Op2Codes, F06Writer):
         https://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html#arrays-dtypes-constructing
 
         """
-        self.fdtype = npdtype(self._uendian + 'f4')
-        self.idtype = npdtype(self._uendian + 'i4')
-        self.double_dtype = npdtype(self._uendian + 'd')
-        self.long_dtype = npdtype(self._uendian + 'i8')
-        #self.idtype = npdtype(self._uendian + 'i8')
+        self.fdtype = np.dtype(self._uendian + 'f4')
+        self.idtype = np.dtype(self._uendian + 'i4')
+        self.double_dtype = np.dtype(self._uendian + 'd')
+        self.long_dtype = np.dtype(self._uendian + 'i8')
+        #self.idtype = np.dtype(self._uendian + 'i8')
 
-        #self.sdtype = npdtype(self._uendian + '4s')
+        #self.sdtype = np.dtype(self._uendian + '4s')
         self.struct_i = Struct(self._endian + b'i')
         self.struct_3i = Struct(self._endian + b'3i')
         self.struct_8s = Struct(self._endian + b'8s')

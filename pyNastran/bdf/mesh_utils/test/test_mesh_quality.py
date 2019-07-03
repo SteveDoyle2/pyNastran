@@ -321,7 +321,7 @@ class TestMeshQuality(unittest.TestCase):
         assert eids_to_delete == [101], eids_to_delete
 
         #assert len(model.elements) == 0, model.elements
-        #os.remove(bdf_filename)
+        os.remove(bdf_filename)
 
     def test_fix_bad_quads(self):
         """split high interior angle quads"""

@@ -859,13 +859,74 @@ class Op2Codes:
         except KeyError:
             device = '???'
 
+        force_flux = self.get_force_flux(thermal)
+        disp_temp = self.get_disp_temp(thermal)
+        table_code, table = self.get_table_code_name(disp_temp, force_flux, stress_word)
+
+        msg = '--Table3Data--\n\n'
+        msg += "  device_code   = %-3s %s\n" % (self.device_code, device)
+        msg += "  analysis_code = %-3s %s\n" % (self.analysis_code, analysis)
+        msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, self.table_name_str, table)
+        msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
+
+        msg += "  sort_method   = %s\n" % self.sort_method
+        msg += "  sort_code     = %s\n" % self.sort_code
+        msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
+        msg += "    data_format = %-3s %s\n" % (self.sort_bits[0], sort_word1)
+        msg += "    sort_type   = %-3s %s\n" % (self.sort_bits[1], sort_word2)
+        msg += "    is_random   = %-3s %s\n" % (self.sort_bits[2], sort_word3)
+
+        random_code = self.random_code if hasattr(self, 'random_code') else 0
+        msg += "  random_code   = %-3s\n" % (random_code)
+
+        if element_type is not None:
+            if isinstance(element_type, str):
+                etype = element_type
+            else:
+                etype = self.get_element_type(element_type)
+            msg += "  element_type  = %-3s %s\n" % (element_type, etype)
+
+        if s_word:  # stress code
+            msg += "  s_code        = %-3s %s\n" % (s_code, s_word)
+        if thermal is not None:
+            msg += "  thermal       = %-3s %s\n" % (thermal, thermal_word)
+            if hasattr(self, 'thermal_bits'):
+                msg += "  thermal_bits  = %s\n" % str(self.thermal_bits)
+
+        if hasattr(self, 'num_wide'):
+            msg += "  num_wide      = %-3s\n" % self.num_wide
+        if hasattr(self, 'isubcase'):
+            msg += "  isubcase      = %-3s\n" % self.isubcase
+        else:
+            msg += "  ID            = %-3s\n" % self.ID
+
+        dt_names = [
+            'dt', 'time', 'mode', 'eign', 'cycle', 'mode2',
+            'freq', 'lsdvmn', 'eigr', 'eigi', 'lftsfq']
+        for name in dt_names:
+            if hasattr(self, name):
+                dvalue = getattr(self, name)
+                msg += "  %-6s        = %s\n" % (name, dvalue)
+
+
+        if self.is_msc:
+            msg += '  MSC Nastran\n'
+        else:
+            msg += '  NX Nastran\n'
+        #print msg
+        assert isinstance(self.format_code, int), type(self.format_code)
+        return msg
+
+    def get_force_flux(self, thermal=None):
         if thermal == 0:
             force_flux = 'Force'
         elif thermal == 1:
             force_flux = 'Flux'
         else:
             force_flux = 'Force (or Flux); thermal=%r' % thermal
+        return force_flux
 
+    def get_disp_temp(self, thermal):
         if thermal == 0:
             disp_temp = 'Displacement'
         elif thermal == 1:
@@ -874,7 +935,9 @@ class Op2Codes:
             #raise RuntimeError('thermal_code is not specified; thermal_code=None')
         else:
             disp_temp = 'Displacement/Temperature; thermal=%r' % thermal
+        return disp_temp
 
+    def get_table_code_name(self, disp_temp='', force_flux='', stress_word=''):
         table = '???'
         table_code = self.table_code
         if table_code in [501, 510, 511]:
@@ -887,7 +950,6 @@ class Op2Codes:
             table_code -= 800
         elif table_code in [901, 910, 911]:
             table_code -= 900
-
 
         if table_code == 1:
             table = "OUG - %s vector/scalar" % disp_temp
@@ -971,60 +1033,7 @@ class Op2Codes:
             table = "OGPKE - Grip point kinetic energy"
         else:
             table = '%s - Unknown' % self.table_name
-
-        msg = '--Table3Data--\n\n'
-        msg += "  device_code   = %-3s %s\n" % (self.device_code, device)
-        msg += "  analysis_code = %-3s %s\n" % (self.analysis_code, analysis)
-        msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, self.table_name_str, table)
-        msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
-
-        msg += "  sort_method   = %s\n" % self.sort_method
-        msg += "  sort_code     = %s\n" % self.sort_code
-        msg += "    sort_bits   = (%s, %s, %s)\n" % tuple(self.sort_bits)
-        msg += "    data_format = %-3s %s\n" % (self.sort_bits[0], sort_word1)
-        msg += "    sort_type   = %-3s %s\n" % (self.sort_bits[1], sort_word2)
-        msg += "    is_random   = %-3s %s\n" % (self.sort_bits[2], sort_word3)
-
-        random_code = self.random_code if hasattr(self, 'random_code') else 0
-        msg += "  random_code   = %-3s\n" % (random_code)
-
-        if element_type is not None:
-            if isinstance(element_type, str):
-                etype = element_type
-            else:
-                etype = self.get_element_type(element_type)
-            msg += "  element_type  = %-3s %s\n" % (element_type, etype)
-
-        if s_word:  # stress code
-            msg += "  s_code        = %-3s %s\n" % (s_code, s_word)
-        if thermal is not None:
-            msg += "  thermal       = %-3s %s\n" % (thermal, thermal_word)
-            if hasattr(self, 'thermal_bits'):
-                msg += "  thermal_bits  = %s\n" % str(self.thermal_bits)
-
-        if hasattr(self, 'num_wide'):
-            msg += "  num_wide      = %-3s\n" % self.num_wide
-        if hasattr(self, 'isubcase'):
-            msg += "  isubcase      = %-3s\n" % self.isubcase
-        else:
-            msg += "  ID            = %-3s\n" % self.ID
-
-        dt_names = [
-            'dt', 'time', 'mode', 'eign', 'cycle', 'mode2',
-            'freq', 'lsdvmn', 'eigr', 'eigi', 'lftsfq']
-        for name in dt_names:
-            if hasattr(self, name):
-                dvalue = getattr(self, name)
-                msg += "  %-6s        = %s\n" % (name, dvalue)
-
-
-        if self.is_msc:
-            msg += '  MSC Nastran\n'
-        else:
-            msg += '  NX Nastran\n'
-        #print msg
-        assert isinstance(self.format_code, int), type(self.format_code)
-        return msg
+        return table_code, table
 
     @property
     def table_name_str(self):

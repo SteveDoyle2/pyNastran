@@ -90,13 +90,25 @@ class GEOM3(GeomCommon):
         }
 
     def _read_accel(self, data, n):
-        """ACCEL"""
+        """
+        Record - ACCEL(7401,74,601)
+
+        Word Name Type Description
+        1 SID     I Load set identification number
+        2 CID     I Coordinate system identification number
+        3 N(3)   RS Components of a vector coordinate system defined by CID
+        6 DIR CHAR1 Component direction of acceleration variation
+        7 LOCi   RS Location along direction DIR in coordinate system
+        8 VALi   RS The load scale factor associated with location LOCi
+        Words 7 through 8 repeat until (-1,-1) occurs.
+        """
+        self.show_data(data)
         self.log.info('skipping ACCEL in GEOM3')
         return len(data)
 
     def _read_accel1(self, data, n):
         """
-        ACCEL1(7401,74,601)
+        ACCEL1(7501,75,602)
 
         1 SID    I Load set identification number
         2 CID    I Coordinate system identification number

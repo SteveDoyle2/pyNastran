@@ -217,6 +217,11 @@ class TestCuttingPlane(unittest.TestCase):
         #show = False
         if IS_MATPLOTLIB:
             plot_inertia(y, A, I, EI, avg_centroid, show=show)
+            os.remove('normalized_inertia_vs_span.png')
+            os.remove('area_vs_span.png')
+            os.remove('amoi_vs_span.png')
+            os.remove('e_amoi_vs_span.png')
+            os.remove('cg_vs_span.png')
 
         #bdf_merge(plane_bdf_filenames, bdf_filename_out='merge.bdf', renumber=True,
                   #encoding=None, size=8, is_double=False, cards_to_skip=None,
@@ -227,12 +232,12 @@ class TestCuttingPlane(unittest.TestCase):
         os.remove('equivalent_beam_model.bdf')
         os.remove('cut_data_vs_span.csv')
         #os.remove('cut_face.csv')
-        if IS_MATPLOTLIB:
-            os.remove('area_vs_span.png')
-            os.remove('amoi_vs_span.png')
+        #if IS_MATPLOTLIB:
+            #os.remove('area_vs_span.png')
+            #os.remove('amoi_vs_span.png')
             #os.remove('normalized_inertia_vs_span.png')
-            os.remove('cg_vs_span.png')
-            os.remove('e_amoi_vs_span.png')
+            #os.remove('cg_vs_span.png')
+            #os.remove('e_amoi_vs_span.png')
 
     def test_cut_plate_eids(self):
         """recover element ids"""

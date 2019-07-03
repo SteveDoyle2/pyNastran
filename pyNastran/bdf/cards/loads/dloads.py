@@ -648,7 +648,7 @@ class RLOAD1(DynamicLoad):
         return self.comment + print_card_16(card)
 
 
-def _cross_reference_excite_id_backup(self, model, msg):
+def _cross_reference_excite_id_backup(self, model, msg):  # pragma: no cover
     """not quite done...not sure how to handle the very odd xref
 
     EXCITEID may refer to one or more static load entries (FORCE, PLOADi, GRAV, etc.).
@@ -699,39 +699,49 @@ def _cross_reference_excite_id_backup(self, model, msg):
         model.log.warning('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
         raise RuntimeError('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
 
+def get_lseqs_by_excite_id(model, excite_id):
+    from collections import defaultdict
+
+    # get the lseqs that correspond to the correct EXCITE_ID id
+    lseq_sids = defaultdict(list)
+    for sid, loads in model.load_combinations.items():
+        for load in loads:
+            if load.type == 'LSEQ':
+                if excite_id == load.excite_id:
+                    print(load)
+                    lseq_sids[sid].append(load)
+    #for sid, loads in lseqs.items():
+        #print(sid, loads)
+    return lseq_sids
+
 def _cross_reference_excite_id(self, model, msg):
     """not quite done...not sure how to handle the very odd xref
 
     EXCITEID may refer to one or more static load entries (FORCE, PLOADi, GRAV, etc.).
     """
-    from collections import defaultdict
-
-    # get the lseqs that correspond to the correct EXCITE_ID id
-    lseqs = defaultdict(list)
-    for sid, loads in model.load_combinations.items():
-        for load in loads:
-            if load.type == 'LSEQ':
-                if self.excite_id == load.excite_id:
-                    lseqs[sid].append(load)
-    #for sid, loads in lseqs.items():
-        #print(sid, loads)
+    #print('*' * 80)
+    lseq_sids = get_lseqs_by_excite_id(model, self.excite_id)
 
     # find all the LOADSETs in the model
     # LOADSETs reference LSEQs by sid
     valid_lseqs = []
-    if lseqs:
+    if lseq_sids:
         # get the sid for the LSEQ
         case_control = model.case_control_deck
         if case_control is not None:
             #print('cc = %r' % case_control)
             for key, subcase in sorted(model.case_control_deck.subcases.items()):
                 if 'LOADSET' in subcase:
-                    lseq_id = subcase['LOADSET'][0]
-                    valid_lseqs.append(lseq_id)
-        valid_lseqs = list(set(valid_lseqs))
-        valid_lseqs.sort()
-        #print('valid_lseqs =', valid_lseqs)
-        assert len(valid_lseqs) == 1, 'valid_lseqs=%s' % valid_lseqs
+                    lseq_sid = subcase['LOADSET'][0]
+                    if lseq_sid in lseq_sids:
+                        print('adding LOADSET = %i' % lseq_sid)
+                        valid_lseqs.append(lseq_sid)
+        if valid_lseqs:
+            valid_lseqs = list(set(valid_lseqs))
+            valid_lseqs.sort()
+            #assert len(valid_lseqs) == 1, 'valid_lseqs=%s' % valid_lseqs
+    #print('valid_lseqs =', valid_lseqs)
+    #  can Case Control LOADSET be substituded for Case Control DLOAD id?
 
     excite_id_ref = []
     if self.excite_id in model.loads:
@@ -747,6 +757,10 @@ def _cross_reference_excite_id(self, model, msg):
         darea_ref = model.DAREA(self.excite_id, msg=msg)
         excite_id_ref.append(darea_ref)
 
+    if self.excite_id in model.bcs:
+        # CONV, TEMPBC
+        excite_id_ref = model.bcs[self.excite_id]
+
     if self.excite_id in model.dload_entries:  #  this is probably wrong...
         # this is probably wrong...
         # it was added to pass TestLoads.test_loads_nonlinear_thermal1, but
@@ -756,23 +770,26 @@ def _cross_reference_excite_id(self, model, msg):
 
     #  handles LSEQ
     if valid_lseqs:
-        lseq_id = valid_lseqs[0]
-        excite_id_ref += lseqs[lseq_id]
-        #print("*******")
+        for lseq_sid in valid_lseqs:
+            excite_id_ref += lseq_sids[lseq_sid]
 
     #  what about SPCD?
 
     if len(excite_id_ref) == 0:
+        print(model.get_bdf_stats())
         print('excite_id = %s' % self.excite_id)
         print('  loads  =', list(model.loads.keys()))
         print('  dareas =', list(model.dareas.keys()))
+        print('  bcs =', list(model.bcs.keys()))
         print('  dloads =', list(model.dloads.keys()))
         print('  dload_entries =', list(model.dload_entries.keys()))
         print('  load_combinations =', list(model.load_combinations.keys())) #  what about LSEQ
-        if lseqs:
-            print('  lseqs = [%s]; sids=%s' % (self.excite_id, list(lseqs.keys())))
+        if lseq_sids:
+            sids = list(lseq_sids.keys())
+            print('  lseq_excite_ids=%s; lseq_sids=%s; valid_lseqs=%s' % (
+                self.excite_id, sids, valid_lseqs))
         else:
-            print('  lseqs = []')
+            print('  lseq_sids = []')
         model.log.warning('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
         raise RuntimeError('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
 

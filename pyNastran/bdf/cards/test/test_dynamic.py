@@ -167,6 +167,9 @@ class TestDynamic(unittest.TestCase):
     def test_tload(self):
         """tests DLOAD, TLOAD1, TLOAD2, TABLED2 cards"""
         model = BDF(debug=False)
+        model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
+                                nxref_errors=0, stop_on_xref_error=True)
+
         sid = 2
         excite_id = 20
         delay = 0
@@ -179,6 +182,14 @@ class TestDynamic(unittest.TestCase):
                                   us0=0.0, vs0=0.0, comment='')
         tload1 = model.add_tload1(sid, excite_id, tid, delay=0, Type='ACC',
                                   us0=0.0, vs0=0.0, comment='')
+
+        nid = 100
+        model.add_grid(nid, [0., 0., 0.])
+
+        darea_id = excite_id
+        component = 4
+        scale = 1.
+        model.add_darea(darea_id, nid, component, scale, comment='')
 
         sid = 3
         excite_id = 30
@@ -194,6 +205,11 @@ class TestDynamic(unittest.TestCase):
         tload2 = model.add_tload2(sid, excite_id, delay=0, Type='A',
                                   T1=0., T2=1., frequency=0., phase=0.,
                                   c=0., b=0., us0=0., vs0=0., comment='')
+
+        darea_id = excite_id
+        component = 4
+        scale = 1.
+        model.add_darea(darea_id, nid, component, scale, comment='')
 
         delay_id = 2
         nodes = 100
@@ -274,7 +290,7 @@ class TestDynamic(unittest.TestCase):
         model2.uncross_reference()
         #print(out)
         #print(outs)
-        save_load_deck(model)
+        save_load_deck(model, run_renumber=False)
 
     def test_rload(self):
         """tests DLOAD, RLOAD1, RLOAD2, TABLED2 cards"""
@@ -393,7 +409,7 @@ class TestDynamic(unittest.TestCase):
         model2.uncross_reference()
         #print(out)
         #print(outs)
-        save_load_deck(model)
+        save_load_deck(model, run_renumber=False)
 
     def test_ascre(self):
         """tests ASCRE, DELAY, DPHASE, TABLED2"""

@@ -1809,8 +1809,8 @@ class OP2Reader:
                     mode, mach, velocity, density, flutter_id)
                 #print(msg)
                 #self.log.debug(msg)
-            else:
-                self.log.debug('R1TABRG response response_type=%s not supported' % response_type)
+            #else:
+                #self.log.debug('R1TABRG response response_type=%s not supported' % response_type)
                 #raise NotImplementedError(response_type)
             assert len(out) == 14, len(out)
         #self.response1_table[self._count] = out

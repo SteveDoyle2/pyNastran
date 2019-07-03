@@ -287,6 +287,8 @@ class RBAR(RigidElement):
         if (cna, cnb) == ('', ''):
             cna = '123456'
             #cnb = ''
+        elif (cna, cnb) == ('123456', '0'):
+            cnb = ''
 
         self.cna = cna
         self.cnb = cnb
@@ -308,8 +310,9 @@ class RBAR(RigidElement):
 
     def validate(self):
         ncna = len(self.cna)
-        ncnb = len(self.cnb)
         ncma = len(self.cma)
+
+        ncnb = len(self.cnb)
         ncmb = len(self.cmb)
 
         nindependent = ncna + ncnb
@@ -317,33 +320,55 @@ class RBAR(RigidElement):
         independent = self.cna + self.cnb
         dependent = self.cma + self.cmb
 
-        msgi = ''
-        msg1 = ''
-        if nindependent != 6:
-            msg = 'nindependent=%s; cna=%r (%s) cnb=%r (%s)\n' % (
-                nindependent, self.cna, ncna, self.cnb, ncnb)
-            raise RuntimeError(msg)
+        independent_a = set()
+        independent_b = set()
+        dependent_a = set()
+        dependent_b = set()
+        msg = ''
         for comp in '123456':
-            if comp not in independent:
-                msgi += '  comp=%s is not independent\n' % (comp)
-        if msgi:
-            msg1 = 'cna=%r cnb=%r\n%s' % (self.cna, self.cnb, msgi)
-
-        msgi2 = ''
-        msg2 = ''
-        if nindependent != 6:
-            msg = 'ndependent=%s; cma=%r (%s) cmb=%r (%s)\n' % (
-                ndependent, self.cma, ncma, self.cmb, ncmb)
-            raise RuntimeError(msg)
-        for comp in '123456':
-            if comp not in dependent:
-                msgi2 += '  comp=%s is not dependent\n' % (comp)
-        if msgi2:
-            msg2 = 'cma=%r cmb=%r\n%s' % (self.cma, self.cmb, msgi2)
-
-        msg = msg1 + msg2
+            if comp in self.cna:
+                independent_a.add(comp)
+            if comp in self.cnb:
+                independent_b.add(comp)
+            if comp in self.cma:
+                if comp in independent_a:
+                    msg += 'dof=%s on node %s is both independent and dependent\n' % (self.ga)
+                dependent_a.add(comp)
+            if comp in self.cmb:
+                if comp in independent_b:
+                    msg += 'dof=%s on node %s is both independent and dependent\n' % (self.gb)
+                dependent_b.add(comp)
         if msg:
-            raise RuntimeError(msg)
+            raise RuntimeError(msg + str(self))
+
+        if 0:  # pragma: no cover
+            msgi = ''
+            msg1 = ''
+            if nindependent != 6:
+                msg1 = 'nindependent=%s; cna=%r (%s) cnb=%r (%s)\n' % (
+                    nindependent, self.cna, ncna, self.cnb, ncnb)
+                #raise RuntimeError(msg)
+            for comp in '123456':
+                if comp not in independent:
+                    msgi += '  comp=%s is not independent\n' % (comp)
+            if msgi:
+                msg1 += 'cna=%r cnb=%r\n%s' % (self.cna, self.cnb, msgi)
+
+            msgi2 = ''
+            msg2 = ''
+            if nindependent != 6:
+                msg = 'ndependent=%s; cma=%r (%s) cmb=%r (%s)\n' % (
+                    ndependent, self.cma, ncma, self.cmb, ncmb)
+                raise RuntimeError(msg)
+            for comp in '123456':
+                if comp not in dependent:
+                    msgi2 += '  comp=%s is not dependent\n' % (comp)
+            if msgi2:
+                msg2 = 'cma=%r cmb=%r\n%s' % (self.cma, self.cmb, msgi2)
+
+            msg = msg1 + msg2
+            if msg:
+                raise RuntimeError(msg + str(self))
 
     @classmethod
     def add_card(cls, card, comment=''):
