@@ -584,8 +584,8 @@ def _mirror_aero(model, nid_offset, plane):
         caeros = []
         for unused_caero_id, caero in model.caeros.items():
             if caero.type == 'CAERO1':
-                assert caero.lspan == 0, caero
-                assert caero.lchord == 0, caero
+                # the AEFACTs are assumed to be the same on the left and right side
+                # I think the spanwise direction will be fine
                 lchord = caero.lchord
                 nchord = caero.nchord
                 lspan = caero.lspan

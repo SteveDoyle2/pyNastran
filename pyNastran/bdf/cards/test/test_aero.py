@@ -445,6 +445,11 @@ class TestAero(unittest.TestCase):
 
     def test_caero1_1(self):
         """checks the CAERO1/PAERO1/AEROS/AEFACT card"""
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
+                                nxref_errors=0, stop_on_xref_error=True)
+
         eid = 1
         pid = 10
         cp = 4
@@ -458,8 +463,6 @@ class TestAero(unittest.TestCase):
         p4 = [2., 3., 4.]
         x43 = 1.
 
-        log = SimpleLogger(level='warning')
-        model = BDF(log=log)
         caero1a = CAERO1.add_card(BDFCard(['CAERO1', eid, pid, cp, nspan, nchord, lspan, lchord,
                                            igid, ] + p1 + [x12] + p4 + [x43]))
         caero1a.validate()
@@ -529,6 +532,18 @@ class TestAero(unittest.TestCase):
                                           p1, p2, p3, p4,
                                           cp=cp, spanwise='z', comment='')
         caero1_no_coord.get_points()
+
+        # caero1c is set as eid=1
+        model.validate()
+        # ------------------------------------------------
+        eid =  1000
+        igroup = 1
+        lspan_lchord = 1
+        fractions = np.linspace(0., 1., num=11)
+        model.add_aefact(lspan_lchord, fractions, comment='')
+        model.add_caero1(eid, pid, igroup, p1, x12, p4, x43, cp=0,
+                         nspan=0, lspan=lspan_lchord,
+                         nchord=0, lchord=lspan_lchord, comment='')
 
         paero = PAERO1(pid, caero_body_ids=None, comment='')
         paero.validate()
@@ -665,6 +680,7 @@ class TestAero(unittest.TestCase):
         caero1_2x3._init_ids()
         points = caero1_2x3.get_points()
         assert len(points) == 4
+        save_load_deck(model)
 
 
     def test_spline1(self):
@@ -991,6 +1007,7 @@ class TestAero(unittest.TestCase):
         p2 = [1., 2., 3.]
         caero2_set_points.set_points([p1, p2])
         assert np.allclose(caero2_set_points.x12, 1.), caero2_set_points.x12
+        save_load_deck(model)
 
     def test_caero3_1(self):
         """checks the CAERO3/PAERO3"""
@@ -1950,6 +1967,7 @@ class TestAero(unittest.TestCase):
         model.add_card(['TRIM', sid, mach, q, labels[0], uxs[0]], 'TRIM', comment='$ trim')
         model.validate()
         model._verify_bdf(xref=False)
+        save_load_deck(model)
 
     def test_trim_02(self):
         """checks the TRIM card with a 2.5g pullup"""
@@ -2042,6 +2060,7 @@ class TestAero(unittest.TestCase):
 
         model2.uncross_reference()
         model2.safe_cross_reference()
+        save_load_deck(model)
 
     def test_gust(self):
         """checks the GUST card"""
@@ -2183,7 +2202,6 @@ class TestAero(unittest.TestCase):
         model.cross_reference()
         model._verify_bdf(xref=True)
         model.uncross_reference()
-
         save_load_deck(model)
 
     def test_bah_plane_bdf(self):

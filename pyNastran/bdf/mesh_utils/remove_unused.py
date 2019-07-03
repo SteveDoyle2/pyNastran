@@ -69,7 +69,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'PGAP', 'PBUSH1D', 'PFAST', 'PVISC', 'PMASS',
 
         'FLFACT', 'FLUTTER', 'DLINK', 'DDVAL', 'DIVERG', 'GUST',
-        'AELINK', 'AELIST', 'TRIM', 'PAERO1', 'AEFACT', 'AESTAT',
+        'AELINK', 'AELIST', 'TRIM', 'TRIM2', 'PAERO1', 'AEFACT', 'AESTAT',
 
         'BCTPARA', 'BCRPARA', 'BSURF', 'BSURFS', 'BCTADD',
         'BCTSET',

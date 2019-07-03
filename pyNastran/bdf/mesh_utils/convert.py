@@ -1064,26 +1064,7 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
 
     xyz_aefacts = set()
     for caero in model.caeros.values():
-        if caero.type == 'CAERO1':
-            caero.p1 *= xyz_scale
-            caero.p4 *= xyz_scale
-            caero.x12 *= xyz_scale
-            caero.x43 *= xyz_scale
-        elif caero.type == 'CAERO2':
-            caero.p1 *= xyz_scale
-            caero.x12 *= xyz_scale
-            #: ID of an AEFACT Bulk Data entry for slender body division
-            #: points; used only if NSB is zero or blank. (Integer >= 0)
-            if caero.lsb > 0:
-                xyz_aefacts.add(caero.lsb)
-
-            #: ID of an AEFACT data entry containing a list of division
-            #: points for interference elements; used only if NINT is zero
-            #: or blank. (Integer > 0)
-            if caero.lint > 0:
-                xyz_aefacts.add(caero.lint)
-        else:
-            raise NotImplementedError('\n' + str(caero))
+        _scale_caero(caero, xyz_scale, xyz_aefacts)
 
     for paero in model.paeros.values():
         if paero.type in ['PAERO1']:
@@ -1166,6 +1147,32 @@ def _convert_aero(model, xyz_scale, time_scale, weight_scale):
     for flfact_id in flfact_velocity_ids: # velocity
         flfact = model.flfacts[flfact_id]
         flfact.factors *= velocity_scale
+
+def _scale_caero(caero, xyz_scale, xyz_aefacts):
+    try:
+        if caero.type == 'CAERO1':
+            caero.p1 *= xyz_scale
+            caero.p4 *= xyz_scale
+            caero.x12 *= xyz_scale
+            caero.x43 *= xyz_scale
+        elif caero.type == 'CAERO2':
+            caero.p1 *= xyz_scale
+            caero.x12 *= xyz_scale
+            #: ID of an AEFACT Bulk Data entry for slender body division
+            #: points; used only if NSB is zero or blank. (Integer >= 0)
+            if caero.lsb > 0:
+                xyz_aefacts.add(caero.lsb)
+
+            #: ID of an AEFACT data entry containing a list of division
+            #: points for interference elements; used only if NINT is zero
+            #: or blank. (Integer > 0)
+            if caero.lint > 0:
+                xyz_aefacts.add(caero.lint)
+        else:
+            raise NotImplementedError('\n' + str(caero))
+    except TypeError:  # pragma: no cover
+        print(caero.get_stats())
+        raise
 
 def _convert_optimization(model, xyz_scale, mass_scale, weight_scale):
     """

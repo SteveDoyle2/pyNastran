@@ -1442,6 +1442,11 @@ class CAERO1(BaseCard):
         return CAERO1(eid, pid, igroup, p1, x12, p4, x43,
                       cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment='')
 
+    def _finalize_hdf5(self, encoding):
+        """hdf5 helper function"""
+        self.p1 = np.asarray(self.p1)
+        self.p4 = np.asarray(self.p4)
+
     def __init__(self, eid, pid, igroup, p1, x12, p4, x43,
                  cp=0, nspan=0, lspan=0, nchord=0, lchord=0, comment=''):
         """
@@ -1530,6 +1535,13 @@ class CAERO1(BaseCard):
     def validate(self):
         msg = ''
         is_failed = False
+        if not isinstance(self.p1, np.ndarray):
+            msg += 'p1=%s and must be a numpy array\n' % (self.p1)
+            is_failed = True
+        if not isinstance(self.p4, np.ndarray):
+            msg += 'p1=%s and must be a numpy array\n' % (self.p1)
+            is_failed = True
+
         if self.x12 <= 0.:
             msg += 'X12=%s and must be greater than or equal to 0\n' % (self.x12)
             is_failed = True
@@ -2016,6 +2028,8 @@ class CAERO1(BaseCard):
         assert self.x12 >= 0., 'p1=%s p2=%s' % (self.p1, p2)
         assert self.x43 >= 0., 'p4=%s p3=%s' % (self.p4, p3)
         assert self.x12 > 0. or self.x43 > 0., 'points=%s' % (points)
+        self.p1 = np.asarray(self.p1)
+        self.p4 = np.asarray(self.p4)
 
     def shift(self, dxyz):
         """shifts the aero panel"""
@@ -2316,6 +2330,9 @@ class CAERO2(BaseCard):
             return self.nsb
         return len(self.lsb_ref.fractions) # AEFACT
 
+    def _init_ids(self, dtype='int32'):
+        self.box_ids = np.arange(0, self.nboxes, dtype=dtype)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -2334,6 +2351,7 @@ class CAERO2(BaseCard):
         if self.nint == 0:
             self.lint_ref = model.AEFact(self.lint, msg=msg)
         self.ascid_ref = model.Acsid(msg=msg)
+        self._init_ids()
 
     def safe_cross_reference(self, model, xref_errors):
         msg = ', which is required by CAERO2 eid=%s' % self.eid
@@ -2346,6 +2364,7 @@ class CAERO2(BaseCard):
         if self.nint == 0:
             self.lint_ref = model.safe_aefact(self.lint, self.eid, xref_errors, msg=msg)
         self.ascid_ref = model.safe_acsid(msg=msg)
+        self._init_ids()
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
