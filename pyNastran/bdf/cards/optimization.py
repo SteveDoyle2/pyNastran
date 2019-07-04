@@ -2181,6 +2181,9 @@ class DRESP2(OptConstraint):
         self.dequation = dequation
         self.region = region
         self.method = method
+
+        # Constants used when FUNC = BETA or FUNC = MATCH in combination with METHOD = BETA
+        # MSC 2016.1 Defaults: C1 = 1.0, C2=0.005, and C3=10.0)
         self.c1 = c1
         self.c2 = c2
         self.c3 = c3
@@ -2236,6 +2239,9 @@ class DRESP2(OptConstraint):
         dequation = integer_or_string(card, 3, 'dequation_id')
         region = integer_or_blank(card, 4, 'region')
         method = string_or_blank(card, 5, 'method', 'MIN')
+
+        # MSC 2005   Defaults: C1=100., C2=.005)
+        # MSC 2016.1 Defaults: C1=1., C2=.005, C3=10.)
         c1 = double_or_blank(card, 6, 'c1', 1.)
         c2 = double_or_blank(card, 7, 'c2', 0.005)
         c3 = double_or_blank(card, 8, 'c3', 10.)
@@ -2435,11 +2441,19 @@ class DRESP2(OptConstraint):
 
     def repr_fields(self):
         method = set_blank_if_default(self.method, 'MIN')
-        c1 = set_blank_if_default(self.c1, 100.)
-        c2 = set_blank_if_default(self.c2, 0.005)
+        c1 = None
+        c2 = None
+        c3 = None
+        if self.method == 'BETA':
+            if 'BETA' in self.func or 'MATCH' in  self.func:
+                # MSC 2005   Defaults: C1=100., C2=.005)
+                # MSC 2016.1 Defaults: C1=1., C2=.005, C3=10.)
+                c1 = set_blank_if_default(self.c1, 100.)
+                c2 = set_blank_if_default(self.c2, 0.005)
+                c3 = set_blank_if_default(self.c3, 10.)
 
         list_fields = ['DRESP2', self.dresp_id, self.label, self.DEquation(),
-                       self.region, method, c1, c2, self.c3]
+                       self.region, method, c1, c2, c3]
         list_fields += self._pack_params()
         return list_fields
 

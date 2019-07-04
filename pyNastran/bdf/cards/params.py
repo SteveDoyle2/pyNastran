@@ -6,7 +6,8 @@ defines the following card:
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.assign_type import (
-    integer, double, integer_or_blank, double_or_blank, string, string_or_blank)
+    integer, double, integer_or_blank, double_or_blank, string, string_or_blank,
+    integer_double_string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 
@@ -259,7 +260,7 @@ INT_WORDS_1 = {
     'SEQOUT', 'SESEF', 'SIGNB', 'SIZE', 'SMALL', 'SNORMPRT', 'SOLADJC',
     'STRUCTMP', 'SUBID', 'SUBSKP', 'SUPER', 'TDAMP', 'TEMPMATE',
     'TESTNEG', 'TESTNO', 'TORSIN', 'TSTATIC', 'UNUSED', 'USETPRT',
-    'USETSEL', 'VMOPT', 'XFLAG', 'XYUNIT',
+    'USETSEL', 'VMOPT', 'XFLAG', 'XYUNIT', 'OPPHIB',
 }
 FLOAT_PARAMS = {
     'AUNITS', 'CHIMERA', 'EPSHT', 'EPPRT', 'G', 'GFL', 'K6ROT', 'MAXRATIO',
@@ -422,15 +423,13 @@ class PARAM(BaseCard):
 
         #-------------------------------------------------------------
         else:
-            raise NotImplementedError(card)
-
-        #else:
-            #n = 2
-            #value1 = integer_double_string_or_blank(card, 2, 'value1')
-            #value2 = integer_double_string_or_blank(card, 3, 'value2')
-            #if value2 is None:
-                #value = value1
-                #n = 1
+            #raise NotImplementedError(card)
+            n = 2
+            value1 = integer_double_string_or_blank(card, 2, 'value1')
+            value2 = integer_double_string_or_blank(card, 3, 'value2')
+            if value2 is None:
+                value = value1
+                n = 1
 
         if value is None:
             # n=2 or blank

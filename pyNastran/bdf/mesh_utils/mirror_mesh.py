@@ -11,6 +11,7 @@ This file defines:
         log=None, debug=True)
 
 """
+from typing import Union
 import numpy as np
 
 from pyNastran.bdf.cards.loads.static_loads import (
@@ -21,7 +22,8 @@ from pyNastran.bdf.cards.aero.aero import CAERO1, SPLINE1
 from pyNastran.bdf.cards.bdf_sets import SET1 #, SET3
 from pyNastran.bdf.bdf import BDF, read_bdf
 
-def get_model(bdf_filename, log=None, debug=True):
+def get_model(bdf_filename: Union[str, BDF],
+              log=None, debug: bool=True):
     """helper method"""
     if isinstance(bdf_filename, BDF):
         model = bdf_filename
@@ -34,8 +36,8 @@ def get_model(bdf_filename, log=None, debug=True):
                          debug=debug, mode='msc')
     return model
 
-def bdf_mirror_plane(bdf_filename, plane, mirror_model=None,
-                     log=None, debug=True, use_nid_offset=True):
+def bdf_mirror_plane(bdf_filename: Union[str, BDF], plane, mirror_model=None,
+                     log=None, debug: bool=True, use_nid_offset: bool=True):
     """mirrors a model about an arbitrary plane"""
     model = get_model(bdf_filename, log=log, debug=debug)
     if mirror_model is None:
@@ -48,7 +50,8 @@ def bdf_mirror_plane(bdf_filename, plane, mirror_model=None,
     return model, mirror_model, nid_offset, eid_offset
 
 
-def bdf_mirror(bdf_filename, plane='xz', log=None, debug=True):
+def bdf_mirror(bdf_filename: Union[str, BDF],
+               plane: str='xz', log=None, debug: bool=True):
     """
     Mirrors the model about the symmetry plane
 
@@ -81,9 +84,10 @@ def bdf_mirror(bdf_filename, plane='xz', log=None, debug=True):
     _mirror_aero(model, nid_offset, plane=plane)
     return model, nid_offset, eid_offset
 
-def write_bdf_symmetric(bdf_filename, out_filename=None, encoding=None,
-                        size=8, is_double=False,
-                        enddata=None, close=True, plane='xz', log=None):
+def write_bdf_symmetric(bdf_filename: Union[str, BDF],
+                        out_filename=None, encoding=None,
+                        size: int=8, is_double: bool=False,
+                        enddata=None, close: bool=True, plane: str='xz', log=None):
     """
     Mirrors the model about the symmetry plane
 
@@ -144,7 +148,7 @@ def write_bdf_symmetric(bdf_filename, out_filename=None, encoding=None,
                     interspersed=False, enddata=enddata, close=close)
     return model, nid_offset, eid_offset
 
-def _mirror_nodes(model, plane='xz'):
+def _mirror_nodes(model: BDF, plane: str='xz'):
     """
     Mirrors the GRIDs
 
@@ -552,7 +556,7 @@ def _mirror_loads(model, nid_offset=0, eid_offset=0):
         if loads_new:
             loads += loads_new
 
-def _mirror_aero(model, nid_offset, plane):
+def _mirror_aero(model, nid_offset: int, plane: str='xz'):
     """
     Mirrors the aero elements
 
@@ -561,7 +565,8 @@ def _mirror_aero(model, nid_offset, plane):
       - doesn't consider sideslip
      - CAERO1
       - doesn't consider sideslip
-      - doesn't consider lspan/lchord
+      - considers lchord/lspan/nchord/nspan
+     - CAERO2
      - SPLINE1
      - SET1
 
@@ -591,11 +596,17 @@ def _mirror_aero(model, nid_offset, plane):
                 lspan = caero.lspan
                 nspan = caero.nspan
                 p1 = caero.p1.copy()
-                p1[1] *= -1.
-                x12 = caero.x12
                 p4 = caero.p4.copy()
-                p4[1] *= -1.
+                x12 = caero.x12
                 x43 = caero.x43
+                if plane == 'xz': # flip the y
+                    p1[1] *= -1.
+                    p4[1] *= -1.
+                elif  plane == 'xy':
+                    p1[2] *= -1.
+                    p4[2] *= -1.
+                else:  # pragma: no cover
+                    raise NotImplementedError('plane=%r not supported in CAERO1' % plane)
                 eid2 = caero.eid + caero_id_offset
                 caero_new = CAERO1(eid2, caero.pid, caero.igroup,
                                    p1, x12, p4, x43,
@@ -606,9 +617,8 @@ def _mirror_aero(model, nid_offset, plane):
                 # we flip the normal so if we ever use W2GJ it's going to be consistent
                 caero_new.flip_normal()
                 caeros.append(caero_new)
-                #print(caero)
             else:  # pragma: no cover
-                model.log.error('skipping (only support CAERO1):\n%s' % caero.rstrip())
+                model.log.error('skipping (only supports CAERO1):\n%s' % caero.rstrip())
 
         for caero in caeros:
             model._add_caero_object(caero)
@@ -625,8 +635,6 @@ def _mirror_aero(model, nid_offset, plane):
         spline_max = max(model.splines)
         for unused_spline_id, spline in model.splines.items():
             if spline.type == 'SPLINE1':
-                #spline = SPLINE1(eid, caero, box1, box2, setg)
-
                 eid = spline.eid + spline_max
                 caero = spline.caero + caero_id_offset
                 method = spline.method
