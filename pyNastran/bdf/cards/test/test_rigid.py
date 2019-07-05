@@ -32,7 +32,7 @@ class TestRigid(unittest.TestCase):
 
     def test_rbe3_02(self):
         """RBE3 Gmi/Cmi default"""
-        model = BDF()
+        model = BDF(debug=None, log=None, mode='msc')
         model.add_grid(1, [0.,0.,0])
         model.add_grid(4, [1.,0.,0])
         model.add_grid(5, [0.,1.,0])
@@ -40,6 +40,7 @@ class TestRigid(unittest.TestCase):
         rbe3 = model.add_rbe3(eid=1, refgrid=1, refc=1, weights=[.1, .5, 3.], comps=['123']*3,
                               Gmi=None, Cmi=None, Gijs=[4, 5, 6])
         rbe3.write_card()
+        save_load_deck(model)
 
     #-------------------------------------------------------------------------
     def test_rbe2_01(self):
@@ -103,6 +104,20 @@ class TestRigid(unittest.TestCase):
                     117750: '123456', 117751: '123456', 117752: '123456', 109821: '123456'}
         assert dependent_nid_to_components == expected, dependent_nid_to_components
 
+        model = BDF(debug=None, log=None, mode='msc')
+        eid = rbe.eid
+        gn = rbe.gn
+        cm = rbe.cm
+        Gmi = rbe.Gmi
+        alpha = rbe.alpha
+        model.add_rbe2(eid, gn, cm, Gmi, alpha=alpha, comment='rbe2')
+        nids = [117752, 101899, 117766, 101898, 117748, 117765, 117764, 117763,
+                109821, 117743, 117744, 117750, 117751, 117745, 117746, 101902,
+                166007]
+        for nid in nids:
+            model.add_grid(nid, [0., 0., 0.])
+        save_load_deck(model)
+
     #-------------------------------------------------------------------------
     def test_rbe1_01(self):
         lines = [
@@ -162,6 +177,19 @@ class TestRigid(unittest.TestCase):
 
         dependent_nid_to_components = check_rbe(rbe)
         assert dependent_nid_to_components == {1002: '123', 1003: '123', 1004: '123', 1005: '123', 1006: '123', 1008: '123', 1009: '123', 1010: '123', 1011: '123', 1012: '123'}, dependent_nid_to_components
+
+        model = BDF(debug=None, log=None, mode='msc')
+        eid = rbe.eid
+        Gni = rbe.Gni
+        Cni = rbe.Cni
+        Gmi = rbe.Gmi
+        Cmi = rbe.Cmi
+        alpha = rbe.alpha
+        model.add_rbe1(eid, Gni, Cni, Gmi, Cmi, alpha=alpha, comment='rbe1')
+        nids = [1000, 1002, 1003, 1004, 1005, 1006, 1008, 1009, 1010, 1011, 1012]
+        for nid in nids:
+            model.add_grid(nid, [0., 0., 0.])
+        save_load_deck(model)
 
     def test_rbe1_03(self):
         lines = [
@@ -223,7 +251,21 @@ class TestRigid(unittest.TestCase):
         dependent_nid_to_components = check_rbe(rsscon)
         assert dependent_nid_to_components == {}, dependent_nid_to_components
 
-        save_load_deck(model, punch=True, run_save_load_hdf5=True)
+        save_load_deck(model, punch=True)
+
+    def test_rbar(self):
+        """tests an RBAR"""
+        model = BDF(debug=False, log=None, mode='msc')
+        eid = 100
+        nids = [10, 20]
+        cna = '123'
+        cnb = '12'
+        cma = '456'
+        cmb = '3456'
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [0., 0., 0.])
+        model.add_rbar(eid, nids, cna, cnb, cma, cmb, alpha=0., comment='rbar')
+        save_load_deck(model)
 
 
 

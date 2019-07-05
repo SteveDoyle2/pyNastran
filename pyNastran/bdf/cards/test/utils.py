@@ -4,7 +4,7 @@ from io import StringIO
 import inspect
 import numpy as np
 from cpylog import get_logger
-from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.delete_bad_elements import element_quality
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.convert import convert
@@ -105,11 +105,14 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
     if run_renumber:
         renumber('model2.bdf', model.log)
         if run_mirror:
-            # we put embed this under renumber to prevent modifying an
+            # we put this under renumber to prevent modifying an
             # existing model to prevent breaking tests
             #
             # shouldn't have any effect model2.bdf
-            bdf_mirror('model2.bdf', plane='xz', log=model.log)
+            model_mirrored = bdf_mirror('model2.bdf', plane='xz', log=model.log)[0]
+            model_mirrored.write_bdf('mirrored2.bdf')
+            read_bdf('mirrored2.bdf', log=model.log)
+            os.remove('mirrored2.bdf')
     os.remove('model2.bdf')
 
     if model.elements and run_quality:
