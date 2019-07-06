@@ -87,7 +87,8 @@ before_install:
 
 # per http://conda.pydata.org/docs/travis.html
 install:
-  - echo "python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas"
+  # atlas
+  - echo "python=$TRAVIS_PYTHON_VERSION ${NUMPY} pandas"
   - sudo apt-get update
   - sudo apt-get install gfortran
 
