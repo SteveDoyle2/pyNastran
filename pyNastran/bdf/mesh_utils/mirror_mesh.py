@@ -236,15 +236,16 @@ def _mirror_nodes_plane(model, mirror_model, plane, use_nid_offset=True):
 def _plane_to_iy(plane):
     """gets the index fo the mirror plane"""
     plane = plane.strip().lower()
-    if plane == 'yz':
+    plane_sorted =  ''.join(sorted(set(plane)))
+    if plane_sorted == 'yz':
         iy = 0
-    if plane == 'xz':
+    if plane_sorted == 'xz':
         iy = 1
-    elif plane == 'xy':
+    elif plane_sorted == 'xy':
         iy = 2
     else:  # pragma: no cover
         raise NotImplementedError("plane=%r and must be 'yz', 'xz', or 'xy'." % plane)
-    return iy, plane
+    return iy, plane_sorted
 
 def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
     """
@@ -258,11 +259,14 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
        3d : ???
        missing : CVISC, CTRIAX, CTRIAX6, CQUADX, CQUADX8, CCONEAX
     rigid_elements:
-       loaded: RBE2, RBE3
-       missing: RBAR, RBAR1
+       loaded: RBE2, RBE3, RBAR
+       missing: RBAR1
     mass_elements:
        loaded: CONM2
        missing CONM1, CMASS1, CMASS2, CMASS3, CMASS4
+    plotels:
+       loaded: PLOTEL
+       missing: ???
 
     Notes
     -----
@@ -273,6 +277,7 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
     eid_max_elements = 0
     eid_max_masses = 0
     eid_max_rigid = 0
+    eid_max_plotels = 0
     if use_eid_offset:
         if model.elements:
             eid_max_elements = max(model.elements.keys())
@@ -280,109 +285,12 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
             eid_max_masses = max(model.masses.keys())
         if model.rigid_elements:
             eid_max_rigid = max(model.rigid_elements.keys())
-    eid_offset = max(eid_max_elements, eid_max_masses, eid_max_rigid)
+        if model.plotels:
+            eid_max_plotels = max(model.plotels.keys())
+    eid_offset = max(eid_max_elements, eid_max_masses, eid_max_rigid, eid_max_plotels)
 
     if model.elements:
-        shells = {'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR'}
-        shell_nones = {'CTRIA6', 'CQUAD8', 'CQUAD', }
-        rods = {'CROD', 'CONROD', 'CTUBE'}
-        spring_dampers = {
-            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-        }
-
-        eid_offset = max(model.elements)
-        def _set_nodes(element, nodes):
-            try:
-                element.nodes = nodes
-            except AttributeError:
-                print(element.get_stats())
-                print(nodes)
-                raise
-
-        for eid, element in sorted(model.elements.items()):
-            etype = element.type
-            if etype in ['CHBDYG', 'CHBDYE']:
-                continue
-
-            nodes = element.node_ids
-            #try:
-                #nodes = [node_id + nid_offset for node_id in nodes]
-            #except TypeError:
-                #msg = 'cannot mirror %r eid=%s because None exists in nodes=%s' % (
-                    #element.type, eid, nodes)
-                #model.log.warning(msg)
-                #continue
-
-            eid_mirror = eid + eid_offset
-            fields = element.repr_fields()
-            fields[1] = eid_mirror
-            mirror_model.add_card(fields, etype)
-            element2 = mirror_model.elements[eid_mirror]
-            #print(element.get_stats())
-
-            if etype in shells:
-                nodes = [node_id + nid_offset for node_id in nodes]
-                element2.nodes = nodes
-                element.flip_normal() # nodes = nodes[::-1]
-            elif etype in shell_nones:
-                nodes = [node_id + nid_offset if node_id is not None else None
-                         for node_id in nodes]
-                element2.nodes = nodes
-                element.flip_normal() # nodes = nodes[::-1]
-            elif etype in rods:
-                nodes = [node_id + nid_offset for node_id in nodes]
-                element2.nodes = nodes
-            elif etype in ['CBAR', 'CBEAM']:
-                nodes = [node_id + nid_offset for node_id in nodes]
-                element2.nodes = nodes
-                g0 = element2.g0 + nid_offset if element2.g0 is not None else None
-                element2.g0 = g0
-            elif etype == 'CBEAM3':
-                element2.ga = nodes[0] + nid_offset
-                element2.gb = nodes[1] + nid_offset
-                g0 = element2.g0 + nid_offset if element2.g0 is not None else None
-                element2.g0 = g0
-
-            elif etype == 'CGAP':
-                #nodes = [node_id + nid_offset if node_id is not None else None
-                         #for node_id in nodes]
-                #_set_nodes(element2, nodes)
-                ga = element2.ga + nid_offset if element2.ga is not None else None
-                gb = element2.gb + nid_offset if element2.gb is not None else None
-                g0 = element2.g0 + nid_offset if element2.g0 is not None else None
-                element2.ga = ga
-                element2.gb = gb
-                element2.g0 = g0
-            elif etype == 'CBUSH1D':
-                ga = element2.ga + nid_offset if element2.ga is not None else None
-                gb = element2.gb + nid_offset if element2.gb is not None else None
-                element2.ga = ga
-                element2.gb = gb
-            elif etype == 'CFAST':
-                ga = element2.ga + nid_offset if element2.ga is not None else None
-                gb = element2.gb + nid_offset if element2.gb is not None else None
-                gs = element2.gs + nid_offset if element2.gs is not None else None
-                element2.ga = ga
-                element2.gb = gb
-                element2.gs = gs
-
-            elif etype == 'CCONEAX':
-                pass
-            elif etype in [spring_dampers]:
-                nodes = [node_id + nid_offset if node_id is not None else None for node_id in nodes]
-                _set_nodes(element2, nodes)
-                #print(nodes)
-                #element2.nodes = nodes
-            elif etype == 'GENEL':
-                element2.ul = element2.ul + nid_offset
-                element2.ud = element2.ud + nid_offset
-            else:
-                try:
-                    element2.nodes = nodes
-                except AttributeError:  # pragma: no cover
-                    print(element.get_stats())
-                    raise
+        __mirror_elements(model, mirror_model, nid_offset, eid_offset)
 
     if model.masses:
         for eid, element in sorted(model.masses.items()):
@@ -400,59 +308,177 @@ def _mirror_elements(model, mirror_model, nid_offset, use_eid_offset=True):
             else:  # pragma: no cover
                 #print(element.get_stats())
                 mirror_model.log.warning('skipping mass element:\n%s' % str(element))
+        del eid_mirror
 
     if model.rigid_elements:
-        for eid, rigid_element in sorted(model.rigid_elements.items()):
+        __mirror_rigid_elements(model, mirror_model, nid_offset, eid_offset)
+
+    if model.plotels:
+        for eid, element in sorted(model.plotels.items()):
             eid_mirror = eid + eid_offset
-            if rigid_element.type == 'RBE2':
-                Gmi_node_ids = rigid_element.Gmi_node_ids
-                Gn = rigid_element.Gn()
-                Gijs = None
-                ref_grid_id = None
-            elif rigid_element.type == 'RBE3':
-                Gmi_node_ids = rigid_element.Gmi_node_ids
-                Gijs = rigid_element.Gijs
-                ref_grid_id = rigid_element.ref_grid_id
-                Gn = None
-            elif rigid_element.type == 'RROD':
-                node_ids_mirror = [node_id + nid_offset for node_id in rigid_element.nodes]
-                model.add_rrod(eid_mirror, node_ids_mirror,
-                               cma=rigid_element.cma, cmb=rigid_element.cmb,
-                               alpha=rigid_element.alpha, comment='')
-                continue
-            elif rigid_element.type == 'RBAR':
-                node_ids_mirror = [node_id + nid_offset for node_id in rigid_element.nodes]
-                model.add_rbar(eid_mirror, node_ids_mirror,
-                               rigid_element.cna, rigid_element.cnb,
-                               rigid_element.cma, rigid_element.cmb,
-                               alpha=rigid_element.alpha, comment='')
-                continue
-            else:
-                model.log.warning('_write_elements_symmetric: %s not implemented' % rigid_element.type)
-                continue
-                #raise NotImplementedError(msg)
-
-            #if rigid_element.type in ['RBE2', 'RBE3']:
-            Gmi_node_ids_mirror = [node_id + nid_offset for node_id in Gmi_node_ids]
-            if Gn:
-                Gn_mirror = Gn + nid_offset
-            if Gijs:
-                Gijs_mirror = [[node_id + nid_offset for node_id in nodes] for nodes in Gijs]
-            if ref_grid_id:
-                ref_grid_id_mirror = ref_grid_id + nid_offset
-
-            if rigid_element.type == 'RBE2':
-                rigid_element2 = mirror_model.add_rbe2(eid_mirror, Gn_mirror, rigid_element.cm,
-                                                       Gmi_node_ids_mirror)
-            elif rigid_element.type == 'RBE3':
-                rigid_element2 = mirror_model.add_rbe3(
-                    eid_mirror, ref_grid_id_mirror, rigid_element.refc, rigid_element.weights,
-                    rigid_element.comps, Gijs_mirror
-                )
+            nodes = element.node_ids
+            if element.type == 'PLOTEL':
+                nodes = [node_id + nid_offset for node_id in nodes]
+                mirror_model.add_plotel(eid_mirror, nodes)
             else:  # pragma: no cover
-                mirror_model.log.warning('skipping:\n%s' % str(rigid_element))
+                mirror_model.log.warning('skipping:\n%s' % str(element))
 
     return eid_offset
+
+def __mirror_elements(model, mirror_model, nid_offset, eid_offset):
+    shells = {'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR'}
+    shell_nones = {'CTRIA6', 'CQUAD8', 'CQUAD', }
+    rods = {'CROD', 'CONROD', 'CTUBE'}
+    spring_dampers = {
+        'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
+        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+    }
+
+    def _set_nodes(element, nodes):
+        try:
+            element.nodes = nodes
+        except AttributeError:
+            print(element.get_stats())
+            print(nodes)
+            raise
+
+    for eid, element in sorted(model.elements.items()):
+        etype = element.type
+        if etype in ['CHBDYG', 'CHBDYE']:
+            continue
+
+        nodes = element.node_ids
+        #try:
+            #nodes = [node_id + nid_offset for node_id in nodes]
+        #except TypeError:
+            #msg = 'cannot mirror %r eid=%s because None exists in nodes=%s' % (
+                #element.type, eid, nodes)
+            #model.log.warning(msg)
+            #continue
+
+        eid_mirror = eid + eid_offset
+        fields = element.repr_fields()
+        fields[1] = eid_mirror
+        mirror_model.add_card(fields, etype)
+        element2 = mirror_model.elements[eid_mirror]
+        #print(element.get_stats())
+
+        if etype in shells:
+            nodes = [node_id + nid_offset for node_id in nodes]
+            element2.nodes = nodes
+            element.flip_normal() # nodes = nodes[::-1]
+        elif etype in shell_nones:
+            nodes = [node_id + nid_offset if node_id is not None else None
+                     for node_id in nodes]
+            element2.nodes = nodes
+            element.flip_normal() # nodes = nodes[::-1]
+        elif etype in rods:
+            nodes = [node_id + nid_offset for node_id in nodes]
+            element2.nodes = nodes
+        elif etype in ['CBAR', 'CBEAM']:
+            nodes = [node_id + nid_offset for node_id in nodes]
+            element2.nodes = nodes
+            g0 = element2.g0 + nid_offset if element2.g0 is not None else None
+            element2.g0 = g0
+        elif etype == 'CBEAM3':
+            element2.ga = nodes[0] + nid_offset
+            element2.gb = nodes[1] + nid_offset
+            g0 = element2.g0 + nid_offset if element2.g0 is not None else None
+            element2.g0 = g0
+
+        elif etype == 'CGAP':
+            #nodes = [node_id + nid_offset if node_id is not None else None
+                     #for node_id in nodes]
+            #_set_nodes(element2, nodes)
+            ga = element2.ga + nid_offset if element2.ga is not None else None
+            gb = element2.gb + nid_offset if element2.gb is not None else None
+            g0 = element2.g0 + nid_offset if element2.g0 is not None else None
+            element2.ga = ga
+            element2.gb = gb
+            element2.g0 = g0
+        elif etype == 'CBUSH1D':
+            ga = element2.ga + nid_offset if element2.ga is not None else None
+            gb = element2.gb + nid_offset if element2.gb is not None else None
+            element2.ga = ga
+            element2.gb = gb
+        elif etype == 'CFAST':
+            ga = element2.ga + nid_offset if element2.ga is not None else None
+            gb = element2.gb + nid_offset if element2.gb is not None else None
+            gs = element2.gs + nid_offset if element2.gs is not None else None
+            element2.ga = ga
+            element2.gb = gb
+            element2.gs = gs
+
+        elif etype == 'CCONEAX':
+            pass
+        elif etype in [spring_dampers]:
+            nodes = [node_id + nid_offset if node_id is not None else None for node_id in nodes]
+            _set_nodes(element2, nodes)
+            #print(nodes)
+            #element2.nodes = nodes
+        elif etype == 'GENEL':
+            element2.ul = element2.ul + nid_offset
+            element2.ud = element2.ud + nid_offset
+        else:
+            try:
+                element2.nodes = nodes
+            except AttributeError:  # pragma: no cover
+                print(element.get_stats())
+                raise
+    return
+
+def __mirror_rigid_elements(model, mirror_model, nid_offset, eid_offset):
+    for eid, rigid_element in sorted(model.rigid_elements.items()):
+        eid_mirror = eid + eid_offset
+        if rigid_element.type == 'RBE2':
+            Gmi_node_ids = rigid_element.Gmi_node_ids
+            Gn = rigid_element.Gn()
+            Gijs = None
+            ref_grid_id = None
+        elif rigid_element.type == 'RBE3':
+            Gmi_node_ids = rigid_element.Gmi_node_ids
+            Gijs = rigid_element.Gijs
+            ref_grid_id = rigid_element.ref_grid_id
+            Gn = None
+        elif rigid_element.type == 'RROD':
+            node_ids_mirror = [node_id + nid_offset for node_id in rigid_element.nodes]
+            mirror_model.add_rrod(
+                eid_mirror, node_ids_mirror,
+                cma=rigid_element.cma, cmb=rigid_element.cmb,
+                alpha=rigid_element.alpha, comment='')
+            continue
+        elif rigid_element.type == 'RBAR':
+            node_ids_mirror = [node_id + nid_offset for node_id in rigid_element.nodes]
+            mirror_model.add_rbar(
+                eid_mirror, node_ids_mirror,
+                rigid_element.cna, rigid_element.cnb,
+                rigid_element.cma, rigid_element.cmb,
+                alpha=rigid_element.alpha, comment='')
+            continue
+        else:
+            model.log.warning('_write_elements_symmetric: %s not implemented' % rigid_element.type)
+            continue
+            #raise NotImplementedError(msg)
+
+        #if rigid_element.type in ['RBE2', 'RBE3']:
+        Gmi_node_ids_mirror = [node_id + nid_offset for node_id in Gmi_node_ids]
+        if Gn:
+            Gn_mirror = Gn + nid_offset
+        if Gijs:
+            Gijs_mirror = [[node_id + nid_offset for node_id in nodes] for nodes in Gijs]
+        if ref_grid_id:
+            ref_grid_id_mirror = ref_grid_id + nid_offset
+
+        if rigid_element.type == 'RBE2':
+            rigid_element2 = mirror_model.add_rbe2(eid_mirror, Gn_mirror, rigid_element.cm,
+                                                   Gmi_node_ids_mirror)
+        elif rigid_element.type == 'RBE3':
+            rigid_element2 = mirror_model.add_rbe3(
+                eid_mirror, ref_grid_id_mirror, rigid_element.refc, rigid_element.weights,
+                rigid_element.comps, Gijs_mirror
+            )
+        else:  # pragma: no cover
+            mirror_model.log.warning('skipping:\n%s' % str(rigid_element))
 
 def _mirror_loads(model, nid_offset=0, eid_offset=0):
     """

@@ -203,5 +203,60 @@ class TestPyBDF(unittest.TestCase):
         bulk_data_lines = pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)[3]
         assert len(bulk_data_lines) == 5, bulk_data_lines
 
+    def test_unicode_errors(self):
+        """tests some error handling"""
+        bdf_filename = 'unicode.bdf'
+        with open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(
+                'CEND\n'
+                'SUBCASE 1\n'
+                '  DISP = ALL\n'
+                'BEGIN BULK\n'
+                'GRID,1,,0.,0.,0.\n'
+                'GRID.2,,1.,0.,0.\n'
+                'GRID,3,,1.,1.,0.\n'
+                'GRID,4,,0.,1.,0.\n'
+                '$ helló wörld from two\n'
+                'CQUAD4,1,2,3,4,5',
+                #'ENDDATA'
+            )
+
+        read_includes = True
+        dumplines = True
+        encoding = 'utf8'
+        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
+                           consider_superelements=False, log=None, debug=False)
+        with self.assertRaises(RuntimeError):
+            bulk_data_lines = pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)[3]
+
+        encoding = 'latin1'
+        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
+                           consider_superelements=False, log=None, debug=False)
+        bulk_data_lines = pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)[3]
+        os.remove(bdf_filename)
+
+        #--------------
+        bdf_filename = 'inc.inc'
+        with open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(
+                'GRID,3,,1.,1.,0.\n'
+                'GRID,4,,0.,1.,0.\n'
+                "INCLUDE 'main.bdf'\n"
+            )
+
+        bdf_filename = 'main.bdf'
+        with open(bdf_filename, 'w') as bdf_file:
+            bdf_file.write(
+                'GRID,1,,0.,0.,0.\n'
+                "INCLUDE 'inc.inc'\n"
+            )
+
+        pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
+                           consider_superelements=False, log=None, debug=False)
+        with self.assertRaises(RuntimeError):
+            bulk_data_lines = pybdf.get_lines(bdf_filename, punch=True, make_ilines=True)
+        os.remove('main.bdf')
+        os.remove('inc.inc')
+
 if __name__ == '__main__':
     unittest.main()
