@@ -12,8 +12,8 @@ language: python
   #  # https://github.com/travis-ci/travis-ci/issues/9815
   #  dist: xenial
   #  sudo: true
-#  - "3.5-dev" # 3.5 development branch
-#  - "nightly" # currently points to 3.6-dev
+#  - "3.8-dev" # 3.8 development branch
+#  - "nightly" # currently points to 3.7-dev
 
 # numpy:
 #  - 1.12 min for 3.6 (bumped for reqs)
@@ -123,7 +123,7 @@ install:
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
 #  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib pandas; fi
 
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas ${NUMPY} pandas
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION ${NUMPY} pandas
   - source activate test-environment
 #  - conda install python-coveralls
   - conda list

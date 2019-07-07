@@ -304,12 +304,15 @@ class RightClickTreeView(QTreeView2):
      - all the features of QTreeView2
      - a right click context menu with:
        - Clear Active Results
+       - Export Case
        - Apply Results to Fringe
        - Apply Results to Displacement
        - Apply Results to Vector
        - Delete Case
     """
-    def __init__(self, parent, data, choices, include_clear=True, include_delete=True,
+    def __init__(self, parent, data, choices,
+                 include_clear=True, include_export_case=True,
+                 include_delete=True,
                  include_results=True):
         QTreeView2.__init__(self, parent, data, choices)
         #
@@ -321,6 +324,10 @@ class RightClickTreeView(QTreeView2):
         if include_clear:
             self.clear = self.right_click_menu.addAction("Clear Results...")
             self.clear.triggered.connect(self.on_clear_results)
+
+        if include_export_case:
+            self.export_case = self.right_click_menu.addAction("Export Case...")
+            self.export_case.triggered.connect(self.on_export_case)
 
         if include_results:
             self.fringe = self.right_click_menu.addAction("Apply Results to Fringe...")
@@ -349,24 +356,37 @@ class RightClickTreeView(QTreeView2):
         }
         return is_clicked
 
+    @property
+    def sidebar(self):
+        return self.parent.parent
+
+    @property
+    def gui(self):
+        return self.sidebar.parent
+
     def on_clear_results(self):
         """clears the active result"""
-        self.parent.parent.on_clear_results()
+        self.sidebar.on_clear_results()
+
+    def on_export_case(self):
+        """exports the case to a file"""
+        unused_is_valid, icase = self.get_row()
+        self.gui.export_case_data(icase)
 
     def on_fringe(self):
         """applies a fringe result"""
         unused_is_valid, icase = self.get_row()
-        self.parent.parent.on_fringe(icase)
+        self.sidebar.on_fringe(icase)
 
     def on_disp(self):
         """applies a displacement result"""
         unused_is_valid, icase = self.get_row()
-        self.parent.parent.on_disp(icase)
+        self.sidebar.on_disp(icase)
 
     def on_vector(self):
         """applies a vector result"""
         unused_is_valid, icase = self.get_row()
-        self.parent.parent.on_vector(icase)
+        self.sidebar.on_vector(icase)
 
     def on_right_mouse_button(self):
         """interfaces with the right click menu"""

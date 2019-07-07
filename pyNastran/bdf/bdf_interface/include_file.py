@@ -14,8 +14,8 @@ IS_WINDOWS = 'nt' in os.name
 #is_mac = 'darwin' in os.name
 
 
-def get_include_filename(card_lines, include_dir='', is_windows=None):
-    # type: (List[str], str, Optional[bool]) -> str
+def get_include_filename(card_lines: List[str], include_dir: str='',
+                         is_windows: Optional[bool]=None) -> str:
     """
     Parses an INCLUDE file split into multiple lines (as a list).
 
@@ -76,8 +76,8 @@ def get_include_filename(card_lines, include_dir='', is_windows=None):
     return filename
 
 
-def split_filename_into_tokens(include_dir, filename, is_windows):
-    # type: (str, str, bool) -> Any
+def split_filename_into_tokens(include_dir: str, filename: str,
+                               is_windows: bool) -> Any:
     r"""
     Tokens are the individual components of paths
 
