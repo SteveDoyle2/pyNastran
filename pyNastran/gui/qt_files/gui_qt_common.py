@@ -1433,8 +1433,9 @@ class GuiQtCommon(GuiAttributes):
             try:
                 actors = self.label_actors[icase]
             except KeyError:
+                keys = list(self.label_actors.keys())
                 msg = 'Cant find label_actors for icase=%r; keys=%s' % (
-                    icase, self.label_actors.keys())
+                    icase, keys)
                 self.log.error(msg)
                 continue
             for actor in actors:

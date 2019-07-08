@@ -76,7 +76,7 @@ class MarkActions:
         return result_name, result_values, node_id, xyz
 
     def mark_elements_by_different_case(self, eids, icase_result: int, icase_to_apply: int,
-                                        show_command=True):
+                                        stop_on_failure: bool=False, show_command: bool=True):
         """
         Marks a series of elements with custom text labels
 
@@ -107,14 +107,18 @@ class MarkActions:
 
         """
         if icase_result not in self.gui.label_actors:
-            msg = 'icase_result=%r not in label_actors=[%s]' % (
-                icase_result, ', '.join(self.gui.label_actors))
+            actorsi = list(self.gui.label_actors.keys())
+            msg = 'icase_result=%r not in label_actors=%s' % (icase_result, actorsi)
+            if stop_on_failure:
+                raise RuntimeError(msg)
             self.gui.log_error(msg)
             return
         if icase_to_apply not in self.gui.label_actors:
-            msg = 'icase_to_apply=%r not in label_actors=[%s]' % (
-                icase_to_apply, ', '.join(self.gui.label_actors))
-            self.gui.log_error(msg)
+            actorsi = list(self.gui.label_actors.keys())
+            msg = 'icase_to_apply=%r not in label_actors=%s' % (icase_to_apply, actorsi)
+            if stop_on_failure:
+                raise RuntimeError(msg)
+            self.gui.log.error(msg)
             return
         label_actors = self.gui.label_actors[icase_to_apply]
 

@@ -1187,24 +1187,28 @@ class GuiAttributes:
             cell_id, world_position, icase=icase)
         return res_name, result_values, xyz
 
-    def mark_elements(self, eids, show_command: bool=True):
+    def mark_elements(self, eids,
+                      stop_on_failure: bool=False, show_command: bool=True):
         """mark the elements by the ElementID"""
         icase_result = 1 # ElementID
         icase_to_apply = self.icase
-        self.mark_elements_by_different_case(eids, icase_result, icase_to_apply,
-                                             show_command=False)
+        self.mark_elements_by_different_case(
+            eids, icase_result, icase_to_apply,
+            stop_on_failure=stop_on_failure, show_command=False)
         self.log_command(f'mark_elements(eids={eids})')
 
-    def mark_elements_by_case(self, eids, show_command: bool=True):
+    def mark_elements_by_case(self, eids,
+                              stop_on_failure: bool=False, show_command: bool=True):
         """mark the elements by the current case"""
         icase_result = self.icase
         icase_to_apply = self.icase
-        self.mark_elements_by_different_case(eids, icase_result, icase_to_apply,
-                                             show_command=False)
+        self.mark_elements_by_different_case(
+            eids, icase_result, icase_to_apply,
+            stop_on_failure=stop_on_failure, show_command=False)
         self.log_command(f'mark_elements_by_case(eids={eids})')
 
     def mark_elements_by_different_case(self, eids, icase_result: int, icase_to_apply: int,
-                                        show_command: bool=False):
+                                        stop_on_failure: bool=False, show_command: bool=False):
         """
         Marks a series of elements with custom text labels
 
@@ -1232,8 +1236,9 @@ class GuiAttributes:
           self.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
 
         """
-        self.mark_actions.mark_elements_by_different_case(eids, icase_result, icase_to_apply,
-                                                          show_command=show_command)
+        self.mark_actions.mark_elements_by_different_case(
+            eids, icase_result, icase_to_apply,
+            stop_on_failure=stop_on_failure, show_command=show_command)
 
     #def mark_max_elements(self, neids, show_command: bool=True):
         #"""mark the elements by the top/btm x elements"""

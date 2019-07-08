@@ -2010,13 +2010,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         build_map_centroidal_result(model, nid_map)
 
-        self.sidebar_nastran = ModelSidebar(self.gui)
-        self.sidebar_nastran.set_model(model)
+        if not IS_TESTING:
+            self.sidebar_nastran = ModelSidebar(self.gui)
+            self.sidebar_nastran.set_model(model)
 
-        self.res_dock_nastran = QDockWidget("Nastran Model", self)
-        self.res_dock_nastran.setObjectName("nastran_model")
-        self.res_dock_nastran.setWidget(self.sidebar_nastran)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock_nastran)
+            self.res_dock_nastran = QDockWidget("Nastran Model", self)
+            self.res_dock_nastran.setObjectName("nastran_model")
+            self.res_dock_nastran.setWidget(self.sidebar_nastran)
+            self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock_nastran)
+
         #self.res_dock.setWidget(self.res_widget)
         if plot:
             self.gui._finish_results_io2(model_name, [form], cases, reset_labels=reset_labels)

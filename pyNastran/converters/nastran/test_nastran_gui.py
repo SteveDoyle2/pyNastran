@@ -183,7 +183,8 @@ class TestNastranGUI(unittest.TestCase):
         icase_to_apply = 3
         test.label_actors[2] = []
         test.label_actors[3] = []
-        test.mark_actions.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
+        test.mark_actions.mark_elements_by_different_case(
+            eids, icase_result, icase_to_apply, stop_on_failure=True, )
 
         #eids = [1, 2]
         with self.assertRaises(NotImplementedError):
@@ -195,6 +196,13 @@ class TestNastranGUI(unittest.TestCase):
         text = 'cat'
         test.mark_actions.mark_nodes(nids, icase, text)
 
+        with self.assertRaises(RuntimeError): # icase_to_apply=166 doesn't exist
+            test.mark_elements(eids, stop_on_failure=True, show_command=True)
+        #test.mark_elements_by_case(eids, stop_on_failure=True, show_command=True)
+
+        test.icase = 2 # PropertyID
+        test.mark_elements(eids, stop_on_failure=True, show_command=True)
+        test.mark_elements_by_case(eids, stop_on_failure=True, show_command=True)
 
     def test_solid_shell_bar_02b(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
