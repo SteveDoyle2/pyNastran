@@ -6,7 +6,7 @@ from qtpy.QtWidgets import (
 
 import numpy as np
 from pyNastran.gui.utils.qt.pydialog import PyDialog
-from .modify_map import Var
+from .modify_map import Var, TransposedVars
 
 
 class ModifyMenu(PyDialog):
@@ -33,7 +33,9 @@ class ModifyMenu(PyDialog):
         for ivar, var in enumerate(variables):
             if isinstance(var, Var):
                 i = add_scalar_var(model, var, obj, grid, grid_objs, i)
-            elif isinstance(var, list):
+            elif isinstance(var, TransposedVars):
+                i = add_transposed_vars(model, var, obj, grid, grid_objs, i)
+            elif isinstance(var, list): # row-based list
                 i = add_list_var(model, var, obj, grid, grid_objs, i)
             else:
                 raise NotImplementedError(var)
@@ -265,16 +267,16 @@ def add_list_var(model, variables, obj, grid, grid_objs, i):
                     #grid_objsi.append(box)
                 #continue
             else:
-                box = QLineEdit()
-                if value is not None:
-                    box.setText(str(value))
+                box = set_qlineedit(value)
                 box.setEnabled(enabled)
 
         elif vartype == 'pulldown':
             pulldown_items = get_pulldown_items(model, var, value)
-            assert not isinstance(value, list), value
-            box, enabled = set_pulldown(model, var, value, enabled, pulldown_items)
-            box.setEnabled(enabled)
+            if isinstance(value, list):
+                raise NotImplementedError('pulldown (list)')
+            else:
+                box, enabled = set_pulldown(model, var, value, enabled, pulldown_items)
+                box.setEnabled(enabled)
 
         elif vartype == 'spinner':
             box = QSpinBox()
@@ -289,6 +291,80 @@ def add_list_var(model, variables, obj, grid, grid_objs, i):
     #self.var = var
     #self.pulldown_objs = pulldown_objs
     i += 1
+    return i
+
+def add_transposed_vars(model, variables_tranposed, obj, grid, grid_objs, i):
+    """
+    combines different variables with the same dimensions into a single table,
+    such as for the PCOMP
+
+    material_id, thickness, theta, SOUT
+    """
+    variables = variables_tranposed.variables
+    nvars = len(variables)
+    nrows = 0
+    #nrows = 5
+    #  combines multiple disjointed parameters into a single row
+    # [I1, I2, I12, J]
+    for ivar, var in enumerate(variables):
+        jcol = ivar
+
+        grid_objsi = []
+        grid_objs[var.name] = grid_objsi
+        label = QLabel(var.name + ':')
+
+        vartype = var.vartype
+        enabled = var.enabled
+        value = getattr(obj, var.var)
+
+        label.setEnabled(enabled)
+        grid.addWidget(label, i, jcol)
+
+        if vartype == 'lineedit':
+            if isinstance(value, (list, np.ndarray)):
+                nrows = max(nrows, len(value))
+                grid_objsi = []
+                for irow, valuei in enumerate(value):
+                    box = set_qlineedit(valuei)
+                    box.setEnabled(enabled)
+                    grid.addWidget(box, i+irow+2, jcol)
+                    grid_objsi.append(box)
+                grid_objs[var.name] = grid_objsi
+            else:
+                #box = set_qlineedit(value)
+                #box.setEnabled(enabled)
+                raise NotImplementedError('lineedit (scalar)')
+
+        elif vartype == 'pulldown':
+            pulldown_items = get_pulldown_items(model, var, value)
+            if isinstance(value, list):
+                grid_objsi = []
+                nrows = max(nrows, len(value))
+                for irow, valuei in enumerate(value):
+                    box, enabled_actual = set_pulldown(model, var, valuei, enabled, pulldown_items)
+                    box.setEnabled(enabled_actual)
+                    grid.addWidget(box, i+irow+2, jcol)
+                    grid_objsi.append(box)
+                grid_objs[var.name] = grid_objsi
+            else:
+                raise NotImplementedError('pulldown (scalar)')
+                #box, enabled_actual = set_pulldown(model, var, value, enabled, pulldown_items)
+                #box.setEnabled(enabled_actual)
+
+        #elif vartype == 'spinner':
+            #box = QSpinBox()
+            #box.setValue(value)
+            #box.setEnabled(enabled)
+        else:  # pragma: no cover
+            raise NotImplementedError(vartype)
+        #grid.addWidget(box, i+irow+1, jcol)
+        #grid_objsi.append(box)
+
+    #self.name = name
+    #self.var = var
+    #self.pulldown_objs = pulldown_objs
+    #i += 1
+    i += nrows + 1
     return i
 
 def set_qlineedit(value):

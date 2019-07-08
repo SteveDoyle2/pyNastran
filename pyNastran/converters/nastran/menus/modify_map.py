@@ -16,6 +16,9 @@ class Var:
         return (f'Var(name={self.name}, var={self.var}, vartype={self.vartype}, '
                 f'pulldown_objs={self.pulldown_objs}, enabled={self.enabled}, required={self.required})')
 
+class TransposedVars:
+    def __init__(self, variables):
+        self.variables = variables
 
 shell_ptypes = ['PSHELL', 'PCOMP']
 bar_ptypes = ['PBAR', 'PBARL']
@@ -114,10 +117,12 @@ PROPERTIES_MAP = {
     ],
     'PCOMP' : [
         Var('Property ID', 'pid', enabled=False),
-        Var('Material ID', 'mids', vartype='pulldown', pulldown_objs='materials'),
-        Var('Material Angle, Theta', 'thetas'),
-        Var('Thickness', 'thicknesses'),
-        Var('SOUT', 'souts', vartype='pulldown', pulldown_objs=['YES', 'NO']),
+        TransposedVars([
+            Var('Material ID', 'mids', vartype='pulldown', pulldown_objs='materials'),
+            Var('Material Angle, Theta', 'thetas'),
+            Var('Thickness', 'thicknesses'),
+            Var('SOUT', 'souts', vartype='pulldown', pulldown_objs=['YES', 'NO']),
+        ]),
         Var('TRef', 'tref', vartype='lineedit'),
         Var('lam', 'lam', vartype='lineedit', required=False),
         Var('ft', 'ft', vartype='lineedit', required=False),
@@ -171,6 +176,7 @@ PROPERTIES_MAP = {
         Var('Beam Type', 'beam_type', vartype='pulldown', pulldown_objs=bar_types, enabled=False),
         Var('Group', 'group', vartype='lineedit', required=False),
 
+        #TransposedVars([
         Var('SOUT', 'so', vartype='pulldown', pulldown_objs=['YES', 'NO']),
         Var('x/xb', 'xxb', vartype='lineedit'),
         Var('nsm', 'nsm', vartype='lineedit', required=False),
@@ -194,9 +200,11 @@ MATERIALS_MAP = {
         Var('Material ID', 'mid', enabled=False),
         Var("E11", 'e11', vartype='lineedit'),
         Var("E22", 'e22', vartype='lineedit'),
-        Var("G12", 'g12', vartype='lineedit'),
-        Var("G1z", 'g1z', vartype='lineedit'),
-        Var("G2z", 'g2z', vartype='lineedit'),
+        [
+            Var("G12", 'g12', vartype='lineedit'),
+            Var("G1z", 'g1z', vartype='lineedit'),
+            Var("G2z", 'g2z', vartype='lineedit'),
+        ],
         Var("nu12", 'nu12', vartype='lineedit'),
 
         Var('Density', 'rho', vartype='lineedit'),
