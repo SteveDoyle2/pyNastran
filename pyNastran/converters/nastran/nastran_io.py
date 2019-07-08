@@ -45,6 +45,9 @@ elif qt_version == 'pyside2':
 else:
     raise NotImplementedError(qt_version)
 
+from qtpy import QtCore
+from qtpy.QtWidgets import QDockWidget
+
 import vtk
 from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkQuadraticTriangle, vtkQuadraticQuad, vtkQuadraticTetra,
@@ -78,12 +81,12 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 
-from pyNastran.converters.nastran.wildcards import IS_H5PY, GEOM_METHODS_BDF
-from pyNastran.converters.nastran.geometry_helper import (
-    NastranGeometryHelper, get_material_arrays, get_suport_node_ids)
-from pyNastran.converters.nastran.results_helper import NastranGuiResults, _get_times
-from pyNastran.converters.nastran.displacements import (
-    ForceTableResults, ElementalTableResults)
+
+from .wildcards import IS_H5PY, GEOM_METHODS_BDF
+from .geometry_helper import NastranGeometryHelper, get_material_arrays, get_suport_node_ids
+from .results_helper import NastranGuiResults, _get_times
+from .displacements import ForceTableResults, ElementalTableResults
+from .menus.setup_model_sidebar import ModelSidebar
 
 from pyNastran.op2.op2 import OP2
 #from pyNastran.f06.f06_formatting import get_key0
@@ -2006,6 +2009,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
         build_map_centroidal_result(model, nid_map)
+
+        self.sidebar_nastran = ModelSidebar(self.gui)
+        self.sidebar_nastran.set_model(model)
+
+        self.res_dock_nastran = QDockWidget("Nastran Model", self)
+        self.res_dock_nastran.setObjectName("nastran_model")
+        self.res_dock_nastran.setWidget(self.sidebar_nastran)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.res_dock_nastran)
+        #self.res_dock.setWidget(self.res_widget)
         if plot:
             self.gui._finish_results_io2(model_name, [form], cases, reset_labels=reset_labels)
         else:

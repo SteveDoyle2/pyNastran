@@ -75,7 +75,8 @@ class MarkActions:
         assert not isinstance(xyz, int), xyz
         return result_name, result_values, node_id, xyz
 
-    def mark_elements_by_different_case(self, eids, icase_result, icase_to_apply):
+    def mark_elements_by_different_case(self, eids, icase_result: int, icase_to_apply: int,
+                                        show_command=True):
         """
         Marks a series of elements with custom text labels
 
@@ -87,6 +88,8 @@ class MarkActions:
             the case to draw the result from
         icase_to_apply : int
             the key in label_actors to slot the result into
+        show_command : bool; default=True
+            should the command be shown
 
         TODO: fix the following
         correct   : applies to the icase_to_apply
@@ -113,22 +116,27 @@ class MarkActions:
                 icase_to_apply, ', '.join(self.gui.label_actors))
             self.gui.log_error(msg)
             return
+        label_actors = self.gui.label_actors[icase_to_apply]
 
         eids = np.unique(eids)
         unused_neids = len(eids)
-        #centroids = np.zeros((neids, 3), dtype='float32')
         ieids = np.searchsorted(self.gui.element_ids, eids)
         #print('ieids = ', ieids)
 
-        for cell_id in ieids:
+        cell_ids = ieids
+        #cell_centroids
+        unused_result_name, result_values = self.get_result_by_cell_ids(
+            cell_ids, icase=icase_result)
+        for cell_id, result_value in zip(cell_ids, result_values):
             centroid = self.gui.cell_centroid(cell_id)
-            unused_result_name, result_values, unused_xyz = self.get_result_by_cell_id(
-                cell_id, centroid, icase_result)
-            texti = '%s' % result_values
+            #unused_result_name, result_values, unused_xyz = self.get_result_by_cell_id(
+                #cell_id, centroid, icase_result)
+            texti = '%s' % result_value
             xi, yi, zi = centroid
-            self.gui.label_actors[icase_to_apply].append(self.create_annotation(texti, xi, yi, zi))
-        self.gui.log_command('mark_elements_by_different_case(%s, %s, %s)' % (
-            eids, icase_result, icase_to_apply))
+            label_actors.append(self.create_annotation(texti, xi, yi, zi))
+        if show_command:
+            self.gui.log_command('mark_elements_by_different_case(%s, %s, %s)' % (
+                eids, icase_result, icase_to_apply))
         self.gui.vtk_interactor.Render()
 
     def get_result_by_cell_id(self, cell_id, world_position, icase=None):
@@ -211,6 +219,27 @@ class MarkActions:
             #VTK_QUADRATIC_PYRAMID = 27
             raise NotImplementedError(msg)
         return res_name, result_values, xyz
+
+    def get_result_by_cell_ids(self, cell_ids, icase=None):
+        """should handle multiple cell_ids"""
+        if icase is None:
+            icase = self.gui.icase_fringe
+        case_key = self.gui.case_keys[icase] # int for object
+        case = self.gui.result_cases[case_key]
+
+        (obj, (i, res_name)) = case
+        unused_subcase_id = obj.subcase_id
+        case = obj.get_result(i, res_name)
+
+        try:
+            result_values = case[cell_ids]
+        except IndexError:
+            msg = ('case[cell_id] is out of bounds; length=%s\n'
+                   'result_name=%r cell_id=%r case_key=%r\n' % (
+                       len(case), res_name, cell_ids, case_key))
+            raise IndexError(msg)
+
+        return res_name, result_values
 
     def highlight_nodes_elements(self, nids=None, eids=None,
                                  representation='wire',

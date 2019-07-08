@@ -3,6 +3,7 @@ creates:
  - QTreeView2 - allows for semi-easy access to the QTreeView
  - RightClickTreeView - adds some right click support for results
  - GenericRightClickTreeView - used for more general right click support
+
 """
 from functools import partial
 from qtpy import QtGui
@@ -15,6 +16,7 @@ class QTreeView2(QTreeView):
     creates a QTreeView with:
      - a nice-ish way to extract the location in the tree
      - key press delete support
+
     """
     def __init__(self, parent, data, choices):
         self.parent = parent
@@ -32,6 +34,7 @@ class QTreeView2(QTreeView):
          - delete: delete result cases
          - enter/return: apply result
          - up/down/left/right: navigate the tree
+
         """
         #if event.key() == QtCore.Qt.Key_Escape:
             #self.close()
@@ -50,7 +53,7 @@ class QTreeView2(QTreeView):
 
     def remove_rows(self, rows):
         """
-        We just hide the row to delete things to prevent refreshing
+        We hide the row to delete things to prevent refreshing
         the window and changing which items have been expanded
 
         Parameters
@@ -89,6 +92,7 @@ class QTreeView2(QTreeView):
         # delete Min Edge Length
         data[0][5][1] = ('Min Edge Length', 6, [])
         >>> remove_rows([0, 5, 1])
+
         """
         # find the row the user wants to delete
         data = self.data
@@ -212,6 +216,7 @@ class QTreeView2(QTreeView):
                 0 - the location (e.g. node, centroid)
                 1 - icase
                 2 - []
+
         """
         # if there's only 1 data member, we don't need to extract the data id
         if self.single:
@@ -251,6 +256,7 @@ class GenericRightClickTreeView(QTreeView2):
        - Apply Results to Displacement
        - Apply Results to Vector
        - Delete Case
+
     """
     def __init__(self, parent, data, choices, actions, **kwargs):
         QTreeView2.__init__(self, parent, data, choices)
@@ -258,25 +264,26 @@ class GenericRightClickTreeView(QTreeView2):
         # TODO: create a menu that only has clear/normals/fringe/delete
         #       if there is no transient result
         #
-        print(data)
-        print(choices)
-        print('kwargs', kwargs)
+        #print(data)
+        #print(choices)
+        #print('kwargs', kwargs)
         self.right_click_menu = QMenu()
 
-        def false_callback(callback_func, menu):
+        def false_callback(callback_func):
             """dont validate the click"""
             #print('false')
             #print('  ', callback_func)
             #print('  ', menu)
             callback_func()
 
-        def true_callback(callback_func, menu):
+        def true_callback(callback_func):
             """a validated callback returns the row"""
             #print('true')
             #print('  ', callback_func)
             #print('  ', menu)
             #print('  ', self)
             unused_is_valid, icase = self.get_row()
+            #print('callback =', callback_func)
             callback_func(icase)
 
         for (right_click_msg, callback_func, validate) in actions:
@@ -309,6 +316,7 @@ class RightClickTreeView(QTreeView2):
        - Apply Results to Displacement
        - Apply Results to Vector
        - Delete Case
+
     """
     def __init__(self, parent, data, choices,
                  include_clear=True, include_export_case=True,
@@ -358,10 +366,12 @@ class RightClickTreeView(QTreeView2):
 
     @property
     def sidebar(self):
+        """gets the sidebar"""
         return self.parent.parent
 
     @property
     def gui(self):
+        """get the MainWindow class"""
         return self.sidebar.parent
 
     def on_clear_results(self):
@@ -414,6 +424,7 @@ def get_many_cases(data):
 
     >>> data = [(u'Max Interior Angle', 8, [])]
     [8]
+
     """
     unused_name, case, rows = data
     if case is None:

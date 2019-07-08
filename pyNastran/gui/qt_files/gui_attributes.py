@@ -6,6 +6,7 @@ import os
 import sys
 import traceback
 from collections import OrderedDict
+from typing import List
 
 import numpy as np
 import vtk
@@ -264,9 +265,7 @@ class GuiAttributes:
         we won't unsupress logging at the end of the function.
         """
         def new_func(self, *args, **kwargs):
-            """
-            The actual function exec'd by the decorated function.
-            """
+            """The actual function exec'd by the decorated function."""
             performance_mode_initial = self.performance_mode
             if not performance_mode_initial:
                 self.performance_mode = True
@@ -296,6 +295,7 @@ class GuiAttributes:
             the new function name
         deprecated_version : float
             the version the method was first deprecated in
+
         """
         deprecated(old_name, new_name, deprecated_version, levels=[0])
 
@@ -393,9 +393,7 @@ class GuiAttributes:
     #-------------------------------------------------------------------
     def set_point_grid(self, name, nodes, elements, color,
                        point_size=5, opacity=1., add=True):
-        """
-        Makes a POINT grid
-        """
+        """Makes a POINT grid"""
         self.create_alternate_vtk_grid(name, color=color, point_size=point_size,
                                        opacity=opacity, representation='point')
 
@@ -420,9 +418,7 @@ class GuiAttributes:
 
     def set_quad_grid(self, name, nodes, elements, color,
                       line_width=5, opacity=1., representation='wire', add=True):
-        """
-        Makes a CQUAD4 grid
-        """
+        """Makes a CQUAD4 grid"""
         self.create_alternate_vtk_grid(name, color=color, line_width=line_width,
                                        opacity=opacity, representation=representation)
 
@@ -493,9 +489,7 @@ class GuiAttributes:
         self._script_path = script_path
 
     def set_icon_path(self, icon_path):
-        """
-        Sets the path to the icon directory where custom icons are found
-        """
+        """Sets the path to the icon directory where custom icons are found"""
         self._icon_path = icon_path
 
     def form(self):
@@ -668,9 +662,7 @@ class GuiAttributes:
             self.label_ids[icase] = set()
 
     def clear_labels(self):
-        """
-        This clears out all labels from all result cases.
-        """
+        """This clears out all labels from all result cases."""
         if len(self.label_actors) == 0:
             self.log.warning('No actors to clear')
             return
@@ -750,6 +742,7 @@ class GuiAttributes:
             displacemnt scale factor; true scale
 
         TODO: speed up by using existing values to skip update steps
+
         """
         self.legend_obj.on_update_legend(
             title=title, min_value=min_value, max_value=max_value,
@@ -790,6 +783,7 @@ class GuiAttributes:
                 red-green-blue array
         is_shown : bool
             show the scalar bar
+
         """
         if colormap is None:
             colormap = self.settings.colormap
@@ -818,9 +812,9 @@ class GuiAttributes:
             title, min_value, max_value, data_format))
 
     #---------------------------------------------------------------------------
-    def create_coordinate_system(self, coord_id, dim_max, label='',
+    def create_coordinate_system(self, coord_id: int, dim_max: float, label: str='',
                                  origin=None, matrix_3x3=None,
-                                 coord_type='xyz'):
+                                 coord_type: str='xyz'):
         """
         Creates a coordinate system
 
@@ -842,13 +836,14 @@ class GuiAttributes:
 
         .. todo::  coord_type is not supported ('xyz' ONLY)
         .. todo::  Can only set one coordinate system
+
         """
         self.tool_actions.create_coordinate_system(
             coord_id, dim_max, label=label,
             origin=origin, matrix_3x3=matrix_3x3,
             coord_type=coord_type)
 
-    def create_global_axes(self, dim_max):
+    def create_global_axes(self, dim_max: float):
         """creates the global axis"""
         cid = 0
         self.tool_actions.create_coordinate_system(
@@ -904,7 +899,7 @@ class GuiAttributes:
         #msg2 += msg
         self.setWindowTitle(msg)
 
-    def build_fmts(self, fmt_order, stop_on_failure=False):
+    def build_fmts(self, fmt_order: List[str], stop_on_failure: bool=False):
         """populates the formats that will be supported"""
         fmts = []
         for fmt in fmt_order:
@@ -946,7 +941,7 @@ class GuiAttributes:
     def model(self, model):
         self.models[self.name] = model
 
-    def _reset_model(self, name):
+    def _reset_model(self, name: str):
         """resets the grids; sets up alt_grids"""
         if hasattr(self, 'main_grids') and name not in self.main_grids:
             grid = vtk.vtkUnstructuredGrid()
@@ -1025,7 +1020,7 @@ class GuiAttributes:
         self.load_actions.on_load_results(out_filename=out_filename)
 
     @start_stop_performance_mode
-    def on_load_custom_results(self, out_filename=None, restype=None, stop_on_failure=False):
+    def on_load_custom_results(self, out_filename=None, restype=None, stop_on_failure: bool=False):
         """will be a more generalized results reader"""
         self.load_actions.on_load_custom_results(
             out_filename=out_filename, restype=restype, stop_on_failure=stop_on_failure)
@@ -1130,7 +1125,7 @@ class GuiAttributes:
         """used by the hidden_tools for Ctrl -"""
         self.on_set_font_size(self.settings.font_size - 1)
 
-    def on_set_font_size(self, font_size, show_command=True):
+    def on_set_font_size(self, font_size: int, show_command: bool=True):
         """changes the font size"""
         is_failed = True
         if not isinstance(font_size, int):
@@ -1192,7 +1187,24 @@ class GuiAttributes:
             cell_id, world_position, icase=icase)
         return res_name, result_values, xyz
 
-    def mark_elements_by_different_case(self, eids, icase_result, icase_to_apply):
+    def mark_elements(self, eids, show_command: bool=True):
+        """mark the elements by the ElementID"""
+        icase_result = 1 # ElementID
+        icase_to_apply = self.icase
+        self.mark_elements_by_different_case(eids, icase_result, icase_to_apply,
+                                             show_command=False)
+        self.log_command(f'mark_elements(eids={eids})')
+
+    def mark_elements_by_case(self, eids, show_command: bool=True):
+        """mark the elements by the current case"""
+        icase_result = self.icase
+        icase_to_apply = self.icase
+        self.mark_elements_by_different_case(eids, icase_result, icase_to_apply,
+                                             show_command=False)
+        self.log_command(f'mark_elements_by_case(eids={eids})')
+
+    def mark_elements_by_different_case(self, eids, icase_result: int, icase_to_apply: int,
+                                        show_command: bool=False):
         """
         Marks a series of elements with custom text labels
 
@@ -1218,8 +1230,15 @@ class GuiAttributes:
           icase_result = 22
           icase_to_apply = 25
           self.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
+
         """
-        self.mark_actions.mark_elements_by_different_case(eids, icase_result, icase_to_apply)
+        self.mark_actions.mark_elements_by_different_case(eids, icase_result, icase_to_apply,
+                                                          show_command=show_command)
+
+    #def mark_max_elements(self, neids, show_command: bool=True):
+        #"""mark the elements by the top/btm x elements"""
+    #def mark_min_elements(self, neids, show_command: bool=True):
+        #"""mark the elements by the top/btm x elements"""
 
     def mark_nodes(self, nids, icase, text):
         """
@@ -1239,6 +1258,7 @@ class GuiAttributes:
         self.mark_nodes(6, 0, 'min')
         self.mark_nodes([1, 6], 0, 'max')
         self.mark_nodes([1, 6], 0, ['max', 'min'])
+
         """
         self.mark_actions.mark_nodes(nids, icase, text)
 
@@ -1258,6 +1278,7 @@ class GuiAttributes:
         -------
         annotation : vtkBillboardTextActor3D
             the annotation object
+
         """
         annotation = self.mark_actions.create_annotation(text, x, y, z)
         return annotation
@@ -1367,6 +1388,7 @@ class GuiAttributes:
             the name for the user points
         color : (float, float, float)
             RGB values as 0.0 <= rgb <= 1.0
+
         """
         self.tool_actions.on_load_user_geom(csv_filename=csv_filename, name=name, color=color)
 
@@ -1386,6 +1408,7 @@ class GuiAttributes:
             the name for the user points
         color : (float, float, float)
             RGB values as 0.0 <= rgb <= 1.0
+
         """
         is_failed = self.tool_actions.on_load_csv_points(
             csv_filename=csv_filename, name=name, color=color)
@@ -1459,6 +1482,7 @@ class GuiAttributes:
         focal_point : (3, ) float ndarray
             The focal point
             [ 188.25109863 -7. -32.07858658]
+
         """
         self.view_actions.set_focal_point(focal_point)
 
@@ -1484,6 +1508,7 @@ class GuiAttributes:
             int : resolution increase factor
         show_msg : bool; default=True
             log the command
+
         """
         self.tool_actions.on_take_screenshot(fname=fname, magnify=magnify, show_msg=show_msg)
 
@@ -1528,6 +1553,7 @@ class GuiAttributes:
            i x j' -> k
            k x i -> j
            or it's like k'
+
         """
         self.camera_obj.on_set_camera_data(camera_data, show_log=show_log)
 
@@ -1623,6 +1649,7 @@ def _add_fmt(fmts, fmt, geom_results_funcs, data):
     data : function
         the outputs from ``get_nastran_wildcard_geometry_results_functions()``
         so 1 or more formats (macro_name, geo_fmt, geo_func, res_fmt, res_func)
+
     """
     msg = 'macro_name, geo_fmt, geo_func, res_fmt, res_func = data\n'
     msg += 'data = %s'

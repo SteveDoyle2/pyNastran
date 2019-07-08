@@ -41,24 +41,32 @@ class ModifyMenu(PyDialog):
             if vartype == 'lineedit':
                 if isinstance(value, (list, np.ndarray)):
                     for j, valuei in enumerate(value):
-                        box = QLineEdit(str(valuei))
+                        box = QLineEdit()
+                        if value is not None:
+                            box.setText(str(valuei))
                         box.setEnabled(enabled)
                         grid.addWidget(box, i, j+1)
                         grid_objsi.append(box)
                     continue
                 else:
-                    box = QLineEdit(str(value))
+                    box = QLineEdit()
+                    if value is not None:
+                        box.setText(str(value))
                     box.setEnabled(enabled)
             elif vartype == 'pulldown':
-                #box = QLineEdit(str(value))
-                pulldown = QComboBox()
-                objs_dict = getattr(model, var.pulldown_objs)
-                for idi, obji in sorted(objs_dict.items()):
-                    pulldown.addItem('%s %i' % (obji.type, idi))
-                enabled = enabled and len(objs_dict)
-                pulldown.setEnabled(enabled)
-                grid.addWidget(pulldown, i, 1)
-                grid_objsi.append(pulldown)
+                pulldown_items = get_pulldown_items(model, var, value)
+
+                if isinstance(value, (list, np.ndarray)):
+                    for j, valuei in enumerate(value):
+                        pulldown, enabled = set_pulldown(model, var, valuei, enabled, pulldown_items)
+                        pulldown.setEnabled(enabled)
+                        grid.addWidget(pulldown, i, j+1)
+                        grid_objsi.append(pulldown)
+                else:
+                    pulldown, enabled = set_pulldown(model, var, value, enabled, pulldown_items)
+                    pulldown.setEnabled(enabled)
+                    grid.addWidget(pulldown, i, 1)
+                    grid_objsi.append(pulldown)
                 continue
 
             elif vartype == 'spinner':
@@ -167,3 +175,68 @@ class ModifyMenu(PyDialog):
         font = QtGui.QFont()
         font.setPointSize(value)
         self.setFont(font)
+
+def get_pulldown_items(model, var, value):
+    pulldown_items = []
+    if var.pulldown_allow_zero:
+        pulldown_items.append('0')
+    if value is None:
+        return pulldown_items
+
+    pulldown_type_limit = var.pulldown_type_limit
+    pulldown_objs = var.pulldown_objs
+
+    if isinstance(pulldown_objs, str):
+        objs_dict = getattr(model, pulldown_objs)
+        if pulldown_type_limit:
+            for idi, obji in sorted(objs_dict.items()):
+                card_type = obji.type
+                if card_type in pulldown_type_limit:
+                    pulldown_items.append('%s %i' % (card_type, idi))
+        else:
+            for idi, obji in sorted(objs_dict.items()):
+                pulldown_items.append('%s %i' % (obji.type, idi))
+    elif isinstance(pulldown_objs, list):
+        # ['DBOX', 'TUBE', 'TUBE2', ...]
+        pulldown_items = pulldown_objs
+    else:  # pragma: no cover
+        raise NotImplementedError(var)
+    return pulldown_items
+
+def set_pulldown(model, var, value, enabled, pulldown_items):
+    pulldown = QComboBox()
+    #print('var.pulldown_objs =', var, var.pulldown_objs)
+    if value is None:
+        return pulldown, False
+
+    pulldown_objs = var.pulldown_objs
+    if isinstance(pulldown_objs, str):
+        objs_dict = getattr(model, pulldown_objs)
+        assert isinstance(objs_dict, dict), objs_dict
+        pulldown.addItems(pulldown_items)
+
+        if var.pulldown_allow_zero and value == 0:
+            name = '0'
+        else:
+            try:
+                obji = objs_dict[value]
+            except KeyError:
+                print(var)
+                values = list(objs_dict.keys())
+                print(values)
+                raise
+            name = '%s %i' % (obji.type, value)
+
+    elif isinstance(pulldown_objs, list):
+        # ['DBOX', 'TUBE', 'TUBE2', ...]
+        pulldown.addItems(pulldown_items)
+        name = value
+    else:  # pragma: no cover
+        raise NotImplementedError(var)
+    enabled = enabled and len(pulldown_items) > 1
+
+    # pyside
+    index = pulldown.findText(name)
+    #pulldown.setItemText(name)
+    pulldown.setCurrentIndex(index)
+    return pulldown, enabled

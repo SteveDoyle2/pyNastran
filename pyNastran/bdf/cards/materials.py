@@ -1710,7 +1710,8 @@ class MAT8(OrthotropicMaterial):
         'RHO' : 'rho', #6 : 'rho',
         'A1' : 'a1',
         'A2' : 'a2',
-        'A3' : 'a3',
+        #'A3' : 'a3',
+
         #'TREF' : 'tref', #8 : 'tref',
         #'E' : 'e', #3 : 'e',
         #'G' : 'g', #4 : 'g',
