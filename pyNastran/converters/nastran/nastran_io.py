@@ -2011,7 +2011,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         build_map_centroidal_result(model, nid_map)
 
         if not IS_TESTING:
-            self.sidebar_nastran = ModelSidebar(self.gui)
+            self.sidebar_nastran = ModelSidebar(self.gui, nastran_io=self)
             self.sidebar_nastran.set_model(model)
 
             self.res_dock_nastran = QDockWidget("Nastran Model", self)
@@ -2024,6 +2024,23 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.gui._finish_results_io2(model_name, [form], cases, reset_labels=reset_labels)
         else:
             self.gui._set_results([form], cases)
+
+    def update_caeros(self, obj):
+        """the update call for the ModifyMenu"""
+        model = self.model
+        xref_errors = {}
+        obj.uncross_reference()
+        obj.safe_cross_reference(model, xref_errors)
+
+        out = self.make_caeros(model)
+        (has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
+         ncaeros_points, ncaero_sub_points,
+         has_control_surface, box_id_to_caero_element_map, cs_box_ids) = out
+        self.has_caero = has_caero
+        self._create_aero(model, box_id_to_caero_element_map, cs_box_ids,
+                          caero_points, ncaeros_points, ncaero_sub_points,
+                          has_control_surface)
+        self.Render()
 
     def _create_aero(self, model, box_id_to_caero_element_map, cs_box_ids,
                      caero_points, ncaeros_points, ncaero_sub_points, has_control_surface):
@@ -2664,6 +2681,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             text = str(note)
             #slot = self.gui.label_actors[-1]
             slot = self.gui.geometry_properties[name].label_actors
+            for sloti in slot:
+                self.gui.rend.RemoveActor(sloti)
             annotation = self.gui.create_annotation(text, x, y, z)
             slot.append(annotation)
 

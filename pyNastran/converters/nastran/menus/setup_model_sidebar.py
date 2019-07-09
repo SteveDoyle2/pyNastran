@@ -11,7 +11,7 @@ from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.results_window import ResultsWindow
 from pyNastran.converters.nastran.wildcards import GEOM_BDF_SAVE
 
-from pyNastran.converters.nastran.menus.modify_map import MODIFY_MAP
+from pyNastran.converters.nastran.menus.modify_map import MODIFY_MAP, UPDATE_MAP
 from pyNastran.converters.nastran.menus.modify_menu import  ModifyMenu
 from pyNastran.converters.nastran.menus.model_sidebar import Sidebar
 
@@ -147,11 +147,12 @@ def build_form_from_model(model):
     return form, objs
 
 class ModelSidebar(Sidebar):
-    def __init__(self, parent):
+    def __init__(self, parent, nastran_io=None):
         self.bdf_filename = None
         self.model = None
         self.objs = None
         self.parent2 = parent
+        self.nastran_io = nastran_io
 
         from functools import partial
         right_click_actions = [
@@ -188,6 +189,11 @@ class ModelSidebar(Sidebar):
     def on_modify(self, icase):
         """opens a menu to modify a card"""
         obj = self.objs[icase]
+
+        update_function_name = None
+        if obj.type in UPDATE_MAP:
+            update_function_name = UPDATE_MAP[obj.type]
+
         try:
             variables = MODIFY_MAP[obj.type]
         except KeyError:
@@ -197,17 +203,18 @@ class ModelSidebar(Sidebar):
             print('keys=', keys)
             print(obj)
             return
-        self.load_menu(self.model, obj, variables, win_parent=None)
+        self.load_menu(self.model, obj, variables, update_function_name, win_parent=None)
 
-    def load_menu(self, model, obj, variables, win_parent=None):
+    def load_menu(self, model, obj, variables, update_function_name, win_parent=None):
         data = {
             'font_size': 9,
             'model' : model,
             'obj' : obj,
             'variables': variables,
+            'update_function_name': update_function_name,
         }
         parent = self.parent
-        self.menu = ModifyMenu(data, win_parent=None)
+        self.menu = ModifyMenu(data, nastran_io=self.nastran_io, win_parent=None)
         self.menu.show()
         self.menu.exec_()
 

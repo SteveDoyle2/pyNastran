@@ -252,3 +252,9 @@ MODIFY_MAP = dict(chain(
     MATERIALS_MAP.items(),
     CAERO_MAP.items(),
 ))
+
+UPDATE_MAP = {
+    #'GRID' : 'update_grid',
+    #'CONROD' : 'update_element',
+    'CAERO1' : 'update_caeros',
+}

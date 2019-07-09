@@ -10,7 +10,7 @@ from .modify_map import Var, TransposedVars
 
 
 class ModifyMenu(PyDialog):
-    def __init__(self, data, win_parent=None):
+    def __init__(self, data, nastran_io, win_parent=None):
         """
         Saves the data members from data and
         performs type checks
@@ -26,6 +26,8 @@ class ModifyMenu(PyDialog):
         variables = data['variables']
         self.obj = obj
         self.variables = variables
+        self.update_function_name = data['update_function_name']
+        self.nastran_io = nastran_io
         #--------------------------------------------
         i = 0
         grid_objs = {}
@@ -75,6 +77,7 @@ class ModifyMenu(PyDialog):
 
         self.grid_objs = grid_objs
         self.on_font(self._default_font_size)
+        self.apply_button.clicked.connect(self.on_apply)
         self.ok_button.clicked.connect(self.on_ok)
         self.cancel_button.clicked.connect(self.close)
 
@@ -85,6 +88,7 @@ class ModifyMenu(PyDialog):
 
     def on_apply(self):
         obj = self.obj
+        is_valid = False
         for i, var in enumerate(self.variables):
             if isinstance(var, list):
                 for vari in var:
@@ -101,6 +105,21 @@ class ModifyMenu(PyDialog):
                 except AttributeError:
                     print(var)
                     raise
+        is_valid = True
+        if is_valid:
+            self.update_obj_in_gui(obj)
+        return is_valid
+
+    def update_obj_in_gui(self, obj):
+        """updates the GUI object"""
+        if self.nastran_io is not None:
+            if self.update_function_name is not None:
+                func = getattr(self.nastran_io, self.update_function_name)
+                try:
+                    func(obj)
+                except Exception as e:
+                    self.nastran_io.model.log.error(str(e))
+                    return False
         return True
 
     def on_font(self, value=None):
