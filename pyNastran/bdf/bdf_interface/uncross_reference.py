@@ -6,15 +6,13 @@ class UnXrefMesh(SafeXrefMesh):
     """
     Unlinks up the various cards in the BDF.
     """
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         """
         The main BDF class defines all the parameters that are used.
         """
         SafeXrefMesh.__init__(self)
 
-    def uncross_reference(self, word=''):
-        # type: (str) -> None
+    def uncross_reference(self, word: str='') -> None:
         """uncross references the model"""
         self.log.debug("Uncross Referencing%s..." % word)
         self._uncross_reference_nodes()
@@ -33,24 +31,21 @@ class UnXrefMesh(SafeXrefMesh):
         for super_id, superelement in sorted(self.superelement_models.items()):
             superelement.uncross_reference(word=' (Superelement %i)' % super_id)
 
-    def _uncross_reference_nodes(self):
-        # type: () -> None
+    def _uncross_reference_nodes(self) -> None:
         """uncross references the GRID objects"""
         for node in self.nodes.values():
             node.uncross_reference()
         for point in self.points.values():
             point.uncross_reference()
 
-    def _uncross_reference_coords(self):
-        # type: () -> None
+    def _uncross_reference_coords(self) -> None:
         """uncross references the CORDx objects"""
         for cid, coord in self.coords.items():
             if cid == 0:
                 continue
             coord.uncross_reference()
 
-    def _uncross_reference_elements(self):
-        # type: () -> None
+    def _uncross_reference_elements(self) -> None:
         """uncross references the element objects"""
         for element in self.elements.values():
             try:
@@ -67,8 +62,7 @@ class UnXrefMesh(SafeXrefMesh):
         for element in self.plotels.values():
             element.uncross_reference()
 
-    def _uncross_reference_properties(self):
-        # type: () -> None
+    def _uncross_reference_properties(self) -> None:
         """uncross references the property objects"""
         for prop in self.properties.values():
             try:
@@ -80,8 +74,7 @@ class UnXrefMesh(SafeXrefMesh):
                 print('%s.uncross_reference error' % prop.type)
                 raise
 
-    def _uncross_reference_materials(self):
-        # type: () -> None
+    def _uncross_reference_materials(self) -> None:
         """uncross references the material objects"""
         try:
             for material in self.materials.values():
@@ -108,16 +101,14 @@ class UnXrefMesh(SafeXrefMesh):
                     print(mat)
                     raise
 
-    def _uncross_reference_masses(self):
-        # type: () -> None
+    def _uncross_reference_masses(self) -> None:
         """uncross references the mass objects"""
         for mass in self.masses.values():
             mass.uncross_reference()
         for prop in self.properties_mass.values():
             prop.uncross_reference()
 
-    def _uncross_reference_aero(self):
-        # type: () -> None
+    def _uncross_reference_aero(self) -> None:
         """uncross references the aero objects"""
         for caero in self.caeros.values():
             caero.uncross_reference()
@@ -167,8 +158,7 @@ class UnXrefMesh(SafeXrefMesh):
         if self.aeros:
             self.aeros.uncross_reference()
 
-    def _uncross_reference_constraints(self):
-        # type: () -> None
+    def _uncross_reference_constraints(self) -> None:
         """
         Unlinks the SPCADD, SPC, SPCAX, SPCD, MPCADD, MPC, SUPORT,
         SUPORT1, SESUPORT cards.
@@ -196,8 +186,7 @@ class UnXrefMesh(SafeXrefMesh):
         for se_suport in self.se_suport:
             se_suport.uncross_reference()
 
-    def _uncross_reference_loads(self):
-        # type: () -> None
+    def _uncross_reference_loads(self) -> None:
         """
         Unlinks the LOAD
         PLOAD1, PLOAD2, PLOAD4
@@ -230,8 +219,7 @@ class UnXrefMesh(SafeXrefMesh):
         for unused_key, tic in self.tics.items():
             tic.uncross_reference()
 
-    def _uncross_reference_sets(self):
-        # type: () -> None
+    def _uncross_reference_sets(self) -> None:
         """uncross references the set objects"""
         for set_obj in self.asets:
             set_obj.uncross_reference()
@@ -259,8 +247,7 @@ class UnXrefMesh(SafeXrefMesh):
         for set_obj in self.se_usets:
             set_obj.uncross_reference()
 
-    def _uncross_reference_optimization(self):
-        # type: () -> None
+    def _uncross_reference_optimization(self) -> None:
         """uncross references the optimization objects"""
         for unused_key, deqatn in self.dequations.items():
             deqatn.uncross_reference()

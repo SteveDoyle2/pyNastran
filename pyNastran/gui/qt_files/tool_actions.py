@@ -1,6 +1,7 @@
 # coding: utf-8
 import os
 import traceback
+from typing import Optional
 
 import numpy as np
 import vtk
@@ -141,8 +142,7 @@ class ToolActions:
                     #xprop = axes.GetXAxisCaptionActor2D().GetCaptionTextProperty()
                     yprop = axes.GetYAxisCaptionActor2D().GetCaptionTextProperty()
                     #zprop = axes.GetZAxisCaptionActor2D().GetCaptionTextProperty()
-                    yprop.SetFontFile(font_file)
-                    yprop.SetFontFamily(vtk.VTK_FONT_FILE)
+                    set_vtk_property_to_unicode(yprop, font_file)
                 else:
                     y = 't'
 
@@ -154,10 +154,8 @@ class ToolActions:
                     #xprop = axes.GetXAxisCaptionActor2D().GetCaptionTextProperty()
                     yprop = axes.GetYAxisCaptionActor2D().GetCaptionTextProperty()
                     zprop = axes.GetZAxisCaptionActor2D().GetCaptionTextProperty()
-                    yprop.SetFontFile(font_file)
-                    yprop.SetFontFamily(vtk.VTK_FONT_FILE)
-                    zprop.SetFontFile(font_file)
-                    zprop.SetFontFamily(vtk.VTK_FONT_FILE)
+                    set_vtk_property_to_unicode(yprop, font_file)
+                    set_vtk_property_to_unicode(zprop, font_file)
                 else:
                     y = 't'
                     z = 'p'
@@ -186,11 +184,13 @@ class ToolActions:
             self.rend.AddActor(axes)
 
     #---------------------------------------------------------------------------
-    def create_text(self, position, label, text_size=18):
+    def create_text(self, position, label, text_size: int=18):
         """creates the lower left text actors"""
         text_actor = vtk.vtkTextActor()
+
         text_actor.SetInput(label)
         text_prop = text_actor.GetTextProperty()
+        set_vtk_property_to_unicode(text_prop, font_file)
         #text_prop.SetFontFamilyToArial()
         text_prop.SetFontSize(int(text_size))
         text_prop.SetColor(self.settings.text_color)
@@ -243,7 +243,9 @@ class ToolActions:
             text.VisibilityOn()
 
     #---------------------------------------------------------------------------
-    def on_take_screenshot(self, fname=None, magnify=None, show_msg=True):
+    def on_take_screenshot(self, fname: Optional[str]=None,
+                           magnify: Optional[int]=None,
+                           show_msg: bool=True):
         """
         Take a screenshot of a current view and save as a file
 
@@ -294,7 +296,7 @@ class ToolActions:
             self.gui.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
         self._screenshot_teardown(line_widths0, point_sizes0, coord_scale0, axes_actor)
 
-    def _get_screenshot_filename(self, fname):
+    def _get_screenshot_filename(self, fname: Optional[str]):
         """helper method for ``on_take_screenshot``"""
         if fname is None or fname is False:
             filt = ''
@@ -337,7 +339,7 @@ class ToolActions:
                 flt = 'png'
         return fname, flt
 
-    def _screenshot_setup(self, magnify, render_large):
+    def _screenshot_setup(self, magnify: Optional[int], render_large):
         """helper method for ``on_take_screenshot``"""
         if magnify is None:
             magnify_min = 1
@@ -571,7 +573,8 @@ class ToolActions:
                 csv_filename, name, str(color)))
         return is_failed
 
-    def _add_user_points_from_csv(self, csv_points_filename, name, color, point_size=4):
+    def _add_user_points_from_csv(self, csv_points_filename: str, name: str,
+                                  color, point_size: int=4):
         """
         Helper method for adding csv nodes to the gui
 
@@ -609,8 +612,8 @@ class ToolActions:
         is_failed = False
         return False
 
-    def _add_user_points(self, user_points, name, color,
-                         csv_points_filename='', point_size=4):
+    def _add_user_points(self, user_points, name: str, color,
+                         csv_points_filename: str='', point_size: int=4):
         """
         Helper method for adding csv nodes to the gui
 
@@ -669,12 +672,15 @@ class ToolActions:
         prop.SetPointSize(point_size)
 
     #---------------------------------------------------------------------------
-    def _add_alt_geometry(self, grid, name, color=None, line_width=None,
+    def _add_alt_geometry(self, grid, name: str, color=None, line_width=None,
                           opacity=None, representation=None):
         """NOTE: color, line_width, opacity are ignored if name already exists"""
+        has_geometry_actor = name in self.gui.geometry_actors
+
         is_pickable = self.gui.geometry_properties[name].is_pickable
         quad_mapper = vtk.vtkDataSetMapper()
-        if name in self.gui.geometry_actors:
+
+        if has_geometry_actor:
             alt_geometry_actor = self.gui.geometry_actors[name]
             alt_geometry_actor.GetMapper().SetInputData(grid)
         else:
@@ -724,7 +730,8 @@ class ToolActions:
             prop.SetRepresentationToWireframe()
             prop.SetLineWidth(line_width)
 
-        self.rend.AddActor(alt_geometry_actor)
+        if not has_geometry_actor:
+            self.rend.AddActor(alt_geometry_actor)
         vtk.vtkPolyDataMapper().SetResolveCoincidentTopologyToPolygonOffset()
 
         if geom.is_visible:
@@ -810,6 +817,11 @@ def add_user_geometry(alt_grid, geom_grid,
     if nelements > 0:
         geom_grid.SetPoints(points)
     return points
+
+
+def set_vtk_property_to_unicode(prop, font_file):
+    prop.SetFontFile(font_file)
+    prop.SetFontFamily(vtk.VTK_FONT_FILE)
 
 def make_vtk_transform(origin, matrix_3x3):
     """makes a vtkTransform"""

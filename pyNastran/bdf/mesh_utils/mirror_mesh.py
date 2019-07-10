@@ -14,6 +14,7 @@ This file defines:
 from typing import Union
 import numpy as np
 
+from pyNastran.bdf.cards.coordinate_systems import CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 from pyNastran.bdf.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
     PLOAD, PLOAD2, PLOAD4)
@@ -595,6 +596,14 @@ def _mirror_aero(model, nid_offset: int, plane: str='xz'):
      - CAERO2
      - SPLINE1
      - SET1
+     - AELIST
+       - handle boxes
+     - AESURF
+       - only supports names of length 7 or less (appends an M to the name)
+       - handles AELIST
+       - doesn't handle coords well
+       - doesn't handle second AESURF
+       - doesn't handle hmlim or tqlim
 
     """
     if model.aeros is not None:
@@ -699,7 +708,78 @@ def _mirror_aero(model, nid_offset: int, plane: str='xz'):
         for set_card in sets_to_add:
             model._add_set_object(set_card)
 
+    aelist_id_offset = 0
+    if len(model.aelists):
+        aelist_id_offset = max(model.aelists)
+
+    if len(model.aesurf):
+        aesurf_id_offset = max(model.aesurf)
+        for aelist_id, aelist in sorted(model.aelists.items()):
+            aelist_id_new = aelist_id + aelist_id_offset
+            elements = [eid + caero_id_offset for eid in aelist.elements]
+            model.add_aelist(aelist_id_new, elements, comment='')
+
+        for aesurf_id, aesurf in sorted(model.aesurf.items()):
+            # TODO: doesn't handle coords
+            # TODO: doesn't handle aelist2
+            # TODO: doesn't handle hmlim
+            # TODO: doesn't handle tqlim
+            aesurf_id_new = aesurf_id + aesurf_id_offset
+            label = aesurf.label + 'M'
+            cid1 = 0  # TODO: update
+            alid1 = aesurf.alid1 + aelist_id_offset
+            model.add_aesurf(aesurf_id_new, label, cid1, alid1,
+                             cid2=None, alid2=None,
+                             eff=aesurf.eff, ldw=aesurf.ldw,
+                             crefc=aesurf.crefc, crefs=aesurf.crefs,
+                             pllim=aesurf.pllim, pulim=aesurf.pulim,
+                             hmllim=None, hmulim=None,
+                             tqllim=None, tqulim=None, comment='')
+
     model.pop_parse_errors()
+    cid_offset = max(model.coords)
+    for cid, coord in sorted(model.coords.items()):
+        if cid == 0:
+            continue
+        cid_new = cid + cid_offset
+        _mirror_coord(model, coord, cid_new, plane='xz')
+
+def _mirror_coord(model: BDF, coord, cid_new, plane='xz'):
+    """we'll leave i the same, flip j, and invert k"""
+    # doesn't handle CORD1x
+    coord_map = {
+        'CORD1R': CORD1R,
+        'CORD1C': CORD1C,
+        'CORD1S': CORD1S,
+
+        'CORD2R': CORD2R,
+        'CORD2C': CORD2C,
+        'CORD2S': CORD2S,
+    }
+    if coord.type in {'CORD2R', 'CORD2C', 'CORD2S'}:
+        i, j, k = coord.beta().copy()
+        origin = coord.origin.copy()
+        #print(origin, i, j, k)
+        if plane == 'xz':
+            origin[1] *= -1
+            j[1] *= -1
+        elif plane == 'xy':
+            origin[2] *= -1
+            j[2] *= -1
+        else:
+            model.log.warning('skipping coord_id=%s' % coord.cid)
+            return
+        #k = np.cross(i, j)
+        #print(origin, i, j, k)
+        coord_obj = coord_map[coord.type]  # CORD2R/C/S
+        coord_new = coord_obj.add_ijk(cid_new, origin=origin, i=i, j=j, k=None,
+                                      rid=0, comment='')
+    else:
+        model.log.warning('skipping coord_id=%s' % coord.cid)
+        #raise NotImplementedError(coord.type)
+        return
+    model.coords[cid_new] = coord_new
+
 
 def make_symmetric_model(bdf_filename, plane='xz', zero_tol=1e-12, log=None, debug=True):
     """

@@ -180,7 +180,7 @@ class FakeGUIMethods(GuiVTKCommon):
     def update_menu_bar(self):
         pass
 
-    def _finish_results_io2(self, model_name, form, cases, reset_labels=True):
+    def _finish_results_io2(self, model_name: str, form, cases, reset_labels: bool=True):
         """
         This is not quite the same as the main one.
         It's more or less just _set_results
@@ -337,7 +337,7 @@ class FakeGUIMethods(GuiVTKCommon):
         """fake QMainWindow method"""
         return 'title'
 
-    def resize(self, height, width):  # pragma: no cover
+    def resize(self, height: int, width: int):  # pragma: no cover
         """fake QMainWindow method"""
         assert isinstance(height, int), 'height=%r' % height
         assert isinstance(width, int), 'width=%r' % width

@@ -1528,7 +1528,7 @@ class TestAero(unittest.TestCase):
 
         cid2 = 1
         coord = CORD2R(cid2, rid=0, origin=[0., 0., 0.],
-                       zaxis=[1., 0., 0.], xzplane=[0., 1., 1.], comment='')
+                       zaxis=[1., 0., 0.], xzplane=[0., 0., 1.], comment='')
 
         aelist_id1 = 10
         aelist_id2 = 20
