@@ -1,5 +1,6 @@
 """defines various methods to access low level BDF data"""
 from itertools import chain
+from typing import Any
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
@@ -505,14 +506,13 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # COORDINATES CARDS
-    def Coord(self, cid, msg=''):
-        # type: (int, str) -> Any
+    def Coord(self, cid: int, msg: str='') -> Any:
         """gets an COORDx"""
         try:
             return self.coords[cid]
         except KeyError:
-            raise KeyError('cid=%s not found%s.  Allowed Cids=%s'
-                           % (cid, msg, self.coord_ids))
+            cids = np.array(list(self.coord_ids))
+            raise KeyError(f'cid={cid} not found{msg}.  Allowed Cids={cids}')
 
     #--------------------
     # AERO CARDS

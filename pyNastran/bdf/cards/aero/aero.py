@@ -1039,7 +1039,8 @@ class AESURF(BaseCard):
             the BDF object
 
         """
-        self.cid1_ref = model.Coord(self.cid1)
+        msg = ', which is required by AESURF eid=%s' % self.label
+        self.cid1_ref = model.Coord(self.cid1, msg=msg)
         if self.cid2 is not None:
             self.cid2_ref = model.Coord(self.cid2)
         self.alid1_ref = model.AELIST(self.alid1)

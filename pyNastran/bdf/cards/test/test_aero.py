@@ -2035,6 +2035,7 @@ class TestAero(unittest.TestCase):
         model.add_aelist(alid1, [100, 101, 102], comment='')
         model.add_grid(55, [0., 0., 0.])
         model.add_grid(66, [0., 0., 0.])
+        #model.add_cord2r(cid, origin, zaxis, xzplane, rid=0, comment='')
         model.validate()
 
         # why doesn't this work?

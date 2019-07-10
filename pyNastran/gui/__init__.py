@@ -12,7 +12,7 @@ IS_DEV = (
 #IS_TRAVIS = 'TRAVIS' in os.environ
 #IS_RTD = 'READTHEDOCS' in os.environ
 
-if is_pynastrangui_exe:
+if is_pynastrangui_exe:  # pragma: no cover
     PKG_PATH = sys._MEIPASS #@UndefinedVariable
     SCRIPT_PATH = os.path.join(PKG_PATH, 'scripts')
     ICON_PATH = os.path.join(PKG_PATH, 'icons')
@@ -26,18 +26,43 @@ IS_LINUX = 'posix' in os.name
 IS_MAC = 'darwin' in os.name
 
 font_dirname = ''
+font_file = ''
 if IS_WINDOWS:
     font_dirname = r'C:\Windows\Fonts'
     if os.path.exists(font_dirname):
         font_file = os.path.join(font_dirname, 'arial.ttf')
         assert os.path.exists(font_file), os.listdir(font_dirname)
-elif IS_LINUX:
-    font_dirname = '/etc/fonts/fonts.conf'
-elif IS_MAC:
-    font_dirname = '/Library/Fonts'
 
-font_file = ''
-if font_dirname and os.path.exists(font_dirname):
-    font_file = os.path.join(font_dirname, 'arial.ttf')
-    assert os.path.exists(font_file), os.listdir(font_dirname)
+elif IS_LINUX:
+    # /etc/fonts/fonts.conf is an xml file that points to one of many font directories
+    #
+    #font_dirname = '/etc/fonts/fonts.conf'
+    #/usr/local/share/fonts
+    #/usr/share/fonts/
+
+    #  we want a true-type font, so...
+    #/usr/share/fonts/truetype/
+
+    # only 1 font class for my system...
+    #/usr/share/fonts/truetype/dejavu/
+    font_dirname = '/usr/share/fonts/truetype/dejavu/'
+
+    # let's go with a Sans-Serif font that's not bold
+    # DejaVuSans.ttf            DejaVuSerif.ttf          DejaVuSansMono.ttf
+    # DejaVuSans-Bold.ttf       DejaVuSerif-Bold.ttf     DejaVuSansMono-Bold.ttf
+    #
+    if os.path.exists(font_dirname):
+        font_file = os.path.join(font_dirname, 'DejaVuSans.ttf')
+
+elif IS_MAC: # pragma: no cover
+    # pulled off a screenshot...
+    font_dirname = '/Library/Fonts'
+    assert os.path.exists(font_dirname), font_dirname
+    font_file = os.path.join(font_dirname, 'Arial.ttf')
+    assert os.path.exists(font_file), font_file
+
+if font_file and not os.path.exists(font_file):
+    print('cant find %s' % font_file)
+    #assert os.path.exists(font_file), os.listdir(font_dirname)
+    font_file = ''
 del font_dirname, IS_WINDOWS, IS_LINUX, IS_MAC

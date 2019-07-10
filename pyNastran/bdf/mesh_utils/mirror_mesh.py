@@ -6,12 +6,9 @@ This file defines:
         bdf_filename, out_filename=None, encoding=None,
         size=8, is_double=False,
         enddata=None, close=True, plane='xz')
-  - model = make_symmetric_model(
-        bdf_filename, plane='xz', zero_tol=1e-12,
-        log=None, debug=True)
 
 """
-from typing import List, Union, Optional
+from typing import Set, Union, Optional
 import numpy as np
 
 from pyNastran.bdf.cards.coordinate_systems import CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
@@ -601,7 +598,6 @@ def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz'):
        - handles AELIST
        - doesn't handle coords well
        - doesn't handle second AESURF
-       - doesn't handle hmlim or tqlim
 
     Doesnt consider:
      - AERO
@@ -613,6 +609,7 @@ def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz'):
 
     """
     is_aero = False
+    aero_cids_set = set([])
     if model.aeros is not None:
         is_aero = True
         aeros = model.aeros
@@ -732,8 +729,7 @@ def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz'):
         is_aero = True
         aelist_id_offset = max(model.aelists)
 
-    aero_cids = []
-    cid_offset = max(model.coords) if len(model.coords) > 1 else 1
+    cid_offset = max(model.coords) if len(model.coords) > 1 else 0
     if len(model.aesurf):
         is_aero = True
         aesurf_id_offset = max(model.aesurf)
@@ -744,28 +740,40 @@ def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz'):
 
         for aesurf_id, aesurf in sorted(model.aesurf.items()):
             # TODO: doesn't handle cid2/aelist2
-            # TODO: doesn't handle hmlim
-            # TODO: doesn't handle tqlim
             aesurf_id_new = aesurf_id + aesurf_id_offset
             label = aesurf.label + 'M'
             cid1 = aesurf.cid1 + cid_offset
             alid1 = aesurf.alid1 + aelist_id_offset
-            aero_cids.append(cid1)
+            if cid_offset > 0:
+                aero_cids_set.add(aesurf.cid1)
+
+            cid2 = None
+            alid2 = None
+            if aesurf.cid2:
+                model.log.warning("skipping aesurf='{aesurf.label}' second cid/aelist")
+                # combine this into the first coordinate system
+                #
+                #  don't mirror the coordinate system because it's antisymmetric?
+                #cid2 = aesurf.cid1 + cid_offset * 2
+                # how is the second coord and aelist made?
+                #aero_cids_set.add(aesurf.cid1)
+                #alid2 = aesurf.alid1 + aelist_id_offset * 2
+
             model.add_aesurf(aesurf_id_new, label, cid1, alid1,
                              cid2=None, alid2=None,
                              eff=aesurf.eff, ldw=aesurf.ldw,
                              crefc=aesurf.crefc, crefs=aesurf.crefs,
                              pllim=aesurf.pllim, pulim=aesurf.pulim,
-                             hmllim=None, hmulim=None,
-                             tqllim=None, tqulim=None, comment='')
+                             hmllim=aesurf.hmllim, hmulim=aesurf.hmulim,
+                             tqllim=aesurf.tqllim, tqulim=aesurf.tqulim, comment='')
 
     if is_aero:
-        _symmetrically_mirror_aero_coords(model, aero_cids, cid_offset, plane)
+        _asymmetrically_mirror_aero_coords(model, aero_cids_set, cid_offset, plane)
     model.pop_parse_errors()
 
-def _symmetrically_mirror_aero_coords(model: BDF,
-                                      aero_cids: List[int],
-                                      cid_offset: int, plane: str='xz'):
+def _asymmetrically_mirror_aero_coords(model: BDF,
+                                       aero_cids_set: Set[int],
+                                       cid_offset: int, plane: str='xz'):
     """we'll leave i the same, flip j, and invert k"""
     # doesn't handle CORD1x
 
@@ -778,8 +786,11 @@ def _symmetrically_mirror_aero_coords(model: BDF,
         'CORD2C': CORD2C,
         'CORD2S': CORD2S,
     }
+    aero_cids = list(aero_cids_set)
+    aero_cids.sort()
     for cid in aero_cids:
-        coord = model.coords[cid]
+
+        coord = model.Coord(cid)
         if cid == 0:
             continue
         cid_new = cid + cid_offset
@@ -787,7 +798,6 @@ def _symmetrically_mirror_aero_coords(model: BDF,
         if coord.type in {'CORD2R', 'CORD2C', 'CORD2S'}:
             i, j, unused_k = coord.beta().copy()
             origin = coord.origin.copy()
-            #print(origin, i, j, k)
             if plane == 'xz':
                 origin[1] *= -1
                 j[1] *= -1
@@ -798,132 +808,11 @@ def _symmetrically_mirror_aero_coords(model: BDF,
                 model.log.warning('skipping coord_id=%s' % coord.cid)
                 return
             #k = np.cross(i, j)
-            #print(origin, i, j, k)
             coord_obj = coord_map[coord.type]  # CORD2R/C/S
             coord_new = coord_obj.add_ijk(cid_new, origin=origin, i=i, j=j, k=None,
                                           rid=0, comment='')
         else:
             model.log.warning('skipping coord_id=%s' % coord.cid)
-            #raise NotImplementedError(coord.type)
             continue
         model.coords[cid_new] = coord_new
     return
-
-
-def make_symmetric_model(bdf_filename, plane: str='xz',
-                         zero_tol: float=1e-12, log=None, debug: bool=True):
-    """
-    Makes a half/symmetric model from a full model
-
-    Parameters
-    ----------
-    bdf_filename : str / BDF()
-        str : the bdf filename
-        BDF : the BDF model object
-    plane : str; {'xy', 'yz', 'xz'}; default='xz'
-        the plane to mirror about
-        xz : +y/-y
-        yz : +x/-x
-        xy : +z/-z
-    zaero_tol : float; default=1e-12
-        the symmetry plane tolerance
-
-    Returns
-    -------
-    model : BDF()
-        BDF : the BDF model object
-
-    ## TODO: doesn't handle elements straddling the centerline
-
-    """
-    model = get_bdf_model(bdf_filename, xref=True, log=log, debug=debug)
-    iy, plane = _plane_to_iy(plane)
-    nids_to_remove = []
-    eids_to_remove = []
-    caero_ids_to_remove = []
-    zero = -zero_tol
-    for eid, elem in model.elements.items():
-        xyz = elem.Centroid()
-
-        if xyz[iy] < zero:
-            eids_to_remove.append(eid)
-
-    for nid, node in model.nodes.items():
-        xyz = node.get_position()
-        if xyz[iy] < zero:
-            nids_to_remove.append(nid)
-
-    for nid in nids_to_remove:
-        del model.nodes[nid]
-
-    for eid in eids_to_remove:
-        del model.elements[eid]
-
-    for caero_id, caero in model.caeros.items():
-        if caero.type == 'CAERO1':
-            p1, p2, p3, p4 = caero.get_points()
-            #print(caero)
-            if p1[iy] <= zero and p4[iy] <= zero:
-                #print('p1=%s p4=%s' % (p1, p4))
-                caero_ids_to_remove.append(caero_id)
-            elif p1[iy] < zero:
-                p1[iy] = 0.
-                caero.set_points([p1, p2, p3, p4])
-            elif p4[iy] < zero:
-                p4[iy] = 0.
-                caero.set_points([p1, p2, p3, p4])
-        elif caero.type == 'CAERO2':
-            # TODO: a CAERO2 can't be half symmetric...can it?
-            # TODO: it can be skewed though...
-            p1, p2 = caero.get_points()
-            if p1[iy] <= zero and p2[iy] <= zero:
-                #print('p1=%s p4=%s' % (p1, p4))
-                caero_ids_to_remove.append(caero_id)
-        else:  # pragma: no cover
-            raise NotImplementedError(caero)
-
-    for caero_id in caero_ids_to_remove:
-        del model.caeros[caero_id]
-
-    #print('nids_to_remove =', nids_to_remove)
-    for unused_spline_id, spline in model.splines.items():
-        caero = spline.caero
-        #setg = spline.setg
-        #print('caero = ', caero)
-        nids = spline.setg_ref.ids  # list
-        #spline.uncross_reference()
-
-        #i = 0
-        nids = list(set(nids) - set(nids_to_remove))
-        nids.sort()
-        spline.setg_ref.ids_ref = None
-        spline.setg_ref.ids = nids
-
-    plane_to_labels_keep_map = {
-        'yz' : ['URDD4', 'URDD2', 'URDD3', 'SIDES', 'YAW'], # yz
-        'xz' : ['URDD1', 'URDD5', 'URDD3', 'PITCH', 'ANGLEA'], # xz plane
-        'xy' : ['URDD1', 'URDD2', 'URDD6', 'ROLL'], # xy plane
-    }
-
-    all_labels = {
-        'URDD4', 'URDD2', 'URDD3', 'SIDES', 'YAW',
-        'URDD1', 'URDD5', 'URDD3', 'PITCH', 'ANGLEA',
-        'URDD1', 'URDD2', 'URDD6', 'ROLL',
-    }
-    labels_to_keep = plane_to_labels_keep_map[plane]
-    labels_to_remove = [label for label in all_labels if label not in labels_to_keep]
-
-    #print('labels_to_remove =', labels_to_remove)
-    for aestat_id in list(model.aestats.keys()):
-        aestat = model.aestats[aestat_id]
-        if aestat.label in labels_to_remove:
-            del model.aestats[aestat_id]
-
-    for unused_trim_id, trim in model.trims.items():
-        labels = trim.labels
-        ilabels_to_remove = [labels.index(label) for label in labels_to_remove
-                             if label in labels]
-        #print("ilabels_to_remove =", ilabels_to_remove)
-        trim.uxz = [trim.uxs[ilabel] for ilabel in ilabels_to_remove]
-        trim.labels = [trim.labels[ilabel] for ilabel in ilabels_to_remove]
-    return model

@@ -20,7 +20,8 @@ from pyNastran.bdf.mesh_utils.split_elements import split_line_elements
 from pyNastran.bdf.mesh_utils.pierce_shells import (
     pierce_shell_model) #, quad_intersection, triangle_intersection)
 from pyNastran.bdf.mesh_utils.mirror_mesh import (
-    write_bdf_symmetric, bdf_mirror, make_symmetric_model, bdf_mirror_plane)
+    write_bdf_symmetric, bdf_mirror, bdf_mirror_plane)
+from pyNastran.bdf.mesh_utils.make_half_model import make_symmetric_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.utils import cmd_line
 from cpylog import SimpleLogger
