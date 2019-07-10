@@ -1820,6 +1820,16 @@ class CAERO1(BaseCard):
         nchord, nspan = self.shape
         return [self.eid, self.eid + nchord * nspan]
 
+    def get_leading_edge_points(self):
+        """gets the leading edge points"""
+        if self.cp_ref is None and self.cp == 0:
+            p1 = self.p1
+            p4 = self.p4
+        else:
+            p1 = self.cp_ref.transform_node_to_global(self.p1)
+            p4 = self.cp_ref.transform_node_to_global(self.p4)
+        return p1, p4
+
     def get_points(self):
         """
         Get the 4 corner points for the CAERO card
@@ -1830,13 +1840,7 @@ class CAERO1(BaseCard):
              List of 4 corner points in the global frame
 
         """
-        if self.cp_ref is None and self.cp == 0:
-            p1 = self.p1
-            p4 = self.p4
-        else:
-            p1 = self.cp_ref.transform_node_to_global(self.p1)
-            p4 = self.cp_ref.transform_node_to_global(self.p4)
-
+        p1, p4 = self.get_leading_edge_points()
         if self.ascid_ref is None:
             # yes, this really does list + array addition
             p2 = p1 + np.array([self.x12, 0., 0.])

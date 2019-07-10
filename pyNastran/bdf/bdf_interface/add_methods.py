@@ -1030,9 +1030,9 @@ class AddMethods(BDFAttributes):
     def _add_spline_object(self, spline):
         # type: (Any) -> None
         """adds an SPLINE1/SPLINE2/SPLINE3/SPLINE4/SPLINE5 object"""
-        assert spline.eid not in self.splines
-        assert spline.eid > 0
         key = spline.eid
+        assert spline.eid not in self.splines, f'\nspline={spline}\n%sold_spline=\n{self.splines[key]}'
+        assert spline.eid > 0, spline
         self.splines[key] = spline
         self._type_to_id_map[spline.type].append(key)
 

@@ -1309,7 +1309,7 @@ class SPCOFF(Constraint):
         #else:
             #raise RuntimeError('SPC; components=%s data=%s' % (components, data))
         #assert 0 < components[0] > 1000, data
-        return cls(nodes, components, enforced, comment=comment)
+        return SPCOFF(nodes, components, enforced, comment=comment)
 
     @property
     def constraints(self):
