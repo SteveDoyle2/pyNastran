@@ -234,9 +234,9 @@ def export_bdf_to_hdf5_file(hdf5_file, model, exporter=None):
         group = hdf5_file.create_group('usets')
         for name, usets in model.usets.items():
             groupi = group.create_group(name)
-            print(usets)
+            #print(usets)
             for i, uset in enumerate(usets):
-                print(uset.get_stats())
+                #print(uset.get_stats())
                 key = str(i)
                 _h5_export_class(groupi, model, key, uset, skip_attrs, encoding, debug=False)
 

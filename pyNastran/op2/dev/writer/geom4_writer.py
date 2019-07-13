@@ -31,6 +31,11 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         assert not isinstance(omit, int), obj.omits
         loads_by_type[omit.type].append(omit)
 
+    for suport in obj.suport:
+        loads_by_type[suport.type].append(suport)
+    for idi, suport in obj.suport1:
+        loads_by_type[suport.type].append(suport)
+
     for unused_id, spcs in obj.spcs.items():
         for spc in spcs:
             loads_by_type[spc.type].append(spc)
@@ -50,18 +55,23 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
     # return if no supported cards are found
     skip_cards = {
+        'SUPORT', 'SUPORT1', # suport
         # rigid elements
         'RROD', 'RSSCON',
 
         # sets
-        'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
-        'QSET', 'QSET1', 'OMIT1', 'USET', 'USET1',
+        'ASET1', 'BSET1', 'CSET1',
+        'QSET1', 'OMIT1', 'USET', 'USET1',
     }
     # not defined in DMAP
     not_defined_cards = {'RBAR1'}
     supported_cards = {
-        'RBAR',
-        'RBE1', 'RBE2', 'RBE3',
+        # sets
+        'ASET', 'BSET', 'CSET', 'QSET', 'OMIT',
+
+        # rigid
+        'RBAR', 'RBE1', 'RBE2', 'RBE3',
+        # constraints
         'MPC', 'SPC', 'SPC1', 'SPCADD', 'MPCADD',
     }
 
@@ -112,7 +122,34 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
 def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
     ncards = len(cards)
-    if card_type == 'MPC':
+    if card_type in ['ASET', 'BSET', 'CSET', 'OMIT', 'QSET']:
+        #Word Name Type Description
+        #1 ID I Grid or scalar point identification number
+        #2  C I Component numbers
+        if card_type == 'ASET':
+            key = (5561, 76, 215)
+        elif card_type == 'BSET':
+            key = (110, 1, 311)
+        elif card_type == 'CSET':
+            key = (310, 3, 313)
+        elif card_type == 'QSET':
+            key = (510, 5, 315)
+        elif card_type == 'OMIT':
+            key = (5001, 50, 15)
+        else:  # pragma: no cover
+            raise NotImplementedError(card_type)
+        data = []
+        fmt = endian
+        for set_obj in cards:
+            nnodes = len(set_obj.components)
+            fmt += b'%ii' % (nnodes * 2)
+            for nid, comp in zip(set_obj.node_ids, set_obj.components):
+                data += [nid, int(comp)]
+        nfields = len(data)
+        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+        op2.write(pack(fmt, *data))
+        del data, fmt
+    elif card_type == 'MPC':
         key = (4901, 49, 17)
 
         data = []

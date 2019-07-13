@@ -132,7 +132,12 @@ class GEOM4(GeomCommon):
         return self._read_xset1(data, n, 'ASET1', ASET1, self._add_aset_object)
 
     def _read_xset(self, data, n, card_name, cls, add_method):
-        """common method for ASET, QSET; not USET"""
+        """common method for ASET, QSET; not USET
+
+        Word Name Type Description
+        1 ID I Grid or scalar point identification number
+        2  C I Component numbers
+        """
         struct_2i = Struct(self._endian + b'2i')
         #self.show_data(data, types='ifs')
         ntotal = 8
