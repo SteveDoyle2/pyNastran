@@ -163,6 +163,8 @@ class TestCoords(unittest.TestCase):
         self.assertEqual(coord.Rid(), 0)
         coord.write_card(size, 'dummy')
         coord.raw_fields()
+        make_tri(model)
+        save_load_deck(model, run_renumber=False)
 
     def test_cord2c_01(self):
         """simple CORD2R/CORD2C input/output test"""
@@ -568,12 +570,15 @@ class TestCoords(unittest.TestCase):
         card.write_card(size, 'dummy')
         card.raw_fields()
 
-        model = BDF()
+        model = BDF(debug=False)
         cid = 2
         grid1, grid2, grid3 = 1, 4, 3
         coord = model.add_cord1c(cid, grid1, grid2, grid3, comment='cord1c')
         coord.comment = ''
+        make_tri(model)
+
         assert coord == card, 'card:\n%r\ncoord:\n%r' % (str(coord), str(card))
+        save_load_deck(model, run_renumber=False)
 
     def test_cord1s_01(self):
         lines = ['cord1s,2,1,4,3']
@@ -589,17 +594,22 @@ class TestCoords(unittest.TestCase):
         card.raw_fields()
 
         model = BDF(debug=False)
+        model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
+                                nxref_errors=0, stop_on_xref_error=True)
+
         cid = 2
         grid1, grid2, grid3 = 1, 4, 3
         coord = model.add_cord1s(cid, grid1, grid2, grid3, comment='cord1c')
         coord.comment = ''
         assert coord == card, 'card:\n%r\ncoord:\n%r' % (str(coord), str(card))
 
-        model.add_grid(1, [0., 0., 0.])
-        model.add_grid(3, [0., 0., 1.])
-        model.add_grid(4, [1., 0., 1.])
+        make_tri(model)
         coord.cross_reference(model)
         unused_cord2s = coord.to_cord2x(model, rid=0)
+
+        model.pop_parse_errors()
+        model.coords[cid] = coord
+        save_load_deck(model, run_renumber=False)
 
     def test_cord2r_02(self):
         grid = ['GRID       20143       7 -9.31-4  .11841 .028296']
@@ -918,6 +928,21 @@ class TestCoords(unittest.TestCase):
         make_monpnt1s_from_cids(model, nids, cids, cid_to_inids)
         #model.write_bdf('spike.bdf')
 
+def make_tri(model):
+    model.add_grid(1, [0., 0., 0.])
+    model.add_grid(3, [0., 0., 1.])
+    model.add_grid(4, [1., 0., 1.])
+    eid = 100
+    pid = 10
+    nids = [1, 3, 4]
+    mid = 1000
+    E = 3.0e7
+    G = None
+    nu = 0.3
+    model.add_ctria3(eid, pid, nids)
+    model.add_mat1(mid, E, G, nu)
+    model.add_pshell(pid, mid1=mid, t=0.1)
+
 def get_nodes(grids, grids_expected, coords):
     """
     Create each input grid/coord
@@ -952,7 +977,7 @@ def get_nodes(grids, grids_expected, coords):
         #coord_obj = model.Coord(cid)
 
     model.cross_reference()
-    save_load_deck(model, run_remove_unused=False, run_convert=False, run_save_load_hdf5=True)
+    save_load_deck(model, run_remove_unused=False, run_convert=False)
 
     for (i, grid) in enumerate(grids_expected):
         (nid, cid, x, y, z) = grid

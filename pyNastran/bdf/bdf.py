@@ -1181,7 +1181,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     is_error = True
 
             if is_error:
-                msg = 'There are dupliate cards.\n\n' + msg
+                msg = 'There are duplicate cards.\n\n' + msg
 
             if self._stop_on_xref_error:
                 msg += 'There are parsing errors.\n\n'

@@ -73,7 +73,7 @@ class TestMassElements(unittest.TestCase):
         model.add_grid(nid, [0., 0., 0.])
         model.validate()
         model.cross_reference()
-        model = save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
+        model = save_load_deck(model, run_convert=False)
         pids_to_mass, mass_type_to_mass = model.get_mass_breakdown(property_ids=None)
         assert len(pids_to_mass) == 0, pids_to_mass
         assert mass_type_to_mass['CONM2'] == 42., mass_type_to_mass

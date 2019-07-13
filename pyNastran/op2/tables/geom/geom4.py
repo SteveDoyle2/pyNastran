@@ -469,8 +469,8 @@ class GEOM4(GeomCommon):
         6 ALPHA RS Thermal expansion coefficient
         7 UNDEF none Not used
         """
+        # TODO: neither reader or writer considers alpha; no current examples
         idata = np.frombuffer(data[n:], self.idtype).copy()
-
         i = 0
         nelements = 0
         nfields = len(idata)
@@ -511,6 +511,14 @@ class GEOM4(GeomCommon):
     def _read_rbe2(self, data, n):
         """
         RBE2(6901,69,295) - Record 24
+
+        Word Name Type Description
+        1 EID I Element identification number
+        2  GN I Grid point identification number for independent degrees-of-freedom
+        3  CM I Component numbers of dependent degrees of-freedom
+        4  GM I Grid point identification number for dependent degrees-of-freedom
+        Word 4 repeats until End of Record
+        5 ALPHA RS Thermal expansion coefficient
 
         ::
 

@@ -195,7 +195,7 @@ class TestMaterials(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
         matt2.write_card(size=16, is_double=False)
-        save_load_deck(model, run_op2_writer=True)
+        save_load_deck(model)
 
     def test_mat3_01(self):
         """tests MAT3"""

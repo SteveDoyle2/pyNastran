@@ -1561,7 +1561,7 @@ class GetCard(GetMethods):
             raise
         rbes = []
         for eid, rigid_element in self.rigid_elements.items():
-            if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR', 'RSPLINE', 'RROD']:
+            if rigid_element.type in ['RBE3', 'RBE2', 'RBE1', 'RBAR', 'RSPLINE', 'RROD', 'RBAR1']:
                 independent_nodes = set(rigid_element.independent_nodes)
                 dependent_nodes = set(rigid_element.dependent_nodes)
                 rbe_nids = independent_nodes | dependent_nodes
@@ -1635,6 +1635,9 @@ class GetCard(GetMethods):
                 components = [rigid_element.cma, rigid_element.cmb]
                 for nid, componentsi in zip(nodes, components):
                     dependent_nid_to_components[nid] = componentsi
+            elif rigid_element.type == 'RBAR1':
+                for componentsi in rigid_element.cb:
+                    dependent_nid_to_components[rigid_element.gb] = componentsi
             elif rigid_element.type == 'RBE1':
                 # +------+-----+-----+-----+-------+-----+-----+-----+
                 # |   1  |  2  |  3  |  4  |   5   |  6  |  7  |  8  |

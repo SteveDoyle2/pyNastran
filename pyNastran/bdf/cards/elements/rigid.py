@@ -528,6 +528,15 @@ class RBAR1(RigidElement):
     """
     type = 'RBAR1'
 
+    _properties = ['dependent_nodes', 'independent_nodes', 'nodes']
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        nids = [1, 2]
+        cb = '123'
+        return RBAR1(eid, nids, cb, alpha=0., comment='')
+
     def __init__(self, eid, nids, cb, alpha=0., comment=''):
         RigidElement.__init__(self)
         if comment:

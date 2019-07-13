@@ -49,22 +49,28 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         #loads_by_type[load.type].append(load)
 
     # return if no supported cards are found
-    skip_cards = [
-
+    skip_cards = {
         # rigid elements
-        'RBE1', 'RBE2', 'RBE3', 'RBAR', 'RROD', 'RSSCON',
+        'RROD', 'RSSCON',
 
         # sets
         'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
         'QSET', 'QSET1', 'OMIT1', 'USET', 'USET1',
-    ]
-    supported_cards = [
+    }
+    # not defined in DMAP
+    not_defined_cards = {'RBAR1'}
+    supported_cards = {
+        'RBAR',
+        'RBE1', 'RBE2', 'RBE3',
         'MPC', 'SPC', 'SPC1', 'SPCADD', 'MPCADD',
-    ]
+    }
+
     is_constraints = False
     for card_type in sorted(loads_by_type.keys()):
         if card_type in skip_cards:
             obj.log.warning('skipping GEOM4-%s' % card_type)
+            continue
+        elif card_type in not_defined_cards:
             continue
         if card_type in supported_cards:
             is_constraints = True
@@ -79,7 +85,7 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     for card_type, cards in sorted(loads_by_type.items()):
         #if card_type in ['SPCD']: # not a GEOM3 load
             #continue
-        if card_type in skip_cards:
+        if card_type in skip_cards or card_type in not_defined_cards:
             continue
 
         try:
@@ -154,6 +160,155 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
             #data = [load.sid, load.node_id, load.Cid(), load.mag] + list(load.xyz)
             #op2_ascii.write('  MPC data=%s\n' % str(data))
             #op2.write(spack.pack(*data))
+    elif card_type == 'RBE1':
+        #"""
+        #RBE1(6801,68,294) - Record 23
+
+        #MSC/NX
+        #Word Name Type Description
+        #1 EID I Element identification number
+        #2 GN  I Grid point identification number for independent degrees-of-freedom
+        #3 CN  I Component numbers of independent degrees-of-freedom
+        #Words 2 through 3 repeat until (-2,-2) occurs
+
+        #4 GM  I Grid point identification number for dependent degrees-of-freedom
+        #5 CM  I Component numbers of dependent degreesof-freedom
+        #Words 4 through 5 repeat until (-1,-1) occurs
+
+        #6 ALPHA RS Thermal expansion coefficient
+        #7 UNDEF none Not used
+        #"""
+        # TODO: neither reader or writer considers alpha; no current examples
+        key = (6801, 68, 294)
+        fields = []
+        fmt = endian
+        for rbe1 in cards:
+            fieldsi = [rbe1.eid]
+            ngn = len(rbe1.Gni)
+            ngm = len(rbe1.Gmi)
+            #fmt += b'i %if 2i %if 2i fi' % (ngn * 2, ngm * 2)
+            fmt += b'i %if 2i %if 2i' % (ngn * 2, ngm * 2)
+            for gn, cn in zip(rbe1.Gni, rbe1.Cni):
+                fieldsi += [gn, int(cn)]
+            fieldsi += [-2, -2]
+            for gm, cm in zip(rbe1.Gmi, rbe1.Cmi):
+                fieldsi += [gm, int(cm)]
+            #fieldsi += [-1, -1, rbe1.alpha, 0]
+            fieldsi += [-1, -1]
+            fields += fieldsi
+        nfields = len(fields)
+        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+        op2.write(pack(fmt, *fields))
+        del fields, fmt
+    elif card_type == 'RBE2':
+        #RBE2(6901,69,295) - Record 24
+        #
+        #Word Name Type Description
+        #1 EID I Element identification number
+        #2  GN I Grid point identification number for independent degrees-of-freedom
+        #3  CM I Component numbers of dependent degrees of-freedom
+        #4  GM I Grid point identification number for dependent degrees-of-freedom
+        #Word 4 repeats until End of Record
+        #5 ALPHA RS Thermal expansion coefficient
+        #
+        is_alpha = False
+        for rbe2 in cards:
+            if rbe2.alpha != 0.:
+                is_alpha = True
+                break
+
+        key = (6901, 69, 295)
+        fields = []
+        fmt = endian
+        if is_alpha:
+            for rbe2 in cards:
+                ngm = len(rbe2.Gmi)
+                fmt += b'3i %ii' % ngm
+                fields += [rbe2.eid, rbe2.gn, int(rbe2.cm)] + rbe2.Gmi
+        else:
+            for rbe2 in cards:
+                ngm = len(rbe2.Gmi)
+                fmt += b'3i %ii f' % ngm
+                fields += [rbe2.eid, rbe2.gn, int(rbe2.cm)] + rbe2.Gmi + [rbe2.alpha]
+
+        nfields = len(fields)
+        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+        op2.write(pack(fmt, *fields))
+        del fields, fmt
+    elif card_type == 'RBE3':
+        #"""
+        #1 EID   I Element identification number
+        #2 REFG  I Reference grid point identification number
+        #3 REFC  I Component numbers at the reference grid point
+
+        #4 WT1  RS Weighting factor for components of motion at G
+        #5 C     I Component numbers
+        #6 G     I Grid point identification number
+        #Word 6 repeats until -1 occurs
+        #Words 4 through 6 repeat until -2 occurs
+
+        #7 GM    I Grid point identification number for dependent degrees-of-freedom
+        #8 CM    I Component numbers of dependent degrees-of-freedom
+
+        #Words 7 through 8 repeat until -3 occurs
+        #"""
+        # TODO: alpha is not supported in the writer
+        key = (7101, 71, 187)
+        fields = []
+        fmt = endian
+        for rbe3 in cards:
+            #print(rbe3.get_stats())
+            fieldsi = [rbe3.eid, rbe3.refgrid, int(rbe3.refc)]
+            fmti = b'3i'
+            for weight, cg, group in rbe3.wt_cg_groups:
+                fieldsi += [weight, int(cg)] + group + [-1]
+                ngroup = len(group)
+                fmti += b'fi %ii i' % ngroup
+                #int(rbe3.cna), int(rbe3.cnb),
+                #int(rbe3.cma), int(rbe3.cmb),
+                #rbe3.alpha]
+            fmti += b'i'
+            fieldsi.append(-2)
+            ngmi = len(rbe3.Gmi)
+            if ngmi:
+                raise RuntimeError('UM is not implemented')
+            fmti += b'i'
+            fieldsi += [-3]
+
+            fmt += fmti
+            fields += fieldsi
+        nfields = len(fields)
+        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+        op2.write(pack(fmt, *fields))
+        del fields, fmt
+
+    elif card_type == 'RBAR':
+        # MSC
+        key = (6601, 66, 292)
+        #"""RBAR(6601,66,292) - Record 22 - MSC version"""
+        if nastran_format == 'msc':
+            fmt = endian + b'7if' * ncards
+            fields = []
+            for rbar in cards:
+                fields += [
+                    rbar.eid, rbar.ga, rbar.gb,
+                    int(rbar.cna), int(rbar.cnb),
+                    int(rbar.cma), int(rbar.cmb),
+                    rbar.alpha]
+        elif nastran_format == 'nx':
+            fmt = endian + b'7i' * ncards
+            fields = []
+            for rbar in cards:
+                fields += [
+                    rbar.eid, rbar.ga, rbar.gb,
+                    int(rbar.cna), int(rbar.cnb),
+                    int(rbar.cma), int(rbar.cmb)]
+        else:  # pragma: no cover
+            raise NotImplementedError(nastran_format)
+        nfields = len(fields)
+        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+        op2.write(pack(fmt, *fields))
+        del fields, fmt
 
     elif card_type == 'SPC1':
         key = (5481, 58, 12)

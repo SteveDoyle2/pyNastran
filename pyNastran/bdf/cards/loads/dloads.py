@@ -734,7 +734,7 @@ def _cross_reference_excite_id(self, model, msg):
                 if 'LOADSET' in subcase:
                     lseq_sid = subcase['LOADSET'][0]
                     if lseq_sid in lseq_sids:
-                        print('adding LOADSET = %i' % lseq_sid)
+                        model.log.debug('adding LOADSET = %i' % lseq_sid)
                         valid_lseqs.append(lseq_sid)
         if valid_lseqs:
             valid_lseqs = list(set(valid_lseqs))

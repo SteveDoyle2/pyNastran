@@ -449,6 +449,21 @@ def __mirror_rigid_elements(model: BDF, mirror_model: BDF,
                 rigid_element.cma, rigid_element.cmb,
                 alpha=rigid_element.alpha, comment='')
             continue
+        elif rigid_element.type == 'RBAR1':
+            node_ids = [node_id + nid_offset for node_id in
+                        [rigid_element.ga, rigid_element.gb]]
+            mirror_model.add_rbar1(
+                eid_mirror, node_ids, rigid_element.cb, alpha=rigid_element.alpha, comment='')
+            continue
+        elif rigid_element.type == 'RBE1':
+            Gni = [node_id + nid_offset for node_id in rigid_element.Gni]
+            Gmi = [node_id + nid_offset for node_id in rigid_element.Gmi]
+            mirror_model.add_rbe1(
+                eid_mirror,
+                Gni, rigid_element.Cni,
+                Gmi, rigid_element.Cmi,
+                alpha=rigid_element.alpha, comment='')
+            continue
         else:
             model.log.warning('_write_elements_symmetric: %s not implemented' % rigid_element.type)
             continue

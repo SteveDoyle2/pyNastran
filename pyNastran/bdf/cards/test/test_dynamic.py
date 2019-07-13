@@ -459,7 +459,7 @@ class TestDynamic(unittest.TestCase):
         model = BDF(debug=False)
         nlparm_id = 42
         model.add_nlparm(nlparm_id, comment='nlparm')
-        save_load_deck(model, run_save_load_hdf5=True)
+        save_load_deck(model)
 
     def test_nlpci(self):
         """tests NLPCI"""

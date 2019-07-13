@@ -1301,7 +1301,7 @@ class TestLoads(unittest.TestCase):
                                                               include_grav=True, xyz_cid0=None)
         assert np.array_equal(forces1, forces2)
         assert np.array_equal(moments1, moments2)
-        save_load_deck(model, run_convert=False, run_op2_reader=True)
+        save_load_deck(model, run_convert=False)
 
     def test_loads_nonlinear(self):
         """tests a nonlinear variation on a FORCE and PLOAD4"""

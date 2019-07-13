@@ -244,7 +244,7 @@ class TestElements(unittest.TestCase):
 
         #model.pop_parse_errors()
         #model.cross_reference()
-        save_load_deck(model, run_convert=False, run_save_load_hdf5=True)
+        save_load_deck(model, run_convert=False)
 
     def test_crac3d(self):
         log = get_logger(level='warning')
@@ -363,8 +363,7 @@ class TestElements(unittest.TestCase):
         genel.raw_fields()
         str(genel)
         assert len(genel.ul.ravel()) == 2, genel.ul
-        save_load_deck(model, xref='standard', punch=True,
-                       run_mirror=False)
+        save_load_deck(model, xref='standard', punch=True, run_mirror=False)
 
 
 if __name__ == '__main__':  # pragma: no cover

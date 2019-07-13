@@ -118,6 +118,20 @@ class TestRigid(unittest.TestCase):
             model.add_grid(nid, [0., 0., 0.])
         save_load_deck(model)
 
+    def test_rbe2_02b(self):
+        """similar to test_rbe2_02, except with alpha"""
+        model = BDF(debug=None, log=None, mode='msc')
+        eid = 10
+        gn = 100
+        cm = '123'
+        Gmi = [20, 21, 30]
+        alpha = 1.
+        model.add_rbe2(eid, gn, cm, Gmi, alpha=alpha, comment='rbe2')
+        nids = [gn] + Gmi
+        for nid in nids:
+            model.add_grid(nid, [0., 0., 0.])
+        save_load_deck(model)
+
     #-------------------------------------------------------------------------
     def test_rbe1_01(self):
         lines = [
@@ -265,6 +279,17 @@ class TestRigid(unittest.TestCase):
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(20, [0., 0., 0.])
         model.add_rbar(eid, nids, cna, cnb, cma, cmb, alpha=0., comment='rbar')
+        save_load_deck(model)
+
+    def test_rbar1(self):
+        """tests an RBAR1"""
+        model = BDF(debug=False, log=None, mode='msc')
+        eid = 100
+        nids = [10, 20]
+        cb = '123'
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [0., 0., 0.])
+        model.add_rbar1(eid, nids, cb)
         save_load_deck(model)
 
 

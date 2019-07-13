@@ -1340,8 +1340,7 @@ class TestBeams(unittest.TestCase):
         pbend2.write_card()
         pbend2.write_card(size=16)
 
-        save_load_deck(model, punch=True, run_remove_unused=True,
-                       run_convert=False, run_renumber=True, run_mirror=True)
+        save_load_deck(model, punch=True, run_convert=False)
 
     def test_pbrsect(self):
         """tests a PBRSECT"""
