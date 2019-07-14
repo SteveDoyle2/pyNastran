@@ -60,15 +60,15 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         'RROD', 'RSSCON',
 
         # sets
-        'ASET1', 'BSET1', 'CSET1',
-        'QSET1', 'OMIT1', 'USET', 'USET1',
+        'CSET1',
+        'USET', 'USET1',
     }
     # not defined in DMAP
     not_defined_cards = {'RBAR1'}
     supported_cards = {
         # sets
         'ASET', 'BSET', 'CSET', 'QSET', 'OMIT',
-
+        'ASET1','BSET1', 'QSET1', 'OMIT1',
         # rigid
         'RBAR', 'RBE1', 'RBE2', 'RBE3',
         # constraints
@@ -122,7 +122,53 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
 def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
     ncards = len(cards)
-    if card_type in ['ASET', 'BSET', 'CSET', 'OMIT', 'QSET']:
+    if card_type in ['ASET1', 'BSET1', 'CSET1', 'QSET1', 'OMIT1']:
+        if card_type == 'ASET1':
+            key = (5571, 77, 216)
+        elif card_type == 'BSET1':
+            key = (410, 4, 314)
+        elif card_type == 'CSET1':
+            key = (210, 2, 312)
+        elif card_type == 'QSET1':
+            key = (610, 6, 316)
+        elif card_type == 'OMIT1':
+            key = (4951, 63, 92)
+        else:  # pragma: no cover
+            raise NotImplementedError(card_type)
+
+        #Word Name Type Description
+        #1 C        I Component numbers
+        #2 THRUFLAG I Thru range flag
+        #THRUFLAG=0 No
+        #  3 ID I Grid or scalar point identification number
+        #  Word 3 repeats until End of Record
+        #THRUFLAG=1 Yes
+        #  3 ID1 I First grid or scalar point identification number
+        #  4 ID2 I Second grid or scalar point identification number
+        #End THRUFLAG
+        data = []
+        fmt = endian
+        for set_obj in cards:
+            nodes = set_obj.node_ids
+            singles, doubles = collapse_thru_packs(nodes)
+            nsingles = len(singles)
+            ndoubles = len(doubles)
+            if nsingles == 0 and ndoubles == 1:
+                min_node, unused_thru, max_node = doubles[0]
+                data += [int(set_obj.components), 1, min_node, max_node]
+                fmt += b'4i'
+            else:
+                data += [int(set_obj.components), 0, ] + nodes
+                nnodes = len(nodes)
+                fmt += b'%ii' % (nnodes + 2)
+
+        nfields = len(data)
+        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+
+        op2.write(pack(fmt, *data))
+        del data, fmt
+
+    elif card_type in ['ASET', 'BSET', 'CSET', 'OMIT', 'QSET']:
         #Word Name Type Description
         #1 ID I Grid or scalar point identification number
         #2  C I Component numbers
@@ -149,9 +195,9 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
         nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
         op2.write(pack(fmt, *data))
         del data, fmt
+
     elif card_type == 'MPC':
         key = (4901, 49, 17)
-
         data = []
         fmt = endian
         for mpc in cards:
@@ -167,36 +213,7 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
         nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
         op2.write(pack(fmt, *data))
         del data, fmt
-        #while i < nfields:
-            #sid, grid, comp = ints[i:i+3]
-            #coeff = floats[i+3]
-            #mpc_data = [sid, grid, comp, coeff]
-            #nodes = [grid]
-            #components = [comp]
-            #coefficients = [coeff]
 
-            #intsi = ints[i+4:i+7]
-            #assert len(intsi) == 3, intsi
-            #while intsi != (-1, -1, -1):
-                #gridi, compi, coeffi = ints[i+4], ints[i+5], floats[i+6]
-                #mpc_data.extend([gridi, compi, coeffi])
-                #nodes.append(gridi)
-                #components.append(compi)
-                #coefficients.append(coeffi)
-                #i += 3
-                #intsi = ints[i+4:i+7]
-            #mpc_data.extend([-1, -1, -1])
-            #i += 7 # 3 + 4 from (-1,-1,-1) and (sid,grid,comp,coeff)
-            #if self.is_debug_file:
-                #self.binary_debug.write('  MPC=%s\n' % str(mpc_data))
-            #mpci = MPC.add_op2_data((sid, nodes, components, coefficients))
-            #self._add_constraint_mpc_object(mpci)
-        #raise NotImplementedError('MPC')
-
-        #for load in cards:
-            #data = [load.sid, load.node_id, load.Cid(), load.mag] + list(load.xyz)
-            #op2_ascii.write('  MPC data=%s\n' % str(data))
-            #op2.write(spack.pack(*data))
     elif card_type == 'RBE1':
         #"""
         #RBE1(6801,68,294) - Record 23
@@ -294,16 +311,12 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
         fields = []
         fmt = endian
         for rbe3 in cards:
-            #print(rbe3.get_stats())
             fieldsi = [rbe3.eid, rbe3.refgrid, int(rbe3.refc)]
             fmti = b'3i'
             for weight, cg, group in rbe3.wt_cg_groups:
                 fieldsi += [weight, int(cg)] + group + [-1]
                 ngroup = len(group)
                 fmti += b'fi %ii i' % ngroup
-                #int(rbe3.cna), int(rbe3.cnb),
-                #int(rbe3.cma), int(rbe3.cmb),
-                #rbe3.alpha]
             fmti += b'i'
             fieldsi.append(-2)
             ngmi = len(rbe3.Gmi)
@@ -322,7 +335,6 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
     elif card_type == 'RBAR':
         # MSC
         key = (6601, 66, 292)
-        #"""RBAR(6601,66,292) - Record 22 - MSC version"""
         if nastran_format == 'msc':
             fmt = endian + b'7if' * ncards
             fields = []
@@ -391,16 +403,16 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
     elif card_type in ['SPCADD', 'MPCADD']:
         if card_type == 'SPCADD':
             key = (5491, 59, 13)
-        else:
-            # MPCADD
+        elif card_type == 'MPCADD':
             key = (4891, 60, 83)
+        else:  # pragma: no cover
+            raise NotImplementedError(card_type)
         #SPCADD(5491,59,13)
         #MPCADD(4891,60,83)
         #[2  1 10 -1]
         #[3  1 -1]
         data = []
         for spcadd in cards:
-            #print(spcadd.get_stats())
             datai = [spcadd.conid] + spcadd.ids + [-1]
             op2_ascii.write('  %s data=%s\n' % (card_type, str(datai)))
             data += datai

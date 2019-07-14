@@ -146,6 +146,7 @@ class ComplexCBush1DArray(OES_Object):
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1,
                   is_mag_phase=False, is_sort1=True):
+        complex_bush1d_f06
         if header is None:
             header = []
         msg_temp = self.get_f06_header(is_mag_phase)
