@@ -43,15 +43,15 @@ matrix:
       env:
       # - bumped numpy from 1.13 to 1.14 to fix unicode savetxt writing
       # - no pyside2
-      - NUMPY='numpy=1.14 scipy=0.19 matplotlib=2.0 h5py vtk pyqt'
+      - NUMPY='numpy==1.14 scipy==0.19 matplotlib==2.0 h5py vtk pyqt'
 
     - name: "Python 3.7 old packages"
       python: '3.7'
       env:
-      #- NUMPY='numpy=1.15 scipy=0.19 matplotlib=2.2'  # doesn't work
+      #- NUMPY='numpy==1.15 scipy==0.19 matplotlib==2.2'  # doesn't work
       # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
       # - no pyside2
-      - NUMPY='numpy=1.14 scipy=1.1 matplotlib=2.2 h5py vtk pyqt'
+      - NUMPY='numpy==1.14 scipy==1.1 matplotlib==2.2 h5py vtk pyqt'
 
     - name: "Python 3.7 (no gui)"
       python: '3.7'
@@ -82,7 +82,8 @@ matrix:
 # Setup anaconda
 before_install:
  - sudo -H pip install auxlib
- - sudo pip install conda
+# removed...
+# - sudo pip install conda
 
 
 # per http://conda.pydata.org/docs/travis.html
@@ -95,38 +96,46 @@ install:
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
 
-   # not using latest because random crashes (2016/3/23)
-   #wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
-   #wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+#=====conda setup=====
+# removed...
+#   # not using latest because random crashes (2016/3/23)
+#   #wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
+#   #wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+#
+#    # 4.1.11 -> 4.5.4 (2018/8/19)
+#  - wget https://repo.continuum.io/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh -O miniconda.sh;
+#  - bash miniconda.sh -b -p $HOME/miniconda
+#  - export PATH="$HOME/miniconda/bin:$PATH"
+#  - hash -r
+#  - conda config --set always_yes yes --set changeps1 no
+#  #- conda update -q conda
+#  # Useful for debugging any issues with conda
+#  - conda info -a
+#
+#  - conda install psutil pip
+#  #- pip install coveralls
+#===end conda setup===
 
-    # 4.1.11 -> 4.5.4 (2018/8/19)
-  - wget https://repo.continuum.io/miniconda/Miniconda3-4.5.4-Linux-x86_64.sh -O miniconda.sh;
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  #- conda update -q conda
-  # Useful for debugging any issues with conda
-  - conda info -a
-
-  - conda install psutil pip
-#  - pip install coveralls
-
-  # install dependencies
   # if line per https://docs.travis-ci.com/user/multi-os/
   - echo "python version=$TRAVIS_PYTHON_VERSION"
 
-  # numpy 1.14.2; pandas is fine: 0.22.0
-#  - if [[ "$TRAVIS_JOB_NAME"]]
-
-#  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
-#  - if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
-#  - if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib pandas; fi
-
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION ${NUMPY} pandas
-  - source activate test-environment
-#  - conda install python-coveralls
-  - conda list
+#===install dependencies===
+#-----------pip------------
+# added...
+  - pip install ${NUMPY} pandas
+  - pip list
+#----------conda-----------
+# removed...
+#  # numpy 1.14.2; pandas is fine: 0.22.0
+#  #- if [[ "$TRAVIS_JOB_NAME"]]
+#  #- if [[ "$TRAVIS_PYTHON_VERSION" == "3.6" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
+#  #- if [[ "$TRAVIS_PYTHON_VERSION" == "3.7" ]];     then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy>=1.12 scipy matplotlib pandas      h5py vtk pyqt; fi
+#  #- if [[ "$TRAVIS_PYTHON_VERSION" == "nightly" ]]; then conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION atlas numpy<1.13  scipy matplotlib pandas; fi
+#  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION ${NUMPY} pandas
+#  - source activate test-environment
+#  #- conda install python-coveralls
+#  - conda list
+#----------run-----------
   - python setup${NOGUI}.py develop
 
 

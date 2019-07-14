@@ -35,31 +35,6 @@ def Iyy_beam(b, h):
     return 1 / 12. * b * h ** 3
 
 
-#def I_beam(b, h):
-    ## type: (float, float) -> Tuple[float, float, float]
-    #"""gets the Iyy, Izz, Iyz for a solid beam"""
-    #f = 1 / 12. * b * h
-    #Iyy = f * h * h  # 1/12.*b*h**3
-    #Izz = f * b * b  # 1/12.*h*b**3
-    #Iyz = 0.
-    #return (Iyy, Izz, Iyz)
-
-
-#def I_beam_offset(b, h, y, z):
-    ## type: (float, float, float, float) -> Tuple[float, float, float]
-    #A = b * h
-    #f = 1. / 12. * A
-
-    #Iyy = f * h * h  # 1/12.*b*h**3
-    #Izz = f * b * b  # 1/12.*h*b**3
-    #Iyz = 0.
-
-    #Iyy += A * y * y
-    #Izz += A * z * z
-    #Iyz += A * y * z
-    #return (Iyy, Izz, Iyz)
-
-
 def get_inertia_rectangular(sections):
     """
     Calculates the moment of inertia for a section about the CG.
@@ -266,7 +241,7 @@ def A_I1_I2_I12(prop, beam_type: str,
             beam_type, prop.type)
         raise NotImplementedError(msg)
     assert A == prop.Area(), prop
-    return(A, I1, I2, I12)
+    return A, I1, I2, I12
 
 def _bar_areaL(class_name, beam_type, dim, prop):
     # type: (str, str, List[float], Any) -> float
@@ -301,7 +276,6 @@ def _bar_areaL(class_name, beam_type, dim, prop):
 
     elif beam_type == 'L':
         A, I1, I2, I12 = l_section(class_name, beam_type, dim, prop)
-
 
     elif beam_type == 'CHAN':
         A, I1, I2, I12 = chan_section(class_name, beam_type, dim, prop)
@@ -349,134 +323,7 @@ def _bar_areaL(class_name, beam_type, dim, prop):
 
     return A
 
-def chan_section(class_name, beam_type, dim, prop):
-    #
-    # +-+----+   ^  ^
-    # | |    |   |  | d4 = tf
-    # | +----+   |  v
-    # | |        |         ^
-    # | |<-- d3  |         |
-    # | |    tw  | d2 = h  | hw
-    # | |        |         |
-    # | +----+   |         v
-    # | |    |   |
-    # +-+----+   v
-    #   <-bf->
-    # <--d1-->
-    #
-
-    dim1, dim2, dim3, dim4 = dim
-    tw = tweb = dim3
-    tf = tflange = dim4
-    bflange_tweb = dim1
-
-    bflange = bflange_tweb - tweb
-    hweb_all = dim2
-    hweb = dim2 - 2. * tf
-    #print(f'tflange={tflange} bflage={bflange} hweb_all={hweb_all} hweb={hweb} tweb={tweb}')
-    A0 = 2 * (tflange * bflange) + tweb * hweb_all
-
-    d = dim2 - 2 * tf
-
-    # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
-    #b = dim1 - 0.5 * tw
-    #h = dim2 - tf
-    #bf = dim1 - tw
-    #hw = dim2 - 2 * tf
-
-    #A = 2 * tf * bf + (h + tf) * tweb  # I think tt is tf...
-    #zc = bf * tf * (bf + tw) / A
-    #zs = b**2 * tf / (2 * b * tw + h * tf / 3)
-    #i1 = (
-        #h ** 2 * tf * bf / 2
-        #+ bf * tf ** 3 / 6
-        #+ (h + tf) ** 3 * tw / 12
-    #)
-    #i2 = (
-        #(h + tf) * tw**3/12
-        #+ bf**3 * tf / 6
-        #+ 0.5 * (bf + tw) ** 2 * bf * tf
-        #- zc ** 2 * A
-    #)
-    #j = (2 * b * tf **3 + h * tw ** 3) / 3
-
-    # warping coefficient for the cross section relative to the shear center
-    #iw = tf * b**3 * h**2 / 12 * (2 * tw * h + 3 * tf * b) / (tw * h + 6 * tf * b)
-    #k1 = tw * hw / A
-    #k2 = 2 * tf * bf / A
-    #zna = zc + zs
-    hweb = dim2 - 2 * tf
-    A1 = 2 * tf * dim1 + hweb * tweb
-    A = A1
-    I1 = I2 = I12 = None
-    return A, I1, I2, I12
-
-def chan1_section(class_name, beam_type, dim, prop):
-    #
-    # +--------+  ^
-    # |        |  |
-    # +---+----+  |
-    # |   |       |         ^
-    # |   |       |         |
-    # |   |       | d4 = h  | d3 = hw = h2
-    # |   |       |         |
-    # +---+----+  |         v
-    # |        |  |
-    # +--------+  v
-    # <---w1--->
-    # <--><---->
-    # dim2 dim1
-    # tw    bf
-    dim1, dim2, dim3, dim4 = dim
-    tweb = dim2
-    bflange = dim1
-    h_all = dim4
-    h_inner = dim3
-
-    h1 = h_all - h_inner  # 2*tflange
-    assert h_all > h_inner, f'h_all(dim4)={h_all} h_inner(dim3)={h_inner}'
-    tflange = h1 / 2.
-    w_all = bflange + tweb  # bf + tw
-    A = h1 * w_all + h_inner * tweb
-    #print(f'h_all={h_all} h_inner={h_inner} tweb={tweb} tflange={tflange} bflange={bflange}')
-    A2 = dim2 * dim3 + (h_all - dim3) * (dim1 + dim2)
-    assert np.allclose(A, A2), 'A=%s A2=%s' % (A, A2)
-    I1 = I2 = I12 = None
-    return A, I1, I2, I12
-
-def chan2_section(class_name, beam_type, dim, prop):
-    #  d1        d1
-    # <-->      <-->
-    # +--+      +--+        ^
-    # |  |      |  |        |
-    # |  |      |  |        | d3
-    # +--+------+--+  ^     |
-    # |            |  | d2  |
-    # +------------+  v     v
-    #
-    # <-----d4----->
-    #
-    dim1, dim2, dim3, dim4 = dim
-    hupper = dim3 - dim2
-    hlower = dim2
-    wlower = dim4
-    wupper = dim1
-    A = 2 * hupper * wupper + hlower * wlower
-
-    h2 = dim2
-    w2 = dim4
-
-    h1 = dim3 - h2
-    w1 = dim1 * 2
-    A2 = h1 * w1 + h2 * w2
-    A3 = 2 * dim1 * dim3 + (dim4 - 2 * dim1) * dim2
-    assert np.allclose(A, A2), 'A=%s A2=%s A3=%s' % (A, A2, A3)
-    assert np.allclose(A, A3), 'A=%s A2=%s A3=%s' % (A, A2, A3)
-    I1 = I2 = I12 = None
-    return A, I1, I2, I12
-
 def rod_section(class_name, beam_type, dim, prop):
-
     # This is a circle if you couldn't tell...
     #   __C__
     #  /     \
@@ -525,11 +372,10 @@ def bar_section(class_type, beam_type, dim, prop):
     # E------D  v
     b, h = dim
     A = b * h
-    I1 = b * h ** 3 / 12
-    I2 = h * b ** 3 / 12
+    I1 = b * h ** 3 / 12.
+    I2 = h * b ** 3 / 12.
     I12 = 0.
     #J = b*h**3*(1/3. - 0.21*h/b*(1-h**4/(12*b**4)))
-
     return A, I1, I2, I12
 
 def box_section(class_name, beam_type, dim, prop):
@@ -581,11 +427,12 @@ def box1_section(class_name, beam_type, dim, prop):
     return A, I1, I2, I12
 
 def cross_section(class_type, beam_type, dim, prop):
-    h1 = dim[2]
-    w1 = dim[1]
+    dim1, dim2, dim3, dim4 = dim
+    h1 = dim3
+    w1 = dim2
 
-    h2 = dim[3]
-    w2 = dim[0]
+    h2 = dim4
+    w2 = dim1
     A = h1 * w1 + h2 * w2
     I1 = I2 = I12 = None
     return A, I1, I2, I12
@@ -674,7 +521,7 @@ def t2_section(class_name, beam_type, dim, prop):
     bflange = ball - tweb
     #print(f'hall={hall} ball={ball} tweb={tweb} bflange={bflange}')
     assert hall - tflange > 0, f'bweb={hall-tflange} hall(dim2)={hall} tflange(dim3)={tflange}'
-    assert ball - tweb > 0, f'bflange={bflange} ball(dim1)={hall} tweb(dim4)={tweb}'
+    assert ball - tweb > 0, f'bflange={bflange} ball(dim1)={ball} tweb(dim4)={tweb}'
     A = tweb * hall + tflange * bflange
     I1 = I2 = I12 = None
     return A, I1, I2, I12
@@ -876,11 +723,12 @@ def i1_section(class_name, beam_type, dim, prop):
     #
     # A3 = A1
     # A = A1 + A2 + A3
-    w1 = dim[0] + dim[1]
-    h1 = (dim[3] - dim[2]) / 2.
+    dim1, dim2, dim3, dim4 = dim
+    w1 = dim1 + dim2
+    h1 = (dim4 - dim3) / 2.
 
-    w2 = dim[1]
-    h2 = dim[2]
+    w2 = dim2
+    h2 = dim3
 
     A = 2. * (h1 * w1) + h2 * w2
     I1 = I2 = I12 = None
@@ -903,29 +751,26 @@ def l_section(class_type, beam_type, dim, prop):
     dim1, dim2, dim3, dim4 = dim
     t1 = dim3
     t2 = dim4
-    A0 = (dim1*t1) + t2*(dim2-t1)
-
     b = dim1 - 0.5 * t2
     h = dim2 - 0.5 * t1
     h2 = dim2 - t1
     b1 = dim1 - t2
     A = (b + 0.5 * t2) * t1 + h2 * t2
-    assert np.allclose(A0, A), 'A0=%s A=%s' % (A0, A)
 
     yc = t2*h2 * (h2 + t1) / (2 * A)
     zc = t1*b1 * (b1 + t2) / (2 * A)
-    I1 = (
+    i1 = (
         t1 ** 3 * (b + 0.5 * t2) / 12. +
         t1 * (b + 0.5 * t2) * yc ** 2 +
         t2 * h ** 3 / 12 +
         h2 * t2 * (0.5 * (h2 + t1) - yc) ** 2
     )
-    I2 = (
-        t2 ** 3 * h2 / 12 +
-        t1*(b + 0.5 * t2) ** 3 / 12 +
+    i2 = (
+        t2 ** 3 * h2 / 12. +
+        t1*(b + 0.5 * t2) ** 3 / 12. +
         t1*(b + 0.5 * t2) * (0.5 * b1 - zc) ** 2  # zc is z2 in the docs...
     )
-    I12 = (
+    i12 = (
         zc * yc * t1 * t2
         - b1 * t1 * yc * (0.5 * (b1 + t2) - zc)
         - h2 * t2 * zc * (0.5 * (h2 + t1) - yc)
@@ -935,6 +780,132 @@ def l_section(class_type, beam_type, dim, prop):
     #k2 = b1 * t1 / A
     #yna = yc
     #zna = zc
+    return A, i1, i2, i12
+
+def chan_section(class_name, beam_type, dim, prop):
+    #
+    # +-+----+   ^  ^
+    # | |    |   |  | d4 = tf
+    # | +----+   |  v
+    # | |        |         ^
+    # | |<-- d3  |         |
+    # | |    tw  | d2 = h  | hw
+    # | |        |         |
+    # | +----+   |         v
+    # | |    |   |
+    # +-+----+   v
+    #   <-bf->
+    # <--d1-->
+    #
+
+    dim1, dim2, dim3, dim4 = dim
+    tw = tweb = dim3
+    tf = tflange = dim4
+    bflange_tweb = dim1
+
+    bflange = bflange_tweb - tweb
+    hweb_all = dim2
+    hweb = dim2 - 2. * tf
+    #print(f'tflange={tflange} bflage={bflange} hweb_all={hweb_all} hweb={hweb} tweb={tweb}')
+    A0 = 2 * (tflange * bflange) + tweb * hweb_all
+
+    d = dim2 - 2 * tf
+
+    # per https://docs.plm.automation.siemens.com/data_services/resources/nxnastran/10/help/en_US/tdocExt/pdf/element.pdf
+    #b = dim1 - 0.5 * tw
+    #h = dim2 - tf
+    #bf = dim1 - tw
+    #hw = dim2 - 2 * tf
+
+    #A = 2 * tf * bf + (h + tf) * tweb  # I think tt is tf...
+    #zc = bf * tf * (bf + tw) / A
+    #zs = b**2 * tf / (2 * b * tw + h * tf / 3)
+    #i1 = (
+        #h ** 2 * tf * bf / 2
+        #+ bf * tf ** 3 / 6
+        #+ (h + tf) ** 3 * tw / 12
+    #)
+    #i2 = (
+        #(h + tf) * tw**3/12
+        #+ bf**3 * tf / 6
+        #+ 0.5 * (bf + tw) ** 2 * bf * tf
+        #- zc ** 2 * A
+    #)
+    #j = (2 * b * tf **3 + h * tw ** 3) / 3
+
+    # warping coefficient for the cross section relative to the shear center
+    #iw = tf * b**3 * h**2 / 12 * (2 * tw * h + 3 * tf * b) / (tw * h + 6 * tf * b)
+    #k1 = tw * hw / A
+    #k2 = 2 * tf * bf / A
+    #zna = zc + zs
+    hweb = dim2 - 2 * tf
+    A1 = 2 * tf * dim1 + hweb * tweb
+    A = A1
+    I1 = I2 = I12 = None
+    return A, I1, I2, I12
+
+def chan1_section(class_name, beam_type, dim, prop):
+    #
+    # +--------+  ^
+    # |        |  |
+    # +---+----+  |
+    # |   |       |         ^
+    # |   |       |         |
+    # |   |       | d4 = h  | d3 = hw = h2
+    # |   |       |         |
+    # +---+----+  |         v
+    # |        |  |
+    # +--------+  v
+    # <---w1--->
+    # <--><---->
+    # dim2 dim1
+    # tw    bf
+    dim1, dim2, dim3, dim4 = dim
+    tweb = dim2
+    bflange = dim1
+    h_all = dim4
+    h_inner = dim3
+
+    h1 = h_all - h_inner  # 2*tflange
+    assert h_all > h_inner, f'h_all(dim4)={h_all} h_inner(dim3)={h_inner}'
+    tflange = h1 / 2.
+    w_all = bflange + tweb  # bf + tw
+    A = h1 * w_all + h_inner * tweb
+    #print(f'h_all={h_all} h_inner={h_inner} tweb={tweb} tflange={tflange} bflange={bflange}')
+    A2 = dim2 * dim3 + (h_all - dim3) * (dim1 + dim2)
+    assert np.allclose(A, A2), 'A=%s A2=%s' % (A, A2)
+    I1 = I2 = I12 = None
+    return A, I1, I2, I12
+
+def chan2_section(class_name, beam_type, dim, prop):
+    #  d1        d1
+    # <-->      <-->
+    # +--+      +--+        ^
+    # |  |      |  |        |
+    # |  |      |  |        | d3
+    # +--+------+--+  ^     |
+    # |            |  | d2  |
+    # +------------+  v     v
+    #
+    # <-----d4----->
+    #
+    dim1, dim2, dim3, dim4 = dim
+    hupper = dim3 - dim2
+    hlower = dim2
+    wlower = dim4
+    wupper = dim1
+    A = 2 * hupper * wupper + hlower * wlower
+
+    h2 = dim2
+    w2 = dim4
+
+    h1 = dim3 - h2
+    w1 = dim1 * 2
+    A2 = h1 * w1 + h2 * w2
+    A3 = 2 * dim1 * dim3 + (dim4 - 2 * dim1) * dim2
+    assert np.allclose(A, A2), 'A=%s A2=%s A3=%s' % (A, A2, A3)
+    assert np.allclose(A, A3), 'A=%s A2=%s A3=%s' % (A, A2, A3)
+    I1 = I2 = I12 = None
     return A, I1, I2, I12
 
 def dbox_section(class_name, beam_type, dim, prop):
@@ -1861,10 +1832,6 @@ class PBARL(LineProperty):
         beam_type = self.beam_type
         if beam_type == 'ROD':
             A, I1, I2, I12 = rod_section(self.type, beam_type, self.dim, self)
-            #r = self.dim[0]
-            #Ixx = pi * r**4 / 4.
-            #Iyy = Ixx
-            #unused_Ixy = 0.
         elif beam_type == 'TUBE':
             A, I1, I2, I12 = tube_section(self.type, beam_type, self.dim, self)
         elif beam_type == 'TUBE2':

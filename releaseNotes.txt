@@ -50,10 +50,7 @@ Solver
 BDF:
  - bug fixes:
    - added AECOMPL, DEFORM to bdf attributes
-   - added I12, J to PBEAM updater; fixed error message
    - added RHO to MAT10 updater
-   - fixed Area calculation for PBARL/CHAN, HAT1, DBOX
-
  - new cards:
    - DTI besides UNITS are now supported
    - PBEAM3, TEMPB3
@@ -107,15 +104,19 @@ BDF:
      field id numbers are used to update the card).
    - added some missing hdf5 object support
    - fixing DEQATN bug caused by using python builtin
-   - fixed issue where CAERO1 didn't set the xyz1 and xyz4 points to arrays
-     when loading an HDF5 file
-   - caero2 now sets box ids
-   - fixed PBAR optimization treating I12 as I1; added J
    - fixed missing variable in mass properties error message
+   - aero
+     - fixed issue where CAERO1 didn't set the xyz1 and xyz4 points to arrays
+       when loading an HDF5 file
+     - caero2 now sets box ids
+   - elements/properties
+     - added I12, J to PBEAM updater; fixed error message
+     - fixed Area calculation for PBARL/CHAN, HAT1, DBOX
+     - fixed PBAR optimization treating I12 as I1; added J
    - convert better handles:
      - T1-T4 in quad shells
      - fixed bug in CGAP x/g0
-  - bdf mirror:
+   - bdf mirror:
      - fixed bug where max element id is less than max rigid_element id
      - fixed bug with shells that have blanks (e.g., CTRIA6, CQUAD8)
      - plane is now case insensitive and auto-sorted
