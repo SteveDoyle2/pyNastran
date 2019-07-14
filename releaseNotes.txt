@@ -53,7 +53,7 @@ BDF:
    - added I12, J to PBEAM updater; fixed error message
    - added RHO to MAT10 updater
    - fixed Area calculation for PBARL/CHAN, HAT1, DBOX
-   - fixed missing variable in mass properties error message
+
  - new cards:
    - DTI besides UNITS are now supported
    - PBEAM3, TEMPB3
@@ -63,6 +63,8 @@ BDF:
    - PCOMPG now supports DVPRELx
    - added get_position for SPOINT
    - added inertia for PBARL/L
+   - bdf mirror:
+     - added PLOTEL, RROD, RBAR, RBAR1, RBE1, AELIST, AESURF support
  - minor enhancements:
    - handling ;; in DEQATN
    - PBARL & PBEAML DBOX now has defaults for DIM5-DIM10
@@ -91,6 +93,7 @@ GUI:
       filter out extra nodes/elements or you set some blank nodes/elements.
        - For integer results, no masking is applied.
        - For float results, masking is applied and nan corresponds to no color.
+    - added mark_elements, mark_elements_by_case
 
 -----------------------v1.2.2 released 2019/6/x-----------------------
 BDF:
@@ -104,12 +107,38 @@ BDF:
      field id numbers are used to update the card).
    - added some missing hdf5 object support
    - fixing DEQATN bug caused by using python builtin
+   - fixed issue where CAERO1 didn't set the xyz1 and xyz4 points to arrays
+     when loading an HDF5 file
+   - caero2 now sets box ids
+   - fixed PBAR optimization treating I12 as I1; added J
+   - fixed missing variable in mass properties error message
+   - convert better handles:
+     - T1-T4 in quad shells
+     - fixed bug in CGAP x/g0
+  - bdf mirror:
+     - fixed bug where max element id is less than max rigid_element id
+     - fixed bug with shells that have blanks (e.g., CTRIA6, CQUAD8)
+     - plane is now case insensitive and auto-sorted
+     - CAERO1 now supports lspan/lchord and Cp
+     - CAERO1 handles xy plane properly now (doesn't assume it's xz)
+OP2:
+ - geom bug fixes:
+    - fixed reading bugs for QHBDY and SPCOFF
+    - better identifing duplicate property id (PBCOMP -> PBEAM)
+    - fixed CONVM error (it can be 6 or 7 fields, not only 6)
+    - fixed ACCEL key
+ - bug fixes:
+    - R1TABRG now stores response_types as strings (instead of bytes for
+      Python 3)
+    - f06 writer now writes CDAMP3/4 names correctly
 
 GUI:
  - bug fixes:
   - added check on highlight menu for model existance
   - fixed import for new version download menu
   - improved command line error message
+  - fixed support for CAEROx models without elements
+  - export_cases now supports integers
 
 -----------------------v1.2.1 released 2019/5/24-----------------------
 OP2:
@@ -250,7 +279,7 @@ BDF:
    - preliminary ZONA loading
    - added atmosphere2.make_flfacts_eas_sweep, make_flfacts_mach_sweep, and
      make_flfacts_alt_sweep with an EAS (equivalent airspeed) limiter
-   - rotate_v_wa_wb for CBAR/CBEAM to determine
+   - rotate_v_wa_wb for CBAR/CBEAM to determine element vectors
 
   - Bug fixes:
    - more add_card documentation (e.g., add_grid, add_ctria3)

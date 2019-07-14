@@ -1416,7 +1416,6 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n+24]
             out = structi.unpack(edata)
-            print(out)
             if self.is_debug_file:
                 self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2) = out

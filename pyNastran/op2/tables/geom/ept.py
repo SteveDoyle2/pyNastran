@@ -508,7 +508,6 @@ class EPT(GeomCommon):
             is_pbcomp = False
             for i in range(11):
                 edata = data[n:n+64]
-                #self.show_data(edata)
                 if len(edata) != 64:
                     endpack = []
                     raise RuntimeError('PBEAM unexpected length i=%s...' % i)

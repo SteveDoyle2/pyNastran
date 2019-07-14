@@ -61,6 +61,7 @@ def _to_fields_mntpnt1(card_lines: List[str]) -> List[str]:
     ]
     return fields
 
+
 def to_fields(card_lines: List[str], card_name: str) -> List[str]:
     """
     Converts a series of lines in a card into string versions of the field.

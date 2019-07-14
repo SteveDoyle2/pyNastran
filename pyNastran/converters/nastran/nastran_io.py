@@ -5100,7 +5100,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             max_skew_angle, taper_ratio, dideal_theta,
             area_ratio, min_edge_length, max_warp_angle,
         )
-        print('end', len(out))
         return out
 
     def _map_elements1_quality(self, model, xyz_cid0, nid_cp_cd, unused_dim_max, nid_map, j):

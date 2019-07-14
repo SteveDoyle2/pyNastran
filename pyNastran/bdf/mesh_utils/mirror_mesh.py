@@ -353,7 +353,6 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
         fields[1] = eid_mirror
         mirror_model.add_card(fields, etype)
         element2 = mirror_model.elements[eid_mirror]
-        #print(element.get_stats())
 
         if etype in shells:
             nodes = [node_id + nid_offset for node_id in nodes]
@@ -488,6 +487,7 @@ def __mirror_rigid_elements(model: BDF, mirror_model: BDF,
             )
         else:  # pragma: no cover
             mirror_model.log.warning('skipping:\n%s' % str(rigid_element))
+
 
 def _mirror_loads(model: BDF, nid_offset: int=0, eid_offset: int=0):
     """
@@ -785,6 +785,7 @@ def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz'):
     if is_aero:
         _asymmetrically_mirror_aero_coords(model, aero_cids_set, cid_offset, plane)
     model.pop_parse_errors()
+
 
 def _asymmetrically_mirror_aero_coords(model: BDF,
                                        aero_cids_set: Set[int],
