@@ -1330,7 +1330,7 @@ class TestLoads(unittest.TestCase):
         model.add_pload4(pload4_sid, eids, pressures)
 
         table_id = 30000
-        theta = np.linspace(0., 1., num=50, endpoint=True, retstep=False, dtype=None, axis=0)
+        theta = np.linspace(0., 1., num=50, endpoint=True)
         y = np.sin(theta)
         x = theta
         model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
@@ -1383,7 +1383,7 @@ class TestLoads(unittest.TestCase):
         #model.add_pload4(pload4_sid, eids, pressures)
 
         table_id = 30000
-        theta = np.linspace(0., 1., num=50, endpoint=True, retstep=False, dtype=None, axis=0)
+        theta = np.linspace(0., 1., num=50, endpoint=True)
         y = np.sin(theta)
         x = theta
         model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
@@ -1441,7 +1441,7 @@ class TestLoads(unittest.TestCase):
         #model.add_pload4(pload4_sid, eids, pressures)
 
         table_id = 30000
-        theta = np.linspace(0., 1., num=50, endpoint=True, retstep=False, dtype=None, axis=0)
+        theta = np.linspace(0., 1., num=50, endpoint=True)
         y = np.sin(theta)
         x = theta
         model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
@@ -1499,7 +1499,7 @@ class TestLoads(unittest.TestCase):
         #model.add_pload4(pload4_sid, eids, pressures)
 
         table_id = 30000
-        theta = np.linspace(0., 1., num=50, endpoint=True, retstep=False, dtype=None, axis=0)
+        theta = np.linspace(0., 1., num=50, endpoint=True)
         y = np.sin(theta)
         x = theta
         model.add_tabled1(table_id, x, y, xaxis='LINEAR', yaxis='LINEAR', extrap=0, comment='')
