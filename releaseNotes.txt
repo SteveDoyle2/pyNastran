@@ -92,7 +92,7 @@ GUI:
        - For float results, masking is applied and nan corresponds to no color.
     - added mark_elements, mark_elements_by_case
 
------------------------v1.2.2 released 2019/6/x-----------------------
+-----------------------v1.2.2 released 2019/7/x-----------------------
 BDF:
  - bug fixes:
    - Better case control SET parser (can now handle 1,THRU,10,EXCEPT,7,8,
@@ -122,6 +122,7 @@ BDF:
      - plane is now case insensitive and auto-sorted
      - CAERO1 now supports lspan/lchord and Cp
      - CAERO1 handles xy plane properly now (doesn't assume it's xz)
+     - fixing bug in set_param
 OP2:
  - geom bug fixes:
     - fixed reading bugs for QHBDY and SPCOFF

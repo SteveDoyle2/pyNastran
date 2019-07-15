@@ -476,7 +476,7 @@ def create_annotation(gui, text, x, y, z):
     settings = gui.settings
     text_actor = vtk.vtkBillboardTextActor3D()
     text_actor.SetPosition(x, y, z)
-    text_actor.SetInput(text)
+    text_actor.SetInput(str(text))
     text_actor.PickableOff()
     text_actor.DragableOff()
     #text_actor.SetPickable(False)
