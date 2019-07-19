@@ -125,6 +125,9 @@ def _cast(h5_result_attr):
         #raise NotImplementedError(h5_result_attr.dtype)
     return np.array(h5_result_attr)
 
+# the data fro these keys must be strings
+STRING_KEYS = ['result_name', 'superelement_adaptivity_index']
+
 TABLE_OBJ_MAP = {
     'displacements' : (RealDisplacementArray, ComplexDisplacementArray),
     'no.displacements' : (RealDisplacementArray, ComplexDisplacementArray),
@@ -1008,6 +1011,10 @@ def _load_table(result_name, h5_result, objs, log, debug=False):# real_obj, comp
     dt = nonlinear_factor
 
     class_name = _cast(h5_result.get('class_name'))
+    if isinstance(class_name, bytes):
+        class_name = class_name.decode('latin1')
+
+
     obj_class = _get_obj_class(objs, class_name, result_name, is_real, log)
     if obj_class is None:
         log.warning('  unhandled result_name=%r class_name=%r...' % (
@@ -1055,6 +1062,8 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
                 if key not in ['data']:
                     print(datai)
 
+            if key in STRING_KEYS and isinstance(datai, bytes):
+                datai = datai.decode('latin1')
 
             try:
                 setattr(obj, key, datai)
@@ -1073,8 +1082,10 @@ def _get_obj_class(objs, class_name, result_name, unused_is_real, log):
     # does what the two previous lines should do...
     obj_map = {str(obj).split("'")[1].split('.')[-1] : obj
                for obj in objs if obj is not None}
+
+    class_name_str = class_name
     try:
-        obj_class = obj_map[class_name]
+        obj_class = obj_map[class_name_str]
     except KeyError:
         keysi = list(obj_map.keys())
         print(objs)

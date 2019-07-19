@@ -110,7 +110,11 @@ class Sidebar(QWidget):
     +--------------+
     """
     def __init__(self, parent, debug=False, data=None, clear_data=True, name='main',
-                 setup_dict=None):
+                 setup_dict=None,
+                 include_clear=True,
+                 include_export_case=False,
+                 include_delete=True,
+                 include_results=True):
         """
         Creates the buttons in the Sidebar, not the actual layout
 
@@ -138,7 +142,13 @@ class Sidebar(QWidget):
         if data is None:
             data = []
 
-        self.result_case_windows = [ResultsWindow(self, 'Case/Results', data, choices)]
+        self.result_case_windows = [
+            ResultsWindow(self, 'Case/Results', data, choices,
+                          include_clear=include_clear,
+                          include_export_case=include_export_case,
+                          include_delete=include_delete,
+                          include_results=include_results)
+        ]
         data = [
             ('A', 1, []),
             #('B', 2, []),

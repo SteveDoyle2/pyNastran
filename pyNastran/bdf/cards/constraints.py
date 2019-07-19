@@ -500,7 +500,7 @@ class MPC(Constraint):
                 break
             nid = integer(card, ifield + 3, 'G%i' % i)
             component = components_or_blank(card, ifield + 4, 'constraint%i' % i, '0')  # scalar point
-            coefficient = double_or_blank(card, ifield + 5, 'coefficient%i' % i)
+            coefficient = double_or_blank(card, ifield + 5, 'coefficient%i' % i, 0.0)
             nodes.append(nid)
             components.append(component)
             coefficients.append(coefficient)
@@ -616,9 +616,17 @@ class MPC(Constraint):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         """see BaseCard.write_card``"""
-        if size == 8:
-            return self.write_card_8()
-        return self.write_card_16(is_double)
+        try:
+            if size == 8:
+                return self.write_card_8()
+            return self.write_card_16(is_double)
+        except:  # pragma: no cover
+            fields = self.raw_fields()
+            print('MPC fields = %s' % fields)
+            if size == 8:
+                if size == 8:
+                    return print_card_8(fields)
+                return print_card_16(fields)
 
     def write_card_8(self):
         msg = 'MPC     %8s' % self.conid
