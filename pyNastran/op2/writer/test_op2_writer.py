@@ -8,7 +8,7 @@ import pyNastran
 #from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import read_op2_geom#, OP2Geom,
 from pyNastran.op2.test.test_op2 import run_op2, read_op2
-from pyNastran.op2.dev.op2_writer import OP2Writer
+from pyNastran.op2.writer.op2_writer import OP2Writer
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))

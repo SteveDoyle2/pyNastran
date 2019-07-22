@@ -26,7 +26,7 @@ except ImportError:
 
 import pyNastran
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
-from pyNastran.op2.dev.op2_writer import OP2Writer
+from pyNastran.op2.writer.op2_writer import OP2Writer
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError

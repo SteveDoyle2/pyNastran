@@ -8,12 +8,12 @@ import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.write_utils import _write_markers
 from pyNastran.op2.errors import FatalError
-from .writer.geom1_writer import write_geom1
-from .writer.geom2_writer import write_geom2
-from .writer.geom3_writer import write_geom3
-from .writer.geom4_writer import write_geom4
-from .writer.ept_writer import write_ept
-from .writer.mpt_writer import write_mpt
+from .geom1_writer import write_geom1
+from .geom2_writer import write_geom2
+from .geom3_writer import write_geom3
+from .geom4_writer import write_geom4
+from .ept_writer import write_ept
+from .mpt_writer import write_mpt
 
 
 class TrashWriter:
