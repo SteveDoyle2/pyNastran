@@ -127,8 +127,8 @@ class BDFInputPy:
                 bulk_data_lines, bulk_data_ilines,
                 superelement_lines, superelement_ilines)
 
-    def _get_lines_zona(self, system_lines, bulk_data_lines, bulk_data_ilines, punch):
-        # type: (List[str], List[str], Any, bool) -> (List[str], Any, List[str])
+    def _get_lines_zona(self, system_lines: List[str], bulk_data_lines: List[str], bulk_data_ilines: Any,
+                        punch: bool) -> Tuple[List[str], Any, List[str]]:
         """load and update the lines for ZONA"""
         system_lines2 = []
         for system_line in system_lines:
@@ -142,7 +142,9 @@ class BDFInputPy:
                     self.log.debug('reading %s' % filename)
                     if filename.lower().endswith('.f06'):
                         filename = os.path.splitext(filename)[0] + '.bdf'
-                    assert filename.endswith('.bdf'), filename
+                    if not filename.endswith('.bdf'):
+                        raise RuntimeError('filename must end in bdf; %s' % filename)
+
 
                     _main_lines = self.get_main_lines(filename)
                     make_ilines = bulk_data_ilines is not None
@@ -190,7 +192,8 @@ class BDFInputPy:
         if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
             bdf_filename = cast(StringIO, bdf_filename)
             lines = bdf_filename.readlines()
-            assert len(lines) > 0, lines
+            if len(lines) == 0:
+                raise RuntimeError('lines in %s is empty' % bdf_filename)
             return lines
 
         bdf_filename = cast(str, bdf_filename)
@@ -446,7 +449,9 @@ class BDFInputPy:
         #print(include_lines)
         return j, include_lines
 
-    def _dump_file(self, bdf_dump_filename: str, lines: List[str], i: int) -> None:
+    def _dump_file(self, bdf_dump_filename: str,
+                   lines: List[str],
+                   i: int) -> None:
         """
         Writes a BDF up to some failed line index
 
@@ -491,32 +496,32 @@ class BDFInputPy:
             msg += 'cwd: %r\n' % os.getcwd()
             msg += 'include_dir: %r\n' % self.include_dir
             msg += print_bad_path(bdf_filename_inc)
-            print(msg)
+            self.log.error(msg)
             raise IOError(msg)
         elif bdf_filename_inc.endswith('.op2'):
             msg = 'Invalid filetype: bdf_filename=%r' % bdf_filename_inc
-            print(msg)
+            self.log.error(msg)
             raise IOError(msg)
         bdf_filename = bdf_filename_inc
 
         if bdf_filename in self.active_filenames:
             msg = 'bdf_filename=%s is already active.\nactive_filenames=%s' \
                 % (bdf_filename, self.active_filenames)
-            print(msg)
+            self.log.error(msg)
             raise RuntimeError(msg)
         elif os.path.isdir(_filename(bdf_filename)):
             current_filename = self.active_filename if len(self.active_filenames) > 0 else 'None'
             msg = 'Found a directory: bdf_filename=%r\ncurrent_file=%s' % (
                 bdf_filename_inc, current_filename)
-            print(msg)
+            self.log.error(msg)
             raise IOError(msg)
         elif not os.path.isfile(_filename(bdf_filename)):
             msg = 'Not a file: bdf_filename=%r' % bdf_filename
-            print(msg)
+            self.log.error(msg)
             raise IOError(msg)
 
-    def _open_file(self, bdf_filename, basename=False, check=True, encoding=None):
-        # type: (Union[str, StringIO], bool, bool, Optional[str]) -> Any
+    def _open_file(self, bdf_filename: Union[str, StringIO],
+                   basename: bool=False, check: bool=True, encoding: Optional[str]=None) -> Any:
         """
         Opens a new bdf_filename with the proper encoding and include directory
 
@@ -553,8 +558,9 @@ class BDFInputPy:
         bdf_file = open(_filename(bdf_filename_inc), 'r', encoding=encoding)
         return bdf_file
 
-    def _validate_open_file(self, bdf_filename, bdf_filename_inc, check=True):
-        # type: (Union[str, StringIO], str, bool) -> None
+    def _validate_open_file(self, bdf_filename: Union[str, StringIO],
+                            bdf_filename_inc: str,
+                            check: bool=True) -> None:
         """
         checks that the file doesn't have obvious errors
          - hasn't been used
@@ -644,8 +650,7 @@ def _is_bulk_data_line(text: str) -> bool:
     return False
 
 
-def _check_pynastran_encoding(bdf_filename, encoding):
-    # type: (Union[str, StringIO], str) -> str
+def _check_pynastran_encoding(bdf_filename: Union[str, StringIO], encoding: str) -> str:
     """updates the $pyNastran: key=value variables"""
     line = '$pyNastran: punch=False'
     #line_temp = u'é à è ê'.encode('utf8').decode('ascii')
@@ -802,7 +807,9 @@ def _lines_to_decks(lines: List[str],
 
     for super_id, _lines in superelement_lines.items():
         # cqrsee101b2.bdf
-        assert len(_lines) > 0, 'superelement %i lines=[]' % (super_id)
+        if len(_lines) == 0:
+            raise RuntimeError('lines in superelement %i is empty' % super_id)
+
         #assert len(_lines) == len(superelement_ilines[super_id]), 'superelement %i ilines is the wrong length' % (super_id)
 
     for auxmodel_id, _lines in auxmodel_lines.items():
@@ -810,11 +817,11 @@ def _lines_to_decks(lines: List[str],
         # C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\tpl\d200am1.dat
         # C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\tpl\d200am2.dat
         log.warning('skipping auxmodel=%i' % auxmodel_id)
-        assert len(_lines) > 0, 'auxmodel %i lines=[]' % (auxmodel_id)
+        raise RuntimeError('lines in auxmodel %i is empty' % auxmodel_id)
 
     for afpm_id, _lines in afpm_lines.items():
         log.warning('skipping AFPM=%i' % afpm_id)
-        assert len(_lines) > 0, 'AFPM %i lines=[]' % (afpm_id)
+        raise RuntimeError('lines in AFPM %i is empty' % afpm_id)
 
     # clean comments
     system_lines = [_clean_comment(line) for line in system_lines
@@ -960,7 +967,9 @@ def _lines_to_decks_main(lines: List[str],
             if line.upper().startswith('CEND'):
                 # case control
                 old_flags.append(flag)
-                assert flag == 1
+                if flag != 1:
+                    raise RuntimeError('expected a flag of 1 (executive control deck) when going to the case control deck')
+
                 flag = 2
                 #flag_word = 'case'
                 current_lines = case_control_lines
@@ -1056,27 +1065,34 @@ def _lines_to_decks_main(lines: List[str],
                 # SUPER = ALL
                 #auxmodel_idi = int(uline.split('=')[1])
                 #auxmodels_to_find.append(auxmodel_idi)
-                assert flag == 2
+                if flag != 2:
+                    raise RuntimeError('expected a flag of 2 (case control deck) when going to an SUPER model')
+
                 is_superelement = True
             elif uline.startswith('AUXMODEL'):
                 # case control line
                 # AUXMODEL = 10
                 auxmodel_idi = int(uline.split('=')[1])
                 auxmodels_to_find.append(auxmodel_idi)
-                assert flag == 2
+                if flag != 2:
+                    raise RuntimeError('expected a flag of 2 (case control deck) when going to an AUXMODEL')
                 is_auxmodel = True
             elif uline.startswith('AFPM'):
                 # case control line
                 # AFPM = 10
                 afpm_idi = int(uline.split('=')[1])
                 afpms_to_find.append(afpm_idi)
-                assert flag == 2
+                if flag != 2:
+                    raise RuntimeError('expected a flag of 2 (case control deck) when going to an AFPM model')
                 is_afpm = True
 
             #print('%s: %s' % (flag_word, line.rstrip()))
             current_lines.append(line.rstrip())
         elif flag == 3:
-            assert is_auxmodel is True or is_superelement is True or consider_superelements
+            if not(is_auxmodel is True or is_superelement is True or consider_superelements):
+                raise RuntimeError('one must be True: is_auxmodel=%s; is_superelement=%s; consider_superelements=%s' % (
+                    is_auxmodel, is_superelement, consider_superelements))
+            #assert is_auxmodel is True or is_superelement is True or consider_superelements
 
             # we have to handle the comment because we could incorrectly
             # flag the model as flipping to the BULK data section if we
@@ -1084,7 +1100,9 @@ def _lines_to_decks_main(lines: List[str],
             if '$' in line:
                 line, comment = line.split('$', 1)
                 current_lines.append('$' + comment.rstrip())
-                assert bulk_data_ilines == current_ilines
+                if bulk_data_ilines != current_ilines:
+                    raise RuntimeError('bulk_data_ilines != current_ilines')
+
                 current_ilines.append(ifile_iline)
                 #bulk_data_ilines.append(ifile_iline)
 
@@ -1110,7 +1128,8 @@ def _lines_to_decks_main(lines: List[str],
 
     _check_valid_deck(flag, old_flags)
 
-    assert len(bulk_data_lines) > 0, bulk_data_lines
+    if len(bulk_data_lines) == 0:
+        raise RuntimeError('no bulk data lines were found')
     #print('nbulk=%s nilines=%s' % (len(bulk_data_lines),
                                    #len(bulk_data_ilines)), bulk_data_ilines.shape)
 
@@ -1129,8 +1148,10 @@ def _lines_to_decks_main(lines: List[str],
     )
     return out
 
-def _bulk_data_lines_extract(lines: List[str], ilines: Any,
-                             bulk_data_lines: List[str], i: int,
+def _bulk_data_lines_extract(lines: List[str],
+                             ilines: Any,
+                             bulk_data_lines: List[str],
+                             i: int,
                              make_ilines: bool=True, keep_enddata: bool=True) -> Any:
     """grabs the bulk data lines and ilines when we're breaking"""
     if keep_enddata:
@@ -1177,8 +1198,8 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
                             unused_is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
                             unused_is_afpm, afpm_lines, afpm_to_find, afpm_found,
                             superelement_lines, superelement_ilines,
-                            is_auxmodel_active, auxmodel_id,
-                            is_afpm_active, afpm_id,
+                            is_auxmodel_active: bool, auxmodel_id: int,
+                            is_afpm_active: bool, afpm_id: int,
                             bulk_data_ilines):
     """
     Reads a BEGIN BULK section searching for 'BEGIN AUXMODEL=1' and BEGIN SUPER=1'
@@ -1187,7 +1208,9 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
     # for a 'BEGIN AUXMODEL=1' or ???.
     #
     #print(len(bulk_data_lines), len(bulk_data_ilines))
-    assert len(bulk_data_lines) == len(bulk_data_ilines)
+    if len(bulk_data_lines) == len(bulk_data_ilines):
+        raise RuntimeError('len(bulk_data_lines)=%s len(bulk_data_ilines)=%s are not equal' % (
+            len(bulk_data_lines), len(bulk_data_ilines)))
     is_broken = False
 
     #if not is_auxmodel:
@@ -1359,8 +1382,7 @@ def _check_valid_deck(flag: int, old_flags: List[int]) -> None:
         raise MissingDeckSections(msg)
     return
 
-def _show_bad_file(self, bdf_filename, encoding, nlines_previous=10):
-    # type: (Any, Union[str, StringIO], str, int) -> None
+def _show_bad_file(self: Any, bdf_filename: Union[str, StringIO], encoding: str, nlines_previous: int=10) -> None:
     """
     Prints the 10 lines before the UnicodeDecodeError occurred.
 
@@ -1459,10 +1481,14 @@ def _get_super_id(line: str, uline: str) -> int:
     if '=' in uline:
         sline = uline.split('=')
         super_id_str = sline[1]
-        assert len(sline) == 2, sline
+        if len(sline) != 2:
+            msg = 'expected "BEGIN SUPER=1"\nline = %s' % line
+            raise SyntaxError(msg)
     else:
         sline = uline.split()
-        assert len(sline) in [3, 4], sline
+        if len(sline) not in [3, 4]:
+            msg = 'expected "BEGIN SUPER=1"\nline = %s' % line
+            raise SyntaxError(msg)
         if len(sline) == 3:
             # BEGIN SUPER 2
             super_id_str = sline[2]
@@ -1509,8 +1535,7 @@ def _clean_comment_bulk(comment: str) -> str:
         #print(comment)
     return comment
 
-def _make_ilines(nlines, ifile):
-    # type: (int, int) -> np.ndarray
+def _make_ilines(nlines: int, ifile: int) -> np.ndarray:
     """helper method"""
     ilines = np.empty((nlines, 2), dtype='int32')
     ilines[:, 0] = ifile
