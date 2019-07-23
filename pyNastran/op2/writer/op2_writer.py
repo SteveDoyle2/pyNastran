@@ -178,7 +178,7 @@ class OP2Writer(OP2_F06_Common):
         res_categories2 = defaultdict(list)
         table_order = [
             'OUGV1',
-            'BOUGV1', 'BOPHIG',
+            'BOUGV1', 'BOPHIG', 'BOPG1',
             'OUPV1',
             'TOUGV1',
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',

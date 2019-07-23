@@ -286,6 +286,7 @@ class OPG(OP2Common):
     def _read_opg1_4(self, data, ndata):
         if self.table_code == 2:  # load vector
             prefixs = {
+                b'BOPG1' : '',
                 b'OPG1' : '',
                 b'OPG2' : '',
                 b'OPGV1' : '',
@@ -302,6 +303,7 @@ class OPG(OP2Common):
                 b'OPGNO2' : 'no.',
             }
             postfixs = {
+                b'BOPG1' : '',
                 b'OPG1' : '',
                 b'OPG2' : '',
                 #b'OPGV1' : '_v',

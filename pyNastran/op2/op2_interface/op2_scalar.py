@@ -399,6 +399,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'CSTM',
     b'AXIC',
     b'BOPHIG',
+    b'BOPG1',
     b'HOEF1',
 
     #------------------------------------------
@@ -1040,8 +1041,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #F:\work\pyNastran\examples\Dropbox\move_tpl\sbuckl2a.op2
             b'OCRUG' : [self._read_oug1_3, self._read_oug_4],  # post-buckling displacement
 
-            b'OPHIG' :  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
-            b'BOPHIG':  [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
+            b'OPHIG' : [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
+            b'BOPHIG': [self._read_oug1_3, self._read_oug_4],  # eigenvectors in basic coordinate system
+            b'BOPG1' : [self._read_opg1_3, self._read_opg1_4],  # applied loads in basic coordinate system
 
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
             b'ROUGV2'  : [self._read_oug2_3, self._read_oug_4], # relative OUG

@@ -79,6 +79,8 @@ SORT2_TABLE_NAME_MAP = {
 }
 table_name_to_table_code = {
     'OUGV1' : 1,
+    'BOUGV1' : 1,
+    #'BOPHIG1' : 5, # ???
 }
 def append_sort1_sort2(data1, data2, to_sort1=True):
     """
@@ -685,6 +687,23 @@ class RealTableArray(TableArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         TableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    def set_as_static_case(self):
+        analysis_code = 1 # static
+        device_code = 2  # Plot
+        approach_code = analysis_code * 10 + device_code
+
+        self.table_code = table_name_to_table_code[self.table_name_str]
+        self.nonlinear_factor = None
+        self.data_code['lsdvmns'] = [0] # TODO: ???
+        self.data_code['data_names'] = []
+        self.data_code['analysis_code'] = analysis_code
+        self.data_code['approach_code'] = approach_code
+        self.analysis_code = analysis_code
+        self.approach_code = approach_code
+        self.data_names = []
+        self.lsdvmns = [0]
+        self._times = [None]
+
     @classmethod
     def add_static_case(cls, table_name, node_gridtype, data, isubcase,
                         is_sort1=True, is_random=False, is_msc=True,
@@ -798,7 +817,8 @@ class RealTableArray(TableArray):
         """writes an OP2"""
         import inspect
         allowed_tables = [
-            'OUGV1', 'BOUGV1', 'BOPHIG', 'OUPV1',
+            'OUGV1', 'BOUGV1', 'BOPHIG', 'BOPG1',
+            'OUPV1',
             'OQP1', 'OQMG1', 'OQG1', 'OQGV1', 'OPNL1',
             'OPG1', 'OPGV1',
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',

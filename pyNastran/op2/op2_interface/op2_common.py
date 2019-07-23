@@ -670,9 +670,6 @@ class OP2Common(Op2Codes, F06Writer):
             #msg += '  but the result type is REAL\n'
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, ndata, msg)
-        #else:
-        #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
-        #n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
     def _read_scalar_table_vectorized(self, data, ndata, result_name, storage_obj,
@@ -769,9 +766,6 @@ class OP2Common(Op2Codes, F06Writer):
             #msg += '  but the result type is REAL\n'
             msg = self.code_information()
             n = self._not_implemented_or_skip(data, ndata, msg)
-        #else:
-        #msg = 'invalid random_code=%s num_wide=%s' % (random_code, self.num_wide)
-        #n = self._not_implemented_or_skip(data, ndata, msg)
         return n
 
     def function_code(self, value):
@@ -1177,7 +1171,6 @@ class OP2Common(Op2Codes, F06Writer):
                                        unused_result_name, flag):
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table_sort1_imag\n')
-        self.log.info('_read_complex_table_sort1_imag')
         #assert flag in ['node', 'elem'], flag
         dt = self.nonlinear_factor
         obj = self.obj
@@ -1189,7 +1182,6 @@ class OP2Common(Op2Codes, F06Writer):
 
             if obj.itime == 0:
                 ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
-                #print(ints[:, :2])
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
@@ -1326,6 +1318,7 @@ class OP2Common(Op2Codes, F06Writer):
         flag, flag_type = self.get_oug2_flag()
         node_id = self.nonlinear_factor
 
+        obj = self.obj
         if self.use_vector and is_vectorized:
             itime = obj.itime
             n = nnodes * 4 * 14
@@ -1368,7 +1361,7 @@ class OP2Common(Op2Codes, F06Writer):
                 rx = complex(rxr, rxi)
                 ry = complex(ryr, ryi)
                 rz = complex(rzr, rzi)
-                self.obj.add_sort2(freq, node_id, grid_type, tx, ty, tz, rx, ry, rz)
+                obj.add_sort2(freq, node_id, grid_type, tx, ty, tz, rx, ry, rz)
                 n += 56
         return n
 
@@ -1537,42 +1530,6 @@ class OP2Common(Op2Codes, F06Writer):
                 self.table_name, self.table_code, msg, self.code_information())
             raise NotImplementedError(msg)
 
-    def _function1(self, value):
-        """function1(value)"""
-        if value // 1000 in [2, 3, 6]:
-            return 2
-        return 1
-
-    def _function2(self, value):
-        """function2(value)"""
-        return value % 100
-
-    def _function3(self, value):
-        """function3(value)"""
-        return value % 1000
-
-    def _function4(self, value):
-        """function4(value)"""
-        return value // 10
-
-    def _function5(self, value):
-        """function5(value)"""
-        return value % 10
-
-    def _function6(self, value):
-        """weird..."""
-        if value != 8:
-            return 0
-        return 1
-
-    def _function7(self, value):
-        """function7(value)"""
-        if value in [0, 2]:
-            return 0
-        elif value in [1, 3]:
-            return 1
-        raise RuntimeError(value)
-
     def parse_approach_code(self, data):
         """
         Function  Formula                                                Manual
@@ -1619,7 +1576,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         self.data_code['sort_code'] = self.sort_code
         #print('tCode=%s tCode%%1000=%-2s tCode//1000=%s' % (tCode, tCode%1000, tCode//1000))
-        self.sort_method = self._function1(tCode)
+        self.sort_method = _function1(tCode)
         self.data_code['sort_method'] = self.sort_method
 
         #: what type of data was saved from the run; used to parse the
@@ -2098,3 +2055,39 @@ def _cast_nonlinear_factor(value):
     else: # pragma: no cover
         raise NotImplementedError('value=%s type=%s' % (value, type(value)))
     return value
+
+def _function1(value):
+    """function1(value)"""
+    if value // 1000 in [2, 3, 6]:
+        return 2
+    return 1
+
+def _function2(value):
+    """function2(value)"""
+    return value % 100
+
+def _function3(value):
+    """function3(value)"""
+    return value % 1000
+
+def _function4(value):
+    """function4(value)"""
+    return value // 10
+
+def _function5(value):
+    """function5(value)"""
+    return value % 10
+
+def _function6(value):
+    """weird..."""
+    if value != 8:
+        return 0
+    return 1
+
+def _function7(value):
+    """function7(value)"""
+    if value in [0, 2]:
+        return 0
+    elif value in [1, 3]:
+        return 1
+    raise RuntimeError(value)

@@ -36,7 +36,7 @@ from pyNastran.op2.result_objects.monpnt import MONPNT1, MONPNT3
 
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import SortCodeError, DeviceCodeError, FortranMarkerError
-#from pyNastran.op2.op2_interface.op2_writer import OP2Writer
+from pyNastran.op2.writer.op2_writer import OP2Writer
 #from pyNastran.op2.op2_interface.op2_f06_common import Op2F06Attributes
 from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 from pyNastran.op2.op2_interface.transforms import (
@@ -112,8 +112,8 @@ def read_op2(op2_filename=None, combine=True, subcases=None,
     return model
 
 
-#class OP2(OP2_Scalar, OP2Writer):
-class OP2(OP2_Scalar):
+class OP2(OP2_Scalar, OP2Writer):
+#class OP2(OP2_Scalar):
     _properties = ['is_real', 'is_complex', 'is_random',
                    '_sort_method', 'is_sort1', 'is_sort2',
                    'matrix_tables', 'table_name_str']
