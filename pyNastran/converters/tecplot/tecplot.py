@@ -24,6 +24,14 @@ def read_tecplot(tecplot_filename: str, use_cols=None, dtype=None, log=None, deb
     tecplot.read_tecplot(tecplot_filename)
     return tecplot
 
+class CaseInsensitiveDict(dict):
+    def __getitem__(self, key):
+        val = dict.__getitem__(self, key.upper())
+        #log.info("GET %s['%s'] = %s" % str(dict.get(self, 'name_label')), str(key), str(val)))
+        return val
+    def __setitem__(self, key, val):
+        #log.info("SET %s['%s'] = %s" % str(dict.get(self, 'name_label')), str(key), str(val)))
+        dict.__setitem__(self, key.upper(), val)
 
 class Tecplot:
     """
@@ -60,17 +68,7 @@ class Tecplot:
         a_shape = str(self.A.shape) if self.A is not None else None
         is3d = is_3d(self.headers_dict)
         if 'I' in self.headers_dict:
-            ni = self.headers_dict['I']
-            if 'J' in self.headers_dict:
-                nj = self.headers_dict['J']
-                if 'K' in self.headers_dict:
-                    nk = self.headers_dict['K']
-                    msgi = f'  nI={ni} nJ={nj} nK={nk}\n'
-                else:
-                    msgi = f'  nI={ni} nJ={nj}\n'
-            else:
-                assert 'K' not in self.headers_dict, list(self.headers_dict.keys())
-                msgi = f'  nI={ni}\n'
+            msgi = self.repr_nijk()
         else:
             msgi = (
                 '  datapacking = %r\n'
@@ -103,6 +101,21 @@ class Tecplot:
             )
         )
         return msg
+
+    def repr_nijk(self):
+        ni = self.headers_dict['I']
+        if 'J' in self.headers_dict:
+            nj = self.headers_dict['J']
+            if 'K' in self.headers_dict:
+                nk = self.headers_dict['K']
+                msgi = f'  nI={ni} nJ={nj} nK={nk}\n'
+            else:
+                msgi = f'  nI={ni} nJ={nj}\n'
+        else:
+            assert 'K' not in self.headers_dict, list(self.headers_dict.keys())
+            msgi = f'  nI={ni}\n'
+        return msgi
+
     @property
     def title(self):
         return self.headers_dict['TITLE']
@@ -243,8 +256,8 @@ class Tecplot:
                 vars_found.append('TITLE')
             if 'VARIABLES' in line:
                 vars_found.append('VARIABLES')
-            if 'ZONE T' in line:
-                vars_found.append('ZONE T')
+            #if 'ZONE T' in line:
+                #vars_found.append('ZONE T')
             if 'ZONE' in line:
                 vars_found.append('ZONE')
             #if 'ZONE N' in line:
@@ -444,7 +457,7 @@ class Tecplot:
         -------------  ---------  ----------  ----------------------------------------------
         http://paulbourke.net/dataformats/tp/
         """
-        print('self.variables', self.variables)
+        #print('self.variables', self.variables)
         ndim = self.ndim
         if iblock == 0:
             variables = headers_dict['VARIABLES']
@@ -460,7 +473,7 @@ class Tecplot:
             nnodesi = headers_dict['N']
             nelementsi = headers_dict['E']
             is_unstructured = True
-        elif zone_type in ['POINT']: #  structured
+        elif zone_type in ['POINT', 'BLOCK']: #  structured
             ni = headers_dict['I']
             if 'J' in headers_dict:
                 nj = headers_dict['J']
@@ -499,8 +512,9 @@ class Tecplot:
             elements = np.zeros((nelementsi, 3), dtype='int32')
         #elif zone_type == 'FEBLOCK':
             #pass
-        elif  zone_type == 'POINT':
+        elif  zone_type in ['POINT', 'BLOCK']:
             # already handled
+            #print('data')
             pass
         else:
             #if isinstance(zone_type, list):
@@ -550,6 +564,11 @@ class Tecplot:
         elif zone_type == 'POINT':
             nvars = len(self.variables)
             iline = read_point(tecplot_file, iline, xyz, results, zone_type,
+                               line, sline, nnodesi, nvars, self.log)
+        elif zone_type == 'BLOCK':
+            nvars = len(self.variables)
+            print(self.variables)
+            iline = read_block(tecplot_file, iline, xyz, results, zone_type,
                                line, sline, nnodesi, nvars, self.log)
         else:  # pragma: no cover
             raise NotImplementedError(zone_type)
@@ -1357,7 +1376,8 @@ class Tecplot:
 
 def _header_lines_to_header_dict(header_lines: List[str]):
     """parses the parsed header lines"""
-    headers_dict = {}
+    #headers_dict = {}
+    headers_dict = CaseInsensitiveDict()
     if len(header_lines) == 0:
         #raise RuntimeError(header_lines)
         return None
@@ -1451,7 +1471,7 @@ def _simplify_variables(headers_dict) -> None:
 
 def is_3d(headers_dict) -> bool:
     variables = headers_dict['VARIABLES']
-    is_3d = 'Z' in variables or 'z' in variables
+    is_3d = 'Z' in variables # or 'z' in variables
     return is_3d
 
 def read_zone_block(tecplot_file, iline, xyz, results, nresults, zone_type,
@@ -1553,6 +1573,33 @@ def read_point(tecplot_file, iline, xyz, results, zone_type, line, sline, nnodes
         sline = line.split()
         #log.debug(sline)
     log.debug('end of POINT')
+    return iline
+
+def read_block(tecplot_file, iline, xyz, results, zone_type, line, sline, nnodes, nvars, log):
+    log.debug('start of BLOCK')
+    #print('nnodes =', nnodes)
+    #print('nvars =', nvars)
+    ndata = nnodes * nvars
+    #print('ndata =', ndata)
+    results = []
+
+    while len(results) < ndata:
+        sline = line.split()
+        results += sline
+        #print('block:', iline, sline, len(results))
+        if len(sline) == 0:
+            raise
+        iline, line = get_next_line(tecplot_file, iline)
+
+        sline = line.split()
+        #log.debug(sline)
+    print(len(results))
+    assert len(results) == ndata, 'len(results)=%s expected=%s' % (len(results), ndata)
+    log.debug('end of BLOCK')
+
+    #TODO: save results
+    raise RuntimeError('not done...save results')
+    return iline
 
 def get_next_line(tecplot_file, iline):
     line = tecplot_file.readline().strip()
