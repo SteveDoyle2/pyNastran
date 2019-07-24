@@ -31,60 +31,96 @@ class Tecplot:
     Writes an ASCII Tecplot 10 file.
 
     Supports:
-     - single zone only?
-     - unstructured
-     - nodal results
-     - single element type (FETRIANGLE, FEQUADRILATERAL, FETETRAHEDRON, FEBRICK)
-     - POINT/ELEMENT writing
      - title
-     - 2D/3D
+     - single zone only?
+     - unstructured:
+       - nodal results
+       - single element type; ZONETYPE = [FETRIANGLE, FEQUADRILATERAL, FETETRAHEDRON, FEBRICK]
+       - DATAPACKING = [POINT, ELEMENT] writing
+       - 2D/3D
+       - full support for writing
+     - structured:
+       - nodal results
+       - F=POINT
+       - 2d/3d (POINT, I/J/K)
+       - full support for writing
+       - no reshaping of xyz to make slicing easier!
 
     Doesn't support:
+     - text
      - geometry
-     - structured grid
      - transient writing
      - centroidal results
      - non-sequential node ids
      - data lists (100*0.0)
     """
     def __repr__(self):
+        xy_shape = str(self.xy.shape)
+        xyz_shape = str(self.xyz.shape)
         a_shape = str(self.A.shape) if self.A is not None else None
+        is3d = is_3d(self.headers_dict)
+        if 'I' in self.headers_dict:
+            ni = self.headers_dict['I']
+            if 'J' in self.headers_dict:
+                nj = self.headers_dict['J']
+                if 'K' in self.headers_dict:
+                    nk = self.headers_dict['K']
+                    msgi = f'  nI={ni} nJ={nj} nK={nk}\n'
+                else:
+                    msgi = f'  nI={ni} nJ={nj}\n'
+            else:
+                assert 'K' not in self.headers_dict, list(self.headers_dict.keys())
+                msgi = f'  nI={ni}\n'
+        else:
+            msgi = (
+                '  datapacking = %r\n'
+                '  zonetype = %r\n' % (self.datapacking, self.zonetype)
+            )
+
+
+        title2 = '  T = %r\n' % self.headers_dict['T'] if 'T' in self.headers_dict else ''
         msg = (
             'Tecplot():'
             '  filename = %r\n'
             '  is_mesh = %s\n'
             '  variables = %s\n'
+            '  is3d = %s\n'
+            '    xy.shape = %s\n'
+            '    xyz.shape = %s\n'
             '  A.shape = %s\n'
-            '  results.shape = %s\n'
+            '  nodal_results.shape = %s\n'
             #'  headers_dict = %s\n'
-            '  title = %r\n'
-            '  datapacking = %r\n'
-            '  zonetype = %r\n'
+            '  title = %r\n%s%s'
             '  use_cols = %s\n'
             '  dtype = %s\n' % (
                 self.tecplot_filename, self.is_mesh,
                 self.variables,
+                is3d, xy_shape, xyz_shape,
                 a_shape, str(self.nodal_results.shape),
                 #str(self.headers_dict),
-                self.title, self.datapacking, self.zonetype,
+                self.title, title2, msgi,
                 self.use_cols, self.dtype,
             )
         )
         return msg
     @property
     def title(self):
-        if 'TITLE' in self.headers_dict:
-            return self.headers_dict['TITLE']
-        return 'tecplot geometry and solution file'
+        return self.headers_dict['TITLE']
     @title.setter
     def title(self, title):
         self.headers_dict['TITLE'] = title
     @property
     def datapacking(self):
-        return self.headers_dict['DATAPACKING']
+        try:
+            return self.headers_dict['DATAPACKING']
+        except KeyError:
+            return None
     @property
     def zonetype(self):
-        return self.headers_dict['ZONETYPE']
+        try:
+            return self.headers_dict['ZONETYPE']
+        except KeyError:
+            return None
 
     @property
     def results(self):
@@ -156,7 +192,7 @@ class Tecplot:
             return self.read_tecplot_binary(tecplot_filename)
         return self.read_tecplot_ascii(tecplot_filename)
 
-    def read_header_lines(self, tecplot_file, line):
+    def read_header_lines(self, tecplot_file, iline, line):
         """
         reads a tecplot header
 
@@ -197,6 +233,7 @@ class Tecplot:
             #self.n = 0
             if len(line) == 0 or line[0] == '#':
                 line = tecplot_file.readline().strip()
+                iline += 1
                 i += 1
                 continue
             if line[0].isdigit() or line[0] == '-':
@@ -221,10 +258,11 @@ class Tecplot:
                 #break
             i += 1
             line = tecplot_file.readline().strip()
+            iline += 1
 
         self.log.debug('vars_found = %s' % vars_found)
 
-        return header_lines, i, line
+        return iline, header_lines, i, line
 
     def read_tecplot_ascii(self, tecplot_filename, nnodes=None, nelements=None):
         """
@@ -242,6 +280,7 @@ class Tecplot:
         self.tecplot_filename = tecplot_filename
         assert os.path.exists(tecplot_filename), tecplot_filename
 
+        iline = 0
         nnodes = -1
         nelements = -1
         with open(tecplot_filename, 'r') as tecplot_file:
@@ -254,9 +293,10 @@ class Tecplot:
             results_list = []
 
             line = tecplot_file.readline().strip()
+            iline += 1
             iblock = 0
             while 1:
-                header_lines, unused_i, line = self.read_header_lines(tecplot_file, line)
+                iline, header_lines, unused_i, line = self.read_header_lines(tecplot_file, iline, line)
                 #print(header_lines)
                 headers_dict = _header_lines_to_header_dict(header_lines)
                 if headers_dict is None:
@@ -267,7 +307,7 @@ class Tecplot:
                 if 'ZONETYPE' in headers_dict:
                     zone_type = headers_dict['ZONETYPE'].upper() # FEBrick
                     data_packing = headers_dict['DATAPACKING'].upper() # block
-                    self._read_zonetype(zone_type, tecplot_file, iblock, headers_dict, line,
+                    self._read_zonetype(zone_type, tecplot_file, iline, iblock, headers_dict, line,
                                         nnodes, nelements,
                                         xyz_list, hexas_list, tets_list, quads_list, tris_list,
                                         results_list,
@@ -276,9 +316,8 @@ class Tecplot:
                     fe = headers_dict['F'] # FEPoint
                     assert isinstance(fe, str), headers_dict
                     zone_type = fe.upper() # FEPoint
-                    assert zone_type == 'FEPOINT', zone_type
                     self.log.debug('zone_type = %r' % zone_type[0])
-                    self._read_zonetype(zone_type, tecplot_file, iblock, headers_dict, line,
+                    self._read_zonetype(zone_type, tecplot_file, iline, iblock, headers_dict, line,
                                         nnodes, nelements,
                                         xyz_list, hexas_list, tets_list, quads_list, tris_list,
                                         results_list,
@@ -286,7 +325,7 @@ class Tecplot:
                 elif (('ZONE' in headers_dict) and
                       (headers_dict['ZONE'] is None) and
                       ('T' in headers_dict)):
-                    A, line = self.read_table(tecplot_file, iblock, headers_dict, line)
+                    A, line = self.read_table(tecplot_file, iline, iblock, headers_dict, line)
                     self.A = A
                     return
 
@@ -311,24 +350,28 @@ class Tecplot:
         else:
             xyz = np.vstack(xyz_list)
 
-        nresults = len(results_list)
-        if nresults == 1:
-            results = results_list[0]
-        else:
-            results = np.vstack(results_list)
         #self.elements = elements - 1
         #print(self.elements)
 
         if is_3d(self.headers_dict):
             self.xyz = xyz
+
+            nresults = len(results_list)
+            if nresults == 1:
+                results = results_list[0]
+            else:
+                results = np.vstack(results_list)
             self.nodal_results = results
         else:
             self.xy = xyz[:, :2]
+            nresults = len(results_list) + 1
+            nnodes_temp = xyz.shape[0]
             if nresults == 1:
-                self.nodal_results = xyz[:, 2]
+                self.nodal_results = xyz[:, 2].reshape(nnodes_temp, 1)
             else:
-                # TODO: not 100%
-                self.nodal_results = np.vstack(xyz[:, 2], results)
+                inputs = [xyz[:, 2].reshape(nnodes_temp, 1), *results_list]
+                self.nodal_results = np.hstack(inputs)
+            del nnodes_temp
 
         self.variables = [var for var in self.variables if var not in ['X', 'Y', 'Z']]
 
@@ -349,18 +392,60 @@ class Tecplot:
                        usecols=use_cols, unpack=False, ndmin=0)
         return A, None
 
-    def _read_zonetype(self, zone_type, tecplot_file, iblock, headers_dict, line,
+    @property
+    def ndim(self):
+        is_x = 'X' in self.variables
+        is_y = 'Y' in self.variables
+        is_z = 'Z' in self.variables
+        return is_x + is_y + is_z
+
+    def _read_zonetype(self, zone_type, tecplot_file, iline, iblock, headers_dict, line,
                        nnodes, nelements,
                        xyz_list, hexas_list, tets_list, quads_list, tris_list,
                        results_list,
                        data_packing=None, fe=None):
         """
+        Parameters
+        ----------
+        zone_type : str
+
+        fe : str
+          - a zone_type.upper() string???
+          - FEPOINT
+
         reads:
           - ZONE E
           - ZONE T
 
         ZONE is a flag, T is title, E is number of elements
+
+        -------------  ---------  ----------  ----------------------------------------------
+        Parameter      Ordered    Finite      Description
+                       Data       Element
+        -------------  ---------  ----------  ----------------------------------------------
+        T="title"      Yes        Yes         Zone title.
+        I=imax         Yes        No          Number of points in 1st dimension.
+        J=jmax         Yes        No          Number of points in 2nd dimension.
+        K=kmax         Yes        No          Number of points in 3rd dimension.
+        C=colour       Yes        Yes         Colour from WHITE, BLACK, RED, GREEN,
+                                                          BLUE, CYAN, YELLOW, PURPLE,
+                                                          CUST1, CUST2,....CUST8.
+        F=format       Yes        Yes         POINT or BLOCK for ordered data.
+                                              FEPOINT or FEBLOCK for finite element.
+        D=(list)       Yes        Yes         A list of variable names to to include
+                                              from the last zone.
+        DT=(list)      Yes        Yes         A list of datatypes for each variable.
+                                              SINGLE, DOUBLE, LONGINT, SHORTINT, BYTE, BIT.
+        N=num          No         Yes         Number of nodes.
+        E=num          No         Yes         Number of elements.
+        ET=type        No         Yes         Element type from TRIANGLE, BRICK,
+                                                                QUADRILATERAL, TETRAHEDRON.
+        NV=variable    No         Yes         Variable for node value.
+        -------------  ---------  ----------  ----------------------------------------------
+        http://paulbourke.net/dataformats/tp/
         """
+        print('self.variables', self.variables)
+        ndim = self.ndim
         if iblock == 0:
             variables = headers_dict['VARIABLES']
             self.variables = [variable.strip(' \r\n\t"\'') for variable in variables]
@@ -369,10 +454,38 @@ class Tecplot:
             self.log.debug('nresults = %s' % nresults)
 
         self.log.debug(str(headers_dict))
-        nnodesi = headers_dict['N']
-        nelementsi = headers_dict['E']
+        is_unstructured = False
+        is_structured = False
+        if zone_type in ['FETRIANGLE', 'FEQUADRILATERAL', 'FETETRAHEDRON', 'FEBRICK']:
+            nnodesi = headers_dict['N']
+            nelementsi = headers_dict['E']
+            is_unstructured = True
+        elif zone_type in ['POINT']: #  structured
+            ni = headers_dict['I']
+            if 'J' in headers_dict:
+                nj = headers_dict['J']
+                if 'K' in headers_dict:
+                    # 3d
+                    nk = headers_dict['K']
+                    nnodesi = ni * nj * nk
+                    nelementsi = (ni - 1) * (nj - 1) * (nk - 1)
+                else:
+                    # 2d
+                    nnodesi = ni * nj
+                    nelementsi = (ni - 1) * (nj - 1)
+            else:
+                assert 'K' not in headers_dict, list(headers_dict.keys())
+                nnodesi = ni
+                #nelementsi = (ni - 1)
+            nelementsi = 0
+            elements = None # np.zeros((nelementsi, 8), dtype='int32')
+            is_structured = True
+        else:
+            raise NotImplementedError('zone_type = %r' % zone_type)
         self.log.info('nnodes=%s nelements=%s' % (nnodesi, nelementsi))
 
+        assert nnodesi > 0, nnodesi
+        assert nresults >= 0, 'nresults=%s' % nresults
         xyz = np.zeros((nnodesi, 3), dtype='float32')
         results = np.zeros((nnodesi, nresults), dtype='float32')
         if zone_type == 'FEBRICK':
@@ -386,6 +499,9 @@ class Tecplot:
             elements = np.zeros((nelementsi, 3), dtype='int32')
         #elif zone_type == 'FEBLOCK':
             #pass
+        elif  zone_type == 'POINT':
+            # already handled
+            pass
         else:
             #if isinstance(zone_type, list):
                 #raise NotImplementedError(zone_type[0])
@@ -410,58 +526,31 @@ class Tecplot:
                         print(msg)
                         raise
 
-                    line = tecplot_file.readline().strip()
-                    while len(line) == 0 or line[0] == '#':
-                        line = tecplot_file.readline().strip()
+                    iline, line = get_next_line(tecplot_file, iline)
                     sline = line.split()
             elif data_packing == 'BLOCK':
-                result = []
-                iresult = 0
-                nresult = 0
-                nnodes_max = (3 + nresults) * nnodesi
-                while iresult < nnodes_max:
-                    result += sline
-                    nresult += len(sline)
-                    if iresult >= nnodes_max:
-                        self.log.debug('breaking...')
-                        #break
-                    line = tecplot_file.readline().strip()
-                    while line[0] == '#':
-                        line = tecplot_file.readline().strip()
-                    sline = line.split()
-                    if iresult == 0:
-                        self.log.debug('zone_type=%s sline=%s' % (zone_type, sline))
-                    iresult += len(sline)
-
-                for ires in range(3 + nresults):
-                    i0 = ires * nnodesi
-                    i1 = (ires + 1) * nnodesi #+ 1
-                    if len(result[i0:i1]) != nnodesi:
-                        msg = 'ires=%s len=%s nnodesi=%s' % (
-                            ires, len(result[i0:i1]), nnodesi)
-                        raise RuntimeError(msg)
-                    if ires in [0, 1, 2]:
-                        self.log.debug('ires=%s nnodesi=%s len(result)=%s' %
-                                       (ires, nnodesi, len(result)))
-                        xyz[:, ires] = result[i0:i1]
-                    else:
-                        results[:, ires - 3] = result[i0:i1]
+                iline, sline = read_zone_block(tecplot_file, iline, xyz, results, nresults, zone_type,
+                                               sline, nnodesi, self.log)
+                #print('sline =', sline)
             else:
                 raise NotImplementedError(data_packing)
         elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETRIANGLE'):
             sline = line.strip().split()
             for inode in range(nnodesi):
-                #print('inode ', inode, sline)
+                #print(iline, inode, sline)
                 xyz[inode, :] = sline[:3]
                 #if abs(xyz[inode, 1]) <= 5.0:
                     #msg = 'inode=%s xyz=%s'  % (inode, xyz[inode, :])
                     #raise RuntimeError(msg)
 
                 results[inode, :] = sline[3:]
-                line = tecplot_file.readline().strip()
-                while line[0] == '#':
-                    line = tecplot_file.readline().strip()
+                iline, line = get_next_line(tecplot_file, iline)
                 sline = line.split()
+
+        elif zone_type == 'POINT':
+            nvars = len(self.variables)
+            iline = read_point(tecplot_file, iline, xyz, results, zone_type,
+                               line, sline, nnodesi, nvars, self.log)
         else:  # pragma: no cover
             raise NotImplementedError(zone_type)
 
@@ -469,32 +558,26 @@ class Tecplot:
         #print('xyz[0 , :]', xyz[0, :])
         #print('xyz[-1, :]', xyz[-1, :])
         #print(sline)
-        assert '.' not in sline[0], sline
+        if is_structured:
+            pass
+        elif is_unstructured:
+            iline = read_unstructured_elements(tecplot_file, iline, sline, elements, nelementsi)
 
-        i = 0
-        for i in range(nelementsi):
-            try:
-                elements[i, :] = sline
-            except IndexError:
-                raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
-            except ValueError:
-                raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
-            line = tecplot_file.readline()
-            sline = line.strip().split()
-        #print(f.readline())
+            #print(f.readline())
 
-        if zone_type == 'FEBRICK':
-            hexas_list.append(elements + nnodes)
-        elif zone_type == 'FETETRAHEDRON':
-            tets_list.append(elements + nnodes)
-        elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
-            # TODO: why are points stuck in the quads?
-            quads_list.append(elements + nnodes)
-        elif zone_type == 'FETRIANGLE':
-            tris_list.append(elements + nnodes)
+            if zone_type == 'FEBRICK':
+                hexas_list.append(elements + nnodes)
+            elif zone_type == 'FETETRAHEDRON':
+                tets_list.append(elements + nnodes)
+            elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
+                # TODO: why are points stuck in the quads?
+                quads_list.append(elements + nnodes)
+            elif zone_type == 'FETRIANGLE':
+                tris_list.append(elements + nnodes)
+            else:
+                raise NotImplementedError(zone_type)
         else:
-            raise NotImplementedError(zone_type)
-
+            raise RuntimeError()
         xyz_list.append(xyz)
         results_list.append(results)
         nnodes += nnodesi
@@ -955,7 +1038,8 @@ class Tecplot:
 
         nnodes = self.nnodes
         nelements = self.nelements
-        is_points, zone_type, is_tris, is_quads, is_tets, is_hexas = self._determine_element_type()
+        (is_structured, is_unstructured, is_points, zone_type,
+         is_tris, is_quads, is_tets, is_hexas) = self._determine_element_type()
 
         with open(tecplot_filename, 'w') as tecplot_file:
             #"tecplot geometry and solution file"
@@ -988,20 +1072,43 @@ class Tecplot:
                 assert len(res_types) == 0, len(res_types)
                 ivars = []
 
-            msg += 'ZONE '
-            self.log.info('is_points = %s' % is_points)
-            if is_points:
-                msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=POINT\n' % (
-                    nnodes, nelements, zone_type)
-            else:
-                msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=BLOCK\n' % (
-                    nnodes, nelements, zone_type)
             tecplot_file.write(msg)
+            if is_unstructured:
+                self.write_unstructured_zone(tecplot_file, ivars, is_points, nnodes, nelements, zone_type, self.log,
+                                             is_tris, is_quads, is_tets, is_hexas, adjust_nids=adjust_nids)
+            elif is_structured:
+                self.write_structured_zone(tecplot_file, ivars, self.log, adjust_nids=adjust_nids)
+            else:  # pragma: no cover
+                raise RuntimeError('only structured/unstructured')
 
-            self._write_xyz_results(tecplot_file, is_points, ivars)
-            self._write_elements(tecplot_file, nnodes,
-                                 is_tris, is_quads, is_tets, is_hexas,
-                                 adjust_nids=adjust_nids)
+    def write_structured_zone(self, tecplot_file, ivars, log, adjust_nids=True):
+        ni = self.headers_dict['I']
+        if 'J' in self.headers_dict:
+            nj = self.headers_dict['J']
+            if 'K' in self.headers_dict:
+                nk = self.headers_dict['K']
+                msg = f'ZONE I={ni:d}, J={nj:d}, K={nk:d} F=POINT\n'
+            else:
+                msg = f'ZONE I={ni:d}, J={nj:d}, F=POINT\n'
+        else:
+            assert 'K' not in self.headers_dict, list(self.headers_dict.keys())
+            msg = f'ZONE I={ni:d}, F=POINT\n'
+        tecplot_file.write(msg)
+        is_points = True
+        self._write_xyz_results(tecplot_file, is_points, ivars)
+
+    def write_unstructured_zone(self, tecplot_file, ivars, is_points, nnodes, nelements, zone_type, log,
+                                is_tris, is_quads, is_tets, is_hexas, adjust_nids=True):
+        msg = 'ZONE '
+        self.log.info('is_points = %s' % is_points)
+        datapacking = 'POINT' if  is_points else 'BLOCK'
+        msg += f' n={nnodes:d}, e={nelements:d}, ZONETYPE={zone_type}, DATAPACKING={datapacking}\n'
+        tecplot_file.write(msg)
+
+        self._write_xyz_results(tecplot_file, is_points, ivars)
+        self._write_elements(tecplot_file, nnodes,
+                             is_tris, is_quads, is_tets, is_hexas,
+                             adjust_nids=adjust_nids)
 
     def _determine_element_type(self):
         etype_elements = [
@@ -1016,6 +1123,9 @@ class Tecplot:
         is_tris = False
         is_quads = False
 
+        is_structured = False
+        is_unstructured = False
+        zone_type = None
         for etype, elements in etype_elements:
             if not len(elements):
                 continue
@@ -1044,7 +1154,11 @@ class Tecplot:
                 self.log.info(elements)
                 continue
             break
-        return is_points, zone_type, is_tris, is_quads, is_tets, is_hexas
+        if any([is_tris, is_quads, is_tets, is_hexas]):
+            is_unstructured = True
+        elif 'I' in self.headers_dict:
+            is_structured = True
+        return is_structured, is_unstructured, is_points, zone_type, is_tris, is_quads, is_tets, is_hexas
 
     def _write_elements(self, tecplot_file, nnodes,
                         is_tris, is_quads, is_tets, is_hexas,
@@ -1088,59 +1202,35 @@ class Tecplot:
 
     def _write_xyz_results(self, tecplot_file, is_points, ivars):
         # xyz
+        xyz = self.xyz
+        xy = self.xy
+
+        nnodes3d = self.xyz.shape[0]
+        nnodes2d = self.xy.shape[0]
+        if nnodes2d and nnodes3d:
+            raise RuntimeError('2d and 3d nodes is not supported')
+        elif nnodes2d:
+            nodes = xy
+            word = 'xy'
+            ndim = 2
+        elif nnodes3d:
+            nodes = xyz
+            word = 'xyz'
+            ndim = 3
+        else:  # pragma: no cover
+            raise RuntimeError('failed to find 2d/3d nodes')
+
+        #print('nnodes', nodes.shape)
+        #print('results', self.nodal_results.shape)
         assert self.nnodes > 0, 'nnodes=%s' % self.nnodes
         nresults = len(ivars)
         if is_points:
-            if nresults:
-                try:
-                    res = self.nodal_results[:, ivars]
-                except IndexError:
-                    msg = 'Cant access...\n'
-                    msg += 'ivars = %s\n' % ivars
-                    msg += 'nresults = %s\n' % nresults
-                    msg += 'results.shape=%s\n' % str(self.nodal_results.shape)
-                    raise IndexError(msg)
+            _write_xyz_results_point(tecplot_file, nodes, self.nodal_results, nresults, ivars,
+                                     ndim=ndim, word=word)
 
-                try:
-                    data = np.hstack([self.xyz, res])
-                except ValueError:
-                    msg = 'Cant hstack...\n'
-                    msg += 'xyz.shape=%s\n' % str(self.xyz.shape)
-                    msg += 'results.shape=%s\n' % str(self.nodal_results.shape)
-                    raise ValueError(msg)
-                fmt = ' %15.9E' * (3 + nresults)
-            else:
-                data = self.xyz
-                fmt = ' %15.9E %15.9E %15.9E'
-
-            # works in numpy 1.15.1
-            np.savetxt(tecplot_file, data, fmt=fmt)
         else:
-            #nvalues_per_line = 5
-            for ivar in range(3):
-                #tecplot_file.write('# ivar=%i\n' % ivar)
-                vals = self.xyz[:, ivar].ravel()
-                msg = ''
-                for ival, val in enumerate(vals):
-                    msg += ' %15.9E' % val
-                    if (ival + 1) % 3 == 0:
-                        tecplot_file.write(msg)
-                        msg = '\n'
-                tecplot_file.write(msg.rstrip() + '\n')
-
-            if nresults:
-                #print('nnodes_per_element =', nnodes_per_element)
-                # for ivar in range(nnodes_per_element):
-                for ivar in ivars:
-                    #tecplot_file.write('# ivar=%i\n' % ivar)
-                    vals = self.nodal_results[:, ivar].ravel()
-                    msg = ''
-                    for ival, val in enumerate(vals):
-                        msg += ' %15.9E' % val
-                        if (ival + 1) % 5 == 0:
-                            tecplot_file.write(msg)
-                            msg = '\n'
-                    tecplot_file.write(msg.rstrip() + '\n')
+            _write_xyz_results_block(tecplot_file, nodes, self.nodal_results, nresults, ivars,
+                                     ndim=ndim, word=word)
 
     def skin_elements(self):
         tris = []
@@ -1304,7 +1394,7 @@ def _header_lines_to_header_dict(header_lines: List[str]):
             elif '=' in headers[iheader + 1]:
                 parse = True
         else:
-            raise NotImplementedError(header)
+            raise NotImplementedError('header=%r headers=%r' % (header, headers))
 
         if parse:
             #print('  parsing')
@@ -1323,9 +1413,10 @@ def _header_lines_to_header_dict(header_lines: List[str]):
             #value = value.strip()
 
             # 'T', 'ZONE T',  ???
+            #   'DT', 'SOLUTIONTIME', 'STRANDID', # tecplot 360 specific things not supported
             allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
                             'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
-                            'I', 'J']
+                            'I', 'J', 'K']
             assert key in allowed_keys, 'key=%r; allowed=[%s]' % (key, ', '.join(allowed_keys))
             parse = False
     #print(headers_dict.keys())
@@ -1335,22 +1426,213 @@ def _header_lines_to_header_dict(header_lines: List[str]):
     return headers_dict
 
 def _simplify_header(headers_dict) -> None:
+    # unstructured
     if 'N' in headers_dict: # nnodes
         headers_dict['N'] = int(headers_dict['N'])
     if 'E' in headers_dict: # nelements
         headers_dict['E'] = int(headers_dict['E'])
+
+    # structured
+    if 'I' in headers_dict:
+        headers_dict['I'] = int(headers_dict['I'])
+    if 'J' in headers_dict:
+        headers_dict['J'] = int(headers_dict['J'])
+    if 'K' in headers_dict:
+        headers_dict['K'] = int(headers_dict['K'])
+
+    if 'TITLE' not  in headers_dict:
+        headers_dict['TITLE'] = 'tecplot geometry and solution file'
+
     _simplify_variables(headers_dict)
 
 def _simplify_variables(headers_dict) -> None:
     variables = headers_dict['VARIABLES']
-    headers_dict['VARIABLES'] = [var.strip('"') for  var in variables]
+    headers_dict['VARIABLES'] = [var.strip('"') for var in variables]
 
 def is_3d(headers_dict) -> bool:
     variables = headers_dict['VARIABLES']
     is_3d = 'Z' in variables or 'z' in variables
     return is_3d
 
+def read_zone_block(tecplot_file, iline, xyz, results, nresults, zone_type,
+                    sline, nnodes, log):
+    #print('***', iline, sline)
 
+    # read all data
+    #result = sline
+    #iresult = len(sline)
+    #nresult = len(sline)
+
+    result = []
+    iresult = 0
+    nresult = 0
+    nnodes_max = (3 + nresults) * nnodes
+    #print('nnodes_max =', nnodes_max)
+    while nresult < nnodes_max: #  changed from iresult to nresult
+        #print('zb', iline, sline, len(sline))
+        result += sline
+        nresult += len(sline)
+        if iresult >= nnodes_max:
+            log.debug('breaking...')
+            #break
+        iline, line = get_next_line(tecplot_file, iline)
+        sline = line.split()
+        if iresult == 0:
+            log.debug('zone_type=%s sline=%s' % (zone_type, sline))
+        iresult += len(sline)
+        #print('len', iresult, nresult, len(result))
+    #print(result, len(result))
+    for i, value in enumerate(result):
+        assert '.' in value, 'i=%i value=%s' % (i, value)
+    assert len(result) == nnodes_max, 'len(result)=%s expected=%s' % (len(result), nnodes_max)
+    #-----------------
+
+    # pack data
+    for ires in range(3 + nresults):
+        i0 = ires * nnodes
+        i1 = (ires + 1) * nnodes #+ 1
+        if len(result[i0:i1]) != nnodes:
+            msg = 'ires=%s len=%s nnodes=%s' % (
+                ires, len(result[i0:i1]), nnodes)
+            raise RuntimeError(msg)
+        if ires in [0, 1, 2]:
+            log.debug('ires=%s nnodes=%s len(result)=%s' % (ires, nnodes, len(result)))
+            xyz[:, ires] = result[i0:i1]
+        else:
+            results[:, ires - 3] = result[i0:i1]
+
+    # setup
+    #iline, line = get_next_line(tecplot_file, iline)
+    #sline = line.split()
+    return iline, sline
+
+def read_unstructured_elements(tecplot_file, iline, sline, elements, nelements):
+    assert '.' not in sline[0], sline
+
+    i = 0
+    #print('nelements =', nelements)
+    for i in range(nelements):
+        #print(iline, i, sline)
+        try:
+            elements[i, :] = sline
+        except IndexError:
+            raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
+        except ValueError:
+            raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
+        line = tecplot_file.readline()
+        iline += 1
+        sline = line.strip().split()
+    return iline
+
+def read_point(tecplot_file, iline, xyz, results, zone_type, line, sline, nnodes, nvars, log):
+    log.debug('start of POINT')
+    #print('nnodes =', nnodes)
+    #print('nvars =', nvars)
+    for inode in range(nnodes):
+        iline, sline = get_next_sline(tecplot_file, iline, sline, nvars)
+        #print(iline, inode, sline)
+
+        if inode == 0:
+            log.debug('zone_type=%s sline=%s' %(zone_type, sline))
+
+
+        if not len(sline[3:]) == len(results[inode, :]):
+            msg = 'sline[3:]=%s results[inode, :]=%s' % (sline[:3], results[inode, :])
+            raise RuntimeError(msg)
+
+        try:
+            xyz[inode, :] = sline[:3]
+            results[inode, :] = sline[3:]
+        except ValueError:
+            msg = 'i=%s line=%r\n' % (inode, line)
+            msg += 'sline = %s' % str(sline)
+            print(msg)
+            raise
+        iline, line = get_next_line(tecplot_file, iline)
+
+        sline = line.split()
+        #log.debug(sline)
+    log.debug('end of POINT')
+
+def get_next_line(tecplot_file, iline):
+    line = tecplot_file.readline().strip()
+    iline += 1
+    igap = 0
+    ngap_max = 10
+    while len(line) == 0 or line[0] == '#':
+        line = tecplot_file.readline().strip()
+        iline += 1
+        if igap > ngap_max:
+            break
+        igap += 1
+    return iline, line
+
+def get_next_sline(tecplot_file, iline, sline, nvars):
+    #print(iline, sline)
+    while len(sline) != nvars:  # long line was split
+        iline, line = get_next_line(tecplot_file, iline)
+        slinei = line.split()
+        #print(iline, slinei)
+        assert len(slinei) > 0, slinei
+        sline += slinei
+        iline += 1
+    assert len(sline) == nvars, 'iline=%i sline=%s nvars=%s' % (iline, sline, nvars)
+    return iline, sline
+
+def _write_xyz_results_point(tecplot_file, nodes, nodal_results, nresults, ivars, ndim=3, word='xyz'):
+    if nresults:
+        try:
+            res = nodal_results[:, ivars]
+        except IndexError:
+            msg = 'Cant access...\n'
+            msg += 'ivars = %s\n' % ivars
+            msg += 'nresults = %s\n' % nresults
+            msg += 'results.shape=%s\n' % str(nodal_results.shape)
+            raise IndexError(msg)
+
+        try:
+            data = np.hstack([nodes, res])
+        except ValueError:
+            msg = 'Cant hstack...\n'
+            msg += '%s.shape=%s\n' % (word, str(nodes.shape))
+            msg += 'results.shape=%s\n' % str(nodal_results.shape)
+            raise ValueError(msg)
+        fmt = ' %15.9E' * (ndim + nresults)
+    else:
+        data = nodes
+        fmt = ' %15.9E %15.9E %15.9E'
+
+    # works in numpy 1.15.1
+    np.savetxt(tecplot_file, data, fmt=fmt)
+
+def _write_xyz_results_block(tecplot_file, nodes, nodal_results, nresults, ivars,
+                             ndim=3, word='xyz'):
+    """TODO: hasn't been tested for 2d"""
+    #nvalues_per_line = 5
+    for ivar in range(ndim):
+        #tecplot_file.write('# ivar=%i\n' % ivar)
+        vals = nodes[:, ivar].ravel()
+        msg = ''
+        for ival, val in enumerate(vals):
+            msg += ' %15.9E' % val
+            if (ival + 1) % 3 == 0:
+                tecplot_file.write(msg)
+                msg = '\n'
+        tecplot_file.write(msg.rstrip() + '\n')
+
+    if nresults:
+        #print('nnodes_per_element =', nnodes_per_element)
+        # for ivar in range(nnodes_per_element):
+        for ivar in ivars:
+            #tecplot_file.write('# ivar=%i\n' % ivar)
+            vals = nodal_results[:, ivar].ravel()
+            msg = ''
+            for ival, val in enumerate(vals):
+                msg += ' %15.9E' % val
+                if (ival + 1) % 5 == 0:
+                    tecplot_file.write(msg)
+                    msg = '\n'
+            tecplot_file.write(msg.rstrip() + '\n')
 
 def main():  # pragma: no cover
     #plt = Tecplot()

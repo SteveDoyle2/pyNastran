@@ -90,13 +90,13 @@ class TecplotIO:
         """
         nodes2d = model.xy
         nodes3d = model.xyz
-        nnodes2d = len(nodes2d)
-        nnodes3d = len(nodes3d)
+        nnodes2d = nodes2d.shape[0]
+        nnodes3d = nodes3d.shape[0]
 
         unused_nnodes = self.gui.nnodes
         grid = self.gui.grid
-        if nnodes2d == 0 and nnodes3d == 0:
-            raise RuntimeError('failed to find 2d/3d nodes')
+        if nnodes2d and nnodes3d:
+            raise RuntimeError('2d and 3d nodes is not supported')
         elif nnodes2d:
             nodes = np.zeros((nnodes2d, 3), dtype=nodes2d.dtype)
             nodes[:, :2] = nodes2d
