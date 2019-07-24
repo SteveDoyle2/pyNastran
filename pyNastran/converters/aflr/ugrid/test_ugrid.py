@@ -59,7 +59,6 @@ class TestUgrid(unittest.TestCase):
         tecplot_filename2 = os.path.join(NASTRAN_PATH, 'solid_bending', 'solid_bending2.plt')
         tecplot = ugrid_to_tecplot(ugrid_model)
         tecplot.write_tecplot(tecplot_filename2, res_types=None,
-                              is_points=True,
                               adjust_nids=True)
         assert os.path.exists(tecplot_filename2), tecplot_filename2
 
@@ -82,7 +81,6 @@ class TestUgrid(unittest.TestCase):
         tecplot = ugrid_to_tecplot(ugrid_filename)
         tecplot = ugrid_to_tecplot(ugrid_model)
         tecplot.write_tecplot(tecplot_filename2, res_types=None,
-                              is_points=True,
                               adjust_nids=True)
         assert os.path.exists(tecplot_filename2), tecplot_filename2
 

@@ -65,8 +65,8 @@ def nastran_to_tecplot(model):
         print('ignoring %s' % etype)
 
     # only supports nodal results
-    #tecplot.results = vstack([pids, mids])#.T
-    #print(tecplot.results.shape)
+    #tecplot.nodal_results = vstack([pids, mids])#.T
+    #print(tecplot.nodal_results.shape)
     #tecplot.result_names = ['PropertyID', 'MaterialID']
 
     ntris = len(tris)
@@ -183,5 +183,5 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=
     tecplot.xyz = nodes
     tecplot.hexa_elements = elements
     tecplot.write_tecplot(tecplot_filename)
-    tecplot.results = array([], dtype='float32')
+    tecplot.nodal_results = array([], dtype='float32')
     return tecplot

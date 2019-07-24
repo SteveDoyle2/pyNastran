@@ -4,11 +4,11 @@ Defines:
  - tecplot_to_nastran(tecplot_filename, bdf_filename, debug=True)
 
 """
-from numpy import unique
+import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.converters.tecplot.tecplot import read_tecplot
+from pyNastran.converters.tecplot.tecplot import Tecplot, read_tecplot
 
 
 def tecplot_to_nastran_filename(tecplot_filename, bdf_filename, log=None, debug=True):
@@ -76,7 +76,7 @@ def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):
         if len(model.hexa_elements):
             # need to split out the CTETRA and CPENTA elements
             for ihex, hexa in enumerate(model.hexa_elements):
-                uhexa = unique(hexa)
+                uhexa = np.unique(hexa)
                 nnodes_unique = len(uhexa)
                 nids = hexa[:nnodes_unique]
                 centroid_y = model.xyz[nids, 1].max()
@@ -106,3 +106,42 @@ def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):
         bdf_model = BDF(debug=debug)
         bdf_model.read_bdf(bdf_filename)
         remove_unused(bdf_model)
+
+
+def nastran_table_to_tecplot(bdf_model, case, variables):
+    """assumes only triangles"""
+    xyz = []
+    tris = []
+    nid_map = {}
+    for inid, (nid, node) in enumerate(sorted(bdf_model.nodes.items())):
+        xyz.append(node.get_position())
+        nid_map[nid] = inid
+    for eid, elem in sorted(bdf_model.elements.items()):
+        tris.append([nid_map[nid] for nid in elem.node_ids])
+
+    tecplot_model = Tecplot(log=bdf_model.log, debug=bdf_model.debug)
+    tecplot_model.xyz = np.array(xyz, dtype='float64')
+    tecplot_model.tri_elements = tris = np.array(tris, dtype='int32') + 1
+
+    tecplot_model.title = ('%s; %s' % (case.title, case.subtitle)).strip(' ;')
+    tecplot_model.variables = variables
+    return tecplot_model
+
+def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str, bdf_model: BDF, case, variables=None, ivars=None):
+    if variables is None:
+        variables = case.headers
+    if ivars is None:
+        ivars = np.arange(0, len(variables))
+
+    tecplot_model = nastran_table_to_tecplot(bdf_model, case, variables)
+    for itime, time in enumerate(case._times):
+        if '%' in tecplot_filename_base:
+            tecplot_filename = tecplot_filename_base % time
+        else:
+            tecplot_filename = tecplot_filename_base
+
+        # you can't combine the two lines or it transposes it...
+        nodal_results = case.data[itime, :, :]
+        tecplot_model.nodal_results = nodal_results[:, ivars]
+        tecplot_model.write_tecplot(
+            tecplot_filename, res_types=None, adjust_nids=False)

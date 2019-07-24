@@ -23,6 +23,7 @@ class TecplotGUI(TecplotIO, FakeGUIMethods):
 class TestTecplotGUI(unittest.TestCase):
 
     def test_tecplot_geometry(self):
+        """2d tri example"""
         test = TecplotGUI()
         tecplot_filename = os.path.join(TECPLOT_PATH, 'models', 'ascii', 'point_fetri_2d_02.dat')
         #test.model.load_tecplot_geometry(tecplot_filename, '')
@@ -45,7 +46,6 @@ class TestTecplotGUI(unittest.TestCase):
         ugrid_model = read_ugrid(ugrid_filename, log=log)
         tecplot = ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename2)
         tecplot.write_tecplot(tecplot_filename2, res_types=None,
-                              is_points=True,
                               adjust_nids=True)
 
         test = TecplotGUI()

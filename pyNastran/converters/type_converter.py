@@ -163,7 +163,7 @@ def process_tecplot(tecplot_filename, fmt2, fname2, log, data=None, quiet=False)
         element_slice(model, data)
 
         # this is a good way to merge files
-        model.write_tecplot(fname2, res_types=res_types, is_points=is_points)
+        model.write_tecplot(fname2, res_types=res_types) # is_points=is_points
     elif fmt2 == 'nastran':
         tecplot_to_nastran_filename(model, fname2)
     elif fmt2 == 'stl':

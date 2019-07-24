@@ -59,7 +59,7 @@ def write_tecplot(ugrid_model, tecplot_filename):
     ugrid_model.check_hanging_nodes()
     tecplot = ugrid_to_tecplot(ugrid_model)
     tecplot.write_tecplot(tecplot_filename, adjust_nids=True)  # is adjust correct???
-    tecplot.results = array([], dtype='float32')
+    tecplot.nodal_results = array([], dtype='float32')
     return tecplot
 
 def ugrid_to_tecplot(ugrid_filename, tecplot_filename=None, log=None, debug=False):

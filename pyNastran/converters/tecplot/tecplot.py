@@ -7,6 +7,7 @@ import os
 from struct import unpack
 from collections import defaultdict
 import itertools
+from typing import List
 
 import numpy as np
 from cpylog import get_logger2
@@ -14,7 +15,7 @@ from cpylog import get_logger2
 from pyNastran.utils import is_binary_file
 
 
-def read_tecplot(tecplot_filename, use_cols=None, dtype=None, log=None, debug=False):
+def read_tecplot(tecplot_filename: str, use_cols=None, dtype=None, log=None, debug=False):
     """loads a tecplot file"""
     tecplot = Tecplot(log=log, debug=debug)
     if use_cols:
@@ -27,7 +28,24 @@ def read_tecplot(tecplot_filename, use_cols=None, dtype=None, log=None, debug=Fa
 class Tecplot:
     """
     Parses a hexa binary/ASCII Tecplot 360 file.
-    Writes an ASCII Tecplot 10 file (no transient support).
+    Writes an ASCII Tecplot 10 file.
+
+    Supports:
+     - single zone only?
+     - unstructured
+     - nodal results
+     - single element type (FETRIANGLE, FEQUADRILATERAL, FETETRAHEDRON, FEBRICK)
+     - POINT/ELEMENT writing
+     - title
+     - 2D/3D
+
+    Doesn't support:
+     - geometry
+     - structured grid
+     - transient writing
+     - centroidal results
+     - non-sequential node ids
+     - data lists (100*0.0)
     """
     def __repr__(self):
         a_shape = str(self.A.shape) if self.A is not None else None
@@ -46,7 +64,7 @@ class Tecplot:
             '  dtype = %s\n' % (
                 self.tecplot_filename, self.is_mesh,
                 self.variables,
-                a_shape, str(self.results.shape),
+                a_shape, str(self.nodal_results.shape),
                 #str(self.headers_dict),
                 self.title, self.datapacking, self.zonetype,
                 self.use_cols, self.dtype,
@@ -55,13 +73,29 @@ class Tecplot:
         return msg
     @property
     def title(self):
-        return self.headers_dict['TITLE']
+        if 'TITLE' in self.headers_dict:
+            return self.headers_dict['TITLE']
+        return 'tecplot geometry and solution file'
+    @title.setter
+    def title(self, title):
+        self.headers_dict['TITLE'] = title
     @property
     def datapacking(self):
         return self.headers_dict['DATAPACKING']
     @property
     def zonetype(self):
         return self.headers_dict['ZONETYPE']
+
+    @property
+    def results(self):
+        self.log.warning('depecrecated tecplot.results for tecplot.nodal_results')
+        aaa
+        return self.nodal_results
+    @results.setter
+    def results(self, nodal_results):
+        self.log.warning('depecrecated tecplot.results for tecplot.nodal_results')
+        bbb
+        self.nodal_results = nodal_results
 
     def __init__(self, log=None, debug=False):
         # defines binary file specific features
@@ -78,12 +112,17 @@ class Tecplot:
         self.headers_dict = {}
 
         # mesh = True : this is a structured/unstructured grid
+        self.xy = np.array([], dtype='float32')
         self.xyz = np.array([], dtype='float32')
         self.tet_elements = np.array([], dtype='int32')
         self.hexa_elements = np.array([], dtype='int32')
         self.quad_elements = np.array([], dtype='int32')
         self.tri_elements = np.array([], dtype='int32')
-        self.results = np.array([], dtype='float32')
+
+        # VARLOCATION=([3-7,10]=CELLCENTERED, [11-12]=CELLCENTERED)
+        # default=NODAL
+        self.nodal_results = np.array([], dtype='float32')
+        #self.centroidal_results = np.array([], dtype='float32')
         self.variables = []
 
         # mesh = False : this is a plot file
@@ -284,14 +323,14 @@ class Tecplot:
 
         if is_3d(self.headers_dict):
             self.xyz = xyz
-            self.results = results
+            self.nodal_results = results
         else:
             self.xy = xyz[:, :2]
             if nresults == 1:
-                self.results = xyz[:, 2]
+                self.nodal_results = xyz[:, 2]
             else:
                 # TODO: not 100%
-                self.results = np.vstack(xyz[:, 2], results)
+                self.nodal_results = np.vstack(xyz[:, 2], results)
 
         self.variables = [var for var in self.variables if var not in ['X', 'Y', 'Z']]
 
@@ -332,8 +371,8 @@ class Tecplot:
             self.log.debug('nresults = %s' % nresults)
 
         self.log.debug(str(headers_dict))
-        nnodesi = int(headers_dict['N'])
-        nelementsi = int(headers_dict['E'])
+        nnodesi = headers_dict['N']
+        nelementsi = headers_dict['E']
         self.log.info('nnodes=%s nelements=%s' % (nnodesi, nelementsi))
 
         xyz = np.zeros((nnodesi, 3), dtype='float32')
@@ -425,10 +464,9 @@ class Tecplot:
                 while line[0] == '#':
                     line = tecplot_file.readline().strip()
                 sline = line.split()
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(zone_type)
 
-        i = 0
         #print(elements.shape)
         #print('xyz[0 , :]', xyz[0, :])
         #print('xyz[-1, :]', xyz[-1, :])
@@ -452,6 +490,7 @@ class Tecplot:
         elif zone_type == 'FETETRAHEDRON':
             tets_list.append(elements + nnodes)
         elif zone_type in ('FEPOINT', 'FEQUADRILATERAL'):
+            # TODO: why are points stuck in the quads?
             quads_list.append(elements + nnodes)
         elif zone_type == 'FETRIANGLE':
             tris_list.append(elements + nnodes)
@@ -462,7 +501,7 @@ class Tecplot:
         results_list.append(results)
         nnodes += nnodesi
         nelements += nelementsi
-        self.log.debug('nnodes=%s nelements=%s' % (nnodes, nelements))
+        self.log.debug('nnodes=%s nelements=%s (0-based)' % (nnodes, nelements))
         del headers_dict
         iblock += 1
         if iblock == 10:
@@ -472,7 +511,7 @@ class Tecplot:
     @property
     def nnodes(self):
         """gets the number of nodes in the model"""
-        return self.xyz.shape[0]
+        return self.xyz.shape[0] + self.xy.shape[0]
 
     @property
     def nelements(self):
@@ -644,7 +683,7 @@ class Tecplot:
                 data = tecplot_file.read(nbytes)
                 self.n += nbytes
                 resvals = unpack(b'%sf' % ni, data)
-                results = np.array(resvals, dtype='float32').reshape(nvars, nnodes).T
+                nodal_results = np.array(resvals, dtype='float32').reshape(nvars, nnodes).T
 
 
                 # 7443 elements
@@ -682,7 +721,7 @@ class Tecplot:
             del self.f
 
         self.xyz = xyz
-        self.results = results
+        self.nodal_results = nodal_results
         self.log.debug('done...')
 
     def show(self, n, types='ifs', endian=None):  # pragma: no cover
@@ -890,8 +929,7 @@ class Tecplot:
             #if
         #self.hexa_elements
 
-    def write_tecplot(self, tecplot_filename, res_types=None, is_points=True,
-                      adjust_nids=True):
+    def write_tecplot(self, tecplot_filename, res_types=None, adjust_nids=True):
         """
         Only handles single type writing
 
@@ -902,24 +940,31 @@ class Tecplot:
         res_types : str; List[str, str, ...]; default=None -> all
             the results that will be written (must be consistent with
             self.variables)
-        is_points : bool; default=True
-            write in POINT format vs. BLOCK format
         adjust_nids : bool; default=True
             element_ids are 0-based in binary and must be switched to
             1-based in ASCII
         """
+        #is_points : bool; default=True
+            #write in POINT format vs. BLOCK format
+
         self.log.info('writing tecplot %s' % tecplot_filename)
+
+        is_results = bool(len(self.nodal_results))
+        if res_types is None:
+            res_types = self.variables
+        elif isinstance(res_types, str):
+            res_types = [res_types]
+
+        nnodes = self.nnodes
+        nelements = self.nelements
+        is_points, zone_type, is_tris, is_quads, is_tets, is_hexas = self._determine_element_type()
+
         with open(tecplot_filename, 'w') as tecplot_file:
-            is_results = bool(len(self.results))
             #"tecplot geometry and solution file"
             msg = 'TITLE = %s\n' % self.title
             msg += 'VARIABLES = "X"\n'
             msg += '"Y"\n'
             msg += '"Z"\n'
-            if res_types is None:
-                res_types = self.variables
-            elif isinstance(res_types, str):
-                res_types = [res_types]
             result_indices_to_write = []
             if is_results:
                 #msg += '"rho"\n'
@@ -946,10 +991,6 @@ class Tecplot:
                 ivars = []
 
             msg += 'ZONE '
-            nnodes = self.nnodes
-            nelements = self.nelements
-            is_points, zone_type, is_tris, is_quads, is_tets, is_hexas = self._determine_element_type()
-
             self.log.info('is_points = %s' % is_points)
             if is_points:
                 msg += ' n=%i, e=%i, ZONETYPE=%s, DATAPACKING=POINT\n' % (
@@ -1036,6 +1077,7 @@ class Tecplot:
             if node_max > nnodes:
                 msg = 'elements.min()=node_min=%s elements.max()=node_max=%s nnodes=%s' % (
                     node_min, node_max, nnodes)
+                self.log.error(msg)
                 raise RuntimeError(msg)
             # assert elements.min() == 1, elements.min()
             # assert elements.max() == nnodes, elements.max()
@@ -1053,12 +1095,12 @@ class Tecplot:
         if is_points:
             if nresults:
                 try:
-                    res = self.results[:, ivars]
+                    res = self.nodal_results[:, ivars]
                 except IndexError:
                     msg = 'Cant access...\n'
                     msg += 'ivars = %s\n' % ivars
                     msg += 'nresults = %s\n' % nresults
-                    msg += 'results.shape=%s\n' % str(self.results.shape)
+                    msg += 'results.shape=%s\n' % str(self.nodal_results.shape)
                     raise IndexError(msg)
 
                 try:
@@ -1066,7 +1108,7 @@ class Tecplot:
                 except ValueError:
                     msg = 'Cant hstack...\n'
                     msg += 'xyz.shape=%s\n' % str(self.xyz.shape)
-                    msg += 'results.shape=%s\n' % str(self.results.shape)
+                    msg += 'results.shape=%s\n' % str(self.nodal_results.shape)
                     raise ValueError(msg)
                 fmt = ' %15.9E' * (3 + nresults)
             else:
@@ -1093,7 +1135,7 @@ class Tecplot:
                 # for ivar in range(nnodes_per_element):
                 for ivar in ivars:
                     #tecplot_file.write('# ivar=%i\n' % ivar)
-                    vals = self.results[:, ivar].ravel()
+                    vals = self.nodal_results[:, ivar].ravel()
                     msg = ''
                     for ival, val in enumerate(vals):
                         msg += ' %15.9E' % val
@@ -1167,7 +1209,7 @@ class Tecplot:
         nodes = self.xyz
         assert tol > 0.0, tol
         elements = self.hexa_elements
-        results = self.results
+        results = self.nodal_results
 
         iy = np.where((y0 - tol <= y) & (y <= y0 + tol))[0]
 
@@ -1214,10 +1256,10 @@ class Tecplot:
 
         self.log.debug(inodes)
         nodes2 = nodes[inodes, :]
-        results2 = results[inodes, :]
+        nodal_results2 = results[inodes, :]
         model = Tecplot()
         model.xyz = nodes2
-        model.results = results2
+        model.nodal_results = nodal_results2
         model.hexa_elements = elements3
 
         if slice_filename:
@@ -1225,11 +1267,96 @@ class Tecplot:
         return model
 
 
+def _header_lines_to_header_dict(header_lines: List[str]):
+    """parses the parsed header lines"""
+    headers_dict = {}
+    if len(header_lines) == 0:
+        #raise RuntimeError(header_lines)
+        return None
+    header = ','.join(header_lines)
+
+    # this is so overly complicataed and probably not even enough...
+    # what about the following 'quote' style?
+    headers = header.replace('""', '","').split(',')
+
+    nheaders = len(headers) - 1
+    for iheader, header in enumerate(headers):
+        header = header.strip()
+        #print('%2i %s' % (iheader, header))
+        #print('iheader=%s header=%r' % (iheader, header))
+        if '=' in header:
+            sline = header.split('=', 1)
+            parse = False
+            #print('iheader=%s nheaders=%s' % (iheader, nheaders))
+            if iheader == nheaders:
+                parse = True
+            elif '=' in headers[iheader + 1]:
+                parse = True
+        elif header.upper() == 'ZONE':
+            # apparently the null key is also a thing...
+            # we'll use 'ZONE' because...
+            headers_dict['ZONE'] = None
+            parse = True
+            #continue
+        elif '"' in header:
+            sline += [header]
+            parse = False
+            if iheader == nheaders:
+                parse = True
+            elif '=' in headers[iheader + 1]:
+                parse = True
+        else:
+            raise NotImplementedError(header)
+
+        if parse:
+            #print('  parsing')
+            key = sline[0].strip().upper()
+            if key.startswith('ZONE '):
+                # the key is not "ZONE T" or "ZONE E"
+                # ZONE is a flag, T is title, E is number of elements
+                key = key[5:].strip()
+
+            value = [val.strip() for val in sline[1:]]
+            if len(value) == 1:
+                value = value[0].strip()
+            #assert not isinstance(value, list), value
+            headers_dict[key] = value
+            #print('  ', value)
+            #value = value.strip()
+
+            # 'T', 'ZONE T',  ???
+            allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
+                            'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
+                            'I', 'J']
+            assert key in allowed_keys, 'key=%r; allowed=[%s]' % (key, ', '.join(allowed_keys))
+            parse = False
+    #print(headers_dict.keys())
+
+    _simplify_header(headers_dict)
+    assert len(headers_dict) > 0, headers_dict
+    return headers_dict
+
+def _simplify_header(headers_dict) -> None:
+    if 'N' in headers_dict: # nnodes
+        headers_dict['N'] = int(headers_dict['N'])
+    if 'E' in headers_dict: # nelements
+        headers_dict['E'] = int(headers_dict['E'])
+    _simplify_variables(headers_dict)
+
+def _simplify_variables(headers_dict) -> None:
+    variables = headers_dict['VARIABLES']
+    headers_dict['VARIABLES'] = [var.strip('"') for  var in variables]
+
+def is_3d(headers_dict) -> bool:
+    variables = headers_dict['VARIABLES']
+    is_3d = 'Z' in variables or 'z' in variables
+    return is_3d
+
+
 
 def main():  # pragma: no cover
     #plt = Tecplot()
     fnames = os.listdir(r'Z:\Temporary_Transfers\steve\output\time20000')
-
 
     #datai = [
         #'n=3807, e=7443',
@@ -1401,85 +1528,6 @@ def main2():  # pragma: no cover
     for iprocessor, tecplot_filename in enumerate(fnames):
         plt.read_tecplot(tecplot_filename)
         plt.write_tecplot('processor_%i.plt' % iprocessor)
-
-
-def _header_lines_to_header_dict(header_lines):
-    """parses the parsed header lines"""
-    headers_dict = {}
-    if len(header_lines) == 0:
-        #raise RuntimeError(header_lines)
-        return None
-    header = ','.join(header_lines)
-
-    # this is so overly complicataed and probably not even enough...
-    # what about the following 'quote' style?
-    headers = header.replace('""', '","').split(',')
-
-    nheaders = len(headers) - 1
-    for iheader, header in enumerate(headers):
-        header = header.strip()
-        #print('%2i %s' % (iheader, header))
-        #print('iheader=%s header=%r' % (iheader, header))
-        if '=' in header:
-            sline = header.split('=', 1)
-            parse = False
-            #print('iheader=%s nheaders=%s' % (iheader, nheaders))
-            if iheader == nheaders:
-                parse = True
-            elif '=' in headers[iheader + 1]:
-                parse = True
-        elif header.upper() == 'ZONE':
-            # apparently the null key is also a thing...
-            # we'll use 'ZONE' because...
-            headers_dict['ZONE'] = None
-            parse = True
-            #continue
-        elif '"' in header:
-            sline += [header]
-            parse = False
-            if iheader == nheaders:
-                parse = True
-            elif '=' in headers[iheader + 1]:
-                parse = True
-        else:
-            raise NotImplementedError(header)
-
-        if parse:
-            #print('  parsing')
-            key = sline[0].strip().upper()
-            if key.startswith('ZONE '):
-                # the key is not "ZONE T" or "ZONE E"
-                # ZONE is a flag, T is title, E is number of elements
-                key = key[5:].strip()
-
-            value = [val.strip() for val in sline[1:]]
-            if len(value) == 1:
-                value = value[0].strip()
-            #assert not isinstance(value, list), value
-            headers_dict[key] = value
-            #print('  ', value)
-            #value = value.strip()
-
-            # 'T', 'ZONE T',  ???
-            allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
-                            'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
-                            'I', 'J']
-            assert key in allowed_keys, 'key=%r; allowed=[%s]' % (key, ', '.join(allowed_keys))
-            parse = False
-    #print(headers_dict.keys())
-
-    _simplify_variables(headers_dict)
-    assert len(headers_dict) > 0, headers_dict
-    return headers_dict
-
-def _simplify_variables(headers_dict):
-    variables = headers_dict['VARIABLES']
-    headers_dict['VARIABLES'] = [var.strip('"') for  var in variables]
-
-def is_3d(headers_dict):
-    variables = headers_dict['VARIABLES']
-    is_3d = 'Z' in variables or 'z' in variables
-    return is_3d
 
 if __name__ == '__main__':
     main()

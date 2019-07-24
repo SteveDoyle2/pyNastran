@@ -1,7 +1,8 @@
 """Defines the GUI IO file for Tecplot."""
 from collections import OrderedDict
 
-from numpy import arange, mean, amax, amin, array
+import numpy as np
+#from numpy import arange, mean, amax, amin, array
 from vtk import vtkHexahedron, vtkQuad, vtkTriangle, vtkTetra
 
 from pyNastran.converters.tecplot.tecplot import read_tecplot
@@ -56,7 +57,7 @@ class TecplotIO:
         loads = []
         assert loads is not None
         if 'Mach' in loads:
-            avg_mach = mean(loads['Mach'])
+            avg_mach = np.mean(loads['Mach'])
             note = ':  avg(Mach)=%g' % avg_mach
         else:
             note = ''
@@ -81,12 +82,31 @@ class TecplotIO:
             #appendFilter.Update()
 
     def _make_tecplot_geometry(self, model, quads_only=False):
-        nodes = model.xyz
+        """
+        Returns
+        -------
+        is_surface : bool
+            the model is made up of only shells (not 100%)
+        """
+        nodes2d = model.xy
+        nodes3d = model.xyz
+        nnodes2d = len(nodes2d)
+        nnodes3d = len(nodes3d)
+
         unused_nnodes = self.gui.nnodes
         grid = self.gui.grid
+        if nnodes2d == 0 and nnodes3d == 0:
+            raise RuntimeError('failed to find 2d/3d nodes')
+        elif nnodes2d:
+            nodes = np.zeros((nnodes2d, 3), dtype=nodes2d.dtype)
+            nodes[:, :2] = nodes2d
+        elif nnodes3d:
+            nodes = nodes3d
+        else:  # pragma: no cover
+            raise RuntimeError('failed to find 2d/3d nodes')
 
-        mmax = amax(nodes, axis=0)
-        mmin = amin(nodes, axis=0)
+        mmax = np.amax(nodes, axis=0)
+        mmin = np.amin(nodes, axis=0)
         dim_max = (mmax - mmin).max()
         self.gui.create_global_axes(dim_max)
 
@@ -118,59 +138,73 @@ class TecplotIO:
                 #self._create_tecplot_shells(is_quads, quads, is_tris, tris)
             #else:
             is_surface = False
-            if is_surface:
-                if nhexas:
-                    free_faces = array(model.get_free_faces(), dtype='int32')# + 1
-                    nfaces = len(free_faces)
-                    self.gui.nelements = nfaces
-                    unused_elements = free_faces
-                    grid.Allocate(nfaces, 1000)
-
-                    for face in free_faces:
-                        elem = vtkQuad()
-                        epoints = elem.GetPointIds()
-                        epoints.SetId(0, face[0])
-                        epoints.SetId(1, face[1])
-                        epoints.SetId(2, face[2])
-                        epoints.SetId(3, face[3])
-                        #elem.GetCellType() = 5  # vtkTriangle
-                        grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            else:
-                # is_volume
-                grid.Allocate(nsolids, 1000)
-                self.gui.nelements = nsolids
-                if ntets:
-                    for node_ids in tets:
-                        elem = vtkTetra()
-                        epoints = elem.GetPointIds()
-                        epoints.SetId(0, node_ids[0])
-                        epoints.SetId(1, node_ids[1])
-                        epoints.SetId(2, node_ids[2])
-                        epoints.SetId(3, node_ids[3])
-                        #elem.GetCellType() = 5  # vtkTriangle
-                        grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-
-
-                if nhexas:
-                    for node_ids in hexas:
-                        elem = vtkHexahedron()
-                        epoints = elem.GetPointIds()
-                        epoints.SetId(0, node_ids[0])
-                        epoints.SetId(1, node_ids[1])
-                        epoints.SetId(2, node_ids[2])
-                        epoints.SetId(3, node_ids[3])
-                        epoints.SetId(4, node_ids[4])
-                        epoints.SetId(5, node_ids[5])
-                        epoints.SetId(6, node_ids[6])
-                        epoints.SetId(7, node_ids[7])
-                        #elem.GetCellType() = 5  # vtkTriangle
-                        grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            self._create_tecplot_solids(model, nsolids, ntets, tets, nhexas, hexas,
+                                        is_surface=is_surface)
         else:
             raise NotImplementedError()
 
         grid.SetPoints(points)
         grid.Modified()
         return is_surface
+
+    def _create_tecplot_solids(self, model, nsolids, ntets, tets, nhexas, hexas, is_surface=True):
+        """
+        add a model with solid elements
+
+        Parameters
+        ----------
+        is_surface : bool; default=True
+            True : skin the model (good for large models, but doesn't load everything)
+            False : load the model normally
+        """
+        grid = self.gui.grid
+        if is_surface:
+            if nhexas:
+                free_faces = np.array(model.get_free_faces(), dtype='int32')# + 1
+                nfaces = len(free_faces)
+                self.gui.nelements = nfaces
+                unused_elements = free_faces
+                grid.Allocate(nfaces, 1000)
+
+                for face in free_faces:
+                    elem = vtkQuad()
+                    epoints = elem.GetPointIds()
+                    epoints.SetId(0, face[0])
+                    epoints.SetId(1, face[1])
+                    epoints.SetId(2, face[2])
+                    epoints.SetId(3, face[3])
+                    #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(elem.GetCellType(), epoints)
+        else:
+            # is_volume
+            grid.Allocate(nsolids, 1000)
+            self.gui.nelements = nsolids
+            if ntets:
+                for node_ids in tets:
+                    elem = vtkTetra()
+                    epoints = elem.GetPointIds()
+                    epoints.SetId(0, node_ids[0])
+                    epoints.SetId(1, node_ids[1])
+                    epoints.SetId(2, node_ids[2])
+                    epoints.SetId(3, node_ids[3])
+                    #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(elem.GetCellType(), epoints)
+
+
+            if nhexas:
+                for node_ids in hexas:
+                    elem = vtkHexahedron()
+                    epoints = elem.GetPointIds()
+                    epoints.SetId(0, node_ids[0])
+                    epoints.SetId(1, node_ids[1])
+                    epoints.SetId(2, node_ids[2])
+                    epoints.SetId(3, node_ids[3])
+                    epoints.SetId(4, node_ids[4])
+                    epoints.SetId(5, node_ids[5])
+                    epoints.SetId(6, node_ids[6])
+                    epoints.SetId(7, node_ids[7])
+                    #elem.GetCellType() = 5  # vtkTriangle
+                    grid.InsertNextCell(elem.GetCellType(), epoints)
 
     def _create_tecplot_shells(self, is_quads, quads, is_tris, tris):
         grid = self.gui.grid
@@ -183,17 +217,17 @@ class TecplotIO:
                 epoints.SetId(2, face[2])
                 epoints.SetId(3, face[3])
                 #elem.GetCellType() = 5  # vtkTriangle
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(elem.GetCellType(), epoints)
 
         if is_tris:
+            #elem.GetCellType() = 5  # vtkTriangle
             for face in tris:
                 elem = vtkTriangle()
                 epoints = elem.GetPointIds()
                 epoints.SetId(0, face[0])
                 epoints.SetId(1, face[1])
                 epoints.SetId(2, face[2])
-                #elem.GetCellType() = 5  # vtkTriangle
-                grid.InsertNextCell(5, elem.GetPointIds())
+                grid.InsertNextCell(5, epoints)
 
     def clear_tecplot(self):
         pass
@@ -229,8 +263,8 @@ class TecplotIO:
         assert nnodes > 0, nnodes
         assert nelements > 0, nelements
 
-        nids = arange(1, nnodes + 1, dtype='int32')
-        eids = arange(1, nelements + 1, dtype='int32')
+        nids = np.arange(1, nnodes + 1, dtype='int32')
+        eids = np.arange(1, nelements + 1, dtype='int32')
 
         nid_res = GuiResult(ID, header='NodeID', title='NodeID',
                             location='node', scalar=nids)
@@ -242,7 +276,7 @@ class TecplotIO:
         cases[icase + 1] = (eid_res, (0, element_id))
         icase += 2
 
-        results = model.results
+        results = model.nodal_results
         if is_results and len(results):
             for iresult, result_name in enumerate(result_names):
                 if results.shape[1] == 1:
