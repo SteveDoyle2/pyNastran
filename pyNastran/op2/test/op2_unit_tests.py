@@ -291,12 +291,8 @@ class TestOP2(Tester):
         op2_2 = read_op2_geom(op2_filename_m2, debug=False, debug_file='temp.debug', log=log)
         op2_1.write_f06(f06_filename)
 
-        from pyNastran.op2.dev.op2_writer import OP2Writer
-        op2w_1 = OP2Writer(op2_1)
-        op2w_1.write_op2(op2_filename_m1_out, obj=op2_1, skips=['grid_point_weight']) #, is_mag_phase=False)
-
-        op2w_2 = OP2Writer(op2_2)
-        op2w_2.write_op2(op2_filename_m2_out, obj=op2_2, skips=['grid_point_weight']) #, is_mag_phase=False)
+        op2_1.write_op2(op2_filename_m1_out, skips=['grid_point_weight']) #, is_mag_phase=False)
+        op2_2.write_op2(op2_filename_m2_out, skips=['grid_point_weight']) #, is_mag_phase=False)
         os.remove(f06_filename)
         os.remove('temp.debug')
         os.remove(op2_filename_m1_out)

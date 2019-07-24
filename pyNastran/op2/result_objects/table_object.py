@@ -78,8 +78,12 @@ SORT2_TABLE_NAME_MAP = {
     'OUGV2' : 'OUGV1',
 }
 table_name_to_table_code = {
+    # displacement (msc/nx)
     'OUGV1' : 1,
     'BOUGV1' : 1,
+    # load vector (msc/nx)
+    'OPG1' : 2,
+    'BOPG1' : 2,
     #'BOPHIG1' : 5, # ???
 }
 def append_sort1_sort2(data1, data2, to_sort1=True):

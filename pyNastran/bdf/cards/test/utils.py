@@ -120,7 +120,6 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
 
     if run_op2_writer:
         op2_geom_model = attach_op2_results_to_bdf(model, op2_model=None)
-        from pyNastran.op2.dev.op2_writer import OP2Writer
         from pyNastran.op2.op2_geom import read_op2_geom
 
         table_name = 'OUGV1'
@@ -133,9 +132,8 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         op2_geom_model.displacements[isubcase] = disp
 
 
-        op2w = OP2Writer()
         op2_filename = 'spike.op2'
-        op2w.write_op2(op2_filename, obj=op2_geom_model, post=-1, endian=b'<', skips=None, nastran_format='nx')
+        op2_geom_model.write_op2(op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')
         if run_op2_reader:
             op2r = read_op2_geom(op2_filename, log=op2_geom_model.log, xref=False)
         else:

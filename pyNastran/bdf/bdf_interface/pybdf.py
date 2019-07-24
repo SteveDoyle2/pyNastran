@@ -1208,7 +1208,7 @@ def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
     # for a 'BEGIN AUXMODEL=1' or ???.
     #
     #print(len(bulk_data_lines), len(bulk_data_ilines))
-    if len(bulk_data_lines) == len(bulk_data_ilines):
+    if len(bulk_data_lines) != len(bulk_data_ilines):
         raise RuntimeError('len(bulk_data_lines)=%s len(bulk_data_ilines)=%s are not equal' % (
             len(bulk_data_lines), len(bulk_data_ilines)))
     is_broken = False

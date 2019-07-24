@@ -383,6 +383,9 @@ class OP2Geom(BDF, OP2GeomCommon):
 
 def bdf_to_op2_geom(model: BDF, validate: bool=True) -> OP2Geom:
     """converts a BDF() -> OP2Geom()"""
+    if isinstance(model, OP2Geom):
+        return model
+
     assert model is not None
     #assert op2_model is not None
     #assert model.bdf_filename is not None

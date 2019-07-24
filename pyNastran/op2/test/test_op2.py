@@ -26,7 +26,6 @@ except ImportError:
 
 import pyNastran
 from pyNastran.op2.op2 import OP2, FatalError, read_op2
-from pyNastran.op2.writer.op2_writer import OP2Writer
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
@@ -323,10 +322,9 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         if write_op2:
             model = os.path.splitext(op2_filename)[0]
             op2_filename2 = model + '.test_op2.op2'
-            op2w = OP2Writer(op2)
-            total_case_count = op2w.write_op2(op2_filename2, obj=op2,
-                                              #is_mag_phase=is_mag_phase,
-                                              endian=b'<')
+            total_case_count = op2.write_op2(op2_filename2,
+                                             #is_mag_phase=is_mag_phase,
+                                             endian=b'<')
             if total_case_count > 0:
                 #print('------------------------------')
                 op2a = OP2(debug_file='debug.out', log=log)
