@@ -89,12 +89,10 @@ class Tecplot:
     @property
     def results(self):
         self.log.warning('depecrecated tecplot.results for tecplot.nodal_results')
-        aaa
         return self.nodal_results
     @results.setter
     def results(self, nodal_results):
         self.log.warning('depecrecated tecplot.results for tecplot.nodal_results')
-        bbb
         self.nodal_results = nodal_results
 
     def __init__(self, log=None, debug=False):
