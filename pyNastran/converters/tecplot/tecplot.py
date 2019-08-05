@@ -156,7 +156,8 @@ class Tecplot:
         # mesh = None : model hasn't been read
         self.is_mesh = None
 
-        self.headers_dict = {}
+        self.headers_dict = CaseInsensitiveDict()
+        self.title = 'tecplot geometry and solution file'
 
         # mesh = True : this is a structured/unstructured grid
         self.xy = np.array([], dtype='float32')
@@ -205,78 +206,6 @@ class Tecplot:
             return self.read_tecplot_binary(tecplot_filename)
         return self.read_tecplot_ascii(tecplot_filename)
 
-    def read_header_lines(self, tecplot_file, iline, line):
-        """
-        reads a tecplot header
-
-        Examples
-        --------
-        **Example 1**
-
-        TITLE     = "tecplot geometry and solution file"
-        VARIABLES = "x"
-        "y"
-        "z"
-        "rho"
-        "u"
-        "v"
-        "w"
-        "p"
-        ZONE T="\"processor 1\""
-        n=522437, e=1000503, ZONETYPE=FEBrick
-        DATAPACKING=BLOCK
-
-        **Example 2**
-
-        title="Force and Momment Data for forces"
-        variables="Iteration"
-        "C_L","C_D","C_M_x","C_M_y","C_M_z""C_x","C_y","C_z","C_Lp","C_Dp", "C_Lv", "C_Dv""C_M_xp"
-        "C_M_yp","C_M_zp","C_M_xv","C_M_yv""C_M_zv","C_xp","C_yp","C_zp","C_xv","C_yv""C_zv
-        "Mass flow","<greek>r</greek>","u"
-        "p/p<sub>0</sub>","T","p<sub>t</sub>/p<sub>0</sub>"
-        "T<sub>t</sub>","Mach"
-        "Simulation Time"
-        zone,t="forces"
-        """
-        i = 0
-        vars_found = []
-        header_lines = []
-        while i < 30:
-            #print(i, line.strip())
-            #self.n = 0
-            if len(line) == 0 or line[0] == '#':
-                line = tecplot_file.readline().strip()
-                iline += 1
-                i += 1
-                continue
-            if line[0].isdigit() or line[0] == '-':
-                self.log.debug('breaking...')
-                break
-            if 'TITLE' in line:
-                vars_found.append('TITLE')
-            if 'VARIABLES' in line:
-                vars_found.append('VARIABLES')
-            #if 'ZONE T' in line:
-                #vars_found.append('ZONE T')
-            if 'ZONE' in line:
-                vars_found.append('ZONE')
-            #if 'ZONE N' in line:
-                #vars_found.append('N')
-            if 'ZONETYPE' in line:
-                vars_found.append('ZONETYPE')
-            if 'DATAPACKING' in line:
-                vars_found.append('DATAPACKING')
-            header_lines.append(line.strip())
-            #if len(vars_found) == 5:
-                #break
-            i += 1
-            line = tecplot_file.readline().strip()
-            iline += 1
-
-        self.log.debug('vars_found = %s' % vars_found)
-
-        return iline, header_lines, i, line
-
     def read_tecplot_ascii(self, tecplot_filename, nnodes=None, nelements=None):
         """
         Reads a Tecplot ASCII file.
@@ -309,9 +238,10 @@ class Tecplot:
             iline += 1
             iblock = 0
             while 1:
-                iline, header_lines, unused_i, line = self.read_header_lines(tecplot_file, iline, line)
+                iline, title_line, header_lines, unused_i, line = _read_header_lines(
+                    tecplot_file, iline, line, self.log)
                 #print(header_lines)
-                headers_dict = _header_lines_to_header_dict(header_lines)
+                headers_dict = _header_lines_to_header_dict(title_line, header_lines)
                 if headers_dict is None:
                     break
                 self.headers_dict = headers_dict
@@ -521,7 +451,7 @@ class Tecplot:
                 #raise NotImplementedError(zone_type[0])
             raise NotImplementedError(zone_type)
 
-        sline = line.strip().split()
+        sline = split_line(line.strip())
         if zone_type in ('FEBRICK', 'FETETRAHEDRON'):
             if data_packing == 'POINT':
                 for inode in range(nnodesi):
@@ -540,8 +470,7 @@ class Tecplot:
                         print(msg)
                         raise
 
-                    iline, line = get_next_line(tecplot_file, iline)
-                    sline = line.split()
+                    iline, line, sline = get_next_sline(tecplot_file, iline)
             elif data_packing == 'BLOCK':
                 iline, sline = read_zone_block(tecplot_file, iline, xyz, results, nresults, zone_type,
                                                sline, nnodesi, self.log)
@@ -549,7 +478,7 @@ class Tecplot:
             else:
                 raise NotImplementedError(data_packing)
         elif zone_type in ('FEPOINT', 'FEQUADRILATERAL', 'FETRIANGLE'):
-            sline = line.strip().split()
+            sline = split_line(line.strip())
             for inode in range(nnodesi):
                 #print(iline, inode, sline)
                 xyz[inode, :] = sline[:3]
@@ -558,8 +487,7 @@ class Tecplot:
                     #raise RuntimeError(msg)
 
                 results[inode, :] = sline[3:]
-                iline, line = get_next_line(tecplot_file, iline)
-                sline = line.split()
+                iline, line, sline = get_next_sline(tecplot_file, iline)
 
         elif zone_type == 'POINT':
             nvars = len(self.variables)
@@ -567,7 +495,7 @@ class Tecplot:
                                line, sline, nnodesi, nvars, self.log)
         elif zone_type == 'BLOCK':
             nvars = len(self.variables)
-            print(self.variables)
+            #print(self.variables)
             iline = read_block(tecplot_file, iline, xyz, results, zone_type,
                                line, sline, nnodesi, nvars, self.log)
         else:  # pragma: no cover
@@ -822,7 +750,7 @@ class Tecplot:
 
         self.xyz = xyz
         self.nodal_results = nodal_results
-        self.log.debug('done...')
+        #self.log.debug('done...')
 
     def show(self, n, types='ifs', endian=None):  # pragma: no cover
         assert self.n == self.f.tell()
@@ -1059,7 +987,9 @@ class Tecplot:
         nelements = self.nelements
         (is_structured, is_unstructured, is_points, zone_type,
          is_tris, is_quads, is_tets, is_hexas) = self._determine_element_type()
-
+        #print(is_structured, is_unstructured, is_points, zone_type)
+        #print(is_tris, is_quads, is_tets, is_hexas)
+        #print('is_results =', is_results)
         with open(tecplot_filename, 'w') as tecplot_file:
             #"tecplot geometry and solution file"
             msg = 'TITLE = %s\n' % self.title
@@ -1074,8 +1004,8 @@ class Tecplot:
                 #msg += '"w"\n'
                 #msg += '"p"\n'
                 #msg += 'ZONE T="%s"\n' % r'\"processor 1\"'
-                #print('res_types =', res_types)
-                #print('vars =', self.variables)
+                print('res_types =', res_types)
+                print('vars =', self.variables)
                 for ivar, var in enumerate(res_types):
                     if var not in self.variables:
                         raise RuntimeError('var=%r not in variables=%s' % (var, self.variables))
@@ -1374,10 +1304,52 @@ class Tecplot:
         return model
 
 
-def _header_lines_to_header_dict(header_lines: List[str]):
+def split_headers(header):
+    #allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
+                    #'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
+                    #'I', 'J', 'K'
+                    #]
+    header = header.replace('""', '","')
+    cheaders = header.split(',')
+
+    #print(header)
+    #print(cheaders)
+    #header = cheaders[0]
+    #headers = [header]
+    #i = 1
+    #while i < len(cheaders):
+        #headeri = cheaders[i]
+        #uheaderi = headeri.upper().replace(' ', '')
+        #is_key = [uheaderi.startswith(key+'=') for key in allowed_keys]
+        #if any(is_key):
+            #print('key!', headeri)
+            #header = headeri
+            #headers.append(header.lstrip())
+        #else:
+            #headers[-1] += ',' + headeri
+        #i += 1
+    #print('headers')
+    #for headeri in headers:
+        #print('  ', headeri)
+
+    #print(headers)
+    #print(header.replace('""', '","'))
+    #if ''
+    #headers = header.replace('""', '","').split(',')
+    return cheaders
+
+def _header_lines_to_header_dict(title_line: str, header_lines: List[str]):
     """parses the parsed header lines"""
+    #print('header_lines', header_lines)
     #headers_dict = {}
     headers_dict = CaseInsensitiveDict()
+    if title_line:
+        title_sline = title_line.split('=', 1)
+        title = title_sline[1]
+    else:
+        title = 'tecplot geometry and solution file'
+    headers_dict['TITLE'] = title
+
     if len(header_lines) == 0:
         #raise RuntimeError(header_lines)
         return None
@@ -1385,7 +1357,12 @@ def _header_lines_to_header_dict(header_lines: List[str]):
 
     # this is so overly complicataed and probably not even enough...
     # what about the following 'quote' style?
-    headers = header.replace('""', '","').split(',')
+    headers = split_headers(header)
+    #headers = header.replace('""', '","').split(',')
+
+    #TITLE = "Weights=1/6,6,1"
+    #Variables = "x","y","z","psi"
+    #Zone N = 125, E = 64, DATAPACKING = POINT, ZONETYPE = FEBRICK
 
     nheaders = len(headers) - 1
     for iheader, header in enumerate(headers):
@@ -1434,7 +1411,7 @@ def _header_lines_to_header_dict(header_lines: List[str]):
 
             # 'T', 'ZONE T',  ???
             #   'DT', 'SOLUTIONTIME', 'STRANDID', # tecplot 360 specific things not supported
-            allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
+            allowed_keys = ['VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING', # 'TITLE',
                             'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
                             'I', 'J', 'K']
             assert key in allowed_keys, 'key=%r; allowed=[%s]' % (key, ', '.join(allowed_keys))
@@ -1495,8 +1472,7 @@ def read_zone_block(tecplot_file, iline, xyz, results, nresults, zone_type,
         if iresult >= nnodes_max:
             log.debug('breaking...')
             #break
-        iline, line = get_next_line(tecplot_file, iline)
-        sline = line.split()
+        iline, line, sline = get_next_sline(tecplot_file, iline)
         if iresult == 0:
             log.debug('zone_type=%s sline=%s' % (zone_type, sline))
         iresult += len(sline)
@@ -1522,8 +1498,7 @@ def read_zone_block(tecplot_file, iline, xyz, results, nresults, zone_type,
             results[:, ires - 3] = result[i0:i1]
 
     # setup
-    #iline, line = get_next_line(tecplot_file, iline)
-    #sline = line.split()
+    #iline, line, sline = get_next_sline(tecplot_file, iline)
     return iline, sline
 
 def read_unstructured_elements(tecplot_file, iline, sline, elements, nelements):
@@ -1539,17 +1514,17 @@ def read_unstructured_elements(tecplot_file, iline, sline, elements, nelements):
             raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
         except ValueError:
             raise RuntimeError('i=%s sline=%s' % (i, str(sline)))
-        line = tecplot_file.readline()
-        iline += 1
-        sline = line.strip().split()
+
+        iline, line, sline = get_next_sline(tecplot_file, iline)
+        #line = tecplot_file.readline()
+        #iline += 1
+        #sline = line.strip().split()
     return iline
 
 def read_point(tecplot_file, iline, xyz, results, zone_type, line, sline, nnodes, nvars, log):
-    log.debug('start of POINT')
-    #print('nnodes =', nnodes)
-    #print('nvars =', nvars)
+    log.debug(f'start of POINT; nnodes={nnodes} nvars={nvars}')
     for inode in range(nnodes):
-        iline, sline = get_next_sline(tecplot_file, iline, sline, nvars)
+        iline, sline = get_next_nsline(tecplot_file, iline, sline, nvars)
         #print(iline, inode, sline)
 
         if inode == 0:
@@ -1568,9 +1543,7 @@ def read_point(tecplot_file, iline, xyz, results, zone_type, line, sline, nnodes
             msg += 'sline = %s' % str(sline)
             print(msg)
             raise
-        iline, line = get_next_line(tecplot_file, iline)
-
-        sline = line.split()
+        iline, line, sline = get_next_sline(tecplot_file, iline)
         #log.debug(sline)
     log.debug('end of POINT')
     return iline
@@ -1584,22 +1557,20 @@ def read_block(tecplot_file, iline, xyz, results, zone_type, line, sline, nnodes
     results = []
 
     while len(results) < ndata:
-        sline = line.split()
+        sline = split_line(line)
         results += sline
         #print('block:', iline, sline, len(results))
         if len(sline) == 0:
             raise
-        iline, line = get_next_line(tecplot_file, iline)
-
-        sline = line.split()
+        iline, line, sline = get_next_sline(tecplot_file, iline)
         #log.debug(sline)
-    print(len(results))
+    #print(len(results))
     assert len(results) == ndata, 'len(results)=%s expected=%s' % (len(results), ndata)
     log.debug('end of BLOCK')
 
     #TODO: save results
     raise RuntimeError('not done...save results')
-    return iline
+    #return iline
 
 def get_next_line(tecplot_file, iline):
     line = tecplot_file.readline().strip()
@@ -1614,17 +1585,126 @@ def get_next_line(tecplot_file, iline):
         igap += 1
     return iline, line
 
-def get_next_sline(tecplot_file, iline, sline, nvars):
+def split_line(line):
+    if ',' in line:
+        line2 = line.replace(',', ' ')
+        sline = line2.split()
+    else:
+        sline = line.split()
+    return sline
+
+def get_next_sline(tecplot_file, iline):
+    iline, line = get_next_line(tecplot_file, iline)
+    sline = split_line(line)
+    return iline, line, sline
+
+
+def get_next_nsline(tecplot_file, iline, sline, nvars):
     #print(iline, sline)
     while len(sline) != nvars:  # long line was split
-        iline, line = get_next_line(tecplot_file, iline)
-        slinei = line.split()
-        #print(iline, slinei)
+        #print(sline, nvars)
+        iline, line, slinei = get_next_sline(tecplot_file, iline)
+        #print(iline, line, slinei, nvars)
         assert len(slinei) > 0, slinei
         sline += slinei
-        iline += 1
+        #print(sline, '\n')
+        #iline += 1
     assert len(sline) == nvars, 'iline=%i sline=%s nvars=%s' % (iline, sline, nvars)
     return iline, sline
+
+def _read_header_lines(tecplot_file, iline, line, log):
+    """
+    reads a tecplot header
+
+    Examples
+    --------
+    **Example 1**
+
+    TITLE     = "tecplot geometry and solution file"
+    VARIABLES = "x"
+    "y"
+    "z"
+    "rho"
+    "u"
+    "v"
+    "w"
+    "p"
+    ZONE T="\"processor 1\""
+    n=522437, e=1000503, ZONETYPE=FEBrick
+    DATAPACKING=BLOCK
+
+    **Example 2**
+
+    title="Force and Momment Data for forces"
+    variables="Iteration"
+    "C_L","C_D","C_M_x","C_M_y","C_M_z""C_x","C_y","C_z","C_Lp","C_Dp", "C_Lv", "C_Dv""C_M_xp"
+    "C_M_yp","C_M_zp","C_M_xv","C_M_yv""C_M_zv","C_xp","C_yp","C_zp","C_xv","C_yv""C_zv
+    "Mass flow","<greek>r</greek>","u"
+    "p/p<sub>0</sub>","T","p<sub>t</sub>/p<sub>0</sub>"
+    "T<sub>t</sub>","Mach"
+    "Simulation Time"
+    zone,t="forces"
+    """
+    i = 0
+    title_line = ''
+    variables_line = ''
+    active_key = None
+
+    vars_found = []
+    header_lines = []
+    while i < 30:
+        #print(i, line.strip())
+        #self.n = 0
+        if len(line) == 0 or line[0] == '#':
+            line = tecplot_file.readline().strip()
+            iline += 1
+            i += 1
+            continue
+        if line[0].isdigit() or line[0] == '-':
+            log.debug('breaking...')
+            break
+
+        uline = line.upper()
+        uline2 = uline.replace(' ', '')
+        if 'TITLE=' in uline2:
+            title_line += line
+            vars_found.append('TITLE')
+            active_key = 'TITLE'
+        elif 'VARIABLES' in uline2:
+            vars_found.append('VARIABLES')
+            variables_line += line
+            active_key = 'VARIABLES'
+        else:
+            #if 'ZONE T' in line:
+                #vars_found.append('ZONE T')
+            if 'ZONE' in uline2:
+                vars_found.append('ZONE')
+                active_key = 'ZONE'
+            #if 'ZONE N' in uline:
+                #vars_found.append('N')
+            if 'ZONETYPE' in uline2:
+                vars_found.append('ZONETYPE')
+                active_key = 'ZONE'
+            if 'DATAPACKING' in uline2:
+                vars_found.append('DATAPACKING')
+                active_key = 'ZONE'
+
+        #print(active_key, line)
+        if active_key in ['ZONE', 'VARIABLES']:
+            header_lines.append(line.strip())
+        #if len(vars_found) == 5:
+            #break
+
+        #if active_key
+        i += 1
+        line = tecplot_file.readline().strip()
+        iline += 1
+
+    log.debug('vars_found = %s' % vars_found)
+    #print("title = %r" % title_line)
+    #print("variables_line = %r" % variables_line)
+
+    return iline, title_line, header_lines, i, line
 
 def _write_xyz_results_point(tecplot_file, nodes, nodal_results, nresults, ivars, ndim=3, word='xyz'):
     if nresults:
