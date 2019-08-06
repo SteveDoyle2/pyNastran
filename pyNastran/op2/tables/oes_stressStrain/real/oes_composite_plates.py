@@ -109,6 +109,8 @@ class RealCompositePlateArray(OES_Object):
         name = mode
         """
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         headers = self.get_headers()
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
@@ -118,10 +120,26 @@ class RealCompositePlateArray(OES_Object):
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=element_layer, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
+            if is_v25:
+                # Static                 o11        o22        t12        t1z  ...     angle       major       minor   max_shear
+                # ElementID Layer                                              ...
+                # 16        1     -2193.9639   1773.909  -2325.400  5.477e+02  ... -65.32178   284.30176  -326.28027   56.329102
+                #           2     -1843.9912   1465.191  -2445.139  1.277e+03  ... -62.41302   276.41992  -314.80713   52.761230
+                #           3     -1260.6953    952.560  -2646.621  1.451e+03  ... -56.48576   271.34375  -302.74707   68.154541
+                #           4      -444.0792    235.137  -2926.092 -0.000e+00  ... -48.08685   284.21777  -305.24219   46.322998
+                # 17        1     -1546.0195   4338.887  -2750.557  3.610e+02  ... -68.65797   542.58496  -263.74561   28.316406
+                #           2     -1597.4194   4303.379  -2707.898  9.309e+02  ... -68.34154   535.37598  -265.98535   04.518066
+                #           3     -1683.7607   4245.215  -2634.891  1.393e+03  ... -69.88499   524.96875  -268.98779   65.647705
+                #           4     -1802.0312   4163.371  -2531.777  1.295e+03  ... -69.39493   509.74609  -273.14307   12.944336
+                #           5     -1956.2432   4058.359  -2400.559  2.975e-13  ... -70.02080   489.06738  -279.80811   48.243652
+                index = pd.MultiIndex.from_arrays(element_layer, names=['ElementID', 'Layer'])
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+                self.data_frame.columns.names = ['Static']
+            else:
+                self.data_frame = pd.Panel(self.data,
+                                           major_axis=element_layer, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

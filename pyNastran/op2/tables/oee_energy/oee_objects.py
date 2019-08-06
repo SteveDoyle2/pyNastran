@@ -125,6 +125,8 @@ class RealStrainEnergyArray(BaseElement):
         name = mode
         """
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         #print(''.join(self.get_stats()))
         #print(self.element)
         #print(self.data)
@@ -145,10 +147,23 @@ class RealStrainEnergyArray(BaseElement):
         #print('ntimes=%s' % ntimes)
         if ntimes == 1:
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
+            if is_v25:
+                # Static     strain_energy    percent  strain_energy_density
+                # ElementID
+                # 6               0.375997   0.878471               1.503990
+                # 7               0.462838   1.081362               1.851350
+                # 16              0.590421   1.379446               0.590421
+                # 17              1.399199   3.269053               0.932799
+                # 23              8.086797  18.893791               8.086797
+                # 100000000      10.915252  25.502123                    NaN
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=element)
+                self.data_frame.index.name = 'ElementID'
+                self.data_frame.columns.names = ['Static']
+            else:
+                self.data_frame = pd.Panel(self.data, items=column_values,
+                                           major_axis=element,
+                                           minor_axis=headers).to_frame()
+                self.data_frame.columns.names = column_names
         else:
             # we can get into this in a linear case
             # F:\work\pyNastran\examples\Dropbox\move_tpl\setp04.op2

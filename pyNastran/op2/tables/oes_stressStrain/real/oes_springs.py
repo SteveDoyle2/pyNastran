@@ -146,8 +146,27 @@ class RealSpringArray(OES_Object):
             self.data = data
 
     def build_dataframe(self):
-        """creates a pandas dataframe"""
+        """creates a pandas dataframe
+
+        v 0.24
+        Static                     0
+        ElementID Item
+        30        spring_stress  0.0
+        31        spring_stress  0.0
+        32        spring_stress  0.0
+        33        spring_stress  0.0
+
+        v 0.25 for test_bdf_op2_elements_01
+        Static  ElementID  spring_stress
+        0              30            0.0
+        1              31            0.0
+        2              32            0.0
+        3              33            0.0
+        ...
+        """
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -155,9 +174,38 @@ class RealSpringArray(OES_Object):
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+            if is_v25:
+                #Static     spring_stress
+                #ElementID
+                #30                   0.0
+                #31                   0.0
+                #32                   0.0
+                #33                   0.0
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+                self.data_frame.index.name = 'ElementID'
+                self.data_frame.columns.names = ['Static']
+            elif 0:  # pragma: no cover
+                #Static  ElementID  spring_stress
+                #0              30            0.0
+                #1              31            0.0
+                #2              32            0.0
+                #3              33            0.0
+
+                df1 = pd.DataFrame(self.element, columns=['ElementID'])
+                df2 = pd.DataFrame(self.data[0], columns=headers)
+                self.data_frame = df1.join(df2)
+                self.data_frame.columns.names = ['Static']
+            else:
+                # 0.24.2 or less
+                #Static                     0
+                #ElementID Item
+                #30        spring_stress  0.0
+                #31        spring_stress  0.0
+                #32        spring_stress  0.0
+                #33        spring_stress  0.0
+                self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

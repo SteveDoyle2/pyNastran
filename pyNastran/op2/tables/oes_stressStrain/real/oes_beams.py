@@ -114,6 +114,8 @@ class RealBeamArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
@@ -123,10 +125,19 @@ class RealBeamArray(OES_Object):
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=element_node,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            if is_v25:
+                # Static            sxc  sxd  sxe  sxf  smax  smin    MS_tension  MS_compression
+                # ElementID NodeID
+                # 12        22      0.0  0.0  0.0  0.0   0.0   0.0  1.401298e-45    1.401298e-45
+                #           26      0.0  0.0  0.0  0.0   0.0   0.0  1.401298e-45    1.401298e-45
+                index = pd.MultiIndex.from_arrays(self.element_node.T, names=['ElementID', 'NodeID'])
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+                self.data_frame.columns.names = ['Static']
+            else:
+                self.data_frame = pd.Panel(self.data, major_axis=element_node,
+                                           minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

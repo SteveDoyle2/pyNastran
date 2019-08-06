@@ -453,17 +453,32 @@ class RealSpringDamperForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Item']
+            if is_v25:
+                #Static      spring_force
+                #ElementID
+                #30                   0.0
+                #31                   0.0
+                #32                   0.0
+                #33                   0.0
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+                self.data_frame.index.name = 'ElementID'
+                self.data_frame.columns.names = ['Static']
+            else:
+                self.data_frame = pd.Panel(self.data,
+                                           major_axis=self.element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['ElementID', 'Item']
+
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
@@ -803,17 +818,29 @@ class RealRodForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
+            if is_v25:
+                #Static     axial           SMa  torsion           SMt
+                #ElementID
+                #14           0.0  1.401298e-45      0.0  1.401298e-45
+                #15           0.0  1.401298e-45      0.0  1.401298e-45
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+                self.data_frame.index.name = 'ElementID'
+                self.data_frame.columns.names = ['Static']
+            else:
+                self.data_frame = pd.Panel(self.data,
+                                           major_axis=self.element, minor_axis=headers).to_frame()
+                self.data_frame.index.names = ['ElementID', 'Item']
             self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Item']
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
@@ -1467,6 +1494,8 @@ class RealCShearForceArray(RealForceObject):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -1475,10 +1504,19 @@ class RealCShearForceArray(RealForceObject):
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+            if is_v25:
+                #Static     axial           SMa  torsion           SMt
+                #ElementID
+                #14           0.0  1.401298e-45      0.0  1.401298e-45
+                #15           0.0  1.401298e-45      0.0  1.401298e-45
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+                self.data_frame.index.name = 'ElementID'
+                self.data_frame.columns.names = ['Static']
+            else:
+                self.data_frame = pd.Panel(self.data,
+                                           major_axis=self.element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
@@ -1697,17 +1735,29 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Item']
+            if is_v25:
+                #Static     axial  torsion
+                #ElementID
+                #14           0.0      0.0
+                #15           0.0      0.0
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+                self.data_frame.index.name = 'ElementID'
+                self.data_frame.columns.names = ['Static']
+            else:
+                self.data_frame = pd.Panel(self.data,
+                                           major_axis=self.element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['ElementID', 'Item']
 
     def add_sort1(self, dt, eid, axial, torque):
         """unvectorized method for adding SORT1 transient data"""
@@ -1907,6 +1957,8 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         headers = self.get_headers()
         assert 0 not in self.element
         if self.nonlinear_factor not in (None, np.nan):
@@ -1914,11 +1966,21 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = column_names
+            self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Item']
+            if is_v25:
+                #Static     axial           SMa  torsion           SMt
+                #ElementID
+                #14           0.0  1.401298e-45      0.0  1.401298e-45
+                #15           0.0  1.401298e-45      0.0  1.401298e-45
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+                self.data_frame.index.name = 'ElementID'
+                self.data_frame.columns.names = ['Static']
+            else:
+                self.data_frame = pd.Panel(self.data,
+                                           major_axis=self.element, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['ElementID', 'Item']
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
@@ -2639,6 +2701,8 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -2650,13 +2714,21 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
 
             # Define names for column labels
             self.data_frame.columns.names = column_names
+
+            # Define names for the row labels
+            self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            #cbar_forces = cbar_forces.to_frame()
-            self.data_frame.columns.names = ['Static']
-        # Define names for the row labels
-        self.data_frame.index.names = ['ElementID', 'Item']
+            if is_v25:
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+                self.data_frame.index.name = 'ElementID'
+                self.data_frame.columns.names = ['Static']
+            else:
+                self.data_frame = pd.Panel(self.data,
+                                           major_axis=self.element, minor_axis=headers).to_frame()
+                #cbar_forces = cbar_forces.to_frame()
+                self.data_frame.columns.names = ['Static']
+                # Define names for the row labels
+                self.data_frame.index.names = ['ElementID', 'Item']
 
     def add_sort1(self, dt, eid, bending_moment_a1, bending_moment_a2,
                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque):

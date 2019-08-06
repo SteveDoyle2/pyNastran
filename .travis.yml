@@ -30,12 +30,12 @@ matrix:
     - name: "Python 3.6"
       python: '3.6'
       env:
-      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5'
+      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas'
 
     - name: "Python 3.7"
       python: '3.7'
       env:
-      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5'
+      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas'
 
       # old versions of packages
     - name: "Python 3.6 old packages"
@@ -43,7 +43,7 @@ matrix:
       env:
       # - bumped numpy from 1.13 to 1.14 to fix unicode savetxt writing
       # - no pyside2 on conda
-      - NUMPY='numpy==1.14 scipy==0.19 matplotlib==2.0 h5py vtk pyqt5'
+      - NUMPY='numpy==1.14 scipy==0.19 matplotlib==2.0 h5py vtk pyqt5 pandas<=0.25'
 
     - name: "Python 3.7 old packages"
       python: '3.7'
@@ -52,7 +52,7 @@ matrix:
       # - bumped scipy from 1.0 to 1.1 for compatibility with numpy
       # - no pyside2 on conda
       # - bumped from numpy 1.14 to 1.14.5 for py3.7 pypi compatibility
-      - NUMPY='numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5'
+      - NUMPY='numpy==1.14.5 scipy==1.1 matplotlib==2.2 h5py vtk pyqt5 pandas<=0.25'
 
     - name: "Python 3.7 (no gui)"
       python: '3.7'
@@ -90,7 +90,7 @@ before_install:
 # per http://conda.pydata.org/docs/travis.html
 install:
   # atlas
-  - echo "python=$TRAVIS_PYTHON_VERSION ${NUMPY} pandas"
+  - echo "python=$TRAVIS_PYTHON_VERSION ${NUMPY}"
   - sudo apt-get update
   - sudo apt-get install gfortran
 

@@ -153,6 +153,8 @@ class RealSolidArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
+        is_v25 = pd.__version__ >= '0.25'
+
         headers = self.get_headers()
         # TODO: cid?
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
@@ -162,9 +164,18 @@ class RealSolidArray(OES_Object):
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            if is_v25:
+                # Static            sxc  sxd  sxe  sxf  smax  smin    MS_tension  MS_compression
+                # ElementID NodeID
+                # 12        22      0.0  0.0  0.0  0.0   0.0   0.0  1.401298e-45    1.401298e-45
+                #           26      0.0  0.0  0.0  0.0   0.0   0.0  1.401298e-45    1.401298e-45
+                index = pd.MultiIndex.from_arrays(self.element_node.T, names=['ElementID', 'NodeID'])
+                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+                self.data_frame.columns.names = ['Static']
+            else:
+                self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+                self.data_frame.columns.names = ['Static']
+                self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
 
     def add_eid_sort1(self, unused_etype, cid, dt, eid, unused_node_id,
                       oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3,
