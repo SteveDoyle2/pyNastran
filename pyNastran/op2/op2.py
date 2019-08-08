@@ -23,7 +23,7 @@ Defines the main OP2 class.  Defines:
 """
 import os
 import sys
-from typing import List, Tuple, Any, Optional
+from typing import List, Any, Optional
 from pickle import load, dump, dumps
 
 import numpy as np
@@ -42,74 +42,6 @@ from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 from pyNastran.op2.op2_interface.transforms import (
     transform_displacement_to_global, transform_gpforce_to_globali)
 from pyNastran.utils import check_path
-
-
-def read_op2(op2_filename=None, combine=True, subcases=None,
-             exclude_results=None, include_results=None,
-             log=None, debug=True, debug_file=None, build_dataframe=None,
-             skip_undefined_matrices=True, mode=None, encoding=None):
-    """
-    Creates the OP2 object without calling the OP2 class.
-
-    Parameters
-    ----------
-    op2_filename : str (default=None -> popup)
-        the op2_filename
-    combine : bool; default=True
-        True : objects are isubcase based
-        False : objects are (isubcase, subtitle) based;
-                will be used for superelements regardless of the option
-    subcases : List[int, ...] / int; default=None->all subcases
-        list of [subcase1_ID,subcase2_ID]
-    exclude_results / include_results : List[str] / str; default=None
-        a list of result types to exclude/include
-        one of these must be None
-    build_dataframe : bool (default=None -> True if in iPython, False otherwise)
-        builds a pandas DataFrame for op2 objects
-    skip_undefined_matrices : bool; default=False
-         True : prevents matrix reading crashes
-    debug : bool; default=False
-        enables the debug log and sets the debug in the logger
-    log : Log()
-        a logging object to write debug messages to
-        (.. seealso:: import logging)
-    mode : str; default=None -> 'msc'
-        the version of the Nastran you're using
-        {nx, msc, optistruct}
-    debug_file : str; default=None (No debug)
-        sets the filename that will be written to
-    encoding : str
-        the unicode encoding (default=None; system default)
-
-    Returns
-    -------
-    model : OP2()
-        an OP2 object
-
-    .. todo:: creates the OP2 object without all the read methods
-
-    .. note :: this method will change in order to return an object that
-               does not have so many methods
-
-    """
-    model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
-    model.set_subcases(subcases)
-    model.include_exclude_results(exclude_results=exclude_results,
-                                  include_results=include_results)
-
-    model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
-                   skip_undefined_matrices=skip_undefined_matrices, combine=combine,
-                   encoding=encoding)
-    ## TODO: this will go away when OP2 is refactored
-    ## TODO: many methods will be missing, but it's a start...
-    ## doesn't support F06 writer
-    #obj = Op2F06Attributes()
-    #attr_names = object_attributes(obj, mode="public", keys_to_skip=None)
-    #for attr_name in attr_names:
-        #attr = getattr(model, attr_name)
-        #setattr(obj, attr_name, attr)
-    #obj.get_op2_stats()
-    return model
 
 
 class OP2(OP2_Scalar, OP2Writer):
@@ -378,22 +310,24 @@ class OP2(OP2_Scalar, OP2Writer):
             return False
         return True
 
-    def set_mode(self, mode):
-        # type: (str) -> None
+    def set_mode(self, mode: str) -> None:
         """
-        Sets the mode as 'msc' or 'nx'
+        Sets the mode as 'msc', 'nx', 'autodesk', or 'optistruct'
         """
         if mode.lower() == 'msc':
             self.set_as_msc()
         elif mode.lower() == 'nx':
             self.set_as_nx()
+        elif mode.lower() == 'autodesk':
+            self.set_as_autodesk()
         elif mode.lower() == 'optistruct':
             self.set_as_optistruct()
         else:
-            raise RuntimeError("mode=%r and must be in [msc, nx, radioss, optistruct]")
+            raise RuntimeError(f"mode='{mode}' and must be in [msc, nx, autodesk, optistruct]") # radioss,
 
-    def include_exclude_results(self, exclude_results=None, include_results=None):
-        # type: (Optional[List[str]], Optional[List[str]]) -> None
+    def include_exclude_results(self,
+                                exclude_results: Optional[List[str]]=None,
+                                include_results: Optional[List[str]]=None) -> None:
         """
         Sets results to include/exclude
 
@@ -1299,6 +1233,82 @@ class OP2(OP2_Scalar, OP2Writer):
         self.log.debug('-----------')
 
 
+def read_op2(op2_filename: Optional[str]=None,
+             combine: bool=True,
+             subcases: Optional[List[int]]=None,
+             exclude_results: Optional[List[str]]=None,
+             include_results: Optional[List[str]]=None,
+             log: Any=None,
+             debug: bool=True,
+             debug_file: Optional[str]=None,
+             build_dataframe: Optional[bool]=None,
+             skip_undefined_matrices: bool=True,
+             mode: Optional[str]=None,
+             encoding: Optional[str]=None) -> OP2:
+    """
+    Creates the OP2 object without calling the OP2 class.
+
+    Parameters
+    ----------
+    op2_filename : str (default=None -> popup)
+        the op2_filename
+    combine : bool; default=True
+        True : objects are isubcase based
+        False : objects are (isubcase, subtitle) based;
+                will be used for superelements regardless of the option
+    subcases : List[int, ...] / int; default=None->all subcases
+        list of [subcase1_ID,subcase2_ID]
+    exclude_results / include_results : List[str] / str; default=None
+        a list of result types to exclude/include
+        one of these must be None
+    build_dataframe : bool (default=None -> True if in iPython, False otherwise)
+        builds a pandas DataFrame for op2 objects
+    skip_undefined_matrices : bool; default=False
+         True : prevents matrix reading crashes
+    debug : bool; default=False
+        enables the debug log and sets the debug in the logger
+    log : Log()
+        a logging object to write debug messages to
+        (.. seealso:: import logging)
+    mode : str; default=None -> 'msc'
+        the version of the Nastran you're using
+        {nx, msc, autodesk, optistruct}
+    debug_file : str; default=None (No debug)
+        sets the filename that will be written to
+    encoding : str
+        the unicode encoding (default=None; system default)
+
+    Returns
+    -------
+    model : OP2()
+        an OP2 object
+
+    .. todo:: creates the OP2 object without all the read methods
+
+    .. note :: this method will change in order to return an object that
+               does not have so many methods
+
+    """
+    model = OP2(log=log, debug=debug, debug_file=debug_file, mode=mode)
+    model.set_subcases(subcases)
+    model.include_exclude_results(exclude_results=exclude_results,
+                                  include_results=include_results)
+
+    model.read_op2(op2_filename=op2_filename, build_dataframe=build_dataframe,
+                   skip_undefined_matrices=skip_undefined_matrices, combine=combine,
+                   encoding=encoding)
+    ## TODO: this will go away when OP2 is refactored
+    ## TODO: many methods will be missing, but it's a start...
+    ## doesn't support F06 writer
+    #obj = Op2F06Attributes()
+    #attr_names = object_attributes(obj, mode="public", keys_to_skip=None)
+    #for attr_name in attr_names:
+        #attr = getattr(model, attr_name)
+        #setattr(obj, attr_name, attr)
+    #obj.get_op2_stats()
+    return model
+
+
 def main():  # pragma: no cover
     """testing new ideas"""
     pkg_path = pyNastran.__path__[0]
@@ -1350,20 +1360,20 @@ def main():  # pragma: no cover
 
     # get all the nodes for element 4 and 5
     ielem45 = solid_stress.getElementIndex([[1, 4, 5]])
-    datai = data[0, ielem45, :]
+    unused_datai = data[0, ielem45, :]
 
     # get the index for element 1, centroid
     ielem1_centroid = solid_stress.getElementNodeIndex([[1, 0]])
-    datai = data[0, ielem1_centroid, :]
+    unused_datai = data[0, ielem1_centroid, :]
 
     # get the index for element 1, node 1
     ielem1_node1 = solid_stress.getElementNodeIndex([[1, 1]])
-    datai = data[0, ielem1_node1, :]
+    unused_datai = data[0, ielem1_node1, :]
 
     # get the index for element 1, node 1 and element 1, node 2
     ielem1_node12 = solid_stress.getElementNodeIndex([[1, 1],
                                                       [1, 2],])
-    datai = data[0, ielem1_node12, :]
+    unused_datai = data[0, ielem1_node12, :]
 
     # ============plate stress=================
     # same for plate strain
@@ -1376,7 +1386,7 @@ def main():  # pragma: no cover
     # get all the nodes for element 1
     ielem1 = plate_stress.getElementIndex([1])
     # [itransient, elem*node, oxx/oyy, etc.]
-    datai = plate_stress[0, ielem1, :]
+    unused_datai = plate_stress[0, ielem1, :]
 
     # ========composite plate stress============
     # same for plate strain
@@ -1386,7 +1396,7 @@ def main():  # pragma: no cover
 
     # get the indexs for cid, element 1
     ielem1 = comp_plate_stress.getElementPropertiesIndex([1])  # element-specific properties
-    datai = cid[ielem1]
+    unused_datai = cid[ielem1]
 
     # oxx, oyy, ozz, txy, tyz, txz
     assert comp_plate_stress.ntimes == 1, comp_plate_stress.ntimes
@@ -1394,19 +1404,19 @@ def main():  # pragma: no cover
     # get all the nodes/layers for element 1
     ielem1 = comp_plate_stress.getElementIndex([1])
     # [itransient, elem*node*layer, oxx/oyy, etc.]
-    datai = data[0, ielem1, :]
+    unused_datai = data[0, ielem1, :]
 
     # get all the layers for element 1, centroid, and all the layers
     ielem1_centroid = solid_stress.getElementNodeIndex([[1, 0]])
-    datai = data[0, ielem1_centroid, :]
+    unused_datai = data[0, ielem1_centroid, :]
 
     # get the index for element 1, centroid, layer 0
     ielem1_centroid_layer = solid_stress.getElementNodeLayerIndex([[1, 0, 0]])
-    datai = data[0, ielem1_centroid_layer, :]
+    unused_datai = data[0, ielem1_centroid_layer, :]
 
     # get the index for element 1, layer 0, and all the nodes
     ielem1_layer = solid_stress.getElementLayerIndex([[1, 0]])
-    datai = data[0, ielem1_layer, :]
+    unused_datai = data[0, ielem1_layer, :]
 
 def _create_hdf5_info(h5_file, op2_model):
     """exports the h5 info group"""

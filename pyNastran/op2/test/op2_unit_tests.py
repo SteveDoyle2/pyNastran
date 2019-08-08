@@ -677,7 +677,7 @@ class TestOP2(Tester):
     def test_bdf_op2_other_03(self):
         """checks ac10901a.bdf, which is an acoustic problem"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'ac10901a.bdf')
+        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'ac10901a.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'ac10901a.op2')
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
         #diff_cards2 = list(set(diff_cards))
@@ -701,7 +701,7 @@ class TestOP2(Tester):
     def test_bdf_op2_other_04(self):
         """checks v10111.bdf, which is an conical problem"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10111.bdf')
+        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10111.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'v10111.op2')
         #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
         #diff_cards2 = list(set(diff_cards))
@@ -1744,7 +1744,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, write_f06=False,
-            log=log, stop_on_failure=True, binary_debug=True, quiet=True,
+            is_autodesk=True, log=log, stop_on_failure=True, binary_debug=True, quiet=True,
             post=-4)
 
         assert len(op2.displacements) == 1
@@ -1757,6 +1757,32 @@ class TestOP2(Tester):
             ctetra_stress.build_dataframe()
         assert ctetra_stress.nelements == 810, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (1, 810*5, 10), ctetra_stress.data.shape
+
+        assert len(op2.cpenta_stress) == 0
+        assert len(op2.chexa_stress) == 0
+        assert len(op2.grid_point_forces) == 0
+
+    def test_op2_autodesk_2(self):
+        """tests an Autodesk Nastran example"""
+        op2_filename = os.path.join(MODEL_PATH,  'autodesk', '9zk6b5uuo.op2')
+        log = get_logger(level='warning')
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, write_f06=False,
+            log=log, stop_on_failure=True, binary_debug=True, quiet=True,
+            is_autodesk=True, post=-4)
+
+        assert len(op2.displacements) == 4, len(op2.displacements)
+        assert len(op2.spc_forces) == 4, len(op2.spc_forces)
+        assert len(op2.ctetra_stress) == 4, len(op2.ctetra_stress)
+        assert len(op2.ctetra_strain_energy) == 4, len(op2.ctetra_strain_energy)
+
+        isubcase = 1
+        ctetra_stress = op2.ctetra_stress[isubcase]
+        if IS_PANDAS:
+            ctetra_stress.build_dataframe()
+        nelements = 36
+        assert ctetra_stress.nelements == nelements, ctetra_stress.nelements
+        assert ctetra_stress.data.shape == (1, nelements*5, 10), ctetra_stress.data.shape
 
         assert len(op2.cpenta_stress) == 0
         assert len(op2.chexa_stress) == 0

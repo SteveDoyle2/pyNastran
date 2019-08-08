@@ -557,6 +557,539 @@ OP2 Results
       - Force
       - Flutter
 
+Main OP2 Results
+----------------
+The main op2 results can be accessed directly from the op2 object
+(e.g., model.displacements, model.celas1_stress).
+
+ - OUG - displacement, temperatures, eigenvectors, velocity, acceleration
+  - displacements 
+  - velocities
+  - accelerations
+  - displacements_scaled
+  - temperatures
+  - eigenvectors
+ - OQG - spc/mpc forces
+  - spc_forces
+  - spc_forces_v 
+  - spc_forces_scaled_response_spectra_nrl
+  - mpc_forces 
+  - mpc_forces_RAQCONS 
+  - mpc_forces_RAQEATC
+  - thermal_gradient_and_flux
+ - OGF - grid point forces
+  - grid_point_forces
+ - OPG - summation of loads for each element 
+  - load_vectors 
+  - load_vectors_v
+  - thermal_load_vectors
+  - applied_loads
+  - force_vectors
+ - OES/OSTR - CELAS1/CELAS2/CELAS3/CELAS4 stress/strain
+  - 0d
+   - celas1_stress 
+   - celas2_stress 
+   - celas3_stress 
+   - celas4_stress
+   - celas1_strain 
+   - celas2_strain 
+   - celas3_strain 
+   - celas4_strain
+  - isotropic CROD/CONROD/CTUBE stress/strain
+   - crod_stress 
+   - conrod_stress 
+   - ctube_stress
+   - crod_strain 
+   - conrod_strain 
+   - ctube_strain
+  - isotropic CBAR stress/strain
+   - cbar_stress 
+   - cbar_strain
+   - cbar_stress_10nodes 
+   - cbar_strain_10nodes 
+  - isotropic CBEAM stress/strain
+   - cbeam_stress 
+   - cbeam_strain 
+   - nonlinear_cbeam_stress
+  - CBEND
+   - cbend_stress 
+   - cbend_strain 
+  - isotropic CTRIA3/CQUAD4 stress
+   - ctria3_stress 
+   - ctriar_stress 
+   - ctria6_stress
+   - cquadr_stress 
+   - cquad4_stress 
+   - cquad8_stress
+  - isotropic CTRIA3/CQUAD4 strain
+   - ctria3_strain 
+   - ctriar_strain 
+   - ctria6_strain
+   - cquadr_strain 
+   - cquad4_strain 
+   - cquad8_strain
+  - isotropic CTETRA/CHEXA/CPENTA stress/strain
+   - ctetra_stress
+   - chexa_stress 
+   - cpenta_stress
+   - ctetra_strain 
+   - chexa_strain 
+   - cpenta_strain
+  - CSHEAR stress/strain
+   - cshear_stress
+   - cshear_strain
+  - GAPNL 86
+   - nonlinear_cgap_stress
+  - CBUSH 226
+   - nonlinear_cbush_stress
+   - cbush1d_stress_strain 
+   - nonlinear_cbush1d_stress_strain
+   - cplstn3_stress 
+   - cplstn4_stress 
+   - cplstn6_stress 
+   - cplstn8_stress
+   - cplsts3_stress 
+   - cplsts4_stress 
+   - cplsts6_stress 
+   - cplsts8_stress
+   - cplstn3_strain 
+   - cplstn4_strain 
+   - cplstn6_strain 
+   - cplstn8_strain
+   - cplsts3_strain
+   - cplsts4_strain
+   - cplsts6_strain
+   - cplsts8_strain
+  - CTRIAX6
+   - ctriax_stress 
+   - ctriax_strain
+   - cbush_stress 
+   - cbush_strain
+  - nonlinear CROD/CONROD/CTUBE stress
+   - nonlinear_crod_stress 
+   - nonlinear_crod_strain
+   - nonlinear_ctube_stress 
+   - nonlinear_ctube_strain
+   - nonlinear_conrod_stress 
+   - nonlinear_conrod_strain
+  - CEALS1 224, CELAS3 225
+   - nonlinear_celas1_stress
+   - nonlinear_celas3_stress
+  - composite CTRIA3/CQUAD4 stress
+   - cquad4_composite_stress 
+   - cquad8_composite_stress 
+   - cquadr_composite_stress
+   - ctria3_composite_stress 
+   - ctria6_composite_stress 
+   - ctriar_composite_stress
+   - cquad4_composite_strain 
+   - cquad8_composite_strain 
+   - cquadr_composite_strain
+   - ctria3_composite_strain 
+   - ctria6_composite_strain 
+   - ctriar_composite_strain
+ - OESNLXR - CTRIA3/CQUAD4 stress
+  - nonlinear_cquad4_stress 
+  - nonlinear_ctria3_stress
+  - nonlinear_cquad4_strain 
+  - nonlinear_ctria3_strain
+  - hyperelastic_cquad4_strain
+ - PVT0
+  - params
+ - LAMA
+  - eigenvalues
+ - HISADD
+  - convergence_history
+ - R1TABRG
+  -response1_table
+ - OEF - Forces
+  - 0-d
+   - celas1_force
+   - celas2_force
+   - celas3_force
+   - celas4_force
+   - cvisc_force
+   - coneax_force
+   - cdamp1_force 
+   - cdamp2_force 
+   - cdamp3_force 
+   - cdamp4_force
+   - cgap_force
+  - rod
+   - crod_force 
+   - conrod_force 
+   - ctube_force
+ - bar/beam
+  - cbar_force 
+  - cbar_force_abs 
+  - cbar_force_nrl
+  - cbar_force_10nodes
+  - cbeam_force 
+  - cbeam_force_vu
+  - cbush_force
+  - cbend_force
+ - shell
+  - cquad4_force 
+  - cquad8_force 
+  - cquadr_force
+  - ctria3_force 
+  - ctria6_force 
+  - ctriar_force
+  - cshear_force
+ - solid
+  - chexa_pressure_force 
+  - cpenta_pressure_force
+  - ctetra_pressure_force
+  - vu_quad_force
+  - vu_tria_force
+ - OEF - Fluxes
+  - conv_thermal_load
+  - chbdye_thermal_load 
+  - chbdye_thermal_load_flux
+  - chbdyg_thermal_load 
+  - chbdyg_thermal_load_flux
+  - chbdyp_thermal_load 
+  - chbdyp_thermal_load_flux
+  - thermalLoad_1D
+   - crod_thermal_load 
+   - crod_thermal_load_flux
+   - cbeam_thermal_load 
+   - cbeam_thermal_load_flux
+   - ctube_thermal_load 
+   - ctube_thermal_load_flux
+   - conrod_thermal_load 
+   - conrod_thermal_load_flux
+   - cbar_thermal_load 
+   - cbar_thermal_load_flux
+   - cbend_thermal_load 
+   - cbend_thermal_load_flux
+  - thermalLoad_2D_3D
+   - cquad4_thermal_load 
+   - cquad4_thermal_load_flux
+   - ctriax6_thermal_load 
+   - ctriax6_thermal_load_flux
+   - cquad8_thermal_load 
+   - cquad8_thermal_load_flux
+   - ctria3_thermal_load 
+   - ctria3_thermal_load_flux
+   - ctria6_thermal_load 
+   - ctria6_thermal_load_flux
+   - ctetra_thermal_load 
+   - ctetra_thermal_load_flux
+   - chexa_thermal_load 
+   - chexa_thermal_load_flux
+   - cpenta_thermal_load 
+   - cpenta_thermal_load_flux
+   - thermalLoad_VU
+   - thermalLoad_VU_3D
+   - vu_beam_thermal_load
+ - OEFIT - Failure Indices
+  - cquad4_composite_force_failure_indicies
+  - cquad8_composite_force_failure_indicies
+  - ctria3_composite_force_failure_indicies
+  - ctria6_composite_force_failure_indicies
+ - OGS1 - grid point stresses
+  - grid_point_surface_stresses
+  - grid_point_stresses_volume_direct 
+  - grid_point_stresses_volume_principal
+  - grid_point_stress_discontinuities
+ - OEE - strain energy density
+  - cquad4_strain_energy 
+  - cquad8_strain_energy 
+  - cquadr_strain_energy
+  - cquadx_strain_energy
+  - ctria3_strain_energy 
+  - ctria6_strain_energy
+  - ctriar_strain_energy
+  - ctriax_strain_energy 
+  - ctriax6_strain_energy
+  - cshear_strain_energy
+  - ctetra_strain_energy
+  - cpenta_strain_energy
+  - chexa_strain_energy
+  - cpyram_strain_energy
+  - crod_strain_energy
+  - ctube_strain_energy 
+  - conrod_strain_energy
+  - cbar_strain_energy 
+  - cbeam_strain_energy
+  - cgap_strain_energy
+  - cbush_strain_energy
+  - celas1_strain_energy
+  - celas2_strain_energy
+  - celas3_strain_energy 
+  - celas4_strain_energy
+  - cdum8_strain_energy
+  - cbend_strain_energy
+  - dmig_strain_energy
+  - genel_strain_energy
+  - conm2_strain_energy
+  - rbe1_strain_energy 
+  - rbe3_strain_energy
+ - unused?
+  - displacement_scaled_response_spectra_nrl
+  - displacement_scaled_response_spectra_abs
+  - displacement_scaled_response_spectra_srss
+  - velocity_scaled_response_spectra_abs
+  - acceleration_scaled_response_spectra_nrl
+  - acceleration_scaled_response_spectra_abs
+
+OP2.Results()
+-------------
+ - eqexin
+ - gpdt
+ - ato # AutoCorrelationObjects()           - see below
+ - psd # PowerSpectralDensityObjects()      - see below
+ - rms # RootMeansSquareObjects()           - see below
+ - no  # NumberOfCrossingsObjects()         - see below
+ - crm # CumulativeRootMeansSquareObjects() - see below
+ - modal_contribution
+   - celas1_stress
+   - celas2_stress
+   - celas3_stress
+   - celas4_stress
+   - celas1_strain
+   - celas2_strain
+   - celas3_strain
+   - celas4_strain
+   - crod_stress
+   - conrod_stress
+   - ctube_stress
+   - crod_strain
+   - conrod_strain
+   - ctube_strain
+   - ctetra_stress
+   - cpenta_stress
+   - chexa_stress
+   - ctetra_strain
+   - cpenta_strain
+   - chexa_strain
+   - cbar_stress
+   - cbar_strain
+   - cbeam_stress
+   - cbeam_strain
+   - ctria3_stress
+   - ctria6_stress
+   - cquad4_stress
+   - cquad8_stress
+   - cquadr_stress
+   - ctriar_stress
+   - ctria3_strain
+   - ctria6_strain
+   - cquad4_strain
+   - cquad8_strain
+   - cquadr_strain
+   - ctriar_strain
+   - cquad4_composite_stress
+   - cquad8_composite_stress
+   - cquadr_composite_stress
+   - ctria3_composite_stress
+   - ctria6_composite_stress
+   - ctriar_composite_stress
+   - cquad4_composite_strain
+   - cquad8_composite_strain
+   - cquadr_composite_strain
+   - ctria3_composite_strain
+   - ctria6_composite_strain
+   - ctriar_composite_strain
+   - cshear_stress
+   - cshear_strain
+   - cshear_force
+   - cbush_stress
+   - cbush_strain
+ - strength_ratio
+   - cquad4_composite_stress
+   - cquad8_composite_stress
+   - cquadr_composite_stress
+   - ctria3_composite_stress
+   - ctria6_composite_stress
+   - ctriar_composite_stress
+   - cquad4_composite_strain
+   - cquad8_composite_strain
+   - cquadr_composite_strain
+   - ctria3_composite_strain
+   - ctria6_composite_strain
+   - ctriar_composite_strain
+ - ROUGV1  # relative disp/vel/acc/eigenvectors
+   - displacements
+   - velocities
+   - accelerations
+   - eigenvectors
+ - RADEFFM 
+   - eigenvectors
+ - RADCONS
+   - eigenvectors
+ - RAFCONS
+   - cbar_force 
+   - cquad4_force
+   - cbush_force 
+ - RASCONS
+   - ctetra_stress
+   - cpenta_stress
+   - chexa_stress 
+   - ctetra_strain
+   - cpenta_strain
+   - chexa_strain 
+   - ctria3_stress
+   - ctria6_stress
+   - cquad4_stress
+   - cquad8_stress
+   - cquadr_stress
+   - ctriar_stress
+   - ctria3_strain
+   - ctria6_strain
+   - cquad4_strain
+   - cquad8_strain
+   - cquadr_strain
+   - ctriar_strain
+ - RAECONS
+   - ctria3_strain
+   - cquad4_strain
+   - chexa_strain 
+ - RAGCONS 
+   - grid_point_forces
+ - RAPCONS
+   - cquad4_composite_stress
+   - cquad8_composite_stress
+   - cquadr_composite_stress
+   - ctria3_composite_stress
+   - ctria6_composite_stress
+   - ctriar_composite_stress
+ - RANCONS 
+   - cbar_strain_energy 
+   - cbush_strain_energy
+   - chexa_strain_energy
+   - ctria3_strain_energy 
+   - cquad4_strain_energy 
+ - RADEATC
+   - eigenvectors
+ - RAFEATC 
+   - cbar_force   
+   - cquad4_force
+   - cbush_force 
+ - RASEATC 
+   - chexa_stress 
+   - cquad4_stress 
+ - RAEEATC 
+   - chexa_strain 
+   - ctria3_strain
+   - cquad4_strain
+ - RAGEATC
+   - grid_point_forces
+ - RAPEATC 
+   - cquad4_composite_stress
+   - cquad8_composite_stress
+   - cquadr_composite_stress
+   - ctria3_composite_stress
+   - ctria6_composite_stress
+   - ctriar_composite_stress
+ - RANEATC 
+   - cbar_strain_energy
+   - cbush_strain_energy
+   - chexa_strain_energy
+   - ctria3_strain_energy
+   - cquad4_strain_energy
+
+All of these results have the same outputs (shown under model.results.crm)
+ - ato # AutoCorrelationObjects()
+ - psd # PowerSpectralDensityObjects()
+ - rms # RootMeansSquareObjects()
+ - no  # NumberOfCrossingsObjects()
+ - crm # CumulativeRootMeansSquareObjects()
+   - displacements
+   - velocities
+   - accelerations
+   - load_vectors
+   - spc_forces
+   - mpc_forces
+   - crod_force
+   - conrod_force
+   - ctube_force
+   - cbar_force
+   - cbeam_force
+   - cbush_stress
+   - cbush_strain
+   - crod_stress
+   - conrod_stress
+   - ctube_stress
+   - cbar_stress
+   - cbeam_stress
+   - crod_strain
+   - conrod_strain
+   - ctube_strain
+   - cbar_strain
+   - cbeam_strain
+   - ctetra_strain
+   - cpenta_strain
+   - chexa_strain
+   - ctetra_stress
+   - cpenta_stress
+   - chexa_stress
+   - celas1_stress
+   - celas2_stress
+   - celas3_stress
+   - celas4_stress
+   - celas1_strain
+   - celas2_strain
+   - celas3_strain
+   - celas4_strain
+   - celas1_force
+   - celas2_force
+   - celas3_force
+   - celas4_force
+   - ctria3_force
+   - ctria6_force
+   - ctriar_force
+   - cquad4_force
+   - cquad8_force
+   - cquadr_force
+   - ctria3_stress
+   - ctria6_stress
+   - cquad4_stress
+   - cquad8_stress
+   - cquadr_stress
+   - ctriar_stress
+   - ctria3_strain
+   - ctria6_strain
+   - cquad4_strain
+   - cquad8_strain
+   - cquadr_strain
+   - ctriar_strain
+   - cbend_stress
+   - cbend_strain
+   - cbend_force
+   - cshear_stress
+   - cshear_strain
+   - cshear_force
+   - cbush_force
+   - cdamp1_force
+   - cdamp2_force
+   - cdamp3_force
+   - cdamp4_force
+   - cvisc_force
+   - cquad4_composite_stress
+   - cquad8_composite_stress
+   - cquadr_composite_stress
+   - ctria3_composite_stress
+   - ctria6_composite_stress
+   - ctriar_composite_stress
+   - cquad4_composite_strain
+   - cquad8_composite_strain
+   - cquadr_composite_strain
+   - ctria3_composite_strain
+   - ctria6_composite_strain
+   - ctriar_composite_strain
+
+Matrices with explicit methods
+------------------------------
+ - total_effective_mass_matrix (EFMFSMS)
+ - effective_mass_matrix (EFMASSS)
+ - rigid_body_mass_matrix (RBMASS)
+ - modal_effective_mass_fraction (EFMFACS)
+ - modal_participation_factors (MPFACS)
+ - modal_effective_mass (MEFMASS)
+ - modal_effective_weight (MEFWTS)
+
 F06 Plotter
 ===========
 - flutter (SOL 145) parser

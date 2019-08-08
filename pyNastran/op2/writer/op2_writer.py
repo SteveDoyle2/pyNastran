@@ -225,6 +225,7 @@ class OP2Writer(OP2_F06_Common):
             'OESTRCP',
             'OSTR1C',
             'OSTR1X',
+            'OSTR1',
 
             'OGPFB1',
             'ONRGY1',

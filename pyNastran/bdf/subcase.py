@@ -451,7 +451,7 @@ class Subcase:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
         # strain
-        elif table_name in ['OSTR1X', 'OSTR1C', 'RAECONS', 'RAEEATC']:
+        elif table_name in ['OSTR1X', 'OSTR1C', 'OSTR1', 'RAECONS', 'RAEEATC']:
             assert data_code['is_strain_flag'] is True, data_code
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')

@@ -1081,7 +1081,8 @@ class OES(OP2Common):
         """
         prefix = ''
         postfix = ''
-        if self.table_name in [b'OES1X1', b'OES1X', b'OSTR1X', b'OES1C', b'OSTR1C', b'OES1', ]:
+        if self.table_name in [b'OES1X1', b'OES1X', b'OSTR1X', b'OSTR1',
+                               b'OES1C', b'OSTR1C', b'OES1', ]:
             pass
         elif self.table_name in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:
             assert self.sort_method == 2, self.sort_method

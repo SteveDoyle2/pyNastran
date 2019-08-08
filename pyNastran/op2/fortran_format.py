@@ -4,12 +4,9 @@ Defines:
 
 """
 import sys
-from copy import deepcopy
-from struct import unpack
-
 from pyNastran.utils import object_attributes
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.errors import FortranMarkerError, SortCodeError
+#from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 
 # this is still a requirement, but disabling it so readthedocs works
 if sys.version_info < (2, 7, 7):
@@ -31,6 +28,7 @@ class FortranFormat:
         self.read_mode = 1
         self._endian = None
         self._table_mapper = {}
+        self._nastran_format = None
 
         #: stores if the user entered [] for isubcases
         self.is_all_subcases = True

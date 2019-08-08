@@ -278,7 +278,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'OESNL1X', b'OESRT',
     #----------------------
     # strain
-    b'OSTR1X', b'OSTR1C',
+    b'OSTR1', b'OSTR1X', b'OSTR1C',
 
     #----------------------
     # forces
@@ -653,18 +653,28 @@ class OP2_Scalar(LAMA, ONR, OGPF,
     def set_as_nx(self):
         self.is_nx = True
         self.is_msc = False
+        self.is_autodesk = False
         self.is_optistruct = False
         self._nastran_format = 'nx'
 
     def set_as_msc(self):
         self.is_nx = False
         self.is_msc = True
+        self.is_autodesk = False
         self.is_optistruct = False
         self._nastran_format = 'msc'
+
+    def set_as_autodesk(self):
+        self.is_nx = False
+        self.is_msc = False
+        self.is_autodesk = True
+        self.is_optistruct = False
+        self._nastran_format = 'autodesk'
 
     def set_as_optistruct(self):
         self.is_nx = False
         self.is_msc = False
+        self.is_autodesk = False
         self.is_optistruct = True
         self._nastran_format = 'optistruct'
 
@@ -978,6 +988,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESRT'  : [self._read_oes1_3, self._read_oes1_4], # ply strength ratio
 
             # strain
+            b'OSTR1' : [self._read_oes1_3, self._read_ostr1_4],  # strain - autodesk/9zk6b5uuo.op2
             b'OSTR1X'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - isotropic
             b'OSTR1C'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - composite
             b'OESTRCP' : [self._read_oes1_3, self._read_ostr1_4],

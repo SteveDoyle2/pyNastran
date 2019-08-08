@@ -248,7 +248,11 @@ class OP2Reader:
                 op2.post = -2
         else:
             raise NotImplementedError(markers)
-        if mode is None:
+        if op2._nastran_format in ['autodesk']:
+            op2.post = -4
+            mode = 'autodesk'
+
+        elif mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
             mode = 'msc'
         self.log.debug('mode = %r' % mode)
@@ -2871,7 +2875,8 @@ class OP2Reader:
                     self.read_markers([0], macro_rewind=rewind)
                 except:
                     # if we hit this block, we have a FATAL error
-                    if not op2._nastran_format.lower().startswith('imat') and op2.post != -4:
+                    is_special_nastran = op2._nastran_format.lower().startswith(('imat', 'autodesk'))
+                    if not is_special_nastran and op2.post != -4:
                         op2.f.seek(op2.n)
                         self.show(1000)
                         raise FatalError('There was a Nastran FATAL Error.  '

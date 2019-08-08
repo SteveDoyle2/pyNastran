@@ -3,7 +3,7 @@ import os
 import sys
 import time
 from traceback import print_exc
-from typing import List, Optional, Tuple, Any
+from typing import List, Tuple, Optional, Any
 
 import numpy as np
 np.set_printoptions(precision=3, threshold=20)
@@ -25,7 +25,7 @@ except ImportError:
 #warnings.filterwarnings('error', category=UnicodeWarning)
 
 import pyNastran
-from pyNastran.op2.op2 import OP2, FatalError, read_op2
+from pyNastran.op2.op2 import OP2, FatalError # , read_op2
 #SortCodeError, DeviceCodeError, FortranMarkerError
 
 from pyNastran.op2.op2_geom import OP2Geom, DuplicateIDsError
@@ -44,12 +44,12 @@ def parse_table_names_from_f06(f06_filename):
     return names
 
 
-def run_lots_of_files(files, make_geom=True, write_bdf=False, write_f06=True,
-                      delete_f06=True, build_pandas=True, write_op2=False,
-                      write_hdf5=True, debug=True, skip_files=None,
-                      stop_on_failure=False, nstart=0, nstop=1000000000,
-                      short_stats=False, binary_debug=False,
-                      compare=True, quiet=False, dev=True, xref_safe=False):
+def run_lots_of_files(files, make_geom: bool=True, write_bdf: bool=False, write_f06: bool=True,
+                      delete_f06: bool=True, build_pandas: bool=True, write_op2: bool=False,
+                      write_hdf5: bool=True, debug: bool=True, skip_files: Optional[List[str]]=None,
+                      stop_on_failure: bool=False, nstart: int=0, nstop: int=1000000000,
+                      short_stats: bool=False, binary_debug: bool=False,
+                      compare: bool=True, quiet: bool=False, dev: bool=True, xref_safe: bool=False):
     """used by op2_test.py to run thousands of files"""
     if skip_files is None:
         skip_files = []
@@ -111,7 +111,8 @@ def run_op2(op2_filename: str, make_geom: bool=False,
             write_bdf: bool=False, read_bdf: Optional[bool]=None,
             write_f06: bool=True, write_op2: bool=False,
             write_hdf5: bool=True,
-            is_mag_phase: bool=False, is_sort2: bool=False, is_nx: Optional[bool]=None,
+            is_mag_phase: bool=False, is_sort2: bool=False,
+            is_nx: Optional[bool]=None, is_autodesk: Optional[bool]=None,
             delete_f06: bool=False, build_pandas: bool=True,
             subcases: Optional[str]=None, exclude: Optional[str]=None,
             short_stats: bool=False, compare: bool=True,
@@ -144,6 +145,10 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         True : writes "transient" data is SORT2
     is_nx : bool; default=None
         True : use NX Nastran
+        False : use MSC Nastran
+        None : guess
+    is_autodesk : bool; default=None
+        True : use Autodesk Nastran
         False : use MSC Nastran
         None : guess
     delete_f06 : bool; default=False
@@ -218,12 +223,16 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         op2 = OP2Geom(debug=debug, log=log)
         op2_nv = OP2Geom(debug=debug, log=log, debug_file=debug_file)
         op2_bdf = OP2Geom(debug=debug, log=log)
-        if is_nx is None:
+        if is_nx is None and is_autodesk is None:
             pass
         elif is_nx:
             op2.set_as_nx()
             op2_nv.set_as_nx()
             op2_bdf.set_as_nx()
+        elif is_autodesk:
+            op2.set_as_autodesk()
+            op2_nv.set_as_autodesk()
+            op2_bdf.set_as_autodesk()
         else:
             op2.set_as_msc()
             op2_nv.set_as_msc()
@@ -246,12 +255,14 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         # have to double write this until ???
         op2_nv = OP2(debug=debug, log=log, debug_file=debug_file)
 
-        if is_nx is None:
+        if is_nx is None and is_autodesk is None:
             pass
         elif is_nx:
-            print('set as nx')
             op2.set_as_nx()
             op2_nv.set_as_nx()
+        elif is_autodesk:
+            op2.set_as_autodesk()
+            op2_nv.set_as_autodesk()
         else:
             op2.set_as_msc()
             op2_nv.set_as_msc()
@@ -464,7 +475,7 @@ def get_test_op2_data(argv):
     is_release = 'dev' not in ver
 
     msg = "Usage:\n"
-    options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx] [--safe] [--post POST] [--load_hdf5]'
+    options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx|--autodesk] [--safe] [--post POST] [--load_hdf5]'
     if is_release:
         line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] %s OP2_FILENAME\n" % options
     else:
@@ -500,6 +511,7 @@ def get_test_op2_data(argv):
     msg += "  -w, --is_sort2         Sets the F06 transient to SORT2\n"
     msg += "  -x <arg>, --exclude    Exclude specific results\n"
     msg += "  --nx                   Assume NX Nastran\n"
+    msg += "  --autodesk             Assume Autodesk Nastran\n"
     msg += "  --post POST            Set the PARAM,POST flag\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
 
@@ -570,6 +582,7 @@ def main(argv=None):
             compare=not data['--disablecompare'],
             quiet=data['--quiet'],
             is_nx=data['--nx'],
+            is_autodesk=data['--autodesk'],
             safe=data['--safe'],
             post=data['--post'],
         )
@@ -600,6 +613,7 @@ def main(argv=None):
             compare=not data['--disablecompare'],
             quiet=data['--quiet'],
             is_nx=data['--nx'],
+            is_autodesk=data['--autodesk'],
             xref_safe=data['--safe'],
             post=data['--post'],
         )
