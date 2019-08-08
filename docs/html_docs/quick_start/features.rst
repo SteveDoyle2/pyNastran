@@ -589,9 +589,9 @@ The main op2 results can be accessed directly from the op2 object
   - thermal_load_vectors
   - applied_loads
   - force_vectors
- - OES/OSTR - CELAS1/CELAS2/CELAS3/CELAS4 stress/strain
+ - OES/OSTR
 
-  - 0d
+  - 0d - CELASx stress/strain
 
    - celas1_stress
    - celas2_stress
@@ -715,7 +715,7 @@ The main op2 results can be accessed directly from the op2 object
   - nonlinear_cquad4_strain
   - nonlinear_ctria3_strain
   - hyperelastic_cquad4_strain
- - PVT0
+ - PVT
 
   - params
  - LAMA
@@ -823,13 +823,13 @@ The main op2 results can be accessed directly from the op2 object
   - cquad8_composite_force_failure_indicies
   - ctria3_composite_force_failure_indicies
   - ctria6_composite_force_failure_indicies
- - OGS1 - grid point stresses
+ - OGS1 - Grid Point Stresses
 
   - grid_point_surface_stresses
   - grid_point_stresses_volume_direct
   - grid_point_stresses_volume_principal
   - grid_point_stress_discontinuities
- - OEE - strain energy density
+ - OEE - Strain Energy Density
 
   - cquad4_strain_energy
   - cquad8_strain_energy
@@ -1050,7 +1050,8 @@ The OP2.Results() are accessed using model.results. as a prefix
    - ctria3_strain_energy
    - cquad4_strain_energy
 
-All of these results have the same outputs (shown under model.results.crm)
+All of these results have the same outputs (shown under model.results.crm).  
+For example, model.results.ato.displacements, model.results.crm.displacements.
  - ato # AutoCorrelationObjects()
  - psd # PowerSpectralDensityObjects()
  - rms # RootMeansSquareObjects()
@@ -1143,6 +1144,9 @@ All of these results have the same outputs (shown under model.results.crm)
 
 Matrices with explicit methods
 ------------------------------
+These are simply accessor methods to various matrices.  For example,
+``model.total_effective_mass_matrix`` is the same as ``self.matrices['EFMFSMS']``.
+
  - total_effective_mass_matrix (EFMFSMS)
  - effective_mass_matrix (EFMASSS)
  - rigid_body_mass_matrix (RBMASS)

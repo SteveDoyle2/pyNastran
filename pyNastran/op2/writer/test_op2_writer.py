@@ -25,7 +25,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_out = os.path.join(folder, 'solid_bending_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'solid_bending_out.debug.out')
         #debug_file = 'solid_bending.debug.out'
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
@@ -44,7 +44,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_out = os.path.join(folder, 'solid_bending_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'solid_bending_out.debug.out')
         #debug_file = 'solid_bending.debug.out'
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
         op2 = read_op2(op2_filename, debug_file=op2_filename_debug, log=log)
@@ -62,13 +62,13 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_out = os.path.join(folder, 'static_solid_shell_bar_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'static_solid_shell_bar_out.debug.out')
         #debug_file = 'solid_bending.debug.out'
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log)
 
         op2.write_op2(op2_filename_out) #, is_mag_phase=False)
-        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
+        unused_op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out)
 
     def test_write_4(self):
         """tests basic op2 writing"""
@@ -79,7 +79,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_out = os.path.join(folder, 'static_solid_shell_bar_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'static_solid_shell_bar_out.debug.out')
         #debug_file = 'solid_bending.debug.out'
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log)
@@ -99,7 +99,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_out = os.path.join(folder, 'mode_solid_shell_bar_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'mode_solid_shell_bar_out.debug.out')
         #debug_file = 'solid_bending.debug.out'
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
         exclude_results = [
@@ -124,7 +124,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_out = os.path.join(folder, 'transient_solid_shell_bar_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'transient_solid_shell_bar_out.debug.out')
         #debug_file = 'solid_bending.debug.out'
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log)
@@ -144,7 +144,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_out = os.path.join(folder, 'freq_solid_shell_bar_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'freq_solid_shell_bar_out.debug.out')
         #debug_file = 'solid_bending.debug.out'
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log)
@@ -163,7 +163,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_debug = os.path.join(folder, 'freq_elements.debug.out')
         op2_filename_out = os.path.join(folder, 'freq_elements_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'freq_elements_out.debug.out')
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
 
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug, log=log)
 
@@ -181,7 +181,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_debug = os.path.join(folder, 'freq_elements2.debug.out')
         op2_filename_out = os.path.join(folder, 'freq_elements_out2.op2')
         op2_filename_debug_out = os.path.join(folder, 'freq_elements_out2.debug.out')
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
             'ctria6_force', 'ctriar_force', 'cshear_force',
@@ -191,7 +191,7 @@ class TestOP2Writer(unittest.TestCase):
                             exclude_results=exclude_results, log=log)
 
         op2.write_op2(op2_filename_out) #, is_mag_phase=False)
-        op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)
+        unused_op2b = read_op2_geom(op2_filename_out, debug_file=op2_filename_debug_out, log=log)
         #op2.assert_op2_equal(op2b,
                              #skip_results=['params', ],
                              #stop_on_failure=True, debug=False)
@@ -204,7 +204,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_debug = os.path.join(folder, 'freq_random_elements.debug.out')
         op2_filename_out = os.path.join(folder, 'freq_random_elements_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'freq_random_elements_out.debug.out')
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
             'ctria6_force', 'ctriar_force', 'cshear_force',
@@ -227,7 +227,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_debug = os.path.join(folder, 'modes_complex_elements.debug.out')
         op2_filename_out = os.path.join(folder, 'modes_complex_elements_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'modes_complex_elements_out.debug.out')
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
             'ctria6_force', 'ctriar_force', 'cshear_force',
@@ -251,7 +251,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_debug = os.path.join(folder, 'time_elements.debug.out')
         op2_filename_out = os.path.join(folder, 'time_elements_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'time_elements_out.debug.out')
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
             'cshear_force',
@@ -275,7 +275,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_out = os.path.join(folder, 'time_thermal_elements_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'time_thermal_elements.debug.out')
         #debug_file = 'solid_bending.debug.out'
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
         exclude_results = [
@@ -299,7 +299,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_out = os.path.join(folder, 'hd15306_out.op2')
         op2_filename_debug_out = os.path.join(folder, 'hd15306.debug.out')
         #debug_file = 'solid_bending.debug.out'
-        model = os.path.splitext(op2_filename)[0]
+        #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
 
         exclude_results = [
