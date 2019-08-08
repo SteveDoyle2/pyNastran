@@ -874,6 +874,10 @@ The main op2 results can be accessed directly from the op2 object
 
 OP2.Results()
 -------------
+
+The OP2.Results() are accessed using model.results. as a prefix
+(e.g., model.results.modal_contribution.celas1_stress).
+
  - eqexin
  - gpdt
  - ato # AutoCorrelationObjects()           - see below
