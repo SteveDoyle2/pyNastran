@@ -71,7 +71,7 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_composite_plates import Ra
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import (
     HyperelasticQuadArray)
-from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
 
 
 
@@ -3009,27 +3009,49 @@ class OES(OP2Common):
         return n, nelements, ntotal
 
     def _oes_csolid_nonlinear(self, data, ndata, dt, unused_is_magnitude_phase,
-                              stress_name, unused_prefix, unused_postfix):
+                              stress_name, prefix, postfix):
         """
         reads stress/strain for element type:
         - 85-TETRANL
         - 91-PENTANL
         - 93-HEXANL
+
+        2  CTYPE CHAR4
+        3  NODEF 1 Number of active GRID points
+
+        4  GRID  I Grid / Gauss
+        5  SX    RS Stress in x
+        6  SY    RS Stress in y
+        7  SZ    RS Stress in z
+        8  SXY   RS Stress in xy
+        9  SYZ   RS Stress in yz
+        10 SZX   RS Stress in zx
+        11 SE    RS Equivalent stress
+        12 EPS   RS Effective plastic strain
+        13 ECS   RS Effective creep strain
+        14 EX    RS Strain in x
+        15 EY    RS Strain in y
+        16 EZ    RS Strain in z
+        17 EXY   RS Strain in xy
+        18 EYZ   RS Strain in yz
+        19 EZX   RS Strain in zx
+        Words 3 through 19 repeat 005 times
         """
-        if self.read_mode == 1:
-            return ndata, None, None
         #85: 2 + (18 - 2) * 5,  # Nonlinear CTETRA
         #91: 4 + (25 - 4) * 7,  # Nonlinear CPENTA
         #93: 4 + (25 - 4) * 9,  # Nonlinear CHEXA
         if self.element_type == 85:
             etype = 'CTETRANL'
             nnodes = 5
+            result_name = prefix + 'ctetra_stress' + postfix
         elif self.element_type == 91:
             etype = 'CPENTANL'
             nnodes = 7
+            result_name = prefix + 'cpenta_stress' + postfix
         elif self.element_type == 93:
             etype = 'CHEXANL'
             nnodes = 9
+            result_name = prefix + 'chexa_stress' + postfix
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
 
@@ -3043,28 +3065,39 @@ class OES(OP2Common):
         #ntotal = 8 + 64 * nnodes
 
         if self.format_code == 1 and self.num_wide == numwide_real:
+            if self.read_mode == 1:
+                return ndata, None, None
+
             ntotal = numwide_real * 4
             #if self.is_stress:
                 #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolid)
             #else:
                 #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolid)
             #self.handle_results_buffer(self.OES_CQUAD4NL_90, resultName, name)
-            raise RuntimeError('OES_CQUAD4NL_90')
+            raise RuntimeError('OES_CSOLIDNL_90')
         elif self.format_code == 1 and self.num_wide == numwide_random:  # random
             # 82 : CTETRA_NL (etype=85)
             # 146 : CHEXA_NL (etype=93)
             #raise RuntimeError(self.code_information())
         #elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
+
+            slot = self.get_result(result_name)
             ntotal = numwide_random * 4
-            #if self.is_stress:
-                #self.create_transient_object(self.nonlinearPlateStress, NonlinearSolid)
-            #else:
-                #self.create_transient_object(self.nonlinearPlateStrain, NonlinearSolid)
+
+            nelements = ndata // ntotal
+            self.ntotal += nelements * nnodes
+            #print(self.read_mode, RealNonlinearSolidArray)
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, RealNonlinearSolidArray)
+            if auto_return:
+                self._data_factor = nnodes
+                return nelements * self.num_wide * 4, None, None
 
             n = 0
             s1 = Struct(self._endian + self._analysis_code_fmt + b'4s')
             s2 = Struct(self._endian + b'i15f')
             nelements = ndata // ntotal
+            obj = self.obj
             for unused_i in range(nelements):  # 2+16*9 = 146 -> 146*4 = 584
                 edata = data[n:n+8]
                 n += 8
@@ -3072,9 +3105,11 @@ class OES(OP2Common):
                 out = s1.unpack(edata)
                 if self.is_debug_file:
                     self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
+
                 (eid_device, unused_ctype) = out
                 eid, dt = get_eid_dt_from_eid_device(
                     eid_device, self.nonlinear_factor, self.sort_method)
+                #print('%s-%s -eid=%s dt=%s %s\n' % (etype, self.element_type, eid, dt, str(out)))
 
                 for unused_j in range(nnodes):
                     edata = data[n:n+64]
@@ -3082,11 +3117,16 @@ class OES(OP2Common):
                     out = s2.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('%s-%sB - %s\n' % (etype, self.element_type, str(out)))
-
+                    #print('%s-%sB - %s\n' % (etype, self.element_type, str(out)))
                     assert len(out) == 16
-                    #(grid,
-                     #sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
-                     #ex, ey, ez, unused_exy, eyz, exz) = out
+
+                    (grid,
+                     sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
+                     ex, ey, ez, exy, eyz, exz) = out
+                    obj.add_sort1(dt, eid, grid,
+                                  sx, sy, sz, sxy, syz, sxz, se, eps, ecs,
+                                  ex, ey, ez, exy, eyz, exz)
+
         else:  # pragma: no cover
             #msg = self.code_information()
             msg = "format_code=%s numwide=%s numwide_real=%s numwide_random=%s\n" % (

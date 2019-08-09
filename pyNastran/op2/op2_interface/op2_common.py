@@ -1970,9 +1970,8 @@ class OP2Common(Op2Codes, F06Writer):
                 #self.log.info("code = %s" % str(self.code))
                 #print("code = %s" % str(self.code))
 
-                # if this is failing, you probably set obj_vector to None...
                 try:
-                    self.obj = slot[self.code]
+                    self.obj = slot[self.code] # if this is failing, you probably set obj_vector to None...
                 except KeyError:
                     msg = 'Could not find key=%s in result=%r\n' % (self.code, result_name)
                     msg += "There's probably an extra check for read_mode=1...%s" % result_name

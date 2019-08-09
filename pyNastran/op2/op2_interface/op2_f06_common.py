@@ -167,6 +167,10 @@ class OP2_F06_Common:
         self.cpenta_strain = {}
         self.chexa_strain = {}
 
+        self.nonlinear_ctetra_stress = {}
+        self.nonlinear_cpenta_stress = {}
+        self.nonlinear_chexa_stress = {}
+
         #======================================================================
 
         # bars/beams
@@ -678,6 +682,9 @@ class OP2_F06_Common:
 
             'cplstn3_strain', 'cplstn4_strain', 'cplstn6_strain', 'cplstn8_strain',
             'cplsts3_strain', 'cplsts4_strain', 'cplsts6_strain', 'cplsts8_strain',
+
+            # OESNLXR
+            'nonlinear_ctetra_stress', 'nonlinear_cpenta_stress', 'nonlinear_chexa_stress',
         ]
 
         table_types += [
