@@ -167,9 +167,9 @@ class OP2_F06_Common:
         self.cpenta_strain = {}
         self.chexa_strain = {}
 
-        self.nonlinear_ctetra_stress = {}
-        self.nonlinear_cpenta_stress = {}
-        self.nonlinear_chexa_stress = {}
+        self.nonlinear_ctetra_stress_strain = {}
+        self.nonlinear_cpenta_stress_strain = {}
+        self.nonlinear_chexa_stress_strain = {}
 
         #======================================================================
 
@@ -650,20 +650,24 @@ class OP2_F06_Common:
             'cbar_stress_10nodes', 'cbar_strain_10nodes', 'cbar_force_10nodes',
 
             # OES - isotropic CBEAM stress/strain
-            'cbeam_stress', 'cbeam_strain', 'cbeam_force', 'cbeam_force_vu',
+            'cbeam_stress', 'cbeam_strain',
             'nonlinear_cbeam_stress',
             #'nonlinear_cbeam_strain',
 
-            # CBEND
+            # CBEND - isotropic CBEAM stress/strain
             'cbend_stress', 'cbend_strain', 'cbend_force',
 
-            # OES - isotropic CTRIA3/CQUAD4 stress
+            # OES - isotropic CTRIA3/CQUAD4 stress/strain
             'ctria3_stress', 'ctriar_stress', 'ctria6_stress',
             'cquadr_stress', 'cquad4_stress', 'cquad8_stress',
-
-            # OES - isotropic CTRIA3/CQUAD4 strain
             'ctria3_strain', 'ctriar_strain', 'ctria6_strain',
             'cquadr_strain', 'cquad4_strain', 'cquad8_strain',
+
+            # OES - composite CTRIA3/CQUAD4 stress/strain
+            'cquad4_composite_stress', 'cquad8_composite_stress', 'cquadr_composite_stress',
+            'ctria3_composite_stress', 'ctria6_composite_stress', 'ctriar_composite_stress',
+            'cquad4_composite_strain', 'cquad8_composite_strain', 'cquadr_composite_strain',
+            'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress/strain
             'ctetra_stress', 'chexa_stress', 'cpenta_stress',
@@ -682,13 +686,10 @@ class OP2_F06_Common:
 
             'cplstn3_strain', 'cplstn4_strain', 'cplstn6_strain', 'cplstn8_strain',
             'cplsts3_strain', 'cplsts4_strain', 'cplsts6_strain', 'cplsts8_strain',
-
-            # OESNLXR
-            'nonlinear_ctetra_stress', 'nonlinear_cpenta_stress', 'nonlinear_chexa_stress',
         ]
 
         table_types += [
-            # PVT0
+            # PVT/PVT0
             'params',
 
             # LAMA
@@ -701,18 +702,7 @@ class OP2_F06_Common:
             #'response1_table',
 
             # OEF - Forces - tCode=4 thermal=0
-            'crod_force', 'conrod_force', 'ctube_force',
 
-            # bar/beam
-            'cbush_force',
-            'coneax_force',
-            'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
-            'cgap_force',
-
-            'cquad4_force', 'cquad8_force', 'cquadr_force',
-            'ctria3_force', 'ctria6_force', 'ctriar_force',
-
-            'cshear_force',
             #'cquad4_composite_force',
             #'cquad8_composite_force',
             #'cquadr_composite_force',
@@ -720,11 +710,30 @@ class OP2_F06_Common:
             #'ctria6_composite_force',
             #'ctriar_composite_force',
 
+            # 0d
+            'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
+            'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
+            'cvisc_force',
+            'cbush_force',
+            'coneax_force',
+            'cgap_force',
+
+            # rods
+            'crod_force', 'conrod_force', 'ctube_force',
+
+            # bars/beams
+            'cbeam_force', 'cbeam_force_vu',
+
+            # shells
+            'cquad4_force', 'cquad8_force', 'cquadr_force',
+            'ctria3_force', 'ctria6_force', 'ctriar_force',
+
+            'cshear_force',
+
+            # solids
             'chexa_pressure_force', 'cpenta_pressure_force', 'ctetra_pressure_force',
 
-            'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
-            'cvisc_force',
-
+            # vu
             'vu_quad_force', 'vu_tria_force',
 
             #OEF - Fluxes - tCode=4 thermal=1
@@ -766,7 +775,6 @@ class OP2_F06_Common:
         table_types += [
             # OES - CTRIAX6
             'ctriax_stress', 'ctriax_strain',
-
             'cbush_stress', 'cbush_strain',
 
             #'cbush_stress',
@@ -775,14 +783,15 @@ class OP2_F06_Common:
 
             # OES - nonlinear CROD/CONROD/CTUBE stress
             'nonlinear_crod_stress', 'nonlinear_crod_strain',
-
             'nonlinear_ctube_stress', 'nonlinear_ctube_strain',
-
             'nonlinear_conrod_stress', 'nonlinear_conrod_strain',
 
             # OESNLXR - CTRIA3/CQUAD4 stress
             'nonlinear_cquad4_stress', 'nonlinear_ctria3_stress',
             'nonlinear_cquad4_strain', 'nonlinear_ctria3_strain',
+
+            # OESNLXR - solid
+            'nonlinear_ctetra_stress_strain', 'nonlinear_cpenta_stress_strain', 'nonlinear_chexa_stress_strain',
 
             #'hyperelastic_plate_stress',
             'hyperelastic_cquad4_strain',
@@ -791,21 +800,13 @@ class OP2_F06_Common:
             'nonlinear_celas1_stress',
             'nonlinear_celas3_stress',
 
-            # OES - composite CTRIA3/CQUAD4 stress
-            'cquad4_composite_stress', 'cquad8_composite_stress', 'cquadr_composite_stress',
-            'ctria3_composite_stress', 'ctria6_composite_stress', 'ctriar_composite_stress',
-
-            'cquad4_composite_strain', 'cquad8_composite_strain', 'cquadr_composite_strain',
-            'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
-
             # OGS1 - grid point stresses
             'grid_point_surface_stresses', # tCode=26
             'grid_point_stresses_volume_direct',  # tCode=27 # volume direct
             'grid_point_stresses_volume_principal', # tCode =28
             'grid_point_stress_discontinuities',  # tCode=35,
 
-            # OEE - strain energy density
-            #'strain_energy',  # tCode=18
+            # OEE - strain energy density # tCode=18
             'cquad4_strain_energy', 'cquad8_strain_energy', 'cquadr_strain_energy',
             'cquadx_strain_energy',
 

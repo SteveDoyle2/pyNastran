@@ -3043,15 +3043,15 @@ class OES(OP2Common):
         if self.element_type == 85:
             etype = 'CTETRANL'
             nnodes = 5
-            result_name = prefix + 'ctetra_stress' + postfix
+            result_name = prefix + 'ctetra_stress_strain' + postfix
         elif self.element_type == 91:
             etype = 'CPENTANL'
             nnodes = 7
-            result_name = prefix + 'cpenta_stress' + postfix
+            result_name = prefix + 'cpenta_stress_strain' + postfix
         elif self.element_type == 93:
             etype = 'CHEXANL'
             nnodes = 9
-            result_name = prefix + 'chexa_stress' + postfix
+            result_name = prefix + 'chexa_stress_strain' + postfix
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
 
