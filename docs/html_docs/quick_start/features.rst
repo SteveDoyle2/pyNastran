@@ -715,6 +715,11 @@ The main op2 results can be accessed directly from the op2 object
   - nonlinear_cquad4_strain
   - nonlinear_ctria3_strain
   - hyperelastic_cquad4_strain
+ - OESNLXR - solids
+
+   - nonlinear_ctetra_stress_strain
+   - nonlinear_cpenta_stress_strain
+   - nonlinear_chexa_stress_strain
  - PVT
 
   - params

@@ -1788,6 +1788,33 @@ class TestOP2(Tester):
         assert len(op2.chexa_stress) == 0
         assert len(op2.grid_point_forces) == 0
 
+    def test_op2_autodesk_3(self):
+        """tests an Autodesk Nastran example"""
+        op2_filename = os.path.join(MODEL_PATH,  'autodesk', 'nonlinear_beam.op2')
+        log = get_logger(level='warning')
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, write_f06=True,
+            log=log, stop_on_failure=True, binary_debug=True, quiet=True,
+            is_autodesk=True, post=-4)
+
+        assert len(op2.displacements) == 4, len(op2.displacements)
+        assert len(op2.spc_forces) == 4, len(op2.spc_forces)
+        assert len(op2.ctetra_stress) == 4, len(op2.ctetra_stress)
+        assert len(op2.nonlinear_ctetra_stress_strain) == 4, len(op2.nonlinear_ctetra_stress_strain)
+
+        #isubcase = 1
+        #ctetra_stress = op2.ctetra_stress[isubcase]
+        #if IS_PANDAS:
+            #ctetra_stress.build_dataframe()
+        #nelements = 36
+        #assert ctetra_stress.nelements == nelements, ctetra_stress.nelements
+        #assert ctetra_stress.data.shape == (1, nelements*5, 10), ctetra_stress.data.shape
+
+        assert len(op2.ctetra_strain_energy) == 0, len(op2.ctetra_strain_energy)
+        assert len(op2.cpenta_stress) == 0, len(op2.cpenta_stress)
+        assert len(op2.chexa_stress) == 0, len(op2.chexa_stress)
+        assert len(op2.grid_point_forces) == 4, len(op2.grid_point_forces)
+
     def test_op2_optistruct_1(self):
         """
         Optistruct 2012 Tables : CASECC, GEOM1S, GEOM2S, GEOM3S, GEOM4S, EPTS, MPTS,

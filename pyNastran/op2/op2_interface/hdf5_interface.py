@@ -55,7 +55,7 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_triax import RealTriaxStress
 from pyNastran.op2.tables.oes_stressStrain.real.oes_bend import RealBendStressArray, RealBendStrainArray
 
 from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_rod import RealNonlinearRodArray
-from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear import RealNonlinearPlateArray, RealNonlinearSolidArray
 from pyNastran.op2.tables.oes_stressStrain.oes_hyperelastic import HyperelasticQuadArray
 
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_bars import ComplexBarStressArray, ComplexBarStrainArray
@@ -857,6 +857,9 @@ TABLE_OBJ_MAP = {
     'nonlinear_cquad4_stress' : (RealNonlinearPlateArray, ),
     'nonlinear_ctria3_stress' : (RealNonlinearPlateArray, ),
     'nonlinear_cbush1d_stress_strain' : (RealBush1DStressArray, ComplexCBush1DStressArray),
+    'nonlinear_ctetra_stress_strain' : (RealNonlinearSolidArray, ),
+    'nonlinear_cpenta_stress_strain' : (RealNonlinearSolidArray, ),
+    'nonlinear_chexa_stress_strain' : (RealNonlinearSolidArray, ),
 
     'hyperelastic_cquad4_strain' : (HyperelasticQuadArray, ),
 

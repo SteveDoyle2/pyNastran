@@ -3065,8 +3065,8 @@ class OES(OP2Common):
         #ntotal = 8 + 64 * nnodes
 
         if self.format_code == 1 and self.num_wide == numwide_real:
-            if self.read_mode == 1:
-                return ndata, None, None
+            #if self.read_mode == 1:
+                #return ndata, None, None
 
             ntotal = numwide_real * 4
             #if self.is_stress:

@@ -9,7 +9,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
-from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
+from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_11e, write_float_13e
 
 
 class RealNonlinearPlateArray(OES_Object):
@@ -248,7 +248,7 @@ class RealNonlinearPlateArray(OES_Object):
                 #'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
                 #'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
             ]
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
 
         #msg = [
@@ -265,7 +265,6 @@ class RealNonlinearPlateArray(OES_Object):
 
         # write the f06
         ntimes = self.data.shape[0]
-
         eids = self.element
 
         #cen_word = 'CEN/%i' % nnodes
@@ -554,49 +553,60 @@ class RealNonlinearSolidArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
-    def _write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1,
+    def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1,
                   is_mag_phase=False, is_sort1=True):  # pragma: no cover
         if header is None:
             header = []
         #raise NotImplementedError('RealNonlinearSolidArray.write_f06')
         #msg, nnodes, cen = _get_plate_msg(self)
-        if self.element_type == 88:
+        #if self.element_type == 85:
+            ##etype = 'CTETRANL'
+            #nnodes_per_element = 5
+        #elif self.element_type == 91:
+            ##etype = 'CPENTANL'
+            #nnodes_per_element = 7
+        #elif self.element_type == 93:
+            ##etype = 'CHEXANL'
+            #nnodes_per_element = 9
+        #else:
+            #raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        if self.element_type == 85:
             msg = [
-                '                   N O N L I N E A R   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S      ( T R I A 3 )\n'
+                '          N O N L I N E A R   S T R E S S E S   I N   T E T R A H E D R O N   S O L I D   E L E M E N T S   ( T E T R A )'
                 ' \n'
-                '    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
-                '       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
+                '  ELEMENT GRID/   POINT                         STRESSES/ TOTAL STRAINS                          EQUIVALENT EFF. STRAIN  EFF. CREEP\n'
+                '     ID   GAUSS     ID       X           Y           Z           XY          YZ          ZX        STRESS   PLAS/NLELAS   STRAIN\n'
             ]
-        elif self.element_type == 90:
+        elif self.element_type == 91:
             msg = [
-                '               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
+                '          N O N L I N E A R   S T R E S S E S   I N   P E N T A H E D R O N   S O L I D   E L E M E N T S   ( P E N T A )'
                 ' \n'
-                '    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
-                '       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
-                #'0         1  -2.500000E-02  -4.829193E+00  -1.640651E-05                 -1.907010E-04   4.829185E+00   0.0            0.0\n'
-                #'                            -4.829188E-05   1.448741E-05                 -4.958226E-09\n'
-                #'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
-                #'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
+                '  ELEMENT GRID/   POINT                         STRESSES/ TOTAL STRAINS                          EQUIVALENT EFF. STRAIN  EFF. CREEP\n'
+                '     ID   GAUSS     ID       X           Y           Z           XY          YZ          ZX        STRESS   PLAS/NLELAS   STRAIN\n'
             ]
-        else:
+        elif self.element_type == 93:
+            msg = [
+                '          N O N L I N E A R   S T R E S S E S   I N   H E X A H E D R O N   S O L I D   E L E M E N T S     ( H E X A )\n'
+                ' \n'
+                '  ELEMENT GRID/   POINT                         STRESSES/ TOTAL STRAINS                          EQUIVALENT EFF. STRAIN  EFF. CREEP\n'
+                '     ID   GAUSS     ID       X           Y           Z           XY          YZ          ZX        STRESS   PLAS/NLELAS   STRAIN\n'
+                #'0       1 GRID   CENTER  1.0000E+04  1.5916E-12  1.3642E-12 -3.5862E-13  8.3400E-14   0.0        1.0000E+04   0.0         0.0'
+                #'                         1.5626E-03 -4.6877E-04 -4.6877E-04 -1.4569E-19  3.3881E-20   0.0'
+                #'                      1  1.0000E+04 -1.8190E-12  4.5475E-13 -6.3308E-13  7.4789E-13 -4.6225E-13  1.0000E+04   0.0         0.0'
+                #'                         1.5626E-03 -4.6877E-04 -4.6877E-04 -2.5719E-19  3.0383E-19 -1.8779E-19'
+                #'                   N O N L I N E A R   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S      ( T R I A 3 )\n'
+                #' \n'
+                #'    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
+                #'       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
+            ]
+        else:  # pragma: no cover
             raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))
-
-        #msg = [
-        #'               N O N L I N E A R   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S    ( Q U A D 4 )\n'
-        #' \n'
-        #'    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
-        #'       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
-        #'0         1  -2.500000E-02  -4.829193E+00  -1.640651E-05                 -1.907010E-04   4.829185E+00   0.0            0.0\n'
-        #'                            -4.829188E-05   1.448741E-05                 -4.958226E-09\n'
-        #'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
-        #'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
-        #]
 
         # write the f06
         ntimes = self.data.shape[0]
 
         eids = self.element_node[:, 0]
-        #nids = self.element_node[:, 1]
+        nids = self.element_node[:, 1]
 
         #cen_word = 'CEN/%i' % nnodes
         for itime in range(ntimes):
@@ -606,67 +616,78 @@ class RealNonlinearSolidArray(OES_Object):
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
 
-            #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
-            fiber_dist = self.data[itime, :, 0]
-            oxx = self.data[itime, :, 1]
-            oyy = self.data[itime, :, 2]
-            ozz = self.data[itime, :, 3]
-            txy = self.data[itime, :, 4]
-            es = self.data[itime, :, 5]
-            eps = self.data[itime, :, 6]
-            ecs = self.data[itime, :, 7]
-            exx = self.data[itime, :, 8]
-            eyy = self.data[itime, :, 9]
-            ezz = self.data[itime, :, 10]
-            exy = self.data[itime, :, 11]
+            #oxx, oyy, ozz, txy, tyz, txz, se, eps, ecs,
+            #exx, eyy, ezz, exy, eyz, exz
+            oxx = self.data[itime, :, 0]
+            oyy = self.data[itime, :, 1]
+            ozz = self.data[itime, :, 2]
+            txy = self.data[itime, :, 3]
+            tyz = self.data[itime, :, 4]
+            txz = self.data[itime, :, 5]
 
-            for (i, eid, fdi, oxxi, oyyi, ozzi, txyi, exxi, eyyi, ezzi, exyi, esi, epsi, ecsi) in zip(
-                 cycle([0, 1]), eids, fiber_dist, oxx, oyy, ozz, txy, exx, eyy, ezz, exy, es, eps, ecs):
-                #[fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
-                    #[fdi, oxxi, oyyi, txyi, major, minor, ovmi])
+            se = self.data[itime, :, 6]
+            eps = self.data[itime, :, 7]
+            ecs = self.data[itime, :, 8]
+
+            exx = self.data[itime, :, 9]
+            eyy = self.data[itime, :, 10]
+            ezz = self.data[itime, :, 11]
+            exy = self.data[itime, :, 12]
+            eyz = self.data[itime, :, 13]
+            exz = self.data[itime, :, 14]
+
+            #oxx, oyy, ozz, txy, tyz, txz, se, eps, ecs,
+            #exx, eyy, ezz, exy, eyz, exz
+
+            for (eid, nid, oxxi, oyyi, ozzi, txyi, tyzi, txzi, sei, epsi, ecsi,
+                 exxi, eyyi, ezzi, exyi, eyzi, exzi) in zip(
+                 eids, nids, oxx, oyy, ozz, txy, tyz, txz, se, eps, ecs,
+                 exx, eyy, ezz, exy, eyz, exz):
 
                 #'    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
                 #'       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
-                #'0         1  -2.500000E-02  -4.829193E+00  -1.640651E-05                 -1.907010E-04   4.829185E+00   0.0            0.0\n'
-                #'                            -4.829188E-05   1.448741E-05                 -4.958226E-09\n'
-                #'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
-                #'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
-                if i == 0:
+                #'0       1 GRID   CENTER  1.0000E+04  1.5916E-12  1.3642E-12 -3.5862E-13  8.3400E-14   0.0        1.0000E+04   0.0         0.0'
+                #'                         1.5626E-03 -4.6877E-04 -4.6877E-04 -1.4569E-19  3.3881E-20   0.0'
+                #'                      1  1.0000E+04 -1.8190E-12  4.5475E-13 -6.3308E-13  7.4789E-13 -4.6225E-13  1.0000E+04   0.0         0.0'
+                #'                         1.5626E-03 -4.6877E-04 -4.6877E-04 -2.5719E-19  3.0383E-19 -1.8779E-19'
+                if nid == 0:
+                    #nid = '  CENTER'
+                    #assert len(nid) == 8
                     f06_file.write(
-                        '0  %8i  %-13s  %-13s  %-13s                 %-13s  %-13s  %-13s  %s\n'
-                        '                            %-13s  %-13s                 %s\n' % (
+                        '0%8i GRID   CENTER %-11s %-11s %-11s %-11s %-11s %-11s %-11s %-11s %s\n'
+                        '                        %-11s %-11s %-11s %-11s %-11s %-11s\n' % (
                             # A
+                            #oxxi, oyyi, ozzi, txyi, tyzi, txzi, sei, epsi, ecsi,
+                            #exxi, eyyi, ezzi, exyi, eyzi, exzi
                             #    ELEMENT  FIBER  XYZ STRESS     EQUIVALENT  EFF.STRAIN  EFF.CREEP\n'
-                            eid, write_float_13e(fdi),
-                            write_float_13e(oxxi), write_float_13e(oyyi),
-                            #write_float_13e(ozzi),
-                            write_float_13e(txyi),
+                            eid,
+                            write_float_11e(oxxi), write_float_11e(oyyi), write_float_11e(ozzi),
+                            write_float_11e(txyi), write_float_11e(tyzi), write_float_11e(txzi),
 
-                            write_float_13e(esi), write_float_13e(epsi),
-                            write_float_13e(ecsi),
+                            write_float_11e(sei), write_float_11e(epsi), write_float_11e(ecsi),
 
-                            write_float_13e(exxi), write_float_13e(eyyi),
-                            #write_float_13e(ezzi),
-                            write_float_13e(exyi),
-                        ))
-                else:
-                    f06_file.write(
-                        '             %-13s  %-13s  %-13s                 %-13s  %-13s  %-13s  %s\n'
-                        '                            %-13s  %-13s                 %s\n' % (
-                            write_float_13e(fdi),
-                            write_float_13e(oxxi), write_float_13e(oyyi),
-                            #write_float_13e(ozzi),
-                            write_float_13e(txyi),
-
-                            write_float_13e(esi), write_float_13e(epsi),
-                            write_float_13e(ecsi),
-
-                            write_float_13e(exxi), write_float_13e(eyyi),
-                            #write_float_13e(ezzi),
-                            write_float_13e(exyi),
+                            write_float_11e(exxi), write_float_11e(eyyi), write_float_11e(ezzi),
+                            write_float_11e(exyi), write_float_11e(eyzi), write_float_11e(exzi),
                         )
                     )
+                else:
+                    f06_file.write(
+                        ' %8s      %8s %-11s %-11s %-11s %-11s %-11s %-11s %-11s %-11s %s\n'
+                        '                        %-11s %-11s %-11s %-11s %-11s %s\n' % (
+                            # A
+                            #oxxi, oyyi, ozzi, txyi, tyzi, txzi, sei, epsi, ecsi,
+                            #exxi, eyyi, ezzi, exyi, eyzi, exzi
+                            #    ELEMENT  FIBER  XYZ STRESS     EQUIVALENT  EFF.STRAIN  EFF.CREEP\n'
+                            '', nid,
+                            write_float_11e(oxxi), write_float_11e(oyyi), write_float_11e(ozzi),
+                            write_float_11e(txyi), write_float_11e(tyzi), write_float_11e(txzi),
 
+                            write_float_11e(sei), write_float_11e(epsi), write_float_11e(ecsi),
+
+                            write_float_11e(exxi), write_float_11e(eyyi), write_float_11e(ezzi),
+                            write_float_11e(exyi), write_float_11e(eyzi), write_float_11e(exzi),
+                        )
+                    )
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1

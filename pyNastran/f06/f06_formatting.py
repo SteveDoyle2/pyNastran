@@ -3,8 +3,14 @@ import numpy as np
 from pyNastran.utils import object_attributes
 
 
-def write_float_12e(val):
-    # type: (float) -> str
+def write_float_11e(val: float) -> str:
+    """writes a Nastran formatted 11.4 float"""
+    v2 = '%11.4E' % val
+    if v2 in (' 0.0000E+00', '-0.0000E+00'):
+        v2 = ' 0.0'
+    return v2
+
+def write_float_12e(val: float) -> str:
     """writes a Nastran formatted 12.5 float"""
     v2 = '%12.5E' % val
     if v2 in (' 0.00000E+00', '-0.00000E+00'):
@@ -12,8 +18,7 @@ def write_float_12e(val):
     return v2
 
 
-def write_float_13e(val):
-    # type: (float) -> str
+def write_float_13e(val: float) -> str:
     """writes a Nastran formatted 13.6 float"""
     val2 = '%13.6E' % val
     if val2 in (' 0.000000E+00', '-0.000000E+00'):
@@ -21,8 +26,7 @@ def write_float_13e(val):
     return val2
 
 
-def write_floats_10e(vals):
-    # type: (List[float]) -> List[str]
+def write_floats_10e(vals: List[float]) -> List[str]:
     """writes a series of Nastran formatted 10.3 floats"""
     vals2 = []
     for v in vals:
@@ -33,8 +37,7 @@ def write_floats_10e(vals):
     return vals2
 
 
-def write_floats_12e(vals):
-    # type: (List[float]) -> List[str]
+def write_floats_12e(vals: List[float]) -> List[str]:
     """writes a series of Nastran formatted 12.5 floats"""
     vals2 = []
     for v in vals:
@@ -45,8 +48,7 @@ def write_floats_12e(vals):
     return vals2
 
 
-def write_floats_13e(vals):
-    # type: (List[float]) -> List[str]
+def write_floats_13e(vals: List[float]) -> List[str]:
     """writes a series of Nastran formatted 13.6 floats"""
     vals2 = []
     for v in vals:
@@ -57,8 +59,7 @@ def write_floats_13e(vals):
     return vals2
 
 
-def write_imag_floats_13e(vals, is_mag_phase):
-    # type: (List[float], bool) -> str
+def write_imag_floats_13e(vals: List[float], is_mag_phase: bool) -> str:
     vals2 = []
 
     if is_mag_phase:
@@ -91,8 +92,7 @@ def write_imag_floats_13e(vals, is_mag_phase):
     return vals2
 
 
-def write_floats_8p4f(vals):
-    # type: (List[float]) -> List[str]
+def write_floats_8p4f(vals: List[float]) -> List[str]:
     """writes an 8.4F formatted number"""
     vals2 = []
     for val in vals:
@@ -104,8 +104,7 @@ def write_floats_8p4f(vals):
         vals2.append(val2)
     return vals2
 
-def write_floats_8p1e(vals):
-    # type: (List[float]) -> List[str]
+def write_floats_8p1e(vals: List[float]) -> List[str]:
     """writes an 8.1E formatted number"""
     vals2 = []
     for val in vals:
@@ -115,7 +114,7 @@ def write_floats_8p1e(vals):
             vals2.append('%8.1E' % val)
     return vals2
 
-def _eigenvalue_header(obj, header, itime, ntimes, dt):
+def _eigenvalue_header(obj, header, itime: int, ntimes: int, dt):
     if obj.nonlinear_factor not in (None, np.nan):
         name = obj.data_code['name']
         if isinstance(dt, int):
