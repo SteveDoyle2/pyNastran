@@ -756,6 +756,7 @@ The main op2 results can be accessed directly from the op2 object
 
   - cbar_force
   - cbar_force_abs
+  - cbar_force_srss
   - cbar_force_nrl
   - cbar_force_10nodes
   - cbeam_force
@@ -885,6 +886,7 @@ The OP2.Results() are accessed using model.results. as a prefix
 
  - eqexin
  - gpdt
+ - bgpdt
  - ato # AutoCorrelationObjects()           - see below
  - psd # PowerSpectralDensityObjects()      - see below
  - rms # RootMeansSquareObjects()           - see below

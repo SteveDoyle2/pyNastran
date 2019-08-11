@@ -387,7 +387,7 @@ class RealNonlinearSolidArray(OES_Object):
     def build(self):
         """sizes the vectorized attributes of the RealNonlinearPlateArray"""
         #print("self.ielement = %s" % self.ielement)
-        print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        #print(f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal} - {self.element_name}')
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
@@ -413,6 +413,7 @@ class RealNonlinearSolidArray(OES_Object):
             raise RuntimeError(msg)
 
         self.nelements //= self.ntimes
+        assert self.nelements > 0
         self.itime = 0
         self.ielement = 0
         self.itotal = 0
@@ -530,17 +531,16 @@ class RealNonlinearSolidArray(OES_Object):
         ntimes = self.ntimes
         nnodes = self.nnodes
         ntotal = self.ntotal
-        nlayers = 2
-        nelements = self.ntotal // self.nnodes // 2
+        #ntotal = self.ntotal * nnodes
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
-                self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal)
+            msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i\n' % (
+                self.__class__.__name__, ntimes, nelements, nnodes, ntotal)
             ntimes_word = 'ntimes'
         else:
-            msgi = '  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
-                self.__class__.__name__, nelements, nnodes, nlayers, ntotal)
+            msgi = '  type=%s nelements=%i nnodes_per_element=%i ntotal=%i\n' % (
+                self.__class__.__name__, nelements, nnodes, ntotal)
             ntimes_word = '1'
         msg.append(msgi)
         headers = self.get_headers()

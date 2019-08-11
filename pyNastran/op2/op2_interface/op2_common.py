@@ -354,12 +354,12 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             raise  RuntimeError('isubcase is not defined')
 
-        if hasattr(self, 'subtitle') and hasattr(self, 'label'):
-            ogs = 0
-            if hasattr(self, 'ogs'):
-                ogs = self.ogs
-            code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index,
-                    self.pval_step, ogs)
+        #if hasattr(self, 'subtitle') and hasattr(self, 'label'):
+            #ogs = 0
+            #if hasattr(self, 'ogs'):
+                #ogs = self.ogs
+            #code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index,
+                    #self.pval_step, ogs)
             #code = (self.isubcase, self.analysis_code, self.superelement_adaptivity_index, self.table_name_str)
             #print("code =", code)
             #if code not in self.labels:
@@ -1150,7 +1150,7 @@ class OP2Common(Op2Codes, F06Writer):
             obj.itotal = itotal2
         else:
             s = Struct(self._endian + b'2i12f')
-            for inode in range(nnodes):
+            for unused_inode in range(nnodes):
                 out = s.unpack(data[n:n+56])
                 (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
                  txi, tyi, tzi, rxi, ryi, rzi) = out
@@ -1200,7 +1200,7 @@ class OP2Common(Op2Codes, F06Writer):
 
             assert self.obj is not None
             assert nnodes > 0
-            for inode in range(nnodes):
+            for unused_inode in range(nnodes):
                 out = s.unpack(data[n:n+56])
                 (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
                  txi, tyi, tzi, rxi, ryi, rzi) = out
@@ -1497,8 +1497,9 @@ class OP2Common(Op2Codes, F06Writer):
         #if any([card_name in msg for card_name in ['VUHEXA', 'VUPENTA', 'VUTETRA', 'VUQUAD']]):
             #return ndata
         #raise NotImplementedError(msg)
-        #if self.table_name.startswith(('OSTR', 'OES', 'OEF')):
-            #if self.element_type in [145, 146, 147, 189,  # VUHEXA, VUPENTA, VUTETRA, VUQUAD
+        #if self.table_name_str.startswith(('OSTR', 'OES', 'OEF')):
+            #if self.element_type in [145, 146, 147, # VUHEXA, VUPENTA, VUTETRA,
+                                     #189, 190, 191, # VUQUAD, VUTRIA, VUBEAM
                                      #69, # CBEND
                                      #]:
                 #return ndata
@@ -1984,7 +1985,12 @@ class OP2Common(Op2Codes, F06Writer):
                     raise TypeError(msg)
 
                 #obj.update_data_code(self.data_code)
-                build_obj(self.obj)
+                try:
+                    build_obj(self.obj)
+                except AssertionError:
+                    print(self.code)
+                    print(self.code_information())
+                    raise
 
             else:  # not vectorized
                 auto_return = True

@@ -162,10 +162,13 @@ class OEF(OP2Common):
                 postfix = '_abs'
             elif self.thermal == 2:
                 postfix = '_abs'  # Scaled response spectra ABS
+            elif self.thermal == 4:
+                #C:\NASA\m4\formats\git\examples\move_tpl\ms103.op2
+                postfix = '_srss' #   # Scaled response spectra SRSS
             elif self.thermal == 8:
                 postfix = '_nrl'  # Scaled response spectra NRL
             else:
-                assert self.thermal in [2, 8], self.code_information() # abs
+                assert self.thermal in [2, 4, 8], self.code_information() # abs
         elif self.table_name in [b'OEFIT']:
             assert self.table_code in [25], self.code_information()
             postfix = '_failure_indicies'
@@ -510,7 +513,8 @@ class OEF(OP2Common):
             n = self._read_oef1_loads(data, ndata)
         elif self.thermal == 1:
             n = self._read_oef1_thermal(data, ndata)
-        elif self.thermal in [2, 8]: # 2=ABS, 8=NRL
+        elif self.thermal in [2, 4, 8]: # 2=ABS, 4=SRSS, 8=NRL
+            #C:\NASA\m4\formats\git\examples\move_tpl\ms103.op2 # SRSS
             n = self._read_oef1_loads(data, ndata)
         else:
             n = self._not_implemented_or_skip(data, ndata, 'thermal=%s' % self.thermal)

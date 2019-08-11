@@ -3500,19 +3500,20 @@ class OP2Reader:
                             setattr(op2, key, value)
                         n = table4_parser(data, ndata)
                         #print(data_code_old)
+                        if not isinstance(n, integer_types):
+                            msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
+                                self.op2.table_name, n, table4_parser)
+                            raise TypeError(msg)
 
-                        if 1:
-                            if not isinstance(n, integer_types):
-                                msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
-                                    self.op2.table_name, n, table4_parser)
-                                raise TypeError(msg)
-
+                        if self.read_mode == 1:
                             #op2_reader._goto(n)
                             #n = op2_reader._skip_record()
                             #if hasattr(self.op2, 'table_name'):
                                 #print('***_init_vector_counter', self.op2.table_name)
                             #print('record_len', record_len)
                             self.op2._init_vector_counter(record_len)
+                        else:
+                            self.op2._reset_vector_counter()
 
                         #print('except...')
                         return False

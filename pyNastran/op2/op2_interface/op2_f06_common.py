@@ -176,6 +176,7 @@ class OP2_F06_Common:
         # bars/beams
         self.cbar_force = {}
         self.cbar_force_abs = {} # thermal=2
+        self.cbar_force_srss = {} # thermal=4
         self.cbar_force_nrl = {} # thermal=8
 
         self.cbar_stress = {}
@@ -645,7 +646,7 @@ class OP2_F06_Common:
 
             # OES - isotropic CBAR stress/strain
             'cbar_stress', 'cbar_strain',
-            'cbar_force', 'cbar_force_abs', 'cbar_force_nrl',
+            'cbar_force', 'cbar_force_abs', 'cbar_force_nrl', 'cbar_force_srss',
 
             'cbar_stress_10nodes', 'cbar_strain_10nodes', 'cbar_force_10nodes',
 

@@ -408,6 +408,7 @@ TABLE_OBJ_MAP = {
     'cbar_force' : (RealCBarForceArray, ComplexCBarForceArray),
     'cbar_force_abs' : (RealCBarForceArray, ),
     'cbar_force_nrl' : (RealCBarForceArray, ),
+    'cbar_force_srss' : (RealCBarForceArray, ),
     'ato.cbar_force' : (RealCBarForceArray, ),
     'crm.cbar_force' : (RealCBarForceArray, ),
     'psd.cbar_force' : (RealCBarForceArray, ),
