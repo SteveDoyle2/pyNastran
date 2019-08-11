@@ -3039,7 +3039,7 @@ class OES(OP2Common):
         """
         #85: 2 + (18 - 2) * 5,  # Nonlinear CTETRA
         #91: 4 + (25 - 4) * 7,  # Nonlinear CPENTA
-        #93: 4 + (25 - 4) * 9,  # Nonlinear CHEXA
+        #93: 4 + (25 - 4) * 9,  # Nonlinear CHEXA -> 584 (can cause a crash)
         if self.element_type == 85:
             etype = 'CTETRANL'
             nnodes = 5
@@ -3064,6 +3064,12 @@ class OES(OP2Common):
         #numwide_imag = 2 + 16 * nnodes
         #ntotal = 8 + 64 * nnodes
 
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+        self._results._found_result(result_name)
+
+        slot = self.get_result(result_name)
+
         if self.format_code == 1 and self.num_wide == numwide_real:
             #if self.read_mode == 1:
                 #return ndata, None, None
@@ -3081,7 +3087,6 @@ class OES(OP2Common):
             #raise RuntimeError(self.code_information())
         #elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
 
-            slot = self.get_result(result_name)
             ntotal = numwide_random * 4
 
             nelements = ndata // ntotal

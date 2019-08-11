@@ -11,6 +11,7 @@ class Results:
     def __init__(self):
         self.eqexin = None
         self.gpdt = None
+        self.bgpdt = None
         self.ato = AutoCorrelationObjects()
         self.psd = PowerSpectralDensityObjects()
         self.rms = RootMeansSquareObjects()

@@ -46,9 +46,11 @@ import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct
+from typing import Optional
 import numpy as np
 import scipy  # type: ignore
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.op2.result_objects.gpdt import GPDT
@@ -574,7 +576,7 @@ class OP2Reader:
         val_old = 0
         if debug:
             print('-----------------------------')
-        i = 0
+        #i = 0
         #icheck = 7
         while 1:
             #print('i = %i' % i)
@@ -596,7 +598,7 @@ class OP2Reader:
             #print(marker2)
             if marker2 == 696:
                 break
-            i += 1
+            #i += 1
         if debug:
             print('----------------------------------------')
 
@@ -1253,7 +1255,7 @@ class OP2Reader:
         #print('cd = %s' % cd.tolist())
         #print('xyz:\n%s' % xyz)
 
-        bgpdt = {
+        op2.op2_results.bgpdt = {
             'cd' : cd,
             'xyz' : xyz,
         }
@@ -2201,7 +2203,7 @@ class OP2Reader:
         niter = 0
         niter_max = 100000000
 
-        jj = 1
+        #jj = 1
         while niter < niter_max:
             #nvalues = self.get_marker1(rewind=True)
             #print('nvalues4a =', nvalues)
@@ -2214,7 +2216,7 @@ class OP2Reader:
                     nvalues = self.get_marker1(rewind=False)
                     unused_data = self._skip_block()
                     nvalues = self.get_marker1(rewind=True)
-                jj += 1
+                #jj += 1
             else:
                 nvalues = self.get_marker1(rewind=False)
                 assert nvalues == 0, nvalues
@@ -2790,7 +2792,7 @@ class OP2Reader:
 
         markers1 = self.get_nmarkers(1, rewind=True)
         if markers1[0] > 0:
-            nloop = 0
+            #nloop = 0
             records = [record]
             while markers1[0] > 0:
                 markers1 = self.get_nmarkers(1, rewind=False)
@@ -2803,7 +2805,7 @@ class OP2Reader:
                 markers1 = self.get_nmarkers(1, rewind=True)
                 if self.is_debug_file and debug:
                     self.binary_debug.write('read_record - markers1 = [4, %i, 4]\n' % markers1[0])
-                nloop += 1
+                #nloop += 1
 
             # if nloop == 0:
                 # record = records[0]
@@ -3441,7 +3443,7 @@ class OP2Reader:
         self.read_markers([0])
         op2._finish()
 
-    def _read_subtable_3_4(self, table3_parser, table4_parser, passer):
+    def _read_subtable_3_4(self, table3_parser, table4_parser, passer) -> Optional[bool]:
         """
         Reads a series of subtable 3/4
 
@@ -3496,7 +3498,23 @@ class OP2Reader:
                         op2.data_code = data_code_old
                         for key, value in data_code_old.items():
                             setattr(op2, key, value)
-                        table4_parser(data, ndata)
+                        n = table4_parser(data, ndata)
+                        #print(data_code_old)
+
+                        if 1:
+                            if not isinstance(n, integer_types):
+                                msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
+                                    self.op2.table_name, n, table4_parser)
+                                raise TypeError(msg)
+
+                            #op2_reader._goto(n)
+                            #n = op2_reader._skip_record()
+                            #if hasattr(self.op2, 'table_name'):
+                                #print('***_init_vector_counter', self.op2.table_name)
+                            #print('record_len', record_len)
+                            self.op2._init_vector_counter(record_len)
+
+                        #print('except...')
                         return False
                     raise RuntimeError(op2.code_information())
                 #if hasattr(op2, 'isubcase'):

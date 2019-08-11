@@ -370,10 +370,9 @@ class RealNonlinearSolidArray(OES_Object):
 
     def get_headers(self):
         headers = [
-            #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
-            'fiber_distance', 'oxx', 'oyy', 'ozz', 'txy',
+            'oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz',
             'eff_plastic_strain', 'eff_plastic_strain', 'eff_creep_strain',
-            'exx', 'eyy', 'ezz', 'exy',
+            'exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz',
         ]
         return headers
 
@@ -388,7 +387,7 @@ class RealNonlinearSolidArray(OES_Object):
     def build(self):
         """sizes the vectorized attributes of the RealNonlinearPlateArray"""
         #print("self.ielement = %s" % self.ielement)
-        #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
+        print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal

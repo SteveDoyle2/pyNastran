@@ -78,7 +78,7 @@ class FortranFormat:
 
         """
         op2_reader = self.op2_reader
-        datai = b''
+        #datai = b''
         n = 0
         if self.read_mode == 2:
             self.ntotal = 0

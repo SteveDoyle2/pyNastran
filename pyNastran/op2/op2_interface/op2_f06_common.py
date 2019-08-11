@@ -586,7 +586,7 @@ class OP2_F06_Common:
                 res_length = max(len(class_name), res_length)
 
                 if not is_release:
-                    print('%s - results not found...key=%s' % (class_name, res_key))
+                    print(' %s - results not found...key=%s' % (class_name, res_key))
             else:  # empty result
                 #print('else')
                 pass
