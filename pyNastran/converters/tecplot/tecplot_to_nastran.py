@@ -8,7 +8,7 @@ import numpy as np
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.converters.tecplot.tecplot import Tecplot, read_tecplot
+from pyNastran.converters.tecplot.tecplot import Tecplot, Zone, read_tecplot
 
 
 def tecplot_to_nastran_filename(tecplot_filename, bdf_filename, log=None, debug=True):
@@ -23,6 +23,7 @@ def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):
     else:
         model = tecplot_filename
 
+    zone = model.zones[0]
     removed_nodes = False
     shell_pid = 1
     solid_pid = 2
@@ -30,28 +31,28 @@ def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):
     istart = 1
     with open(bdf_filename, 'w') as bdf_file:
         bdf_file.write('$pyNastran : punch=True\n')
-        for inode, node in enumerate(model.xyz):
+        for inode, node in enumerate(zone.xyz):
             card = ['GRID', inode + 1, None,] + list(node)
             bdf_file.write(print_card_8(card))
 
         itri = 0
-        if len(model.tri_elements):
+        if len(zone.tri_elements):
             # tris only
-            for itri, tri in enumerate(model.tri_elements):
+            for itri, tri in enumerate(zone.tri_elements):
                 card = ['CTRIA3', itri + 1, shell_pid] + list(tri)
                 bdf_file.write(print_card_8(card))
             #istart += bdf_model
 
-        if len(model.quad_elements):
-            if len(model.tri_elements) != 0:
+        if len(zone.quad_elements):
+            if len(zone.tri_elements) != 0:
                 # if there are tris, then we assume the quads are good
-                for iquad, quad in enumerate(model.quad_elements):
+                for iquad, quad in enumerate(zone.quad_elements):
                     card = ['CQUAD4', iquad + 1, shell_pid] + list(quad)
                     bdf_file.write(print_card_8(card))
             else:
                 # need to split out the CQUAD4 elements
                 istart = itri + 1
-                for iquad, quad in enumerate(model.quad_elements):
+                for iquad, quad in enumerate(zone.quad_elements):
                     if quad[2] == quad[3]:
                         # if it's a tri
                         card = ['CTRIA3', istart + iquad, shell_pid] + list(quad[:3])
@@ -60,26 +61,26 @@ def tecplot_to_nastran(tecplot_filename, bdf_filename, log=None, debug=True):
                     bdf_file.write(print_card_8(card))
             istart += iquad
 
-        if len(model.tri_elements) + len(model.quad_elements):
+        if len(zone.tri_elements) + len(zone.quad_elements):
             card = ['PSHELL', shell_pid, mid, 0.1]
             bdf_file.write(print_card_8(card))
 
-        if len(model.tet_elements) + len(model.hexa_elements):
+        if len(zone.tet_elements) + len(zone.hexa_elements):
             card = ['PSOLID', solid_pid, mid]
             bdf_file.write(print_card_8(card))
 
-        if len(model.tet_elements):
-            for itet, tet in enumerate(model.tet_elements):
+        if len(zone.tet_elements):
+            for itet, tet in enumerate(zone.tet_elements):
                 card = ['CTETRA', istart + itet, solid_pid] + list(tet)
                 bdf_file.write(print_card_8(card))
 
-        if len(model.hexa_elements):
+        if len(zone.hexa_elements):
             # need to split out the CTETRA and CPENTA elements
-            for ihex, hexa in enumerate(model.hexa_elements):
+            for ihex, hexa in enumerate(zone.hexa_elements):
                 uhexa = np.unique(hexa)
                 nnodes_unique = len(uhexa)
                 nids = hexa[:nnodes_unique]
-                centroid_y = model.xyz[nids, 1].max()
+                centroid_y = zone.xyz[nids, 1].max()
                 if centroid_y < 0:
                     removed_nodes = True
                     continue
@@ -120,11 +121,13 @@ def nastran_table_to_tecplot(bdf_model, case, variables):
         tris.append([nid_map[nid] for nid in elem.node_ids])
 
     tecplot_model = Tecplot(log=bdf_model.log, debug=bdf_model.debug)
-    tecplot_model.xyz = np.array(xyz, dtype='float64')
-    tecplot_model.tri_elements = tris = np.array(tris, dtype='int32') + 1
+    zone = Zone(bdf_model.log)
+    zone.xyz = np.array(xyz, dtype='float64')
+    zone.tri_elements = tris = np.array(tris, dtype='int32') + 1
 
     tecplot_model.title = ('%s; %s' % (case.title, case.subtitle)).strip(' ;')
-    tecplot_model.variables = variables
+    zone.variables = variables
+    tecplot_model.zones[0] = [zone]
     return tecplot_model
 
 def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str, bdf_model: BDF, case, variables=None, ivars=None):
@@ -142,6 +145,7 @@ def nastran_tables_to_tecplot_filenames(tecplot_filename_base: str, bdf_model: B
 
         # you can't combine the two lines or it transposes it...
         nodal_results = case.data[itime, :, :]
-        tecplot_model.nodal_results = nodal_results[:, ivars]
+        zone = tecplot_model.zones[0]
+        zone.nodal_results = nodal_results[:, ivars]
         tecplot_model.write_tecplot(
             tecplot_filename, res_types=None, adjust_nids=False)

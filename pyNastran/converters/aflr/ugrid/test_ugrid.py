@@ -48,7 +48,7 @@ class TestUgrid(unittest.TestCase):
 
         ugrid_model.write_bdf(nastran_filename3)
 
-        bdf_model = read_bdf(nastran_filename3)
+        unused_bdf_model = read_bdf(nastran_filename3)
         #print(bdf_model.get_bdf_stats())
         assert os.path.exists(nastran_filename3), nastran_filename3
 
@@ -57,7 +57,7 @@ class TestUgrid(unittest.TestCase):
         #assert os.path.exists(tecplot_filename1), tecplot_filename1
 
         tecplot_filename2 = os.path.join(NASTRAN_PATH, 'solid_bending', 'solid_bending2.plt')
-        tecplot = ugrid_to_tecplot(ugrid_model)
+        tecplot, unused_zone = ugrid_to_tecplot(ugrid_model)
         tecplot.write_tecplot(tecplot_filename2, res_types=None,
                               adjust_nids=True)
         assert os.path.exists(tecplot_filename2), tecplot_filename2
@@ -78,8 +78,8 @@ class TestUgrid(unittest.TestCase):
 
         ugrid_model = read_ugrid(ugrid_filename, log=log)
         tecplot = ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename2)
-        tecplot = ugrid_to_tecplot(ugrid_filename)
-        tecplot = ugrid_to_tecplot(ugrid_model)
+        tecplot, unused_zone = ugrid_to_tecplot(ugrid_filename)
+        tecplot, unused_zone = ugrid_to_tecplot(ugrid_model)
         tecplot.write_tecplot(tecplot_filename2, res_types=None,
                               adjust_nids=True)
         assert os.path.exists(tecplot_filename2), tecplot_filename2

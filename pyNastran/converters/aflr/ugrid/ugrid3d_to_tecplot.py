@@ -1,6 +1,6 @@
-from numpy import zeros, array
+import numpy as np
 from pyNastran.converters.aflr.ugrid.ugrid_reader import UGRID, read_ugrid
-from pyNastran.converters.tecplot.tecplot import Tecplot
+from pyNastran.converters.tecplot.tecplot import Tecplot, Zone
 
 def get_ugrid_model(ugrid_filename, log=None, debug=False):
     """helper method for loading UGRID models
@@ -57,9 +57,9 @@ def ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename,
 
 def write_tecplot(ugrid_model, tecplot_filename):
     ugrid_model.check_hanging_nodes()
-    tecplot = ugrid_to_tecplot(ugrid_model)
+    tecplot, zone = ugrid_to_tecplot(ugrid_model)
+    zone.nodal_results = np.array([], dtype='float32')
     tecplot.write_tecplot(tecplot_filename, adjust_nids=True)  # is adjust correct???
-    tecplot.nodal_results = array([], dtype='float32')
     return tecplot
 
 def ugrid_to_tecplot(ugrid_filename, tecplot_filename=None, log=None, debug=False):
@@ -84,8 +84,8 @@ def ugrid_to_tecplot(ugrid_filename, tecplot_filename=None, log=None, debug=Fals
         the Tecplot object
     """
     ugrid_model = get_ugrid_model(ugrid_filename, log=log, debug=debug)
-    nnodes = len(ugrid_model.nodes)
-    nodes = zeros((nnodes, 3), dtype='float64')
+    #nnodes = len(ugrid_model.nodes)
+    #nodes = zeros((nnodes, 3), dtype='float64')
     ugrid_model.check_hanging_nodes()
     elements = []
 
@@ -94,11 +94,12 @@ def ugrid_to_tecplot(ugrid_filename, tecplot_filename=None, log=None, debug=Fals
     assert ntets + non_tets > 0, 'nsolids=%s' % (ntets + non_tets)
 
     tecplot = Tecplot(log=ugrid_model.log, debug=debug)
-    tecplot.xyz = ugrid_model.nodes
+    zone = Zone(ugrid_model.log)
+    zone.xyz = ugrid_model.nodes
 
     if ntets and non_tets == 0:
         elements = ugrid_model.tets
-        tecplot.tet_elements = elements - 1
+        zone.tet_elements = elements - 1
     elif non_tets:
         for element in ugrid_model.tets:
             n1, n2, n3, n4 = element
@@ -116,14 +117,15 @@ def ugrid_to_tecplot(ugrid_filename, tecplot_filename=None, log=None, debug=Fals
             n1, n2, n3, n4, n5, n6, n7, n8 = element
             elements.append([n1, n2, n3, n4,
                              n5, n6, n7, n8])
-        elements = array(elements, dtype='int32') - 1
-        tecplot.hexa_elements = elements
+        elements = np.array(elements, dtype='int32') - 1
+        zone.hexa_elements = elements
     else:
         raise RuntimeError()
 
     if tecplot_filename is not None:
         tecplot.write_tecplot(tecplot_filename)
-    return tecplot
+    tecplot.zones = [zone]
+    return tecplot, zone
 
 
 def main(): # pragma: no cover
