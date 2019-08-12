@@ -27,6 +27,7 @@ def nastran_to_tecplot(model):
             nnodes, inode_max)
         raise RuntimeError(msg)
     zone = Zone(model.log)
+    zone.headers_dict['VARIABLES'] = ['X', 'Y', 'Z']
     zone.xyz = xyz
 
     nquads = model.card_count['CQUAD4'] if 'CQUAD4' in model.card_count else 0
@@ -182,6 +183,7 @@ def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=
 
     tecplot = Tecplot(log=model.log)
     zone = Zone(model.log)
+    zone.headers_dict['VARIABLES'] = ['X', 'Y', 'Z']
     zone.xyz = nodes
     zone.hexa_elements = elements
     zone.nodal_results = np.array([], dtype='float32')

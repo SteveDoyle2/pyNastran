@@ -472,17 +472,17 @@ class Tecplot:
         iline += 1
         iblock = 0
         while 1:
-            print('start...')
+            #print('start...')
             iline, title_line, header_lines, line = _read_header_lines(
                 lines, iline, line, self.log)
-            print('header_lines', header_lines)
+            #print('header_lines', header_lines)
             headers_dict = _header_lines_to_header_dict(title_line, header_lines, self.variables)
             if headers_dict is None:
                 break
             zone = Zone(self.log)
             zone.headers_dict = headers_dict
             self.variables = headers_dict['VARIABLES']
-            print('self.variables', self.variables)
+            #print('self.variables', self.variables)
 
             #print(headers_dict.keys())
             if 'ZONETYPE' in headers_dict:
@@ -511,17 +511,25 @@ class Tecplot:
                   ('T' in headers_dict)):
                 A, line = self.read_table(lines, iline, iblock, headers_dict, line)
                 self.A = A
-                print('read_table...')
+                #print('read_table...')
                 return
             else:
                 msg = 'headers=%s\n' % str(headers_dict)
                 msg += 'line = %r' % line.strip()
                 raise NotImplementedError(msg)
+
             self.zones.append(zone)
-            line = lines[iline].strip()
+
             #sline = line.split()
-            print('stack...')
+            #print('stack...')
             _stack(zone, xyz_list, quads_list, tris_list, tets_list, hexas_list, results_list, self.log)
+            #print(zone)
+            if line is None:
+                return
+            try:
+                line = lines[iline].strip()
+            except IndexError:
+                break
             quads_list = []
             hexas_list = []
             tris_list = []
@@ -593,7 +601,7 @@ class Tecplot:
         """
         #print('self.variables', self.variables)
         #ndim = zone.ndim
-        print('iblock =', iblock)
+        #print('iblock =', iblock)
         if iblock == 0:
             variables = headers_dict['VARIABLES']
             zone.variables = [variable.strip(' \r\n\t"\'') for variable in variables]
@@ -777,7 +785,7 @@ class Tecplot:
                     self.n += 4
                     values.append((vali, valf))
                     if vali == 9999:
-                        print('breaking...')
+                        #print('breaking...')
                         break
                 #for j, vals in enumerate(values):
                     #print('  ', j, vals)
@@ -1506,7 +1514,7 @@ def _simplify_header(headers_dict, variables: List[str]) -> None:
         headers_dict['TITLE'] = 'tecplot geometry and solution file'
 
     if 'VARIABLES' in headers_dict and variables is None:
-        print('VARIABLES' in headers_dict, variables is None)
+        #print('VARIABLES' in headers_dict, variables is None)
         _simplify_variables(headers_dict)
     elif 'VARIABLES' in headers_dict:
         _simplify_variables(headers_dict)
@@ -1520,7 +1528,7 @@ def _simplify_variables(headers_dict) -> None:
     headers_dict['VARIABLES'] = [var.strip('"') for var in variables]
 
 def is_3d(headers_dict) -> bool:
-    print(headers_dict)
+    #print(headers_dict)
     variables = headers_dict['VARIABLES']
     is_3d = 'Z' in variables # or 'z' in variables
     return is_3d
@@ -1582,7 +1590,7 @@ def read_zone_block(lines, iline, xyz, results, nresults, zone_type,
     nnodes_max = (3 + nresults) * nnodes
     #print('nnodes_max =', nnodes_max)
     while nresult < nnodes_max: #  changed from iresult to nresult
-        print('zb', iline, sline, len(sline))
+        #print('zb', iline, sline, len(sline))
         result += sline
         nresult += len(sline)
         if iresult >= nnodes_max:
@@ -1623,7 +1631,7 @@ def read_unstructured_elements(lines, iline, sline, elements, nelements):
     i = 0
     #print('nelements =', nelements)
     for i in range(nelements):
-        print(iline, i, sline)
+        #print(iline, i, sline)
         try:
             elements[i, :] = sline
         except IndexError:
@@ -1641,7 +1649,7 @@ def read_point(lines, iline, xyz, results, zone_type, line, sline, nnodes, nvars
     log.debug(f'start of POINT (structured); nnodes={nnodes} nvars={nvars} zone_type={zone_type}')
     for inode in range(nnodes):
         iline, sline = get_next_nsline(lines, iline, sline, nvars)
-        print(iline, inode, sline)
+        #print(iline, inode, sline)
 
         #if inode == 0:
             #log.debug('zone_type=%s sline=%s' %(zone_type, sline))
@@ -1675,7 +1683,7 @@ def read_block(lines, iline, xyz, results, zone_type, line, sline, nnodes, nvars
     while len(results) < ndata:
         sline = split_line(line)
         results += sline
-        print('block:', iline, sline, len(results))
+        #print('block:', iline, sline, len(results))
         if len(sline) == 0:
             raise
         iline, line, sline = get_next_sline(lines, iline)
@@ -1779,9 +1787,9 @@ def _read_header_lines(lines, iline, line, log):
 
     vars_found = []
     header_lines = []
-    print('-----------------------------')
+    #print('-----------------------------')
     while i < 30:
-        print(iline, i, line.strip())
+        #print(iline, i, line.strip())
         #self.n = 0
         if len(line) == 0 or line[0] == '#':
             line = lines[iline].strip()
@@ -1789,7 +1797,7 @@ def _read_header_lines(lines, iline, line, log):
             i += 1
             continue
         if line[0].isdigit() or line[0] == '-':
-            print(line)
+            #print(line)
             log.debug('breaking...')
             break
 

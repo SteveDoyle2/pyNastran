@@ -42,11 +42,10 @@ class TecplotIO:
         model = read_tecplot(tecplot_filename, log=self.gui.log, debug=False)
 
         self.gui.model_type = 'tecplot'
-        zone = model.zones[0]
-        self.gui.nnodes = zone.nnodes
+        self.gui.nnodes = sum([zone.nnodes for zone in model.zones])
 
         #self._make_tecplot_geometry(model, self.nnodes, quads_only=True) # cart3d
-        is_surface = self._make_tecplot_geometry(zone, quads_only=False)
+        is_surface = self._make_tecplot_geometry(model, quads_only=False)
 
         #self._create_cart3d_free_edegs(model, nodes, elements)
 
@@ -66,7 +65,7 @@ class TecplotIO:
         cases = OrderedDict()
         ID = 1
 
-        form, cases, node_ids, element_ids = self._fill_tecplot_case(cases, ID, zone, is_surface)
+        form, cases, node_ids, element_ids = self._fill_tecplot_case(cases, ID, model, is_surface)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
         self.gui._finish_results_io2(model_name, form, cases)
@@ -82,42 +81,85 @@ class TecplotIO:
             #appendFilter.AddInputData()
             #appendFilter.Update()
 
-    def _make_tecplot_geometry(self, zone, quads_only=False):
+    def _make_tecplot_geometry(self, model, quads_only=False):
         """
         Returns
         -------
         is_surface : bool
             the model is made up of only shells (not 100%)
         """
-        nodes2d = zone.xy
-        nodes3d = zone.xyz
-        nnodes2d = nodes2d.shape[0]
-        nnodes3d = nodes3d.shape[0]
-
-        unused_nnodes = self.gui.nnodes
         grid = self.gui.grid
-        if nnodes2d and nnodes3d:
-            raise RuntimeError('2d and 3d nodes is not supported')
-        elif nnodes2d:
-            nodes = np.zeros((nnodes2d, 3), dtype=nodes2d.dtype)
-            nodes[:, :2] = nodes2d
-        elif nnodes3d:
-            nodes = nodes3d
-        else:  # pragma: no cover
-            raise RuntimeError('failed to find 2d/3d nodes')
+        nnodes = self.gui.nnodes
+        nodes = np.zeros((nnodes, 3), dtype='float32')
+        #print('nnodes=', nnodes)
 
-        mmax = np.amax(nodes, axis=0)
-        mmin = np.amin(nodes, axis=0)
-        dim_max = (mmax - mmin).max()
-        self.gui.create_global_axes(dim_max)
+        inode = 0
 
-        points = numpy_to_vtk_points(nodes)
+        quads = []
+        tris = []
+        tets = []
+        hexas = []
+        for zone in model.zones:
+            nodes2d = zone.xy
+            nodes3d = zone.xyz
+            nnodes2d = nodes2d.shape[0]
+            nnodes3d = nodes3d.shape[0]
 
-        #elements = zone.elements
-        quads = zone.quad_elements
-        hexas = zone.hexa_elements
-        tets = zone.tet_elements
-        tris = zone.tri_elements
+            # elements
+            if 'I' in zone.headers_dict:
+                i = zone.headers_dict['I']
+                if 'J' in zone.headers_dict:
+                    j = zone.headers_dict['J']
+                    nnodes = i * j
+                    elements = np.arange(0, nnodes).reshape(j, i)
+                    #print('elements:')
+                    #print(elements)
+                    n1 = elements[:-1, :-1].ravel()
+                    n2 = elements[:-1, 1:].ravel()
+                    n3 = elements[1:, 1:].ravel()
+                    n4 = elements[1:, :-1].ravel()
+                    nquads = (i - 1) * (j - 1)
+                    quadsi = np.vstack([n1, n2, n3, n4]).T
+                    #trisi = None
+                    #tetsi = None
+                    #hexasi = None
+                    trisi = []
+                    tetsi = []
+                    hexasi = []
+            else:
+                quadsi = zone.quad_elements
+                hexasi = zone.hexa_elements
+                tetsi = zone.tet_elements
+                trisi = zone.tri_elements
+
+            if len(quadsi):
+                quads.append(inode + quadsi)
+            if len(trisi):
+                tris.append(inode + trisi)
+            if len(tetsi):
+                tets.append(inode + tetsi)
+            if len(hexasi):
+                hexas.append(inode + hexasi)
+
+            # nodes
+            if nnodes2d and nnodes3d:
+                raise RuntimeError('2d and 3d nodes is not supported')
+            elif nnodes2d:
+                nodes[inode:inode+nnodes2d, :2] = nodes2d
+                inode += nnodes2d
+            elif nnodes3d:
+                nodes[inode:inode+nnodes3d] = nodes3d
+                inode += nnodes3d
+            else:  # pragma: no cover
+                raise RuntimeError('failed to find 2d/3d nodes')
+            #print('inode', inode)
+            #print(nodes)
+            #print('-------------')
+        #print('stack', len(quads))
+        quads = stack(quads)
+        tris = stack(tris)
+        tets = stack(tets)
+        hexas = stack(hexas)
 
         nquads = len(quads)
         ntris = len(tris)
@@ -147,6 +189,17 @@ class TecplotIO:
         else:
             raise NotImplementedError()
 
+        #----------------------------------------------
+        #print('nnodes', nnodes, inode)
+        mmax = np.amax(nodes, axis=0)
+        mmin = np.amin(nodes, axis=0)
+        dim_max = (mmax - mmin).max()
+        self.gui.create_global_axes(dim_max)
+
+        #print('nodes', nodes)
+        #nnodes = nodes.shape[0]
+        points = numpy_to_vtk_points(nodes)
+
         grid.SetPoints(points)
         grid.Modified()
         return is_surface
@@ -158,13 +211,15 @@ class TecplotIO:
         #model = Cart3D(log=self.log, debug=False)
         #self.load_cart3d_geometry(cart3d_filename)
 
-    def _fill_tecplot_case(self, cases, ID, zone, is_surface):
+    def _fill_tecplot_case(self, cases, ID, model, is_surface):
         #'x', 'y', 'z',
         #result_names = ['rho', 'U', 'V', 'W', 'p']
+        zone = model.zones[0]
         result_names = zone.variables[3:]
         #nelements = elements.shape[0]
         nelements = self.gui.nelements
-        nnodes = zone.nnodes
+        nnodes = self.gui.nnodes
+        #nnodes = zone.nnodes
         #nnodes = nodes.shape[0]
 
         #is_results = False
@@ -222,6 +277,7 @@ class TecplotIO:
 
 def _create_tecplot_shells(grid, is_quads, quads, is_tris, tris):
     if is_quads:
+        #elem.GetCellType() = 9  # vtkQuad
         for face in quads:
             elem = vtkQuad()
             epoints = elem.GetPointIds()
@@ -229,8 +285,7 @@ def _create_tecplot_shells(grid, is_quads, quads, is_tris, tris):
             epoints.SetId(1, face[1])
             epoints.SetId(2, face[2])
             epoints.SetId(3, face[3])
-            #elem.GetCellType() = 5  # vtkTriangle
-            grid.InsertNextCell(elem.GetCellType(), epoints)
+            grid.InsertNextCell(9, epoints)
 
     if is_tris:
         #elem.GetCellType() = 5  # vtkTriangle
@@ -260,6 +315,7 @@ def _create_tecplot_solids(grid, model, nsolids, ntets, tets, nhexas, hexas, is_
             unused_elements = free_faces
             grid.Allocate(nfaces, 1000)
 
+            #elem.GetCellType() = 9  # vtkQuad
             for face in free_faces:
                 elem = vtkQuad()
                 epoints = elem.GetPointIds()
@@ -267,8 +323,7 @@ def _create_tecplot_solids(grid, model, nsolids, ntets, tets, nhexas, hexas, is_
                 epoints.SetId(1, face[1])
                 epoints.SetId(2, face[2])
                 epoints.SetId(3, face[3])
-                #elem.GetCellType() = 5  # vtkTriangle
-                grid.InsertNextCell(elem.GetCellType(), epoints)
+                grid.InsertNextCell(9, epoints)
     else:
         # is_volume
         grid.Allocate(nsolids, 1000)
@@ -299,3 +354,19 @@ def _create_tecplot_solids(grid, model, nsolids, ntets, tets, nhexas, hexas, is_
                 #elem.GetCellType() = 5  # vtkTriangle
                 grid.InsertNextCell(elem.GetCellType(), epoints)
     return nelements
+
+
+def stack(elements):
+    if len(elements) == 0:
+        pass
+    elif len(elements) == 1:
+        elements = elements[0]
+        #print(elements)
+    else:
+        #print('----stack------')
+        #for elementsi in elements:
+            #print(elementsi)
+        #print('----stack------')
+
+        elements = np.vstack(elements)
+    return elements

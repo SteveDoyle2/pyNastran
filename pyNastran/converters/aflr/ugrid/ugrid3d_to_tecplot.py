@@ -95,6 +95,7 @@ def ugrid_to_tecplot(ugrid_filename, tecplot_filename=None, log=None, debug=Fals
 
     tecplot = Tecplot(log=ugrid_model.log, debug=debug)
     zone = Zone(ugrid_model.log)
+    zone.headers_dict['VARIABLES'] = ['X', 'Y', 'Z']
     zone.xyz = ugrid_model.nodes
 
     if ntets and non_tets == 0:
