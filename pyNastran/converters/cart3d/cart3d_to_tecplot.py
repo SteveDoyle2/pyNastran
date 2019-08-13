@@ -13,9 +13,10 @@ def cart3d_to_tecplot(cart3d_filename, tecplot_filename, log=None, debug=False):
     tecplot = Tecplot()
     tecplot.log = model.log
     zone = Zone(model.log)
-    tecplot.zones = [zone]
-    zone.variables = ['X', 'Y', 'Z']
+    zone.headers_dict['VARIABLES'] = ['X', 'Y', 'Z']
     zone.xyz = model.points
     zone.tri_elements = model.elements + 1
+    tecplot.zones = [zone]
+
     tecplot.write_tecplot(tecplot_filename, adjust_nids=False)
     return tecplot

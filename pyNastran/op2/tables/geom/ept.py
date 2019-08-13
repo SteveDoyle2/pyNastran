@@ -892,18 +892,21 @@ class EPT(GeomCommon):
             out = struct1.unpack(edata)
             (pid, k, c, m, unused_alpha, sa, se,
              typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
-             types, idts, idcs, idtdu, idcdu,
-             typed, idtd, idtd, idtdv, idcdv,
-             typeg, idtg, idcg, idtdu, idcdu, idtdv, idcdv,
+             types, idts, idcs, idtdus, idcdus,
+             typed, idtd, idtd, idtdvd, idcdvd,
+             typeg, idtg, idcg, idtdug, idcdug, idtdvg, idcdvg,
              typef, idtf, idcf,
              unused_ut, unused_uc) = out
+            #  test_op2_other_05
             #pbush1d, 204, 1.e+5, 1000., , , , , , +pb1
             #+pb1, spring, table, 205, , , , , , +pb2
             #+pb2, damper, table, 206
             #pid=204 k=100000.0 c=1000.0 m=0.0 sa=nan se=nan
-            print(f'PBUSH1D pid={pid} k={k} c={c} m={m} sa={sa} se={se}')
+
+
+            msg = f'PBUSH1D pid={pid} k={k} c={c} m={m} sa={sa} se={se}'
             optional_vars = {}
-            unused_typea_str = type_map[typea]
+            typea_str = type_map[typea]
             types_str = type_map[types]
             typed_str = type_map[typed]
             unused_typeg_str = type_map[typeg]
@@ -912,20 +915,41 @@ class EPT(GeomCommon):
             if min([typea, types, typed, typeg, typef]) < 0:
                 raise RuntimeError(f'typea={typea} types={types} typed={typed} typeg={typeg} typef={typef}')
             if typea in [1, 2]:  # SHOCKA?
-                raise NotImplementedError(str((typea, cvt, cvc, expvt, expvc,
-                                               idtsu, idtcu, idtsud, idcsud)))
+                #pbush1d, 204, 1.e+5, 1000., , , , , , +pb4
+                #+pb4, shocka, table, 1000., , 1., , 214, , +pb41
+                #+pb41, spring, table, 205
+
+                idts = idtsu if typea_str == 'TABLE' else 0
+                idets = idtsu if typea_str == 'EQUAT' else 0
+                optional_vars['SHOCKA'] = [typea_str, cvt, cvc, expvt, expvc,
+                                           idts, idets, idtcu, idtsud, idcsud]
+                #(shock_type, shock_cvt, shock_cvc, shock_exp_vt, shock_exp_vc,
+                 #shock_idts, shock_idets, shock_idecs, shock_idetsd, shock_idecsd
+                #)
+                #print('shock_idts, shock_idets', typea_str, idtsu, idtsu)
+                msg += (
+                    f'  SHOCKA type={typea} cvt={cvt} cvc={cvc} expvt={expvt} expvc={expvc}\n'
+                    f'    idtsu={idtsu} (idts={idts} idets={idets}) idtcu={idtcu} idtsud={idtsud} idcsud={idcsud}')
             if types in [1, 2]: # SPRING: Spring data type: 0=Null, 1=Table, 2=Equation
                 #(spring_type, spring_idt, spring_idc, spring_idtdu, spring_idcdu) = values
                 # SPRING, TYPE IDT IDC IDTDU IDCDU
-                optional_vars['SPRING'] = [types_str, idts, idcs, idtdu, idcdu]
-                print(f'  types={types} idts={idts} idcs={idcs} idtdu={idtdu} idcdu={idcdu}')
+                optional_vars['SPRING'] = [types_str, idts, idcs, idtdus, idcdus]
+                msg += f'  SPRING type={types} idt={idts} idc={idcs} idtdu={idtdus} idcdu={idcdus}'
             if typed in [1, 2]: # Damper data type: 0=Null, 1=Table, 2=Equation
-                optional_vars['DAMPER'] = [typed_str, idts, idcs, idtdu, idcdu]
-                print(f'  typed={typed} idtd={idtd} idtd={idtd} idtdv={idtdv} idcdv={idcdv}')
+                optional_vars['DAMPER'] = [typed_str, idts, idcs, idtdvd, idcdvd]
+                msg += f'  DAMPER type={typed} idt={idtd} idt={idtd} idtdv={idtdvd} idcdv={idcdvd}'
             if typeg in [1, 2]: # general, GENER?: 0=Null, 1=Table 2=Equation
-                raise NotImplementedError(f'typeg={typeg} idtg={idtg} idcg={idcg} idtdu={idtdu} idcdu={idcdu} idtdv={idtdv} idcdv={idcdv}')
+                # C:\NASA\m4\formats\git\examples\move_tpl\ar29scbt.bdf
+                #pbush1d, 206, 1.e+3, 10., , , , , , +pb6
+                #+pb6, gener, equat, 315, , 3015, , 3016
+                msg += f'  GENER  type={typeg} idt={idtg} idc={idcg} idtdu={idtdug} idcdu={idcdug} idtdv={idtdvg} idcdv={idcdvg}'
+                optional_vars['GENER'] = [idtg, idcg, idtdug, idcdug, idtdvg, idcdvg]
             if typef in [1, 2]: # Fuse data type: 0=Null, 1=Table
                 raise NotImplementedError(f'typef={typef} idtf={idtf} idcf={idcf}')
+
+            if self.is_debug_file:
+                self.binary_debug.write(msg)
+
             self.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
                              optional_vars=optional_vars,)
             n += ntotal
