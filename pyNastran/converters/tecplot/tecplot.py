@@ -318,7 +318,62 @@ class Zone():
         is_points = True
         self._write_xyz_results(tecplot_file, is_points, ivars)
 
+    def skin_elements(self):
+        """get the tris/quads from tets/hexas"""
+        tris = []
+        quads = []
+        if len(self.tet_elements):
+            faces1 = self.tet_elements[:, :3]
+            faces2 = self.tet_elements[:, 1:4]
+            faces3 = self.tet_elements[:, [2, 3, 0]]
+            tris.append(faces1)
+            tris.append(faces2)
+            tris.append(faces3)
 
+        if len(self.hexa_elements):
+            faces1 = self.hexa_elements[:, :4]
+            faces2 = self.hexa_elements[:, 4:7]
+            assert faces1.shape[1] == 4, faces1.shape
+            assert faces2.shape[1] == 4, faces2.shape
+            #faces3 = self.hexa_elements[:, [2, 3, 0]]
+            # TODO: others CHEXA faces...
+            quads.append(faces1)
+            quads.append(faces2)
+
+        # if tris:
+            # tris = np.vstack(tris)
+            # tris.sort(axis=0)
+            # tris = unique_rows(tris)
+        # if quads:
+            # quads = np.vstack(quads)
+            # quads.sort(axis=0)
+            # quads = unique_rows(tris)
+        return tris, quads
+
+    def get_free_faces(self):
+        """get the free faces for hexa elements"""
+        self.log.info('start get_free_faces')
+        sort_face_to_element_map = defaultdict(list)
+        sort_face_to_face = {}
+        for ie, element in enumerate(self.hexa_elements):
+            btm = [element[0], element[1], element[2], element[3]]
+            top = [element[4], element[5], element[6], element[7]]
+            left = [element[0], element[3], element[7], element[4]]
+            right = [element[1], element[2], element[6], element[5]]
+            front = [element[0], element[1], element[5], element[4]]
+            back = [element[3], element[2], element[6], element[7]]
+            for face in [btm, top, left, right, front, back]:
+                if len(np.unique(face)) >= 3:
+                    sort_face = tuple(sorted(face))
+                    sort_face_to_element_map[sort_face].append(ie)
+                    sort_face_to_face[sort_face] = face
+
+        free_faces = []
+        for sort_face, eids in sort_face_to_element_map.items():
+            if len(eids) == 1:
+                free_faces.append(sort_face_to_face[sort_face])
+        self.log.info('finished get_free_faces')
+        return free_faces
 
 class Tecplot:
     """
@@ -379,6 +434,11 @@ class Tecplot:
 
         self._uendian = ''
         self.n = 0
+
+    @property
+    def nzones(self):
+        """gets the number of zones"""
+        return len(self.zones)
 
     @property
     def headers_dict(self):
@@ -1167,6 +1227,8 @@ class Tecplot:
         """gets the tecplot header"""
         is_y = True
         is_z = True
+        #is_results = False
+        assert self.nzones >= 1, self.nzones
         for zone in self.zones:
             variables = zone.variables
             is_y = 'Y' in zone.headers_dict['VARIABLES']
@@ -1208,6 +1270,7 @@ class Tecplot:
                 msg += '"%s"\n' % var
             #print('ivars =', ivars)
         else:
+            #if res_types is None:
             assert len(res_types) == 0, len(res_types)
             ivars = []
         return msg, ivars
@@ -1254,59 +1317,12 @@ class Tecplot:
                     raise RuntimeError('only structured/unstructured')
 
     def skin_elements(self):
-        tris = []
-        quads = []
-        if len(self.tet_elements):
-            faces1 = self.tet_elements[:, :3]
-            faces2 = self.tet_elements[:, 1:4]
-            faces3 = self.tet_elements[:, [2, 3, 0]]
-            tris.append(faces1)
-            tris.append(faces2)
-            tris.append(faces3)
-
-        if len(self.hexa_elements):
-            faces1 = self.hexa_elements[:, :4]
-            faces2 = self.hexa_elements[:, 4:7]
-            assert faces1.shape[1] == 4, faces1.shape
-            assert faces2.shape[1] == 4, faces2.shape
-            #faces3 = self.hexa_elements[:, [2, 3, 0]]
-            # TODO: others CHEXA faces...
-            quads.append(faces1)
-            quads.append(faces2)
-
-        # if tris:
-            # tris = np.vstack(tris)
-            # tris.sort(axis=0)
-            # tris = unique_rows(tris)
-        # if quads:
-            # quads = np.vstack(quads)
-            # quads.sort(axis=0)
-            # quads = unique_rows(tris)
-        return tris, quads
+        sss
+        #return tris, quads
 
     def get_free_faces(self):
         """get the free faces for hexa elements"""
-        self.log.info('start get_free_faces')
-        sort_face_to_element_map = defaultdict(list)
-        sort_face_to_face = {}
-        for ie, element in enumerate(self.hexa_elements):
-            btm = [element[0], element[1], element[2], element[3]]
-            top = [element[4], element[5], element[6], element[7]]
-            left = [element[0], element[3], element[7], element[4]]
-            right = [element[1], element[2], element[6], element[5]]
-            front = [element[0], element[1], element[5], element[4]]
-            back = [element[3], element[2], element[6], element[7]]
-            for face in [btm, top, left, right, front, back]:
-                if len(np.unique(face)) >= 3:
-                    sort_face = tuple(sorted(face))
-                    sort_face_to_element_map[sort_face].append(ie)
-                    sort_face_to_face[sort_face] = face
-
-        free_faces = []
-        for sort_face, eids in sort_face_to_element_map.items():
-            if len(eids) == 1:
-                free_faces.append(sort_face_to_face[sort_face])
-        self.log.info('finished get_free_faces')
+        sss
         return free_faces
 
     def extract_y_slice(self, y0, tol=0.01, slice_filename=None):

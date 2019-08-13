@@ -126,6 +126,7 @@ def nastran_to_tecplot(model):
         msg += '  ntris=%s nquads=%s\n' % (ntris, nquads)
         msg += '  ntets=%s npentas=%s nhexas=%s\n' % (ntets, npentas, nhexas)
         raise NotImplementedError(msg)
+    tecplot.zones = [zone]
     return tecplot
 
 def nastran_to_tecplot_filename(bdf_filename, tecplot_filename, log=None, debug=False):

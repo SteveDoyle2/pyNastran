@@ -383,13 +383,72 @@ class PBUSH1D(BushingProperty):
 
         Parameters
         ----------
-        pid : ???
-            ???
+        pid : int
+            property id
+        k : float
+           stiffness
+        c : float
+            Viscous damping
+        m : float
+            mass
+        sa : float
+            Stress recovery coefficient [1/area].
+        se : float
+            Strain recovery coefficient [1/length].
         optional_vars : dict[name] : value; default=None
             name : str
                 SHOCKA, SPRING, DAMPER, GENER
-            values : ???
-                ???
+            values : List[varies]
+                thhe values
+            SHOCKA:
+                Coefficients of the following force versus
+                velocity/displacement relationship
+                F(u, v) = Cv * S(u) * sign(v) * |v|^EXPV
+                TYPE CVT CVC EXPVT EXPVC
+                IDTS IDETS IDECS IDETSD IDECSD
+                CVT/CVC : int
+                    Viscous damping coefficient CV for tension v > 0, force
+                    per unit velocity.
+                EXPVT/EXPVC : int
+                    Exponent of velocity EXPV for tension v > 0 (or compression v < 0).
+                IDTS : int
+                    Identification number of a TABLEDi entry for tension and
+                    compression if TYPE=TABLE. The TABLEDi entry
+                    defines the scale factor S, versus displacement u.
+                IDETS/IDECS : int
+                    Identification number of a DEQATN entry for tension if
+                    TYPE=EQUAT. The DEQATN entry defines the scale
+                    factor S, versus displacement u, for tension u > 0
+                    (or compression v < 0).
+                IDETSD/IDECSD : int
+                    Identification number of a DEQATN entry for tension if
+                    TYPE=EQUAT. The DEQATN entry defines the defines the scale
+                    factor S, versus displacement u, for tension u > 0
+                    (or compression v < 0).
+            SPRING:
+                Nonlinear elastic spring element in terms of a force versus
+                displacement relationship
+                TYPE IDT IDC IDTDU IDCDU
+            DAMPER:
+                Nonlinear viscous element in terms of a force versus
+                velocity relationship.
+                TYPE IDT IDC IDTDV IDCDV
+            GENER:
+                General nonlinear elastic spring and viscous damper
+                element in terms of a force versus displacement and
+                velocity relationship.  For this element, the relationship
+                can only be defined with TYPE=EQUAT (and it's implicit).
+                IDT IDC IDTDU IDCDU IDTDV IDCDV
+
+            TYPE : int
+               the type of the result; {TABLE, EQUAT}
+            IDT/IDC : int
+                tension/compression table/equation
+            IDTDU/IDCDU : int
+                du/dt tension/compression table/eq
+            IDTDV/IDCDV : int
+                dv/dt tension/compression table/eq
+
 
         """
         BushingProperty.__init__(self)
@@ -455,6 +514,7 @@ class PBUSH1D(BushingProperty):
                     self.shock_idecs = shock_idecs
                     self.shock_idetsd = shock_idetsd
                     self.shock_idecsd = shock_idecsd
+                    assert isinstance(self.shock_type, str), f'shock_type={shock_type}'
 
                 elif key == 'SPRING':
                     (spring_type, spring_idt, spring_idc, spring_idtdu,
@@ -465,6 +525,7 @@ class PBUSH1D(BushingProperty):
                     self.spring_idc = spring_idc
                     self.spring_idtdu = spring_idtdu
                     self.spring_idcdu = spring_idcdu
+                    assert isinstance(self.spring_type, str), f'spring_type={spring_type}'
 
                 elif key == 'DAMPER':
                     (damper_type, damper_idt, damper_idc, damper_idtdv,
@@ -474,6 +535,7 @@ class PBUSH1D(BushingProperty):
                     self.damper_idc = damper_idc
                     self.damper_idtdv = damper_idtdv
                     self.damper_idcdv = damper_idcdv
+                    assert isinstance(self.damper_type, str), f'damper_type={damper_type}'
 
                 elif key == 'GENER':
                     (

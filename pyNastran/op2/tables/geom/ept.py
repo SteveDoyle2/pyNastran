@@ -880,7 +880,7 @@ class EPT(GeomCommon):
         38 UC     RS Ultimate compression
         """
         type_map = {
-            0 : None,
+            0 : None,  # NULL
             1 : 'EQUAT',
             2 : 'TABLE',
         }
@@ -892,27 +892,42 @@ class EPT(GeomCommon):
             out = struct1.unpack(edata)
             (pid, k, c, m, unused_alpha, sa, se,
              typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
-             types, idts, idcs, idtdu, idcdu, typed, idtd, idtd, idtdv, idcdv,
+             types, idts, idcs, idtdu, idcdu,
+             typed, idtd, idtd, idtdv, idcdv,
              typeg, idtg, idcg, idtdu, idcdu, idtdv, idcdv,
              typef, idtf, idcf,
              unused_ut, unused_uc) = out
-            if not is_release:
-                if typea in [1, 2]:
-                    raise NotImplementedError(str((typea, cvt, cvc, expvt, expvc,
-                                                   idtsu, idtcu, idtsud, idcsud)))
-                if types in [1, 2]:
-                    raise NotImplementedError(str((types, idts, idcs, idtdu, idcdu, typed,
-                                                   idtd, idtd, idtdv, idcdv)))
-                if typeg in [1, 2]:
-                    raise NotImplementedError(str((typeg, idtg, idcg, idtdu, idcdu, idtdv, idcdv)))
-                if typef in [1, 2]:
-                    raise NotImplementedError(str((idtf, idcf)))
-                unused_typea_str = type_map[typea]
-                unused_types_str = type_map[types]
-                unused_typeg_str = type_map[typeg]
-                unused_typef_str = type_map[typef]
+            #pbush1d, 204, 1.e+5, 1000., , , , , , +pb1
+            #+pb1, spring, table, 205, , , , , , +pb2
+            #+pb2, damper, table, 206
+            #pid=204 k=100000.0 c=1000.0 m=0.0 sa=nan se=nan
+            print(f'PBUSH1D pid={pid} k={k} c={c} m={m} sa={sa} se={se}')
+            optional_vars = {}
+            unused_typea_str = type_map[typea]
+            types_str = type_map[types]
+            typed_str = type_map[typed]
+            unused_typeg_str = type_map[typeg]
+            unused_typef_str = type_map[typef]
+
+            if min([typea, types, typed, typeg, typef]) < 0:
+                raise RuntimeError(f'typea={typea} types={types} typed={typed} typeg={typeg} typef={typef}')
+            if typea in [1, 2]:  # SHOCKA?
+                raise NotImplementedError(str((typea, cvt, cvc, expvt, expvc,
+                                               idtsu, idtcu, idtsud, idcsud)))
+            if types in [1, 2]: # SPRING: Spring data type: 0=Null, 1=Table, 2=Equation
+                #(spring_type, spring_idt, spring_idc, spring_idtdu, spring_idcdu) = values
+                # SPRING, TYPE IDT IDC IDTDU IDCDU
+                optional_vars['SPRING'] = [types_str, idts, idcs, idtdu, idcdu]
+                print(f'  types={types} idts={idts} idcs={idcs} idtdu={idtdu} idcdu={idcdu}')
+            if typed in [1, 2]: # Damper data type: 0=Null, 1=Table, 2=Equation
+                optional_vars['DAMPER'] = [typed_str, idts, idcs, idtdu, idcdu]
+                print(f'  typed={typed} idtd={idtd} idtd={idtd} idtdv={idtdv} idcdv={idcdv}')
+            if typeg in [1, 2]: # general, GENER?: 0=Null, 1=Table 2=Equation
+                raise NotImplementedError(f'typeg={typeg} idtg={idtg} idcg={idcg} idtdu={idtdu} idcdu={idcdu} idtdv={idtdv} idcdv={idcdv}')
+            if typef in [1, 2]: # Fuse data type: 0=Null, 1=Table
+                raise NotImplementedError(f'typef={typef} idtf={idtf} idcf={idcf}')
             self.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
-                             optional_vars=None,)
+                             optional_vars=optional_vars,)
             n += ntotal
         self.card_count['PBUSH1D'] = nentries
         return n

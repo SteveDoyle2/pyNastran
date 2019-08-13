@@ -1,5 +1,5 @@
 from pyNastran.converters.cart3d.cart3d import Cart3D, read_cart3d
-from pyNastran.converters.tecplot.tecplot import Tecplot
+from pyNastran.converters.tecplot.tecplot import Tecplot, Zone
 
 def cart3d_to_tecplot(cart3d_filename, tecplot_filename, log=None, debug=False):
     """
@@ -12,7 +12,10 @@ def cart3d_to_tecplot(cart3d_filename, tecplot_filename, log=None, debug=False):
 
     tecplot = Tecplot()
     tecplot.log = model.log
-    tecplot.xyz = model.points
-    tecplot.tri_elements = model.elements + 1
+    zone = Zone(model.log)
+    tecplot.zones = [zone]
+    zone.variables = ['X', 'Y', 'Z']
+    zone.xyz = model.points
+    zone.tri_elements = model.elements + 1
     tecplot.write_tecplot(tecplot_filename, adjust_nids=False)
     return tecplot
