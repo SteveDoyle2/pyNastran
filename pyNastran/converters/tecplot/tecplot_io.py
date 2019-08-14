@@ -327,6 +327,7 @@ def _create_tecplot_solids(grid, model, nsolids, ntets, tets, nhexas, hexas, is_
     else:
         # is_volume
         grid.Allocate(nsolids, 1000)
+        nelements = nsolids
         if ntets:
             for node_ids in tets:
                 elem = vtkTetra()
@@ -353,6 +354,7 @@ def _create_tecplot_solids(grid, model, nsolids, ntets, tets, nhexas, hexas, is_
                 epoints.SetId(7, node_ids[7])
                 #elem.GetCellType() = 5  # vtkTriangle
                 grid.InsertNextCell(elem.GetCellType(), epoints)
+    assert nelements > 0, nelements
     return nelements
 
 

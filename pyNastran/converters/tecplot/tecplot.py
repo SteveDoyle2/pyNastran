@@ -868,7 +868,7 @@ class Tecplot:
             self.n += nbytes
             #self.show_data(data, types='if', endian='<') # 'if'?
             s = unpack('2f 9i', data)
-            self.log.debug(s)
+            self.log.debug(str(s))
             #assert self.n == 360, self.n
             #print('----------')
 
@@ -964,7 +964,7 @@ class Tecplot:
                 #print('nbytes =', nbytes)
                 data = tecplot_file.read(nbytes)
                 self.n += nbytes
-                xyzvals = unpack(b'%sf' % ni, data)
+                xyzvals = unpack('%if' % ni, data)
                 xyz = np.array(xyzvals, dtype='float32').reshape(3, nnodes).T
 
                 # the variables: [rho, u, v, w, p]
@@ -974,7 +974,7 @@ class Tecplot:
                 nbytes = ni * 4
                 data = tecplot_file.read(nbytes)
                 self.n += nbytes
-                resvals = unpack(b'%sf' % ni, data)
+                resvals = unpack('%if' % ni, data)
                 nodal_results = np.array(resvals, dtype='float32').reshape(nvars, nnodes).T
 
 
@@ -1004,6 +1004,7 @@ class Tecplot:
                 #print(vals)
 
                 #self.show(100, endian='<')
+                zone = Zone(self.log)
                 if zone_type == 5:
                     zone.hexa_elements = elements
                 elif zone_type == 0:
@@ -1012,7 +1013,6 @@ class Tecplot:
                     raise NotImplementedError(zone_type)
             del self.f
 
-        zone = Zone(self.log)
         zone.xyz = xyz
         zone.nodal_results = nodal_results
         self.zones.append(zone)

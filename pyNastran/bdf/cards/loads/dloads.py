@@ -759,6 +759,7 @@ def _cross_reference_excite_id(self, model, msg):
 
     if self.excite_id in model.bcs:
         # CONV, TEMPBC
+        model.log.debug('excite_id bcs = %s' % self.excite_id)
         excite_id_ref = model.bcs[self.excite_id]
 
     if self.excite_id in model.dload_entries:  #  this is probably wrong...
@@ -767,6 +768,11 @@ def _cross_reference_excite_id(self, model, msg):
         # I think QVECT should be in self.loads, not self.dload_entries...
         model.log.debug('excite_id dload_entries = %s' % self.excite_id)
         excite_id_ref += model.dload_entries
+
+    if self.excite_id in model.load_combinations:  #  this should be right...
+        # C:\NASA\m4\formats\git\examples\move_tpl\nlstrs2.op2
+        model.log.debug('excite_id load_combinations = %s' % self.excite_id)
+        excite_id_ref = model.load_combinations[self.excite_id]
 
     #  handles LSEQ
     if valid_lseqs:
