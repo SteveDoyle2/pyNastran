@@ -1556,15 +1556,20 @@ class GEOM2(GeomCommon):
         if self.is_debug_file:
             self.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
+        if self.is_debug_file:
+            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4], theta, zoffs, '
+                                    'unused_blank, [tflag, t1, t2, t3, t4]); theta_mcid\n')
+
         for unused_i in range(nelements):
             edata = data[n:n + 56]  # 14*4
             out = s.unpack(edata)
             (eid, pid, n1, n2, n3, n4, theta, zoffs, unused_blank, tflag,
              t1, t2, t3, t4) = out
-            if self.is_debug_file:
-                self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
-
             theta_mcid = convert_theta_to_mcid(theta)
+            if self.is_debug_file:
+                self.binary_debug.write(f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}], '
+             f'{theta}, {zoffs}, {unused_blank}, [{tflag}, {t1}, {t2}, {t3}, {t4})]; {theta_mcid}\n')
+
             #print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
                   #'blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s' % (
                       #eid, pid, n1, n2, n3, n4, theta, zoffs,

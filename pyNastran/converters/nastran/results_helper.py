@@ -1,12 +1,12 @@
 """Interface for converting OP2 results to the GUI format"""
 # pylint: disable=C1801, C0103
-from copy import deepcopy
+#from copy import deepcopy
 from collections import defaultdict
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
-from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult, GuiResultIDs
 from pyNastran.converters.nastran.geometry_helper import NastranGuiAttributes
 from pyNastran.converters.nastran.displacements import (
     DisplacementResults, ForceTableResults) #, TransientElementResults
@@ -887,6 +887,51 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase += 6
         return icase
 
+    def _fill_op2_time_centroidal_composite_stress(self, cases, model, key, icase, itime,
+                                                   form_dict, header_dict, keys_map,
+                                                   is_stress=True):
+        nelements = self.nelements
+        #oxx = np.full(nelements, np.nan, dtype='float32')
+        #oyy = np.full(nelements, np.nan, dtype='float32')
+
+        #txy = np.full(nelements, np.nan, dtype='float32')
+        #tyz = np.full(nelements, np.nan, dtype='float32')
+        #txz = np.full(nelements, np.nan, dtype='float32')
+
+        #max_principal = np.full(nelements, np.nan, dtype='float32')  # max
+        #min_principal = np.full(nelements, np.nan, dtype='float32')  # min
+        #ovm = np.full(nelements, np.nan, dtype='float32')
+
+        if is_stress:
+            stress_obj = self.stress[key]
+            word = 'Stress'
+            fmt = '%.3f'
+        else:
+            stress_obj = self.strain[key]
+            word = 'Strain'
+            fmt = '%.4e'
+
+        vm_word = None
+        if len(stress_obj.composite_data_dict):
+            print(stress_obj)
+            out = stress_obj.set_composite_stress_by_layer(
+                key, itime, nelements, header_dict,
+            )
+            vm_word, element_ids, oxx, oyy, txy, tyz, txz, max_principal, min_principal, ovm = out
+        if vm_word is None:
+            return icase
+
+        #form0 = (word, None, [])
+        #unused_formis = form0[2]
+        subcase_id = key[2]
+        if np.any(np.isfinite(oxx)):
+            oxx_res = GuiResultIDs(subcase_id, header=word + 'XX', title=word + 'XX',
+                                   location='centroid',
+                                   ids=element_ids, scalar=oxx, data_format=fmt)
+            cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
+            form_dict[(key, itime)].append((word + 'XX', icase, []))
+            icase += 1
+
     def _fill_op2_time_centroidal_stress(self, cases, model, key, icase, itime,
                                          form_dict, header_dict, keys_map,
                                          is_stress=True):
@@ -1006,9 +1051,11 @@ class NastranGuiResults(NastranGuiAttributes):
             if is_element_on.min() == 0:  # if all elements aren't on
                 print_empty_elements(self.model, self.element_ids, is_element_on, self.log_error)
 
+                is_element_on = np.isfinite(oxx)
+                is_element_on = is_element_on.astype('|i1')
                 stress_res = GuiResult(
                     subcase_id, header='Stress - isElementOn', title='Stress\nisElementOn',
-                    location='centroid', scalar=oxx, data_format=fmt)
+                    location='centroid', scalar=is_element_on, mask_value=0, data_format=fmt)
                 cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
                 form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
                 icase += 1
@@ -1105,7 +1152,7 @@ def print_empty_elements(model, element_ids, is_element_on, log_error):
     print('-----------------------------------')
 
 
-def _get_t123_tnorm(case, nids, nnodes, t123_offset=0):
+def _get_t123_tnorm(case, nids, nnodes: int, t123_offset: int=0):
     """
     helper method for _fill_op2_oug_oqg
 

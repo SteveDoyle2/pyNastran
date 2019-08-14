@@ -9,6 +9,7 @@ import numpy as np
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
               '|i1', # this is a boolean
+              #'|b1', # this is officially a boolean...
               '>i4', '>i8', '>f4', '>f8']
 #COMPLEX_TYPES = ['<c8']
 INT_TYPES = ['<i4', '<i8', '|i1',
@@ -319,14 +320,13 @@ class NormalResult(GuiResultCommon):
         msg += '    uname=%r\n' % self.uname
         return msg
 
-
 class GuiResult(GuiResultCommon):
     deflects = False
-    def __init__(self, subcase_id, header, title, location, scalar,
-                 mask_value=None, nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                 data_map=None,
-                 data_format=None, uname='GuiResult'):
-        # type: (int, str, str, str, Any, Optional[int], Optional[int], Optional[int], Optional[int], str, Any, Optional[str], str) -> None
+    def __init__(self, subcase_id: int, header: str, title: str, location: str, scalar: Any,
+                 mask_value: Optional[int]=None, nlabels: Optional[int]=None,
+                 labelsize: Optional[int]=None, ncolors: Optional[int]=None,
+                 colormap: str='jet', data_map: Any=None,
+                 data_format: Optional[str]=None, uname: str='GuiResult'):
         """
         Parameters
         ----------
@@ -561,3 +561,18 @@ class GuiResult(GuiResultCommon):
         msg += '    data_type=%r\n' % self.data_type
         msg += '    uname=%r\n' % self.uname
         return msg
+
+
+class GuiResultIDs(GuiResult):
+    def __init__(self, subcase_id: int, header: str, title: str, location: str,
+                 ids: Any, scalar: Any,
+                 mask_value: Optional[int]=None, nlabels: Optional[int]=None,
+                 labelsize: Optional[int]=None, ncolors: Optional[int]=None,
+                 colormap: str='jet', data_map: Any=None,
+                 data_format: Optional[str]=None, uname: str='GuiResult'):
+        """a GuiResult with node/element ids"""
+        self.ids = ids
+        super().__init__(
+            subcase_id, header, title, location, scalar,
+            mask_value, nlabels, labelsize, ncolors, colormap, data_map,
+            data_format, uname)

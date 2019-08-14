@@ -199,7 +199,8 @@ class MPT(GeomCommon):
         """
         MAT9(2603,26,300) - record 9
         """
-        return len(data)
+        #self.log.info('skipping MAT9')
+        #return len(data)
         if 1:
             ntotal = 140 # 35
             s2 = Struct(self._endian + b'i 30f iiii')
@@ -209,11 +210,18 @@ class MPT(GeomCommon):
             s2 = Struct(self._endian + b'i 21f 34f')
         nmaterials = (len(data) - n) // ntotal
         #assert nmaterials % ntotal == 0, self.numwide
+
+        if self.is_debug_file:
+            self.binary_debug.write(
+                '  MAT9=(mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, '
+                'g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21, '
+                'rho, a1, a2, a3, a4, a5, a6, tref, ge, '
+                'blank1, blank2, blank3, blank4)\n')
         for i in range(nmaterials):
             #self.show_data(data[n:n+ntotal], types='if')
             out = s2.unpack(data[n:n+ntotal])
             if self.is_debug_file:
-                self.binary_debug.write('  MAT9=%s\n' % str(out))
+                self.binary_debug.write('    MAT9=%s\n' % str(out))
             assert len(out) == 35, out
             #print(out)
             (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,

@@ -1,6 +1,6 @@
 import sys
 from collections import OrderedDict
-from typing import Tuple, Dict, Union, Any
+from typing import Dict, Union, Any
 
 import numpy as np
 from pyNastran.femutils.utils import pivot_table
@@ -11,8 +11,7 @@ from pyNastran.femutils.utils import pivot_table
     #header_dict, keys_map)
 
 class StressObject:
-    def __init__(self, model, key, all_eids, is_stress=True):
-        # type: (Any, str, Any, bool) -> None
+    def __init__(self, model: Any, key: str, all_eids: Any, is_stress: bool=True) -> None:
         #print('--StressObject--')
         self.model = model
         self.vm_word = None
@@ -43,19 +42,16 @@ class StressObject:
 
 
     def set_composite_stress_old(self,
-                                 key, itime, oxx, oyy, txy, tyz, txz,
-                                 max_principal, min_principal, ovm,
-                                 is_element_on, header_dict):
-        # type: (int, int, Any, Any, Any, Any, Any, Any, Any, Any, Any, Dict[Any,Any]) -> str
-        #print("setting...")
-
+                                 key: int, itime: int,
+                                 oxx: Any, oyy: Any, txy: Any, tyz: Any, txz: Any,
+                                 max_principal: Any, min_principal: Any, ovm: Any,
+                                 is_element_on: Any, header_dict: Dict[Any, Any]) -> str:
         for element_type, composite_data in self.composite_data_dict.items():
             try:
                 element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
             except KeyError:
                 print(composite_data)
                 raise
-            #print("vm_word = ", key, vm_word)
             for itime2, header in enumerate(headers):
                 header_dict[(key, itime2)] = header
 
@@ -63,7 +59,6 @@ class StressObject:
             #data2[itime, eid, layer, oxx/oyy/...]
 
             ieids = self.composite_ieids[element_type]
-            #print('setting...')
             data3 = data2[itime, :, :, :]
             oxx[ieids] = np.nanmax(data3[:, :, 0], axis=1)
             oyy[ieids] = np.nanmax(data3[:, :, 1], axis=1)
@@ -74,8 +69,64 @@ class StressObject:
             max_principal[ieids] = np.nanmax(data3[:, :, 6], axis=1)
             min_principal[ieids] = np.nanmin(data3[:, :, 7], axis=1)
             ovm[ieids] = np.nanmax(data3[:, :, 8], axis=1)
+
             if itime == 0:
                 is_element_on[ieids] = 1
+            #assert oxxi.shape == (ntimes, neids)
+        return vm_word
+
+    def set_composite_stress_by_layer(self,
+                                      key: int, itime: int, nelements: int,
+                                      header_dict: Dict[Any, Any]) -> str:
+        """get all the ply stresses/strains"""
+        nlayers = 0
+        nelements2 = 0
+        for element_type, composite_data in self.composite_data_dict.items():
+            try:
+                element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
+            except KeyError:
+                print(composite_data)
+                raise
+            ntimesi, neidsi, nlayersi, nresultsi = data2.shape
+            nlayers = max(nlayers, nlayersi)
+            nelements2 += neidsi
+
+        shape = (nelements2, nlayers)
+        element_ids = np.full(nelements2, np.nan, dtype='float32')
+        oxx = np.full(shape, np.nan, dtype='float32')
+        oyy = np.full(shape, np.nan, dtype='float32')
+
+        txy = np.full(shape, np.nan, dtype='float32')
+        tyz = np.full(shape, np.nan, dtype='float32')
+        txz = np.full(shape, np.nan, dtype='float32')
+
+        max_principal = np.full(shape, np.nan, dtype='float32')  # max
+        min_principal = np.full(shape, np.nan, dtype='float32')  # min
+        ovm = np.full(shape, np.nan, dtype='float32')
+
+        for element_type, composite_data in self.composite_data_dict.items():
+            element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
+
+            for itime2, header in enumerate(headers):
+                header_dict[(key, itime2)] = header
+
+            ntimes, neids, nlayers, nresults = data2.shape
+            #data2[itime, eid, layer, oxx/oyy/...]
+
+            ieids = self.composite_ieids[element_type]
+            data3 = data2[itime, :, :, :]
+
+            # neids, nlayers, nresults
+            oxx[ieids] = data3[:, :, 0]
+            oyy[ieids] = data3[:, :, 1]
+            txy[ieids] = data3[:, :, 2]
+            txz[ieids] = data3[:, :, 3]
+            tyz[ieids] = data3[:, :, 4]
+            # angle
+            max_principal[ieids] = data3[:, :, 6]
+            min_principal[ieids] = data3[:, :, 7]
+            ovm[ieids] = data3[:, :, 8]
+
             #assert oxxi.shape == (ntimes, neids)
         return vm_word
 
@@ -102,8 +153,7 @@ class StressObject:
             ovm[ieids] = np.nanmax(data2[:, :, :, 8], axis=2)
             assert oxx.shape == (ntimes, neids)
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         if self.is_stress:
             msg = 'StressObject:\n'
         else:
@@ -112,8 +162,7 @@ class StressObject:
         msg += '    composite_ieids = %s\n' % self.composite_ieids
         return msg
 
-def create_plates(model, key, is_stress):
-    # type: (Any, str, bool) -> Dict[str, Any]
+def create_plates(model: Any, key: str, is_stress: bool) -> Dict[str, Any]:
     """helper method for _fill_op2_time_centroidal_stress"""
     if is_stress:
         plates = [
@@ -147,7 +196,7 @@ def create_plates(model, key, is_stress):
                 nlayers_per_element = nnodes_per_element * 2  # *2 for every other layer
                 #eidsi = case.element_node[::nlayers_per_element, 0]  # ::2 is for layer skipping
                 ueids = np.unique(case.element_node[:, 0])
-                neids = len(ueids)
+                #neids = len(ueids)
 
                 #if 0:
                     #i = np.searchsorted(eids, eidsi)
@@ -180,7 +229,7 @@ def create_plates(model, key, is_stress):
                 min_data_list = [min_start]
                 max_data_list = [max_start]
                 for inode in range(1, nlayers_per_element):
-                    datai = case.data[:, j+inode, :]
+                    #datai = case.data[:, j+inode, :]
                     min_data_list.append(case.data[:, j+inode, :][:, :, max_vals])
                     max_data_list.append(case.data[:, j+inode, :])
                 if len(min_data_list) == 1:
@@ -265,8 +314,7 @@ def create_composite_plates(model, key, is_stress, keys_map):
     return composite_data_dict
 
 
-def _get_nastran_header(case, dt, itime):
-    # type: (Any, Union[int, float], int) -> str
+def _get_nastran_header(case: Any, dt: Union[int, float], itime: int) -> str:
     #if case is None:
         #return None
     try:

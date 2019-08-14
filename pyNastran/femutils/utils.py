@@ -13,13 +13,11 @@ import numpy as np
 #ver = np.lib.NumpyVersion(np.__version__)
 #if ver < '1.13.0':
 
-
 def pivot_table(data, rows, cols):
     """PCOMP: rows=element_ids, cols=layer"""
     ncount = len(rows)
     icount = np.arange(ncount)
-    assert len(data.shape) == 3, data.shape
-    ntimes = data.shape[0]
+    assert len(data.shape) in [2, 3], data.shape
     nresults = data.shape[-1]
 
     rows_new, row_pos_new = np.unique(rows, return_inverse=True)
@@ -27,14 +25,28 @@ def pivot_table(data, rows, cols):
     nrows = len(rows_new)
     ncols = len(cols_new)
 
+    nshape = len(data.shape)
+    if nshape == 3:
+        ntimes = data.shape[0]
+        shape2 = (ntimes, nrows, ncols, nresults)
+    elif nshape == 2:
+        shape2 = (nrows, ncols, nresults)
+    else:  # pragma: no cover
+        raise RuntimeError(nshape)
+
     pivot_table = np.full((nrows, ncols), -1, dtype='int32')
     pivot_table[row_pos_new, col_pos_new] = icount
     #print(pivot_table)
 
     ipivot_row, ipivot_col = np.where(pivot_table != -1)
-    data2 = np.full((ntimes, nrows, ncols, nresults), np.nan, dtype=data.dtype)
-    data2[:, ipivot_row, ipivot_col, :] = data[:, icount, :]
+    data2 = np.full(shape2, np.nan, dtype=data.dtype)
 
+    if nshape == 3:
+        data2[:, ipivot_row, ipivot_col, :] = data[:, icount, :]
+    elif  nshape == 2:
+        data2[ipivot_row, ipivot_col, :] = data[icount, :]
+    else:  # pragma: no cover
+        raise NotImplementedError(nshape)
     return data2, rows_new
 
 
