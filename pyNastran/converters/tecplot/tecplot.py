@@ -232,44 +232,46 @@ class Zone():
     def _write_elements(self, tecplot_file, nnodes,
                         is_tris, is_quads, is_tets, is_hexas,
                         adjust_nids=True):
-            self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' %
-                          (is_hexas, is_tets, is_quads, is_tris))
-            if is_hexas:
-                efmt = ' %i %i %i %i %i %i %i %i\n'
-                elements = self.hexa_elements
-            elif is_tets:
-                efmt = ' %i %i %i %i\n'
-                elements = self.tet_elements
-            elif is_quads:
-                efmt = ' %i %i %i %i\n'
-                elements = self.quad_elements
-            elif is_tris:
-                efmt = ' %i %i %i\n'
-                elements = self.tri_elements
-            else:
-                raise RuntimeError()
+        """Writes the unstructured elements.  Verifies that nodes are sequential."""
+        self.log.info('is_hexas=%s is_tets=%s is_quads=%s is_tris=%s' %
+                      (is_hexas, is_tets, is_quads, is_tris))
+        if is_hexas:
+            efmt = ' %i %i %i %i %i %i %i %i\n'
+            elements = self.hexa_elements
+        elif is_tets:
+            efmt = ' %i %i %i %i\n'
+            elements = self.tet_elements
+        elif is_quads:
+            efmt = ' %i %i %i %i\n'
+            elements = self.quad_elements
+        elif is_tris:
+            efmt = ' %i %i %i\n'
+            elements = self.tri_elements
+        else:
+            raise RuntimeError()
 
-            # we do this before the nid adjustment
-            node_min = elements.min()
-            node_max = elements.max()
-            self.log.info('inode: min=%s max=%s' % (node_min, node_max))
-            assert node_min >= 0, node_min
+        # we do this before the nid adjustment
+        node_min = elements.min()
+        node_max = elements.max()
+        self.log.info('inode: min=%s max=%s' % (node_min, node_max))
+        assert node_min >= 0, node_min
 
-            if node_max > nnodes:
-                msg = 'elements.min()=node_min=%s elements.max()=node_max=%s nnodes=%s' % (
-                    node_min, node_max, nnodes)
-                self.log.error(msg)
-                raise RuntimeError(msg)
-            # assert elements.min() == 1, elements.min()
-            # assert elements.max() == nnodes, elements.max()
+        if node_max > nnodes:
+            msg = 'elements.min()=node_min=%s elements.max()=node_max=%s nnodes=%s' % (
+                node_min, node_max, nnodes)
+            self.log.error(msg)
+            raise RuntimeError(msg)
+        # assert elements.min() == 1, elements.min()
+        # assert elements.max() == nnodes, elements.max()
 
-            if adjust_nids:
-                elements += 1
+        if adjust_nids:
+            elements += 1
 
-            for element in elements:
-                tecplot_file.write(efmt % tuple(element))
+        for element in elements:
+            tecplot_file.write(efmt % tuple(element))
 
     def _write_xyz_results(self, tecplot_file, is_points, ivars):
+        """writes XY/XYZs and results in POINT or BLOCK format"""
         # xyz
         xyz = self.xyz
         xy = self.xy
@@ -302,6 +304,7 @@ class Zone():
                                      ndim=ndim, word=word)
 
     def write_structured_zone(self, tecplot_file, ivars, log, headers_dict, adjust_nids=True):
+        """writes a structured IxJ or IxJxK grid"""
         headers_dict = self.headers_dict
         ni = headers_dict['I']
         if 'J' in headers_dict:
@@ -376,9 +379,7 @@ class Zone():
         return free_faces
 
     def _slice_plane_inodes(self, inodes):
-        """
-        TODO: doesn't remove unused nodes/renumber elements
-        """
+        """TODO: doesn't remove unused nodes/renumber elements"""
         # old_num = inodes
         # new_num = arange(self.xyz.shape[0], dtype='int32')
         #print('old =', old_num)
@@ -1519,6 +1520,7 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str], varia
     return headers_dict
 
 def _simplify_header(headers_dict, variables: List[str]) -> None:
+    """cast the integer headers adn sets the variables"""
     # unstructured
     if 'N' in headers_dict: # nnodes
         headers_dict['N'] = int(headers_dict['N'])
@@ -1558,6 +1560,10 @@ def is_3d(headers_dict) -> bool:
     return is_3d
 
 def _stack(zone, xyz_list, quads_list, tris_list, tets_list, hexas_list, results_list, log):
+    """
+    elements are read as a list of lines, so we need to stack them
+    and cast them while we're at it.
+    """
     log.debug('stacking elements')
     if len(hexas_list):
         zone.hexa_elements = np.vstack(hexas_list)
@@ -1601,6 +1607,7 @@ def _stack(zone, xyz_list, quads_list, tris_list, tets_list, hexas_list, results
 
 def read_zone_block(lines, iline, xyz, results, nresults, zone_type,
                     sline, nnodes, log):
+    """a zone can be structured or unstructred"""
     #print('***', iline, sline)
 
     # read all data
@@ -1670,6 +1677,7 @@ def read_unstructured_elements(lines, iline, sline, elements, nelements):
     return iline, line, sline
 
 def read_point(lines, iline, xyz, results, zone_type, line, sline, nnodes, nvars, log):
+    """a POINT grid is a structured grid"""
     log.debug(f'start of POINT (structured); nnodes={nnodes} nvars={nvars} zone_type={zone_type}')
     for inode in range(nnodes):
         iline, sline = get_next_nsline(lines, iline, sline, nvars)
@@ -1697,6 +1705,11 @@ def read_point(lines, iline, xyz, results, zone_type, line, sline, nnodes, nvars
     return iline, line, sline
 
 def read_block(lines, iline, xyz, results, zone_type, line, sline, nnodes, nvars, log):
+    """
+    BLOCK format is similar to PLOT3D in that you read all the X values before the Ys,
+    Zs, and results.  The alternative format is POINT, which reads them on a per node
+    basis.
+    """
     log.debug('start of BLOCK')
     #print('nnodes =', nnodes)
     #print('nvars =', nvars)
@@ -1721,6 +1734,7 @@ def read_block(lines, iline, xyz, results, zone_type, line, sline, nnodes, nvars
     return iline
 
 def get_next_line(lines, iline):
+    """Read the next line from the file.  Handles comments."""
     try:
         line = lines[iline].strip()
     except IndexError:
@@ -1743,6 +1757,7 @@ def get_next_line(lines, iline):
     return iline, line
 
 def split_line(line):
+    """splits a comma or space separated line"""
     if ',' in line:
         line2 = line.replace(',', ' ')
         sline = line2.split()
@@ -1751,6 +1766,7 @@ def split_line(line):
     return sline
 
 def get_next_sline(lines, iline):
+    """Read the next split line from the file.  Handles comments."""
     iline, line = get_next_line(lines, iline)
     if line is None:
         return iline, None, None
@@ -1868,6 +1884,7 @@ def _read_header_lines(lines, iline, line, log):
     return iline, title_line, header_lines, line
 
 def _write_xyz_results_point(tecplot_file, nodes, nodal_results, nresults, ivars, ndim=3, word='xyz'):
+    """writes a POINT formatted result of X,Y,Z,res1,res2 output"""
     if nresults:
         try:
             res = nodal_results[:, ivars]
@@ -1895,7 +1912,7 @@ def _write_xyz_results_point(tecplot_file, nodes, nodal_results, nresults, ivars
 
 def _write_xyz_results_block(tecplot_file, nodes, nodal_results, nresults, ivars,
                              ndim=3, word='xyz'):
-    """TODO: hasn't been tested for 2d"""
+    """TODO: hasn't been tested for 2d?"""
     #nvalues_per_line = 5
     for ivar in range(ndim):
         #tecplot_file.write('# ivar=%i\n' % ivar)
