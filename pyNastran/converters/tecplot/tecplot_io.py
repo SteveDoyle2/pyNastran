@@ -43,6 +43,10 @@ class TecplotIO:
 
         self.gui.model_type = 'tecplot'
         self.gui.nnodes = sum([zone.nnodes for zone in model.zones])
+        variables = None
+        for zone in model.zones:
+            variables = zone.variables
+            break
 
         #self._make_tecplot_geometry(model, self.nnodes, quads_only=True) # cart3d
         is_surface = self._make_tecplot_geometry(model, quads_only=False)
@@ -65,7 +69,7 @@ class TecplotIO:
         cases = OrderedDict()
         ID = 1
 
-        form, cases, node_ids, element_ids = self._fill_tecplot_case(cases, ID, model, is_surface)
+        form, cases, node_ids, element_ids = self._fill_tecplot_case(cases, ID, model, variables, is_surface)
         self.gui.node_ids = node_ids
         self.gui.element_ids = element_ids
         self.gui._finish_results_io2(model_name, form, cases)
@@ -110,22 +114,41 @@ class TecplotIO:
                 i = zone.headers_dict['I']
                 if 'J' in zone.headers_dict:
                     j = zone.headers_dict['J']
-                    nnodes = i * j
-                    elements = np.arange(0, nnodes).reshape(j, i)
-                    #print('elements:')
-                    #print(elements)
-                    n1 = elements[:-1, :-1].ravel()
-                    n2 = elements[:-1, 1:].ravel()
-                    n3 = elements[1:, 1:].ravel()
-                    n4 = elements[1:, :-1].ravel()
-                    nquads = (i - 1) * (j - 1)
-                    quadsi = np.vstack([n1, n2, n3, n4]).T
+                    if 'K' in zone.headers_dict:
+                        k = zone.headers_dict['K']
+                        nnodes = i * j * k
+                        elements = np.arange(0, nnodes).reshape(k, j, i)
+                        #print(elements[0, :, :])
+                        #print(elements[1:, :, :])
+                        n1 = elements[:-1, :-1, :-1].ravel()
+                        n2 = elements[:-1, :-1, 1:].ravel()
+                        n3 = elements[:-1, 1:, 1:].ravel()
+                        n4 = elements[:-1, 1:, :-1].ravel()
+
+                        n5 = elements[1:, :-1, :-1].ravel()
+                        n6 = elements[1:, :-1, 1:].ravel()
+                        n7 = elements[1:, 1:, 1:].ravel()
+                        n8 = elements[1:, 1:, :-1].ravel()
+                        #nhexas = (i - 1) * (j - 1) * (k - 1)
+                        quadsi = []
+                        hexasi = np.vstack([n1, n2, n3, n4, n5, n6, n7, n8]).T
+                    else:
+                        nnodes = i * j
+                        elements = np.arange(0, nnodes).reshape(j, i)
+                        #print('elements:')
+                        #print(elements)
+                        n1 = elements[:-1, :-1].ravel()
+                        n2 = elements[:-1, 1:].ravel()
+                        n3 = elements[1:, 1:].ravel()
+                        n4 = elements[1:, :-1].ravel()
+                        #nquads = (i - 1) * (j - 1)
+                        quadsi = np.vstack([n1, n2, n3, n4]).T
+                        hexasi = []
                     #trisi = None
                     #tetsi = None
                     #hexasi = None
                     trisi = []
                     tetsi = []
-                    hexasi = []
             else:
                 quadsi = zone.quad_elements
                 hexasi = zone.hexa_elements
@@ -211,11 +234,10 @@ class TecplotIO:
         #model = Cart3D(log=self.log, debug=False)
         #self.load_cart3d_geometry(cart3d_filename)
 
-    def _fill_tecplot_case(self, cases, ID, model, is_surface):
+    def _fill_tecplot_case(self, cases, ID, model, variables, is_surface):
         #'x', 'y', 'z',
         #result_names = ['rho', 'U', 'V', 'W', 'p']
-        zone = model.zones[0]
-        result_names = zone.variables[3:]
+        #result_names = zone.variables[3:]
         #nelements = elements.shape[0]
         nelements = self.gui.nelements
         nnodes = self.gui.nnodes
@@ -253,14 +275,24 @@ class TecplotIO:
         cases[icase + 1] = (eid_res, (0, element_id))
         icase += 2
 
-        results = zone.nodal_results
-        if is_results and len(results):
-            for iresult, result_name in enumerate(result_names):
-                if results.shape[1] == 1:
-                    nodal_data = results
-                    assert len(result_names) == 1, result_names
-                else:
-                    nodal_data = results[:, iresult]
+        nvars = len(variables)
+        if model.nzones == 1:
+            zone0 = model.zones[0]
+            results = zone0.nodal_results
+        else:
+            results = []
+            for zonei in model.zones:
+                results.append(zonei.nodal_results)
+            results = np.vstack(results)
+            assert results.shape == (nnodes, nvars), results.shape
+
+        if is_results and nvars:
+            for iresult, result_name in enumerate(variables):
+                #if results.shape[1] == 1:
+                    #nodal_data = results
+                    #assert len(variables) == 1, variables
+                #else:
+                nodal_data = results[:, iresult]
 
                 node_res = GuiResult(ID, header=result_name, title=result_name,
                                      location='node', scalar=nodal_data)

@@ -375,6 +375,42 @@ class Zone():
         self.log.info('finished get_free_faces')
         return free_faces
 
+    def _slice_plane_inodes(self, inodes):
+        """
+        TODO: doesn't remove unused nodes/renumber elements
+        """
+        # old_num = inodes
+        # new_num = arange(self.xyz.shape[0], dtype='int32')
+        #print('old =', old_num)
+        #print('new =', new_num)
+
+        # lookup_table = dict( zip( old_num, new_num ) ) # create your translation dict
+        # vect_lookup = np.vectorize( lookup_table.get ) # create a function to do the translation
+
+        nhexas = self.hexa_elements.shape[0]
+        if nhexas:
+            #boolean_hexa = self.hexa_elements.ravel() == inodes
+            #boolean_hexa = (self.hexa_elements.ravel() == inodes)#.all(axis=1)
+            boolean_hexa = np.in1d(self.hexa_elements.ravel(), inodes).reshape(nhexas, 8)
+            #print(boolean_hexa)
+            # assert len(boolean_hexa) == self.hexa_elements.shape[0]
+            assert True in boolean_hexa
+            irow = np.where(boolean_hexa)[0]
+            isave = np.unique(irow)
+            nsave = len(isave)
+            self.hexa_elements = self.hexa_elements[isave, :]
+            #print(self.hexa_elements)
+            #self.hexa_elements =
+
+            # vect_lookup(self.hexa_elements) # Reassign the elements you want to change
+            self.hexa_elements.reshape(nsave, 8)
+
+        #print(boolean_hexa)
+        #for hexa in hexas:
+            #if
+        #self.hexa_elements
+
+
 class Tecplot:
     """
     Parses a hexa binary/ASCII Tecplot 360 file.
@@ -692,14 +728,15 @@ class Tecplot:
             else:
                 assert 'K' not in headers_dict, list(headers_dict.keys())
                 nnodesi = ni
-                #nelementsi = (ni - 1)
+                nelementsi = (ni - 1)
             assert nelementsi >= 0, nelementsi
-            nelementsi = 0
+            #nelementsi = 0
             elements = None # np.zeros((nelementsi, 8), dtype='int32')
             is_structured = True
         else:
             raise NotImplementedError('zone_type = %r' % zone_type)
-        self.log.info('nnodes=%s nelements=%s' % (nnodesi, nelementsi))
+        self.log.info(f'zone_type={zone_type} data_packing={data_packing} '
+                      f'nnodes={nnodesi} nelements={nelementsi}')
 
         assert nnodesi > 0, nnodesi
         assert nresults >= 0, 'nresults=%s' % nresults
@@ -769,7 +806,6 @@ class Tecplot:
                                             line, sline, nnodesi, nvars, self.log)
         elif zone_type == 'BLOCK':
             nvars = len(zone.variables)
-            #print(zone.variables)
             iline = read_block(lines, iline, xyz, results, zone_type,
                                line, sline, nnodesi, nvars, self.log)
         else:  # pragma: no cover
@@ -1135,24 +1171,28 @@ class Tecplot:
 
     def slice_x(self, xslice):
         """TODO: doesn't remove unused nodes/renumber elements"""
-        x = self.xyz[:, 0]
-        self._slice_plane(x, xslice)
+        zone = self.zones[0]
+        x = zone.xyz[:, 0]
+        self._slice_plane(zone, x, xslice)
 
     def slice_y(self, yslice):
         """TODO: doesn't remove unused nodes/renumber elements"""
-        y = self.xyz[:, 1]
-        self._slice_plane(y, yslice)
+        zone = self.zones[0]
+        y = zone.xyz[:, 1]
+        self._slice_plane(zone, y, yslice)
 
     def slice_z(self, zslice):
         """TODO: doesn't remove unused nodes/renumber elements"""
-        z = self.xyz[:, 2]
-        self._slice_plane(z, zslice)
+        zone = self.zones[0]
+        z = zone.xyz[:, 2]
+        self._slice_plane(zone, z, zslice)
 
     def slice_xyz(self, xslice, yslice, zslice):
         """TODO: doesn't remove unused nodes/renumber elements"""
-        x = self.xyz[:, 0]
-        y = self.xyz[:, 1]
-        z = self.xyz[:, 2]
+        zone = self.zones[0]
+        x = zone.xyz[:, 0]
+        y = zone.xyz[:, 1]
+        z = zone.xyz[:, 2]
 
         inodes = []
         if xslice is not None:
@@ -1177,51 +1217,16 @@ class Tecplot:
             #inodes = arange(self.nodes.shape[0])
             # nodes = unique(hstack(inodes))
         if nodes is not None:
-            self._slice_plane_inodes(nodes)
+            zone._slice_plane_inodes(nodes)
 
-    def _slice_plane(self, y, slice_value):
+    def _slice_plane(self, zone, y, slice_value):
         """
         - Only works for CHEXA
         - Doesn't remove unused nodes/renumber elements
         """
         slice_value = float(slice_value)
         inodes = np.where(y < slice_value)[0]
-        self._slice_plane_inodes(inodes)
-
-    def _slice_plane_inodes(self, inodes):
-        """
-        TODO: doesn't remove unused nodes/renumber elements
-        """
-        # old_num = inodes
-        # new_num = arange(self.xyz.shape[0], dtype='int32')
-        #print('old =', old_num)
-        #print('new =', new_num)
-
-        # lookup_table = dict( zip( old_num, new_num ) ) # create your translation dict
-        # vect_lookup = np.vectorize( lookup_table.get ) # create a function to do the translation
-
-        nhexas = self.hexa_elements.shape[0]
-        if nhexas:
-            #boolean_hexa = self.hexa_elements.ravel() == inodes
-            #boolean_hexa = (self.hexa_elements.ravel() == inodes)#.all(axis=1)
-            boolean_hexa = np.in1d(self.hexa_elements.ravel(), inodes).reshape(nhexas, 8)
-            #print(boolean_hexa)
-            # assert len(boolean_hexa) == self.hexa_elements.shape[0]
-            assert True in boolean_hexa
-            irow = np.where(boolean_hexa)[0]
-            isave = np.unique(irow)
-            nsave = len(isave)
-            self.hexa_elements = self.hexa_elements[isave, :]
-            #print(self.hexa_elements)
-            #self.hexa_elements =
-
-            # vect_lookup(self.hexa_elements) # Reassign the elements you want to change
-            self.hexa_elements.reshape(nsave, 8)
-
-        #print(boolean_hexa)
-        #for hexa in hexas:
-            #if
-        #self.hexa_elements
+        zone._slice_plane_inodes(inodes)
 
     def _get_write_header(self, res_types):
         """gets the tecplot header"""
@@ -1289,6 +1294,7 @@ class Tecplot:
         adjust_nids : bool; default=True
             element_ids are 0-based in binary and must be switched to
             1-based in ASCII
+
         """
         #is_points : bool; default=True
             #write in POINT format vs. BLOCK format
@@ -1306,7 +1312,6 @@ class Tecplot:
                  is_tris, is_quads, is_tets, is_hexas) = zone.determine_element_type()
                 #print(is_structured, is_unstructured, is_points, zone_type)
                 #print(is_tris, is_quads, is_tets, is_hexas)
-                #print('is_results =', is_results)
 
                 if is_unstructured:
                     zone.write_unstructured_zone(tecplot_file, ivars, is_points, nnodes, nelements, zone_type, self.log,
@@ -1316,25 +1321,26 @@ class Tecplot:
                 else:  # pragma: no cover
                     raise RuntimeError('only structured/unstructured')
 
-    def skin_elements(self):
-        sss
+    #def skin_elements(self):
+        #sss
         #return tris, quads
 
-    def get_free_faces(self):
-        """get the free faces for hexa elements"""
-        sss
-        return free_faces
+    #def get_free_faces(self):
+        #"""get the free faces for hexa elements"""
+        #sss
+        #return free_faces
 
     def extract_y_slice(self, y0, tol=0.01, slice_filename=None):
         """
         doesn't work...
         """
         self.log.info('slicing...')
+        zone = model.zones[0]
         y = self.xyz[:, 1]
         nodes = self.xyz
         assert tol > 0.0, tol
-        elements = self.hexa_elements
-        results = self.nodal_results
+        elements = zone.hexa_elements
+        results = zone.nodal_results
 
         iy = np.where((y0 - tol <= y) & (y <= y0 + tol))[0]
 
@@ -1383,9 +1389,11 @@ class Tecplot:
         nodes2 = nodes[inodes, :]
         nodal_results2 = results[inodes, :]
         model = Tecplot()
-        model.xyz = nodes2
-        model.nodal_results = nodal_results2
-        model.hexa_elements = elements3
+        zone = Zone(self.log)
+        zone.xyz = nodes2
+        zone.nodal_results = nodal_results2
+        zone.hexa_elements = elements3
+        model.zones = [zone]
 
         if slice_filename:
             model.write_tecplot(slice_filename)
