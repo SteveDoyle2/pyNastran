@@ -68,7 +68,7 @@ def cmd_line():
 
     if 0:  # pragma: no cover
         import qtpy.QtGui as QtGui
-        import qtpy.QtCore as QtCore
+        #import qtpy.QtCore as QtCore
         from qtpy.QtGui import QPalette, QColor
         dark_palette = QtGui.QPalette()
         dark_palette.setColor(QPalette.WindowText, QColor(180, 180, 180))

@@ -244,13 +244,13 @@ class GEOM1(GeomCommon):
 
     def _read_grid(self, data, n):  # 21.8 sec, 18.9
         """(4501,45,1) - the marker for Record 17"""
-        s = Struct(self._endian + b'ii3f3i')
+        structi = Struct(self._endian + b'ii3f3i')
         ntotal = 32
         nentries = (len(data) - n) // ntotal
         nfailed = 0
         for unused_i in range(nentries):
             edata = data[n:n + 32]
-            out = s.unpack(edata)
+            out = structi.unpack(edata)
             (nid, cp, x1, x2, x3, cd, ps, seid) = out
             if self.is_debug_file:
                 self.binary_debug.write('  GRID=%s\n' % str(out))

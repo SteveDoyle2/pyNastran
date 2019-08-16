@@ -88,8 +88,9 @@ class GEOM4(GeomCommon):
             (2110, 21, 194) : ['USET1', self._read_uset1],  # record
             (1010, 10, 320): ['SECSET1', self._read_secset1],  # record
 
-            (5561, 76, 0): ['PLOTEL/SESET?', self._read_fake],         # record
-            (610, 6, 0): ['', self._read_fake],           # record
+            (5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self._read_fake],         # record
+            #(5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self._read_seqset1b],         # record
+            (610, 6, 0): ['SESET/SEQSET1?', self._read_fake],           # record
             (5110, 51, 620256): ['', self._read_fake],    # record
             (5501, 55, 620016): ['', self._read_fake],    # record
             (410, 4, 0): ['', self._read_fake],    # record
@@ -1217,6 +1218,27 @@ class GEOM4(GeomCommon):
             n += ntotal
         self.increase_card_count('USET', len(self.usets))
         return n
+
+    def _read_seqset1b(self, data, n):  # pragma: no cover
+        """
+
+        SEQSET1(1210,12,322)
+        SESET, 0, 120
+        SEQSET1, 11, 0, 2001, THRU, 2008
+
+        (5561, 76, 0, 120, -1,
+         2001, -1,
+         2002, -1,
+         2003, -1,
+         2004, -1,
+         2005, -1,
+         2006, -1,
+         2007, -1,
+         2008, -1)
+        """
+        #C:\NASA\m4\formats\git\examples\move_tpl\fsp11j.op2
+        self.show_data(data)
+        #sss
 
     def _read_uset1(self, data, n):
         """USET1(2110,21,194) - Record 65

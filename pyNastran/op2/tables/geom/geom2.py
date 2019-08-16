@@ -171,8 +171,8 @@ class GEOM2(GeomCommon):
             (5601, 56, 296): ['SESET', self._read_fake],
             (6808, 68, 114): ['CDUM8', self._read_fake],
             (6908, 69, 115): ['CDUM9', self._read_fake],
-            (7409, 74, 9991): ['CHEXPR', self._read_fake],
-            (7509, 75, 9992): ['CPENPR', self._read_fake],
+            (7409, 74, 9991): ['CHEXPR', self._read_chexpr],
+            (7509, 75, 9992): ['CPENPR', self._read_cpenta],
             (7609, 76, 9993): ['CTETPR', self._read_fake],
             (8100, 81, 381): ['CHACAB', self._read_fake],
             (8200, 82, 383): ['CHACBR', self._read_fake],
@@ -1021,6 +1021,12 @@ class GEOM2(GeomCommon):
         if self.is_debug_file:
             self.binary_debug.write('skipping CHEXP in GEOM2\n')
         return len(data)
+
+    def _read_chexpr(self, data, n):
+        """
+        CHEXPR(7409,74,9991) - the marker for Record 48
+        """
+        return self._read_chexa(data, n)
 
     def _read_cmass1(self, data, n):
         """

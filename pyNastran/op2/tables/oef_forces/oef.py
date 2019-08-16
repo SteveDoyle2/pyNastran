@@ -3149,7 +3149,7 @@ class OEF(OP2Common):
             result_name = prefix + 'chexa_pressure_force' + postfix
         elif self.element_type == 77:
             result_name = prefix + 'cpenta_pressure_force' + postfix
-        elif self.element_type == 77:
+        elif self.element_type == 78:
             result_name = prefix + 'ctetra_pressure_force' + postfix
         else:
             msg = self.code_information()

@@ -193,6 +193,7 @@ GEOM_TABLES = [
     b'EPT', b'EPTS', b'EPTOLD',
     b'EDTS',
     b'MPT', b'MPTS',
+    b'AXIC',
 
     b'DIT', b'DITS',
 
@@ -397,7 +398,6 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     # autoskip
     #b'MATPOOL',
     b'CSTM',
-    b'AXIC',
     b'BOPHIG',
     b'BOPG1',
     b'HOEF1',
@@ -1151,6 +1151,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'DYNAMICS' : [self._table_passer, self._table_passer],
             b'DIT' : [self._table_passer, self._table_passer],
             b'DITS' : [self._table_passer, self._table_passer],
+            b'AXIC' : [self._table_passer, self._table_passer],
             # =========================end geom passers=========================
 
             # ===passers===
@@ -1322,7 +1323,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         assert ndata % 4 == 0, ndata
 
         structs8 = Struct(b'8s')
-        struct2s8 = Struct(b'4s8s')
+        #struct2s8 = Struct(b'4s8s')
         struct2i = Struct(b'ii')
         struct2f = Struct(b'ff')
         struct2d = Struct(b'dd')
@@ -1387,6 +1388,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.binary_debug.write('  skipping table = %s\n' % self.table_name)
         if self.table_name not in GEOM_TABLES and self.isubtable > -4:
             self.log.warning('    skipping table: %s' % self.table_name_str)
+        if not is_release and self.isubtable > -4:
+            if self.table_name in GEOM_TABLES and not self.make_geom:
+                pass
+            else:
+                print('dont skip table %r' % self.table_name_str)
+                raise RuntimeError('dont skip table %r' % self.table_name_str)
         return ndata
 
     def _validate_op2_filename(self, op2_filename):
@@ -1600,7 +1607,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #table_mapper = self._get_table_mapper()
         #RESULT_TABLES = table_mapper.keys()
 
-    def _read_tables(self, table_name):
+    def _read_tables(self, table_name: bytes) -> List[bytes]:
         """
         Reads all the geometry/result tables.
         The OP2 header is not read by this function.

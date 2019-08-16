@@ -23,6 +23,7 @@ from pyNastran.op2.tables.geom.edom import EDOM
 
 from pyNastran.op2.tables.geom.dit import DIT
 from pyNastran.op2.tables.geom.dynamics import DYNAMICS
+from pyNastran.op2.tables.geom.axic import AXIC
 
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.errors import DuplicateIDsError
@@ -106,7 +107,7 @@ def read_op2_geom(op2_filename: Optional[str]=None,
     return model
 
 
-class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, DYNAMICS):
+class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, DYNAMICS, AXIC):
     """interface for the OP2Geom class for to loading subclasses"""
     def __init__(self, make_geom: bool=True,
                  debug: bool=False, log: Any=None, debug_file: Optional[str]=None, mode: Optional[str]=None):
@@ -139,6 +140,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
         EDOM.__init__(self)
         DIT.__init__(self)
         DYNAMICS.__init__(self)
+        AXIC.__init__(self)
 
         OP2.__init__(self, debug=debug, log=log, debug_file=debug_file, mode=mode)
         self.make_geom = True
@@ -235,6 +237,8 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
 
         table_mapper[b'DYNAMIC'] = [self._read_dynamics_4, self._read_dynamics_4]
         table_mapper[b'DYNAMICS'] = [self._read_dynamics_4, self._read_dynamics_4]
+
+        table_mapper[b'AXIC'] = [self._read_axic_4, self._read_axic_4]
 
         # table objects (e.g. TABLED1)
         table_mapper[b'DIT'] = [self._read_dit_4, self._read_dit_4]

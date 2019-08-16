@@ -264,7 +264,7 @@ class GEOM3(GeomCommon):
 
             load = LOAD(sid, s, Si, L1)
             self._add_load_combination_object(load)
-            count += 1
+            #count += 1
             #if count > 1000:
                 #raise RuntimeError('Iteration limit...probably have a bug.')
         self.card_count['LOAD'] = nentries

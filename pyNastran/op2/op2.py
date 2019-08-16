@@ -21,9 +21,8 @@ Defines the main OP2 class.  Defines:
    - transform_gpforce_to_global(nids_all, nids_transform, i_transform, coords, xyz_cid0=None)
 
 """
-import os
 import sys
-from typing import List, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from pickle import load, dump, dumps
 
 import numpy as np
@@ -81,13 +80,11 @@ class OP2(OP2_Scalar, OP2Writer):
         self.ask = False
         self.post = None
 
-    def __del__(self):
-        # type: () -> None
+    def __del__(self) -> None:
         if hasattr(self, 'h5_file') and self.h5_file is not None:
             self.h5_file.close()
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
-        # type: (str, Optional[List[str]]) -> List[str]
+    def object_attributes(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -350,8 +347,7 @@ class OP2(OP2_Scalar, OP2Writer):
         elif include_results:
             self.set_results(include_results)
 
-    def saves(self):
-        # type: () -> str
+    def saves(self) -> str:
         """Saves a pickled string"""
         return dumps(self)
 
@@ -392,8 +388,7 @@ class OP2(OP2_Scalar, OP2Writer):
                 #i += 1
         return state
 
-    def save(self, obj_filename='model.obj', unxref=True):
-        # type: (str, bool) -> None
+    def save(self, obj_filename: str='model.obj', unxref: bool=True) -> None:
         """Saves a pickleable object"""
         #del self.log
         #del self._card_parser, self._card_parser_prepare
@@ -406,8 +401,7 @@ class OP2(OP2_Scalar, OP2Writer):
         with open(obj_filename, 'wb') as obj_file:
             dump(self, obj_file)
 
-    def load(self, obj_filename='model.obj'):
-        # type: (str) -> None
+    def load(self, obj_filename: str='model.obj') -> None:
         """Loads a pickleable object"""
         with open(obj_filename, 'rb') as obj_file:
             obj = load(obj_file)
@@ -747,8 +741,7 @@ class OP2(OP2_Scalar, OP2Writer):
             load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
         self.combine_results(combine=combine)
 
-    def load_hdf5_file(self, h5_file, combine=True):
-        # type: (Any, bool) -> None
+    def load_hdf5_file(self, h5_file: Any, combine: bool=True) -> None:
         """
         Loads an h5 file object into an OP2 object
 
@@ -785,7 +778,6 @@ class OP2(OP2_Scalar, OP2Writer):
         export_op2_to_hdf5_filename(hdf5_filename, self)
 
     def export_hdf5_file(self, hdf5_file, exporter=None) -> None:
-        # type (file, Any) -> None
         """
         Converts the OP2 objects into hdf5 object
 
@@ -800,6 +792,7 @@ class OP2(OP2_Scalar, OP2Writer):
           - BucklingEigenvalues
 
         """
+        ## type (file, Any) -> None
         from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_file
         export_op2_to_hdf5_file(hdf5_file, self)
 
@@ -992,8 +985,13 @@ class OP2(OP2_Scalar, OP2Writer):
         self.subcase_key = subcase_key2
         #print('subcase_key = %s' % self.subcase_key)
 
-    def get_key_order(self):
-        # type: () -> List[int, int, int, int, int, str]
+    def get_key_order(self) -> List[Union[int, str]]:
+        """
+        Returns
+        -------
+        keys3 : List[int, int, int, int, int, str]
+            the keys in order
+        """
         keys = []
         table_types = self.get_table_types()
         for table_type in sorted(table_types):
@@ -1087,8 +1085,7 @@ class OP2(OP2_Scalar, OP2Writer):
         #assert len(keys3) > 0, keys3
         return keys3
 
-    def print_subcase_key(self):
-        # type: () -> None
+    def print_subcase_key(self) -> None:
         self.log.info('---self.subcase_key---')
         for isubcase, keys in sorted(self.subcase_key.items()):
             if len(keys) == 1:
@@ -1099,8 +1096,8 @@ class OP2(OP2_Scalar, OP2Writer):
                     self.log.info('  %s' % str(key))
         #self.log.info('subcase_key = %s' % self.subcase_key)
 
-    def transform_displacements_to_global(self, icd_transform, coords, xyz_cid0=None, debug=False):
-        # type: (Any, Any, Any, bool) -> None
+    def transform_displacements_to_global(self, icd_transform: Any, coords: Dict[int, Any], xyz_cid0: Any=None,
+                                          debug: bool=False) -> None:
         """
         Transforms the ``data`` of displacement-like results into the
         global coordinate system for those nodes with different output
@@ -1309,115 +1306,6 @@ def read_op2(op2_filename: Optional[str]=None,
     return model
 
 
-def main():  # pragma: no cover
-    """testing new ideas"""
-    pkg_path = pyNastran.__path__[0]
-
-    # we don't want the variable name to get picked up by the class
-    _op2_filename = os.path.join(pkg_path, '..', 'models',
-                                 'sol_101_elements', 'solid_shell_bar.op2')
-
-    model = read_op2(_op2_filename)
-    isubcase = 1
-
-    # ============displacement================
-    # same for velocity/acceleration/mpc forces/spc forces/applied load
-    # maybe not temperature because it's only 1 result...
-    displacement = model.displacements[isubcase]
-    data = displacement.data
-    grid_type = model.displacements[isubcase].grid_type
-
-    # t1, t2, t3, r1, r2, r3
-    assert displacement.ntimes == 1, displacement.ntimes
-
-    # get all the nodes for element 1
-    inode1 = data.getNodeIndex([1])    # [itransient, node, t1/t2]
-    unused_datai = data[0, inode1, :]
-    unused_grid_typei = grid_type[inode1]
-
-    # ============solid stress=================
-    # same for solid strain
-    solid_stress = model.ctetra_stress[isubcase]
-    data = solid_stress.data
-    cid = model.ctetra_stress[isubcase].cid
-
-    # oxx, oyy, ozz, txy, tyz, txz
-    assert solid_stress.ntimes == 1, solid_stress.ntimes
-
-    # get the indexs for cid, element 1
-    ielem1 = solid_stress.getElementPropertiesIndex([1])  # element-specific properties
-    unused_datai = cid[ielem1]
-
-    # get all the nodes for element 1
-    ielem1 = solid_stress.getElementIndex([1])
-    # [itransient, elem*node, oxx/oyy, etc.]
-    unused_datai = data[0, ielem1, :]
-
-    # get all the nodes for element 1
-    ielem1 = solid_stress.getElementIndex([1])
-    # [itransient, elem*node, oxx/oyy, etc.]
-    unused_datai = data[0, ielem1, :]
-
-    # get all the nodes for element 4 and 5
-    ielem45 = solid_stress.getElementIndex([[1, 4, 5]])
-    unused_datai = data[0, ielem45, :]
-
-    # get the index for element 1, centroid
-    ielem1_centroid = solid_stress.getElementNodeIndex([[1, 0]])
-    unused_datai = data[0, ielem1_centroid, :]
-
-    # get the index for element 1, node 1
-    ielem1_node1 = solid_stress.getElementNodeIndex([[1, 1]])
-    unused_datai = data[0, ielem1_node1, :]
-
-    # get the index for element 1, node 1 and element 1, node 2
-    ielem1_node12 = solid_stress.getElementNodeIndex([[1, 1],
-                                                      [1, 2],])
-    unused_datai = data[0, ielem1_node12, :]
-
-    # ============plate stress=================
-    # same for plate strain
-    plate_stress = model.cquad4_stress[isubcase]
-    data = plate_stress.data
-
-    # oxx, oyy, ozz, txy, tyz, txz
-    assert plate_stress.ntimes == 1, plate_stress.ntimes
-
-    # get all the nodes for element 1
-    ielem1 = plate_stress.getElementIndex([1])
-    # [itransient, elem*node, oxx/oyy, etc.]
-    unused_datai = plate_stress[0, ielem1, :]
-
-    # ========composite plate stress============
-    # same for plate strain
-    comp_plate_stress = model.cquad4_composite_stress[isubcase]
-    data = comp_plate_stress.data
-    cid = model.cquad4_stress[isubcase].cid
-
-    # get the indexs for cid, element 1
-    ielem1 = comp_plate_stress.getElementPropertiesIndex([1])  # element-specific properties
-    unused_datai = cid[ielem1]
-
-    # oxx, oyy, ozz, txy, tyz, txz
-    assert comp_plate_stress.ntimes == 1, comp_plate_stress.ntimes
-
-    # get all the nodes/layers for element 1
-    ielem1 = comp_plate_stress.getElementIndex([1])
-    # [itransient, elem*node*layer, oxx/oyy, etc.]
-    unused_datai = data[0, ielem1, :]
-
-    # get all the layers for element 1, centroid, and all the layers
-    ielem1_centroid = solid_stress.getElementNodeIndex([[1, 0]])
-    unused_datai = data[0, ielem1_centroid, :]
-
-    # get the index for element 1, centroid, layer 0
-    ielem1_centroid_layer = solid_stress.getElementNodeLayerIndex([[1, 0, 0]])
-    unused_datai = data[0, ielem1_centroid_layer, :]
-
-    # get the index for element 1, layer 0, and all the nodes
-    ielem1_layer = solid_stress.getElementLayerIndex([[1, 0]])
-    unused_datai = data[0, ielem1_layer, :]
-
 def _create_hdf5_info(h5_file, op2_model):
     """exports the h5 info group"""
     load_as_h5 = False
@@ -1427,6 +1315,3 @@ def _create_hdf5_info(h5_file, op2_model):
         return
     from pyNastran.op2.op2_interface.hdf5_interface import create_info_group
     create_info_group(h5_file, op2_model)
-
-if __name__ == '__main__':  # pragma: no cover
-    main()

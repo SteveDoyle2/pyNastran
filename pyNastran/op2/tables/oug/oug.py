@@ -65,7 +65,7 @@ class OUG(OP2Common):
         self.nonlinear_factor = np.nan
         self.is_table_1 = True
         self.is_table_2 = False
-        three = self.parse_approach_code(data)
+        unused_three = self.parse_approach_code(data)
         self.words = [
             'approach_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',
@@ -181,7 +181,7 @@ class OUG(OP2Common):
 
         self.is_table_1 = False
         self.is_table_2 = True
-        three = self.parse_approach_code(data)
+        unused_three = self.parse_approach_code(data)
         self.words = [
             'approach_code', 'table_code', '???', 'isubcase',
             '???', '???', '???', 'random_code',
