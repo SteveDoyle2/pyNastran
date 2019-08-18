@@ -1165,7 +1165,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             b'PVT' : [self._read_pvto_3, self._read_pvto_4], # PVT - Parameter Variable Table
             b'PVT0' : [self._read_pvto_3, self._read_pvto_4],  # user parameter value table
-            b'DESTAB' : [self._table_passer, self._table_passer],
             b'TOLD' : [self._table_passer, self._table_passer],
             b'CASECC' : [self._table_passer, self._table_passer],  # case control deck
 
@@ -1194,11 +1193,22 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             #==================================
             # modal participation factors
-            b'OFMPF2M' : [self._table_passer, self._table_passer],
-            b'OLMPF2M' : [self._table_passer, self._table_passer],
-            b'OPMPF2M' : [self._table_passer, self._table_passer],
-            b'OSMPF2M' : [self._table_passer, self._table_passer],
-            b'OGPMPF2M' : [self._table_passer, self._table_passer],
+            # OFMPF2M Table of fluid mode participation factors by normal mode.
+            b'OFMPF2M' : [self._read_mpf_3, self._read_mpf_4],
+            # OLMPF2M Table of load mode participation factors by normal mode.
+            b'OLMPF2M' : [self._read_mpf_3, self._read_mpf_4],
+            # OPMPF2M Table of panel mode participation factors by normal mode.
+            b'OPMPF2M' : [self._read_mpf_3, self._read_mpf_4],
+            # OPMPF2M Table of panel mode participation factors by normal mode.
+            b'OSMPF2M' : [self._read_mpf_3, self._read_mpf_4],
+            # OGMPF2M Table of grid mode participation factors by normal mode.
+            b'OGPMPF2M' : [self._read_mpf_3, self._read_mpf_4],
+
+            #OFMPF2E Table of fluid mode participation factors by excitation frequencies.
+            #OSMPF2E Table of structure mode participation factors by excitation frequencies.
+            #OPMPF2E Table of panel mode participation factors by excitation frequencies.
+            #OLMPF2E Table of load mode participation factors by excitation frequencies.
+            #OGMPF2E Table of grid mode participation factors by excitation frequencies.
 
             # velocity
             b'OVGATO1' : [self._read_oug1_3, self._read_oug_ato],
@@ -1217,7 +1227,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
             #==================================
             #b'GPL': [self._table_passer, self._table_passer],
-            b'OMM2' : [self._table_passer, self._table_passer],  # max/min table - kinda useless
+            #b'OMM2' : [self._table_passer, self._table_passer],  # max/min table - kinda useless
             b'ERRORN' : [self._table_passer, self._table_passer],  # p-element error summary table
             #==================================
 
@@ -1296,6 +1306,155 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 table_mapper[key] = value
             #table_mapper.update(table_mapper2)
         return table_mapper
+
+    def _read_mpf_3(self, data, ndata):
+        """reads table 3 (the header table)
+
+        OFMPF2E Table of fluid mode participation factors by excitation frequencies.
+        OFMPF2M Table of fluid mode participation factors by normal mode.
+        OSMPF2E Table of structure mode participation factors by excitation frequencies.
+        OSMPF2M Table of structure mode participation factors by normal mode.
+        OPMPF2E Table of panel mode participation factors by excitation frequencies.
+        OPMPF2M Table of panel mode participation factors by normal mode.
+        OLMPF2E Table of load mode participation factors by excitation frequencies.
+        OLMPF2M Table of load mode participation factors by normal mode.
+        OGMPF2E Table of grid mode participation factors by excitation frequencies.
+        OGMPF2M Table of grid mode participation factors by normal mode.
+        """
+        #self._set_times_dtype()
+        self.nonlinear_factor = np.nan
+        self.is_table_1 = True
+        self.is_table_2 = False
+        unused_three = self.parse_approach_code(data)
+        self.words = [
+            'approach_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', 'random_code',
+            'format_code', 'num_wide', '???', '???',
+            'acoustic_flag', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
+
+        ## random code
+        self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
+
+        ## format code
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+
+        ## number of words per entry in record
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+
+        ## acoustic pressure flag
+        self.acoustic_flag = self.add_data_parameter(data, 'acoustic_flag', b'i', 13, False)
+
+        ## thermal flag; 1 for heat transfer, 0 otherwise
+        self.thermal = self.add_data_parameter(data, 'thermal', b'i', 23, False)
+
+        #if self.analysis_code == 1:   # statics / displacement / heat flux
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+            #self.setNullNonlinearFactor()
+        #elif self.analysis_code == 2:  # real eigenvalues
+            ## mode number
+            #self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            ## eigenvalue
+            #self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
+            ## mode or cycle .. todo:: confused on the type - F1???
+            #self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)
+            #self.update_mode_cycle('mode_cycle')
+            #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
+        #elif self.analysis_code == 3: # differential stiffness
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+            #self.data_code['lsdvmn'] = self.lsdvmn
+        #elif self.analysis_code == 4: # differential stiffness
+            #self.lsdvmn = self.get_values(data, b'i', 5) ## load set number
+        if self.analysis_code == 5:   # frequency
+            # frequency
+            self.node_id = self.add_data_parameter(data, 'node_id', b'i', 5, fix_device_code=True)
+            self.data_names = self.apply_data_code_value('data_names', ['node_id'])
+            #self.freq = self.add_data_parameter(data, 'freq', b'f', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['freq'])
+        #elif self.analysis_code == 6:  # transient
+            ## time step
+            #self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['dt'])
+        #elif self.analysis_code == 7:  # pre-buckling
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        #elif self.analysis_code == 8:  # post-buckling
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            ## real eigenvalue
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn', 'eigr'])
+        #elif self.analysis_code == 9:  # complex eigenvalues
+            ## mode number
+            #self.mode = self.add_data_parameter(data, 'mode', b'i', 5)
+            ## real eigenvalue
+            #self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
+            ## imaginary eigenvalue
+            #self.eigi = self.add_data_parameter(data, 'eigi', b'f', 7, False)
+            #self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eigi'])
+        #elif self.analysis_code == 10:  # nonlinear statics
+            ## load step
+            #self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
+        #elif self.analysis_code == 11:  # old geometric nonlinear statics
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        #elif self.analysis_code == 12:  # contran ? (may appear as aCode=6)  --> straight from DMAP...grrr...
+            ## load set number
+            #self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
+            #self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
+        else:
+            msg = f'invalid analysis_code...analysis_code={self.analysis_code}\ndata={self.data_code}'
+            raise RuntimeError(msg)
+
+        #print self.code_information()
+        #
+        self.fix_format_code()
+        if self.num_wide == 8:
+            self.format_code = 1
+            self.data_code['format_code'] = 1
+        else:
+            #self.fix_format_code()
+            if self.format_code == 1:
+                self.format_code = 2
+                self.data_code['format_code'] = 2
+            assert self.format_code in [2, 3], self.code_information()
+
+        self._parse_thermal_code()
+        if self.is_debug_file:
+            self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
+            self.binary_debug.write('  tCode          = %r\n' % self.tCode)
+            self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
+        self._read_title(data)
+        self._write_debug_bits()
+
+    def _read_mpf_4(self, data, ndata):
+        """unused"""
+        if self.read_mode == 1: # or self.table_name_str not in ['OFMPF2M']:
+            return ndata
+        #print(self.table_name_str, ndata, self.num_wide)  # 176
+        #self.show_ndata(100, types='ifs')
+
+        structi = Struct('fiff')
+        nelements = ndata // 16
+        ndev = ndata % 16
+        assert ndev == 0, ndev
+
+        for i in range(nelements):
+            datai = data[i*16 : (i+1)*16]
+            freq, dunno_int, mag, phase = structi.unpack(datai)
+            assert dunno_int == 2, str(self.node_id, freq, dunno_int, mag, phase)
+            #print(self.node_id, freq, dunno_int, mag, phase)
+        #print()
+        if self.isubtable == -4:
+            self.log.warning('%s results were read, but not saved' % self.table_name_str)
+        return ndata
 
     def _read_pvto_3(self, data, ndata):
         """unused"""
@@ -1639,6 +1798,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #if 0:
                 #op2_reader._skip_table(table_name)
             #else:
+            #print(table_name, table_name in op2_reader.mapped_tables)
             if table_name in self.generalized_tables:
                 t0 = self.f.tell()
                 self.generalized_tables[table_name](self)

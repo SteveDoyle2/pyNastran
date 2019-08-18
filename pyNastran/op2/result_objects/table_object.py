@@ -541,7 +541,6 @@ class TableArray(ScalarObject):  # displacement style table
                 #2      G    -0.200504+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
                 #3      G          1.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
                 #1001   S     1.200504+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
-                from itertools import count
                 for itime in range(ntimes):
                     column_values2 = [column_value[itime] for column_value in column_values]
                     for nid, gridtype in zip(self.node_gridtype[:, 0], self.gridtype_str):
@@ -612,6 +611,12 @@ class TableArray(ScalarObject):  # displacement style table
             #self.data_frame = pd.Panel(self.data[0, :, :], major_axis=node_gridtype, minor_axis=headers).to_frame()
             #self.data_frame.columns.names = ['Static']
             #self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+
+            #    NodeID Type      t1           t2            t3   r1   r2   r3
+            # 0        1    G     0.0     0.000000  0.000000e+00  0.0  0.0  0.0
+            # 1        2    G     0.0     0.000000  0.000000e+00  0.0  0.0  0.0
+            # 2        3    G     0.0     0.000000  0.000000e+00  0.0  0.0  0.0
+            #self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.node_gridtype)
 
             df1 = pd.DataFrame(self.node_gridtype[:, 0])
             df1.columns = ['NodeID']

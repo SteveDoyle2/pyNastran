@@ -101,6 +101,7 @@ class OP2Reader:
             b'HISADD' : self.read_hisadd,
             b'EXTDB' : self.read_extdb,
             b'OMM2' : self.read_omm2,
+            b'STDISP' : self.read_stdisp,
             b'TOL' : self.read_tol,
             b'PCOMPT' : self._read_pcompts,
             b'PCOMPTS' : self._read_pcompts,
@@ -112,6 +113,7 @@ class OP2Reader:
             b'IBULK' : self.read_ibulk,
             b'CDDATA' : self.read_ibulk,
             b'CMODEXT' : self._read_cmodext,
+            b'DESTAB' :  self._read_destab,
 
             # element matrices
             #b'KELM' : self._read_element_matrix,
@@ -521,6 +523,113 @@ class OP2Reader:
             itable -= 1
         self.read_markers([0])
         self.op2.matdicts[name] = matdict
+
+    def _read_destab(self):
+        """unused"""
+        #if self.read_mode == 1:
+            #return ndata
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % op2.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('_read_destab - %s\n' % op2.table_name)
+
+        self.read_markers([-1])
+        data = self._read_record()
+
+        # (101, 3, 3, 0, 3, 0, 0)
+
+        itable = -2
+        markers = self.read_markers([itable, 1, 0])
+        data = self._read_record()
+        destab = Struct('8s').unpack(data)[0].rstrip()
+        assert destab == b'DESTAB', destab
+
+        itable -= 1
+        markers = self.read_markers([itable, 1, 0])
+
+        desvars = []
+        while 1:
+            markers = self.get_nmarkers(1, rewind=True)
+            if markers == [0]:
+                break
+
+            data = self._read_record()
+
+            #self.show(100, types='ifs', endian=None)
+            #self.show_data(data[:8], types='ifs', endian=None)
+
+            #1 IDVID I Internal design variable identification number
+            #2 DVID I External design variable identification number
+            #3 LABEL1 CHAR4 First part of design Variable
+            #4 LABEL2 CHAR4 Second part of design Variable
+            #5 VMIN RS Lower bound
+            #6 VMAX RS Upper bound
+            #7 DELX RS Move limit for a design cycle
+            # 8 ???
+
+            #C:\NASA\m4\formats\git\examples\move_tpl\accopt3.op2
+            #---------------------------------------------------------------------------------------------------------
+                #INTERNAL       DESVAR                         LOWER                               UPPER
+                    #ID            ID          LABEL            BOUND             VALUE             BOUND
+            #---------------------------------------------------------------------------------------------------------
+                #1             1      THICK           2.0000E-02        5.0000E-02        8.0000E-02
+                #2             2      SPRING          1.0000E-02        6.2500E-02        7.5000E-02
+                #3             3      SPRING          5.0000E-02        1.2500E-01        1.5000E-01
+            # internal, desvar, label, lower,   upper,  ???,  ???
+            # (1, 1, b'THICK   ', 0.019999, 0.07999999, -0.5, 0.0)
+            # (2, 2, b'SPRING  ', 0.009999, 0.07500000, -0.5, 0.0)
+            # (3, 3, b'SPRING  ', 0.050000, 0.15000000, -0.5, 0.0)
+
+            ##        id       label   xinit   xlb   xub delxv
+            #DESVAR  1       THICK   .05     0.02    .08
+            #DESVAR  2       SPRING  .0625   .01     .075
+            #DESVAR  3       SPRING  .125    .05     .15
+
+            # C:\NASA\m4\formats\git\examples\move_tpl\betaadj.op2
+            #---------------------------------------------------------------------------------------------------------
+                #INTERNAL       DESVAR                         LOWER                               UPPER
+                    #ID            ID          LABEL            BOUND             VALUE             BOUND
+            #---------------------------------------------------------------------------------------------------------
+                #11            20      BETA            1.0000E-03        8.0000E-01        1.0000E+20
+            # int, des, label,     lower,     upper,     ???,  ???
+            #(11, 20, b'BETA    ', 0.0010000, 1.000e+20, 0.200, 0.0)
+            #        id       label   xinit   xlb   xub delxv
+            #desvar  20       beta    0.8     0.001	xub	0.20
+            desvar = Struct('2i 8s 4f').unpack(data)
+            #internal_id, desvar_id, label, lower, upper, delxv, dunno = desvar
+            #print(desvar)
+            #assert np.allclose(desvar[5], -0.5), desvar  # -0.5 is the default
+            assert np.allclose(desvar[6], 0.0), desvar
+            desvars.append(desvar)
+            itable -= 1
+            markers = self.read_markers([itable, 1, 0])
+
+        if self.read_mode == 2:
+            self.log.warning('DESTAB results were read, but not saved')
+        #marker -= 1
+        #markers = self.read_markers([marker, 1, 0])
+        #data = self._read_record()
+        ##self.show_data(data, types='ifs', endian=None)
+        #desvar = Struct('2i 8s 4f').unpack(data)
+        #print(desvar)
+
+        #marker -= 1
+        #markers = self.read_markers([marker, 1, 0])
+        #data = self._read_record()
+        #desvar = Struct('2i 8s 4f').unpack(data)
+        #print(desvar)
+
+        #marker -= 1
+        #markers = self.read_markers([marker, 1, 0])
+        ##data = self._read_record()
+        #self.read_markers([0])
+
+        #self.show(100, types='ifs', endian=None)
+
+
+        #raise RuntimeError(self.read_mode)
+
 
     def _read_cmodext(self):
         r"""
@@ -1399,10 +1508,47 @@ class OP2Reader:
         #print("marker = ", marker)
         unused_marker_end = self.get_marker1(rewind=False)
 
+    def read_stdisp(self):
+        """reads the STDISP table"""
+        #C:\NASA\m4\formats\git\examples\backup\aeroelasticity\loadf.op2
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        #(101, 1, 27, 0, 3, 1, 0)
+        data = self._read_record()
+        #self.show_data(data, types='ifs', endian=None)
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        assert Struct('8s').unpack(data)[0] == b'STDISP  '
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        a, b1, b2, b3, b4, b5, b6, b7, b8, b9 = Struct('64s 5i 12s 3i').unpack(data)
+        #a 345 0 0 0 0 b'DISPSTWING  ' 1 0 123
+        out = (b1, b2, b3, b4, b5, b6, b7, b8, b9)
+        assert b1 == 345, out
+        assert b2 == 0, out
+        assert b3 == 0, out
+        assert b4 == 0, out
+        assert b5 == 0, out
+        assert b6 == b'DISPSTWING  ', out
+        assert b7 == 1, out
+        assert b8 == 0, out
+        assert b9 == 123, out
+        #print(a, b1, b2, b3, b4, b5, b6, b7, b8, b9)
+        #'STWING  COMPLETE STRUCTURAL WING                                '
+        #(345, 0, 0, 0, 0, 1347635524, 1230459987, 538986318, 1, 0, 123)
+        #(4.834479701920619e-43, 0.0, 0.0, 0.0, 0.0, 14179176448.0, 881989.1875, 1.35761196e-19, 1.4012e-45, 0.0, 1.72359)
+        #self.show_data(data[96:], types='ifs', endian=None)
+
+        self.read_markers([-4, 1, 0])
+        self.read_markers([0])
+
     def read_omm2(self):
         """reads the OMM2 table"""
         op2 = self.op2
-        op2.log.debug("table_name = %r" % op2.table_name)
+        #op2.log.debug("table_name = %r" % op2.table_name)
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()

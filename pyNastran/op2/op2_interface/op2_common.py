@@ -299,10 +299,13 @@ class OP2Common(Op2Codes, F06Writer):
         self.label = label
         self.pval_step = label2
 
-
         nsubtitle_break = 67
         adpativity_index = subtitle[nsubtitle_break:99].strip()
         superelement = subtitle[99:].strip()
+
+        #print('subtitle = %r' % subtitle)
+        #print('aindex   = %r' % adpativity_index)
+        #print('superele = %r' % superelement)
 
         subtitle = subtitle[:nsubtitle_break].strip()
         assert len(superelement) <= 26, 'len=%s superelement=%r' % (len(superelement), superelement)
@@ -1184,7 +1187,14 @@ class OP2Common(Op2Codes, F06Writer):
                 ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
-                obj.node_gridtype[itotal:itotal2, 0] = nids
+                try:
+                    obj.node_gridtype[itotal:itotal2, 0] = nids
+                except ValueError:  # pragma: no cover
+                    msg = f'nnids={len(nids)} itotal={itotal} itotal2={itotal2}'
+                    print(obj.node_gridtype[:, 0].shape)
+                    print(obj.node_gridtype[itotal:itotal2, 0].shape)
+                    print(nids.shape)
+                    raise ValueError(msg)
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
 
             floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
