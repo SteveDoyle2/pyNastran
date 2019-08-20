@@ -3828,8 +3828,8 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if not is_sort1:
-            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
+        #if not is_sort1:
+            #raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
         self.itotal = 0

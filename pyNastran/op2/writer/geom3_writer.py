@@ -20,6 +20,8 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
     # return if no supported cards are found
     cards_to_skip = [
+        'QHBDY',
+
     ]
     supported_cards = [
         'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -29,6 +31,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         'ACCEL1',
         'TEMP', 'TEMPP1', 'QBDY1', 'QBDY2', 'QBDY3', 'QVOL',
         'LOAD',
+        'TEMPD',
     ]
     is_loads = False
     for load_type in sorted(loads_by_type.keys()):
@@ -37,8 +40,8 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
             continue
             #break
         elif load_type in cards_to_skip:
+            obj.log.warning('skipping GEOM3-%s' % load_type)
             continue
-        obj.log.warning('skipping GEOM3-%s' % load_type)
     #else:
         #return
 
@@ -371,27 +374,14 @@ def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx
             op2.write(spack.pack(*data))
     elif load_type == 'TEMPD':
         key = (5641, 65, 98)
-        nfields = 6
+        nfields = 2
         spack = Struct(endian + b'if')
         nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
         for load in loads:
-            #print(load.get_stats())
             #sid, T = data
             data = [load.sid, load.temperature]
             op2_ascii.write('  TEMPD data=%s\n' % str(data))
             op2.write(spack.pack(*data))
-
-            #struct_if = Struct('if')
-            #for i in range(nentries):
-                #edata = data[n:n + ntotal]
-                #out = struct_if.unpack(edata)
-                #if self.is_debug_file:
-                    #self.binary_debug.write('  TEMPD=%s\n' % str(out))
-                #(sid, T) = out
-                #load = TEMPD.add_op2_data(out)
-                ##self.add_thermal_load(load)
-                #n += ntotal
-            #self.card_count['TEMPD'] = nentries
 
     elif load_type == 'QHBDY':
         key = (4309, 43, 233)
@@ -453,6 +443,17 @@ def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx
         nfields = len(data)
         nbytes = write_header_nvalues(load_type, nfields, key, op2, op2_ascii)
         op2.write(pack(fmt, *data))
+    elif load_type == 'LSEQ':
+        key = (3609, 36, 188)
+        fmt = endian
+        nfields = 5
+        spack = Struct(endian + b'5i')
+        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+        for load in loads:
+            #(sid, darea, load_id, temperature_id, undef) = out
+            datai = [load.sid, load.excite_id, load.lid, load.tid, 0]
+            op2_ascii.write('  LSEQ data=%s\n' % str(datai))
+            op2.write(spack.pack(*datai))
     elif load_type == 'ACCEL':
         """
         ACCEL(7401, 74, 601) - NX  (uses CHAR1)

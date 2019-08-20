@@ -101,7 +101,7 @@ class OP2Writer(OP2_F06_Common):
             assert isinstance(op2_outname, file), 'type(op2_outname)= %s' % op2_outname
             fop2 = op2_outname
             op2_outname = op2_outname.name
-            print('op2_outname =', op2_outname)
+            #print('op2_outname =', op2_outname)
 
         #op2_ascii.write('writing [3, 7, 0] header\n')
         #if markers == [3,]:  # PARAM, POST, -1

@@ -521,7 +521,7 @@ class OEF(OP2Common):
         return n
 
     def _read_oef2_4(self, data, ndata):
-        if self.thermal == 0 and self.element_type not in [77]:
+        if self.thermal == 0: # and self.element_type not in [77]:
             self._setup_op2_subcase('FORCE')
             n = self._read_oef1_loads(data, ndata)
         else:

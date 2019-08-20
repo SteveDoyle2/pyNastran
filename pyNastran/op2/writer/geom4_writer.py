@@ -348,10 +348,13 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
             fmt = endian + b'7i' * ncards
             fields = []
             for rbar in cards:
+                cna = int(rbar.cna)
+                cma = int(rbar.cma)
+                cnb = int(rbar.cnb) if rbar.cnb != '' else 0
+                cmb = int(rbar.cmb)
                 fields += [
                     rbar.eid, rbar.ga, rbar.gb,
-                    int(rbar.cna), int(rbar.cnb),
-                    int(rbar.cma), int(rbar.cmb)]
+                    cna, cnb, cma, cmb]
         else:  # pragma: no cover
             raise NotImplementedError(nastran_format)
         nfields = len(fields)

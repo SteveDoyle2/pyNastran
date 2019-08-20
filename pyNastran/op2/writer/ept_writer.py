@@ -25,6 +25,9 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
 
     #ptypes = [
         #'PSOLID', 'PSHELL', 'PCOMP', 'PROD',
+
+        # thermal
+        #'PHBDY',
     #]
     #out = obj.get_card_ids_by_card_types(ptypes)
     for pid, prop in obj.properties.items():
@@ -35,9 +38,6 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
         'PMASS', 'PBCOMP',
 
         #'PCOMPG',
-
-        # thermal
-        'PHBDY',
 
     ]
     for name, pids in out.items():
@@ -118,6 +118,10 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             key = (1302, 13, 34)
             nfields = 4
             spack = Struct(endian + b'4i')
+        elif name == 'PHBDY':
+            key = (2802, 28, 236)
+            nfields = 4
+            spack = Struct(endian + b'i3f')
         elif name == 'PIHEX':
             obj.log.warning('skipping PIHEX')
             continue
@@ -467,6 +471,13 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             data = [pid, prop.tkid, prop.tgeid, prop.tknid]
             op2_ascii.write('  pid=%s tables=%s\n' % (pid, data[1:]))
             op2.write(spack.pack(*data))
+    elif name == 'PHBDY':
+        for pid in sorted(pids):
+            prop = obj.phbdys[pid]
+            data = [pid, prop.af, prop.d1, prop.d2]
+            op2_ascii.write('  pid=%s tables=%s\n' % (pid, data[1:]))
+            op2.write(spack.pack(*data))
+            #(pid, af, d1, d2) = out
     else:  # pragma: no cover
         raise NotImplementedError(name)
 

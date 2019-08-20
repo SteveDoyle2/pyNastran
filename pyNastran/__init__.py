@@ -1,5 +1,5 @@
 import os
-import sys
+#import sys
 
 # this variable is automatically set by the .spec file; should be False
 is_pynastrangui_exe = False

@@ -18,7 +18,7 @@ MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
 class TestOP2Writer(unittest.TestCase):
     def test_write_1(self):
         """tests basic op2 writing"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = get_logger(log=None, level='warning', encoding='utf-8')
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
         op2_filename_debug = os.path.join(folder, 'solid_bending.debug.out')
@@ -37,7 +37,7 @@ class TestOP2Writer(unittest.TestCase):
 
     def test_write_2(self):
         """tests basic op2 writing"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = get_logger(log=None, level='warning', encoding='utf-8')
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
         op2_filename_debug = os.path.join(folder, 'solid_bending.debug.out')
@@ -55,7 +55,7 @@ class TestOP2Writer(unittest.TestCase):
 
     def _test_write_3(self):
         """tests basic op2 writing"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = get_logger(log=None, level='warning', encoding='utf-8')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2_filename_debug = os.path.join(folder, 'static_solid_shell_bar.debug.out')
@@ -72,7 +72,7 @@ class TestOP2Writer(unittest.TestCase):
 
     def test_write_4(self):
         """tests basic op2 writing"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = get_logger(log=None, level='warning', encoding='utf-8')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'static_solid_shell_bar.op2')
         op2_filename_debug = os.path.join(folder, 'static_solid_shell_bar.debug.out')
@@ -92,7 +92,7 @@ class TestOP2Writer(unittest.TestCase):
 
     def test_write_5(self):
         """tests basic op2 writing"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = get_logger(log=None, level='warning', encoding='utf-8')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'mode_solid_shell_bar.op2')
         op2_filename_debug = os.path.join(folder, 'mode_solid_shell_bar.debug.out')
@@ -117,7 +117,7 @@ class TestOP2Writer(unittest.TestCase):
 
     def test_write_6(self):
         """tests basic op2 writing"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = get_logger(log=None, level='warning', encoding='utf-8')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
         op2_filename_debug = os.path.join(folder, 'transient_solid_shell_bar.debug.out')
@@ -137,7 +137,7 @@ class TestOP2Writer(unittest.TestCase):
 
     def test_write_7(self):
         """tests basic op2 writing"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = get_logger(log=None, level='warning', encoding='utf-8')
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'freq_solid_shell_bar.op2')
         op2_filename_debug = os.path.join(folder, 'freq_solid_shell_bar.debug.out')
@@ -157,7 +157,7 @@ class TestOP2Writer(unittest.TestCase):
 
     def test_write_elements_1(self):
         """tests basic op2 writing"""
-        log = get_logger(log=None, level='info', encoding='utf-8')
+        log = get_logger(log=None, level='warning', encoding='utf-8')
         folder = os.path.join(MODEL_PATH, 'elements')
         op2_filename = os.path.join(folder, 'freq_elements.op2')
         op2_filename_debug = os.path.join(folder, 'freq_elements.debug.out')
@@ -297,7 +297,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename = os.path.join(folder, 'hd15306.op2')
         op2_filename_debug = os.path.join(folder, 'hd15306.debug.out')
         op2_filename_out = os.path.join(folder, 'hd15306_out.op2')
-        op2_filename_debug_out = os.path.join(folder, 'hd15306.debug.out')
+        op2_filename_debug_out = os.path.join(folder, 'hd15306_out.debug.out')
         #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
         #debug_file = model + '.debug.out'
