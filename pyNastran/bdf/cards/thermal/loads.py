@@ -867,21 +867,27 @@ class QHBDY(ThermalLoad):
 
         """
         sid = data[0]
-        flag = data[1]
+        flag_int = data[1]
         q0 = data[2]
         af = data[3]
-        if flag == 1:
+        if flag_int == 1:
             flag = 'POINT'
-        elif flag == 2:
+            nnodes = 1
+        elif flag_int == 2:
             flag = 'LINE'
-        elif flag == 5:
+            nnodes = 2
+        elif flag_int == 5:
             flag = 'AREA4'
-        elif flag == 9:
+            nnodes = 4
+        elif flag_int == 9:
             flag = 'AREA8'
-        else:
-            raise NotImplementedError('QHBDY sid=%s flag=%s data=%s' % (sid, flag, data[2:]))
+            nnodes = 8
+        else:  # pragma: no cover
+            raise NotImplementedError('QHBDY sid=%s flag_int=%s data=%s' % (sid, flag_int, data[2:]))
         grids = list(data[4:])
-        return QHBDY(sid, flag, q0, grids, af=af, comment=comment)
+        grids2 = grids[:nnodes]
+        print(sid, flag_int, flag, q0, af, grids, grids2)
+        return QHBDY(sid, flag, q0, grids2, af=af, comment=comment)
 
     def get_loads(self):
         return [self]

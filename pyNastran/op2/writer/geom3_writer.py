@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from struct import pack, Struct
 from collections import defaultdict
 
@@ -20,8 +19,6 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
     # return if no supported cards are found
     cards_to_skip = [
-        'QHBDY',
-
     ]
     supported_cards = [
         'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -32,6 +29,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
         'TEMP', 'TEMPP1', 'QBDY1', 'QBDY2', 'QBDY3', 'QVOL',
         'LOAD',
         'TEMPD',
+        'QHBDY',
     ]
     is_loads = False
     for load_type in sorted(loads_by_type.keys()):
@@ -396,12 +394,35 @@ def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx
             #5 G(8)  I Grid point identification numbers
             #print(load.get_stats())
 
-            #nids = load.grids
             nids = [0] * 8
-            if load.flag == 'POINT':
-                flag = 0
-            else:
+            #if flag == 1:
+                #flag = 'POINT'
+            #elif flag == 2:
+                #flag = 'LINE'
+            #elif flag == 5:
+                #flag = 'AREA4'
+            #elif flag == 9:
+                #flag = 'AREA8'
+
+            #if load.flag == 'POINT':
+                #flag = 0 # 1?
+            if load.flag == 'LINE':
+                flag = 2
+                nnodes = 2
+            elif load.flag == 'AREA4':
+                flag = 5
+                nnodes = 4
+            elif load.flag == 'AREA8':
+                flag = 9
+                nnodes = 8
+            else:  # pragma: no cover
+                print(load.get_stats())
                 raise NotImplementedError(load.get_stats())
+
+            grids = load.grids
+            for i in range(nnodes):
+                nids[i] = grids[i]
+                assert nids[i] > 0, f'nids[{i}]={nids[i]} nids={nids}'
 
             data = [
                 load.sid, flag, load.q0,

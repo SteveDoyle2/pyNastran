@@ -6,7 +6,7 @@ from struct import unpack, Struct
 
 import numpy as np
 
-from pyNastran import is_release
+#from pyNastran import is_release
 from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSML
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
@@ -18,7 +18,7 @@ from pyNastran.bdf.cards.properties.shell import PSHEAR, PSHELL, PCOMP
 from pyNastran.bdf.cards.properties.solid import PSOLID
 from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
 
-from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY
+from pyNastran.bdf.cards.thermal.thermal import PCONV, PHBDY, PCONVM
 # PCOMPG, PBUSH1D, PBEAML, PBEAM3
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
@@ -223,7 +223,7 @@ class EPT(GeomCommon):
         #for pack in packs:
             #print(pack)
 
-        ipack = 0
+        #ipack = 0
         while n < len(data):
             #print('ints[i:]=', ints[i:].tolist())
             #i1, i2 = packs[ipack]
@@ -269,7 +269,7 @@ class EPT(GeomCommon):
             # handle the trailing -1
             i += 1
             n += 4
-            ipack += 1
+            #ipack += 1
         return n, properties
 
 # NSM1
@@ -1207,9 +1207,32 @@ class EPT(GeomCommon):
             n += ntotal
         return n, props
 
-    def _read_pconvm(self, data, n):  # 26
-        self.log.info('skipping PCONVM in EPT')
-        return len(data)
+    def _read_pconvm(self, data, n):
+        """Record 24 -- PCONVM(2902,29,420)
+
+        1 PID    I Property identification number
+        2 MID    I Material identification number
+        3 FORM   I Type of formula used for free convection
+        4 FLAG   I Flag for mass flow convection
+        5 COEF  RS Constant coefficient used for forced convection
+        6 EXPR  RS Reynolds number convection exponent
+        7 EXPPI RS Prandtl number convection exponent into the working fluid
+        8 EXPPO RS Prandtl number convection exponent out of the working fluid
+        """
+        ntotal = 32  # 8*4
+        structi = Struct(self._endian + b'4i 4f')
+        nentries = (len(data) - n) // ntotal
+        for unused_i in range(nentries):
+            out = structi.unpack(data[n:n+ntotal])
+            if out != (0, 0, 0, 0, 0., 0., 0., 0.):
+                (pconid, mid, form, flag, coeff, expr, expri, exppo) = out
+                #print(out)
+                prop = PCONVM(pconid, mid, coeff, form=form, flag=flag,
+                              expr=expr, exppi=expri, exppo=exppo, comment='')
+                self._add_convection_property_object(prop)
+            n += ntotal
+        self.card_count['PCONVM'] = nentries
+        return n
 
     def _read_pdamp(self, data, n):
         """

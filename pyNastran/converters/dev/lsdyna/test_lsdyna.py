@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from pyNastran.converters.dev.lsdyna.lsdyna import read_lsdyna
 
 if __name__ == '__main__':
