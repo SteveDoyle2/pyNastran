@@ -2,22 +2,21 @@
 from types import MethodType, FunctionType
 import os
 import io
-import sys
-from itertools import count
+#import sys
+#from itertools import count
 from io import StringIO
 
-from typing import List, Union, Optional
+from typing import List, Optional, Any
 
 
-def ipython_info():
-    # type: () -> Optional[str]
+def ipython_info() -> Optional[str]:
     """determines if iPython/Jupyter notebook is running"""
     try:
         return get_ipython()
     except NameError:
         return None
 
-def is_file_obj(filename):
+def is_file_obj(filename: str) -> bool:
     """does this object behave like a file object?"""
     return (
         (hasattr(filename, 'read') and hasattr(filename, 'write'))
@@ -25,12 +24,11 @@ def is_file_obj(filename):
         or isinstance(filename, StringIO)
     )
 
-def b(string):
-    # type: (str) -> bytes
+def b(string: str) -> bytes:
     """reimplementation of six.b(...) to work in Python 2"""
     return string.encode('latin-1')
 
-#def merge_dicts(dict_list, strict=True):
+#def merge_dicts(dict_list, strict: bool=True):
     #"""merges two or more dictionaries"""
     #assert isinstance(dict_list, list), type(dict_list)
     #dict_out = {}
@@ -46,8 +44,7 @@ def b(string):
     #return dict_out
 
 
-def is_binary_file(filename):
-    # type: (str) -> bool
+def is_binary_file(filename: str) -> bool:
     """
     Return true if the given filename is binary.
 
@@ -77,8 +74,7 @@ def is_binary_file(filename):
     return False
 
 
-def check_path(filename, name='file'):
-    # type: (str, str) -> None
+def check_path(filename: str, name: str='file') -> None:
     try:
         exists = os.path.exists(filename)
     except TypeError:
@@ -88,8 +84,7 @@ def check_path(filename, name='file'):
         msg = 'cannot find %s=%r\n%s' % (name, filename, print_bad_path(filename))
         raise FileNotFoundError(msg)
 
-def print_bad_path(path):
-    # type: (str) -> str
+def print_bad_path(path: str) -> str:
     """
     Prints information about the existence (access possibility) of the parts
     of the given path. Useful for debugging when the path to a given file
@@ -126,8 +121,7 @@ def print_bad_path(path):
         msg = {True: 'passed', False: 'failed'}
         return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i) for i in res])
 
-def _filename(filename):
-    # type: (str) -> str
+def _filename(filename: str) -> str:
     """
     Prepends some magic data to a filename in order to have long filenames.
 
@@ -168,8 +162,7 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
     #                                           attr_type(getattr(obj, k)))])
 
 
-def object_methods(obj, mode='public', keys_to_skip=None):
-    # type: (object, str, Optional[List[str]]) -> List[str]
+def object_methods(obj: Any, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
     """
     List the names of methods of a class as strings. Returns public methods
     as default.
@@ -196,8 +189,7 @@ def object_methods(obj, mode='public', keys_to_skip=None):
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
 
-def object_attributes(obj, mode='public', keys_to_skip=None):
-    # type: (object, str, Optional[List[str]]) -> List[str]
+def object_attributes(obj: Any, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
     """
     List the names of attributes of a class as strings. Returns public
     attributes as default.
@@ -240,7 +232,7 @@ def object_attributes(obj, mode='public', keys_to_skip=None):
     #return failed_list
 
 
-def int_version(name, version):
+def int_version(name: str, version: str) -> List[int]:
     """splits the version into a tuple of integers"""
     sversion = version.split('-')[0]
     #numpy

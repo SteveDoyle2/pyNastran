@@ -103,7 +103,7 @@ class GEOM2(GeomCommon):
             (16500, 165, 9999) : ['CPENT15F', self._read_fake],  # record 65
             (16000, 160, 9999) : ['CPENT6FD', self._read_fake],  # record 66
             (17000, 170, 9999) : ['CQDX4FD', self._read_fake],  # record 67
-            (17100, 171, 9999) : ['CQDX9FD', self._read_fake],  # record 68
+            (17100, 171, 9999) : ['CQDX9FD', self._read_cquadx],  # record 68
             (9108, 91, 507): ['CQUAD', self._read_cquad],       # record 69 - not tested
             (2958, 51, 177): ['CQUAD4', self._read_cquad4],     # record 70
             (13900, 139, 9989): ['CQUAD4', self._read_cquad4],  # record 71
@@ -124,9 +124,9 @@ class GEOM2(GeomCommon):
             (4508, 45, 228) : ['CSLOT4', self._read_fake],  # record 86
             (12201, 122, 9013): ['CTETP', self._read_ctetrap],  # record 87 - not done
             (5508, 55, 217): ['CTETRA', self._read_ctetra],     # record 88
-            (7609, 76, 9993) : ['CTETPR', self._read_fake],  # record 89
-            (16600, 166, 9999) : ['CTETR10F', self._read_fake],  # record 90
-            (16100, 161, 9999) : ['CTETR4FD', self._read_fake],  # record 91
+            (7609, 76, 9993) : ['CTETPR', self._read_ctetra],  # record 89
+            (16600, 166, 9999) : ['CTETR10F', self._read_ctetra],  # record 90
+            (16100, 161, 9999) : ['CTETR4FD', self._read_ctetra],  # record 91
             (14801, 148, 643) : ['CTQUAD', self._read_fake],  # record 92
             (14901, 149, 644) : ['CTTRIA', self._read_fake],  # record 93
             (5959, 59, 282): ['CTRIA3', self._read_ctria3],   # record 94
@@ -140,7 +140,7 @@ class GEOM2(GeomCommon):
             # : ['RADBC', self._read_fake],  record 100
             (10108, 101, 512) : ['CTRIAX', self._read_ctriax],
             (6108, 61, 107) : ['CTRIAX6', self._read_ctriax6], # record 101 - not done
-            (16700, 167, 9999) : ['CTRIA6FD', self._read_fake],  # record 102
+            (16700, 167, 9999) : ['CTRIA6FD', self._read_ctria6],  # record 102
             (11301, 113, 9015) : ['CTRIAP', self._read_fake],  # record 103
             (3701, 37, 49): ['CTUBE', self._read_ctube],      # record 104
             (3901, 39, 50): ['CVISC', self._read_cvisc],      # record 105 - not done
@@ -181,16 +181,16 @@ class GEOM2(GeomCommon):
             (12801, 128, 417): ['RADBC', self._read_radbc],
             (2708, 27, 59): ['CAABSF', self._read_fake],
             (3201, 32, 478): ['GMBNDC', self._read_fake],
-            (13900, 139, 9984): ['CQUAD4FD', self._read_fake],
-            (14000, 140, 9990): ['CHEXAFD', self._read_fake],
-            (16000, 160, 9988): ['CPENTA6FD', self._read_fake],
-            (16100, 161, 9986): ['CTETRAFD', self._read_fake],
-            (16300, 163, 9989): ['CHEXA20F', self._read_fake],
-            (16700, 167, 9981): ['CTRIA6FD', self._read_fake],
-            (16800, 168, 9978): ['CTRIAX3FD', self._read_fake],
-            (16500, 165, 9987): ['CPENT15F', self._read_fake],
+            (13900, 139, 9984): ['CQUAD4FD', self._read_cquad],
+            (14000, 140, 9990): ['CHEXAFD', self._read_chexa],
+            (16000, 160, 9988): ['CPENTA6FD', self._read_cpenta],
+            (16100, 161, 9986): ['CTETRAFD', self._read_ctetra],
+            (16300, 163, 9989): ['CHEXA20F', self._read_chexa],
+            (16700, 167, 9981): ['CTRI6FD', self._read_ctria6fd],
+            (16800, 168, 9978): ['CTRIAX3FD', self._read_ctrix3fd],  # same as ctria6fd
+            (16500, 165, 9987): ['CPENT15F', self._read_cpenta],
             (5008, 50, 258): ['', self._read_fake],
-            (16400, 164, 9983) : ['CQUAD9FD', self._read_fake],
+            (16400, 164, 9983) : ['CQUAD9FD', self._read_cquad],
             (11000, 110, 6667): ['', self._read_fake],
             (12301, 123, 9921): ['', self._read_fake],
             (12401, 124, 9922): ['FEFACE/PVAL?', self._read_fake],
@@ -202,9 +202,9 @@ class GEOM2(GeomCommon):
             (3401, 34, 9600): ['', self._read_fake],    # record
             (7701, 77, 8881): ['', self._read_fake],  # record
             (2901, 29, 9601): ['', self._read_fake],  # record
-            (16600, 166, 9985) : ['', self._read_fake],  # record
-            (16200, 162, 9982) : ['', self._read_fake],  # record
-            (16900, 169, 9977) : ['', self._read_fake],  # record
+            (16600, 166, 9985) : ['CTETRA?', self._read_ctetra],  # record
+            (16200, 162, 9982) : ['CTRIA3', self._read_ctria3fd],  # record
+            (16900, 169, 9977) : ['CTRIAX', self._read_ctriax],  # record
             (1701, 17, 980) : ['CPLSTN3', self._read_fake],  # record
             (1801, 18, 986) : ['', self._read_fake],  # record
             (23500, 235, 6662) : ['', self._read_fake],  # record
@@ -218,8 +218,8 @@ class GEOM2(GeomCommon):
             (7801, 78, 8883): ['SINT', self._read_fake],  # record 118
             (8801, 88, 984) : ['CPLSTS3', self._read_fake],  # record
             (8401, 84, 985) : ['CPLSTS4', self._read_fake],  # record
-            (17000, 170, 9980): ['CQDX4FD', self._read_fake],  # record
-            (17100, 171, 9979): ['CQDX9FD', self._read_fake],  # record
+            (17000, 170, 9980): ['CQDX4FD', self._read_cquad],  # record
+            (17100, 171, 9979): ['CQDX9FD', self._read_cquadx],  # record
 
             (1976, 1, 1996) : ['', self._read_fake],  # record
             (6120, 1, 60434) : ['', self._read_fake],  # record
@@ -1539,8 +1539,8 @@ class GEOM2(GeomCommon):
                 self.binary_debug.write('  %s=%s\n' % (element.type, str(out)))
             #print('CQUAD eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s n5=%s n6=%s n7=%s n8=%s' % (
                 #eid, pid, n1, n2, n3, n4, n5, n6, n7, n8))
-            data = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
-            elem = element.add_op2_data(data)
+            datai = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, n9]
+            elem = element.add_op2_data(datai)
             self.add_op2_element(elem)
             n += 44
         self.card_count[element.type] = nelements
@@ -1867,6 +1867,106 @@ class GEOM2(GeomCommon):
                                   'CTRIA6', self.add_op2_element)
         return n
 
+    def _read_ctria3fd(self, data, n):
+        """
+        Word Name Type Description
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(6) I Grid point identification numbers of connection points
+        """
+        s = Struct(self._endian + b'8i')
+        nelements = (len(data) - n) // 32  # 8*4
+        assert (len(data) - n) % 32 == 0
+        elements = []
+        for unused_i in range(nelements):
+            edata = data[n:n + 32]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIA3=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6) = out
+            assert n4 == 0, out
+            assert n5 == 0, out
+            assert n6 == 0, out
+            nids = [n1, n2, n3]
+            elem = CTRIA3(eid, pid, nids,
+                          theta_mcid=0., zoffset=0., tflag=0,
+                          T1=None, T2=None, T3=None, comment='')
+            elements.append(elem)
+            n += 32
+
+        nelements = len(elements)
+        for elem in elements:
+            self.add_op2_element(elem)
+        self.card_count['CTRIA6'] = nelements
+        return n
+
+    def _read_ctrix3fd(self, data, n):
+        """
+        Word Name Type Description
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(6) I Grid point identification numbers of connection points
+
+        (331, 111, 331, 332, 333, 0, 0, 0,
+         332, 11, 331, 333, 334, 0, 0, 0)
+        """
+        #self.show_data(data[12:])
+        #aaa
+        s = Struct(self._endian + b'8i')
+        nelements = (len(data) - n) // 32  # 8*4
+        assert (len(data) - n) % 32 == 0
+        elements = []
+        for unused_i in range(nelements):
+            edata = data[n:n + 32]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6) = out
+            nids = [n1, n2, n3, n4, n5, n6]
+            assert n4 == 0, out
+            assert n5 == 0, out
+            assert n6 == 0, out
+            elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='')
+            elements.append(elem)
+            n += 32
+
+        nelements = len(elements)
+        for elem in elements:
+            self.add_op2_element(elem)
+        self.card_count['CTRIAX'] = nelements
+        return n
+
+    def _read_ctria6fd(self, data, n):
+        """
+        Word Name Type Description
+        1 EID  I Element identification number
+        2 PID  I Property identification number
+        3 G(6) I Grid point identification numbers of connection points
+        """
+        s = Struct(self._endian + b'8i')
+        nelements = (len(data) - n) // 32  # 8*4
+        assert (len(data) - n) % 32 == 0
+        elements = []
+        for unused_i in range(nelements):
+            edata = data[n:n + 32]
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIA6=%s\n' % str(out))
+            (eid, pid, n1, n2, n3, n4, n5, n6) = out
+            nids = [n1, n2, n3, n4, n5, n6]
+            #out = (eid, pid, n1, n2, n3, n4, n5, n6, theta, zoffs, t1, t2, t3, 0)
+            elem = CTRIA6(eid, pid, nids,
+                          theta_mcid=0., zoffset=0., tflag=0,
+                          T1=None, T2=None, T3=None, comment='')
+            elements.append(elem)
+            n += 32
+
+        nelements = len(elements)
+        for elem in elements:
+            self.add_op2_element(elem)
+        self.card_count['CTRIA6'] = nelements
+        return n
+
     def _read_ctria6_current(self, data, n):
         """
         CTRIA6(4801,48,327) - the marker for Record 96
@@ -1907,6 +2007,14 @@ class GEOM2(GeomCommon):
     def _read_ctria6_v2001(self, data, n):
         """
         CTRIA6(4801,48,327) - the marker for Record 96
+
+        1 EID     I Element identification number
+        2 PID     I Property identification number
+        3 G(6)    I Grid point identification numbers of connection points
+        9 THETA  RS Material property orientation angle or coordinate system identification number
+        10 ZOFFS RS Offset from the surface of grid points reference plane
+        11 T(3)  RS Membrane thickness of element at grid points
+        14 TFLAG  I Relative thickness flag
         """
         s = Struct(self._endian + b'8i 5f')
         nelements = (len(data) - n) // 52  # 13*4
@@ -1954,6 +2062,30 @@ class GEOM2(GeomCommon):
             self.add_op2_element(elem)
             n += ntotal
         self.card_count['CTRIAR'] = nelements
+        return n
+
+    def _read_ctriax_b(self, data, n):  # pragma: no cover
+        """
+        CTRIAX  341     11      341     342     343     345     346     349     +TX1
+        +TX1    12
+        CTRIAX  342     111     341     343     344     349     347     348
+        (341, 11,  341, 342, 343, 345, 346, 349,
+         342, 111, 341, 343, 344, 349, 347, 348)
+        """
+        ntotal = 32  # 8*4
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(self._endian + b'8i')
+        for unused_i in range(nentries):
+            edata = data[n:n + 32]
+            out = struc.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            eid, pid, n1, n2, n3, n4, n5, n6 = out
+            nids = [n1, n2, n3, n4, n5, n6]
+            elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='')
+            self.add_op2_element(elem)
+            n += 32
+        self.card_count['CTRIAX'] = nentries
         return n
 
     def _read_ctriax(self, data, n):

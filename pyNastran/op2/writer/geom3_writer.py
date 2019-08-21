@@ -404,9 +404,11 @@ def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx
             #elif flag == 9:
                 #flag = 'AREA8'
 
-            #if load.flag == 'POINT':
-                #flag = 0 # 1?
-            if load.flag == 'LINE':
+            if load.flag == 'POINT':
+                # C:\NASA\m4\formats\git\examples\move_tpl\ex8a.op2 - flag=1
+                flag = 1 # 0?
+                nnodes = 1
+            elif load.flag == 'LINE':
                 flag = 2
                 nnodes = 2
             elif load.flag == 'AREA4':

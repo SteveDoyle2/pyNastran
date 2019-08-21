@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import unittest
 from pyNastran.f06.f06_formatting import (
     write_floats_8p4f, write_floats_8p1e,

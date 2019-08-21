@@ -139,7 +139,7 @@ class HDF5Exporter:
         elif isinstance(value, set):
             self._add_list_tuple(hdf5_file, key, value, 'set')
         elif hasattr(value, 'export_hdf5_file'):
-            print('export_hdf5_file', key)
+            #print('export_hdf5_file', key)
             sub_group = hdf5_file.create_group(key)
             sub_group.attrs['type'] = value.__class__.__name__
             value.export_hdf5_file(sub_group, exporter=self)

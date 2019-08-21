@@ -2,6 +2,7 @@
 """tests for dict_to_h5py"""
 import unittest
 import numpy as np
+from cpylog import get_logger
 
 try:
     import h5py  # pylint: disable=unused-import
@@ -19,6 +20,7 @@ class TestDictToH5(unittest.TestCase):
     @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_dict_to_h5py(self):
         model = BDF()
+        log = get_logger(log=None, level='warning', encoding='utf-8')
         obj = {
             'bdf' : model,
             'key' : 'value',
@@ -39,13 +41,13 @@ class TestDictToH5(unittest.TestCase):
         custom_types = {
             'BDF' : BDF,
         }
-        export_obj_to_hdf5('test.h5', obj, log=None)
+        export_obj_to_hdf5('test.h5', obj, log=log)
         #export_obj_to_hdf5_file('test.h5', ap, log)
-        new_dict = load_obj_from_hdf5('test.h5', custom_types, log=None)
+        new_dict = load_obj_from_hdf5('test.h5', custom_types, log=log)
         #print('new_dict[ap]', new_dict['ap'])
         #print('variable_type_list', new_dict['variable_type_list'])
         #print('variable_type_tuple', new_dict['variable_type_tuple'])
-        export_obj_to_hdf5('test_new.h5', new_dict, log=None)
+        export_obj_to_hdf5('test_new.h5', new_dict, log=log)
 
 
         #os.remove('test.h5')
