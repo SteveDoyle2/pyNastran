@@ -6,7 +6,7 @@ from struct import Struct
 import numpy as np
 
 from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP
-from pyNastran.bdf.cards.parametric import FEEDGE
+from pyNastran.bdf.cards.parametric.geometry import FEEDGE, FEFACE
 
 from pyNastran.bdf.cards.coordinate_systems import (
     CORD1R, CORD1C, CORD1S,
@@ -60,7 +60,7 @@ class GEOM1(GeomCommon):
             (5501,  55, 297): ['CSUPEXT', self._read_fake],  # record 9
             (1627,  16, 463): ['EXTRN',   self._read_extrn],  # record 10
             (6101,  61, 388): ['FEEDGE',  self._read_feedge],  # record 11
-            (6601,  66, 392): ['GMCURVE', self._read_gmcurve],  # record 12
+            (6601,  66, 392): ['GMCURVE', self._read_gmcurv],  # record 12
             (6201,  62, 389): ['FEFACE',  self._read_feface],  # record 13
             (6001,  60, 377): ['POINT',   self._read_point],  # record 14
             (10101,101, 394): ['GMSURF',  self._read_gmsurf],  # record 15
@@ -385,6 +385,8 @@ class GEOM1(GeomCommon):
 
             if geomin == b'POIN':
                 geomin_str = 'POINT'
+            elif geomin == b'GMCU':
+                geomin_str = 'GMCURV'
             else:  # pragma: no cover
                 raise RuntimeError(geomin)
 
@@ -393,17 +395,67 @@ class GEOM1(GeomCommon):
             elem = FEEDGE(edge_id, [n1, n2], cid, geomin_str, [geom1, geom2])
             self.reject_cards.append(elem)
             n += ntotal
-
         self.card_count['FEEDGE'] = nelements
         return n
 
-    def _read_gmcurve(self, data, n):
-        self.log.info('skipping GMCURVE in GEOM1')
+    def _read_gmcurv(self, data, n):
+        """
+        Word Name Type Description
+        1 CURVID       I Curve identification number
+        2 GROUP(2) CHAR4 Group of curves/surfaces to which this curve belongs
+        4 CIDIN        I Coordinate system identification number for the geometry
+        5 CIDBC        I Coordinate system identification number for the constraints
+        6 DATA     CHAR4 Geometry evaluator specific data
+        """
+        ints = np.frombuffer(data[n:], dtype=self.idtype).copy()
+        iminus1 = np.where(ints == -1)[0].tolist()
+        i0 = 0
+        for iminus1i in iminus1:
+            curve_id = ints[i0]
+            cid_in, cid_bc = ints[i0+3:i0+5]
+            s0 = n + 4
+            s1 = s0 + 8
+            group = data[s0:s1].decode('latin1').rstrip()
+            #print(curve_id, group, cid_in, cid_bc)
+            assert group in ['MSCGRP1', 'MSCGRP2'], (curve_id, group, cid_in, cid_bc)
+
+            s2 = s1 + 8
+            s3 = 12 + iminus1i * 4
+            datai = data[s2:s3].decode('latin1').rstrip()
+            #print('datai = %r' % datai)
+            i0 = iminus1i + 1
+            # n = s3 + 4
+            n = 12+(iminus1i + 1)*4
+            #print('-----------------')
         return len(data)
 
     def _read_feface(self, data, n):
-        self.log.info('skipping FEFACE in GEOM1')
-        return len(data)
+        """
+        Word Name Type Description
+        1 FACEID    I Face identification number
+        2 GRID1     I Identification number of end GRID 1
+        3 GRID2     I Identification number of end GRID 2
+        4 GRID3     I Identification number of end GRID 3
+        5 GRID4     I Identification number of end GRID 4
+        6 CIDBC     I Coordinate system identification number for the constraints
+        7 SURFID(2) I Alternate method used to specify the geometry
+        """
+        structi = Struct(self._endian + b'8i')
+        nentries = (len(data) - n) // 32
+        for unused_i in range(nentries):
+            edata = data[n:n + 32]
+            out = structi.unpack(edata)
+            (face_id, n1, n2, n3, n4, cid, surf_id1, surf_id2) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  FEFACE=%s\n' % str(out))
+
+            nodes = [n1, n2, n3, n4]
+            surf_ids = [surf_id1, surf_id2]
+            feface = FEFACE(face_id, nodes, cid, surf_ids)
+            self.reject_cards.append(feface)
+            n += 32
+        self.increase_card_count('FEFACE', nentries)
+        return n
 
     def _read_gmsurf(self, data, n):
         self.log.info('skipping GMSURF in GEOM1')

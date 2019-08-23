@@ -9,7 +9,8 @@ from pyNastran.bdf.cards.elements.elements import CGAP, PLOTEL
 from pyNastran.bdf.cards.elements.damper import (CDAMP1, CDAMP2, CDAMP3,
                                                  CDAMP4, CDAMP5, CVISC)
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
-from pyNastran.bdf.cards.elements.axisymmetric_shells import CQUADX, CTRIAX6, CTRAX3, CTRAX6, CQUADX8, CTRIAX
+from pyNastran.bdf.cards.elements.axisymmetric_shells import (
+    CQUADX, CTRIAX6, CTRAX3, CTRAX6, CQUADX8, CTRIAX)
 from pyNastran.bdf.cards.elements.shell import (CTRIA3, CQUAD4, CTRIA6,
                                                 CQUADR, CTRIAR,
                                                 CQUAD8, CQUAD,
@@ -25,13 +26,46 @@ from pyNastran.bdf.cards.thermal.thermal import CHBDYG, CONV, CHBDYP, CHBDYE, CO
 from pyNastran.bdf.cards.thermal.radiation import RADBC # , RADM, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
 from pyNastran.bdf.cards.nodes import SPOINTs
 from pyNastran.bdf.cards.elements.bush import CBUSH
-from pyNastran.bdf.cards.parametric import FEEDGE
+from pyNastran.bdf.cards.parametric.geometry import FEEDGE
 
 from pyNastran.op2.errors import MixedVersionCard
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 
 class CAABSF:
     type = 'CAABSF'
+    def __init__(self, eid, pid, nodes):
+        self.eid = eid
+        self.pid = pid
+        self.nodes = nodes
+
+class CHACAB:
+    """
+    Acoustic Absorber Element Connection
+    Defines the acoustic absorber element in coupled fluid-structural analysis.
+
+    | CHACAB | EID | PID | G1  | G2  | G3  | G4  | G5 | G6 |
+    |        | G7  | G8  | G9  | G10 | G11 | G12 |    |    |
+    |        |     |     | G17 | G18 | G19 | G20 |    |    |
+    """
+    type = 'CHACAB'
+    def __init__(self, eid, pid, nodes):
+        """
+        EID Element identification number. (0 < Integer < 100,000,000)
+        PID Property identification number of a PACABS entry. (Integer > 0)
+        Gi Grid point identification numbers of connection points. (Integer > 0 or blank)
+        """
+        self.eid = eid
+        self.pid = pid
+        self.nodes = nodes
+
+class CHACBR:
+    """
+
+    | CHACBR | EID | PID | G1  | G2  | G3  | G4  | G5 | G6 |
+    |        | G7  | G8  | G9  | G10 | G11 | G12 |    |    |
+    |        |     |     | G17 | G18 | G19 | G20 |    |    |
+    """
+    type = 'CHACBR'
     def __init__(self, eid, pid, nodes):
         self.eid = eid
         self.pid = pid
@@ -207,7 +241,7 @@ class GEOM2(GeomCommon):
             #(13601, 136, 562): ['CWELDG', self._read_fake], # This record is no longer used
             (4301, 43, 28): ['GENEL', self._read_genel],
             #(3201, 32, 478): ['GMBNDC', self._read_fake],
-            (12901, 129, 482): ['GMBNDS', self._read_fake],
+            (12901, 129, 482): ['GMBNDS', self._read_gmbnds],
             (3301, 33, 479): ['GMINTC', self._read_fake],
             (13001, 130, 483): ['GMINTS', self._read_fake],
             #(2801, 28, 630): ['MICPNT', self._read_fake],
@@ -222,7 +256,7 @@ class GEOM2(GeomCommon):
             #(5207, 52, 674): ['PLOTTET', self._read_fake],
             #(3002, 46, 0): ['Q4AERO', self._read_fake],
             (12801, 128, 417): ['RADBC', self._read_radbc],
-            (7801, 78, 8883): ['SINT', self._read_fake],
+            (7801, 78, 8883): ['SINT', self._read_sint],
             (5551, 49, 105): ['SPOINT', self._read_spoint], # record 119
             #(2701, 27, 0): ['T3AERO', self._read_fake],
             #(11601, 116, 9942): ['VUBEAM', self._read_fake],
@@ -275,11 +309,11 @@ class GEOM2(GeomCommon):
             #(8515, 85, 0): ['CFLUID2', self._read_cfluid2],  # record 36 - not done
             #(8615, 86, 0): ['CFLUID3', self._read_cfluid3],  # record 37 - not done
             #(8715, 87, 0): ['CFLUID4', self._read_cfluid4],  # record 38 - not done
-            (7701, 77, 8881): ['CINT', self._read_fake],     # record 39 - not done
+            (7701, 77, 8881): ['CINT', self._read_cint],      # record 39 - not done
 
             #(1908, 19, 104): ['CGAP', self._read_cgap],      # record 40 - buggy
-            (8100, 81, 381): ['CHACAB', self._read_fake],    # 41 - not done
-            (8200, 82, 383): ['CHACBR', self._read_fake],    # 42 - not done
+            (8100, 81, 381): ['CHACAB', self._read_chacab],    # 41
+            (8200, 82, 383): ['CHACBR', self._read_chacbr],    # 42 - not done
             #(8308, 83, 405): ['CHBDYE', self._read_chbdye],  # record 43
             #(10808, 108, 406): ['CHBDYG', self._read_fake],  # 44
             #(10908, 109, 407): ['CHBDYP', self._read_fake],  # 45
@@ -288,7 +322,7 @@ class GEOM2(GeomCommon):
             (14000, 140, 9990): ['CHEXAFD', self._read_chexa], # record 48
             (7908, 79, 369): ['CHEXAL', self._read_fake],     # 49
 
-            (12001, 120, 9011): ['CHEXP', self._read_chexp],  # record 50
+            (12001, 120, 9011): ['CHEXP', self._read_fake],  # record 50
             (7409, 74, 9991): ['CHEXPR', self._read_chexpr],  # record 51
             #(1001, 10, 65): ['CMASS1', self._read_cmass1],   # record 52
             #(1101, 11, 66): ['CMASS2', self._read_cmass2],   # record 53
@@ -317,11 +351,11 @@ class GEOM2(GeomCommon):
             (11101, 111, 9014): ['CQUADP', self._read_fake], # 74
             (8009, 80, 367): ['CQUADR', self._read_cquadr], # record 75
             (9008, 90, 508): ['CQUADX', self._read_cquadx], # record 76
-            (14700, 147, 6662): ['CRBAR', self._read_fake], # 77
-            (17300, 173, 6664): ['CRBE1', self._read_fake], # 78
-            (17200, 172, 6663): ['CRBE3', self._read_fake], # 79
+            (14700, 147, 6662): ['CRBAR', self._read_crbar], # 77
+            (17300, 173, 6664): ['CRBE1', self._read_crbe1], # 78
+            (17200, 172, 6663): ['CRBE3', self._read_crbe3], # 79
 
-            (11000, 110, 6667): ['CRJOINT', self._read_fake],  # 80
+            (11000, 110, 6667): ['CRJOINT', self._read_crjoint],  # 80
             #(3001, 30, 48): ['CROD', self._read_crod],         # record 81
             (12600, 126, 6661): ['CRROD', self._read_fake],    # 82
             (13801, 138, 570): ['CSEAM', self._read_fake],     # 83
@@ -355,7 +389,7 @@ class GEOM2(GeomCommon):
 
             #(4301, 43, 28): ['GENEL', self._read_genel],     # 110
             (3201, 32, 478): ['GMBNDC', self._read_gmbndc],   # 111
-            #(12901, 129, 482): ['GMBNDS', self._read_fake], # 112
+            #(12901, 129, 482): ['GMBNDS', self.read_gmbnds], # 112
             #(3301, 33, 479): ['GMINTC', self._read_fake],   # 113
             #(13001, 130, 483): ['GMINTS', self._read_fake], # 114
             #(5201, 52, 11): ['PLOTEL', self._read_plotel],  # record 115
@@ -369,7 +403,7 @@ class GEOM2(GeomCommon):
             (11201, 112, 9940): ['VUQUAD4', self._read_vuquad4],  # 122
             (12401, 124, 146): ['VUPENTA', self._read_fake],   # 123
             (12501, 125, 147): ['VUTETRA', self._read_fake],   # 124
-            (11501, 115, 9941): ['VUTRIA3', self._read_fake],  # 125
+            (11501, 115, 9941): ['VUTRIA3', self._read_vutria3],  # 125
             (13701, 137, 569): ['WELDP', self._read_fake],     # 126; same as CFASTP
 
             #----------------------------------------------
@@ -386,13 +420,13 @@ class GEOM2(GeomCommon):
             (16700, 167, 9981): ['CTRI6FD', self._read_ctria6fd],
             (16800, 168, 9978): ['CTRIAX3FD', self._read_ctrix3fd],  # same as ctria6fd
             (16500, 165, 9987): ['CPENT15F', self._read_cpenta],
-            (5008, 50, 258): ['', self._read_fake],
-            (12301, 123, 9921): ['', self._read_fake],
+            (5008, 50, 258): ['CNGRET', self._read_cngret],
+            (12301, 123, 9921): ['ADAPT card', self._read_adapt],
             (12401, 124, 9922): ['FEFACE/PVAL?', self._read_feface_pval],
             (12600, 126, 6661): ['', self._read_fake],
-            (7309, 73, 0): ['', self._read_fake],
-            (12501, 125, 9923): ['', self._read_fake],    # record
-            (3401, 34, 9600): ['', self._read_fake],    # record
+            (7309, 73, 0): ['CaseControl SET?', self._read_fake],
+            (12501, 125, 9923): ['ADAPT card 2', self._read_adapt],    # record
+            (3401, 34, 9600): ['GMCONV?', self._read_fake],    # record
             (2901, 29, 9601): ['FEEDGE', self._read_feedge2],  # record
             (16600, 166, 9985) : ['CTETRA?', self._read_ctetra],  # record
             (16200, 162, 9982) : ['CTRIA3', self._read_ctria3fd],  # record
@@ -445,7 +479,7 @@ class GEOM2(GeomCommon):
         5 G3  I Grid point 3 identification number
         6 G4  I Grid point 4 identification number
         """
-        return self._run_quad_no_extra(data, n, CAABSF)
+        return self._run_4nodes(data, n, CAABSF)
 
 # 3-CAXIF2 (2108,21,224)
 # 4-CAXIF3 (2208,22,225)
@@ -541,10 +575,6 @@ class GEOM2(GeomCommon):
         8 X6 RS 6th intermediate station for data recovery
         9 UNDEF none Not used
         """
-        #self.log.info('skipping CBARAO in GEOM2')
-        #if self.is_debug_file:
-            #self.binary_debug.write('skipping CBARAO in GEOM2\n')
-        #return len(data)
         nelements = (len(data) - n) // 36
         s = Struct(self._endian + b'2i7f')
         for unused_i in range(nelements):
@@ -879,13 +909,15 @@ class GEOM2(GeomCommon):
 # CDUM7
 
     def _read_cdum8(self, data, n):
+        self.log.info('skipping CDUM9 in GEOM2')
         ints = np.frombuffer(data[n:], dtype='int32').copy()
-        print('CDUM8', ints)
+        #print('CDUM8', ints)
         return n
 
     def _read_cdum9(self, data, n):
+        self.log.info('skipping CDUM9 in GEOM2')
         ints = np.frombuffer(data[n:], dtype='int32').copy()
-        print('CDUM9', ints)
+        #print('CDUM9', ints)
         return n
 
     def _read_celas1(self, data, n):
@@ -1047,7 +1079,30 @@ class GEOM2(GeomCommon):
         self.card_count['CFLUID4'] = nelements
         return n
 
-# CINT
+    def _read_cint(self, data, n):
+        """
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 PID    I Property identification number
+        3 PTELC  I Pointer to element identification number
+        4 NSEG   I Number of segments
+        5 PTSGR  I Pointer to segment displacements
+        6 NBOUND I Number of boundaries
+        7 BID    I Boundary identification number
+        8 NEDGE  I Number of edges
+        9 PTBND  I Pointer to boundary identification number
+        10 PTBGR I Pointer to boundary grid displacements
+        11 PTBED I Pointer to boundary edge displacements
+        12 PTBGL I Pointer to boundary grid Lagrange Multipliers
+        13 PTBEL I Pointer to boundary edge Lagrange Multipliers
+        Words 7 through 13 repeat 6 times
+        14 UNDEF(2 ) none
+        """
+        self.log.info('skipping CINT in GEOM2')
+        # C:\NASA\m4\formats\git\examples\move_tpl\ifcq12p.op2
+        # doesn't seem to be a card, more of a general info on the geometry...
+        #ints = np.frombuffer(data[n:], dtype=self.idtype).copy()
+        return len(data)
 
     def _read_cgap(self, data, n):
         """
@@ -1086,7 +1141,46 @@ class GEOM2(GeomCommon):
         self.card_count['CGAP'] = nelements
         return n
 
-# CHACAB
+    def _read_chacab(self, data, n):
+        """CHACAB(8100,81,381)"""
+        return self._run_20nodes(data, n, CHACAB)
+
+    def _read_chacbr(self, data, n):
+        """CHACAB(8100,81,381)"""
+        return self._run_20nodes(data, n, CHACBR)
+
+    def _run_20nodes(self, data, n, element):
+        """
+        common method for
+        Word Name Type Description
+        1 EID I Element identification number
+        2 PID I Property identification number
+        3 G(20) I Grid point identification numbers of connection points
+        """
+        nelements = (len(data) - n) // 88
+        s = Struct(self._endian + b'22i')
+        #if self.is_debug_file:
+            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+
+        #if self.is_debug_file:
+            #self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2]')
+
+        for unused_i in range(nelements):
+            edata = data[n:n + 88]  # 22*4
+            out = s.unpack(edata)
+            (eid, pid, *nodes) = out
+            nodes = list(nodes)
+            if self.is_debug_file:
+                self.binary_debug.write(f'  {element.type}=({eid}, {pid}, {nodes}')
+
+            elem = element(eid, pid, nodes)
+            self.add_op2_element(elem)
+            n += 88
+        #if stop:
+            #raise RuntimeError('theta is too large...make the quad wrong')
+        self.card_count[elem.type] = nelements
+        return n
+
 # CHACBR
 
     def _read_chbdye(self, data, n):
@@ -1194,14 +1288,14 @@ class GEOM2(GeomCommon):
 # CHEXAFD
 # CHEXAL
 # CHEXP
-    def _read_chexp(self, data, n):
-        """
-        CHEXP(12001,120,9011) - the marker for Record 50
-        """
-        self.log.info('skipping CHEXP in GEOM2')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping CHEXP in GEOM2\n')
-        return len(data)
+    #def _read_chexp(self, data, n):
+        #"""
+        #CHEXP(12001,120,9011) - the marker for Record 50
+        #"""
+        #self.log.info('skipping CHEXP in GEOM2')
+        #if self.is_debug_file:
+            #self.binary_debug.write('skipping CHEXP in GEOM2\n')
+        #return len(data)
 
     def _read_chexpr(self, data, n):
         """
@@ -1618,7 +1712,6 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n+28]
             out = structi.unpack(edata)
-            #print(out)
             if self.is_debug_file:
                 self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot) = out
@@ -1705,11 +1798,12 @@ class GEOM2(GeomCommon):
         """
         return self._run_cquad4(data, n, CQUAD4)
 
+    def _read_vutria3(self, data, n):
+        return self._run_3nodes(data, n, CTRIA3)
+
     def _read_vuquad4(self, data, n):
-        """
-        VUQUAD4(11201,112,9940)
-        """
-        return self._run_cquad4_no_extra(data, n, CQUAD4)
+        """VUQUAD4(11201,112,9940)"""
+        return self._run_4nodes(data, n, CQUAD4)
 
     def _run_cquad(self, data, n, element):
         """common method for CQUAD, CQUADX"""
@@ -1732,39 +1826,8 @@ class GEOM2(GeomCommon):
         self.card_count[element.type] = nelements
         return n
 
-    def _run_cquad4_no_extra(self, data, n, element):
-        """
-        common method for CQUAD4, CQUADR
-        """
-        nelements = (len(data) - n) // 24
-        s = Struct(self._endian + b'6i')
-        #if self.is_debug_file:
-            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
-
-        if self.is_debug_file:
-            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4]')
-
-        for unused_i in range(nelements):
-            edata = data[n:n + 24]  # 6*4
-            out = s.unpack(edata)
-            (eid, pid, n1, n2, n3, n4) = out
-            if self.is_debug_file:
-                self.binary_debug.write(
-                    f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}]')
-
-            nids = [n1, n2, n3, n4]
-            elem = element(eid, pid, nids)
-            self.add_op2_element(elem)
-            n += 24
-        #if stop:
-            #raise RuntimeError('theta is too large...make the quad wrong')
-        self.card_count[element.type] = nelements
-        return n
-
-    def _run_2nodes_no_extra(self, data, n, element):
-        """
-        common method for CQUAD4, CQUADR
-        """
+    def _run_2nodes(self, data, n, element):
+        """common method for VUBEAM"""
         nelements = (len(data) - n) // 16
         s = Struct(self._endian + b'4i')
         #if self.is_debug_file:
@@ -1790,10 +1853,62 @@ class GEOM2(GeomCommon):
         self.card_count[elem.type] = nelements
         return n
 
+    def _run_3nodes(self, data, n, element):
+        """common method for CTRIA3, VUTRIA3"""
+        nelements = (len(data) - n) // 20
+        s = Struct(self._endian + b'5i')
+        #if self.is_debug_file:
+            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+
+        if self.is_debug_file:
+            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3]')
+
+        for unused_i in range(nelements):
+            edata = data[n:n + 20]  # 5*4
+            out = s.unpack(edata)
+            (eid, pid, n1, n2, n3) = out
+            if self.is_debug_file:
+                self.binary_debug.write(
+                    f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}]')
+
+            nids = [n1, n2, n3]
+            elem = element(eid, pid, nids)
+            self.add_op2_element(elem)
+            n += 20
+        #if stop:
+            #raise RuntimeError('theta is too large...make the quad wrong')
+        self.card_count[element.type] = nelements
+        return n
+
+    def _run_4nodes(self, data, n, element):
+        """common method for CQUAD4, CQUADR"""
+        nelements = (len(data) - n) // 24
+        s = Struct(self._endian + b'6i')
+        #if self.is_debug_file:
+            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+
+        if self.is_debug_file:
+            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4]')
+
+        for unused_i in range(nelements):
+            edata = data[n:n + 24]  # 6*4
+            out = s.unpack(edata)
+            (eid, pid, n1, n2, n3, n4) = out
+            if self.is_debug_file:
+                self.binary_debug.write(
+                    f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}]')
+
+            nids = [n1, n2, n3, n4]
+            elem = element(eid, pid, nids)
+            self.add_op2_element(elem)
+            n += 24
+        #if stop:
+            #raise RuntimeError('theta is too large...make the quad wrong')
+        self.card_count[element.type] = nelements
+        return n
+
     def _run_cquad4(self, data, n, element):
-        """
-        common method for CQUAD4, CQUADR
-        """
+        """common method for CQUAD4, CQUADR"""
         nelements = (len(data) - n) // 56
         s = Struct(self._endian + b'6iffii4f')
         if self.is_debug_file:
@@ -1895,7 +2010,6 @@ class GEOM2(GeomCommon):
         16 ZOFFS RS Offset from the surface of grid points
                     reference plane
         """
-        #self.show_data(data, types='if')
         nelements = (len(data) - n) // 64  # 16*4
         s = Struct(self._endian + b'10i 6f')
         elements = []
@@ -1924,16 +2038,41 @@ class GEOM2(GeomCommon):
 
     def _read_cquadr(self, data, n):
         """CQUADR(8009,80,367)  - the marker for Record 75"""
-        return self.run_cquad4(data, n, CQUADR)
+        return self._run_cquad4(data, n, CQUADR)
 
     def _read_cquadx(self, data, n):
         """CQUADX(9008,90,508)  - the marker for Record 76"""
-        return self.run_cquad(data, n, CQUADX)
+        return self._run_cquad(data, n, CQUADX)
 
-# CRBAR
-# CRBE1
-# CRBE3
-# CRJOINT
+    def _read_crbar(self, data, n):
+        # C:\NASA\m4\formats\git\examples\move_tpl\nrgd20c.op2
+        self.log.info('skipping RBAR in GEOM2')
+        return len(data)
+
+    def _read_crbe1(self, data, n):
+        # C:\NASA\m4\formats\git\examples\move_tpl\nrgd406a.op2
+        self.log.info('skipping RBE1 in GEOM2')
+        return len(data)
+
+    def _read_crbe3(self, data, n):
+        # C:\NASA\m4\formats\git\examples\move_tpl\ngd720a.op2
+        self.log.info('skipping RBE3 in GEOM2')
+        return len(data)
+
+    def _read_crjoint(self, data, n):
+        """
+        Word Name Type Description
+        1 EID   I Element identification number
+        2 GA    I Grid point A identification number
+        3 GB    I Grid point B identification number
+        4 LMID1 I Lagrange multiplier identification number
+        5 NDOFS I Number of DOF for Lagrange multiplier
+        6 CB    I Component numbers of dependent DOFs at end B
+        """
+        # no rjoint...
+        # C:\NASA\m4\formats\git\examples\move_tpl\ngd720a.op2
+        self.log.info('skipping RJOINT in GEOM2')
+        return len(data)
 
     def _read_crod(self, data, n):
         """
@@ -1986,6 +2125,7 @@ class GEOM2(GeomCommon):
         CTETP(12201,122,9013)    - the marker for Record 87
         .. todo:: needs work
         """
+        self.log.info('poor reading of CTETRAP in GEOM2')
         nelements = (len(data) - n) // 108  # 27*4
         struct_27i = Struct(self._endian + b'27i')
         for unused_i in range(nelements):
@@ -2369,20 +2509,32 @@ class GEOM2(GeomCommon):
         6    EID       I     Entity identification numbers for boundary of subdomain
         Word 6 repeats until End of Record
         """
+        self.log.info('skipping GMBNDC in GEOM2')
         #self.show_data(data)
         #(1, 31, 32, GRID____, -1,
          #2, 41, 42, GRID____, -1)
-        nelements = 0
-        structi = Struct(self._endian + b'3i 8s i')
-        while n < len(data):
-            datai = data[n:n+24]
-            out = structi.unpack(datai)
-            bid, gridi, gridf, entity, eid = out
-            assert eid == -1, out
-            nelements += 1
-            n += 24
+
+        #ints= (3201, 32, 478,
+        # 2, 41, 42, 1145390406, 538985799, 41, -1,
+        # 990003, 101000045, 101000046, 1145655879, 538976288, 101000045, 101000046, -1)
+        ints = np.frombuffer(data[n:], self.idtype) # .tolist()
+        isplit = np.where(ints == -1)[0]
+        nelements = len(isplit)
+
+        i0 = 0
+        for ispliti in isplit:
+            eid, gridi, gridf = ints[i0:i0+3]
+            #print(eid, gridi, gridf)
+            s0 = n + (i0 + 3) * 4
+            s1 = s0 + 8
+            entity = data[s0:s1].decode('latin1').rstrip()
+            eids = ints[i0+5:ispliti]
+            assert entity in ['FEEDGE', 'GRID', 'GMCURV'], f'entity={repr(entity)}'
+            #print(eids)
+            i0 = ispliti + 1
+
         self.card_count['GMBNDC'] = nelements
-        return n
+        return len(data)
 
     def _read_ctube(self, data, n):
         """
@@ -2504,6 +2656,7 @@ class GEOM2(GeomCommon):
         141.0, 1.0, 186.0, 71.4000015258789, 141.0, 1.0, 268.0, -15.800000190734863, 223.0, 1.0, 268.0, 63.20000076293945, 223.0, 1.0, 368.0, -13.300000190734863, 323.0, 1.0,
         368.0, 53.20000076293945, 323.0, 1.0, 458.0, -11.050000190734863, 413.0, 1.0, 458.0, 44.20000076293945, 413.0)
         """
+        self.log.info('skipping GENEL in GEOM2')
         #self.log.info(f'skipping GENEL in GEOM2; len(data)={len(data)-12}')
         #print(n)
         ints = np.frombuffer(data[n:], dtype='int32').copy()
@@ -2621,7 +2774,34 @@ class GEOM2(GeomCommon):
         return n
 
 # RADINT
-# SINT
+    def _read_sint(self, data, n):
+        """
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 PID    I Property identification number
+        3 PTELE  I Pointer to element identification number
+        4 NSEG   I Number of segments
+        5 STSC   I Stride for segment displacement data
+        6 PTSC   I Pointer to segment displacements
+        7 NBOUND I Number of boundaries
+        8 BID    I Boundary identification number
+        9 NFACE  I Number of faces
+        10 STBC  I Stride for boundary displacement data
+        11 NSEG  I Number of segments
+        12 STLC1 I Stride for Boundary Lagrange Multiplier data
+        13 PTBND I Pointer to boundary identification number
+        14 PTBC  I Pointer to boundary displacements
+        15 PTLC  I Pointer to boundary Lagrange
+        Multipliers
+        Words 8 through 15 repeat 5 times
+        16 UNDEF(3 ) none
+        """
+        self.log.info('skipping SINT in GEOM2')
+        # C:\NASA\m4\formats\git\examples\move_tpl\ifscp88.op2
+        # doesn't seem to be a card, more of a general info on the geometry...
+        #ints = np.frombuffer(data[n:], dtype=self.idtype).copy()
+        #print(ints.tolist())
+        return len(data)
 
     def _read_spoint(self, data, n):
         """
@@ -2646,7 +2826,7 @@ class GEOM2(GeomCommon):
             elem = CBEAM(eid-deltae, pid, nids2, x, g0)
             return elem
 
-        self._run_2nodes_no_extra(data, n, element)
+        self._run_2nodes(data, n, element)
         #assert len(self.elements) > 0, self.elements
         return n
 
@@ -2794,6 +2974,8 @@ class GEOM2(GeomCommon):
         #(200000002, 3, 1002, 6, 12, 0, 0)
         # FEEDGE EDGEID GRID1 GRID2 CIDBC GEOMIN ID1 ID2
         #FEEDGE    1002    6     12
+
+        # C:\NASA\m4\formats\git\examples\move_tpl\phscvhg6.op2
         #self.show_data(data[12:])
         ntotal = 28  # 7*4
         # s = Struct(self._endian + b'4i 4s 2i') #expected
@@ -2802,10 +2984,10 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n+28]
             out = s.unpack(edata)
-            #print(out)
+            print(out)
             #edge_id, n1, n2, cid, geomin, geom1, geom2 = out # expected
-            dunno, three, edge_id, n1, n2, zero1, zero2 = out
-            assert three == 3, out
+            dunno, two_three, edge_id, n1, n2, zero1, zero2 = out
+            assert two_three in [2, 3], out
             assert zero1 == 0, out
             assert zero2 == 0, out
             if self.is_debug_file:
@@ -2822,9 +3004,47 @@ class GEOM2(GeomCommon):
             # elem = CQUADX8(eid, pid, [n1, n2, n3, n4, n5, n6, n7, n8], theta)
             # self.add_op2_element(elem)
             n += ntotal
+        bbb
         self.card_count['FEEDGE'] = nelements
         return n
 
+    def _read_gmbnds(self, data, n):
+        """
+        Word Name Type Description
+        1 BID           I Boundary identification number
+        2 GRIDC(4)      I Corner grid 1
+        6 ENTITY(2) CHAR4 Entity type for defining boundary
+        8 EID           I Entity identification numbers for boundary of subdomain
+        Word 8 repeats until End of Record
+        """
+        self.log.info('skipping GMBNDS in GEOM2')
+        #(1, 0, 0, 0, 0, 'FEFACE  ', 31, -1)
+        ints = np.frombuffer(data[n:], dtype=self.idtype).copy()
+        iminus1 = np.where(ints == -1)[0]
+        i0 = 0
+        for iminus1i in iminus1:
+            bid, n1, n2, n3, n4 = ints[i0:i0+5]
+            s0 = n + (i0 + 5) * 4
+            s1 = s0 + 8
+            entity = data[s0:s1].decode('latin1').rstrip()
+            assert entity in ['FEFACE', 'GMSURF', 'GRID'], (bid, n1, n2, n3, n4, entity)
+            assert bid >= 0, (bid, n1, n2, n3, n4, entity)
+            eids = ints[i0+7:iminus1i]
+            #print(bid, n1, n2, n3, n4)
+            #print('entity = %r' % entity)
+            #print(eid)
+            #print('-----')
+            i0 = iminus1i + 1
+        return len(data)
+
+    def _read_cngret(self, data, n):
+        # C:\NASA\m4\formats\git\examples\move_tpl\bpas101.op2
+        # C:\NASA\m4\formats\git\examples\move_tpl\pass8.op2
+        return len(data)
+
+    def _read_adapt(self, data, n):
+        self.log.info('skipping adapt card in GEOM2')
+        return len(data)
 
 def convert_theta_to_mcid(theta):
     """odd function..."""

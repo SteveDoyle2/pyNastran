@@ -178,13 +178,43 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
             (10300, 103, 16) : ['QUADP', self._read_fake],
             (10400, 104, 15) : ['TRIAP', self._read_fake],
             (10500, 105, 14) : ['BEAMP', self._read_fake],
-            (14100, 141, 18) : ['HEXAP', self._read_fake],
+            (14100, 141, 18) : ['HEXAP', self._read_view_hexa],
             (14200, 142, 16) : ['PENTAP', self._read_fake],
             (14300, 143, 14) : ['TETRAP', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
             #(10500, 105, 14) : ['???', self._read_fake],
 
         }
+    def _read_view_hexa(self, data, n):
+        """
+        Word Name Type Description
+        1 EID         I Element identification number
+        2 CID         I Coordinate system identification number -- from CID field
+        3 NX          I View mesh subdivision -- from VIEW field
+        4 NY          I View mesh subdivision -- from VIEW field
+        5 NZ          I View mesh subdivision -- from VIEW field
+        6 MTH     CHAR4 Method -- 'DIRE' means direct
+        7 MINEID      I Mininum VUHEXA identification number for this element
+        8 MAXEID      I Maximum VUHEXA identification number for this element
+        9 MINGID      I Minimum grid identification number for this element
+        10 MAXGID     I Maximum grid identification number for this element
+        11 G(8)       I Corner grid identification numbers
+        """
+        # C:\NASA\m4\formats\git\examples\move_tpl\ifsv34b.op2
+        import numpy as np
+        ints = np.frombuffer(data[n:], self.idtype) # .tolist()
+        nelements = len(ints) // 18
+        assert len(ints) % 18 == 0
+        #print('nelements =', nelements)
+        ints2 = ints.reshape(nelements, 18)
+
+        for intsi in ints2:
+            eid, cid, nx, ny, nz, junk_imth, mineid, maxeid, mingid, maxgid, *nids = intsi
+            mth = data[n+20:n+24].decode('latin1')
+            #print(eid, cid, [nx, ny, nz], mth, [mineid, maxeid, mingid, maxgid], nids)
+            assert mth in ['DIRE'], mth
+            n += 72
+        return n
 
     def save(self, obj_filename='model.obj', unxref=True):
         # type: (str, bool) -> None
