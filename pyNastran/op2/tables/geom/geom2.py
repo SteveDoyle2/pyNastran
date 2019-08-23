@@ -22,11 +22,20 @@ from pyNastran.bdf.cards.elements.mass import (CONM1, CONM2, CMASS1, CMASS2,
 from pyNastran.bdf.cards.elements.solid import (CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
                                                 CTETRA10, CPYRAM13, CPENTA15, CHEXA20,)
 from pyNastran.bdf.cards.thermal.thermal import CHBDYG, CONV, CHBDYP, CHBDYE, CONVM
+from pyNastran.bdf.cards.thermal.radiation import RADBC # , RADM, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
 from pyNastran.bdf.cards.nodes import SPOINTs
 from pyNastran.bdf.cards.elements.bush import CBUSH
+from pyNastran.bdf.cards.parametric import FEEDGE
 
 from pyNastran.op2.errors import MixedVersionCard
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
+
+class CAABSF:
+    type = 'CAABSF'
+    def __init__(self, eid, pid, nodes):
+        self.eid = eid
+        self.pid = pid
+        self.nodes = nodes
 
 
 class GEOM2(GeomCommon):
@@ -38,12 +47,17 @@ class GEOM2(GeomCommon):
     def __init__(self):
         GeomCommon.__init__(self)
         self._geom2_map = {
-            # per dmap-nx-10.pdf
-            # BEAMAERO(2601,26,0)
-            # CAABSF(2708,27,59)
-            # CAXIF2(2108,21,224)
-            # CAXIF3(2208,22,225)
-            # CAXIF4(2308,23,226)
+            # per dmap-nx-10.pdf or nx12.pdf
+            (15200, 152, 9912): ['ACFACE3', self._read_fake],
+            (15500, 155, 9913): ['ACFACE4', self._read_fake],
+            (15600, 156, 9914): ['ACFACE6', self._read_fake],
+            (15700, 157, 9915): ['ACFACE8', self._read_fake],
+            (2601, 26, 0): ['BEAMAERO', self._read_fake],
+            (2708, 27, 59): ['CAABSF', self._read_caabsf],
+            (2108, 21, 224): ['CAXIF2', self._read_fake],
+            (2208, 22, 225): ['CAXIF3', self._read_fake],
+            (2308, 23, 226): ['CAXIF4', self._read_fake],
+
             (2408, 24, 180): ['CBAR', self._read_cbar],         # record 8
             (4001, 40, 275): ['CBARAO', self._read_cbarao],     # record 9  - not done
             (5408, 54, 261): ['CBEAM', self._read_cbeam],       # record 10
@@ -51,42 +65,59 @@ class GEOM2(GeomCommon):
             (4601, 46, 298): ['CBEND', self._read_cbend],     # record 12 - not done
             (2608, 26, 60): ['CBUSH', self._read_cbush],      # record 13
             (5608, 56, 218): ['CBUSH1D', self._read_cbush1d], # record 14 - not done
-            (2315, 23, 146): ['CCONE', self._read_ccone],     # record 15 - not done
-            (201, 2, 69): ['CDAMP1', self._read_cdamp1],      # record 16
-            (301, 3, 70): ['CDAMP2', self._read_cdamp2],      # record 17
-            (401, 4, 71): ['CDAMP3', self._read_cdamp3],      # record 18
-            (501, 5, 72): ['CDAMP4', self._read_cdamp4],      # record 19
-            (10608, 106, 404): ['CDAMPS', self._read_cdamp5], # record 20
+            (5609, 60, 9899): ['CBUSH1DNL', self._read_fake],
+            (14801, 148, 956): ['CCHOCK3', self._read_fake],
+            (14901, 149, 957): ['CCHOCK4', self._read_fake],
+            (15001, 150, 958): ['CCHOCK6', self._read_fake],
+            (15101, 151, 959): ['CCHOCK8', self._read_fake],
+            (2315, 23, 146): ['CCONE-10', self._read_ccone],  # nx10
+            (2315, 23, 0): ['CCONE-12', self._read_fake],     # nx12
+            (201, 2, 69): ['CDAMP1', self._read_cdamp1],
+            (301, 3, 70): ['CDAMP2', self._read_cdamp2],
+            (401, 4, 71): ['CDAMP3', self._read_cdamp3],
+            (501, 5, 72): ['CDAMP4', self._read_cdamp4],
+            (10608, 106, 404): ['CDAMPS', self._read_cdamp5],
+            (6208, 62, 108): ['CDUM2', self._read_fake],
+            (6308, 63, 109): ['CDUM3', self._read_fake],
+            (6408, 64, 110): ['CDUM4', self._read_fake],
+            (6508, 65, 111): ['CDUM5', self._read_fake],
+            (6608, 66, 112): ['CDUM6', self._read_fake],
+            (6708, 67, 113): ['CDUM7', self._read_fake],
+            (6808, 68, 114): ['CDUM8', self._read_cdum8],
+            (6908, 69, 115): ['CDUM9', self._read_cdum9],
+            (601, 6, 73): ['CELAS1', self._read_celas1],
+            (6010, 53, 9900): ['CELAS1NL', self._read_fake],
+            (701, 7, 74): ['CELAS2', self._read_celas2],
+            (7010, 20, 9898): ['CELAS2NL', self._read_fake],
+            (801, 8, 75): ['CELAS3', self._read_celas3],
+            (901, 9, 76): ['CELAS4', self._read_celas4],
 
-            (601, 6, 73): ['CELAS1', self._read_celas1],      # record 29
-            (701, 7, 74): ['CELAS2', self._read_celas2],      # record 30
-            (801, 8, 75): ['CELAS3', self._read_celas3],      # record 31
-            (901, 9, 76): ['CELAS4', self._read_celas4],      # record 32
-            # record 33
-            (9801, 98, 506): ['CFAST', self._read_cfast],     # record 34 - not done
-            # record 34
-            # record 35
-            (8515, 85, 209): ['CFLUID2', self._read_cfluid2],  # record 35 - not done
-            (8615, 86, 210): ['CFLUID3', self._read_cfluid3],  # record 36 - not done
-            (8715, 87, 211): ['CFLUID4', self._read_cfluid4],  # record 37 - not done
+            (9801, 98, 506): ['CFAST-nx10', self._read_cfast],  # nx10
+            (13801, 138, 566): ['CFAST-nx12', self._read_cfast], # nx12
 
-            # MSC
-            (8515, 85, 0): ['CFLUID2', self._read_cfluid2],  # record 36 - not done
-            (8615, 86, 0): ['CFLUID3', self._read_cfluid3],  # record 37 - not done
-            (8715, 87, 0): ['CFLUID4', self._read_cfluid4],  # record 38 - not done
-            (7701, 77, 8881): ['CINT', self._read_fake],     # record 39 - not done
-            (1908, 19, 104): ['CGAP', self._read_cgap],       # record 40 - buggy
-            (8100, 81, 381): ['CHACAB', self._read_fake],     # record 41 - not done
-            (8200, 82, 383): ['CHACBR', self._read_fake],     # record 42 - not done
-            (8308, 83, 405): ['CHBDYE', self._read_fake],     # record 43 - not done
-            (10808, 108, 406): ['CHBDYG', self._read_chbdyg], # record 44
-            (10908, 109, 407): ['CHBDYP', self._read_chbdyp], # record 45
-            (7308, 73, 253): ['CHEXA', self._read_chexa],     # record 46
-            # CHEXA20F record 47
-            # CHEXAFD record 48
-            # CHEXAL record 49
-            (12001, 120, 9011): ['CHEXP', self._read_chexp],    # record 50
-            # CHEXPR record 51
+            (8515, 85, 209): ['CFLUID2-nx10', self._read_cfluid2],  # nx10
+            (8615, 86, 210): ['CFLUID3-nx10', self._read_cfluid3],  # nx10
+            (8715, 87, 211): ['CFLUID4-nx10', self._read_cfluid4],  # nx10
+            (8515, 85, 0): ['CFLUID2-nx12', self._read_cfluid2], # nx12
+            (8615, 86, 0): ['CFLUID3-nx12', self._read_cfluid3], # nx12
+            (8715, 87, 0): ['CFLUID4-nx12', self._read_cfluid4], # nx12
+
+            (1908, 19, 104): ['CGAP', self._read_cgap],
+            #(13101, 131, 9901): ['CGPLSTN3', self._read_fake],
+            #(13401, 134, 9904): ['CGPLSTN8', self._read_fake],
+            #(13301, 133, 9903): ['CGPLSTN6', self._read_fake],
+            #(13201, 132, 9902): ['CGPLSTN4', self._read_fake],
+            (8308, 83, 405): ['CHBDYE', self._read_chbdye],
+            (10808, 108, 406): ['CHBDYG', self._read_chbdyg],
+            (10908, 109, 407): ['CHBDYP', self._read_chbdyp],
+            #(7308, 73, 253): ['CHEXA', self._read_fake],
+            #(16300, 163, 9989): ['CHEXA20F', self._read_fake],
+            #(14100, 141, 9990): ['CHEXAF', self._read_fake],
+            #(14000, 140, 9990): ['CHEXAFD', self._read_fake],
+            #(7708, 77, 9944): ['CHEXAL', self._read_fake],
+            #(11801, 118, 907): ['CHEXCZ', self._read_fake],
+            #(12001, 120, 9011): ['CHEXP', self._read_fake],
+            #(7409, 74, 9991): ['CHEXPR', self._read_fake],
             (1001, 10, 65): ['CMASS1', self._read_cmass1],    # record 52
             (1101, 11, 66): ['CMASS2', self._read_cmass2],    # record 53
             (1201, 12, 67): ['CMASS3', self._read_cmass3],    # record 54
@@ -95,94 +126,260 @@ class GEOM2(GeomCommon):
             (1401, 14, 63): ['CONM1', self._read_conm1],      # record 57
             (1501, 15, 64): ['CONM2', self._read_conm2],      # record 58
             (1601, 16, 47): ['CONROD', self._read_conrod],    # record 59
-            (12701, 127, 408): ['CONV', self._read_conv],     # record 60 - not tested
-            (8908, 89, 422): ['CONVM', self._read_convm],     # record 61 - not tested
-            (12101, 121, 9012) : ['CPENPR', self._read_fake],  # record 62
-            (4108, 41, 280): ['CPENTA', self._read_cpenta],   # record 63
-            (7509, 75, 9992) : ['CPENPR', self._read_fake],  # record 64
-            (16500, 165, 9999) : ['CPENT15F', self._read_fake],  # record 65
-            (16000, 160, 9999) : ['CPENT6FD', self._read_fake],  # record 66
-            (17000, 170, 9999) : ['CQDX4FD', self._read_fake],  # record 67
-            (17100, 171, 9999) : ['CQDX9FD', self._read_cquadx],  # record 68
-            (9108, 91, 507): ['CQUAD', self._read_cquad],       # record 69 - not tested
-            (2958, 51, 177): ['CQUAD4', self._read_cquad4],     # record 70
-            (13900, 139, 9989): ['CQUAD4', self._read_cquad4],  # record 71
-            (4701, 47, 326): ['CQUAD8', self._read_cquad8],     # record 72
-            (16400, 164, 9999) : ['CQUAD9FD', self._read_fake],  # record 73
-            (11101, 111, 9014) : ['CQUADP', self._read_fake],  # record 74
-            (8009, 80, 367): ['CQUADR', self._read_cquadr],   # record 75 - not tested
-            (9008, 90, 508): ['CQUADX', self._read_cquadx],   # record 76 - not tested
-            (14700, 147, 6662) : ['CRBAR', self._read_fake],  # record 77
-            (17300, 173, 6664) : ['CRBE1', self._read_fake],  # record 78
-            (17200, 172, 6663) : ['CRBE3', self._read_fake],  # record 79
-            (11000, 110, 6667) : ['CRJOINT', self._read_fake],  # record 80
-            (3001, 30, 48): ['CROD', self._read_crod],        # record 81
-            (12600, 126, 6661) : ['CRROD', self._read_fake],  #  record 82
-            (13801, 138, 570) : ['CSEAM', self._read_fake],  #  record 83
-            (3101, 31, 61): ['CSHEAR', self._read_cshear],        # record 84
-            (4408, 44, 227) : ['CSLOT3', self._read_fake],  # record 85
-            (4508, 45, 228) : ['CSLOT4', self._read_fake],  # record 86
-            (12201, 122, 9013): ['CTETP', self._read_ctetrap],  # record 87 - not done
-            (5508, 55, 217): ['CTETRA', self._read_ctetra],     # record 88
-            (7609, 76, 9993) : ['CTETPR', self._read_ctetra],  # record 89
-            (16600, 166, 9999) : ['CTETR10F', self._read_ctetra],  # record 90
-            (16100, 161, 9999) : ['CTETR4FD', self._read_ctetra],  # record 91
-            (14801, 148, 643) : ['CTQUAD', self._read_fake],  # record 92
-            (14901, 149, 644) : ['CTTRIA', self._read_fake],  # record 93
-            (5959, 59, 282): ['CTRIA3', self._read_ctria3],   # record 94
-            (16200, 162, 9999) : ['CTRIA3FD', self._read_fake],  # record 95
-            (4801, 48, 327): ['CTRIA6', self._read_ctria6],   # record 96 - buggy
-            (6113, 61, 998): ['CTRAX6', self._read_ctrax6],
-
-            # : ['RADBC', self._read_fake],  record 97
-            # : ['RADBC', self._read_fake],  record 98
-            (9200, 92, 385): ['CTRIAR', self._read_ctriar],   # record 99  - not done
-            # : ['RADBC', self._read_fake],  record 100
-            (10108, 101, 512) : ['CTRIAX', self._read_ctriax],
-            (6108, 61, 107) : ['CTRIAX6', self._read_ctriax6], # record 101 - not done
-            (16700, 167, 9999) : ['CTRIA6FD', self._read_ctria6],  # record 102
-            (11301, 113, 9015) : ['CTRIAP', self._read_fake],  # record 103
-            (3701, 37, 49): ['CTUBE', self._read_ctube],      # record 104
-            (3901, 39, 50): ['CVISC', self._read_cvisc],      # record 105 - not done
-            (11701, 117, 559) : ['CWELD', self._read_fake],  # record 106
-            (13501, 135, 564) : ['CWELDC', self._read_fake],  # record 107
-            (13601, 136, 562) : ['CWELDG', self._read_fake],  # record 108
-            # : ['RADBC', self._read_fake],  record 109
-            # : ['RADBC', self._read_fake],  record 110
-            # : ['RADBC', self._read_fake],  record 111
-            # : ['RADBC', self._read_fake],  record 112
-            # : ['RADBC', self._read_fake],  record 113
-            # : ['RADBC', self._read_fake],  record 114
-            (5201, 52, 11) :   ['PLOTEL', self._read_plotel],    # record 115 - not done
-            (12801, 128, 417) : ['RADBC', self._read_fake],  # record 116
-            (15501, 155, 634) : ['RADINT', self._read_fake], # record 117
-            (7801, 78, 8883) : ['SINT', self._read_fake],    # record 118
-            (5551, 49, 105) : ['SPOINT', self._read_spoint],     # record 119
-            (11601, 116, 9942) : ['VUBEAM', self._read_vubeam],  # record 120 - not done
-            # record 121
-            # record 121
-            # record 121
-            # record 121
-            # record 121
-            # record 121
-            # record 121
-            (2108, 21, 224): ['CAXIF2', self._read_fake],
-            (4301, 43, 28): ['GENEL', self._read_fake],
-            (5601, 56, 296): ['SESET', self._read_fake],
-            (6808, 68, 114): ['CDUM8', self._read_fake],
-            (6908, 69, 115): ['CDUM9', self._read_fake],
-            (7409, 74, 9991): ['CHEXPR', self._read_chexpr],
-            (7509, 75, 9992): ['CPENPR', self._read_cpenta],
-            (7609, 76, 9993): ['CTETPR', self._read_fake],
-            (8100, 81, 381): ['CHACAB', self._read_fake],
-            (8200, 82, 383): ['CHACBR', self._read_fake],
-            (8308, 83, 405): ['CHBDYE', self._read_chbdye],
-            (11201, 112, 9940): ['VUQUAD4', self._read_fake],
-            (12801, 128, 417): ['RADBC', self._read_radbc],
-            (2708, 27, 59): ['CAABSF', self._read_fake],
-            (3201, 32, 478): ['GMBNDC', self._read_fake],
+            (12701, 127, 408): ['CONV', self._read_conv],
+            (8908, 89, 422): ['CONVM', self._read_convm],
+            (12101, 121, 9012): ['CPENP', self._read_fake],
+            (4108, 41, 280): ['CPENTA', self._read_cpenta],
+            #(14200, 142, 9906): ['CPENTAF', self._read_fake],
+            #(7108, 71, 9943): ['CPENTAL', self._read_fake],
+            (7509, 75, 9992): ['CPENPR', self._read_fake],
+            #(16500, 165, 9987): ['CPENT15F', self._read_fake],
+            #(16000, 160, 9988): ['CPENT6FD', self._read_fake],
+            #(11901, 119, 908): ['CPENTCZ', self._read_fake],
+            (1701, 17, 980): ['CPLSTN3', self._read_fake],
+            (5701, 57, 981): ['CPLSTN4', self._read_fake],
+            (5801, 58, 982): ['CPLSTN6', self._read_fake],
+            (7201, 72, 983): ['CPLSTN8', self._read_fake],
+            (8801, 88, 984): ['CPLSTS3', self._read_fake],
+            (8401, 84, 985): ['CPLSTS4', self._read_fake],
+            (1801, 18, 986): ['CPLSTS6', self._read_fake],
+            (3601, 36, 987): ['CPLSTS8', self._read_fake],
+            (17200, 172, 1000) : ['CPYRAM', self._read_cpyram], # nx-specific
+            #(14400, 144, 9908): ['CPYRAMF', self._read_fake], # nx-specific
+            (25700, 257, 9948) : ['CPYRA5FD', self._read_cpyram], # nx-specific
+            (25800, 258, 9947) : ['CPYRA13F', self._read_cpyram], # nx-specific
+            (7909, 79, 9946) : ['CPYRAMPR', self._read_cpyram], # nx-specific
+            (17000, 170, 9980): ['CQDX4FD', self._read_cquad],
+            (17100, 171, 9979): ['CQDX9FD', self._read_cquadx],
+            #(25110, 170, 9951): ['CQDX4FDN', self._read_fake],
+            #(25310, 171, 9949): ['CQDX8FDN', self._read_fake],
+            (9108, 91, 507): ['CQUAD', self._read_cquad],
+            (2958, 51, 177): ['CQUAD4', self._read_cquad4],
+            #(14600, 146, 9910): ['CQUADF', self._read_fake],
             (13900, 139, 9984): ['CQUAD4FD', self._read_cquad],
-            (14000, 140, 9990): ['CHEXAFD', self._read_chexa],
+            #(4701, 47, 326): ['CQUAD8', self._read_fake],
+            #(3302, 33, 1694): ['CQUAD8L', self._read_fake],
+            #(15901, 159, 9956): ['CQUAD8N', self._read_fake],
+            (16400, 164, 9983): ['CQUAD9FD', self._read_cquad],
+            #(11101, 111, 9014): ['CQUADP', self._read_fake],
+            #(8009, 80, 367): ['CQUADR', self._read_fake],
+            #(13002, 130, 1692): ['CQUADRL', self._read_fake],
+            #(15401, 154, 9954): ['CQUADRN', self._read_fake],
+            #(9008, 90, 508): ['CQUADX', self._read_fake],
+            (6112, 61, 997): ['CQUADX4', self._read_fake],
+            (6114, 61, 999): ['CQUADX8', self._read_cquadx8],
+            (3001, 30, 48): ['CROD', self._read_crod],         # record 81
+            #(14500, 145, 9909): ['CRODF', self._read_fake],
+            (3501, 35, 1): ['CSBOLT', self._read_fake],
+            (3101, 31, 61): ['CSHEAR', self._read_cshear],     # record 84
+            (4408, 44, 227): ['CSLOT3', self._read_fake],
+            (4508, 45, 228): ['CSLOT4', self._read_fake],
+            #(12201, 122, 9013): ['CTETP', self._read_fake],
+            #(5508, 55, 217): ['CTETRA', self._read_fake],
+            #(14300, 143, 9907): ['CTETRAF', self._read_fake],
+            #(7609, 76, 9993): ['CTETPR', self._read_fake],
+            #(16600, 166, 9985): ['CTETR10F', self._read_fake],
+            #(16100, 161, 9986): ['CTETR4FD', self._read_fake],
+            #(25010, 168, 9952): ['CTRAX3FDN', self._read_fake],
+            #(25210, 169, 9950): ['CTRAX6FDN', self._read_fake],
+            #(5959, 59, 282): ['CTRIA3', self._read_fake],
+            #(14700, 147, 9911): ['CTRIAF', self._read_fake],
+            #(16200, 162, 9982): ['CTRIA3FD', self._read_fake],
+            #(4801, 48, 327): ['CTRIA6', self._read_fake],
+            #(16700, 167, 9981): ['CTRIA6FD', self._read_fake],
+            #(3202, 32, 1693): ['CTRIA6L', self._read_fake],
+            #(15801, 158, 9955): ['CTRIA6N', self._read_fake],
+            #(11301, 113, 9015): ['CTRIAP', self._read_fake],
+            #(9200, 92, 385): ['CTRIAR', self._read_fake],
+            #(12902, 129, 1691): ['CTRIARL', self._read_fake],
+            #(15301, 153, 9953): ['CTRIARN', self._read_fake],
+            #(10108, 101, 512): ['CTRIAX', self._read_fake],
+            #(6108, 61, 107): ['CTRIAX6', self._read_fake],
+            (6111, 61, 996): ['CTRAX3', self._read_ctrax3],
+            (6113, 61, 998): ['CTRAX6', self._read_ctrax6],
+            #(16800, 168, 9978): ['CTRIX3FD', self._read_fake],
+            #(16900, 169, 9977): ['CTRIX6FD', self._read_fake],
+            (3701, 37, 49): ['CTUBE', self._read_ctube], # record 104
+            (3901, 39, 50): ['CVISC', self._read_cvisc], # record 105
+            #(11701, 117, 559): ['CWELD', self._read_fake],
+            #(13501, 135, 564): ['CWELDC', self._read_fake],
+            (13701, 137, 565): ['CWELDP', self._read_fake],
+            #(13601, 136, 562): ['CWELDG', self._read_fake], # This record is no longer used
+            (4301, 43, 28): ['GENEL', self._read_genel],
+            #(3201, 32, 478): ['GMBNDC', self._read_fake],
+            (12901, 129, 482): ['GMBNDS', self._read_fake],
+            (3301, 33, 479): ['GMINTC', self._read_fake],
+            (13001, 130, 483): ['GMINTS', self._read_fake],
+            #(2801, 28, 630): ['MICPNT', self._read_fake],
+            (5201, 52, 11): ['PLOTEL', self._read_plotel],
+            #(5202, 52, 669): ['PLOTEL3', self._read_fake],
+            #(5203, 52, 670): ['PLOTEL4', self._read_fake],
+            #(5204, 52, 671): ['PLOTEL6', self._read_fake],
+            #(5205, 52, 672): ['PLOTEL8', self._read_fake],
+            #(5206, 52, 673): ['PLOTHEX', self._read_fake],
+            #(5208, 52, 675): ['PLOTPEN', self._read_fake],
+            #(5209, 52, 676): ['PLOTPYR', self._read_fake],
+            #(5207, 52, 674): ['PLOTTET', self._read_fake],
+            #(3002, 46, 0): ['Q4AERO', self._read_fake],
+            (12801, 128, 417): ['RADBC', self._read_radbc],
+            (7801, 78, 8883): ['SINT', self._read_fake],
+            (5551, 49, 105): ['SPOINT', self._read_spoint], # record 119
+            #(2701, 27, 0): ['T3AERO', self._read_fake],
+            #(11601, 116, 9942): ['VUBEAM', self._read_fake],
+            #(12301, 123, 145): ['VUHEXA', self._read_fake],
+            #(12401, 124, 146): ['VUPENTA', self._read_fake],
+            #(11201, 112, 9940): ['VUQUAD4', self._read_fake],
+            #(12501, 125, 147): ['VUTETRA', self._read_fake],
+            #(11501, 115, 9941): ['VUTRIA3', self._read_fake],
+            #(65535, 65535, 65535): ['EODB', self._read_fake],
+
+
+            #------------------------------------------------------------------------------
+            # MSC - DMAP 2016.1
+            (2002, 20, 0): ['AEROQ4', self._read_fake], # 2
+            (1801, 18, 0): ['AEROT3', self._read_fake], # 3
+            (1701, 17, 0): ['BEAMAERO', self._read_fake], # 4
+            (2708, 27, 59): ['CAABSF', self._read_caabsf], # 5
+            (2108, 21, 224): ['CAXIF2', self._read_fake], # 6
+            (2208, 22, 225): ['CAXIF3', self._read_fake], # 7
+            (2308, 23, 226): ['CAXIF4', self._read_fake], # 8
+            #(2408, 24, 180): ['CBAR', self._read_fake], # record 9
+
+            #(4001, 40, 275): ['CBARAO', self._read_fake],    # record 10
+            #(5408, 54, 261): ['CBEAM', self._read_fake],     # record 11
+            #(11401, 114, 9016): ['CBEAMP', self._read_fake], # record 12
+            #(4601, 46, 298): ['CBEND', self._read_fake],   # record 13
+            #(2608, 26, 60): ['CBUSH', self._read_fake],    # record 14
+            #(5608, 56, 218): ['CBUSH1D', self._read_fake], # record 15
+            (2315, 23, 0): ['CCONE-msc', self._read_fake],  # record 16
+            #(201, 2, 69): ['CDAMP1', self._read_cdamp1], # record 17
+            #(301, 3, 70): ['CDAMP2', self._read_cdamp2], # record 18
+            #(401, 4, 71): ['CDAMP3', self._read_cdamp3], # record 19
+            #(501, 5, 72): ['CDAMP4', self._read_cdamp4],      # record 20
+            #(10608, 106, 404): ['CDAMP5', self._read_cdamp5], # record 21
+            #(6208, 62, 108): ['CDUM2', self._read_fake], # 22
+            #(6308, 63, 109): ['CDUM3', self._read_fake], # 23
+            #(6408, 64, 110): ['CDUM4', self._read_fake], # 24
+            #(6508, 65, 111): ['CDUM5', self._read_fake], # 25
+            #(6608, 66, 112): ['CDUM6', self._read_fake], # 26
+            #(6708, 67, 113): ['CDUM7', self._read_fake], # 27
+            #(6808, 68, 114): ['CDUM8', self._read_cdum8], # 28
+            #(6908, 69, 115): ['CDUM9', self._read_cdum9], # 29
+
+            #(601, 6, 73): ['CELAS1', self._read_fake], # record 30
+            #(701, 7, 74): ['CELAS2', self._read_fake], # record 31
+            #(801, 8, 75): ['CELAS3', self._read_fake], # record 32
+            #(901, 9, 76): ['CELAS4', self._read_fake], # record 33
+            #(9801, 98, 506): ['CFAST', self._read_fake], # record 34
+            (9301, 93, 607): ['CFASTP', self._read_fake],    # 35
+            #(8515, 85, 0): ['CFLUID2', self._read_cfluid2],  # record 36 - not done
+            #(8615, 86, 0): ['CFLUID3', self._read_cfluid3],  # record 37 - not done
+            #(8715, 87, 0): ['CFLUID4', self._read_cfluid4],  # record 38 - not done
+            (7701, 77, 8881): ['CINT', self._read_fake],     # record 39 - not done
+
+            #(1908, 19, 104): ['CGAP', self._read_cgap],      # record 40 - buggy
+            (8100, 81, 381): ['CHACAB', self._read_fake],    # 41 - not done
+            (8200, 82, 383): ['CHACBR', self._read_fake],    # 42 - not done
+            #(8308, 83, 405): ['CHBDYE', self._read_chbdye],  # record 43
+            #(10808, 108, 406): ['CHBDYG', self._read_fake],  # 44
+            #(10908, 109, 407): ['CHBDYP', self._read_fake],  # 45
+            (7308, 73, 253): ['CHEXA', self._read_chexa],    # record 46
+            (16300, 163, 9999): ['CHEXA20F', self._read_fake], # 47
+            (14000, 140, 9990): ['CHEXAFD', self._read_chexa], # record 48
+            (7908, 79, 369): ['CHEXAL', self._read_fake],     # 49
+
+            (12001, 120, 9011): ['CHEXP', self._read_chexp],  # record 50
+            (7409, 74, 9991): ['CHEXPR', self._read_chexpr],  # record 51
+            #(1001, 10, 65): ['CMASS1', self._read_cmass1],   # record 52
+            #(1101, 11, 66): ['CMASS2', self._read_cmass2],   # record 53
+            #(1201, 12, 67): ['CMASS3', self._read_cmass3],   # record 54
+            #(1301, 13, 68): ['CMASS4', self._read_cmass4],   # record 55
+            #(2508, 25, 0): ['CMFREE', self._read_cmfree],    # record 56 - not done
+            #(1401, 14, 63): ['CONM1', self._read_conm1],     # record 57
+            #(1501, 15, 64): ['CONM2', self._read_conm2],     # record 58
+            #(1601, 16, 47): ['CONROD', self._read_conrod],   # record 59
+
+            #(12701, 127, 408): ['CONV', self._read_conv],     # record 60 - not tested
+            #(8908, 89, 422): ['CONVM', self._read_convm],     # record 61 - not tested
+            #(12101, 121, 9012): ['CPENP', self._read_fake],   # 62
+            #(4108, 41, 280): ['CPENTA', self._read_cpenta],   # record 63
+            #(7509, 75, 9992): ['CPENPR', self._read_fake],    # 64
+            (16500, 165, 9999): ['CPENT15F', self._read_fake], # 65
+            (16000, 160, 9999): ['CPENT6FD', self._read_fake], # 66
+            (17000, 170, 9999): ['CQDX4FD', self._read_fake],  # 67
+            (17100, 171, 9999) : ['CQDX9FD', self._read_cquadx],  # record 68
+            #(9108, 91, 507): ['CQUAD', self._read_cquad],        # record 69 - not tested
+
+            #(2958, 51, 177): ['CQUAD4', self._read_cquad4],     # record 70
+            (13900, 139, 9989): ['CQUAD4FD', self._read_cquad4], # record 71
+            (4701, 47, 326): ['CQUAD8', self._read_cquad8], # record 72
+            (16400, 164, 9999): ['CQUAD9FD', self._read_fake], # 73
+            (11101, 111, 9014): ['CQUADP', self._read_fake], # 74
+            (8009, 80, 367): ['CQUADR', self._read_cquadr], # record 75
+            (9008, 90, 508): ['CQUADX', self._read_cquadx], # record 76
+            (14700, 147, 6662): ['CRBAR', self._read_fake], # 77
+            (17300, 173, 6664): ['CRBE1', self._read_fake], # 78
+            (17200, 172, 6663): ['CRBE3', self._read_fake], # 79
+
+            (11000, 110, 6667): ['CRJOINT', self._read_fake],  # 80
+            #(3001, 30, 48): ['CROD', self._read_crod],         # record 81
+            (12600, 126, 6661): ['CRROD', self._read_fake],    # 82
+            (13801, 138, 570): ['CSEAM', self._read_fake],     # 83
+            #(3101, 31, 61): ['CSHEAR', self._read_cshear],     # record 84
+            #(4408, 44, 227): ['CSLOT3', self._read_fake],      # 85
+            #(4508, 45, 228): ['CSLOT4', self._read_fake],      # 86
+            (12201, 122, 9013): ['CTETP', self._read_ctetrap], # record 87
+            (5508, 55, 217): ['CTETRA', self._read_ctetra],    # record 88
+            (7609, 76, 9993): ['CTETPR', self._read_ctetra],   # record 89
+
+            (16600, 166, 9999): ['CTETR10F', self._read_ctetra], # record 90
+            (16100, 161, 9999): ['CTETR4FD', self._read_ctetra], # record 91
+            (14801, 148, 643): ['CTQUAD', self._read_fake], # 92
+            (14901, 149, 644): ['CTTRIA', self._read_fake], # 93
+            (5959, 59, 282): ['CTRIA3', self._read_ctria3], # record 94
+            (16200, 162, 9999): ['CTRIA3FD', self._read_fake], # 95
+            (4801, 48, 327): ['CTRIA6', self._read_ctria6], # record 96 - buggy
+            (16700, 167, 9999): ['CTRIA6FD', self._read_ctria6], # 97
+            (11301, 113, 9015): ['CTRIAP', self._read_fake], # 98
+            (9200, 92, 385): ['CTRIAR', self._read_ctriar], # record 99
+
+            (6108, 61, 107): ['CTRIAX6', self._read_ctriax6], # 101
+            (16800, 168, 9978): ['CTRIX3FD', self._read_fake], # 102
+            (16900, 169, 9977): ['CTRIX6FD', self._read_fake], # 103
+            #(3701, 37, 49): ['CTUBE', self._read_ctube], # record 104
+            #(3901, 39, 50): ['CVISC', self._read_cvisc], # record 105
+            (11701, 117, 559): ['CWELD', self._read_fake], # 106; same as cfast
+            (13501, 135, 564): ['CWELDC', self._read_fake], # 107
+            (13601, 136, 562): ['CWELDG', self._read_fake], # 108
+            (14600, 146, 630): ['CWSEAM', self._read_fake], # 109
+
+            #(4301, 43, 28): ['GENEL', self._read_genel],     # 110
+            (3201, 32, 478): ['GMBNDC', self._read_gmbndc],   # 111
+            #(12901, 129, 482): ['GMBNDS', self._read_fake], # 112
+            #(3301, 33, 479): ['GMINTC', self._read_fake],   # 113
+            #(13001, 130, 483): ['GMINTS', self._read_fake], # 114
+            #(5201, 52, 11): ['PLOTEL', self._read_plotel],  # record 115
+            #(12801, 128, 417): ['RADBC', self._read_radbc], # record 116
+            (15501, 155, 634): ['RADINT', self._read_fake], # 117
+            #(7801, 78, 8883): ['SINT', self._read_fake],    # 118
+            #(5551, 49, 105): ['SPOINT', self._read_spoint], # record 119
+
+            (11601, 116, 9942): ['VUBEAM', self._read_vubeam], # record 120
+            (12301, 123, 145): ['VUHEXA', self._read_fake],    # 121
+            (11201, 112, 9940): ['VUQUAD4', self._read_vuquad4],  # 122
+            (12401, 124, 146): ['VUPENTA', self._read_fake],   # 123
+            (12501, 125, 147): ['VUTETRA', self._read_fake],   # 124
+            (11501, 115, 9941): ['VUTRIA3', self._read_fake],  # 125
+            (13701, 137, 569): ['WELDP', self._read_fake],     # 126; same as CFASTP
+
+            #----------------------------------------------
+
+            # unorganized
+            (6113, 61, 998): ['CTRAX6', self._read_ctrax6],
+            (10108, 101, 512) : ['CTRIAX', self._read_ctriax],
+            (2108, 21, 224): ['CAXIF2', self._read_fake],
+            (5601, 56, 296): ['SESET', self._read_fake],
+            (7509, 75, 9992): ['CPENPR', self._read_cpenta],
             (16000, 160, 9988): ['CPENTA6FD', self._read_cpenta],
             (16100, 161, 9986): ['CTETRAFD', self._read_ctetra],
             (16300, 163, 9989): ['CHEXA20F', self._read_chexa],
@@ -190,63 +387,27 @@ class GEOM2(GeomCommon):
             (16800, 168, 9978): ['CTRIAX3FD', self._read_ctrix3fd],  # same as ctria6fd
             (16500, 165, 9987): ['CPENT15F', self._read_cpenta],
             (5008, 50, 258): ['', self._read_fake],
-            (16400, 164, 9983) : ['CQUAD9FD', self._read_cquad],
-            (11000, 110, 6667): ['', self._read_fake],
             (12301, 123, 9921): ['', self._read_fake],
-            (12401, 124, 9922): ['FEFACE/PVAL?', self._read_fake],
+            (12401, 124, 9922): ['FEFACE/PVAL?', self._read_feface_pval],
             (12600, 126, 6661): ['', self._read_fake],
-            (14700, 147, 6662): ['', self._read_fake],
             (7309, 73, 0): ['', self._read_fake],
-            (11501, 115, 9941): ['', self._read_fake],    # record
             (12501, 125, 9923): ['', self._read_fake],    # record
             (3401, 34, 9600): ['', self._read_fake],    # record
-            (7701, 77, 8881): ['', self._read_fake],  # record
-            (2901, 29, 9601): ['', self._read_fake],  # record
+            (2901, 29, 9601): ['FEEDGE', self._read_feedge2],  # record
             (16600, 166, 9985) : ['CTETRA?', self._read_ctetra],  # record
             (16200, 162, 9982) : ['CTRIA3', self._read_ctria3fd],  # record
             (16900, 169, 9977) : ['CTRIAX', self._read_ctriax],  # record
-            (1701, 17, 980) : ['CPLSTN3', self._read_fake],  # record
-            (1801, 18, 986) : ['', self._read_fake],  # record
             (23500, 235, 6662) : ['', self._read_fake],  # record
             (23800, 238, 6665) : ['', self._read_fake],  # record
             (23900, 239, 6666) : ['', self._read_fake],  # record
-
-            (2208, 22, 225): ['CAXIF3', self._read_fake],  # record 7
-            (4408, 44, 227): ['CSLOT3', self._read_fake],  # record 85
-            (4508, 45, 228): ['CSLOT4', self._read_fake],  # record 86-R
-            (12901, 129, 482): ['GMBNDS', self._read_fake],  # record 112
-            (7801, 78, 8883): ['SINT', self._read_fake],  # record 118
-            (8801, 88, 984) : ['CPLSTS3', self._read_fake],  # record
-            (8401, 84, 985) : ['CPLSTS4', self._read_fake],  # record
-            (17000, 170, 9980): ['CQDX4FD', self._read_cquad],  # record
-            (17100, 171, 9979): ['CQDX9FD', self._read_cquadx],  # record
 
             (1976, 1, 1996) : ['', self._read_fake],  # record
             (6120, 1, 60434) : ['', self._read_fake],  # record
             (2024, 1001, 2024) : ['', self._read_fake],  # record
             (801, 1, 572) : ['', self._read_fake],  # record
 
-            (5701, 57, 981) : ['CPLSTN4', self._read_fake],  # record
-            (5801, 58, 982) : ['CPLSTN6', self._read_fake],  # record
-            (1801, 18, 986) : ['CPLSTS6', self._read_fake],  # record
-            (6111, 61, 996) : ['CTRAX3', self._read_ctrax3],  # record
-            (6112, 61, 997) : ['CQUADX4', self._read_cquadx4],  # record
-            (6113, 61, 998) : ['CTRAX6', self._read_ctrax6],  # record
-            (6114, 61, 999) : ['CQUADX8', self._read_cquadx8],  # record
-            (3501, 35, 1) : ['', self._read_fake],  # record
             (1001, 100, 10000) : ['', self._read_fake],  # record
             (1118, 1, 1874) : ['', self._read_fake],  # record
-
-            # NX specific
-            (17200, 172, 1000) : ['CPYRAM', self._read_cpyram],
-            (25700, 257, 9948) : ['CPYRA5FD', self._read_cpyram],
-            (25800, 258, 9947) : ['CPYRA13F', self._read_cpyram],
-            (7909, 79, 9946) : ['CPYRAMPR', self._read_cpyram],
-            (7201, 72, 983) : ['CPLSTN8', self._read_fake],
-            (11701, 117, 559) : ['CWELD', self._read_fake],
-            (13501, 135, 564) : ['CWELDC', self._read_fake],
-            (3601, 36, 987) : ['CPLSTS8', self._read_fake],
-            (13701, 137, 565) : ['CWELDP', self._read_fake],
         }
 
     def add_op2_element(self, elem):
@@ -273,7 +434,19 @@ class GEOM2(GeomCommon):
 # 1-AEROQ4 (???)
 # AEROT3   (???)
 # 1-BEAMAERO (1701,17,0)
-# 2-CAABSF (2708,27,59)
+    def _read_caabsf(self, data, n):
+        """2-CAABSF (2708,27,59)
+
+        Word Name Type Description
+        1 EID I Element identification number
+        2 PID I Property identification number
+        3 G1  I Grid point 1 identification number
+        4 G2  I Grid point 2 identification number
+        5 G3  I Grid point 3 identification number
+        6 G4  I Grid point 4 identification number
+        """
+        return self._run_quad_no_extra(data, n, CAABSF)
+
 # 3-CAXIF2 (2108,21,224)
 # 4-CAXIF3 (2208,22,225)
 # 5-CAXIF4 (2308,23,226)
@@ -704,8 +877,16 @@ class GEOM2(GeomCommon):
 # CDUM5
 # CDUM6
 # CDUM7
-# CDUM8
-# CDUM9
+
+    def _read_cdum8(self, data, n):
+        ints = np.frombuffer(data[n:], dtype='int32').copy()
+        print('CDUM8', ints)
+        return n
+
+    def _read_cdum9(self, data, n):
+        ints = np.frombuffer(data[n:], dtype='int32').copy()
+        print('CDUM9', ints)
+        return n
 
     def _read_celas1(self, data, n):
         """
@@ -1299,12 +1480,6 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
-    #def _read_convm(self, data, n):
-        #"""CONVM"""
-        #n = self._read_dual_card(data, n, self._read_convm_nx, self._read_convm_msc,
-                                 #'CONVM', self._add_thermal_bc_object)
-        #return n
-
     def _read_convm(self, data, n):
         """
         CONVM(8908,89,422) - the marker for Record 60
@@ -1447,12 +1622,12 @@ class GEOM2(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CONVM=%s\n' % str(out))
             (eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot) = out
-            #if eid <= 0:
+
             if eid <= 0 or pcon_id <= 0 or flmnd < 0 or cntrlnd <= 0 or ta1 <= 0 or ta2 <= 0:
                 self.show_data(data, 'if')
                 # TODO: I'm not sure that this really has 7 fields...
-                raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} cntrlnd={cntrlnd} ta1={ta1} ta2={ta2} < 0')
-                #raise RuntimeError('eid=%s < 0' % eid)
+                raise RuntimeError(f'eid={eid} pconid={pcon_id} flmnd={flmnd} '
+                                   f'cntrlnd={cntrlnd} ta1={ta1} ta2={ta2} < 0')
             data_in = [eid, pcon_id, flmnd, cntrlnd, ta1, ta2, mdot]
             elem = CONVM.add_op2_data(data_in)
             n += 28
@@ -1520,12 +1695,23 @@ class GEOM2(GeomCommon):
 # CQDX9FD - same as CQDX4FD
 
     def _read_cquad(self, data, n):
-        """
-        CQUAD(9108,91,507)  - the marker for Record 69
-        """
-        return self.run_cquad(data, n, CQUAD)
+        """CQUAD(9108,91,507)  - the marker for Record 69"""
+        return self._run_cquad(data, n, CQUAD)
 
-    def run_cquad(self, data, n, element):
+    def _read_cquad4(self, data, n):
+        """
+        CQUAD4(2958,51,177)    - the marker for Record 70
+        CQUAD4(13900,139,9989) - the marker for Record 71
+        """
+        return self._run_cquad4(data, n, CQUAD4)
+
+    def _read_vuquad4(self, data, n):
+        """
+        VUQUAD4(11201,112,9940)
+        """
+        return self._run_cquad4_no_extra(data, n, CQUAD4)
+
+    def _run_cquad(self, data, n, element):
         """common method for CQUAD, CQUADX"""
         s = Struct(self._endian + b'11i')
         nelements = (len(data) - n) // 44  # 11*4
@@ -1546,14 +1732,65 @@ class GEOM2(GeomCommon):
         self.card_count[element.type] = nelements
         return n
 
-    def _read_cquad4(self, data, n):
+    def _run_cquad4_no_extra(self, data, n, element):
         """
-        CQUAD4(2958,51,177)    - the marker for Record 70
-        CQUAD4(13900,139,9989) - the marker for Record 71
+        common method for CQUAD4, CQUADR
         """
-        return self.run_cquad4(data, n, CQUAD4)
+        nelements = (len(data) - n) // 24
+        s = Struct(self._endian + b'6i')
+        #if self.is_debug_file:
+            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-    def run_cquad4(self, data, n, element):
+        if self.is_debug_file:
+            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2, n3, n4]')
+
+        for unused_i in range(nelements):
+            edata = data[n:n + 24]  # 6*4
+            out = s.unpack(edata)
+            (eid, pid, n1, n2, n3, n4) = out
+            if self.is_debug_file:
+                self.binary_debug.write(
+                    f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}]')
+
+            nids = [n1, n2, n3, n4]
+            elem = element(eid, pid, nids)
+            self.add_op2_element(elem)
+            n += 24
+        #if stop:
+            #raise RuntimeError('theta is too large...make the quad wrong')
+        self.card_count[element.type] = nelements
+        return n
+
+    def _run_2nodes_no_extra(self, data, n, element):
+        """
+        common method for CQUAD4, CQUADR
+        """
+        nelements = (len(data) - n) // 16
+        s = Struct(self._endian + b'4i')
+        #if self.is_debug_file:
+            #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
+
+        if self.is_debug_file:
+            self.binary_debug.write(f'  {element.type}=(eid, pid, [n1, n2]')
+
+        for unused_i in range(nelements):
+            edata = data[n:n + 16]  # 4*4
+            out = s.unpack(edata)
+            (eid, pid, n1, n2) = out
+            if self.is_debug_file:
+                self.binary_debug.write(
+                    f'  {element.type}=({eid}, {pid}, [{n1}, {n2}]')
+
+            nids = [n1, n2]
+            elem = element(eid, pid, nids)
+            self.add_op2_element(elem)
+            n += 16
+        #if stop:
+            #raise RuntimeError('theta is too large...make the quad wrong')
+        self.card_count[elem.type] = nelements
+        return n
+
+    def _run_cquad4(self, data, n, element):
         """
         common method for CQUAD4, CQUADR
         """
@@ -1573,8 +1810,9 @@ class GEOM2(GeomCommon):
              t1, t2, t3, t4) = out
             theta_mcid = convert_theta_to_mcid(theta)
             if self.is_debug_file:
-                self.binary_debug.write(f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}], '
-             f'{theta}, {zoffs}, {unused_blank}, [{tflag}, {t1}, {t2}, {t3}, {t4})]; {theta_mcid}\n')
+                self.binary_debug.write(
+                    f'  {element.type}=({eid}, {pid}, [{n1}, {n2}, {n3}, {n4}], '
+                    f'{theta}, {zoffs}, {unused_blank}, [{tflag}, {t1}, {t2}, {t3}, {t4})]; {theta_mcid}\n')
 
             #print('eid=%s pid=%s n1=%s n2=%s n3=%s n4=%s theta=%s zoffs=%s '
                   #'blank=%s tflag=%s t1=%s t2=%s t3=%s t4=%s' % (
@@ -1685,15 +1923,11 @@ class GEOM2(GeomCommon):
 # CQUADP
 
     def _read_cquadr(self, data, n):
-        """
-        CQUADR(8009,80,367)  - the marker for Record 75
-        """
+        """CQUADR(8009,80,367)  - the marker for Record 75"""
         return self.run_cquad4(data, n, CQUADR)
 
     def _read_cquadx(self, data, n):
-        """
-        CQUADX(9008,90,508)  - the marker for Record 76
-        """
+        """CQUADX(9008,90,508)  - the marker for Record 76"""
         return self.run_cquad(data, n, CQUADX)
 
 # CRBAR
@@ -1910,8 +2144,6 @@ class GEOM2(GeomCommon):
         (331, 111, 331, 332, 333, 0, 0, 0,
          332, 11, 331, 333, 334, 0, 0, 0)
         """
-        #self.show_data(data[12:])
-        #aaa
         s = Struct(self._endian + b'8i')
         nelements = (len(data) - n) // 32  # 8*4
         assert (len(data) - n) % 32 == 0
@@ -2064,29 +2296,29 @@ class GEOM2(GeomCommon):
         self.card_count['CTRIAR'] = nelements
         return n
 
-    def _read_ctriax_b(self, data, n):  # pragma: no cover
-        """
-        CTRIAX  341     11      341     342     343     345     346     349     +TX1
-        +TX1    12
-        CTRIAX  342     111     341     343     344     349     347     348
-        (341, 11,  341, 342, 343, 345, 346, 349,
-         342, 111, 341, 343, 344, 349, 347, 348)
-        """
-        ntotal = 32  # 8*4
-        nentries = (len(data) - n) // ntotal
-        struc = Struct(self._endian + b'8i')
-        for unused_i in range(nentries):
-            edata = data[n:n + 32]
-            out = struc.unpack(edata)
-            if self.is_debug_file:
-                self.binary_debug.write('  CTRIAX=%s\n' % str(out))
-            eid, pid, n1, n2, n3, n4, n5, n6 = out
-            nids = [n1, n2, n3, n4, n5, n6]
-            elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='')
-            self.add_op2_element(elem)
-            n += 32
-        self.card_count['CTRIAX'] = nentries
-        return n
+    #def _read_ctriax_b(self, data, n):  # pragma: no cover
+        #"""
+        #CTRIAX  341     11      341     342     343     345     346     349     +TX1
+        #+TX1    12
+        #CTRIAX  342     111     341     343     344     349     347     348
+        #(341, 11,  341, 342, 343, 345, 346, 349,
+         #342, 111, 341, 343, 344, 349, 347, 348)
+        #"""
+        #ntotal = 32  # 8*4
+        #nentries = (len(data) - n) // ntotal
+        #struc = Struct(self._endian + b'8i')
+        #for unused_i in range(nentries):
+            #edata = data[n:n + 32]
+            #out = struc.unpack(edata)
+            #if self.is_debug_file:
+                #self.binary_debug.write('  CTRIAX=%s\n' % str(out))
+            #eid, pid, n1, n2, n3, n4, n5, n6 = out
+            #nids = [n1, n2, n3, n4, n5, n6]
+            #elem = CTRIAX(eid, pid, nids, theta_mcid=0., comment='')
+            #self.add_op2_element(elem)
+            #n += 32
+        #self.card_count['CTRIAX'] = nentries
+        #return n
 
     def _read_ctriax(self, data, n):
         """(10108, 101, 512)"""
@@ -2124,6 +2356,33 @@ class GEOM2(GeomCommon):
 
 # CTRIX3FD - 102
 # CTRIX6FD - 103
+
+    def _read_gmbndc(self, data, n):
+        """
+        GMBNDC(3201,32,478)
+
+        Word Name      Type  Description
+        1    BID       I     Boundary identification number
+        2    GRIDI     I     Initial grid identification number for boundary
+        3    GRIDF     I     Final grid identification number for boundary
+        4    ENTITY(2) CHAR4 Entity type for defining boundary
+        6    EID       I     Entity identification numbers for boundary of subdomain
+        Word 6 repeats until End of Record
+        """
+        #self.show_data(data)
+        #(1, 31, 32, GRID____, -1,
+         #2, 41, 42, GRID____, -1)
+        nelements = 0
+        structi = Struct(self._endian + b'3i 8s i')
+        while n < len(data):
+            datai = data[n:n+24]
+            out = structi.unpack(datai)
+            bid, gridi, gridf, entity, eid = out
+            assert eid == -1, out
+            nelements += 1
+            n += 24
+        self.card_count['GMBNDC'] = nelements
+        return n
 
     def _read_ctube(self, data, n):
         """
@@ -2185,7 +2444,133 @@ class GEOM2(GeomCommon):
 #-------------------------------
 # CWSEAM
     def _read_genel(self, data, n):
-        self.log.info('skipping GENEL in GEOM2')
+        r"""
+        Word Name Type Description
+        1 EID I Element identification number
+        2 UI  I Independent grid point identification number
+        3 CI  I Component number
+        Words 2 through 3 repeat until End of Record
+
+        4 M(C) I Number of rows and columns in K or Z and rows in S
+        5 UD   I Dependent grid point identification number
+        6 CD   I Component number
+        Words 5 through 6 repeat until End of Record
+
+        7 N(C)  I Number of columns in S
+        8 F     I 1 means Z, 2 means K
+        9 KZIJ RS Lower triangular terms of the K or Z
+        matrix. See Notes.
+        Word 9 repeats MM times
+        10 NZERO(C) I
+        NZERO =1 Actually " 0"
+        11 SIJ RS Terms of the S matrix
+        Word 11 repeats M times
+        Word 11 repeats N times
+        NZERO =0
+        End NZERO
+        12 UNDEF none
+        Word 12 repeats until End of Record
+
+        # C:\NASA\m4\formats\git\examples\move_tpl\ha145c.op2
+        (432, # eid
+        1, 3, 2, 3, 3, 3, 4, 3, 5, 3, 6, 3, 7, 3, 8, 3, 9, 3, 10, 3, -1, # (ui,ci)
+        10, # M(c)
+        11, 3, 11, 4, 11, 5, 11, 6, -1, # (ud,cd)
+        4, 1, # N(c), f, KZij...floats...)
+
+        (6.05360936588321e-43,
+        1.401298464324817e-45, 4.203895392974451e-45,
+        2.802596928649634e-45, 4.203895392974451e-45,
+        4.203895392974451e-45, 4.203895392974451e-45,
+        5.605193857299268e-45, 4.203895392974451e-45,
+        7.006492321624085e-45, 4.203895392974451e-45,
+        8.407790785948902e-45, 4.203895392974451e-45,
+        9.80908925027372e-45, 4.203895392974451e-45,
+        1.1210387714598537e-44, 4.203895392974451e-45,
+        1.2611686178923354e-44, 4.203895392974451e-45,
+        1.401298464324817e-44, 4.203895392974451e-45,
+        nan,
+        1.401298464324817e-44, 1.5414283107572988e-44, 4.203895392974451e-45, 1.5414283107572988e-44, 5.605193857299268e-45, 1.5414283107572988e-44, 7.006492321624085e-45, 1.5414283107572988e-44, 8.407790785948902e-45,
+        nan,
+        5.605193857299268e-45, 1.401298464324817e-45,
+        8.71720021677902e-06, 1.3361000128497835e-06, 1.2778000382240862e-05, 6.272000064200256e-06, 1.6251000488409773e-05, 1.0492000001249835e-05, 2.0478000806178898e-05, 1.562999932502862e-05, 2.428500010864809e-05, 2.0403000235091895e-05,
+        3.086099968641065e-05, 6.272000064200256e-06, 3.229700087103993e-05, 1.0492000001249835e-05, 3.352899875608273e-05, 1.562999932502862e-05, 3.502099934848957e-05,
+        2.025700086960569e-05, 3.578500036383048e-05, 2.7731999580282718e-05, 1.572600012877956e-05, 4.825499854632653e-05, 3.762800042750314e-05, 7.328399806283414e-05,
+        6.433799717342481e-05, 9.580999903846532e-05, 8.837800123728812e-05, 6.374900112859905e-05, 3.762800042750314e-05, 8.013600017875433e-05, 6.433799717342481e-05,
+        0.00010011999984271824, 8.837800123728812e-05, 0.00011811000149464235, 0.00012758000229950994, 0.00011344000085955486, 0.00019350000366102904, 0.0001816000003600493,
+        0.0002528300101403147, 0.00024294000468216836, 0.0001699900021776557, 0.0001816000003600493, 0.000229199999012053, 0.00024294000468216836, 0.0002824899856932461,
+        0.00036862000706605613, 0.00035051998565904796, 0.0005267499946057796, 0.0005117100081406534, 0.00042292001307941973, 0.0005117100081406534, 0.0005718700122088194,
+        0.0008483999990858138, 0.0008233999833464622, 0.0009233999880962074, 5.605193857299268e-45, 1.0, 90.0, -20.25, 45.0, 1.0, 90.0, 81.0, 45.0, 1.0, 186.0, -17.850000381469727,
+        141.0, 1.0, 186.0, 71.4000015258789, 141.0, 1.0, 268.0, -15.800000190734863, 223.0, 1.0, 268.0, 63.20000076293945, 223.0, 1.0, 368.0, -13.300000190734863, 323.0, 1.0,
+        368.0, 53.20000076293945, 323.0, 1.0, 458.0, -11.050000190734863, 413.0, 1.0, 458.0, 44.20000076293945, 413.0)
+        """
+        #self.log.info(f'skipping GENEL in GEOM2; len(data)={len(data)-12}')
+        #print(n)
+        ints = np.frombuffer(data[n:], dtype='int32').copy()
+        floats = np.frombuffer(data[n:], dtype='float32').copy()
+        i = 0
+        while i < len(ints):
+            #1 EID I Element identification number
+            eid = ints[i]
+
+            iminus1 = np.where(ints[i+1:] == -1)[0]
+            #print('iminus1', iminus1)
+            idelta0 = iminus1[0]
+            idelta1 = iminus1[1]
+            # print('idelta0', idelta0)
+            uc = ints[i+1:i+1+idelta0].reshape(idelta0//2, 2)
+            print(uc)
+            j = i + 1 + idelta0 + 1
+            #2 UI  I Independent grid point identification number
+            #3 CI  I Component number
+            #Words 2 through 3 repeat until End of Record
+
+            nrows = ints[j]
+            print('nrows=', nrows)
+            mucd = ints[j:i+1+idelta1]
+            mc = mucd[0]
+            nucd = len(mucd) - 1
+            ucd = mucd[1:].reshape(nucd//2, 2)
+            print(f'M(c) = {mc}')
+            print(ucd)
+            i = i + 1 + idelta1 + 1
+            #4 M(C) I Number of rows and columns in K or Z and rows in S
+            #5 UD   I Dependent grid point identification number
+            #6 CD   I Component number
+            #Words 5 through 6 repeat until End of Record
+
+            # ---------------
+            print('-----------------')
+
+            #7 N(C)  I Number of columns in S (4)
+            #8 F     I 1 means Z, 2 means K -> Z
+
+            #9 KZIJ RS Lower triangular terms of the K or Z matrix. See Notes.
+            #Word 9 repeats MM times
+            #  10 NZERO(C) I
+            #  NZERO =1 Actually " 0"
+            #    11 SIJ RS Terms of the S matrix
+            #    Word 11 repeats M times
+            # Word 11 repeats N times
+            # NZERO =0
+            #End NZERO
+            #12 UNDEF none
+            #Word 12 repeats until End of Record
+
+            nc = ints[i]
+            f = ints[i+1]
+            i += 2
+            print(f'nc={nc} f={f}')
+            #print(ints[i:].min())
+            #print(ints[i+55])
+            #print(floats[i:i+55].tolist())
+            #print(ints[i+55:].tolist())
+            #print(ints[i:].tolist())
+            #print(floats[i:])
+            #print(len(floats[i:]))
+            break
+        #self.show_data(data[12:])
+        #aaa
         return len(data)
 # GMDNDC
 # GMBNDS
@@ -2210,8 +2595,30 @@ class GEOM2(GeomCommon):
         return n
 
     def _read_radbc(self, data, n):
-        self.log.info('skipping RADBC in GEOM2')
-        return len(data)
+        """
+        RADBC(12801,128,417)
+
+        Word Name Type Description
+        1 EID      I Element identification number
+        2 FAMB    RS Radiation view factor between the face and the ambient point
+        3 CNTRLND  I Control point for radiation boundary condition
+        4 NODAMB   I
+        """
+        structi = Struct(self._endian + b'ifii')
+        ntotal = 16
+        nelements = (len(data) - n) // ntotal
+        for unused_i in range(nelements):
+            edata = data[n:n + ntotal]  # 4*4
+            out = structi.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  RADBC=%s\n' % str(out))
+            eid, famb, cntrlnd, nodamb = out
+            eids = eid
+            boundary_condition = RADBC(nodamb, famb, cntrlnd, eids)
+            self._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
+            n += ntotal
+        self.card_count['RADBC'] = nelements
+        return n
 
 # RADINT
 # SINT
@@ -2230,10 +2637,18 @@ class GEOM2(GeomCommon):
         return n
 
     def _read_vubeam(self, data, n):  # 119
-        self.log.info('skipping VUBEAM in GEOM2')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping VUBEAM in GEOM2\n')
-        return len(data)
+        deltae = 100000000
+        #deltan = 111000000 # 111001002
+        def element(eid, pid, nids):
+            x = [1., 0., 0.]
+            g0 = None
+            nids2 = [nid - deltae for nid in nids]
+            elem = CBEAM(eid-deltae, pid, nids2, x, g0)
+            return elem
+
+        self._run_2nodes_no_extra(data, n, element)
+        #assert len(self.elements) > 0, self.elements
+        return n
 
 # VUHEXA
 # VUQUAD4
@@ -2271,9 +2686,9 @@ class GEOM2(GeomCommon):
         self.card_count['CTRAX3'] = nelements
         return n
 
-    def _read_cquadx4(self, data, n):
-        self.log.info('skipping CQUADX4 in GEOM2')
-        return len(data)
+    #def _read_cquadx4(self, data, n):
+        #self.log.info('skipping CQUADX4 in GEOM2')
+        #return len(data)
 
     def _read_ctrax6(self, data, n):
         """
@@ -2326,6 +2741,90 @@ class GEOM2(GeomCommon):
             n += ntotal
         self.card_count['CQUADX8'] = nelements
         return n
+
+    def _read_feface_pval(self, data, n):
+        r"""
+        C:\NASA\m4\formats\git\examples\move_tpl\pshp02.bdf
+        ints = (
+           100001001, 100, 111001001, 111001002, 111001004, 111001007, 111001008, 111001010,
+           100001002, 100, 111001002, 111001003, 111001005, 111001008, 111001009, 111001011,
+           100001003, 100, 111001005, 111001004, 111001002, 111001011, 111001010, 111001008,
+           100001004, 100, 111001004, 111001005, 111001006, 111001010, 111001011, 111001012,
+           100001005, 100, 111001007, 111001008, 111001010, 111001013, 111001014, 111001016,
+           100001006, 100, 111001008, 111001009, 111001011, 111001014, 111001015, 111001017,
+           100001007, 100, 111001011, 111001010, 111001008, 111001017, 111001016, 111001014,
+           100001008, 100, 111001010, 111001011, 111001012, 111001016, 111001017, 111001018,
+           100002001, 100, 111002001, 111002002, 111002004, 111002007, 111002008, 111002010,
+           100002002, 100, 111002002, 111002003, 111002005, 111002008, 111002009, 111002011,
+           100002003, 100, 111002005, 111002004, 111002002, 111002011, 111002010, 111002008,
+           100002004, 100, 111002004, 111002005, 111002006, 111002010, 111002011, 111002012,
+           100002005, 100, 111002007, 111002008, 111002010, 111002013, 111002014, 111002016,
+           100002006, 100, 111002008, 111002009, 111002011, 111002014, 111002015, 111002017,
+           100002007, 100, 111002011, 111002010, 111002008, 111002017, 111002016, 111002014,
+           100002008, 100, 111002010, 111002011, 111002012, 111002016, 111002017, 111002018)
+
+        C:\NASA\m4\formats\git\examples\move_tpl\pet1126.op2
+        ints = (
+           100001001, 1, 111001001, 111001002, 111001004, 111001007, 111001008, 111001010,
+           100001002, 1, 111001002, 111001003, 111001005, 111001008, 111001009, 111001011,
+           100001003, 1, 111001005, 111001004, 111001002, 111001011, 111001010, 111001008,
+           100001004, 1, 111001004, 111001005, 111001006, 111001010, 111001011, 111001012,
+           100001005, 1, 111001007, 111001008, 111001010, 111001013, 111001014, 111001016,
+           100001006, 1, 111001008, 111001009, 111001011, 111001014, 111001015, 111001017,
+           100001007, 1, 111001011, 111001010, 111001008, 111001017, 111001016, 111001014,
+           100001008, 1, 111001010, 111001011, 111001012, 111001016, 111001017, 111001018)
+        """
+        #self.show_data(data[12:])
+        return len(data)
+
+    def _read_feedge2(self, data, n):
+        """
+        (2901, 29, 9601)
+
+        Word Name Type Description
+        1 EDGEID     I Edge identification number
+        2 GRID1      I Identification number of end GRID 1
+        3 GRID2      I Identification number of end GRID 2
+        4 CID        I Coordinate system identification number
+        5 GEOMIN CHAR4 Type of referencing entry: "GMCURV" or "POINT"
+        6 GEOMID1    I Identification number of a POINT or GMCURV entry
+        7 GEOMID2    I Identification number of a POINT or GMCURV entry
+        """
+        # C:\NASA\m4\formats\git\examples\move_tpl\phsflux4.op2
+        #(200000002, 3, 1002, 6, 12, 0, 0)
+        # FEEDGE EDGEID GRID1 GRID2 CIDBC GEOMIN ID1 ID2
+        #FEEDGE    1002    6     12
+        #self.show_data(data[12:])
+        ntotal = 28  # 7*4
+        # s = Struct(self._endian + b'4i 4s 2i') #expected
+        s = Struct(self._endian + b'7i')
+        nelements = (len(data) - n)// 28  # 7*4
+        for unused_i in range(nelements):
+            edata = data[n:n+28]
+            out = s.unpack(edata)
+            #print(out)
+            #edge_id, n1, n2, cid, geomin, geom1, geom2 = out # expected
+            dunno, three, edge_id, n1, n2, zero1, zero2 = out
+            assert three == 3, out
+            assert zero1 == 0, out
+            assert zero2 == 0, out
+            if self.is_debug_file:
+                self.binary_debug.write('  FEEDGE=%s\n' % str(out))
+
+            geomin_str = 'POINT' # ???
+            cid = 0
+            geom1 = 0
+            geom2 = 0
+            elem = FEEDGE(edge_id, [n1, n2], cid, geomin_str, [geom1, geom2])
+            self.reject_cards.append(elem)
+
+            #data_in = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta]
+            # elem = CQUADX8(eid, pid, [n1, n2, n3, n4, n5, n6, n7, n8], theta)
+            # self.add_op2_element(elem)
+            n += ntotal
+        self.card_count['FEEDGE'] = nelements
+        return n
+
 
 def convert_theta_to_mcid(theta):
     """odd function..."""

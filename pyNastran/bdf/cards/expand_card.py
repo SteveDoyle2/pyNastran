@@ -61,9 +61,8 @@ def expand_thru(fields, set_fields=True, sort_fields=False):
     return out
 
 
-def expand_thru_by(fields, set_fields=True, sort_fields=True,
-                   require_int=True, allow_blanks=False):
-    # type: (List[str], bool, bool, bool, bool) -> List[int]
+def expand_thru_by(fields: List[str], set_fields: bool=True, sort_fields: bool=True,
+                   require_int: bool=True, allow_blanks: bool=False) -> List[int]:
     """
     Expands a list of values of the form [1,5,THRU,9,BY,2,13]
     to be [1,5,7,9,13]

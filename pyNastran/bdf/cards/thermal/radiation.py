@@ -158,6 +158,8 @@ class RADBC(ThermalBC):
         self.cntrlnd = cntrlnd
 
         #: CHBDYi element identification number
+        if isinstance(eids, int):
+            eids = [eids]
         self.eids = expand_thru_by(eids)
 
         assert self.nodamb > 0

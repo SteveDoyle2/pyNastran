@@ -6,6 +6,8 @@ from struct import Struct
 import numpy as np
 
 from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP
+from pyNastran.bdf.cards.parametric import FEEDGE
+
 from pyNastran.bdf.cards.coordinate_systems import (
     CORD1R, CORD1C, CORD1S,
     CORD2R, CORD2C, CORD2S,
@@ -351,8 +353,49 @@ class GEOM1(GeomCommon):
         return len(data)
 
     def _read_feedge(self, data, n):
-        self.log.info('skipping FEEDGE in GEOM1')
-        return len(data)
+        """
+        (2901, 29, 9601)
+
+        Word Name Type Description
+        1 EDGEID     I Edge identification number
+        2 GRID1      I Identification number of end GRID 1
+        3 GRID2      I Identification number of end GRID 2
+        4 CID        I Coordinate system identification number
+        5 GEOMIN CHAR4 Type of referencing entry: "GMCURV" or "POINT"
+        6 GEOMID1    I Identification number of a POINT or GMCURV entry
+        7 GEOMID2    I Identification number of a POINT or GMCURV entry
+        """
+        # C:\NASA\m4\formats\git\examples\move_tpl\phsflux4.op2
+        #(200000002, 3, 1002, 6, 12, 0, 0)
+        # FEEDGE EDGEID GRID1 GRID2 CIDBC GEOMIN ID1 ID2
+        #FEEDGE    1002    6     12
+        #self.show_data(data[12:])
+        ntotal = 28  # 7*4
+        s = Struct(self._endian + b'4i 4s 2i') #expected
+        #s = Struct(self._endian + b'7i')
+        nelements = (len(data) - n)// 28  # 7*4
+        for unused_i in range(nelements):
+            edata = data[n:n+28]
+            out = s.unpack(edata)
+            #print(out)
+            edge_id, n1, n2, cid, geomin, geom1, geom2 = out # expected
+
+            if self.is_debug_file:
+                self.binary_debug.write('  FEEDGE=%s\n' % str(out))
+
+            if geomin == b'POIN':
+                geomin_str = 'POINT'
+            else:  # pragma: no cover
+                raise RuntimeError(geomin)
+
+            if cid == -1:
+                cid = None
+            elem = FEEDGE(edge_id, [n1, n2], cid, geomin_str, [geom1, geom2])
+            self.reject_cards.append(elem)
+            n += ntotal
+
+        self.card_count['FEEDGE'] = nelements
+        return n
 
     def _read_gmcurve(self, data, n):
         self.log.info('skipping GMCURVE in GEOM1')
