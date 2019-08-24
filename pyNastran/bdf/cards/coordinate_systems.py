@@ -10,12 +10,16 @@ All coordinate cards are defined in this file.  This includes:
  * CORD2S
 
 """
+from __future__ import annotations
 import copy
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
+import typing
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
+if typing.TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -385,7 +389,7 @@ class Coord(BaseCard):
         #print('cid=%s rid_trace=%s' % (self.cid, self.rid_trace))
         assert self.cid not in self.rid_trace, 'cid=%s rid_trace=%s' % (self.cid, self.rid_trace)
 
-    def setup_no_xref(self, model):
+    def setup_no_xref(self, model: BDF):
         r"""
         .. math::
           e_{13} = e_3 - e_1
@@ -577,7 +581,7 @@ class Coord(BaseCard):
             else:
                 self.setup()
 
-    def transform_vector_to_global_no_xref(self, p, model):
+    def transform_vector_to_global_no_xref(self, p, model: BDF):
         if self.cid == 0:
             return p
 
@@ -714,7 +718,7 @@ class Coord(BaseCard):
             return xyz
         return self.transform_vector_to_global(xyz) + self.origin
 
-    def transform_node_to_global_no_xref(self, xyz, model):
+    def transform_node_to_global_no_xref(self, xyz, model: BDF):
         if self.cid == 0:
             return xyz
         return self.transform_vector_to_global_no_xref(xyz, model) + self.origin
@@ -1873,7 +1877,7 @@ class Cord2x(Coord):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2068,7 +2072,7 @@ class Cord1x(Coord):
         cid = self.Cid()
         assert isinstance(cid, integer_types), 'cid=%r' % cid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2198,7 +2202,7 @@ class GMCORD(BaseCard):
         ]
         return GMCORD(cid, entity, gm_ids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:
@@ -2310,7 +2314,7 @@ class CORD3G(Coord):  # not done
         return CORD3G(cid, method_es, method_int, form, thetas, rid,
                       comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

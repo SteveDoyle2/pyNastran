@@ -58,7 +58,8 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
             #continue
 
         try:
-            nbytes = write_card(op2, op2_ascii, load_type, loads, endian)
+            nbytes = write_card(op2, op2_ascii, load_type, loads, endian, obj.log,
+                                nastran_format=nastran_format)
         except:  # pragma: no cover
             obj.log.error('failed GEOM3-%s' % load_type)
             raise
@@ -78,7 +79,8 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
     #-------------------------------------
 
-def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx'):
+def write_card(op2, op2_ascii, load_type, loads, endian, log,
+               nastran_format: str='nx'):
     nloads = len(loads)
     if load_type == 'FORCE':
         key = (4201, 42, 18)
@@ -424,7 +426,9 @@ def write_card(op2, op2_ascii, load_type, loads, endian, nastran_format: str='nx
             grids = load.grids
             for i in range(nnodes):
                 nids[i] = grids[i]
-                assert nids[i] > 0, f'nids[{i}]={nids[i]} nids={nids}'
+                if nids[i] <= 0:
+                    log.warning(f'QHBDY: nids[{i}]={nids[i]} nids={nids}')
+                #assert nids[i] > 0, f'QHBDY: nids[{i}]={nids[i]} nids={nids}'
 
             data = [
                 load.sid, flag, load.q0,

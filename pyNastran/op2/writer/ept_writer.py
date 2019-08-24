@@ -393,8 +393,8 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             #print('PSHELL', data)
             #print(prop.mid1, mid2, prop.mid3, prop.mid4)
 
-            op2_ascii.write('  pid=%s mid=%s data=%s\n' % (pid, prop.mid1, data[2:]))
-            assert None not in data, '  %s pid=%s mid=%s data=%s\n' % (name, pid, prop.mid1, data[2:])
+            op2_ascii.write(f'  {name} pid={pid} mid1={mid1} data={data[2:]}\n')
+            assert None not in data, f'  {name} pid={pid} mid1={mid1} data={data[2:]}'
             op2.write(spack.pack(*data))
     elif name == 'PLPLANE':
         #NX 10
@@ -474,8 +474,12 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
     elif name == 'PHBDY':
         for pid in sorted(pids):
             prop = obj.phbdys[pid]
-            data = [pid, prop.af, prop.d1, prop.d2]
-            op2_ascii.write('  pid=%s tables=%s\n' % (pid, data[1:]))
+            af = 0.0 if prop.af is None else prop.af
+            d1 = 0.0 if prop.d1 is None else prop.d1
+            d2 = 0.0 if prop.d2 is None else prop.d2
+            data = [pid, af, d1, d2]
+            op2_ascii.write('  pid=%s [af,d1,d2]=%s\n' % (pid, data[1:]))
+            #print('  pid=%s [af,d1,d2]=%s\n' % (pid, data[1:]))
             op2.write(spack.pack(*data))
             #(pid, af, d1, d2) = out
     else:  # pragma: no cover
@@ -483,7 +487,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
 
 
 def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
-    nproperties = len(pids)
+    #nproperties = len(pids)
     for pid in sorted(pids):
         prop = obj.properties[pid]
     return itable
@@ -622,7 +626,7 @@ def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
                                '\nPCOMP = %s' % (pid, prop.ft, prop))
 
         #is_symmetric = True
-        symmetric_factor = 1
+        #symmetric_factor = 1
         lam = lam_map[prop.lam]
         #(pid, lam_int, z0, nsm, sb, ft_int, tref, ge) = out
         data = [pid, lam, prop.z0,

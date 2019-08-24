@@ -27,49 +27,9 @@ from pyNastran.bdf.cards.thermal.radiation import RADBC # , RADM, RADCAV, RADLST
 from pyNastran.bdf.cards.nodes import SPOINTs
 from pyNastran.bdf.cards.elements.bush import CBUSH
 from pyNastran.bdf.cards.parametric.geometry import FEEDGE
-
+from pyNastran.bdf.cards.elements.acoustic import CHACAB, CHACBR, CAABSF
 from pyNastran.op2.errors import MixedVersionCard
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
-
-class CAABSF:
-    type = 'CAABSF'
-    def __init__(self, eid, pid, nodes):
-        self.eid = eid
-        self.pid = pid
-        self.nodes = nodes
-
-class CHACAB:
-    """
-    Acoustic Absorber Element Connection
-    Defines the acoustic absorber element in coupled fluid-structural analysis.
-
-    | CHACAB | EID | PID | G1  | G2  | G3  | G4  | G5 | G6 |
-    |        | G7  | G8  | G9  | G10 | G11 | G12 |    |    |
-    |        |     |     | G17 | G18 | G19 | G20 |    |    |
-    """
-    type = 'CHACAB'
-    def __init__(self, eid, pid, nodes):
-        """
-        EID Element identification number. (0 < Integer < 100,000,000)
-        PID Property identification number of a PACABS entry. (Integer > 0)
-        Gi Grid point identification numbers of connection points. (Integer > 0 or blank)
-        """
-        self.eid = eid
-        self.pid = pid
-        self.nodes = nodes
-
-class CHACBR:
-    """
-
-    | CHACBR | EID | PID | G1  | G2  | G3  | G4  | G5 | G6 |
-    |        | G7  | G8  | G9  | G10 | G11 | G12 |    |    |
-    |        |     |     | G17 | G18 | G19 | G20 |    |    |
-    """
-    type = 'CHACBR'
-    def __init__(self, eid, pid, nodes):
-        self.eid = eid
-        self.pid = pid
-        self.nodes = nodes
 
 
 class GEOM2(GeomCommon):
@@ -2989,8 +2949,23 @@ class GEOM2(GeomCommon):
         #FEFACE   3       1       51      18
         #FEFACE   4       68      18      51
 
+        # C:\NASA\m4\formats\git\examples\move_tpl\ptsahd.op2
+        #feedge,311, 311,331, ,gmcurv,31
+        #feedge,321, 331,321, ,gmcurv,31
+        #feface,21, 121,122,126,125,,12
+        #feface,22, 125,126,123,  ,,12
+        #feface,23, 124,123,126,  ,,12
+        #(200000004, 5, 12, 121, 122, 126, 125)
+        #(200000004, 5, 12, 123, 124, 126, 0)
+        #(200000004, 5, 12, 123, 125, 126, 0)
+        #(200000002, 4, 22, 221, 222, 0, 0)
+        #(200000003, 1, 321, 321, 0, 0, 0)
+        #(200000005, 3, 22, 125, 126, 123, 0)
+        #(200000006, 3, 23, 124, 123, 126, 0)
+
         # C:\NASA\m4\formats\git\examples\move_tpl\phscvhg6.op2
         #C:\NASA\m4\formats\git\examples\move_tpl\phsconv4.op2
+
 
         #self.show_data(data[12:])
         ntotal = 28  # 7*4
@@ -3002,8 +2977,8 @@ class GEOM2(GeomCommon):
             out = s.unpack(edata)
             print(out)
             #edge_id, n1, n2, cid, geomin, geom1, geom2 = out # expected
-            dunno, two_three, edge_id, n1, n2, zero1, zero2 = out
-            assert two_three in [2, 3], out
+            dunno, nfields, edge_id, n1, n2, zero1, zero2 = out
+            assert nfields in [1, 2, 3, 4, 5], out
             #assert zero1 == 0, f'zero1={zero1} out={out}'
             #assert zero2 == 0, f'zero2={zero2} out={out}'
             if self.is_debug_file:
