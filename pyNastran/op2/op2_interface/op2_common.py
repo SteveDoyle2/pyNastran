@@ -1260,7 +1260,7 @@ class OP2Common(Op2Codes, F06Writer):
     def _read_complex_table_sort2_mag(self, data, is_vectorized, nnodes, result_name, flag):
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table_sort2_mag\n')
-        self.log.info('_read_complex_table_sort2_mag')
+        #self.log.info('_read_complex_table_sort2_mag')
         assert flag in ['node', 'elem'], flag
         flag, flag_type = self.get_oug2_flag()
         node_id = self.nonlinear_factor
@@ -1839,7 +1839,7 @@ class OP2Common(Op2Codes, F06Writer):
             curvature_flag = False
         else:
             # strain only
-            curvature_flag = True if self.stress_bits[2] == 0 else False
+            curvature_flag = self.stress_bits[2] == 0
         if self.s_code in [10, 11, 20, 27]:
             assert curvature_flag, curvature_flag
             return True
@@ -1852,7 +1852,7 @@ class OP2Common(Op2Codes, F06Writer):
 
     @property
     def is_max_shear(self):
-        return True if self.stress_bits[4] == 0 else False
+        return self.stress_bits[4] == 0
 
     @property
     def is_von_mises(self):
@@ -1946,7 +1946,7 @@ class OP2Common(Op2Codes, F06Writer):
         We're going to fill self.ctetra_stress with the class
         RealSolidStressArray.  So we call:
 
-        if self._is_vectorized(RealSolidStressArray, self.ctetra_stress):
+        if self._is_vectorized(RealSolidStressArray):
             if self._results.is_not_saved(result_vector_name):
                 return ndata
         else:
@@ -1962,7 +1962,7 @@ class OP2Common(Op2Codes, F06Writer):
         """
         auto_return = False
         #is_vectorized = True
-        is_vectorized = self._is_vectorized(obj_vector, slot)
+        is_vectorized = self._is_vectorized(obj_vector)
         #print("vectorized...read_mode=%s...%s; %s" % (self.read_mode, result_name, is_vectorized))
 
         if is_vectorized:
@@ -2010,7 +2010,7 @@ class OP2Common(Op2Codes, F06Writer):
         assert is_vectorized, '%r is not vectorized; obj=%s' % (result_name, obj_vector)
         return auto_return, is_vectorized
 
-    def _is_vectorized(self, obj_vector, slot_vector):
+    def _is_vectorized(self, obj_vector):
         """
         Checks to see if the data array has been vectorized
 
@@ -2018,8 +2018,6 @@ class OP2Common(Op2Codes, F06Writer):
         ----------
         obj_vector:  the object to check
             (obj or None; None happens when vectorization hasn't been implemented)
-        slot_vector: the dictionary to put the object in
-            (dict or None; None happens when obj hasn't been implemented)
 
         Returns
         -------
@@ -2102,7 +2100,9 @@ def _function6(value):
 def _function7(value):
     """function7(value)"""
     if value in [0, 2]:
-        return 0
+        out = 0
     elif value in [1, 3]:
-        return 1
-    raise RuntimeError(value)
+        out = 1
+    else:
+        raise RuntimeError(value)
+    return out

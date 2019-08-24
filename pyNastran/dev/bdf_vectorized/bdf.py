@@ -1980,7 +1980,8 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         """rejects a card object"""
         self.reject_cards.append(card_obj)
 
-    def reject_card_lines(self, card_name, card_lines, comment=''):
+    def reject_card_lines(self, card_name: str, card_lines: List[str],
+                          show_log: bool=True, comment: str='') -> None:
         """rejects a card"""
         if card_name.isdigit():
             # TODO: this should technically work (I think), but it's a problem

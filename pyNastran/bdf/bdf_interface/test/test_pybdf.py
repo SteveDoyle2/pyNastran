@@ -227,12 +227,12 @@ class TestPyBDF(unittest.TestCase):
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
                            consider_superelements=False, log=None, debug=False)
         with self.assertRaises(RuntimeError):
-            bulk_data_lines = pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)[3]
+            unused_bulk_data_lines1 = pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)[3]
 
         encoding = 'latin1'
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
                            consider_superelements=False, log=None, debug=False)
-        bulk_data_lines = pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)[3]
+        unused_bulk_data_lines2 = pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)[3]
         os.remove(bdf_filename)
 
         #--------------
@@ -254,7 +254,7 @@ class TestPyBDF(unittest.TestCase):
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
                            consider_superelements=False, log=None, debug=False)
         with self.assertRaises(RuntimeError):
-            bulk_data_lines = pybdf.get_lines(bdf_filename, punch=True, make_ilines=True)
+            unused_bulk_data_lines3 = pybdf.get_lines(bdf_filename, punch=True, make_ilines=True)
         os.remove('main.bdf')
         os.remove('inc.inc')
 

@@ -317,7 +317,7 @@ class GEOM2(GeomCommon):
 
             (11000, 110, 6667): ['CRJOINT', self._read_crjoint],  # 80
             #(3001, 30, 48): ['CROD', self._read_crod],         # record 81
-            (12600, 126, 6661): ['CRROD', self._read_fake],    # 82
+            (12600, 126, 6661): ['CRROD', self._read_crrod],    # 82
             (13801, 138, 570): ['CSEAM', self._read_fake],     # 83
             #(3101, 31, 61): ['CSHEAR', self._read_cshear],     # record 84
             #(4408, 44, 227): ['CSLOT3', self._read_fake],      # 85
@@ -383,7 +383,6 @@ class GEOM2(GeomCommon):
             (5008, 50, 258): ['CNGRET', self._read_cngret],
             (12301, 123, 9921): ['ADAPT card', self._read_adapt],
             (12401, 124, 9922): ['FEFACE/PVAL?', self._read_feface_pval],
-            (12600, 126, 6661): ['', self._read_fake],
             (7309, 73, 0): ['CaseControl SET?', self._read_fake],
             (12501, 125, 9923): ['ADAPT card 2', self._read_adapt],    # record
             (3401, 34, 9600): ['GMCONV?', self._read_fake],    # record
@@ -870,13 +869,13 @@ class GEOM2(GeomCommon):
 
     def _read_cdum8(self, data, n):
         self.log.info('skipping CDUM9 in GEOM2')
-        ints = np.frombuffer(data[n:], dtype='int32').copy()
+        #ints = np.frombuffer(data[n:], dtype='int32').copy()
         #print('CDUM8', ints)
         return n
 
     def _read_cdum9(self, data, n):
         self.log.info('skipping CDUM9 in GEOM2')
-        ints = np.frombuffer(data[n:], dtype='int32').copy()
+        #ints = np.frombuffer(data[n:], dtype='int32').copy()
         #print('CDUM9', ints)
         return n
 
@@ -2056,7 +2055,41 @@ class GEOM2(GeomCommon):
         self.card_count['CROD'] = nelements
         return n
 
-# CRROD
+    def _read_crrod(self, data, n):
+        """
+        Word Name Type Description
+        1 EID    I Element identification number
+        2 GA     I Grid point A identification number
+        3 GB     I Grid point B identification number
+        4 LMID1  I Lagrange multiplier identification number
+        5 CMA    I Component numbers of dependent DOFs at end A
+        6 CMB    I Component numbers of dependent DOFs at end B
+        7 ALPHA RS Thermal expansion cofficient
+        """
+        structi = Struct(self._endian + b'6if')
+        nelements = (len(data) - n) // 28  # 7*4
+        #is_long_ids = False
+        for unused_i in range(nelements):
+            edata = data[n:n + 28]
+            out = structi.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('  RROD=%s\n' % str(out))
+
+            #print(out)
+            (eid, n1, n2, unused_lagrange_multiplier_id, cma, cmb, alpha) = out
+            assert cma == 0, (eid, n1, n2, unused_lagrange_multiplier_id, cma, cmb, alpha)
+            assert cmb == 0, (eid, n1, n2, unused_lagrange_multiplier_id, cma, cmb, alpha)
+            #if n1 > 100000000 or n2 > 100000000:
+                #is_long_ids = True
+
+            #eid, nids, cma='', cmb='', alpha=0.0
+            elem = self.add_rrod(eid, [n1, n2], cma=cma, cmb=cmb, alpha=alpha)
+            self.add_op2_element(elem)
+            n += 28
+        #self._is_long_ids = is_long_ids
+        self.card_count['RROD'] = nelements
+        return n
+
 # CSEAM
 
     def _read_cshear(self, data, n):
@@ -2975,9 +3008,9 @@ class GEOM2(GeomCommon):
         for unused_i in range(nelements):
             edata = data[n:n+28]
             out = s.unpack(edata)
-            print(out)
+            #print(out)
             #edge_id, n1, n2, cid, geomin, geom1, geom2 = out # expected
-            dunno, nfields, edge_id, n1, n2, zero1, zero2 = out
+            dunno, nfields, edge_id, n1, n2, n3, n4 = out
             assert nfields in [1, 2, 3, 4, 5], out
             #assert zero1 == 0, f'zero1={zero1} out={out}'
             #assert zero2 == 0, f'zero2={zero2} out={out}'
@@ -2988,8 +3021,17 @@ class GEOM2(GeomCommon):
             cid = 0
             geom1 = 0
             geom2 = 0
-            elem = FEEDGE(edge_id, [n1, n2], cid, geomin_str, [geom1, geom2])
-            self.reject_cards.append(elem)
+            if nfields == 2:
+                elem = FEEDGE(edge_id, [n1, n2], cid, geomin_str, [geom1, geom2])
+                self.reject_cards.append(elem)
+            #elif nfields in [3, 4, 5]:
+                #if nfields == 3:
+                    #nids = [n1, n2]
+                #elif nfields == 4:
+                    #nids = [n1, n2, n3]
+                #elif nfields == 5:
+                    #nids = [n1, n2, n3, n4]
+                ##elem = FEFACE(edge_id, nids)
 
             #data_in = [eid, pid, n1, n2, n3, n4, n5, n6, n7, n8, theta]
             # elem = CQUADX8(eid, pid, [n1, n2, n3, n4, n5, n6, n7, n8], theta)

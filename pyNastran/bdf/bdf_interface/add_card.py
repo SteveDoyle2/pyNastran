@@ -686,8 +686,8 @@ class AddCards(AddMethods):
         custom_types['CaseControlDeck'] = CaseControlDeck
         return custom_types
 
-    def add_grid(self, nid, xyz, cp=0, cd=0, ps='', seid=0, comment=''):
-        # type: (int, Union[None, List[float], np.ndarray], int, int, str, int, str) -> None
+    def add_grid(self, nid: int, xyz: Union[None, List[float], np.ndarray],
+                 cp: int=0, cd: int=0, ps: str='', seid: int=0, comment: str='') -> GRID:
         """
         Creates the GRID card
 
@@ -715,8 +715,7 @@ class AddCards(AddMethods):
         self._add_node_object(grid)
         return grid
 
-    def add_grdset(self, cp, cd, ps, seid, comment=''):
-        # type: (int, int, str, int, str) -> GRDSET
+    def add_grdset(self, cp: int, cd: int, ps: str, seid: int, comment: str='') -> GRDSET:
         """
         Creates the GRDSET card
 
@@ -740,8 +739,8 @@ class AddCards(AddMethods):
         self.grdset = grdset
         return grdset
 
-    def add_seqgp(self, nids, seqids, comment=''):
-        # type: (List[int], List[Union[int, float]], str) -> SEQGP
+    def add_seqgp(self, nids: List[int], seqids: List[Union[int, float]],
+                  comment: str='') -> SEQGP:
         """
         Creates the SEQGP card
 
@@ -793,8 +792,7 @@ class AddCards(AddMethods):
         self._add_epoint_object(epoint)
         return epoint
 
-    def add_point(self, nid, xyz, cp=0, comment=''):
-        # type: (int, int, Any, str) -> POINT
+    def add_point(self, nid: int, xyz: Any, cp: int=0, comment: str='') -> POINT:
         """
         Creates the POINT card
 
@@ -814,8 +812,11 @@ class AddCards(AddMethods):
         self._add_point_object(point)
         return point
 
-    def add_cord2r(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
-        # type: (int, Optional[Union[List[float], np.ndarray]], Any, Any, int, str) -> CORD2R
+    def add_cord2r(self, cid: int,
+                   origin: Optional[Union[List[float], np.ndarray]],
+                   zaxis: Optional[Union[List[float], np.ndarray]],
+                   xzplane: Optional[Union[List[float], np.ndarray]],
+                   rid: int=0, comment: str='') -> CORD2R:
         """
         Creates the CORD2R card, which defines a rectangular coordinate
         system using 3 vectors.
@@ -841,8 +842,11 @@ class AddCards(AddMethods):
         self._add_coord_object(coord)
         return coord
 
-    def add_cord2c(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
-        # type: (int, Optional[Union[List[float], np.ndarray]], Any, Any, int, str) -> CORD2C
+    def add_cord2c(self, cid: int,
+                   origin: Optional[Union[List[float], np.ndarray]],
+                   zaxis: Optional[Union[List[float], np.ndarray]],
+                   xzplane: Optional[Union[List[float], np.ndarray]],
+                   rid: int=0, comment: str='') -> CORD2C:
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
         system using 3 vectors.
@@ -868,8 +872,11 @@ class AddCards(AddMethods):
         self._add_coord_object(coord)
         return coord
 
-    def add_cord2s(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
-        # type: (int, Optional[Union[List[float], np.ndarray]], Any, Any, int, str) -> CORD2S
+    def add_cord2s(self, cid: int,
+                   origin: Optional[Union[List[float], np.ndarray]],
+                   zaxis: Optional[Union[List[float], np.ndarray]],
+                   xzplane: Optional[Union[List[float], np.ndarray]],
+                   rid: int=0, comment: str='') -> CORD2S:
         """
         Creates the CORD2C card, which defines a spherical coordinate
         system using 3 vectors.
@@ -896,8 +903,7 @@ class AddCards(AddMethods):
         self._add_coord_object(coord)
         return coord
 
-    def add_cord1r(self, cid, g1, g2, g3, comment=''):
-        # type: (int, int, int, int, str) -> CORD1R
+    def add_cord1r(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> CORD1R:
         """
         Creates the CORD1R card, which defines a rectangular coordinate
         system using 3 GRID points.
@@ -920,8 +926,7 @@ class AddCards(AddMethods):
         self._add_coord_object(coord)
         return coord
 
-    def add_cord1c(self, cid, g1, g2, g3, comment=''):
-        # type: (int, int, int, int, str) -> CORD1C
+    def add_cord1c(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> CORD1C:
         """
         Creates the CORD1C card, which defines a cylindrical coordinate
         system using 3 GRID points.
@@ -944,8 +949,7 @@ class AddCards(AddMethods):
         self._add_coord_object(coord)
         return coord
 
-    def add_cord1s(self, cid, g1, g2, g3, comment=''):
-        # type: (int, int, int, int, str) -> CORD1S
+    def add_cord1s(self, cid: int, g1: int, g2: int, g3: int, comment: str='') -> CORD1S:
         """
         Creates the CORD1S card, which defines a spherical coordinate
         system using 3 GRID points.
@@ -968,8 +972,8 @@ class AddCards(AddMethods):
         self._add_coord_object(coord)
         return coord
 
-    def add_param(self, key, values, comment=''):
-        # type: (str, List[Union[int, float, str]], str) -> PARAM
+    def add_param(self, key: str, values: List[Union[int, float, str]],
+                  comment: str='') -> PARAM:
         """
         Creates a PARAM card
 
@@ -987,8 +991,7 @@ class AddCards(AddMethods):
         self._add_param_object(param)
         return param
 
-    def add_plotel(self, eid, nodes, comment=''):
-        # type: (int, List[int], str) -> PLOTEL
+    def add_plotel(self, eid: int, nodes: List[int], comment: str='') -> PLOTEL:
         """
         Adds a PLOTEL card
 
@@ -1037,8 +1040,9 @@ class AddCards(AddMethods):
         self._add_mass_object(mass)
         return mass
 
-    def add_conm2(self, eid, nid, mass, cid=0, X=None, I=None, comment=''):
-        # type: (int, int, float, int, Any, Any, str) -> CONM2
+    def add_conm2(self, eid: int, nid: int, mass: float, cid: int=0,
+                  X: Optional[List[float]]=None, I: Optional[List[float]]=None,
+                  comment: str='') -> CONM2:
         """
         Creates a CONM2 card
 
@@ -1065,8 +1069,8 @@ class AddCards(AddMethods):
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_nsm(self, sid, nsm_type, pid_eid, value, comment=''):
-        # type: (int, str, int, float, str) -> NSM
+    def add_nsm(self, sid: int, nsm_type: str, pid_eid: int, value: float,
+                comment: str='') -> NSM:
         """
         Creates an NSM card
 
@@ -1105,8 +1109,7 @@ class AddCards(AddMethods):
             nsms.append(nsm)
         return nsms
 
-    def add_nsm1(self, sid, nsm_type, value, ids, comment=''):
-        # type: (int, str, float, List[int], str) -> NSM1
+    def add_nsm1(self, sid: int, nsm_type: str, value: float, ids: List[int], comment: str='') -> NSM1:
         """
         Creates an NSM1 card
 
@@ -1134,8 +1137,7 @@ class AddCards(AddMethods):
         self._add_nsm_object(nsm)
         return nsm
 
-    def add_nsml(self, sid, nsm_type, pid_eid, value, comment=''):
-        # type: (int, str, int, float, str) -> NSML
+    def add_nsml(self, sid: int, nsm_type: str, pid_eid: int, value: float, comment: str='') -> NSML:
         """
         Creates an NSML card, which defines lumped non-structural mass
 
@@ -1174,8 +1176,7 @@ class AddCards(AddMethods):
             nsms.append(nsm)
         return nsms
 
-    def add_nsml1(self, sid, nsm_type, value, ids, comment=''):
-        # type: (int, str, float, List[int], str) -> NSML1
+    def add_nsml1(self, sid: int, nsm_type: str, value: float, ids: List[int], comment: str='') -> NSML1:
         """
         Creates an NSML1 card, which defines lumped non-structural mass
 
@@ -1202,8 +1203,7 @@ class AddCards(AddMethods):
         self._add_nsm_object(nsm)
         return nsm
 
-    def add_nsmadd(self, sid, sets, comment=''):
-        # type: (int, List[int], str) -> NSMADD
+    def add_nsmadd(self, sid: int, sets: List[int], comment: str='') -> NSMADD:
         """
         Creates an NSMADD card, which sum NSM sets
 
@@ -1221,8 +1221,7 @@ class AddCards(AddMethods):
         self._add_nsmadd_object(nsmadd)
         return nsmadd
 
-    def add_pmass(self, pid, mass, comment=''):
-        # type: (int, float, str) -> PMASS
+    def add_pmass(self, pid: int, mass: float, comment: str='') -> PMASS:
         """
         Creates an PMASS card, which defines a mass applied to a single DOF
 
@@ -1240,8 +1239,8 @@ class AddCards(AddMethods):
         self._add_property_mass_object(prop)
         return prop
 
-    def add_cmass1(self, eid, pid, nids, c1=0, c2=0, comment=''):
-        # type: (int, int, [int, int], int, int, str) -> CMASS1
+    def add_cmass1(self, eid: int, pid: int, nids: List[int],
+                   c1: int=0, c2: int=0, comment: str='') -> CMASS1:
         """
         Creates a CMASS1 card
 
@@ -7116,29 +7115,29 @@ class AddCards(AddMethods):
 
     def add_cmfree(self, eid, s, s2, y, n):
         fields = ['CMFREE', eid, s, s2, y, n]
-        self.reject_card_lines('CMFREE', print_card_8(fields).split('\n'))
+        self.reject_card_lines('CMFREE', print_card_8(fields).split('\n'), show_log=False)
 
     def add_cfluid2(self, eid, ringfls, rho, b, harmonic):
         fields = ['CFLUID2', eid] + ringfls + [rho, b, harmonic]
-        self.reject_card_lines('CFLUID2', print_card_8(fields).split('\n'))
+        self.reject_card_lines('CFLUID2', print_card_8(fields).split('\n'), show_log=False)
 
     def add_cfluid3(self, eid, ringfls, rho, b, harmonic):
         fields = ['CFLUID3', eid] + ringfls + [rho, b, harmonic]
-        self.reject_card_lines('CFLUID3', print_card_8(fields).split('\n'))
+        self.reject_card_lines('CFLUID3', print_card_8(fields).split('\n'), show_log=False)
 
     def add_cfluid4(self, eid, ringfls, rho, b, harmonic):
         fields = ['CFLUID4', eid] + ringfls + [rho, b, harmonic]
-        self.reject_card_lines('CFLUID4', print_card_8(fields).split('\n'))
+        self.reject_card_lines('CFLUID4', print_card_8(fields).split('\n'), show_log=False)
 
     def add_rgyro(self, sid, asynci, refrot, unit, speed_low, speed_high, speed, comment=''):
         """Creates an RGYRO card"""
         fields = ['RGYRO', sid, asynci, refrot, unit, speed_low, speed_high, speed]
-        self.reject_card_lines('RGYRO', print_card_8(fields).split('\n'))
+        self.reject_card_lines('RGYRO', print_card_8(fields).split('\n'), show_log=False)
 
     def add_rspint(self, rid, grida, gridb, gr, unit, table_id, comment=''):
         """Creates an RSPINT card"""
         fields = ['RSPINT', rid, grida, gridb, gr, unit, table_id]
-        self.reject_card_lines('RSPINT', print_card_8(fields).split('\n'))
+        self.reject_card_lines('RSPINT', print_card_8(fields).split('\n'), show_log=False)
 
     def add_temp(self, sid, temperatures, comment=''):
         """
@@ -7801,3 +7800,43 @@ class AddCards(AddMethods):
         senqset = SENQSET(set_id, n, comment=comment)
         self._add_senqset_object(senqset)
         return senqset
+
+    def add_nlrsfd(self, sid, ga, gb, plane, bdia, blen, bclr, soln,
+                   visco, pvapco, nport,
+                   pres1, theta1, pres2, theat2, npnt,
+                   offset1, offset2):
+        fields = [
+            'NLRSFD', sid, ga, gb, plane, bdia, blen, bclr, soln,
+            visco, pvapco, nport,
+            pres1, theta1, pres2, theat2, npnt,
+            offset1, offset2]
+        self.reject_card_lines('NLRSFD', print_card_8(fields).split('\n'), show_log=False)
+
+    def add_nolin1(self, sid, gi, ci, s, gj, cj, t):
+        fields = ['NOLIN1', sid, gi, ci, s, gj, cj, t]
+        self.reject_card_lines('NOLIN1', print_card_8(fields).split('\n'), show_log=False)
+
+    def add_nolin2(self, sid, g, ci, s, gj, cj, gk, ck):
+        fields = ['NOLIN2', sid, g, ci, s, gj, cj, gk, ck]
+        self.reject_card_lines('NOLIN2', print_card_8(fields).split('\n'), show_log=False)
+
+    def add_nolin3(self, sid, gi, ci, s, gj, cj, a):
+        fields = ['NOLIN3', sid, gi, ci, s, gj, cj, a]
+        self.reject_card_lines('NOLIN3', print_card_8(fields).split('\n'), show_log=False)
+
+    def add_nolin4(self, sid, gi, ci, s, gj, cj, a):
+        fields = ['NOLIN4', sid, gi, ci, s, gj, cj, a]
+        self.reject_card_lines('NOLIN4', print_card_8(fields).split('\n'), show_log=False)
+
+    def add_dynred(self, sid, fmax, nirv, nit, idir, nqdes):
+        fields = ['DYNRED', sid, fmax, nirv, nit, idir, nqdes]
+        self.reject_card_lines('DYNRED', print_card_8(fields).split('\n'), show_log=False)
+
+    def add_rcross(self, sid, rtype1, id1, comp1, rtype2, id2, comp2, curid):
+        fields = ['RCROSS', sid, rtype1, id1, comp1, rtype2, id2, comp2, curid]
+        self.reject_card_lines('RCROSS', print_card_8(fields).split('\n'), show_log=False)
+
+    def add_pval(self, idi, poly1, poly2, poly3, cid, typei, typeids):
+        """# PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID"""
+        fields = ['PVAL', idi, poly1, poly2, poly3, cid, typei, typeids]
+        self.reject_card_lines('PVAL', print_card_8(fields).split('\n'), show_log=False)

@@ -91,8 +91,8 @@ class GEOM4(GeomCommon):
             (5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self._read_fake],         # record
             #(5561, 76, 0): ['PLOTEL/SESET/SEQSET1?', self._read_seqset1b],         # record
             (610, 6, 0): ['SESET/SEQSET1?', self._read_fake],           # record
-            (5110, 51, 620256): ['', self._read_fake],    # record
-            (5501, 55, 620016): ['', self._read_fake],    # record
+            (5110, 51, 620256): ['SPCD?', self._read_fake],    # record
+            (5501, 55, 620016): ['SPC/SPC1?', self._read_fake],    # record
             (410, 4, 0): ['', self._read_fake],    # record
             (6701, 67, 293): ['RTRPLT', self._read_rtrplt],    # record 34
             (9801, 98, 79): ['', self._read_fake],  # record

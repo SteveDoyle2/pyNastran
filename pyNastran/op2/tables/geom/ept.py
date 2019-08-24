@@ -1001,6 +1001,7 @@ class EPT(GeomCommon):
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
 
+        props = []
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -1029,7 +1030,6 @@ class EPT(GeomCommon):
         struct1 = Struct(self._endian + b'25i')
         nentries = (len(data) - n) // ntotal
         assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
-        aaa
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
@@ -1700,8 +1700,45 @@ class EPT(GeomCommon):
         return len(data)
 
     def _read_pval(self, data, n):
-        self.log.info('skipping PVAL in EPT')
-        return len(data)
+        """
+        PVAL(10201,102,400)
+
+        Word Name Type Description
+        1 ID       I p-value set identification number
+        2 POLY1    I Polynomial order in 1 direction of the CID system
+        3 POLY2    I Polynomial order in 2 direction of the CID system
+        4 POLY3    I Polynomial order in 2 direction of the CID system
+        5 CID      I Coordinate system identification number
+        6 TYPE CHAR4 Type of set provided: "SET" or "ELID"
+        7 TYPEID   I SET identification number or element identification
+                     number with this p-value specification.
+        Words 1 through 7 repeat until End of Record
+        """
+        #self.show_data(data[n:])
+        struct_5i4si = Struct(self._endian + b'5i4si')
+        nentries = 0
+        while  n < len(data):
+            edata = data[n:n+28]
+            out = struct_5i4si.unpack(edata)
+            #print(out)
+            idi, poly1, poly2, poly3, cid, typei, typeid = out
+            typei = typei.rstrip().decode('latin1')
+            assert typei in ['SET'], (idi, poly1, poly2, poly3, cid, typei, typeid)
+            if self.is_debug_file:
+                self.binary_debug.write('  PVAL=%s\n' % str(out))
+            #print(idi, poly1, poly2, poly3, cid, typei, typeid)
+            typeids = []
+            n += 28
+            while typeid != -1:
+                typeids.append(typeid)
+                typeid, = self.struct_i.unpack(data[n:n+4])
+                n += 4
+                #print(val)
+            #print(typeids)
+            # PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID
+            self.add_pval(idi, poly1, poly2, poly3, cid, typei, typeids)
+        self.card_count['PVAL'] = nentries
+        return n
 
     def _read_pvisc(self, data, n):
         """PVISC(1802,18,31) - the marker for Record 39"""

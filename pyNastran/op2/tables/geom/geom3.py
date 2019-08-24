@@ -75,7 +75,7 @@ class GEOM3(GeomCommon):
             (3809, 38, 332): ['LOADCYN', self._read_loadcyn],    # record
             (6209, 62, 390): ['TEMPF', self._read_tempf],    # record
             (10901, 109, 427): ['', self._read_fake],  # record
-            (10801, 108, 428): ['', self._read_fake],  # record
+            (10801, 108, 428): ['GMQVOL', self._read_fake],  # record
             (11329, 113, 9602): ['', self._read_fake],  # record
             (11429, 114, 9603): ['', self._read_fake],  # record
             (11529, 115, 9604): ['', self._read_fake],  # record

@@ -32,7 +32,7 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
     for suport in obj.suport:
         loads_by_type[suport.type].append(suport)
-    for idi, suport in obj.suport1:
+    for unused_idi, suport in obj.suport1:
         loads_by_type[suport.type].append(suport)
 
     for unused_id, spcs in obj.spcs.items():

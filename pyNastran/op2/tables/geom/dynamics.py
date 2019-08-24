@@ -38,13 +38,13 @@ class DYNAMICS(GeomCommon):
             (1507, 15, 40): ['FREQ4', self._read_freq4],  # 17
             (1607, 16, 41): ['FREQ5', self._read_freq5],  # 18
 
-            (3707, 37, 556) : ['NLRGAP', self._read_fake], # 19
+            (3707, 37, 556) : ['NLRGAP', self._read_nrlgap], # 19
 
-            (3107, 31, 127): ['NONLIN1', self._read_fake], # 20
-            (3207, 32, 128): ['NONLIN2', self._read_fake], # 21
-            #(3207, 33, 129): ['NONLIN3', self._read_fake], # 22
-            (3307, 33, 129) : ['NONLIN3', self._read_fake],
-            (3407, 34, 130): ['NONLIN4', self._read_fake], # 23
+            (3107, 31, 127): ['NOLIN1', self._read_nolin1], # 20
+            (3207, 32, 128): ['NOLIN2', self._read_nolin2], # 21
+            #(3207, 33, 129): ['NOLIN3', self._read_fake], # 22
+            (3307, 33, 129) : ['NOLIN3', self._read_nolin3],
+            (3407, 34, 130): ['NOLIN4', self._read_nolin4], # 23
             (2107, 21, 195): ['RANDPS', self._read_randps], # 24
             (2207, 22, 196): ['RANDT1', self._read_randt1], # 25
             (5107, 51, 131): ['RLOAD1', self._read_rload1],  # 26
@@ -62,8 +62,8 @@ class DYNAMICS(GeomCommon):
 
             (10701, 107, 117) : ['RGYRO', self._read_rgyro],
             (10801, 108, 242) : ['ROTORG', self._read_fake],
-            (3807, 38, 505) : ['NLRSFD', self._read_fake],
-            (4807, 48, 306) : ['DYNRED', self._read_fake],
+            (3807, 38, 505) : ['NLRSFD', self._read_nlrsfd],
+            (4807, 48, 306) : ['DYNRED', self._read_dynred],
             (11001, 110, 310) : ['RSPINT', self._read_rspint],
             (10901, 109, 260) : ['RSPINR', self._read_fake],
             (11101, 111, 368) : ['UNBALNC', self._read_fake],
@@ -72,15 +72,36 @@ class DYNAMICS(GeomCommon):
             (7507, 75, 626) : ['TEMPD/TTEMP/TMPSET', self._read_fake],
 
             #F:\work\pyNastran\examples\Dropbox\move_tpl\rcross01.op2
-            (3201, 24, 54) : ['RCROSS', self._read_fake],
+            (3201, 24, 54) : ['RCROSS', self._read_rcross],
         }
 
     def _read_acsrce(self, data, n):
-        """ACSRCE(5307,53,379)"""
-        self.log.info('skipping ACSRCE in DYNAMICS\n')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping ACSRCE in DYNAMICS\n')
-        return len(data)
+        """
+        ACSRCE(5307,53,379)
+
+        Word Name Type Description
+        1 SID    I Load set identification number
+        2 DAREA  I DAREA Bulk Data entry identification number
+        3 DPHASE I DPHASE Bulk Data entry identification number
+        4 DELAY  I DELAY Bulk Data entry identification number
+        5 TC     I TABLEDi Bulk Data entry identification number for C(f)
+        6 RHO   RS Density of the fluid
+        7 B     RS Bulk modulus of the fluid
+        8 T     RS Time delay
+        9 PH    RS Phase lead
+        """
+        ntotal = 36
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0, 'ACSRCE'
+        self.increase_card_count('ACSRCE', nentries)
+        struc = Struct(self._endian + b'5i4f')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, excite_id, dphase, delay, tc, rho, b, t, phase_lead) = out
+            self.add_acsrce(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=0)
+            n += ntotal
+        return n
 
     def _read_darea(self, data, n):
         """
@@ -96,7 +117,7 @@ class DYNAMICS(GeomCommon):
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('DAREA', nentries)
         struc = Struct(self._endian + b'3if')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             #(sid,p,c,a) = out
@@ -119,7 +140,7 @@ class DYNAMICS(GeomCommon):
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('DELAY', nentries)
         struc = Struct(self._endian + b'3if')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, nodes, components, delays = out
@@ -170,7 +191,7 @@ class DYNAMICS(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  DLOAD=%s\n' % str(out))
 
-            dload = self.add_dload(sid, global_scale, scales, load_ids)
+            self.add_dload(sid, global_scale, scales, load_ids)
             istart = iend + 2
             nentries += 1
         self.increase_card_count('DLOAD', nentries)
@@ -190,7 +211,7 @@ class DYNAMICS(GeomCommon):
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('DPHASE', nentries)
         struc = Struct(self._endian + b'3if')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, nodes, components, delays = out
@@ -201,7 +222,50 @@ class DYNAMICS(GeomCommon):
             n += ntotal
         return n
 
-#DYNRED(4807,48,306)
+    def _read_dynred(self, data, n):
+        """
+        DYNRED(4807,48,306)
+
+        Word Name Type Description
+        1 SID   I Load set identification number
+        2 FMAX RS Highest frequency of interest
+        3 NIRV  I Number of initial random vectors
+        4 NIT   I Number of iterations
+        5 IDIR  I Starting point to generate initial random vectors
+        6 NQDES I Number of generalized degrees-of-freedom
+        7 UNDEF(2 ) none
+        """
+        #C:\NASA\m4\formats\git\examples\move_tpl\n2h39.op2
+        #DYNRED  202     1000.
+
+        #C:\NASA\m4\formats\git\examples\move_tpl\gdr20w.op2
+        #DYNRED  24      160.            10                              YES
+        #DYNRED  23      160.            10              75
+        #(23, 160.0, 6, 10, 0, 75, 75, 0)
+        #(24, 160.0, 6, 10, 0,  0,  0, YES)
+        ntotal = 32 # 4*8
+        #self.show_data(data[n:])
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        #struc = Struct(self._endian + b'i f 5i 4s')
+        struc = Struct(self._endian + b'i f 5i i')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            #print(out)
+            (sid, fmax, nirv, nit, idir, nqdes, unused_zero1, zero_yes) = out
+            if zero_yes == 542328153:  # integer version of yes
+                zero_yes = 'YES'
+            #print(sid, fmax, nirv, nit, idir, nqdes, unused_zero1, zero_yes)
+            #assert unused_zero1 == 0, out
+            #assert unused_yes == b'YES ', out
+            if self.is_debug_file:
+                self.binary_debug.write('  DYNRED=%s\n' % str(out))
+            self.add_dynred(sid, fmax, nirv, nit, idir, nqdes)
+            n += ntotal
+        self.increase_card_count('DYNRED', nentries)
+        return n
+
 
     def _read_eigb(self, data, n):
         """EIGB(107,1,86) - Record 7"""
@@ -209,7 +273,7 @@ class DYNAMICS(GeomCommon):
         nentries = (len(data) - n) // ntotal
         self.increase_card_count('EIGB', nentries)
         struc = Struct(self._endian + b'i8s ff 3i i 8s 4i')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             #self.show_data(edata[44:])
             # int, 8s, 2f, 3i, i, 8s, 4i
@@ -496,9 +560,9 @@ class DYNAMICS(GeomCommon):
                 self.binary_debug.write('  EIGRL=%s\n' % str(out))
             options = []
             values = []
-            eigrl = self.add_eigrl(sid, v1=v1, v2=v2, nd=nd, msglvl=msglvl,
-                                   maxset=maxset, shfscl=shfscl,
-                                   norm=norm, options=options, values=values)
+            self.add_eigrl(sid, v1=v1, v2=v2, nd=nd, msglvl=msglvl,
+                           maxset=maxset, shfscl=shfscl,
+                           norm=norm, options=options, values=values)
             #print(eigrl)
             if nums == 538976288:
                 n = len(data)
@@ -600,7 +664,7 @@ class DYNAMICS(GeomCommon):
         ntotal = 24 # 4*6
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'i 2f 4s if')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, f1, f2, freq_type, nef, bias = out
@@ -684,12 +748,204 @@ class DYNAMICS(GeomCommon):
             #n += ntotal
         #self.increase_card_count('FREQ5', nentries)
 
+    def _read_nrlgap(self, data, n):
+        #C:\NASA\m4\formats\git\examples\move_tpl\nlrgap2.op2
+        #NLRGAP  SID     GA      GB      PLANE   TABK     TABG    TABU RADIUS
+        #nlrgap  200     9       10      XY      -961     965     967     5.0
+        #(200, 9, 10, 101, 961, 965, 967, 5.0)
+        #ntotal = 32
+        #self.show_data(data[n:])
+        #aaa
+        assert len(data) == 12 + 32, len(data)
+        return n
 
-#NLRSFD
-#NOLIN1
-#NOLIN2
-#NOLIN3
-#NOLIN4
+    def _read_nlrsfd(self, data, n):
+        """
+        NLRSFD(3807,38,505)
+
+        Word Name Type Description
+        1 SID          I Load set identification number
+        2 GA           I Inner grid id
+        3 GB           I Outer grid id
+        4 PLANE(2) CHAR4 Radial gap orientation plan
+        6 BDIA        RS Inner journal diameter
+        7 BLEN        RS Damper length
+        8 BCLR        RS Damper radial clearance
+        9 SOLN(2)  CHAR4 Solution option
+        11 VISCO      RS Lubricant viscosity
+        12 PVAPCO     RS Lubricant vapor pressure
+        13 NPORT       I Number of lubication ports
+        14 PRES1      RS Boundary pressure for port 1
+        15 THETA1     RS Angular position for port 1
+        16 PRES2      RS Boundary pressure for port 2
+        17 THETA2     RS Angular position for port 2
+        18 NPNT        I Number of finite diff points
+        19 OFFSET1    RS Offset in the SFD direction 1
+        20 OFFSET2    RS Offset in the SFD direction 2
+
+        """
+        ntotal = 80 # 4*20
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(self._endian + b'3i 8s 3f 8s 2f i 4f i 2f')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, ga, gb, plane, bdia, blen, bclr, soln,
+             visco, pvapco, nport,
+             pres1, theta1, pres2, theat2, npnt,
+             offset1, offset2) = out
+            plane = plane.rstrip().decode('latin1')
+            soln = soln.rstrip().decode('latin1')
+            #NLRSFD SID     GA     GB    PLANE BDIA   BLEN  BCLR   SOLN
+            #       VISCO   PVAPCO NPORT PRES1 THETA1 PRES2 THETA2 NPNT
+            #       OFFSET1 OFFSET2
+            if self.is_debug_file:
+                self.binary_debug.write('  NLRSFD=%s\n' % str(out))
+            self.add_nlrsfd(sid, ga, gb, plane, bdia, blen, bclr, soln,
+                            visco, pvapco, nport,
+                            pres1, theta1, pres2, theat2, npnt,
+                            offset1, offset2)
+            n += ntotal
+        self.increase_card_count('NLRSFD', nentries)
+        return n
+
+
+    def _read_nolin1(self, data, n):
+        """
+        NOLIN1(3107,31,127)
+
+        Word Name Type Description
+        1 SID I Load set identification number
+        2 GI  I Grid, scalar, or extra point identification number of I
+        3 CI  I Component number for GI.
+        4 S  RS Scale factor
+        5 GJ  I Grid, scalar, or extra point identification number of J
+        6 CJ  I Component number for GJ
+        7 T   I Identification number of a TABLEDi Bulk Data entry.
+        8 UNDEF none
+
+        """
+        #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
+        #NOLIN1 SID GI CI S GJ CJ TID
+        #NOLIN1  115     2               -1.0    2               2
+        #NOLIN1  115     13              -1.0    13              3
+
+        ntotal = 32 # 4*8
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(self._endian + b'3if4i')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, gi, ci, s, gj, cj, t, unused_zero) = out
+            assert unused_zero == 0, out
+            if self.is_debug_file:
+                self.binary_debug.write('  NOLIN1=%s\n' % str(out))
+            self.add_nolin1(sid, gi, ci, s, gj, cj, t)
+            n += ntotal
+        self.increase_card_count('NOLIN1', nentries)
+        return n
+
+    def _read_nolin2(self, data, n):
+        """
+        NOLIN2(3207,32,128)
+
+        Word Name Type Description
+        1 SID I Load set identification number
+        2 GI  I Grid, scalar, or extra point identification number of I
+        3 CI  I Component number for GI.
+        4 S  RS Scale factor
+        5 GJ  I Grid, scalar, or extra point identification number of J
+        6 CJ  I Component number for GJ
+        7 GK  I Grid, scalar, or extra point identification number of K
+        8 CK  I Component number for GK
+
+        """
+        #C:\NASA\m4\formats\git\examples\move_tpl\n12905b.op2
+        #NOLIN2  SID     GI      CI         S    GJ      CJ      GK      CK
+        #NOLIN2  400     2       1       -.01    3       0       2       1
+        #NOLIN2  400     2       2       -.01    3       0       2       2
+        #NOLIN2  400     3       0       -.005   2       1       2       1
+        #NOLIN2  400     3       0       -.005   2       2       2       2
+
+        ntotal = 32 # 4*8
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(self._endian + b'3if4i')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, g, ci, s, gj, cj, gk, ck) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  NOLIN2=%s\n' % str(out))
+            self.add_nolin2(sid, g, ci, s, gj, cj, gk, ck)
+            n += ntotal
+        self.increase_card_count('NOLIN2', nentries)
+        return n
+
+    def _read_nolin3(self, data, n):
+        """
+        NOLIN3(3307,33,129)
+
+        Word Name Type Description
+        1 SID I Load set identification number
+        2 GI  I Grid, scalar, or extra point identification number of I
+        3 CI  I Component number for GI.
+        4 S  RS Scale factor
+        5 GJ  I Grid, scalar, or extra point identification number of J
+        6 CJ  I Component number for GJ
+        7 A  RS Exponent of the forcing function
+        8 UNDEF none
+        """
+        #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
+        #NOLIN3  115     4               -3.5+3  4       10      2.
+        #NOLIN3  115     11              -3.5+3  11      10      2.
+
+        ntotal = 32 # 4*8
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(self._endian + b'3if2ifi')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, gi, ci, s, gj, cj, a, zero) = out
+            assert zero == 0, out
+            if self.is_debug_file:
+                self.binary_debug.write('  NOLIN3=%s\n' % str(out))
+            self.add_nolin3(sid, gi, ci, s, gj, cj, a)
+            n += ntotal
+        self.increase_card_count('NOLIN3', nentries)
+        return n
+
+    def _read_nolin4(self, data, n):
+        """
+        NOLIN4(3407,34,130)
+
+        Word Name Type Description
+        1 SID I Load set identification number
+        2 GI  I Grid, scalar, or extra point identification number of I
+        3 CI  I Component number for GI.
+        4 S  RS Scale factor
+        5 GJ  I Grid, scalar, or extra point identification number of J
+        6 CJ  I Component number for GJ
+        7 A  RS Exponent of the forcing function
+        8 UNDEF none
+        """
+        #C:\NASA\m4\formats\git\examples\move_tpl\d10903.op2
+        #NOLIN4  115     4               -3.5+3  4       10      2.
+        #NOLIN4  115     11              -3.5+3  11      10      2.
+
+        ntotal = 32 # 4*8
+        nentries = (len(data) - n) // ntotal
+        struc = Struct(self._endian + b'3if2ifi')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, gi, ci, s, gj, cj, a, zero) = out
+            assert zero == 0, out
+            if self.is_debug_file:
+                self.binary_debug.write('  NOLIN4=%s\n' % str(out))
+            self.add_nolin4(sid, gi, ci, s, gj, cj, a)
+            n += ntotal
+        self.increase_card_count('NOLIN4', nentries)
+        return n
 
     def _read_randps(self, data, n):
         """common method for reading NX/MSC RLOAD1"""
@@ -754,7 +1010,7 @@ class DYNAMICS(GeomCommon):
         ntotal = 24
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'3i2fi')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, j, k, x, y, tid = out
@@ -1121,7 +1377,7 @@ class DYNAMICS(GeomCommon):
         #self.show_data(data[n:], 'if')
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'5i 3f')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, load_type, tid, delayr, us0, vs0 = out
@@ -1163,7 +1419,7 @@ class DYNAMICS(GeomCommon):
         ntotal = 52
         nentries = (len(data) - n) // ntotal
         struc = Struct(self._endian + b'4i 7f 2f')
-        for i in range(nentries):
+        for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
             sid, darea, delayi, load_type, t1, t2, freq, p, c, growth, delayr, us0, vs0 = out
@@ -1200,7 +1456,7 @@ class DYNAMICS(GeomCommon):
         # strings = unpack(self._endian + b'4s'* nfields, datan)
 
         i = 0
-        nentries = 0
+        #nentries = 0
         ntimes = []
         dt = []
         no = []
@@ -1245,3 +1501,98 @@ class DYNAMICS(GeomCommon):
         return len(data)
 
 #UNBALNC
+
+    def _read_rcross(self, data, n):
+        """
+        """
+        #C:\NASA\m4\formats\git\examples\move_tpl\rcross01.op2
+        #RCROSS  SID    RTYPE1   ID1     COMP1   RTYPE2  ID2     COMP2   CURID
+        #RCROSS  100     FORCE   202     167     FORCE   202     167     1202001
+        #RCROSS  100     FORCE   3302    6               3302    6       1330201
+        #RCROSS  100     FORCE   202     167     FORCE   3302    6       1330202
+        #RCROSS  100     FORCE   3302    6       FORCE   202     167     1330204
+        #RCROSS  100     FORCE   6402    6               6402    6       1640201
+        #RCROSS  100     FORCE   6412    6               6412    6       1641201
+        #RCROSS  100     FORCE   6402    6               6412    6       1641202
+        #RCROSS  100     FORCE   6412    6               6402    6       1641204
+        #RCROSS  100     FORCE   6901    17              6901    17      1690101
+        #RCROSS  100     STRESS  201     16      STRESS  201     16      2201001
+        #RCROSS  100     STRESS  3301    7       STRESS  3301    7       2330101
+        #RCROSS  100     STRESS  201     16      STRESS  3301    7       2330102
+        #RCROSS  100     STRESS  3301    7       STRESS  201     16      2330104
+        #RCROSS  100     STRESS  6401    7               6401    7       2640101
+        #RCROSS  100     STRESS  6411    7               6411    7       2641101
+        #RCROSS  100     STRESS  6701    86              6701    86      2670101
+        #RCROSS  100     STRESS  7001    12              7001    12      2700101
+        #RCROSS  100     STRESS  7401    12              7401    12      2740101
+        #RCROSS  100     STRESS  7501    12              7501    12      2750101
+        #RCROSS  100     STRESS  7511    12              7511    12      2751101
+        #RCROSS  100     STRESS  9901    7               9901    7       2990101
+        #RCROSS  100     STRESS  7511    12              9901    7       2990102
+        #RCROSS  100     STRESS  9901    7               7511    12      2990104
+        #RCROSS  100     FORCE   9902    6       STRESS  9901    7       2990106
+        #RCROSS  100     STRESS  9901    7       FORCE   9902    6       2990108
+        #RCROSS  100     DISP    3306    3       DISP    3306    3       3330601
+        #RCROSS  100     DISP    3306    5       DISP    3306    5       3330602
+        #RCROSS  100     DISP    6423    1               6423    1       3642301
+        #RCROSS  100     DISP    6423    4               6423    4       3642302
+        #RCROSS  100     DISP    3306    3       DISP    3306    5       3330603
+        #RCROSS  100     DISP    3306    5       DISP    3306    3       3330604
+        #RCROSS  100     DISP    3306    3               6423    4       3642303
+        #RCROSS  100     DISP    6423    4               3306    3       3642304
+        #RCROSS  100     SPCF    3305    3       SPCF    3305    3       4330501
+        #RCROSS  100     SPCF    3305    5       SPCF    3305    5       4330502
+        #RCROSS  100     SPCF    3305    3               3305    5       4330503
+        #RCROSS  100     SPCF    3305    5               3305    3       4330504
+        #RCROSS  100     SPCF    6413    1       SPCF    6413    1       4641301
+        #RCROSS  100     SPCF    6413    4       SPCF    6413    4       4641302
+        #RCROSS  100     SPCF    3305    3               6413    4       4641303
+        #RCROSS  100     SPCF    6413    4               3305    3       4641304
+        #RCROSS  100     SPCF    3305    3       DISP    3306    3       4641306
+        #RCROSS  100     DISP    3306    3       SPCF    3305    3       4641308
+        #RCROSS  200     SPCF    4444    2       DISP    9999    1       9999999
+
+        #self.show_data(data[n:])
+        ntotal = 32 # 4*8
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0
+        struc = Struct(self._endian + b'i 4s 2i 4s 2i i')
+
+        allowed = {'DISP', 'VELO', 'ACCEL', 'OLOAD', 'SPCF', 'MPCF', 'STRESS', 'STRAIN', 'FORCE'}
+        #DISP Displacement Vector
+        #VELO Velocity Vector
+        #ACCEL Acceleration Vector
+        #OLOAD Applied Load Vector
+        #SPCF Single-point Constraint Force Vector
+        #MPCF Multi-point Constraint Force Vector
+        #STRESS Element Stress
+        #STRAIN Element Strain
+        #FORCE Element Force
+
+        map_type = {
+            'DISP' : 'DISP',
+            'VELO' : 'VELO',
+            'SPCF' : 'SPCF',
+            'MPCF' : 'MPCF',
+
+            'ACCE' : 'ACCEL',
+            'FORC' : 'FORCE',
+            'STRE' : 'STRESS',
+        }
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            #self.show_data(edata)
+            out = struc.unpack(edata)
+            #print(out)
+            (sid, rtype1, id1, comp1, rtype2, id2, comp2, curid) = out
+            if self.is_debug_file:
+                self.binary_debug.write('  RCROSS=%s\n' % str(out))
+
+            rtype1 = map_type[rtype1.decode('latin1').rstrip()]
+            rtype2 = map_type[rtype2.decode('latin1').rstrip()]
+            assert rtype1 in allowed, rtype1
+            assert rtype2 in allowed, rtype2
+            self.add_rcross(sid, rtype1, id1, comp1, rtype2, id2, comp2, curid)
+            n += ntotal
+        self.increase_card_count('RCROSS', nentries)
+        return n
