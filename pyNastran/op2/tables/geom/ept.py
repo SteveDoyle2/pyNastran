@@ -10,7 +10,7 @@ import numpy as np
 from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSML
 from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBEND
 from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP
-from pyNastran.bdf.cards.properties.bush import PBUSH
+from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSHT
 from pyNastran.bdf.cards.properties.damper import PDAMP, PVISC
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP
 from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
@@ -957,8 +957,95 @@ class EPT(GeomCommon):
         return n
 
     def _read_pbusht(self, data, n):
-        self.log.info('skipping PBUSHT in EPT')
-        return len(data)
+        """reads the PBUSHT"""
+        n, props = self._read_pbusht_nx(data, n)
+        for prop in props:
+            #print(prop)
+            self._add_pbusht_object(prop)
+        return n
+
+    def _read_pbusht_nx(self, data, n):
+        """
+        NX 12 / MSC 2005
+        Word Name Type Description
+        1 PID       I Property identification number
+        2 TKID(6)   I TABLEDi entry identification numbers for stiffness
+        8 TBID(6)   I TABLEDi entry identification numbers for viscous damping
+        14 TGEID(6) I TABLEDi entry identification number for structural damping
+        20 TKNID(6) I TABLEDi entry identification numbers for force versus deflection
+
+        old style
+        Word Name Type Description
+        1 PID       I Property identification number
+        2 TKID(6)   I TABLEDi entry identification numbers for stiffness
+        8 TBID(6)   I TABLEDi entry identification numbers for viscous damping
+        14 TGEID    I TABLEDi entry identification number for structural damping
+        15 TKNID(6) I TABLEDi entry IDs for force versus deflection
+        """
+        #self.show_data(data[12:])
+        ndata = len(data) - n
+
+        if ndata % 100 == 0 and ndata % 80 == 0:
+            self.log.info(f"skipping PBUSHT in EPT because nfields={ndata//4}, which is "
+                          'nproperties*25 or nproperties*20')
+            return len(data), []
+        if ndata % 100 == 0:
+            n, props = self._read_pbusht_100(data, n)
+        elif ndata % 80 == 0:
+            n, props = self._read_pbusht_80(data, n)
+        return n, props
+
+    def _read_pbusht_80(self, data, n):
+        ntotal = 80
+        struct1 = Struct(self._endian + b'20i')
+        nentries = (len(data) - n) // ntotal
+        assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            #(pid,
+             #k1, k2, k3, k4, k5, k6,
+             #b1, b2, b3, b4, b5, b6,
+             #g1, sa, st, ea, et) = out
+            (pid,
+             k1, k2, k3, k4, k5, k6,
+             b1, b2, b3, b4, b5, b6,
+             g1,
+             n1, n2, n3, n4, n5, n6) = out
+            g2 = g3 = g4 = g5 = g6 = g1
+            k_tables = [k1, k2, k3, k4, k5, k6]
+            b_tables = [b1, b2, b3, b4, b5, b6]
+            ge_tables = [g1, g2, g3, g4, g5, g6]
+            kn_tables = [n1, n2, n3, n4, n5, n6]
+            prop = PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables)
+            props.append(prop)
+            n += ntotal
+        return n, props
+
+    def _read_pbusht_100(self, data, n):
+        props = []
+        ntotal = 100
+        struct1 = Struct(self._endian + b'25i')
+        nentries = (len(data) - n) // ntotal
+        assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        aaa
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+            (pid,
+             k1, k2, k3, k4, k5, k6,
+             b1, b2, b3, b4, b5, b6,
+             g1, g2, g3, g4, g5, g6,
+             n1, n2, n3, n4, n5, n6) = out
+            k_tables = [k1, k2, k3, k4, k5, k6]
+            b_tables = [b1, b2, b3, b4, b5, b6]
+            ge_tables = [g1, g2, g3, g4, g5, g6]
+            kn_tables = [n1, n2, n3, n4, n5, n6]
+            prop = PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables)
+            props.append(prop)
+            n += ntotal
+        return n, props
 
     def _read_pcomp(self, data, n):
         """

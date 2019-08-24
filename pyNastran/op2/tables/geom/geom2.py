@@ -2757,6 +2757,10 @@ class GEOM2(GeomCommon):
         3 CNTRLND  I Control point for radiation boundary condition
         4 NODAMB   I
         """
+        #C:\NASA\m4\formats\git\examples\move_tpl\ht15339.op2
+        #(-99, 1.0, 0, 101)
+        #radbc   101     1.0             -99
+        #RADBC NODAMB   FAMB CNTRLND     EID1 EID2 EID3
         structi = Struct(self._endian + b'ifii')
         ntotal = 16
         nelements = (len(data) - n) // ntotal
@@ -2825,7 +2829,7 @@ class GEOM2(GeomCommon):
             nids2 = [nid - deltae for nid in nids]
             elem = CBEAM(eid-deltae, pid, nids2, x, g0)
             return elem
-
+        element.type = 'CBEAM' #  I love python
         self._run_2nodes(data, n, element)
         #assert len(self.elements) > 0, self.elements
         return n
@@ -2974,8 +2978,20 @@ class GEOM2(GeomCommon):
         #(200000002, 3, 1002, 6, 12, 0, 0)
         # FEEDGE EDGEID GRID1 GRID2 CIDBC GEOMIN ID1 ID2
         #FEEDGE    1002    6     12
+        # no FEFACE...
+
+        # weird because the order is wrong and there are two extra FEFACE lines
+        #C:\NASA\m4\formats\git\examples\move_tpl\phs19332.op2
+        #(200000002, 3, 2, 74, 57, 24, 0)
+        #(200000003, 3, 1, 7, 24, 57, 0)
+        #FEFACE   1       7       24      57
+        #FEFACE   2       74      57      24
+        #FEFACE   3       1       51      18
+        #FEFACE   4       68      18      51
 
         # C:\NASA\m4\formats\git\examples\move_tpl\phscvhg6.op2
+        #C:\NASA\m4\formats\git\examples\move_tpl\phsconv4.op2
+
         #self.show_data(data[12:])
         ntotal = 28  # 7*4
         # s = Struct(self._endian + b'4i 4s 2i') #expected
@@ -2988,8 +3004,8 @@ class GEOM2(GeomCommon):
             #edge_id, n1, n2, cid, geomin, geom1, geom2 = out # expected
             dunno, two_three, edge_id, n1, n2, zero1, zero2 = out
             assert two_three in [2, 3], out
-            assert zero1 == 0, out
-            assert zero2 == 0, out
+            #assert zero1 == 0, f'zero1={zero1} out={out}'
+            #assert zero2 == 0, f'zero2={zero2} out={out}'
             if self.is_debug_file:
                 self.binary_debug.write('  FEEDGE=%s\n' % str(out))
 
@@ -3004,7 +3020,6 @@ class GEOM2(GeomCommon):
             # elem = CQUADX8(eid, pid, [n1, n2, n3, n4, n5, n6, n7, n8], theta)
             # self.add_op2_element(elem)
             n += ntotal
-        bbb
         self.card_count['FEEDGE'] = nelements
         return n
 

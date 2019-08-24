@@ -417,9 +417,7 @@ class GEOM3(GeomCommon):
         return n
 
     def _read_pload3(self, data, n):
-        """
-        PLOAD3(7109,71,255) - the marker for Record 19
-        """
+        """PLOAD3(7109,71,255) - the marker for Record 19"""
         ntotal = 20  # 5*4
         nentries = (len(data) - n) // ntotal
         s = Struct(self._endian + b'if3i')

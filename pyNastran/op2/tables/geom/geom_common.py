@@ -34,9 +34,12 @@ class GeomCommon:
         #self.log = SuppressLogging()
 
     def _read_fake(self, data, n):
-        self.log.info('skipping %s in %s' % (self.card_name, self.table_name))
+        self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
         #if (self.card_name == '' or '?' in self.card_name) and data:
             #self.show_data(data)
+        #if self.table_name_str in ['GEOM2', 'GEOM3', 'DYNAMICS']:
+            #self.show_data(data)
+            #aaa
         return len(data)
 
     def increase_card_count(self, name, count_num=1):

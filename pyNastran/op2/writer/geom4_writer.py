@@ -23,7 +23,7 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     for qset in obj.qsets:
         assert not isinstance(qset, int), obj.qsets
         loads_by_type[qset.type].append(qset)
-    for name, usets in obj.usets.items():
+    for unused_name, usets in obj.usets.items():
         for uset in usets:
             loads_by_type[uset.type].append(uset)
     for omit in obj.omits:
@@ -67,7 +67,7 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     supported_cards = {
         # sets
         'ASET', 'BSET', 'CSET', 'QSET', 'OMIT',
-        'ASET1','BSET1', 'QSET1', 'OMIT1',
+        'ASET1', 'BSET1', 'QSET1', 'OMIT1',
         # rigid
         'RBAR', 'RBE1', 'RBE2', 'RBE3',
         # constraints
@@ -89,6 +89,8 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     #else:
         #return
 
+    if not is_constraints:
+        return
     write_geom_header(b'GEOM4', op2, op2_ascii)
     itable = -3
     for card_type, cards in sorted(loads_by_type.items()):

@@ -407,27 +407,51 @@ class GEOM1(GeomCommon):
         5 CIDBC        I Coordinate system identification number for the constraints
         6 DATA     CHAR4 Geometry evaluator specific data
         """
-        ints = np.frombuffer(data[n:], dtype=self.idtype).copy()
-        iminus1 = np.where(ints == -1)[0].tolist()
-        i0 = 0
-        for iminus1i in iminus1:
-            curve_id = ints[i0]
-            cid_in, cid_bc = ints[i0+3:i0+5]
-            s0 = n + 4
-            s1 = s0 + 8
-            group = data[s0:s1].decode('latin1').rstrip()
+        structi = Struct(b'i 8s ii')
+        struct_i = self.struct_i
+        while n < len(data):
+            datab = data[n:n+20]
+            curve_id, group_btyes, cid_in, cid_bc = structi.unpack(datab)
+            group = group_btyes.decode('latin1').rstrip()
             #print(curve_id, group, cid_in, cid_bc)
-            assert group in ['MSCGRP1', 'MSCGRP2'], (curve_id, group, cid_in, cid_bc)
+            assert group in ['MSCGRP1', 'MSCGRP2'], f'GMCURV: curve_id={curve_id} group={repr(group)} cid_in={cid_in} cid_bc={cid_bc}'
+            n += 20
 
-            s2 = s1 + 8
-            s3 = 12 + iminus1i * 4
-            datai = data[s2:s3].decode('latin1').rstrip()
+            databi_bytes = data[n:n+4]
+            n += 4
+            databi = data[n:n+4]
+            datab_int, = struct_i.unpack(databi)
+            n += 4
+            while datab_int != -1:
+                databi_bytes += databi
+                databi = data[n:n+4]
+                datab_int, = struct_i.unpack(databi)
+                n += 4
+            datai = databi_bytes.decode('latin1').rstrip()
+            #print(datai)
+
+        #ints = np.frombuffer(data[n:], dtype=self.idtype).copy()
+        #iminus1 = np.where(ints == -1)[0].tolist()
+        #i0 = 0
+        #for iminus1i in iminus1:
+            #curve_id = ints[i0]
+            #cid_in, cid_bc = ints[i0+3:i0+5]
+            #s0 = n + 4
+            #s1 = s0 + 8
+            #group = data[s0:s1].decode('latin1').rstrip()
+            #print(curve_id, group, cid_in, cid_bc)
+            #assert group in ['MSCGRP1', 'MSCGRP2'], f'GMCURV: curve_id={curve_id} group={repr(group)} cid_in={cid_in} cid_bc={cid_bc}'
+
+            #s2 = s1 + 8
+            #s3 = 12 + iminus1i * 4
+            #datai = data[s2:s3].decode('latin1').rstrip()
             #print('datai = %r' % datai)
-            i0 = iminus1i + 1
-            # n = s3 + 4
-            n = 12+(iminus1i + 1)*4
+            #i0 = iminus1i + 1
+            ## n = s3 + 4
+            #n = 12+(iminus1i + 1)*4
             #print('-----------------')
-        return len(data)
+        #return len(data)
+        return n
 
     def _read_feface(self, data, n):
         """

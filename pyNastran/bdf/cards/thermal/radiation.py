@@ -165,11 +165,13 @@ class RADBC(ThermalBC):
         assert self.nodamb > 0
         assert self.famb > 0.0
         assert self.cntrlnd >= 0
+        self.eids_ref = None
+
+    def validate(self):
         min_eid = min(self.eids)
         if min_eid < 1:
             msg = 'min(eids)=%i' % min_eid
-            raise ValueError(msg)
-        self.eids_ref = None
+            warnings.warn(msg)
 
     @classmethod
     def add_card(cls, card, comment=''):

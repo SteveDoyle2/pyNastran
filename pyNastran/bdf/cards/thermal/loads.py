@@ -883,10 +883,10 @@ class QHBDY(ThermalLoad):
             flag = 'AREA8'
             nnodes = 8
         else:  # pragma: no cover
-            raise NotImplementedError('QHBDY sid=%s flag_int=%s data=%s' % (sid, flag_int, data[2:]))
+            raise NotImplementedError(f'QHBDY sid={sid} flag_int={flag_int} data={data[2:]}')
         grids = list(data[4:])
         grids2 = grids[:nnodes]
-        print(sid, flag_int, flag, q0, af, grids, grids2)
+        #print(sid, flag_int, flag, q0, af, grids, grids2)
         return QHBDY(sid, flag, q0, grids2, af=af, comment=comment)
 
     def get_loads(self):
@@ -1209,7 +1209,6 @@ class TEMPB3(BaseCard):
             a comment for the card
 
         """
-
         sid = integer(card, 1, 'sid')
         eid = integer(card, 2, 'eid')
 

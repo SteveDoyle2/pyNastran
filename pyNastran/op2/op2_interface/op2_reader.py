@@ -3484,10 +3484,14 @@ class OP2Reader:
         if ndata == 8:
             subtable_name, = self.op2.struct_8s.unpack(data)
         elif ndata == 28:
+            # date = august 2, 2019
+            #(b'OGPFB1  ', 8, 2, 19, 0, 1)
+            #(b'OGPFB1  ', 8, 2, 19, 1, 1)
             fmt = self._endian + b'8s 3i 2i'
             subtable_name, month, day, year, zero, one = Struct(fmt).unpack(data)
             if zero != 0 or one != 1:  # pragma: no cover
-                self.generic_stop_table(data, ndata)
+                self.log.warning(f'  subtable_name={subtable_name} possible error; zero={zero} one={one}')
+                #self.generic_stop_table(data, ndata)
             self._set_op2_date(month, day, year)
         else:
             self.generic_stop_table(data, ndata)
