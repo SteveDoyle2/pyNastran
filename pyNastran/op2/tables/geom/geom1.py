@@ -392,8 +392,7 @@ class GEOM1(GeomCommon):
 
             if cid == -1:
                 cid = None
-            elem = FEEDGE(edge_id, [n1, n2], cid, geomin_str, [geom1, geom2])
-            self.reject_cards.append(elem)
+            elem = self.add_feedge(edge_id, [n1, n2], cid, [geom1, geom2], geomin=geomin_str)
             n += ntotal
         self.card_count['FEEDGE'] = nelements
         return n
@@ -411,10 +410,10 @@ class GEOM1(GeomCommon):
         struct_i = self.struct_i
         while n < len(data):
             datab = data[n:n+20]
-            curve_id, group_btyes, cid_in, cid_bc = structi.unpack(datab)
-            group = group_btyes.decode('latin1').rstrip()
+            curve_id, group_bytes, cid_in, cid_bc = structi.unpack(datab)
+            group = group_bytes.decode('latin1').rstrip()
             #print(curve_id, group, cid_in, cid_bc)
-            assert group in ['MSCGRP1', 'MSCGRP2'], f'GMCURV: curve_id={curve_id} group={repr(group)} cid_in={cid_in} cid_bc={cid_bc}'
+            assert group in ['MSCGRP0', 'MSCGRP1', 'MSCGRP2'], f'GMCURV: curve_id={curve_id} group={repr(group)} cid_in={cid_in} cid_bc={cid_bc}'
             n += 20
 
             databi_bytes = data[n:n+4]
@@ -428,6 +427,7 @@ class GEOM1(GeomCommon):
                 datab_int, = struct_i.unpack(databi)
                 n += 4
             datai = databi_bytes.decode('latin1').rstrip()
+            self.add_gmcurv(curve_id, group, cid_in, cid_bc, datai)
             #print(datai)
 
         #ints = np.frombuffer(data[n:], dtype=self.idtype).copy()

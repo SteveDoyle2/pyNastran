@@ -6,8 +6,7 @@ from pyNastran.bdf.cards.nodes import SPOINT, EPOINT
 
 class AddMethods(BDFAttributes):
     """defines methods to add card objects to the BDF"""
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         BDFAttributes.__init__(self)
 
     def _add_dmi_object(self, dmi, allow_overwrites=False):
@@ -1411,3 +1410,15 @@ class AddMethods(BDFAttributes):
     def _add_mkaero_object(self, mkaero):
         """adds an MKAERO1/MKAERO2 object"""
         self.mkaeros.append(mkaero)
+
+    #---------------------------------------------------------------------------
+    # parametric
+    def _add_pval(self, pval, allow_overwrites: bool=False):
+        self.pval[pval.idi] = pval
+    def _add_gmcurv(self, curve, allow_overwrites: bool=False):
+        self.gmcurv[curve.curve_id] = curve
+    def _add_feface(self, face, allow_overwrites: bool=False):
+        self.feface[face.face_id] = face
+    def _add_feedge(self, edge, allow_overwrites: bool=False):
+        self.feedge[edge.edge_id] = edge
+    #---------------------------------------------------------------------------

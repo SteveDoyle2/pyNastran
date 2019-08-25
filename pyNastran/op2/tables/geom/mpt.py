@@ -483,7 +483,8 @@ class MPT(GeomCommon):
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  MATT4=%s\n' % str(out))
-            #(mid, tk1, tk2, tk3, tk4, tk5, tk6, tcp, null, thgen) = out
+            #(mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
+            # cp_table, null, hgen_table) = out
             mat = MATT5.add_op2_data(out)
             self._add_material_dependence_object(mat)
             n += ntotal

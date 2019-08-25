@@ -133,13 +133,17 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
 
 
         op2_filename = 'spike.op2'
-        op2_geom_model.write_op2(op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')
+        bkp_log = op2_geom_model.log
+        op2_geom_model.log = get_logger(log=None, level='warning', encoding='utf-8')
+        op2_geom_model.write_op2(op2_filename, post=-1, endian=b'<', skips=None,
+                                 nastran_format='nx')
         if run_op2_reader:
             op2r = read_op2_geom(op2_filename, log=op2_geom_model.log, xref=False)
         else:
             frame = inspect.currentframe()
             call_frame = inspect.getouterframes(frame, 2)
             op2_geom_model.log.warning('skipping op2 reader for %s' % call_frame[1][3])
+        op2_geom_model.log = bkp_log
     return model3
 
 def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):

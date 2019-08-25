@@ -1727,7 +1727,7 @@ class MATT9(MaterialDependenceThermal):
 
         ge_table = integer_or_blank(card, 31, 'T(GE)')
 
-        assert len(card) <= 30, 'len(MATT9 card) = %i\ncard=%s' % (len(card), card)
+        assert len(card) <= 32, 'len(MATT9 card) = %i\ncard=%s' % (len(card), card)
         return MATT9(mid, g11_table, g12_table, g13_table, g14_table, g15_table, g16_table,
                      g22_table, g23_table, g24_table, g25_table, g26_table,
                      g33_table, g34_table, g35_table, g36_table,

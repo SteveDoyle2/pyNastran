@@ -357,8 +357,8 @@ def run_and_compare_fems(
     diff_cards = []
 
     mesh_opt_cards = [
-        'GRIDG', 'CGEN', 'SPCG', 'EQUIV', 'FEEDGE', 'FEFACE', 'ADAPT',
-        'PVAL', 'GMCURV', 'GMSURF',
+        #'GRIDG', 'CGEN', 'SPCG', 'EQUIV', 'FEEDGE', 'FEFACE', 'ADAPT',
+        #'PVAL', 'GMCURV', 'GMSURF',
     ]
     #nastran_cmd = 'nastran scr=yes bat=no old=no news=no '
     nastran_cmd = ''
@@ -1482,7 +1482,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
         assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
         print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
         allowed_sols = [
-            1, 5, 24, 61, 64, 66, 101, 103, 105, 106, 107,
+            1, 5, 24, 61, 64, 66, 100, 101, 103, 105, 106, 107,
             108, 109, 110, 111, 112, 114, 144, 145, 153, 200, 400, 401, 600, 601,
         ]
         ierror = check_sol(sol, subcase, allowed_sols, 'LOAD', log, ierror, nerrors)

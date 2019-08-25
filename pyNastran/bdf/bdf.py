@@ -152,6 +152,8 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
+from pyNastran.bdf.cards.parametric.geometry import PVAL, FEEDGE, FEFACE, GMCURV
+
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_methods import BDFMethods
 from pyNastran.bdf.bdf_interface.get_card import GetCard
@@ -167,6 +169,7 @@ from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
                                   SuperelementFlagError, ReplicationError)
 from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
+
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 
 
@@ -495,6 +498,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SEQSEP',
 
             #------------------------------------------------------------------
+            ## parametric
+            'PVAL', 'GMCURV', 'FEEDGE', 'FEFACE',
+
+            #------------------------------------------------------------------
             ## tables
             'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',  # dynamic tables - freq/time loads
             'TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4',  # material tables - temperature
@@ -548,8 +555,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
             #'BNDFIX', 'BNDFIX1',
             #'AEFORCE', 'UXVEC', 'GUST2',
-
-
 
             # other
             'INCLUDE',  # '='
@@ -1636,7 +1641,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         card_name = card_name.upper()
         self.increase_card_count(card_name)
-        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT']:
+        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT', 'GMCURV', 'OUTPUT', 'ADAPT']:
             card_obj = card_lines
             card = card_lines
         else:
@@ -1777,6 +1782,12 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CORD2R' : (CORD2R, self._add_coord_object),
             'CORD2C' : (CORD2C, self._add_coord_object),
             'CORD2S' : (CORD2S, self._add_coord_object),
+
+            # parametric
+            'PVAL' : (PVAL, self._add_pval),
+            'GMCURV' : (GMCURV, self._add_gmcurv),
+            'FEFACE' : (FEFACE, self._add_feface),
+            'FEEDGE' : (FEEDGE, self._add_feedge),
 
             # msgmesh
             'GMCORD' : (GMCORD, self._add_coord_object),

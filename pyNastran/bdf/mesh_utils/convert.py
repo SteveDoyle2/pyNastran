@@ -801,7 +801,8 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.G56 *= stress_scale
             mat.G66 *= stress_scale
             mat.rho *= density_scale
-            mat.A *= a_scale
+            mat.A = [ai * a_scale if ai is not None else None
+                     for ai in mat.A]
             mat.tref *= temp_scale
         elif mat.type == 'MAT3D':
             mat.e1 *= stress_scale

@@ -376,8 +376,10 @@ class PBUSH1D(BushingProperty):
         pid = 1
         return PBUSH1D(pid, k=0., c=0., m=0., sa=0., se=0., optional_vars=None, comment='')
 
-    def __init__(self, pid, k=0., c=0., m=0., sa=0., se=0.,
-                 optional_vars=None, comment=''):
+    def __init__(self, pid: int,
+                 k: float=0., c: float=0., m: float=0.,
+                 sa: float=0., se: float=0., optional_vars=None,
+                 comment: str=''):
         """
         Creates a PBUSH1D card
 

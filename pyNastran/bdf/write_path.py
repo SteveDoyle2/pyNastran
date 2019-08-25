@@ -8,8 +8,7 @@ from typing import Tuple
 from pathlib import PurePosixPath, PureWindowsPath
 
 
-def write_include(filename, is_windows=None):
-    # type: (str, bool) -> str
+def write_include(filename: str, is_windows: bool=None) -> str:
     """
     Writes a bdf INCLUDE file line given an imported filename.
 
@@ -75,8 +74,7 @@ def write_include(filename, is_windows=None):
     return out
 
 
-def _split_path(abspath, is_windows):
-    # type: (str, bool) -> Tuple[str, ...]
+def _split_path(abspath: str, is_windows: bool) -> Tuple[str, ...]:
     """
     Takes a path and splits it into the various components.
 

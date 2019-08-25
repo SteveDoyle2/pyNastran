@@ -8,6 +8,10 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     if not hasattr(obj, 'materials'):
         return
     nmaterials = len(obj.materials) + len(obj.thermal_materials)
+
+    materials_to_skip = ['NLPARM',
+                         'MATS3', 'MATS8',
+                         'MATT3', 'MATT9']
     mtypes = [
         'MATS1', 'MATS3', 'MATS8',
         'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
@@ -16,6 +20,9 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     for mtype in mtypes:
         mat_dict = getattr(obj, mtype)
         if len(mat_dict) == 0:
+            continue
+        if mtype in materials_to_skip:
+            obj.log.warning(f'skipping MPT-{mtype}')
             continue
         out[mtype] = list(mat_dict.keys())
     if len(obj.nlparms):
@@ -26,16 +33,9 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
     write_geom_header(b'MPT', op2, op2_ascii, endian=endian)
     itable = -3
 
-    materials_to_skip = ['NLPARM']
-    #mtypes = [
-        #'MAT1', 'MAT2', 'MAT3', 'MAT4', 'MAT5', 'MAT8', 'MAT9',
-    #]
-    #out = obj.get_card_ids_by_card_types(mtypes)
     for mid, mat in obj.materials.items():
-        #if mat.type in mtypes:
         out[mat.type].append(mat.mid)
     for mid, mat in obj.thermal_materials.items():
-        #if mat.type in mtypes:
         out[mat.type].append(mat.mid)
 
 
@@ -183,9 +183,7 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                     mat.G33, mat.G34, mat.G35, mat.G36,
                     mat.G44, mat.G45, mat.G46,
                     mat.G55, mat.G56, mat.G66,
-                    mat.rho] + mat.A + [mat.tref, mat.ge,
-                    0, 0, 0, 0,
-                ]
+                    mat.rho] + mat.A + [mat.tref, mat.ge, 0, 0, 0, 0,]
                 #assert len(mat.A) == 6, mat.A
                 assert len(data) == nfields
 
@@ -277,7 +275,7 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
         elif name == 'MATT2':
-            #Record – MATT2(803,8,102)
+            #Record - MATT2(803,8,102)
             #Word Name Type Description
             #1 MID I Material identification number
             #2 TID(15) I TABLEMi entry identification numbers
@@ -356,17 +354,17 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
 
 
                 #(mid, tk1, tk2, tk3, tk4, tk5, tk6, tcp, null, thgen) = out
-                data = [mid, kxx_table, kxy_table, kxz_table, kyy_table, kyy_table, kzz_table,
+                data = [mid, kxx_table, kxy_table, kxz_table, kyy_table, kyz_table, kzz_table,
                         cp_table, 0, hgen_table]
                 assert None not in data, 'MATT4 %s' % data
                 assert len(data) == nfields
                 op2_ascii.write('  mid=%s data=%s\n' % (mid, data[1:]))
                 op2.write(spack.pack(*data))
-        elif  name == 'MATT8':
+        elif name == 'MATT8':
             key = (903, 9, 336)
             nfields = 19
             # nx
-            # Record – MATT8(903,9,336)
+            # Record - MATT8(903,9,336)
             # Word Name Type Description
             # 1 MID I
             # 2 TID(9) I TABLEMi entry identification numbers

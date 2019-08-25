@@ -135,6 +135,8 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
+from pyNastran.bdf.cards.parametric.geometry import PVAL, FEEDGE, FEFACE, GMCURV
+
 from pyNastran.utils.numpy_utils import integer_string_types
 
 CARD_MAP = {
@@ -665,6 +667,11 @@ CARD_MAP = {
     # BCTSET
     'ROTORG' : ROTORG,
     'ROTORD' : ROTORD,
+
+    # parametric
+    'GMCURV' : GMCURV,
+    'FEEDGE' : FEEDGE,
+    'FEFACE' : FEFACE,
 
     'DAREA' : DAREA,
     'DPHASE' : DPHASE,
@@ -1262,8 +1269,8 @@ class AddCards(AddMethods):
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_cmass2(self, eid, mass, nids, c1, c2, comment=''):
-        # type: (int, float, [int, int], int, int, str) -> CMASS2
+    def add_cmass2(self, eid: int, mass: float, nids: List[int],
+                   c1: int, c2: int, comment: str='') -> CMASS2:
         """
         Creates a CMASS2 card
 
@@ -1285,8 +1292,7 @@ class AddCards(AddMethods):
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_cmass3(self, eid, pid, nids, comment=''):
-        # type: (int, int, [int, int], str) -> CMASS3
+    def add_cmass3(self, eid: int, pid: int, nids: List[int], comment: str='') -> CMASS3:
         """
         Creates a CMASS3 card
 
@@ -1306,8 +1312,7 @@ class AddCards(AddMethods):
         self._add_mass_object(mass)
         return mass
 
-    def add_cmass4(self, eid, mass, nids, comment=''):
-        # type: (int, float, [int, int], str) -> CMASS4
+    def add_cmass4(self, eid: int, mass: float, nids: List[int], comment: str='') -> CMASS4:
         """
         Creates a CMASS4 card
 
@@ -1327,8 +1332,8 @@ class AddCards(AddMethods):
         self._add_mass_object(mass_obj)
         return mass_obj
 
-    def add_pelas(self, pid, k, ge=0., s=0., comment=''):
-        # type: (int, float, float, float, str) -> PELAS
+    def add_pelas(self, pid: int, k: float, ge: float=0., s: float=0.,
+                  comment: str='') -> PELAS:
         """
         Creates a PELAS card
 
@@ -1350,8 +1355,8 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_celas1(self, eid, pid, nids, c1=0, c2=0, comment=''):
-        # type: (int, int, List[int], int, int, str) -> CELAS1
+    def add_celas1(self, eid: int, pid: int, nids: List[int],
+                   c1: int=0, c2: int=0, comment: str='') -> CELAS1:
         """
         Creates a CELAS1 card
 
@@ -1373,8 +1378,8 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_celas2(self, eid, k, nids, c1=0, c2=0, ge=0., s=0., comment=''):
-        # type: (int, float, List[int], int, int, float, float, str) -> CELAS2
+    def add_celas2(self, eid: int, k: float, nids: List[int],
+                   c1: int=0, c2: int=0, ge: float=0., s: float=0., comment: str='') -> CELAS2:
         """
         Creates a CELAS2 card
 
@@ -1401,8 +1406,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_celas3(self, eid, pid, nids, comment=''):
-        # type: (int, int, List[int], str) -> CELAS3
+    def add_celas3(self, eid: int, pid: int, nids: List[int], comment: str='') -> CELAS3:
         """
         Creates a CELAS3 card
 
@@ -1422,8 +1426,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_celas4(self, eid, k, nids, comment=''):
-        # type: (int, float, List[int], str) -> CELAS4
+    def add_celas4(self, eid: int, k: float, nids: List[int], comment: str='') -> CELAS4:
         """
         Creates a CELAS4 card
 
@@ -1443,8 +1446,8 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_cdamp1(self, eid, pid, nids, c1=0, c2=0, comment=''):
-        # type: (int, int, List[int], int, int, str) -> CDAMP1
+    def add_cdamp1(self, eid: int, pid: int, nids: List[int], c1: int=0, c2: int=0,
+                   comment: str='') -> CDAMP1:
         """
         Creates a CDAMP1 card
 
@@ -1466,8 +1469,8 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_cdamp2(self, eid, b, nids, c1=0, c2=0, comment=''):
-        # type: (int, float, List[int], int, int, str) -> CDAMP2
+    def add_cdamp2(self, eid: int, b: float, nids: List[int],
+                   c1: int=0, c2: int=0, comment: str='') -> CDAMP2:
         """
         Creates a CDAMP2 card
 
@@ -1490,8 +1493,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_cdamp3(self, eid, pid, nids, comment=''):
-        # type: (int, int, List[int], str) -> CDAMP3
+    def add_cdamp3(self, eid: int, pid: int, nids: List[int], comment: str='') -> CDAMP3:
         """
         Creates a CDAMP3 card
 
@@ -1511,8 +1513,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_cdamp4(self, eid, b, nids, comment=''):
-        # type: (int, float, List[int], str) -> CDAMP4
+    def add_cdamp4(self, eid: int, b: float, nids: List[int], comment: str='') -> CDAMP4:
         """
         Creates a CDAMP4 card
 
@@ -1532,8 +1533,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_cdamp5(self, eid, pid, nids, comment=''):
-        # type: (int, float, List[int], str) -> CDAMP5
+    def add_cdamp5(self, eid: int, pid: int, nids: List[int], comment: str='') -> CDAMP5:
         """
         Creates a CDAMP5 card
 
@@ -1553,29 +1553,25 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pdamp(self, pid, b, comment=''):
-        # type: (int, float, str) -> PDAMP
+    def add_pdamp(self, pid: int, b: float, comment: str='') -> PDAMP:
         """Creates a PDAMP card"""
         prop = PDAMP(pid, b, comment=comment)
         self._add_property_object(prop)
         return prop
 
-    def add_pdampt(self, pid, tbid, comment=''):
-        # type: (int, int, str) -> PDAMPT
+    def add_pdampt(self, pid: int, tbid: int, comment: str='') -> PDAMPT:
         """Creates a PDAMPT card"""
         prop = PDAMPT(pid, tbid, comment=comment)
         self._add_pdampt_object(prop)
         return prop
 
-    def add_pdamp5(self, pid, mid, b, comment=''):
-        # type: (int, int, float, str) -> PDAMP5
+    def add_pdamp5(self, pid: int, mid: int, b: float, comment: str='') -> PDAMP5:
         """Creates a PDAMP5 card"""
         prop = PDAMP5(pid, mid, b, comment=comment)
         self._add_property_object(prop)
         return prop
 
-    def add_cvisc(self, eid, pid, nids, comment=''):
-        # type: (int, int, List[int], str) -> CVISC
+    def add_cvisc(self, eid: int, pid: int, nids: List[int], comment: str='') -> CVISC:
         """
         Creates a CVISC card
 
@@ -1611,13 +1607,13 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        # type: (int, float, float, str) -> PVISC
         prop = PVISC(pid, ce, cr, comment=comment)
         self._add_property_object(prop)
         return prop
 
-    def add_cgap(self, eid, pid, nids, x, g0, cid=None, comment=''):
-        # type: (int, int, int, List[int], Any, Optional[int], str) -> CGAP
+    def add_cgap(self, eid: int, pid: int, nids: List[int],
+                 x: Optional[List[int]], g0: Optional[int],
+                 cid: Optional[int]=None, comment: str='') -> CGAP:
         """
         Creates a CGAP card
 
@@ -1647,9 +1643,11 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pgap(self, pid, u0=0., f0=0., ka=1.e8, kb=None, mu1=0.,
-                 kt=None, mu2=None, tmax=0., mar=100., trmin=0.001,
-                 comment=''):
+    def add_pgap(self, pid: int, u0: float=0., f0: float=0.,
+                 ka: float=1.e8, kb: Optional[float]=None, mu1: float=0.,
+                 kt: Optional[float]=None, mu2: Optional[float]=None,
+                 tmax: float=0., mar: float=100., trmin: float=0.001,
+                 comment: str='') -> PGAP:
         """
         Defines the properties of the gap element (CGAP entry).
 
@@ -1689,15 +1687,14 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        # type: (int, float, float, float, Any, float, Any, Any, float, float, float, str) -> PGAP
         prop = PGAP(pid, u0, f0, ka, kb, mu1, kt, mu2, tmax, mar, trmin,
                     comment=comment)
         self._add_property_object(prop)
         return prop
 
-    def add_cfast(self, eid, pid, Type, ida, idb, gs=None, ga=None, gb=None,
-                  xs=None, ys=None, zs=None, comment=''):
-        # type: (int, int, str, int, int, Any, Any, Any, Any, Any, Any, str) -> CFAST
+    def add_cfast(self, eid: int, pid: int, Type: str, ida: int, idb: int,
+                  gs=None, ga=None, gb=None,
+                  xs=None, ys=None, zs=None, comment: str='') -> CFAST:
         """Creates a CFAST card"""
         elem = CFAST(eid, pid, Type, ida, idb, gs=gs, ga=ga, gb=gb,
                      xs=xs, ys=ys, zs=zs, comment=comment)
@@ -1813,22 +1810,24 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cbush1d(self, eid, pid, nids, cid=None, comment=''):
-        # type: (int, int, List[int], int, str) -> CBUSH1D
+    def add_cbush1d(self, eid: int, pid: int, nids: List[int], cid: Optional[int]=None,
+                    comment: str='') -> CBUSH1D:
         """Creates a CBUSH1D card"""
         elem = CBUSH1D(eid, pid, nids, cid=cid, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_cbush2d(self, eid, pid, nids, cid=0, plane='XY', sptid=None, comment=''):
-        # type: (int, int, List[int], int, str, int, str) -> CBUSH2D
+    def add_cbush2d(self, eid: int, pid: int, nids: List[int], cid: int=0,
+                    plane: str='XY', sptid: Optional[int]=None, comment: str='') -> CBUSH2D:
         """Creates a CBUSH2D card"""
         elem = CBUSH2D(eid, pid, nids, cid=cid, plane=plane, sptid=sptid, comment=comment)
         self._add_element_object(elem)
         return elem
 
-    def add_pbush1d(self, pid, k=0., c=0., m=0., sa=0., se=0.,
-                    optional_vars=None, comment=''):
+    def add_pbush1d(self, pid: int,
+                    k: float=0., c: float=0., m: float=0.,
+                    sa: float=0., se: float=0., optional_vars=None,
+                    comment: str='') -> PBUSH1D:
         """Creates a PBUSH1D card"""
         prop = PBUSH1D(pid, k=k, c=c, m=m, sa=sa, se=se,
                        optional_vars=optional_vars, comment=comment)
@@ -1843,16 +1842,15 @@ class AddCards(AddMethods):
         #self._add_property_object(prop)
         #return prop
 
-    def add_pbusht(self, pid, k_tables, b_tables, ge_tables, kn_tables,
-                   comment=''):
+    def add_pbusht(self, pid: int, k_tables: List[int], b_tables: List[int],
+                   ge_tables: List[int], kn_tables: List[int], comment: str='') -> PBUSHT:
         """Creates a PBUSHT card"""
         prop = PBUSHT(pid, k_tables, b_tables, ge_tables, kn_tables,
                       comment=comment)
         self._add_pbusht_object(prop)
         return prop
 
-    def add_pelast(self, pid, tkid=0, tgeid=0, tknid=0, comment=''):
-        # type: (int, int, int, int, str) -> PELAST
+    def add_pelast(self, pid: int, tkid: int=0, tgeid: int=0, tknid: int=0, comment: str='') -> PELAST:
         """
         Creates a PELAST card
 
@@ -1874,8 +1872,9 @@ class AddCards(AddMethods):
         self._add_pelast_object(prop)
         return prop
 
-    def add_conrod(self, eid, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment=''):
-        # type: (int, int, List[int], float, float, float, float, str) -> CONROD
+    def add_conrod(self, eid: int, mid: int, nids: List[int],
+                   A: float=0.0, j: float=0.0, c: float=0.0, nsm: float=0.0,
+                   comment: str='') -> CONROD:
         """
         Creates a CONROD card
 
@@ -1903,8 +1902,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_crod(self, eid, pid, nids, comment=''):
-        # type: (int, int, List[int], str) -> CROD
+    def add_crod(self, eid: int, pid: int, nids: List[int], comment: str='') -> CROD:
         """
         Creates a CROD card
 
@@ -1924,8 +1922,8 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_prod(self, pid, mid, A, j=0., c=0., nsm=0., comment=''):
-        # type: (int, int, float, float, float, float, str) -> PROD
+    def add_prod(self, pid: int, mid: int, A: float,
+                 j: float=0., c: float=0., nsm: float=0., comment: str='') -> PROD:
         """
         Creates a PROD card
 
@@ -1951,8 +1949,7 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_ctube(self, eid, pid, nids, comment=''):
-        # type: (int, int, List[int], str) -> CTUBE
+    def add_ctube(self, eid: int, pid: int, nids: List[int], comment: str='') -> CTUBE:
         """
         Creates a CTUBE card
 
@@ -1998,8 +1995,7 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cbarao(self, eid, scale, x, comment=''):
-        # type: (int, str, List[float], str) -> CBARAO
+    def add_cbarao(self, eid: int, scale: str, x: List[float], comment: str='') -> CBARAO:
         """
         Creates a CBARAO card, which defines additional output locations
         for the CBAR card.
@@ -2032,9 +2028,11 @@ class AddCards(AddMethods):
         self._add_ao_object(elem_flag, allow_overwrites=False)
         return elem_flag
 
-    def add_cbar(self, eid, pid, nids, x, g0, offt='GGG', pa=0, pb=0,
-                 wa=None, wb=None, comment=''):
-        # type: (int, int, List[int], Any, int, str, int, int, Any, Any, str) -> CBAR
+    def add_cbar(self, eid: int, pid: int, nids: List[int],
+                 x: Optional[List[float]], g0: Optional[int],
+                 offt: str='GGG', pa: int=0, pb: int=0,
+                 wa: Optional[List[float]]=None, wb: Optional[List[float]]=None,
+                 comment: str='') -> CBAR:
         """
         Adds a CBAR card
 
@@ -3097,7 +3095,7 @@ class AddCards(AddMethods):
         return elem
 
     def add_pconeax(self, pid, mid1, t1=None, mid2=0, i=None, mid3=None, t2=None,
-                    nsm=None, z1=None, z2=None, phi=None, comment=''):
+                    nsm=0., z1=None, z2=None, phi=None, comment=''):
         """Creates a PCONEAX card"""
         prop = PCONEAX(pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
                        comment=comment)
@@ -5580,8 +5578,8 @@ class AddCards(AddMethods):
         self._add_flfact_object(flfact)
         return flfact
 
-    def add_aecomp(self, name, list_type, lists, comment=''):
-        # type: (str, List[str], Union[int, List[int]], str) -> None
+    def add_aecomp(self, name: str, list_type: List[str], lists: Union[int, List[int]],
+                   comment: str='') -> AECOMP:
         """
         Creates an AECOMP card
 
@@ -5606,8 +5604,7 @@ class AddCards(AddMethods):
         self._add_aecomp_object(aecomp)
         return aecomp
 
-    def add_aecompl(self, name, labels, comment=''):
-        # type: (str, List[str]) -> None
+    def add_aecompl(self, name: str, labels: List[str], comment: str='') -> AECOMPL:
         """
         Creates an AECOMPL card
 
@@ -5626,7 +5623,7 @@ class AddCards(AddMethods):
         self._add_aecomp_object(aecompl)
         return aecompl
 
-    def add_aestat(self, aestat_id, label, comment=''):
+    def add_aestat(self, aestat_id: int, label: str, comment: str='') -> AESTAT:
         """
         Creates an AESTAT card, which is a variable to be used in a TRIM analysis
 
@@ -5642,8 +5639,11 @@ class AddCards(AddMethods):
         """
         aestat = AESTAT(aestat_id, label, comment=comment)
         self._add_aestat_object(aestat)
+        return aestat
 
-    def add_aelink(self, aelink_id, label, independent_labels, linking_coefficents, comment=''):
+    def add_aelink(self, aelink_id: int, label: str,
+                   independent_labels: List[str], linking_coefficents: List[float],
+                   comment: str='') -> AELINK:
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
@@ -7836,7 +7836,20 @@ class AddCards(AddMethods):
         fields = ['RCROSS', sid, rtype1, id1, comp1, rtype2, id2, comp2, curid]
         self.reject_card_lines('RCROSS', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_pval(self, idi, poly1, poly2, poly3, cid, typei, typeids):
-        """# PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID"""
-        fields = ['PVAL', idi, poly1, poly2, poly3, cid, typei, typeids]
-        self.reject_card_lines('PVAL', print_card_8(fields).split('\n'), show_log=False)
+    #----------------------------------------------------------------------------------
+    # parametric
+    def add_pval(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment=''):
+        """PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID"""
+        pval = PVAL(idi, poly1, poly2, poly3, cid, typei, typeids, comment='')
+        self.pval[idi] = pval
+
+    def add_gmcurv(self, curve_id, group_btyes, cid_in, cid_bc, data):
+        curve = GMCURV(curve_id, group_btyes, cid_in, cid_bc, data)
+        self.gmcurv[curve_id] = curve
+        return curve
+
+    def add_feedge(self, edge_id, nids, cid, geom_ids, geomin='POINT'):
+        edge = FEEDGE(edge_id, nids, cid, geom_ids, geomin=geomin)
+        self.feedge[edge_id] = edge
+        return edge
+    #----------------------------------------------------------------------------------

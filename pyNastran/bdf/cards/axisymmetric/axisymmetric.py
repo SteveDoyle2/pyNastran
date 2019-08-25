@@ -571,7 +571,7 @@ class PCONEAX(Property):
         pid = 1
         mid1 = 1
         return PCONEAX(pid, mid1, t1=None, mid2=0, i=None, mid3=None, t2=None,
-                       nsm=None, z1=None, z2=None, phi=None, comment='')
+                       nsm=0., z1=None, z2=None, phi=None, comment='')
 
     def _update_field_helper(self, n, value):
         if n <= 0:
@@ -580,7 +580,7 @@ class PCONEAX(Property):
         self.phi[n - 10] = value
 
     def __init__(self, pid, mid1, t1=None, mid2=0, i=None, mid3=None, t2=None,
-                 nsm=None, z1=None, z2=None, phi=None, comment=''):
+                 nsm=0., z1=None, z2=None, phi=None, comment=''):
         """
         Creates a PCONEAX
 
@@ -663,7 +663,7 @@ class PCONEAX(Property):
         else:
             t2 = blank(card, 7, 't3')
 
-        nsm = double(card, 8, 'nsm')
+        nsm = double_or_blank(card, 8, 'nsm', 0.0)
         z1 = double(card, 9, 'z1')
         z2 = double(card, 10, 'z2')
 

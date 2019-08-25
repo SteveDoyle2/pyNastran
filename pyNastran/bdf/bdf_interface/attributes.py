@@ -1,6 +1,6 @@
 """defines the BDF attributes"""
 from collections import defaultdict
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Union
 from numpy import array  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods
@@ -53,8 +53,7 @@ class BDFAttributes:
                 'nmaterials', 'material_ids', 'ncoords', 'coord_ids',
                 'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map']
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
-        # type: (str, Optional[List[str]]) -> List[str]
+    def object_attributes(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -93,8 +92,7 @@ class BDFAttributes:
         ]
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    def object_methods(self, mode='public', keys_to_skip=None):
-        # type: (str, Optional[List[str]]) -> List[str]
+    def object_methods(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -136,13 +134,11 @@ class BDFAttributes:
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    def deprecated(self, old_name, new_name, deprecated_version):
-        # type: (str, str, str) -> None
+    def deprecated(self, old_name: str, new_name: str, deprecated_version: str) -> None:
         """deprecates methods"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
 
-    def clear_attributes(self):
-        # type: () -> None
+    def clear_attributes(self) -> None:
         """removes the attributes from the model"""
         self.__init_attributes()
 
@@ -150,13 +146,12 @@ class BDFAttributes:
         self.loads = {}  # type: Dict[int, List[Any]]
         self.load_combinations = {}  # type: Dict[int, List[Any]]
 
-    def reset_errors(self):
+    def reset_errors(self) -> None:
         """removes the errors from the model"""
         self._ixref_errors = 0
         self._stored_xref_errors = []
 
-    def __init_attributes(self):
-        # type: () -> None
+    def __init_attributes(self) -> None:
         """
         Creates storage objects for the BDF object.
         This would be in the init but doing it this way allows for better
@@ -439,6 +434,13 @@ class BDFAttributes:
         self.se_qsets = []  # type: List[Any]
         self.se_usets = {}  # type: Dict[str, Any]
         self.se_sets = {}  # type: Dict[str, Any]
+
+        # ----------------------------------------------------------------
+        #: parametric
+        self.pval = {}
+        self.gmcurv = {}
+        self.feedge = {}
+        self.feface = {}
 
         # ----------------------------------------------------------------
         #: tables
@@ -844,6 +846,12 @@ class BDFAttributes:
             'radmtx' : ['RADMTX'],
             # SEBSEP
 
+            # parametric
+            'pval' : ['PVAL'],
+            'gmcurv' : ['GMCURV'],
+            'feface' : ['FEFACE'],
+
+            # tables
             'tables' : [
                 'TABLEH1', 'TABLEHT',
                 'TABLES1', 'TABLEST',
@@ -881,11 +889,11 @@ class BDFAttributes:
         self._type_to_slot_map = self.get_rslot_map()
 
     @property
-    def type_slot_str(self):
+    def type_slot_str(self) -> str:
         """helper method for printing supported cards"""
         nchars = len('Card Group')
 
-        nchars_cards = 0
+        #nchars_cards = 0
         for card_group in self._slot_to_type_map:
             nchars = max(nchars, len(card_group))
 
@@ -907,7 +915,7 @@ class BDFAttributes:
             if len(valid_cards) == 0:
                 continue
 
-            i = 0
+            #i = 0
             sublines = []
             subline = ''
             while valid_cards:
@@ -941,35 +949,30 @@ class BDFAttributes:
         return msg
 
     @property
-    def nastran_format(self):
-        # type: () -> str
+    def nastran_format(self) -> str:
         return self._nastran_format
 
     @nastran_format.setter
-    def nastran_format(self, nastran_format):
-        # type: (str) -> None
+    def nastran_format(self, nastran_format: str) -> None:
         fmt_lower = nastran_format.lower().strip()
         if fmt_lower not in ['nx', 'msc', 'zona']:
             raise RuntimeError(nastran_format)
         self._nastran_format = fmt_lower
 
     @property
-    def is_long_ids(self):
-        # type: () -> bool
+    def is_long_ids(self) -> bool:
         return self._is_long_ids
         #if self._nastran_format == 'nx' or self._is_long_ids:
             #return True
         #return False
 
     @property
-    def sol(self):
-        # type: () -> int
+    def sol(self) -> int:
         """gets the solution (e.g. 101, 103)"""
         return self._sol
 
     @sol.setter
-    def sol(self, sol):
-        # type: (int) -> int
+    def sol(self, sol: int) -> int:
         """sets the solution (e.g. 101, 103)"""
         self._sol = sol
         if len(self.executive_control_lines) == 0:
@@ -978,8 +981,7 @@ class BDFAttributes:
         return self._sol
 
     @property
-    def subcases(self):
-        # type: () -> Dict[int, Optional[Any]]
+    def subcases(self) -> Dict[int, Optional[Any]]:
         """gets the subcases"""
         if self.case_control_deck is None:
             return {}
@@ -996,8 +998,7 @@ class BDFAttributes:
         #self.nodes = grids
 
     @property
-    def nnodes(self):
-        # type: () -> int
+    def nnodes(self) -> int:
         """gets the number of GRIDs"""
         return len(self.nodes)
 
@@ -1012,8 +1013,7 @@ class BDFAttributes:
         return set(self.node_ids) | set(list(self.spoints.keys())) | set(list(self.epoints.keys()))
 
     @property
-    def npoints(self):
-        # type: () -> int
+    def npoints(self) -> int:
         """gets the number of GRID, SPOINT, EPOINT ids"""
         return len(self.point_ids)
 
@@ -1021,8 +1021,7 @@ class BDFAttributes:
     # Elements CARDS
 
     @property
-    def nelements(self):
-        # type: () -> int
+    def nelements(self) -> int:
         """gets the number of element"""
         return len(self.elements)
 
@@ -1035,8 +1034,7 @@ class BDFAttributes:
     # Property CARDS
 
     @property
-    def nproperties(self):
-        # type: () -> int
+    def nproperties(self) -> int:
         """gets the number of properties"""
         return len(self.properties)
 
@@ -1049,8 +1047,7 @@ class BDFAttributes:
     # Material CARDS
 
     @property
-    def nmaterials(self):
-        # type: () -> int
+    def nmaterials(self) -> int:
         """gets the number of materials"""
         return len(self.materials)
 
@@ -1063,8 +1060,7 @@ class BDFAttributes:
     # Coords CARDS
 
     @property
-    def ncoords(self):
-        # type: () -> int
+    def ncoords(self) -> int:
         """gets the number of coordinate systems"""
         return len(self.coords)
 
@@ -1076,8 +1072,7 @@ class BDFAttributes:
     #--------------------
 
     @property
-    def ncaeros(self):
-        # type: () -> int
+    def ncaeros(self) -> int:
         """gets the number of CAEROx panels"""
         return len(self.caeros)
 
@@ -1102,8 +1097,7 @@ class BDFAttributes:
             wtmass = param.values[0]
         return wtmass
 
-    def set_param(self, key, values):
-        # type: (str, Union[int, float, str, List[float]]) -> None
+    def set_param(self, key: str, values: Union[int, float, str, List[float]]) -> None:
         """sets a param card; creates it if necessary"""
         if isinstance(values, (int, float, str)):
             values = [values]

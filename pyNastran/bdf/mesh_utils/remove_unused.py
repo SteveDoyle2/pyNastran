@@ -132,7 +132,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             # todo: MATS1, MATT1, etc.
             pass
         elif card_type in ['MATS1', 'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5',
-                           'MATT8', 'MATHE', 'MATHP', 'CREEP']:
+                           'MATT8', 'MATT9', 'MATHE', 'MATHP', 'CREEP']:
             mids_used.update(ids)
 
         elif card_type in ['CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA']:

@@ -65,7 +65,7 @@ class OP2Writer(OP2_F06_Common):
         return make_stamp(title, today)
 
     def write_op2(self, op2_outname: str, obj=None, #is_mag_phase=False,
-                  post: int=-1, endian: bytes=b'<', skips=None, nastran_format='nx'):
+                  post: int=-1, endian: bytes=b'<', skips=None, nastran_format='nx') -> int:
         """
         Writes an OP2 file based on the data we have stored in the object
 
@@ -87,7 +87,6 @@ class OP2Writer(OP2_F06_Common):
             skips = set(skips)
 
         #print('writing %s' % op2_outname)
-        struct_3i = Struct(endian + b'3i')
 
         if obj is None:
             obj = self
@@ -97,12 +96,30 @@ class OP2Writer(OP2_F06_Common):
             #fop2_ascii = open(op2_outname + '.txt', 'w')
             fop2_ascii = TrashWriter()
             #print('op2 out = %r' % op2_outname)
+            close = True
         else:
             assert isinstance(op2_outname, file), 'type(op2_outname)= %s' % op2_outname
             fop2 = op2_outname
             op2_outname = op2_outname.name
+            close = False
             #print('op2_outname =', op2_outname)
 
+        try:
+            total_case_count = self._write_op2(
+                fop2, fop2_ascii, obj,
+                post=post, endian=endian, skips=skips,
+                nastran_format=nastran_format)
+        except:  # NotImplementedError
+            if close:
+                fop2.close()
+                fop2_ascii.close()
+            raise
+        return total_case_count
+
+    def _write_op2(self, fop2, fop2_ascii, obj,
+                   post: int=-1, endian: bytes=b'<', skips=None, nastran_format='nx') -> int:
+        """actually writes the op2"""
+        struct_3i = Struct(endian + b'3i')
         #op2_ascii.write('writing [3, 7, 0] header\n')
         #if markers == [3,]:  # PARAM, POST, -1
             #self.op2_reader.read_markers([3])

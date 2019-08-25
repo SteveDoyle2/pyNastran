@@ -1,19 +1,18 @@
 import os
 
-from qtpy.QtCore import Qt
+#from qtpy.QtCore import Qt
 from qtpy.QtWidgets import (
-    QApplication, QLabel, QPushButton, QLineEdit, QRadioButton,
-    QGridLayout, QHBoxLayout, QVBoxLayout, QSpinBox,
+    QApplication, QLabel, QPushButton, QLineEdit,
+    QGridLayout, QHBoxLayout, QVBoxLayout,
     QComboBox, )
-from qtpy.compat import getexistingdirectory
-from qtpy.QtWidgets import QLabel, QTextEdit, QGridLayout, QVBoxLayout, QLineEdit
+#from qtpy.compat import getexistingdirectory
+from qtpy.QtWidgets import QLabel, QGridLayout, QVBoxLayout, QLineEdit
 
 from pyNastran.gui.utils.qt.qelement_edit import QNodeEdit, QElementEdit
-from pyNastran.gui.utils.qt.pydialog import PyDialog, check_int, check_float
+from pyNastran.gui.utils.qt.pydialog import PyDialog  # check_int, check_float
 from pyNastran.gui.menus.results_sidebar import ResultsWindow
-from pyNastran.gui.menus.results_sidebar_utils import (
-    get_cases_from_tree, #build_pruned_tree
-)
+#from pyNastran.gui.menus.results_sidebar_utils import (
+    #get_cases_from_tree, #build_pruned_tree)
 
 field_map = {
     'CAERO1' : [
