@@ -1448,6 +1448,7 @@ class OES(OP2Common):
         """unsupported element"""
         assert self.num_wide == 9, "num_wide=%s not 9" % self.num_wide
         ntotal = 36  # 4*9
+        #oesrt_cquad4_95
 
         n = 0
         struct1 = Struct(self._endian + self._analysis_code_fmt + b'8si3fi4s')
@@ -1474,7 +1475,7 @@ class OES(OP2Common):
         """same as _create_oes_object4 except it adds to the nnodes parameter"""
         auto_return = False
         #is_vectorized = True
-        is_vectorized = self._is_vectorized(obj_vector, slot)
+        is_vectorized = self._is_vectorized(obj_vector)
         #print("vectorized...read_mode=%s...%s; %s" % (self.read_mode, result_name, is_vectorized))
 
         if is_vectorized:
@@ -1513,7 +1514,7 @@ class OES(OP2Common):
         """same as _create_oes_object4 except it adds to the ntotal parameter"""
         auto_return = False
         #is_vectorized = True
-        is_vectorized = self._is_vectorized(obj_vector, slot)
+        is_vectorized = self._is_vectorized(obj_vector)
         #print("vectorized...read_mode=%s...%s; %s" % (self.read_mode, result_name, is_vectorized))
 
         if is_vectorized:
@@ -3272,7 +3273,7 @@ class OES(OP2Common):
                 s2 = Struct(self._endian + b'i14f')
 
                 cen = 0 # 'CEN/4'
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n+60]  # 4*15=60
                     n += 60
                     out = s1.unpack(edata)  # 15
@@ -3303,7 +3304,7 @@ class OES(OP2Common):
                     obj.add_new_eid_sort1(dt, eid, cen, fd1, sx1, sy1, txy1)
                     obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
 
-                    for node_id in range(nnodes):  # nodes pts
+                    for unused_inode in range(nnodes):  # nodes pts
                         edata = data[n:n+60]  # 4*15=60
                         n += 60
                         out = s2.unpack(edata)
@@ -3387,7 +3388,7 @@ class OES(OP2Common):
                     self.log.debug('vectorize CQUAD4-33 random SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f')
                 #cen = 0 # CEN/4
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = struct1.unpack(edata)
 
@@ -3473,7 +3474,7 @@ class OES(OP2Common):
             else:
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
                 #cen = 0 # CEN/4
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = struct1.unpack(edata)
 
@@ -3626,7 +3627,7 @@ class OES(OP2Common):
                     self.log.debug('vectorize CTRIA3 imag SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'14f')
                 cen = 0 # CEN/3
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = struct1.unpack(edata)
                     (eid_device,
@@ -3733,7 +3734,7 @@ class OES(OP2Common):
                     self.log.debug('vectorize CTRIA3 random SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
                 #cen = 0 # CEN/4
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = struct1.unpack(edata)
 
@@ -3812,7 +3813,7 @@ class OES(OP2Common):
                     self.log.debug('vectorize CTRIA3 random2 SORT%s' % self.sort_method)
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f')
                 cen = 0 # CEN/4
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = struct1.unpack(edata)
 
@@ -4225,7 +4226,7 @@ class OES(OP2Common):
                         '  nelements=%i; nnodes=%i # +1 centroid\n' % (ndata, nelements, nnodes))
 
                 grid_center = 0
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n+44]
                     #self.show_data(edata)
                     out = cs.unpack(edata)  # len=17*4
@@ -4442,7 +4443,7 @@ class OES(OP2Common):
                     self.log.debug('vectorize CTRIA3/CQUAD4_NL imag SORT%s' % self.sort_method)
                 etype = self.element_type
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'24f') # 1+24=25
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = struct1.unpack(edata)
                     if self.is_debug_file:
@@ -4619,7 +4620,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f')
-            for i in range(nelements):
+            for unused_i in range(nelements):
                 edata = data[n:n+ntotal]
                 out = struct1.unpack(edata)
 
@@ -4641,7 +4642,7 @@ class OES(OP2Common):
 
             # not 100%
             struct1 = Struct(self._endian + self._analysis_code_fmt + b' 8s i 3f if')
-            for i in range(nelements):
+            for unused_i in range(nelements):
                 edata = data[n:n+ntotal]
                 #self.show_data(edata)
                 out = struct1.unpack(edata)
@@ -4667,7 +4668,7 @@ class OES(OP2Common):
                 return nelements * self.num_wide * 4, None, None
 
             struct1 = Struct(self._endian + self._analysis_code_fmt + b'i9f ff')
-            for i in range(nelements):
+            for unused_i in range(nelements):
                 edata = data[n:n+ntotal]
                 out = struct1.unpack(edata)
 
@@ -4772,8 +4773,6 @@ class OES(OP2Common):
                         n += 32
         elif self.format_code in [2, 3] and self.num_wide == 37: # imag
             # TODO: vectorize object
-            #return ndata
-
             if self.is_stress:
                 #print('self.element_type', self.element_type)
                 #print('self.element_name', self.element_name)
@@ -4790,8 +4789,8 @@ class OES(OP2Common):
             leftover = ndata % ntotal
             assert leftover == 0, 'ntotal=%s nelements=%s leftover=%s' % (ntotal, nelements, leftover)
 
-            #auto_return, is_vectorized = self._create_oes_object4(
-                #nelements, result_name, slot, obj_vector_complex)
+            auto_return, is_vectorized = self._create_oes_object4(
+                nelements, result_name, slot, obj_vector_complex)
 
             if data is None:
                 return ndata, None, None
@@ -4838,8 +4837,7 @@ class OES(OP2Common):
                 s1 = Struct(self._endian + self._analysis_code_fmt + b'i8f') # 10*4 = 40
                 s2 = Struct(self._endian + b'i8f')  #  9*4 = 36
 
-
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     out = s1.unpack(data[n:n + 40])
                     (eid_device, loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
                     eid, dt = get_eid_dt_from_eid_device(
@@ -4858,10 +4856,10 @@ class OES(OP2Common):
                         azs = complex(azsr, azsi)
                         As = complex(Asr, Asi)
                         ss = complex(ssr, ssi)
-                    #obj.add_new_eid_sort1(dt, eid, loc, rs, azs, As, ss)
+                    obj.add_new_eid_sort1(dt, eid, loc, rs, azs, As, ss)
 
                     n += 40
-                    for j in range(3):
+                    for unused_j in range(3):
                         out = s2.unpack(data[n:n + 36])
                         (loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
                         if self.is_debug_file:
@@ -4879,7 +4877,7 @@ class OES(OP2Common):
                             azs = complex(azsr, azsi)
                             As = complex(Asr, Asi)
                             ss = complex(ssr, ssi)
-                        #obj.add_sort1(dt, eid, loc, rs, azs, As, ss)
+                        obj.add_sort1(dt, eid, loc, rs, azs, As, ss)
                         n += 36  # 4*8
         else:  # pragma: no cover
             msg = self.code_information()
@@ -5116,7 +5114,7 @@ class OES(OP2Common):
                 obj.itotal = itotal2
             else:
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f')
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
 
                     out = struct1.unpack(edata)  # num_wide=25
@@ -5450,14 +5448,14 @@ class OES(OP2Common):
                 struct1 = Struct(self._endian + self._analysis_code_fmt)
                 struct2 = Struct(self._endian + b'i9f')
 
-                for i in range(nelements):
+                for unused_i in range(nelements):
                     edata = data[n:n + 4]
                     eid_device, = struct1.unpack(edata)
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
 
                     n += 4
-                    for j in range(2):
+                    for unused_j in range(2):
                         edata = data[n:n + ntotali]
                         out = struct2.unpack(edata)
                         if self.is_debug_file:
@@ -5537,7 +5535,7 @@ class OES(OP2Common):
                         eid_device, self.nonlinear_factor, self.sort_method)
 
                     n += 4
-                    for i in range(2):
+                    for unused_i in range(2):
                         edata = data[n:n + ntotali]
                         out = struct2.unpack(edata)
                         if self.is_debug_file:
@@ -5954,6 +5952,7 @@ class OES(OP2Common):
 
     def _oes_vu_quad(self, data, ndata, unused_dt, unused_is_magnitude_phase,
                      unused_stress_name, unused_prefix, unused_postfix):
+        """Adds an adaptive VUQUAD"""
         n = 0
         if self.element_type == 189:  # VQUAD
             if self.read_mode == 1:

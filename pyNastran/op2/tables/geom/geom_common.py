@@ -37,7 +37,7 @@ class GeomCommon:
         self.log.info(f'skipping {self.card_name} in {self.table_name}; ndata={len(data)-12}')
         #if (self.card_name == '' or '?' in self.card_name) and data:
             #self.show_data(data)
-        #if self.table_name_str in ['GEOM2', 'GEOM3', 'DYNAMICS']:
+        #if self.table_name_str in ['GEOM3', 'DYNAMIC', 'DYNAMICS', 'GEOM4', 'EPT', 'MPT']: # 'GEOM2',
             #self.show_data(data)
             #aaa
         return len(data)
