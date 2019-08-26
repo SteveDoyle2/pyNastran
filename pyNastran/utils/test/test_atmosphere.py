@@ -171,6 +171,7 @@ class TestAtm(unittest.TestCase):
 
     def test_mach(self):
         """
+        Tests mach at various speeds.
         @todo fix error in function related to assertAlmostEqual
         """
         mach_a = atm_mach(14000., 743.011549709834) #, debug=False)
@@ -226,7 +227,7 @@ class TestAtm(unittest.TestCase):
         assert np.allclose(veq4, 340.0184647740884)
 
     def test_atm_kinematic_viscosity_nu(self):
-        """tests atm_kinematic_viscosity_mu"""
+        """tests ``atm_kinematic_viscosity_mu``"""
         mu = atm_kinematic_viscosity_nu(10., alt_units='kft', visc_units='ft^2/s')
         self.assertEqual(mu, 0.00020075264466844382)
 
@@ -234,7 +235,7 @@ class TestAtm(unittest.TestCase):
         self.assertEqual(mu, 2.204293839480214e-05)
 
     def test_get_alt_for_density(self):
-        """tests get_alt_for_density"""
+        """tests ``get_alt_for_density``"""
         alt_targets = [0., 10., 20., 30., 40., 50.]
         for alt_target in alt_targets:
             rho1 = atm_density(alt_target * 1000.)
@@ -249,7 +250,7 @@ class TestAtm(unittest.TestCase):
             assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
 
     def test_get_alt_for_pressure(self):
-        """tests get_alt_for_pressure"""
+        """tests ``get_alt_for_pressure``"""
         alt_targets = [0., 10., 20., 30., 40., 50.]
         for alt_target in alt_targets:
             pressure1 = atm_pressure(alt_target*1000.)
@@ -267,7 +268,7 @@ class TestAtm(unittest.TestCase):
 
 
     def test_get_alt_for_q_with_constant_mach(self):
-        """tests get_alt_for_q_with_constant_mach for various altitudes"""
+        """tests ``get_alt_for_q_with_constant_mach`` for various altitudes"""
         alt = get_alt_for_q_with_constant_mach(
             534.2, 0.8, pressure_units='psf', alt_units='ft', nmax=20, tol=5.)
         assert np.allclose(alt, 15064.6441438)
@@ -282,7 +283,7 @@ class TestAtm(unittest.TestCase):
         self.assertAlmostEqual(alt_b, 22058.47, delta=2.25)  # TODO: should be 0.01
 
     def test_get_alt_for_q_with_constant_mach2(self):
-        """tests get_alt_for_q_with_constant_mach"""
+        """tests ``get_alt_for_q_with_constant_mach``"""
         mach = 0.8
         alt_targets = [0., 10., 20., 30., 40., 50.]
         for alt_target in alt_targets:
@@ -334,7 +335,7 @@ class TestAtm(unittest.TestCase):
         assert np.allclose(eas, 296.2418795250434), eas
 
     def test_atm_unit_reynolds_number(self):
-        """tests atm_unit_reynolds_number and atm_unit_reynolds_number"""
+        """tests ``atm_unit_reynolds_number and atm_unit_reynolds_number``"""
         mach = 0.8
         targets = [
             # (alt_kft, Re_1/ft)
@@ -349,7 +350,7 @@ class TestAtm(unittest.TestCase):
             assert np.allclose(rel_a, re_expected, atol=1e-3), 'rel_a=%s re_expected=%s' % (rel_a, re_expected)
 
             rel_b = atm_unit_reynolds_number2(alt, mach, alt_units='kft', reynolds_units='1/ft')
-            assert np.allclose(rel_b, re_expected, atol=1e-3), 'rel_c=%s re_expected=%s' % (rel_b, re_expected)
+            assert np.allclose(rel_b, re_expected, atol=1e-3), 'rel_b=%s re_expected=%s' % (rel_b, re_expected)
 
     def test_sweep(self):
         """tests FLFACT sweeps"""

@@ -165,7 +165,7 @@ class GMCURV(BaseCard):
         self.cid_in = cid_in
         self.cid_bc = cid_bc
         self.data = data
-        assert group in ['MSCGRP0'], group
+        assert group in ['MSCGRP0', 'MSCGRP1', 'MSCGRP2'], group
 
     @classmethod
     def add_card(cls, card_lines, comment=''):

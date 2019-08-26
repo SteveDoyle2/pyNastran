@@ -7,7 +7,7 @@ Main BDF class.  Defines:
 import os
 from collections import defaultdict
 from itertools import count
-from typing import List, Dict, Tuple, Optional, Union, Set, Any, cast
+from typing import List, Tuple, Optional, Union, Any, cast
 from io import StringIO
 
 import numpy as np
@@ -279,8 +279,9 @@ class BDFInputPy:
             #assert nlines == ilines.shape[0], 'nlines=%s nilines=%s' % (nlines, nilines)
         return lines, ilines
 
-    def _update_include(self, lines, nlines, ilines,
-                        include_lines, bdf_filename2, i, j, ifile, make_ilines=False):
+    def _update_include(self, lines: List[str], nlines: int, ilines,
+                        include_lines: List[str], bdf_filename2: str, i: int, j: int, ifile: int,
+                        make_ilines: bool=False):
         """incorporates an include file into the lines"""
         try:
             self._open_file_checks(bdf_filename2)

@@ -6,7 +6,6 @@ Defines various utilities including:
 """
 from typing import List, Dict, Optional
 import numpy as np  # type: ignore
-from numpy import unique, array  # type: ignore
 
 from pyNastran.bdf.cards.collpase_card import collapse_colon_packs
 from pyNastran.utils.numpy_utils import integer_types
@@ -67,13 +66,13 @@ def parse_patran_syntax(node_sets: str, pound: Optional[int]=None) -> np.ndarray
         assert isinstance(pound, (str, integer_types)), type(pound)
         node_sets = node_sets.replace('#', str(pound).strip())
     if len(node_sets) == 0:
-        return array([], dtype='int32')
+        return np.array([], dtype='int32')
 
     snodes = node_sets.split()
     nodes = []  # type: List[int]
     for snode in snodes:
         _apply_comma_colon_int_node(nodes, snode)
-    return unique(nodes)
+    return np.unique(nodes)
 
 def _apply_comma_colon_int_node(nodes, snode):
     """helper method for parse_patran_syntax"""
@@ -87,7 +86,7 @@ def _apply_comma_colon_int_node(nodes, snode):
     else:
         nodes.append(int(snode))
 
-def _apply_colon_set(snode):
+def _apply_colon_set(snode: str) -> List[int]:
     """helper method for parse_patran_syntax"""
     ssnode = snode.split(':')
     if len(ssnode) == 2:
@@ -251,7 +250,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: Dict[str, Optional[int]
                 raise NotImplementedError(snode)
             if key is None:
                 msg = 'data must be of the form "Node 10:13", not "10:13"\n'
-                msg += 'new_set=%s' % array(new_set, dtype='int32')
+                msg += 'new_set=%s' % np.array(new_set, dtype='int32')
                 raise SyntaxError(msg)
             data[key] += new_set
         else:
@@ -265,7 +264,7 @@ def parse_patran_syntax_dict(node_sets: str, pound_dict: Dict[str, Optional[int]
                 if key not in data:
                     data[key] = []
     for key, ints in data.items():
-        data[key] = unique(ints)
+        data[key] = np.unique(ints)
     return data
 
 

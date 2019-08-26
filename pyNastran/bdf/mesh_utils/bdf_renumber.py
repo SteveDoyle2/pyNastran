@@ -18,9 +18,12 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
 
 
-def bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
-                 starting_id_dict=None, round_ids=False, cards_to_skip=None,
-                 log=None, debug=False):
+def bdf_renumber(bdf_filename: Union[str, BDF, StringIO],
+                 bdf_filename_out: str,
+                 size=8, is_double=False,
+                 starting_id_dict=None, round_ids: bool=False,
+                 cards_to_skip: Optional[List[str]]=None,
+                 log=None, debug=False) -> BDF:
     """
     Renumbers a BDF
 
@@ -1177,9 +1180,9 @@ def _update_case_control(model, mapper):
                         eids_missing, nids_missing, values2 = _update_case_key(
                             key, elemental_quantities, seti2, eid_map, nid_map)
                         if eids_missing:
-                            model.log.warning("  couldn't find eids=%s...dropping" % eids_missing)
+                            model.log.warning(f"  couldn't find eids={eids_missing}...dropping")
                         if nids_missing:
-                            model.log.warning("  couldn't find nids=%s...dropping" % nids_missing)
+                            model.log.warning(f"  couldn't find nids={nids_missing}...dropping")
 
 
                         param_type = 'SET-type'

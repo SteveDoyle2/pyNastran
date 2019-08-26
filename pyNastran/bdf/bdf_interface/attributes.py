@@ -849,6 +849,7 @@ class BDFAttributes:
             # parametric
             'pval' : ['PVAL'],
             'gmcurv' : ['GMCURV'],
+            'feedge' : ['FEEDGE'],
             'feface' : ['FEFACE'],
 
             # tables

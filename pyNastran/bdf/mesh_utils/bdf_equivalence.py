@@ -25,7 +25,7 @@ if scipy.__version__ < '0.18.1':  # pragma: no cover
                        'Upgrade your scipy.' % scipy.__version__)
 
 
-def bdf_equivalence_nodes(bdf_filename, bdf_filename_out, tol,
+def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out, tol,
                           renumber_nodes=False, neq_max=4, xref=True,
                           node_set=None,
                           size=8, is_double=False,

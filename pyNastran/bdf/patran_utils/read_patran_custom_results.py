@@ -76,8 +76,8 @@ def read_patran(patran_filename, fdtype='float64', idtype='int32'):
     subtitle = (lines[2].strip() + ';' + lines[3].strip()).rstrip(';')
 
     sline = lines[1].strip().split()
-    nnodes = int(sline[0])
-    max_node = int(sline[1])
+    #nnodes = int(sline[0])
+    #max_node = int(sline[1])
     fmt = sline[2]
     nvalues = int(sline[4])
 
@@ -105,7 +105,7 @@ def read_patran(patran_filename, fdtype='float64', idtype='int32'):
         i16 = i8 + width
         datai = []
         #print('i8=%s i16=%s' % (i8, i16))
-        for ivalue in range(nvalues):
+        for unused_ivalue in range(nvalues):
             value = line[i8:i16]
             i8 += width
             i16 += width
