@@ -687,3 +687,63 @@ class BaseElement(ScalarObject):
                 msg += '%s : (%s, %s), (%s, %s)\n' % (i, eid1, nid1, eid2, nid2)
             print(msg)
             raise ValueError(msg)
+
+    def _build_pandas_transient_elements(self, column_values, column_names, headers, element, data):
+        """common method to build a transient dataframe"""
+        import pandas as pd
+        columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
+
+        eid_item = []
+        for eid in element:
+            for header in headers:
+                eid_item.append([eid, header])
+        ntimes, nelements = data.shape[:2]
+        A = data.reshape(ntimes, nelements*len(headers)).T
+
+        names = ['ElementID', 'Item']
+        index = pd.MultiIndex.from_tuples(eid_item, names=names)
+        data_frame = pd.DataFrame(A, columns=columns, index=index)
+
+        #data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        #data_frame.columns.names = column_names
+        #data_frame.index.names = ['ElementID', 'Item']
+        #print(data_frame)
+        return data_frame
+
+    def _build_pandas_transient_element_node(self, column_values, column_names, headers,
+                                             element_node, data):
+        """common method to build a transient dataframe"""
+        # Freq                  0.00001  10.00000 20.00000 30.00000                 40.00000 50.00000 60.00000
+        # ElementID NodeID Item
+        # 1         0      oxx        0j       0j       0j       0j    (3200.0806+6017.714j)       0j       0j
+        #                  oyy        0j       0j       0j       0j    (410.68146+772.2816j)       0j       0j
+        #                  ozz        0j       0j       0j       0j    (0.306115+0.5756457j)       0j       0j
+        #                  txy        0j       0j       0j       0j  (-120.69606-226.96753j)       0j       0j
+        #                  tyz        0j       0j       0j       0j  (0.70554054+1.3267606j)       0j       0j
+        #                  txz        0j       0j       0j       0j     (5193.834+9766.943j)       0j       0j
+        # 2                oxx        0j       0j       0j       0j    (8423.371+15840.051j)       0j       0j
+        #                  oyy        0j       0j       0j       0j    (-3364.359-6326.637j)       0j       0j
+        #                  ozz        0j       0j       0j       0j  (-74931.664-140908.11j)       0j       0j
+        #                  txy        0j       0j       0j       0j  (-261.20972-491.20178j)       0j       0j
+        #                  tyz        0j       0j       0j       0j   (121.57285+228.61633j)       0j       0j
+        #                  txz        0j       0j       0j       0j     (5072.678+9539.112j)       0j       0j
+        import pandas as pd
+        columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
+
+        eid_nid_item = []
+        for eid, nid in element_node:
+            for header in headers:
+                eid_nid_item.append([eid, nid, header])
+        ntimes, nelements = data.shape[:2]
+        A = data.reshape(ntimes, nelements*len(headers)).T
+
+        names = ['ElementID', 'NodeID', 'Item']
+        index = pd.MultiIndex.from_tuples(eid_nid_item, names=names)
+        data_frame = pd.DataFrame(A, columns=columns, index=index)
+
+        #element_node = [element_node[:, 0], element_node[:, 1]]
+        #data_frame = pd.Panel(data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+        #data_frame.columns.names = column_names
+        #data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+        #print(data_frame)
+        return data_frame

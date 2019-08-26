@@ -76,10 +76,13 @@ class ComplexRodForceArray(ComplexForceObject):
         import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        data_frame = self._build_pandas_transient_elements(column_values, column_names,
+                                                           headers, self.element, self.data)
+        #data_frame = pd.Panel(self.data, items=column_values,
+                              #major_axis=self.element, minor_axis=headers).to_frame()
+        #data_frame.columns.names = column_names
+        #data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         self._eq_header(table)
@@ -201,9 +204,9 @@ class ComplexRodForceArray(ComplexForceObject):
 
         eids = self.element
         #is_odd = False
-        nwrite = len(eids)
-        if len(eids) % 2 == 1:
-            nwrite -= 1
+        #nwrite = len(eids)
+        #if len(eids) % 2 == 1:
+            #nwrite -= 1
             #is_odd = True
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
@@ -750,9 +753,9 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
 
         eids = self.element
         #is_odd = False
-        nwrite = len(eids)
-        if len(eids) % 2 == 1:
-            nwrite -= 1
+        #nwrite = len(eids)
+        #if len(eids) % 2 == 1:
+            #nwrite -= 1
             #is_odd = True
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
@@ -1106,13 +1109,33 @@ class ComplexPlateForceArray(ComplexForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        # Freq           0.00001  10.00000 20.00000 30.00000                 40.00000 50.00000 60.00000
+        # ElementID Item
+        #8         mx         0j       0j       0j       0j   (-361.6303-680.04156j)       0j       0j
+        #          my         0j       0j       0j       0j  (-7884.6196-14826.936j)       0j       0j
+        #          mxy        0j       0j       0j       0j    (-237.5723-446.7519j)       0j       0j
+        #          bmx        0j       0j       0j       0j   (5.514431+10.3698225j)       0j       0j
+        #          bmy        0j       0j       0j       0j    (10.107019+19.00613j)       0j       0j
+        #          bmxy       0j       0j       0j       0j  (-16.361727-30.768036j)       0j       0j
+        #          tx         0j       0j       0j       0j     (18.819313+35.3895j)       0j       0j
+        #          ty         0j       0j       0j       0j   (-61.55238-115.74853j)       0j       0j
+        #9         mx         0j       0j       0j       0j   (1086.9078+2043.9175j)       0j       0j
+        #          my         0j       0j       0j       0j    (8089.895+15212.953j)       0j       0j
+        #          mxy        0j       0j       0j       0j   (-4725.3286-8885.925j)       0j       0j
+        #          bmx        0j       0j       0j       0j   (-3.9810739-7.486363j)       0j       0j
+        #          bmy        0j       0j       0j       0j  (-10.283798-19.338562j)       0j       0j
+        #          bmxy       0j       0j       0j       0j   (-8.663734-16.292051j)       0j       0j
+        #          tx         0j       0j       0j       0j    (54.14508+101.81919j)       0j       0j
+        #          ty         0j       0j       0j       0j   (-61.92162-116.44288j)       0j       0j
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        data_frame = self._build_pandas_transient_elements(column_values, column_names,
+                                                           headers, self.element, self.data)
+        #data_frame = pd.Panel(self.data, items=column_values,
+                                   #major_axis=self.element, minor_axis=headers).to_frame()
+        #data_frame.columns.names = column_names
+        #data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
@@ -1430,15 +1453,39 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         assert 0 not in self.element_node[:, 0]
         if self.nonlinear_factor not in (None, np.nan):
+            # Freq                  0.00001  10.00000 20.00000 30.00000                  40.00000 50.00000 60.00000
+            # ElementID NodeID Item
+            # 6         0      mx         0j       0j       0j       0j    (-705.7376-1327.1312j)       0j       0j
+            #                  my         0j       0j       0j       0j      (7404.8853+13924.8j)       0j       0j
+            #                  mxy        0j       0j       0j       0j  (-101.319756-190.53061j)       0j       0j
+            #                  bmx        0j       0j       0j       0j    (3.0701134+5.7733126j)       0j       0j
+            #                  bmy        0j       0j       0j       0j     (98.75731+185.71196j)       0j       0j
+            #                  bmxy       0j       0j       0j       0j   (0.25202343+0.4739271j)       0j       0j
+            #                  tx         0j       0j       0j       0j    (14.426779+27.129389j)       0j       0j
+            #                  ty         0j       0j       0j       0j     (-199.6823-375.5002j)       0j       0j
+            #           4      mx         0j       0j       0j       0j    (-2934.639-5518.5537j)       0j       0j
+            #                  my         0j       0j       0j       0j    (7516.2485+14134.217j)       0j       0j
+            #                  mxy        0j       0j       0j       0j  (-101.319756-190.53061j)       0j       0j
+            #                  bmx        0j       0j       0j       0j    (-19.69526-37.036705j)       0j       0j
+            #                  bmy        0j       0j       0j       0j     (100.64615+189.2639j)       0j       0j
+            #                  bmxy       0j       0j       0j       0j   (0.25202343+0.4739271j)       0j       0j
+            #                  tx         0j       0j       0j       0j    (14.426779+27.129389j)       0j       0j
+            #                  ty         0j       0j       0j       0j     (-199.6823-375.5002j)       0j       0j
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element_node, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
+            data_frame = self._build_pandas_transient_element_node(
+                column_values, column_names,
+                headers, self.element_node, self.data)
+
+            #data_frame = pd.Panel(self.data, items=column_values,
+                                  #major_axis=element_node, minor_axis=headers).to_frame()
+            #data_frame.columns.names = column_names
+            #data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=element_node, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            data_frame = pd.Panel(self.data,
+                                  major_axis=element_node, minor_axis=headers).to_frame()
+            data_frame.columns.names = ['Static']
+            data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         self._eq_header(table)
@@ -1786,13 +1833,15 @@ class ComplexCBarForceArray(ComplexForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        data_frame = self._build_pandas_transient_elements(column_values, column_names,
+                                                           headers, self.element, self.data)
+        #self.data_frame = pd.Panel(self.data, items=column_values,
+                                   #major_axis=self.element, minor_axis=headers).to_frame()
+        #self.data_frame.columns.names = column_names
+        #self.data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
@@ -2138,6 +2187,22 @@ class ComplexCBeamForceArray(ComplexForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
+        # Freq                                          0.00001             10.00000  ...            50.00000            60.00000
+        # ElementID Location Item                                                     ...
+        # 12.0      12.0     bending_moment1  0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    bending_moment2  0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    shear1           0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    shear2           0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    axial_force      0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    total_torque     0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    warping_torque   0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        # 0.0       1.0      bending_moment1  0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    bending_moment2  0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    shear1           0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    shear2           0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    axial_force      0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    total_torque     0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
+        #                    warping_torque   0.000000+0.000000j  0.000000+0.000000j  ...  0.000000+0.000000j  0.000000+0.000000j
         import pandas as pd
         headers = self.get_headers()[1:]
         column_names, column_values = self._build_dataframe_transient_header()
@@ -2145,11 +2210,24 @@ class ComplexCBeamForceArray(ComplexForceObject):
             self.element_node[:, 0],
             self.data[0, :, 0].real,
         ]
-        self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
-                                   major_axis=element_location, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Location', 'Item']
-        #print(self.data_frame)
+        is_v25 = pd.__version__ >= '0.25'
+        if is_v25:
+            print(f'skipping pandas {self.class_name}')
+            return
+        # wrong type for ElementID
+        #data_frame = self._build_pandas_transient_element_node(
+            #column_values, column_names,
+            #headers, element_location, self.data[:, :, 1:])
+        #data_frame.index.names = ['ElementID', 'Location', 'Item']
+        #data_frame.index['ElementID', :]# .astype('int32')
+        #print(data_frame)
+
+        data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
+                              major_axis=element_location, minor_axis=headers).to_frame()
+        data_frame.columns.names = column_names
+        data_frame.index.names = ['ElementID', 'Location', 'Item']
+        #print(data_frame)
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         return self.assert_equal(table)

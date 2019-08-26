@@ -73,13 +73,26 @@ class ComplexBarArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        # Freq            0.00001  10.00000 20.00000 30.00000 40.00000 50.00000 60.00000
+        # ElementID Item
+        # 13        s1a         0j       0j       0j       0j       0j       0j       0j
+        #           s1b         0j       0j       0j       0j       0j       0j       0j
+        #           s1c         0j       0j       0j       0j       0j       0j       0j
+        #           s1d         0j       0j       0j       0j       0j       0j       0j
+        #           axial  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)
+        #           s2a    (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)
+        #           s2b    (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)
+        #           s2c    (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)
+        #           s2d    (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        data_frame = self._build_pandas_transient_elements(column_values, column_names,
+                                                           headers, self.element, self.data)
+        #data_frame = pd.Panel(self.data, items=column_values,
+                              #major_axis=self.element, minor_axis=headers).to_frame()
+        #data_frame.columns.names = column_names
+        #data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

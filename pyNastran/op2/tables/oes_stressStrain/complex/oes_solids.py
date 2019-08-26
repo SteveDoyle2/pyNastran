@@ -119,13 +119,32 @@ class ComplexSolidArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        # Freq                  0.00001  10.00000 20.00000 30.00000                 40.00000 50.00000 60.00000
+        # ElementID NodeID Item
+        # 1         0      oxx        0j       0j       0j       0j    (3200.0806+6017.714j)       0j       0j
+        #                  oyy        0j       0j       0j       0j    (410.68146+772.2816j)       0j       0j
+        #                  ozz        0j       0j       0j       0j    (0.306115+0.5756457j)       0j       0j
+        #                  txy        0j       0j       0j       0j  (-120.69606-226.96753j)       0j       0j
+        #                  tyz        0j       0j       0j       0j  (0.70554054+1.3267606j)       0j       0j
+        #                  txz        0j       0j       0j       0j     (5193.834+9766.943j)       0j       0j
+        # 2                oxx        0j       0j       0j       0j    (8423.371+15840.051j)       0j       0j
+        #                  oyy        0j       0j       0j       0j    (-3364.359-6326.637j)       0j       0j
+        #                  ozz        0j       0j       0j       0j  (-74931.664-140908.11j)       0j       0j
+        #                  txy        0j       0j       0j       0j  (-261.20972-491.20178j)       0j       0j
+        #                  tyz        0j       0j       0j       0j   (121.57285+228.61633j)       0j       0j
+        #                  txz        0j       0j       0j       0j     (5072.678+9539.112j)       0j       0j
+        #import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        element_node = [self.element_node[:, 0], self.element_node[:, 1]]
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+        data_frame = self._build_pandas_transient_element_node(column_values, column_names,
+                                                               headers, self.element_node, self.data)
+
+        #element_node = [self.element_node[:, 0], self.element_node[:, 1]]
+        #data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
+        #data_frame.columns.names = column_names
+        #data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+        #print(data_frame)
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

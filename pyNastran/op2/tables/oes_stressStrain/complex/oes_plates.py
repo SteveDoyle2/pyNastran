@@ -196,13 +196,24 @@ class ComplexPlateArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        #import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element_node, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        #is_v25 = pd.__version__ >= '0.25'
+        #if is_v25:
+            #print(f'skipping pandas {self.class_name}')
+            #return
+        #else:
+            #data_frame = pd.Panel(self.data, items=column_values,
+                                  #major_axis=self.element_node, minor_axis=headers).to_frame()
+            #data_frame.columns.names = column_names
+            #data_frame.index.names = ['ElementID', 'Item']
+
+        data_frame = self._build_pandas_transient_element_node(
+            column_values, column_names,
+            headers, self.element_node, self.data)
+        #print(data_frame)
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
