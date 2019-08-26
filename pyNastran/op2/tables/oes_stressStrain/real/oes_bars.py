@@ -101,18 +101,22 @@ class RealBarArray(OES_Object):
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
+            #data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            #data_frame.columns.names = column_names
+            #data_frame.index.names = ['ElementID', 'Item']
         else:
             if is_v25:
-                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
-                self.data_frame.index.name = 'ElementID'
-                self.data_frame.columns.names = ['Static']
+                data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+                data_frame.index.name = 'ElementID'
+                data_frame.columns.names = ['Static']
             else:
-                self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = ['Static']
-                self.data_frame.index.names = ['ElementID', 'Item']
+                data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+                data_frame.columns.names = ['Static']
+                data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

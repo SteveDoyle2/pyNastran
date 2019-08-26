@@ -1,5 +1,5 @@
 #pylint disable=C0301
-from itertools import count
+#from itertools import count
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -7,7 +7,7 @@ from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.result_objects.op2_objects import BaseElement
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_12e,
-    write_float_13e, write_float_12e,
+    write_float_13e, # write_float_12e,
     _eigenvalue_header,
 )
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
@@ -2706,29 +2706,27 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            # Create a 3D Panel
             #column_values = [modes, freq]
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            #self.data_frame = self.data_frame.to_frame()
-
-            # Define names for column labels
-            self.data_frame.columns.names = column_names
-
-            # Define names for the row labels
-            self.data_frame.index.names = ['ElementID', 'Item']
+            #data_frame = pd.Panel(self.data, items=column_values,
+                                  #major_axis=self.element, minor_axis=headers).to_frame()
+            #data_frame.columns.names = column_names
+            #data_frame.index.names = ['ElementID', 'Item']
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
             if is_v25:
-                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
-                self.data_frame.index.name = 'ElementID'
-                self.data_frame.columns.names = ['Static']
+                data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+                data_frame.index.name = 'ElementID'
+                data_frame.columns.names = ['Static']
             else:
-                self.data_frame = pd.Panel(self.data,
-                                           major_axis=self.element, minor_axis=headers).to_frame()
+                data_frame = pd.Panel(self.data,
+                                      major_axis=self.element, minor_axis=headers).to_frame()
                 #cbar_forces = cbar_forces.to_frame()
-                self.data_frame.columns.names = ['Static']
+                data_frame.columns.names = ['Static']
                 # Define names for the row labels
-                self.data_frame.index.names = ['ElementID', 'Item']
+                data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def add_sort1(self, dt, eid, bending_moment_a1, bending_moment_a2,
                   bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque):
@@ -4355,15 +4353,19 @@ class RealCBushForceArray(RealForceObject):
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
+            #data_frame = pd.Panel(self.data, items=column_values,
+                                  #major_axis=self.element, minor_axis=headers).to_frame()
+            #data_frame.columns.names = column_names
+            #data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = pd.Panel(self.data,
+                                  major_axis=self.element, minor_axis=headers).to_frame()
+            data_frame.columns.names = ['Static']
+            data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

@@ -88,9 +88,15 @@ class RealRodArray(OES_Object):
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            data_frame.columns.names = column_names
-            data_frame.index.names = ['ElementID', 'Item']
+            #if is_v25:
+                #print(f'skipping pandas {self.class_name}')
+                #return
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
+            #data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+            #data_frame.columns.names = column_names
+            #data_frame.index.names = ['ElementID', 'Item']
         else:
             #if is_v25:
             #Static     axial           SMa  torsion           SMt

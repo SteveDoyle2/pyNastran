@@ -122,18 +122,21 @@ class RealPlateArray(OES_Object):
 
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element_node, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
+            #data_frame = self._build_pandas_transient_element_node(
+                #column_values, column_names,
+                #headers, self.element_node, self.data)
+            data_frame = pd.Panel(self.data, items=column_values,
+                                  major_axis=element_node, minor_axis=headers).to_frame()
+            data_frame.columns.names = column_names
+            data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
         else:
             # option B - nice!
             df1 = pd.DataFrame(element_node).T
             df1.columns = ['ElementID', 'NodeID', 'Location']
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
-            self.data_frame = df1.join(df2)
-        self.data_frame = self.data_frame.reset_index().replace(
+            data_frame = df1.join(df2)
+        self.data_frame = data_frame.reset_index().replace(
             {'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
         #print(self.data_frame)
 
