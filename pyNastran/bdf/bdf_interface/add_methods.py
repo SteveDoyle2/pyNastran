@@ -1413,10 +1413,14 @@ class AddMethods(BDFAttributes):
 
     #---------------------------------------------------------------------------
     # parametric
+    def _add_pset(self, pset, allow_overwrites: bool=False):
+        self.pset[pset.idi] = pset
     def _add_pval(self, pval, allow_overwrites: bool=False):
         self.pval[pval.idi] = pval
     def _add_gmcurv(self, curve, allow_overwrites: bool=False):
         self.gmcurv[curve.curve_id] = curve
+    #def _add_gmsurf(self, surf, allow_overwrites: bool=False):
+        #self.gmsurf[surf.surf_id] = surf
     def _add_feface(self, face, allow_overwrites: bool=False):
         self.feface[face.face_id] = face
     def _add_feedge(self, edge, allow_overwrites: bool=False):

@@ -135,7 +135,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
-from pyNastran.bdf.cards.parametric.geometry import PVAL, FEEDGE, FEFACE, GMCURV
+from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV
 
 from pyNastran.utils.numpy_utils import integer_string_types
 
@@ -669,6 +669,8 @@ CARD_MAP = {
     'ROTORD' : ROTORD,
 
     # parametric
+    'PSET' : PSET,
+    'PVAL' : PVAL,
     'GMCURV' : GMCURV,
     'FEEDGE' : FEEDGE,
     'FEFACE' : FEFACE,
@@ -7838,6 +7840,11 @@ class AddCards(AddMethods):
 
     #----------------------------------------------------------------------------------
     # parametric
+    def add_pset(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment=''):
+        """PSET ID POLY1 POLY2 POLY3 CID SETTYP ID"""
+        pset = PSET(idi, poly1, poly2, poly3, cid, typei, typeids, comment='')
+        self.pset[idi] = pset
+
     def add_pval(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment=''):
         """PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID"""
         pval = PVAL(idi, poly1, poly2, poly3, cid, typei, typeids, comment='')
@@ -7847,6 +7854,11 @@ class AddCards(AddMethods):
         curve = GMCURV(curve_id, group_btyes, cid_in, cid_bc, data)
         self.gmcurv[curve_id] = curve
         return curve
+
+    #def add_gmsurf(self, curve_id, group_btyes, cid_in, cid_bc, data):
+        #surf = GMCURV(curve_id, group_btyes, cid_in, cid_bc, data)
+        #self.gmsurf[curve_id] = surf
+        #return surf
 
     def add_feedge(self, edge_id, nids, cid, geom_ids, geomin='POINT'):
         edge = FEEDGE(edge_id, nids, cid, geom_ids, geomin=geomin)

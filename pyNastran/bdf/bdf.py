@@ -152,7 +152,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
-from pyNastran.bdf.cards.parametric.geometry import PVAL, FEEDGE, FEFACE, GMCURV
+from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_methods import BDFMethods
@@ -499,7 +499,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #------------------------------------------------------------------
             ## parametric
-            'PVAL', 'GMCURV', 'FEEDGE', 'FEFACE',
+            'PSET', 'PVAL', 'GMCURV', 'FEEDGE', 'FEFACE',
 
             #------------------------------------------------------------------
             ## tables
@@ -1784,8 +1784,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CORD2S' : (CORD2S, self._add_coord_object),
 
             # parametric
+            'PSET' : (PSET, self._add_pset),
             'PVAL' : (PVAL, self._add_pval),
             'GMCURV' : (GMCURV, self._add_gmcurv),
+            #'GMSURF' : (GMSURF, self._add_gmsurf),
             'FEFACE' : (FEFACE, self._add_feface),
             'FEEDGE' : (FEEDGE, self._add_feedge),
 

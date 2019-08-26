@@ -122,7 +122,7 @@ def main():
     from docopt import docopt
     ver = str(pyNastran.__version__)
 
-    is_release = False
+    #is_release = False
     msg = (
         'Usage:\n'
         'bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C] [--safe]\n'

@@ -870,8 +870,11 @@ class WriteMesh(BDFAttributes):
     def _write_parametric(self, bdf_file: Any, size: int=8, is_double: bool=False,
                           is_long_ids: Optional[bool]=None) -> None:
         """Writes the optimization cards sorted by ID"""
-        is_parametric = self.pval or self.gmcurv or self.feedge or self.feface
+        is_parametric = self.pset or self.pval or self.gmcurv or self.feedge or self.feface
         if is_parametric:
+            for (unused_id, pset) in sorted(self.pset.items()):
+                bdf_file.write(pset.write_card(size, is_double))
+
             for (unused_id, pval) in sorted(self.pval.items()):
                 bdf_file.write(pval.write_card(size, is_double))
 

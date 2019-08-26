@@ -72,6 +72,9 @@ dict_int_obj_attrs = [
     'tics',
     'tstepnls', 'tsteps',
     'view3ds', 'views',
+
+    # parametric
+    'pset', 'pval', 'gmcurv', 'feedge', 'feface',
 ]
 
 scalar_obj_keys = [
@@ -524,8 +527,8 @@ def _export_list_obj_keys(model, hdf5_file, list_obj_keys, encoding):
         _hdf5_export_object_dict(group, model, attr, list_obj, indices, encoding)
 
 
-def _h5_export_class(sub_group, model, key, value, skip_attrs, encoding, debug=True):
-    # type: (Any, Any, str, Any, List[str], str, bool) -> None
+def _h5_export_class(sub_group: Any, model: Any, key: str, value: Any,
+                     skip_attrs: List[str], encoding: str, debug: bool=True) -> None:
     #model.log.debug('exporting %s to hdf5' % key)
     #sub_groupi = sub_group.create_group('values')
     class_group = sub_group.create_group(str(key))
@@ -821,7 +824,7 @@ def _hdf5_export_group(hdf5_file, model, group_name, encoding, debug=False):
         #model.log.debug('skipping %s to hdf5' % group_name)
 
 def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
-    i = 0
+    #i = 0
     skip_attrs = ['comment', '_field_map']
 
     keys_write = list(keys)
@@ -855,7 +858,7 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
             # for debugging
             #sub_group2 = group.create_group('values2')
             #_h5_export_class(sub_group2, model, key, value, skip_attrs, encoding, debug=True)
-        i += 1
+        #i += 1
 
     #group.attrs['type'] = class_name
     #print('%s keys = %s' % (name, keys))

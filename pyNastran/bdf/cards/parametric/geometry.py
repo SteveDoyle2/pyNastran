@@ -1,5 +1,8 @@
 from pyNastran.bdf.cards.base_card import BaseCard
+from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.bdf_interface.utils import to_fields
+
 
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, # integer_or_string,
@@ -26,6 +29,17 @@ class PSET(BaseCard):
         self.idi = idi
 
     @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        poly1 = 1
+        poly2 = 1
+        poly3 = 1
+        cid = None
+        typei = 'SET'
+        idi = 42
+        return PSET(sid, poly1, poly2, poly3, cid, typei, idi, comment='')
+
+    @classmethod
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         poly1 = integer(card, 2, 'poly1')
@@ -37,7 +51,7 @@ class PSET(BaseCard):
         return PSET(sid, poly1, poly2, poly3, cid, typei, idi, comment=comment)
 
     def raw_fields(self):
-        return ['PVAL', self.sid, self.poly1, self.poly2, self.poly3, self.cid, self.Type, self.idi]
+        return ['PSET', self.sid, self.poly1, self.poly2, self.poly3, self.cid, self.Type, self.idi]
 
     def write_card(self, size=8, is_double=False):
         fields = self.raw_fields()
@@ -62,6 +76,17 @@ class PVAL(BaseCard):
         self.cid = cid
         self.Type = typei
         self.typeids = typeids
+
+    @classmethod
+    def _init_from_empty(cls):
+        idi = 1
+        poly1 = 1
+        poly2 = 1
+        poly3 = 1
+        cid = None
+        typei = 'SET'
+        typeids = 42
+        return PVAL(idi, poly1, poly2, poly3, cid, typei, typeids)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -94,7 +119,15 @@ class FEEDGE(BaseCard):
         self.geom_ids = geom_ids
         assert geomin in ['POINT', 'GMCURV'], geomin
         if geom_ids[0] == 0:
-            assert geom_ids[1] is None, f'geom1 must be 0 when geom_id1=0; geom_ids={geom_ids}'
+            assert geom_ids[1] == 0, f'geom1 must be 0 when geom_id1=0; geom_ids={geom_ids}'
+
+    @classmethod
+    def _init_from_empty(cls):
+        edge_id = 1
+        nids = [1, 2]
+        cid = None
+        geom_ids = [0, 0]
+        return FEEDGE(edge_id, nids, cid, geom_ids, geomin='POINT', comment='')
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -135,6 +168,14 @@ class FEFACE(BaseCard):
         self.surf_ids = surf_ids
 
     @classmethod
+    def _init_from_empty(cls):
+        face_id = 1
+        nids = [1, 2]
+        cid = None
+        surf_id = 0
+        return FEFACE(face_id, nids, cid, surf_id, comment='')
+
+    @classmethod
     def add_card(cls, card, comment=''):
         face_id = integer(card, 1, 'face_id')
         nid1 = integer(card, 2, 'nid1')
@@ -165,20 +206,25 @@ class GMCURV(BaseCard):
         self.cid_in = cid_in
         self.cid_bc = cid_bc
         self.data = data
+        assert isinstance(data, list), type(data)
         assert group in ['MSCGRP0', 'MSCGRP1', 'MSCGRP2'], group
 
     @classmethod
-    def add_card(cls, card_lines, comment=''):
-        #print(card_lines)
-        from pyNastran.bdf.bdf_interface.utils import to_fields
-        from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
+    def _init_from_empty(cls):
+        curve_id = 1
+        group = 'MSCGRP0'
+        cid_in = None
+        cid_bc = None
+        data = ['CAT']
+        return GMCURV(curve_id, group, cid_in, cid_bc, data, comment='')
 
+    @classmethod
+    def add_card(cls, card_lines, comment=''):
         card = BDFCard(to_fields([card_lines[0]], 'GMCURV'))
         curve_id = integer(card, 1, 'curve_id')
         group = string(card, 2, 'group')
         cid_in = integer(card, 3, 'cid_in')
         cid_bc = integer(card, 4, 'cid_bc')
-        #print(card.fields())
         data = card_lines[1:]
         return GMCURV(curve_id, group, cid_in, cid_bc, data, comment=comment)
 
@@ -186,12 +232,17 @@ class GMCURV(BaseCard):
         return ['GMCURV', self.curve_id, self.group, self.cid_in, self.cid_bc, self.data]
 
     def write_card(self, size=8, is_double=False):
-        data = self.data.strip()
+        #data = self.data.strip()
         #print(repr(data))
-        data_split = ['        %s\n' % data[i:i+64].strip() for i in range(0, len(data), 64)]
+        #data_split = ['        %s\n' % data[i:i+64].strip() for i in range(0, len(data), 64)]
+
+        data_split = self.data
         #print(data_split)
         msg = 'GMCURV  %8i%8s%8i%8i\n' % (
             self.curve_id, self.group, self.cid_in, self.cid_bc)
-        msg += ''.join(data_split)
-        print(msg)
+        #msg += ''.join(data_split)
+        msg += '\n'.join(data_split) + '\n'
         return msg
+
+    def __repr__(self):
+        return self.write_card(size=8, is_double=False)

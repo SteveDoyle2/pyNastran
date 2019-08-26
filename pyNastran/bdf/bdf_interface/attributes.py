@@ -437,6 +437,7 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         #: parametric
+        self.pset = {}
         self.pval = {}
         self.gmcurv = {}
         self.feedge = {}
@@ -847,8 +848,10 @@ class BDFAttributes:
             # SEBSEP
 
             # parametric
+            'pset' : ['PSET'],
             'pval' : ['PVAL'],
             'gmcurv' : ['GMCURV'],
+            'gmsurf' : ['GMSURF'],
             'feedge' : ['FEEDGE'],
             'feface' : ['FEFACE'],
 
