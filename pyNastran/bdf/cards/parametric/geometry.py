@@ -43,8 +43,8 @@ class PSET(BaseCard):
     def add_card(cls, card, comment=''):
         sid = integer(card, 1, 'sid')
         poly1 = integer(card, 2, 'poly1')
-        poly2 = integer(card, 3, 'poly2')
-        poly3 = integer(card, 4, 'poly3')
+        poly2 = integer_or_blank(card, 3, 'poly2', poly1)
+        poly3 = integer_or_blank(card, 4, 'poly3', poly1)
         cid = integer_or_blank(card, 5, 'cid')
         typei = string_or_blank(card, 6, 'typei', 'SET')
         idi = integer_or_blank(card, 7, 'id', 999999)
@@ -92,11 +92,11 @@ class PVAL(BaseCard):
     def add_card(cls, card, comment=''):
         idi = integer(card, 1, 'idi')
         poly1 = integer(card, 2, 'nid1')
-        poly2 = integer(card, 3, 'poly2')
-        poly3 = integer(card, 4, 'poly3')
+        poly2 = integer_or_blank(card, 3, 'poly2', poly1)
+        poly3 = integer_or_blank(card, 4, 'poly3', poly1)
         cid = integer_or_blank(card, 5, 'cid')
         typei = string_or_blank(card, 6, 'typei', 'SET')
-        typeids = integer(card, 7, 'typeids') # 999999
+        typeids = integer_or_blank(card, 7, 'typeids', 999999)
         return PVAL(idi, poly1, poly2, poly3, cid, typei, typeids, comment=comment)
 
     def raw_fields(self):
@@ -118,7 +118,24 @@ class FEEDGE(BaseCard):
         self.geomin = geomin
         self.geom_ids = geom_ids
         assert geomin in ['POINT', 'GMCURV'], geomin
+        geom_ids = [idi if idi is not None else 0
+                    for  idi in geom_ids]
+        #if geom_ids[0] is None:
+            #geom_ids[0] = 0
+        #if geom_ids[1] is None:
+            #geom_ids[1] = 0
         if geom_ids[0] == 0:
+            # ID1      ID2      Shape of the FEEDGE
+            # =======  =======  ===================
+            # Blank/0  Blank/0  Linear
+            # >0       Blank/0  Quadratic
+            # >0      >0        Cubic
+            # Blank/0 >0        Not allowed
+
+            # 0        0        Linear
+            # >0       0        Quadratic
+            # >0      >0        Cubic
+            # 0       >0        Not allowed
             assert geom_ids[1] == 0, f'geom1 must be 0 when geom_id1=0; geom_ids={geom_ids}'
 
     @classmethod
@@ -198,7 +215,7 @@ class FEFACE(BaseCard):
 
 class GMCURV(BaseCard):
     type = 'GMCURV'
-    def __init__(self, curve_id, group, cid_in, cid_bc, data, comment=''):
+    def __init__(self, curve_id, group, data, cid_in=0, cid_bc=0, comment=''):
         if comment:
             self.comment = comment
         self.curve_id = curve_id
@@ -213,20 +230,18 @@ class GMCURV(BaseCard):
     def _init_from_empty(cls):
         curve_id = 1
         group = 'MSCGRP0'
-        cid_in = None
-        cid_bc = None
         data = ['CAT']
-        return GMCURV(curve_id, group, cid_in, cid_bc, data, comment='')
+        return GMCURV(curve_id, group, data, cid_in=0, cid_bc=0, comment='')
 
     @classmethod
     def add_card(cls, card_lines, comment=''):
         card = BDFCard(to_fields([card_lines[0]], 'GMCURV'))
         curve_id = integer(card, 1, 'curve_id')
         group = string(card, 2, 'group')
-        cid_in = integer(card, 3, 'cid_in')
-        cid_bc = integer(card, 4, 'cid_bc')
+        cid_in = integer_or_blank(card, 3, 'cid_in', 0)
+        cid_bc = integer_or_blank(card, 4, 'cid_bc', 0)
         data = card_lines[1:]
-        return GMCURV(curve_id, group, cid_in, cid_bc, data, comment=comment)
+        return GMCURV(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc, comment=comment)
 
     def raw_fields(self):
         return ['GMCURV', self.curve_id, self.group, self.cid_in, self.cid_bc, self.data]

@@ -30,14 +30,14 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.errors import (
     #CrossReferenceError,
     CardParseSyntaxError, DuplicateIDsError, MissingDeckSections,
-    #UnsupportedCard,
+    UnsupportedCard,
     DisabledCardError,
     ReplicationError,
 )
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
-from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_breakdown
+#from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_breakdown
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 #from pyNastran.bdf.mesh_utils.convert import convert
@@ -411,10 +411,10 @@ def run_and_compare_fems(
         if not dev:
             raise
         print('failed test because CardParseSyntaxError...ignoring')
-    #except UnsupportedCard:
-        #if not dev:
-            #raise
-        #print('failed test because UnsupportedCard...ignoring')
+    except UnsupportedCard:
+        if not dev:
+            raise
+        print('failed test because UnsupportedCard /...ignoring')
     except MissingDeckSections:
         if not dev:
             raise
@@ -1010,7 +1010,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
                                           RuntimeError, log, ierror, nerrors)
     elif sol in [3, 103]:
         msg = 'sol=%s\n%s' % (sol, subcase)
-        ierror = check_for_optional_param(('METHOD', 'RSMETHOD', 'RIGID', 'BOLTID'), subcase, msg,
+        ierror = check_for_optional_param(('METHOD', 'RSMETHOD', 'RIGID', 'BOLTID', 'BGSET'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
     elif sol == 105: # buckling
         _assert_has_spc(subcase, fem2)
@@ -1033,7 +1033,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
     elif sol == 106: # freq
         assert 'NLPARM' in subcase, subcase
         msg = 'sol=%s\n%s' % (sol, subcase)
-        ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)'), subcase, msg,
+        ierror = check_for_optional_param(('LOAD', 'TEMPERATURE(LOAD)', 'CLOAD'), subcase, msg,
                                           RuntimeError, log, ierror, nerrors)
     elif sol == 107: # ???
         _assert_has_spc(subcase, fem2)
@@ -1354,19 +1354,32 @@ def _tstep_msg(fem, subcase, tstep_id, tstep_type=''):
     return msg
 
 
-def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
-                           ierror=0, nerrors=100, stop_on_failure=True):
+def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
+                           ierror: int=0, nerrors: int=100, stop_on_failure: bool=True) -> int:
     """helper method for ``check_case``"""
     log = fem2.log
-    if any(subcase.has_parameter('TIME', 'TSTEP')):
-        if 'TIME' in subcase:
-            tstep_id = subcase.get_parameter('TIME')[0]
-        elif 'TSTEP' in subcase:
-            tstep_id = subcase.get_parameter('TSTEP')[0]
+    if fem2.sol == 401:
+        # TSTEP references a TSTEP1, but not a TSTEP
+        # TSTEP1s are stored in tstepnls
+        if any(subcase.has_parameter('TIME', 'TSTEP')):
+            if 'TSTEP' in subcase:
+                tstep_id = subcase.get_parameter('TSTEP')[0]
+            else:  # pragma: no cover
+                raise NotImplementedError(subcase)
+            if tstep_id not in fem2.tstepnls:
+                raise RuntimeError(_tstep_msg(fem2, subcase, tstep_id))
         else:
-            raise NotImplementedError(subcase)
-        if tstep_id not in fem2.tsteps:
-            raise RuntimeError(_tstep_msg(fem2, subcase, tstep_id))
+            raise RuntimeError(f'missing TSTEP in case control deck\n{subcase}')
+    else:
+        if any(subcase.has_parameter('TIME', 'TSTEP')):
+            if 'TIME' in subcase:
+                tstep_id = subcase.get_parameter('TIME')[0]
+            elif 'TSTEP' in subcase:
+                tstep_id = subcase.get_parameter('TSTEP')[0]
+            else:  # pragma: no cover
+                raise NotImplementedError(subcase)
+            if tstep_id not in fem2.tsteps:
+                raise RuntimeError(_tstep_msg(fem2, subcase, tstep_id))
 
     if 'TSTEPNL' in subcase:
         tstepnl_id = subcase.get_parameter('TSTEPNL')[0]
@@ -1596,7 +1609,7 @@ def _check_case_parameters(subcase, fem2, p0, isubcase, sol,
                     if freq.type in ['FREQ', 'FREQ1', 'FREQ2']:
                         fmax = freq.freqs[-1]
                         force = load2.get_load_at_freq(fmax) * scale_factor
-        elif sol in [109, 129]:  # direct transient (time linear), time nonlinear
+        elif sol in [109, 129, 401]:  # direct transient (time linear), time nonlinear, NX nonlinear???
             for load2, scale_factor in zip(loads, scale_factors):
                 force = load2.get_load_at_time(0.) * scale_factor
         elif  sol == 200:
@@ -1797,12 +1810,12 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
     if not quiet:
         if fem1.wtmass != 1.0:
             print('weight = %s' % (mass1 / fem1.wtmass))
-        print('mass = %s' % mass1)
-        print('cg   = %s' % cg1)
+        print(f'mass = {mass1}')
+        print(f'cg   = {cg1}')
         print('Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
-    assert np.allclose(mass1, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
-    assert np.allclose(cg1, cg2), 'mass=%s\ncg1=%s cg2=%s' % (mass1, cg1, cg2)
-    assert np.allclose(inertia1, inertia2, atol=1e-5), 'mass=%s cg=%s\ninertia1=%s\ninertia2=%s\ndinertia=%s' % (mass1, cg1, inertia1, inertia2, inertia1-inertia2)
+    assert np.allclose(mass1, mass2), f'mass1={mass1} mass2={mass2}'
+    assert np.allclose(cg1, cg2), f'mass={mass1}\ncg1={cg1} cg2={cg2}'
+    assert np.allclose(inertia1, inertia2, atol=1e-5), f'mass={mass} cg={cg}\ninertia1={inertia1}\ninertia2={inertia2}\ndinertia={inertia1-inertia2}'
 
     for nsm_id in chain(fem1.nsms, fem1.nsmadds):
         mass, unused_cg, unused_inertia = fem1.mass_properties_nsm(
@@ -1815,9 +1828,9 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
     reference_point = [10., 10., 10.]
     mass1, cg1, inertia1 = fem1.mass_properties(reference_point=reference_point, sym_axis=None)
     mass2, cg2, inertia2 = fem1.mass_properties_nsm(reference_point=reference_point, sym_axis=None)
-    assert np.allclose(mass1, mass2), 'reference_point=[10., 10., 10.]; mass1=%s mass2=%s' % (mass1, mass2)
-    assert np.allclose(cg1, cg2), 'reference_point=[10., 10., 10.]; mass=%s cg1=%s cg2=%s' % (mass1, cg1, cg2)
-    assert np.allclose(inertia1, inertia2, atol=1e-5), 'reference_point=[10., 10., 10.]; mass=%s cg=%s inertia1=%s inertia2=%s' % (mass1, cg1, inertia1, inertia2)
+    assert np.allclose(mass1, mass2), f'reference_point=[10., 10., 10.]; mass1={mass1} mass2={mass2}'
+    assert np.allclose(cg1, cg2), f'reference_point=[10., 10., 10.]; mass={mass1} cg1={cg1} cg2={cg2}'
+    assert np.allclose(inertia1, inertia2, atol=1e-5), f'reference_point=[10., 10., 10.]; mass={mass1} cg={cg1} inertia1={inertia1} inertia2={inertia2}'
 
 
 def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
@@ -1987,7 +2000,7 @@ def test_bdf_argparse(argv=None):
 
     #argv
     #print(argv)
-    from pyNastran.utils.arg_handling import argparse_to_dict, swap_key, update_message
+    from pyNastran.utils.arg_handling import argparse_to_dict, update_message # swap_key
     update_message(parent_parser, usage, args, examples)
 
     #try:

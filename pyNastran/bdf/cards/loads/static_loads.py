@@ -2339,7 +2339,7 @@ class PLOAD2(Load):
     def raw_fields(self):
         list_fields = ['PLOAD2', self.sid, self.pressure]
         eids = self.element_ids
-        if len(eids) == 1:
+        if len(eids) <= 5:
             list_fields += eids
         else:
             eids.sort()

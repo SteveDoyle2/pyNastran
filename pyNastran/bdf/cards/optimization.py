@@ -430,7 +430,10 @@ class DVXREL1(BaseCard):
             if not isinstance(desvar_id, int):
                 msg += '  desvar_id[%i]=%s is not an integer; type=%s\n' % (
                     i, desvar_id, type(desvar_id))
-            if not isinstance(coeff, float):
+
+            if coeff in ['PVAL']:
+                pass
+            elif not isinstance(coeff, float):
                 msg += '  coeff[%i]=%s is not a float; type=%s\n' % (i, coeff, type(coeff))
         if msg:
             raise RuntimeError('Invalid %s\n' % self.type + msg + str(self))

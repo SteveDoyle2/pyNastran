@@ -792,7 +792,7 @@ class CSUPER(BaseCard):
     @classmethod
     def add_card(cls, card, comment=''):
         seid = integer(card, 1, 'seid')
-        psid = integer(card, 2, 'psid')
+        psid = integer_or_blank(card, 2, 'psid', 0)
         nodes = []
         i = 1
         nfields = len(card)

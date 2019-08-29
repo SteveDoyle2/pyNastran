@@ -7850,8 +7850,8 @@ class AddCards(AddMethods):
         pval = PVAL(idi, poly1, poly2, poly3, cid, typei, typeids, comment='')
         self.pval[idi] = pval
 
-    def add_gmcurv(self, curve_id, group_btyes, cid_in, cid_bc, data):
-        curve = GMCURV(curve_id, group_btyes, cid_in, cid_bc, data)
+    def add_gmcurv(self, curve_id, group, data, cid_in=0, cid_bc=0):
+        curve = GMCURV(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc)
         self.gmcurv[curve_id] = curve
         return curve
 

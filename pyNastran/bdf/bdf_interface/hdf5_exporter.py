@@ -1,6 +1,6 @@
 """Defines various helper functions for exporting a HDF5 BDF file"""
 from collections import defaultdict
-from typing import List
+from typing import List, Any
 from io import StringIO
 import numpy as np
 

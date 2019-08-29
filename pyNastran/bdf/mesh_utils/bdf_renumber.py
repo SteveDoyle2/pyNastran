@@ -9,8 +9,9 @@ defines:
 
 """
 from itertools import chain
-
 from io import StringIO, IOBase
+from typing import List, Union, Optional
+
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF
