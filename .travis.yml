@@ -27,10 +27,10 @@ language: python
 matrix:
   include:
       # latest versions of package
-    - name: "Python 3.6"
-      python: '3.6'
-      env:
-      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25'
+#    - name: "Python 3.6"
+#      python: '3.6'
+#      env:
+#      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25'
 
     - name: "Python 3.7"
       python: '3.7'
@@ -38,12 +38,12 @@ matrix:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25'
 
       # old versions of packages
-    - name: "Python 3.6 old packages"
-      python: '3.6'
-      env:
-      # - bumped numpy from 1.13 to 1.14 to fix unicode savetxt writing
-      # - no pyside2 on conda
-      - NUMPY='numpy==1.14 scipy==0.19 matplotlib==2.0 h5py vtk pyqt5 pandas<0.25'
+#    - name: "Python 3.6 old packages"
+#      python: '3.6'
+#      env:
+#      # - bumped numpy from 1.13 to 1.14 to fix unicode savetxt writing
+#      # - no pyside2 on conda
+#      - NUMPY='numpy==1.14 scipy==0.19 matplotlib==2.0 h5py vtk pyqt5 pandas<0.25'
 
     - name: "Python 3.7 old packages"
       python: '3.7'

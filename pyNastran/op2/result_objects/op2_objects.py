@@ -704,7 +704,8 @@ class BaseElement(ScalarObject):
         index = pd.MultiIndex.from_tuples(eid_item, names=names)
         data_frame = pd.DataFrame(A, columns=columns, index=index)
 
-        #data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
+        # old
+        #data_frame = pd.Panel(data, items=column_values, major_axis=element, minor_axis=headers).to_frame()
         #data_frame.columns.names = column_names
         #data_frame.index.names = ['ElementID', 'Item']
         #print(data_frame)

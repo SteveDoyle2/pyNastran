@@ -121,6 +121,28 @@ class RealPlateArray(OES_Object):
         element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
 
         if self.nonlinear_factor not in (None, np.nan):
+            # Mode                                                 1             2             3
+            # Freq                                      1.482246e-10  3.353940e-09  1.482246e-10
+            # Eigenvalue                               -8.673617e-19  4.440892e-16  8.673617e-19
+            # Radians                                   9.313226e-10  2.107342e-08  9.313226e-10
+            # ElementID NodeID Location Item
+            # 8         0      Top      fiber_distance -1.250000e-01 -1.250000e-01 -1.250000e-01
+            #                           oxx             7.092928e-12 -3.259632e-06 -9.558293e-12
+            #                           oyy             3.716007e-12 -2.195630e-06 -5.435632e-12
+            #                           txy            -7.749725e-14  1.438695e-07 -6.269848e-13
+            #                           angle          -1.313964e+00  8.243371e+01 -8.154103e+01
+            #                           omax            7.094705e-12 -2.176520e-06 -5.342388e-12
+            #                           omin            3.714229e-12 -3.278742e-06 -9.651537e-12
+            #                           von_mises       6.146461e-12  2.889834e-06  8.374427e-12
+            #                  Bottom   fiber_distance  1.250000e-01  1.250000e-01  1.250000e-01
+            #                           oxx            -7.530338e-12  2.134777e-06  1.063986e-11
+            #                           oyy            -4.434658e-12 -9.347183e-07  6.212209e-12
+            #                           txy             2.291380e-12 -5.399188e-07 -4.161393e-12
+            #                           angle           6.201962e+01 -9.690845e+00 -3.099370e+01
+            #                           omax           -3.217317e-12  2.226978e-06  1.313966e-11
+            #                           omin           -8.747680e-12 -1.026920e-06  3.712415e-12
+            #                           von_mises       7.663484e-12  2.881133e-06  1.173255e-11
+            # 9         0      Top      fiber_distance -1.250000e-01 -1.250000e-01 -1.250000e-01
             column_names, column_values = self._build_dataframe_transient_header()
             #data_frame = self._build_pandas_transient_element_node(
                 #column_values, column_names,
@@ -129,6 +151,8 @@ class RealPlateArray(OES_Object):
                                   major_axis=element_node, minor_axis=headers).to_frame()
             data_frame.columns.names = column_names
             data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
+            #print(data_frame)
+            #print(data_frame.columns.values)
         else:
             # option B - nice!
             df1 = pd.DataFrame(element_node).T
@@ -138,6 +162,7 @@ class RealPlateArray(OES_Object):
             data_frame = df1.join(df2)
         self.data_frame = data_frame.reset_index().replace(
             {'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
+        #print(self.data_frame.columns.values)
         #print(self.data_frame)
 
     def __eq__(self, table):

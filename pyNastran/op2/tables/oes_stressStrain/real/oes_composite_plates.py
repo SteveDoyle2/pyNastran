@@ -112,13 +112,30 @@ class RealCompositePlateArray(OES_Object):
         is_v25 = pd.__version__ >= '0.25'
 
         headers = self.get_headers()
-        element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
+            #Mode                                  1             2             3
+            #Freq                       1.482246e-10  3.353940e-09  1.482246e-10
+            #Eigenvalue                -8.673617e-19  4.440892e-16  8.673617e-19
+            #Radians                    9.313226e-10  2.107342e-08  9.313226e-10
+            #ElementID Layer Item
+            #16        1     o11       -1.052490e-13  3.106268e-08  1.121784e-13
+            #                o22        4.804592e-13  1.855033e-07 -9.785236e-13
+            #                t12        4.436908e-14  4.873383e-09  4.387037e-15
+            #                t1z        8.207617e-14  2.501582e-08 -1.056211e-13
+            #                t2z       -5.918040e-14 -1.112469e-08  1.255247e-13
+            #                angle      8.569244e+01  8.819442e+01  2.304509e-01
+            #                major      4.838012e-13  1.856569e-07  1.121961e-13
+            #                minor     -1.085910e-13  3.090905e-08 -9.785411e-13
+            #                max_shear  2.961961e-13  7.737391e-08  5.453687e-13
+            #          2     o11       -6.490381e-14  2.856533e-08  4.105937e-14
+            # columns
+            #[(1, 1.4822459136312394e-10, -8.673617379884035e-19, 9.313225746154785e-10)
+             #(2, 3.353939638127037e-09, 4.440892098500626e-16, 2.1073424255447017e-08)
+             #(3, 1.4822459136312394e-10, 8.673617379884035e-19, 9.313225746154785e-10)]
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element_layer, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
+            data_frame = self._build_pandas_transient_element_node(
+                column_values, column_names,
+                headers, self.element_layer, self.data)
         else:
             if is_v25:
                 # Static                 o11        o22        t12        t1z  ...     angle       major       minor   max_shear
@@ -132,14 +149,18 @@ class RealCompositePlateArray(OES_Object):
                 #           3     -1683.7607   4245.215  -2634.891  1.393e+03  ... -69.88499   524.96875  -268.98779   65.647705
                 #           4     -1802.0312   4163.371  -2531.777  1.295e+03  ... -69.39493   509.74609  -273.14307   12.944336
                 #           5     -1956.2432   4058.359  -2400.559  2.975e-13  ... -70.02080   489.06738  -279.80811   48.243652
+                #
+                #element_layer = self.element_layer #???
+                element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
                 index = pd.MultiIndex.from_arrays(element_layer, names=['ElementID', 'Layer'])
-                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
-                self.data_frame.columns.names = ['Static']
+                data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+                data_frame.columns.names = ['Static']
             else:
-                self.data_frame = pd.Panel(self.data,
+                data_frame = pd.Panel(self.data,
                                            major_axis=element_layer, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = ['Static']
-                self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
+                data_frame.columns.names = ['Static']
+                data_frame.index.names = ['ElementID', 'Layer', 'Item']
+            self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

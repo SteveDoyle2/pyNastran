@@ -169,10 +169,19 @@ class RealSpringArray(OES_Object):
 
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
+            # Mode                                1             2             3
+            # Freq                     1.482246e-10  3.353940e-09  1.482246e-10
+            # Eigenvalue              -8.673617e-19  4.440892e-16  8.673617e-19
+            # Radians                  9.313226e-10  2.107342e-08  9.313226e-10
+            # ElementID Item
+            # 30        spring_stress           0.0          -0.0          -0.0
+            # 31        spring_stress           0.0          -0.0          -0.0
+            # 32        spring_stress           0.0           0.0           0.0
+            # 33        spring_stress           0.0           0.0           0.0
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
             if is_v25:
                 #Static     spring_stress
@@ -181,10 +190,12 @@ class RealSpringArray(OES_Object):
                 #31                   0.0
                 #32                   0.0
                 #33                   0.0
-                self.data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
-                self.data_frame.index.name = 'ElementID'
-                self.data_frame.columns.names = ['Static']
+                data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+                data_frame.index.name = 'ElementID'
+                data_frame.columns.names = ['Static']
             elif 0:  # pragma: no cover
+                # doesn't have ElementID as the index
+                #
                 #Static  ElementID  spring_stress
                 #0              30            0.0
                 #1              31            0.0
@@ -193,9 +204,11 @@ class RealSpringArray(OES_Object):
 
                 df1 = pd.DataFrame(self.element, columns=['ElementID'])
                 df2 = pd.DataFrame(self.data[0], columns=headers)
-                self.data_frame = df1.join(df2)
-                self.data_frame.columns.names = ['Static']
+                data_frame = df1.join(df2)
+                data_frame.columns.names = ['Static']
             else:
+                # why is there a Static=0???
+                #
                 # 0.24.2 or less
                 #Static                     0
                 #ElementID Item
@@ -203,9 +216,10 @@ class RealSpringArray(OES_Object):
                 #31        spring_stress  0.0
                 #32        spring_stress  0.0
                 #33        spring_stress  0.0
-                self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-                self.data_frame.columns.names = ['Static']
-                self.data_frame.index.names = ['ElementID', 'Item']
+                data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+                data_frame.columns.names = ['Static']
+                data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
