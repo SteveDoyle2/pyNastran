@@ -137,6 +137,7 @@ class RealCompositePlateArray(OES_Object):
                 column_values, column_names,
                 headers, self.element_layer, self.data)
         else:
+            element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
             if is_v25:
                 # Static                 o11        o22        t12        t1z  ...     angle       major       minor   max_shear
                 # ElementID Layer                                              ...
@@ -151,7 +152,6 @@ class RealCompositePlateArray(OES_Object):
                 #           5     -1956.2432   4058.359  -2400.559  2.975e-13  ... -70.02080   489.06738  -279.80811   48.243652
                 #
                 #element_layer = self.element_layer #???
-                element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
                 index = pd.MultiIndex.from_arrays(element_layer, names=['ElementID', 'Layer'])
                 data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
                 data_frame.columns.names = ['Static']
