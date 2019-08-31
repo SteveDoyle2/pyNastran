@@ -712,7 +712,7 @@ class BaseElement(ScalarObject):
         return data_frame
 
     def _build_pandas_transient_element_node(self, column_values, column_names, headers,
-                                             element_node, data):
+                                             element_node, data, from_tuples=True, from_array=False):
         """common method to build a transient dataframe"""
         # Freq                  0.00001  10.00000 20.00000 30.00000                 40.00000 50.00000 60.00000
         # ElementID NodeID Item
@@ -731,15 +731,26 @@ class BaseElement(ScalarObject):
         import pandas as pd
         columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
 
-        eid_nid_item = []
-        for eid, nid in element_node:
-            for header in headers:
-                eid_nid_item.append([eid, nid, header])
         ntimes, nelements = data.shape[:2]
-        A = data.reshape(ntimes, nelements*len(headers)).T
+        nheaders = len(headers)
+        A = data.reshape(ntimes, nelements*nheaders).T
 
         names = ['ElementID', 'NodeID', 'Item']
-        index = pd.MultiIndex.from_tuples(eid_nid_item, names=names)
+        if from_tuples:
+            eid_nid_item = []
+            for eid, nid in element_node:
+                for header in headers:
+                    eid_nid_item.append([eid, nid, header])
+            index = pd.MultiIndex.from_tuples(eid_nid_item, names=names)
+        elif from_array:
+            eid_nid_item = []
+            for eid in element_node:
+                eidi = np.vstack([eid]*nheaders)
+                eid_nid_item.append(eidi.ravel())
+            eid_nid_item.append(headers * nelements)
+            index = pd.MultiIndex.from_arrays(eid_nid_item, names=names)
+        else:  # pragma: no cover
+            raise RuntimeError('from_tuple, from_array')
         data_frame = pd.DataFrame(A, columns=columns, index=index)
 
         #element_node = [element_node[:, 0], element_node[:, 1]]

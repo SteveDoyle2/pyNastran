@@ -5,7 +5,7 @@ Defines:
 """
 from numpy import array
 
-class Resultant(object):
+class Resultant:
     """interface for making the OLOAD Resultant Table"""
     def __init__(self, table_name, fxyz, isubcase):
         """

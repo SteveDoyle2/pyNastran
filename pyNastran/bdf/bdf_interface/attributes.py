@@ -826,10 +826,7 @@ class BDFAttributes:
 
             # sets
             'asets' : ['ASET', 'ASET1'],
-            'omits' : [
-                #'OMIT',
-                'OMIT1'
-            ],
+            'omits' : ['OMIT', 'OMIT1'],
             'bsets' : ['BSET', 'BSET1',],
             'qsets' : ['QSET', 'QSET1'],
             'csets' : ['CSET', 'CSET1',],

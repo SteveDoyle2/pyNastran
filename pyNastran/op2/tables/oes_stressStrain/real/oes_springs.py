@@ -368,7 +368,7 @@ class RealSpringArray(OES_Object):
             self._write_table_header(op2, op2_ascii, date)
             itable = -3
 
-        eids = self.element
+        #eids = self.element
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -384,7 +384,7 @@ class RealSpringArray(OES_Object):
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         eids_device = self.element * 10 + self.device_code

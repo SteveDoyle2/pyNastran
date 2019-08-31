@@ -18,6 +18,8 @@ class RealCompositePlateArray(OES_Object):
         self.nelements = 0  # result specific
         self.nnodes = None
 
+        self.element_layer = None
+
         #if is_sort1:
             #if dt is not None:
                 #pass
@@ -157,7 +159,7 @@ class RealCompositePlateArray(OES_Object):
                 data_frame.columns.names = ['Static']
             else:
                 data_frame = pd.Panel(self.data,
-                                           major_axis=element_layer, minor_axis=headers).to_frame()
+                                      major_axis=element_layer, minor_axis=headers).to_frame()
                 data_frame.columns.names = ['Static']
                 data_frame.index.names = ['ElementID', 'Layer', 'Item']
             self.data_frame = data_frame
@@ -359,10 +361,10 @@ class RealCompositePlateArray(OES_Object):
             ovm = self.data[itime, :, 8]
 
             for eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in zip(
-                eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
+                    eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
 
                 [o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi] = write_floats_12e([
-                 o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
+                    o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
                 f06_file.write('0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %s\n'
                                % (eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi))
             f06_file.write(page_stamp % page_num)
@@ -402,7 +404,7 @@ class RealCompositePlateArray(OES_Object):
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         #fmt = '%2i %6f'
@@ -413,9 +415,8 @@ class RealCompositePlateArray(OES_Object):
         op2_ascii.write('  #elementi = [eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
         op2_ascii.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
 
-        if self.is_sort1:
-            struct1 = Struct(endian + b'i16f')
-        else:
+        struct1 = Struct(endian + b'i16f')
+        if not self.is_sort1:
             raise NotImplementedError('SORT2')
 
         op2_ascii.write('nelements=%i\n' % nelements)
@@ -455,13 +456,13 @@ class RealCompositePlateArray(OES_Object):
             ovm = self.data[itime, :, 8]
 
             for eid_device, eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi in zip(
-                eids_device, eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
+                    eids_device, eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
 
                 data = [eid_device, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi]
-                op2.write(pack('2i 9f', *data))
+                op2.write(struct1.pack(*data))
 
                 [o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi] = write_floats_12e([
-                 o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
+                    o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])
                 op2_ascii.write('0 %8s %4s  %12s %12s %12s   %12s %12s  %6.2F %12s %12s %s\n'
                                 % (eid, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi))
 

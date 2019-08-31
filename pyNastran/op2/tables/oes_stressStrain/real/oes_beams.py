@@ -1,3 +1,4 @@
+from itertools import count
 import numpy as np
 from numpy import zeros
 
@@ -22,6 +23,10 @@ class RealBeamArray(OES_Object):
         self.ielement = 0
         self.nelements = 0  # result specific
         self.nnodes = None
+
+        self.data = None
+        self.element_node = None
+        self.xxb = None
 
         #if not is_sort1:
             #raise NotImplementedError('SORT2')
@@ -287,7 +292,7 @@ class RealBeamArray(OES_Object):
             eid_old = None
             xxb_old = None
             for (eid, nid, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc) in zip(
-                eids, nids, xxbs, sxcs, sxds, sxes, sxfs, smaxs, smins, smts, smcs):
+                    eids, nids, xxbs, sxcs, sxds, sxes, sxfs, smaxs, smins, smts, smcs):
                 if eid != eid_old:
                     f06_file.write('0  %8i\n' % eid)
                 if xxb == xxb_old:
@@ -337,7 +342,7 @@ class RealBeamArray(OES_Object):
 
         eids_device = eids * 10 + self.device_code
         ueids = np.unique(eids)
-        ieid = np.searchsorted(eids, ueids)
+        #ieid = np.searchsorted(eids, ueids)
         # table 4 info
         #ntimes = self.data.shape[0]
         #nnodes = self.data.shape[1]
@@ -390,16 +395,15 @@ class RealBeamArray(OES_Object):
             smts = self.data[itime, :, 6]
             smcs = self.data[itime, :, 7]
 
-            eid_old = None
-            xxb_old = None
+            #eid_old = None
+            #xxb_old = None
             icount = 0
-            from itertools import count
             nwide = 0
             ielement = 0
             #print('------------')
             #print(self.element_node.shape, self.data.shape)
-            for (i, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc) in zip(
-                count(), xxbs, sxcs, sxds, sxes, sxfs, smaxs, smins, smts, smcs):
+            for (unused_i, xxb, sxc, sxd, sxe, sxf, smax, smin, smt, smc) in zip(
+                    count(), xxbs, sxcs, sxds, sxes, sxfs, smaxs, smins, smts, smcs):
 
                 if icount == 0:
                     eid_device = eids_device[ielement]
@@ -413,7 +417,7 @@ class RealBeamArray(OES_Object):
                     # xxb sections
                     data = [0, 0., 0., 0., 0., 0., 0., 0., 0., 0.]
                     #print('***adding %s\n' % (10-icount))
-                    for i in range(10 - icount):
+                    for unused_j in range(10 - icount):
                         op2.write(struct2.pack(*data))
                         nwide += len(data)
 
@@ -557,15 +561,15 @@ class RealNonlinearBeamArray(OES_Object):
         return msg
 
     def add_new_eid_sort1(self, dt, eid, grid_a,
-         unused_ca, long_ca, eqs_ca, te_ca, eps_ca, ecs_ca,
-         unused_da, long_da, eqs_da, te_da, eps_da, ecs_da,
-         unused_ea, long_ea, eqs_ea, te_ea, eps_ea, ecs_ea,
-         unused_fa, long_fa, eqs_fa, te_fa, eps_fa, ecs_fa,
-         grid_b,
-         unused_cb, long_cb, eqs_cb, te_cb, eps_cb, ecs_cb,
-         unused_db, long_db, eqs_db, te_db, eps_db, ecs_db,
-         unused_eb, long_eb, eqs_eb, te_eb, eps_eb, ecs_eb,
-         unused_fb, long_fb, eqs_fb, te_fb, eps_fb, ecs_fb):
+                          unused_ca, long_ca, eqs_ca, te_ca, eps_ca, ecs_ca,
+                          unused_da, long_da, eqs_da, te_da, eps_da, ecs_da,
+                          unused_ea, long_ea, eqs_ea, te_ea, eps_ea, ecs_ea,
+                          unused_fa, long_fa, eqs_fa, te_fa, eps_fa, ecs_fa,
+                          grid_b,
+                          unused_cb, long_cb, eqs_cb, te_cb, eps_cb, ecs_cb,
+                          unused_db, long_db, eqs_db, te_db, eps_db, ecs_db,
+                          unused_eb, long_eb, eqs_eb, te_eb, eps_eb, ecs_eb,
+                          unused_fb, long_fb, eqs_fb, te_fb, eps_fb, ecs_fb):
         #assert eid >= 0, eid
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt

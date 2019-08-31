@@ -35,9 +35,13 @@ The superelement sets start with SE:
 +------------+-----------------+
 
 """
+from __future__ import annotations
+import typing
 from typing import List, Union, Optional, Any
 import numpy as np
 
+if typing.TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, _node_ids, expand_thru
@@ -58,19 +62,16 @@ class Set(BaseCard):
         #:  list of IDs in the SETx
         self.ids = []
 
-    def clean_ids(self):
-        # () -> None
+    def clean_ids(self) -> None:
         """eliminates duplicate IDs from self.IDs and sorts self.IDs"""
         self.ids = list(set(self.ids))
         self.ids.sort()
 
-    def repr_fields(self):
-        # type: () -> List[Optional[Union[int, float, str]]]
+    def repr_fields(self)-> List[Optional[Union[int, float, str]]]:
         list_fields = self.raw_fields()
         return list_fields
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return self.comment + print_card_8(self.repr_fields())
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -112,8 +113,7 @@ class ABCQSet(Set):
         if isinstance(self.components, np.ndarray):
             self.components = self.components.tolist()
 
-    def __init__(self, ids, components, comment=''):
-        # type: (List[int], List[int], str) -> None
+    def __init__(self, ids: List[int], components: List[int], comment: str='') -> None:
         Set.__init__(self)
         if comment:
             self.comment = comment
@@ -122,8 +122,7 @@ class ABCQSet(Set):
         self.components = components
         self.ids_ref = None
 
-    def validate(self):
-        # type: () -> None
+    def validate(self) -> None:
         assert isinstance(self.ids, list), type(self.ids)
         assert isinstance(self.components, list), type(self.components)
         assert len(self.ids) == len(self.components), 'len(ids)=%s len(components)=%s' % (len(self.ids), len(self.components))
@@ -143,13 +142,12 @@ class ABCQSet(Set):
         return cls(ids, components, comment=comment)
 
     @classmethod
-    def add_op2_data(cls, data, comment=''):
-        # type: (List[Any], str) -> ABCQSet
+    def add_op2_data(cls, data: List[Any], comment: str='') -> ABCQSet:
         ids = [data[0]]
         components = [data[1]]
         return cls(ids, components, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -703,6 +701,19 @@ class ASET1(ABQSet1):
 
         """
         ABQSet1.__init__(self, ids, components, comment)
+
+class OMIT:
+    type = 'OMIT'
+    def __init__(self, comment=''):
+        if self.comment:
+            self.comment = comment
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        OMIT(comment=comment)
+
+    def raw_fields(self):
+        return ['OMIT']
 
 
 class OMIT1(ABQSet1):
@@ -1603,8 +1614,7 @@ class SEQSEP(SetSuper):  # not integrated...is this an SESET ???
         ids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
         return SEQSEP(ssid, psid, ids, comment=comment)
 
-    def get_ids(self):
-        # type: () -> List[int]
+    def get_ids(self)-> List[int]:
         """gets the ids"""
         return self.ids
 

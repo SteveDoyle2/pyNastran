@@ -9,8 +9,7 @@ class AddMethods(BDFAttributes):
     def __init__(self) -> None:
         BDFAttributes.__init__(self)
 
-    def _add_dmi_object(self, dmi, allow_overwrites=False):
-        # type: (Any, bool) -> None
+    def _add_dmi_object(self, dmi: Any, allow_overwrites: bool=False) -> None:
         """adds a DMI object"""
         name = dmi.name
         self.dmis[name] = dmi

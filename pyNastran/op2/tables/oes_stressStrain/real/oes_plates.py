@@ -144,15 +144,10 @@ class RealPlateArray(OES_Object):
             #                           von_mises       7.663484e-12  2.881133e-06  1.173255e-11
             # 9         0      Top      fiber_distance -1.250000e-01 -1.250000e-01 -1.250000e-01
             column_names, column_values = self._build_dataframe_transient_header()
-            #data_frame = self._build_pandas_transient_element_node(
-                #column_values, column_names,
-                #headers, self.element_node, self.data)
-            data_frame = pd.Panel(self.data, items=column_values,
-                                  major_axis=element_node, minor_axis=headers).to_frame()
-            data_frame.columns.names = column_names
-            data_frame.index.names = ['ElementID', 'NodeID', 'Location', 'Item']
-            #print(data_frame)
-            #print(data_frame.columns.values)
+            data_frame = self._build_pandas_transient_element_node(
+                column_values, column_names,
+                headers, self.element_node, self.data)
+            data_frame.index.names = ['ElementID', 'NodeID', 'Location']
         else:
             # option B - nice!
             df1 = pd.DataFrame(element_node).T
@@ -162,8 +157,6 @@ class RealPlateArray(OES_Object):
             data_frame = df1.join(df2)
         self.data_frame = data_frame.reset_index().replace(
             {'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
-        #print(self.data_frame.columns.values)
-        #print(self.data_frame)
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

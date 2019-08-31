@@ -3,16 +3,21 @@ defines:
  - export_caero_mesh(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True)
 
 """
-from pyNastran.bdf.bdf import BDF
+from __future__ import annotations
+import typing
+
+if typing.TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.field_writer_8 import print_card_8
 
-def export_caero_mesh(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
-    # type: (BDF, str, bool) -> None
+def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
+                      is_subpanel_model: bool=True) -> None:
     """write the CAERO cards as CQUAD4s that can be visualized"""
-    export_caero_model_aesurf(model, caero_bdf_filename='caero.bdf', is_subpanel_model=is_subpanel_model)
+    export_caero_model_aesurf(model, caero_bdf_filename=caero_bdf_filename,
+                              is_subpanel_model=is_subpanel_model)
 
-#def export_caero_model_base(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
-    ## type: (BDF, str, bool) -> None
+#def export_caero_model_base(model: BDF, caero_bdf_filename: str='caero.bdf',
+                            #is_subpanel_model: bool=True) -> None:
     #inid = 1
     #mid = 1
     #model.log.debug('---starting export_caero_model of %s---' % caero_bdf_filename)
@@ -34,8 +39,9 @@ def export_caero_mesh(model, caero_bdf_filename='caero.bdf', is_subpanel_model=T
                 #x, y, z = point
                 #bdf_file.write(print_card_8(['GRID', inid+ipoint, None, x, y, z]))
 
-def export_caero_model_aesurf(model, caero_bdf_filename='caero.bdf', is_subpanel_model=True):
-    # type: (BDF, str, bool) -> None
+def export_caero_model_aesurf(model: BDF, caero_bdf_filename: str='caero.bdf',
+                              is_subpanel_model: bool=True) -> None:
+    """write the CAERO cards as CQUAD4s that can be visualized"""
     inid = 1
     mid = 1
     model.log.debug('---starting export_caero_model of %s---' % caero_bdf_filename)
@@ -106,7 +112,7 @@ def export_caero_model_aesurf(model, caero_bdf_filename='caero.bdf', is_subpanel
         bdf_file.write('MAT1,%s,3.0E7,,0.3\n' % mid)
         bdf_file.write('ENDDATA\n')
 
-def _get_subpanel_property(model, eid):
+def _get_subpanel_property(model: BDF, eid: int) -> int:
     """gets the property id for the subpanel"""
     pidi = None
     for aesurf_id, aesurf in model.aesurf.items():

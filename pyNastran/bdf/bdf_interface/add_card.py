@@ -112,9 +112,8 @@ from pyNastran.bdf.cards.superelements import (
     CSUPER, CSUPEXT,
 )
 from pyNastran.bdf.cards.bdf_sets import (
-    ASET, BSET, CSET, QSET, USET,
-    ASET1, BSET1, CSET1, QSET1, USET1,
-    OMIT1,
+    ASET, BSET, CSET, QSET, USET, OMIT,
+    ASET1, BSET1, CSET1, QSET1, USET1, OMIT1,
     SET1, SET3,
     SEBSET, SECSET, SEQSET, # SEUSET
     SEBSET1, SECSET1, SEQSET1, # SEUSET1
@@ -642,7 +641,7 @@ CARD_MAP = {
     'SET1' : SET1,
     'SET3' : SET3,
 
-    #'OMIT' : OMIT,
+    'OMIT' : OMIT,
     'OMIT1' : OMIT1,
 
     # radset

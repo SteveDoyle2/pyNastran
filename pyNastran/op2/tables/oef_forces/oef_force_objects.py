@@ -108,7 +108,7 @@ class ForceObject(BaseElement):
         subtitle = b'%-128s' % self.subtitle.encode('ascii')
         label = b'%-128s' % self.label.encode('ascii')
         ftable3 = b'50i 128s 128s 128s'
-        oCode = 0
+        #oCode = 0
         load_set = 0
         #print(self.code_information())
 
@@ -662,7 +662,7 @@ class RealSpringDamperForceArray(RealForceObject):
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         eids_device = self.element * 10 + self.device_code
@@ -1167,17 +1167,10 @@ class RealCBeamForceArray(RealForceObject):
             #                   total_torque    -4.240346e-16  2.742446e-09  1.522254e-15
             #                   warping_torque   0.000000e+00  0.000000e+00  0.000000e+00
             column_names, column_values = self._build_dataframe_transient_header()
-            # doesn't have integer elementIDs
-            #data_frame = self._build_pandas_transient_element_node(
-                #column_values, column_names,
-                #headers[1:], element_location, self.data[:, :, 1:])
-            #data_frame.index.names = ['ElementID', 'Location', 'Item']
-
-            data_frame = pd.Panel(self.data[:, :, 1:], items=column_values,
-                                  major_axis=element_location, minor_axis=headers[1:]).to_frame()
-            data_frame.columns.names = column_names
+            data_frame = self._build_pandas_transient_element_node(
+                column_values, column_names,
+                headers[1:], element_location, self.data[:, :, 1:], from_tuples=False, from_array=True)
             data_frame.index.names = ['ElementID', 'Location', 'Item']
-            #print(data_frame)
         else:
             df1 = pd.DataFrame(element_location).T
             df1.columns = ['ElementID', 'Location']
@@ -1375,7 +1368,7 @@ class RealCBeamForceArray(RealForceObject):
 
         eids_device = eids * 10 + self.device_code
         ueids = np.unique(eids)
-        ieid = np.searchsorted(eids, ueids)
+        #ieid = np.searchsorted(eids, ueids)
         # table 4 info
         #ntimes = self.data.shape[0]
         #nnodes = self.data.shape[1]
@@ -2373,15 +2366,24 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
+            # Mode                              1             2             3
+            # Freq                   1.482246e-10  3.353940e-09  1.482246e-10
+            # Eigenvalue            -8.673617e-19  4.440892e-16  8.673617e-19
+            # Radians                9.313226e-10  2.107342e-08  9.313226e-10
+            # ElementID NodeID Item
+            # 6         0      mx    2.515537e-13 -2.294306e-07 -3.626725e-13
+            #                  my    2.916815e-13 -7.220319e-08 -5.030049e-13
+            #                  mxy  -2.356622e-14  4.391171e-07 -5.960345e-14
+            #                  bmx   4.138377e-14 -1.861012e-08 -5.586283e-14
+            #                  bmy   5.991298e-15 -2.471926e-09 -5.400710e-15
+            #                  bmxy  4.511364e-15 -1.190845e-09 -5.546569e-15
+            #                  tx    1.122732e-13 -5.563460e-08 -1.523176e-13
+            #                  ty   -1.164320e-14  4.813929e-09  1.023404e-14
+            # 4                mx    3.839208e-13 -4.580973e-07 -4.949736e-13
             column_names, column_values = self._build_dataframe_transient_header()
-            #data_frame = self._build_pandas_transient_element_node(
-                #column_values, column_names,
-                #headers, element_node, self.data)
-
-            data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element_node, minor_axis=headers).to_frame()
-            data_frame.columns.names = column_names
-            data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            data_frame = self._build_pandas_transient_element_node(
+                column_values, column_names,
+                headers, element_node, self.data, from_tuples=False, from_array=True)
         else:
             df1 = pd.DataFrame(element_node).T
             df1.columns = ['ElementID', 'NodeID']
