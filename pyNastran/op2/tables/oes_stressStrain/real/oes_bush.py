@@ -92,13 +92,32 @@ class RealBushArray(OES_Object):
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = pd.Panel(self.data, items=column_values,
+                                  major_axis=self.element, minor_axis=headers).to_frame()
+            data_frame.columns.names = column_names
+            data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+            # >25.0
+            #Static         tx   ty   tz   rx   ry   rz
+            #ElementID
+            #1          1000.0  0.0  0.0  0.0  0.0  0.0
+            #
+            # <=24.2
+            #Static               0
+            #ElementID Item
+            #1         tx    1000.0
+            #          ty       0.0
+            #          tz       0.0
+            #          rx       0.0
+            #          ry       0.0
+            #          rz       0.0
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+            data_frame.index.name = 'ElementID'
+            data_frame.columns.names = ['Static']
+            #data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            #data_frame.columns.names = ['Static']
+            #data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
@@ -188,7 +207,7 @@ class RealBushArray(OES_Object):
         if header is None:
             header = []
         msg = self._get_msgs()
-        (ntimes, ntotal) = self.data.shape[:2]
+        (ntimes, unused_ntotal) = self.data.shape[:2]
         eids = self.element
 
         for itime in range(ntimes):
@@ -204,13 +223,12 @@ class RealBushArray(OES_Object):
             rz = self.data[itime, :, 5]
 
             for eid, txi, tyi, tzi, rxi, ryi, rzi in zip(
-                eids, tx, ty, tz, rx, ry, rz):
-
+                    eids, tx, ty, tz, rx, ry, rz):
                 vals = [txi, tyi, tzi, rxi, ryi, rzi]
                 vals2 = write_floats_13e(vals)
                 [txi, tyi, tzi, rxi, ryi, rzi] = vals2
                 f06_file.write('0                   %8i     %-13s %-13s %-13s %-13s %-13s %s\n' % (
-                        eid, txi, tyi, tzi, rxi, ryi, rzi))
+                    eid, txi, tyi, tzi, rxi, ryi, rzi))
             f06_file.write(page_stamp % page_num)
             page_num += 1
         if self.nonlinear_factor in (None, np.nan):
@@ -253,7 +271,7 @@ class RealBushArray(OES_Object):
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         eids_device = self.element * 10 + self.device_code

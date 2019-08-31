@@ -139,6 +139,10 @@ class TestSets(unittest.TestCase):
         model._add_omit_object(omit1a)
         model._add_omit_object(omit1b)
 
+        nids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        for nid in nids:
+            model.add_grid(nid, [float(nid), 0., 0.])
+
         omit1a.validate()
         omit1b.validate()
         omit1a.write_card()

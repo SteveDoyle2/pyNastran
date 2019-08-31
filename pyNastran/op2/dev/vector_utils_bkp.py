@@ -7,7 +7,7 @@ def transform_force_moment(force_in_local, moment_in_local,
                            nid_cd, i_transform,
                            xyz_cid0, summation_point_cid0=None,
                            consider_rxf=True,
-                           debug=False, logger=None):
+                           debug=False, log=None):
     """
     Transforms force/moment from global to local and returns all the forces.
 
@@ -27,7 +27,7 @@ def transform_force_moment(force_in_local, moment_in_local,
         considers the r x F term
     debug : bool; default=False
         debugging flag
-    logger : logger; default=None
+    log : log; default=None
         a logger object that gets used when debug=True
 
     Returns
@@ -71,12 +71,12 @@ def transform_force_moment(force_in_local, moment_in_local,
     coord_out_T = coord_out.beta()
 
     if debug:
-        logger.debug(coord_out)
+        log.debug(coord_out)
         if consider_rxf:
             for ii in range(xyz_cid0.shape[0]):
-                logger.debug('***i=%s xyz=%s nid=%s cd=%s' % (
+                log.debug('***i=%s xyz=%s nid=%s cd=%s' % (
                     ii, xyz_cid0[ii, :], nid_cd[ii, 0], nid_cd[ii, 1]))
-        logger.debug('------------')
+        log.debug('------------')
 
     if consider_rxf and summation_point_cid0 is None:
         summation_point_cid0 = np.array([0., 0., 0.])
@@ -86,8 +86,8 @@ def transform_force_moment(force_in_local, moment_in_local,
         nidsi = nids[i]
         analysis_coord = coords[cd]
         if debug:
-            logger.debug('i = %s' % i)
-            logger.debug('nids = %s' % nidsi)
+            log.debug('i = %s' % i)
+            log.debug('nids = %s' % nidsi)
         #summation_point_cid0 = analysis_coord.origin
         #print('summation_point =', summation_point_cid0)
         #print(analysis_coord)
@@ -100,7 +100,7 @@ def transform_force_moment(force_in_local, moment_in_local,
         moment_in_locali.astype('float64')
 
         if debug:
-            logger.debug('force_input =%s' % force_in_locali)
+            log.debug('force_input =%s' % force_in_locali)
 
         #force_in_locali = analysis_coord.coord_to_xyz_array(force_in_locali)
         #moment_in_locali = analysis_coord.coord_to_xyz_array(moment_in_locali)
@@ -131,10 +131,10 @@ def transform_force_moment(force_in_local, moment_in_local,
             moment_outi = (coord_out_T @ moment_in_globali).T
 
         if debug:
-            logger.debug('force_in_locali =%s' % force_in_locali.T)
-            logger.debug('force_in_globali = %s' % force_in_globali.T)
-            logger.debug('force_outi = %s' % force_outi)
-            #logger.debug('moment_outi = %s' % moment_outi)
+            log.debug('force_in_locali =%s' % force_in_locali.T)
+            log.debug('force_in_globali = %s' % force_in_globali.T)
+            log.debug('force_outi = %s' % force_outi)
+            #log.debug('moment_outi = %s' % moment_outi)
 
         force_out[i, :] = force_outi
         moment_out[i, :] = moment_outi
@@ -145,19 +145,17 @@ def transform_force_moment(force_in_local, moment_in_local,
             #delta_minus_origin = delta - analysis_coord.origin
             #delta_in_cid = dot(delta_minus_origin, cd_T.T)
             if debug:
-                logger.debug('delta = %s' % delta)
+                log.debug('delta = %s' % delta)
             rxf = np.cross(delta, force_in_globali.T)
 
             if debug:
-                logger.debug('rxf = %s' % rxf)
+                log.debug('rxf = %s' % rxf)
             rxf_in_cid = (coord_out_T @ rxf.T).T
             if debug:
-                logger.debug('rxf_in_cid = %s' % rxf_in_cid)
+                log.debug('rxf_in_cid = %s' % rxf_in_cid)
 
             moment_out[i, :] += rxf_in_cid
         #print('------------')
     #force_out = coord_out.xyz_to_coord_array(force_out)
     #moment_out = coord_out.xyz_to_coord_array(moment_out)
     return -force_out, -moment_out
-
-

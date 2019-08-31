@@ -219,26 +219,75 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         ugridtype_str = unique(self.gridtype_str)
 
         if self.nonlinear_factor not in (None, np.nan):
-            column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=node_gridtype, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+            #Time             0.0       10.0
+            #NodeID Type Item
+            #1      S    t1     0.0  0.006239
+            #2      S    t1     0.0  0.006239
+            #3      S    t1     0.0  0.006239
+            #4      S    t1     0.0  0.006239
+            #5      S    t1     0.0  0.006239
+            #6      S    t1     0.0  0.006239
+            #7      S    t1     0.0  0.006239
+            #8      S    t1     0.0  0.006239
+            #99     S    t1     0.0  5.000000
+            #
+            #Time             0.0       10.0
+            #NodeID Type Item
+            #1      S    t1     0.0  0.006239
+            #2      S    t1     0.0  0.006239
+            #3      S    t1     0.0  0.006239
+            #4      S    t1     0.0  0.006239
+            #5      S    t1     0.0  0.006239
+            #6      S    t1     0.0  0.006239
+            #7      S    t1     0.0  0.006239
+            #8      S    t1     0.0  0.006239
+            #99     S    t1     0.0  5.000000
 
-            letter_dims = [
-                ('G', 1),
-                ('E', 1),
-                ('S', 1),
-                ('H', 1),
-                ('L', 1),
+            column_names, column_values = self._build_dataframe_transient_header()
+
+            columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
+
+            nheaders = len(headers)
+            def m_hstack(array, n):
+                if n == 1:
+                    return array
+                return np.hstack([array]*n)
+
+            ntimes, nnodes = self.data.shape[:2]
+            node_gridtype_item = [
+                m_hstack(self.node_gridtype[:, 0], nheaders),
+                m_hstack(self.gridtype_str, nheaders),
+                m_hstack(headers, nnodes)
             ]
-            cat_keys = []
-            for (letter, unused_dim) in letter_dims:
-                if letter not in ugridtype_str:
-                    continue
-                eig = self.data_frame.xs(letter, level=1)
-                cat_keys.append(eig)
-            self.data_frame = pd.concat(cat_keys)
+            names = ['NodeID', 'Type', 'Item']
+            index = pd.MultiIndex.from_arrays(node_gridtype_item, names=names)
+
+            A = self.data.reshape(ntimes, nnodes*nheaders).T
+            data_frame = pd.DataFrame(A, columns=columns, index=index)
+
+            if 0:  # pragma: no cover
+                # <=24.2
+                data_frame = pd.Panel(self.data, items=column_values,
+                                      major_axis=node_gridtype, minor_axis=headers).to_frame()
+                data_frame.columns.names = column_names
+                data_frame.index.names = ['NodeID', 'Type', 'Item']
+                print(data_frame)
+
+                letter_dims = [
+                    ('G', 1),
+                    ('E', 1),
+                    ('S', 1),
+                    ('H', 1),
+                    ('L', 1),
+                ]
+                cat_keys = []
+                for (letter, unused_dim) in letter_dims:
+                    if letter not in ugridtype_str:
+                        continue
+                    eig = data_frame.xs(letter, level=1)
+                    cat_keys.append(eig)
+                data_frame = pd.concat(cat_keys)
+                #print(data_frame)
         else:
             #self.data_frame = pd.Panel(self.data[0, :, :],
                                        #major_axis=node_gridtype, minor_axis=headers).to_frame()
@@ -251,7 +300,8 @@ class ScalarTableArray(ScalarObject):  # displacement style table
             df2.columns = ['Type']
             df3 = pd.DataFrame(self.data[0])
             df3.columns = headers
-            self.data_frame = df1.join([df2, df3])
+            data_frame = df1.join([df2, df3])
+        self.data_frame = data_frame
         #print(self.data_frame)
 
     def finalize(self):

@@ -77,7 +77,7 @@ class TestGridPointForces(unittest.TestCase):
             #summation_point,
             #itime=0,
             #debug=True,
-            #logger=op2.log)
+            #log=op2.log)
 
         #print('------------')
         #eids = [1]
@@ -89,7 +89,7 @@ class TestGridPointForces(unittest.TestCase):
             #summation_point,
             #itime=0,
             #debug=True,
-            #logger=op2.log)
+            #log=op2.log)
         print('------------')
 
         eids = [1]
@@ -101,7 +101,7 @@ class TestGridPointForces(unittest.TestCase):
             summation_point,
             itime=0,
             debug=True,
-            logger=op2.log)
+            log=op2.log)
         #print(gpforce)
 
     def test_op2_solid_shell_bar_01_gpforce(self):
@@ -144,7 +144,7 @@ class TestGridPointForces(unittest.TestCase):
                 nids, eids,
                 coord_out, coords,
                 nid_cd, icd_transform,
-                xyz_cid0, summation_point, itime=0, debug=False, logger=op2.log)
+                xyz_cid0, summation_point, itime=0, debug=False, log=op2.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
             #op2.log.debug('***********')
@@ -220,7 +220,7 @@ class TestGridPointForces(unittest.TestCase):
         return
         data = _get_gpforce_data()
         coords = op2_1.coords
-        used_cds = np.unique(nid_cd[:, 1])
+        #used_cds = np.unique(nid_cd[:, 1])
         #for cd in used_cds:
             #coord = op2_1.coords[cd]
             #print(coord)
@@ -236,7 +236,7 @@ class TestGridPointForces(unittest.TestCase):
                 nids, eids,
                 coord_out, coords,
                 nid_cd, icd_transform_1,
-                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
+                xyz_cid0, summation_point, itime=0, debug=False, log=op2_1.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
             op2_1.log.debug('***********')
@@ -351,7 +351,7 @@ class TestGridPointForces(unittest.TestCase):
                 nids, eids,
                 coord_out, op2_1.coords,
                 nid_cd, icd_transform_1,
-                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
+                xyz_cid0, summation_point, itime=0, debug=False, log=op2_1.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
             op2_1.log.debug('***********')
@@ -461,7 +461,7 @@ class TestGridPointForces(unittest.TestCase):
                 nids, eids,
                 coord_out, op2_1.coords,
                 nid_cd, icd_transform_1,
-                xyz_cid0, summation_point, itime=0, debug=False, logger=op2_1.log)
+                xyz_cid0, summation_point, itime=0, debug=False, log=op2_1.log)
             total_force_global, total_moment_global, total_force_local, total_moment_local = out
 
             op2_1.log.debug('***********')

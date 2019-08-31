@@ -4447,10 +4447,27 @@ class RealCBushForceArray(RealForceObject):
             #data_frame.columns.names = column_names
             #data_frame.index.names = ['ElementID', 'Item']
         else:
-            data_frame = pd.Panel(self.data,
-                                  major_axis=self.element, minor_axis=headers).to_frame()
+            # >=25.0
+            #Static         fx   fy   fz   mx   my   mz
+            #ElementID
+            #1          1000.0  0.0  0.0  0.0  0.0  0.0
+            #
+            # <=24.2
+            #Static               0
+            #ElementID Item
+            #1         fx    1000.0
+            #          fy       0.0
+            #          fz       0.0
+            #          mx       0.0
+            #          my       0.0
+            #          mz       0.0
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+            data_frame.index.name = 'ElementID'
             data_frame.columns.names = ['Static']
-            data_frame.index.names = ['ElementID', 'Item']
+            #data_frame = pd.Panel(self.data,
+                                  #major_axis=self.element, minor_axis=headers).to_frame()
+            #data_frame.columns.names = ['Static']
+            #data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
     def __eq__(self, table):

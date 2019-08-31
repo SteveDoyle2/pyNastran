@@ -79,12 +79,18 @@ class ComplexShearArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        #Mode                                          1                   2
+        #EigenvalueReal                             -0.0                -0.0
+        #EigenvalueImag                             -0.0                -0.0
+        #Damping                                     0.0                 0.0
+        #ElementID Item
+        #22        max_shear  5.855954e-09+0.000000e+00j  0.000000+0.000000j
+        #          avg_shear  5.855954e-09+0.000000e+00j  0.000000+0.000000j
+        #import pandas as pd
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=self.headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = self._build_pandas_transient_elements(
+            column_values, column_names,
+            self.headers, self.element, self.data)
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

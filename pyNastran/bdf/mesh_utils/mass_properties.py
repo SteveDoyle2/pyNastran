@@ -39,7 +39,7 @@ NO_MASS = {
     'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
 
     'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
-    'QSET', 'QSET1', 'USET', 'USET1',
+    'QSET', 'QSET1', 'USET', 'USET1', 'OMIT', 'OMIT1',
 
     'DLOAD', 'TLOAD1', 'PLOAD', 'PLOAD2', 'PLOAD4',
     'TSTEP', 'TSTEPNL', 'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4',
@@ -515,9 +515,10 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
 
     no_mass = NO_MASS
     for etype, eids in model._type_to_id_map.items():
-        #assert isinstance(eids, list), 'etype=%r eids=%s'%  (etype, eids)
+        #assert isinstance(eids, list), f'etype={etype} eids={eids} type={type(eids)}'
         if etype in no_mass or len(eids) == 0:
             continue
+        #assert isinstance(eids, list), 'etype=%r eids=%s'%  (etype, eids)
         mass, cg, inertia = _get_mass_nsm(
             model, element_ids, mass_ids,
             all_eids, all_mass_ids, etypes_skipped,

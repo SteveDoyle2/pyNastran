@@ -2,15 +2,18 @@
 # encoding: utf8
 # pylint: disable=W0212
 import os
+import sys
 import unittest
 from io import StringIO
 from cpylog import get_logger
 
+import numpy as np
 from pyNastran.bdf.bdf_interface.pybdf import (
     BDFInputPy, _show_bad_file, _lines_to_decks, MissingDeckSections)
 
 
 class TestPyBDF(unittest.TestCase):
+    """tests PyBDF"""
 
     def test_pybdf_open_file_checks(self):
         """tests _open_file_checks"""
@@ -69,7 +72,7 @@ class TestPyBDF(unittest.TestCase):
         os.rmdir(bdf_dir)
 
     def test_get_lines_1(self):
-        import numpy as np
+        """tests the basic deck sections, with a GRID and a skipped POST"""
         punch = False
         lines = [
             'CEND',
@@ -90,10 +93,11 @@ class TestPyBDF(unittest.TestCase):
                               keep_enddata=False, consider_superelements=False)
         (system_lines, executive_control_lines, case_control_lines,
          bulk_data_lines, bulk_data_ilines, superelement_lines, superelement_ilines) = out
-        for line in bulk_data_ilines:
-            print(line)
+        #for line in bulk_data_ilines:
+            #print(line)
 
     def test_get_lines_2(self):
+        """tests system control lines"""
         with open('junk.bdf', 'w') as bdf_file:
             bdf_file.write('CEND\n')
             bdf_file.write('BEGIN BULK\n')
@@ -227,9 +231,14 @@ class TestPyBDF(unittest.TestCase):
         encoding = 'utf8'
         pybdf = BDFInputPy(read_includes, dumplines, encoding, nastran_format='msc',
                            consider_superelements=False, log=None, debug=False)
+        if sys.platform == 'win32':
+            with self.assertRaises(RuntimeError):
+                pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)
+        else:
+            pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)
+
         #with self.assertRaises(RuntimeError):
         #with self.assertRaises(UnicodeDecodeError):
-        pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)
         #unused_bulk_data_lines1 = pybdf.get_lines(bdf_filename, punch=None, make_ilines=True)[3]
 
     def test_unicode_errors2(self):

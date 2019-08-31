@@ -75,10 +75,18 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
+            #Time                                           0.02       0.04
+            #ElementID Item
+            #102       axial_stress                    19.413668  76.139496
+            #          equiv_stress                    19.413668  76.139496
+            #          total_strain                     0.000194   0.000761
+            #          effective_plastic_creep_strain   0.000000   0.000000
+            #          effective_creep_strain           0.000000   0.000000
+            #          linear_torsional_stress          0.000000   0.000000
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            self.data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
             df1 = pd.DataFrame(self.element).T
             df1.columns = ['ElementID']

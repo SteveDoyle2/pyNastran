@@ -205,7 +205,7 @@ class ShearMomentTorqueObject:
             xyz_cid0, eids, nids, icd_transform,
             element_centroids_cid0,
             model.coords, nid_cd, stations, coord,
-            idir=0, itime=0, debug=False, logger=log)
+            idir=0, itime=0, debug=False, log=log)
         plot_smt(x, force_sum, moment_sum, show=show)
         return force_sum, moment_sum
 

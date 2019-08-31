@@ -13,12 +13,11 @@ All coordinate cards are defined in this file.  This includes:
 from __future__ import annotations
 import copy
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
-import typing
-
+from typing import Union, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -2927,3 +2926,5 @@ def transform_coords_vectorized(cps_to_check0, icp_transform,
         assert len(nids_checked) > 0, nids_checked
     cps_to_check.sort()
     return nids_checked, cps_checked, cps_to_check
+
+CORDx = Union[CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S]

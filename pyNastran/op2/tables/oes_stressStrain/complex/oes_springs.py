@@ -62,12 +62,11 @@ class ComplexSpringDamperArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = self._build_pandas_transient_elements(
+            column_values, column_names,
+            headers, self.element, self.data)
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
@@ -263,11 +262,13 @@ class ComplexSpringDamperArray(OES_Object):
             op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
             op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
 
+            from pyNastran.op2.op2_interface.utils import to_mag_phase
             stress = self.data[itime, :, 0]
+            reals, imags = to_mag_phase(stress, is_mag_phase)
 
-            for eid, stressi in zip(eids_device, stress):
-                data = [eid, stressi.real, stressi.imag]
-                op2_ascii.write('  eid=%s stress=%s\n' % (eid, stressi))
+            for eid, stress_real, stress_imag in zip(eids_device, reals, imags):
+                data = [eid, stress_real, stress_imag]
+                op2_ascii.write(f'  eid={eid} stress={[stress_real, stress_imag]}\n')
                 op2.write(struct1.pack(*data))
 
             itable -= 1

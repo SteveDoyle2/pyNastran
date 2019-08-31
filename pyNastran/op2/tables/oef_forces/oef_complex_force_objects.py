@@ -370,13 +370,32 @@ class ComplexCShearForceArray(BaseElement):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        #Mode                                           1                   2
+        #EigenvalueReal                              -0.0                -0.0
+        #EigenvalueImag                              -0.0                -0.0
+        #Damping                                      0.0                 0.0
+        #ElementID Item
+        #22        force41     2.927977e-10+0.000000e+00j  0.000000+0.000000j
+        #          force14     2.927977e-10+5.855954e-10j  0.000000+0.000000j
+        #          force21    -2.927977e-10+0.000000e+00j  0.000000+0.000000j
+        #          force12    -2.927977e-10+5.855954e-10j  0.000000+0.000000j
+        #          force32     2.927977e-10+0.000000e+00j  0.000000+0.000000j
+        #          force23     2.927977e-10+5.855954e-10j  0.000000+0.000000j
+        #          force43    -2.927977e-10+0.000000e+00j  0.000000+0.000000j
+        #          force34    -2.927977e-10+5.855954e-10j  0.000000+0.000000j
+        #          kickForce1  0.000000e+00+0.000000e+00j  0.000000+0.000000j
+        #          kickForce2  0.000000e+00+0.000000e+00j  0.000000+0.000000j
+        #          kickForce3  0.000000e+00+0.000000e+00j  0.000000+0.000000j
+        #          kickForce4  0.000000e+00+0.000000e+00j  0.000000+0.000000j
+        #          shear12     0.000000e+00+0.000000e+00j  0.000000+0.000000j
+        #          shear23     0.000000e+00+0.000000e+00j  0.000000+0.000000j
+        #          shear34     0.000000e+00+0.000000e+00j  0.000000+0.000000j
+        #          shear41     0.000000e+00+0.000000e+00j  0.000000+0.000000j
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = self._build_pandas_transient_elements(
+            column_values, column_names,
+            headers, self.element, self.data)
 
     def __eq__(self, table):
         self._eq_header(table)
@@ -619,13 +638,21 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        #Mode                                     1                   2
+        #EigenvalueReal                        -0.0                -0.0
+        #EigenvalueImag                        -0.0                -0.0
+        #Damping                                0.0                 0.0
+        #ElementID Item
+        #30        spring_force  0.000000+0.000000j  0.000000+0.000000j
+        #31        spring_force  0.000000+0.000000j  0.000000+0.000000j
+        #32        spring_force  0.000000+0.000000j  0.000000+0.000000j
+        #33        spring_force  0.000000+0.000000j  0.000000+0.000000j
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = self._build_pandas_transient_elements(
+            column_values, column_names,
+            headers, self.element, self.data)
+
 
     def __eq__(self, table):
         self._eq_header(table)
@@ -2861,13 +2888,23 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        #Mode                                        1                           2
+        #EigenvalueReal                    -0.000000                   -0.000000
+        #EigenvalueImag                    -0.000000                   -0.000000
+        #Damping                               0.000000                    0.000000
+        #ElementID Item
+        #1000      ax       -1.887379e-13+2.791559e-13j -1.901257e-13+2.789015e-13j
+        #          ay        3.330669e-14-7.316397e-14j  1.776357e-14-7.368508e-14j
+        #          az       -1.360023e-13-9.545406e-14j -1.432188e-13-8.333307e-14j
+        #          vx        0.000000e+00+0.000000e+00j  0.000000e+00+0.000000e+00j
+        #          vy        0.000000e+00+0.000000e+00j  0.000000e+00+0.000000e+00j
+        #          vz        0.000000e+00+0.000000e+00j  0.000000e+00+0.000000e+00j
+        #          pressure  0.000000e+00+0.000000e+00j  0.000000e+00+0.000000e+00j
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = self._build_pandas_transient_elements(
+            column_values, column_names,
+            headers, self.element, self.data)
 
     def __eq__(self, table):
         self._eq_header(table)

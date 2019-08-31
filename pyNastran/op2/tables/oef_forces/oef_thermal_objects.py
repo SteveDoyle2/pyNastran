@@ -74,17 +74,26 @@ class Real1DHeatFluxArray(BaseElement):
         headers = self.get_headers()
         assert 0 not in self.element
         if self.nonlinear_factor not in (None, np.nan):
+            #LoadStep                  1.0
+            #ElementID Item
+            #14        xgrad  0.000000e+00
+            #          ygrad  1.401298e-45
+            #          zgrad  1.401298e-45
+            #          xflux -0.000000e+00
+            #          yflux  1.401298e-45
+            #          zflux  1.401298e-45
+            #15        xgrad -2.842171e-14
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = pd.Panel(self.data,
+                                  major_axis=self.element,
+                                  minor_axis=headers).to_frame()
+            data_frame.columns.names = ['Static']
+            data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         self._eq_header(table)
@@ -648,19 +657,26 @@ class RealHeatFlux_2D_3DArray(RealElementTableArray):
 
         #nelements = self.element.shape[0]# // 2
         if self.nonlinear_factor not in (None, np.nan):
+            #Time            0.0           10.0
+            #ElementID Item
+            #1         grad1   0.0 -1.734723e-18
+            #          grad2   0.0 -1.301043e-18
+            #          grad3   0.0  1.951564e-18
+            #          flux1  -0.0  3.538836e-16
+            #          flux2  -0.0  2.654127e-16
+            #          flux3  -0.0 -3.981190e-16
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
             df1 = pd.DataFrame(self.element)
             df1.columns = ['ElementID']
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
-            self.data_frame = df1.join(df2)
+            data_frame = df1.join(df2)
         #print(self.data_frame)
+        self.data_frame = data_frame
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
                   page_num=1, is_mag_phase=False, is_sort1=True):
@@ -745,16 +761,41 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         ]
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element_node,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
+            #data_frame = self._build_pandas_transient_elements(
+                #column_values, column_names,
+                #headers, self.element, self.data)
+            #print(data_frame)
+            #asdf
+            data_frame = pd.Panel(self.data, items=column_values,
+                                  major_axis=element_node,
+                                  minor_axis=headers).to_frame()
+            data_frame.columns.names = column_names
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=element_node,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Node', 'Item']
+            # >=25.0
+            #Static            free_conv  free_conv_k
+            #ElementID NodeID
+            #1         0       -0.166667         10.0
+            #2         0       -0.166667         10.0
+            #3         0       -0.166667         10.0
+            #4         0       -0.166667         10.0
+            #5         0       -0.166667         10.0
+            #6         0       -0.166667         10.0
+            # <v24.2
+            #Static                              0
+            #ElementID Node Item
+            #1         0    free_conv    -0.166667
+            #               free_conv_k  10.000000
+            #2         0    free_conv    -0.166667
+            #               free_conv_k  10.000000
+            index = pd.MultiIndex.from_arrays(self.element_node.T, names=['ElementID', 'NodeID'])
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+            data_frame.columns.names = ['Static']
+            #data_frame = pd.Panel(self.data,
+                                  #major_axis=element_node,
+                                  #minor_axis=headers).to_frame()
+            #data_frame.columns.names = ['Static']
+            #data_frame.index.names = ['ElementID', 'Node', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         self._eq_header(table)
@@ -925,13 +966,44 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         headers = self.get_headers()
         assert 0 not in self.element
         if self.nonlinear_factor not in (None, np.nan):
+            #Time                 0.0         10.0
+            #ElementID Item
+            #10        fapplied     0.0    0.000000
+            #          free_conv    0.0  499.376068
+            #          force_conv   0.0    0.000000
+            #          frad         0.0    0.000000
+            #          ftotal       0.0  499.376068
+            #20        fapplied     0.0    0.000000
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-        self.data_frame.index.names = ['ElementID', 'Item']
+            # >=25.0
+            #Static     fapplied  free_conv  force_conv  frad  ftotal
+            #ElementID
+            #1          0.166667  -0.166667         0.0   0.0     0.0
+            #2          0.166667  -0.166667         0.0   0.0     0.0
+            #3          0.166667  -0.166667         0.0   0.0     0.0
+            #4          0.166667  -0.166667         0.0   0.0     0.0
+            #5          0.166667  -0.166667         0.0   0.0     0.0
+            #6          0.166667  -0.166667         0.0   0.0     0.0
+            #
+            # <=24.2
+            #Static                       0
+            #ElementID Item
+            #1         fapplied    0.166667
+            #          free_conv  -0.166667
+            #          force_conv  0.000000
+            #          frad        0.000000
+            #          ftotal      0.000000
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+            data_frame.index.name = 'ElementID'
+            data_frame.columns.names = ['Static']
+            #data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            #data_frame.columns.names = ['Static']
+            #data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         self._eq_header(table)

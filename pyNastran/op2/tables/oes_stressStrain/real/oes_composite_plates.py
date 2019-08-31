@@ -415,12 +415,12 @@ class RealCompositePlateArray(OES_Object):
         op2_ascii.write('  #elementi = [eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
         op2_ascii.write('  #                        fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,]\n')
 
-        struct1 = Struct(endian + b'i16f')
+        #struct1 = Struct(endian + b'i16f')
+        struct2 = Struct(endian + b'2i 9f')
         if not self.is_sort1:
             raise NotImplementedError('SORT2')
 
         op2_ascii.write('nelements=%i\n' % nelements)
-
         ntimes = self.data.shape[0]
 
         for itime in range(ntimes):
@@ -459,7 +459,7 @@ class RealCompositePlateArray(OES_Object):
                     eids_device, eids, layers, o11, o22, t12, t1z, t2z, angle, major, minor, ovm):
 
                 data = [eid_device, layer, o11i, o22i, t12i, t1zi, t2zi, anglei, majori, minori, ovmi]
-                op2.write(struct1.pack(*data))
+                op2.write(struct2.pack(*data))
 
                 [o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi] = write_floats_12e([
                     o11i, o22i, t12i, t1zi, t2zi, majori, minori, ovmi])

@@ -104,15 +104,45 @@ class RealBar10NodesArray(OES_Object):
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = pd.Panel(self.data, items=column_values,
+                                  major_axis=self.element, minor_axis=headers).to_frame()
+            data_frame.columns.names = column_names
+            data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element,
-                                       minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+            # >=25.0
+            #Static      sd  sxc  sxd  sxe  sxf     axial      smax      smin            MS
+            #ElementID
+            #10         0.0  0.0  0.0  0.0  0.0  0.003300  0.003300  0.003300  1.401298e-45
+            #10         1.0  0.0  0.0  0.0  0.0 -0.000033 -0.000033 -0.000033  1.401298e-45
+            #
+            # <=24.2
+            #ElementID Item
+            #10        sd     0.000000e+00
+                #sxc    0.000000e+00
+                #sxd    0.000000e+00
+                #sxe    0.000000e+00
+                #sxf    0.000000e+00
+                #axial  3.300000e-03
+                #smax   3.300000e-03
+                #smin   3.300000e-03
+                #MS     1.401298e-45
+                #sd     1.000000e+00
+                #sxc    0.000000e+00
+                #sxd    0.000000e+00
+                #sxe    0.000000e+00
+                #sxf    0.000000e+00
+                #axial -3.333333e-05
+                #smax  -3.333333e-05
+                #smin  -3.333333e-05
+                #MS     1.401298e-45
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+            data_frame.index.name = 'ElementID'
+            data_frame.columns.names = ['Static']
+            #data_frame = pd.Panel(self.data, major_axis=self.element,
+                                  #minor_axis=headers).to_frame()
+            #data_frame.columns.names = ['Static']
+            #data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

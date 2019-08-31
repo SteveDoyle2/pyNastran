@@ -88,10 +88,18 @@ class RealBush1DStressArray(OES_Object):
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
+            # Time                               0.02        0.04        0.06
+            # ElementID Item
+            #104       element_force       38.633198  113.462921  220.903046
+            #          axial_displacement   0.000194    0.000761    0.001673
+            #          axial_velocity       0.019220    0.037323    0.053638
+            #          axial_stress              NaN         NaN         NaN
+            #          axial_strain              NaN         NaN         NaN
+            #          plastic_strain       0.000000    0.000000    0.000000
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            self.data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
             self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
             self.data_frame.columns.names = ['Static']

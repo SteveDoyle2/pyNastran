@@ -437,7 +437,7 @@ class TableArray(ScalarObject):  # displacement style table
                 #             r3                  0j                0j                  0j
                 #  ...
                 #
-                # then we call _pandas_extract_rows to make it this...
+                # then we call pandas_extract_rows to make it this...
                 #
                 # Mode                        1              2              3
                 # EigenvalueReal           -0.0           -0.0           -0.0
@@ -478,8 +478,8 @@ class TableArray(ScalarObject):  # displacement style table
                 names = ['NodeID', 'Type', 'Item']
                 index = pd.MultiIndex.from_tuples(node_gridtype_item, names=names)
                 A = self.data.reshape(ntimes, nnodes*6).T
-                self.data_frame = pd.DataFrame(A, columns=columns, index=index)
-                self.data_frame = _pandas_extract_rows(self.data_frame, ugridtype_str, ['NodeID', 'Item'])
+                data_frame = pd.DataFrame(A, columns=columns, index=index)
+                data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
 
             elif is_v25 and 0:  # pragma: no cover
                 #                                                                           t1        t2
@@ -506,10 +506,10 @@ class TableArray(ScalarObject):  # displacement style table
                 names = ['itime'] + column_names + ['NodeID', 'Type']
                 index = pd.MultiIndex.from_tuples(time_node_gridtype, names=names)
                 A = self.data.reshape(ntimes*nnodes, 6)
-                self.data_frame = pd.DataFrame(A, columns=headers, index=index)
+                data_frame = pd.DataFrame(A, columns=headers, index=index)
                 #print(self.data_frame.index.names)
-                #self.data_frame = _pandas_extract_rows(self.data_frame, ugridtype_str)
-                print(self.data_frame)
+                #data_frame = pandas_extract_rows(self.data_frame, ugridtype_str)
+                print(data_frame)
             elif is_v25 and 0:  # pragma: no cover
                 node_gridtype2 = []
                 #NodeID Type             t1        t2        ...
@@ -549,10 +549,10 @@ class TableArray(ScalarObject):  # displacement style table
                 names = ['itime', 'NodeID', 'Type']
                 index = pd.MultiIndex.from_tuples(node_gridtype2, names=names)
                 A = self.data.reshape(ntimes*nnodes, 6)
-                self.data_frame = pd.DataFrame(A, columns=headers, index=index)
-                #print(self.data_frame.index.names)
-                #self.data_frame = _pandas_extract_rows(self.data_frame, ugridtype_str)
-                print(self.data_frame)
+                data_frame = pd.DataFrame(A, columns=headers, index=index)
+                #print(data_frame.index.names)
+                #data_frame = pandas_extract_rows(data_frame, ugridtype_str)
+                print(data_frame)
 
             elif is_v25 and 0:  # pragma: no cover
                 #                t1        t2        t3        r1        r2        r3
@@ -565,8 +565,8 @@ class TableArray(ScalarObject):  # displacement style table
                 # 6        1.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
                 #index = pd.MultiIndex.from_arrays(node_gridtype, names=['NodeID', 'Type'])
                 A = self.data.reshape(nnodes*ntimes, 6)
-                self.data_frame = pd.DataFrame(A, columns=headers)
-                #self.data_frame = pd.DataFrame(A, columns=headers, index=index)  # doesn't work
+                data_frame = pd.DataFrame(A, columns=headers)
+                #data_frame = pd.DataFrame(A, columns=headers, index=index)  # doesn't work
                 # doesn't turn into workable table
             else:
                 # old
@@ -596,15 +596,15 @@ class TableArray(ScalarObject):  # displacement style table
                 #     t3
                 #     ...
 
-                self.data_frame = pd.Panel(self.data, items=column_values,
-                                           major_axis=node_gridtype, minor_axis=headers).to_frame()  # to_xarray()
-                self.data_frame.columns.names = column_names
-                self.data_frame.index.names = ['NodeID', 'Type', 'Item']
+                data_frame = pd.Panel(self.data, items=column_values,
+                                      major_axis=node_gridtype, minor_axis=headers).to_frame()  # to_xarray()
+                data_frame.columns.names = column_names
+                data_frame.index.names = ['NodeID', 'Type', 'Item']
                 #print(column_names)
-                #print(self.data_frame)
+                #print(data_frame)
                 #print(self.data_frame.index.names)
-                self.data_frame = _pandas_extract_rows(self.data_frame, ugridtype_str, ['NodeID', 'Item'])
-
+                data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
+            self.data_frame = data_frame
             #print(self.data_frame)
 
         else:
@@ -1594,7 +1594,7 @@ class ComplexTableArray(TableArray):
             #page_num += 1
         #return page_num
 
-def _pandas_extract_rows(data_frame, ugridtype_str, index_names):
+def pandas_extract_rows(data_frame, ugridtype_str, index_names):
     import pandas as pd
     letter_dims = [
         ('G', 6),

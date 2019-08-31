@@ -60,7 +60,7 @@ class GridPointForces(BaseElement):
         title = b'%-128s' % self.title.encode('ascii')
         subtitle = b'%-128s' % self.subtitle.encode('ascii')
         label = b'%-128s' % self.label.encode('ascii')
-        oCode = 0
+        #oCode = 0
         load_set = 0
         #print(self.code_information())
 
@@ -242,7 +242,7 @@ class RealGridPointForcesArray(GridPointForces):
         if self.is_unique:
             ntimes = self.data.shape[0]
             nnodes = self.data.shape[1]
-            nvalues = ntimes * nnodes
+            #nvalues = ntimes * nnodes
             node_element = self.node_element.reshape((ntimes * nnodes, 2))
             if self.nonlinear_factor not in (None, np.nan):
                 column_names, column_values = self._build_dataframe_transient_header()
@@ -412,7 +412,7 @@ class RealGridPointForcesArray(GridPointForces):
 
     def extract_freebody_loads(self, eids,
                                coord_out, coords, nid_cd, icd_transform,
-                               itime=0, debug=True, logger=None):
+                               itime=0, debug=True, log=None):
         """
         Extracts Patran-style freebody loads.  Freebody loads are the
         extternal loads.
@@ -437,8 +437,8 @@ class RealGridPointForcesArray(GridPointForces):
             the time to extract loads for
         debug : bool; default=False
             debugging flag
-        logger : logger; default=None
-            a logger object that gets used when debug=True
+        log : log; default=None
+            a log object that gets used when debug=True
 
         Returns
         -------
@@ -467,9 +467,9 @@ class RealGridPointForcesArray(GridPointForces):
         nids = gpforce_nids[irange]
 
         if debug:
-            logger.debug('gpforce_eids =' % gpforce_eids[is_in])
-            logger.debug('nids = %s' % gpforce_nids[irange])
-            logger.debug('eids = %s' % gpforce_eids[irange])
+            log.debug('gpforce_eids =' % gpforce_eids[is_in])
+            log.debug('nids = %s' % gpforce_nids[irange])
+            log.debug('eids = %s' % gpforce_eids[irange])
 
         try:
             is_in3 = np.in1d(nid_cd[:, 0], nids, assume_unique=False)
@@ -496,14 +496,14 @@ class RealGridPointForcesArray(GridPointForces):
             icd_transform,
             xyz_cid0=None, summation_point_cid0=None,
             consider_rxf=False,
-            debug=debug, logger=logger)
+            debug=debug, log=log)
         return force, moment
 
     def extract_interface_loads(self, nids, eids,
                                 coord_out, coords, nid_cd, icd_transform,
                                 xyz_cid0, summation_point=None,
                                 consider_rxf=True,
-                                itime=0, debug=True, logger=None):
+                                itime=0, debug=True, log=None):
         """
         Extracts Patran-style interface loads.  Interface loads are the
         internal loads at a cut.
@@ -596,9 +596,9 @@ class RealGridPointForcesArray(GridPointForces):
             with open(f06_filename, 'w') as f06_file:
                 self.write_f06_time(f06_file, itime=0, i=irange)
 
-            logger.debug('gpforce_eids =' % gpforce_eids[is_in])
-            logger.debug('nids = %s' % gpforce_nids[irange])
-            logger.debug('eids = %s' % gpforce_eids[irange])
+            log.debug('gpforce_eids =' % gpforce_eids[is_in])
+            log.debug('nids = %s' % gpforce_nids[irange])
+            log.debug('eids = %s' % gpforce_eids[irange])
 
         try:
             is_in3 = np.in1d(nid_cd[:, 0], nids, assume_unique=False)
@@ -619,7 +619,7 @@ class RealGridPointForcesArray(GridPointForces):
             icd_transform,
             xyz_cid0[is_in3, :][isort], summation_point_cid0=summation_point,
             consider_rxf=consider_rxf,
-            debug=debug, logger=logger)
+            debug=debug, log=log)
         return force_out, moment_out, force_out_sum, moment_out_sum
 
     def find_centroid_of_load(self, f, m):
@@ -664,7 +664,7 @@ class RealGridPointForcesArray(GridPointForces):
     def shear_moment_diagram(self, xyz_cid0, eids, nids, icd_transform,
                              element_centroids_cid0,
                              coords, nid_cd, stations, coord_out,
-                             idir=0, itime=0, debug=False, logger=None):
+                             idir=0, itime=0, debug=False, log=None):
         """
         Computes a series of forces/moments at various stations along a
         structure.
@@ -760,7 +760,7 @@ class RealGridPointForcesArray(GridPointForces):
                     eids[i],
                     coord_out, coords, nid_cd, icd_transform,
                     # xyz_cid0, summation_point,
-                    itime=itime, debug=debug, logger=logger)
+                    itime=itime, debug=debug, log=log)
 
                 force_sum[istation, :] = forcei.sum(axis=0)
                 # TODO: extract_freebody_loads doesn't sum forces/moments
@@ -771,8 +771,8 @@ class RealGridPointForcesArray(GridPointForces):
                     eids[i], nids[j],
                     coord_out, coords, nid_cd, icd_transform,
                     xyz_cid0, summation_point, itime=itime, debug=debug,
-                    logger=logger)
-                logger.info('neids=%s nnodes=%s force=%s moment=%s' % (
+                    log=log)
+                log.info('neids=%s nnodes=%s force=%s moment=%s' % (
                     len(i), len(j), force_sumi, moment_sumi
                 ))
                 force_sum[istation, :] = force_sumi
@@ -855,7 +855,7 @@ class RealGridPointForcesArray(GridPointForces):
         #node = self.node_gridtype[:, 0]
         #gridtype = self.node_gridtype[:, 1]
         itime = 0
-        times = self._times
+        #times = self._times
 
         assert self.is_unique, self.is_unique
         # sort1 as sort1
@@ -1077,7 +1077,7 @@ class RealGridPointForcesArray(GridPointForces):
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         #fmt = '%2i %6f'
@@ -1122,7 +1122,7 @@ class RealGridPointForcesArray(GridPointForces):
             op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
             op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
 
-            zero = ' '
+            #zero = ' '
             ntotal = self._ntotals[itime]
             #print(self._ntotals)
             assert len(eids) == len(nids)
@@ -1251,7 +1251,7 @@ class ComplexGridPointForcesArray(GridPointForces):
         if self.is_unique:
             ntimes = self.data.shape[0]
             nnodes = self.data.shape[1]
-            nvalues = ntimes * nnodes
+            #nvalues = ntimes * nnodes
             node_element = self.node_element.reshape((ntimes * nnodes, 2))
             df1 = pd.DataFrame(node_element)
             df1.columns = ['NodeID', 'ElementID']
@@ -1358,7 +1358,7 @@ class ComplexGridPointForcesArray(GridPointForces):
                         if not np.array_equal(t1, t2):
                             msg += '(%s, %s, %s)    (%s, %s, %s, %s, %s, %s)  (%s, %s, %s, %s, %s, %s)\n' % (
                                 eid, nid, ename1,
-                                t12, t22, t32, r12, r22, r32,
+                                t11, t21, t31, r11, r21, r31,
                                 t12, t22, t32, r12, r22, r32)
                             i += 1
                             if i > 10:
@@ -1487,8 +1487,8 @@ class ComplexGridPointForcesArray(GridPointForces):
 
                 zero = ' '
                 ntotal = self._ntotals[itime]
-                for (i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
-                     range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
+                for (unused_i, nid, eid, ename, t1i, t2i, t3i, r1i, r2i, r3i) in zip(
+                         range(ntotal), nids, eids, enames, t1, t2, t3, r1, r2, r3):
 
                     vals = [t1i, t2i, t3i, r1i, r2i, r3i]
                     vals2 = write_imag_floats_13e(vals, is_mag_phase)
@@ -1652,7 +1652,7 @@ class ComplexGridPointForcesArray(GridPointForces):
 
         #print('shape = %s' % str(self.data.shape))
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         #fmt = '%2i %6f'
@@ -1697,7 +1697,7 @@ class ComplexGridPointForcesArray(GridPointForces):
             op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
             op2_ascii.write('r4 [4, %i, 4]\n' % (4 * ntotal))
 
-            zero = ' '
+            #zero = ' '
             ntotal = self._ntotals[itime]
             #print(self._ntotals)
             assert len(eids) == len(nids)

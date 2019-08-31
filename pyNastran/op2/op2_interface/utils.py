@@ -25,6 +25,15 @@ def apply_mag_phase(floats: Any, is_magnitude_phase: bool,
         real_imag = real + 1.j * imag
     return real_imag
 
+def to_mag_phase(real_imag: Any, is_magnitude_phase: bool) -> Any:
+    """converts real/imag data to mag/phase"""
+    if is_magnitude_phase:
+        mag = np.abs(real_imag)
+        phase = np.angle(real_imag, deg=True)
+        return mag, phase
+    else:
+        return real_imag.real, real_imag.imag
+
 def get_superelement_adaptivity_index(subtitle: str, superelement: str) -> str:
     """determines the SUPERELEMENT/ADAPTIVITY_INDEX from the subtitle"""
     superelement_adaptivity_index = ''
