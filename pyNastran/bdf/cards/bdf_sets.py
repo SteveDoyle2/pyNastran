@@ -707,10 +707,13 @@ class OMIT:
     def __init__(self, comment=''):
         if self.comment:
             self.comment = comment
+        aaa
 
     @classmethod
     def add_card(cls, card, comment=''):
-        OMIT(comment=comment)
+        print(card)
+        bb
+        return OMIT(comment=comment)
 
     def raw_fields(self):
         return ['OMIT']
@@ -731,6 +734,7 @@ class OMIT1(ABQSet1):
     +-------+-----+-----+------+-----+-----+-----+-----+-----+
     """
     type = 'OMIT1'
+    _properties = ['node_ids']
 
     @classmethod
     def _init_from_empty(cls):
