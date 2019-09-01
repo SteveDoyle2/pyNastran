@@ -28,3 +28,5 @@ class SuperelementFlagError(SyntaxError):
 class ReplicationError(SyntaxError):
     pass
 
+class EnvironmentVariableError(SyntaxError):
+    pass

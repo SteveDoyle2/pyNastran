@@ -979,6 +979,7 @@ class PCONV(ThermalProperty):
         assert self.mid > 0
         assert self.form in [0, 1, 10, 11, 20, 21]
         self.ce_ref = None
+        self.gidin_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1000,7 +1001,7 @@ class PCONV(ThermalProperty):
         ftype = integer_or_blank(card, 5, 'ftype', 0)
         tid = integer_or_blank(card, 6, 'tid')
         chlen = double_or_blank(card, 9, 'chlen')
-        gidin = double_or_blank(card, 10, 'gidin')
+        gidin = integer_or_blank(card, 10, 'gidin')
         ce = integer_or_blank(card, 11, 'ce', 0)
         e1 = double_or_blank(card, 12, 'e1')
         e2 = double_or_blank(card, 13, 'e2')
@@ -1034,18 +1035,29 @@ class PCONV(ThermalProperty):
             return self.ce_ref.cid
         return self.ce
 
+    def Gidin(self):
+        """gets the grid input node, gidin"""
+        if self.gidin_ref is not None:
+            return self.gidin_ref.nid
+        return self.gidin
+
+
     def cross_reference(self, model):
         msg = 'which is required by PCONV pconid=%s' % self.pconid
         self.ce_ref = model.Coord(self.ce, msg)
+        if self.gidin is not None:
+            self.gidin_ref = model.Node(self.gidin, msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.ce = self.Ce()
         self.ce_ref = None
+        self.gidin = self.Gidin()
+        self.gidin_ref = None
 
     def raw_fields(self):
         list_fields = ['PCONV', self.pconid, self.mid, self.form, self.expf,
-                       self.ftype, self.tid, None, None, self.chlen, self.gidin,
+                       self.ftype, self.tid, None, None, self.chlen, self.Gidin(),
                        self.Ce(), self.e1, self.e2, self.e3]
         return list_fields
 
@@ -1055,7 +1067,7 @@ class PCONV(ThermalProperty):
         ftype = set_blank_if_default(self.ftype, 0)
         ce = set_blank_if_default(self.Ce(), 0)
         list_fields = ['PCONV', self.pconid, self.mid, form, expf, ftype, self.tid,
-                       None, None, self.chlen, self.gidin, ce, self.e1, self.e2,
+                       None, None, self.chlen, self.Gidin(), ce, self.e1, self.e2,
                        self.e3]
         return list_fields
 

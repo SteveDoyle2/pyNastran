@@ -8,6 +8,7 @@ import ntpath
 import posixpath
 from typing import List, Tuple, Optional, Any
 from pathlib import PurePosixPath, PureWindowsPath
+from pyNastran.bdf.errors import EnvironmentVariableError
 
 IS_WINDOWS = 'nt' in os.name
 #is_linux = 'posix' in os.name
@@ -221,10 +222,10 @@ def split_tokens(tokens, is_windows):
                     if env_var.strip('$ %') not in os.environ:
                         environment_variables = list(os.environ.keys())
                         environment_variables.sort()
-                        raise SyntaxError("Cant find environment variable=%r"
-                                          '\nenviron=%s\n'
-                                          'which is required for %r' % (
-                                              env_var, environment_variables, tokens))
+                        raise EnvironmentVariableError(
+                            f"Can't find environment variable={repr(env_var)}"
+                            f'\nenviron={environment_variables}\n'
+                            f'which is required for {repr(tokens)}')
 
                     env_vari = os.path.expandvars('$' + env_var.strip('%'))
                     if '$' in env_vari:
