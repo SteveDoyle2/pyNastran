@@ -227,7 +227,6 @@ class SELOAD(BaseCard):
         self.lid_s0 = lid_s0
         self.seid = seid
         self.lid_se = lid_se
-        print(self)
 
     @classmethod
     def add_card(cls, card, comment=''):

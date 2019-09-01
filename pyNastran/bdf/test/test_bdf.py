@@ -33,6 +33,7 @@ from pyNastran.bdf.errors import (
     UnsupportedCard,
     DisabledCardError,
     ReplicationError,
+    EnvironmentVariableError,
 )
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.subcase import Subcase
@@ -429,6 +430,9 @@ def run_and_compare_fems(
         else:
             print('failed test because DuplicateIDsError...ignoring')
     except DisabledCardError as e:
+        if not dev:
+            raise
+    except EnvironmentVariableError:
         if not dev:
             raise
     except RuntimeError as e:
@@ -1509,11 +1513,11 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
         allowed_sols = [26, 68, 76, 78, 88, 108, 101, 111, 112, 118, 146, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'FREQUENCY', log, ierror, nerrors)
 
-    # if 'LSEQ' in subcase:
-        # lseq_id = subcase.get_parameter('LSEQ')[0]
-        # lseq = fem2.loads[lseq_id]
-        # assert sol in [], sol
-        # print(lseq)
+    #if 'LSEQ' in subcase:
+        #lseq_id = subcase.get_parameter('LSEQ')[0]
+        #lseq = fem2.loads[lseq_id]
+        #assert sol in [], sol
+        #print(lseq)
     if 'SPC' in subcase:
         spc_id = subcase.get_parameter('SPC')[0]
         fem2.get_spcs(spc_id, stop_on_failure=False)

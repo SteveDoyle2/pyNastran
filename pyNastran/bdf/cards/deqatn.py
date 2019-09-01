@@ -704,7 +704,6 @@ def write_function_header(func_header, eq, default_values, comment=''):
                     #print('group = %r' % group)
                 #print(y.group(0))
                 #print('***eq = %r' % eq)
-            #aaa
     for builtin in BUILTINS:
         if builtin in eq and '_' + builtin not in eq:
             eq = eq.replace(builtin, '_'+builtin)

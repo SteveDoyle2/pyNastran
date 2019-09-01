@@ -19,7 +19,8 @@ else:
             #   what about if you use setup_user.py install?
             #   what about if you don't have git?
             # can raise a subprocess.CalledProcessError, which means the return code != 0
-            ghash = subprocess.check_output(['git', 'describe', '--always'], cwd=os.path.dirname(__file__))
+            ghash = subprocess.check_output(['git', 'describe', '--always'],
+                                            cwd=os.path.dirname(__file__))
 
             ghash = ghash.decode('utf-8').rstrip()
         except:
@@ -37,7 +38,7 @@ __email__ = 'mesheb82@gmail.com'
 __desc__ = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __longdesc__ = __desc__
 __license__ = 'BSD-3'
-__copyright__ = 'Copyright %s; 2011-2019' % __license__
+__copyright__ = f'Copyright {__license__}; 2011-2019'
 __pyside_copyright__ = 'Copyright LGPLv3 - pySide'
 __pyqt_copyright__ = 'Copyright GPLv3 - PyQt'
 __website__ = 'https://github.com/SteveDoyle2/pyNastran'
@@ -46,8 +47,9 @@ if 'dev' in  __version__:
     __docs_rtd__ = 'https://pynastran-git.readthedocs.io/en/latest/quick_start/index.html'
     __docs__ = __docs_rtd__
 else:
-    __docs_rtd__ = 'https://pynastran-git.readthedocs.io/en/%s/quick_start/index.html' % __version__[:3] # 1.2
-    __docs__ = 'http://pynastran.m4-engineering.com/%s' % __version__
+    # 1.2
+    __docs_rtd__ = f'https://pynastran-git.readthedocs.io/en/{__version__[:3]}/quick_start/index.html'
+    __docs__ = f'http://pynastran.m4-engineering.com/{__version__}'
 
 __issue__ = 'https://github.com/SteveDoyle2/pyNastran/issues'
 __discussion_forum__ = 'https://groups.google.com/forum/#!forum/pynastran-discuss'

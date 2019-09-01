@@ -391,7 +391,7 @@ class OP2:
         self._skip_key(4)
 
         reclen = self._Str4.unpack(self._fileh.read(4))[0]
-        db_name2 = self._valid_name(self._fileh.read(reclen))
+        unused_db_name2 = self._valid_name(self._fileh.read(reclen))
         self._fileh.read(4)  # endrec
 
         self._skip_key(2)
@@ -688,7 +688,7 @@ class OP2:
             self.directory(verbose=False)
         fpos = self.dbnames['DYNAMICS'][0][0][0]
         self._fileh.seek(fpos)
-        name, trailer, dbtype = self._read_op2_name_trailer()
+        name, trailer, unused_dbtype = self._read_op2_name_trailer()
         return self.read_op2_dynamics()
 
     def read_op2_record(self, form=None, N=0):
@@ -1679,7 +1679,7 @@ class OP2:
             drmrow += L
 
             # read rest of record:
-            for i in range(1, key // nwords):
+            for unused_i in range(1, key // nwords):
                 dataint = ir_str.unpack(fp.read(ir_bytes))
                 id_cur = dataint[0] // 10
                 if drmrow+L >= drmrows:
@@ -1728,10 +1728,10 @@ class OP2:
             if drmcol == drmcols:
                 drm = np.asfortranarray(np.hstack((drm, B)))
                 drmcols += blocksize
-            for _ in it.repeat(None, rpc):
+            for unused_ in it.repeat(None, rpc):
                 L = nwords - ints_rec2
                 fp.read(4)   # reclen
-                for i in range(key // nwords):
+                for unused_i in range(key // nwords):
                     # dataint = ir_Str.unpack(fp.read(ir_bytes))
                     fp.read(ir_bytes)
                     if L < self._rowsCutoff:

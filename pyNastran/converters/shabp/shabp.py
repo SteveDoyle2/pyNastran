@@ -480,7 +480,6 @@ class SHABP(ShabpOut):
         else:
             print("*lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip()))
             raise RuntimeError()
-            #aaaa
 
         # component names   7
         comp_names_line = self.trailer[i].rstrip()

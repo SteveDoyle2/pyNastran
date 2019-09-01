@@ -474,18 +474,18 @@ def get_test_op2_data(argv):
     ver = str(pyNastran.__version__)
     is_release = 'dev' not in ver
 
-    msg = "Usage:\n"
+    msg = "Usage:  "
     options = '[-p] [-d] [-z] [-w] [-t] [-s <sub>] [-x <arg>]... [--nx|--autodesk] [--safe] [--post POST] [--load_hdf5]'
     if is_release:
-        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] %s OP2_FILENAME\n" % options
+        line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] %s OP2_FILENAME\n" % options
     else:
         line1 = "test_op2 [-q] [-b] [-c] [-g] [-n] [-f] [-o] [--profile] %s OP2_FILENAME\n" % options
 
     while '  ' in line1:
         line1 = line1.replace('  ', ' ')
     msg += line1
-    msg += "  test_op2 -h | --help\n"
-    msg += "  test_op2 -v | --version\n"
+    msg += "        test_op2 -h | --help\n"
+    msg += "        test_op2 -v | --version\n"
     msg += "\n"
     msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
     msg += "\n"
@@ -503,6 +503,7 @@ def get_test_op2_data(argv):
     msg += "  -n, --write_bdf        Writes the bdf to fem.test_op2.bdf (default=False)\n"
     msg += "  -f, --write_f06        Writes the f06 to fem.test_op2.f06\n"
     msg += "  -d, --write_hdf5       Writes the h5 to fem.test_op2.h5\n"
+    msg += "  -o, --write_op2        Writes the op2 to fem.test_op2.op2\n"
     msg += "  -z, --is_mag_phase     F06 Writer writes Magnitude/Phase instead of\n"
     msg += "                         Real/Imaginary (still stores Real/Imag); [default: False]\n"
     msg += "  --load_hdf5            Load as HDF5 (default=False)\n"
@@ -515,11 +516,9 @@ def get_test_op2_data(argv):
     msg += "  --post POST            Set the PARAM,POST flag\n"
     msg += "  --safe                 Safe cross-references BDF (default=False)\n"
 
-
     if not is_release:
         msg += "\n"
         msg += "Developer:\n"
-        msg += "  -o, --write_op2   Writes the op2 to fem.test_op2.op2\n"
         msg += '  --profile         Profiles the code (default=False)\n'
 
     msg += "\n"
@@ -544,14 +543,15 @@ def get_test_op2_data(argv):
     #print("data", data)
     return data
 
-def main(argv=None):
+def main(argv=None, show_args=False):
     """the interface for test_op2"""
     if argv is None:
         argv = sys.argv
-
     data = get_test_op2_data(argv)
-    for key, value in sorted(data.items()):
-        print("%-12s = %r" % (key.strip('--'), value))
+
+    if show_args:
+        for key, value in sorted(data.items()):
+            print("%-12s = %r" % (key.strip('--'), value))
 
     if os.path.exists('skippedCards.out'):
         os.remove('skippedCards.out')
@@ -620,4 +620,4 @@ def main(argv=None):
     print("dt = %f" % (time.time() - time0))
 
 if __name__ == '__main__':  # pragma: no cover
-    main()
+    main(show_args=True)

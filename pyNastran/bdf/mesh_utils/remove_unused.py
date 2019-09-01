@@ -146,9 +146,6 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 elem = model.masses[eid]
                 nids_used.add(elem.Nid())
                 cids_used.add(elem.Cid())
-                #print(elem.object_attributes())
-                #print(elem.object_methods())
-                #aaa
         elif card_type in ['CMASS1', 'CMASS3']:
             for eid in ids:
                 elem = model.masses[eid]

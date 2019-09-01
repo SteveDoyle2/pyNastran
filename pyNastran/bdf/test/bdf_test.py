@@ -124,10 +124,9 @@ def main():
 
     #is_release = False
     msg = (
-        'Usage:\n'
-        'bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C] [--safe]\n'
-        '  bdf_test -h | --help\n'
-        '  bdf_test -v | --version\n'
+        'Usage:  bdf_test [-r] [-n] [-s S...] [-e E] [-L] [-x] [-c C] [--safe]\n'
+        '        bdf_test -h | --help\n'
+        '        bdf_test -v | --version\n'
         '\n'
         "Tests to see if many BDFs will work with pyNastran %s.\n"
         '\n'

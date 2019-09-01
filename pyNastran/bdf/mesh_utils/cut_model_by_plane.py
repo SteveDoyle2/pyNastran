@@ -446,7 +446,6 @@ def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup=True):
     #print(geometry_array)
     #iedges = geometry_array[:, 1:]
     #geometry_array[:, 1:] = nodes[iedges.flatten()].reshape(iedges.shape)
-    #aaa
     #myrow = None
 
     # eid, nid, inid1, inid2

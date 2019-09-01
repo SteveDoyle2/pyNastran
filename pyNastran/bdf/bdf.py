@@ -153,7 +153,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
-from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV
+from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_methods import BDFMethods
@@ -499,7 +499,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #------------------------------------------------------------------
             ## parametric
-            'PSET', 'PVAL', 'GMCURV', 'FEEDGE', 'FEFACE',
+            'PSET', 'PVAL', 'GMCURV', 'GMSURF', 'FEEDGE', 'FEFACE',
 
             #------------------------------------------------------------------
             ## tables
@@ -1641,7 +1641,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         """
         card_name = card_name.upper()
         self.increase_card_count(card_name)
-        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT', 'GMCURV', 'OUTPUT', 'ADAPT']:
+        if card_name in ['DEQATN', 'PBRSECT', 'PBMSECT', 'GMCURV', 'GMSURF', 'OUTPUT', 'ADAPT']:
             card_obj = card_lines
             card = card_lines
         else:
@@ -1787,7 +1787,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PSET' : (PSET, self._add_pset),
             'PVAL' : (PVAL, self._add_pval),
             'GMCURV' : (GMCURV, self._add_gmcurv),
-            #'GMSURF' : (GMSURF, self._add_gmsurf),
+            'GMSURF' : (GMSURF, self._add_gmsurf),
             'FEFACE' : (FEFACE, self._add_feface),
             'FEEDGE' : (FEEDGE, self._add_feedge),
 
@@ -2163,7 +2163,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'USET' : (USET, self._add_uset_object),
             'USET1' : (USET1, self._add_uset_object),
 
-            #'OMIT' : (OMIT, self._add_omit_object),
+            'OMIT' : (OMIT, self._add_omit_object),
             'OMIT1' : (OMIT1, self._add_omit_object),
 
             'SET1' : (SET1, self._add_set_object),

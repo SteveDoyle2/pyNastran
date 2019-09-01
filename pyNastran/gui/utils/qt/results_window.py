@@ -125,10 +125,10 @@ class ResultsWindow(QWidget):
             return is_single
         except ValueError:
             print()
-            print('elements =', elements)
-            print('element =', element)
-            print('len(element) =', len(element))
-            print('len(elements)=%s' % len(elements))
+            print(f'elements = {elements}')
+            print(f'element = {element}')
+            print(f'len(element) = {len(element)}')
+            print(f'len(elements)={len(elements)}')
             for elem in elements:
                 print('  e = %s' % str(elem))
             raise

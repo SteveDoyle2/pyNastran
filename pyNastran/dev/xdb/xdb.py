@@ -292,7 +292,6 @@ class XDB:
                 else:
                     raise NotImplementedError(nsubcases)
                 #self.show(6468, types='s')
-                #aaa
             else:
                 raise NotImplementedError(etype)
             #self.show(dn, types='s')
@@ -300,7 +299,6 @@ class XDB:
             data = self.f.read(dn)
             self.n += dn
             #self.show(100, types='s')
-            #aa
 
             # SUPERS-----
             table_name = self.read_table_name()
@@ -550,7 +548,6 @@ class XDB:
             #dn = 4092
             dn = 12280
             #self.show(dn2 + 8, types='s')
-            #aaa
         elif table_name in [b'SID', b'PLOAD4', b'EQEXING', b'EQEXINE', b'LIMITS',
                             b'CTR3', b'GRIDX', b'MAT1', b'PSHELL', b'SPC1']:
             dn = 12280

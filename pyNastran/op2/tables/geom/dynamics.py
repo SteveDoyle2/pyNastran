@@ -755,7 +755,6 @@ class DYNAMICS(GeomCommon):
         #(200, 9, 10, 101, 961, 965, 967, 5.0)
         #ntotal = 32
         #self.show_data(data[n:])
-        #aaa
         assert len(data) == 12 + 32, len(data)
         return n
 

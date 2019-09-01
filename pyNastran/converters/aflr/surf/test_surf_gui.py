@@ -90,7 +90,6 @@ class TestSurfGui(unittest.TestCase):
         remap_cards(bdf_model_re)
         #print(bdf_model_re.properties)
         #print(bdf_model_re.elements)
-        #aaa
 
         #bdf_model_re = read_bdf(bdf_filename_re)
         #print(bdf_model_re.get_bdf_stats())

@@ -442,7 +442,7 @@ class MAT1(IsotropicMaterial):
     @classmethod
     def export_to_hdf5(cls, h5_file, model, mids):
         """exports the materials in a vectorized way"""
-        comments = []
+        #comments = []
         e = []
         g = []
         nu = []
@@ -637,7 +637,7 @@ class MAT1(IsotropicMaterial):
             the BDF object
 
         """
-        msg = ', which is required by MAT1 mid=%s' % self.mid
+        #msg = ', which is required by MAT1 mid=%s' % self.mid
         #self.mcsid = model.Coord(self.mcsid, msg=msg)  # used only for PARAM,CURVPLOT
         if self.mid in model.MATS1:
             self.mats1_ref = model.MATS1[self.mid]  # not using a method...
@@ -848,7 +848,7 @@ class MAT2(AnisotropicMaterial):
     @classmethod
     def export_to_hdf5(cls, h5_file, model, mids):
         """exports the materials in a vectorized way"""
-        comments = []
+        #comments = []
         G = []
         rho = []
         a = []
@@ -986,7 +986,7 @@ class MAT2(AnisotropicMaterial):
             the BDF object
 
         """
-        msg = ', which is required by MAT2 mid=%s' % self.mid
+        #msg = ', which is required by MAT2 mid=%s' % self.mid
         if self.mid in model.MATT2:
             self.matt2_ref = model.MATT2[self.mid]  # not using a method...
 
@@ -1133,7 +1133,7 @@ class MAT3(OrthotropicMaterial):
     @classmethod
     def export_to_hdf5(cls, h5_file, model, mids):
         """exports the elements in a vectorized way"""
-        comments = []
+        #comments = []
         ex = []
         eth = []
         ez = []
@@ -1607,8 +1607,8 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         cp = data[7]
         rho = data[8]
         hgen = data[9]
-        return MAT5(mid, kxx, kxz, kyy, kyz, kzz,
-                    cp, rho, hgen, comment=comment)
+        return MAT5(mid, kxx=kxx, kxy=kxy, kxz=kxz, kyy=kyy, kyz=kyz, kzz=kzz,
+                    cp=cp, rho=rho, hgen=hgen, comment=comment)
 
     def cross_reference(self, model):
         """
@@ -3168,19 +3168,19 @@ class MATHE(HyperelasticMaterial):
 
     ``model (MSC) = OGDEN, FOAM``
 
-    +-------+-------+----------+--------+------+--------+-------+
-    |   1   |   2   |    3     |   4    |  5   |   6    |   7   |
-    +=======+=======+==========+========+======+========+=======+
-    | MATHE |  MID  |  Model   |   NOT  |   K  |  RHO   |  TEXP |
-    +-------+-------+----------+--------+------+--------+-------+
-    |       |  MU1  |  ALPHA1  |  BETA1 |      |        |       |
-    +-------+-------+----------+--------+------+--------+-------+
-    |       |  MU2  |  ALPHA2  |  BETA2 |  MU3 | ALPHA3 | BETA3 |
-    +-------+-------+----------+--------+------+--------+-------+
-    |       |  MU4  |  ALPHA4  |  BETA4 |  MU5 | ALPHA5 | BETA5 |
-    +-------+-------+----------+--------+------+--------+-------+
-    |       |  D1   |    D2    |   D3   |   D4 |   D5   |       |
-    +-------+-------+----------+--------+------+--------+-------+
+    +-------+-------+----------+--------+------+--------+-------+----+
+    |   1   |   2   |    3     |   4    |  5   |   6    |   7   |  8 |
+    +=======+=======+==========+========+======+========+=======+====+
+    | MATHE |  MID  |  Model   |   NOT  |   K  |  RHO   |  TEXP |    |
+    +-------+-------+----------+--------+------+--------+-------+----+
+    |       |  MU1  |  ALPHA1  |  BETA1 |      |        |       |    |
+    +-------+-------+----------+--------+------+--------+-------+----+
+    |       |  MU2  |  ALPHA2  |  BETA2 |  MU3 | ALPHA3 | BETA3 |    |
+    +-------+-------+----------+--------+------+--------+-------+----+
+    |       |  MU4  |  ALPHA4  |  BETA4 |  MU5 | ALPHA5 | BETA5 |    |
+    +-------+-------+----------+--------+------+--------+-------+----+
+    |       |  D1   |    D2    |   D3   |   D4 |   D5   |       |    |
+    +-------+-------+----------+--------+------+--------+-------+----+
 
     NOT is an MSC only parameter
 
@@ -3188,15 +3188,15 @@ class MATHE(HyperelasticMaterial):
 
     ``model (MSC) = ABOYCE, GENT``
 
-    +-------+-------+----------+--------+------+--------+-------+
-    |   1   |   2   |    3     |   4    |  5   |   6    |   7   |
-    +=======+=======+==========+========+======+========+=======+
-    | MATHE |  MID  |   Model  |        |  K   |   RHO  |  TEXP |
-    +-------+-------+----------+--------+------+--------+-------+
-    |       |  NKT  |    N1    |        |      |        |       |
-    +-------+-------+----------+--------+------+--------+-------+
-    |       |   D1  |    D2    |   D3   |  D4  |   D5   |       |
-    +-------+-------+----------+--------+------+--------+-------+
+    +-------+-------+----------+--------+------+--------+-------+----+
+    |   1   |   2   |    3     |   4    |  5   |   6    |   7   |  8 |
+    +=======+=======+==========+========+======+========+=======+====+
+    | MATHE |  MID  |   Model  |        |  K   |   RHO  |  TEXP |    |
+    +-------+-------+----------+--------+------+--------+-------+----+
+    |       |  NKT  |    N1    |        |      |        |       |    |
+    +-------+-------+----------+--------+------+--------+-------+----+
+    |       |   D1  |    D2    |   D3   |  D4  |   D5   |       |    |
+    +-------+-------+----------+--------+------+--------+-------+----+
 
     the last line is an MSC only line
 
@@ -3220,17 +3220,20 @@ class MATHE(HyperelasticMaterial):
         bulk = 3.
         rho = 4.
         texp = 5.
+        ref = 0.
+        ge = 0.
         mus = [6.]
         alphas = [7.]
         betas = [8.]
         mooney = []
         sussbat = []
         aboyce = []
-        return MATHE(mid, model, bulk, rho, texp, mus, alphas, betas,
-                     mooney, sussbat, aboyce, comment='')
+        gent = []
+        return MATHE(mid, model, bulk, rho, texp, tref, ge, mus, alphas, betas,
+                     mooney, sussbat, aboyce, gent, comment='')
 
-    def __init__(self, mid, model, bulk, rho, texp,
-                 mus, alphas, betas, mooney, sussbat, aboyce, comment=''):
+    def __init__(self, mid, model, bulk, rho, texp, tref, ge,
+                 mus, alphas, betas, mooney, sussbat, aboyce, gent, comment=''):
         HyperelasticMaterial.__init__(self)
         if comment:
             self.comment = comment
@@ -3239,6 +3242,8 @@ class MATHE(HyperelasticMaterial):
         self.bulk = bulk
         self.rho = rho
         self.texp = texp
+        self.tref = tref  # MSC only
+        self.ge = ge  # MSC only
 
         # OGDEN/FOAM
         self.mus = mus
@@ -3254,9 +3259,12 @@ class MATHE(HyperelasticMaterial):
         # ABOYCE
         self.aboyce = aboyce
 
+        # GENT
+        self.gent = gent
+
     def validate(self):
-        if self.model not in ['MOONEY', 'OGDEN', 'FOAM', 'ABOYCE', 'SUSSBAT', 'ABOYCE']:
-            msg = "model=%r not in [MOONEY, OGDEN, FOAM, ABOYCE, SUSSBAT, ABOYCE]" % self.model
+        if self.model not in ['MOONEY', 'OGDEN', 'FOAM', 'ABOYCE', 'SUSSBAT', 'ABOYCE', 'GENT']:
+            msg = "model=%r not in [MOONEY, OGDEN, FOAM, ABOYCE, SUSSBAT, ABOYCE, GENT]" % self.model
             raise ValueError(msg)
 
     @classmethod
@@ -3277,6 +3285,8 @@ class MATHE(HyperelasticMaterial):
         bulk = double_or_blank(card, 4, 'bulk, k', None)
         rho = double_or_blank(card, 5, 'rho', 0.)
         texp = double_or_blank(card, 6, 'texp', 0.)
+        tref = double_or_blank(card, 7, 'tref', 0.)  # MSC only
+        ge = double_or_blank(card, 8, 'ge', 0.)  # MSC only
 
         nfields_leftover = card.nfields - 8
         nlines = nfields_leftover // 8
@@ -3290,6 +3300,7 @@ class MATHE(HyperelasticMaterial):
         mooney = []
         sussbat = []
         aboyce = []
+        gent = []
         if model in ['OGDEN', 'FOAM']:
             for iline in range(nlines):
                 ilinei = iline + 1
@@ -3301,7 +3312,6 @@ class MATHE(HyperelasticMaterial):
                 mus.append(mu)
                 alphas.append(alpha)
                 betas.append(beta)
-            #print('nfields =', nfields)
         elif model == 'MOONEY':
             c10 = double(card, 9, 'c10') # 1.0 for NX, 0.0 for MSC
             c01 = double(card, 10, 'c01') # 1.0 for NX, 0.0 for MSC
@@ -3326,17 +3336,44 @@ class MATHE(HyperelasticMaterial):
             relerr = double_or_blank(card, 11, 'relerr', 0.01)
             assert len(card) <= 12, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
             sussbat = [tab1, sstype, relerr]
-        elif model in ['ABOYCE', 'GENT']:
+        elif model in ['ABOYCE']:
             # NX version
+            # MSC version not supported (same as GENT)
             nkt = double_or_blank(card, 9, 'NKT', 1.0)
             n = double_or_blank(card, 10, 'N', 1.0)
             assert len(card) <= 11, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
             aboyce = [nkt, n]
+        elif model in ['GENT']:
+            # no NX version
+            # MSC version
+            #+-------+-------+----------+--------+------+--------+-------+----+
+            #|   1   |   2   |    3     |   4    |  5   |   6    |   7   |  8 |
+            #+=======+=======+==========+========+======+========+=======+====+
+            #| MATHE |  MID  |   Model  |        |  K   |   RHO  |  TEXP |    |
+            #+-------+-------+----------+--------+------+--------+-------+----+
+            #|       |  NKT  |    N/E   |   Im   |      |        |       |    |
+            #+-------+-------+----------+--------+------+--------+-------+----+
+            #|       |   D1  |    D2    |   D3   |  D4  |   D5   |       |    |
+            #+-------+-------+----------+--------+------+--------+-------+----+
+            # NKT N/E Im
+            nkt = double_or_blank(card, 9, 'NKT', 1.0)
+            n = double_or_blank(card, 10, 'N', 1.0)
+            im = double_or_blank(card, 11, 'Im', 0.)
+
+            d1 = double_or_blank(card, 17, 'd1')
+            d2 = double_or_blank(card, 18, 'd2')
+            d3 = double_or_blank(card, 19, 'd3')
+            d4 = double_or_blank(card, 20, 'd4')
+            d5 = double_or_blank(card, 21, 'd5')
+            print(card.write_card())
+            assert len(card) <= 21, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
+
+            gent = [nkt, n, im, d1, d2, d3, d4, d5]
         else:  # pragma: no cover
             raise NotImplementedError('model=%r' % (model))
 
-        return MATHE(mid, model, bulk, rho, texp,
-                     mus, alphas, betas, mooney, sussbat, aboyce,
+        return MATHE(mid, model, bulk, rho, texp, tref, ge,
+                     mus, alphas, betas, mooney, sussbat, aboyce, gent,
                      comment=comment)
 
     def raw_fields(self):
@@ -3399,10 +3436,10 @@ class MATHE(HyperelasticMaterial):
         #a05 = set_blank_if_default(self.a05, 0.0)
         #d5 = set_blank_if_default(self.d5, 0.0)
 
-        #tref = set_blank_if_default(self.tref, 0.0)
-        #ge = set_blank_if_default(self.ge, 0.0)
+        tref = set_blank_if_default(self.tref, 0.0)
+        ge = set_blank_if_default(self.ge, 0.0)
         list_fields = ['MATHE', self.mid, self.model, None, self.bulk, self.rho, self.texp,
-                       None, None]
+                       tref, ge]
         if self.model in ['OGDEN', 'FOAM']:
             i = 0
             for mu, alpha, beta in zip(self.mus, self.alphas, self.betas):
@@ -3428,15 +3465,25 @@ class MATHE(HyperelasticMaterial):
         elif self.model == 'SUSSBAT':
             (tab1, sstype, relerr) = self.sussbat
             list_fields += [tab1, sstype, relerr]
-        elif self.model == ['ABOYCE', 'GENT']:
+        elif self.model == 'ABOYCE':
             (nkt, n) = self.aboyce
             list_fields = ['MATHE', self.mid, self.model, None,
                            self.bulk, self.rho, self.texp, None, None,
                            nkt, n]
+        elif self.model == 'GENT':
+            print(self.get_stats())
+            (nkt, n, im, d1, d2, d3, d4, d5) = self.gent
+            list_fields = ['MATHE', self.mid, self.model, None,
+                           self.bulk, self.rho, self.texp, None, None,
+                           nkt, n, im, None, None, None, None,
+                           d1, d2, d3, d4, d5]
+        else:  # pragma: no cover
+            raise NotImplementedError(self.model)
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
+        print(self.comment + print_card_8(card))
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)

@@ -785,7 +785,6 @@ class OP2Geom(OP2GeomCommon, BDF):
             self._type_to_id_map[coord.type].append(key)
 
     #def _add_element_object(self, elem, allow_overwrites=False):
-        #aaa
         #key = elem.eid
         #assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
         #if key in self.elements and not allow_overwrites:

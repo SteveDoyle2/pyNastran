@@ -279,8 +279,9 @@ def cmd_line_renumber(argv=None, quiet=False):
 
     size = 16
     if data['--size']:
-        size = int(data['--size'])
+        size = int(data['SIZE'])
 
+    assert size in [8, 16], f'size={size} args={argv}'
     #cards_to_skip = [
         #'AEFACT', 'CAERO1', 'CAERO2', 'SPLINE1', 'SPLINE2',
         #'AERO', 'AEROS', 'PAERO1', 'PAERO2', 'MKAERO1']

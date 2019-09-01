@@ -216,6 +216,10 @@ class FEFACE(BaseCard):
 class GMCURV(BaseCard):
     type = 'GMCURV'
     def __init__(self, curve_id, group, data, cid_in=0, cid_bc=0, comment=''):
+        """
+        | GMCURV | CURVID | GROUP | CIDIN | CIDBC |
+        |Evaluator Specific Data and Format |
+        """
         if comment:
             self.comment = comment
         self.curve_id = curve_id
@@ -255,6 +259,61 @@ class GMCURV(BaseCard):
         #print(data_split)
         msg = 'GMCURV  %8i%8s%8i%8i\n' % (
             self.curve_id, self.group, self.cid_in, self.cid_bc)
+        #msg += ''.join(data_split)
+        msg += '\n'.join(data_split) + '\n'
+        return msg
+
+    def __repr__(self):
+        return self.write_card(size=8, is_double=False)
+
+
+class GMSURF(BaseCard):
+    type = 'GMSURF'
+    def __init__(self, surf_id, group, data, cid_in=0, cid_bc=0, comment=''):
+        """
+        | GMSURF | SURFID | GROUP | CIDIN | CIDBC |
+        |Evaluator Specific Data and Format |
+
+        """
+        if comment:
+            self.comment = comment
+        self.surf_id = surf_id
+        self.group = group
+        self.cid_in = cid_in
+        self.cid_bc = cid_bc
+        self.data = data
+        assert isinstance(data, list), type(data)
+        assert group in ['MSCGRP1', 'MSCGRP2'], group # 'MSCGRP0', 'MSCGRP1', 'MSCGRP2'
+
+    @classmethod
+    def _init_from_empty(cls):
+        surf_id = 1
+        group = 'MSCGRP0'
+        data = ['CAT']
+        return GMSURF(surf_id, group, data, cid_in=0, cid_bc=0, comment='')
+
+    @classmethod
+    def add_card(cls, card_lines, comment=''):
+        card = BDFCard(to_fields([card_lines[0]], 'GMSURF'))
+        surf_id = integer(card, 1, 'surf_id')
+        group = string(card, 2, 'group')
+        cid_in = integer_or_blank(card, 3, 'cid_in', 0)
+        cid_bc = integer_or_blank(card, 4, 'cid_bc', 0)
+        data = card_lines[1:]
+        return GMSURF(surf_id, group, data, cid_in=cid_in, cid_bc=cid_bc, comment=comment)
+
+    def raw_fields(self):
+        return ['GMSURF', self.surf_id, self.group, self.cid_in, self.cid_bc, self.data]
+
+    def write_card(self, size=8, is_double=False):
+        #data = self.data.strip()
+        #print(repr(data))
+        #data_split = ['        %s\n' % data[i:i+64].strip() for i in range(0, len(data), 64)]
+
+        data_split = self.data
+        #print(data_split)
+        msg = 'GMSURF  %8i%8s%8i%8i\n' % (
+            self.surf_id, self.group, self.cid_in, self.cid_bc)
         #msg += ''.join(data_split)
         msg += '\n'.join(data_split) + '\n'
         return msg

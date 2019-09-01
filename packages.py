@@ -187,14 +187,13 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
     try:
         import docopt
         iver = int_version('docopt', docopt.__version__)
-        all_reqs['docopt'] = str_version(iver)
-        if iver != [0, 6, 2]:
-        #if docopt.__version__ != '0.6.2':
-            print("docopt.__version__ = %r != '0.6.2'" % docopt.__version__)
-            all_reqs['docopt'] = '== 0.6.2'
-            install_requires.append('docopt == 0.6.2')
+        all_reqs['docopt-ng'] = str_version(iver)
+        if iver < [0, 7, 0]:
+            print("docopt.__version__ = %r < '0.7.0'" % docopt.__version__)
+            all_reqs['docopt-ng'] = '>= 0.7.0'
+            install_requires.append('docopt-ng >= 0.7.0')
     except ImportError:
-        install_requires.append('docopt == 0.6.2')  # 0.6.2 used
+        install_requires.append('docopt-ng >= 0.7.0')  # 0.7.2 used
 
     if is_rtd:
         pass

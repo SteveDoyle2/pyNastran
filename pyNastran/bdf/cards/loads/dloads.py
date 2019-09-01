@@ -708,7 +708,7 @@ def get_lseqs_by_excite_id(model, excite_id):
         for load in loads:
             if load.type == 'LSEQ':
                 if excite_id == load.excite_id:
-                    print(load)
+                    #print(load)
                     lseq_sids[sid].append(load)
     #for sid, loads in lseqs.items():
         #print(sid, loads)
@@ -798,6 +798,7 @@ def _cross_reference_excite_id(self, model, msg):
             print('  lseq_sids = []')
         model.log.warning('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
         raise RuntimeError('could not find excite_id=%i for\n%s' % (self.excite_id, str(self)))
+
 
 class RLOAD2(DynamicLoad):
     r"""

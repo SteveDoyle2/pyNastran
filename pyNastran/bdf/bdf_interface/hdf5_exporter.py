@@ -20,6 +20,9 @@ dict_int_list_obj_attrs = [
     'frequencies',
     'bcs', 'transfer_functions',
     'dvgrids',
+
+    # parametric
+    'pval',
 ]
 
 # dict[key] : value
@@ -74,7 +77,7 @@ dict_int_obj_attrs = [
     'view3ds', 'views',
 
     # parametric
-    'pset', 'pval', 'gmcurv', 'feedge', 'feface',
+    'pset', 'gmcurv', 'feedge', 'feface',
 ]
 
 scalar_obj_keys = [

@@ -95,12 +95,12 @@ def cmd_line_plot_flutter(argv=None, plot=True, show=True, log=None):
 
     in_units = 'si'
     if data['--in_units']:
-        in_units = data['--in_units'].lower()
+        in_units = data['IN'].lower()
     assert in_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'in_units=%r' % in_units
 
     out_units = 'si'
     if data['--out_units']:
-        out_units = data['--out_units'].lower()
+        out_units = data['OUT'].lower()
     assert out_units in ['si', 'english_in', 'english_ft', 'english_kt'], 'out_units=%r' % out_units
 
     plot_type = 'tas'

@@ -128,11 +128,9 @@ class MouseActions:
             #self.vtk_interactor.RemoveObservers('LeftButtonPressEvent')
             #self.vtk_interactor.AddObserver('LeftButtonPressEvent', self.on_cell_pick_event)
         elif mode == 'cell_pick':
-            #aaa
             #print('set mouse mode as cell_pick')
             self.vtk_interactor.SetPicker(self.cell_picker)
         elif mode == 'node_pick':
-            #bbb
             #print('set mouse mode as node_pick')
             self.vtk_interactor.SetPicker(self.node_picker)
         elif mode == 'style':

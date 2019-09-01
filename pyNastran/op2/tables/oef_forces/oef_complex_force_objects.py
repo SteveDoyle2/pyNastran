@@ -73,7 +73,6 @@ class ComplexRodForceArray(ComplexForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         data_frame = self._build_pandas_transient_elements(column_values, column_names,
@@ -244,7 +243,7 @@ class ComplexRodForceArray(ComplexForceObject):
             self._write_table_header(op2, op2_ascii, date)
             itable = -3
 
-        eids = self.element
+        #eids = self.element
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -257,7 +256,7 @@ class ComplexRodForceArray(ComplexForceObject):
         ntotali = self.num_wide
         ntotal = ntotali * nelements
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         eids_device = self.element * 10 + self.device_code
@@ -818,7 +817,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
             self._write_table_header(op2, op2_ascii, date)
             itable = -3
 
-        eids = self.element
+        #eids = self.element
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -834,7 +833,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         eids_device = self.element * 10 + self.device_code
@@ -939,6 +938,23 @@ class ComplexViscForceArray(BaseElement):
 
         #[axial_force, torque]
         self.data = zeros((self.ntimes, self.ntotal, 2), dtype='complex64')
+
+    def build_dataframe(self):
+        """creates a pandas dataframe"""
+        #Mode                         1        2        3        4
+        #EigenvalueReal            -0.0     -0.0     -0.0     -0.0
+        #EigenvalueImag            -0.0     -0.0     -0.0     -0.0
+        #Damping                    0.0      0.0      0.0      0.0
+        #ElementID Item
+        #50        axial_force  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)
+        #          torque       (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)
+        #51        axial_force  (-0+0j)  (-0+0j)  (-0+0j)  (-0+0j)
+        #          torque            0j  (-0+0j)  (-0+0j)  (-0+0j)
+        headers = self.get_headers()
+        column_names, column_values = self._build_dataframe_transient_header()
+        data_frame = self._build_pandas_transient_elements(column_values, column_names,
+                                                           headers, self.element, self.data)
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         self._eq_header(table)
@@ -1061,10 +1077,10 @@ class ComplexViscForceArray(BaseElement):
 
         eids = self.element
         #is_odd = False
-        nwrite = len(eids)
-        if len(eids) % 2 == 1:
-            nwrite -= 1
-            is_odd = True
+        #nwrite = len(eids)
+        #if len(eids) % 2 == 1:
+            #nwrite -= 1
+            #is_odd = True
 
         #print('len(eids)=%s nwrite=%s is_odd=%s' % (len(eids), nwrite, is_odd))
         for itime in range(ntimes):
@@ -1987,7 +2003,7 @@ class ComplexCBarForceArray(ComplexForceObject):
 
     def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase):
         eids = self.element
-        times = self._times
+        #times = self._times
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
             dt = self._times[itime]
@@ -2416,7 +2432,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
 
     def _write_sort1_as_sort1(self, f06_file, page_num, page_stamp, header, msg_temp, is_mag_phase):
         eids = self.element
-        times = self._times
+        #times = self._times
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
             dt = self._times[itime]
@@ -2466,13 +2482,13 @@ class ComplexCBeamForceArray(ComplexForceObject):
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
-        long_form = False
-        if nids.min() == 0:
-            long_form = True
+        #long_form = False
+        #if nids.min() == 0:
+            #long_form = True
 
         eids_device = eids * 10 + self.device_code
         ueids = np.unique(eids)
-        ieid = np.searchsorted(eids, ueids)
+        #ieid = np.searchsorted(eids, ueids)
         # table 4 info
         #ntimes = self.data.shape[0]
         #nnodes = self.data.shape[1]
@@ -2541,7 +2557,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
                             0., 0., 0., 0., 0., 0., 0.,
                             0., 0., 0., 0., 0., 0., 0.]
                     #print('***adding %s\n' % (10-icount))
-                    for i in range(10 - icount):
+                    for unused_i in range(10 - icount):
                         op2.write(struct2.pack(*data))
                         nwide += len(data)
 
@@ -3092,7 +3108,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         ntotali = self.num_wide
         ntotal = ntotali * nelements
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         eids_device = self.element * 10 + self.device_code
@@ -3466,7 +3482,7 @@ class ComplexCBushForceArray(ComplexForceObject):
         ntotali = self.num_wide
         ntotal = ntotali * nelements
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         eids_device = self.element * 10 + self.device_code

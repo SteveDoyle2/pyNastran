@@ -1416,7 +1416,6 @@ def read_rbe3s_from_idata_fdata(self, idata, fdata):
         self._add_op2_rigid_element(rbe3)
         rbe3s.append(rbe3)
         #print('--------------------------------------')
-    #aaa
     return rbe3s
 
 def _get_rbe3_um(i, unused_j, idata, unused_fdata):

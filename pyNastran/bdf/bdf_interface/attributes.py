@@ -440,6 +440,7 @@ class BDFAttributes:
         self.pset = {}
         self.pval = {}
         self.gmcurv = {}
+        self.gmsurf = {}
         self.feedge = {}
         self.feface = {}
 

@@ -192,6 +192,8 @@ def bdf_renumber(bdf_filename: Union[str, BDF, StringIO],
                      starting_ids_dict=starting_ids_dict, round_ids=False)
 
     """
+    assert size in [8, 16], size
+    assert isinstance(is_double, bool), is_double
     starting_id_dict_default = {
         'cid' : 1,
         'nid' : 1,

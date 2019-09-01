@@ -27,8 +27,7 @@ from struct import Struct, pack
 import warnings
 
 import numpy as np
-from numpy import zeros, abs, angle, float32, searchsorted, unique, where
-from numpy import allclose, asarray, vstack, swapaxes, hstack
+#from numpy import float32
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.f06.f06_formatting import write_floats_13e, write_imag_floats_13e, write_float_12e
@@ -99,12 +98,12 @@ def append_sort1_sort2(data1, data2, to_sort1=True):
     unused_nnids = nnids1 + nnids2
     assert ntimes1 == ntimes2
     if to_sort1:
-        out = hstack([
+        out = np.hstack([
             data1,
-            swapaxes(data2, 0, 1),])
+            np.swapaxes(data2, 0, 1),])
     else:
-        out = hstack([
-            swapaxes(data1, 0, 1),
+        out = np.hstack([
+            np.swapaxes(data1, 0, 1),
             data2,])
     return out
 
@@ -176,8 +175,8 @@ class TableArray(ScalarObject):  # displacement style table
 
         # no double inheritance
         ScalarObject.__init__(self, data_code, isubcase, apply_data_code=True)
-        self.is_sort1
-        self.is_sort2
+        str(self.is_sort1)
+        str(self.is_sort2)
         #self.dt = dt
 
         #self.code = [self.format_code, self.sort_code, self.s_code]
@@ -220,7 +219,7 @@ class TableArray(ScalarObject):  # displacement style table
                         (nid, grid_type) = nid_gridtype
                         t1 = self.data[itime, inid, :]
                         t2 = table.data[itime, inid, :]
-                        if not allclose(t1, t2, rtol=rtol, atol=atol):
+                        if not np.allclose(t1, t2, rtol=rtol, atol=atol):
                         #if not np.array_equal(t1, t2):
                             inonzero = np.where(t1 != 0.)[0]
                             atoli = np.abs(t2 - t1).max()
@@ -260,7 +259,7 @@ class TableArray(ScalarObject):  # displacement style table
         #print(self._times)
         #print(result._times)
         # self._times = hstack([self._times, result._times])
-        self.node_gridtype = vstack([self.node_gridtype, result.node_gridtype])
+        self.node_gridtype = np.vstack([self.node_gridtype, result.node_gridtype])
         #print('%s' % ''.join(self.get_stats()))
 
     def _get_msgs(self, is_mag_phase):
@@ -379,11 +378,11 @@ class TableArray(ScalarObject):  # displacement style table
         self._nnodes = nnodes
         self.ntotal = ntotal
 
-        _times = zeros(ntimes, dtype=float_fmt)
-        node_gridtype = zeros((nnodes, 2), dtype='int32')
+        _times = np.zeros(ntimes, dtype=float_fmt)
+        node_gridtype = np.zeros((nnodes, 2), dtype='int32')
 
         #[t1, t2, t3, r1, r2, r3]
-        data = zeros((nx, ny, 6), self.data_type())
+        data = np.zeros((nx, ny, 6), self.data_type())
         if self.load_as_h5:
             group = self._get_result_group()
             self._times = group.create_dataset('_times', data=_times)
@@ -403,11 +402,11 @@ class TableArray(ScalarObject):  # displacement style table
         broken: 0.25.0
         """
         import pandas as pd
-        is_v25 = pd.__version__ >= '0.25'
+        #is_v25 = pd.__version__ >= '0.25'
 
         headers = self.get_headers()
         #headers = [0, 1, 2, 3, 4, 5]
-        node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
+        #node_gridtype = [self.node_gridtype[:, 0], self.gridtype_str]
 
         #letter_dims = [
             #('G', 6),
@@ -418,70 +417,70 @@ class TableArray(ScalarObject):  # displacement style table
         #]
         ntimes, nnodes = self.data.shape[:2]
 
-        ugridtype_str = unique(self.gridtype_str)
+        ugridtype_str = np.unique(self.gridtype_str)
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            if is_v25:
-                #  we start out like this...
-                #
-                # Mode                             1                 2                   3
-                # EigenvalueReal               -0.0              -0.0                -0.0
-                # EigenvalueImag          -0.463393          0.463393           -1.705689
-                # Damping                        0.0               0.0                 0.0
-                # NodeID Type Item
-                # 1      G    t1      (0.6558146+0j)    (0.6558146+0j)       (1.034078+0j)
-                #             t2                  0j                0j                  0j
-                #             t3                  0j                0j                  0j
-                #             r1                  0j                0j                  0j
-                #             r2                  0j                0j                  0j
-                #             r3                  0j                0j                  0j
-                #  ...
-                #
-                # then we call pandas_extract_rows to make it this...
-                #
-                # Mode                        1              2              3
-                # EigenvalueReal           -0.0           -0.0           -0.0
-                # EigenvalueImag      -0.463393       0.463393      -1.705689
-                # Damping                   0.0            0.0            0.0
-                # NodeID Item
-                # 1      t1       0.655815+0.0j  0.655815+0.0j  1.034078+0.0j
-                #        t2            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        t3            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        r1            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        r2            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        r3            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                # 2      t1       0.999141+0.0j  0.999141+0.0j -0.282216+0.0j
-                #        t2            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        t3            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        r1            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        r2            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        r3            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                # 3      t1            1.0+0.0j       1.0+0.0j -0.285539+0.0j
-                #        t2            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        t3            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        r1            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        r2            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                #        r3            0.0+0.0j       0.0+0.0j       0.0+0.0j
-                # 1001   S        0.000859+0.0j  0.000859+0.0j -0.003323+0.0j
+            #if is_v25:
+            #  we start out like this...
+            #
+            # Mode                             1                 2                   3
+            # EigenvalueReal               -0.0              -0.0                -0.0
+            # EigenvalueImag          -0.463393          0.463393           -1.705689
+            # Damping                        0.0               0.0                 0.0
+            # NodeID Type Item
+            # 1      G    t1      (0.6558146+0j)    (0.6558146+0j)       (1.034078+0j)
+            #             t2                  0j                0j                  0j
+            #             t3                  0j                0j                  0j
+            #             r1                  0j                0j                  0j
+            #             r2                  0j                0j                  0j
+            #             r3                  0j                0j                  0j
+            #  ...
+            #
+            # then we call pandas_extract_rows to make it this...
+            #
+            # Mode                        1              2              3
+            # EigenvalueReal           -0.0           -0.0           -0.0
+            # EigenvalueImag      -0.463393       0.463393      -1.705689
+            # Damping                   0.0            0.0            0.0
+            # NodeID Item
+            # 1      t1       0.655815+0.0j  0.655815+0.0j  1.034078+0.0j
+            #        t2            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        t3            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        r1            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        r2            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        r3            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            # 2      t1       0.999141+0.0j  0.999141+0.0j -0.282216+0.0j
+            #        t2            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        t3            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        r1            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        r2            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        r3            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            # 3      t1            1.0+0.0j       1.0+0.0j -0.285539+0.0j
+            #        t2            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        t3            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        r1            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        r2            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            #        r3            0.0+0.0j       0.0+0.0j       0.0+0.0j
+            # 1001   S        0.000859+0.0j  0.000859+0.0j -0.003323+0.0j
 
-                node_gridtype_item = []
-                for nid, gridtype in zip(self.node_gridtype[:, 0], self.gridtype_str):
-                    node_gridtype_item.extend([[nid, gridtype, 't1']])
-                    node_gridtype_item.extend([[nid, gridtype, 't2']])
-                    node_gridtype_item.extend([[nid, gridtype, 't3']])
-                    node_gridtype_item.extend([[nid, gridtype, 'r1']])
-                    node_gridtype_item.extend([[nid, gridtype, 'r2']])
-                    node_gridtype_item.extend([[nid, gridtype, 'r3']])
+            node_gridtype_item = []
+            for nid, gridtype in zip(self.node_gridtype[:, 0], self.gridtype_str):
+                node_gridtype_item.extend([[nid, gridtype, 't1']])
+                node_gridtype_item.extend([[nid, gridtype, 't2']])
+                node_gridtype_item.extend([[nid, gridtype, 't3']])
+                node_gridtype_item.extend([[nid, gridtype, 'r1']])
+                node_gridtype_item.extend([[nid, gridtype, 'r2']])
+                node_gridtype_item.extend([[nid, gridtype, 'r3']])
 
-                columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
+            columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
 
-                names = ['NodeID', 'Type', 'Item']
-                index = pd.MultiIndex.from_tuples(node_gridtype_item, names=names)
-                A = self.data.reshape(ntimes, nnodes*6).T
-                data_frame = pd.DataFrame(A, columns=columns, index=index)
-                data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
+            names = ['NodeID', 'Type', 'Item']
+            index = pd.MultiIndex.from_tuples(node_gridtype_item, names=names)
+            A = self.data.reshape(ntimes, nnodes*6).T
+            data_frame = pd.DataFrame(A, columns=columns, index=index)
+            data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
 
-            elif is_v25 and 0:  # pragma: no cover
+            #elif is_v25 and 0:  # pragma: no cover
                 #                                                                           t1        t2
                 # itime Mode  EigenvalueReal EigenvalueImag Damping  NodeID  Type
                 # 0      1      G    -0.0         -0.463393     0.0  1           0.655815+0.0j  0.0+0.0j
@@ -496,22 +495,22 @@ class TableArray(ScalarObject):  # displacement style table
                 #               G                                    2          -0.282216+0.0j  0.0+0.0j
                 #               G                                    3          -0.285539+0.0j  0.0+0.0j
                 #               S                                    1001       -0.003323+0.0j  0.0+0.0j
-                time_node_gridtype = []
-                from itertools import count
-                for itime in range(ntimes):
-                    column_values2 = [column_value[itime] for column_value in column_values]
-                    for nid, gridtype in zip(self.node_gridtype[:, 0], self.gridtype_str):
-                        time_node_gridtype.append([itime] + column_values2 + [nid, gridtype])
+                #time_node_gridtype = []
+                #from itertools import count
+                #for itime in range(ntimes):
+                    #column_values2 = [column_value[itime] for column_value in column_values]
+                    #for nid, gridtype in zip(self.node_gridtype[:, 0], self.gridtype_str):
+                        #time_node_gridtype.append([itime] + column_values2 + [nid, gridtype])
 
-                names = ['itime'] + column_names + ['NodeID', 'Type']
-                index = pd.MultiIndex.from_tuples(time_node_gridtype, names=names)
-                A = self.data.reshape(ntimes*nnodes, 6)
-                data_frame = pd.DataFrame(A, columns=headers, index=index)
-                #print(self.data_frame.index.names)
-                #data_frame = pandas_extract_rows(self.data_frame, ugridtype_str)
-                print(data_frame)
-            elif is_v25 and 0:  # pragma: no cover
-                node_gridtype2 = []
+                #names = ['itime'] + column_names + ['NodeID', 'Type']
+                #index = pd.MultiIndex.from_tuples(time_node_gridtype, names=names)
+                #A = self.data.reshape(ntimes*nnodes, 6)
+                #data_frame = pd.DataFrame(A, columns=headers, index=index)
+                ##print(self.data_frame.index.names)
+                ##data_frame = pandas_extract_rows(self.data_frame, ugridtype_str)
+                #print(data_frame)
+            #elif is_v25 and 0:  # pragma: no cover
+                #node_gridtype2 = []
                 #NodeID Type             t1        t2        ...
                 #1      G     0.655815+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
                 #2      G     0.999141+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
@@ -541,20 +540,20 @@ class TableArray(ScalarObject):  # displacement style table
                 #2      G    -0.200504+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
                 #3      G          1.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
                 #1001   S     1.200504+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
-                for itime in range(ntimes):
-                    column_values2 = [column_value[itime] for column_value in column_values]
-                    for nid, gridtype in zip(self.node_gridtype[:, 0], self.gridtype_str):
-                        node_gridtype2.append([itime, nid, gridtype])
+                #for itime in range(ntimes):
+                    #column_values2 = [column_value[itime] for column_value in column_values]
+                    #for nid, gridtype in zip(self.node_gridtype[:, 0], self.gridtype_str):
+                        #node_gridtype2.append([itime, nid, gridtype])
 
-                names = ['itime', 'NodeID', 'Type']
-                index = pd.MultiIndex.from_tuples(node_gridtype2, names=names)
-                A = self.data.reshape(ntimes*nnodes, 6)
-                data_frame = pd.DataFrame(A, columns=headers, index=index)
-                #print(data_frame.index.names)
-                #data_frame = pandas_extract_rows(data_frame, ugridtype_str)
-                print(data_frame)
+                #names = ['itime', 'NodeID', 'Type']
+                #index = pd.MultiIndex.from_tuples(node_gridtype2, names=names)
+                #A = self.data.reshape(ntimes*nnodes, 6)
+                #data_frame = pd.DataFrame(A, columns=headers, index=index)
+                ##print(data_frame.index.names)
+                ##data_frame = pandas_extract_rows(data_frame, ugridtype_str)
+                #print(data_frame)
 
-            elif is_v25 and 0:  # pragma: no cover
+            #elif is_v25 and 0:  # pragma: no cover
                 #                t1        t2        t3        r1        r2        r3
                 # 0   0.655815+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
                 # 1   0.999141+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
@@ -564,11 +563,11 @@ class TableArray(ScalarObject):  # displacement style table
                 # 5   0.999141+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
                 # 6        1.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j  0.0+0.0j
                 #index = pd.MultiIndex.from_arrays(node_gridtype, names=['NodeID', 'Type'])
-                A = self.data.reshape(nnodes*ntimes, 6)
-                data_frame = pd.DataFrame(A, columns=headers)
-                #data_frame = pd.DataFrame(A, columns=headers, index=index)  # doesn't work
+                #A = self.data.reshape(nnodes*ntimes, 6)
+                #data_frame = pd.DataFrame(A, columns=headers)
+                ##data_frame = pd.DataFrame(A, columns=headers, index=index)  # doesn't work
                 # doesn't turn into workable table
-            else:
+            #else:
                 # old
                 # Mode                             1                 2                   3
                 # EigenvalueReal               -0.0              -0.0                -0.0
@@ -596,14 +595,14 @@ class TableArray(ScalarObject):  # displacement style table
                 #     t3
                 #     ...
 
-                data_frame = pd.Panel(self.data, items=column_values,
-                                      major_axis=node_gridtype, minor_axis=headers).to_frame()  # to_xarray()
-                data_frame.columns.names = column_names
-                data_frame.index.names = ['NodeID', 'Type', 'Item']
+                #data_frame = pd.Panel(self.data, items=column_values,
+                                      #major_axis=node_gridtype, minor_axis=headers).to_frame()  # to_xarray()
+                #data_frame.columns.names = column_names
+                #data_frame.index.names = ['NodeID', 'Type', 'Item']
                 #print(column_names)
                 #print(data_frame)
                 #print(self.data_frame.index.names)
-                data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
+                #data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
             self.data_frame = data_frame
             #print(self.data_frame)
 
@@ -641,9 +640,9 @@ class TableArray(ScalarObject):  # displacement style table
         gridtypes = self.node_gridtype[:, 1]
         nnodes = len(gridtypes)
         self.gridtype_str = np.chararray((nnodes), unicode=True)
-        ugridtypes = unique(gridtypes)
+        ugridtypes = np.unique(gridtypes)
         for ugridtype in ugridtypes:
-            i = where(gridtypes == ugridtype)
+            i = np.where(gridtypes == ugridtype)
             self.gridtype_str[i] = self.recast_gridtype_as_string(ugridtype)
         #del self.itotal, self.itime
 
@@ -1160,7 +1159,7 @@ class RealTableArray(TableArray):
             r2 = self.data[itime, :, 4]
             r3 = self.data[itime, :, 5]
 
-            if isinstance(dt, (float, float32)):
+            if isinstance(dt, float_types):
                 header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
             else:
                 header[1] = ' %s = %10i\n' % (self.data_code['name'], dt)
@@ -1233,11 +1232,11 @@ class RealTableArray(TableArray):
         return page_num - 1
 
     def extract_xyplot(self, node_ids, index):
-        node_ids = asarray(node_ids, dtype='int32')
+        node_ids = np.asarray(node_ids, dtype='int32')
         i = index - 1
         assert index in [1, 2, 3, 4, 5, 6], index
         nids = self.node_gridtype[:, 0]
-        inids = searchsorted(nids, node_ids)
+        inids = np.searchsorted(nids, node_ids)
         assert all(nids[inids] == node_ids), 'nids=%s expected=%s; all=%s'  % (nids[inids], node_ids, nids)
         return self.data[:, inids, i]
 
@@ -1251,9 +1250,9 @@ class ComplexTableArray(TableArray):
 
     @classmethod
     def add_freq_case(cls, table_name, node_gridtype, data, isubcase,
-                       freqs,
-                       is_sort1=True, is_random=False, is_msc=True,
-                       random_code=0, title='', subtitle='', label=''):
+                      freqs,
+                      is_sort1=True, is_random=False, is_msc=True,
+                      random_code=0, title='', subtitle='', label=''):
 
         table_name = 'OUGV1'
         analysis_code = 5 # freq
@@ -1295,12 +1294,12 @@ class ComplexTableArray(TableArray):
         else:
             raise ValueError('index_str=%r' % index_str)
 
-        node_ids = asarray(node_ids, dtype='int32')
+        node_ids = np.asarray(node_ids, dtype='int32')
         i = index - 1
         assert index in [1, 2, 3, 4, 5, 6,
                          7, 8, 9, 10, 11, 12], index
         nids = self.node_gridtype[:, 0]
-        inids = searchsorted(nids, node_ids)
+        inids = np.searchsorted(nids, node_ids)
         assert all(nids[inids] == node_ids), 'nids=%s expected=%s; all=%s'  % (nids[inids], node_ids, nids)
         if j == 1:
             # real
@@ -1310,10 +1309,10 @@ class ComplexTableArray(TableArray):
             return self.data[:, inids, i].imag
         elif j == 3:
             # mag
-            return abs(self.data[:, inids, i])
+            return np.abs(self.data[:, inids, i])
         elif j == 4:
             # phase
-            return angle(self.data[:, inids, i])
+            return np.angle(self.data[:, inids, i])
         else:
             raise RuntimeError()
 
@@ -1609,7 +1608,7 @@ def pandas_extract_rows(data_frame, ugridtype_str, index_names):
             continue
         if dim == 1:
             # Note that I'm only keeping every 6th row
-            eig = data_frame.xs(letter,level=1).iloc[0::6]
+            eig = data_frame.xs(letter, level=1).iloc[0::6]
             eig = eig.reset_index().replace(
                 {'Item' : {'t1' : letter}}).set_index(index_names)
         elif dim == 6:

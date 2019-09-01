@@ -56,11 +56,11 @@ class ComplexCBush1DArray(OES_Object):
         import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = self._build_pandas_transient_elements(
-            column_values, column_names,
-            headers, self.element, self.data)
-        print(self.data_frame)
-        aa
+        #self.data_frame = self._build_pandas_transient_elements(
+            #column_values, column_names,
+            #headers, self.element, self.data)
+        #print(self.data_frame)
+        #aa
         self.data_frame = pd.Panel(self.data, items=column_values,
                                    major_axis=self.element, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names

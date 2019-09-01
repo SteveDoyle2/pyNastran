@@ -875,11 +875,15 @@ class WriteMesh(BDFAttributes):
             for (unused_id, pset) in sorted(self.pset.items()):
                 bdf_file.write(pset.write_card(size, is_double))
 
-            for (unused_id, pval) in sorted(self.pval.items()):
-                bdf_file.write(pval.write_card(size, is_double))
+            for (unused_adapt_id, pvals) in sorted(self.pval.items()):
+                for pval in pvals:
+                    bdf_file.write(pval.write_card(size, is_double))
 
             for (unused_id, gmcurv) in sorted(self.gmcurv.items()):
                 bdf_file.write(gmcurv.write_card(size, is_double))
+
+            for (unused_id, gmsurf) in sorted(self.gmsurf.items()):
+                bdf_file.write(gmsurf.write_card(size, is_double))
 
             for (unused_id, feedge) in sorted(self.feedge.items()):
                 bdf_file.write(feedge.write_card(size, is_double))
