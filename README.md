@@ -254,10 +254,6 @@ See [v0.8.0](https://github.com/SteveDoyle2/pyNastran/releases/tag/v0.8.0) for i
 
 ### pyNastran v0.7.2 has been Released (2015/4/25)
 
-|  Version  | Docs  |
-| :--- 	  | :--- 	  |
-|  [v0.7.2](https://github.com/SteveDoyle2/pyNastran/releases) |  [![Documentation Status](https://readthedocs.org/projects/pynastran-git/badge/?version=v0.7.2)](http://pynastran-git.readthedocs.io/en/v0.7.2/?badge=v0.7.2) |
-
 See [v0.7.2](https://github.com/SteveDoyle2/pyNastran/releases) for information regarding enhancements.
 
 ### Version 0.6.1 has been released (2013/6)
