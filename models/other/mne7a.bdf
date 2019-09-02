@@ -39,6 +39,7 @@ SPC1    100     123     1
 SPC1    100     13      11
 SPC1    100     3       111
 SPOINT,80001,THRU,80019
-include 'TPLDIR:model1.dat'
+cinclude 'TPLDIR:model1.dat'
+include 'mne7a_model1.dat'
 PARAM,POST,-1
 ENDDATA
