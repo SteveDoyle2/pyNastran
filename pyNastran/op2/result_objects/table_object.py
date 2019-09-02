@@ -419,6 +419,9 @@ class TableArray(ScalarObject):  # displacement style table
 
         ugridtype_str = np.unique(self.gridtype_str)
         if self.nonlinear_factor not in (None, np.nan):
+            #if not self.is_sort1:
+                #print("skipping %s becuase it's not SORT1" % self.class_name)
+                #return
             column_names, column_values = self._build_dataframe_transient_header()
             #if is_v25:
             #  we start out like this...
@@ -455,30 +458,37 @@ class TableArray(ScalarObject):  # displacement style table
             #        r1            0.0+0.0j       0.0+0.0j       0.0+0.0j
             #        r2            0.0+0.0j       0.0+0.0j       0.0+0.0j
             #        r3            0.0+0.0j       0.0+0.0j       0.0+0.0j
-            # 3      t1            1.0+0.0j       1.0+0.0j -0.285539+0.0j
-            #        t2            0.0+0.0j       0.0+0.0j       0.0+0.0j
-            #        t3            0.0+0.0j       0.0+0.0j       0.0+0.0j
-            #        r1            0.0+0.0j       0.0+0.0j       0.0+0.0j
-            #        r2            0.0+0.0j       0.0+0.0j       0.0+0.0j
-            #        r3            0.0+0.0j       0.0+0.0j       0.0+0.0j
             # 1001   S        0.000859+0.0j  0.000859+0.0j -0.003323+0.0j
-
-            node_gridtype_item = []
-            for nid, gridtype in zip(self.node_gridtype[:, 0], self.gridtype_str):
-                node_gridtype_item.extend([[nid, gridtype, 't1']])
-                node_gridtype_item.extend([[nid, gridtype, 't2']])
-                node_gridtype_item.extend([[nid, gridtype, 't3']])
-                node_gridtype_item.extend([[nid, gridtype, 'r1']])
-                node_gridtype_item.extend([[nid, gridtype, 'r2']])
-                node_gridtype_item.extend([[nid, gridtype, 'r3']])
 
             columns = pd.MultiIndex.from_arrays(column_values, names=column_names)
 
-            names = ['NodeID', 'Type', 'Item']
-            index = pd.MultiIndex.from_tuples(node_gridtype_item, names=names)
-            A = self.data.reshape(ntimes, nnodes*6).T
-            data_frame = pd.DataFrame(A, columns=columns, index=index)
-            data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
+            gridtype_str = self.gridtype_str
+            ugridtype_str = np.unique(gridtype_str)
+            if len(ugridtype_str) == 1 and gridtype_str[0] in ['S', 'E']:
+                nnodes = self.node_gridtype.shape[0]
+                node_gridtype = [self.node_gridtype[:, 0], [gridtype_str[0]] * nnodes]
+
+                names = ['NodeID', 'Item']
+                index = pd.MultiIndex.from_arrays(node_gridtype, names=names)
+                A = self.data[:, :, 0].T
+                data_frame = pd.DataFrame(A, columns=columns, index=index)
+            else:
+                node_gridtype_item = []
+                for nid, gridtype in zip(self.node_gridtype[:, 0], gridtype_str):
+                    node_gridtype_item.extend([[nid, gridtype, 't1']])
+                    node_gridtype_item.extend([[nid, gridtype, 't2']])
+                    node_gridtype_item.extend([[nid, gridtype, 't3']])
+                    node_gridtype_item.extend([[nid, gridtype, 'r1']])
+                    node_gridtype_item.extend([[nid, gridtype, 'r2']])
+                    node_gridtype_item.extend([[nid, gridtype, 'r3']])
+
+
+                names = ['NodeID', 'Type', 'Item']
+                index = pd.MultiIndex.from_tuples(node_gridtype_item, names=names)
+                A = self.data.reshape(ntimes, nnodes*6).T
+                data_frame = pd.DataFrame(A, columns=columns, index=index)
+                #print(data_frame.to_string())
+                data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
 
             #elif is_v25 and 0:  # pragma: no cover
                 #                                                                           t1        t2
@@ -1594,6 +1604,7 @@ class ComplexTableArray(TableArray):
         #return page_num
 
 def pandas_extract_rows(data_frame, ugridtype_str, index_names):
+    """removes the t2-t6 for S and E points"""
     import pandas as pd
     letter_dims = [
         ('G', 6),
@@ -1609,8 +1620,21 @@ def pandas_extract_rows(data_frame, ugridtype_str, index_names):
         if dim == 1:
             # Note that I'm only keeping every 6th row
             eig = data_frame.xs(letter, level=1).iloc[0::6]
-            eig = eig.reset_index().replace(
-                {'Item' : {'t1' : letter}}).set_index(index_names)
+            eig = eig.reset_index()
+            #print(eig.columns)
+            #print(eig)
+            #item = eig.loc[:, 1]
+            #item = eig.loc[:, 'Item']
+            #print(dir(eig))
+            #print(eig.loc)
+            #item = eig['Item']
+            #print(item)
+            try:
+                eig = eig.replace({'Item' : {'t1' : letter}}).set_index(index_names)
+            except (TypeError, NotImplementedError):
+                print(f'skipping pandas cleanup due to issue with complex {letter} points')
+                return data_frame
+                #continue
         elif dim == 6:
             eig = data_frame.xs(letter, level=1)
         else:

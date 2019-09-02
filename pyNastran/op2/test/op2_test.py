@@ -182,14 +182,14 @@ def main():
     from docopt import docopt
     ver = str(pyNastran.__version__)
 
-    msg = "Usage:\n"
+    msg = "Usage:  "
     #is_release = False
     if 'dev' in ver:
         msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-o] [-h] [-d] [-b] [--safe] [--skip_dataframe]\n"
     else:
         msg += "op2_test [-r] [-s] [-c] [-u] [-t] [-g] [-n] [-f] [-h] [-d] [-b] [--safe] [--skip_dataframe]\n"
-    msg += "  op2_test -h | --help\n"
-    msg += "  op2_test -v | --version\n"
+    msg += "        op2_test -h | --help\n"
+    msg += "        op2_test -v | --version\n"
     msg += "\n"
     msg += "Tests to see if an OP2 will work with pyNastran %s.\n" % ver
     msg += "\n"

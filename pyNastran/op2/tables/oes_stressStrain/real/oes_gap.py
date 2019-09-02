@@ -92,16 +92,26 @@ class NonlinearGapStressArray(OES_Object):
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
+            #Time                 0.025     0.050
+            #ElementID Item
+            #899       compX   0.537281  0.851454
+            #          shearY  0.000000  0.000000
+            #          shearZ  0.000000  0.000000
+            #          axialU  0.000005  0.000009
+            #          shearV  0.000000  0.000000
+            #          shearW  0.000000  0.000000
+            #          slipV   0.000000  0.000000
+            #          slipW   0.000000  0.000000
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = pd.Panel(self.data,
+                                  major_axis=self.element, minor_axis=headers).to_frame()
+            data_frame.columns.names = ['Static']
+            data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

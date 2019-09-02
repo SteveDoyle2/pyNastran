@@ -91,11 +91,19 @@ class RealBushArray(OES_Object):
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
+            #Time           0.00 0.10
+            #ElementID Item
+            #11        tx    0.0  0.0
+            #          ty    0.0  0.0
+            #          tz    0.0  0.0
+            #          rx    0.0  0.0
+            #          ry    0.0  0.0
+            #          rz    0.0  0.0
+            #21        tx    0.0  0.0
             column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = pd.Panel(self.data, items=column_values,
-                                  major_axis=self.element, minor_axis=headers).to_frame()
-            data_frame.columns.names = column_names
-            data_frame.index.names = ['ElementID', 'Item']
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
             # >25.0
             #Static         tx   ty   tz   rx   ry   rz

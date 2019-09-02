@@ -3258,13 +3258,19 @@ class ComplexCBushForceArray(ComplexForceObject):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        #Freq                              10.0
+        #ElementID Item
+        #123       fx    10000.000000+0.000021j
+        #          fy     1000.000000+0.000002j
+        #          fz      100.000000+0.000000j
+        #          mx     7000.000000+0.000000j
+        #          my      700.000000+0.000000j
+        #          mz       70.000000+0.000000j
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = self._build_pandas_transient_elements(
+            column_values, column_names,
+            headers, self.element, self.data)
 
     def __eq__(self, table):
         self._eq_header(table)

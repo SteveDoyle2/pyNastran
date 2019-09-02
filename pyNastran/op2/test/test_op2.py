@@ -543,7 +543,7 @@ def get_test_op2_data(argv):
     #print("data", data)
     return data
 
-def main(argv=None, show_args=False):
+def main(argv=None, show_args=True):
     """the interface for test_op2"""
     if argv is None:
         argv = sys.argv

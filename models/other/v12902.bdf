@@ -1,0 +1,121 @@
+$ DEC/CMS REPLACEMENT HISTORY, Element V12902.DAT
+$ *2     4-NOV-1993 11:35:25 D_FERG "68 PLUS/ETD/ The CGAP entry was changed to reflect new format in V68."
+$ *1    21-MAY-1991 13:44:21 EC004ABB "67 PLUS/G/ NEW FOR V67 JFC/KJW"
+$ DEC/CMS REPLACEMENT HISTORY, Element V12902.DAT
+$ DEC/CMS REPLACEMENT HISTORY, Element V12902.DAT
+$ *1    21-MAY-1991 11:00:38 EC004ABB "67 PLUS/G/ NEW FOR V67 JFC/KJW"
+$ DEC/CMS REPLACEMENT HISTORY, Element V12902.DAT
+ID MSC, V12902 $ KJW 04/22/91
+$ID MSC, V9902 $ CJC 2-SEP-88
+$ID HAMMER,V66 $ SSH 6/22/87, SHL 5/28/87 $ TKT 5-10-1985, SHL 6/4/85
+TIME 5        $ FOR VAX870(TETRA), 30 MIN. FOR VAX780(BEAM)
+SOL  129
+$SOL  99       $ NONLINEAR TRANSIENT ANALYSIS
+CEND
+TITLE= TRANSIENT RESPONSE OF SHOCK WAVE IN BAR -- IMPACT       V12902
+SUBTITLE= BAR WITH FIXED END STRUCK BY A MOVING MASS AT THE OTHER END
+  SET 1=21,99
+  SET 2=101,120,899
+  SET 3=99,21
+$ SEALL=ALL
+  DISPLACEMENT=1
+  VELOCITY=3
+  STRESS=2
+SUBCASE 1 $ UP TO 3 SEC.
+  IC=1
+  TSTEPNL=10
+SUBCASE 2 $ UP TO 5 SEC.
+  TSTEPNL=20
+$SUBCASE 3
+$  TSTEPNL=30
+OUTPUT(XYPLOT)
+  CSCALE=1.3
+  XAXIS=YES
+  YAXIS=YES
+  XTITLE=TIME
+  YTITLE=DISPLACEMENT
+  TCURVE= DISP.(T1) AT MASS PT.(GP99),FREE END(GP21)
+XYPLOT DISP /99(T1),21(T1)
+  YTITLE=STRESS
+  TCURVE= STRESS AT FREE END (ELEMENT 120)
+XYPLOT STRESS /120(2)
+  TCURVE= STRESS AT FIXED END (ELEMENT 101)
+XYPLOT STRESS /101(2)
+  TCURVE= FORCE IN THE GAP (ELEMENT 899)
+  YMAX=2.
+XYPLOT STRESS /899(2)
+BEGIN BULK
+$.......2.......3.......4.......5.......6.......7.......8.......9.......10.....
+GRID    1               0.0     0.0     0.0             123456
+GRID    2               5.      0.0     0.0             23456
+GRID    3               10.     0.0     0.0             23456
+GRID    4               15.     0.0     0.0             23456
+GRID    5               20.     0.0     0.0             23456
+GRID    6               25.     0.0     0.0             23456
+GRID    7               30.     0.0     0.0             23456
+GRID    8               35.     0.0     0.0             23456
+GRID    9               40.     0.0     0.0             23456
+GRID    10              45.     0.0     0.0             23456
+GRID    11              50.     0.0     0.0             23456
+GRID    12              55.     0.0     0.0             23456
+GRID    13              60.     0.0     0.0             23456
+GRID    14              65.     0.0     0.0             23456
+GRID    15              70.     0.0     0.0             23456
+GRID    16              75.     0.0     0.0             23456
+GRID    17              80.     0.0     0.0             23456
+GRID    18              85.     0.0     0.0             23456
+GRID    19              90.     0.0     0.0             23456
+GRID    20              95.     0.0     0.0             23456
+GRID    21              100.    0.0     0.0             23456
+GRID    99              100.    0.0     0.0             23456
+$ TO CHECK OMIT
+$OMIT1   1       5       9       13      17
+$ TO CHECK ASET
+$ASET1   1       2       3       4       6       7       8       10      +AS1
+$+AS1    11      12      14      15      16      18      19      20      +AS2
+$+AS2    21      99
+$ ROD ELEMENTS
+CONROD  101     1       2       100     1.0
+CONROD  102     2       3       100     1.0
+CONROD  103     3       4       100     1.0
+CONROD  104     4       5       100     1.0
+CONROD  105     5       6       100     1.0
+CONROD  106     6       7       100     1.0
+CONROD  107     7       8       100     1.0
+CONROD  108     8       9       100     1.0
+CONROD  109     9       10      100     1.0
+CONROD  110     10      11      100     1.0
+CONROD  111     11      12      100     1.0
+CONROD  112     12      13      100     1.0
+CONROD  113     13      14      100     1.0
+CONROD  114     14      15      100     1.0
+CONROD  115     15      16      100     1.0
+CONROD  116     16      17      100     1.0
+CONROD  117     17      18      100     1.0
+CONROD  118     18      19      100     1.0
+CONROD  119     19      20      100     1.0
+CONROD  120     20      21      100     1.0
+$ GAP ELEMENT
+CGAP    899     90      21      99      0.      1.      0.      0
+PGAP    90                      1.E+5
+$ MASS ELEMENT
+CONM2   999     99              10.
+$ INITIAL CONDITION
+TIC     1       99      1               -0.1
+TIC     1       21      1               -0.1
+$ MATERIAL PROPERTY OF ROD
+MAT1    100     1.E+3           .3      0.1                     .002
+PARAM   W4      1.570796
+PARAM   COUPMASS1
+$ TIME STEP DEFINITION
+TSTEPNL 10      120     0.025   1       ADAPT                           +TS11
++TS11                                                                   +TS12
++TS12           0
+TSTEPNL 20      80      0.025   1       ADAPT                           +TS21
++TS21                                                                   +TS22
++TS22           0
+TSTEPNL 30      75      0.010   1       ADAPT                           +TS31
++TS31                                                                   +TS32
++TS32           0
+PARAM,POST,-1
+ENDDATA

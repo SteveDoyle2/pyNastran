@@ -143,7 +143,7 @@ def get_centroid_max_min_principal_stress(bdf, op2, subcase, eids):
     #return eid_max, maxp, eid_min, minp
 
 
-def main():
+def main():  # pragma: no cover
     bdf = None
     #op2_filename = 'model.op2'
     op2 = read_op2(op2_filename=None, combine=True, log=None, debug=True,

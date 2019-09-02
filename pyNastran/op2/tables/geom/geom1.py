@@ -427,7 +427,9 @@ class GEOM1(GeomCommon):
                 datab_int, = struct_i.unpack(databi)
                 n += 4
             datai = databi_bytes.decode('latin1').rstrip()
-            self.add_gmcurv(curve_id, group, cid_in, cid_bc, datai)
+
+            data_split = ['        %s\n' % datai[i:i+64].strip() for i in range(0, len(datai), 64)]
+            self.add_gmcurv(curve_id, group, data_split, cid_in=cid_in, cid_bc=cid_bc)
             #print(datai)
 
         #ints = np.frombuffer(data[n:], dtype=self.idtype).copy()

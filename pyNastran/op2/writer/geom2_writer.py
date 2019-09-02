@@ -220,6 +220,11 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             if cid is None:
                 cid = -1
 
+            # not 100%
+            s1 = 0.0 if s1 is None else s1
+            s2 = 0.0 if s2 is None else s2
+            s3 = 0.0 if s3 is None else s3
+
             if elem.x[0] is None and elem.g0 is None:
                 # Use Element CID below for orientation
                 f = -1

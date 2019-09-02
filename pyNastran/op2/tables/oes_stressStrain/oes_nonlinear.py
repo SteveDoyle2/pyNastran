@@ -117,18 +117,33 @@ class RealNonlinearPlateArray(OES_Object):
         #nelements = self.element.shape[0]
 
         if self.nonlinear_factor not in (None, np.nan):
+            #LoadStep                              0.25          0.50
+            #ElementID Item
+            #1         oxx                 1.725106e-05  1.075969e-05
+            #          oyy                 1.500000e+06  3.000000e+06
+            #          ozz                 0.000000e+00  0.000000e+00
+            #          txy                -1.751084e-10  2.152285e-09
+            #          eff_plastic_strain  1.500000e+06  3.000000e+06
+            #...                                    ...           ...
+            #100       eff_creep_strain    0.000000e+00  0.000000e+00
+            #          exx                -2.024292e-06 -4.048583e-06
+            #          eyy                 6.747639e-06  1.349528e-05
+            #          ezz                 0.000000e+00  0.000000e+00
+            #          exy                 0.000000e+00  0.000000e+00
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data[:, :, 1:], items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            element = np.vstack([self.element, self.element]).T.flatten()
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, element, self.data[:, :, 1:])
         else:
             # option B - nice!
             df1 = pd.DataFrame(self.element).T
             df1.columns = ['ElementID']
             df2 = pd.DataFrame(self.data[0, :, 1:])
             df2.columns = headers
-            self.data_frame = df1.join(df2)
-        self.data_frame = self.data_frame.reset_index().set_index(['ElementID'])
+            data_frame = df1.join(df2)
+            data_frame = data_frame.reset_index().set_index(['ElementID'])
+        self.data_frame = data_frame
         #print(self.data_frame)
 
     def add_new_eid_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):

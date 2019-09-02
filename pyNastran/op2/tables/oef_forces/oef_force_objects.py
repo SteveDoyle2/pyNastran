@@ -320,16 +320,22 @@ class FailureIndicesArray(RealForceObject):
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element_layer, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
+            data_frame = pd.Panel(self.data, items=column_values,
+                                  major_axis=element_layer, minor_axis=headers).to_frame()
+            data_frame.columns.names = column_names
+            data_frame.index.names = ['ElementID', 'Layer', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=element_layer, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
+            #Static           failure_index_for_ply (direct stress/strain)  failure_index_for_bonding (interlaminar stresss)     max_value
+            #ElementID Layer
+            #101       1                                      7.153059e-07                                               0.0           NaN
+            #          2                                      1.276696e-07                                               0.0           NaN
+            #          3                                      7.153059e-07                                               NaN  7.153059e-07
+            element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
+            index = pd.MultiIndex.from_arrays(element_layer, names=['ElementID', 'Layer'])
 
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=index)
+            data_frame.columns.names = ['Static']
+        self.data_frame = data_frame
 
     def get_headers(self):
         #headers = ['eid', 'failure_theory', 'ply', 'failure_index_for_ply (direct stress/strain)',
@@ -3732,10 +3738,10 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
-        element = self.element_node[:, 0]
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             # TODO: add NodeA, NodeB
+            element = self.element_node[:, 0]
             column_names, column_values = self._build_dataframe_transient_header()
             self.data_frame = pd.Panel(self.data, items=column_values,
                                        major_axis=element, minor_axis=headers).to_frame()
@@ -4203,16 +4209,35 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
+            #Mode                                1             2
+            #Freq                      1.214849e-07  1.169559e-07
+            #Eigenvalue               -5.826450e-13 -5.400125e-13
+            #Radians                   7.633119e-07  7.348554e-07
+            #ElementID NodeID    Item
+            #100001001 111001001 xxb   0.000000e+00  0.000000e+00
+            #                    fx   -2.363981e-14  1.091556e-15
+            #                    fy    1.041715e-13  5.642625e-14
+            #                    fz    2.040026e-14  1.133024e-12
+            #                    mx   -1.903338e-15  5.201282e-16
+            #                    my    8.236364e-14  2.141288e-13
+            #                    mz   -2.247944e-14  9.947491e-14
+            #          111001002 xxb   3.333333e-01  3.333333e-01
+            #                    fx   -2.278856e-14  5.621586e-16
+            #                    fy   -2.092285e-14 -7.903003e-14
+            #                    fz   -6.230423e-14  2.318665e-12
+            #                    mx    7.229356e-16 -1.005680e-16
+            #                    my    3.688462e-14  7.122293e-14
+            #                    mz   -7.785338e-15  3.304847e-14
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element_node[:, 0], minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = self._build_pandas_transient_element_node(
+                column_values, column_names,
+                headers, self.element_node, self.data)
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element_node[:, 0], minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = pd.Panel(self.data,
+                                  major_axis=self.element_node[:, 0], minor_axis=headers).to_frame()
+            data_frame.columns.names = ['Static']
+            data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1

@@ -328,6 +328,9 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type == 'SUPORT1':
             for suport1 in model.suport1.values():
                 nids_used.update(suport1.node_ids)
+        elif card_type == 'TIC':
+            for tic in model.tics.values():
+                nids_used.update(tic.node_ids)
         elif card_type == 'GRID':
             for unused_nid, node in model.nodes.items():
                 cids_used.update([node.Cp(), node.Cd()])

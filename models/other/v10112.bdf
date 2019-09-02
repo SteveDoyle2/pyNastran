@@ -1,0 +1,50 @@
+$ DEC/CMS REPLACEMENT HISTORY, Element V10112.DAT
+$ *1    15-JUN-1990 16:41:35 CMSMGR "66B PLUS/G 66B/ Initial installation of DEMO test problems"
+$ DEC/CMS REPLACEMENT HISTORY, Element V10112.DAT
+ID MSC, V10112 $ LNA 17-OCT-1988
+TIME 5 $
+SOL 101 $
+CEND
+TITLE =   LAMINATE ANALYSIS FOR THERMAL AND MEMBRANE LOADING   V10112
+SUBTIT =  REF: JONES, MECHANICS OF COMPOSITE MATERIALS, 1975, PP.199-201
+DISP=ALL
+FORCE=ALL
+STRESS=ALL
+SUBCASE 10
+LABEL = COEFFICIENTS OF DELTA(T); DELTA(T) = 1.
+TEMP(LOAD)=11
+SUBCASE 20
+LABEL = COEFFICIENTS OF NX/T ; NX= 12. FOR T=12.
+LOAD=20
+SUBCOM 30
+LABEL = HILL FAILURE IN INNER LAYER  ; NX/T= 3400.PSI
+SUBSEQ=-200.,3400.
+TEMP(LOAD)=31  $ REQUIRED, SEE AM SECT:2.13
+SUBCOM 40
+LABEL = HILL FAILURE IN INNER LAYER WITH NO TEMPERATURE CHANGE ; NX/T= 5320.PSI
+SUBSEQ=5320.
+BEGIN BULK
+TEMPD   11      1.
+FORCE   20      2               .5      12.
+FORCE   20      3               .5      12.
+TEMPD   31      -200.
+CQUAD4  101     101     1       2       3       4       0.
+GRID    1               0.      0.                      123456
+GRID    2               1.      0.                      6
+GRID    3               1.      1.                      6
+GRID    4               0.      1.                      16
+$
+$MAT8   MID     E1      E2      NU12    G12     G1,Z    G2,Z    RHO
+MAT8    1       7.8+6   2.6+6   .25     1.25+6  4.+3    20.+3   6.+3    +M10
+$       A1      A2      TREF    XT      XC      YT      YC      S
++M10    3.5-6   11.4-6  0.      150.+3  150.+3  4.+3    20.+3   6.+3
+$
+$PCOMP  PID     ZO      NSM     SB      F.T.    TREF    GE      LAM
+PCOMP   101                     1.+10   HILL    0.                      +P1A
+$       MID1    T1      THETA1  SOUTI   MID2    T2      THETA2  SOUT2
++P1A    1       1.      0.      YES     1       10.     +90.    YES     +P1B
++P1B    1       1.      0.      YES
+$ PARAM NOCOMPS 1 $ REQUIRED FOR LAMINA OUTPUT IN SOL61
+$ PARAM LSTRN   1 $ FOR LAMINA STRAINS RATHER THAN STRESSES
+PARAM,POST,-1
+ENDDATA

@@ -1,0 +1,44 @@
+id msc, mne7a.dat $ v2004 22-Aug-2004 klk
+SOL 106
+CEND
+TITLE= SIMPLE PLATE MODEL 10 X 10 ELEMENTS
+NLSTRESS = ALL
+SUBCASE 200
+LABEL= static stiffining load in plane of plate for preload
+SPCF(PLOT) = ALL $ Generate forces of constraint
+SPC = 100 $ 
+LOAD=100
+NLPARM = 1
+BEGIN BULK
+PARAM,LGDISP,1
+NLPARM,1,4,,,,,UPW,YES
+PARAM,WTMASS,1.0
+FORCE1  100     111     3000.   1       111
+FORCE1  100     112     6000.   2       112
+FORCE1  100     113     6000.   3       113
+FORCE1  100     114     6000.   4       114
+FORCE1  100     115     6000.   5       115
+FORCE1  100     116     6000.   6       116
+FORCE1  100     117     6000.   7       117
+FORCE1  100     118     6000.   8       118
+FORCE1  100     119     6000.   9       119
+FORCE1  100     120     6000.   10      120
+FORCE1  100     121     3000.   11      121
+FORCE1  100     1       3000.   111     1
+FORCE1  100     2       6000.   112     2
+FORCE1  100     3       6000.   113     3
+FORCE1  100     4       6000.   114     4
+FORCE1  100     5       6000.   115     5
+FORCE1  100     6       6000.   116     6
+FORCE1  100     7       6000.   117     7
+FORCE1  100     8       6000.   118     8
+FORCE1  100     9       6000.   119     9
+FORCE1  100     10      6000.   120     10
+FORCE1  100     11      3000.   121     11
+SPC1    100     123     1
+SPC1    100     13      11
+SPC1    100     3       111
+SPOINT,80001,THRU,80019
+include 'TPLDIR:model1.dat'
+PARAM,POST,-1
+ENDDATA

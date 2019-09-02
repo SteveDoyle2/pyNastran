@@ -611,9 +611,11 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
                 elif var == 'B':
                     prop.Bi = [bi*velocity_scale if bi is not None else None
                                for bi in prop.Bi]
+                elif var == 'RCV':
+                    model.log.warning('Skipping RCV for PBUSH %i' % prop.pid)
                 elif var == 'GE':
                     pass
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError(prop)
 
             #prop.rcv
