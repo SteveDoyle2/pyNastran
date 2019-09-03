@@ -3571,18 +3571,29 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
+        # LoadStep                 1.0
+        # ElementID Item
+        # 101       fx    33333.332031
+        #           sfy       0.000000
+        #           sfz       0.000000
+        #           u         0.000115
+        #           v         0.000000
+        #           w         0.000000
+        #           sv        0.000000
+        #           sw        0.000000
+        # 102       fx       -0.000002
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
-            self.data_frame = pd.Panel(self.data,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = pd.Panel(self.data,
+                                  major_axis=self.element, minor_axis=headers).to_frame()
+            data_frame.columns.names = ['Static']
+            data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)

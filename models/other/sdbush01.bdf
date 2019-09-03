@@ -1,0 +1,71 @@
+id msc, sdbush01.dat $ dvw v2002 21-oct-2001
+SOL	108 $ STATIC ANALYSIS 
+CEND
+  LOAD  = 85
+  DLOAD = 185
+  DISP = ALL
+  FORCE( RALL) = ALL
+  STRESS(RALL) = ALL
+  FREQ = 120
+  RANDOM = 100
+  OUTPUT(XYOUT)
+  TCURVE = BUSH ELEMENT 123
+  XYPRINT STRESS  PSDF / 123(2)
+  XYPRINT STRESS  PSDF / 123(3)
+  XYPRINT STRESS  PSDF / 123(4)
+  XYPRINT STRESS  PSDF / 123(5)
+  XYPRINT STRESS  PSDF / 123(6)
+  XYPRINT STRESS  PSDF / 123(7)
+  XYPRINT STRESS  AUTO / 123(2)
+  XYPRINT STRESS  AUTO / 123(3)
+  XYPRINT STRESS  AUTO / 123(4)
+  XYPRINT STRESS  AUTO / 123(5)
+  XYPRINT STRESS  AUTO / 123(6)
+  XYPRINT STRESS  AUTO / 123(7)
+  XYPRINT FORCE PSDF / 123(2)
+  XYPRINT FORCE PSDF / 123(3)
+  XYPRINT FORCE PSDF / 123(4)
+  XYPRINT FORCE PSDF / 123(5)
+  XYPRINT FORCE PSDF / 123(6)
+  XYPRINT FORCE PSDF / 123(7)
+  XYPRINT FORCE AUTO / 123(2)
+  XYPRINT FORCE AUTO / 123(3)
+  XYPRINT FORCE AUTO / 123(4)
+  XYPRINT FORCE AUTO / 123(5)
+  XYPRINT FORCE AUTO / 123(6)
+  XYPRINT FORCE AUTO / 123(7)
+BEGIN BULK
+GRID    11              10.     0.      0.        
+GRID    112             -10.    0.      0.              123456
+GRID    21              -10.    10.     0.              123456
+CBUSH   123     456     112     11      21
+        1.
+PBUSH   456     K       101.    202.    303.    404.    505.    606.
+                GE      .07
+                B	.131	.132	.133
+                RCV	1.
+PBUSHT  456     K       101     101     101     101     101     101
+		B	103	103	103
+                GE      107
+FORCE   85      11              10000.  1.
+FORCE   85      11              1000.           1.
+FORCE   85      11              100.                    1.
+MOMENT  85      11              7000.   1.
+MOMENT  85      11              700.            1.
+MOMENT  85      11              70.                     1.
+RLOAD1  185     85                      581
+TABLED1 581
+        1.      1.      10000.  1.      ENDT
+FREQ1   120     10.     5.      2
+TABLED1 101
+        10.     700.    20.     700.    ENDT
+TABLED1 103
+        10.      30.    20.      30.    ENDT
+TABLED1 107
+        10.     2.      20.     2.    	ENDT
+RANDPS  100     1       1       4.              1
+RANDPS  10      2       2       8.              1
+RANDT1  100     4       0.0     0.4
+TABRNDG 1       1       .2      6.
+PARAM,POST,-1
+ENDDATA

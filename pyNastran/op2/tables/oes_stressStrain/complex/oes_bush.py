@@ -55,13 +55,20 @@ class ComplexCBushArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        # Freq                          0.0                 2.5
+        # ElementID Item
+        # 10210     tx    0.010066-0.000334j  0.010066-0.000334j
+        #           ty    0.000000+0.000000j  0.000000+0.000000j
+        #           tz    0.431447-0.009564j  0.431461-0.009564j
+        #           rx    0.000000+0.000000j  0.000000+0.000000j
+        #           ry    0.000000+0.000000j  0.000000+0.000000j
+        #           rz    0.000000+0.000000j  0.000000+0.000000j
+        # 10211     tx   -0.000002+0.000000j -0.000002+0.000000j
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = self._build_pandas_transient_elements(
+            column_values, column_names,
+            headers, self.element, self.data)
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1

@@ -82,14 +82,24 @@ class ComplexBendArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
-        print(self.data_code)
+        #Freq                                   0.0                  2.5
+        #ElementID NodeID Item
+        #6901      6901   angle   0.000000+0.000000j   0.000000+0.000000j
+        #                 sc     13.847674-0.461543j  13.855294-0.462052j
+        #                 sd      0.625892-0.020861j   0.623742-0.020717j
+        #                 se    -12.178029+0.405894j -12.185331+0.406381j
+        #                 sf      1.043753-0.034788j   1.046222-0.034953j
+        #          6904   angle   0.000000+0.000000j   0.000000+0.000000j
+        #                 sc     -1.660571-0.416504j  -1.663256-0.416978j
+        #                 sd     -2.790551+0.024178j  -2.789738+0.024356j
+        #                 se      0.627616+0.450933j   0.629571+0.451455j
+        #                 sf      1.757596+0.010251j   1.756053+0.010121j
+        #6902      6901   angle   0.000000+0.000000j   0.000000+0.000000j
         headers = self.headers
         column_names, column_values = self._build_dataframe_transient_header()
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element_node, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = self._build_pandas_transient_element_node(
+            column_values, column_names,
+            headers, self.element_node, self.data)
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1

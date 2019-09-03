@@ -685,13 +685,12 @@ class OP2(OP2_Scalar, OP2Writer):
                 #print('working on %s' % class_name)
                 obj.object_attributes()
                 obj.object_methods()
+                str(obj)
+                obj.get_stats()
 
                 if class_name in no_sort2_classes:
                     try:
                         obj.build_dataframe()
-                        obj.object_methods()
-                        str(obj)
-                        obj.get_stats()
                         #assert obj.data_frame is not None
                     except MemoryError:
                         raise
@@ -704,8 +703,13 @@ class OP2(OP2_Scalar, OP2Writer):
                     #self.log.warning(obj)
                     self.log.warning('build_dataframe is not supported for %s - SORT2' % class_name)
                     continue
+
+                # SORT1
                 try:
                     obj.build_dataframe()
+                #except TypeError:
+                    #self.log.error(obj)
+                    #self.log.error('build_dataframe is broken with a TypeError for %s' % class_name)
                 except MemoryError:
                     raise
                 except NotImplementedError:

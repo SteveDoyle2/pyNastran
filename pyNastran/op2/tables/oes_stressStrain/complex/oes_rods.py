@@ -62,9 +62,9 @@ class ComplexRodArray(OES_Object):
         #          torsion       0j       0j       0j       0j       0j       0j       0j
         #15        axial         0j       0j       0j       0j       0j       0j       0j
         #          torsion       0j       0j       0j       0j       0j       0j       0j
-        data_frame = self._build_pandas_transient_elements(column_values, column_names,
-                                                           headers, self.element, self.data)
-        self.data_frame = data_frame
+        self.data_frame = self._build_pandas_transient_elements(
+            column_values, column_names,
+            headers, self.element, self.data)
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1

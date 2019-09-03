@@ -2645,14 +2645,29 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        import pandas as pd
+        #Freq                                       0.0                 2.5
+        #ElementID Item
+        #6901      bending_moment_1a  1.066567-0.035549j  1.066996-0.035577j
+        #          bending_moment_2a  1.101375-0.036709j  1.102188-0.036763j
+        #          shear_1a           0.516478-0.017214j  0.516842-0.017239j
+        #          shear_2a           0.859292-0.028640j  0.860111-0.028695j
+        #          axial_a            0.834822-0.027825j  0.834982-0.027835j
+        #          torque_a           0.953420-0.031777j  0.953947-0.031813j
+        #          bending_moment_1b -0.284733+0.009490j -0.284828+0.009497j
+        #          bending_moment_2b  0.094127-0.003137j  0.093836-0.003118j
+        #          shear_1b           0.834822-0.027825j  0.834982-0.027835j
+        #          shear_2b           0.859292-0.028640j  0.860111-0.028695j
+        #          axial_b           -0.516478+0.017214j -0.516842+0.017239j
+        #          torque_b          -0.242082+0.008069j -0.242077+0.008068j
+        #6902      bending_moment_1a -0.931214+0.031037j -0.931519+0.031058j
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
+
+        # element_node is (nelements, 3)
         element = self.element_node[:, 0]
-        self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=element, minor_axis=headers).to_frame()
-        self.data_frame.columns.names = column_names
-        self.data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = self._build_pandas_transient_elements(
+            column_values, column_names,
+            headers, element, self.data)
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
