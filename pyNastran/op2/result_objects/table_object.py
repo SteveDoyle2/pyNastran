@@ -185,7 +185,7 @@ class TableArray(ScalarObject):  # displacement style table
         self.ntotal = 0
         self._nnodes = 0  # result specific
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         return self.assert_equal(table)
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):

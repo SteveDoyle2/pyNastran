@@ -85,7 +85,7 @@ class RealCPLSTRNPlateArray(OES_Object):
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         self.data = np.zeros((self.ntimes, self.ntotal, 5), dtype='float32')
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):

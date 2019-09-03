@@ -38,7 +38,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         self.ntotal = 0
         self._nnodes = 0  # result specific
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.node_gridtype, table.node_gridtype):

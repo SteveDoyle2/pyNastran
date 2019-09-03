@@ -27,7 +27,7 @@ class RealEigenvalues(BaseScalarObject):
         self.generalized_stiffness = np.zeros(nmodes, dtype='float32')
         self.data_frame = None
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         return True
 
     def get_stats(self, short=False):
@@ -395,7 +395,7 @@ class ComplexEigenvalues(BaseScalarObject):
 
         self.data_frame = None
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         return True
 
     def get_stats(self, short=False):
@@ -683,7 +683,7 @@ class BucklingEigenvalues(BaseScalarObject):
         self.generalized_stiffness = np.zeros(nmodes, dtype='float32')
         self.data_frame = None
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         return True
 
     def get_stats(self, short=False):

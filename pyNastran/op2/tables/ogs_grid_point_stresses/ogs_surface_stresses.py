@@ -172,7 +172,7 @@ class GridPointSurfaceStressesArray(ScalarObject):
             page_num += 1
         return page_num - 1
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
@@ -227,7 +227,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
             'epr', 'ovm']
         return headers
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
@@ -479,7 +479,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
             page_num += 1
         return page_num - 1
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):

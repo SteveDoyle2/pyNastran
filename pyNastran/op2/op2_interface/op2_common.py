@@ -1536,7 +1536,7 @@ class OP2Common(Op2Codes, F06Writer):
 
                 self._last_comment = msg
             return ndata
-        else:
+        else:  # pragma: no cover
             msg = 'table_name=%s table_code=%s %s\n%s' % (
                 self.table_name, self.table_code, msg, self.code_information())
             raise NotImplementedError(msg)

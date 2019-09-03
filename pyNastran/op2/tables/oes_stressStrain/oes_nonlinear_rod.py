@@ -95,7 +95,7 @@ class RealNonlinearRodArray(OES_Object): # 89-CRODNL, 92-CONRODNL
             self.data_frame = df1.join([df2])
         #print(self.data_frame)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):

@@ -136,7 +136,7 @@ class HyperelasticQuadArray(OES_Object):
         #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
         #print(self.data_frame)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):

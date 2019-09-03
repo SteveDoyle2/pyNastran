@@ -74,7 +74,7 @@ class PBEAM(IntegratedLineProperty):
 
                 # call this function again to update pname
                 self.update_by_pname_fid(pname_fid, value)
-            else:
+            else:  # pragma: no cover
                 msg = "property_type='PBEAM' has not implemented %r in pname_map" % pname_fid
                 raise NotImplementedError(msg)
 
@@ -150,7 +150,7 @@ class PBEAM(IntegratedLineProperty):
             elif pname_fid.startswith('F2'):
                 self.f2[i] = value
                 word = 'F2'
-            else:
+            else:  # pragma: no cover
                 msg = "property_type='PBEAM' has not implemented %r in pname_map" % (
                     pname_fid)
                 raise NotImplementedError(msg)
@@ -159,7 +159,7 @@ class PBEAM(IntegratedLineProperty):
             if pname_fid != expected_word:
                 raise RuntimeError('pname_fid=%r expected_word=%r is invalid' % (
                     pname_fid, expected_word))
-        else:
+        else:  # pragma: no cover
             msg = "property_type='PBEAM' has not implemented %r in pname_map; type=%s" % (
                 pname_fid, type(pname_fid))
             raise NotImplementedError(msg)
@@ -1102,7 +1102,7 @@ def update_pbeam_negative_integer(pname_fid):
     TODO: only handles istation=0 for now (e.g., 'J(1)')
     """
     # shift to divisible by 16
-    if not (-167 <= pname_fid <= -6):
+    if not (-167 <= pname_fid <= -6):  # pragma: no cover
         msg = "A-property_type='PBEAM' has not implemented %r in pname_map" % (
             pname_fid)
         raise NotImplementedError(msg)
@@ -1144,7 +1144,7 @@ def update_pbeam_negative_integer(pname_fid):
         word = 'F1'
     elif iterm == 15:
         word = 'F2'
-    else:
+    else:  # pragma: no cover
         #print('istation=%s iterm=%s' % (istation, iterm))
         msg = ("property_type='PBEAM' has not implemented %r (istation=%r, iterm=%r)"
                " in pname_map" % (pname_fid, istation, iterm))

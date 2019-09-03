@@ -63,7 +63,7 @@ class BaseScalarObject(Op2Codes):
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         #raise NotImplementedError(str(self.get_stats()))
         return False
 
@@ -197,7 +197,7 @@ class ScalarObject(BaseScalarObject):
                 class_name, self.isubcase, shape, headers_str))
         return msg
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         #raise NotImplementedError(str(self.get_stats()))
         return False
@@ -565,9 +565,9 @@ class ScalarObject(BaseScalarObject):
                 column_names.append('NodeID')
                 column_values.append(times)
             elif name == 'element_id':
-                column_names.append('EleemntID')
+                column_names.append('ElementID')
                 column_values.append(times)
-            else:
+            else:  # pragma: no cover
                 msg = 'build_dataframe; name=%r' % name
                 print(msg)
                 raise NotImplementedError(msg)

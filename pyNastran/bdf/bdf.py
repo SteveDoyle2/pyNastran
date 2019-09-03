@@ -587,8 +587,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             self.set_as_nx()
         elif mode == 'zona':
             self.set_as_zona()
-        else:
-            msg = 'mode=%r is not supported; modes=[msc, nx]' % self._nastran_format
+        else:  # pragma: no cover
+            msg = 'mode=%r is not supported; modes=[msc, nx, zona]' % self._nastran_format
             raise NotImplementedError(msg)
 
     def __getstate__(self):

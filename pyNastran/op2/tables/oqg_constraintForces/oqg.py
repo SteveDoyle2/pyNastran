@@ -342,7 +342,7 @@ class OQG(OP2Common):
         """
         if self.table_name in [b'OQG1', b'OQG2', b'OQGV1', b'OQP1']:
             pass
-        else:
+        else:  # pragma: no cover
             msg = 'spc_forces; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
 
@@ -404,7 +404,7 @@ class OQG(OP2Common):
             result_name = 'mpc_forces_RAQCONS'
         elif self.table_name == b'RAQEATC':
             result_name = 'mpc_forces_RAQEATC'
-        else:
+        else:  # pragma: no cover
             msg = 'mpc_forces; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
 

@@ -169,7 +169,7 @@ class RealNonlinearPlateArray(OES_Object):
         self.data[self.itime, self.itotal, :] = [fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy]
         self.itotal += 1
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -495,7 +495,7 @@ class RealNonlinearSolidArray(OES_Object):
                                                  ex, ey, ez, exy, eyz, exz]
         self.itotal += 1
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):

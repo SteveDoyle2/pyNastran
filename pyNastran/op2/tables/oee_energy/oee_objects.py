@@ -206,7 +206,7 @@ class RealStrainEnergyArray(BaseElement):
             assert self.data_frame is not None
             self.data_frame = self.data_frame[self.data_frame.ElementID != compare]
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         return self.assert_equal(table)
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
@@ -825,7 +825,7 @@ class ComplexStrainEnergyArray(BaseElement):
             ## remove empty rows
             #self.data_frame = self.data_frame[self.data_frame.ElementID != 0]
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         return self.assert_equal(table)
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):

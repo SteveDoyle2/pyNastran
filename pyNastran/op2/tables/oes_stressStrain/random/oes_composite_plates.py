@@ -57,7 +57,7 @@ class RandomCompositePlateArray(OES_Object):
             nnodes_per_element = 1
         elif self.element_type == 98:  # CTRIA6
             nnodes_per_element = 1
-        else:
+        else:  # pragma: no cover
             msg = 'element_name=%s element_type=%s' %(self.element_name, self.element_type)
             raise NotImplementedError(msg)
 
@@ -112,7 +112,7 @@ class RandomCompositePlateArray(OES_Object):
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Layer', 'Item']
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.element_layer, table.element_layer):
@@ -278,7 +278,7 @@ class RandomCompositePlateArray(OES_Object):
                 msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
             else:
                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
-        else:
+        else:  # pragma: no cover
             msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
             raise NotImplementedError(msg)
 

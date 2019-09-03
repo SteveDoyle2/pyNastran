@@ -391,7 +391,7 @@ class OUG(OP2Common):
                 result_name = 'displacements'
             elif self.thermal == 1:
                 result_name = 'temperatures'
-            else:
+            else:  # pragma: no cover
                 msg = 'displacements; table_name=%s' % self.table_name
                 raise NotImplementedError(msg)
 
@@ -404,7 +404,7 @@ class OUG(OP2Common):
                 result_name = 'displacement_scaled_response_spectra_srss'
             elif self.thermal == 8:
                 result_name = 'displacement_scaled_response_spectra_nrl'
-            else:
+            else:  # pragma: no cover
                 msg = 'displacements; table_name=%s' % self.table_name
                 raise NotImplementedError(msg)
 
@@ -414,7 +414,7 @@ class OUG(OP2Common):
         elif self.table_name in [b'OCRUG']:
             result_name = 'displacements'
             assert self.thermal == 0, self.code_information()
-        else:
+        else:  # pragma: no cover
             msg = 'displacements; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
 
@@ -486,7 +486,7 @@ class OUG(OP2Common):
             else:
                 msg = 'velocities; table_name=%s' % self.table_name
                 raise NotImplementedError(msg)
-        else:
+        else:  # pragma: no cover
             msg = 'velocities; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
 
@@ -539,10 +539,10 @@ class OUG(OP2Common):
                 result_name = 'acceleration_scaled_response_spectra_abs'
             elif self.thermal == 4:
                 result_name = 'acceleration_scaled_response_spectra_nrl'
-            else:
+            else:  # pragma: no cover
                 msg = 'accelerations; table_name=%s' % self.table_name
                 raise NotImplementedError(msg)
-        else:
+        else:  # pragma: no cover
             msg = 'accelerations; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
 
@@ -611,7 +611,7 @@ class OUG(OP2Common):
             result_name = 'RADEATC.eigenvectors'
         elif self.table_name in [b'ROUGV1', 'ROUGV2']:
             result_name = 'ROUGV1.eigenvectors'
-        else:
+        else:  # pragma: no cover
             msg = 'eigenvectors; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
         assert self.thermal == 0, self.code_information()

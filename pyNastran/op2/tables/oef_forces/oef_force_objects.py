@@ -344,7 +344,7 @@ class FailureIndicesArray(RealForceObject):
                    'failure_index_for_bonding (interlaminar stresss)', 'max_value']
         return headers
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         return True
 
     def add_sort1(self, dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,
@@ -495,7 +495,7 @@ class RealSpringDamperForceArray(RealForceObject):
         self.data_frame = data_frame
 
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         is_nan = (
             self.nonlinear_factor is not None and
@@ -729,7 +729,7 @@ class RealSpringForceArray(RealSpringDamperForceArray):
             msg = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 3 )\n']
         elif self.element_type == 14:  # CELAS4
             msg = ['                              F O R C E S   I N   S C A L A R   S P R I N G S        ( C E L A S 4 )\n']
-        else:
+        else:  # pragma: no cover
             msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
             raise NotImplementedError(msg)
 
@@ -757,7 +757,7 @@ class RealDamperForceArray(RealSpringDamperForceArray):
             msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 3 )\n']
         elif self.element_type == 23:  # CDAMP4
             msg = ['                              F O R C E S   I N   S C A L A R   D A M P E R S        ( C D A M P 4 )\n']
-        else:
+        else:  # pragma: no cover
             msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
             raise NotImplementedError(msg)
 
@@ -951,7 +951,7 @@ class RealRodForceArray(RealForceObject):
             page_num += 1
         return page_num - 1
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         is_nan = (
             self.nonlinear_factor is not None and
@@ -1186,7 +1186,7 @@ class RealCBeamForceArray(RealForceObject):
         #self.data_frame = data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
 
@@ -1573,7 +1573,7 @@ class RealCShearForceArray(RealForceObject):
                 data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         is_nan = (
             self.nonlinear_factor is not None and
@@ -1923,7 +1923,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
             page_num += 1
         return page_num - 1
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         is_nan = (
             self.nonlinear_factor is not None and
@@ -2060,7 +2060,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
                 data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
 
         self._eq_header(table)
@@ -2400,7 +2400,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         self.data_frame = data_frame
         #print(self.data_frame)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
 
@@ -2904,7 +2904,7 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
             f06_file.write(page_stamp % page_num)
         return page_num
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
 
@@ -3095,7 +3095,7 @@ class RealConeAxForceArray(RealForceObject):
             self.data_frame = df1.join([df2])
         #print(self.data_frame)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
 
@@ -3487,7 +3487,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
             new_result = False
         return itable
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -3584,7 +3584,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
             self.data_frame.columns.names = ['Static']
             self.data_frame.index.names = ['ElementID', 'Item']
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -3862,7 +3862,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
             page_num += 1
         return page_num - 1
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.element_node, table.element_node):
@@ -3963,7 +3963,7 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         #[ax, ay, az, vx, vy, vz, pressure]
         self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -4239,7 +4239,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
             data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         is_nan = (
             self.nonlinear_factor is not None and
@@ -4495,7 +4495,7 @@ class RealCBushForceArray(RealForceObject):
             #data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         is_nan = (
             self.nonlinear_factor is not None and
@@ -4789,7 +4789,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
             #self.data_frame.columns.names = ['Static']
         #self.data_frame.index.names = ['ElementID', 'Item']
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
 
         self._eq_header(table)

@@ -95,7 +95,7 @@ class Real1DHeatFluxArray(BaseElement):
             data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.element, table.element):
@@ -288,7 +288,7 @@ class RealHeatFluxVU3DArray(BaseElement):
             self.data_frame.columns.names = ['Static']
         self.data_frame.index.names = ['ElementID', 'Parent', 'Item']
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.element_parent, table.element_parent):
@@ -517,7 +517,7 @@ class RealHeatFluxVUBeamArray(BaseElement):  # 191-VUBEAM
             self.data_frame = df1.join([df2, df3])
         #print(self.data_frame)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.element_parent_coord, table.element_parent_coord):
@@ -797,7 +797,7 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             #data_frame.index.names = ['ElementID', 'Node', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -1005,7 +1005,7 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
             #data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -1230,7 +1230,7 @@ class RealHeatFluxVUShellArray(BaseElement):
         #[xgrad, ygrad, zgrad, xflux, yflux, zflux]
         self.data = np.zeros((nx, ny, 6), self.data_type())
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         is_nan = (self.nonlinear_factor is not None and
                   np.isnan(self.nonlinear_factor) and

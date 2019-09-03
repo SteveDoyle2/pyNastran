@@ -23,7 +23,7 @@ class ElementTableArray(BaseElement):  # displacement style table
         self.ntotal = 0
         self.nelements = 0  # result specific
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         is_nan = (self.nonlinear_factor is not None and
                   np.isnan(self.nonlinear_factor) and

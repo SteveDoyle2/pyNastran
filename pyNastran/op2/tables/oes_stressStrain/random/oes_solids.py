@@ -107,7 +107,7 @@ class RandomSolidArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
@@ -319,7 +319,7 @@ def _get_f06_header_nnodes(self, is_mag_phase=True):
     elif self.element_type == 68: # CPENTA
         msg = penta_msg
         nnodes = 6
-    else:
+    else:  # pragma: no cover
         msg = 'element_name=%s self.element_type=%s' % (self.element_name, self.element_type)
         raise NotImplementedError(msg)
     return nnodes, msg

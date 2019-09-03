@@ -118,7 +118,7 @@ class RealBarArray(OES_Object):
                 data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):

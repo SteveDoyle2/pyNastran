@@ -19,7 +19,7 @@ elif VTK_VERSION[0] in [5, 6, 7, 8]:
     vtkConstants = vtk
 #elif VTK_VERSION[0] == vtk_9?:
     #vtkConstants = vtk.vtkConstants
-else:
+else:  # pragma: no cover
     msg = 'VTK version=%r is not supported (use vtk 7 or 8)' % vtk.VTK_VERSION
     raise NotImplementedError(msg)
 
@@ -58,7 +58,7 @@ def get_numpy_idtype_for_vtk():
         dtype = 'int32' # TODO: can we include endian?
     elif isize == 8:
         dtype = 'int64'
-    else:
+    else:  # pragma: no cover
         msg = 'isize=%s' % str(isize)
         raise NotImplementedError(msg)
     return dtype

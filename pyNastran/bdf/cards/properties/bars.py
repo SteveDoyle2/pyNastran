@@ -315,7 +315,7 @@ def _bar_areaL(class_name, beam_type, dim, prop):
         A, I1, I2, I12 = hat1_section(class_name, beam_type, dim, prop)
     elif beam_type == 'DBOX':
         A, I1, I2, I12 = dbox_section(class_name, beam_type, dim, prop)
-    else:
+    else:  # pragma: no cover
         msg = 'areaL; beam_type=%s is not supported for %s class...' % (
             beam_type, class_name)
         raise NotImplementedError(msg)
@@ -1924,7 +1924,7 @@ class PBARL(LineProperty):
             #cy = d / 2.
             I1 = (b * d**3 - h **3 * (b-t)) / 12.
             #I12 = (2.*s*b**3 + h*t**3)/3 - A*cx**2
-        else:
+        else:  # pragma: no cover
             msg = 'J for beam_type=%r dim=%r on PBARL is not supported' % (beam_type, self.dim)
             raise NotImplementedError(msg)
 

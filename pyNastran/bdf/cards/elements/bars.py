@@ -392,7 +392,7 @@ class CBAR(LineElement):
             self.x[1] = value
         elif cp_name == 'X3':
             self.x[2] = value
-        else:
+        else:  # pragma: no cover
             msg = 'CBAR: cp_name=%r must be added to update_by_cp_name' % cp_name
             raise NotImplementedError(msg)
 

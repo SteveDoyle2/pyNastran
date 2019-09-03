@@ -300,7 +300,7 @@ class RealGridPointForcesArray(GridPointForces):
                 self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
             #print(self.data_frame)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         is_valid = False
         try:
             self.assert_equal(table)
@@ -1321,7 +1321,7 @@ class ComplexGridPointForcesArray(GridPointForces):
             self.data_frame.columns.names = column_names
             self.data_frame.index.names = ['NodeID', 'ElementID', 'Item']
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.node_element, table.node_element) and array_equal(self.element_names, table.element_names):

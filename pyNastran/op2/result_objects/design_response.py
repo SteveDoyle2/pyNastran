@@ -279,7 +279,7 @@ class Convergence:
             convergence = 'SOFT'
         elif (conv_result, iconvergence) == ('soft', 'soft'): # is this possible???
             convergence = 'SOFT'
-        else:
+        else:  # pragma: no cover
             msg = 'conv_result=%r iconvergence=%r' % (conv_result, iconvergence)
             raise NotImplementedError(msg)
         return convergence, (conv_result, iconvergence)

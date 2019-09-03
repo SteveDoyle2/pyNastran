@@ -1414,7 +1414,7 @@ class OP2Reader:
         elif iconvergence == 6:
             self.log.warning('HISADD iconverge=6')
             iconvergence = '???'
-        else:
+        else:  # pragma: no cover
             msg = 'iconvergence=%s\n' % iconvergence
             self.show_data(data, types='ifs', endian=None)
             raise NotImplementedError(msg)

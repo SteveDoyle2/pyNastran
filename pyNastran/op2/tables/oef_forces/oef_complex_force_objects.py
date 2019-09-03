@@ -83,7 +83,7 @@ class ComplexRodForceArray(ComplexForceObject):
         #data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -396,7 +396,7 @@ class ComplexCShearForceArray(BaseElement):
             column_values, column_names,
             headers, self.element, self.data)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -653,7 +653,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
             headers, self.element, self.data)
 
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -956,7 +956,7 @@ class ComplexViscForceArray(BaseElement):
                                                            headers, self.element, self.data)
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -1180,7 +1180,7 @@ class ComplexPlateForceArray(ComplexForceObject):
         #data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
@@ -1530,7 +1530,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
             data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -1886,7 +1886,7 @@ class ComplexCBarForceArray(ComplexForceObject):
         #self.data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
@@ -2272,7 +2272,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
         #print(data_frame)
         self.data_frame = data_frame
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         return self.assert_equal(table)
 
     def assert_equal(self, table, rtol=1.e-5, atol=1.e-8):
@@ -2654,7 +2654,7 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'element_node shape=%s table.shape=%s' % (self.element_node.shape, table.element_nodes.shape)
@@ -2922,7 +2922,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
             column_values, column_names,
             headers, self.element, self.data)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -3272,7 +3272,7 @@ class ComplexCBushForceArray(ComplexForceObject):
             column_values, column_names,
             headers, self.element, self.data)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
         assert self.is_sort1 == table.is_sort1
         if not np.array_equal(self.data, table.data):
@@ -3675,7 +3675,7 @@ class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
         #self.data_frame = self.data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
         #print(self.data_frame)
 
-    def __eq__(self, table):
+    def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
         if not np.array_equal(self.data, table.data):
