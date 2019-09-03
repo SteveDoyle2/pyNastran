@@ -821,7 +821,7 @@ class TestOP2(Tester):
                 build_pandas=IS_PANDAS, log=log)
 
     def test_bdf_op2_other_09(self):
-        """checks randvar2.bdf, which is an CTRIAX problem"""
+        """checks sdbush10.bdf, which is a ??? problem"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'sdbush10.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'sdbush10.op2')
@@ -871,19 +871,19 @@ class TestOP2(Tester):
     def test_bdf_op2_other_11(self):
         """checks cbus129.bdf, which is an transient real/oes/cbush problem"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'v10112.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'other', 'v10112.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
-        diff_cards2 = list(set(diff_cards))
-        diff_cards2.sort()
-        assert len(diff_cards2) == 0, diff_cards2
+        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'cbus129.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'cbus129.op2')
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log)
-        model.safe_cross_reference()
-        save_load_deck(model)
+        #model = read_bdf(bdf_filename, debug=False, log=log)
+        #model.safe_cross_reference()
+        #save_load_deck(model)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
-                write_f06=True, write_op2=False,
+                write_f06=True, write_op2=True,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
@@ -893,18 +893,18 @@ class TestOP2(Tester):
                 build_pandas=IS_PANDAS, log=log)
 
     def test_bdf_op2_other_12(self):
-        """checks cbus129.bdf, which is an transient real/oes/cbush problem"""
+        """checks api3.bdf, which is a ??? problem"""
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'api3.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'api3.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename, run_skin_solids=False)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_test_bdf=False, run_mass_properties=False)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -928,10 +928,10 @@ class TestOP2(Tester):
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         model.safe_cross_reference()
-        save_load_deck(model)
+        save_load_deck(model, run_op2_writer=False,)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
-                write_f06=True, write_op2=False,
+                write_f06=True, write_op2=False, write_hdf5=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
@@ -945,14 +945,14 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'sbuckl2a.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'sbuckl2a.op2')
-        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
-        diff_cards2 = list(set(diff_cards))
-        diff_cards2.sort()
-        assert len(diff_cards2) == 0, diff_cards2
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         model.safe_cross_reference()
-        save_load_deck(model)
+        #save_load_deck(model)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,

@@ -19,7 +19,8 @@ class Tester(unittest.TestCase):
 
     def run_bdf(self, folder, bdf_filename, xref=False, size=8,
                 mesh_form='combined', dynamic_vars=None, debug=False, quiet=True,
-                run_extract_bodies=True, save_file_structure=False, log=None):
+                run_extract_bodies=True,
+                run_skin_solids=True, save_file_structure=False, log=None):
         #xref = False
         if quiet:
             debug = None
@@ -28,6 +29,7 @@ class Tester(unittest.TestCase):
                        mesh_form=mesh_form, dynamic_vars=dynamic_vars,
                        debug=debug, quiet=quiet,
                        sum_load=True, run_extract_bodies=run_extract_bodies,
+                       run_skin_solids=run_skin_solids,
                        save_file_structure=save_file_structure, log=log)
 
 

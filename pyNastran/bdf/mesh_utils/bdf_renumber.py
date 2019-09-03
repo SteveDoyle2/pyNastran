@@ -1103,6 +1103,7 @@ def _update_case_control(model, mapper):
         'PTITLE', 'PLOTTER', 'K2PP', 'CSCALE', 'XGRID LINES', 'YGRID LINES', 'YMIN', 'YMAX',
         'LINE',
         ] + skip_keys_temp
+    warn_keys = ['CLOAD', 'RANDOM']
 
     sets_analyzed = set()
     # sets in the global don't get updated....
@@ -1135,6 +1136,8 @@ def _update_case_control(model, mapper):
 
             if key in skip_keys:
                 pass
+            elif key in warn_keys:
+                model.log.warning('skipping %s=%s' % (key, values))
             elif 'SET ' in key:
                 # does this need to be updated...I don't think so...
                 continue

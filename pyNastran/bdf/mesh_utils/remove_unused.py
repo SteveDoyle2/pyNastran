@@ -430,10 +430,9 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             for set_card in sets:
                 nids_used.update(set_card.ids)
 
-        elif card_type in seset_types:
-            obj = card_type[:6].lower() + 's'
-            sets = getattr(model, obj) # list of SETs
-            for set_card in sets:
+        elif card_type == 'SESET':
+            sets = model.se_sets # list of SETs
+            for unused_id, set_card in sorted(sets.items()):
                 nids_used.update(set_card.ids)
 
         elif card_type in ['DCONSTR']:
@@ -530,6 +529,8 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 #if prop.cores:
                     #for key, value in prop.cores.items():
                         #pids_used.add(value)
+        elif card_type == 'TABRNDG':
+            pass
         else:
             raise NotImplementedError(card_type)
 

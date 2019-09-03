@@ -478,7 +478,8 @@ def write_card(op2, op2_ascii, load_type, loads, endian, log,
         nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
         for load in loads:
             #(sid, darea, load_id, temperature_id, undef) = out
-            datai = [load.sid, load.excite_id, load.lid, load.tid, 0]
+            tid = 0 if load.tid is None else load.tid
+            datai = [load.sid, load.excite_id, load.lid, tid, 0]
             op2_ascii.write('  LSEQ data=%s\n' % str(datai))
             op2.write(spack.pack(*datai))
     elif load_type == 'ACCEL':

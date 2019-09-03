@@ -231,7 +231,8 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
             encoding=None, sum_load=True, size=8, is_double=False,
             hdf5=False,
             stop=False, nastran='', post=-1, dynamic_vars=None,
-            quiet=False, dumplines=False, dictsort=False, run_extract_bodies=False,
+            quiet=False, dumplines=False, dictsort=False,
+            run_extract_bodies=False, run_skin_solids=True,
             save_file_structure=False,
             nerrors=0, dev=False, crash_cards=None, safe_xref=False, pickle_obj=False,
             stop_on_failure=True, log=None):
@@ -321,6 +322,7 @@ def run_bdf(folder, bdf_filename, debug=False, xref=True, check=True, punch=Fals
         nerrors=nerrors, dev=dev, crash_cards=crash_cards,
         safe_xref=safe_xref,
         run_extract_bodies=run_extract_bodies,
+        run_skin_solids=run_skin_solids,
         save_file_structure=save_file_structure,
         pickle_obj=pickle_obj,
         stop_on_failure=stop_on_failure,
@@ -338,7 +340,9 @@ def run_and_compare_fems(
         dynamic_vars=None,
         quiet=False, dumplines=False, dictsort=False,
         nerrors=0, dev=False, crash_cards=None,
-        safe_xref=True, run_extract_bodies=False, pickle_obj=False,
+        safe_xref=True,
+        run_extract_bodies=False,
+        run_skin_solids=True, pickle_obj=False,
         stop_on_failure=True, log=None,
     ):
     """runs two fem models and compares them"""
@@ -370,6 +374,7 @@ def run_and_compare_fems(
         fem1 = run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load,
                         size, is_double,
                         run_extract_bodies=run_extract_bodies,
+                        run_skin_solids=run_skin_solids,
                         save_file_structure=save_file_structure,
                         hdf5=hdf5,
                         encoding=encoding, crash_cards=crash_cards, safe_xref=safe_xref,
@@ -536,7 +541,7 @@ def run_nastran(bdf_model: BDF, nastran: str, post: int=-1,
         print(op2.get_op2_stats())
 
 def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double,
-             run_extract_bodies=False, save_file_structure=False, hdf5=False,
+             run_extract_bodies=False, run_skin_solids=True, save_file_structure=False, hdf5=False,
              encoding=None, crash_cards=None, safe_xref=True,
              pickle_obj=False, stop=False):
     # type: (BDF, str, str, str, bool, bool, bool, int, int, bool, bool, bool, Any, Any, bool, bool, bool) -> BDF
@@ -590,7 +595,7 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 if card in fem1.card_count:
                     raise DisabledCardError('card=%r has been disabled' % card)
             #fem1.geom_check(geom_check=True, xref=False)
-            if not stop and not xref:
+            if not stop and not xref and run_skin_solids:
                 skin_filename = 'skin_file.bdf'
                 fem1.write_skin_solid_faces(skin_filename, size=16, is_double=False)
                 if os.path.exists(skin_filename):

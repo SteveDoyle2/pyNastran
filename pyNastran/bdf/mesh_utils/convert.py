@@ -948,6 +948,8 @@ def _convert_loads(model, xyz_scale, weight_scale, temperature_scale):
                 scale = _get_dload_scale(dload, xyz_scale, velocity_scale,
                                          accel_scale, force_scale)
                 tabled_scales.add((dload.tid, scale))
+            elif dload.type in ['TLOAD2', 'RANDPS', 'RANDT1']:
+                model.log.warning('skipping TLOAD2')
             else:
                 raise NotImplementedError(dload)
     for tid, scale in tabled_scales:
