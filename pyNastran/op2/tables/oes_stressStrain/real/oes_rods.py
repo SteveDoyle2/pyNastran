@@ -14,10 +14,10 @@ class RealRodArray(OES_Object):
 
         self.nelements = 0  # result specific
 
-        #if is_sort1:
-            #self.add_new_eid = self.add_new_eid_sort1
-        #else:
-            #raise NotImplementedError('SORT2')
+        self.itime = 0
+        self.itotal = 0
+        self.ielement = 0
+        self.element = None
 
     @property
     def is_real(self):
@@ -226,7 +226,7 @@ class RealRodArray(OES_Object):
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s', page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        (elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
+        (unused_elem_name, msg_temp) = self.get_f06_header(is_mag_phase)
         if self.is_sort1:
             page_num = self._write_sort1_as_sort1(header, page_stamp, page_num, f06_file, msg_temp)
         return page_num
@@ -260,7 +260,7 @@ class RealRodArray(OES_Object):
             for i in range(0, nwrite, 2):
                 f06_file.write(
                     '      %8i %-13s  %-13s %-13s  %-13s %-8i   %-13s  %-13s %-13s  %-s\n' % (
-                    tuple(out[i] + out[i + 1])))
+                        tuple(out[i] + out[i + 1])))
             if is_odd:
                 f06_file.write('      %8i %-13s  %-13s %-13s  %13s\n' % (tuple(out[-1])))
             f06_file.write(page_stamp % page_num)

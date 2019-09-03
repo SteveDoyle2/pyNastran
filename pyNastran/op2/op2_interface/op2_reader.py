@@ -607,28 +607,7 @@ class OP2Reader:
 
         if self.read_mode == 2:
             self.log.warning('DESTAB results were read, but not saved')
-        #marker -= 1
-        #markers = self.read_markers([marker, 1, 0])
-        #data = self._read_record()
-        ##self.show_data(data, types='ifs', endian=None)
-        #desvar = Struct('2i 8s 4f').unpack(data)
-        #print(desvar)
-
-        #marker -= 1
-        #markers = self.read_markers([marker, 1, 0])
-        #data = self._read_record()
-        #desvar = Struct('2i 8s 4f').unpack(data)
-        #print(desvar)
-
-        #marker -= 1
-        #markers = self.read_markers([marker, 1, 0])
-        ##data = self._read_record()
-        #self.read_markers([0])
-
-        #self.show(100, types='ifs', endian=None)
-
-
-        #raise RuntimeError(self.read_mode)
+        markers = self.read_markers([0])
 
 
     def _read_cmodext(self):

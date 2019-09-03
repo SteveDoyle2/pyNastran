@@ -1,12 +1,12 @@
 from itertools import count
 import numpy as np
-from numpy import zeros, array_equal
+from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.numpy_utils import float_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object, SORT2_TABLE_NAME_MAP)
-from pyNastran.f06.f06_formatting import write_floats_13e, write_float_13e, _eigenvalue_header
+    StressObject, StrainObject, OES_Object)
+from pyNastran.f06.f06_formatting import write_float_13e, _eigenvalue_header
 
 
 class RealSpringArray(OES_Object):
@@ -14,6 +14,11 @@ class RealSpringArray(OES_Object):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
 
         self.nelements = 0  # result specific
+
+        self.itime = 0
+        self.itotal = 0
+        self.ielement = 0
+        self.element = None
 
     @property
     def is_real(self):
@@ -192,19 +197,6 @@ class RealSpringArray(OES_Object):
                 #33                   0.0
                 data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
                 data_frame.index.name = 'ElementID'
-                data_frame.columns.names = ['Static']
-            elif 0:  # pragma: no cover
-                # doesn't have ElementID as the index
-                #
-                #Static  ElementID  spring_stress
-                #0              30            0.0
-                #1              31            0.0
-                #2              32            0.0
-                #3              33            0.0
-
-                df1 = pd.DataFrame(self.element, columns=['ElementID'])
-                df2 = pd.DataFrame(self.data[0], columns=headers)
-                data_frame = df1.join(df2)
                 data_frame.columns.names = ['Static']
             else:
                 # why is there a Static=0???
@@ -501,6 +493,11 @@ class RealNonlinearSpringStressArray(OES_Object):
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.nelements = 0  # result specific
+
+        self.itime = 0
+        self.itotal = 0
+        self.ielement = 0
+        self.element = None
 
         if is_sort1:
             pass

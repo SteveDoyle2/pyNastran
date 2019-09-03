@@ -690,6 +690,9 @@ class OP2(OP2_Scalar, OP2Writer):
                     try:
                         obj.build_dataframe()
                         obj.object_methods()
+                        str(obj)
+                        obj.get_stats()
+                        #assert obj.data_frame is not None
                     except MemoryError:
                         raise
                     except:

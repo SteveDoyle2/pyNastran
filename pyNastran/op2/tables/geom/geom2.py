@@ -2716,7 +2716,6 @@ class GEOM2(GeomCommon):
             #print(len(floats[i:]))
             break
         #self.show_data(data[12:])
-        #aaa
         return len(data)
 # GMDNDC
 # GMBNDS

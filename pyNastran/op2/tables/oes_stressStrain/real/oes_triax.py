@@ -1,4 +1,3 @@
-from itertools import count
 import numpy as np
 from numpy import zeros, searchsorted, ravel
 
@@ -15,6 +14,10 @@ class RealTriaxArray(OES_Object):
         #self.ntotal = 0
         self.ielement = 0
         self.nelements = 0  # result specific
+
+        self.itime = 0
+        self.itotal = 0
+        self.element_node = None
 
     @property
     def is_real(self):
@@ -87,13 +90,32 @@ class RealTriaxArray(OES_Object):
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values, major_axis=element_node, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            #data_frame = self._build_pandas_transient_element_node(
+                #column_values, column_names,
+                #headers, self.element_node, self.data)
+            data_frame = pd.Panel(self.data, items=column_values,
+                                  major_axis=element_node, minor_axis=headers).to_frame()
+            data_frame.columns.names = column_names
+            data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+            #                    radial  azimuthal     axial     shear      omax       oms       ovm
+            #ElementID NodeID
+            #5301      0      -0.018626  -0.090677 -0.007052  0.010027 -0.090677  0.044707  0.080379
+            #          5301   -0.000184  -0.050802 -0.015103  0.025020 -0.050802  0.034634  0.062511
+            #          5303   -0.040201  -0.117615  0.015897  0.010630 -0.117615  0.067729  0.117565
+            #          5305   -0.021945  -0.166931 -0.028821 -0.005979 -0.166931  0.074223  0.142052
+            #5311      0      -0.016238  -0.072509 -0.006677  0.010041 -0.072509  0.036086  0.064018
+            #          5311   -0.006616  -0.089126 -0.007863  0.012473 -0.089126  0.047187  0.084695
+            #          5313   -0.032047  -0.038660  0.001105  0.011260 -0.038660  0.021614  0.041742
+            #          5315   -0.017285  -0.129091 -0.017932  0.002921 -0.129091  0.057211  0.111599
+            df1 = pd.DataFrame(element_node).T
+            df1.columns = ['ElementID', 'NodeID']
+            df2 = pd.DataFrame(self.data[0], columns=headers)
+            data_frame = df1.join(df2).set_index(['ElementID', 'NodeID'])
+            #self.data_frame = pd.Panel(self.data, major_axis=element_node, minor_axis=headers).to_frame()
+            #self.data_frame.columns.names = ['Static']
+            #self.data_frame.index.names = ['ElementID', 'NodeID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):
         assert self.is_sort1 == table.is_sort1
@@ -156,7 +178,7 @@ class RealTriaxArray(OES_Object):
 
         nelements = self.ntotal
         ntimes = self.ntimes
-        ntotal = self.ntotal
+        #ntotal = self.ntotal
         nelements = self.ntotal
 
         msg = []
@@ -211,8 +233,8 @@ class RealTriaxArray(OES_Object):
             oms = self.data[itime, :, 5]
             ovm = self.data[itime, :, 6]
 
-            for (i, eid, nid, radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi) in zip(
-                count(), eids, nids, radial, azimuthal, axial, shear, omax, oms, ovm):
+            for (eid, nid, radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi) in zip(
+                    eids, nids, radial, azimuthal, axial, shear, omax, oms, ovm):
 
                 vals = [radiali, azimuthali, axiali, sheari, omaxi, omsi, ovmi]
                 vals2 = write_floats_13e(vals)

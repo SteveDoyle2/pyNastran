@@ -4279,7 +4279,7 @@ class OES(OP2Common):
                 #self.show_data(edata)
                 #print(out)
                 #n += ntotal
-            #aaa
+
             ## 47 - CQUAD8-64
             ##msg = self.code_information()
             #msg = '%s-CQUAD4-numwide=%s format_code=%s;\n numwide_real=%s numwide_imag=%s numwide_random=%s' % (

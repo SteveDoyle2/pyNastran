@@ -386,23 +386,15 @@ class RealPlateArray(OES_Object):
         eids_device = eids * 10 + self.device_code
 
         nelements = len(np.unique(eids))
-        #print('nelements =', nelements)
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
 
         ntotali = self.num_wide
         ntotal = ntotali * nelements
-
-        #print('shape = %s' % str(self.data.shape))
         assert nnodes > 1, nnodes
-        #assert self.ntimes == 1, self.ntimes
 
         device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
-
-        #fmt = '%2i %6f'
-        #print('ntotal=%s' % (ntotal))
-        #assert ntotal == 193, ntotal
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
         op2_ascii.write('  #elementi = [eid_device, fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,\n')
@@ -442,8 +434,6 @@ class RealPlateArray(OES_Object):
             nwide = 0
             for (i, eid_device, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
                  count(), eids_device, eids, nids, fiber_dist, oxx, oyy, txy, angle, major_principal, minor_principal, ovm):
-                #[fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
-                    #[fdi, oxxi, oyyi, txyi, major, minor, ovmi])
                 ilayer = i % 2
                 # tria3
                 if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
@@ -462,7 +452,6 @@ class RealPlateArray(OES_Object):
                 elif self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
                     # bilinear
                     if nid == 0 and ilayer == 0:  # CEN
-                        #print()
                         data = [eid_device, cen_word, nid,
                                 fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi]
                         op2.write(pack('i 4s i 8f', *data))
@@ -480,10 +469,8 @@ class RealPlateArray(OES_Object):
                             '', '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
                     else:  # pragma: no cover
                         raise RuntimeError()
-                    #print('eid=%-2s nid=%s ilayer=%s data=%s' % (eid, nid, ilayer, str(data[1:])))
-                else:
-                    msg = 'element_name=%s self.element_type=%s' % (
-                        self.element_name, self.element_type)
+                else:  # pragma: no cover
+                    msg = f'element_name={self.element_name} element_type={self.element_type}'
                     raise NotImplementedError(msg)
                 nwide += len(data)
 
@@ -502,15 +489,8 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         StressObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        if self.is_fiber_distance:
-            fiber_dist = 'fiber_distance'
-        else:
-            fiber_dist = 'fiber_curvature'
-
-        if self.is_von_mises:
-            ovm = 'von_mises'
-        else:
-            ovm = 'max_shear'
+        fiber_dist = 'fiber_distance' if self.is_fiber_distance else 'fiber_curvature'
+        ovm = 'von_mises' if self.is_von_mises else 'max_shear'
         headers = [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
         return headers
 
@@ -526,24 +506,14 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
 
     def get_headers(self):
-        if self.is_fiber_distance:
-            fiber_dist = 'fiber_distance'
-        else:
-            fiber_dist = 'fiber_curvature'
-
-        if self.is_von_mises:
-            ovm = 'von_mises'
-        else:
-            ovm = 'max_shear'
+        fiber_dist = 'fiber_distance' if self.is_fiber_distance else 'fiber_curvature'
+        ovm = 'von_mises' if self.is_von_mises else 'max_shear'
         headers = [fiber_dist, 'exx', 'eyy', 'exy', 'angle', 'emax', 'emin', ovm]
         return headers
 
 
 def _get_plate_msg(self):
-    if self.is_von_mises:
-        von_mises = 'VON MISES'
-    else:
-        von_mises = 'MAX SHEAR'
+    von_mises = 'VON MISES' if self.is_von_mises else 'MAX SHEAR'
 
     if self.is_stress:
         if self.is_fiber_distance:
@@ -557,17 +527,13 @@ def _get_plate_msg(self):
             tri_msg_temp = ['  ELEMENT      FIBER               STRESSES IN ELEMENT COORD SYSTEM             PRINCIPAL STRESSES (ZERO SHEAR)                 \n',
                             '    ID.      CURVATURE           NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
 
-        #is_bilinear = False
         cquad4_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + tri_msg_temp
         cquad8_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + tri_msg_temp
         cquadr_msg = ['                        S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + tri_msg_temp
 
-        ## TODO: can cquad8s be bilinear???
-        #is_bilinear = True
         #cquadr_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
         cquad4_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
 
-        #is_bilinear = False
         ctria3_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n'] + tri_msg_temp
         ctria6_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 6 )\n'] + tri_msg_temp
         ctriar_msg = ['                           S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
@@ -583,12 +549,10 @@ def _get_plate_msg(self):
             tri_msg_temp = ['  ELEMENT      STRAIN               STRAINS IN ELEMENT COORD SYSTEM             PRINCIPAL  STRAINS (ZERO SHEAR)                 \n',
                             '    ID.       CURVATURE          NORMAL-X       NORMAL-Y      SHEAR-XY       ANGLE         MAJOR           MINOR        %s\n' % von_mises]
 
-        #is_bilinear = False
         cquad4_msg = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + tri_msg_temp
         cquad8_msg = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + tri_msg_temp
         cquadr_msg = ['                         S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + tri_msg_temp
 
-        ## TODO: can cquad8s be bilinear???
         #cquadr_bilinear_msg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
         cquad4_bilinear_msg = ['                           S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
 
@@ -598,7 +562,6 @@ def _get_plate_msg(self):
         ctriar_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
 
 
-    #is_bilinear = False
     if self.element_type == 74:
         msg = ctria3_msg
         nnodes = 3
@@ -610,28 +573,23 @@ def _get_plate_msg(self):
     elif self.element_type == 144:
         msg = cquad4_bilinear_msg
         nnodes = 4
-        #is_bilinear = True
         cen = 'CEN/4'
     elif self.element_type == 82:  # CQUADR
         msg = cquadr_msg
         nnodes = 4
-        #is_bilinear = True
         cen = 'CEN/4'
     elif self.element_type == 64:  # CQUAD8
         msg = cquad8_msg
         nnodes = 4
-        #is_bilinear = True
         cen = 'CEN/8'
     elif self.element_type == 75:  # CTRIA6
         msg = ctria6_msg
         nnodes = 3
-        #is_bilinear = True
         cen = 'CEN/6'
     elif self.element_type == 70:  # CTRIAR
         msg = ctriar_msg
         nnodes = 3
-        #is_bilinear = True
         cen = 'CEN/3'
-    else:
+    else:  # pragma: no cover
         raise NotImplementedError('name=%s type=%s' % (self.element_name, self.element_type))
     return msg, nnodes, cen

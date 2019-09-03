@@ -85,7 +85,7 @@ class EPT(GeomCommon):
             (12101, 121, 484): ['PINTS', self._read_fake],  # record 45
             (4606, 46, 375): ['PLPLANE', self._read_plplane],  # record 46
             (4706, 47, 376): ['PLSOLID', self._read_plsolid],  # record 47
-            (10301, 103, 399): ['PSET', self._read_fake],  # record 57
+            (10301, 103, 399): ['PSET', self._read_pset],  # record 57
             (3002, 30, 415): ['VIEW3D', self._read_fake],  # record 63
 
             (13501, 135, 510) : ['PFAST', self._read_pfast_msc],  # MSC-specific
@@ -1696,8 +1696,30 @@ class EPT(GeomCommon):
         return n
 
     def _read_pset(self, data, n):
-        self.log.info('skipping PSET in EPT')
-        return len(data)
+        struct_5i4si = Struct(self._endian + b'5i4si')
+        nentries = 0
+        while  n < len(data):
+            edata = data[n:n+28]
+            out = struct_5i4si.unpack(edata)
+            #print(out)
+            idi, poly1, poly2, poly3, cid, typei, typeid = out
+            typei = typei.rstrip().decode('latin1')
+            assert typei in ['SET'], (idi, poly1, poly2, poly3, cid, typei, typeid)
+            if self.is_debug_file:
+                self.binary_debug.write('  PVAL=%s\n' % str(out))
+            #print(idi, poly1, poly2, poly3, cid, typei, typeid)
+            typeids = []
+            n += 28
+            while typeid != -1:
+                typeids.append(typeid)
+                typeid, = self.struct_i.unpack(data[n:n+4])
+                n += 4
+                #print(val)
+            #print(typeids)
+            # PSET ID POLY1 POLY2 POLY3 CID SETTYP ID
+            self.add_pset(idi, poly1, poly2, poly3, cid, typei, typeids)
+        self.card_count['PSET'] = nentries
+        return n
 
     def _read_pval(self, data, n):
         """

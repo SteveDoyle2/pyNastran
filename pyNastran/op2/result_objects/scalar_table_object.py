@@ -333,7 +333,6 @@ class ScalarTableArray(ScalarObject):  # displacement style table
         #print(self.get_stats())
         #print(self.node_gridtype)
         #print(self.data.shape)
-        #aaa
         self.sort_method = 1
         self.sort_bits[1] = 0
         bit0, bit1, bit2 = self.sort_bits

@@ -3129,7 +3129,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
             ename = b'TETPR'
         else:
             raise NotImplementedError(self)
-        etypeb = self.element_type#.encode('ascii')
+        #etypeb = self.element_type#.encode('ascii')
         for itime in range(self.ntimes):
             self._write_table_3(op2, op2_ascii, new_result, itable, itime)
 
@@ -3844,9 +3844,9 @@ class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
                 if i == 0:
                     f06_file.write(''.join(header + msg) % (eid, parenti, coordi))
 
-                out = write_imag_floats_13e([fxi, fyi, fzi, mxi, myi, mzi], is_mag_phase=is_mag_phase)
-                [fxri, fyri, fzri, mxri, myri, mzri,
-                 fxii, fyii, fzii, mxii, myii, mzii] = out
+                #out = write_imag_floats_13e([fxi, fyi, fzi, mxi, myi, mzi], is_mag_phase=is_mag_phase)
+                #[fxri, fyri, fzri, mxri, myri, mzri,
+                 #fxii, fyii, fzii, mxii, myii, mzii] = out
 
                         #   nid   xxb
                 f06_file.write(

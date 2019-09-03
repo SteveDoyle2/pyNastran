@@ -652,7 +652,7 @@ class RealSpringDamperForceArray(RealForceObject):
             self._write_table_header(op2, op2_ascii, date)
             itable = -3
 
-        eids = self.element
+        #eids = self.element
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -1020,7 +1020,7 @@ class RealRodForceArray(RealForceObject):
             #op2_format = 'i21f'
         #s = Struct(op2_format)
 
-        eids = self.element
+        #eids = self.element
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -1036,7 +1036,7 @@ class RealRodForceArray(RealForceObject):
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         eids_device = self.element * 10 + self.device_code
@@ -1359,9 +1359,9 @@ class RealCBeamForceArray(RealForceObject):
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
-        long_form = False
-        if nids.min() == 0:
-            long_form = True
+        #long_form = False
+        #if nids.min() == 0:
+            #long_form = True
         #if isinstance(self.nonlinear_factor, float):
             #op2_format = '%sif' % (7 * self.ntimes)
             #raise NotImplementedError()
@@ -1436,7 +1436,7 @@ class RealCBeamForceArray(RealForceObject):
                     # xxb sections
                     data = [0, 0., 0., 0., 0., 0., 0., 0., 0.]
                     #print('***adding %s\n' % (10-icount))
-                    for i in range(10 - icount):
+                    for unused_i in range(10 - icount):
                         op2.write(struct2.pack(*data))
                         nwide += len(data)
 
@@ -1711,10 +1711,10 @@ class RealCShearForceArray(RealForceObject):
             kick4 = self.data[itime, :, 14]
             tau41 = self.data[itime, :, 15]
 
-            zip_in = [
-                f14, f12, f21, f23, f32, f34, f43, f41,
-                kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
-            ]
+            #zip_in = [
+                #f14, f12, f21, f23, f32, f34, f43, f41,
+                #kick1, tau12, kick2, tau23, kick3, tau34, kick4, tau41,
+            #]
             for (eid, f14i, f12i, f21i, f23i, f32i, f34i, f43i, f41i,
                  kick1i, tau12i, kick2i, tau23i, kick3i, tau34i, kick4i, tau41i) in zip(
                     eids, f14, f12, f21, f23, f32, f34, f43, f41,
@@ -2236,11 +2236,11 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             raise NotImplementedError(self.code_information())
 
         #print("nnodes_all =", nnodes_all)
-        cen_word_ascii = 'CEN/%i' % nnodes
-        cen_word = b'CEN/%i' % nnodes
+        #cen_word_ascii = 'CEN/%i' % nnodes
+        #cen_word = b'CEN/%i' % nnodes
 
         eids = self.element
-        cen_word = 'CEN/%i' % nnodes
+        #cen_word = 'CEN/%i' % nnodes
 
         #msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         #msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
@@ -2260,7 +2260,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         assert nnodes > 1, nnodes
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         #fmt = '%2i %6f'
@@ -2633,7 +2633,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         (unused_elem_name, nnodes, unused_msg_temp) = self.get_f06_header(is_mag_phase)
 
         # write the f06
-        ntimes = self.data.shape[0]
+        #ntimes = self.data.shape[0]
 
         eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
@@ -2653,7 +2653,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         assert len(eids) % nnodes_per_eid == 0
 
         #print("nnodes_all =", nnodes_all)
-        cen_word_ascii = 'CEN/%i' % nnodes
+        #cen_word_ascii = 'CEN/%i' % nnodes
         cen_word = b'CEN/'
 
         #msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
@@ -2675,7 +2675,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         assert nnodes > 1, nnodes
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         #fmt = '%2i %6f'
@@ -3426,7 +3426,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         eids_device = self.element * 10 + self.device_code
@@ -3444,7 +3444,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         eids = self.element
         #f.write(''.join(words))
 
-        ntimes = self.data.shape[0]
+        #ntimes = self.data.shape[0]
         struct1 = Struct(endian + b'i7f')
         for itime in range(self.ntimes):
             self._write_table_3(op2, op2_ascii, new_result, itable, itime)
@@ -4298,8 +4298,8 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
 
-        eids = self.element_node[:, 0]
-        nids = self.element_node[:, 1]
+        #eids = self.element_node[:, 0]
+        #nids = self.element_node[:, 1]
         self.element_node[self.ielement] = [eid, nid]
         self.parent_coord[self.ielement] = [parent, coord]
         self.data[self.itime, self.ielement, :] = [xxb, fx, fy, fz, mx, my, mz]
@@ -4660,7 +4660,7 @@ class RealCBushForceArray(RealForceObject):
             #op2_format = 'i21f'
         #s = Struct(op2_format)
 
-        eids = self.element
+        #eids = self.element
 
         # table 4 info
         #ntimes = self.data.shape[0]
@@ -4676,7 +4676,7 @@ class RealCBushForceArray(RealForceObject):
         #print('shape = %s' % str(self.data.shape))
         #assert self.ntimes == 1, self.ntimes
 
-        device_code = self.device_code
+        #device_code = self.device_code
         op2_ascii.write('  ntimes = %s\n' % self.ntimes)
 
         eids_device = self.element * 10 + self.device_code
@@ -4923,9 +4923,9 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         # write the f06
         ntimes = self.data.shape[0]
 
-        eids = self.element_node[:, 0]
+        #eids = self.element_node[:, 0]
         nids = self.element_node[:, 1]
-        cen_word = 'CEN/%i' % nnodes
+        #cen_word = 'CEN/%i' % nnodes
         for itime in range(ntimes):
             dt = self._times[itime]  # TODO: rename this...
             header = _eigenvalue_header(self, header, itime, ntimes, dt)

@@ -4,8 +4,8 @@ SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
                 b'OES1C', b'OSTR1C']
 SORT2_TABLES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
                 b'OES2C', b'OSTR2C',
-                b'OFMPF2M', b'OLMPF2M' , b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',
-                'OFMPF2M' , 'OLMPF2M' , 'OPMPF2M', 'OSMPF2M', 'OGPMPF2M',]
+                b'OFMPF2M', b'OLMPF2M', b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',
+                'OFMPF2M', 'OLMPF2M', 'OPMPF2M', 'OSMPF2M', 'OGPMPF2M',]
 NO_SORT_METHOD = [b'QHHA']
 
 MSC_TABLE_CONTENT = {
@@ -711,6 +711,46 @@ THERMAL_MAP = {
     8 : 'Scaled response spectra NRL',
 }
 
+TABLE_CODE_MAP = {
+    2 : "OPG - Load vector",
+    3 : "OQG - SPC Force vector",
+    6 : "LAMA - Eigenvalue summary",
+    7 : "OUG - Eigenvector",
+    8 : "none - Grid point singularity table (obsolete)",
+    9 : 'OEIGS - Eigenvalue analysis summary',
+    10 : "OUG - Velocity vector",
+    11 : "OUG - Acceleration vector",
+    12 : "OPG - Nonlinear force vector",
+    13 : "OGPWG - Grid point weight generator",
+    14 : "OUG - Eigenvector (solution set)",
+    15 : "OUG - Displacement vector (solution set)",
+    16 : "OUG - Velocity vector (solution set)",
+    17 : "OUG - Acceleration vector (solution set)",
+    18 : "OEE - Element strain energy",
+    19 : "OGF - Grid point force balance",
+    20 : "OES - Stresses at grid points (from the CURV module)",
+    21 : "OES - Strain/curvature at grid points",
+    22 : "OELOF1 - Element internal forces and moments",
+    23 : "OELOP1 - Summation of element oriented forces on adjacent elements",
+    24 : "OEP - Element pressures",
+    25 : "OEF - Composite failure indicies",
+    26 : "OGS - Grid point stresses (surface)",
+    27 : "OGS - Grid point stresses (volume -- direct)",
+    28 : "OGS - Grid point stresses (volume -- principal)",
+    29 : "OGS - Element stress discontinuities (surface)",
+    30 : "OGS - Element stress discontinuities (volume -- direct)",
+    31 : "OGS - Element stress discontinuities (volume -- principal)",
+    32 : "OGS - Grid point stress discontinuities (surface)",
+    33 : "OGS - Grid point stress discontinuities (volume -- direct)",
+    34 : "OGS - Grid point stress discontinuities (volume -- principal)",
+    35 : "OGS - Grid point stress discontinuities (plane strain)",
+    36 : "OEE - Element kinetic energy",
+    37 : "OEE - Element energy loss",
+    38 : "OMM - Max/Min summary",
+    39 : "OQG - MPC Forces",
+    40 : "OGPKE - Grip point kinetic energy",
+}
+
 def get_sort_method_from_table_name(table_name):
     """helper method"""
     if table_name in SORT1_TABLES:
@@ -955,86 +995,16 @@ class Op2Codes:
 
         if table_code == 1:
             table = "OUG - %s vector/scalar" % disp_temp
-        elif table_code == 2:
-            table = "OPG - Load vector"
-        elif table_code == 3:
-            table = "OQG - SPC Force vector"
         elif table_code == 4:
             table = "OEF - Element %s" % force_flux
         elif table_code == 5:
             table = "OES - Element %s" % stress_word
-        elif table_code == 6:
-            table = "LAMA - Eigenvalue summary"
-        elif table_code == 7:
-            table = "OUG - Eigenvector"
-        elif table_code == 8:
-            table = "none - Grid point singularity table (obsolete)"
-        elif table_code == 9:
-            table = "OEIGS - Eigenvalue analysis summary"
-        elif table_code == 10:
-            table = "OUG - Velocity vector"
-        elif table_code == 11:
-            table = "OUG - Acceleration vector"
-        elif table_code == 12:
-            table = "OPG - Nonlinear force vector"
-        elif table_code == 13:
-            table = "OGPWG - Grid point weight generator"
-        elif table_code == 14:
-            table = "OUG - Eigenvector (solution set)"
-        elif table_code == 15:
-            table = "OUG - Displacement vector (solution set)"
-        elif table_code == 16:
-            table = "OUG - Velocity vector (solution set)"
-        elif table_code == 17:
-            table = "OUG - Acceleration vector (solution set)"
-        elif table_code == 18:
-            table = "OEE - Element strain energy"
-        elif table_code == 19:
-            table = "OGF - Grid point force balance"
-        elif table_code == 20:
-            table = "OES - Stresses at grid points (from the CURV module)"
-        elif table_code == 21:
-            table = "OES - Strain/curvature at grid points"
-        elif table_code == 22:
-            table = "OELOF1 - Element internal forces and moments"
-        elif table_code == 23:
-            table = "OELOP1 - Summation of element oriented forces on adjacent elements"
-        elif table_code == 24:
-            table = "OEP - Element pressures"
-        elif table_code == 25:
-            table = "OEF - Composite failure indicies"
-        elif table_code == 26:
-            table = "OGS - Grid point stresses (surface)"
-        elif table_code == 27:
-            table = "OGS - Grid point stresses (volume -- direct)"
-        elif table_code == 28:
-            table = "OGS - Grid point stresses (volume -- principal)"
-        elif table_code == 29:
-            table = "OGS - Element stress discontinuities (surface)"
-        elif table_code == 30:
-            table = "OGS - Element stress discontinuities (volume -- direct)"
-        elif table_code == 31:
-            table = "OGS - Element stress discontinuities (volume -- principal)"
-        elif table_code == 32:
-            table = "OGS - Grid point stress discontinuities (surface)"
-        elif table_code == 33:
-            table = "OGS - Grid point stress discontinuities (volume -- direct)"
-        elif table_code == 34:
-            table = "OGS - Grid point stress discontinuities (volume -- principal)"
-        elif table_code == 35:
-            table = "OGS - Grid point stress discontinuities (plane strain)"
-        elif table_code == 36:
-            table = "OEE - Element kinetic energy"
-        elif table_code == 37:
-            table = "OEE - Element energy loss"
-        elif table_code == 38:
-            table = "OMM - Max/Min summary"
-        elif table_code == 39:
-            table = "OQG - MPC Forces"
-        elif table_code == 40:
-            table = "OGPKE - Grip point kinetic energy"
         else:
-            table = '%s - Unknown' % self.table_name
+            try:
+                table = TABLE_CODE_MAP[table_code]
+            except KeyError:
+                table = '%s - Unknown' % self.table_name
+
         return table_code, table
 
     @property
@@ -1157,7 +1127,7 @@ class Op2Codes:
             (1, 1, 1) : 5, # not 100%
             (0, 1, 1) : 6,
         }
-        t_code = map_sort_bits[(is_complex, is_sort2, is_random)]
+        unused_t_code = map_sort_bits[(is_complex, is_sort2, is_random)]
 
     def _table_specs(self):
         """
