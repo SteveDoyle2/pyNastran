@@ -454,12 +454,19 @@ class MPT(GeomCommon):
         for unused_i in range(nmaterials):
             edata = data[n:n+68]
             out = s.unpack(edata)
-            (mid, *tables, unused_zeroa, unused_zerob) = out
-            assert unused_zeroa == 0, out
-            assert unused_zerob == 0, out
+            (mid, g11_table, g12_table, g13_table, g22_table,
+             g23_table, g33_table, rho_table,
+             a1_table, a2_table, a3_table, unused_zeroa, ge_table,
+             st_table, sc_table, ss_table, unused_zerob) = out
+            assert unused_zeroa == 0, f'unused_zeroa={unused_zeroa} out={out}'
+            assert unused_zerob == 0, f'unused_zerob={unused_zerob} out={out}'
             if self.is_debug_file:
                 self.binary_debug.write('  MATT2=%s\n' % str(out))
-            mat = MATT2(mid, *tables, comment='')
+
+            mat = MATT2(mid, g11_table, g12_table, g13_table, g22_table,
+                        g23_table, g33_table, rho_table,
+                        a1_table, a2_table, a3_table, ge_table,
+                        st_table, sc_table, ss_table, comment='')
             self._add_material_dependence_object(mat, allow_overwrites=False)
         self.card_count['MATT2'] = nmaterials
         return n

@@ -153,16 +153,16 @@ class TestMaterials(unittest.TestCase):
         g12_table = 2
         g13_table = 3
         g22_table = 4
-        g23_table = 1
-        g33_table = 1
-        rho_table = 1
-        a1_table = 1
-        a2_table = 1
-        a3_table = 1
-        ge_table = 1
-        st_table = 1
-        sc_table = 1
-        ss_table = 1
+        g23_table = 5
+        g33_table = 6
+        rho_table = 7
+        a1_table = 8
+        a2_table = 9
+        a3_table = 10
+        ge_table = 11
+        st_table = 12
+        sc_table = 13
+        ss_table = 14
         matt2 = model.add_matt2(mid, g11_table, g12_table, g13_table, g22_table,
                                 g23_table, g33_table, rho_table,
                                 a1_table, a2_table, a3_table,
@@ -172,8 +172,9 @@ class TestMaterials(unittest.TestCase):
 
         x = np.linspace(1., 10.)
         y = np.sin(x) + 5.
-        tablem1 = model.add_tablem1(1, x, y, comment='tablem1')
-        tablem1.write_card()
+        for tid in [1, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
+            tablem1 = model.add_tablem1(tid, x, y, comment='tablem1')
+            tablem1.write_card()
 
         x1 = 1.0
         tablem2 = model.add_tablem2(2, x1, x, y, comment='tablem2')
