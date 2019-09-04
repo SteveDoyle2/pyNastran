@@ -647,7 +647,8 @@ class TestOP2(Tester):
             quiet=True,
             stop_on_failure=True, dev=False,
             build_pandas=False, log=log)
-        op2.cbush_stress[1].build_dataframe()
+        if IS_PANDAS:
+            op2.cbush_stress[1].build_dataframe()
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)

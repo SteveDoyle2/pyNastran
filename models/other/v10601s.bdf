@@ -1,0 +1,56 @@
+$ DEC/CMS REPLACEMENT HISTORY, Element V10601S.DAT
+$ *2    21-JUN-1991 09:14:13 J_CASTRO "67 PLUS/G/ Added LOAD=5 to Case Control to get correct answers in V67. Change required
+$because of correction of error 3041 in V67."
+$ *1    29-NOV-1990 14:16:58 EC004ABB "67 PLUS/G/ NEW FOR V67 ADDED BY JFC VERIF_N BOOK"
+$ DEC/CMS REPLACEMENT HISTORY, Element V10601S.DAT
+$NASTRAN HICORE=500000,REAL=0 $ MINIMUM RECOMMENDED WSL IS 4096
+ID MSC, V10601S $ CREATED FOR V67 BY JFC -- 28-NOV-1990
+$ Modified 3-May-2004 v2005 klk
+$ID MSC, V6601S
+$ID BMLIFT,V65 $ SHL 4/30/85, TEW 21-JULY-81
+TIME 60
+SOL 106 $
+$SOL 66 $
+CEND
+TITLE=BEAM WITH GAP/LIFT-OFF -- PROB.                          V10601S
+SUBTITLE=VERIFICATION MANUAL PROBLEM P. 3.6601S-1
+SPC=10
+$ load = 5 required to apply superelement loads according to the new CLOAD
+$          V67 documentation.
+LOAD=5
+CLOAD=25
+NLPARM=5
+SUPER=ALL
+ LOADSET=99
+ DISPLACEMENT=ALL
+ SPCFORCES=ALL
+ STRESS=ALL
+ ELFORCE=ALL
+BEGIN BULK
+$.......2.......3.......4.......5.......6.......7.......8.......9.......10.....
+LSEQ    99      999     5
+CLOAD   25      1.      1.      999
+SESET   10      1       2
+CORD2R  10      0       0.      0.      0.      0.      0.      1.      +C
++C      0.      1.      1.
+CBEAM   1       40      1       2       0.      1.      0.
+CBEAM   2       40      2       3       0.      1.      0.
+CBEAM   3       40      3       4       0.      1.      0.
+CGAP    101     400     5       3                               10
+CGAP    102     400     6       4                               10
+FORCE   5       2       0       40000.  0.      -1.     0.
+FORCE   5       4       0       10000.  0.      -1.     0.
+GRID    1       0       00.0    0.      0.              345
+GRID    2       0       180.    0.      0.              345
+GRID    3       0       360.    0.      0.              345
+GRID    4       0       480.    0.      0.              345
+GRID    5       0       360.    0.      0.              345
+GRID    6       0       480.    0.      0.              345
+MAT1    5       29.+6           .3
+NLPARM  5       1               ITER    1       10      PW      YES
+PBEAM   40      5       83.3    1000.   334.
+PGAP    400     0.      0.      2.9+8
+SPC1    10      12      1
+SPC1    10      123456  5       6
+PARAM,POST,-1
+ENDDATA

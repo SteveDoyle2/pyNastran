@@ -966,11 +966,10 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     if caero_bdf_filename is None:
         caero_bdf_filename = 'caero.bdf'
     is_subpanel_model = data['--subpanels']
-    pid = data['--pid']
 
     pid_method = 'aesurf'
     if data['--pid']:
-        pid_method = data['PID']
+        pid_method = data['--pid']
 
     from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
