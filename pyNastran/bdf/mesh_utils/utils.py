@@ -931,7 +931,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     import pyNastran
     msg = (
         'Usage:\n'
-        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels]\n'
+        '  bdf export_caero_mesh IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
         '  bdf export_caero_mesh -h | --help\n'
         '  bdf export_caero_mesh -v | --version\n'
         '\n'
@@ -942,7 +942,8 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
 
         'Options:\n'
         '  -o OUT, --output  OUT_CAERO_BDF_FILENAME  path to output BDF file\n'
-        '  -subpanels                                write the subpanels (default=False)\n'
+        '  --subpanels                               write the subpanels (default=False)\n'
+        '  --pid PID                                 sets the pid; {aesurf, caero, paero} [default: aesurf]\n'
         '\n'
 
         'Info:\n'
@@ -965,6 +966,11 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     if caero_bdf_filename is None:
         caero_bdf_filename = 'caero.bdf'
     is_subpanel_model = data['--subpanels']
+    pid = data['--pid']
+
+    pid_method = 'aesurf'
+    if data['--pid']:
+        pid_method = data['PID']
 
     from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.export_caero_mesh import export_caero_mesh
@@ -997,7 +1003,8 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     level = 'debug' if not quiet else 'warning'
     log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
     model = read_bdf(bdf_filename, log=log, skip_cards=skip_cards)
-    export_caero_mesh(model, caero_bdf_filename, is_subpanel_model=is_subpanel_model)
+    export_caero_mesh(model, caero_bdf_filename,
+                      is_subpanel_model=is_subpanel_model, pid_method=pid_method)
 
 def cmd_line(argv=None, quiet=False):
     """command line interface to multiple other command line scripts"""
@@ -1015,7 +1022,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf scale                       bdf scale IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x | --no_y]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
-        '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels]\n'
+        '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
     )
 

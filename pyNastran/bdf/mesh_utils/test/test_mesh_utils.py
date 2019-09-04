@@ -397,6 +397,16 @@ class TestMeshUtils(unittest.TestCase):
 
         cmd_line(argv=argv, quiet=True)
 
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_aesurf.bdf', '--subpanels',
+                '--pid', 'aesurf']
+        cmd_line(argv=argv, quiet=True)
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_caero.bdf', '--subpanels',
+                '--pid', 'caero']
+        cmd_line(argv=argv, quiet=True)
+        argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero_paero.bdf', '--subpanels',
+                '--pid', 'paero']
+        cmd_line(argv=argv, quiet=True)
+
         argv = ['bdf', 'export_caero_mesh', bdf_filename, '-o', 'caero.bdf', '--subpanels']
         cmd_line(argv=argv, quiet=True)
 
@@ -431,6 +441,9 @@ class TestMeshUtils(unittest.TestCase):
         os.remove('caero6.bdf')
         #os.remove('caero5.scaled.bdf')
         os.remove('caero6.scaled.bdf')
+        os.remove('caero_aesurf.bdf')
+        os.remove('caero_caero.bdf')
+        os.remove('caero_paero.bdf')
 
     def test_export_mcids(self):
         """creates material coordinate systems"""
