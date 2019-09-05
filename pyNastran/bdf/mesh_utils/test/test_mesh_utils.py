@@ -39,6 +39,17 @@ np.set_printoptions(edgeitems=3, infstr='inf',
 
 class TestMeshUtils(unittest.TestCase):
 
+    def test_free_faces(self):
+        """CTETRA10"""
+        #bdf free_faces [-d | -l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME
+        #with self.assertRaises(SystemExit):
+            #cmd_line(argv=['bdf', 'free_faces'])
+
+        bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
+        #log = get_logger(log=None, level='info', encoding='utf-8')
+        cmd_line(argv=['bdf', 'free_faces', bdf_filename, 'skin.bdf'], quiet=True)
+        os.remove('skin.bdf')
+
     def test_structured_cquads(self):
         """tests create_structured_cquad4s"""
         pid = 42

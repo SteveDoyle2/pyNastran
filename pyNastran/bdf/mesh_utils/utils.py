@@ -25,6 +25,7 @@ from pyNastran.bdf.mesh_utils.delete_bad_elements import delete_bad_shells, get_
 from pyNastran.bdf.mesh_utils.split_cbars_by_pin_flag import split_cbars_by_pin_flag
 from pyNastran.bdf.mesh_utils.dev.create_vectorized_numbered import create_vectorized_numbered
 from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
+from pyNastran.bdf.mesh_utils.free_faces import write_skin_solid_faces
 
 
 def cmd_line_create_vectorized_numbered(argv=None, quiet=False):  # pragma: no cover
@@ -71,9 +72,8 @@ def cmd_line_equivalence(argv=None, quiet=False):
     from docopt import docopt
     import pyNastran
     msg = (
-        "Usage:\n"
-        "  bdf equivalence IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME]\n"
-
+        'Usage:\n'
+        '  bdf equivalence IN_BDF_FILENAME EQ_TOL [-o OUT_BDF_FILENAME]\n'
         '  bdf equivalence -h | --help\n'
         '  bdf equivalence -v | --version\n'
         '\n'
@@ -207,7 +207,7 @@ def cmd_line_bin(argv=None, quiet=False):  # pragma: no cover
     dy = (y1 - y0) / nbins
     y0i = y0
     y1i = y0 + dy
-    for i in range(nbins):
+    for unused_i in range(nbins):
         j = np.where((y0i <= y) & (y <= y1i))[0]
         if not len(j):
             continue
@@ -316,7 +316,7 @@ def cmd_line_mirror(argv=None, quiet=False):
 
         "Positional Arguments:\n"
         "  IN_BDF_FILENAME    path to input BDF/DAT/NAS file\n"
-       #"  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
+        #"  OUT_BDF_FILENAME   path to output BDF/DAT/NAS file\n"
         '\n'
 
         'Options:\n'
@@ -357,7 +357,7 @@ def cmd_line_mirror(argv=None, quiet=False):
     if bdf_filename_out is None:
         bdf_filename_out = 'mirrored.bdf'
 
-    from io import StringIO
+    #from io import StringIO
     from pyNastran.bdf.bdf import read_bdf
     from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
 
@@ -465,7 +465,7 @@ def cmd_line_convert(argv=None, quiet=False):
     data = docopt(msg, version=ver, argv=argv[1:])
     if not quiet:  # pragma: no cover
         print(data)
-    size = 16
+    #size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
@@ -507,7 +507,7 @@ def cmd_line_scale(argv=None, quiet=False):
         argv = sys.argv
 
     import argparse
-    import textwrap
+    #import textwrap
     import pyNastran
     parent_parser = argparse.ArgumentParser(
         #prog = 'pyNastranGUI',
@@ -632,7 +632,7 @@ def cmd_line_export_mcids(argv=None, quiet=False):
     data = docopt(msg, version=ver, argv=argv[1:])
     if not quiet:  # pragma: no cover
         print(data)
-    size = 16
+    #size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     csv_filename_in = data['--output']
     if csv_filename_in is None:
@@ -664,6 +664,112 @@ def cmd_line_export_mcids(argv=None, quiet=False):
         export_mcids(model, csv_filename,
                      export_xaxis=export_xaxis, export_yaxis=export_yaxis, iply=iply)
         model.log.info('wrote %s' % csv_filename)
+
+
+def cmd_line_free_faces(argv=None, quiet=False):
+    """command line interface to bdf free_faces"""
+    if argv is None:
+        argv = sys.argv
+
+    encoding = sys.getdefaultencoding()
+    import pyNastran
+    usage = (
+        'Usage:\n'
+        '  bdf free_faces BDF_FILENAME SKIN_FILENAME [-d] [-l] [-f] [--encoding ENCODE]\n'
+        '  bdf free_faces -h | --help\n'
+        '  bdf free_faces -v | --version\n'
+        '\n'
+    )
+    arg_msg = (
+        "Positional Arguments:\n"
+        "  BDF_FILENAME    path to input BDF/DAT/NAS file\n"
+        "  SKIN_FILENAME   path to output BDF/DAT/NAS file\n"
+        '\n'
+
+        'Options:\n'
+        '  -l, --large        writes the BDF in large field, single precision format (default=False)\n'
+        '  -d, --double       writes the BDF in large field, double precision format (default=False)\n'
+        '  --encoding ENCODE  the encoding method (default=None -> %r)\n'
+        '\n'
+        'Developer:\n'
+        '  -f, --profile    Profiles the code (default=False)\n'
+        '\n'
+        "Info:\n"
+        '  -h, --help     show this help message and exit\n'
+        "  -v, --version  show program's version number and exit\n" % encoding
+    )
+    if len(sys.argv) == 1:
+        sys.exit(arg_msg)
+
+    arg_msg += '\n'
+
+    examples = (
+        'Examples\n'
+        '--------\n'
+        '  bdf free_faces solid.bdf skin.bdf\n'
+        '  bdf free_faces solid.bdf skin.bdf --large\n'
+    )
+    import argparse
+    parent_parser = argparse.ArgumentParser()
+    # positional arguments
+    parent_parser.add_argument('BDF_FILENAME', help='path to input BDF/DAT/NAS file', type=str)
+    parent_parser.add_argument('SKIN_FILENAME', help='path to output BDF/DAT/NAS file', type=str)
+
+    size_group = parent_parser.add_mutually_exclusive_group()
+    size_group.add_argument('-d', '--double', help='writes the BDF in large field, single precision format', action='store_true')
+    size_group.add_argument('-l', '--large', help='writes the BDF in large field, double precision format', action='store_true')
+    size_group.add_argument('--encoding', help='the encoding method (default=None -> {repr(encoding)})', type=str)
+    parent_parser.add_argument('--profile', help='Profiles the code', action='store_true')
+    parent_parser.add_argument('-v', '--version', action='version', version=pyNastran.__version__)
+
+    from pyNastran.utils.arg_handling import argparse_to_dict, update_message
+
+    update_message(parent_parser, usage, arg_msg, examples)
+    print(argv)
+    args = parent_parser.parse_args(args=argv[2:])
+    data = argparse_to_dict(args)
+
+    if not quiet:  # pragma: no cover
+        for key, value in sorted(data.items()):
+            print("%-12s = %r" % (key.strip('--'), value))
+
+    import time
+    time0 = time.time()
+
+    is_double = False
+    if data['double']:
+        size = 16
+        is_double = True
+    elif data['large']:
+        size = 16
+    else:
+        size = 8
+    bdf_filename = data['BDF_FILENAME']
+    skin_filename = data['SKIN_FILENAME']
+
+
+    from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
+
+    tol = 1e-005
+    bdf_filename_merged = 'merged.bdf'
+    level = 'debug' if not quiet else 'warning'
+    log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
+    bdf_equivalence_nodes(bdf_filename, bdf_filename_merged, tol,
+                          renumber_nodes=False, neq_max=10, xref=True,
+                          node_set=None,
+                          size=8, is_double=is_double,
+                          remove_collapsed_elements=False,
+                          avoid_collapsed_elements=False,
+                          crash_on_collapse=False, log=log, debug=True)
+    if not quiet:  # pragma: no cover
+        print('done with equivalencing')
+    write_skin_solid_faces(
+        bdf_filename_merged, skin_filename,
+        write_solids=False, write_shells=True,
+        size=size, is_double=is_double, encoding=None, log=log,
+    )
+    if not quiet:  # pragma: no cover
+        print("total time:  %.2f sec" % (time.time() - time0))
 
 
 def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False):
@@ -701,7 +807,7 @@ def cmd_line_split_cbars_by_pin_flag(argv=None, quiet=False):
     data = docopt(msg, version=ver, argv=argv[1:])
     if not quiet:  # pragma: no cover
         print(data)
-    size = 16
+    #size = 16
     bdf_filename_in = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
@@ -751,7 +857,7 @@ def cmd_line_transform(argv=None, quiet=False):
     if not quiet:  # pragma: no cover
         print(data)
 
-    size = 16
+    #size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
@@ -769,14 +875,14 @@ def cmd_line_transform(argv=None, quiet=False):
     log = SimpleLogger(level=level, encoding='utf-8', log_func=None)
     model = read_bdf(bdf_filename, log=log)
 
-    nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = model.get_xyz_in_coord_array(
+    nid_cp_cd, xyz_cid0, unused_xyz_cp, unused_icd_transform, unused_icp_transform = model.get_xyz_in_coord_array(
         cid=0, fdtype='float64', idtype='int32')
 
-    update_nodesi = False
+    #update_nodesi = False
     # we pretend to change the SPOINT location
     if dxyz is not None:
         xyz_cid0 += dxyz
-        update_nodesi = True
+        #update_nodesi = True
 
     if update_nodes:
         update_nodes(model, nid_cp_cd, xyz_cid0)
@@ -827,7 +933,7 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
     data = docopt(msg, version=ver, argv=argv[1:])
     if not quiet:  # pragma: no cover
         print(data)
-    size = 16
+    #size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     bdf_filename_out = data['--output']
     if bdf_filename_out is None:
@@ -875,7 +981,7 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
     eids = np.array(eids)
 
     # we pretend to change the SPOINT location
-    update_nodes = False
+    update_nodesi = False
     # we pretend to change the SPOINT location
     iunion = None
     if xsign:
@@ -883,21 +989,21 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
         xfunc = func_map[xsign]
         ix = xfunc(xvals, xval)
         iunion = _union(xval, ix, iunion)
-        update_nodes = True
+        update_nodesi = True
     if ysign:
         yvals = xyz_cid0[:, 1]
         yfunc = func_map[ysign]
         iy = yfunc(yvals, yval)
         iunion = _union(yval, iy, iunion)
-        update_nodes = True
+        update_nodesi = True
     if zsign:
         zvals = xyz_cid0[:, 2]
         zfunc = func_map[zsign]
         iz = xfunc(zvals, zval)
         iunion = _union(zval, iz, iunion)
-        update_nodes = True
+        update_nodesi = True
 
-    if update_nodes:
+    if update_nodesi:
         eids_to_remove = eids[iunion]
         for eid in eids_to_remove:
             etype = model.elements[eid].type
@@ -960,7 +1066,7 @@ def cmd_line_export_caero_mesh(argv=None, quiet=False):
     data = docopt(msg, version=ver, argv=argv[1:])
     if not quiet:  # pragma: no cover
         print(data)
-    size = 16
+    #size = 16
     bdf_filename = data['IN_BDF_FILENAME']
     caero_bdf_filename = data['--output']
     if caero_bdf_filename is None:
@@ -1017,9 +1123,10 @@ def cmd_line(argv=None, quiet=False):
         '  bdf equivalence                 IN_BDF_FILENAME EQ_TOL\n'
         '  bdf renumber                    IN_BDF_FILENAME [OUT_BDF_FILENAME] [--superelement] [--size SIZE]\n'
         '  bdf mirror                      IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--plane PLANE] [--tol TOL]\n'
-        '  bdf convert                     bdf convert IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
-        '  bdf scale                       bdf scale IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
+        '  bdf convert                     IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--in_units IN_UNITS] [--out_units OUT_UNITS]\n'
+        '  bdf scale                       IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--lsf LENGTH_SF] [--msf MASS_SF] [--fsf FORCE_SF] [--psf PRESSURE_SF] [--tsf TIME_SF] [--vsf VEL_SF]\n'
         '  bdf export_mcids                IN_BDF_FILENAME [-o OUT_CSV_FILENAME] [--no_x | --no_y]\n'
+        '  bdf free_faces                  BDF_FILENAME SKIN_FILENAME [-d | -l] [-f] [--encoding ENCODE]\n'
         '  bdf transform                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--shift XYZ]\n'
         '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--subpanels] [--pid PID]\n'
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [-p PIN_FLAGS_CSV_FILENAME]\n'
@@ -1031,7 +1138,7 @@ def cmd_line(argv=None, quiet=False):
         msg += '  bdf bin                         IN_BDF_FILENAME AXIS1 AXIS2 [--cid CID] [--step SIZE]\n'
 
     msg += (
-        '\n'
+        #'\n'
         '  bdf merge              -h | --help\n'
         '  bdf equivalence        -h | --help\n'
         '  bdf renumber           -h | --help\n'
@@ -1039,6 +1146,7 @@ def cmd_line(argv=None, quiet=False):
         '  bdf convert            -h | --help\n'
         '  bdf scale              -h | --help\n'
         '  bdf export_mcids       -h | --help\n'
+        '  bdf free_faces         -h | --help\n'
         '  bdf transform          -h | --help\n'
         '  bdf filter             -h | --help\n'
         '  bdf export_caero_mesh  -h | --help\n'
@@ -1079,6 +1187,8 @@ def cmd_line(argv=None, quiet=False):
         cmd_line_transform(argv, quiet=quiet)
     elif argv[1] == 'filter' and dev:  # TODO: make better name
         cmd_line_filter(argv, quiet=quiet)
+    elif argv[1] == 'free_faces':
+        cmd_line_free_faces(argv, quiet=quiet)
     elif argv[1] == 'bin' and dev:
         cmd_line_bin(argv, quiet=quiet)
     elif argv[1] == 'create_vectorized_numbered' and dev:
