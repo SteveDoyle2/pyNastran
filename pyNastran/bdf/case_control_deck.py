@@ -18,10 +18,13 @@ CaseControlDeck:
     convert_to_sol_200(self, model)
 
 """
+from __future__ import annotations
 import re
 import sys
 import copy
-from typing import List, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional, TYPE_CHECKING
+
+from cpylog import get_logger
 
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
@@ -35,12 +38,12 @@ from pyNastran.bdf.bdf_interface.subcase_cards import (
     split_by_mixed_commas_parentheses,
 )
 from pyNastran.utils import object_attributes
-from cpylog import get_logger
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+
 
 class CaseControlDeck:
-    """
-    CaseControlDeck parsing and extraction class
-    """
+    """CaseControlDeck parsing and extraction class"""
     type = 'CaseControlDeck'
 
     def __getstate__(self):
@@ -52,8 +55,7 @@ class CaseControlDeck:
         del state['log']
         return state
 
-    def __init__(self, lines, log=None):
-        # (List[str], Optional[object]) -> None
+    def __init__(self, lines: List[str], log: Optional[Any]=None) -> None:
         """
         Parameters
         ----------
@@ -65,7 +67,7 @@ class CaseControlDeck:
 
         """
         # pulls the logger from the BDF object
-        self.log = get_logger(log, "debug")
+        self.log = get_logger(log, level="debug")
         self.debug = False
 
         self.sol_200_map = {
@@ -116,7 +118,8 @@ class CaseControlDeck:
             self.log.error('Invalid Case Control Deck:\n' + '\n'.join(self.lines))
             raise
 
-    def load_hdf5_file(self, hdf5_file, encoding):
+    def load_hdf5_file(self, hdf5_file, encoding: str) -> None:
+        """loads the case control deck section from a hdf5 file"""
         from pyNastran.utils.dict_to_h5py import _cast
 
         keys = list(hdf5_file.keys())
@@ -126,19 +129,19 @@ class CaseControlDeck:
                 setattr(self, key, value)
             elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
                 value_bytes = _cast(hdf5_file[key]).tolist()
-                value_str = [line.decode(encoding) for line in value_bytes]
+                unused_value_str = [line.decode(encoding) for line in value_bytes]
             elif key == 'subcases':
                 subcase_group = hdf5_file[key]
                 keys = list(subcase_group.keys())
                 keys.remove('keys')
                 subcases = {}
-                for key in keys:
-                    sub_group = subcase_group[key]
-                    ikey = int(key)
-                    subcase = Subcase(id=ikey)
+                for key2 in keys:
+                    sub_group = subcase_group[key2]
+                    ikey2 = int(key2)
+                    subcase = Subcase(id=ikey2)
                     subcase.log = self.log
                     subcase.load_hdf5_file(sub_group, encoding)
-                    subcases[ikey] = subcase
+                    subcases[ikey2] = subcase
                     str(subcase)
                 self.subcases = subcases
                 #print(value_bytes)
@@ -146,7 +149,8 @@ class CaseControlDeck:
                 self.log.warning('skipping CaseControlDeck/%s' % key)
                 raise RuntimeError('error loading hdf5 CaseControlDeck/%s' % key)
 
-    def export_to_hdf5(self, hdf5_file, model, encoding):
+    def export_to_hdf5(self, hdf5_file, model: BDF, encoding: str) -> None:
+        """exports the case control deck section to an hdf5 file"""
         keys_to_skip = ['type', 'log', 'sol_200_map', 'rsolmap_to_str', 'solmap_to_value']
 
         # scalars----
@@ -187,7 +191,7 @@ class CaseControlDeck:
                 self.log.warning('skipping CaseControlDeck/%s' % h5attr)
                 raise RuntimeError('error exporting hdf5 CaseControlDeck/%s' % h5attr)
 
-    def suppress_output(self):
+    def suppress_output(self) -> None:
         """
         Replaces F06 printing with OP2 printing
 
@@ -207,7 +211,7 @@ class CaseControlDeck:
                 # continue
             subcase.suppress_output()
 
-    def has_parameter(self, isubcase, *param_names):
+    def has_parameter(self, isubcase: int, *param_names: List[str]) -> bool:
         """
         Checks to see if a parameter (e.g. STRESS) is defined in a certain
         subcase ID.
@@ -219,15 +223,22 @@ class CaseControlDeck:
         param_names : List[str]
             the parameter name to look for
 
+        Returns
+        -------
+        has_parameter : bool
+            does any subcase have a parameter
         """
         if self.has_subcase(isubcase):
             return any(self.subcases[isubcase].has_parameter(*param_names))
+        return False
 
-    def get_subcase_parameter(self, isubcase, param_name, obj=False):
+    def get_subcase_parameter(self, isubcase: int, param_name: str, obj: bool=False) -> Any:
         """
         Get the [value, options] of a subcase's parameter.  For example, for
-        STRESS(PLOT,POST)=ALL, param_name=STRESS, value=ALL, options=['PLOT',
-        'POST']
+        STRESS(PLOT,POST)=ALL:
+            param_name=STRESS
+            value=ALL
+            options=['PLOT', 'POST']
 
         Parameters
         ----------
@@ -245,8 +256,7 @@ class CaseControlDeck:
                % (isubcase, str(sorted(self.subcases.keys()))))
         raise RuntimeError(msg)
 
-    def has_subcase(self, isubcase):
-        # type: (int) -> bool
+    def has_subcase(self, isubcase: int) -> bool:
         """
         Checks to see if a subcase exists.
 
@@ -265,7 +275,7 @@ class CaseControlDeck:
             return True
         return False
 
-    def create_new_subcase(self, isubcase):
+    def create_new_subcase(self, isubcase: int) -> Subcase:
         """
         Method create_new_subcase:
 
@@ -293,7 +303,7 @@ class CaseControlDeck:
         #self.subcases[isubcase] = Subcase(id=isubcase)
         return subcase
 
-    def delete_subcase(self, isubcase):
+    def delete_subcase(self, isubcase: int) -> None:
         """
         Deletes a subcase.
 
@@ -307,7 +317,8 @@ class CaseControlDeck:
             sys.stderr.write('subcase %s doesnt exist...skipping\n' % isubcase)
         del self.subcases[isubcase]
 
-    def copy_subcase(self, i_from_subcase, i_to_subcase, overwrite_subcase=True):
+    def copy_subcase(self, i_from_subcase: int, i_to_subcase: int,
+                     overwrite_subcase: bool=True) -> Subcase:
         """
         Overwrites the parameters from one subcase to another.
 
@@ -353,20 +364,20 @@ class CaseControlDeck:
                 subcase_to[key] = copy.deepcopy(param)
         return subcase_to
 
-    def get_subcase_list(self):
+    def get_subcase_list(self) -> List[int]:
         """
         Gets the list of subcases including the global subcase ID (0)
         """
         return sorted(self.subcases.keys())
 
-    def get_local_subcase_list(self):
+    def get_local_subcase_list(self) -> List[int]:
         """
         Gets the list of subcases that aren't the global subcase ID
         """
         id_list = [idi for idi in self.subcases if idi != 0]  # skip the global
         return sorted(id_list)
 
-    def update_solution(self, isubcase, sol):
+    def update_solution(self, isubcase: int, sol: str) -> None:
         """
         sol = STATICS, FLUTTER, MODAL, etc.
 
@@ -414,13 +425,13 @@ class CaseControlDeck:
         DISP = ALL
 
         """
-        (j, key, value, options, param_type) = self._parse_data_from_user(param)
+        (unused_j, key, value, options, param_type) = self._parse_data_from_user(param)
         subcase_list = self.get_subcase_list()
         for isubcase in subcase_list:
             self._add_parameter_to_subcase(key, value, options, param_type,
                                            isubcase)
 
-    def add_parameter_to_local_subcase(self, isubcase, param):
+    def add_parameter_to_local_subcase(self, isubcase: int, param: List[str]) -> None:
         """
         Takes in a single-lined string and adds it to a single Subcase.
 
@@ -470,7 +481,7 @@ class CaseControlDeck:
         (j, key, value, options, param_type) = self._parse_entry(lines)
         return (j, key, value, options, param_type)
 
-    def _read(self, lines):
+    def _read(self, lines: List[str]) -> None:
         """
         Reads the case control deck
 
@@ -501,6 +512,9 @@ class CaseControlDeck:
 
             line_upper = line.upper()
             if key == 'BEGIN':
+                if ('NLSTEP' in line_upper or 'SUBSTEP' in line_upper or 'SUBSEQ' in line_upper or
+                    'SUBCOM' in line_upper or 'REPCASE' in line_upper or 'NONLINEAR' in line_upper):
+                    asdfadsf
                 if 'BULK' not in line_upper and 'SUPER' not in line_upper:
                     raise NotImplementedError('line=%r' % line)
                 if self._begin_count == 1:
@@ -523,8 +537,8 @@ class CaseControlDeck:
                     key, value, options, param_type, isubcase)
                 self.output_lines.append(line)
                 continue
-            #print("key=%-12r icase=%i value=%r options=%r param_type=%r" %(
-            #    key, isubcase, value, options, param_type))
+            #print("key=%-12r icase=%i value=%r options=%r param_type=%r" % (
+                #key, isubcase, value, options, param_type))
             isubcase = self._add_parameter_to_subcase(
                 key, value, options, param_type, isubcase)
 
@@ -645,7 +659,7 @@ class CaseControlDeck:
             value = obj.value  # type: int
             param_type = 'SET-type'
 
-        #elif line_upper.startswith(CHECK_CARD_NAMES):
+        #elif line_upper.startswith(CHECK_CARD_NAMES) and self.use_card_dict:
             #if '(' in line:
                 #key = line_upper.strip().split('(', 1)[0].strip()
             #elif '=' in line:
@@ -661,7 +675,7 @@ class CaseControlDeck:
             #param_type = 'STRESS-type'
             #key = obj.type
 
-        #elif line_upper.startswith(INT_CARD_NAMES):
+        #elif line_upper.startswith(INT_CARD_NAMES) and self.use_card_dict:
             #if '=' in line:
                 #(name, value) = line_upper.strip().split('=')
             #else:
@@ -680,7 +694,7 @@ class CaseControlDeck:
             #param_type = 'OBJ-type'
             #key = obj.type
 
-        #elif line_upper.startswith(INTSTR_CARD_NAMES):
+        #elif line_upper.startswith(INTSTR_CARD_NAMES) and self.use_card_dict:
             #if '=' in line:
                 #(name, value) = line_upper.strip().split('=')
             #else:
@@ -903,8 +917,7 @@ class CaseControlDeck:
         for subcase in self.subcases.values():
             subcase.finish_subcase()
 
-    def convert_to_sol_200(self, model):
-        # type: (object) -> None
+    def convert_to_sol_200(self, model: BDF) -> None:
         """
         Takes a case control deck and changes it from a SOL xxx to a SOL 200
 
@@ -955,8 +968,7 @@ class CaseControlDeck:
         #print("\n%s\n" % (self.subcases[isubcase]))
         return isubcase
 
-    def cross_reference(self, model):
-        # type: (object) -> None
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -966,11 +978,10 @@ class CaseControlDeck:
             the BDF object
 
         """
-        for isubcase, subcase in sorted(self.subcases.items()):
+        for unused_isubcase, subcase in sorted(self.subcases.items()):
             subcase.cross_reference(model)
 
-    def get_op2_data(self):
-        # type: () -> Dict[int, Any]
+    def get_op2_data(self) -> Dict[int, Any]:
         """
         Gets the relevant op2 parameters required for a given subcase
 
@@ -982,17 +993,28 @@ class CaseControlDeck:
                 cases[isubcase] = subcase.get_op2_data(self.sol, subcase.solmap_to_value)
         return cases
 
-    def __repr__(self):
-        # type: () -> str
+    def __repr__(self) -> str:
         return self.write()
 
-    def write(self, write_begin_bulk=None):
-        # type: (Optional[bool]) -> str
+    def write(self, write_begin_bulk: Optional[bool]=None) -> str:
+        """
+        Writes the case control deck.  Has an option to not write the begin bulk line
+
+        Parameters
+        ----------
+        write_begin_bulk : bool; default=None
+            None: use the value in the original deck
+
+        Returns
+        -------
+        msg : str
+            the deck as a string
+        """
         if write_begin_bulk is None:
             write_begin_bulk = self.write_begin_bulk
         msg = ''
         subcase0 = self.subcases[0]
-        for subcase_id, subcase in sorted(self.subcases.items()):
+        for unused_subcase_id, subcase in sorted(self.subcases.items()):
             msg += subcase.write_subcase(subcase0)
         #if len(self.subcases) == 1:
             #msg += 'BEGIN BULK\n'
@@ -1004,7 +1026,7 @@ class CaseControlDeck:
             msg += ' '.join(self.begin_bulk) + '\n'
         return msg
 
-def _split_param(line, line_upper):
+def _split_param(line: str, line_upper: str) -> Tuple[str, str, str]:
     """parses a PARAM card"""
     if ',' in line_upper:
         sline = line_upper.split(',')
@@ -1022,8 +1044,7 @@ def _split_param(line, line_upper):
     assert key.upper() == key, key
     return key, value, options, param_type
 
-def verify_card(key, value, options, line):
-    # type: (int, Any, Any, str) -> None
+def verify_card(key: int, value: Any, options: Any, line: str) -> None:
     """Make sure there are no obvious errors"""
     if key in ['AUXMODEL', 'BC', 'BCHANGE', 'BCMOVE', 'CAMPBELL', 'CLOAD',
                'CMETHOD', 'CSSCHD', 'DEACTEL', 'DEFORM', 'DESGLB', 'DESSUB',
@@ -1083,6 +1104,16 @@ def verify_card2(key, value, options, line):
         'EXTSEOUT', 'FLSTCNT PREFDB', 'AESYMXY',
         'DSYM',
     ]
+    all_none_cards = [
+        'STRESS', 'STRAIN', 'SPCFORCES', 'DISPLACEMENT', 'MPCFORCES', 'SVECTOR',
+        'VELOCITY', 'ACCELERATION', 'FORCE', 'ESE', 'OLOAD', 'SEALL', 'GPFORCE',
+        'GPSTRESS', 'GPSTRAIN', 'FLUX', 'AEROF', 'THERMAL', 'STRFIELD',
+        'NOUTPUT', 'SEDV', 'APRES', 'HTFLOW', 'NLSTRESS', 'GPKE',
+        'SACCELERATION', 'SDISPLACEMENT', 'SEMG', 'HARMONICS', 'PRESSURE', 'VUGRID',
+        'ELSUM', 'SVELOCITY', 'STRFIELD REAL', 'SENSITY', 'MONITOR',
+        'NLLOAD', 'GPSDCON', 'BOUTPUT',
+    ]
+
     if key in ['BCONTACT', 'CURVELINESYMBOL']:
         value2 = integer(value, line)
 
@@ -1094,13 +1125,7 @@ def verify_card2(key, value, options, line):
     # these may have a value of all/none/integer, nothing else
     # except commas are allowed
     # 'DISP=ALL', 'DISP=NONE', 'DISP=1', 'DISP=1,2'
-    elif key in ['STRESS', 'STRAIN', 'SPCFORCES', 'DISPLACEMENT', 'MPCFORCES', 'SVECTOR',
-                 'VELOCITY', 'ACCELERATION', 'FORCE', 'ESE', 'OLOAD', 'SEALL', 'GPFORCE',
-                 'GPSTRESS', 'GPSTRAIN', 'FLUX', 'AEROF', 'THERMAL', 'STRFIELD',
-                 'NOUTPUT', 'SEDV', 'APRES', 'HTFLOW', 'NLSTRESS', 'GPKE',
-                 'SACCELERATION', 'SDISPLACEMENT', 'SEMG', 'HARMONICS', 'PRESSURE', 'VUGRID',
-                 'ELSUM', 'SVELOCITY', 'STRFIELD REAL', 'SENSITY', 'MONITOR',
-                 'NLLOAD', 'GPSDCON', 'BOUTPUT']:
+    elif key in all_none_cards:
         if value not in ['ALL', 'NONE']:
             if ',' in value:
                 sline = value.split(',')
@@ -1135,8 +1160,7 @@ def verify_card2(key, value, options, line):
         raise NotImplementedError('key=%r line=%r' % (key, line))
 
 
-def _clean_lines(lines):
-    # type: (List[str]) -> List[str]
+def _clean_lines(lines: List[str]) -> List[str]:
     """
     Removes comment characters defined by a *$*.
 
@@ -1179,8 +1203,7 @@ def _clean_lines(lines):
                 lines_pack = [line]
     return [''.join(pack) for pack in lines3]
 
-def split_equal_space(line, word, example):
-    # (str, str, str) -> str
+def split_equal_space(line: str, word: str, example: str) -> str:
     """
     Splits a case insensative line by an
 
@@ -1190,11 +1213,11 @@ def split_equal_space(line, word, example):
     """
     if ' ' not in line and '=' not in line:
         raise SyntaxError("expected data of the form '%s', not %r" % (example, line))
-    out = re.split('\s*%s\s*=?\s*' % word, line, maxsplit=1, flags=re.IGNORECASE)
+    out = re.split(r'\s*%s\s*=?\s*' % word, line, maxsplit=1, flags=re.IGNORECASE)
     return out[1]
 
-def integer(str_value, line):
-    # (str, str) -> int
+def integer(str_value: str, line: str) -> int:
+    """casts the value as an integer"""
     try:
         value = int(str_value)
     except ValueError:

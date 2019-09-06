@@ -866,8 +866,7 @@ class CheckCard(CaseControlCard):
             msg += ' = %s' % self.value
         return msg + '\n'
 
-def split_by_mixed_commas_parentheses(str_options):
-    # type: (str) -> List[str]
+def split_by_mixed_commas_parentheses(str_options: str) -> List[str]:
     """
     Excessively complicated function to split something excessively
     complicated.  Thankfully, it only has one set of parentheses
