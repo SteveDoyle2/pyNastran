@@ -17,7 +17,6 @@ class TestBDFParsing(unittest.TestCase):
         args = ['test_bdf', 'fem.bdf']
         out = test_bdf_argparse(argv=args)
         #print(out)
-        #print(out)
 
         #args = ['test_bdf', 'fem.bdf', 'fem2.bdf']
         #out = test_bdf_argparse(argv=args)

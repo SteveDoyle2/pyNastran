@@ -56,7 +56,6 @@ class AddMethods(BDFAttributes):
             assert key not in old_dti.fields, 'key=%i old_fields=%s fields=%s' % (key, old_dti.fields, dti.fields)
             old_dti.fields[key] = dti.fields[key]
 
-
     def _add_param_object(self, param, allow_overwrites=False):
         # type: (Any, bool) -> None
         """adds a PARAM object"""

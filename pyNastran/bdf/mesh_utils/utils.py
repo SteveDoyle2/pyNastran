@@ -513,7 +513,7 @@ def cmd_line_scale(argv=None, quiet=False):
         #prog = 'pyNastranGUI',
         #usage = usage,
         #description='A foo that bars',
-        epilog="And that's how you'd foo a bar",
+        #epilog="And that's how you'd foo a bar",
         #formatter_class=argparse.RawDescriptionHelpFormatter,
         #description=textwrap.dedent(text),
         #version=pyNastran.__version__,
@@ -1161,7 +1161,7 @@ def cmd_line(argv=None, quiet=False):
     msg += '\n'
 
     if len(argv) == 1:
-        sys.exit(msg)
+        sys.exit(msg + 'Not enough arguments.\n')
 
     #assert sys.argv[0] != 'bdf', msg
 
@@ -1193,10 +1193,16 @@ def cmd_line(argv=None, quiet=False):
         cmd_line_bin(argv, quiet=quiet)
     elif argv[1] == 'create_vectorized_numbered' and dev:
         cmd_line_create_vectorized_numbered(argv, quiet=quiet)
+    elif argv[1] in ['-v', '--version']:
+        import pyNastran
+        print(pyNastran.__version__)
     else:
         sys.exit(msg)
         #raise NotImplementedError('arg1=%r' % sys.argv[1])
 
 if __name__ == '__main__':  # pragma: no cover
-    sys.argv = sys.argv[1:]
-    cmd_line()
+    # for the exe, we pass all the args, but we hack them to have the bdf prefix
+    from copy import deepcopy
+    argv = deepcopy(sys.argv)
+    argv[0] = 'bdf'
+    cmd_line(argv=argv)
