@@ -227,8 +227,7 @@ class Subcase:
         _copy.params.update(self.params)
         return _copy
 
-    def deprecated(self, old_name, new_name, deprecated_version):
-        # type: (str, str, str) -> None
+    def deprecated(self, old_name: str, new_name: str, deprecated_version: str) -> None:
         """
         Throws a deprecation message and crashes if past a specific version.
 
@@ -492,8 +491,7 @@ class Subcase:
             print(data_code)
             raise RuntimeError(data_code)
 
-    def __contains__(self, param_name):
-        # type: (str) -> bool
+    def __contains__(self, param_name: str) -> bool:
         """
         Checks to see if a parameter name is in the subcase.
 
@@ -1142,8 +1140,8 @@ def _load_hdf5_param(group, key, encoding):
             #print('keys2 =', keys2)
             #print('values2 =', values2)
             data = []
-            for key, value in zip(keys2, values2):
-                data.append((key, value))
+            for keyi, valuei in zip(keys2, values2):
+                data.append((keyi, valuei))
             class_obj = CLASS_MAP[Type](data)
             assert options is None, options
         else:
@@ -1307,8 +1305,7 @@ def get_analysis_code(sol):
     #print('approach_code = %s' % approach_code)
     return approach_code
 
-def get_device_code(options, unused_value):
-    # type: (Any, Any) -> int
+def get_device_code(options: Any, unused_value: Any) -> int:
     """
     Gets the device code of a given set of options and value
 
@@ -1566,8 +1563,7 @@ def get_sort_code(options, unused_value):
         sort_code += 4
     return sort_code
 
-def get_format_code(options, unused_value):
-    # type: (Any, Any) -> int
+def get_format_code(options: Any, unused_value: Any) -> int:
     """
     Gets the format code that will be used by the op2 based on
     the options.
@@ -1591,8 +1587,7 @@ def get_format_code(options, unused_value):
     format_code = max(format_code, 1)
     return format_code
 
-def get_stress_code(key, options, unused_value):
-    # type: (str, Dict[str, Any], Any) -> int
+def get_stress_code(key: str, options: Dict[str, Any], unused_value: Any) -> int:
     """
     Method get_stress_code:
 

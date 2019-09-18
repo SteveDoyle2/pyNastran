@@ -50,7 +50,7 @@ class Results:
             self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS,
             self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC,
         ]
-        base = ['eqexin', 'gpdt']
+        base = ['eqexin', 'gpdt', 'bgpdt']
         for objs in sum_objs:
             base.extend(objs.get_table_types())
         return base

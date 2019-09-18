@@ -86,14 +86,16 @@ class IntStrCard(IntCard):
             the value for the card
 
         """
-        super(IntStrCard, self).__init__()
+        #super(IntStrCard, self).__init__()
         try:
             self.value = int(value)
         except ValueError:
+            value = value.strip()
             if value not in self.allowed_strings:
                 msg = 'value=%r not in [%s]' % (
                     self.value, ', '.join(self.allowed_strings))
                 raise ValueError(msg)
+            self.value = value
 
     def __repr__(self):
         """writes a card"""
@@ -104,302 +106,142 @@ class ADACT(IntStrCard):
     type = 'ADACT'
     allowed_strings = {'ALL', 'NONE'}
     def __init__(self, value):
-        super(ADACT, self).__init__(value)
+        super().__init__(value)
 
 class AEROF(IntStrCard):
     type = 'AEROF'
     allowed_strings = {'ALL'}
     def __init__(self, value):
-        super(AEROF, self).__init__(value)
+        super().__init__(value)
 
 class APRES(IntStrCard):
     type = 'APRES'
     allowed_strings = {'ALL'}
     def __init__(self, value):
-        super(APRES, self).__init__(value)
+        super().__init__(value)
 
 class GPRSORT(IntStrCard):
     type = 'GPRSORT'
     allowed_strings = {'ALL'}
     def __init__(self, value):
-        super(GPRSORT, self).__init__(value)
+        super().__init__(value)
 
 class GPSDCON(IntStrCard):
     type = 'GPSDCON'
     allowed_strings = {'ALL'}
     def __init__(self, value):
-        super(GPSDCON, self).__init__(value)
+        super().__init__(value)
 
 class HARMONICS(IntStrCard):
     type = 'HARMONICS'
     allowed_strings = {'ALL', 'NONE'}
     def __init__(self, value):
-        super(HARMONICS, self).__init__(value)
+        super().__init__(value)
 
 class OFREQUENCY(IntStrCard):
     type = 'OFREQUENCY'
     allowed_strings = {'ALL'}
     def __init__(self, value):
-        super(OFREQUENCY, self).__init__(value)
+        super().__init__(value)
 
 class OMODES(IntStrCard):
     type = 'OMODES'
     allowed_strings = {'ALL'}
     def __init__(self, value):
-        super(OMODES, self).__init__(value)
+        super().__init__(value)
+
+class SUPER(IntStrCard):
+    type = 'SUPER'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+#----------------------------
+class DISPLACEMENT(IntStrCard):
+    type = 'DISPLACEMENT'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+class VELOCITY(IntStrCard):
+    type = 'VELOCITY'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+class ACCELERATION(IntStrCard):
+    type = 'ACCELERATION'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+class ESE(IntStrCard):
+    type = 'ESE'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+class STRESS(IntStrCard):
+    type = 'STRESS'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+class STRAIN(IntStrCard):
+    type = 'STRAIN'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+class FORCE(IntStrCard):
+    type = 'FORCE'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+class GPFORCE(IntStrCard):
+    type = 'GPFORCE'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+class GPSTRESS(IntStrCard):
+    type = 'GPSTRESS'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+class SEALL(IntStrCard):
+    type = 'SEALL'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
+class SEDR(IntStrCard):
+    type = 'SEDR'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
+
 
 INTSTR_CARDS = [
-    ADACT, AEROF, APRES, GPRSORT, GPSDCON, HARMONICS, OFREQUENCY, OMODES]
+    ADACT, AEROF, APRES, GPRSORT, GPSDCON, HARMONICS, OFREQUENCY, OMODES,
+    SUPER, SEALL, SEDR,
+] + [ESE, STRESS, STRAIN, DISPLACEMENT, VELOCITY, ACCELERATION, FORCE, GPFORCE,
+     GPSTRESS, ]
 INTSTR_CARD_DICT = {card.type : card for card in INTSTR_CARDS}
 INTSTR_CARD_NAMES = tuple([card.type for card in INTSTR_CARDS])
-
-#--------------------------------------------------------------
-class AUXMODEL(IntCard):
-    type = 'AUXMODEL'
-    def __init__(self, value):
-        super(AUXMODEL, self).__init__(value)
-
-class BC(IntCard):
-    type = 'BC'
-    def __init__(self, value):
-        super(BC, self).__init__(value)
-
-class BCSET(IntCard):
-    type = 'BCSET'
-    def __init__(self, value):
-        super(BCSET, self).__init__(value)
-
-class BGSET(IntCard):
-    type = 'BGSET'
-    def __init__(self, value):
-        super(BGSET, self).__init__(value)
-
-class BOLTLD(IntCard):
-    type = 'BOLTLD'
-    def __init__(self, value):
-        super(BOLTLD, self).__init__(value)
-
-class CLOAD(IntCard):
-    type = 'CLOAD'
-    def __init__(self, value):
-        super(CLOAD, self).__init__(value)
-
-class CMETHOD(IntCard):
-    type = 'CMETHOD'
-    def __init__(self, value):
-        super(CMETHOD, self).__init__(value)
-
-class CSSCHD(IntCard):
-    type = 'CSSCHD'
-    def __init__(self, value):
-        super(CSSCHD, self).__init__(value)
-
-class DEFORM(IntCard):
-    type = 'DEFORM'
-    def __init__(self, value):
-        super(DEFORM, self).__init__(value)
-
-class DESGLB(IntCard):
-    type = 'DESGLB'
-    def __init__(self, value):
-        super(DESGLB, self).__init__(value)
-
-class DESSUB(IntCard):
-    type = 'DESSUB'
-    def __init__(self, value):
-        super(DESSUB, self).__init__(value)
-
-class DIVERG(IntCard):
-    type = 'DIVERG'
-    def __init__(self, value):
-        super(DIVERG, self).__init__(value)
-
-class DLOAD(IntCard):
-    type = 'DLOAD'
-    def __init__(self, value):
-        super(DLOAD, self).__init__(value)
-
-class DRSPAN(IntCard):
-    type = 'DRSPAN'
-    def __init__(self, value):
-        super(DRSPAN, self).__init__(value)
-
-class DTEMP(IntCard):
-    type = 'DTEMP'
-    def __init__(self, value):
-        super(DTEMP, self).__init__(value)
-
-class EBDSET(IntCard):
-    type = 'EBDSET'
-    def __init__(self, value):
-        super(EBDSET, self).__init__(value)
-
-class FMETHOD(IntCard):
-    type = 'FMETHOD'
-    def __init__(self, value):
-        super(FMETHOD, self).__init__(value)
-
-class FREQUENCY(IntCard):
-    type = 'FREQUENCY'
-    def __init__(self, value):
-        super(FREQUENCY, self).__init__(value)
-
-class GUST(IntCard):
-    type = 'GUST'
-    def __init__(self, value):
-        super(GUST, self).__init__(value)
-
-class LINE(IntCard):
-    type = 'LINE'
-    def __init__(self, value):
-        super(LINE, self).__init__(value)
-
-class LOAD(IntCard):
-    type = 'LOAD'
-    def __init__(self, value):
-        super(LOAD, self).__init__(value)
-
-class LOADSET(IntCard):
-    type = 'LOADSET'
-    def __init__(self, value):
-        super(LOADSET, self).__init__(value)
-
-class MAXLINES(IntCard):
-    type = 'MAXLINES'
-    def __init__(self, value):
-        super(MAXLINES, self).__init__(value)
-
-class MFLUID(IntCard):
-    type = 'MFLUID'
-    def __init__(self, value):
-        super(MFLUID, self).__init__(value)
-
-class MODES(IntCard):
-    type = 'MODES'
-    def __init__(self, value):
-        super(MODES, self).__init__(value)
-
-class MODTRAK(IntCard):
-    type = 'MODTRAK'
-    def __init__(self, value):
-        super(MODTRAK, self).__init__(value)
-
-class MPC(IntCard):
-    type = 'MPC'
-    def __init__(self, value):
-        super(MPC, self).__init__(value)
-
-class NLCNTL(IntCard):
-    type = 'NLCNTL'
-    def __init__(self, value):
-        super(NLCNTL, self).__init__(value)
-
-class NLPARM(IntCard):
-    type = 'NLPARM'
-    def __init__(self, value):
-        super(NLPARM, self).__init__(value)
-
-class NONLINEAR(IntCard):
-    type = 'NONLINEAR'
-    def __init__(self, value):
-        super(NONLINEAR, self).__init__(value)
-
-class NSM(IntCard):
-    type = 'NSM'
-    def __init__(self, value):
-        super(NSM, self).__init__(value)
-
-class OUTRCV(IntCard):
-    type = 'OUTRCV'
-    def __init__(self, value):
-        super(OUTRCV, self).__init__(value)
-
-class PARTN(IntCard):
-    type = 'PARTN'
-    def __init__(self, value):
-        super(PARTN, self).__init__(value)
-
-class REPCASE(IntCard):
-    type = 'REPCASE'
-    def __init__(self, value):
-        super(REPCASE, self).__init__(value)
-
-class RSMETHOD(IntCard):
-    type = 'RSMETHOD'
-    def __init__(self, value):
-        super(RSMETHOD, self).__init__(value)
-
-class SEFINAL(IntCard):
-    type = 'SEFINAL'
-    def __init__(self, value):
-        super(SEFINAL, self).__init__(value)
-
-class SMETHOD(IntCard):
-    type = 'SMETHOD'
-    def __init__(self, value):
-        super(SMETHOD, self).__init__(value)
-
-class SPC(IntCard):
-    type = 'SPC'
-    def __init__(self, value):
-        super(SPC, self).__init__(value)
-
-class SUPORT1(IntCard):
-    type = 'SUPORT1'
-    def __init__(self, value):
-        super(SUPORT1, self).__init__(value)
-
-class SYM(IntCard):
-    type = 'SYM'
-    def __init__(self, value):
-        super(SYM, self).__init__(value)
-
-class SYMCOM(IntCard):
-    type = 'SYMCOM'
-    def __init__(self, value):
-        super(SYMCOM, self).__init__(value)
-
-class TRIM(IntCard):
-    type = 'TRIM'
-    def __init__(self, value):
-        super(TRIM, self).__init__(value)
-
-class TSTEP(IntCard):
-    type = 'TSTEP'
-    def __init__(self, value):
-        super(TSTEP, self).__init__(value)
-
-class TSTEPNL(IntCard):
-    type = 'TSTEPNL'
-    def __init__(self, value):
-        super(TSTEPNL, self).__init__(value)
-
-class TSTRU(IntCard):
-    type = 'TSTRU'
-    def __init__(self, value):
-        super(TSTRU, self).__init__(value)
-
-
-INT_CARDS = [
-    AUXMODEL, BC, BCSET, BGSET, BOLTLD, CLOAD, CMETHOD, CSSCHD,
-    DEFORM, DESGLB, DESSUB, DIVERG, DLOAD, DRSPAN, DESSUB, DTEMP,
-    EBDSET, FMETHOD, FREQUENCY, GUST, LINE, LOAD, LOADSET, MAXLINES,
-    MFLUID, MODES, MODTRAK, MPC, NLCNTL, NLPARM, NONLINEAR, NSM,
-    OUTRCV, PARTN, REPCASE, RSMETHOD, SEFINAL, SMETHOD, SPC,
-    SUPORT1, SYM, SYMCOM, TRIM, TSTEP, TSTEPNL, TSTRU,
-]
-INT_CARD_DICT = {card.type : card for card in INT_CARDS}
-INT_CARD_NAMES = tuple([card.type for card in INT_CARDS])
 
 #-------------------------------------------------------------------------------
 
 class StringCard(CaseControlCard):
     type = 'StringCard'
     allowed_values = [] # type: List[str]
-    def __init__(self, value):
+    def __init__(self, value, validate=True):
         super(StringCard, self).__init__()
         self.value = value.strip()
-        self.validate()
+        if validate:
+            self.validate()
 
     @classmethod
     def add_from_case_control(cls, line, line_upper, lines, i):
@@ -424,33 +266,59 @@ class AESYMXY(StringCard):
     type = 'AESYMXY'
     allowed_values = ['SYMMETRIC', 'ANTISYMMETRIC', 'ASYMMTRIC']
     def __init__(self, value):
-        super(AESYMXY, self).__init__(value)
+        super().__init__(value)
 
 class AESYMXZ(StringCard):
     type = 'AESYMXZ'
     allowed_values = ['SYMMETRIC', 'ANTISYMMETRIC', 'ASYMMTRIC']
     def __init__(self, value):
-        super(AESYMXZ, self).__init__(value)
+        super().__init__(value)
 
 class AXISYMMETRIC(StringCard):
     type = 'AXISYMMETRIC'
     allowed_values = ['SINE', 'COSINE', 'FLUID']
     def __init__(self, value):
-        super(AXISYMMETRIC, self).__init__(value)
+        super().__init__(value)
 
 class DSYM(StringCard):
     type = 'DSYM'
     allowed_values = ['S', 'A', 'SS', 'SA', 'AS', 'AA']
     def __init__(self, value):
-        super(DSYM, self).__init__(value)
+        super().__init__(value)
 
 class SEQDEP(StringCard):
     type = 'SEQDEP'
     allowed_values = ['YES', 'NO']
     def __init__(self, value):
-        super(SEQDEP, self).__init__(value)
+        super().__init__(value)
 
-STR_CARDS = [AESYMXY, AESYMXZ, AXISYMMETRIC, DSYM, SEQDEP]
+#----------
+# special
+
+class K2PP(StringCard):
+    type = 'K2PP'
+    def __init__(self, value):
+        super().__init__(value, validate=False)
+
+class ECHO(StringCard):
+    type = 'ECHO'
+    allowed_values = ['BOTH', 'SORT', 'UNSORT', 'NONE', 'NOSORT']
+    def __init__(self, value):
+        super().__init__(value)
+
+class ANALYSIS(StringCard):
+    type = 'ANALYSIS'
+    allowed_values = ['HEAT', 'STATICS', 'MODES', 'MFREQ', 'DFREQ', 'NLSTATIC', 'NLTRAN']
+    def __init__(self, value):
+        super().__init__(value)
+
+class THERMAL(StringCard): #  ???
+    type = 'THERMAL'
+    allowed_values = ['ALL']
+    def __init__(self, value):
+        super().__init__(value)
+
+STR_CARDS = [AESYMXY, AESYMXZ, AXISYMMETRIC, DSYM, SEQDEP] + [ECHO, ANALYSIS, K2PP, THERMAL]
 STR_CARD_DICT = {card.type : card for card in STR_CARDS}
 STR_CARD_NAMES = tuple([card.type for card in STR_CARDS])
 
@@ -491,7 +359,7 @@ class SET(CaseControlCard):
             raise RuntimeError(key)
 
         assert key.upper() == key, key
-        uused_options = int(set_id)
+        unused_options = int(set_id)
 
         #if self.debug:
             #self.log.debug('SET-type key=%r set_id=%r' % (key, set_id))

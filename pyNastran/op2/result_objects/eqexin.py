@@ -16,4 +16,3 @@ class EQEXIN:
     def __repr__(self):
         return 'EQEXIN(nid, ndof, doftype); nnodes=%s\n' % len(self.nid)
 
-

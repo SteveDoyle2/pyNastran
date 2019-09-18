@@ -53,7 +53,7 @@ import scipy  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.errors import FatalError
 from pyNastran.op2.errors import FortranMarkerError, SortCodeError
-from pyNastran.op2.result_objects.gpdt import GPDT
+from pyNastran.op2.result_objects.gpdt import GPDT, BGPDT
 from pyNastran.op2.result_objects.eqexin import EQEXIN
 from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
 
@@ -1343,10 +1343,7 @@ class OP2Reader:
         #print('cd = %s' % cd.tolist())
         #print('xyz:\n%s' % xyz)
 
-        op2.op2_results.bgpdt = {
-            'cd' : cd,
-            'xyz' : xyz,
-        }
+        op2.op2_results.bgpdt = BGPDT(cd, xyz)
         self.read_markers([-4, 1, 0])
         marker = self.get_nmarkers(1, rewind=True)[0]
         if marker == 0:

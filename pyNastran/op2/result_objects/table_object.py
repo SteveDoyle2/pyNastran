@@ -37,6 +37,7 @@ float_types = (float, np.float32)
 integer_types = (int, np.int32)
 
 SORT2_TABLE_NAME_MAP = {
+    # sort2_name : sort1_name
     'OUGATO2' : 'OUGATO1',
     'OUGCRM2' : 'OUGCRM1',
     'OUGNO2' : 'OUGNO1',
@@ -75,6 +76,8 @@ SORT2_TABLE_NAME_MAP = {
 
     #'OUG2' : 'OUG1',
     'OUGV2' : 'OUGV1',
+    'OQG2' : 'OQG1',
+    'OPG2' : 'OPG1',
 }
 table_name_to_table_code = {
     # displacement (msc/nx)

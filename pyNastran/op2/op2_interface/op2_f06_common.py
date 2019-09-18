@@ -944,7 +944,7 @@ class OP2_F06_Common:
                 if table_type in ['params']:
                     msg.extend(_write_params(self.params))
                     continue
-                elif table_type in ['gpdt', 'eqexin']:
+                elif table_type in ['gpdt', 'bgpdt', 'eqexin']:
                     obj = self.get_result(table_type)
                     if obj is None:
                         continue
@@ -980,10 +980,12 @@ class OP2_F06_Common:
                 if table_type == 'params':
                     msg.extend(_write_params(self.params))
                     continue
-                elif table_type in ['gpdt', 'eqexin']:
+                elif table_type in ['gpdt', 'bgpdt', 'eqexin']:
                     obj = self.get_result(table_type)
                     if obj is None:
                         continue
+                    elif isinstance(obj, dict):
+                        print(obj)
                     stats = obj.get_stats(short=False)
                     msg.extend(stats)
                     continue

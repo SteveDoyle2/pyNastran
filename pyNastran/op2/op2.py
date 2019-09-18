@@ -196,6 +196,7 @@ class OP2(OP2_Scalar, OP2Writer):
             skip_results = set(skip_results)
 
         skip_results.add('gpdt')
+        skip_results.add('bgpdt')
         skip_results.add('eqexin')
 
         if not self.read_mode == op2_model.read_mode:
@@ -636,7 +637,7 @@ class OP2(OP2_Scalar, OP2Writer):
         """internal method"""
         result_types = self.get_table_types()
         for result_type in result_types:
-            if result_type in ['params', 'gpdt', 'eqexin']:
+            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin']:
                 continue
             result = self.get_result(result_type)
             for obj in result.values():
@@ -675,7 +676,7 @@ class OP2(OP2_Scalar, OP2Writer):
                     #continue
 
         for result_type in result_types:
-            if result_type in ['params', 'gpdt', 'eqexin']:
+            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin']:
                 #self.log.debug('skipping %s' % result_type)
                 continue
 
@@ -832,7 +833,7 @@ class OP2(OP2_Scalar, OP2Writer):
         """
         self.combine = combine
         result_types = self.get_table_types()
-        results_to_skip = ['gpdt', 'eqexin']
+        results_to_skip = ['bgpdt', 'gpdt', 'eqexin', ]
 
         # set subcase_key
         for result_type in result_types:
@@ -956,7 +957,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
         subcase_key2 = {}
         for result_type in result_types:
-            if result_type in ['eigenvalues', 'params', 'gpdt', 'eqexin']:
+            if result_type in ['eigenvalues', 'params', 'gpdt', 'bgpdt', 'eqexin']:
                 continue
             result = self.get_result(result_type)
             case_keys = list(result.keys())
@@ -1002,7 +1003,7 @@ class OP2(OP2_Scalar, OP2Writer):
         keys = []
         table_types = self.get_table_types()
         for table_type in sorted(table_types):
-            if table_type in ['gpdt', 'eqexin']:
+            if table_type in ['gpdt', 'bgpdt', 'eqexin']:
                 continue
             result_type_dict = self.get_result(table_type)
             #if result_type_dict is None: # gpdt, eqexin

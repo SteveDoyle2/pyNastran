@@ -584,7 +584,8 @@ INT_PARAMS_1 = [
     b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
     b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
     b'OUNIT2K', b'OUNIT2M', b'RESCOMP', b'PDRMSG', b'LMODES', b'USETPRT',
-    b'NOCOMPS', b'OPTEXIT', b'RSOPT', b'GUSTAERO', b'MPTUNIT']
+    b'NOCOMPS', b'OPTEXIT', b'RSOPT', b'GUSTAERO', b'MPTUNIT',
+    b'USETSEL']
 FLOAT_PARAMS_1 = [
     b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
     b'SIGMA', b'TABS', b'EPPRT', b'AUNITS',
@@ -601,10 +602,13 @@ STR_PARAMS_1 = [
     b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',
     b'PRTGPL', b'PRTGPTT', b'PRTMGG', b'PRTPG',
 
+    # superelements
+    b'EXTOUT', b'SESDAMP',
+
     # TODO: remove these as they're in the matrix test and are user
     #       defined PARAMs
     # TODO: add an option for custom PARAMs
-    b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', ]
+    b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH']
 
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):

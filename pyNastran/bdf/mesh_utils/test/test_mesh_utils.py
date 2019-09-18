@@ -5,6 +5,8 @@ from io import StringIO
 
 from docopt import DocoptExit
 import numpy as np
+from cpylog import SimpleLogger
+
 #import pyNastran
 #from pyNastran.bdf.bdf import BDF
 
@@ -24,7 +26,6 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import (
 from pyNastran.bdf.mesh_utils.make_half_model import make_symmetric_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.utils import cmd_line
-from cpylog import SimpleLogger
 
 # not tested
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s
@@ -38,7 +39,7 @@ np.set_printoptions(edgeitems=3, infstr='inf',
 
 
 class TestMeshUtils(unittest.TestCase):
-
+    """various mesh_utils tests"""
     def test_free_faces(self):
         """CTETRA10"""
         #bdf free_faces [-d | -l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME
@@ -469,12 +470,14 @@ class TestMeshUtils(unittest.TestCase):
         model.safe_cross_reference()
         #os.remove('mcids.csv')
 
-        argv = ['bdf', 'export_mcids', bdf_filename, '-o', csv_filename, '--iplies', '0,1,2,3,4,5,6,7,8,9,10', '--no_x', '--no_y']
+        argv = ['bdf', 'export_mcids', bdf_filename, '-o', csv_filename,
+                '--iplies', '0,1,2,3,4,5,6,7,8,9,10', '--no_x', '--no_y']
         with self.assertRaises(DocoptExit):
             # can't define both --no_x and --no_y
             cmd_line(argv=argv, quiet=True)
 
-        argv = ['bdf', 'export_mcids', bdf_filename, '-o', csv_filename, '--iplies', '0,1,2,3,4,5,6,7,8,9', '--no_x']
+        argv = ['bdf', 'export_mcids', bdf_filename, '-o', csv_filename,
+                '--iplies', '0,1,2,3,4,5,6,7,8,9', '--no_x']
         cmd_line(argv=argv, quiet=True)
 
         eids = [1204, 1211]
@@ -508,7 +511,8 @@ class TestMeshUtils(unittest.TestCase):
         os.remove('pin_flags.csv')
         os.remove('pin_flags.bdf')
 
-        argv = ['bdf', 'split_cbars_by_pin_flags', bdf_filename, '-o', 'pin_flags.bdf', '-p', 'pin_flags.csv']
+        argv = ['bdf', 'split_cbars_by_pin_flags', bdf_filename,
+                '-o', 'pin_flags.bdf', '-p', 'pin_flags.csv']
         cmd_line(argv=argv, quiet=True)
         os.remove('pin_flags.csv')
         os.remove('pin_flags.bdf')
@@ -766,7 +770,7 @@ class TestMeshUtils(unittest.TestCase):
             [0., 0., 1.],
             [1., 0., 0.],
         ])
-        model, mirror_model, unused_nid_offset, eid_offset = bdf_mirror_plane(
+        model, unsed_mirror_model, unused_nid_offset, unused_eid_offset = bdf_mirror_plane(
             model, plane, mirror_model=None, log=None, debug=True,
             use_nid_offset=False)
         #for nid, node in sorted(mirror_model.nodes.items()):

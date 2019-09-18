@@ -348,7 +348,7 @@ class OQG(OP2Common):
 
         if self.thermal == 0:
             self._setup_op2_subcase('SPCFORCES')
-            if self.table_name in [b'OQG1']:
+            if self.table_name in [b'OQG1', b'OQG2']:
                 result_name = 'spc_forces'
             #elif self.table_name in [b'OQGV1']:
                 #result_name = 'spc_forces_v'

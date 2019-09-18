@@ -1164,7 +1164,7 @@ def _export_subcases(hdf5_file, op2_model):
     subcase_groups = {}
     result_types = op2_model.get_table_types()
     for result_type in result_types:
-        if result_type in ['params', 'gpdt', 'eqexin']:
+        if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin']:
             #op2_model.log.debug('skipping %s' % result_type)
             continue
 
