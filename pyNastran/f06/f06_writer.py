@@ -40,8 +40,7 @@ def make_stamp(title, today=None, build=None):
     return out
 
 
-def make_f06_header():
-    # type: () -> str
+def make_f06_header() -> str:
     spaces = ''
     lines1 = [
         spaces + '/* -------------------------------------------------------------------  */\n',
@@ -98,8 +97,7 @@ def make_f06_header():
     return ''.join(lines1 + lines2)
 
 
-def sorted_bulk_data_header():
-    # type: () -> str
+def sorted_bulk_data_header() -> str:
     """creates the bulk data echo header"""
     msg = '0                                                 S O R T E D   B U L K   D A T A   E C H O                                         \n'
     msg += '                 ENTRY                                                                                                              \n'
@@ -107,8 +105,8 @@ def sorted_bulk_data_header():
     return msg
 
 
-def make_end(end_flag=False, options=None):
-    # type: (bool, Optional[Dict[str, str]]) -> str
+def make_end(end_flag: bool=False,
+             options: Optional[Dict[str, str]]=None) -> str:
     """creates the F06 footer"""
     lines = []
     lines2 = []
@@ -194,17 +192,14 @@ class F06Writer(OP2_F06_Common):
 
         self._results = ResultSet(self.get_all_results(), self.log)
 
-    def get_all_results(self):
-        # type: () -> List[str]
+    def get_all_results(self) -> List[str]:
         all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()
         return all_results
 
-    def clear_results(self):
-        # type: () -> None
+    def clear_results(self) -> None:
         self._results.clear()
 
-    def add_results(self, results):
-        # type: (Union[str, List[str]]) -> None
+    def add_results(self, results: Union[str, List[str]]) -> None:
         if isinstance(results, str):
             results = [results]
         all_results = self.get_all_results()
@@ -237,13 +232,11 @@ class F06Writer(OP2_F06_Common):
             # thermalLoad_VU_3D, thermalLoad_1D, conv_thermal_load, thermalLoad_2D_3D
             self._results.add(result)
 
-    def set_results(self, results):
-        # type: (Union[str, List[str]]) -> None
+    def set_results(self, results: Union[str, List[str]]) -> None:
         self.clear_results()
         self.add_results(results)
 
-    def remove_results(self, results):
-        # type: (Union[str, List[str]]) -> None
+    def remove_results(self, results: Union[str, List[str]]) -> None:
         self._results.remove(results)
 
     def make_f06_header(self):
@@ -366,11 +359,11 @@ class F06Writer(OP2_F06_Common):
             f06.write(page_stamp % self.page_num)
             self.page_num += 1
 
-    def write_f06(self, f06_outname, matrix_filename=None,
-                  is_mag_phase=False, is_sort1=True,
-                  delete_objects=True, end_flag=False, quiet=True, repr_check=False,
-                  close=True):
-        # type: (str, Optional[str], bool, bool, bool, bool, bool, bool, bool) -> None
+    def write_f06(self, f06_outname: str, matrix_filename: Optional[str]=None,
+                  is_mag_phase: bool=False, is_sort1: bool=True,
+                  delete_objects: bool=True, end_flag: bool=False,
+                  quiet: bool=True, repr_check: bool=False,
+                  close: bool=True) -> None:
         """
         Writes an F06 file based on the data we have stored in the object
 
@@ -566,7 +559,7 @@ class F06Writer(OP2_F06_Common):
         header_old = ['     DEFAULT                                                                                                                        \n',
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
-        unallowed_results = ['eigenvectors', 'eigenvalues', 'params', 'gpdt', 'eqexin']
+        unallowed_results = ['eigenvectors', 'eigenvalues', 'params', 'gpdt', 'bgpdt', 'eqexin']
         res_types = list(self.get_result(table_type) for table_type in sorted(self.get_table_types())
                          if table_type not in unallowed_results)
 

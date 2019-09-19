@@ -44,7 +44,7 @@ def Position(xyz, cid, model):
 
 def TransformLoadWRT(F, M, cid, cid_new, model):
     deprecated('TransformLoadWRT', 'transform_load', '1.3', levels=[0, 1, 2])
-    transform_load(F, M, cid, cid_new, model)
+    return transform_load(F, M, cid, cid_new, model)
 
 def transform_load(F, M, cid, cid_new, model):
     """

@@ -698,7 +698,7 @@ def cmd_line_free_faces(argv=None, quiet=False):
         '  -h, --help     show this help message and exit\n'
         "  -v, --version  show program's version number and exit\n" % encoding
     )
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(arg_msg)
 
     arg_msg += '\n'
@@ -892,6 +892,7 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
     """command line interface to bdf filter"""
     if argv is None:
         argv = sys.argv
+
     from docopt import docopt
     import pyNastran
     msg = (
@@ -1197,6 +1198,7 @@ def cmd_line(argv=None, quiet=False):
         import pyNastran
         print(pyNastran.__version__)
     else:
+        print(argv)
         sys.exit(msg)
         #raise NotImplementedError('arg1=%r' % sys.argv[1])
 
