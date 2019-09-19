@@ -6,9 +6,9 @@ This file defines:
 
 """
 from cpylog import get_logger2
+from pyNastran.utils import deprecated
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 from pyNastran.bdf.mesh_utils.mirror_mesh import _plane_to_iy
-from pyNastran.bdf.bdf_interface.utils import deprecated
 
 
 def make_symmetric_model(bdf_filename, plane: str='xz',

@@ -11,6 +11,7 @@ from copy import deepcopy
 import numpy as np  # type: ignore
 from numpy import cross, dot  # type: ignore
 
+from pyNastran.utils import deprecated
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.patran_utils.colon_syntax import (
     parse_patran_syntax, parse_patran_syntax_dict, parse_patran_syntax_dict_map,
@@ -41,8 +42,9 @@ def Position(xyz, cid, model):
     return xyz2
 
 
-#def TransformLoadWRT(F, M, cid, cid_new, model):
-    #transform_load(F, M, cid, cid_new, model)
+def TransformLoadWRT(F, M, cid, cid_new, model):
+    deprecated('TransformLoadWRT', 'transform_load', '1.3', levels=[0, 1, 2])
+    transform_load(F, M, cid, cid_new, model)
 
 def transform_load(F, M, cid, cid_new, model):
     """

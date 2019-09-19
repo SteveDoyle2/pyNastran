@@ -3,9 +3,7 @@ from typing import List, Dict, Any
 from numpy import ndarray
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.utils import object_attributes
-
-from pyNastran.bdf.bdf_interface.utils import deprecated
+from pyNastran.utils import object_attributes, deprecated
 
 from pyNastran.bdf.bdf_interface.subcase_cards import CLASS_MAP
 from pyNastran.bdf.bdf_interface.subcase_utils import (

@@ -1,4 +1,14 @@
-from typing import List, Tuple, Union, Optional, Any
+"""
+defines:
+ - BaseCard()
+ - Element()
+ - Property()
+ - Material()
+ - word, num = break_word_by_trailing_integer(pname_fid)
+ - word, num = break_word_by_trailing_parentheses_integer_ab(pname_fid)
+"""
+from __future__ import annotations
+from typing import List, Tuple, Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 #from numpy import nan, empty, unique
@@ -8,9 +18,11 @@ from pyNastran.utils import object_attributes, object_methods
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.field_writer_8 import is_same
-from pyNastran.bdf.bdf_interface.utils import deprecated
+from pyNastran.utils import deprecated
 from pyNastran.bdf.cards.expand_card import  expand_thru, expand_thru_by
 
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 #from abc import ABC, abstractmethod
 
 class BaseCard:
@@ -351,27 +363,24 @@ class Material(BaseCard):
         BaseCard.__init__(self)
 
     @property
-    def TRef(self):
-        # type: () -> float
+    def TRef(self) -> float:
         if not hasattr(self, 'tref'):
             raise AttributeError('%r object has no attribute tref' % self.type)
         return self.tref
 
     @TRef.setter
-    def TRef(self, tref):
+    def TRef(self, tref: float) -> None:
         # type: (float) -> None
         """sets the self.Tref attributes"""
         if not hasattr(self, 'tref'):
             raise AttributeError('%r object has no attribute tref' % self.type)
         self.tref = tref
 
-    def cross_reference(self, model):
-        # type: (Any) -> None
+    def cross_reference(self, model: BDF) -> None:
         """dummy cross reference method for a Material"""
         pass
 
-    def Mid(self):
-        # type: () -> Any
+    def Mid(self) -> Any:
         """
         returns the material ID of an element
 

@@ -5,9 +5,6 @@ Defines various utilities for BDF parsing including:
 """
 import os
 import sys
-import getpass
-import inspect
-import warnings
 from io import StringIO
 from collections import defaultdict
 from typing import List, Union, Dict, Tuple, Optional, Any
@@ -309,68 +306,6 @@ def print_filename(filename: str, relpath: bool=True) -> str:
     if drive_letter == os.path.splitdrive(os.curdir)[0] and relpath:
         return os.path.relpath(filename)
     return filename
-
-def deprecated(old_name: str, new_name: str, deprecated_version: str,
-               levels: Optional[List[int]]=None) -> None:
-    """
-    Throws a deprecation message and crashes if past a specific version.
-
-    Parameters
-    ----------
-    old_name : str
-        the old function name
-    new_name : str
-        the new function name
-    deprecated_version : float
-        the version the method was first deprecated in
-    levels : List[int]
-        the deprecation levels to show
-        [1, 2, 3] shows 3 levels up from this function (good for classes)
-        None : ???
-
-    TODO: turn this into a decorator?
-
-    """
-    assert isinstance(deprecated_version, str), type(deprecated_version)
-    assert isinstance(levels, list), type(levels)
-    assert old_name != new_name, "'%s' and '%s' are the same..." % (old_name, new_name)
-
-    version = pyNastran.__version__.split('_')[0]
-    dep_ver_tuple = tuple([int(i) for i in deprecated_version.split('.')])
-    ver_tuple = tuple([int(i) for i in version.split('.')[:2]])
-
-    #new_line = ''
-    msg = "'%s' was deprecated in v%s (current=%s)" % (
-        old_name, deprecated_version, version)
-    if new_name:
-        msg += "; replace it with '%s'\n" % new_name
-
-    for level in levels:
-        # jump to get out of the inspection code
-        frame = sys._getframe(3 + level)
-        line_no = frame.f_lineno
-        code = frame.f_code
-        try:
-            #filename = os.path.basename(frame.f_globals['__file__'])
-            filename = os.path.basename(inspect.getfile(code))
-        except:
-            print(code)
-            raise
-
-        source_lines, line_no0 = inspect.getsourcelines(code)
-        delta_nlines = line_no - line_no0
-        try:
-            line = source_lines[delta_nlines]
-        except:
-            break
-        msg += '  %-25s:%-4s %s\n' % (filename, str(line_no) + ';', line.strip())
-
-    user_name = getpass.getuser()
-    if ver_tuple > dep_ver_tuple: # or 'id' in msg:
-        # fail
-        raise NotImplementedError(msg)
-    elif user_name not in ['sdoyle', 'travis']:
-        warnings.warn(msg, DeprecationWarning)
 
 
 def _parse_dynamic_syntax(key: str,

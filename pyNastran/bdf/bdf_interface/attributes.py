@@ -3,8 +3,7 @@ from collections import defaultdict
 from typing import List, Dict, Optional, Any, Union
 from numpy import array  # type: ignore
 
-from pyNastran.utils import object_attributes, object_methods
-from pyNastran.bdf.bdf_interface.utils import deprecated
+from pyNastran.utils import object_attributes, object_methods, deprecated
 #from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
