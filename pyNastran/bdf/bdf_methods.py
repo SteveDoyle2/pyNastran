@@ -14,7 +14,7 @@ reading/writing/accessing of BDF data.  Such methods include:
 
 """
 from collections import defaultdict
-from typing import List, Tuple, Any, Union, Dict
+from typing import List, Tuple, Dict, Any, Optional, Union
 
 import numpy as np
 
@@ -25,6 +25,7 @@ from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moment
 from pyNastran.bdf.mesh_utils.breakdowns import (
     get_length_breakdown, get_area_breakdown, get_volume_breakdown, get_mass_breakdown)
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
+from pyNastran.bdf.utils import transform_load
 
 
 class BDFMethods(BDFAttributes):
@@ -40,7 +41,6 @@ class BDFMethods(BDFAttributes):
             xyz_cid0=None)
 
     """
-
     def __init__(self):
         BDFAttributes.__init__(self)
 
@@ -75,7 +75,8 @@ class BDFMethods(BDFAttributes):
         return get_area_breakdown(self, property_ids=property_ids,
                                   stop_if_no_area=stop_if_no_area, sum_bar_area=sum_bar_area)
 
-    def get_volume_breakdown(self, property_ids=None, stop_if_no_volume=True):
+    def get_volume_breakdown(self, property_ids: Optional[int]=None,
+                             stop_if_no_volume: bool=True) -> Dict[int, float]:
         """
         gets a breakdown of the volume by property region
 
@@ -91,7 +92,10 @@ class BDFMethods(BDFAttributes):
         return get_volume_breakdown(self, property_ids=property_ids,
                                     stop_if_no_volume=stop_if_no_volume)
 
-    def get_mass_breakdown(self, property_ids=None, stop_if_no_mass=True, detailed=False):
+    def get_mass_breakdown(self,
+                           property_ids: Optional[int]=None,
+                           stop_if_no_mass: bool=True,
+                           detailed: bool=False) -> Dict[int, float]:
         """
         Gets a breakdown of the mass by property region.
 
@@ -128,7 +132,7 @@ class BDFMethods(BDFAttributes):
 
     def mass_properties(self, element_ids=None, mass_ids=None,
                         reference_point=None,
-                        sym_axis=None, scale=None, inertia_reference='cg'):
+                        sym_axis=None, scale=None, inertia_reference: str='cg'):
         """
         Calculates mass properties in the global system about the
         reference point.
@@ -415,18 +419,16 @@ class BDFMethods(BDFAttributes):
         #p0 = array([0., 0., 0.])  ## .. todo:: hardcoded
         #mass, cg, I = self.mass_properties(reference_point=p0, sym_axis=None)
 
-    def sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
-                                    include_grav=False, xyz_cid0=None):
-        # type: (int, int, List[int], List[int], bool, Union[None, Dict[int, np.ndarray]]) -> Tuple[np.ndarray, np.ndarray]
+    def sum_forces_moments_elements(self, p0: int, loadcase_id: int,
+                                    eids: List[int], nids: List[int],
+                                    cid: int=0,
+                                    include_grav: bool=False,
+                                    xyz_cid0: Union[None, Dict[int, np.ndarray]]=None) -> Tuple[np.ndarray, np.ndarray]:
         """
         Sum the forces/moments based on a list of nodes and elements.
 
         Parameters
         ----------
-        eids : List[int]
-            the list of elements to include (e.g. the loads due to a PLOAD4)
-        nids : List[int]
-            the list of nodes to include (e.g. the loads due to a FORCE card)
         p0 : int; (3,) ndarray
            the point to sum moments about
            type = int
@@ -435,6 +437,12 @@ class BDFMethods(BDFAttributes):
                the x, y, z location in the global frame
         loadcase_id : int
             the LOAD=ID to analyze
+        eids : List[int]
+            the list of elements to include (e.g. the loads due to a PLOAD4)
+        nids : List[int]
+            the list of nodes to include (e.g. the loads due to a FORCE card)
+        cid : int; default=0
+            the coordinate system for the summation
         include_grav : bool; default=False
             includes gravity in the summation (not supported)
         xyz_cid0 : None / Dict[int] = (3, ) ndarray
@@ -496,11 +504,17 @@ class BDFMethods(BDFAttributes):
             '1.3')
         forces, moments = sum_forces_moments_elements(self, p0, loadcase_id, eids, nids,
                                                       include_grav=include_grav, xyz_cid0=xyz_cid0)
+        if cid == 0:
+            return forces, moments
+        cid0 = 0
+        forces, moments = transform_load(forces, moments, cid0, cid, self)
         return forces, moments
 
-    def sum_forces_moments(self, p0, loadcase_id, include_grav=False,
-                           xyz_cid0=None):
-        # type: (int, int, bool, Union[None, Dict[int, np.ndarray]]) -> Tuple[np.ndarray, np.ndarray]
+    def sum_forces_moments(self, p0: int,
+                           loadcase_id: int,
+                           cid: int=0,
+                           include_grav: bool=False,
+                           xyz_cid0: Union[None, Dict[int, np.ndarray]]=None) -> Tuple[np.ndarray, np.ndarray]:
         """
         Sums applied forces & moments about a reference point p0 for all
         load cases.
@@ -516,6 +530,8 @@ class BDFMethods(BDFAttributes):
             the reference point
         loadcase_id : int
             the LOAD=ID to analyze
+        cid : int; default=0
+            the coordinate system for the summation
         include_grav : bool; default=False
             includes gravity in the summation (not supported)
         xyz_cid0 : None / Dict[int] = (3, ) ndarray
@@ -543,9 +559,13 @@ class BDFMethods(BDFAttributes):
             '1.3')
         forces, moments = sum_forces_moments(self, p0, loadcase_id,
                                              include_grav=include_grav, xyz_cid0=xyz_cid0)
+        if cid == 0:
+            return forces, moments
+        cid0 = 0
+        forces, moments = transform_load(forces, moments, cid0, cid, self)
         return forces, moments
 
-    def get_element_faces(self, element_ids=None, allow_blank_nids=True):
+    def get_element_faces(self, element_ids: Optional[List[int]]=None, allow_blank_nids: bool=True) -> Any:
         """
         Gets the elements and faces that are skinned from solid elements.
         This includes internal faces, but not existing shells.

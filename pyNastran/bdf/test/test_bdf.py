@@ -1494,15 +1494,17 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
         fem2._get_temperatures_array(loadcase_id, nid_map=nid_map, dtype='float32')
 
     if 'LOAD' in subcase:
+        cid_new = 0
+        cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
         loadcase_id = subcase.get_parameter('LOAD')[0]
-        force, moment = fem2.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        force, moment = fem2.sum_forces_moments(p0, loadcase_id, cid=cid_new, include_grav=False)
         eids = None
         nids = None
         force2, moment2 = fem2.sum_forces_moments_elements(
-            p0, loadcase_id, eids, nids, include_grav=False)
+            p0, loadcase_id, eids, nids, cid=cid_new, include_grav=False)
         assert np.allclose(force, force2), 'force=%s force2=%s' % (force, force2)
         assert np.allclose(moment, moment2), 'moment=%s moment2=%s' % (moment, moment2)
-        print('  isubcase=%i F=%s M=%s' % (isubcase, force, moment))
+        print('  isubcase=%i F=%s M=%s%s' % (isubcase, force, moment, cid_msg))
         allowed_sols = [
             1, 5, 24, 61, 64, 66, 100, 101, 103, 105, 106, 107,
             108, 109, 110, 111, 112, 114, 144, 145, 153, 200, 400, 401, 600, 601,

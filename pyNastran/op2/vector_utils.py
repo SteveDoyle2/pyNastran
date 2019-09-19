@@ -371,10 +371,6 @@ def transform_force(force_in_local,
         the (BDF.point_ids, cd) array
     icd_transform : dict[cd] = (Mi, ) int ndarray
         the mapping for nid_cd
-    #xyz_cid0 : (n, 3) ndarray
-        #the nodes in the global frame
-    #summation_point_cid0 : (3, ) ndarray
-        #the summation point in the global frame
 
     .. warning:: the function signature will change...
     .. todo:: sum of moments about a point must have an rxF term to get the
@@ -412,7 +408,8 @@ def transform_force(force_in_local,
 def transform_force_moment(force_in_local, moment_in_local,
                            coord_out: CORDx, coords: Dict[int, CORDx],
                            nid_cd: int, icd_transform: Dict[int, ndarray],
-                           xyz_cid0: ndarray, summation_point_cid0: Optional[ndarray]=None,
+                           xyz_cid0: ndarray,
+                           summation_point_cid0: Optional[ndarray]=None,
                            consider_rxf: bool=True,
                            debug: bool=False, log=None):
     """

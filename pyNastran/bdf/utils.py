@@ -4,7 +4,7 @@ Defines various utilities including:
  - parse_patran_syntax_dict
  - Position
  - PositionWRT
- - TransformLoadWRT
+ - transform_load
 
 """
 from copy import deepcopy
@@ -40,7 +40,11 @@ def Position(xyz, cid, model):
     xyz2 = cp_ref.transform_node_to_global(xyz)
     return xyz2
 
-def TransformLoadWRT(F, M, cid, cid_new, model):
+
+#def TransformLoadWRT(F, M, cid, cid_new, model):
+    #transform_load(F, M, cid, cid_new, model)
+
+def transform_load(F, M, cid, cid_new, model):
     """
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.
