@@ -250,10 +250,13 @@ class OP2Writer(OP2_F06_Common):
             'OEFIT',
         ]
         for table_type in obj.get_table_types():
-            if table_type in ['gpdt', 'eqexin'] or table_type in skips:
+            if table_type in ['gpdt', 'bgpdt', 'eqexin'] or table_type in skips:
                 continue
 
             res_dict = obj.get_result(table_type)
+            if not isinstance(res_dict, dict):
+                raise TypeError(table_type)
+
             for unused_key, res in res_dict.items():
                 if hasattr(res, 'table_name_str'): # params
                     #print(table_type)
