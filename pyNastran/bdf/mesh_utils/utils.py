@@ -878,13 +878,13 @@ def cmd_line_transform(argv=None, quiet=False):
     nid_cp_cd, xyz_cid0, unused_xyz_cp, unused_icd_transform, unused_icp_transform = model.get_xyz_in_coord_array(
         cid=0, fdtype='float64', idtype='int32')
 
-    #update_nodesi = False
+    update_nodes_flag = False
     # we pretend to change the SPOINT location
     if dxyz is not None:
         xyz_cid0 += dxyz
-        #update_nodesi = True
+        update_nodes_flag = True
 
-    if update_nodes:
+    if update_nodes_flag:
         update_nodes(model, nid_cp_cd, xyz_cid0)
         model.write_bdf(bdf_filename_out)
 
@@ -1000,7 +1000,7 @@ def cmd_line_filter(argv=None, quiet=False):  # pragma: no cover
     if zsign:
         zvals = xyz_cid0[:, 2]
         zfunc = func_map[zsign]
-        iz = xfunc(zvals, zval)
+        iz = zfunc(zvals, zval)
         iunion = _union(zval, iz, iunion)
         update_nodesi = True
 

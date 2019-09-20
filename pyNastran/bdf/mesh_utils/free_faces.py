@@ -7,7 +7,6 @@ defines:
                           size=8, is_double=False, encoding=None)
 
 """
-import sys
 from copy import deepcopy
 from collections import defaultdict
 
@@ -337,85 +336,3 @@ def _write_shells(bdf_file, model, eid_set, face_map, eid_shell, pid_shell, mid_
     #for pid, prop in model.properties.items():
         #bdf_file.write(prop.write_card(size=size, is_double=is_double))
     return eid_shell
-
-
-def main():  # pragma: no cover
-    """docopt interface"""
-    encoding = sys.getdefaultencoding()
-    import pyNastran
-    from docopt import docopt
-    msg = (
-        'Usage:\n'
-        '  free_faces [-d] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME\n'
-        '  free_faces [-l] [-f] [--encoding ENCODE] BDF_FILENAME SKIN_FILENAME\n'
-
-        '  free_faces -h | --help\n'
-        '  free_faces -v | --version\n'
-        '\n'
-
-        "Positional Arguments:\n"
-        "  BDF_FILENAME   path to input BDF/DAT/NAS file\n"
-        "  SKIN_FILENAME   path to output BDF/DAT/NAS file\n"
-        '\n'
-
-        'Options:\n'
-        '  -l, --large        writes the BDF in large field, single precision format (default=False)\n'
-        '  -d, --double       writes the BDF in large field, double precision format (default=False)\n'
-        '  --encoding ENCODE  the encoding method (default=None -> %r)\n'
-        '\n'
-        'Developer:\n'
-        '  -f, --profile    Profiles the code (default=False)\n'
-        '\n'
-        "Info:\n"
-        '  -h, --help     show this help message and exit\n'
-        "  -v, --version  show program's version number and exit\n" % encoding
-    )
-    if len(sys.argv) == 1:
-        sys.exit(msg)
-
-    ver = str(pyNastran.__version__)
-    data = docopt(msg, version=ver)
-
-    #data['--xref'] = not data['--xref']
-    if not data['--encoding']:
-        data['--encoding'] = None
-
-    for key, value in sorted(data.items()):
-        print("%-12s = %r" % (key.strip('--'), value))
-
-    import time
-    time0 = time.time()
-
-    #is_double = False
-    if data['--double']:
-        size = 16
-        #is_double = True
-    elif data['--large']:
-        size = 16
-    else:
-        size = 8
-    bdf_filename = data['BDF_FILENAME']
-    skin_filename = data['SKIN_FILENAME']
-
-
-    from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
-
-    tol = 1e-005
-    bdf_filename_merged = 'merged.bdf'
-    bdf_equivalence_nodes(bdf_filename, bdf_filename_merged, tol,
-                          renumber_nodes=False, neq_max=10, xref=True,
-                          node_set=None,
-                          size=8, is_double=False,
-                          remove_collapsed_elements=False,
-                          avoid_collapsed_elements=False,
-                          crash_on_collapse=False, debug=True)
-    print('done with equivalencing')
-    write_skin_solid_faces(
-        bdf_filename_merged, skin_filename,
-        write_solids=False, write_shells=True,
-        size=size, is_double=False, encoding=None,
-    )
-    print("total time:  %.2f sec" % (time.time() - time0))
-
-if __name__ == '__main__':  # pragma: no cover
-    main()

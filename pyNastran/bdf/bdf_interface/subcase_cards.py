@@ -157,53 +157,6 @@ class SUPER(IntStrCard):
         super().__init__(value)
 
 #----------------------------
-class DISPLACEMENT(IntStrCard):
-    type = 'DISPLACEMENT'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class VELOCITY(IntStrCard):
-    type = 'VELOCITY'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class ACCELERATION(IntStrCard):
-    type = 'ACCELERATION'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class ESE(IntStrCard):
-    type = 'ESE'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class STRESS(IntStrCard):
-    type = 'STRESS'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class STRAIN(IntStrCard):
-    type = 'STRAIN'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class FORCE(IntStrCard):
-    type = 'FORCE'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
-
-class GPFORCE(IntStrCard):
-    type = 'GPFORCE'
-    allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
 
 class GPSTRESS(IntStrCard):
     type = 'GPSTRESS'
@@ -223,12 +176,16 @@ class SEDR(IntStrCard):
     def __init__(self, value):
         super().__init__(value)
 
+class GPKE(IntStrCard):
+    type = 'GPKE'
+    allowed_strings = {'ALL'}
+    def __init__(self, value):
+        super().__init__(value)
 
 INTSTR_CARDS = [
     ADACT, AEROF, APRES, GPRSORT, GPSDCON, HARMONICS, OFREQUENCY, OMODES,
     SUPER, SEALL, SEDR,
-] + [ESE, STRESS, STRAIN, DISPLACEMENT, VELOCITY, ACCELERATION, FORCE, GPFORCE,
-     GPSTRESS, ]
+] + [GPSTRESS, GPKE, ]
 INTSTR_CARD_DICT = {card.type : card for card in INTSTR_CARDS}
 INTSTR_CARD_NAMES = tuple([card.type for card in INTSTR_CARDS])
 
@@ -261,33 +218,56 @@ class StringCard(CaseControlCard):
     def write(self, spaces):
         return spaces + str(self)
 
+    def export_to_hdf5(self, h5_file, encoding):
+        value_bytes = self.value.encode(encoding)
+        #sub_group = h5_file.create_group(self.type)
+        h5_file.create_dataset('value', data=value_bytes)
+
+    @classmethod
+    def load_hdf5(cls, h5_file, encoding):
+        from pyNastran.utils.dict_to_h5py import _cast
+        value = h5_file['value']
+        value2 = _cast(value).decode(encoding)
+        return cls(value2), []
 
 class AESYMXY(StringCard):
     type = 'AESYMXY'
+    short_name = 'AESYMXY'
     allowed_values = ['SYMMETRIC', 'ANTISYMMETRIC', 'ASYMMTRIC']
     def __init__(self, value):
         super().__init__(value)
 
 class AESYMXZ(StringCard):
     type = 'AESYMXZ'
+    short_name = 'AESYMXZ'
     allowed_values = ['SYMMETRIC', 'ANTISYMMETRIC', 'ASYMMTRIC']
     def __init__(self, value):
         super().__init__(value)
 
 class AXISYMMETRIC(StringCard):
     type = 'AXISYMMETRIC'
+    short_name = type[:4]
     allowed_values = ['SINE', 'COSINE', 'FLUID']
+    def __init__(self, value):
+        super().__init__(value)
+
+class AUTOSPC(StringCard):
+    type = 'AUTOSPC'
+    short_name = type[:4]
+    allowed_values = ['NO']
     def __init__(self, value):
         super().__init__(value)
 
 class DSYM(StringCard):
     type = 'DSYM'
+    short_name = type[:4]
     allowed_values = ['S', 'A', 'SS', 'SA', 'AS', 'AA']
     def __init__(self, value):
         super().__init__(value)
 
 class SEQDEP(StringCard):
     type = 'SEQDEP'
+    short_name = type[:4]
     allowed_values = ['YES', 'NO']
     def __init__(self, value):
         super().__init__(value)
@@ -297,31 +277,64 @@ class SEQDEP(StringCard):
 
 class K2PP(StringCard):
     type = 'K2PP'
+    short_name = type[:4]
     def __init__(self, value):
         super().__init__(value, validate=False)
 
 class ECHO(StringCard):
+    """
+    ECHO = NONE
+    """
     type = 'ECHO'
+    short_name = type[:4]
     allowed_values = ['BOTH', 'SORT', 'UNSORT', 'NONE', 'NOSORT']
     def __init__(self, value):
         super().__init__(value)
 
 class ANALYSIS(StringCard):
+    """ANALYSIS = HEAT"""
     type = 'ANALYSIS'
-    allowed_values = ['HEAT', 'STATICS', 'MODES', 'MFREQ', 'DFREQ', 'NLSTATIC', 'NLTRAN']
+    short_name = type[:4]
+    allowed_values = ['HEAT', 'STATICS', 'MODES', 'MFREQ', 'DFREQ', 'NLSTATIC', 'NLTRAN', 'SAERO', 'HEAT']
     def __init__(self, value):
         super().__init__(value)
 
 class THERMAL(StringCard): #  ???
     type = 'THERMAL'
+    short_name = type[:4]
     allowed_values = ['ALL']
     def __init__(self, value):
         super().__init__(value)
 
-STR_CARDS = [AESYMXY, AESYMXZ, AXISYMMETRIC, DSYM, SEQDEP] + [ECHO, ANALYSIS, K2PP, THERMAL]
-STR_CARD_DICT = {card.type : card for card in STR_CARDS}
-STR_CARD_NAMES = tuple([card.type for card in STR_CARDS])
+class AECONFIG(StringCard): #  ???
+    type = 'AECONFIG'
+    short_name = type# [:4]
+    allowed_values = ['FSWHALF']
+    def __init__(self, value):
+        super().__init__(value)
 
+special_cards = {'AESYMXY', 'AESYMXZ', 'AECONFIG'}
+STR_CARDS = [AESYMXY, AESYMXZ, AECONFIG, AXISYMMETRIC, AUTOSPC, DSYM, SEQDEP] + [ECHO, ANALYSIS, K2PP, THERMAL]
+
+if 0:
+    STR_CARD_DICT = {}
+    STR_CARD_NAMES = []
+    for card in STR_CARDS:
+        if card.type in special_cards:
+            name = card.type
+        else:
+            name = card.type[:4]
+        STR_CARD_DICT[name] = card
+        STR_CARD_NAMES.append(name)
+#STR_CARD_DICT = {card.type[:4] : card if card.type not in special_cards else card.type : card
+                 #for card in STR_CARDS}
+#STR_CARD_NAMES = tuple([card.type for card in STR_CARDS])
+
+STR_CARD_DICT = {card.short_name : card for card in STR_CARDS}
+STR_CARD_NAMES = tuple([card.short_name for card in STR_CARDS])
+
+STR_CARD_NAMES = tuple(STR_CARD_NAMES)
+assert len(STR_CARD_DICT) == len(STR_CARD_DICT), f'ndict={len(STR_CARD_DICT)} STR_CARD_DICT.keys()={STR_CARD_DICT.keys()}'
 #-------------------------------------------------------------------------------
 
 class SET(CaseControlCard):
@@ -434,47 +447,7 @@ class CheckCard(CaseControlCard):
     allowed_strings = set([]) # type: Set[str]
     duplicate_names = {} # type: Dict[Any, Any]
     allow_ints = False
-
-    def export_to_hdf5(self, hdf5_file, encoding):
-        #print(hdf5_file)
-        #print('values* =', self.value)
-        #print('options* =', self.options)
-        if isinstance(self.options, list):
-            options_bytes = [
-                option.encode(encoding) if isinstance(option, str) else option
-                for option in self.options]
-            #print('optins =', options_bytes)
-            hdf5_file.create_dataset('options', data=options_bytes)
-        else:
-            raise NotImplementedError(self.options)
-        #else:
-            #sub_group.create_dataset('options', data=self.options)
-
-        if isinstance(self.data, list):
-            data_group = hdf5_file.create_group('data')
-            keys = []
-            values = []
-            for (key, value) in self.data:
-                keys.append(key)
-                values.append(value)
-            #print('keys = ', keys)
-            #print('values = ', values)
-            keys_bytes = [
-                key.encode(encoding) if isinstance(key, str) else key
-                for key in keys]
-            values_bytes = [
-                value.encode(encoding) if isinstance(value, str) else value
-                for value in values]
-            data_group.create_dataset('keys', data=keys_bytes)
-            data_group.create_dataset('values', data=values_bytes)
-            #hdf5_file.create_dataset('data', data=data_bytes)
-        else:
-            raise NotImplementedError(self.data)
-
-        hdf5_file.create_dataset('key', data=self.key)
-        hdf5_file.create_dataset('value', data=self.value)
-        #hdf5_file.create_dataset('options', data=self.options)
-        #hdf5_file.create_dataset('data', data=self.data)
+    allow_equals = True
 
     def __init__(self, key, value, options):
         """
@@ -508,23 +481,27 @@ class CheckCard(CaseControlCard):
 
         if isinstance(value, str):
             value = value.strip().upper()
-        if self.allow_ints:
-            try:
-                value = int(value)
-            except ValueError:
+        if self.allow_equals:
+            if self.allow_ints:
+                try:
+                    value = int(value)
+                except ValueError:
+                    if value not in self.allowed_strings:
+                        msg = '%s: value=%r not in [%s]; options=%s' % (
+                            self.type, value, ', '.join(self.allowed_strings), options)
+                        raise ValueError(msg)
+            else:
                 if value not in self.allowed_strings:
-                    msg = '%s: value=%r not in [%s]' % (
-                        self.type, value, ', '.join(self.allowed_strings))
+                    msg = '%s: value=%r not in [%s]; options=%s' % (
+                        self.type, value, ', '.join(self.allowed_strings), options)
                     raise ValueError(msg)
         else:
-            if value not in self.allowed_strings:
-                msg = '%s: value=%r not in [%s]' % (
-                    self.type, value, ', '.join(self.allowed_strings))
-                raise ValueError(msg)
+            assert value is None, value
         self.value = value
 
     def _parse(self, key_value, options):
         if '=' in key_value:
+            assert self.allow_equals is True, key_value
             key, valuei = key_value.split('=')
             key = key.strip()
             valuei = valuei.strip()
@@ -630,90 +607,120 @@ class CheckCard(CaseControlCard):
     def add_from_case_control(cls, line, line_upper, lines, i):
         """add method used by the CaseControl class"""
         equals_count = line.count('=')
-        if equals_count == 1:
-            #GROUNDCHECK=YES
-            #WEIGHTCHECK=YES
+        if cls.allow_equals:
+            if equals_count == 1:
+                # GROUNDCHECK=YES
+                # WEIGHTCHECK=YES
+                key, value, options = cls._parse_single_equals(line, line_upper, lines, i)
 
-            if '=' in line:
-                (key, value) = line_upper.strip().split('=')
+            elif equals_count >= 2 and '(' in line:
+                #GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
+                #WEIGHTCHECK(PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)=YES
+                key, value, options = cls._parse_multi_equals(line, line_upper, lines, i)
+
+            #elif equals_count == 2:
+                #GROUNDCHECK(SET=ALL)=YES
+                #WEIGHTCHECK(SET=ALL, PRINT, THRESH=0.01, DATAREC=NO)=YES
             else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-
-            key = key.strip().upper()
-            value = value.strip()
-            #if self.debug:
-                #self.log.debug("key=%r value=%r" % (key, value))
-            #param_type = 'STRESS-type'
-            assert key.upper() == key, key
-
-            if '(' in key:  # comma may be in line - STRESS-type
-                #param_type = 'STRESS-type'
-                sline = key.strip(')').split('(')
-                key = sline[0]
-                options = sline[1].split(',')
-
-                # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
-                if key in ['TEMPERATURE', 'TEMP']:
-                    option = options[0]
-                    if option == '':
-                        option = 'BOTH'
-                    key = 'TEMPERATURE'
-                    options = [option]
-            else:
-                # DISPLACEMENT = ALL
-                options = []
-
-        elif equals_count >= 2 and '(' in line:
-            #GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
-            #WEIGHTCHECK(PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)=YES
-            assert len(lines) == 1, lines
-            line = lines[0]
-            try:
-                key, value_options = line.split('(', 1)
-                #GROUNDCHECK, PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
-                #WEIGHTCHECK, PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)=YES
-            except ValueError:
-                msg = 'Expected a "(", but did not find one.\n'
-                msg += 'Looking for something of the form:\n'
-                msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
-                msg += '%r' % line
-                raise ValueError(msg)
-
-            try:
-                options_paren, value = value_options.rsplit('=', 1)
-                #'GROUNDCHECK', 'PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)', 'YES'
-                #'WEIGHTCHECK', 'PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)',        'YES'
-            except ValueError:
-                msg = 'Expected a "=", but did not find one.\n'
-                msg += 'Looking for something of the form:\n'
-                msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
-                msg += 'value_options=%r\n' % value_options
-                msg += '%r' % line
-                raise ValueError(msg)
-            options_paren = options_paren.strip()
-
-            value = value.strip()
-            if value.isdigit():
-                value = int(value)
-            if not options_paren.endswith(')'):
-                raise RuntimeError(line)
-            str_options = options_paren[:-1]
-            #'GROUNDCHECK', 'PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO', 'YES'
-            #'WEIGHTCHECK', 'PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT',        'YES'
-
-            if '(' in str_options:
-                options = split_by_mixed_commas_parentheses(str_options)
-            else:
-                options = str_options.split(',')
-            #param_type = 'STRESS-type'
-            key = key.upper()
-        #elif equals_count == 2:
-            #GROUNDCHECK(SET=ALL)=YES
-            #WEIGHTCHECK(SET=ALL, PRINT, THRESH=0.01, DATAREC=NO)=YES
+                raise RuntimeError('equals_count=%s; line = %r' % (equals_count, line))
         else:
-            raise RuntimeError('equals_count=%s; line = %r' % (equals_count, line))
+            value = None
+            if '(' in line:
+                (class_name, options_str) = line_upper.strip(')').split('(')
+                options = options_str.split(',')
+            else:
+                class_name = line_upper
+                assert class_name == 'OUTPUT', class_name
+                options = []
+            key = class_name
+            #print(f'options_str = {options_str!r}')
         return cls(key, value, options)
+
+    @classmethod
+    def _parse_single_equals(cls, line, line_upper, lines, i):
+        """
+        GROUNDCHECK=YES
+        WEIGHTCHECK=YES
+        """
+        if '=' in line:
+            (key, value) = line_upper.strip().split('=')
+        else:
+            msg = 'expected item of form "name = value"   line=%r' % line.strip()
+            raise RuntimeError(msg)
+
+        key = key.strip().upper()
+        value = value.strip()
+        #if self.debug:
+            #self.log.debug("key=%r value=%r" % (key, value))
+        #param_type = 'STRESS-type'
+        assert key.upper() == key, key
+
+        if '(' in key:  # comma may be in line - STRESS-type
+            #param_type = 'STRESS-type'
+            sline = key.strip(')').split('(')
+            key = sline[0]
+            options = sline[1].split(',')
+
+            # handle TEMPERATURE(INITIAL) and TEMPERATURE(LOAD) cards
+            if key in ['TEMPERATURE', 'TEMP']:
+                option = options[0]
+                if option == '':
+                    option = 'BOTH'
+                key = 'TEMPERATURE'
+                options = [option]
+        else:
+            # DISPLACEMENT = ALL
+            options = []
+        return key, value, options
+
+    @classmethod
+    def _parse_multi_equals(cls, line, line_upper, lines, i):
+        """
+        #GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
+        #WEIGHTCHECK(PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)=YES
+        """
+        assert len(lines) == 1, lines
+        line = lines[0]
+        try:
+            key, value_options = line.split('(', 1)
+            #GROUNDCHECK, PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES
+            #WEIGHTCHECK, PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)=YES
+        except ValueError:
+            msg = 'Expected a "(", but did not find one.\n'
+            msg += 'Looking for something of the form:\n'
+            msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
+            msg += '%r' % line
+            raise ValueError(msg)
+
+        try:
+            options_paren, value = value_options.rsplit('=', 1)
+            #'GROUNDCHECK', 'PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)', 'YES'
+            #'WEIGHTCHECK', 'PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT)',        'YES'
+        except ValueError:
+            msg = 'Expected a "=", but did not find one.\n'
+            msg += 'Looking for something of the form:\n'
+            msg += '   GROUNDCHECK(PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO)=YES\n'
+            msg += 'value_options=%r\n' % value_options
+            msg += '%r' % line
+            raise ValueError(msg)
+        options_paren = options_paren.strip()
+
+        value = value.strip()
+        if value.isdigit():
+            value = int(value)
+        if not options_paren.endswith(')'):
+            raise RuntimeError(line)
+        str_options = options_paren[:-1]
+        #'GROUNDCHECK', 'PRINT,SET=(G,N,N+AUTOSPC,F,A),DATAREC=NO', 'YES'
+        #'WEIGHTCHECK', 'PRINT,SET=(G,N,F,A),CGI=NO,WEIGHT',        'YES'
+
+        if '(' in str_options:
+            options = split_by_mixed_commas_parentheses(str_options)
+        else:
+            options = str_options.split(',')
+        #param_type = 'STRESS-type'
+        key = key.upper()
+        return key, value, options
 
     def write(self, spaces):
         msg = spaces + str(self)
@@ -831,6 +838,8 @@ class GROUNDCHECK(CheckCard):
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+    def export_to_hdf5(self, hdf5_file, encoding):
+        export_to_hdf5_check(self, hdf5_file, encoding)
 
 class WEIGHTCHECK(CheckCard):
     """
@@ -849,6 +858,9 @@ class WEIGHTCHECK(CheckCard):
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
+    def export_to_hdf5(self, hdf5_file, encoding):
+        export_to_hdf5_check(self, hdf5_file, encoding)
 
 class MODCON(CheckCard):
     """
@@ -998,218 +1010,141 @@ class EXTSEOUT(CaseControlCard):
             msg = msg.strip(', ') + ')'
         return msg + '\n'
 
-#-------------------------------------------------------------------------------
-class DISPLACEMENT(CheckCard):
+class VOLUME(CaseControlCard):
     """
-    DISPLACEMENT=5
-    DISPLACEMENT(REAL)=ALL
-    DISPLACEMENT(SORT2, PUNCH, REAL)=ALL
-
+    VOLUME 21 SET 2
+    VOLUME id SET sid, [PRINCIPAL, DIRECT STRESS] [SYSTEM {ELEMENT, CORD cid, BASIC}]
     """
-    type = 'DISPLACEMENT'
-    short_name = 'DISP'
-    allowed_keys = {
-        'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
-        'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
-        'NOPRINT', 'RPUNCH',
-    }
-    allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: Dict[str, Union[str, int]]
-    allow_ints = True
+    type = 'VOLUME'
 
-    def __init__(self, key, value, options):
-        CheckCard.__init__(self, key, value, options)
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
 
-class VELOCITY(CheckCard):
-    """
-    VELOCITY=5
-    VELOCITY(REAL)=ALL
-    VELOCITY(SORT2, PUNCH, REAL)=ALL
+    #def export_to_hdf5(self, hdf5_file, encoding):
+        #if isinstance(self.data, list):
+            #data_group = hdf5_file.create_group('data')
+            #keys = []
+            #values = []
+            #for (key, value) in self.data:
+                #keys.append(key)
+                #values.append(value)
+            ##print('keys = ', keys)
+            ##print('values = ', values)
+            #keys_bytes = [
+                #key.encode(encoding) if isinstance(key, str) else key
+                #for key in keys]
+            #values_bytes = [
+                #value.encode(encoding) if isinstance(value, str) else value
+                #for value in values]
+            #data_group.create_dataset('keys', data=keys_bytes)
 
-    """
-    type = 'VELOCITY'
-    short_name = 'VELO'
+            #if None in values_bytes:
+                #value_group = data_group.create_group('values')
+                #for i, value in enumerate(values):
+                    #if value is None:
+                        #continue
+                    #value_group.create_dataset(str(i), data=value)
+            #else:
+                #data_group.create_dataset('values', data=values_bytes)
+            ##hdf5_file.create_dataset('data', data=data_bytes)
+        #else:
+            #raise NotImplementedError(self.data)
 
-    allowed_keys = {
-        'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
-        'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
-        'NOPRINT', 'RPUNCH',
-    }
-    allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: Dict[str, Union[str, int]]
-    allow_ints = True
+    @classmethod
+    def add_from_case_control(cls, line):
+        """add method used by the CaseControl class"""
+        sline = line.split()
 
-    def __init__(self, key, value, options):
-        CheckCard.__init__(self, key, value, options)
+        i = 0
+        data = {}
+        while i < len(sline):
+            word = sline[i]
+            if word == 'VOLUME':
+                value = sline[i+1]
+                data[word] = int(value)
+                i += 2
+            elif word == 'SET':
+                value = sline[i+1]
+                data[word] = int(value)
+                i += 2
+            else:
+                raise RuntimeError(word)
+        return VOLUME(data)
 
-class ACCELERATION(CheckCard):
-    """
-    ACCELERATION=5
-    ACCELERATION(REAL)=ALL
-    ACCELERATION(SORT2, PUNCH, REAL)=ALL
+    #@staticmethod
+    #def _update_key(key):
+        #"""
+        #STIFFNESS, DAMPING, K4DAMP, and LOADS may be abbreviated to STIF,
+        #DAMP, K4DA, and LOAD, respectively.
 
-    """
-    type = 'ACCELERATION'
-    short_name = 'ACCE'
-    allowed_keys = {
-        'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
-        'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
-        'NOPRINT', 'RPUNCH',
-    }
-    allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: Dict[str, Union[str, int]]
-    allow_ints = True
+        #"""
+        #key = key.strip()
+        #if key == 'STIF':
+            #key = 'STIFFNESS'
+        #elif key == 'DAMP':
+            #key = 'DAMPING'
+        #elif key == 'K4DA':
+            #key = 'K4DAMP'
+        #elif key == 'LOAD':
+            #key = 'LOADS'
+        #return key
 
-    def __init__(self, key, value, options):
-        CheckCard.__init__(self, key, value, options)
+    def write(self, spaces):
+        msg = spaces + str(self)
+        return msg
 
-class SPCFORCES(CheckCard):
-    """
-    SPCFORCES=5
-    SPCFORCES(REAL)=ALL
-    SPCFORCES(SORT2, PUNCH, REAL)=ALL
+    def __repr__(self):
+        """writes a card"""
+        msg = 'VOLUME %i' % self.data['VOLUME']
+        for key, value in sorted(self.data.items()):
+            if key == 'VOLUME':
+                continue
+            msg += ' %s %s' % (key, value)
+        return msg + '\n'
 
-    """
-    type = 'SPCFORCES'
-    short_name = 'SPCF'
-    allowed_keys = {
-        'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
-        'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
-        'NOPRINT', 'RPUNCH',
-    }
-    allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: Dict[str, Union[str, int]]
-    allow_ints = True
+def export_to_hdf5_check(self, hdf5_file, encoding):
+    #print(hdf5_file)
+    #print('values* =', self.value)
+    #print('options* =', self.options)
 
-    def __init__(self, key, value, options):
-        CheckCard.__init__(self, key, value, options)
+    if isinstance(self.options, list):
+        options_bytes = [
+            option.encode(encoding) if isinstance(option, str) else option
+            for option in self.options]
+        #print('optins =', options_bytes)
+        hdf5_file.create_dataset('options', data=options_bytes)
+    else:
+        raise NotImplementedError(self.options)
+    #else:
+        #sub_group.create_dataset('options', data=self.options)
 
-class MPCFORCES(CheckCard):
-    """
-    MPCFORCES=5
-    MPCFORCES(REAL)=ALL
-    MPCFORCES(SORT2, PUNCH, REAL)=ALL
+    if isinstance(self.data, list):
+        data_group = hdf5_file.create_group('data')
+        keys = []
+        values = []
+        for (key, value) in self.data:
+            keys.append(key)
+            values.append(value)
+        #print('keys = ', keys)
+        #print('values = ', values)
+        keys_bytes = [
+            key.encode(encoding) if isinstance(key, str) else key
+            for key in keys]
+        values_bytes = [
+            value.encode(encoding) if isinstance(value, str) else value
+            for value in values]
+        data_group.create_dataset('keys', data=keys_bytes)
+        data_group.create_dataset('values', data=values_bytes)
+        #hdf5_file.create_dataset('data', data=data_bytes)
+    else:
+        raise NotImplementedError(self.data)
 
-    """
-    type = 'MPCFORCES'
-    short_name = 'MPCF'
-    allowed_keys = {
-        'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT', 'REAL', 'IMAG', 'PHASE',
-        'ABS', 'REL', 'PSDF', 'ATOC', 'CRMS', 'RMS', 'RALL', 'RPRINT',
-        'NOPRINT', 'RPUNCH',
-    }
-    allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: Dict[str, Union[str, int]]
-    allow_ints = True
+    hdf5_file.create_dataset('key', data=self.key)
+    hdf5_file.create_dataset('value', data=self.value)
+    #hdf5_file.create_dataset('options', data=self.options)
+    #hdf5_file.create_dataset('data', data=self.data)
 
-    def __init__(self, key, value, options):
-        CheckCard.__init__(self, key, value, options)
-
-class NLLOAD(CheckCard):
-    """
-    NLLOAD(PRINT, PUNCH)=ALL
-    NLLOAD(PRINT, PUNCH)=N
-    NLLOAD(PRINT, PUNCH)=NONE
-
-    """
-    type = 'NLLOAD'
-    short_name = type
-    allowed_keys = {'PRINT', 'PUNCH'}
-    allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: Dict[str, Union[str, int]]
-    allow_ints = True
-
-    def __init__(self, key, value, options):
-        CheckCard.__init__(self, key, value, options)
-
-class NLSTRESS(CheckCard):
-    """
-    NLSTRESS=5
-    NLSTRESS (SORT1,PRINT,PUNCH,PHASE)=15
-    NLSTRESS(PLOT)=ALL
-
-    """
-    type = 'NLSTRESS'
-    short_name = type
-    allowed_keys = {'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT'}
-    allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: Dict[str, Union[str, int]]
-    allow_ints = True
-
-    def __init__(self, key, value, options):
-        CheckCard.__init__(self, key, value, options)
-
-#class NOUTPUT(CheckCard):
-    #"""
-    #NOUTPUT (R)=ALL
-    #NOUTPUT (2)=5
-    #NOUTPUT (4,L)=10
-    #"""
-    #type = 'NOUTPUT'
-    #allowed_keys = {'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT']
-    #allowed_strings = {'ALL'}
-    #allowed_values = {}
-
-    #def __init__(self, key, value, options):
-        #super(NLLOAD, self).__init__(key, value, options)
-
-class OLOAD(CheckCard):
-    """
-    OLOAD=ALL
-    OLOAD(SORT1,PHASE)=5
-
-    """
-    type = 'OLOAD'
-    short_name = type
-    allowed_keys = {'SORT1', 'SORT2', 'PRINT', 'PUNCH', 'PLOT',
-                    'REAL', 'IMAG', 'PHASE', 'PSDF', 'ATOC', 'CRMS',
-                    'RMS', 'RALL', 'RPRINT', 'NORPRINT', 'RPUNCH'}
-    allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: Dict[str, Union[str, int]]
-    allow_ints = True
-
-    def __init__(self, key, value, options):
-        CheckCard.__init__(self, key, value, options)
-
-
-class OPRESS(CheckCard):
-    """
-    OPRESS=ALL
-    OPRESS(PRINT,PUNCH)=17
-
-    """
-    type = 'OPRESS'
-    short_name = type
-    allowed_keys = {'PRINT', 'PUNCH'}
-    allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: Dict[str, Union[str, int]]
-    allow_ints = True
-
-    def __init__(self, key, value, options):
-        CheckCard.__init__(self, key, value, options)
-
-class OTEMP(CheckCard):
-    """
-    OTEMP=ALL
-    OTEMP(PRINT,PUNCH)=17
-
-    """
-    type = 'OTEMP'
-    short_name = type
-    allowed_keys = {'PRINT', 'PUNCH'}
-    allowed_strings = {'ALL', 'NONE'}
-    allowed_values = {}  # type: Dict[str, Union[str, int]]
-    allow_ints = True
-
-    def __init__(self, key, value, options):
-        CheckCard.__init__(self, key, value, options)
-
-CHECK_CARDS = [
-    DISPLACEMENT, VELOCITY, ACCELERATION, NLLOAD, NLSTRESS, OLOAD, OPRESS,
-    OTEMP, SPCFORCES, MPCFORCES,
-]  # type: List[Any]
-CHECK_CARD_DICT = {card.type : card for card in CHECK_CARDS} # type: Dict[str, str]
-CHECK_CARD_NAMES = tuple([card.short_name for card in CHECK_CARDS])  # type: Tuple[str]
 
 #-------------------------------------------------------------------------------
 
@@ -1220,4 +1155,5 @@ CLASS_MAP = {
     'MODCON' : MODCON,
     'SET' : SET,
     'SETMC' : SETMC,
+    'ANALYSIS': ANALYSIS,
 }

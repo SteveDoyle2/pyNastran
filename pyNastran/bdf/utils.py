@@ -46,7 +46,7 @@ def TransformLoadWRT(F, M, cid, cid_new, model):
     deprecated('TransformLoadWRT', 'transform_load', '1.3', levels=[0, 1, 2])
     return transform_load(F, M, cid, cid_new, model)
 
-def transform_load(F, M, cid, cid_new, model):
+def transform_load(F, M, cid: int, cid_new: int, model):
     """
     Transforms a force/moment from an arbitrary coordinate system to another
     coordinate system.

@@ -29,14 +29,15 @@ from cpylog import get_logger
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
 from pyNastran.bdf.bdf_interface.subcase_cards import (
-    EXTSEOUT, WEIGHTCHECK, GROUNDCHECK,
+    VOLUME, EXTSEOUT, WEIGHTCHECK, GROUNDCHECK,
     MODCON, SET, SETMC, #AXISYMMETRIC,
     INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
     STR_CARD_DICT, STR_CARD_NAMES,
-    CHECK_CARD_DICT, CHECK_CARD_NAMES,
     split_by_mixed_commas_parentheses,
 )
+
 from pyNastran.bdf.bdf_interface.subcase_cards_int import INT_CARD_DICT, INT_CARD_NAMES
+from pyNastran.bdf.bdf_interface.subcase_cards_check import CHECK_CARD_DICT, CHECK_CARD_NAMES
 
 from pyNastran.utils import object_attributes
 if TYPE_CHECKING:
@@ -173,7 +174,7 @@ class CaseControlDeck:
         h5attrs = object_attributes(self, mode='both', keys_to_skip=keys_to_skip)
         for h5attr in h5attrs:
             value = getattr(self, h5attr)
-            if h5attr in ['_begin_count', 'debug', 'write_begin_bulk']: # scalars
+            if h5attr in ['_begin_count', 'debug', 'write_begin_bulk', 'use_card_dict']: # scalars
                 # simple export
                 hdf5_file.create_dataset(h5attr, data=value)
             elif h5attr in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']:
@@ -676,6 +677,13 @@ class CaseControlDeck:
             value = obj.value  # type: int
             param_type = 'SET-type'
 
+        elif line_upper.startswith('OUTPUT'):
+            obj = CHECK_CARD_DICT['OUTPUT'].add_from_case_control(line, line_upper, lines, i)
+            value = obj.value
+            options = obj.options
+            param_type = 'STRESS-type'
+            key = obj.type
+
         elif line_upper.startswith(CHECK_CARD_NAMES) and self.use_card_dict:
             if '(' in line:
                 key = line_upper.strip().split('(', 1)[0].strip()
@@ -729,6 +737,12 @@ class CaseControlDeck:
             options = None
             param_type = 'OBJ-type'
             key = obj.type
+        elif line_upper.startswith('VOLUME'):
+            options = None
+            param_type = 'OBJ-type'
+            obj = VOLUME.add_from_case_control(line_upper.strip())
+            value = obj
+            key = obj.type
         elif line_upper.startswith('EXTSEOUT'):
             options = None
             param_type = 'OBJ-type'
@@ -766,14 +780,34 @@ class CaseControlDeck:
                 msg = 'expected item of form "name = value"   line=%r' % line.strip()
                 raise RuntimeError(msg)
             name = name.strip()
-            obj = STR_CARD_DICT[name].add_from_case_control(line, line_upper, lines, i)
+            try:
+                cls = STR_CARD_DICT[name[:4]]
+            except KeyError:
+                cls = STR_CARD_DICT[name]
+            obj = cls.add_from_case_control(line, line_upper, lines, i)
             value = obj
             options = None
             param_type = 'OBJ-type'
             key = obj.type
+
+        elif line_upper.startswith('BEGIN'):  # begin bulk
+            try:
+                (key, value) = line_upper.split(' ')
+            except ValueError:
+                msg = 'excepted "BEGIN BULK" found=%r' % line
+                raise RuntimeError(msg)
+            key = key.upper()
+            param_type = 'BEGIN_BULK-type'
+            assert key.upper() == key, key
+
+        elif line_upper.startswith('PARAM'):
+            #line2 = line_upper.replace('\t', ' ').replace(',' , ' ')
+            key, value, options, param_type = _split_param(line, line_upper)
+
         elif self.use_card_dict:
             raise RuntimeError(f'case control work...\n{line_upper}')
 
+        #========================================================================================
         elif line_upper.startswith('TEMP'):
             if '=' in line:
                 (key, value) = line_upper.strip().split('=')

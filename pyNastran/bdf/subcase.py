@@ -1093,62 +1093,8 @@ def _load_hdf5_param(group, key, encoding):
             value = value.tolist()
 
     elif 'object' in sub_group:
-        keys.remove('object')
-        sub_groupi = sub_group['object']
+        value, options = _load_hdf5_object(keys, sub_group)
 
-        Type = sub_groupi.attrs['type']
-
-        use_data = True
-        if 'options' in sub_groupi:
-            options2 = _cast(sub_groupi['options']).tolist()
-            value = _cast(sub_groupi['value'])
-            #print('sub_keys =', sub_groupi, sub_groupi.keys())
-
-            options_str = [
-                option.decode(encoding) if isinstance(option, bytes) else option
-                for option in options2]
-            use_data = False
-
-        data_group = sub_groupi['data']
-        keys2 = _cast(data_group['keys']).tolist()
-
-        h5_values = data_group['values']
-        if isinstance(h5_values, h5py._hl.group.Group):
-            values2 = [None] * len(keys2)
-            for ih5 in h5_values.keys():
-                ih5_int = int(ih5)
-                h5_value = _cast(h5_values[ih5])
-                values2[ih5_int] = h5_value
-        else:
-            values2 = _cast(h5_values).tolist()
-        #print('data_keys =', data_group, data_group.keys())
-
-        unused_keys_str = [
-            keyi.decode(encoding) if isinstance(keyi, bytes) else keyi
-            for keyi in keys2]
-        unused_values_str = [
-            valuei.decode(encoding) if isinstance(valuei, bytes) else valuei
-            for valuei in values2]
-
-        #print('keys2 =', keys2)
-        #print('values2 =', values2)
-        #print('options2 =', options2)
-
-        if use_data:
-            #print('keys2 =', keys2)
-            #print('values2 =', values2)
-            data = []
-            for keyi, valuei in zip(keys2, values2):
-                data.append((keyi, valuei))
-            class_obj = CLASS_MAP[Type](data)
-            assert options is None, options
-        else:
-            class_obj = CLASS_MAP[Type](key, value, options_str)
-            options = options_str
-        value = class_obj
-
-        #print(class_obj)
-        #class_obj.load_hdf5_file(hdf5_file, encoding)
 
     if len(keys) > 0:
         #keyi = _cast(sub_group['key'])
@@ -1158,6 +1104,72 @@ def _load_hdf5_param(group, key, encoding):
     #print(value, options, param_type)
     return value, options, param_type
 
+def _load_hdf5_object(keys, sub_group):
+    keys.remove('object')
+    sub_groupi = sub_group['object']
+
+    Type = sub_groupi.attrs['type']
+    print('Type =', Type)
+    cls = CLASS_MAP[Type]
+
+    if hasattr(cls, 'load_hdf5'):
+        class_obj, options = cls.load_hdf5(sub_groupi, 'utf8')
+        value = class_obj
+        return value, options
+
+        return value, options
+
+    use_data = True
+    if 'options' in sub_groupi:
+        options2 = _cast(sub_groupi['options']).tolist()
+        value = _cast(sub_groupi['value'])
+        #print('sub_keys =', sub_groupi, sub_groupi.keys())
+
+        options_str = [
+            option.decode(encoding) if isinstance(option, bytes) else option
+            for option in options2]
+        use_data = False
+
+    data_group = sub_groupi['data']
+    keys2 = _cast(data_group['keys']).tolist()
+
+    h5_values = data_group['values']
+    if isinstance(h5_values, h5py._hl.group.Group):
+        values2 = [None] * len(keys2)
+        for ih5 in h5_values.keys():
+            ih5_int = int(ih5)
+            h5_value = _cast(h5_values[ih5])
+            values2[ih5_int] = h5_value
+    else:
+        values2 = _cast(h5_values).tolist()
+    #print('data_keys =', data_group, data_group.keys())
+
+    unused_keys_str = [
+        keyi.decode(encoding) if isinstance(keyi, bytes) else keyi
+        for keyi in keys2]
+    unused_values_str = [
+        valuei.decode(encoding) if isinstance(valuei, bytes) else valuei
+        for valuei in values2]
+
+    #print('keys2 =', keys2)
+    #print('values2 =', values2)
+    #print('options2 =', options2)
+
+    if use_data:
+        #print('keys2 =', keys2)
+        #print('values2 =', values2)
+        data = []
+        for keyi, valuei in zip(keys2, values2):
+            data.append((keyi, valuei))
+        class_obj = cls(data)
+        assert options is None, options
+    else:
+        class_obj = cls(key, value, options_str)
+        options = options_str
+    value = class_obj
+    #print(class_obj)
+    #class_obj.load_hdf5_file(hdf5_file, encoding)
+    return value, options
 
 def update_param_name(param_name):
     """

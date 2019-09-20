@@ -4,7 +4,7 @@ from typing import List, Dict, Union, Optional, Tuple
 
 
 def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
-                keywords: Optional[Union[List[str], Dict[str, str]]]=None,
+                keywords: Optional[Union[str, List[str], Dict[str, str]]]=None,
                 run: bool=True, run_in_bdf_dir: bool=True) -> Tuple[int, List[str]]:
     """
     Call a nastran subprocess with the given filename
@@ -13,7 +13,7 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
     ----------
     bdf_filename : string
         Filename of the Nastran .bdf file
-    keywords : dict/list of strings, optional
+    keywords : str/dict/list of strings, optional
         Default keywords are `'scr=yes'`, `'bat=no'`, `'old=no'`, and `'news=no'`
     run : bool; default=True
         let's you disable actually running Nastran to test out code/get the call arguments
@@ -30,6 +30,8 @@ def run_nastran(bdf_filename: str, nastran_cmd: str='nastran',
     """
     if keywords is None:
         keywords_list = ['scr=yes', 'bat=no', 'old=no', 'news=no'] # 'mem=1024mb',
+    elif isinstance(keywords, str):
+        keywords_list = keywords.split()
     else:
         if isinstance(keywords, (list, tuple)):
             keywords_list = keywords

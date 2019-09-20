@@ -50,7 +50,7 @@ def parse_skipped_cards(fname):
     return files_to_analyze
 
 
-def get_all_files(folders_file, file_type):
+def get_all_files(folders_file, file_type, max_size=4.2):
     """
     Gets all the files in the folder and subfolders.  Ignores missing folders.
 
@@ -60,6 +60,8 @@ def get_all_files(folders_file, file_type):
         path to the file with a list of folders
     file_type : str
         a file extension
+    max_size : float; default=100.0
+        size in MB for max file size
 
     Returns
     -------
@@ -90,7 +92,7 @@ def get_all_files(folders_file, file_type):
                 continue
             print("move_dir = %s" % move_dir)
             #assert os.path.exists(move_dir), '%s doesnt exist' % move_dir
-            files_in_dir = get_files_of_type(move_dir, file_type, max_size=4.2)
+            files_in_dir = get_files_of_type(move_dir, file_type, max_size=max_size)
             files2 += files_in_dir
             #print('nfiles = %s/%s' % (len(files_in_dir), len(files2)))
     #print('nfiles = %s' % len(files2))

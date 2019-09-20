@@ -124,7 +124,7 @@ class CaseControlDeck:
 
         keys = list(hdf5_file.keys())
         for key in keys:
-            if key in ['_begin_count', 'debug', 'write_begin_bulk']: # scalars
+            if key in ['_begin_count', 'debug', 'write_begin_bulk', 'use_card_dict']: # scalars
                 value = _cast(hdf5_file[key])
                 setattr(self, key, value)
             elif key in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
