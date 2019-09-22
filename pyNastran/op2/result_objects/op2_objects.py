@@ -308,7 +308,7 @@ class ScalarObject(BaseScalarObject):
             if isinstance(value, bytes):
                 print("  key=%s value=%s; value is bytes" % (key, value))
             self.__setattr__(key, value)
-            #print("  key=%s value=%s" %(key, value))
+            #print("  key=%s value=%s" % (key, value))
         #if self.table_name in [b'OES1X', b'OES1X1']:
 
     def get_data_code(self, prefix='  '):

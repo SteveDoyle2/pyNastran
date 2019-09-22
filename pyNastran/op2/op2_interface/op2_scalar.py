@@ -308,6 +308,7 @@ NX_RESULT_TABLES = [
     b'ODAMGPFE',
     b'ODAMGPFD',
     b'ODAMGPFS',
+    b'ODAMGPFR',
 
     b'OSTR1THG',
     b'OSTR1ELG',
@@ -1437,7 +1438,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OEFATO2' : [self._read_oef2_3, self._read_oef2_4],
             b'OEFCRM2' : [self._read_oef2_3, self._read_oef2_4],
             b'OEFPSD2' : [self._read_oef2_3, self._read_oef2_4],
-            b'OEFRMS2' : [self._read_oef2_3, self._read_oef2_4],
+            #b'OEFRMS2' : [self._read_oef2_3, self._read_oef2_4], # buggy on isat random
         }
         if self.is_nx and 0:
             table_mapper2 = {

@@ -2660,7 +2660,7 @@ class OEF(OP2Common):
                           #f'  ply_id={ply_id} failure_stress_for_ply={failure_stress_for_ply} '
                           #f'flag={flag} interlaminar_stress={interlaminar_stress} max_value={max_value} failure_flag={failure_flag}')
                     eid_old = eid
-                assert flag in ['', '-1', '-2', '-12'], 'flag=%r' % flag
+                assert flag in ['', '-1', '-2', '-12', 'IN'], 'flag=%r' % flag
                 assert failure_theory in ['TSAI-WU', 'STRAIN', 'HILL', 'HOFFMAN', ''], 'failure_theory=%r' % failure_theory
                 assert  failure_flag in ['', '***'], 'failure_flag=%r' % failure_flag
                 obj.add_sort1(dt, eid, failure_theory, ply_id, failure_stress_for_ply, flag,

@@ -101,7 +101,7 @@ class ComplexTriaxStressArray(OES_Object):
             msg.append('  type=%s nelements=%i nnodes=%i; table_name=%r\n' % (
                 self.__class__.__name__, nelements, nnodes, self.table_name))
         msg.append('  eType, cid\n')
-        msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self._get_headers())))
+        msg.append('  data: [ntimes, nnodes, 3] where 3=[%s]\n' % str(', '.join(self._get_headers())))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  %s\n' % self.element_name)
@@ -266,7 +266,6 @@ class ComplexPlateArray(OES_Object):
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
-        #import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         #is_v25 = pd.__version__ >= '0.25'
@@ -387,7 +386,7 @@ class ComplexPlateArray(OES_Object):
             msg.append('  type=%s nelements=%i nnodes=%i; table_name=%r\n' % (
                 self.__class__.__name__, nelements, nnodes, self.table_name))
         msg.append('  eType, cid\n')
-        msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self._get_headers())))
+        msg.append('  data: [ntimes, nnodes, 3] where 3=[%s]\n' % str(', '.join(self._get_headers())))
         msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  %s\n' % self.element_name)
@@ -504,8 +503,8 @@ class ComplexPlateArray(OES_Object):
 
         nnodes = self.get_nnodes()
         #print("nnodes =", self.element_name, nnodes)
-        cen_word_ascii = 'CEN/%i' % nnodes
-        cen_word = b'CEN/%i' % nnodes
+        #cen_word_ascii = 'CEN/%i' % nnodes
+        #cen_word = b'CEN/%i' % nnodes
 
         #msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         #msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
