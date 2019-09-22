@@ -292,42 +292,42 @@ NX_RESULT_TABLES = [
     b'OSTR1IN',  # OES output table of initial strains at corner grids in the basic coordinate system
     b'OSTR1G',   # Table of total strain at Gauss points in SORT1 format
     b'OSTR1PLG', # Table of plastic strain at Gauss points in SORT1 format
-    b'OACPERF', # Performance data that indicates computation time in seconds and memory consumed in GB per frequency per subcase for FEMAO analysis.
-    b'OERPEL1', # Element equivalent radiated power (element output)
-    b'OGSTR1',
+    b'OACPERF',  # Performance data that indicates computation time in seconds and memory consumed in GB per frequency per subcase for FEMAO analysis.
+    b'OERPEL1',  # Element equivalent radiated power (element output)
+    b'OGSTR1',   # Output table of grid point strains of superelement
     b'OERPEL1',  # ERP design responses at element level in SORT1 format for a particular subcase.
     b'OELAR',    # Element status (active or inactive)
     b'OPNL2',   # Table of nonlinear loads in SORT2 format for the h-set or d-set.
-    b'OSHT1',  # Output shell element thickness results.
-    b'OTEMP1', # Grid point temperature output
-    b'OERPEL2',
-    b'OEFIIS',
-    b'OBOLT1',
-    b'OES1G',
+    b'OSHT1',   # Output shell element thickness results.
+    b'OTEMP1',  # Grid point temperature output
+    b'OERPEL2', # Element equivalent radiated power output.
+    b'OEFIIS',  # Data block for inter-laminar shear failure indices.
+    b'OBOLT1', # Bolt output data block
+    b'OES1G', # Grid point stress or strain table in SORT1 format and interpolated from the centroidal stress table, OES1M.
 
-    b'ODAMGPFE',
-    b'ODAMGPFD',
-    b'ODAMGPFS',
-    b'ODAMGPFR',
+    b'ODAMGPFE', # Table of damage energy for ply failure
+    b'ODAMGPFD', # Table of damage values for ply failure
+    b'ODAMGPFS', # Table of damage status for ply failure
+    b'ODAMGPFR', # Table of crack density for ply failure EUD model from SOL 401. Crack density at corner grids on the middle of plies. The values are unitless
 
-    b'OSTR1THG',
-    b'OSTR1ELG',
-    b'OSTR1TH',
-    b'OSTR1EL',
+    b'OSTR1THG', # Table of thermal strain at Gauss points in SORT1 format
+    b'OSTR1ELG', # Table of elastic strain at Gauss points in SORT1 format
+    b'OSTR1TH',  # Table of thermal strain in SORT1 format
+    b'OSTR1EL',  # Table of elastic strain in SORT1 format
     b'OSTR1ING', # OES output table of initial strains at corner Gauss points in the basic coordinate system
 
     b'OCONST1',  # Contact status in SORT1 format
 
-    b'OCPSDF',
-    b'OCCORF',
-    b'OCPSDFC',
-    b'OCCORFC',
+    b'OCPSDF',  # Output table of cross-power-spectral-density functions.
+    b'OCCORF',  # Output table of cross-correlation functions.
+    b'OCPSDFC', # Table of cross-power spectral density functions for composites.
+    b'OCCORFC', # Table of cross-correlation functions for composites.
 
-    b'OESXRM1C',
+    b'OESXRM1C', # Table of composite element RMS stresses in SORT1 format for random analysis that includes von Mises stress output.
     b'OESXNO1C',
     b'OESXNO1',
 
-    b'OEDE1',
+    b'OEDE1', # Elemental energy loss.
 
 
     # grid point pressure
@@ -342,33 +342,32 @@ NX_RESULT_TABLES = [
     b'OUGMC2', # Table of modal contributions for displacements, velocities, accelerations.
     b'OQGMC1', # Table of modal contributions of single point constraint forces - SORT1
     b'OQGMC2', # Table of modal contributions of single point constraint forces - SORT2
-    b'OESMC1', # Element stress modal contributions
-    b'OESMC2', # Element stress modal contributions
-    b'OSTRMC1',
-    b'OSTRMC2',
-    b'OEFMC1',
-    b'OEFMC2',
+    b'OESMC1', # Element stress modal contributions - SORT1
+    b'OESMC2', # Element stress modal contributions - SORT2
+    b'OSTRMC1', # Table of modal contributions of element strains - SORT1
+    b'OSTRMC2', # Table of modal contributions of element strains - SORT2
+    b'OEFMC1', # Table of modal contributions of element forces - SORT1
+    b'OEFMC2', # Table of modal contributions of element forces - SORT2
 
-    b'OMKEO2',
-    b'OMECON1',
-    b'OMECON2',
-    b'OMEOSC1',
-    b'OMEOSC2',
-
-    b'OMSEC1', # Constant modal strain energy
-    b'OMSEC2', # Constant modal strain energy
-    b'OMSEO1',
-    b'OMSEO2', # Table of oscillating modal strain energies.
-
-    b'OMKEO1',
-    b'OMKEC1',
-    b'OMKEC2',
+    # modal strain energy
+    b'OMSEC1',  # Constant modal strain energy - SORT1
+    b'OMSEC2',  # Constant modal strain energy - SORT2
+    b'OMECON1', # Constant total modal energies - SORT1
+    b'OMECON2', # Constant total modal energies - SORT2
+    b'OMEOSC1', # Oscillating total modal energies - SORT1
+    b'OMEOSC2', # Oscillating total modal energies - SORT2
+    b'OMKEC1',  # Constant modal kinetic energies - SORT1
+    b'OMKEC2',  # Constant modal kinetic energies - SORT2
+    b'OMKEO2',  # Oscillating modal kinetic energies - SORT2
+    b'OMSEO1',  # Oscillating modal strain energies - SORT2
+    b'OMSEO2',  # Oscillating modal strain energies - SORT2
+    b'OMKEO1',  # Oscillating modal kinetic energies - SORT1
 
     # acoustic
     b'OUGPC1',  # Table of panel contributions - SORT1
     b'OUGPC2',  # Table of panel contributions - SORT2
-    b'OUGF1',   # Data block of acoustic pressures at microphone points in SORT1 format
-    b'OUGF2',   # Data block of acoustic pressures at microphone points in SORT2 format
+    b'OUGF1',   # Acoustic pressures at microphone points in SORT1 format
+    b'OUGF2',   # Acoustic pressures at microphone points in SORT2 format
     b'OUGGC1',  # Table of grid contributions - SORT1
     b'OUGGC2',  # Table of grid contributions - SORT2
     b'OUGRC1',  # Reciprocal panel contributions - SORT1
@@ -376,18 +375,18 @@ NX_RESULT_TABLES = [
     b'BOUGF1',  # Data block of acoustic pressures at microphone points in SORT1 format - basic frame
 
     # acoustic acceleration
-    b'OACCQ',   # Data block that contains acoustic coupling quality
-    b'OACINT1',  # Data block of acoustic intensities at microphone points in SORT1 format
-    b'OACINT2',
-    b'OACPWR2', # Data block of acoustic power for AML regions and GROUPs of 2D elements in SORT2 format
-    b'OACPWRI2', # Table of acoustic incident power in SORT2 format
-    b'OACPWRT2',
-    b'OACTRLS2',
-    b'OACVELO1',
-    b'OACVELO2',
+    b'OACCQ',    # Acoustic coupling quality
+    b'OACINT1',  # Acoustic intensities at microphone points - SORT1
+    b'OACINT2',  # Acoustic intensities at microphone points - SORT2
+    b'OACVELO1', # Acoustic velocities at microphone points - SORT1
+    b'OACVELO2', # Acoustic velocities at microphone points - SORT2
+    b'OACPWR2',  # Acoustic power for AML regions and GROUPs of 2D elements - SORT2
+    b'OACPWRI2', # Acoustic incident power - SORT2
+    b'OACPWRT2', # Transmitted acoustic power for AML regions and GROUPs of 2D elements - SORT2
+    b'OACTRLS2', # Acoustic transmission loss - SORT2
 
     # random acoustic
-    b'OAPPSD2', # Table of acoustic power in SORT2 format for the PSD function
+    b'OAPPSD2', # Acoustic power for the PSD function - SORT2
 ]
 
 MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
@@ -958,6 +957,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESVM1C' : [self._read_oes1_3, self._read_oes1_4],   # isat_random
             b'OSTRVM1' : [self._read_oes1_3, self._read_ostr1_4],   # isat_random
             b'OSTRVM1C' : [self._read_oes1_3, self._read_ostr1_4],  # isat_random
+
+            b'OSTRVM2' : [self._read_oes2_3, self._read_ostr2_4],
 
             b'OESVM2' : [self._read_oes2_3, self._read_oes2_4],    # big random
             b'OES2C' : [self._read_oes2_3, self._read_oes2_4],
