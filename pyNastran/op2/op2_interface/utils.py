@@ -92,7 +92,9 @@ def update_subtitle_with_adaptivity_index(subtitle, superelement_adaptivity_inde
     """
     if adpativity_index:
         #print('adpativity_index = %r' % adpativity_index.strip())
-        assert 'ADAPTIVITY INDEX=' in adpativity_index
+        if 'ADAPTIVITY INDEX=' not in adpativity_index:
+            msg = f'subtitle={subtitle}\nsuperelement_adaptivity_index={superelement_adaptivity_index} adpativity_index={adpativity_index}'
+            raise AssertionError(msg)
         # F:\work\pyNastran\examples\Dropbox\move_tpl\pet1018.op2
         #'ADAPTIVITY INDEX=      1'
         split_adpativity_index = adpativity_index.split()

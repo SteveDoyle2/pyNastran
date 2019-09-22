@@ -597,10 +597,10 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     def get_headers(self):
         headers = ['spring_force']
@@ -1116,10 +1116,10 @@ class ComplexPlateForceArray(ComplexForceObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     def get_headers(self):
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
@@ -1448,10 +1448,10 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     def get_headers(self):
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
@@ -3606,10 +3606,10 @@ class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
         self.nelements = 0  # result specific
         self.nnodes = None
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):

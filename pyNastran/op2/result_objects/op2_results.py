@@ -74,6 +74,8 @@ class ModalContribution:
         self.conrod_strain = {}
         self.ctube_strain = {}
 
+        self.cbend_stress = {}
+
         self.ctetra_stress = {}
         self.cpenta_stress = {}
         self.chexa_stress = {}
@@ -146,7 +148,7 @@ class ModalContribution:
             'cquadr_strain', 'cquad4_strain', 'cquad8_strain',
             'ctetra_strain', 'cpenta_strain', 'chexa_strain',
 
-            #'cbend_stress', 'cbend_strain', 'cbend_force',
+            'cbend_stress', # 'cbend_strain', 'cbend_force',
             'cbush_stress', 'cbush_strain',
             'cshear_stress', 'cshear_strain', 'cshear_force',
 

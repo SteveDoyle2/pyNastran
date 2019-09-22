@@ -4797,7 +4797,7 @@ class OES(OP2Common):
             auto_return = False
             is_vectorized = False
             if auto_return:
-                #self._data_factor = 4
+                self._data_factor = 4
                 return nelements * self.num_wide * 4, None, None
 
             obj = self.obj

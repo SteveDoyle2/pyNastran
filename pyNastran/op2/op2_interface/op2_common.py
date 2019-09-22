@@ -1322,7 +1322,7 @@ class OP2Common(Op2Codes, F06Writer):
         """
         if self.is_debug_file:
             self.binary_debug.write('  _read_complex_table_sort2_imag\n')
-        self.log.info('_read_complex_table_sort2_imag')
+        #self.log.info('_read_complex_table_sort2_imag')
 
         assert flag in ['node', 'elem'], flag
         flag, flag_type = self.get_oug2_flag()
@@ -1449,7 +1449,12 @@ class OP2Common(Op2Codes, F06Writer):
                 assert 'table_name' in data_codei
                 assert data_codei['table_name'] is not None, data_codei
                 self.obj.update_data_code(data_codei)
+                assert self.obj.table_name is not None, self.data_code
             else:
+                #if 'element_name' in self.data_code:
+                    #print('code not in object', self.data_code['element_name'])
+                #else:
+                    #print('code not in object')
                 class_obj.is_cid = is_cid
                 is_sort1 = self.is_sort1  # uses the sort_bits
 
@@ -1464,6 +1469,7 @@ class OP2Common(Op2Codes, F06Writer):
                 #if self.data_code['table_name'] not in ['OUGV1']:
                     #print(self.data_code)
                 self.obj = class_obj(self.data_code, is_sort1, self.isubcase, self.nonlinear_factor)
+                assert self.obj.table_name is not None, self.obj.data_code
             storage_obj[code] = self.obj
             #assert self.obj.table_name is not None
         else:
@@ -1471,7 +1477,7 @@ class OP2Common(Op2Codes, F06Writer):
                 self.obj = storage_obj[code]
             else:
                 storage_obj[code] = self.obj
-        assert self.obj.table_name is not None
+        assert self.obj.table_name is not None, self.data_code
 
     def _get_code(self):
         """

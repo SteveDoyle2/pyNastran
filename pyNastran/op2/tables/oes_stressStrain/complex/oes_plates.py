@@ -7,7 +7,7 @@ from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
 class ComplexTriaxStressArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)   ## why???
+        OES_Object.__init__(self, data_code, isubcase, apply_data_code=True)   ## why???
         self.element_node = None
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -16,10 +16,10 @@ class ComplexTriaxStressArray(OES_Object):
         #self.itime = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):
@@ -28,6 +28,13 @@ class ComplexTriaxStressArray(OES_Object):
     @property
     def is_complex(self):
         return True
+
+    def get_nnodes(self):
+        return 1
+
+    def _reset_indices(self):
+        self.itotal = 0
+        self.ielement = 0
 
     def build(self):
         """sizes the vectorized attributes of the ComplexPlateArray"""
@@ -60,15 +67,19 @@ class ComplexTriaxStressArray(OES_Object):
         # the number is messed up because of the offset for the element's properties
 
         if not self.nelements * nnodes * 2 == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
-                                                                           self.nelements, nnodes,
-                                                                           self.nelements * nnodes,
-                                                                           self.ntotal)
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
             raise RuntimeError(msg)
 
         self.fiber_curvature = zeros(self.ntotal, 'float32')
         # [oxx, oyy, txy]
         self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
+
+    def _get_headers(self):
+        return ['oxx', 'oyy', 'txy']
+
+    def get_headers(self):
+        return self._get_headers()
 
     def get_stats(self, short=False):
         if not self.is_built:
@@ -96,6 +107,65 @@ class ComplexTriaxStressArray(OES_Object):
         msg.append('  %s\n' % self.element_name)
         msg += self.get_data_code()
         return msg
+
+    def __eq__(self, table):  # pragma: no cover
+        assert self.is_sort1 == table.is_sort1
+        self._eq_header(table)
+        if not np.array_equal(self.element_node, table.element_node):
+            assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
+                self.element_node.shape, table.element_node.shape)
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\nEid, Nid\n' % str(self.code_information())
+            for (eid1, nid1), (eid2, nid2) in zip(self.element_node, table.element_node):
+                msg += '(%s, %s), (%s, %s)\n' % (eid1, nid1, eid2, nid2)
+            print(msg)
+            raise ValueError(msg)
+        if not np.array_equal(self.data, table.data):
+            msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
+            msg += '%s\n' % str(self.code_information())
+            ntimes = self.data.shape[0]
+
+            i = 0
+            if self.is_sort1:
+                for itime in range(ntimes):
+                    for ieid, (eid, nid) in enumerate(self.element_node):
+                        t1 = self.data[itime, ieid, :]
+                        t2 = table.data[itime, ieid, :]
+                        (oxx1, oyy1, txy1) = t1
+                        (oxx2, oyy2, txy2) = t2
+                        #d = t1 - t2
+                        if not np.allclose(
+                                [oxx1.real, oxx1.imag, oyy1.real, oyy1.imag, txy1.real, txy1.imag, ], # atol=0.0001
+                                [oxx2.real, oxx2.imag, oyy2.real, oyy2.imag, txy2.real, txy2.imag, ], atol=0.075):
+                            ni = len(str(eid)) + len(str(nid))
+                        #if not np.array_equal(t1, t2):
+                            msg += ('(%s %s)  (%s, %sj, %s, %sj, %s, %sj)\n'
+                                    '%s     (%s, %sj, %s, %sj, %s, %sj)\n' % (
+                                        eid, nid,
+                                        oxx1.real, oxx1.imag, oyy1.real, oyy1.imag,
+                                        txy1.real, txy1.imag,
+                                        ' ' * ni,
+                                        oxx2.real, oxx2.imag, oyy2.real, oyy2.imag,
+                                        txy2.real, txy2.imag,
+                                    ))
+                            msg += ('%s     (%s, %sj, %s, %sj, %s, %sj)\n'
+                                    % (
+                                        ' ' * ni,
+                                        oxx1.real - oxx2.real, oxx1.imag - oxx2.imag,
+                                        oyy1.real - oyy2.real, oyy1.imag - oyy2.imag,
+                                        txy1.real - txy2.real, txy1.imag - txy2.imag,
+                                    ))
+
+                            i += 1
+                        if i > 10:
+                            print(msg)
+                            raise ValueError(msg)
+            else:
+                raise NotImplementedError(self.is_sort2)
+            if i > 0:
+                print(msg)
+                raise ValueError(msg)
+        return True
 
     def add_new_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
         self.add_eid_sort1(dt, eid, node_id, fdr, oxx, oyy, txy)
@@ -133,10 +203,10 @@ class ComplexPlateArray(OES_Object):
         #self.itime = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):

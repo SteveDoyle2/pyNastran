@@ -177,6 +177,9 @@ class ScalarObject(BaseScalarObject):
         #
         # see pyNastran.op2.oes_stressStrain.real.oes_bars for an example
         # it's really subtle...
+        #
+        # since you won't get it, the inherited RealBarStressArray class inits
+        # data code, but RealBarArray does not.
         if apply_data_code:
             self.apply_data_code()
             self._set_data_members()
@@ -199,6 +202,7 @@ class ScalarObject(BaseScalarObject):
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
+        #raise NotImplementedError(self.class_name)
         #raise NotImplementedError(str(self.get_stats()))
         return False
 
@@ -294,8 +298,9 @@ class ScalarObject(BaseScalarObject):
         return self.data_frame
 
     def apply_data_code(self):
+        #print(self.__class__.__name__)
         if self.table_name is not None and self.table_name != self.data_code['table_name']:
-            print(self.data_code)
+            #print(self.data_code)
             msg = 'old_table_name=%r new_table_name=%r' % (
                 self.table_name, self.data_code['table_name'])
             raise RuntimeError(msg)

@@ -87,9 +87,11 @@ class OP2Reader:
 
         self.mapped_tables = {
             b'GPL' : self.read_gpl,
+            #b'GPLS' : self.read_gpl,
 
             # GPDT  - Grid point definition table
             b'GPDT' : self.read_gpdt,
+            b'GPDTS' : self.read_gpdt,
 
             # BGPDT - Basic grid point definition table.
             b'BGPDT' : self.read_bgpdt,
@@ -137,6 +139,7 @@ class OP2Reader:
 
             # coordinate system transformation matrices
             b'CSTM' : self.read_cstm,
+            b'CSTMS' : self.read_cstm,
 
             # Equivalence between external and internal grid/scalar numbers
             b'EQEXIN' : self.read_eqexin,
@@ -202,6 +205,8 @@ class OP2Reader:
             if macro_version == 'nastran':
                 if version.startswith(b'NX'):
                     mode = 'nx'
+                    version_str = version[2:].strip().decode(self._encoding)
+                    assert version_str in ['2019.2'], 'nx version=%r' % version_str
                 elif version.startswith(b'MODEP'):
                     # TODO: why is this separate?
                     # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
@@ -280,7 +285,7 @@ class OP2Reader:
         #print('----------------------')
 
         self.read_markers([-2, 1, 0])
-        self.read_table_name(['EQEXIN', 'EQEXINS'])
+        self.read_table_name(['EQEXIN', 'EQEXINS', 'EQEXNOUT'])
         #print('----------------------')
         # ints
         self.read_markers([-3, 1, 0])
@@ -1067,23 +1072,41 @@ class OP2Reader:
         self.read_markers([-1])
         data = self._read_record()
         idata = unpack(self._endian + b'7i', data)
-        assert idata[0] == 101, idata
-        assert idata[1] == 1, idata
-        assert idata[2] == 0, idata
-        assert idata[3] == 0, idata
-        assert idata[4] == 0, idata
-        assert idata[5] == 0, idata
-        assert idata[6] == 0, idata
+        assert idata[0] == 101, f'idata[0]={idata[0]}; idata={idata}'
+        assert idata[1] in [1, 2, 3, 4], f'idata[1]={idata[1]}; idata={idata}'
+        assert idata[2] == 0, f'idata[2]={idata[2]}; idata={idata}'
+        assert idata[3] == 0, f'idata[3]={idata[3]}; idata={idata}'
+        assert idata[4] == 0, f'idata[4]={idata[4]}; idata={idata}'
+        assert idata[5] == 0, f'idata[5]={idata[5]}; idata={idata}'
+        assert idata[6] == 0, f'idata[6]={idata[6]}; idata={idata}'
         #print(self.show_data(data))
 
 
         self.read_markers([-2, 1, 0])
         data = self._read_record()
-        assert len(data) == 12, '\n'.join(str(d) for d in self.show_data(data))
 
-        subtable_name_raw, = op2.struct_8s.unpack(data[:8])
-        subtable_name = subtable_name_raw.strip()
-        assert subtable_name == b'FRL0', 'subtable_name=%r' % subtable_name
+        if len(data) == 12:
+            subtable_name_raw, = op2.struct_8s.unpack(data[:8])
+            subtable_name = subtable_name_raw.strip()
+            assert subtable_name in [b'FRL', b'FRL0'], 'subtable_name=%r' % subtable_name
+        elif len(data) == 16:
+            #(FRL, 200, 201)
+            subtable_name_raw, = op2.struct_8s.unpack(data[:8])
+            subtable_name = subtable_name_raw.strip()
+            assert subtable_name in [b'FRL', b'FRL0'], 'subtable_name=%r' % subtable_name
+        elif len(data) == 20:
+            #(FRL, 70, 71, 72)
+            subtable_name_raw, = op2.struct_8s.unpack(data[:8])
+            subtable_name = subtable_name_raw.strip()
+            assert subtable_name in [b'FRL'], 'subtable_name=%r' % subtable_name
+        elif len(data) == 24:
+            #(FRL, 71, 72, 73, 74)
+            subtable_name_raw, = op2.struct_8s.unpack(data[:8])
+            subtable_name = subtable_name_raw.strip()
+            assert subtable_name in [b'FRL'], 'subtable_name=%r' % subtable_name
+        else:
+            self.show_data(data, types='ifsd')
+            raise RuntimeError('bad length...')
 
         self.read_markers([-3, 1, 0])
         isubtable = -3
@@ -1095,14 +1118,23 @@ class OP2Reader:
                 data = self._read_record()
                 #self.show_data(data)
                 freqs = np.frombuffer(data, dtype=op2.fdtype).copy()
-                #print('read_mode=%s freqs=%s' % (self.read_mode, freqs.tolist()))
-                if op2._frequencies is not None and not np.array_equal(freqs, op2._frequencies):
-                    msg = (
-                        'Cannot overwrite op2._frequencies...\n'
-                        'op2._frequencies = %s\n'
-                        'new_freqs = %s\n' % (op2._frequencies, freqs))
-                    raise RuntimeError(msg)
-                op2._frequencies = freqs
+                #print('read_mode=%s itable=%s freqs=%s' % (self.read_mode, isubtable, freqs.tolist()))
+                if isubtable == -3:
+                    if op2._frequencies is not None and not np.array_equal(freqs, op2._frequencies):
+                        msg = (
+                            'Cannot overwrite op2._frequencies...\n'
+                            'op2._frequencies = %s\n'
+                            'new_freqs = %s\n' % (op2._frequencies, freqs))
+                        raise RuntimeError(msg)
+                    op2._frequencies = freqs
+                else:
+                    #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\rtr_mfreq41kf.op2
+                    if op2._frequencies is not None and not np.array_equal(freqs, op2._frequencies):
+                        msg = (
+                            'Cannot overwrite op2._frequencies...\n'
+                            'op2._frequencies = %s\n'
+                            'new_freqs = %s\n' % (op2._frequencies, freqs))
+                        self.log.warning(msg)
 
             isubtable -= 1
             self.read_markers([isubtable, 1, 0])
@@ -1141,7 +1173,7 @@ class OP2Reader:
         #print('--------------------')
 
         self.read_markers([-2, 1, 0])
-        self.read_table_name(['GPL'])
+        self.read_table_name(['GPL', 'GPLOUT'])
         #else ndata == 12:  # TestOP2Matrix.test_gpspc
         #print('--------------------')
 
@@ -1210,7 +1242,7 @@ class OP2Reader:
         #print('--------------------')
 
         self.read_markers([-2, 1, 0])
-        self.read_table_name(['GPDT'])
+        self.read_table_name(['GPDT', 'GPDTS'])
 
         #print('--------------------')
 
@@ -1327,7 +1359,7 @@ class OP2Reader:
         #print('--------------------')
 
         self.read_markers([-2, 1, 0])
-        self.read_table_name(['BGPDT', 'BGPDTS', 'BGPDTOLD'])
+        self.read_table_name(['BGPDT', 'BGPDTS', 'BGPDTOLD', 'BGPDTOUT'])
 
         #print('--------------------')
 
@@ -3399,6 +3431,14 @@ class OP2Reader:
         data, ndata = self._read_record_ndata()
         if ndata == 8:
             subtable_name = op2.struct_8s.unpack(data)
+            if self.is_debug_file:
+                self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
+                self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+        elif ndata == 12:
+            subtable_name, ten = unpack(self._endian + b'8si', data)
+            subtable_name = subtable_name.strip().decode(self._encoding)
+            #assert ten == 10, self.show_data(data, types='ifs', endian=None)
+            assert subtable_name in ['GPL', 'GPLS'], subtable_name
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)

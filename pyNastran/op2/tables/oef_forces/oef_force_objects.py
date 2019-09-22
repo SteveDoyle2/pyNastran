@@ -4176,10 +4176,10 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
     def _reset_indices(self):
         self.itotal = 0

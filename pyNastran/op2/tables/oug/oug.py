@@ -473,10 +473,12 @@ class OUG(OP2Common):
         table_code = 10
         """
         self._setup_op2_subcase('velocity')
-        if self.table_name in [b'OUGV1', b'OUGV2']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1']:
+            assert self.thermal == 0, self.code_information()
             result_name = 'velocities'
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
             result_name = 'velocities_ROUGV1'
+            assert self.thermal == 0, self.code_information()
         elif self.table_name == b'OUPV1':
             assert self.thermal in [2, 4], self.thermal
             if self.thermal == 2:
@@ -524,14 +526,18 @@ class OUG(OP2Common):
         """
         self._setup_op2_subcase('acceleration')
 
-        if self.table_name in [b'OUGV1', b'OUGV2', b'OAG1']:
+        result_name = None
+        if self.table_name in [b'OUGV1', b'OUGV2', b'OAG1', b'BOUGV1']:
             result_name = 'accelerations'
+            assert self.thermal == 0, self.code_information()
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
             result_name = 'accelerations_ROUGV1'
+            assert self.thermal == 0, self.code_information()
         elif self.table_name in [b'OAGPSD1', b'OAGPSD2',
                                  b'OAGRMS1', b'OAGRMS2',
                                  b'OACRM1', b'OAGCRM2',
                                  b'OAGNO1', b'OAGNO2']:
+            assert self.thermal == 0, self.code_information()
             pass
         elif self.table_name == b'OUPV1':
             assert self.thermal in [2, 4], self.thermal
@@ -547,7 +553,8 @@ class OUG(OP2Common):
             raise NotImplementedError(msg)
 
         if self.thermal == 0:
-            if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2', b'OAG1']:
+            if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2', b'OAG1', b'BOUGV1']:
+                assert result_name is not None, self.table_name
                 if self._results.is_not_saved(result_name):
                     return ndata
                 storage_obj = self.get_result(result_name)
@@ -600,6 +607,7 @@ class OUG(OP2Common):
         """
         table_code = 7
         """
+        assert self.thermal == 0, self.code_information()
         self._setup_op2_subcase('VECTOR')
         if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'OPHIG', b'BOPHIG', b'OUG1']:
             result_name = 'eigenvectors'
@@ -931,6 +939,7 @@ class OUG(OP2Common):
                 assert self.table_name in [b'OAGATO1', b'OAGATO2'], 'self.table_name=%r' % self.table_name
             else:
                 n = self._not_implemented_or_skip(data, ndata, self.code_information())
+                return n
         else:
             raise NotImplementedError(self.thermal)
 

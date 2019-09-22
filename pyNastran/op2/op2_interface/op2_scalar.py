@@ -261,6 +261,132 @@ NX_RESULT_TABLES = [
     b'OSTPSD2C',
 
     b'OPHIG', # Eigenvectors in the basic coordinate system.
+
+    # ---------------------------------------------
+    # nx2019.2
+
+    # geometry
+    b'GPDTS',
+    # results
+    b'LAMAS', # Normal modes eigenvalue summary table for the structural portion of the model
+    b'LAMAF', # Normal modes eigenvalue summary table for the fluid portion of the model
+    b'GPLS',
+    b'TRMBU',  # Transfomration matrices from undeformed to basic
+    b'TRMBD',  # Transformation matrices from deformed to basic
+    b'OESNL2',
+    b'PVTS', # PVT0?
+    b'OGPFB2',   # Table of grid point forces in SORT2 format
+    b'OEFMXORD', # Data block that contains a list of element IDs with maximum frequency and element order diagnostics for FEMAO solution
+    b'BOPHIGF',  # Eigenvectors in the basic coordinate system for the fluid portion of the model.
+    b'BOPHIGS',  # Eigenvectors in the basic coordinate system for the structural portion of the model.
+    b'OUGMC1',   # Table of modal contributions for displacements, velocities, accelerations.
+    b'OUXY1',    # Table of displacements in SORT1 format for h-set or d-set.
+    b'OUXY2',    # Table of displacements in SORT2 format for h-set or d-set.
+    b'OSLIDE1',  # Incremental and total slide output for contact/glue.
+    b'OSLIDEG1', # Glue slide distance output
+    b'OBCKL',    # Table of load factor vs. cumulative arc-length in SORT2 format
+    b'OJINT',    # Table of J-integral for a crack defined by CRAKTP.
+    b'OERP',     # Equivalent radiated power output.
+    b'OPHSA',
+    b'ONMD',     # Normalized material density for topology optimization output
+    b'OSTR1IN',  # OES output table of initial strains at corner grids in the basic coordinate system
+    b'OSTR1G',   # Table of total strain at Gauss points in SORT1 format
+    b'OSTR1PLG', # Table of plastic strain at Gauss points in SORT1 format
+    b'OACPERF', # Performance data that indicates computation time in seconds and memory consumed in GB per frequency per subcase for FEMAO analysis.
+    b'OERPEL1', # Element equivalent radiated power (element output)
+    b'OGSTR1',
+    b'OERPEL1',  # ERP design responses at element level in SORT1 format for a particular subcase.
+    b'OELAR',    # Element status (active or inactive)
+    b'OPNL2',   # Table of nonlinear loads in SORT2 format for the h-set or d-set.
+    b'OSHT1',  # Output shell element thickness results.
+    b'OTEMP1', # Grid point temperature output
+    b'OERPEL2',
+    b'OEFIIS',
+    b'OBOLT1',
+    b'OES1G',
+
+    b'ODAMGPFE',
+    b'ODAMGPFD',
+    b'ODAMGPFS',
+
+    b'OSTR1THG',
+    b'OSTR1ELG',
+    b'OSTR1TH',
+    b'OSTR1EL',
+    b'OSTR1ING', # OES output table of initial strains at corner Gauss points in the basic coordinate system
+
+    b'OCONST1',  # Contact status in SORT1 format
+
+    b'OCPSDF',
+    b'OCCORF',
+    b'OCPSDFC',
+    b'OCCORFC',
+
+    b'OESXRM1C',
+    b'OESXNO1C',
+    b'OESXNO1',
+
+    b'OEDE1',
+
+
+    # grid point pressure
+    b'OPRNO1',   # SORT1 - NO
+    b'OPRRMS1',  # SORT1 - RMS
+    b'OPRPSD2',  # SORT2 - PSD
+    b'OPRATO2',  # SORT2 - AUTO
+    b'OPRCRM2',  # SORT2 - CRMS
+
+
+    # modal contribution
+    b'OUGMC2', # Table of modal contributions for displacements, velocities, accelerations.
+    b'OQGMC1', # Table of modal contributions of single point constraint forces - SORT1
+    b'OQGMC2', # Table of modal contributions of single point constraint forces - SORT2
+    b'OESMC1', # Element stress modal contributions
+    b'OESMC2', # Element stress modal contributions
+    b'OSTRMC1',
+    b'OSTRMC2',
+    b'OEFMC1',
+    b'OEFMC2',
+
+    b'OMKEO2',
+    b'OMECON1',
+    b'OMECON2',
+    b'OMEOSC1',
+    b'OMEOSC2',
+
+    b'OMSEC1', # Constant modal strain energy
+    b'OMSEC2', # Constant modal strain energy
+    b'OMSEO1',
+    b'OMSEO2', # Table of oscillating modal strain energies.
+
+    b'OMKEO1',
+    b'OMKEC1',
+    b'OMKEC2',
+
+    # acoustic
+    b'OUGPC1',  # Table of panel contributions - SORT1
+    b'OUGPC2',  # Table of panel contributions - SORT2
+    b'OUGF1',   # Data block of acoustic pressures at microphone points in SORT1 format
+    b'OUGF2',   # Data block of acoustic pressures at microphone points in SORT2 format
+    b'OUGGC1',  # Table of grid contributions - SORT1
+    b'OUGGC2',  # Table of grid contributions - SORT2
+    b'OUGRC1',  # Reciprocal panel contributions - SORT1
+    b'OUGRC2',  # Reciprocal panel contributions - SORT2
+    b'BOUGF1',  # Data block of acoustic pressures at microphone points in SORT1 format - basic frame
+
+    # acoustic acceleration
+    b'OACCQ',   # Data block that contains acoustic coupling quality
+    b'OACINT1',  # Data block of acoustic intensities at microphone points in SORT1 format
+    b'OACINT2',
+    b'OACPWR2', # Data block of acoustic power for AML regions and GROUPs of 2D elements in SORT2 format
+    b'OACPWRI2', # Table of acoustic incident power in SORT2 format
+    b'OACPWRT2',
+    b'OACTRLS2',
+    b'OACVELO1',
+    b'OACVELO2',
+
+    # random acoustic
+    b'OAPPSD2', # Table of acoustic power in SORT2 format for the PSD function
 ]
 
 MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
@@ -397,7 +523,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
 
     # autoskip
     #b'MATPOOL',
-    b'CSTM',
+    b'CSTM', b'CSTMS',
     b'BOPHIG',
     b'BOPG1',
     b'HOEF1',
@@ -585,18 +711,46 @@ INT_PARAMS_1 = [
     b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
     b'OUNIT2K', b'OUNIT2M', b'RESCOMP', b'PDRMSG', b'LMODES', b'USETPRT',
     b'NOCOMPS', b'OPTEXIT', b'RSOPT', b'GUSTAERO', b'MPTUNIT',
-    b'USETSEL']
+    b'USETSEL', b'NASPRT', b'DESPCH', b'DESPCH1', b'COMPARE', b'DBNBLKS', b'NEWSEQ', b'OLDSEQ',
+    b'METHCMRS', b'NOFISR', b'KGGCPCH', b'ERROR', b'DBCDIAG', b'GPECT', b'LSTRN',
+    b'DBDROPT', b'SEOP2CV', b'IRES', b'SNORMPRT', b'DBDRNL', b'VMOPT',
+    b'OSWPPT', b'KDAMP', b'KDAMPFL', b'MATNL', b'MPCX', b'GEOMPLT', b'NOELOP',
+    b'NOGPF', b'PROUT', b'SUPER', b'LGDIS', b'EST', b'SEP1XOVR',
+    b'FRSEID', b'HRSEID', b'LRSEID', b'MODACC', b'XFLAG', b'TSTATIC',
+    b'NASPDV', b'RMXCRT', b'RMXTRN', b'DBCLEAN', b'LANGLE', b'SEMAPPRT',
+    b'FIXEDB', b'AMGOK', b'ASING', b'CNSTRT', b'CURVPLOT', b'CYCIO',
+    b'CYCSEQ', b'DBDICT', b'DBINIT', b'DBSET1', b'DBSET2', b'DBSET3', b'DBSET4',
+    b'DBSORT', b'DOPT', b'FACTOR', b'ALTSHAPE', b'MODTRK',
+
+    # not defined in qrg...
+    b'NT', b'PNCHDB', b'DLOAD',
+]
 FLOAT_PARAMS_1 = [
     b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
-    b'SIGMA', b'TABS', b'EPPRT', b'AUNITS',
+    b'SIGMA', b'TABS', b'EPPRT', b'AUNITS', b'BOLTFACT', b'LMSCAL',
+    'DSZERO', b'G', b'GFL', b'LFREQ', b'HFREQ', b'ADPCON',
+    b'W3', b'W4', b'W3FL', b'W4FL', b'PREFDB',
+    b'EPZERO', b'DSZERO', b'TINY', b'VREF', b'TOLRSC', b'ROTCSV', b'ROTGPF',
+    b'FRSPD', b'HRSPD', b'LRSPD', b'MTRFMAX', b'ROTCMRF', b'MTRRMAX',
+    b'LAMLIM', b'BIGER', b'BIGER1', b'BIGER2', b'CLOSE',
+    b'EPSBIG', b'EPSMALC', b'EPSMALU',
     #b'Q'
 ]
+FLOAT_PARAMS_2 = [
+    b'BETA', b'CB1', b'CB2', b'CK1', b'CK2', b'CK3', b'CK41', b'CK42',
+    b'CM1', b'CM2',
+    b'G2', b'G4', b'G5', b'G6', b'G7', b'G8', b'G9', b'G10', b'G12', b'G13']
 DOUBLE_PARAMS_1 = [b'Q']
 STR_PARAMS_1 = [
     b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
     b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
     b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
-    b'CDIF', b'SUPAERO', b'RSCON', b'AUTOMPC',
+    b'CDIF', b'SUPAERO', b'RSCON', b'AUTOMPC', b'DBCCONV',
+    b'AUTOSPRT', b'PBRPROP', b'OMID', b'HEATSTAT', b'SECOMB', b'ELEMITER',
+    b'ELITASPC', b'DBCONV', b'SHLDAMP', b'COMPMATT', b'SPCSTR', b'ASCOUP',
+    b'PRTRESLT', b'SRCOMPS', b'CHECKOUT', b'SEMAP', b'AESMETH', b'RESVALT',
+    b'ROTSYNC', b'SYNCDAMP', b'PRGPOST', b'WMODAL', b'SDAMPUP',
+    b'COLPHEXA', b'CHKOUT', b'CTYPE', b'DBNAME', b'VUHEXA', b'VUPENTA', b'VUTETRA',
 
     # part of param, checkout
     b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',
@@ -606,9 +760,9 @@ STR_PARAMS_1 = [
     b'EXTOUT', b'SESDAMP',
 
     # TODO: remove these as they're in the matrix test and are user
-    #       defined PARAMs
+    #       defined PARAMs; arguably all official examples should just work
     # TODO: add an option for custom PARAMs
-    b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH']
+    b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH']
 
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
@@ -1008,6 +1162,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OESNLBR' : [self._read_oes1_3, self._read_oes1_4],
             b'OESNL1X' : [self._read_oes1_3, self._read_oes1_4],
 
+            b'OESNL2' : [self._read_oes2_3, self._read_oes2_4],
             b'OESNLXR2' : [self._read_oes2_3, self._read_oes2_4],
             b'OESNLBR2' : [self._read_oes2_3, self._read_oes2_4],
             #b'OESNLXR2' : [self._table_passer, self._table_passer],
@@ -1116,6 +1271,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'BLAMA' : [self._read_buckling_eigenvalue_3, self._read_buckling_eigenvalue_4], # buckling eigenvalues
             b'CLAMA' : [self._read_complex_eigenvalue_3, self._read_complex_eigenvalue_4],   # complex eigenvalues
             b'LAMA'  : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues
+            b'LAMAS' : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues-structure
+            b'LAMAF' : [self._read_real_eigenvalue_3, self._read_real_eigenvalue_4],         # eigenvalues-fluid
 
             # ===========================geom passers===========================
             # geometry
@@ -1168,6 +1325,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'BGPDTOLD' : [self._table_passer, self._table_passer],
 
             b'PVT' : [self._read_pvto_3, self._read_pvto_4], # PVT - Parameter Variable Table
+            b'PVTS' : [self._read_pvto_3, self._read_pvto_4], # ???
             b'PVT0' : [self._read_pvto_3, self._read_pvto_4],  # user parameter value table
             b'TOLD' : [self._table_passer, self._table_passer],
             b'CASECC' : [self._table_passer, self._table_passer],  # case control deck
@@ -1499,36 +1657,38 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #print('word=%r' % word)
             #word = s8.unpack(word)[0]#.decode(self._encoding)
 
+            # the first two entries are typically trash, then we can get values
             if word in INT_PARAMS_1:
                 slot = data[(i+2)*4:(i+4)*4]
                 value = struct2i.unpack(slot)[1]
                 i += 4
-                #print(word, value)
             elif word in FLOAT_PARAMS_1:
                 slot = data[(i+2)*4:(i+4)*4]
                 value = struct2f.unpack(slot)[1]
-                #print(word, value)
                 i += 4
+            elif word in FLOAT_PARAMS_2:
+                slot = data[(i+3)*4:(i+5)*4]
+                value = struct2f.unpack(slot)
+                i += 5
             elif word in DOUBLE_PARAMS_1:
                 slot = data[(i+1)*4:(i+8)*4]
                 value = struct2d.unpack(slot)[1]
-                #print(word, value)
                 i += 8
+            #elif word in [b'VUHEXA']:
+                #self.show_data(data[i*4:(i+5)*4], types='ifs', endian=None)
+                #aaa
             elif word in STR_PARAMS_1:
-                #print('--------')
-                #self.show_data(data[i*4:])
                 i += 3
                 slot = data[i*4:(i+2)*4]
                 value = structs8.unpack(slot)[0].decode('latin1').rstrip()
-                #print(word, value.rstrip())
                 i += 2
             else:
-                #self.show_data(data[i*4:])
                 self.show_data(data[i*4:(i+4)*4], types='ifsd')
                 self.show_data(data[i*4+4:], types='ifsd')
                 raise NotImplementedError('%r is not a supported PARAM' % word)
 
             key = word.decode('latin1')
+            #print(key, value)
             self.params[key] = PARAM(key, [value], comment='')
         return nvalues
 

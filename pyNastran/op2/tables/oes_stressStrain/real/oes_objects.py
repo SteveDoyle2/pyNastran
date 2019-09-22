@@ -18,6 +18,7 @@ SORT2_TABLE_NAME_MAP = {
     'OSTRNO2' : 'OSTRNO1',
     'OSTRPSD2' : 'OSTRPSD1',
     'OSTRRMS2' : 'OSTRRMS1',
+    'OESVM2' : 'OESVM1',
 }
 
 class OES_Object(BaseElement):

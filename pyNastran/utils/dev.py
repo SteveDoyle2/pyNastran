@@ -3,11 +3,11 @@ from typing import List, Any
 
 import numpy as np
 
-from pyNastran.utils import object_attributes
+#from pyNastran.utils import object_attributes
 
 
-def get_files_of_type(dirname, extension='.txt', max_size=100., limit_file='no_dig.txt'):
-    # type: (str, str, float, str) -> List[str]
+def get_files_of_type(dirname: str, extension: str='.txt',
+                      max_size: float=100., limit_file: str='no_dig.txt') -> List[str]:
     """
     Gets the list of all the files with a given extension in the specified directory
 
@@ -52,8 +52,7 @@ def get_files_of_type(dirname, extension='.txt', max_size=100., limit_file='no_d
     return filenames2
 
 
-def list_print(lst, float_fmt='%-4.2f'):
-    # type: (List[Any], str) -> str
+def list_print(lst: List[Any], float_fmt: str='%-4.2f') -> str:
     """
     Prints a list or numpy array in an abbreviated format.
     Supported element types: None, string, numbers. Useful for debugging.

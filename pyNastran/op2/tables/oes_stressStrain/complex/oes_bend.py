@@ -23,10 +23,10 @@ class ComplexBendArray(OES_Object):
         #self.itime = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     @property
     def is_real(self):
