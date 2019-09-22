@@ -54,6 +54,9 @@ C:\MSC.Software\MSC.Nastran2005r3\msc20055\nast\tpl
 "C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\doc"
 "C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\demo"
 "C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\tpl"
+
+# NX 2019
+C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2
 #-------------------------------------------------
 # laptop
 D:\work\move

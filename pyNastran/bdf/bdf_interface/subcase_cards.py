@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple, Union, Set, Any
+from typing import List, Dict, Union, Set, Any
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
 
 class CaseControlCard:
@@ -56,8 +56,23 @@ class IntCard(CaseControlCard):
             unused
 
         """
-        value = line.split('=')[1]
-        return cls(value)
+        value = line_upper.split('=')[1]
+        try:
+            out = cls(value)
+        except ValueError:
+            print(line)
+            raise
+        return out
+
+    def export_to_hdf5(self, h5_file, encoding):
+        h5_file.create_dataset('value', data=self.value)
+
+    @classmethod
+    def load_hdf5(cls, h5_file, encoding):
+        from pyNastran.utils.dict_to_h5py import _cast
+        value = h5_file['value']
+        value2 = _cast(value)
+        return cls(value2), []
 
     def __repr__(self):
         """writes a card"""
@@ -93,9 +108,26 @@ class IntStrCard(IntCard):
             value = value.strip()
             if value not in self.allowed_strings:
                 msg = 'value=%r not in [%s]' % (
-                    self.value, ', '.join(self.allowed_strings))
+                    value, ', '.join(self.allowed_strings))
                 raise ValueError(msg)
             self.value = value
+
+    def export_to_hdf5(self, h5_file, encoding):
+        value_bytes = self.value.encode(encoding) if isinstance(self.value, str) else self.value
+        #sub_group = h5_file.create_group(self.type)
+        h5_file.create_dataset('value', data=value_bytes)
+
+    @classmethod
+    def load_hdf5(cls, h5_file, encoding):
+        from pyNastran.utils.dict_to_h5py import _cast
+        value = h5_file['value']
+
+        casted_value = _cast(value)
+        if isinstance(casted_value, int):
+            value2 = casted_value
+        else:
+            value2 = casted_value.decode(encoding)# if isinstance(value, bytes) else value
+        return cls(value2), []
 
     def __repr__(self):
         """writes a card"""
@@ -140,6 +172,7 @@ class HARMONICS(IntStrCard):
 
 class OFREQUENCY(IntStrCard):
     type = 'OFREQUENCY'
+    alternate_names = {'OFREQ'}
     allowed_strings = {'ALL'}
     def __init__(self, value):
         super().__init__(value)
@@ -153,8 +186,8 @@ class OMODES(IntStrCard):
 class SUPER(IntStrCard):
     type = 'SUPER'
     allowed_strings = {'ALL'}
-    def __init__(self, value):
-        super().__init__(value)
+    #def __init__(self, value):
+        #super().__init__(value)
 
 #----------------------------
 
@@ -208,7 +241,8 @@ class StringCard(CaseControlCard):
 
     def validate(self):
         if self.value not in self.allowed_values:
-            msg = 'value=%r not in [%s]' % (self.value, ', '.join(self.allowed_values))
+            msg = '%s: value=%r not in [%s]' % (
+                self.type, self.value, ', '.join(self.allowed_values))
             raise ValueError(msg)
 
     def __repr__(self):
@@ -227,114 +261,13 @@ class StringCard(CaseControlCard):
     def load_hdf5(cls, h5_file, encoding):
         from pyNastran.utils.dict_to_h5py import _cast
         value = h5_file['value']
-        value2 = _cast(value).decode(encoding)
+        try:
+            value2 = _cast(value).decode(encoding)
+        except AttributeError:
+            print(cls.type, _cast(value))
+            raise
         return cls(value2), []
 
-class AESYMXY(StringCard):
-    type = 'AESYMXY'
-    short_name = 'AESYMXY'
-    allowed_values = ['SYMMETRIC', 'ANTISYMMETRIC', 'ASYMMTRIC']
-    def __init__(self, value):
-        super().__init__(value)
-
-class AESYMXZ(StringCard):
-    type = 'AESYMXZ'
-    short_name = 'AESYMXZ'
-    allowed_values = ['SYMMETRIC', 'ANTISYMMETRIC', 'ASYMMTRIC']
-    def __init__(self, value):
-        super().__init__(value)
-
-class AXISYMMETRIC(StringCard):
-    type = 'AXISYMMETRIC'
-    short_name = type[:4]
-    allowed_values = ['SINE', 'COSINE', 'FLUID']
-    def __init__(self, value):
-        super().__init__(value)
-
-class AUTOSPC(StringCard):
-    type = 'AUTOSPC'
-    short_name = type[:4]
-    allowed_values = ['NO']
-    def __init__(self, value):
-        super().__init__(value)
-
-class DSYM(StringCard):
-    type = 'DSYM'
-    short_name = type[:4]
-    allowed_values = ['S', 'A', 'SS', 'SA', 'AS', 'AA']
-    def __init__(self, value):
-        super().__init__(value)
-
-class SEQDEP(StringCard):
-    type = 'SEQDEP'
-    short_name = type[:4]
-    allowed_values = ['YES', 'NO']
-    def __init__(self, value):
-        super().__init__(value)
-
-#----------
-# special
-
-class K2PP(StringCard):
-    type = 'K2PP'
-    short_name = type[:4]
-    def __init__(self, value):
-        super().__init__(value, validate=False)
-
-class ECHO(StringCard):
-    """
-    ECHO = NONE
-    """
-    type = 'ECHO'
-    short_name = type[:4]
-    allowed_values = ['BOTH', 'SORT', 'UNSORT', 'NONE', 'NOSORT']
-    def __init__(self, value):
-        super().__init__(value)
-
-class ANALYSIS(StringCard):
-    """ANALYSIS = HEAT"""
-    type = 'ANALYSIS'
-    short_name = type[:4]
-    allowed_values = ['HEAT', 'STATICS', 'MODES', 'MFREQ', 'DFREQ', 'NLSTATIC', 'NLTRAN', 'SAERO', 'HEAT']
-    def __init__(self, value):
-        super().__init__(value)
-
-class THERMAL(StringCard): #  ???
-    type = 'THERMAL'
-    short_name = type[:4]
-    allowed_values = ['ALL']
-    def __init__(self, value):
-        super().__init__(value)
-
-class AECONFIG(StringCard): #  ???
-    type = 'AECONFIG'
-    short_name = type# [:4]
-    allowed_values = ['FSWHALF']
-    def __init__(self, value):
-        super().__init__(value)
-
-special_cards = {'AESYMXY', 'AESYMXZ', 'AECONFIG'}
-STR_CARDS = [AESYMXY, AESYMXZ, AECONFIG, AXISYMMETRIC, AUTOSPC, DSYM, SEQDEP] + [ECHO, ANALYSIS, K2PP, THERMAL]
-
-if 0:
-    STR_CARD_DICT = {}
-    STR_CARD_NAMES = []
-    for card in STR_CARDS:
-        if card.type in special_cards:
-            name = card.type
-        else:
-            name = card.type[:4]
-        STR_CARD_DICT[name] = card
-        STR_CARD_NAMES.append(name)
-#STR_CARD_DICT = {card.type[:4] : card if card.type not in special_cards else card.type : card
-                 #for card in STR_CARDS}
-#STR_CARD_NAMES = tuple([card.type for card in STR_CARDS])
-
-STR_CARD_DICT = {card.short_name : card for card in STR_CARDS}
-STR_CARD_NAMES = tuple([card.short_name for card in STR_CARDS])
-
-STR_CARD_NAMES = tuple(STR_CARD_NAMES)
-assert len(STR_CARD_DICT) == len(STR_CARD_DICT), f'ndict={len(STR_CARD_DICT)} STR_CARD_DICT.keys()={STR_CARD_DICT.keys()}'
 #-------------------------------------------------------------------------------
 
 class SET(CaseControlCard):
@@ -444,9 +377,17 @@ class CheckCard(CaseControlCard):
 
     # key:(type, allowed_values)
     allowed_values = {}  # type: Dict[str, Union[float, str]]
+
+    # the allowed value for the key, options, value approach
     allowed_strings = set([]) # type: Set[str]
+
+    # maps something like INIT to INITIAL
     duplicate_names = {} # type: Dict[Any, Any]
+
+    # enables values as integers instead of just strings
     allow_ints = False
+
+    # 'OUTPUT(PLOT)' instead of 'OUTPUT(PLOT)=YES'
     allow_equals = True
 
     def __init__(self, key, value, options):
@@ -473,6 +414,9 @@ class CheckCard(CaseControlCard):
                 key = self._parse_set(key_value, options)
             else:
                 key = self._parse(key_value, options)
+
+            if key in self.duplicate_names:
+                key = self.duplicate_names[key]
 
             if key not in self.allowed_keys:
                 msg = '%s: key=%r allowed_keys=[%r]' % (
@@ -609,6 +553,7 @@ class CheckCard(CaseControlCard):
         equals_count = line.count('=')
         if cls.allow_equals:
             if equals_count == 1:
+                line_upper = line_upper.replace(' ', '')
                 # GROUNDCHECK=YES
                 # WEIGHTCHECK=YES
                 key, value, options = cls._parse_single_equals(line, line_upper, lines, i)
@@ -625,7 +570,7 @@ class CheckCard(CaseControlCard):
                 raise RuntimeError('equals_count=%s; line = %r' % (equals_count, line))
         else:
             value = None
-            if '(' in line:
+            if '(' in line_upper:
                 (class_name, options_str) = line_upper.strip(')').split('(')
                 options = options_str.split(',')
             else:
@@ -838,8 +783,43 @@ class GROUNDCHECK(CheckCard):
 
     def __init__(self, key, value, options):
         CheckCard.__init__(self, key, value, options)
+
     def export_to_hdf5(self, hdf5_file, encoding):
         export_to_hdf5_check(self, hdf5_file, encoding)
+
+
+class MEFFMASS(CheckCard):
+    """
+    MEFFMASS
+    MEFFMASS(GRID=12,SUMMARY,PARTFAC)
+    MEFFMASS(PLOT,ALL,THRESH=0.001)=YES
+
+    """
+    type = 'MEFFMASS'
+    allowed_keys = {
+        'PRINT', 'PLOT', 'PUNCH',
+        'MINT1', 'MINT2', 'MINT3', 'MAXIT',
+        'THRESH', 'GRID',
+        'SUMMARY', 'PARTFAC', 'MEFFM', 'MEFFW', 'FRACSUM', 'ALL'}
+    allowed_strings = {'YES', 'NO'}
+    alternate_names = {'MEFF'}
+    allowed_values = {
+        'GRID' : (int, None),
+        'MINT1' : (int, None),
+        'MINT2' : (int, None),
+        'MINT3' : (int, None),
+        'MAXIT' : (int, None),
+        'THRESH' : (float, None),
+    }  # type: Dict[str, Union[str, int]]
+    #alternate_names = {'PRES'}
+    #allow_ints = True
+
+    #def __init__(self, key, value, options):
+        #CheckCard.__init__(self, key, value, options)
+
+    def export_to_hdf5(self, hdf5_file, encoding):
+        export_to_hdf5_check(self, hdf5_file, encoding)
+
 
 class WEIGHTCHECK(CheckCard):
     """
@@ -861,6 +841,36 @@ class WEIGHTCHECK(CheckCard):
 
     def export_to_hdf5(self, hdf5_file, encoding):
         export_to_hdf5_check(self, hdf5_file, encoding)
+
+class DSAPRT(CheckCard):
+    """
+    DSAPRT(END=SENS)=ALL
+    DSAPRT(FORMATTED,EXPORT)
+    DSAPRT(FORMATTED,START=FIRST,BY=3,END=LAST)=101
+    DSAPRT(UNFORMATTED,START=FIRST)
+    DSAPRT(UNFORMATTED,EXPORT)
+    DSAPRT(FORMATTED,END=4)=ALL
+    DSAPRT(UNFORMATTED,END=SENS)=ALL
+    DSAPRT(NOPRINT, EXPORT)
+    """
+    # not done...
+    type = 'DSAPRT'
+    allowed_keys = {
+        'FORMATTED', 'UNFORMATTED', 'EXPORT',
+        'START', 'BY', 'END',}
+    allowed_strings = {'ALL'}
+    allowed_values = {
+        'START' : (str, ['FIRST']),
+        'BY' : (int, None),
+        'END' : (str, ['SENS', 'LAST']),
+    }
+
+    def __init__(self, key, value, options):
+        CheckCard.__init__(self, key, value, options)
+
+    def export_to_hdf5(self, hdf5_file, encoding):
+        export_to_hdf5_check(self, hdf5_file, encoding)
+
 
 class MODCON(CheckCard):
     """
@@ -1068,27 +1078,19 @@ class VOLUME(CaseControlCard):
                 value = sline[i+1]
                 data[word] = int(value)
                 i += 2
+            elif word == 'DIRECT':
+                # this is confusing...
+                value = 'NONE'
+                if i+1 < len(sline):
+                    #print(sline)
+                    value = sline[i+1]
+                #data[word] = None
+                data[word] = value
+                assert value in ['NONE'], 'DIRECT value=%r' % value
+                i += 2
             else:
-                raise RuntimeError(word)
+                raise RuntimeError(f'VOLUME: {word}; {sline}\n{line}')
         return VOLUME(data)
-
-    #@staticmethod
-    #def _update_key(key):
-        #"""
-        #STIFFNESS, DAMPING, K4DAMP, and LOADS may be abbreviated to STIF,
-        #DAMP, K4DA, and LOAD, respectively.
-
-        #"""
-        #key = key.strip()
-        #if key == 'STIF':
-            #key = 'STIFFNESS'
-        #elif key == 'DAMP':
-            #key = 'DAMPING'
-        #elif key == 'K4DA':
-            #key = 'K4DAMP'
-        #elif key == 'LOAD':
-            #key = 'LOADS'
-        #return key
 
     def write(self, spaces):
         msg = spaces + str(self)
@@ -1102,6 +1104,151 @@ class VOLUME(CaseControlCard):
                 continue
             msg += ' %s %s' % (key, value)
         return msg + '\n'
+
+class SURFACE(CaseControlCard):
+    """
+    SURFACE 10 SET 9 NORMAL X3
+    SURFACE 41 SET 42 FIBRE ALL NORMAL Z
+    VOLUME id SET sid, [PRINCIPAL, DIRECT STRESS] [SYSTEM {ELEMENT, CORD cid, BASIC}]
+
+    """
+    type = 'VOLUME'
+
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+
+    #def export_to_hdf5(self, hdf5_file, encoding):
+        #if isinstance(self.data, list):
+            #data_group = hdf5_file.create_group('data')
+            #keys = []
+            #values = []
+            #for (key, value) in self.data:
+                #keys.append(key)
+                #values.append(value)
+            ##print('keys = ', keys)
+            ##print('values = ', values)
+            #keys_bytes = [
+                #key.encode(encoding) if isinstance(key, str) else key
+                #for key in keys]
+            #values_bytes = [
+                #value.encode(encoding) if isinstance(value, str) else value
+                #for value in values]
+            #data_group.create_dataset('keys', data=keys_bytes)
+
+            #if None in values_bytes:
+                #value_group = data_group.create_group('values')
+                #for i, value in enumerate(values):
+                    #if value is None:
+                        #continue
+                    #value_group.create_dataset(str(i), data=value)
+            #else:
+                #data_group.create_dataset('values', data=values_bytes)
+            ##hdf5_file.create_dataset('data', data=data_bytes)
+        #else:
+            #raise NotImplementedError(self.data)
+
+    @classmethod
+    def add_from_case_control(cls, line):
+        """add method used by the CaseControl class"""
+        sline = line.split()
+
+        i = 0
+        data = {}
+        while i < len(sline):
+            word = sline[i]
+            if word == 'SURFACE':
+                value = sline[i+1]
+                data[word] = int(value)
+                i += 2
+            elif word == 'SET':
+                value = sline[i+1]
+                data[word] = int(value)
+                i += 2
+            elif word == 'FIBRE':
+                value = sline[i+1]
+                data[word] = value
+                assert value in  ['ALL'], 'SURFACE: %r=%r' % (word, value)
+                i += 2
+            elif word == 'NORMAL':
+                value = sline[i+1]
+                data[word] = value
+                assert value in  ['Z', 'X1', 'X2', 'X3'], 'SURFACE: %r=%r' % (word, value)
+                i += 2
+            else:
+                raise RuntimeError(word)
+        return SURFACE(data)
+
+    def write(self, spaces):
+        msg = spaces + str(self)
+        return msg
+
+    def __repr__(self):
+        """writes a card"""
+        msg = 'SURFACE %i' % self.data['SURFACE']
+        for key, value in sorted(self.data.items()):
+            if key == 'SURFACE':
+                continue
+            msg += ' %s %s' % (key, value)
+        return msg + '\n'
+
+
+class CSCALE(CaseControlCard):
+    """
+    CSCALE 1.3
+
+    """
+    type = 'CSCALE'
+
+    def __init__(self, data):
+        super().__init__()
+        self.data = data
+
+    #def export_to_hdf5(self, hdf5_file, encoding):
+        #if isinstance(self.data, list):
+            #data_group = hdf5_file.create_group('data')
+            #keys = []
+            #values = []
+            #for (key, value) in self.data:
+                #keys.append(key)
+                #values.append(value)
+            ##print('keys = ', keys)
+            ##print('values = ', values)
+            #keys_bytes = [
+                #key.encode(encoding) if isinstance(key, str) else key
+                #for key in keys]
+            #values_bytes = [
+                #value.encode(encoding) if isinstance(value, str) else value
+                #for value in values]
+            #data_group.create_dataset('keys', data=keys_bytes)
+
+            #if None in values_bytes:
+                #value_group = data_group.create_group('values')
+                #for i, value in enumerate(values):
+                    #if value is None:
+                        #continue
+                    #value_group.create_dataset(str(i), data=value)
+            #else:
+                #data_group.create_dataset('values', data=values_bytes)
+            ##hdf5_file.create_dataset('data', data=data_bytes)
+        #else:
+            #raise NotImplementedError(self.data)
+
+    @classmethod
+    def add_from_case_control(cls, line):
+        """add method used by the CaseControl class"""
+        sline = line.split()
+        value = float(sline[1])
+        return CSCALE(value)
+
+    def write(self, spaces):
+        msg = spaces + str(self)
+        return msg
+
+    def __repr__(self):
+        """writes a card"""
+        msg = 'CSCALE %s\n' % self.value
+        return msg
 
 def export_to_hdf5_check(self, hdf5_file, encoding):
     #print(hdf5_file)
@@ -1148,12 +1295,3 @@ def export_to_hdf5_check(self, hdf5_file, encoding):
 
 #-------------------------------------------------------------------------------
 
-CLASS_MAP = {
-    'GROUNDCHECK' : GROUNDCHECK,
-    'EXTSEOUT' : EXTSEOUT,
-    'WEIGHTCHECK' : WEIGHTCHECK,
-    'MODCON' : MODCON,
-    'SET' : SET,
-    'SETMC' : SETMC,
-    'ANALYSIS': ANALYSIS,
-}

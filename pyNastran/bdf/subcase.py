@@ -5,7 +5,7 @@ from numpy import ndarray
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils import object_attributes, deprecated
 
-from pyNastran.bdf.bdf_interface.subcase_cards import CLASS_MAP
+from pyNastran.bdf.bdf_interface.case_control_cards import CLASS_MAP
 from pyNastran.bdf.bdf_interface.subcase_utils import (
     write_stress_type, write_set, expand_thru_case_control)
 
@@ -1051,7 +1051,6 @@ class Subcase:
         return msg
 
 def _load_hdf5_param(group, key, encoding):
-    import h5py
     from pyNastran.utils.dict_to_h5py import _cast
     #print('-----------------------------------------')
     #print(type(key), key)
@@ -1093,7 +1092,7 @@ def _load_hdf5_param(group, key, encoding):
             value = value.tolist()
 
     elif 'object' in sub_group:
-        value, options = _load_hdf5_object(keys, sub_group)
+        value, options = _load_hdf5_object(key, keys, sub_group, encoding)
 
 
     if len(keys) > 0:
@@ -1104,19 +1103,18 @@ def _load_hdf5_param(group, key, encoding):
     #print(value, options, param_type)
     return value, options, param_type
 
-def _load_hdf5_object(keys, sub_group):
+def _load_hdf5_object(key, keys, sub_group, encoding):
+    import h5py
+    from pyNastran.utils.dict_to_h5py import _cast
     keys.remove('object')
     sub_groupi = sub_group['object']
 
     Type = sub_groupi.attrs['type']
-    print('Type =', Type)
     cls = CLASS_MAP[Type]
 
     if hasattr(cls, 'load_hdf5'):
         class_obj, options = cls.load_hdf5(sub_groupi, 'utf8')
         value = class_obj
-        return value, options
-
         return value, options
 
     use_data = True

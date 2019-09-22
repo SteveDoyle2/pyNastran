@@ -28,14 +28,17 @@ from cpylog import get_logger
 
 #from pyNastran.bdf import subcase
 from pyNastran.bdf.subcase import Subcase, update_param_name
+from .bdf_interface.case_control_cards import CLASS_MAP
 from pyNastran.bdf.bdf_interface.subcase_cards import (
-    VOLUME, EXTSEOUT, WEIGHTCHECK, GROUNDCHECK,
+    #SURFACE, VOLUME, CSCALE,
+    #EXTSEOUT,
+    WEIGHTCHECK, GROUNDCHECK, DSAPRT,
     MODCON, SET, SETMC, #AXISYMMETRIC,
     INTSTR_CARD_DICT, INTSTR_CARD_NAMES,
-    STR_CARD_DICT, STR_CARD_NAMES,
     split_by_mixed_commas_parentheses,
 )
 
+from pyNastran.bdf.bdf_interface.subcase_cards_str import STR_CARD_DICT, STR_CARD_NAMES
 from pyNastran.bdf.bdf_interface.subcase_cards_int import INT_CARD_DICT, INT_CARD_NAMES
 from pyNastran.bdf.bdf_interface.subcase_cards_check import CHECK_CARD_DICT, CHECK_CARD_NAMES
 
@@ -527,9 +530,9 @@ class CaseControlDeck:
 
             line_upper = line.upper()
             if key == 'BEGIN':
-                if ('NLSTEP' in line_upper or 'SUBSTEP' in line_upper or 'SUBSEQ' in line_upper or
-                    'SUBCOM' in line_upper or 'REPCASE' in line_upper or 'NONLINEAR' in line_upper):
-                    asdfadsf
+                #if ('NLSTEP' in line_upper or 'SUBSTEP' in line_upper or 'SUBSEQ' in line_upper or
+                    #'SUBCOM' in line_upper or 'REPCASE' in line_upper or 'NONLINEAR' in line_upper):
+                    #asdfadsf
                 if 'BULK' not in line_upper and 'SUPER' not in line_upper:
                     raise NotImplementedError('line=%r' % line)
                 if self._begin_count == 1:
@@ -625,7 +628,7 @@ class CaseControlDeck:
         for letter in line:
             if letter == '=':
                 equals_count += 1
-        line_upper = line.upper().expandtabs()
+        line_upper = line.upper().expandtabs().strip()
 
         #print("line_upper = %r" % line)
         #print(STR_CARD_NAMES, line_upper.startswith(STR_CARD_NAMES))
@@ -677,6 +680,13 @@ class CaseControlDeck:
             value = obj.value  # type: int
             param_type = 'SET-type'
 
+        elif line_upper.startswith('SETS DEFINITION'):
+            # just OUTPUT(PLOT)
+            obj = CHECK_CARD_DICT['OUTPUT'].add_from_case_control(line, 'OUTPUT(PLOT)', lines, i)
+            value = obj.value
+            options = obj.options
+            param_type = 'STRESS-type'
+            key = obj.type
         elif line_upper.startswith('OUTPUT'):
             obj = CHECK_CARD_DICT['OUTPUT'].add_from_case_control(line, line_upper, lines, i)
             value = obj.value
@@ -737,22 +747,42 @@ class CaseControlDeck:
             options = None
             param_type = 'OBJ-type'
             key = obj.type
-        elif line_upper.startswith('VOLUME'):
-            options = None
-            param_type = 'OBJ-type'
-            obj = VOLUME.add_from_case_control(line_upper.strip())
+
+        elif line_upper.startswith(STR_CARD_NAMES):
+            if '=' in line:
+                (name, value) = line_upper.strip().split('=')
+            else:
+                msg = 'expected item of form "name = value"   line=%r' % line.strip()
+                raise RuntimeError(msg)
+            name = name.strip()
+            try:
+                cls = STR_CARD_DICT[name[:4]]
+            except KeyError:
+                cls = STR_CARD_DICT[name]
+            obj = cls.add_from_case_control(line, line_upper, lines, i)
             value = obj
-            key = obj.type
-        elif line_upper.startswith('EXTSEOUT'):
             options = None
             param_type = 'OBJ-type'
-            obj = EXTSEOUT.add_from_case_control(line_upper.strip())
+            key = obj.type
+
+        elif line_upper.startswith(('CSCALE', 'SURFACE', 'VOLUME', 'EXTSEOUT')):
+            keyi = line_upper.split(' ')[0]
+            options = None
+            param_type = 'OBJ-type'
+            clsi = CLASS_MAP[keyi]
+            obj = clsi.add_from_case_control(line_upper.strip())
             value = obj
             key = obj.type
         elif line_upper.startswith('WEIGHTCHECK'):
             options = None
             param_type = 'OBJ-type'
             obj = WEIGHTCHECK.add_from_case_control(line, line_upper, lines, i)
+            value = obj
+            key = obj.type
+        elif line_upper.startswith('DSAPRT'):
+            options = None
+            param_type = 'OBJ-type'
+            obj = DSAPRT.add_from_case_control(line, line_upper, lines, i)
             value = obj
             key = obj.type
         elif line_upper.startswith('GROUNDCHECK'):
@@ -772,23 +802,6 @@ class CaseControlDeck:
             #param_type = 'OBJ-type'
             #value = AUXMODEL.add_from_case_control(line, line_upper, lines, i)
             #key = value.type
-
-        elif line_upper.startswith(STR_CARD_NAMES):
-            if '=' in line:
-                (name, value) = line_upper.strip().split('=')
-            else:
-                msg = 'expected item of form "name = value"   line=%r' % line.strip()
-                raise RuntimeError(msg)
-            name = name.strip()
-            try:
-                cls = STR_CARD_DICT[name[:4]]
-            except KeyError:
-                cls = STR_CARD_DICT[name]
-            obj = cls.add_from_case_control(line, line_upper, lines, i)
-            value = obj
-            options = None
-            param_type = 'OBJ-type'
-            key = obj.type
 
         elif line_upper.startswith('BEGIN'):  # begin bulk
             try:
