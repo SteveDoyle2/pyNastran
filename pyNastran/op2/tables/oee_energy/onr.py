@@ -94,7 +94,7 @@ class ONR(OP2Common):
         """
         prefix = ''
         postfix = ''
-        if self.table_name in [b'ONRGY1', b'ONRGY2']:
+        if self.table_name in [b'ONRGY1', b'ONRGY2', b'ONRGY']:
             pass
         elif self.table_name in [b'RANEATC']: #, b'OSTRMS1C']:
             self.format_code = 1

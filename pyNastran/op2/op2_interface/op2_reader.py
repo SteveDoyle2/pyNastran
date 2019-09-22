@@ -68,6 +68,8 @@ from pyNastran.op2.result_objects.design_response import (
 class SubTableReadError(Exception):
     pass
 
+NX_VERSIONS = ['8.0', '8.5', '9.1', '10.1', '11.0', '2019.2']
+
 DENSE_MATRICES = [
     b'KELM',
     b'MELM',
@@ -75,6 +77,7 @@ DENSE_MATRICES = [
     b'KELMP',
     b'MELMP',
 ]
+
 class OP2Reader:
     """Stores methods that aren't useful to an end user"""
     def __init__(self, op2):
@@ -206,7 +209,8 @@ class OP2Reader:
                 if version.startswith(b'NX'):
                     mode = 'nx'
                     version_str = version[2:].strip().decode(self._encoding)
-                    assert version_str in ['2019.2'], 'nx version=%r' % version_str
+                    if version_str not in NX_VERSIONS:
+                        self.log.warning('nx version=%r is not supported' % version_str)
                 elif version.startswith(b'MODEP'):
                     # TODO: why is this separate?
                     # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2

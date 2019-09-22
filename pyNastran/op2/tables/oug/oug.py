@@ -474,7 +474,7 @@ class OUG(OP2Common):
         """
         self._setup_op2_subcase('velocity')
         if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1']:
-            assert self.thermal == 0, self.code_information()
+            assert self.thermal in [0, 1], self.code_information()
             result_name = 'velocities'
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
             result_name = 'velocities_ROUGV1'

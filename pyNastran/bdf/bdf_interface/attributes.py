@@ -251,6 +251,7 @@ class BDFAttributes:
             146: 'SEAERO',  # dynamic aeroelastic
             153: 'NLSCSH',  # nonlinear static thermal
             159: 'NLTCSH',  # nonlinear transient thermal
+            #187 - Dynamic Design Analysis Method
             190: 'DBTRANS',
             200: 'DESOPT',  # optimization
         }

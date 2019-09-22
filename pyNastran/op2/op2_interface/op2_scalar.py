@@ -762,7 +762,7 @@ STR_PARAMS_1 = [
     # TODO: remove these as they're in the matrix test and are user
     #       defined PARAMs; arguably all official examples should just work
     # TODO: add an option for custom PARAMs
-    b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH']
+    b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', b'DEBUG']
 
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
