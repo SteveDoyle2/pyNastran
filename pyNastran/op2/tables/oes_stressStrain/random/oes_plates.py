@@ -51,12 +51,56 @@ class RandomPlateArray(OES_Object):
         nnodes = self.get_nnodes()
 
         #self.names = []
-        #self.nelements //= nnodes
-        self.nelements //= self.ntimes
-        #print('element_type=%r ntimes=%s nelements=%s nnodes=%s ntotal=%s subtitle=%s' % (
-            #self.element_type, self.ntimes, self.nelements, nnodes, self.ntotal, self.subtitle))
+        self.nelements //= nnodes
+        #print('element_type=%r ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
+            #self.element_type, self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        #self.nelements //= self.ntimes
+        #self.ntotal = self.nelements # * 2
+        #if self.element_name == 'CTRIA3':
+        #print('element_type=%r ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
+            #self.element_type, self.ntimes, self.nelements, self.ntotal, self.subtitle))
+        #print(self)
+        if self.is_sort1:
+            # old
+            #ntimes = self.ntimes
+            #nelements = self.nelements
 
-        self.ntotal = self.nelements * nnodes * 2
+            ntimes = len(self._ntotals)
+            ntotal = self._ntotals[0]
+            nelements = ntotal // 2
+
+            #ntotal = self.ntotal
+            nx = ntimes
+            ny = nelements * 2
+            ntotal = self._ntotals[0]
+            #ntotal = nelements * 2
+            #if self.element_name in ['CTRIA3', 'CQUAD8']:
+            #print(f"SORT1 ntimes={ntimes} nelements={nelements} ntotal={ntotal}")
+        elif self.is_sort2:
+            # flip this to sort1?
+            #ntimes = self.ntotal
+            #nnodes = self.ntimes
+            #ntotal = nnodes
+            #nelements = self.ntimes
+            #ntimes = self.nelements # // nelements
+            #ntotal = self.ntotal
+            nelements = len(self._ntotals)
+            ntotal = self._ntotals[0]
+            ntimes = ntotal // 2
+
+            #print(self._ntotals)
+            ntotal = self._ntotals[0]
+            #nelements = len(self._ntotals)
+            #ntimes = ntotal // 2
+            #ntimes, nelements = nelements_real, ntimes_real
+            #ntotal = self.ntotal
+            ny = ntimes * 2
+            nx = nelements * 2
+            #if self.element_name in ['CTRIA3', 'CQUAD8']:
+            #print(f"SORT2 ntimes={ntimes} nelements={nelements} ntotal={ntotal}")
+        else:  # pragma: no cover
+            raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
+
         #self.ntotal
         self.itime = 0
         self.ielement = 0
@@ -65,21 +109,32 @@ class RandomPlateArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
+        #dtype = 'float32'
+        #if isinstance(self.nonlinear_factor, integer_types):
+            #dtype = 'int32'
+        self.build_data(ntimes, nelements, ntotal, nx, ny, self._times_dtype)
+
+    def build_data(self, ntimes, nelements, ntotal, nx, ny, dtype):
+        """actually performs the build step"""
+        self.ntimes = ntimes
+        self.nelements = nelements
+        #ntotal = nelements * 2
+        self.ntotal = ntotal
+        #_times = zeros(ntimes, dtype=dtype)
+        #element = zeros(nelements, dtype='int32')
+
+        self._times = zeros(ntimes, dtype)
         #self.ntotal = self.nelements * nnodes
 
-        self.element = zeros((self.ntotal, 2), 'int32')
+        self.element_node = zeros((nelements*2, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
+        #if not self.nelements * 2 == self.ntotal:
+            #msg = 'ntimes=%s nelements=%s nlayers=%s ntotal=%s' % (
+                #self.ntimes, self.nelements, self.nelements * 2, self.ntotal)
+            #raise RuntimeError(msg)
 
-        if not self.nelements * nnodes * 2 == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
-                                                                           self.nelements, nnodes,
-                                                                           self.nelements * nnodes,
-                                                                           self.ntotal)
-            raise RuntimeError(msg)
-
-        self.fiber_curvature = zeros(self.ntotal, 'float32')
+        self.fiber_curvature = zeros(ntotal, 'float32')
 
         # [oxx, oyy, txy]
         nresults = 3
@@ -87,7 +142,8 @@ class RandomPlateArray(OES_Object):
             # ovm
             nresults += 1
 
-        self.data = zeros((self.ntimes, self.ntotal, nresults), 'float32')
+        #print(f'ntimes={self.ntimes} nelements={self.nelements} ntotal={self.ntotal}')
+        self.data = zeros((nx, ny, nresults), 'float32')
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -95,7 +151,7 @@ class RandomPlateArray(OES_Object):
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
         self.data_frame = pd.Panel(self.data, items=column_values,
-                                   major_axis=self.element, minor_axis=headers).to_frame()
+                                   major_axis=self.element_node, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
 
@@ -119,7 +175,7 @@ class RandomPlateArray(OES_Object):
             i = 0
             if self.is_sort1:
                 for itime in range(ntimes):
-                    for ieid, eid in enumerate(self.element):
+                    for ieid, (eid, nid) in enumerate(self.element):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
                         (oxx1, oyy1, txy1) = t1
@@ -156,49 +212,91 @@ class RandomPlateArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, fd, oxx, oyy, txy):
-        self.add_eid_sort1(dt, eid, fd, oxx, oyy, txy)
+    def finalize(self):
+        """Calls any OP2 objects that need to do any post matrix calcs"""
+        if self.is_sort1:
+            return
+        #print('finalize random plate')
+        self.set_as_sort1()
+        #print(self.get_stats())
+        #print(self._times, self._times.dtype)
+        #print(self.element_node)
+        #aaa
 
-    def add_sort1(self, dt, eid, fd, oxx, oyy, txy):
-        """unvectorized method for adding SORT1 transient data"""
-        self.add_eid_sort1(dt, eid, fd, oxx, oyy, txy)
-
-    def add_eid_sort1(self, dt, eid, fd, oxx, oyy, txy):
+    def add_eid_sort1(self, dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2):
+        assert self.is_sort1, self.sort_method
+        #assert self.element_node.max() == 0, self.element_node
+        #if self.element_name in ['CTRIA3', 'CQUAD8']:
+        #print(f'SORT1 {self.element_name}: itime={self.itime} ielement={self.ielement} itotal={self.itotal} dt={dt} eid={eid} nid={nid} fd={fd1} oxx={oxx1}')
+        #print(f'SORT1 {self.element_name}: itime={self.itime} ielement={self.ielement} itotal={self.itotal+1} dt={dt} eid={eid} nid={nid} fd={fd2} oxx={oxx2}')
+            #print('%s: itime=%s itotal=%s dt=%s eid=%s fd=%s oxx=%s' % (self.element_name, self.itime, self.itotal, dt, eid, fd, oxx))
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
-        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
 
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        self.data[self.itime, self.itotal] = [oxx, oyy, txy]
-        self.element[self.itotal, :] = eid  # 0 is center
-        self.fiber_curvature[self.itotal] = fd
-        #self.ielement += 1
-        self.itotal += 1
-    #---------------------------------------------------------------------------
-
-    def add_new_eid_ovm_sort1(self, dt, eid, fd, oxx, oyy, txy, ovm):
-        self.add_eid_ovm_sort1(dt, eid, fd, oxx, oyy, txy, ovm)
-
-    def add_ovm_sort1(self, dt, eid, fd, oxx, oyy, txy, ovm):
-        """unvectorized method for adding SORT1 transient data"""
-        self.add_eid_ovm_sort1(dt, eid, fd, oxx, oyy, txy, ovm)
-
-    def add_eid_ovm_sort1(self, dt, eid, fd, oxx, oyy, txy, ovm):
-        self._times[self.itime] = dt
-        #print(self.element_types2, element_type, self.element_types2.dtype)
-        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
-
-        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        self.data[self.itime, self.itotal] = [oxx, oyy, txy, ovm]
-        self.element[self.itotal, :] = eid  # 0 is center
-        self.fiber_curvature[self.itotal] = fd
+        self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1]
+        self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
+        self.fiber_curvature[self.itotal] = fd1
         #self.ielement += 1
         self.itotal += 1
 
+        self.data[self.itime, self.itotal] = [oxx2, oyy2, txy2]
+        self.fiber_curvature[self.itotal] = fd2
+        self.itotal += 1
+
+    def add_eid_sort2(self, dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2):
+        #if self.element_name == 'CTRIA3':
+        #assert self.element_node.max() == 0, self.element_node
+        #print(self.element_node, nid)
+        #print(f'SORT2 {self.element_name}: itime={self.ielement} ielement={self.itime} itotal={self.itotal} dt={dt} eid={eid} nid={nid} fd={fd1} oxx={oxx1}')
+        #print(f'SORT2 {self.element_name}: itime={self.ielement} ielement={self.itime} itotal={self.itotal+1} dt={dt} eid={eid} nid={nid} fd={fd2} oxx={oxx2}')
+        self._times[self.ielement] = dt
+        #self._times_float[self.ielement] = dt
+        #print(self.element_types2, element_type, self.element_types2.dtype)
+
+
+        itime = self.ielement
+        ielement = self.itime
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+
+        self.element_node[2*ielement, :] = [eid, nid]  # 0 is center
+        self.element_node[2*ielement+1, :] = [eid, nid]  # 0 is center
+
+        self.fiber_curvature[ielement] = fd1
+        self.fiber_curvature[2*ielement+1] = fd2
+
+        self.data[itime, 2*ielement, :] = [oxx1, oyy1, txy1]
+        self.data[itime, 2*ielement+1, :] = [oxx2, oyy2, txy2]
+
+        self.itotal += 1
+        self.ielement += 1
+        #print(self.element_node)
     #---------------------------------------------------------------------------
 
-    def add_new_node_sort1(self, dt, eid, fd, oxx, oyy, txy):
-        self.add_eid_sort1(dt, eid, fd, oxx, oyy, txy)
+    def add_eid_ovm_sort1(self, dt, eid, nid,
+                          fd1, oxx1, oyy1, txy1, ovm1,
+                          fd2, oxx2, oyy2, txy2, ovm2):
+        """unvectorized method for adding SORT1 transient data"""
+        assert self.is_sort1, self.sort_method
+        self._times[self.itime] = dt
+        #print(self.element_types2, element_type, self.element_types2.dtype)
+        #if self.element_name == 'CTRIA3':
+        #print('%s itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.element_name, self.itotal, dt, eid, nid, oxx1))
+
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1, ovm1]
+        self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
+        self.fiber_curvature[self.itotal] = fd1
+        #self.ielement += 1
+        self.itotal += 1
+
+        self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1, ovm1]
+        self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
+        self.fiber_curvature[self.itotal] = fd2
+        self.itotal += 1
+        #print(self.element_node)
+
+    #---------------------------------------------------------------------------
 
     def get_stats(self, short=False):
         if not self.is_built:
@@ -210,17 +308,17 @@ class RandomPlateArray(OES_Object):
 
         nelements = self.nelements
         ntimes = self.ntimes
-        nnodes = self.element.shape[0]
+        nnodes = self.element_node.shape[0]
         #ntotal = self.ntotal
+
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i\n'
-                       % (self.__class__.__name__, ntimes, nelements, nnodes))
+            msg.append(f'  type={self.class_name} ntimes={ntimes} nelements={nelements:d} nnodes={nnodes:d} table_name={self.table_name}\n')
         else:
-            msg.append('  type=%s nelements=%i nnodes=%i\n' % (self.__class__.__name__, nelements, nnodes))
+            msg.append(f'  type={self.class_name} nelements={nelements:d} nnodes={nnodes:d} {self.table_name}\n')
         msg.append('  eType, cid\n')
-        msg.append('  data: [ntimes, nnodes, 6] where 6=[%s]\n' % str(', '.join(self._get_headers())))
-        msg.append('  element.shape = %s\n' % str(self.element.shape).replace('L', ''))
+        msg.append('  data: [ntimes, nnodes, 3] where 3=[%s]\n' % str(', '.join(self._get_headers())))
+        msg.append('  element_node.shape = %s\n' % str(self.element_node.shape).replace('L', ''))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  %s\n' % self.element_name)
         msg += self.get_data_code()
