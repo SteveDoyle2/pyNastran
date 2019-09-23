@@ -8,7 +8,8 @@ All solid properties are defined in this file.  This includes:
  All solid properties are Property objects.
 
 """
-from typing import Dict, Any
+from __future__ import annotations
+from typing import Dict, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -19,6 +20,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
 
 class PLSOLID(Property):
@@ -429,6 +432,8 @@ class PSOLID(Property):
             isop = 'REDUCED'
         elif isop == 1:
             isop = 'FULL'
+        elif isop == 2:
+            pass
         self.isop = isop
 
         # PFLUID
@@ -444,7 +449,7 @@ class PSOLID(Property):
     def export_to_hdf5(cls, h5_file, model, pids):
         """exports the properties in a vectorized way"""
         encoding = model._encoding
-        comments = []
+        #comments = []
         mid = []
         cordm = []
         integ = []
@@ -490,6 +495,8 @@ class PSOLID(Property):
                 isop.append(b'REDUCED')
             elif prop.isop == 1:
                 isop.append(b'FULL')
+            elif prop.isop == 2:
+                isop.append('2')
             else:
                 isop.append(prop.isop.encode(encoding))
 
@@ -564,27 +571,28 @@ class PSOLID(Property):
             stress = 'GRID'
         elif stress == 1:
             stress = 'GAUSS'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('stress=%s and must be [0, 1]' % stress)
 
         if isop == 0:
             isop = 'REDUCED'
         elif isop == 1:
             isop = 'FULL'
-        else:
-            raise NotImplementedError('isop=%s and must be [0, 1]' % isop)
+        elif isop == 2:
+            pass
+        else:  # pragma: no cover
+            raise NotImplementedError('isop=%s and must be [0, 1, 2]' % isop)
 
         if fctn == 'SMEC':
             fctn = 'SMECH'
         elif fctn == 'PFLU':
             fctn = 'PFLUID'
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('PSOLID; fctn=%r' % fctn)
         return PSOLID(pid, mid, cordm, integ, stress, isop,
                       fctn, comment=comment)
 
-    def cross_reference(self, model):
-        # type: (Any) -> None
+    def cross_reference(self, model: BDF) -> None:
         """cross reference method for a PSOLID"""
         msg = ', which is required by PSOLID pid=%s' % (self.pid)
         self.mid_ref = model.Material(self.mid, msg)

@@ -791,7 +791,10 @@ class SPC(Constraint):
         """
         conid = data[0]
         nodes = [data[1]]
-        components = data[2]
+        components_str = sorted(str(data[2]))
+        #components_str = components_str.sort()
+        components = int(''.join(components_str))
+
         assert 0 <= components <= 123456, data
         enforced = [data[3]]
         assert conid > 0, data

@@ -1252,7 +1252,8 @@ class GEOM4(GeomCommon):
         """
         nentries = 0
         nints = (len(data) - n) // 4
-        idata = unpack('%s%ii' % (self._endian, nints), data[n:])
+        fmti = self._endian + b'%ii' % nints
+        idata = unpack(fmti, data[n:])
         i = 0
         #print('idata = %s' % idata)
         nidata = len(idata)

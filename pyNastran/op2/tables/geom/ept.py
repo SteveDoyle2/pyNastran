@@ -1745,7 +1745,7 @@ class EPT(GeomCommon):
             #print(out)
             idi, poly1, poly2, poly3, cid, typei, typeid = out
             typei = typei.rstrip().decode('latin1')
-            assert typei in ['SET'], (idi, poly1, poly2, poly3, cid, typei, typeid)
+            assert typei in ['SET', 'ELID'], f'idi={idi} poly1={poly1} poly2={poly2} poly3={poly3} cid={cid} typei={typei} typeid={typeid}'
             if self.is_debug_file:
                 self.binary_debug.write('  PVAL=%s\n' % str(out))
             #print(idi, poly1, poly2, poly3, cid, typei, typeid)

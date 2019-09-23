@@ -515,6 +515,8 @@ class GEOM1(GeomCommon):
                 superelement_type = 'PRIMARY'
             elif superelement_type == 6:
                 superelement_type = 'MIRROR'
+            elif superelement_type == 7:
+                superelement_type = 'FRFOP2'
 
             if loc == 1:
                 loc = 'YES'

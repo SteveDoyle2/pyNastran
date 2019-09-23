@@ -1014,7 +1014,7 @@ class SEBULK(BaseCard):
                       loc=loc, unitno=unitno, comment=comment)
 
     def validate(self):
-        assert self.superelement_type in ['PRIMARY', 'REPEAT', 'MIRROR', 'COLLCTR', 'EXTERNAL', 'EXTOP2'], self.superelement_type
+        assert self.superelement_type in ['PRIMARY', 'REPEAT', 'MIRROR', 'COLLCTR', 'EXTERNAL', 'EXTOP2', 'FRFOP2'], f'superelement_type={self.superelement_type}\n{self}'
         assert self.loc in ['YES', 'NO'], self.loc
         assert self.method in ['AUTO', 'MANUAL'], self.method
 

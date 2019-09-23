@@ -6,8 +6,6 @@ defines:
 """
 
 import numpy as np
-#from numpy import radians, abs, angle  # ,sin, cos
-#from cmath import rect  # polar
 
 
 def polar_to_real_imag(mag, phase):

@@ -176,9 +176,11 @@ class MATS1(MaterialDependence):
             Type = 'NLELAST'
         elif Type == 2:
             Type = 'PLASTIC'
-        else:
-            raise RuntimeError('Invalid Type:  Type=%s; must be 1=NLELAST '
-                               'or 2=PLASTIC' % (Type))
+        elif Type == 3:
+            Type = 'PLSTRN'
+        else:  # pragma: no cover
+            raise RuntimeError(f'Invalid Type:  mid={mid}; Type={Type}; must be 1=NLELAST, '
+                               '2=PLASTIC, or 3=PLSTRN')
         return MATS1(mid, tid, Type, h, hr, yf, limit1, limit2, comment=comment)
 
     def Yf(self):

@@ -1753,7 +1753,9 @@ class TABRNDG(RandomTable):
 def _map_axis(axis):
     if axis == 0:
         axis_type = 'LINEAR'
-    else:
+    elif axis == 1:
+        axis_type = 'LOG'
+    else: # pragma: no cover
         raise ValueError('axis=%r' % axis)
     return axis_type
 

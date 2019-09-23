@@ -991,7 +991,7 @@ class OP2Reader:
             except FortranMarkerError:
                 op2.show_ndata(100)
                 raise
-            nfields = op2.get_marker1(rewind=True)
+            nfields = self.get_marker1(rewind=True)
             if nfields > 0:
                 unused_data = self._read_record()
                 #self.show_data(data, types='s', endian=None)
@@ -1001,7 +1001,7 @@ class OP2Reader:
             else:
                 raise RuntimeError('nfields=%s' % nfields)
             marker -= 1
-        unused_marker_end = op2.get_marker1(rewind=False)
+        unused_marker_end = self.get_marker1(rewind=False)
 
     def read_fol(self):
         """
@@ -3439,7 +3439,7 @@ class OP2Reader:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         elif ndata == 12:
-            subtable_name, ten = unpack(self._endian + b'8si', data)
+            subtable_name, unused_ten = unpack(self._endian + b'8si', data)
             subtable_name = subtable_name.strip().decode(self._encoding)
             #assert ten == 10, self.show_data(data, types='ifs', endian=None)
             assert subtable_name in ['GPL', 'GPLS'], subtable_name
@@ -3702,6 +3702,7 @@ class OP2Reader:
                     data, ndata = self._read_record_ndata()
                     unused_n = table4_parser(data, ndata)
                 #del n
+        return None
 
     def show(self, n, types='ifs', endian=None):  # pragma: no cover
         """

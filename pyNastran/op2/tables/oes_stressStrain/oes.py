@@ -4278,66 +4278,8 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CQUAD4-144/CQUAD8... random SORT%s' % self.sort_method)
-                n = 0
                 #numwide_random = 2 + 9 * nnodes_all
-                center_format = self._endian + self._analysis_code_fmt + b'4s i8f'
-                node_format = self._endian + b'i8f'
-                cs = Struct(center_format)
-                ns = Struct(node_format)
-
-                if self.is_debug_file:
-                    self.binary_debug.write(
-                        '  [cap, element1, element2, ..., cap]\n'
-                        '  cap = %i  # assume 1 cap when there could have been multiple\n'
-                        '  #elementi = [centeri, node1i, node2i, node3i, node4i]\n'
-                        '  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1,\n'
-                        '  #                                fd2, sx2, sy2, txy2,)]\n'
-                        '  #nodeji = [grid, fd1, sx1, sy1, txy1,\n'
-                        '  #                fd2, sx2, sy2, txy2,)]\n'
-                        '  nelements=%i; nnodes=%i # +1 centroid\n' % (ndata, nelements, nnodes))
-
-                grid_center = 0
-                for unused_i in range(nelements):
-                    edata = data[n:n+44]
-                    #self.show_data(edata)
-                    out = cs.unpack(edata)  # len=17*4
-                    #print(out)
-                    # j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
-                    eid_device = out[0]
-                    (eid_device, unused_j,
-                     grid,
-                     fd1, sx1, sy1, txy1,
-                     fd2, sx2, sy2, txy2,) = out
-                    #print(out)
-
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
-
-                    obj.add_eid_sort1(dt, eid, grid_center, fd1, sx1, sy1, txy1)
-                    obj.add_eid_sort1(dt, eid, grid_center, fd2, sx2, sy2, txy2)
-                    n += 44
-                    for inode in range(nnodes):
-                        out = ns.unpack(data[n:n + 36])
-                        #print(out)
-                        (grid,
-                         fd1, sx1, sy1, txy1,
-                         fd2, sx2, sy2, txy2,) = out
-                        #print(out)
-                        if self.is_debug_file:
-                            d = tuple([grid,
-                                       fd1, sx1, sy1, txy1,
-                                       fd2, sx2, sy2, txy2])
-                            self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
-                        assert isinstance(grid, int), grid
-                        assert grid > 0, grid
-
-                        # leaving off grid
-                        obj.add_eid_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
-                        obj.add_eid_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
-                        n += 36
+                n = oes_quad4_144_random(self, data, obj, nelements, ntotal, nnodes, ndata)
 
             #if self.read_mode == 1:
                 #msg = ''
@@ -6375,4 +6317,111 @@ def oes_ctria3_random_11(self, data, obj, nelements, ntotal):
                               fd1, sx1, sy1, txy1, ovm1,
                               fd2, sx2, sy2, txy2, ovm2)
         n += ntotal
+    return n
+
+def oes_quad4_144_random(self, data, obj, nelements, ntotal, nnodes, ndata):
+    n = 0
+    center_format = self._endian + self._analysis_code_fmt + b'4s i8f'
+    node_format = self._endian + b'i8f'
+    cs = Struct(center_format)
+    ns = Struct(node_format)
+
+    if self.is_debug_file:
+        self.binary_debug.write(
+            '  [cap, element1, element2, ..., cap]\n'
+            '  cap = %i  # assume 1 cap when there could have been multiple\n'
+            '  #elementi = [centeri, node1i, node2i, node3i, node4i]\n'
+            '  #centeri = [eid_device, j, grid, fd1, sx1, sy1, txy1,\n'
+            '  #                                fd2, sx2, sy2, txy2,)]\n'
+            '  #nodeji = [grid, fd1, sx1, sy1, txy1,\n'
+            '  #                fd2, sx2, sy2, txy2,)]\n'
+            '  nelements=%i; nnodes=%i # +1 centroid\n' % (ndata, nelements, nnodes))
+
+    grid_center = 0
+    if self.sort_method == 1:
+        for unused_i in range(nelements):
+            edata = data[n:n+44]
+            #self.show_data(edata)
+            out = cs.unpack(edata)  # len=17*4
+            #print(out)
+            # j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
+            eid_device = out[0]
+            (eid_device, unused_j,
+             grid,
+             fd1, sx1, sy1, txy1,
+             fd2, sx2, sy2, txy2,) = out
+            #print(out)
+
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, self.nonlinear_factor, self.sort_method)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+
+            obj.add_eid_sort1(dt, eid, grid_center, fd1, sx1, sy1, txy1, fd2, sx2, sy2, txy2)
+            n += 44
+            for inode in range(nnodes):
+                out = ns.unpack(data[n:n + 36])
+                #print(out)
+                (grid,
+                 fd1, sx1, sy1, txy1,
+                 fd2, sx2, sy2, txy2,) = out
+                #print(out)
+                if self.is_debug_file:
+                    d = tuple([grid,
+                               fd1, sx1, sy1, txy1,
+                               fd2, sx2, sy2, txy2])
+                    self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
+                assert isinstance(grid, int), grid
+                assert grid > 0, grid
+
+                # leaving off grid
+                obj.add_eid_sort1(dt, eid, grid,
+                                  fd1, sx1, sy1, txy1,
+                                  fd2, sx2, sy2, txy2)
+                n += 36
+    else:
+        for unused_i in range(nelements):
+            edata = data[n:n+44]
+            #self.show_data(edata)
+            out = cs.unpack(edata)  # len=17*4
+            #print(out)
+            # j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
+            eid_device = out[0]
+            (eid_device, unused_j,
+             grid,
+             fd1, sx1, sy1, txy1,
+             fd2, sx2, sy2, txy2,) = out
+            #print(out)
+
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, self.nonlinear_factor, self.sort_method)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
+
+            obj.add_eid_sort2(dt, eid, grid_center,
+                              fd1, sx1, sy1, txy1,
+                              fd2, sx2, sy2, txy2)
+            n += 44
+            for inode in range(nnodes):
+                out = ns.unpack(data[n:n + 36])
+                #print(out)
+                (grid,
+                 fd1, sx1, sy1, txy1,
+                 fd2, sx2, sy2, txy2,) = out
+                #print(out)
+                if self.is_debug_file:
+                    d = tuple([grid,
+                               fd1, sx1, sy1, txy1,
+                               fd2, sx2, sy2, txy2])
+                    self.binary_debug.write('  node%i = [%s]\n' % (inode+1, ', '.join(['%r' % di for di in d])))
+                assert isinstance(grid, int), grid
+                assert grid > 0, grid
+
+                # leaving off grid
+                obj.add_eid_sort2(dt, eid, grid,
+                                  fd1, sx1, sy1, txy1,
+                                  fd2, sx2, sy2, txy2)
+                n += 36
     return n

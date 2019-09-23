@@ -870,11 +870,16 @@ class QHBDY(ThermalLoad):
         flag_int = data[1]
         q0 = data[2]
         af = data[3]
+        grids = list(data[4:])
+
         if flag_int == 1:
             flag = 'POINT'
             nnodes = 1
         elif flag_int == 2:
             flag = 'LINE'
+            nnodes = 2
+        elif flag_int == 3:
+            flag = 'REV'
             nnodes = 2
         elif flag_int == 5:
             flag = 'AREA4'
@@ -884,7 +889,6 @@ class QHBDY(ThermalLoad):
             nnodes = 8
         else:  # pragma: no cover
             raise NotImplementedError(f'QHBDY sid={sid} flag_int={flag_int} data={data[2:]}')
-        grids = list(data[4:])
         grids2 = grids[:nnodes]
         #print(sid, flag_int, flag, q0, af, grids, grids2)
         return QHBDY(sid, flag, q0, grids2, af=af, comment=comment)

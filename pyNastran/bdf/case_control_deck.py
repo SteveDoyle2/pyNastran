@@ -173,7 +173,8 @@ class CaseControlDeck:
             if h5attr in ['_begin_count', 'debug', 'write_begin_bulk']: # scalars
                 # simple export
                 hdf5_file.create_dataset(h5attr, data=value)
-            elif h5attr in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']: # lists of strings
+            elif h5attr in ['reject_lines', 'begin_bulk', 'lines', 'output_lines']:
+                # lists of strings
                 if len(value) == 0:
                     continue
                 value_bytes = [line.encode(encoding) for line in value]
@@ -512,9 +513,9 @@ class CaseControlDeck:
 
             line_upper = line.upper()
             if key == 'BEGIN':
-                if ('NLSTEP' in line_upper or 'SUBSTEP' in line_upper or 'SUBSEQ' in line_upper or
-                    'SUBCOM' in line_upper or 'REPCASE' in line_upper or 'NONLINEAR' in line_upper):
-                    asdfadsf
+                #if ('NLSTEP' in line_upper or 'SUBSTEP' in line_upper or 'SUBSEQ' in line_upper or
+                    #'SUBCOM' in line_upper or 'REPCASE' in line_upper or 'NONLINEAR' in line_upper):
+                    #asdfadsf
                 if 'BULK' not in line_upper and 'SUPER' not in line_upper:
                     raise NotImplementedError('line=%r' % line)
                 if self._begin_count == 1:
