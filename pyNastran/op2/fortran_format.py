@@ -113,7 +113,7 @@ class FortranFormat:
         self._cleanup_data_members()
         return n
 
-    def _reset_vector_counter(self):
+    def _reset_vector_counter(self) -> None:
         """
         if reading the data
         0 - non-vectorized
@@ -172,7 +172,7 @@ class FortranFormat:
             self.log.error(msgb)
             raise RuntimeError(msga + '\n' + msgb)
 
-    def _init_vector_counter(self, record_len):
+    def _init_vector_counter(self, record_len: int) -> None:
         """
         Sets the table size
 
@@ -180,6 +180,7 @@ class FortranFormat:
         ----------
         record_len : int
             the length of the record block
+
         """
         if not(hasattr(self, 'obj') and self.obj is not None):
             return
@@ -210,6 +211,7 @@ class FortranFormat:
             assert isinstance(self.obj.ntotal, integer_types), type(self.obj.ntotal)
         else:
             self.log.warning('obj=%s doesnt have ntimes' % self.obj.__class__.__name__)
+        return
 
     def _cleanup_data_members(self):
         """deletes variables from previous tables"""

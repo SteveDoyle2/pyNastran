@@ -11,6 +11,12 @@ from pyNastran.utils import object_attributes, object_methods
 from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_sort_method_from_table_name
 from pyNastran.op2.op2_interface.write_utils import write_table_header, export_to_hdf5
 
+GRID_TYPE_INT_TO_STR = {
+    1 : 'G', # GRID
+    2 : 'S', # SPOINT
+    7 : 'L', # RIGID POINT (e.g. RBE3)
+    0 : 'H', # SECTOR/HARMONIC/RING POINT
+}
 
 class BaseScalarObject(Op2Codes):
     """
@@ -185,9 +191,6 @@ class ScalarObject(BaseScalarObject):
             self._set_data_members()
         #print(self.code_information())
 
-    #def isImaginary(self):
-        #return bool(self.sort_bits[1])
-
     def _get_stats_short(self):
         msg = []
         class_name = self.__class__.__name__
@@ -256,7 +259,6 @@ class ScalarObject(BaseScalarObject):
         """gets the h5 result group"""
         code = self._get_code()
         case_name = 'Subcase=%s' % str(code) # (self.isubcase)
-        #print('self.h5_file =', self.h5_file)
         if case_name in self.h5_file:
             subcase_group = self.h5_file[case_name]
         else:
@@ -309,7 +311,6 @@ class ScalarObject(BaseScalarObject):
                 print("  key=%s value=%s; value is bytes" % (key, value))
             self.__setattr__(key, value)
             #print("  key=%s value=%s" % (key, value))
-        #if self.table_name in [b'OES1X', b'OES1X1']:
 
     def get_data_code(self, prefix='  '):
         msg = ''
@@ -429,15 +430,9 @@ class ScalarObject(BaseScalarObject):
         =5, p-elements, 0-DOF
         -6, p-elements, number of DOF
         """
-        if grid_type == 1:
-            grid_type_str = 'G'  # GRID
-        elif grid_type == 2:
-            grid_type_str = 'S'  # SPOINT
-        elif grid_type == 7:
-            grid_type_str = 'L'  # RIGID POINT (e.g. RBE3)
-        elif grid_type == 0:
-            grid_type_str = 'H'  # SECTOR/HARMONIC/RING POINT
-        else:
+        try:
+            grid_type_str = GRID_TYPE_INT_TO_STR[grid_type]
+        except KeyError:
             raise RuntimeError('grid_type=%s' % grid_type)
         return grid_type_str
 

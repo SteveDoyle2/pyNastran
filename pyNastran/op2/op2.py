@@ -233,7 +233,8 @@ class OP2(OP2_Scalar, OP2Writer):
                     return is_equal
         return True
 
-    def _is_op2_case_equal(self, table_type, key, a_obj, b_obj, stop_on_failure=True, debug=False):
+    def _is_op2_case_equal(self, table_type, key, a_obj, b_obj,
+                           stop_on_failure: bool=True, debug: bool=False) -> bool:
         """
         Helper method for ``assert_op2_equal``
 
@@ -302,9 +303,14 @@ class OP2(OP2_Scalar, OP2Writer):
 
         # use the array methods to check for equality
         # TODO: this can crash
-        if a_obj != b_obj:
-            self.log.warning('key=%s table_type=%r are not equal; class_name=%r' % (
-                key, table_type, aname))
+        try:
+            is_not_equal = a_obj != b_obj
+        except ValueError:
+            if stop_on_failure:
+                raise
+
+        if is_not_equal:
+            self.log.warning(f'key={key} table_type={table_type!r} are not equal; class_name={aname!r}')
             return False
         return True
 
@@ -318,10 +324,10 @@ class OP2(OP2_Scalar, OP2Writer):
             self.set_as_nx()
         elif mode.lower() == 'autodesk':
             self.set_as_autodesk()
-        elif mode.lower() == 'optistruct':
+        elif mode.lower() == 'optistruct': # radioss,
             self.set_as_optistruct()
         else:
-            raise RuntimeError(f"mode='{mode}' and must be in [msc, nx, autodesk, optistruct]") # radioss,
+            raise RuntimeError(f"mode='{mode}' and must be in [msc, nx, autodesk, optistruct]")
 
     def include_exclude_results(self,
                                 exclude_results: Optional[List[str]]=None,
@@ -660,8 +666,9 @@ class OP2(OP2_Scalar, OP2Writer):
 
         """
         # TODO: sorter = uniques.argsort()
-        #C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198: DeprecationWarning: unorderable dtypes;
-            #returning scalar but in the future this will be an error
+        #C:\Anaconda\lib\site-packages\pandas\core\algorithms.py:198:
+        #    DeprecationWarning: unorderable dtypes;
+        #    returning scalar but in the future this will be an error
 
         no_sort2_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
         result_types = self.get_table_types()
@@ -671,7 +678,8 @@ class OP2(OP2_Scalar, OP2Writer):
                 if hasattr(matrix, 'build_dataframe'):
                     matrix.build_dataframe()
                 else:
-                    self.log.warning('pandas: build_dataframe is not supported for key=%s type=%s' % (key, str(type(matrix))))
+                    self.log.warning('pandas: build_dataframe is not supported for key=%s type=%s' % (
+                        key, str(type(matrix))))
                     raise NotImplementedError()
                     #continue
 
@@ -737,6 +745,7 @@ class OP2(OP2_Scalar, OP2Writer):
             the path to the an hdf5 file
         combine : bool; default=True
             runs the combine routine
+
         """
         check_path(hdf5_filename, 'hdf5_filename')
         from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_file

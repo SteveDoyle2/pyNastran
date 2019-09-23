@@ -6,8 +6,7 @@ from typing import List, Union
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 
-def print_scientific_double(value):
-    # type: (float) -> str
+def print_scientific_double(value: float) -> str:
     """
     Prints a value in 16-character scientific double precision.
 
@@ -29,8 +28,7 @@ def print_scientific_double(value):
     return field
 
 
-def print_field_double(value):
-    # type: (Union[int, float, str, None]) -> str
+def print_field_double(value: Union[int, float, str, None]) -> str:
     """
     Prints a 16-character width field
 
@@ -51,8 +49,7 @@ def print_field_double(value):
     return field
 
 
-def print_card_double(fields, wipe_fields=True):
-    # type: (List[Union[int, float, str, None]], bool) -> str
+def print_card_double(fields: List[Union[int, float, str, None]], wipe_fields: bool=True) -> str:
     """
     Prints a nastran-style card with 16-character width fields.
 

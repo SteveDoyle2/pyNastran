@@ -911,9 +911,9 @@ class RealTableArray(TableArray):
 
     @classmethod
     def add_transient_case(cls, table_name, node_gridtype, data, isubcase,
-                       times,
-                       is_sort1=True, is_random=False, is_msc=True,
-                       random_code=0, title='', subtitle='', label=''):
+                           times,
+                           is_sort1=True, is_random=False, is_msc=True,
+                           random_code=0, title='', subtitle='', label=''):
 
         analysis_code = 6 # transient
         data_code = oug_data_code(table_name, analysis_code,

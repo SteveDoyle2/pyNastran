@@ -43,8 +43,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
 """
 import os
 from struct import Struct, unpack
-from collections import Counter
-from typing import List
+from typing import List, Tuple, Any
 
 from numpy import array
 import numpy as np
@@ -57,6 +56,9 @@ from pyNastran.op2.op2_interface.op2_reader import OP2Reader
 from pyNastran.bdf.cards.params import PARAM
 
 #============================
+
+from pyNastran.op2.op2_interface.msc_tables import MSC_RESULT_TABLES
+from pyNastran.op2.op2_interface.nx_tables import NX_RESULT_TABLES
 
 from pyNastran.op2.tables.lama_eigenvalues.lama import LAMA
 from pyNastran.op2.tables.oee_energy.onr import ONR
@@ -219,380 +221,6 @@ GEOM_TABLES = [
     #b'MONITOR',
     b'CASEXX',
 ]
-
-NX_RESULT_TABLES = [
-    # GEOM table
-    b'ICASE',
-
-    #-----------------------
-    # OESVM1  - OES Table of           element stresses
-    # OESVM1C - OES Table of composite element stresses
-    #           for frequency response analysis that includes von Mises stress
-    #           output in SORT1 format.
-    b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2',
-    b'OESVM1C', b'OSTRVM1C',
-
-    b'OESPSD2C', b'OSTPSD2C',
-    b'OSTRRMS1', b'OSTRMS1C',
-    b'OSTRNO1', b'OSTNO1C',
-    b'MDICT', b'BDICT', b'KDICTP', b'MDICTP',
-
-    #----------------------
-    # displacement/velocity/acceleration/eigenvector/temperature
-    # OUGV1  - Displacements in the global coordinate system
-    b'OUGV1',
-    #----------------------
-    # mpc forces - gset - sort 1
-    b'OQMG1',
-
-    #----------------------
-    # forces
-    # OEF1X - Element forces with intermediate (CBAR and CBEAM) station forces
-    #         and forces on nonlinear elements
-    b'OEF1X',
-
-    b'OES2C',
-    b'OSTR2C',
-    b'OSTRRMS1',
-    b'OSTRMS1C',
-    b'OSTRNO1',
-    b'OSTNO1C',
-    b'OESPSD2C',
-    b'OSTPSD2C',
-
-    b'OPHIG', # Eigenvectors in the basic coordinate system.
-
-    # ---------------------------------------------
-    # nx2019.2
-
-    # geometry
-    b'GPDTS',
-    # results
-    b'LAMAS', # Normal modes eigenvalue summary table for the structural portion of the model
-    b'LAMAF', # Normal modes eigenvalue summary table for the fluid portion of the model
-    b'GPLS',
-    b'TRMBU',  # Transfomration matrices from undeformed to basic
-    b'TRMBD',  # Transformation matrices from deformed to basic
-    b'OESNL2',
-    b'PVTS', # PVT0?
-    b'OGPFB2',   # Table of grid point forces in SORT2 format
-    b'OEFMXORD', # Data block that contains a list of element IDs with maximum frequency and element order diagnostics for FEMAO solution
-    b'BOPHIGF',  # Eigenvectors in the basic coordinate system for the fluid portion of the model.
-    b'BOPHIGS',  # Eigenvectors in the basic coordinate system for the structural portion of the model.
-    b'OUGMC1',   # Table of modal contributions for displacements, velocities, accelerations.
-    b'OUXY1',    # Table of displacements in SORT1 format for h-set or d-set.
-    b'OUXY2',    # Table of displacements in SORT2 format for h-set or d-set.
-    b'OSLIDE1',  # Incremental and total slide output for contact/glue.
-    b'OSLIDEG1', # Glue slide distance output
-    b'OBCKL',    # Table of load factor vs. cumulative arc-length in SORT2 format
-    b'OJINT',    # Table of J-integral for a crack defined by CRAKTP.
-    b'OERP',     # Equivalent radiated power output.
-    b'OPHSA',
-    b'ONMD',     # Normalized material density for topology optimization output
-    b'OSTR1IN',  # OES output table of initial strains at corner grids in the basic coordinate system
-    b'OSTR1G',   # Table of total strain at Gauss points in SORT1 format
-    b'OSTR1PLG', # Table of plastic strain at Gauss points in SORT1 format
-    b'OACPERF',  # Performance data that indicates computation time in seconds and memory consumed in GB per frequency per subcase for FEMAO analysis.
-    b'OERPEL1',  # Element equivalent radiated power (element output)
-    b'OGSTR1',   # Output table of grid point strains of superelement
-    b'OERPEL1',  # ERP design responses at element level in SORT1 format for a particular subcase.
-    b'OELAR',    # Element status (active or inactive)
-    b'OPNL2',   # Table of nonlinear loads in SORT2 format for the h-set or d-set.
-    b'OSHT1',   # Output shell element thickness results.
-    b'OTEMP1',  # Grid point temperature output
-    b'OERPEL2', # Element equivalent radiated power output.
-    b'OEFIIS',  # Data block for inter-laminar shear failure indices.
-    b'OBOLT1',  # Bolt output data block
-    b'OES1G',   # Grid point stress or strain table in SORT1 format and interpolated from the centroidal stress table, OES1M.
-
-    b'ODAMGPFE', # Table of damage energy for ply failure
-    b'ODAMGPFD', # Table of damage values for ply failure
-    b'ODAMGPFS', # Table of damage status for ply failure
-    b'ODAMGPFR', # Table of crack density for ply failure EUD model from SOL 401. Crack density at corner grids on the middle of plies. The values are unitless
-
-    b'OSTR1THG', # Table of thermal strain at Gauss points in SORT1 format
-    b'OSTR1ELG', # Table of elastic strain at Gauss points in SORT1 format
-    b'OSTR1TH',  # Table of thermal strain in SORT1 format
-    b'OSTR1EL',  # Table of elastic strain in SORT1 format
-    b'OSTR1ING', # OES output table of initial strains at corner Gauss points in the basic coordinate system
-
-    b'OCONST1',  # Contact status in SORT1 format
-
-    b'OCPSDF',  # Output table of cross-power-spectral-density functions.
-    b'OCCORF',  # Output table of cross-correlation functions.
-    b'OCPSDFC', # Table of cross-power spectral density functions for composites.
-    b'OCCORFC', # Table of cross-correlation functions for composites.
-
-    b'OESXRM1C', # Table of composite element RMS stresses in SORT1 format for random analysis that includes von Mises stress output.
-    b'OESXNO1C',
-    b'OESXNO1',
-
-    b'OEDE1', # Elemental energy loss.
-
-
-    # grid point pressure
-    b'OPRNO1',   # SORT1 - NO
-    b'OPRRMS1',  # SORT1 - RMS
-    b'OPRPSD2',  # SORT2 - PSD
-    b'OPRATO2',  # SORT2 - AUTO
-    b'OPRCRM2',  # SORT2 - CRMS
-
-
-    # modal contribution
-    b'OUGMC2', # Table of modal contributions for displacements, velocities, accelerations.
-    b'OQGMC1', # Table of modal contributions of single point constraint forces - SORT1
-    b'OQGMC2', # Table of modal contributions of single point constraint forces - SORT2
-    b'OESMC1', # Element stress modal contributions - SORT1
-    b'OESMC2', # Element stress modal contributions - SORT2
-    b'OSTRMC1', # Table of modal contributions of element strains - SORT1
-    b'OSTRMC2', # Table of modal contributions of element strains - SORT2
-    b'OEFMC1', # Table of modal contributions of element forces - SORT1
-    b'OEFMC2', # Table of modal contributions of element forces - SORT2
-
-    # modal strain energy
-    b'OMSEC1',  # Constant modal strain energy - SORT1
-    b'OMSEC2',  # Constant modal strain energy - SORT2
-    b'OMECON1', # Constant total modal energies - SORT1
-    b'OMECON2', # Constant total modal energies - SORT2
-    b'OMEOSC1', # Oscillating total modal energies - SORT1
-    b'OMEOSC2', # Oscillating total modal energies - SORT2
-    b'OMKEC1',  # Constant modal kinetic energies - SORT1
-    b'OMKEC2',  # Constant modal kinetic energies - SORT2
-    b'OMKEO2',  # Oscillating modal kinetic energies - SORT2
-    b'OMSEO1',  # Oscillating modal strain energies - SORT2
-    b'OMSEO2',  # Oscillating modal strain energies - SORT2
-    b'OMKEO1',  # Oscillating modal kinetic energies - SORT1
-
-    # acoustic
-    b'OUGPC1',  # Table of panel contributions - SORT1
-    b'OUGPC2',  # Table of panel contributions - SORT2
-    b'OUGF1',   # Acoustic pressures at microphone points in SORT1 format
-    b'OUGF2',   # Acoustic pressures at microphone points in SORT2 format
-    b'OUGGC1',  # Table of grid contributions - SORT1
-    b'OUGGC2',  # Table of grid contributions - SORT2
-    b'OUGRC1',  # Reciprocal panel contributions - SORT1
-    b'OUGRC2',  # Reciprocal panel contributions - SORT2
-    b'BOUGF1',  # Data block of acoustic pressures at microphone points in SORT1 format - basic frame
-
-    # acoustic acceleration
-    b'OACCQ',    # Acoustic coupling quality
-    b'OACINT1',  # Acoustic intensities at microphone points - SORT1
-    b'OACINT2',  # Acoustic intensities at microphone points - SORT2
-    b'OACVELO1', # Acoustic velocities at microphone points - SORT1
-    b'OACVELO2', # Acoustic velocities at microphone points - SORT2
-    b'OACPWR2',  # Acoustic power for AML regions and GROUPs of 2D elements - SORT2
-    b'OACPWRI2', # Acoustic incident power - SORT2
-    b'OACPWRT2', # Transmitted acoustic power for AML regions and GROUPs of 2D elements - SORT2
-    b'OACTRLS2', # Acoustic transmission loss - SORT2
-
-    # random acoustic
-    b'OAPPSD2', # Acoustic power for the PSD function - SORT2
-]
-
-MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
-    # new
-    b'TOLD',
-    b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS',
-    b'RANCONS', b'RAGCONS', b'RADEFFM', b'RAPEATC', b'RAQEATC', b'RADEATC',
-    b'RASEATC', b'RAFEATC', b'RAEEATC', b'RANEATC', b'RAGEATC',
-
-    # other
-    b'MKLIST',
-
-    # stress
-    b'OES1X1', b'OES1', b'OES1X', b'OES1C', b'OESCP',
-    b'OESNLXR', b'OESNLXD', b'OESNLBR', b'OESTRCP',
-    b'OESNL1X', b'OESRT',
-    #----------------------
-    # strain
-    b'OSTR1', b'OSTR1X', b'OSTR1C',
-
-    #----------------------
-    # forces
-    # OEF1  - Element forces (linear elements only)
-    # HOEF1 - Element heat flux
-    # OEF1X - Element forces with intermediate (CBAR and CBEAM) station forces
-    #         and forces on nonlinear elements
-    # DOEF1 - Scaled Response Spectra
-    b'OEFIT', b'OEF1X', b'OEF1', b'DOEF1',
-    b'OEFITSTN', # output.op2
-
-
-    # Table of Max values?
-    # Table of RMS values?
-    b'OEF1MX', b'OUGV1MX',
-
-    #----------------------
-    # spc forces - gset - sort 1
-    b'OQG1', b'OQGV1',
-    # mpc forces - gset - sort 1
-    b'OQMG1', b'OQMG2',
-    # ??? forces
-    b'OQP1',
-
-    #----------------------
-    # displacement/velocity/acceleration/eigenvector/temperature
-    # OUPV1 - Scaled Response Spectra - displacements
-    b'OUG1', b'OAG1',
-    b'OUGV1', b'BOUGV1', b'OUGV1PAT',
-    b'OUPV1',
-
-    # OUGV1PAT - Displacements in the basic coordinate system
-    # OUGV1  - Output (O) Displacements (U) in the global/g-set (G)
-    #          coordinate system in vector (V) format and SORT1
-    # BOUGV1 - Displacements in the basic coordinate system
-    # BOPHIG - Eigenvectors in the basic coordinate system
-    # ROUGV1 - Relative OUGV1
-    # TOUGV1 - Temperature OUGV1
-    b'ROUGV1', b'TOUGV1', b'RSOUGV1', b'RESOES1', b'RESEF1',
-
-    #----------------------
-    # applied loads
-    # OPG1 - Applied static loads
-    b'OPNL1', # nonlinear applied loads - sort 1
-    b'OPG1', # applied loads - gset? - sort 1
-    b'OPGV1',
-    b'OPG2', # applied loads - sort 2 - v0.8
-
-    # grid point stresses
-    b'OGS1', # grid point stresses/strains - sort 1
-
-    #-----------------------------------------------------
-    # random analysis
-    # OP2 tables:
-    #   CRM - cumulative root mean square
-    #   PSD - power spectral density function
-    #   RMS - root mean square
-    #   NO - number of zero crossings???
-    #   ATO -autocorrelation???
-
-    # QRG:
-    #   RALL - PSDF, ATOC, CRMS
-    #   ATOC - autocorrelation
-    #   CRMS - cumulative root mean square
-    #   PSDF - power spectral density function
-
-    # msc displacement/velocity/acceleration
-    # nx displacement
-    b'OUGATO1', b'OUGCRM1', b'OUGPSD1', b'OUGRMS1', b'OUGNO1',
-    b'OUGATO2', b'OUGCRM2', b'OUGPSD2', b'OUGRMS2', b'OUGNO2',
-
-    # nx velocity
-    b'OVGATO1', b'OVGCRM1', b'OVGPSD1', b'OVGRMS1', b'OVGNO1',
-    b'OVGATO2', b'OVGCRM2', b'OVGPSD2', b'OVGRMS2', b'OVGNO2',
-
-    # nx acceleration
-    b'OAGATO1', b'OAGCRM1', b'OAGPSD1', b'OAGRMS1', b'OAGNO1',
-    b'OAGATO2', b'OAGCRM2', b'OAGPSD2', b'OAGRMS2', b'OAGNO2',
-
-    # msc spc/mpc forces
-    # nx spc forces
-    b'OQGATO1', b'OQGCRM1', b'OQGPSD1', b'OQGRMS1', b'OQGNO1',
-    b'OQGATO2', b'OQGCRM2', b'OQGPSD2', b'OQGRMS2', b'OQGNO2',
-
-    # nx mpc forces
-    b'OQMATO2', b'OQMCRM2', b'OQMPSD2', b'OQMRMS2', b'OQMNO2',
-
-    # stress
-    b'OESATO1', b'OESCRM1', b'OESPSD1', b'OESRMS1', b'OESNO1', b'OESXRMS1',
-    b'OESATO2', b'OESCRM2', b'OESPSD2', b'OESRMS2', b'OESNO2',
-
-    # load vector ???
-    b'OPGATO1', b'OPGCRM1', b'OPGPSD1', b'OPGRMS1', b'OPGNO1',
-    b'OPGATO2', b'OPGCRM2', b'OPGPSD2', b'OPGRMS2', b'OPGNO2',
-
-    #------------------
-    # strain
-    b'OSTRATO1', b'OSTRCRM1', b'OSTRPSD1', b'OSTRRMS1', b'OSTRNO1',
-    b'OSTRATO2', b'OSTRCRM2', b'OSTRPSD2', b'OSTRRMS2', b'OSTRNO2',
-
-    # force
-    b'OEFATO1', b'OEFCRM1', b'OEFPSD1', b'OEFRMS1', b'OEFNO1',
-    b'OEFATO2', b'OEFCRM2', b'OEFPSD2', b'OEFRMS2', b'OEFNO2',
-    #b'OEFPSD2', b'OEFCRM2', b'OEFRMS2', b'OEFATO2', b'OEFNO2',
-
-    #-----------------------------------------------------
-    # other
-    b'OFMPF2M',
-    b'OSMPF2M', b'OPMPF2M', b'OLMPF2M', b'OGPMPF2M',
-
-    b'OCRUG',
-    b'OCRPG',
-
-    b'STDISP', b'AEDISP', #b'TOLB2',
-
-    # autoskip
-    #b'MATPOOL',
-    b'CSTM', b'CSTMS',
-    b'BOPHIG',
-    b'BOPG1',
-    b'HOEF1',
-
-    #------------------------------------------
-    # strain energy
-    b'ONRGY1',
-    b'ONRGY2',
-
-    #------------------------------------------
-    # new skipped - v0.8
-
-    # buggy
-    b'IBULK',
-    #b'FRL',  # frequency response list
-    b'TOL',
-    b'DSCM2', # normalized design sensitivity coeff. matrix
-
-    # dont seem to crash
-    b'DESCYC',
-    b'DBCOPT', # design optimization history for post-processing
-    b'PVT',    # table containing PARAM data
-    b'XSOP2DIR',
-    b'ONRGY',
-    #b'CLAMA',
-    b'DSCMCOL', # design sensitivity parameters
-    b'CONTACTS',
-    b'EDT', # aero and element deformations
-    b'EXTDB',
-
-
-    b'OQG2', # single point forces - sort 2 - v0.8
-    b'OBC1', b'OBC2', # contact pressures and tractions at grid points
-    b'OBG1', # glue normal and tangential tractions at grid points in basic coordinate system
-    b'OES2', # element stresses - sort 2 - v0.8
-    b'OEF2', # element forces - sort 2 - v0.8
-    b'OUGV2', # absolute displacements/velocity/acceleration - sort 2
-
-    # contact
-    b'OSPDSI1', # intial separation distance
-    b'OSPDS1',  # final separation distance
-    b'OQGCF1', b'OQGCF2', # contact force at grid point
-    b'OQGGF1', b'OQGGF2', # glue forces in grid point basic coordinate system
-
-    b'OSPDSI2',
-    b'OSPDS2',
-    b'OSTR2',
-    b'OESNLXR2',
-
-    b'CMODEXT',
-    b'ROUGV2',  # relative displacement
-    b'CDDATA',  # cambpell diagram table
-    b'OEKE1',
-    b'OES1MX', # extreme stresses?
-    b'OESNLBR2',
-    b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
-
-    b'OUG2T',
-    b'AEMONPT',
-    #b'KDICT',
-]
-
-if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):
-    counter = Counter(MSC_RESULT_TABLES)
-    _MSG = 'Invalid count:\n'
-    for key, cvaluei in counter.items():
-        if cvaluei != 1:
-            _MSG += '%s = %s\n' % (key, cvaluei)
-    raise RuntimeError(_MSG)
 
 
 NX_MATRIX_TABLES = [
@@ -1487,7 +1115,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #table_mapper.update(table_mapper2)
         return table_mapper
 
-    def _read_mpf_3(self, data, ndata):
+    def _read_mpf_3(self, data, ndata: int) -> int:
         """reads table 3 (the header table)
 
         OFMPF2E Table of fluid mode participation factors by excitation frequencies.
@@ -2200,15 +1828,14 @@ def main():  # pragma: no cover
     #f06_outname = model + '.test_op2.f06'
     #o.write_f06(f06_outname)
 
-def create_binary_debug(op2_filename, debug_file, log):
+def create_binary_debug(op2_filename: str, debug_file: str, log) -> Tuple[bool, Any]:
     """helper method"""
     binary_debug = None
-    wb = 'w'
 
     if debug_file is not None:
         #: an ASCII version of the op2 (creates lots of output)
         log.debug('debug_file = %s' % debug_file)
-        binary_debug = open(debug_file, wb)
+        binary_debug = open(debug_file, 'w')
         binary_debug.write(op2_filename + '\n')
         is_debug_file = True
     else:

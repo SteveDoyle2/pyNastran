@@ -865,22 +865,22 @@ class Op2Codes:
             raise
         return etype
 
-    def print_table_code(self, table_code):
-        table_code_content = table_code % 1000
-        #dataFormat = table_code/1000
+    def print_table_code(self, table_code: int) -> str:
+        #table_code_content = table_code % 1000
+        #data_format = table_code / 1000
         msg = ''
-        #msg += 'tableCodeContent=%s dataFormat=%s\n' %(tableCodeContent,dataFormat)
+        #msg += 'table_code_content=%s data_format=%s\n' %(table_code_content, data_format)
 
+        table = get_table_from_table_code(table_code, is_msc=self.is_msc)
         if self.is_msc:
-            msg += 'n=%s msc table=%s-%s' % (self.n, self.table_name,
-                                         MSC_TABLE_CONTENT[table_code_content])
+            msg += 'n=%s msc table=%s-%s' % (self.n, self.table_name, table)
         else:
-            msg += 'n=%s nx table=%s-%s' % (self.n, self.table_name,
-                                         NX_TABLE_CONTENT[table_code_content])
+            msg += 'n=%s nx table=%s-%s' % (self.n, self.table_name, table)
 
         return msg
 
-    def approach_code_str(self, approach_code):
+    def approach_code_str(self, approach_code: int) -> str:
+        """TODO: not done"""
         return ''
 
     def code_information(self, include_time=True):
@@ -1071,11 +1071,7 @@ class Op2Codes:
             table = "OES - Element %s" % stress_word
         else:
             try:
-                if self.is_msc:
-                    table = MSC_TABLE_CONTENT[table_code]
-                else:
-                    table = NX_TABLE_CONTENT[table_code]
-                #table = TABLE_CODE_MAP[table_code]
+                table = get_table_from_table_code(table_code, is_msc=self.is_msc)
             except KeyError:
                 table = '%s - Unknown' % self.table_name
 
@@ -1131,6 +1127,7 @@ class Op2Codes:
                 except ValueError:
                     raise ValueError('is this SORT1/2?  table_name=%r' % table_name)
             return is_sort1_table
+        return is_sort1_table
 
     @property
     def is_sort1(self):
@@ -1372,3 +1369,12 @@ def determine_sort_bits_meaning(table_code, sort_code, sort_bits):
         #print('sort_method=%r; is_real=%r is_random=%r' % (sort_method, is_real, is_random))
         raise
     return sort_method, is_real, is_random
+
+def get_table_from_table_code(table_code: int, is_msc: bool=True) -> str:
+    """translates that a key of say 1 is the 'OUG - Displacement vector' table"""
+    if is_msc:
+        table = MSC_TABLE_CONTENT[table_code]
+    else:
+        table = NX_TABLE_CONTENT[table_code]
+    #table = TABLE_CODE_MAP[table_code]
+    return table

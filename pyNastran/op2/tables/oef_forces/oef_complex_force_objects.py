@@ -2176,11 +2176,11 @@ class ComplexCBeamForceArray(ComplexForceObject):
         self.nelements = 0  # result specific
         #self.element_type = 'CBEAM'
 
-        if is_sort1:
-            #sort1
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            ##sort1
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     def get_headers(self):
         headers = [

@@ -4,13 +4,15 @@ defines:
  - validate_bdf(model)
 
 """
+from __future__ import annotations
 import sys
 import traceback
-from typing import List, Dict, Any
-#from six import reraise
+from typing import List, Dict, Tuple, Any, TYPE_CHECKING
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
-def verify_bdf(model, xref):
-    # type: (Any, bool) -> None
+
+def verify_bdf(model: BDF, xref: bool) -> None:
     #for key, card in sorted(model.params.items()):
         #card._verify(xref)
     for unused_key, card in sorted(model.nodes.items()):
@@ -60,8 +62,7 @@ def verify_bdf(model, xref):
     for unused_super_id, superelement in model.superelement_models.items():
         verify_bdf(superelement, xref)
 
-def _verify_dict(dict_obj, xref):
-    # type: (Dict[Any, Any], bool) -> None
+def _verify_dict(dict_obj: Dict[Any, Any], xref: bool) -> None:
     """helper for ``verify_bdf``"""
     for unused_key, card in sorted(dict_obj.items()):
         try:
@@ -70,8 +71,7 @@ def _verify_dict(dict_obj, xref):
             print(str(card))
             raise
 
-def _verify_dict_list(dict_list, xref):
-    # type: (Dict[Any, List[Any]], bool) -> None
+def _verify_dict_list(dict_list: Dict[Any, List[Any]], xref: bool) -> None:
     """helper for ``verify_bdf``"""
     for unused_key, cards in sorted(dict_list.items()):
         for card in cards:
@@ -81,16 +81,14 @@ def _verify_dict_list(dict_list, xref):
                 print(str(card))
                 raise
 
-def _print_card(card):
-    # type: (Any) -> str
+def _print_card(card: Any) -> str:
     """helper for ``_validate_msg``"""
     try:
         return card.write_card(size=8)
     except RuntimeError:
         return ''
 
-def _validate_msg(card_obj):
-    # type: (Any) -> str
+def _validate_msg(card_obj: Any) -> str:
     """helper for ``_validate_traceback``"""
     msg = traceback.format_exc()
     try:
@@ -99,7 +97,8 @@ def _validate_msg(card_obj):
         msg += '\n' + card_obj.get_stats().rstrip()
     return msg
 
-def _validate_traceback(model, obj, unused_error, ifailed, nmax_failed):
+def _validate_traceback(model: BDF, obj, unused_error,
+                        ifailed: int, nmax_failed: int) -> Tuple[int, Any, Any, Any]:
     """helper method for ``validate_bdf`` to write a traceback"""
     exc_type, exc_value, exc_traceback = sys.exc_info()
     #exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -126,8 +125,7 @@ def _validate_traceback(model, obj, unused_error, ifailed, nmax_failed):
         raise
     return ifailed, exc_type, exc_value, exc_traceback
 
-def validate_bdf(model):
-    # type: (Any) -> None
+def validate_bdf(model: BDF) -> None:
     _validate_dict(model, model.nodes)
     _validate_dict(model, model.points)
     _validate_dict(model, model.coords)
@@ -304,8 +302,7 @@ def validate_bdf(model):
     for unused_super_id, superelement in model.superelement_models.items():
         validate_bdf(superelement)
 
-def _validate_dict_list(model, objects_dict):
-    # type: (Any, Dict[Any, Any]) -> None
+def _validate_dict_list(model: BDF, objects_dict: Dict[Any, Any]) -> None:
     """helper method for validate_bdf"""
     ifailed = 0
     nmax_failed = 0
@@ -327,8 +324,7 @@ def _validate_dict_list(model, objects_dict):
             #reraise(exc_type, exc_value, exc_traceback)
             raise
 
-def _validate_dict(model, objects):
-    # type : (Any, Dict[Any, Any]) -> None
+def _validate_dict(model: BDF, objects: Dict[Any, Any]) -> None:
     """helper method for validate_bdf"""
     assert isinstance(objects, dict), type(objects)
     ifailed = 0
@@ -343,8 +339,7 @@ def _validate_dict(model, objects):
         #reraise(exc_type, exc_value, exc_traceback)
         raise
 
-def _validate_list(model, objects):
-    # type : (Any, List[Any]) -> None
+def _validate_list(model: BDF, objects: List[Any]) -> None:
     """helper method for validate_bdf"""
     ifailed = 0
     nmax_failed = 0

@@ -251,7 +251,7 @@ class RandomPlateArray(OES_Object):
         #print(self.element_node, nid)
         nnodes = self.get_nnodes()
         itime = self.ielement // nnodes
-        inid = self.ielement % nnodes
+        #inid = self.ielement % nnodes
         itotal = self.itotal
         #if itime >= self.data.shape[0]:# or itotal >= self.element_node.shape[0]:
             #print(f'*SORT2 {self.element_name}: itime={itime} ielement={self.itime} inid={inid} itotal={itotal} dt={dt} eid={eid} nid={nid} fd={fd1:.2f} oxx={oxx1:.2f}')

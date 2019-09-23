@@ -4,7 +4,7 @@ defines:
  - fields_out = wipe_empty_fields(card)
 
 """
-from typing import List, Union, Optional
+from typing import List, Union
 
 
 def build_table_lines(fields, nstart=1, nend=0):
@@ -60,12 +60,12 @@ def build_table_lines(fields, nstart=1, nend=0):
     return fields_out
 
 
-def wipe_empty_fields(card):
-    # type: (List[str]) -> List[Optional[str]]
+def wipe_empty_fields(card: List[Union[str, int, float, None]]) -> List[Union[str, int, float, None]]:
     """
     Removes any trailing Nones from the card.
     Also converts empty strings to None.
-    Allows floats & ints.
+    Allows floats & ints, but that's not the intended value,
+    though it is ok (it's just extra work).
 
     Parameters
     ----------
@@ -76,8 +76,9 @@ def wipe_empty_fields(card):
     -------
     short_card : List[str]
         the card with no trailing blank fields
+
     """
-    short_card = []  # type: List[Optional[str]]
+    short_card = []  # type: List[Union[str, int, float, None]]
     for field in card:
         if isinstance(field, str):
             field = field.strip()
