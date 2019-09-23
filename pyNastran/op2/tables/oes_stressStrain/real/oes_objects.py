@@ -130,7 +130,7 @@ class OES_Object(BaseElement):
         subtitle = b'%-128s' % self.subtitle.encode('ascii')
         label = b'%-128s' % self.label.encode('ascii')
         ftable3 = b'50i 128s 128s 128s'
-        oCode = 0
+        unused_oCode = 0
 
         ftable3 = b'i' * 50 + b'128s 128s 128s'
         field6 = 0

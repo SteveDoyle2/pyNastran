@@ -1,3 +1,10 @@
+"""
+defines:
+ - deprecated(old_name, new_name, deprecated_version, levels=None)
+ - print_bad_path(path)
+ - object_attributes(obj, mode='public', keys_to_skip=None)
+ - object_methods(obj, mode='public', keys_to_skip=None)
+"""
 # -*- coding: utf-8 -*-
 from types import MethodType, FunctionType
 import os
@@ -75,6 +82,7 @@ def is_binary_file(filename: str) -> bool:
 
 
 def check_path(filename: str, name: str='file') -> None:
+    """checks that the file exists"""
     try:
         exists = os.path.exists(filename)
     except TypeError:
@@ -111,15 +119,15 @@ def print_bad_path(path: str) -> str:
             res.append(path)
         msg = {True: 'passed', False: 'failed'}
         return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i[4:]) for i in res])
-    else:
-        path = os.path.abspath(path)
-        npath = os.path.dirname(path)
-        res = [path]
-        while path != npath:
-            path, npath = npath, os.path.dirname(npath)
-            res.append(path)
-        msg = {True: 'passed', False: 'failed'}
-        return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i) for i in res])
+
+    path = os.path.abspath(path)
+    npath = os.path.dirname(path)
+    res = [path]
+    while path != npath:
+        path, npath = npath, os.path.dirname(npath)
+        res.append(path)
+    msg = {True: 'passed', False: 'failed'}
+    return '\n'.join(['%s: %s' % (msg[os.path.exists(i)], i) for i in res])
 
 def _filename(filename: str) -> str:
     """
@@ -137,7 +145,8 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
     keys_to_skip = [] if keys_to_skip is None else keys_to_skip
     test = {
         'public':  lambda k: (not k.startswith('_') and k not in keys_to_skip),
-        'private': lambda k: (k.startswith('_') and not k.startswith('__') and k not in keys_to_skip),
+        'private': lambda k: (k.startswith('_') and not k.startswith('__')
+                              and k not in keys_to_skip),
         'both': lambda k: (not k.startswith('__') and k not in keys_to_skip),
         'all':  lambda k: (k not in keys_to_skip),
     }
@@ -162,7 +171,8 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
     #                                           attr_type(getattr(obj, k)))])
 
 
-def object_methods(obj: Any, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
+def object_methods(obj: Any, mode: str='public',
+                   keys_to_skip: Optional[List[str]]=None) -> List[str]:
     """
     List the names of methods of a class as strings. Returns public methods
     as default.
@@ -189,7 +199,8 @@ def object_methods(obj: Any, mode: str='public', keys_to_skip: Optional[List[str
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
 
-def object_attributes(obj: Any, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
+def object_attributes(obj: Any, mode: str='public',
+                      keys_to_skip: Optional[List[str]]=None) -> List[str]:
     """
     List the names of attributes of a class as strings. Returns public
     attributes as default.

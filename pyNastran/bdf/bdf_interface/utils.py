@@ -4,12 +4,12 @@ Defines various utilities for BDF parsing including:
 
 """
 import os
-import sys
+#import sys
 from io import StringIO
 from collections import defaultdict
-from typing import List, Union, Dict, Tuple, Optional, Any
+from typing import List, Dict, Tuple, Optional, Any
 
-import pyNastran
+#import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
 
 

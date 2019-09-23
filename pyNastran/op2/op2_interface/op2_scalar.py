@@ -302,8 +302,8 @@ NX_RESULT_TABLES = [
     b'OTEMP1',  # Grid point temperature output
     b'OERPEL2', # Element equivalent radiated power output.
     b'OEFIIS',  # Data block for inter-laminar shear failure indices.
-    b'OBOLT1', # Bolt output data block
-    b'OES1G', # Grid point stress or strain table in SORT1 format and interpolated from the centroidal stress table, OES1M.
+    b'OBOLT1',  # Bolt output data block
+    b'OES1G',   # Grid point stress or strain table in SORT1 format and interpolated from the centroidal stress table, OES1M.
 
     b'ODAMGPFE', # Table of damage energy for ply failure
     b'ODAMGPFD', # Table of damage values for ply failure
@@ -589,9 +589,9 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
 if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):
     counter = Counter(MSC_RESULT_TABLES)
     _MSG = 'Invalid count:\n'
-    for key, value in counter.items():
-        if value != 1:
-            _MSG += '%s = %s\n' % (key, value)
+    for key, cvaluei in counter.items():
+        if cvaluei != 1:
+            _MSG += '%s = %s\n' % (key, cvaluei)
     raise RuntimeError(_MSG)
 
 
@@ -720,27 +720,41 @@ INT_PARAMS_1 = [
     b'NASPDV', b'RMXCRT', b'RMXTRN', b'DBCLEAN', b'LANGLE', b'SEMAPPRT',
     b'FIXEDB', b'AMGOK', b'ASING', b'CNSTRT', b'CURVPLOT', b'CYCIO',
     b'CYCSEQ', b'DBDICT', b'DBINIT', b'DBSET1', b'DBSET2', b'DBSET3', b'DBSET4',
-    b'DBSORT', b'DOPT', b'FACTOR', b'ALTSHAPE', b'MODTRK',
+    b'DBSORT', b'DOPT', b'FACTOR', b'ALTSHAPE', b'MODTRK', b'IFTM', b'INRLM',
+    b'KINDEX', b'KMIN', b'KMAX', b'LARGEDB', b'LOADINC', b'LOADING', b'LOOP',
+    b'LOOPID', b'MODEL', b'MOREK', b'NEWDYN', b'NFECI', b'NINTPTS',
+    b'NLAYERS', b'NOELOF', b'NOMSGSTR', b'NONCUP', b'NUMOUT', b'NUMOUT1', b'NUMOUT2',
+    b'OPGTKG', b'OPPHIB', b'OUTOPT', b'PKRSP', b'RSPECTRA', b'RSPRINT',
+    b'S1G', b'SCRSPEC', b'SEMAPOPT', b'SEQOUT', b'SESEF', b'SKPAMG', b'SKPAMP',
+    b'SLOOPID', b'SOLID', b'SPCGEN', b'SRTELTYP', b'SRTOPT', b'START', b'SUBID',
+    b'SUBSKP', b'TABID', b'TESTNEG',
 
     # not defined in qrg...
-    b'NT', b'PNCHDB', b'DLOAD',
+    b'NT', b'PNCHDB', b'DLOAD', b'NLOAD', b'NOAP', b'NOCMPFLD', b'NODATA',
+    b'NODJE', b'NOMECH', b'NOSDR1', b'NOSHADE', b'NOSORT1', b'NOTRED',
+    b'NSEGS', b'OLDELM', b'OPADOF', b'OUTPUT', b'P1', b'P2', b'P3', b'PCHRESP',
+    b'PLOT', b'PLOTSUP', b'PRTPCH', b'RADLIN', b'RESDUAL', b'S1', b'SDATA',
+    b'SEFINAL', b'SEMAP1', b'SKPLOAD', b'SKPMTRX', b'SOLID1', b'SSG3',
 ]
 FLOAT_PARAMS_1 = [
     b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
     b'SIGMA', b'TABS', b'EPPRT', b'AUNITS', b'BOLTFACT', b'LMSCAL',
     'DSZERO', b'G', b'GFL', b'LFREQ', b'HFREQ', b'ADPCON',
     b'W3', b'W4', b'W3FL', b'W4FL', b'PREFDB',
-    b'EPZERO', b'DSZERO', b'TINY', b'VREF', b'TOLRSC', b'ROTCSV', b'ROTGPF',
+    b'EPZERO', b'DSZERO', b'TINY', b'TOLRSC', b'ROTCSV', b'ROTGPF',
     b'FRSPD', b'HRSPD', b'LRSPD', b'MTRFMAX', b'ROTCMRF', b'MTRRMAX',
     b'LAMLIM', b'BIGER', b'BIGER1', b'BIGER2', b'CLOSE',
-    b'EPSBIG', b'EPSMALC', b'EPSMALU',
-    #b'Q'
+    b'EPSBIG', b'EPSMALC', b'EPSMALU', b'HIRES', b'KDIAG', b'MACH', b'VREF',
+    b'STIME', b'TESTSE', b'Q',
+
+    # not defined
+    b'PRPA', b'PRPHIVZ', b'PRPJ', b'PRRULV', b'RMAX',
 ]
 FLOAT_PARAMS_2 = [
     b'BETA', b'CB1', b'CB2', b'CK1', b'CK2', b'CK3', b'CK41', b'CK42',
     b'CM1', b'CM2',
     b'G2', b'G4', b'G5', b'G6', b'G7', b'G8', b'G9', b'G10', b'G12', b'G13']
-DOUBLE_PARAMS_1 = [b'Q']
+DOUBLE_PARAMS_1 = [] # b'Q'
 STR_PARAMS_1 = [
     b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
     b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
@@ -751,6 +765,7 @@ STR_PARAMS_1 = [
     b'PRTRESLT', b'SRCOMPS', b'CHECKOUT', b'SEMAP', b'AESMETH', b'RESVALT',
     b'ROTSYNC', b'SYNCDAMP', b'PRGPOST', b'WMODAL', b'SDAMPUP',
     b'COLPHEXA', b'CHKOUT', b'CTYPE', b'DBNAME', b'VUHEXA', b'VUPENTA', b'VUTETRA',
+    b'MESH', b'OPTION', b'PRINT', b'SENAME',
 
     # part of param, checkout
     b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',
@@ -968,7 +983,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'OSTR2' : [self._table_passer, self._table_passer],  # TODO: enable
             #b'OSTR2C' : [self._table_passer, self._table_passer],
 
-
+            b'OTEMP1' : [self._read_otemp1_3, self._read_otemp1_4],
+            # --------------------------------------------------------------------------
             # MSC TABLES
             # common tables
 
@@ -1359,13 +1375,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             # modal participation factors
             # OFMPF2M Table of fluid mode participation factors by normal mode.
             b'OFMPF2M' : [self._read_mpf_3, self._read_mpf_4],
-            # OLMPF2M Table of load mode participation factors by normal mode.
+            # OLMPF2M Load mode participation factors by normal mode.
             b'OLMPF2M' : [self._read_mpf_3, self._read_mpf_4],
-            # OPMPF2M Table of panel mode participation factors by normal mode.
+            # OPMPF2M Panel mode participation factors by normal mode.
             b'OPMPF2M' : [self._read_mpf_3, self._read_mpf_4],
-            # OPMPF2M Table of panel mode participation factors by normal mode.
+            # OPMPF2M Panel mode participation factors by normal mode.
             b'OSMPF2M' : [self._read_mpf_3, self._read_mpf_4],
-            # OGMPF2M Table of grid mode participation factors by normal mode.
+            # OGMPF2M Grid mode participation factors by normal mode.
             b'OGPMPF2M' : [self._read_mpf_3, self._read_mpf_4],
 
             #OFMPF2E Table of fluid mode participation factors by excitation frequencies.
@@ -1674,7 +1690,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 i += 5
             elif word in DOUBLE_PARAMS_1:
                 slot = data[(i+1)*4:(i+8)*4]
-                value = struct2d.unpack(slot)[1]
+                try:
+                    value = struct2d.unpack(slot)[1]
+                except:
+                    print(word)
+                    raise
                 i += 8
             #elif word in [b'VUHEXA']:
                 #self.show_data(data[i*4:(i+5)*4], types='ifs', endian=None)

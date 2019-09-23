@@ -122,6 +122,8 @@ NX_TABLE_CONTENT = {
     66 : 'OBG - Glue force results (normal and in-plane tractions)',
     67 : 'OQG - Glue force resutls',
     68 : '??? - Tosca normalized material properties',
+    # nx 2019.2
+    72 : 'OTEMP1 - grid point temperatures',
 }
 
 MSC_ELEMENTS = {
@@ -870,10 +872,10 @@ class Op2Codes:
         #msg += 'tableCodeContent=%s dataFormat=%s\n' %(tableCodeContent,dataFormat)
 
         if self.is_msc:
-            msg += 'n=%s table=%s-%s' % (self.n, self.table_name,
+            msg += 'n=%s msc table=%s-%s' % (self.n, self.table_name,
                                          MSC_TABLE_CONTENT[table_code_content])
         else:
-            msg += 'n=%s table=%s-%s' % (self.n, self.table_name,
+            msg += 'n=%s nx table=%s-%s' % (self.n, self.table_name,
                                          NX_TABLE_CONTENT[table_code_content])
 
         return msg
@@ -1069,7 +1071,11 @@ class Op2Codes:
             table = "OES - Element %s" % stress_word
         else:
             try:
-                table = TABLE_CODE_MAP[table_code]
+                if self.is_msc:
+                    table = MSC_TABLE_CONTENT[table_code]
+                else:
+                    table = NX_TABLE_CONTENT[table_code]
+                #table = TABLE_CODE_MAP[table_code]
             except KeyError:
                 table = '%s - Unknown' % self.table_name
 

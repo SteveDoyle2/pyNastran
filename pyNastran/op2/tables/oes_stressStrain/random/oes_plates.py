@@ -3,7 +3,8 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_float_13e
 
 BASIC_RANDOM_TABLES = [
@@ -72,7 +73,6 @@ class RandomPlateArray(OES_Object):
             #ntotal = self.ntotal
             nx = ntimes
             ny = nelements * 2
-            ntotal = self._ntotals[0]
             #ntotal = nelements * 2
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
             #print(f"SORT1 ntimes={ntimes} nelements={nelements} ntotal={ntotal}")
@@ -86,7 +86,7 @@ class RandomPlateArray(OES_Object):
             #ntotal = self.ntotal
             nelements = len(self._ntotals)
             ntotal = self._ntotals[0]
-            ntimes = ntotal // 2
+            ntimes = ntotal // 2 // nnodes
 
             #print(self._ntotals)
             ntotal = self._ntotals[0]
@@ -94,13 +94,14 @@ class RandomPlateArray(OES_Object):
             #ntimes = ntotal // 2
             #ntimes, nelements = nelements_real, ntimes_real
             #ntotal = self.ntotal
-            ny = ntimes * 2
-            nx = nelements * 2
+            ny = ntotal # nelements * 2 * nnodes
+            nx = ntimes
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
-            #print(f"SORT2 ntimes={ntimes} nelements={nelements} ntotal={ntotal}")
+            #print(f"SORT2 ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes}")
         else:  # pragma: no cover
             raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
 
+        nlayers = nelements * 2 * nnodes
         #self.ntotal
         self.itime = 0
         self.ielement = 0
@@ -112,9 +113,9 @@ class RandomPlateArray(OES_Object):
         #dtype = 'float32'
         #if isinstance(self.nonlinear_factor, integer_types):
             #dtype = 'int32'
-        self.build_data(ntimes, nelements, ntotal, nx, ny, self._times_dtype)
+        self.build_data(ntimes, nelements, nlayers, nnodes, ntotal, nx, ny, self._times_dtype)
 
-    def build_data(self, ntimes, nelements, ntotal, nx, ny, dtype):
+    def build_data(self, ntimes, nelements, nlayers, nnodes, ntotal, nx, ny, dtype):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
@@ -126,7 +127,7 @@ class RandomPlateArray(OES_Object):
         self._times = zeros(ntimes, dtype)
         #self.ntotal = self.nelements * nnodes
 
-        self.element_node = zeros((nelements*2, 2), 'int32')
+        self.element_node = zeros((nlayers, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
         #if not self.nelements * 2 == self.ntotal:
@@ -134,7 +135,7 @@ class RandomPlateArray(OES_Object):
                 #self.ntimes, self.nelements, self.nelements * 2, self.ntotal)
             #raise RuntimeError(msg)
 
-        self.fiber_curvature = zeros(ntotal, 'float32')
+        self.fiber_curvature = zeros(nlayers, 'float32')
 
         # [oxx, oyy, txy]
         nresults = 3
@@ -248,27 +249,36 @@ class RandomPlateArray(OES_Object):
         #if self.element_name == 'CTRIA3':
         #assert self.element_node.max() == 0, self.element_node
         #print(self.element_node, nid)
-        #print(f'SORT2 {self.element_name}: itime={self.ielement} ielement={self.itime} itotal={self.itotal} dt={dt} eid={eid} nid={nid} fd={fd1} oxx={oxx1}')
-        #print(f'SORT2 {self.element_name}: itime={self.ielement} ielement={self.itime} itotal={self.itotal+1} dt={dt} eid={eid} nid={nid} fd={fd2} oxx={oxx2}')
-        self._times[self.ielement] = dt
-        #self._times_float[self.ielement] = dt
+        nnodes = self.get_nnodes()
+        itime = self.ielement // nnodes
+        inid = self.ielement % nnodes
+        itotal = self.itotal
+        #if itime >= self.data.shape[0]:# or itotal >= self.element_node.shape[0]:
+            #print(f'*SORT2 {self.element_name}: itime={itime} ielement={self.itime} inid={inid} itotal={itotal} dt={dt} eid={eid} nid={nid} fd={fd1:.2f} oxx={oxx1:.2f}')
+            #print(f'*SORT2 {self.element_name}: itime={itime} ielement={self.itime} inid={inid} itotal={itotal+1} dt={dt} eid={eid} nid={nid} fd={fd2:.2f} oxx={oxx2:.2f}')
+            #print(self.data.shape)
+            #print(self.element_node.shape)
+        #else:
+            #print(f'SORT2 {self.element_name}: itime={itime} ielement={self.itime} inid={inid} itotal={itotal} dt={dt} eid={eid} nid={nid} fd={fd1:.2f} oxx={oxx1:.2f}')
+            #print(f'SORT2 {self.element_name}: itime={itime} ielement={self.itime} inid={inid} itotal={itotal+1} dt={dt} eid={eid} nid={nid} fd={fd2:.2f} oxx={oxx2:.2f}')
+
+        self._times[itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
 
-
-        itime = self.ielement
-        ielement = self.itime
+        #itime = self.ielement
+        #ielement = self.itime
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
 
-        self.element_node[2*ielement, :] = [eid, nid]  # 0 is center
-        self.element_node[2*ielement+1, :] = [eid, nid]  # 0 is center
+        if itime == 0:
+            self.element_node[itotal, :] = [eid, nid]  # 0 is center
+            self.element_node[itotal+1, :] = [eid, nid]  # 0 is center
+            self.fiber_curvature[itotal] = fd1
+            self.fiber_curvature[itotal+1] = fd2
 
-        self.fiber_curvature[ielement] = fd1
-        self.fiber_curvature[2*ielement+1] = fd2
+        self.data[itime, itotal, :] = [oxx1, oyy1, txy1]
+        self.data[itime, itotal+1, :] = [oxx2, oyy2, txy2]
 
-        self.data[itime, 2*ielement, :] = [oxx1, oyy1, txy1]
-        self.data[itime, 2*ielement+1, :] = [oxx2, oyy2, txy2]
-
-        self.itotal += 1
+        self.itotal += 2
         self.ielement += 1
         #print(self.element_node)
     #---------------------------------------------------------------------------
@@ -328,7 +338,7 @@ class RandomPlateArray(OES_Object):
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        msg_temp, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
+        msg_temp, unused_nnodes, unused_is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
 
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
@@ -402,11 +412,11 @@ class RandomPlateArray(OES_Object):
         eids = self.element
 
         ilayer0 = True
-        for eid, fd, oxx, oyy, dxy in zip(eids, fds, oxx, oyy, txy):
+        for eid, fd, doxx, doyy, dtxy in zip(eids, fds, oxx, oyy, txy):
             sfd = write_float_13e(fd)
-            soxx = write_float_13e(oxx)
-            soyy = write_float_13e(oyy)
-            stxy = write_float_13e(txy)
+            soxx = write_float_13e(doxx)
+            soyy = write_float_13e(doyy)
+            stxy = write_float_13e(dtxy)
 
             if ilayer0:    # TODO: assuming 2 layers?
                 f06_file.write('0  %-13s  %6s   %-13s  %-13s  %s\n' % (

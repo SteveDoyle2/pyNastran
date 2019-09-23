@@ -59,6 +59,77 @@ class OUG(OP2Common):
             setattr(self, name, value)
             self.data_code[name] = value
 
+    def _read_otemp1_3(self, data, ndata):
+        """SOL 401 table"""
+        self.nonlinear_factor = np.nan
+        self.is_table_1 = True
+        self.is_table_2 = False
+        unused_three = self.parse_approach_code(data)
+        self.words = [
+            'approach_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', '???',
+            'format_code', 'num_wide', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label']
+
+        ## format code
+        self.format_code = self.add_data_parameter(data, 'format_code', b'i', 9, False)
+
+        ## number of words per entry in record
+        self.num_wide = self.add_data_parameter(data, 'num_wide', b'i', 10, False)
+
+        ## nBolt sequence number for SOL 401 preloaded bolts
+        self.bolt_seq_id = self.add_data_parameter(data, 'bolt_seq_id', b'i', 28, False)
+
+        if self.analysis_code == 6:  # transient
+            # time step
+            self.dt = self.add_data_parameter(data, 'dt', b'f', 5)
+            self.data_names = self.apply_data_code_value('data_names', ['dt'])
+        elif self.analysis_code == 10:  # nonlinear statics
+            # load step
+            self.lftsfq = self.add_data_parameter(data, 'lftsfq', b'f', 5)
+            self.data_names = self.apply_data_code_value('data_names', ['lftsfq'])
+        else:  # pragma: no cover
+            msg = f'invalid analysis_code...analysis_code={self.analysis_code}\ndata={self.data_code}'
+            raise RuntimeError(msg)
+
+        if self.is_debug_file:
+            self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
+            self.binary_debug.write('  tCode          = %r\n' % self.tCode)
+            self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
+        self._read_title(data)
+        self._write_debug_bits()
+        #print(self.code_information())
+        #asdf
+
+    def _read_otemp1_4(self, data, ndata):
+        """SOL 401 table"""
+        nfields = ndata // 4
+        nnodes = nfields // 2
+        result_name = 'temperatures'
+        storage_obj = self.temperatures
+        real_vector = RealTemperatureArray
+        is_cid = False
+        self.data_code['_times_dtype'] = 'float32'
+        #self._times_dtype = 'float32'
+        auto_return = self._create_table_vector(
+            result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
+        if auto_return:
+            return ndata
+
+        #print(self.obj)
+        #print(self.code_information())
+        floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 2).copy()
+        ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 2) // 10
+        #print(self.obj.get_stats())
+        nids = ints[:, 0]
+        temps = floats[:, 1]
+        self.obj.node_gridtype[:, 0] = nids
+        self.obj.data[self.obj.itime, :, 0] = temps
+        return ndata
+
     def _read_oug1_3(self, data, ndata):
         """reads table 3 (the header table)"""
         #self._set_times_dtype()
@@ -147,7 +218,7 @@ class OUG(OP2Common):
             # load set number
             self.lsdvmn = self.add_data_parameter(data, 'lsdvmn', b'i', 5)
             self.data_names = self.apply_data_code_value('data_names', ['lsdvmn'])
-        else:
+        else:  # pragma: no cover
             msg = f'invalid analysis_code...analysis_code={self.analysis_code}\ndata={self.data_code}'
             raise RuntimeError(msg)
 
