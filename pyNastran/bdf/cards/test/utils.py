@@ -10,7 +10,8 @@ from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 from pyNastran.bdf.mesh_utils.convert import convert
 from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
-from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_breakdown
+from pyNastran.bdf.mesh_utils.mass_properties import (
+    mass_properties, mass_properties_nsm, mass_properties_breakdown)
 from pyNastran.bdf.test.test_bdf import run_bdf as test_bdf
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
@@ -153,8 +154,8 @@ def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):
 
     if nelements > 1 and nnodes == 0:  # pragma: no cover
         raise RuntimeError('no nodes exist')
-    mass1, cg1, inertia1 = model2.mass_properties(reference_point=None, sym_axis=None)
-    mass2, cg2, inertia2 = model2.mass_properties_nsm(reference_point=None, sym_axis=None)
+    mass1, cg1, inertia1 = mass_properties(model2, reference_point=None, sym_axis=None)
+    mass2, cg2, inertia2 = mass_properties_nsm(model2, reference_point=None, sym_axis=None)
     #if not quiet:
         #if model2.wtmass != 1.0:
             #print('weight = %s' % (mass1 / model2.wtmass))

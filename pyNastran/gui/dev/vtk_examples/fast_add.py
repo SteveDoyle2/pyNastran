@@ -136,12 +136,7 @@ def main():
 
     grid_mapper = vtk.vtkDataSetMapper()
     vtk_version = int(VTK_VERSION[0])
-    if vtk_version == 5 :
-        grid_mapper.SetInput(ug)
-    elif vtk_version in [6, 7]:
-        grid_mapper.SetInputData(ug)
-    else:
-        raise NotImplementedError(VTK_VERSION)
+    grid_mapper.SetInputData(ug)
 
     if make_glyphs:
         glyphs = vtk.vtkGlyph3D()
@@ -160,12 +155,7 @@ def main():
 
         glyphSource = vtk.vtkArrowSource()
         glyphSource.InvertOn()  # flip this arrow direction
-        if vtk_version == 5 :
-            glyphs.SetInput(ug)
-        elif vtk_version in [6, 7]:
-            glyphs.SetInputData(ug)
-        else:
-            raise NotImplementedError(VTK_VERSION)
+        glyphs.SetInputData(ug)
 
         #glyphs.SetSource(glyphSource.GetOutput())
         glyphs.SetSourceConnection(glyphSource.GetOutputPort())
@@ -186,10 +176,7 @@ def main():
         #glyph.SetInputArrayToProcess(2,0,0,0,'nothing')             # normals
         #glyph.SetInputArrayToProcess(3,0,0,0,'RTData')              # colors
 
-        #if vtk.VTK_VERSION <= 5:
-        #    grid_mapper.SetInput(ug)
-        #else:
-        #    grid_mapper.SetInputData(ug)
+        #grid_mapper.SetInputData(ug)
 
         #if filter_small_forces:
             ## we need the data to be contiguous or VTK will fail

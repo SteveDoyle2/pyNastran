@@ -7843,11 +7843,13 @@ class AddCards(AddMethods):
         """PSET ID POLY1 POLY2 POLY3 CID SETTYP ID"""
         pset = PSET(idi, poly1, poly2, poly3, cid, typei, typeids, comment='')
         self.pset[idi] = pset
+        return pset
 
     def add_pval(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment=''):
         """PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID"""
         pval = PVAL(idi, poly1, poly2, poly3, cid, typei, typeids, comment='')
         self.pval[idi] = pval
+        return pval
 
     def add_gmcurv(self, curve_id, group, data, cid_in=0, cid_bc=0):
         curve = GMCURV(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc)

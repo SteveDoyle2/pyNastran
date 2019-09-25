@@ -22,13 +22,11 @@ import vtk
 
 import pyNastran
 #print('qt_version = %r' % qt_version)
-if qt_version in ['pyside', 'pyqt4']:
-    from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-else:
-    # vtk makes poor choices regarding the selection of a backend and has no way
-    # to work around it
-    #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-    from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+
+# vtk makes poor choices regarding the selection of a backend and has no way
+# to work around it
+#from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
@@ -63,12 +61,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         """
         # this will reset the background color/label color if things break
         #super(QMainWindow, self).__init__(self)
-        if qt_version == 'pyqt4':
-            QMainWindow.__init__(self)
-            GuiVTKCommon.__init__(self, **kwds)
-        elif qt_version == 'pyqt5':
+        if qt_version == 'pyqt5':
             super(GuiCommon, self).__init__(**kwds)
-        elif qt_version in ['pyside', 'pyside2']:
+        elif qt_version == 'pyside2':
             QMainWindow.__init__(self)
             GuiVTKCommon.__init__(self, **kwds)
         else:  #: pragma: no cover
