@@ -6,14 +6,8 @@ from pyNastran.gui.gui_utils.vtk_utils import numpy_to_vtk
 def main():
     grid = vtk.vtkUnstructuredGrid()
     grid_mapper = vtk.vtkDataSetMapper()
-    if vtk.VTK_VERSION >= 6:
-        grid_mapper.SetInputData(grid)
-    else:
-        grid_mapper.SetInput(grid)
-    #if vtk.VTK_VERSION[0] <= 5:
-    #    grid_mapper.SetInputConnection(grid.GetProducerPort())
-    #else:
-    #    grid_mapper.SetInputData(grid)
+    grid_mapper.SetInputData(grid)
+    #grid_mapper.SetInputData(grid)
 
 
     nodes = np.array([
@@ -52,10 +46,7 @@ def main():
     rend = vtk.vtkRenderer()
     if 1:
         maskPts = vtk.vtkMaskPoints()
-        if vtk.VTK_VERSION <= 5:
-            maskPts.SetInputConnection(grid.GetProducerPort())
-        else:
-            maskPts.SetInputData(grid)
+        maskPts.SetInputData(grid)
 
         arrow = vtk.vtkArrowSource()
         arrow.SetTipResolution(16)

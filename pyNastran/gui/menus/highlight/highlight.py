@@ -6,7 +6,6 @@ The highlight menu handles:
 """
 import numpy as np
 
-#import PySide  # for local testing
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,

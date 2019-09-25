@@ -47,7 +47,7 @@ class GuiQtCommon(GuiAttributes):
         self.vtk_version = VTK_VERSION
         #if not IS_TESTING or not pyNastran.is_pynastrangui_exe:  # pragma: no cover
             #print('vtk_version = %s' % (self.vtk_version))
-        if self.vtk_version[0] < 7 and not IS_DEV:  # TODO: should check for 7.1
+        if self.vtk_version[0] < 7:  # TODO: should check for 7.1
             raise RuntimeError('VTK %s is no longer supported' % vtk.VTK_VERSION)
 
     def _cycle_results(self, icase=0):

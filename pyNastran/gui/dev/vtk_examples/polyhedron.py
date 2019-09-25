@@ -49,12 +49,7 @@ if 1:
     ug = ugrid
     grid_mapper = vtk.vtkDataSetMapper()
     vtk_version = int(VTK_VERSION[0])
-    if vtk_version == 5 :
-        grid_mapper.SetInput(ug)
-    elif vtk_version in [6, 7]:
-        grid_mapper.SetInputData(ug)
-    else:
-        raise NotImplementedError(VTK_VERSION)
+    grid_mapper.SetInputData(ug)
 
 #-------------------------------------
 

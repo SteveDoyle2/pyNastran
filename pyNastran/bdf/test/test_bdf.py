@@ -38,7 +38,8 @@ from pyNastran.bdf.errors import (
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
-#from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_breakdown
+from pyNastran.bdf.mesh_utils.mass_properties import (
+    mass_properties, mass_properties_nsm)  #, mass_properties_breakdown
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.test.compare_card_content import compare_card_content
 #from pyNastran.bdf.mesh_utils.convert import convert
@@ -1815,8 +1816,8 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
 
     if fem1.elements:
         fem1.get_elements_nodes_by_property_type()
-    mass1, cg1, inertia1 = fem1.mass_properties(reference_point=None, sym_axis=None)
-    mass2, cg2, inertia2 = fem1.mass_properties_nsm(reference_point=None, sym_axis=None)
+    mass1, cg1, inertia1 = mass_properties(fem1, reference_point=None, sym_axis=None)
+    mass2, cg2, inertia2 = mass_properties_nsm(fem1, reference_point=None, sym_axis=None)
     #mass3, cg3, inertia3 = mass_properties_breakdown(fem1)[:3]
     if not quiet:
         if fem1.wtmass != 1.0:
@@ -1829,16 +1830,16 @@ def get_element_stats(fem1, unused_fem2, quiet=False):
     assert np.allclose(inertia1, inertia2, atol=1e-5), f'mass={mass} cg={cg}\ninertia1={inertia1}\ninertia2={inertia2}\ndinertia={inertia1-inertia2}'
 
     for nsm_id in chain(fem1.nsms, fem1.nsmadds):
-        mass, unused_cg, unused_inertia = fem1.mass_properties_nsm(
-            reference_point=None, sym_axis=None, nsm_id=nsm_id)
+        mass, unused_cg, unused_inertia = mass_properties_nsm(
+            fem1, reference_point=None, sym_axis=None, nsm_id=nsm_id)
         print('nsm_id=%s' % nsm_id)
         print('  mass = %s' % mass)
         print('  cg = %s' % cg1)
         print('  Ixx=%s, Iyy=%s, Izz=%s \n  Ixy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
 
     reference_point = [10., 10., 10.]
-    mass1, cg1, inertia1 = fem1.mass_properties(reference_point=reference_point, sym_axis=None)
-    mass2, cg2, inertia2 = fem1.mass_properties_nsm(reference_point=reference_point, sym_axis=None)
+    mass1, cg1, inertia1 = mass_properties(fem1, reference_point=reference_point, sym_axis=None)
+    mass2, cg2, inertia2 = mass_properties_nsm(fem1, reference_point=reference_point, sym_axis=None)
     assert np.allclose(mass1, mass2), f'reference_point=[10., 10., 10.]; mass1={mass1} mass2={mass2}'
     assert np.allclose(cg1, cg2), f'reference_point=[10., 10., 10.]; mass={mass1} cg1={cg1} cg2={cg2}'
     assert np.allclose(inertia1, inertia2, atol=1e-5), f'reference_point=[10., 10., 10.]; mass={mass1} cg={cg1} inertia1={inertia1} inertia2={inertia2}'
