@@ -134,7 +134,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
-from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV
+from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.utils.numpy_utils import integer_string_types
 
@@ -671,6 +671,7 @@ CARD_MAP = {
     'PSET' : PSET,
     'PVAL' : PVAL,
     'GMCURV' : GMCURV,
+    'GMSURF' : GMSURF,
     'FEEDGE' : FEEDGE,
     'FEFACE' : FEFACE,
 
@@ -7847,22 +7848,28 @@ class AddCards(AddMethods):
 
     def add_pval(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment=''):
         """PVAL ID POLY1 POLY2 POLY3 CID SETTYP ID"""
-        pval = PVAL(idi, poly1, poly2, poly3, cid, typei, typeids, comment='')
-        self.pval[idi] = pval
+        pval = PVAL(idi, poly1, poly2, poly3, cid, typei, typeids, comment=comment)
+        self._add_pval(pval, allow_overwrites=False)
         return pval
 
-    def add_gmcurv(self, curve_id, group, data, cid_in=0, cid_bc=0):
-        curve = GMCURV(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc)
-        self.gmcurv[curve_id] = curve
+    def add_gmcurv(self, curve_id, group, data, cid_in=0, cid_bc=0, comment=''):
+        curve = GMCURV(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc,
+                       comment=comment)
+        self._add_gmcurv(curve, allow_overwrites=False)
         return curve
 
-    #def add_gmsurf(self, curve_id, group_btyes, cid_in, cid_bc, data):
-        #surf = GMCURV(curve_id, group_btyes, cid_in, cid_bc, data)
-        #self.gmsurf[curve_id] = surf
-        #return surf
+    def add_gmsurf(self, curve_id, group, data, cid_in=0, cid_bc=0, comment=''):
+        surf = GMSURF(curve_id, group, data, cid_in=cid_in, cid_bc=cid_bc, comment=comment)
+        self._add_gmsurf(surf, allow_overwrites=False)
+        return surf
 
-    def add_feedge(self, edge_id, nids, cid, geom_ids, geomin='POINT'):
-        edge = FEEDGE(edge_id, nids, cid, geom_ids, geomin=geomin)
-        self.feedge[edge_id] = edge
+    def add_feedge(self, edge_id, nids, cid, geom_ids, geomin='POINT', comment=''):
+        edge = FEEDGE(edge_id, nids, cid, geom_ids, geomin=geomin, comment=comment)
+        self._add_feedge(edge, allow_overwrites=False)
         return edge
+
+    def add_feface(self, face_id, nids, cid, surf_ids, comment=''):
+        face = FEFACE(face_id, nids, cid, surf_ids, comment=comment)
+        self._add_feface(face, allow_overwrites=False)
+        return face
     #----------------------------------------------------------------------------------
