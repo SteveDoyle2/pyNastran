@@ -1,3 +1,6 @@
+from pyNastran.op2.op2_interface.nx_tables import NX_TABLE_CONTENT
+from pyNastran.op2.op2_interface.msc_tables import MSC_TABLE_CONTENT
+
 # strings
 SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
                 b'OESRMS2', b'OESNO2', b'OESXRMS1',
@@ -10,121 +13,6 @@ SORT2_TABLES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
                 'OES2C', 'OSTR2C']
 NO_SORT_METHOD = [b'QHHA']
 
-MSC_TABLE_CONTENT = {
-    # dmap 2014
-    0: '',
-    1: 'OUG - Displacement vector',
-    2: 'OPG - Load vector',
-    3: 'OQG - SPC Force vector',
-    4: 'OEF - Element force/flux',
-    5: 'OES - Element stress/strain',
-    6: 'LAMA - Eigenvalue summary',
-    7: 'OUG - Eigenvector',
-    8: 'Grid Point Singularity Table (obsolete)',
-    9: 'OEIGS - Eigenvalue analysis summary',
-    10: 'OUG - Velocity vector',
-    11: 'OUG - Acceleration vector',
-    12: 'OPG - Nonlinear force vector',
-    13: 'OGPWG - Grid point weight generator',
-    14: 'OUG - Eigenvector (solution set)',
-    15: 'OUG - Displacement vector (solution set)',
-    16: 'OUG - Velocity vector (solution set)',
-    17: 'OUG - Acceleration vector (solutin set)',
-    18: 'OEE - Element strain energy',
-    19: 'OGF - Grid point force balance',
-    20: 'OES - Stresses at grid points',
-    21: 'OES - Strain/curvature at grid points',
-    22: 'OELOF1 - Element internal forces/moments',
-    23: 'OELOP1 - Summation of element oriented forces on adjacent elements',
-    24: 'OEP - Element pressures',
-    25: 'OEF - Composite failure indices',
-    26: 'OGS - Grid point stresses (surface)',
-    27: 'OGS - Grid point stresses (volume - direct)',
-    28: 'OGS - Grid point stresses (volume - princial)',
-    29: 'OGS - Element stress discontinuities (surface)',
-    30: 'OGS - Element stress discontinuities (volume - direct)',
-    31: 'OGS - Element stress discontinuities (volume - princial)',
-    32: 'OGS - Grid point stress discontinuities (surface)',
-    33: 'OGS - Grid point stress discontinuities (volume - direct)',
-    34: 'OGS - Grid point stress discontinuities (volume - princial)',
-    35: 'OGS - Grid point stresses (plane strain)',
-    36: 'OEE - Element kinetic energy',
-    37: 'OEE - Element energy loss',
-    38: 'OMM - MaxMin summary',
-    39: 'OQG - MPC forces',
-    40: 'OGPKE - Grip point kinetic energy',
-    #51: 'OFMPF2M - ???',
-    #52: 'OSMPF2M - ???',
-    #53: 'OPMPF2M - ???',
-    #54: 'OLMPF2M - ???',
-    #55: 'OGMPF2M - ???',
-}
-NX_TABLE_CONTENT = {
-    # nx 8.5
-    0: '',
-    1: 'OUG - Displacement vector',
-    2: 'OPG - Load vector',
-    3: 'OQG - SPC/MPC Force vector',
-    4: 'OEF - Element force/flux',
-    5: 'OES - Element stress/strain',
-    6: 'LAMA - Eigenvalue summary',
-    7: 'OUG - Eigenvector',
-    8: 'Grid Point Singularity Table (obsolete)',
-    9: 'OEIGS - Eigenvalue analysis summary',
-    10: 'OUG - Velocity vector',
-    11: 'OUG - Acceleration vector',
-    12: 'OPG - Nonlinear force vector',
-    13: 'OGPWG - Grid point weight generator',
-    14: 'OUG - Eigenvector (solution set)',
-    15: 'OUG - Displacement vector (solution set)',
-    16: 'OUG - Velocity vector (solution set)',
-    17: 'OUG - Acceleration vector (solutin set)',
-    18: 'OEE - Element strain energy',
-    19: 'OGF - Grid point force balance',
-    20: 'OES - Stresses at grid points',
-    21: 'OES - Strain/curvature at grid points',
-    22: 'OELOF1 - Element internal forces/moments',
-    23: 'OELOP1 - Summation of element oriented forces on adjacent elements',
-    24: 'OEP - Element pressures',
-    25: 'OEF - Composite failure indices',
-    26: 'OGS - Grid point stresses (surface)',
-    27: 'OGS - Grid point stresses (volume - direct)',
-    28: 'OGS - Grid point stresses (volume - princial)',
-    29: 'OGS - Element stress discontinuities (surface)',
-    30: 'OGS - Element stress discontinuities (volume - direct)',
-    31: 'OGS - Element stress discontinuities (volume - princial)',
-    32: 'OGS - Grid point stress discontinuities (surface)',
-    33: 'OGS - Grid point stress discontinuities (volume - direct)',
-    34: 'OGS - Grid point stress discontinuities (volume - princial)',
-    35: 'OGS - Grid point stresses (plane strain)',
-    36: 'OEE - Element kinetic energy',
-    37: 'OEE - Element energy loss',
-
-    38 : 'OMSEC - Constant modal strain energy',
-    39 : 'OMSED - Oscillating modal strain energy',
-    40 : 'OMKEC - Constant modal kinetic energy',
-    41 : 'OMKED - Oscillating modal kinetic energy',
-    42 : 'OMECON - Constant total modal energy',
-    43 : 'OMEOSC - Oscillating total modal energy',
-    44 : 'OUGMC - Displacement/velocity/acceleration modal contributions',
-    45 : 'OEFMC - Element force modal contributions',
-    46 : 'OESMC - Element stress modal contributions',
-    47 : 'OSTRMC - Element strain modal contributions',
-    48 : 'OQGMC - SPC force modal contributions',
-    49 : 'OUGPC - Panel contributions',
-    50 : 'OUGGC - Grid contributions',
-    51 : 'OUGRC - Reciprocal panel contributions',
-    61 : 'OGK - Gasket Element Results',
-    62 : 'OBC - Contact Pressure and Traction',
-    63 : 'OQG - Contact Force Results',
-    64 : 'OSPDSI - Contact Separation Distance - Initial',
-    65 : 'OSPDS - Contact Separation Distance',
-    66 : 'OBG - Glue force results (normal and in-plane tractions)',
-    67 : 'OQG - Glue force resutls',
-    68 : '??? - Tosca normalized material properties',
-    # nx 2019.2
-    72 : 'OTEMP1 - grid point temperatures',
-}
 
 MSC_ELEMENTS = {
     None: '',
@@ -821,6 +709,16 @@ TABLE_CODE_MAP = {
     40 : "OGPKE - Grip point kinetic energy",
 }
 
+GEOM_TABLES = { # no analysis code
+    'CASECC',
+    'GEOM1', 'GEOM2', 'GEOM3', 'GEOM4', 'DYNAMIC', 'CONTACT',
+    'GEOM1S', 'GEOM2S', 'GEOM3S', 'GEOM4S', 'DYNAMICS', 'CONTACTS',
+    'PVT', 'PVT0',
+    'EPT', 'MPT', 'DIT', 'EDT',
+    'EPTS', 'MPTS', 'DITS', 'EDTS',
+    'DBCOPT', 'DSCMCOL', 'DESCYC', 'R1TABRG',
+}
+
 def get_sort_method_from_table_name(table_name):
     """helper method"""
     if table_name in SORT1_TABLES:
@@ -961,10 +859,19 @@ class Op2Codes:
             #msg = 'unsupported thermal:  thermal=%s\n' %(thermal)
             #raise ValueError(msg)
 
-        try:
-            analysis = ANALYSIS_CODE_MAP[self.analysis_code]
-        except KeyError:
-            analysis = '???'
+        analysis = '???'
+        analysis_code = None
+        is_geom_table = self.table_name_str in GEOM_TABLES
+        if not is_geom_table:
+            if hasattr(self, 'analysis_code'):
+                analysis_code = self.analysis_code
+                try:
+                    analysis = ANALYSIS_CODE_MAP[analysis_code]
+                except KeyError:
+                    pass
+            else:
+                self.log.warning('%s has no analysis code' % self.table_name_str)
+                raise  RuntimeError('%s has no analysis code' % self.table_name_str)
 
         try:
             device = DEVICE_CODE_MAP[self.device_code]
@@ -973,12 +880,18 @@ class Op2Codes:
 
         force_flux = self.get_force_flux(thermal)
         disp_temp = self.get_disp_temp(thermal)
-        table_code, table = self.get_table_code_name(disp_temp, force_flux, stress_word)
+
+        self_table_code = None
+        table_code = None
+        table = None
+        if not is_geom_table:
+            self_table_code = self.table_code
+            table_code, table = self.get_table_code_name(disp_temp, force_flux, stress_word)
 
         msg = '--Table3Data--\n\n'
         msg += "  device_code   = %-3s %s\n" % (self.device_code, device)
-        msg += "  analysis_code = %-3s %s\n" % (self.analysis_code, analysis)
-        msg += "  table_code    = %-3s %s-%s\n" % (self.table_code, self.table_name_str, table)
+        msg += "  analysis_code = %-3s %s\n" % (analysis_code, analysis)
+        msg += "  table_code    = %-3s %s-%s\n" % (self_table_code, self.table_name_str, table)
         msg += "  format_code   = %-3s %s\n" % (format_code, format_word)
 
         msg += "  sort_method   = %s\n" % self.sort_method
@@ -1026,7 +939,8 @@ class Op2Codes:
         else:
             msg += '  NX Nastran\n'
         #print msg
-        assert isinstance(self.format_code, int), type(self.format_code)
+        if hasattr(self, 'format_code'):
+            assert isinstance(self.format_code, int), type(self.format_code)
         return msg
 
     def get_force_flux(self, thermal=None):
@@ -1070,10 +984,10 @@ class Op2Codes:
         elif table_code == 5:
             table = "OES - Element %s" % stress_word
         else:
-            try:
-                table = get_table_from_table_code(table_code, is_msc=self.is_msc)
-            except KeyError:
-                table = '%s - Unknown' % self.table_name
+            #try:
+            table = get_table_from_table_code(table_code, is_msc=self.is_msc)
+            #except KeyError:
+                #table = '%s - Unknown' % self.table_name
 
         return table_code, table
 

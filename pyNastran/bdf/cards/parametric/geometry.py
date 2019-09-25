@@ -283,7 +283,7 @@ class GMSURF(BaseCard):
         self.cid_bc = cid_bc
         self.data = data
         assert isinstance(data, list), type(data)
-        assert group in ['MSCGRP1', 'MSCGRP2'], group # 'MSCGRP0', 'MSCGRP1', 'MSCGRP2'
+        assert group in ['MSCGRP0', 'MSCGRP1', 'MSCGRP2'], group # 'MSCGRP0', 'MSCGRP1', 'MSCGRP2'
 
     @classmethod
     def _init_from_empty(cls):

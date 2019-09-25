@@ -3523,7 +3523,7 @@ class OES(OP2Common):
                                           fd1, sx1, sy1, txy1, ovm1,
                                           fd2, sx2, sy2, txy2, ovm2)
                     n += ntotal
-        elif self.format_code in [2, 3] and self.num_wide == 17 and self.table_name in [b'OESVM1', b'OESVM2', b'OSTRVM1']: # freq
+        elif self.format_code in [2, 3] and self.num_wide == 17 and self.table_name in [b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2']: # freq
             # Table of element stresses for frequency response analysis that includes
             # von Mises stress output in SORT1 format.
             element_id = self.nonlinear_factor

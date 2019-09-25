@@ -61,6 +61,8 @@ from pyNastran.op2.result_objects.design_response import (
     WeightResponse, StressResponse, StrainResponse, ForceResponse,
     FlutterResponse, Convergence)
 
+IS_TESTING = True
+
 #class MinorTables:
     #def __init__(self, op2_reader):
         #self.op2_reader = op2_reader
@@ -3439,7 +3441,7 @@ class OP2Reader:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         elif ndata == 12:
-            subtable_name, unused_ten = unpack(self._endian + b'8si', data)
+            subtable_name, unused_ten = unpack(self._endian + b'8si', data)  # type: Tuple[bytes, int]
             subtable_name = subtable_name.strip().decode(self._encoding)
             #assert ten == 10, self.show_data(data, types='ifs', endian=None)
             assert subtable_name in ['GPL', 'GPLS'], subtable_name
@@ -3674,6 +3676,8 @@ class OP2Reader:
                             msg = 'n is not an integer; table_name=%s n=%s table4_parser=%s' % (
                                 self.op2.table_name, n, table4_parser)
                             raise TypeError(msg)
+                        if IS_TESTING:
+                            self._run_checks(table4_parser)
 
                         if self.read_mode == 1:
                             #op2_reader._goto(n)
@@ -3701,8 +3705,17 @@ class OP2Reader:
                 else:
                     data, ndata = self._read_record_ndata()
                     unused_n = table4_parser(data, ndata)
+                    if IS_TESTING:
+                        self._run_checks(table4_parser)
                 #del n
         return None
+
+    def _run_checks(self, table4_parser):
+        """helper method"""
+        if table4_parser != self.op2._table_passer:
+            str(self.op2.code_information())
+        if hasattr(self, 'obj'):
+            str(self.obj.get_stats())
 
     def show(self, n, types='ifs', endian=None):  # pragma: no cover
         """

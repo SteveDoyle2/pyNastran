@@ -77,7 +77,7 @@ dict_int_obj_attrs = [
     'view3ds', 'views',
 
     # parametric
-    'pset', 'gmcurv', 'feedge', 'feface',
+    'pset', 'gmcurv', 'feedge', 'feface', 'gmsurf',
 ]
 
 scalar_obj_keys = [

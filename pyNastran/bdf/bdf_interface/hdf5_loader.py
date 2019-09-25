@@ -54,6 +54,8 @@ def load_bdf_from_hdf5_file(h5_file, model):
         'mpcs' : hdf5_load_mpcs,
         'mpcadds' : hdf5_load_mpcadds,
 
+        'pval' : hdf5_load_pval,
+
         'loads' : hdf5_load_loads,
         'load_combinations' : hdf5_load_load_combinations,
         'dloads' : hdf5_load_dloads,
@@ -620,6 +622,33 @@ def hdf5_load_mpcadds(model, group, encoding):
                 sub_group, encoding, model.log)
             _put_keys_values_into_dict_list(model, 'mpcadds', mpc_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
+
+def hdf5_load_pval(model, group, encoding):
+    """loads the pval"""
+    keys = list(group.keys())
+    keys.remove('keys')
+    for adapt_id in keys:
+        adapt_idi = int(adapt_id)
+        cards_group = group[adapt_id]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            #if card_type == 'TEMP':  # this has a weird dictionary structure
+                #sid = sub_group.keys()
+                #for index in sid:
+                    #cardi = sub_group[index]
+                    #nodes = _cast(cardi['node']).tolist()
+                    #temp = _cast(cardi['temperature']).tolist()
+                    #temperatures = {nid : tempi for (nid, tempi) in zip(nodes, temp)}
+                    #model.add_temp(iload_id, temperatures, comment='')
+            #else:
+            sid, values = load_cards_from_keys_values(
+                'pval/%s/%s' % (adapt_idi, card_type),
+                sub_group, encoding, model.log)
+            #for value in values:
+                #print(value)
+            _put_keys_values_into_dict_list(model, 'pval', adapt_idi, sid, values)
+
+            model.card_count[card_type] = len(sid)
 
 def hdf5_load_loads(model, group, encoding):
     """loads the loads"""

@@ -2601,10 +2601,10 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
-        if is_sort1:
-            pass
-        else:
-            raise NotImplementedError('SORT2')
+        #if is_sort1:
+            #pass
+        #else:
+            #raise NotImplementedError('SORT2')
 
     def _reset_indices(self):
         self.itotal = 0

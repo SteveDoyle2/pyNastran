@@ -86,6 +86,7 @@ NX_RESULT_TABLES = [
     b'OTEMP1',  # Grid point temperature output
     b'OEFIIS',  # Data block for inter-laminar shear failure indices.
     b'OBOLT1',  # Bolt output data block
+    b'PSDF',    # Power spectral density table.
 
     b'ODAMGPFE', # Table of damage energy for ply failure
     b'ODAMGPFD', # Table of damage values for ply failure
@@ -176,3 +177,70 @@ if len(NX_RESULT_TABLES) != len(np.unique(NX_RESULT_TABLES)):
         if cvaluei != 1:
             _MSG += '%s = %s\n' % (key, cvaluei)
     raise RuntimeError(_MSG)
+
+NX_TABLE_CONTENT = {
+    # nx 8.5
+    0: '',
+    1: 'OUG - Displacement vector',
+    2: 'OPG - Load vector',
+    3: 'OQG - SPC/MPC Force vector',
+    4: 'OEF - Element force/flux',
+    5: 'OES - Element stress/strain',
+    6: 'LAMA - Eigenvalue summary',
+    7: 'OUG - Eigenvector',
+    8: 'Grid Point Singularity Table (obsolete)',
+    9: 'OEIGS - Eigenvalue analysis summary',
+    10: 'OUG - Velocity vector',
+    11: 'OUG - Acceleration vector',
+    12: 'OPG - Nonlinear force vector',
+    13: 'OGPWG - Grid point weight generator',
+    14: 'OUG - Eigenvector (solution set)',
+    15: 'OUG - Displacement vector (solution set)',
+    16: 'OUG - Velocity vector (solution set)',
+    17: 'OUG - Acceleration vector (solutin set)',
+    18: 'OEE - Element strain energy',
+    19: 'OGF - Grid point force balance',
+    20: 'OES - Stresses at grid points',
+    21: 'OES - Strain/curvature at grid points',
+    22: 'OELOF1 - Element internal forces/moments',
+    23: 'OELOP1 - Summation of element oriented forces on adjacent elements',
+    24: 'OEP - Element pressures',
+    25: 'OEF - Composite failure indices',
+    26: 'OGS - Grid point stresses (surface)',
+    27: 'OGS - Grid point stresses (volume - direct)',
+    28: 'OGS - Grid point stresses (volume - princial)',
+    29: 'OGS - Element stress discontinuities (surface)',
+    30: 'OGS - Element stress discontinuities (volume - direct)',
+    31: 'OGS - Element stress discontinuities (volume - princial)',
+    32: 'OGS - Grid point stress discontinuities (surface)',
+    33: 'OGS - Grid point stress discontinuities (volume - direct)',
+    34: 'OGS - Grid point stress discontinuities (volume - princial)',
+    35: 'OGS - Grid point stresses (plane strain)',
+    36: 'OEE - Element kinetic energy',
+    37: 'OEE - Element energy loss',
+
+    38 : 'OMSEC - Constant modal strain energy',
+    39 : 'OMSED - Oscillating modal strain energy',
+    40 : 'OMKEC - Constant modal kinetic energy',
+    41 : 'OMKED - Oscillating modal kinetic energy',
+    42 : 'OMECON - Constant total modal energy',
+    43 : 'OMEOSC - Oscillating total modal energy',
+    44 : 'OUGMC - Displacement/velocity/acceleration modal contributions',
+    45 : 'OEFMC - Element force modal contributions',
+    46 : 'OESMC - Element stress modal contributions',
+    47 : 'OSTRMC - Element strain modal contributions',
+    48 : 'OQGMC - SPC force modal contributions',
+    49 : 'OUGPC - Panel contributions',
+    50 : 'OUGGC - Grid contributions',
+    51 : 'OUGRC - Reciprocal panel contributions',
+    61 : 'OGK - Gasket Element Results',
+    62 : 'OBC - Contact Pressure and Traction',
+    63 : 'OQG - Contact Force Results',
+    64 : 'OSPDSI - Contact Separation Distance - Initial',
+    65 : 'OSPDS - Contact Separation Distance',
+    66 : 'OBG - Glue force results (normal and in-plane tractions)',
+    67 : 'OQG - Glue force resutls',
+    68 : '??? - Tosca normalized material properties',
+    # nx 2019.2
+    72 : 'OTEMP1 - grid point temperatures',
+}
