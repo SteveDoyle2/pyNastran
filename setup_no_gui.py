@@ -42,11 +42,10 @@ setup(
         'Natural Language :: English',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         ], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     keywords='',
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     author=pyNastran.__author__,
     author_email=pyNastran.__email__,
     url=pyNastran.__website__,

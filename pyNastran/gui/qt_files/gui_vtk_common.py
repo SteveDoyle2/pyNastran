@@ -41,7 +41,7 @@ class GuiVTKCommon(GuiQtCommon):
             GuiQtCommon.__init__(self, **kwds)
         elif qt_version == 'pyqt5':
             super(GuiVTKCommon, self).__init__(**kwds)
-        elif qt_version in ['pyside', 'pyside2']:
+        elif qt_version == 'pyside2':
             GuiQtCommon.__init__(self, **kwds)
         else:  #: pragma: no cover
             raise NotImplementedError(qt_version)

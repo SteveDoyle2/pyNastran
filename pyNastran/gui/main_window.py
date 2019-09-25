@@ -43,9 +43,7 @@ def get_stylesheet():
     stylesheet = None
     #if IS_DARK:
         #mapper = {
-            #'pyside' : qdarkstyle.load_stylesheet_pyside,
             #'pyside2' : qdarkstyle.load_stylesheet_pyside2,
-            #'pyqt4' : qdarkstyle.load_stylesheet_pyqt,
             #'pyqt5' : qdarkstyle.load_stylesheet_pyqt5,
         #}
         #stylesheet = mapper[qt_version]()
@@ -125,7 +123,7 @@ class MainWindow(GuiCommon, NastranIO):
         #fmt_order=fmt_order, inputs=inputs,
         #html_logging=html_logging,
 
-        if qt_version in ['pyqt4', 'pyqt5', 'pyside', 'pyside2']:
+        if qt_version in ['pyqt5', 'pyside2']:
             NastranIO.__init__(self)
         else:  # pragma: no cover
             raise NotImplementedError('qt_version=%r is not supported' % qt_version)
@@ -238,7 +236,7 @@ class MainWindow(GuiCommon, NastranIO):
     def about_dialog(self):
         """Display about dialog"""
         copyright = pyNastran.__copyright__
-        if qt_version in ['pyside', 'pyside2']:
+        if qt_version in ['pyside2']:
             word = 'PySide'
             copyright_qt = pyNastran.__pyside_copyright__
         else:

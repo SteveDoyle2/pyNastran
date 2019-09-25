@@ -47,12 +47,6 @@ print('qt_version = %r' % qt_version)
 if qt_version == "pyqt5":
     from PyQt5.QtWidgets import QWidget, QSizePolicy, QApplication
     from PyQt5.QtCore import Qt, QTimer, QObject, QSize, QEvent
-elif qt_version == "pyqt4":
-    from PyQt4.QtGui import QWidget, QSizePolicy, QApplication
-    from PyQt4.QtCore import Qt, QTimer, QObject, QSize, QEvent
-elif qt_version == "pyside":
-    from PySide.QtGui import QWidget, QSizePolicy, QApplication
-    from PySide.QtCore import Qt, QTimer, QObject, QSize, QEvent
 elif qt_version == "pyside2":
     from PySide2.QtWidgets import QWidget, QSizePolicy, QApplication
     from PySide2.QtCore import Qt, QTimer, QObject, QSize, QEvent

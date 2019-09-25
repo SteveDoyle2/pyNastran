@@ -594,16 +594,9 @@ class LoadActions:
     def create_load_file_dialog(self, qt_wildcard, title, default_filename=None):
         #options = QFileDialog.Options()
         #options |= QFileDialog.DontUseNativeDialog
-        #if qt_version == 4:
-            ## works in: pyqt4, pyside
-            ## doesn't work in: pyqt5
-            #fname, wildcard_level = QFileDialog.getOpenFileNameAndFilter(
-                #self, title, default_filename, file_types, options=options)
-            #return str(fname), str(wildcard_level)
-        #else:
-            #fname, flt = QFileDialog.getOpenFileName(
-                #self, title, default_filename, file_types, options=options)
-            ##flt = str(filt).strip()
+        #fname, flt = QFileDialog.getOpenFileName(
+            #self, title, default_filename, file_types, options=options)
+        #flt = str(filt).strip()
         #return fname, flt
 
         if default_filename is None:

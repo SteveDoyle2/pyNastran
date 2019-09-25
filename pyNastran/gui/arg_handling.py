@@ -7,8 +7,8 @@ from pyNastran.utils.arg_handling import argparse_to_dict, swap_key, update_mess
 
 #from gui.formats import format_string
 
-if sys.version_info < (3, 6):  # pragma: no cover
-    sys.exit("requires Python 3.6+...")
+if sys.version_info < (3, 7):  # pragma: no cover
+    sys.exit("requires Python 3.7+...")
 
 SUPPORT_MULTIMODEL = False
 
@@ -271,7 +271,7 @@ def run_argparse(argv):
 
     # no arguments
     if dev:
-        parent_parser.add_argument('--qt', type=str, help='{pyqt4, pyqt5, pyside, pyside2} msg')
+        parent_parser.add_argument('--qt', type=str, help='{pyqt5, pyside2} msg')
         parent_parser.add_argument('--test', help='test msg', action='store_true')
         parent_parser.add_argument('--noupdate', help='noupdate msg', action='store_true')
         parent_parser.add_argument('--plugin', help='disables the format check',
@@ -416,7 +416,7 @@ def _update_argparse_argdict(argdict):
 
     if argdict['qt'] is not None:
         qt = argdict['qt'].lower()
-        assert qt in ['pyside', 'pyqt4', 'pyqt5', 'pyside2'], 'qt=%r' % qt
+        assert qt in ['pyqt5', 'pyside2'], 'qt=%r' % qt
         os.environ.setdefault('QT_API', qt)
 
     #if argdict['input'] is None:

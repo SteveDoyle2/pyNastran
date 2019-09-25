@@ -11,7 +11,6 @@ The preferences menu handles:
 """
 from math import log10, ceil
 
-#import PySide  # for local testing
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
