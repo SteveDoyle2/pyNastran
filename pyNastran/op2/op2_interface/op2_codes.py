@@ -710,7 +710,7 @@ TABLE_CODE_MAP = {
 }
 
 GEOM_TABLES = { # no analysis code
-    'CASECC',
+    'CASECC', 'EDOM',
     'GEOM1', 'GEOM2', 'GEOM3', 'GEOM4', 'DYNAMIC', 'CONTACT',
     'GEOM1S', 'GEOM2S', 'GEOM3S', 'GEOM4S', 'DYNAMICS', 'CONTACTS',
     'PVT', 'PVT0',
