@@ -9,6 +9,7 @@ from pyNastran.utils import object_attributes, object_methods
 #from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.write_path import write_include, _split_path
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
 from pyNastran.bdf.test.test_bdf import run_bdf, compare, run_lots_of_files, main as test_bdf
 
 PKG_PATH = pyNastran.__path__[0]
@@ -129,7 +130,7 @@ class TestBDF(Tester):
             assert len(fem.elements) == 186, 'len(elements) = %i' % len(fem.elements)
             assert len(fem.methods) == 0, 'len(methods) = %i' % len(fem.methods)
             assert len(fem.properties) == 1, 'len(properties) = %i' % len(fem.properties)
-        mass, cg, unused_I = fem1.mass_properties()
+        mass, cg, unused_I = mass_properties(fem1)
 
         assert allclose(mass, 6.0), 'mass = %s' % mass
         cg_exact = array([0.5, 1., 1.5])
@@ -772,8 +773,8 @@ class TestBDF(Tester):
         #assert len(diff_cards2) == 0, diff_cards2
 
 def compare_mass_cg_inertia(fem1, reference_point=None, sym_axis=None):
-    unused_mass1, unused_cg1, unused_I1 = fem1.mass_properties(
-        reference_point=reference_point, sym_axis=sym_axis)
+    unused_mass1, unused_cg1, unused_I1 = mass_properties(
+        fem1, reference_point=reference_point, sym_axis=sym_axis)
     #mass1, cg1, I1 = fem1.mass_properties_no_xref(reference_point=reference_point, sym_axis=sym_axis)
 
 

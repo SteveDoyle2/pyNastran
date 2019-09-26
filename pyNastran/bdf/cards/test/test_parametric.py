@@ -5,7 +5,7 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestParametric(unittest.TestCase):
     def test_parametric(self):
-        """tests xxx"""
+        """tests PVAL, PSET, FEEDGE, FEFACE, GMCURV, GMSURF"""
 
         model = BDF(debug=False)
         idi = 10

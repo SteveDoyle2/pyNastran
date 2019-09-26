@@ -666,7 +666,7 @@ def get_renumber_starting_ids_from_model(model):
         max(model.rigid_elements) if model.rigid_elements else 0,
     ])
     pid_max = max([
-        max(model.properties) if model.masses else 0,
+        max(model.properties) if model.properties else 0,
         max(model.properties_mass) if model.properties_mass else 0,
     ])
     mids = model.material_ids

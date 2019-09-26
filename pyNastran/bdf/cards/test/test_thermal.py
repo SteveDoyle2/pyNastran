@@ -162,6 +162,10 @@ class TestThermal(unittest.TestCase):
         temperature = 13.3
         model.add_tempd(sid, temperature, comment='tempd')
 
+        fields = ['TEMPD', 101, 1., 102, 2., 103, 3., 104, 4.]
+        model.add_card(fields, 'TEMPD')
+
+
         temperatures = {
             15 : 37.,
             16 : 38.,

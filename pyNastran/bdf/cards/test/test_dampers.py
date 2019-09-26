@@ -94,6 +94,11 @@ class TestDampers(unittest.TestCase):
         s2 = 4
         cdamp4 = model.add_cdamp4(eid, bdamp, [s1, s2], comment='cdamp4')
 
+        # two new CDAMP4s defined on one line
+        bdamp2 = 3.0e3
+        fields = ['CDAMP4', 104, bdamp, s1, s2, 105, bdamp2, s1, s2]
+        model.add_card(fields, 'CDAMP4')
+
         eid = 5
         pid = 5
         mid = 10

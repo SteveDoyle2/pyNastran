@@ -143,15 +143,15 @@ def bdf_merge(bdf_filenames, bdf_filename_out=None, renumber=True, encoding=None
                 for key, value in data2.items():
                     if data_member in 'coords' and key == 0:
                         continue
+
                     if isinstance(value, list):
                         assert key not in data1, key
                         data1[key] = value
-
                     else:
-                        assert key not in data1, key
+                        assert key not in data1, f'{data_member} key={key}\n{data1}'
                         data1[key] = value
                         #print('   %s' % key)
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(type(data1))
     #if bdf_filenames_out:
         #model.write_bdf(bdf_filenames_out, size=size)

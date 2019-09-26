@@ -26,7 +26,7 @@ NO_MASS = {
     'PELAS', 'PVISC', 'PBUSH1D',
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', #'CLEAS5',
     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-    'PDAMP',
+    'PDAMP', 'PGAP',
     'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC', 'CGAP', # is this right?
     'CFAST', 'GENEL',
     'CRAC2D', 'CRAC3D',

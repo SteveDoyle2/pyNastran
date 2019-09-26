@@ -549,6 +549,13 @@ class TestDynamic(unittest.TestCase):
         model.reset_errors()
         model.safe_cross_reference()
 
+        delta = 0.1
+        eid1 = 11
+        eid2 = 12
+        eid3 = 13
+        fields = ['DEFORM', sid, eid1, delta, eid2, delta, eid3, delta]
+        model.add_card(fields, 'DEFORM')
+
         eid = 10
         nids = [2, 3]
         mid = 100
@@ -559,6 +566,9 @@ class TestDynamic(unittest.TestCase):
         nu = 0.3
         model.add_mat1(mid, E, G, nu)
         model.add_conrod(eid, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment='')
+        model.add_conrod(eid1, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment='')
+        model.add_conrod(eid2, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment='')
+        model.add_conrod(eid3, mid, nids, A=0.0, j=0.0, c=0.0, nsm=0.0, comment='')
         model.cross_reference()
         save_load_deck(model)
 

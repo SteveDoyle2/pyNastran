@@ -5,6 +5,8 @@ import numpy as np
 
 from pyNastran.bdf.bdf import BDF, BDFCard, CBAR, PBAR, PBARL, GRID, MAT1
 from pyNastran.bdf.field_writer_8 import print_card_8
+from pyNastran.bdf.mesh_utils.mass_properties import (
+    mass_properties, mass_properties_nsm)  #mass_properties_breakdown
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 
@@ -307,7 +309,8 @@ class TestBars(unittest.TestCase):
         model.validate()
         model.cross_reference()
 
-        mass, unused_cg, unused_I = model.mass_properties(
+        mass, unused_cg, unused_I = mass_properties(
+            model,
             element_ids=None, mass_ids=None,
             reference_point=None,
             sym_axis=None,

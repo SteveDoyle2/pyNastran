@@ -1,6 +1,7 @@
 """tests nodes.py"""
 import unittest
 
+import numpy as np
 from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.cards.nodes import GRID, SPOINTs as SPOINT
 
@@ -28,6 +29,17 @@ class TestNodes(unittest.TestCase):
         epoint.write_card(size=16, is_double=False)
         epoint.write_card(size=16, is_double=True)
         model.validate()
+
+    def test_node_spoint_epoint(self):
+        """tests _get_npoints_nids_allnids"""
+        model = BDF(debug=False)
+        model.add_grid(3, [1., 2., 3.])
+        model.add_spoint(12, comment='spoint')
+        model.add_epoint(10, comment='epoint')
+        npoints, nids, all_nodes = model._get_npoints_nids_allnids()
+        assert npoints == 3, npoints
+        assert np.array_equal(nids, [3]), nids
+        assert np.array_equal(all_nodes, [3, 12, 10]), all_nodes
 
     def test_seqgp(self):
         """tests SEQGP"""

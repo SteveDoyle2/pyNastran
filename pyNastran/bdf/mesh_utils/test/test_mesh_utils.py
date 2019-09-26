@@ -23,6 +23,8 @@ from pyNastran.bdf.mesh_utils.pierce_shells import (
     pierce_shell_model) #, quad_intersection, triangle_intersection)
 from pyNastran.bdf.mesh_utils.mirror_mesh import (
     write_bdf_symmetric, bdf_mirror, bdf_mirror_plane)
+from pyNastran.bdf.mesh_utils.mass_properties import (
+    mass_properties, mass_properties_nsm)  #mass_properties_breakdown
 from pyNastran.bdf.mesh_utils.make_half_model import make_symmetric_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.utils import cmd_line
@@ -393,6 +395,15 @@ class TestMeshUtils(unittest.TestCase):
             cmd_line(argv=['bdf', 'equivalence'])
 
         with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'free_faces'])
+
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'merge'])
+
+        with self.assertRaises(SystemExit):
+            cmd_line(argv=['bdf', 'export_caero_mesh'])
+
+        with self.assertRaises(SystemExit):
             cmd_line(argv=['bdf', 'transform'])
 
         with self.assertRaises(SystemExit):
@@ -429,6 +440,9 @@ class TestMeshUtils(unittest.TestCase):
         argv = ['bdf', 'equivalence', 'caero2.bdf', '0.001', '-o', 'caero3.bdf']
         cmd_line(argv=argv, quiet=True)
 
+        argv = ['bdf', 'merge', 'caero2.bdf', 'caero2.bdf', '-o', 'caero3_merged.bdf']
+        cmd_line(argv=argv, quiet=True)
+
         argv = ['bdf', 'renumber', 'caero3.bdf', 'caero4.bdf', '--size', '8']
         cmd_line(argv=argv, quiet=True)
 
@@ -448,6 +462,8 @@ class TestMeshUtils(unittest.TestCase):
         cmd_line(argv=argv, quiet=True)
         os.remove('caero.bdf')
         os.remove('caero2.bdf')
+        os.remove('caero3.bdf')
+        os.remove('caero3_merged.bdf')
         os.remove('caero4.bdf')
         os.remove('caero5.bdf')
         os.remove('caero6.bdf')
@@ -682,7 +698,7 @@ class TestMeshUtils(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
-        mass = model.mass_properties(element_ids=13)[0]
+        mass = mass_properties(model, element_ids=13)[0]
         bdf_file = StringIO()
         model.write_bdf(bdf_file)
         model.uncross_reference()
@@ -691,7 +707,7 @@ class TestMeshUtils(unittest.TestCase):
 
         assert np.allclose(mass, 0.05), mass # t=0.1; A=0.5; nsm=0.; mass=0.05
 
-        mass = model.mass_properties(element_ids=14)[0]
+        mass = mass_properties(model, element_ids=14)[0]
         bdf_file = StringIO()
         model.write_bdf(bdf_file, close=False)
         bdf_file.seek(0)
@@ -759,7 +775,7 @@ class TestMeshUtils(unittest.TestCase):
         model.add_mat1(mid1, E, G, nu, rho=1.0)
         model.validate()
         model.cross_reference()
-        mass1, unused_cg1, unused_inertia1 = model.mass_properties()
+        mass1, unused_cg1, unused_inertia1 = mass_properties(model)
 
         # mirror_model=None -> new model
         #
@@ -784,7 +800,7 @@ class TestMeshUtils(unittest.TestCase):
                             close=True, plane='xz') # +y/-y
         model2 = read_bdf(out_filename, log=log)
         assert len(model2.nodes) == 16, model2.nodes
-        mass2, cg2, unused_inertia2 = model2.mass_properties()
+        mass2, cg2, unused_inertia2 = mass_properties(model2)
         #print('cg1=%s cg2=%s' % (cg1, cg2))
         assert np.allclose(mass1*2, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
         assert np.allclose(cg2[1], 0.), 'cg2=%s stats=%s' % (cg2, model2.get_bdf_stats())

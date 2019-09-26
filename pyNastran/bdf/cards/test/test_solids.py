@@ -10,6 +10,8 @@ from pyNastran.bdf.cards.elements.solid import (
     #CTETRA10, CHEXA20,
     CPENTA15
 )
+from pyNastran.bdf.mesh_utils.mass_properties import (
+    mass_properties, mass_properties_nsm)  #mass_properties_breakdown
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
 
@@ -578,8 +580,8 @@ class TestSolids(unittest.TestCase):
         self.assertEqual(element.Mid(), mid)
         self.assertEqual(element.Volume(), V)
         self.assertEqual(element.Mass(), mass)
-        mass_mp = model.mass_properties(element_ids=eid)[0]
-        mass_mp_nsm = model.mass_properties_nsm(element_ids=eid)[0]
+        mass_mp = mass_properties(model, element_ids=eid)[0]
+        mass_mp_nsm = mass_properties_nsm(model, element_ids=eid)[0]
         assert np.allclose(mass, mass_mp)
         assert np.allclose(mass, mass_mp_nsm)
 
@@ -593,7 +595,7 @@ def end_checks(model):
     model.uncross_reference()
     model.cross_reference()
     model.pop_xref_errors()
-    mass, cg, inertia = model.mass_properties()
+    mass, cg, inertia = mass_properties(model)
     assert mass > 0, 'mass=%s, cg=%s, inertia=%s' % (mass, cg, inertia)
 
     #bdf_filename = 'solid_test.bdf'

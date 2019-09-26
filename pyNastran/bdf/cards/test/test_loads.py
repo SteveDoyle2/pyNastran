@@ -11,6 +11,7 @@ from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf, RROD, CaseC
 from pyNastran.bdf.cards.base_card import expand_thru_by
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moments_elements
 #from pyNastran.bdf.errors import DuplicateIDsError
 
 from pyNastran.op2.op2 import OP2, read_op2
@@ -399,12 +400,12 @@ class TestLoads(unittest.TestCase):
 
         p0 = [0., 0., 0.]
         loadcase_id = sid
-        model.sum_forces_moments(p0, loadcase_id, include_grav=False, xyz_cid0=None)
+        sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None)
 
         eids = None
         nids = None
-        model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                          include_grav=False, xyz_cid0=None)
+        sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
+                                    include_grav=False, xyz_cid0=None)
         save_load_deck(model)
 
     def test_pload4_cpenta(self):
@@ -467,11 +468,11 @@ class TestLoads(unittest.TestCase):
                     assert array_equal(normal, array([0., 1., 0.])), 'Ny g1=%s g34=%s face=%s normal=%s\n%s' % (g1, g34, face, normal, msg)
                     self.assertEqual(area, 2.0, 'area=%s' % area)
 
-            forces1, moments1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            forces1, moments1 = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            forces2, moments2 = model.sum_forces_moments_elements(
-                p0, loadcase_id, eids, nids, include_grav=False)
+            forces2, moments2 = sum_forces_moments_elements(
+                model, p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
             assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
@@ -530,11 +531,11 @@ class TestLoads(unittest.TestCase):
             assert array_equal(centroid, array([2/3., 1/3., 0.])), 'centroid=%s\n%s' % (centroid, msg)
             assert array_equal(normal, array([0., 0., 1.])), 'normal=%s\n%s' % (normal, msg)
 
-            forces1, moments1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            forces1, moments1 = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            forces2, moments2 = model.sum_forces_moments_elements(
-                p0, loadcase_id, eids, nids, include_grav=False)
+            forces2, moments2 = sum_forces_moments_elements(
+                model, p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
             assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
@@ -584,9 +585,9 @@ class TestLoads(unittest.TestCase):
                 assert array_equal(centroid, array([0.5, 0.5, 0.])), 'centroid=%s\n%s' % (centroid, msg)
                 assert array_equal(normal, array([0., 0., 1.])), 'normal=%s\n%s' % (normal, msg)
 
-            f1, m1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            f2, m2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                       include_grav=False)
+            f1, m1 = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+            f2, m2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
+                                                 include_grav=False)
             assert allclose(f1, f2), 'f1=%s f2=%s' % (f1, f2)
             assert allclose(m1, m2), 'm1=%s m2=%s' % (m1, m2)
 
@@ -675,11 +676,11 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(m[0], fm[3], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[1], fm[4], 'm=%s mexpected=%s' % (m, fm[3:]))
             #self.assertEqual(m[2], fm[5], 'm=%s mexpected=%s' % (m, fm[3:]))
-            forces1, moments1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            forces1, moments1 = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            forces2, moments2 = model.sum_forces_moments_elements(
-                p0, loadcase_id, eids, nids, include_grav=False)
+            forces2, moments2 = sum_forces_moments_elements(
+                model, p0, loadcase_id, eids, nids, include_grav=False)
             assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
             assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
@@ -794,11 +795,11 @@ class TestLoads(unittest.TestCase):
             #self.assertEqual(moments1[0], fm[3], 'moments1=%s mexpected=%s' % (moments1, fm[3:]))
             #self.assertEqual(moments1[1], fm[4], 'moments1=%s mexpected=%s' % (moments1, fm[3:]))
             #self.assertEqual(moments1[2], fm[5], 'moments1=%s mexpected=%s' % (moments1, fm[3:]))
-            forces1, moments1 = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            forces1, moments1 = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
             eids = None
             nids = None
-            forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                                  include_grav=False)
+            forces2, moments2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
+                                                            include_grav=False)
             assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
             assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
