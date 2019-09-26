@@ -6,7 +6,7 @@ from pyNastran.bdf.cards.nodes import EPOINTs
 from pyNastran.bdf.cards.loads.loads import DAREA
 from pyNastran.bdf.cards.methods import EIGB
 from pyNastran.bdf.cards.dynamic import FREQ1, TF, DELAY, DPHASE
-from pyNastran.bdf.cards.loads.dloads import TLOAD1, TLOAD2, RLOAD1, RLOAD2
+from pyNastran.bdf.cards.loads.dloads import TLOAD1, TLOAD2, RLOAD1, RLOAD2, ACSRCE
 from pyNastran.op2.tables.geom.geom_common import GeomCommon
 from pyNastran.op2.tables.geom.dit import get_iend_from_ints
 
@@ -76,9 +76,17 @@ class DYNAMICS(GeomCommon):
         }
 
     def _read_acsrce(self, data, n):
+        """common method for reading NX/MSC ACSRCE"""
+        n = self._read_dual_card(data, n, self._read_acsrce_nx, self._read_acsrce_msc,
+                                 'ACSRCE', self._add_dload_entry)
+        return n
+
+    def _read_acsrce_msc(self, data, n):
         """
         ACSRCE(5307,53,379)
 
+        MSC 2005r2 - 2016.1
+        -------------------
         Word Name Type Description
         1 SID    I Load set identification number
         2 DAREA  I DAREA Bulk Data entry identification number
@@ -93,15 +101,64 @@ class DYNAMICS(GeomCommon):
         ntotal = 36
         nentries = (len(data) - n) // ntotal
         assert (len(data) - n) % ntotal == 0, 'ACSRCE'
-        self.increase_card_count('ACSRCE', nentries)
+
+        loads = []
         struc = Struct(self._endian + b'5i4f')
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
-            (sid, excite_id, dphase, delay, tc, rho, b, t, phase_lead) = out
-            self.add_acsrce(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=0)
+            (sid, excite_id, dphase, delay, tc, rho, b, delay_float, dphase_float, tc_float) = out
+            assert sid > 0, sid
+            assert dphase >= 0, dphase
+            assert delay >= 0, delay
+            assert tc >= 0, tc
+            assert rho > 0, rho
+            assert b > 0, b
+            acsrce = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=0)
             n += ntotal
-        return n
+            loads.append(acsrce)
+        return n, loads
+
+    def _read_acsrce_nx(self, data, n):
+        """
+        NX 12 - 2019.2
+        --------------
+        Word Name Type Description
+        1 SID    I Load set identification number
+        2 DAREA  I DAREA Bulk Data entry identification number
+        3 DPHASE I DPHASE Bulk Data entry identification number
+        4 DELAY  I DELAY Bulk Data entry identification number
+        5 TC     I TABLEDi Bulk Data entry identification number for C(f)
+        6 RHO     RS Density of the fluid
+        7 B       RS Bulk modulus of the fluid
+        8 DELAYR  RS If DELAYI  = 0, constant value for delay
+        9 DPHASER RS If DPHASEI = 0, constant value for phase
+        10 TCR    RS If TCI     = 0, constant value for C(f)
+
+        """
+        ntotal = 40
+        nentries = (len(data) - n) // ntotal
+        assert (len(data) - n) % ntotal == 0, 'ACSRCE'
+
+        loads = []
+        struc = Struct(self._endian + b'5i5f')
+        for unused_i in range(nentries):
+            edata = data[n:n+ntotal]
+            out = struc.unpack(edata)
+            (sid, excite_id, dphase, delay, tc, rho, b, delay_float, dphase_float, tc_float) = out
+            assert sid > 0, sid
+            assert rho > 0, rho
+            assert b > 0, b
+            if dphase == 0:
+                dphase = dphase_float
+            if delay == 0:
+                delay = delay_float
+            if tc == 0:
+                tc = tc_float
+            acsrce = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=0)
+            n += ntotal
+            loads.append(acsrce)
+        return n, loads
 
     def _read_darea(self, data, n):
         """

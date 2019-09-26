@@ -989,6 +989,102 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
 
+    def test_bdf_op2_other_16(self):
+        """checks phsflux4.bdf, which tests feedge"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'phsflux4.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'phsflux4.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model.safe_cross_reference()
+        save_load_deck(model, run_renumber=False)
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
+
+    def test_bdf_op2_other_17(self):
+        """checks cc508a.bdf, which tests feface, gmcurv, gmsurf"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'cc508a.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'cc508a.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model.safe_cross_reference()
+        save_load_deck(model, run_renumber=False)
+
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
+
+    def test_bdf_op2_other_18(self):
+        """checks see101nd.bdf, which tests superelement cards"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'see101nd.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'see101nd.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        #model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+        #save_load_deck(model)
+
+        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
+
+    def test_bdf_op2_other_19(self):
+        """checks see101ta.bdf, which tests superelement cards"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'see101ta.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'see101ta.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model.safe_cross_reference()
+        save_load_deck(model, run_renumber=False, run_op2_writer=False)
+
+        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
+
     def test_set_results(self):
         """tests setting only a subset of results"""
         log = get_logger(level='warning')
@@ -1071,7 +1167,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
-        hdf5_filename = os.path.join(folder, 'solid_bending.h5')
+        #hdf5_filename = os.path.join(folder, 'solid_bending.h5')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False, write_hdf5=False,
@@ -1983,7 +2079,7 @@ class TestOP2(Tester):
 
     def test_op2_autodesk_2(self):
         """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(MODEL_PATH,  'autodesk', '9zk6b5uuo.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'autodesk', '9zk6b5uuo.op2')
         log = get_logger(level='warning')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, write_f06=False,

@@ -1,0 +1,240 @@
+ID NXN, see101ta $                                                              
+TIME 10  $                                                                      
+SOL 101 $                                                                       
+CEND                                                                            
+TITLE=LOOP STRUCTURE WITH SELOC INCLUDING ROTATION             see101ta         
+ECHO = BOTH                                                                     
+SUPER = ALL                                                                     
+DISP = ALL                                                                      
+SPC = 20                                                                        
+$SPC = 10                                                                       
+LOAD = 1                                                                        
+$       $$$$$$$$$$$$$$ FOR NASTRAN PLOT $$$$$$$$$$$$$$$$$$$$$$$$$$              
+$       $$$$$$$$$$$$$$ FOR NASTRAN PLOT $$$$$$$$$$$$$$$$$$$$$$$$$$              
+OUTPUT(PLOT)                                                                    
+  CSCALE  1.3                                                                   
+  PLOTTER NAST                                                                  
+  PAPER SIZE 20. X 20.                                                          
+  SET 1 ALL                                                                     
+  MAXI DEFO 5.0                                                                 
+$                                                                               
+ SEPLOT 0,1,2,3,4,5,6                                                           
+  VIEW 34.27 , 23.17 , 0.                                                       
+  AXES X , Y , Z                                                                
+  FIND SCALE ORIGIN 1 SET 1                                                     
+  PLOT   SET 1 LABEL BOTH                                                       
+  PLOT  STATIC 0  SET 1 LABEL BOTH                                              
+$                                                                               
+BEGIN BULK                                                                      
+PARAM       POST      -2
+$ **********************************                                            
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$                                        .                                      
+$                                       .   . se 1 before move                  
+$                                      .   .                                    
+$                                     .   .                                     
+$                                    .   .                                      
+$                                   .   .  30 deg          y                    
+$                                      ._____              |                    
+$                                                          |                    
+$                                       _____.____   ______._____   _____.______
+$                                      |     .    | |    se.1    | |     .      
+$                                      |......____| |______._____| |_____.......
+$                                      |     |                           |      
+$                                      |  s  |       _____   ____        |  s   
+$                                      |  e  |      |  s  | | s  |       |  e   
+$                                      |  5  |      |  e  | | e  |       |  6   
+$                                      |     |      |__2__| |_3__|       |      
+$                                      |     |       ______._____   _____|......
+$                                      |     |      |    se.4    | |     .      
+$                                      |     |      |______._____| |_____.______
+$                                      |.....|____   ______._____               
+$   1  2  3    4  5  6                 |     .    | |    se.0    |              
+$   |  |  |    |  |  |                 |_____.____| |______._____|              
+$   ------------------                                                          
+$           |                       SE 1,2,3,4,and 0 form a solid core plug     
+$           0                       SE 5 and 6 attatch as implied in figure     
+$                                                                               
+$                                                                               
+$                                                                               
+$                                                                               
+$ Single level by default no SETREE specified                                   
+$                                                                               
+$ --------------------------------------------------------------------          
+$ Residule structure SE=0                                                       
+$                                                                               
+$ PROPERTIES                                                                    
+MAT1    1       29.0+6          0.3     .001    6.5-4                           
+PSHELL  100     1       0.5     1                                               
+$  APPLIED LOADS                                                                
+PLOAD2  1       3.0+3   1       2                                               
+$       2       3       4       5       6       7       8       9       10      
+GRID    1               0.0     -10.0                                           
+GRID    2               5.0     -10.0                                           
+GRID    3               5.0     -5.0                                            
+GRID    4               0.0     -5.0                                            
+GRID    5               -5.0    -10.0                                           
+GRID    6               -5.0    -5.0                                            
+CQUAD4  1       100     1       2       3       4                               
+CQUAD4  2       100     5       1       4       6                               
+$                                                                               
+$ POINTS DESIGNATED FOR SELOC SE1 (SEE SE1 6,5,2) TO LOCATION (40,50,60)        
+$  THIS IS A FROM 3 POINTS IN SE1 TO A LOCATION DEFINED BY 3 POINTS IN SPACE    
+$                                                                               
+GRID    40              -5.     15.                                             
+GRID    50              5.      15.                                             
+GRID    60              5.      10.                                             
+$                                                                               
+$       2       3       4       5       6       7       8       9       0       
+SELOC   1       16      13      12      40      50      60                      
+$                                                                               
+$                                                                               
+$ -----------------------------------------------------------------------       
+BEGIN BULK SUPER = 1                                                            
+$                                                                               
+$ NOTE THAT THIS SE NEEDS TO BE MOVED INT ITS FINAL LOCATION                    
+$                                                                               
+$ PROPERTIES                                                                    
+MAT1    1       29.0+6          0.3     .001    6.5-4                           
+PSHELL  100     1       0.5     1                                               
+$  APPLIED LOADS                                                                
+PLOAD2  1       1.5+3   1	2                                                     
+$ GEOMETRY                                                                      
+$	2	3	4	5	6	7	8	9	10                                                            
+GRID	11		-10.669932.5                                                           
+GRID	12		-6.3397535.0                                                           
+GRID	13		-8.8397539.33013                                                       
+GRID	14		-13.169936.83013                                                       
+GRID	15		-15.0	30.0                                                             
+GRID	16		-17.5	34.33013                                                         
+CQUAD4  1       100     11      12      13      14                              
+CQUAD4  2       100     15      11      14      16                              
+$ASET	4	123                                                                     
+$ ------------------------------------------------------------------------      
+BEGIN BULK SUPER = 2                                                            
+$                                                                               
+$ PROPERTIES                                                                    
+MAT1    1       31.0+6          0.35    .001    6.5-4                           
+PSHELL  100     1       0.5     1                                               
+$  APPLIED LOADS                                                                
+PLOAD2  1       3.0+3   1                                                       
+$ GEOMETRY                                                                      
+$       2       3       4       5       6       7       8       9       10      
+GRID    21              0.0     0.0                                             
+GRID    22              0.0     10.                                             
+GRID    23              -5.     10.                                             
+GRID    24              -5.     0.0                                             
+$       2       3       4       5       6       7       8       9       10      
+CQUAD4  1       100     24      23      22      21                              
+$ ------------------------------------------------------------------------      
+BEGIN BULK SUPER = 3                                                            
+$ PROPERTIES                                                                    
+MAT1    1       31.0+6          0.35    .001    6.5-4                           
+PSHELL  100     1       0.5     1                                               
+$  APPLIED LOADS                                                                
+PLOAD2  1       3.0+3   1                                                       
+$ GEOMETRY                                                                      
+$       2       3       4       5       6       7       8       9       10      
+GRID    31              0.0     0.0                                             
+GRID    32              0.0     10.                                             
+GRID    33              5.      10.                                             
+GRID    34              5.      0.0                                             
+$       2       3       4       5       6       7       8       9       10      
+CQUAD4  1       100     34      33      32      31                              
+SPC     10      32      13                                                      
+SPC     10      34      123                                                     
+$ -----------------------------------------------------------------------       
+BEGIN BULK SUPER=4                                                              
+$ PROPERTIES                                                                    
+MAT1    1       29.0+6          0.3     .001    6.5-4                           
+PSHELL  100     1       0.5     1                                               
+$  APPLIED LOADS                                                                
+PLOAD2  1       2.5+3   1       2                                               
+$ GEOMETRY                                                                      
+$       2       3       4       5       6       7       8       9       10      
+GRID    41              0.0     -5.0                                            
+GRID    42              5.0     -5.0                                            
+GRID    43              5.0     0.0                                             
+GRID    44              0.0     0.0                                             
+GRID    45              -5.0    -5.0                                            
+GRID    46              -5.0    0.0                                             
+CQUAD4  1       100     41      42      43      44                              
+CQUAD4  2       100     45      41      44      46                              
+$ -----------------------------------------------------------------------       
+BEGIN BULK SUPER = 5                                                            
+$                                                                               
+$ PROPERTIES                                                                    
+MAT1    1       27.0+6          0.28    .001    6.5-4                           
+PSHELL  100     1       0.5     1                                               
+$  APPLIED LOADS                                                                
+PLOAD2  1       1.5+3   1       2       3       4       5                       
+$       2       3       4       5       6       7       8       9       10      
+GRID    51              -5.     10.                                             
+GRID    52              -5.     15.                                             
+GRID    53              -10.    15.                                             
+GRID    54              -10.    10.                                             
+GRID    55              -15.    15.                                             
+GRID    56              -15.    10.                                             
+GRID    57              -15.    -5.                                             
+GRID    58              -15.    -10.                                            
+GRID    59              -10.    -10.                                            
+GRID    510             -10.    -5.                                             
+GRID    511             -5.     -10.                                            
+GRID    512             -5.     -5.                                             
+CQUAD4  1       100     51      52      53      54                              
+CQUAD4  2       100     53      55      56      54                              
+CQUAD4  3       100     510     54      56      57                              
+CQUAD4  4       100     57      58      59      510                             
+CQUAD4  5       100     59      511     512     510                             
+SPC1    20      123456  55      56      57      58                              
+$ ------------------------------------------------------------------------      
+BEGIN BULK SUPER = 6                                                            
+$ ADAPTIVE                                                                      
+$ADAPT   10              3       2               4                              
+$PVAL    2       2       2       2              SET     50                      
+$PVAL    4       4       4       3              SET     50                      
+$ GMCURV, FEEDGE, etc. for each superelement                                    
+$                                                                               
+$ PROPERTIES                                                                    
+MAT1    1       40.0+6          0.4     .001    6.5-4                           
+PSHELL  100     1       0.5     1                                               
+$  APPLIED LOADS                                                                
+PLOAD2  1       1.5+3   1       2       3       4       5                       
+$       2       3       4       5       6       7       8       9       10      
+GRID    61              5.      10.                                             
+GRID    62              5.      15.                                             
+GRID    63              10.     15.                                             
+GRID    64              10.     10.                                             
+GRID    65              15.     15.                                             
+GRID    66              15.     10.                                             
+GRID    67              15.     0.                                              
+GRID    68              15.     -5.                                             
+GRID    69              10.     0.                                              
+GRID    610             10.     -5.                                             
+GRID    611             5.      -5.                                             
+GRID    612             5.      0.                                              
+CQUAD4  1       100     61      62      63      64                              
+CQUAD4  2       100     63      65      66      64                              
+CQUAD4  3       100     67      69      64      66                              
+CQUAD4  4       100     69      67      68      610                             
+CQUAD4  5       100     69      610     611     612                             
+$ --------------------------------------------------------------------          
+ENDDATA                                                                         
+Keywords: XSORT,/                                                               
+Take deck                                                                       
+This deck is a baseline run to try_delete_1.dat                                 
+ 1. It builds se=0,1,2,3,4,5,6 as parts                                         
+ 2. with a seloc for se1                                                        

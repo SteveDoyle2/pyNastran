@@ -1,0 +1,53 @@
+ID MSC, PHSFLUX4 $ SJF 1-OCT-1998
+SOL    101
+TIME   10
+APP HEAT
+CEND
+TITL=UNIFORM HEAT FLUX FOR QUADP ELEMENTS        phsflux4
+SUBTITLE =  p-adaptivity
+ADAPT    = 101
+VUGRID(PRINT)=ALL
+SPC = 201
+DATAREC = 301
+OUTRCV = 401
+LOAD = 601
+SETS DEFINITION
+set 501 = all
+BEGIN BULK
+PARAM    AUTOSPC YES
+ADAPT   101                     120     120     150
+        part=ALL,elset=501
+PVAL    120     2       2       2               SET     501
+PVAL    150     5       5       3               SET     501
+OUTPUT  301
+        ELSET=501, TEMP=PRINT,
+        PVAL=PRINT, ERROR=PRINT, BY=1
+OUTRCV  401     501
+        VIEW=2*2*2
+PSHELL   1       1       1.
+MAT4    1       204.
+CQUAD4   1       1       1       2       8       7
+CQUAD4   2       1       2       3       9       8
+CQUAD4   3       1       3       4       10      9
+CQUAD4   4       1       4       5       11      10
+CQUAD4   5       1       5       6       12      11
+GRID     1               0.      0.      0.
+GRID     2               1.      0.      0.
+GRID     3               2.      0.      0.
+GRID     4               3.      0.      0.
+GRID     5               4.      0.      0.
+GRID     6               5.      0.      0.
+GRID     7               0.      1.      0.
+GRID     8               1.      1.      0.
+GRID     9               2.      1.      0.
+GRID     10              3.      1.      0.
+GRID     11              4.      1.      0.
+GRID     12              5.      1.      0.
+FEEDGE  1001    1       7
+FEEDGE  1002    6       12
+GMBC    0       201     1       FEEDGE  1001    CONSTANT 100.0
+GMLOAD,601,0,,,,FEEDGE,1002,EQUATION,+GML3
++GML3,901
+DEQATN  901     F(X)= 500.0 +(X-X)
+PARAM,POST,-1
+ENDDATA

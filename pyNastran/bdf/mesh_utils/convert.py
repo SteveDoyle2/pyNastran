@@ -956,7 +956,7 @@ def _convert_loads(model, xyz_scale, weight_scale, temperature_scale):
         tabled = model.TableD(tid)
         tabled.y *= scale
 
-    skip_cards = ['PLOADX1']
+    skip_cards = ['PLOADX1', 'GMLOAD']
     for loads in model.loads.values():
         assert isinstance(loads, list), loads
         for load in loads: # list

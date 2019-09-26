@@ -43,6 +43,7 @@ Defines the sub-OP2 class.  This should never be called outisde of the OP2 class
 """
 import os
 from struct import Struct, unpack
+from collections import defaultdict
 from typing import List, Tuple, Any
 
 from numpy import array
@@ -1598,7 +1599,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         """
         op2_reader = self.op2_reader
         table_names = []
+        self.table_count = defaultdict(int)
         while table_name is not None:
+            self.table_count[table_name] += 1
             table_names.append(table_name)
 
             if self.is_debug_file:

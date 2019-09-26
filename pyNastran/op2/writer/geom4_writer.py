@@ -55,6 +55,10 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     # return if no supported cards are found
     skip_cards = {
         'SUPORT', 'SUPORT1', # suport
+
+        # spcs
+        'GMSPC',
+
         # rigid elements
         'RROD', 'RSSCON',
 

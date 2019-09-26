@@ -6,7 +6,7 @@ from struct import Struct
 import numpy as np
 
 from pyNastran.bdf.cards.nodes import GRID, POINT, SEQGP
-from pyNastran.bdf.cards.parametric.geometry import FEEDGE, FEFACE
+#from pyNastran.bdf.cards.parametric.geometry import FEFACE
 
 from pyNastran.bdf.cards.coordinate_systems import (
     CORD1R, CORD1C, CORD1S,
@@ -392,7 +392,7 @@ class GEOM1(GeomCommon):
 
             if cid == -1:
                 cid = None
-            elem = self.add_feedge(edge_id, [n1, n2], cid, [geom1, geom2], geomin=geomin_str)
+            unused_elem = self.add_feedge(edge_id, [n1, n2], cid, [geom1, geom2], geomin=geomin_str)
             n += ntotal
         self.card_count['FEEDGE'] = nelements
         return n
@@ -477,8 +477,7 @@ class GEOM1(GeomCommon):
 
             nodes = [n1, n2, n3, n4]
             surf_ids = [surf_id1, surf_id2]
-            feface = FEFACE(face_id, nodes, cid, surf_ids)
-            self.reject_cards.append(feface)
+            feface = self.add_feface(face_id, nodes, cid, surf_ids)
             n += 32
         self.increase_card_count('FEFACE', nentries)
         return n
@@ -531,7 +530,8 @@ class GEOM1(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  SEBULK=%s\n' % str(out))
             #media,
-            sebulk = self.add_sebulk(seid, superelement_type, rseid, method=method, tol=tol, loc=loc, unitno=unit)
+            sebulk = self.add_sebulk(seid, superelement_type, rseid,
+                                     method=method, tol=tol, loc=loc, unitno=unit)
             sebulk.validate()
             n += 32
         self.increase_card_count('SEBULK', nentries)

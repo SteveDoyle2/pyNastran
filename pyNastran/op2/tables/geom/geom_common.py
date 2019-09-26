@@ -31,6 +31,7 @@ class GeomCommon:
         self.struct_i = Struct('i')
         self.struct_2i = Struct('2i')
         self.binary_debug = SuppressFileIO()
+        self.isuperelement = 0
         #self.log = SuppressLogging()
 
     def _read_fake(self, data, n):

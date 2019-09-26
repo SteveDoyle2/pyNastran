@@ -415,6 +415,7 @@ class OP2Geom(BDF, OP2GeomCommon):
         OP2GeomCommon.export_hdf5_file(self, hdf5_file)
         BDF.export_hdf5_file(self, hdf5_file)
 
+
 def bdf_to_op2_geom(model: BDF, validate: bool=True) -> OP2Geom:
     """converts a BDF() -> OP2Geom()"""
     if isinstance(model, OP2Geom):

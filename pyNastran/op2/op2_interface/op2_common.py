@@ -456,11 +456,32 @@ class OP2Common(Op2Codes, F06Writer):
 
             self.binary_debug.write('  recordi = [%s]\n\n' % msg)
 
+    def get_table_count(self):
+        """identifiers superelements"""
+        #{#b'PVT0': 1, b'CASECC': 1,
+        #b'GPLS': 2, b'GPDTS': 2, b'EPTS': 2, b'MPTS': 2,
+        #b'GEOM1S': 1, b'GEOM2S': 2, b'GEOM3S': 1,
+        #b'BGPDTS': 1, b'EQEXINS': 1,}
+        keys = [
+            #b'PVT0':, b'CASECC', b'BOUGV1',
+            b'GPDTS', b'BGPDTS', b'GPLS', b'EQEXINS',
+            b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S',
+            b'EPTS', b'MPTS', 'DITS',
+        ]
+        #print('self.table_count =', self.table_count)
+        max_geom_id = max([self.table_count[key] for key in keys])
+        return max_geom_id
+
     def _read_geom_4(self, mapper, data, ndata):
         if self.read_mode == 1:
             return ndata
         if not self.make_geom:
             return ndata
+
+        max_geom_id = self.get_table_count()
+        if max_geom_id > 1:
+            raise NotImplementedError('superelement 2 not supported')
+
         n = 0
         keys = self.struct_3i.unpack(data[n:n+12])
         n += 12

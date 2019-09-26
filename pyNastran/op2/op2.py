@@ -22,8 +22,9 @@ Defines the main OP2 class.  Defines:
 
 """
 import sys
-from typing import List, Dict, Any, Optional, Union
+from collections import defaultdict
 from pickle import load, dump, dumps
+from typing import List, Dict, Any, Optional, Union
 
 import numpy as np
 
@@ -79,6 +80,7 @@ class OP2(OP2_Scalar, OP2Writer):
         OP2_Scalar.__init__(self, debug=debug, log=log, debug_file=debug_file)
         self.ask = False
         self.post = None
+        self.table_count = defaultdict(int)
 
     def __del__(self) -> None:
         if hasattr(self, 'h5_file') and self.h5_file is not None:

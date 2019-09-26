@@ -297,6 +297,9 @@ class DEQATN(BaseCard):  # needs work...
         del self.nargs
         del self.dtable, self.dtable_ref
 
+    def _verify(self, xref):
+        pass
+
     def evaluate(self, *args):
         """Makes a call to self.func"""
         #args2 = args[:self.nargs]
