@@ -931,7 +931,7 @@ class TestOP2(Tester):
         model.safe_cross_reference()
         save_load_deck(model, run_op2_writer=False,)
 
-        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
+        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False, write_hdf5=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
