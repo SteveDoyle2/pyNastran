@@ -243,6 +243,14 @@ class MPT(GeomCommon):
     def _read_mat10(self, data, n):
         """
         MAT10(2801,28,365) - record 9
+
+        Word Name Type Description
+        1 MID   I Material identification number
+        2 BULK RS Bulk modulus
+        3 RHO  RS Mass density
+        4 C    RS Speed of sound
+        5 GE   RS Structural damping coefficient
+
         """
         ntotal = 20  # 5*4
         s = Struct(self._endian + b'i4f')
@@ -252,9 +260,11 @@ class MPT(GeomCommon):
             edata = data[n:n+20]
             out = s.unpack(edata)
             (mid, bulk, rho, c, ge) = out
-            assert mid > 0, out
             if self.is_debug_file:
                 self.binary_debug.write('  MAT10=%s\n' % str(out))
+            if mid == 0 and bulk == 0. and rho == 0. and c == 0. and ge == 0.:
+                self.log.debug('  skipping empty MAT10...')
+                continue
             mat = MAT10.add_op2_data(out)
             assert mat.mid > 0, mat
             self.add_op2_material(mat)
@@ -522,6 +532,7 @@ class MPT(GeomCommon):
         """
         MATT5(2403,24,238)
         checked NX-10.1, MSC-2016
+
         """
         s = Struct(self._endian + b'10i')
         ntotal = 40 # 10*4

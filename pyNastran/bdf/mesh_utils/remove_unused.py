@@ -106,6 +106,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'ACCEL', 'PLOADX1', 'SLOAD', 'ACCEL1', 'LOADCYN', 'LOAD',
         'LSEQ', 'DLOAD', 'QVECT', 'RADM', 'TEMPAX', 'DEFORM',
     ]
+    not_implemented_types = ['FEEDGE', 'FEFACE']
 
     # could remove some if we look at the rid_trace
     #for cid, coord in model.coords.items():
@@ -531,6 +532,8 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                         #pids_used.add(value)
         elif card_type == 'TABRNDG':
             pass
+        elif card_type in not_implemented_types:
+            model.log.warning(f'skipping {card_type}')
         else:
             raise NotImplementedError(card_type)
 

@@ -1429,10 +1429,23 @@ class AddMethods(BDFAttributes):
         self.gmsurf[surf.surf_id] = surf
 
     def _add_feface(self, face, allow_overwrites: bool=False):
-        assert face.face_id not in self.feface, face
-        self.feface[face.face_id] = face
+        key = face.face_id
+        if key in self.feface and not allow_overwrites:
+            if not face == self.feface[key]:
+                raise RuntimeError(f'feface is duplicated\n{face}\nold:\n{self.feface[key]}')
+        else:
+            self.feface[face.face_id] = face
+            self._type_to_id_map[face.type].append(key)
+        #assert face.face_id not in self.feface, face
+        #self.feface[face.face_id] = face
 
     def _add_feedge(self, edge, allow_overwrites: bool=False):
-        assert edge.edge_id not in self.feedge, edge
-        self.feedge[edge.edge_id] = edge
+        key = edge.edge_id
+        if key in self.feedge and not allow_overwrites:
+            if not edge == self.feedge[key]:
+                raise RuntimeError(f'feedge is duplicated\n{edge}\nold:\n{self.feedge[key]}')
+        else:
+            self.feedge[edge.edge_id] = edge
+            self._type_to_id_map[edge.type].append(key)
+
     #---------------------------------------------------------------------------

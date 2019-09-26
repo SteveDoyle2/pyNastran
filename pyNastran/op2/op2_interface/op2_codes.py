@@ -770,7 +770,7 @@ class Op2Codes:
         msg = ''
         #msg += 'table_code_content=%s data_format=%s\n' %(table_code_content, data_format)
 
-        table = get_table_from_table_code(table_code, is_msc=self.is_msc)
+        table = get_table_from_table_code(table_code, self.table_name_str, is_msc=self.is_msc)
         if self.is_msc:
             msg += 'n=%s msc table=%s-%s' % (self.n, self.table_name, table)
         else:
@@ -986,7 +986,7 @@ class Op2Codes:
             table = "OES - Element %s" % stress_word
         else:
             #try:
-            table = get_table_from_table_code(table_code, is_msc=self.is_msc)
+            table = get_table_from_table_code(table_code, self.table_name_str, is_msc=self.is_msc)
             #except KeyError:
                 #table = '%s - Unknown' % self.table_name
 
@@ -1285,11 +1285,16 @@ def determine_sort_bits_meaning(table_code, sort_code, sort_bits):
         raise
     return sort_method, is_real, is_random
 
-def get_table_from_table_code(table_code: int, is_msc: bool=True) -> str:
+def get_table_from_table_code(table_code: int, table_name: str, is_msc: bool=True) -> str:
     """translates that a key of say 1 is the 'OUG - Displacement vector' table"""
-    if is_msc:
-        table = MSC_TABLE_CONTENT[table_code]
-    else:
-        table = NX_TABLE_CONTENT[table_code]
+    try:
+        if is_msc:
+            table = MSC_TABLE_CONTENT[table_code]
+        else:
+            table = NX_TABLE_CONTENT[table_code]
+    except:
+        print(f'count not determine the table description for {table_name}')
+        raise
+
     #table = TABLE_CODE_MAP[table_code]
     return table

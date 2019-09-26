@@ -243,4 +243,5 @@ NX_TABLE_CONTENT = {
     68 : '??? - Tosca normalized material properties',
     # nx 2019.2
     72 : 'OTEMP1 - grid point temperatures',
+    805 : 'OESXRMS1 - ???',
 }

@@ -3021,8 +3021,7 @@ class GEOM2(GeomCommon):
             geom1 = 0
             geom2 = 0
             if nfields == 2:
-                elem = FEEDGE(edge_id, [n1, n2], cid, geomin_str, [geom1, geom2])
-                self.reject_cards.append(elem)
+                self.add_feedge(edge_id, [n1, n2], cid, [geom1, geom2], geomin=geomin_str)
             #elif nfields in [3, 4, 5]:
                 #if nfields == 3:
                     #nids = [n1, n2]

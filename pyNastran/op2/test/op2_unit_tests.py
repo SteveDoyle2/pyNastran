@@ -564,7 +564,7 @@ class TestOP2(Tester):
         assert len(diff_cards2) == 0, diff_cards2
 
         model = read_bdf(bdf_filename, debug=False, log=log)
-        save_load_deck(model, run_op2_reader=False)
+        save_load_deck(model, run_op2_reader=False, run_renumber=False)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
                 write_f06=True, write_op2=False,
@@ -931,7 +931,7 @@ class TestOP2(Tester):
         model.safe_cross_reference()
         save_load_deck(model, run_op2_writer=False,)
 
-        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False, write_hdf5=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
@@ -1051,7 +1051,7 @@ class TestOP2(Tester):
         #model.safe_cross_reference()
         #save_load_deck(model)
 
-        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
@@ -2105,7 +2105,7 @@ class TestOP2(Tester):
 
     def test_op2_autodesk_3(self):
         """tests an Autodesk Nastran example"""
-        op2_filename = os.path.join(MODEL_PATH,  'autodesk', 'nonlinear_beam.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'autodesk', 'nonlinear_beam.op2')
         log = get_logger(level='warning')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, write_f06=True,

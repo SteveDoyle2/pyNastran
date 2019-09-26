@@ -107,13 +107,15 @@ class DYNAMICS(GeomCommon):
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struc.unpack(edata)
-            (sid, excite_id, dphase, delay, tc, rho, b, delay_float, dphase_float, tc_float) = out
+            (sid, excite_id, dphase, delay, tc, rho, b, delay, dphase_float) = out
             assert sid > 0, sid
-            assert dphase >= 0, dphase
+            assert dphase_float >= 0, dphase
             assert delay >= 0, delay
             assert tc >= 0, tc
             assert rho > 0, rho
             assert b > 0, b
+            if dphase == 0:
+                dphase = dphase_float
             acsrce = ACSRCE(sid, excite_id, rho, b, delay=delay, dphase=dphase, power=0)
             n += ntotal
             loads.append(acsrce)

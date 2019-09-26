@@ -480,7 +480,7 @@ class OP2Common(Op2Codes, F06Writer):
 
         max_geom_id = self.get_table_count()
         if max_geom_id > 1:
-            raise NotImplementedError('superelement 2 not supported')
+            self.log.warning('superelement 2 not supported.  This may crash.')
 
         n = 0
         keys = self.struct_3i.unpack(data[n:n+12])
