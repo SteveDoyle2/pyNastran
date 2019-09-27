@@ -2097,6 +2097,13 @@ class CTETRA4(SolidElement):
         nids = self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
         return nids
 
+    def flip_normal(self):  ## TODO verify
+        """flips the element inside out"""
+        n1, n2, n3, n4 = self.nodes
+        self.nodes = [n1, n3, n2, n4]
+        if self.nodes_ref is not None:
+            n1_ref, n2_ref, n3_ref, n4_ref = self.nodes_ref
+            self.nodes_ref = [n1_ref, n3_ref, n2_ref, n4_ref]
 
 def ctetra_face(nid, nid_opposite, nids):
     assert len(nids) == 4, nids

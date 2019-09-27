@@ -11,7 +11,7 @@ from collections import defaultdict
 from numpy import array, cross, dot
 from numpy.linalg import norm  # type: ignore
 import numpy as np
-from pyNastran.bdf.cards.materials import get_mat_props_S
+#from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
 
@@ -1999,7 +1999,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
     g0_dict = defaultdict(list)
     x_dict = defaultdict(list)
     offt_dict = defaultdict(list)
-    element_nsm_dict = defaultdict(list)
+    #element_nsm_dict = defaultdict(list)
 
     skipped_etypes = set()
     nan = np.full(3, np.nan, dtype='float64')
@@ -2100,9 +2100,9 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
      #e2_dict, e3_dict,
      ) = dicts
 
-    xaxis = np.array([1., 0., 0.])
-    yaxis = np.array([0., 1., 0.])
-    zaxis = np.array([0., 0., 1.])
+    #xaxis = np.array([1., 0., 0.])
+    #yaxis = np.array([0., 1., 0.])
+    #zaxis = np.array([0., 0., 1.])
 
     # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
     data = np.zeros((nelements, 12), dtype='float64')
@@ -2112,9 +2112,9 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         nids = np.vstack(nids_list)
         nelementsi = nids.shape[0]
         #print(etype, nelementsi, eids)
-        Ax = 0.
-        Ay = 0.
-        Az = 0.
+        #Ax = 0.
+        #Ay = 0.
+        #Az = 0.
         if etype == 'CROD':
             pids = pids_dict[etype]
             assert len(pids) > 0, pids
@@ -2148,7 +2148,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             #assert len(mass_per_length) > 0, mass_per_length
             #assert len(nsm_per_length) > 0, nsm_per_length
 
-            imids = np.searchsorted(all_mids, mids)
+            #imids = np.searchsorted(all_mids, mids)
             inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 2)
             p1 = xyz_cid0[inids[:, 0], :]
             p2 = xyz_cid0[inids[:, 1], :]
@@ -2195,11 +2195,11 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             pids = pids_dict[etype]
             assert len(pids) > 0, pids
             all_pids = np.array(pids_per_length_dict['bar'], dtype='int32')
-            g0 = np.array(g0_dict['CBAR'], dtype='int32')
-            offt = np.array(offt_dict['CBAR'], dtype='|S3')
+            #g0 = np.array(g0_dict['CBAR'], dtype='int32')
+            #offt = np.array(offt_dict['CBAR'], dtype='|S3')
             x = np.vstack(x_dict['CBAR'])
 
-            jaxis = _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelementsi)
+            #jaxis = _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelementsi)
 
             mass_per_length = np.array(mass_per_length_dict['bar'])
             nsm_per_length = np.array(nsm_per_length_dict['bar'])
@@ -2239,11 +2239,11 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             pids = pids_dict[etype]
             assert len(pids) > 0, pids
             all_pids = np.array(pids_per_length_dict['beam'], dtype='int32')
-            g0 = np.array(g0_dict['CBEAM'], dtype='int32')
-            offt = np.array(offt_dict['CBEAM'], dtype='|S3')
+            #g0 = np.array(g0_dict['CBEAM'], dtype='int32')
+            #offt = np.array(offt_dict['CBEAM'], dtype='|S3')
             x = np.vstack(x_dict['CBEAM'])
 
-            jaxis = _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelementsi)
+            #jaxis = _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelementsi)
 
             mass_per_length = np.array(mass_per_length_dict['beam'])
             nsm_per_length = np.array(nsm_per_length_dict['beam'])
@@ -2371,9 +2371,9 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             # assume the panel is square to calculate w; then multiply by t to get tw
             tw = thickness[ipids] * np.sqrt(area)
             assert len(tw) > 0, tw
-            Ax = tw * norm(cross(xaxis, normal), axis=1)
-            Ay = tw * norm(cross(yaxis, normal), axis=1)
-            Az = tw * norm(cross(zaxis, normal), axis=1)
+            #Ax = tw * norm(cross(xaxis, normal), axis=1)
+            #Ay = tw * norm(cross(yaxis, normal), axis=1)
+            #Az = tw * norm(cross(zaxis, normal), axis=1)
         elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD']:
             # no offsets
             nids2 = nids[:, :4]
@@ -2424,9 +2424,9 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             assert len(area) > 0, area
             assert len(thickness) > 0, thickness
             tw = thickness[ipids] * np.sqrt(area)
-            Ax = tw * norm(cross(xaxis, normal), axis=1)
-            Ay = tw * norm(cross(yaxis, normal), axis=1)
-            Az = tw * norm(cross(zaxis, normal), axis=1)
+            #Ax = tw * norm(cross(xaxis, normal), axis=1)
+            #Ay = tw * norm(cross(yaxis, normal), axis=1)
+            #Az = tw * norm(cross(zaxis, normal), axis=1)
 
         elif etype == 'CTETRA':
             nids2 = nids[:, :4]
@@ -2828,20 +2828,19 @@ def _breakdown_property_dicts(model):
             #rhoi = [mid_ref.Rho() for mid_ref in mids_ref]
             ksym = 2 if prop.is_symmetrical() else 1
             mpai = [ksym * mid_ref.Rho() * t for mid_ref, t in zip(mids_ref, prop.thicknesses)]
-            nlayers = ksym * len(prop.thicknesses)
             thickness = ksym * sum(prop.thicknesses)
-            nlayers = ksym * len(prop.thicknesses)
-            ti = np.zeros((nlayers, 3, 3), dtype='float64')
-            if prop.is_symmetrical():
-                theta = np.radians(np.hstack([
-                    prop.thetas[::-1],
-                    prop.thetas,
-                ]))
-            else:
-                theta = np.radians(prop.thetas)
+            #nlayers = ksym * len(prop.thicknesses)
+            #ti = np.zeros((nlayers, 3, 3), dtype='float64')
+            #if prop.is_symmetrical():
+                #theta = np.radians(np.hstack([
+                    #prop.thetas[::-1],
+                    #prop.thetas,
+                #]))
+            #else:
+                #theta = np.radians(prop.thetas)
 
-            st = np.sin(theta)
-            ct = np.cos(theta)
+            #st = np.sin(theta)
+            #ct = np.cos(theta)
             #ti[:, 0, 0] = ct
             #ti[:, 1, 1] = ct
             #ti[:, 0, 1] = st
@@ -2968,7 +2967,7 @@ def _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p
     itheta = np.where(~is_mcid)[0]
     ielem = np.arange(nelements)
     mcid = np.array(theta_mcid, dtype='int32')[imcid]
-    thetad = np.array(theta_mcid, dtype='float64')[itheta]
+    #thetad = np.array(theta_mcid, dtype='float64')[itheta]
     #print('  nmcid=%s ntheta=%s' % (len(mcid), len(thetad)))
     #print('mcid', mcid)
     #print('thetad', thetad)

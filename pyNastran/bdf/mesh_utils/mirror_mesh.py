@@ -8,7 +8,7 @@ This file defines:
         enddata=None, close=True, plane='xz')
 
 """
-from typing import Set, Union, Optional
+from typing import Set, Tuple, Union, Optional
 import numpy as np
 
 from pyNastran.bdf.cards.coordinate_systems import CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
@@ -144,22 +144,55 @@ def _mirror_nodes(model: BDF, plane: str='xz'):
     .. warning:: doesn't mirror SPOINTs, EPOINTs
 
     """
-    nid_offset = 0
     iy, plane = _plane_to_iy(plane)
+
+    nid_offset = max(model.nodes) if model.nodes else 0
+    if model.spoints:
+        nid_offset = max(max(model.spoints), nid_offset)
+    if model.epoints:
+        nid_offset = max(max(model.epoints), nid_offset)
+
     if model.nodes:
-        nid_offset = max(model.node_ids)
         for (nid, node) in sorted(model.nodes.items()):
             xyz = node.get_position()
             nid2 = nid + nid_offset
             xyz2 = xyz.copy()
             xyz2[iy] *= -1.
             model.add_grid(nid2, xyz2, cp=0, cd=node.cd, ps=node.ps, seid=node.seid)
+    if model.spoints:
+        for nid in list(model.spoints):
+            nid2 = nid + nid_offset
+            model.add_spoint(nid2)
+    if model.epoints:
+        for nid in list(model.epoints):
+            nid2 = nid + nid_offset
+            model.add_spoint(nid2)
+    #if model.epoints:
+
     return nid_offset, plane
 
 def _mirror_nodes_plane(model: BDF, mirror_model: BDF, plane,
-                        use_nid_offset: bool=True):
+                        use_nid_offset: bool=True) -> Tuple[int, str]:
     """
     Mirrors the GRIDs about an arbitrary plane
+
+    Parameters
+    ----------
+    model : BDF
+        ???
+    mirror_model : BDF
+        ???
+    plane : str
+        ???
+    use_nid_offset : bool
+        ???
+
+    Returns
+    -------
+    nid_offset : int
+        the node id offset
+    plane : str
+        the sorted plane; ZX -> xz
 
     .. warning:: doesn't consider coordinate systems;
                   it could, but you'd need 20 new coordinate systems
@@ -222,7 +255,7 @@ def _mirror_nodes_plane(model: BDF, mirror_model: BDF, plane,
             mirror_model.add_grid(nid2, xyz2, cp=0, cd=node.cd, ps=node.ps, seid=node.seid)
     return nid_offset, plane
 
-def _plane_to_iy(plane: str):
+def _plane_to_iy(plane: str) -> Tuple[int, str]:
     """gets the index fo the mirror plane"""
     plane = plane.strip().lower()
     plane_sorted =  ''.join(sorted(set(plane)))
@@ -338,8 +371,19 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
     spring_dampers = {
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
         'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+        'CVISC',
     }
-    solids = ['CHEXA', 'CPENTA', 'CTETRA', 'CYPRAM']
+    solids = {'CHEXA', 'CPENTA', 'CTETRA', 'CYPRAM'}
+    generic_types = {
+        'CSHEAR',
+        'CTRIAX6',
+        'CTRAX3', 'CTRAX6',
+        'CQUADX4', 'CQUADX8',
+        'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', }
+    generic_types_none = {
+        'CHBDYP', 'CRAC2D', 'CRAC3D',
+        'CQUADX',
+        'CTRIAX', }
 
     def _set_nodes(element, nodes):
         try:
@@ -349,6 +393,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             print(nodes)
             raise
 
+    update_mcids = False
     element_cids = set([])
     etypes_skipped = set([])
     for eid, element in sorted(model.elements.items()):
@@ -375,7 +420,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             nodes2 = [node_id + nid_offset for node_id in nodes1]
             element2.nodes = nodes2
             element.flip_normal() # nodes = nodes[::-1]
-            if isinstance(element.theta_mcid, int):
+            if isinstance(element.theta_mcid, int) and update_mcids:
                 element_cids.add(element.theta_mcid)
                 element2.theta_mcid += cid_offset
         elif etype in solids:
@@ -386,13 +431,13 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             element2.nodes2 = nodes2
             element2.cross_reference(model)
             vol = element2.Volume()
-            assert vol > 0., vol
+            assert vol >= 0., vol
         elif etype in shell_nones:
             nodes2 = [node_id + nid_offset if node_id is not None else None
                      for node_id in nodes1]
             element2.nodes = nodes2
             element.flip_normal() # nodes = nodes[::-1]
-            if isinstance(element.theta_mcid, int):
+            if isinstance(element.theta_mcid, int) and update_mcids:
                 element_cids.add(element.theta_mcid)
                 element2.theta_mcid += cid_offset
         elif etype in rods:
@@ -419,7 +464,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             element2.ga = ga
             element2.gb = gb
             element2.g0 = g0
-            if isinstance(element.cid, int):
+            if isinstance(element.cid, int) and update_mcids:
                 element_cids.add(element.cid)
                 element2.cid += cid_offset
         elif etype == 'CBUSH':
@@ -428,7 +473,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             element2.g0 = g0
             element2.nodes = nodes2
             #  TODO: ocid
-            if isinstance(element.cid, int):
+            if isinstance(element.cid, int) and update_mcids:
                 element_cids.add(element.cid)
                 element2.cid += cid_offset
         elif etype == 'CBUSH1D':
@@ -436,7 +481,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
             gb = element2.gb + nid_offset if element2.gb is not None else None
             element2.ga = ga
             element2.gb = gb
-            if isinstance(element.cid, int):
+            if isinstance(element.cid, int) and update_mcids:
                 element_cids.add(element.cid)
                 element2.cid += cid_offset
         elif etype == 'CFAST':
@@ -457,6 +502,16 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
         elif etype == 'GENEL':
             element2.ul = element2.ul + nid_offset
             element2.ud = element2.ud + nid_offset
+        elif etype in generic_types:
+            try:
+                nodes2 = [node_id + nid_offset for node_id in nodes1]
+            except TypeError:  # pragma: no cover
+                print(element.get_stats())
+                raise
+            _set_nodes(element2, nodes2)
+        elif etype in generic_types_none:
+            nodes2 = [node_id + nid_offset if node_id is not None else None for node_id in nodes1]
+            _set_nodes(element2, nodes2)
         else:
             etypes_skipped.add(etype)
             try:
@@ -477,7 +532,7 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
     return
 
 def __mirror_rigid_elements(model: BDF, mirror_model: BDF,
-                            nid_offset: int, eid_offset: int):
+                            nid_offset: int, eid_offset: int) -> None:
     """mirrors model.rigid_elements"""
     for eid, rigid_element in sorted(model.rigid_elements.items()):
         eid_mirror = eid + eid_offset
@@ -547,7 +602,7 @@ def __mirror_rigid_elements(model: BDF, mirror_model: BDF,
             mirror_model.log.warning('skipping:\n%s' % str(rigid_element))
 
 
-def _mirror_loads(model: BDF, nid_offset: int=0, eid_offset: int=0):
+def _mirror_loads(model: BDF, nid_offset: int=0, eid_offset: int=0) -> None:
     """
     Mirrors the loads.  A mirrored force acts in the same direction.
 
@@ -649,7 +704,7 @@ def _mirror_loads(model: BDF, nid_offset: int=0, eid_offset: int=0):
         if loads_new:
             loads += loads_new
 
-def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz'):
+def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz') -> None:
     """
     Mirrors the aero cards
 
@@ -841,13 +896,24 @@ def _mirror_aero(model: BDF, nid_offset: int, plane: str='xz'):
                              tqllim=aesurf.tqllim, tqulim=aesurf.tqulim, comment='')
 
     if is_aero:
-        _asymmetrically_mirror_coords(model, aero_cids_set, cid_offset, plane)
+        _asymmetrically_mirror_coords(model, aero_cids_set, cid_offset, plane=plane)
     model.pop_parse_errors()
 
+def _asymmetrically_mirror_coords2(model: BDF,
+                                  cids_nominal_set: Set[int],
+                                  cid_offset: int, plane: str='xz') -> None:
+    """
+    We'll invert i, but not j, which will invert k.
+
+    This will allow us to mirror material coordinate systems (defined in x).
+    Additionally, we can mirror CGAP coordinate systems (defined in x) as well
+    as some arbitrary y-direction.  We'll try to make y look mirrored.
+    """
+    return
 
 def _asymmetrically_mirror_coords(model: BDF,
                                   cids_nominal_set: Set[int],
-                                  cid_offset: int, plane: str='xz'):
+                                  cid_offset: int, plane: str='xz') -> None:
     """we'll leave i the same, flip j, and invert k"""
     # doesn't handle CORD1x
 
