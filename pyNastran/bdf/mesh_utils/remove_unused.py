@@ -103,7 +103,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4', 'SPCD',
         'GMLOAD', 'RFORCE', 'RFORCE1',
         'TEMP', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
-        'ACCEL', 'PLOADX1', 'SLOAD', 'ACCEL1', 'LOADCYN', 'LOAD',
+        'ACCEL', 'PLOADX1', 'SLOAD', 'ACCEL1', 'LOADCYN', 'LOAD', 'CLOAD',
         'LSEQ', 'DLOAD', 'QVECT', 'RADM', 'TEMPAX', 'DEFORM',
     ]
     not_implemented_types = ['FEEDGE', 'FEFACE']

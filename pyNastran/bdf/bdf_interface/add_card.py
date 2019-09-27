@@ -70,7 +70,7 @@ from pyNastran.bdf.cards.dynamic import (
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
-from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
+from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                                     PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
                                                     GMLOAD)
@@ -437,6 +437,7 @@ CARD_MAP = {
 
     'LSEQ' : LSEQ,
     'LOAD' : LOAD,
+    'CLOAD' : CLOAD,
     'LOADCYN' : LOADCYN,
 
     'GRAV' : GRAV,
@@ -3502,6 +3503,28 @@ class AddCards(AddMethods):
 
         """
         load = LOAD(sid, scale, scale_factors, load_ids, comment=comment)
+        self._add_load_combination_object(load)
+        return load
+
+    def add_cload(self, sid, scale, scale_factors, load_ids, comment=''):
+        """
+        Creates a CLOAD card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            overall scale factor
+        scale_factors : List[float]
+            individual scale factors (corresponds to load_ids)
+        load_ids : List[int]
+            individual load_ids (corresponds to scale_factors)
+        comment : str; default=''
+            a comment for the card
+
+        """
+        load = CLOAD(sid, scale, scale_factors, load_ids, comment=comment)
         self._add_load_combination_object(load)
         return load
 

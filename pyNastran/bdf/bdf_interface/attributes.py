@@ -729,7 +729,7 @@ class BDFAttributes:
             'csupext' : ['CSUPEXT'],
 
             # loads
-            'load_combinations' : ['LOAD', 'LSEQ'],
+            'load_combinations' : ['LOAD', 'LSEQ', 'CLOAD'],
             'loads' : [
                 'FORCE', 'FORCE1', 'FORCE2',
                 'MOMENT', 'MOMENT1', 'MOMENT2',
