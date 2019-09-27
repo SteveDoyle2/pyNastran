@@ -564,7 +564,7 @@ class TestOP2(Tester):
         assert len(diff_cards2) == 0, diff_cards2
 
         model = read_bdf(bdf_filename, debug=False, log=log)
-        save_load_deck(model, run_op2_reader=False, run_renumber=False)
+        save_load_deck(model)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
                 write_f06=True, write_op2=False,
@@ -589,6 +589,7 @@ class TestOP2(Tester):
         #model = read_bdf(bdf_filename, debug=False, log=log)
         #save_load_deck(model)
 
+        # make_geom=False: duplicate ids
         run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
@@ -737,7 +738,7 @@ class TestOP2(Tester):
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         model.safe_cross_reference()
-        save_load_deck(model, run_renumber=False)
+        save_load_deck(model, run_renumber=False)  # excite_id
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -785,7 +786,7 @@ class TestOP2(Tester):
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         model.safe_cross_reference()
-        save_load_deck(model, run_renumber=False, run_op2_writer=False)
+        save_load_deck(model, run_op2_writer=False)  # nsm problem
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -833,7 +834,7 @@ class TestOP2(Tester):
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         model.safe_cross_reference()
-        save_load_deck(model, run_convert=False, run_renumber=False)
+        save_load_deck(model, run_convert=False, run_renumber=False)  # excite_id
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -1001,7 +1002,7 @@ class TestOP2(Tester):
 
         model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         model.safe_cross_reference()
-        save_load_deck(model, run_renumber=False)
+        save_load_deck(model, run_renumber=False)  # GMSPC
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -1025,7 +1026,7 @@ class TestOP2(Tester):
 
         model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         model.safe_cross_reference()
-        save_load_deck(model, run_renumber=False)
+        save_load_deck(model)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -1322,8 +1323,8 @@ class TestOP2(Tester):
         f06_filename = os.path.join(folder, 'freq_solid_shell_bar.test_op2.f06')
         unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
         op2, unused_is_passed = run_op2(
-            op2_filename, make_geom=False, write_bdf=False,
-            write_f06=False, write_op2=False,
+            op2_filename, make_geom=True, write_bdf=True,
+            write_f06=False, write_op2=True,
             is_mag_phase=False, is_sort2=False, delete_f06=False,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
@@ -2136,7 +2137,7 @@ class TestOP2(Tester):
                                 OUGV1, OES1X
         """
         op2_filename = os.path.join(MODEL_PATH, 'optistruct', 'hm14.op2')
-        make_geom = False
+        make_geom = True
         write_bdf = False
         write_f06 = True
         log = get_logger(level='warning')
@@ -2305,8 +2306,8 @@ class TestOP2(Tester):
     def test_op2_cbush_01(self):
         """tests cbush/cbush.op2"""
         op2_filename = os.path.join(MODEL_PATH, 'cbush', 'cbush.op2')
-        make_geom = False
-        write_bdf = False
+        make_geom = True
+        write_bdf = True
         write_f06 = True
         log = get_logger(level='warning')
         #debug_file = 'solid_bending.debug.out'
@@ -2499,7 +2500,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.op2')
         model = read_bdf(bdf_filename, debug=False, log=log)
-        save_load_deck(model, run_op2_reader=False)
+        save_load_deck(model, run_op2_reader=True)
 
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)

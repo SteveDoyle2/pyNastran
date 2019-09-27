@@ -306,6 +306,7 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
         'CSHEAR', 'CQUAD', 'CQUADX', 'CTRIAX', 'CTRIAX6',
         'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
         'CRAC2D', 'CRAC3D',
+        'CHBDYG', 'CHBDYE', 'CHBDYP',
 
         # TODO: NX-verify
         'CTRAX3', 'CTRAX6',
@@ -899,6 +900,7 @@ def _convert_loads(model, xyz_scale, weight_scale, temperature_scale):
     for dloads in model.dloads.values():
         assert isinstance(dloads, str), dloads  # TEMP
 
+    skip_dloads = {'TLOAD2', 'RANDPS', 'RANDT1', 'QVECT'}
     tabled_scales = set()
     for dloads in model.dload_entries.values():
         for dload in dloads:
@@ -948,15 +950,15 @@ def _convert_loads(model, xyz_scale, weight_scale, temperature_scale):
                 scale = _get_dload_scale(dload, xyz_scale, velocity_scale,
                                          accel_scale, force_scale)
                 tabled_scales.add((dload.tid, scale))
-            elif dload.type in ['TLOAD2', 'RANDPS', 'RANDT1']:
-                model.log.warning('skipping TLOAD2')
+            elif dload.type in skip_dloads:
+                model.log.warning(f'skipping {dload.type}')
             else:
                 raise NotImplementedError(dload)
     for tid, scale in tabled_scales:
         tabled = model.TableD(tid)
         tabled.y *= scale
 
-    skip_cards = ['PLOADX1', 'GMLOAD']
+    skip_cards = {'PLOADX1', 'QVOL', 'QHBDY', 'QBDY1', 'QBDY2', 'QBDY3', 'GMLOAD'}
     for loads in model.loads.values():
         assert isinstance(loads, list), loads
         for load in loads: # list
@@ -1173,6 +1175,16 @@ def _scale_caero(caero, xyz_scale, xyz_aefacts):
             #: or blank. (Integer > 0)
             if caero.lint > 0:
                 xyz_aefacts.add(caero.lint)
+        elif caero.type == 'CAERO3':
+            caero.p1 *= xyz_scale
+            caero.p4 *= xyz_scale
+            caero.x12 *= xyz_scale
+            caero.x43 *= xyz_scale
+        elif caero.type == 'CAERO5':
+            caero.p1 *= xyz_scale
+            caero.p4 *= xyz_scale
+            caero.x12 *= xyz_scale
+            caero.x43 *= xyz_scale
         else:
             raise NotImplementedError('\n' + str(caero))
     except TypeError:  # pragma: no cover

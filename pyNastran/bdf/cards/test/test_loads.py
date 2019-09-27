@@ -241,17 +241,17 @@ class TestLoads(unittest.TestCase):
         eids = [4]
         p0 = [0., 0., 0.]
         loadcase_id = sid
-        forces1, moments1 = model.sum_forces_moments(p0, loadcase_id,
+        forces1, moments1 = sum_forces_moments(model, p0, loadcase_id,
                                                      include_grav=False, xyz_cid0=None)
-        forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                              include_grav=False, xyz_cid0=None)
+        forces2, moments2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
+                                                        include_grav=False, xyz_cid0=None)
         assert np.array_equal(forces1, forces2)
         assert np.array_equal(moments1, moments2)
 
         forces1, moments1 = model.sum_forces_moments(p0, loadcase_id,
                                                      include_grav=True, xyz_cid0=None)
-        forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                              include_grav=True, xyz_cid0=None)
+        forces2, moments2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
+                                                        include_grav=True, xyz_cid0=None)
         assert np.array_equal(forces1, forces2)
         assert np.array_equal(moments1, moments2)
         save_load_deck(model)
@@ -840,11 +840,11 @@ class TestLoads(unittest.TestCase):
 
             ##msg = '%s%s\n' % (elem.nodes[0], elem.nodes[1])
 
-            #f, m = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+            #f, m = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
             #eids = None
             #nids = None
-            #f2, m2 = model.sum_forces_moments_elements(
-                #p0, loadcase_id, eids, nids, include_grav=False)
+            #f2, m2 = sum_forces_moments_elements(
+                #model, p0, loadcase_id, eids, nids, include_grav=False)
             #assert allclose(f, f2), 'f=%s f2=%s' % (f, f2)
             #assert allclose(m, m2), 'm=%s m2=%s' % (m, m2)
 
@@ -1219,10 +1219,10 @@ class TestLoads(unittest.TestCase):
         nids = list(model.nodes.keys())
         p0 = [0., 0., 0.]
         loadcase_id = 120
-        forces1, moments1 = model2.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                               include_grav=False, xyz_cid0=None)
-        forces2, moments2 = model2.sum_forces_moments(p0, loadcase_id, include_grav=False,
-                                                      xyz_cid0=None)
+        forces1, moments1 = sum_forces_moments_elements(model2, p0, loadcase_id, eids, nids,
+                                                        include_grav=False, xyz_cid0=None)
+        forces2, moments2 = sum_forces_moments(model2, p0, loadcase_id, include_grav=False,
+                                               xyz_cid0=None)
         assert allclose(forces1, forces2), 'forces1=%s forces2=%s' % (forces1, forces2)
         assert allclose(moments1, moments2), 'moments1=%s moments2=%s' % (moments1, moments2)
 
@@ -1232,10 +1232,10 @@ class TestLoads(unittest.TestCase):
 
         eids = list(model.elements.keys())
         p0 = [0., 0., 0.]
-        forces1, moments1 = model.sum_forces_moments(p0, loadcase_id,
-                                                     include_grav=True, xyz_cid0=None)
-        #forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                              #include_grav=True, xyz_cid0=None)
+        forces1, moments1 = sum_forces_moments(model, p0, loadcase_id,
+                                               include_grav=True, xyz_cid0=None)
+        #forces2, moments2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
+                                                        #include_grav=True, xyz_cid0=None)
         #assert np.array_equal(forces1, forces2)
         #assert np.array_equal(moments1, moments2)
 
@@ -1296,10 +1296,10 @@ class TestLoads(unittest.TestCase):
         nids = list(model.nodes.keys())
         #print('nids =', nids) # empty
         loadcase_id = sid
-        forces1, moments1 = model.sum_forces_moments(p0, loadcase_id,
-                                                     include_grav=True, xyz_cid0=None)
-        forces2, moments2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                              include_grav=True, xyz_cid0=None)
+        forces1, moments1 = sum_forces_moments(model, p0, loadcase_id,
+                                               include_grav=True, xyz_cid0=None)
+        forces2, moments2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
+                                                        include_grav=True, xyz_cid0=None)
         assert np.array_equal(forces1, forces2)
         assert np.array_equal(moments1, moments2)
         save_load_deck(model, run_convert=False)

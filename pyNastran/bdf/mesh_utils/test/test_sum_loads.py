@@ -7,7 +7,9 @@ import numpy as np
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import CORD2C, GRID, FORCE
+from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moments_elements
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
+
 
 log = None
 class TestLoadSum(unittest.TestCase):
@@ -24,8 +26,8 @@ class TestLoadSum(unittest.TestCase):
         M_expected = array([0., 33209.869, -22803.951])
         eids = None
         nids = None
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
 
@@ -45,8 +47,8 @@ class TestLoadSum(unittest.TestCase):
         M_expected = array([5000., -5000., 0.])
         eids = None
         nids = None
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
 
@@ -57,8 +59,8 @@ class TestLoadSum(unittest.TestCase):
         p0 = array([0., 0., 0.])
         F_expected = array([0., 0., 10000.])
         M_expected = array([5000., -5000., 0.])
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
 
@@ -79,8 +81,8 @@ class TestLoadSum(unittest.TestCase):
             M_expected = array([0., 0., 0.])
             eids = None
             nids = None
-            F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+            F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
             assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
 
@@ -111,8 +113,8 @@ class TestLoadSum(unittest.TestCase):
         M_expected = array([0., 0., -3000.])
         eids = None
         nids = None
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         self.assertTrue(allclose(F_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F_expected, F))
@@ -121,7 +123,7 @@ class TestLoadSum(unittest.TestCase):
         loadcase_id = 2
         F_expected = array([600., 0., 0.])
         M_expected = array([0., 0., -3000.])
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
         self.assertTrue(allclose(F_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F_expected, F))
         self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
 
@@ -137,8 +139,8 @@ class TestLoadSum(unittest.TestCase):
 
         eids = None
         nids = None
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
 
@@ -151,8 +153,8 @@ class TestLoadSum(unittest.TestCase):
 
         #---
         loadcase_id = 10
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         self.assertTrue(allclose(F_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F_expected, F))
@@ -164,8 +166,8 @@ class TestLoadSum(unittest.TestCase):
         M_expected = array([1500., -1500., 0.])
         F_expected *= 5.
         M_expected *= 5.
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         #print('F =', F)
@@ -173,8 +175,8 @@ class TestLoadSum(unittest.TestCase):
         self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
 
         loadcase_id = 5
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         F_expected = array([0., 0., 300.])
@@ -185,8 +187,8 @@ class TestLoadSum(unittest.TestCase):
         self.assertTrue(allclose(M_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M_expected, M))
 
         loadcase_id = 6
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         F_expected = array([0., 0., 300.])
@@ -206,8 +208,8 @@ class TestLoadSum(unittest.TestCase):
         normal = element.Normal()
         normal_expected = array([0., 0., 1.])
         self.assertTrue(allclose(normal_expected, normal), 'loadcase_id=%s normal_expected=%s normal=%s' % (loadcase_id, normal_expected, normal))
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
 
@@ -244,8 +246,8 @@ class TestLoadSum(unittest.TestCase):
         loadcase_id = 1001
         eids = None
         nids = None
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         self.assertTrue(allclose(F1001_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1001_expected, F))
@@ -255,14 +257,14 @@ class TestLoadSum(unittest.TestCase):
         r = array([4., 2., 0.])
         F1002_expected = array([0., 0., 1.])
         M1002_expected = cross(r, F1002_expected)
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         self.assertTrue(allclose(F1002_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1002_expected, F))
         self.assertTrue(allclose(M1002_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M1002_expected, M))
 
         loadcase_id = 1
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         self.assertTrue(allclose(F1001_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1001_expected, F))
@@ -271,8 +273,8 @@ class TestLoadSum(unittest.TestCase):
         loadcase_id = 2
         F2_expected = F1001_expected + F1002_expected
         M2_expected = M1001_expected + M1002_expected
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         self.assertTrue(allclose(F2_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F2_expected, F))
@@ -286,16 +288,16 @@ class TestLoadSum(unittest.TestCase):
         M7_expected = 7. * 11. * M6_expected
         if 0:  # pragma: no cover
             loadcase_id = 6
-            F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+            F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
             assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
             self.assertTrue(allclose(F6_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F6_expected, F))
             self.assertTrue(allclose(M6_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M6_expected, M))
 
             loadcase_id = 7
-            F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+            F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
             assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
             self.assertTrue(allclose(F7_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F7_expected, F))
@@ -308,8 +310,8 @@ class TestLoadSum(unittest.TestCase):
         F5_expected = p * A * n
         r = array([0.5, 0.5, 0.])
         M5_expected = cross(r, F5_expected)
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         self.assertTrue(allclose(F5_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F5_expected, F))
@@ -323,8 +325,8 @@ class TestLoadSum(unittest.TestCase):
         F6_expected = p * A * n
         r = array([0.5, 0.5, 0.])
         M6_expected = cross(r, F6_expected)
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         self.assertTrue(allclose(F6_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F6_expected, F))
@@ -338,8 +340,8 @@ class TestLoadSum(unittest.TestCase):
         F1003_expected = p * A * n
         r = array([0.5, 0.5, 0.])
         M1003_expected = cross(r, F1003_expected)
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         self.assertTrue(allclose(F1003_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1003_expected, F))
@@ -349,8 +351,8 @@ class TestLoadSum(unittest.TestCase):
         F8_expected = 2. * (3. * F7_expected + 2. * F1003_expected)
         M8_expected = 2. * (3. * M7_expected + 2. * M1003_expected)
         if 0:  # pragma: no cover
-            F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+            F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
             assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
             self.assertTrue(allclose(F8_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F8_expected, F))
@@ -364,8 +366,8 @@ class TestLoadSum(unittest.TestCase):
         r = array([3.5, 1.5, 0.])
         M800_expected = cross(r, F800_expected)
         if 0:  # pragma: no cover
-            F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+            F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
             assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
             self.assertTrue(allclose(F800_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F800_expected, F))
@@ -375,8 +377,8 @@ class TestLoadSum(unittest.TestCase):
         F801_expected = F800_expected
         M801_expected = M800_expected
         if 0:  # pragma: no cover
-            F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+            F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
             assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
             self.assertTrue(allclose(F801_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F801_expected, F))
@@ -392,8 +394,8 @@ class TestLoadSum(unittest.TestCase):
         r = array([rx, ry, 0.])
         M802_expected = cross(r, F802_expected)
         if 0:  # pragma: no cover
-            F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+            F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
             assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
             self.assertTrue(allclose(F802_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F802_expected, F))
@@ -410,8 +412,8 @@ class TestLoadSum(unittest.TestCase):
         p0 = array([0., 0., 0.])
 
         loadcase_id = 1
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         if 0:  # pragma: no cover
@@ -419,8 +421,8 @@ class TestLoadSum(unittest.TestCase):
             F1_expected = array([0., 0., 1.])
             M1_expected = cross(r, F1_expected)
 
-            F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False)
-            F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids, include_grav=False)
+            F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False)
+            F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids, include_grav=False)
             assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
             assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
             self.assertTrue(allclose(F1_expected, F), 'loadcase_id=%s F_expected=%s F=%s' % (loadcase_id, F1_expected, F))
@@ -455,9 +457,9 @@ class TestLoadSum(unittest.TestCase):
         nids = None
 
         loadcase_id = 1
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False,
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False,
                                         xyz_cid0=None)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                                                    include_grav=False,
                                                    xyz_cid0=None)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
@@ -469,11 +471,11 @@ class TestLoadSum(unittest.TestCase):
         self.assertTrue(allclose(M1_expected, M), 'loadcase_id=%s M_expected=%s M=%s' % (loadcase_id, M1_expected, M))
 
         loadcase_id = 2
-        F, M = model.sum_forces_moments(p0, loadcase_id, include_grav=False,
-                                        xyz_cid0=None)
-        F2, M2 = model.sum_forces_moments_elements(p0, loadcase_id, eids, nids,
-                                                   include_grav=False,
-                                                   xyz_cid0=None)
+        F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False,
+                                  xyz_cid0=None)
+        F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
+                                             include_grav=False,
+                                             xyz_cid0=None)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         F2_expected = np.array([0., 2.2, 0.])

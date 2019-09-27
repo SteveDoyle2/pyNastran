@@ -8,6 +8,8 @@ from cpylog import get_logger
 from pyNastran.bdf.bdf import PCOMP, MAT1, BDF
 from pyNastran.bdf.cards.materials import get_mat_props_S
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties_nsm
+
 
 try:
     import matplotlib
@@ -1030,10 +1032,10 @@ class TestShells(unittest.TestCase):
         mass = model.mass_properties(element_ids=10)[0]
         assert np.allclose(mass, mass_expected), 'mass_properties reduced: mass=%s mass_expected=%s' % (mass, mass_expected)
 
-        mass = model.mass_properties_nsm()[0]
+        mass = mass_properties_nsm(model)[0]
         assert np.allclose(mass, mass_expected*2), 'mass_properties_nsm all: mass=%s mass_expected=%s' % (mass, mass_expected*2)
 
-        mass = model.mass_properties_nsm(element_ids=10)[0]
+        mass = mass_properties_nsm(model, element_ids=10)[0]
         assert np.allclose(mass, mass_expected), 'mass_properties_nsm reduced: mass=%s mass_expected=%s' % (mass, mass_expected)
 
         bdf_file = StringIO()

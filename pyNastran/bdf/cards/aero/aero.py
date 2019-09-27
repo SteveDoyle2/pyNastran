@@ -2579,6 +2579,8 @@ class CAERO3(BaseCard):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
+        p1 = np.asarray(p1)
+        p4 = np.asarray(p4)
 
         #: Element identification number
         self.eid = eid
@@ -2591,6 +2593,7 @@ class CAERO3(BaseCard):
         self.list_w = list_w
         self.list_c1 = list_c1
         self.list_c2 = list_c2
+
         self.p1 = p1
         self.x12 = x12
         self.p4 = p4
