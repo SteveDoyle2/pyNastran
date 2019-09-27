@@ -34,7 +34,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
         out[prop.type].append(pid)
 
     skip_properties = [
-        'PBEND', 'PBUSH', 'PBUSH1D',
+        'PBEND', 'PBUSH',  #'PBUSH1D',
         'PMASS', 'PBCOMP',
 
         #'PCOMPG',
@@ -122,6 +122,10 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             key = (2802, 28, 236)
             nfields = 4
             spack = Struct(endian + b'i3f')
+        elif name == 'PBUSH1D':
+            key = (3101, 31, 219)
+            nfields = 38
+            spack = Struct(endian + b'i 6f i 4f 24i 2f')
         elif name == 'PIHEX':
             obj.log.warning('skipping PIHEX')
             continue
@@ -179,6 +183,111 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             #(pid, ce, cr) = out
             data = [pid, prop.ce, prop.cr]
             op2.write(spack.pack(*data))
+    elif name == 'PBUSH1D':
+        type_map = {
+            None : 0,  # NULL
+            'EQUAT' : 1,
+            'TABLE' : 2,
+        }
+
+        alpha = 0.
+        for pid in sorted(pids):
+            prop = obj.properties[pid]
+            #print(prop.get_stats())
+            #(pid, k, c, m, unused_alpha, sa, se,
+             #typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
+             #types, idts, idcs, idtdus, idcdus,
+             #typed, idtd, idcd, idtdvd, idcdvd,
+             #typeg, idtg, idcg, idtdug, idcdug, idtdvg, idcdvg,
+             #typef, idtf, idcf,
+             #unused_ut, unused_uc) = out
+
+            typea = cvt = cvc = expvt = expvc = idtsu = idtcu = idtsud = idcsud = 0
+            if 'SHOCK' in prop.vars:
+                typea = type_map[typea_str]
+                #optional_vars['SHOCKA'] = [typea_str, cvt, cvc, expvt, expvc,
+                                           #idts, idets, idtcu, idtsud, idcsud]
+                #shock_cvc : None
+                #shock_cvt : None
+                #shock_exp_vc : None
+                #shock_exp_vt : None
+                #shock_idecs : None
+                #shock_idecsd : None
+                #shock_idets : None
+                #shock_idetsd : None
+                #shock_idts : None
+                #shock_type : None
+                shcok
+
+            if 'SPRING' in prop.vars:
+                #optional_vars['SPRING'] = [types_str, idts, idcs, idtdus, idcdus]
+                #spring_idc : None
+                #spring_idcdu : None
+                #spring_idt : 205
+                #spring_idtc : None
+                #spring_idtdu : None
+                #spring_type : 'TABLE'
+                types = type_map[prop.spring_type]
+                idts = prop.spring_idt if prop.spring_idt is not None else 0
+                idcs = prop.spring_idc if prop.spring_idc is not None else 0
+                idtdus = prop.spring_idtdu if prop.spring_idtdu is not None else 0
+                idcdus = prop.spring_idcdu if prop.spring_idcdu is not None else 0
+
+            if 'DAMPER' in prop.vars:
+                #optional_vars['DAMPER'] = [typed_str, idtd, idcd, idtdvd, idcdvd]
+                #damper_idc : None
+                #damper_idcdv : None
+                #damper_idt : 206
+                #damper_idtdv : None
+                #damper_type : 'TABLE'
+                typed = type_map[prop.damper_type]
+                #optional_vars['DAMPER'] = [typed_str, idts, idcs, idtdvd, idcdvd]
+                idtd = prop.damper_idt if prop.damper_idt is not None else 0
+                idcd = prop.damper_idc if prop.damper_idc is not None else 0
+                idtdvd = prop.damper_idtdv if prop.damper_idtdv is not None else 0
+                idcdvd = prop.damper_idcdv if prop.damper_idcdv is not None else 0
+
+            typeg = idtg = idcg = idtdug = idcdug = idtdvg = idcdvg = 0
+            if 'GENER' in prop.vars:
+                #typeg = type_map[typeg_str]
+                #optional_vars['GENER'] = [idtg, idcg, idtdug, idcdug, idtdvg, idcdvg]
+                gener
+
+            typef = idtf = idcf = 0  #type_map[typef_str]  # FUSE...what is this???
+            ut = uc = 0
+            data = [pid, prop.k, prop.c, prop.m, alpha, prop.sa, prop.se,
+                    typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
+                    types, idts, idcs, idtdus, idcdus,
+                    typed, idtd, idtd, idtdvd, idcdvd,
+                    typeg, idtg, idcg, idtdug, idcdug, idtdvg, idcdvg,
+                    typef, idtf, idcf,
+                    ut, uc]
+            assert len(data) == 38, len(data)
+            op2.write(spack.pack(*data))
+        #ntotal = 152  # 38*4
+        #struct1 = Struct(self._endian + b'i 6f i 4f 24i 2f')
+        #nentries = (len(data) - n) // ntotal
+        #for unused_i in range(nentries):
+            #edata = data[n:n+152]
+            #out = struct1.unpack(edata)
+            ##  test_op2_other_05
+            ##pbush1d, 204, 1.e+5, 1000., , , , , , +pb1
+            ##+pb1, spring, table, 205, , , , , , +pb2
+            ##+pb2, damper, table, 206
+            ##pid=204 k=100000.0 c=1000.0 m=0.0 sa=nan se=nan
+
+
+            #msg = f'PBUSH1D pid={pid} k={k} c={c} m={m} sa={sa} se={se}'
+            #optional_vars = {}
+            #typea_str = type_map[typea]
+            #types_str = type_map[types]
+            #typed_str = type_map[typed]
+            #unused_typeg_str = type_map[typeg]
+            #unused_typef_str = type_map[typef]
+
+            #if min([typea, types, typed, typeg, typef]) < 0:
+                #raise RuntimeError(f'typea={typea} types={types} typed={typed} typeg={typeg} typef={typef}')
+
     elif name == 'PTUBE':
         #.. todo:: OD2 only exists for heat transfer...
         #          how do i know if there's heat transfer?

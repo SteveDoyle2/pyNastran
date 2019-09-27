@@ -860,7 +860,7 @@ class EPT(GeomCommon):
 
         22 TYPED  I  Damper data type: 0=Null, 1=Table, 2=Equation
         23 IDTD   I  TABLEDi or DEQATN entry identification number for tension compression
-        24 IDTD   I  DEQATN entry identification number for compression
+        24 IDCD   I  DEQATN entry identification number for compression
         25 IDTDV  I  DEQATN entry identification number for scale factor versus velocity
         26 IDCDV  I  DEQATN entry identification number for force versus velocity
 
@@ -893,7 +893,7 @@ class EPT(GeomCommon):
             (pid, k, c, m, unused_alpha, sa, se,
              typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
              types, idts, idcs, idtdus, idcdus,
-             typed, idtd, idtd, idtdvd, idcdvd,
+             typed, idtd, idcd, idtdvd, idcdvd,
              typeg, idtg, idcg, idtdug, idcdug, idtdvg, idcdvg,
              typef, idtf, idcf,
              unused_ut, unused_uc) = out
@@ -936,8 +936,8 @@ class EPT(GeomCommon):
                 optional_vars['SPRING'] = [types_str, idts, idcs, idtdus, idcdus]
                 msg += f'  SPRING type={types} idt={idts} idc={idcs} idtdu={idtdus} idcdu={idcdus}'
             if typed in [1, 2]: # Damper data type: 0=Null, 1=Table, 2=Equation
-                optional_vars['DAMPER'] = [typed_str, idts, idcs, idtdvd, idcdvd]
-                msg += f'  DAMPER type={typed} idt={idtd} idt={idtd} idtdv={idtdvd} idcdv={idcdvd}'
+                optional_vars['DAMPER'] = [typed_str, idtd, idcd, idtdvd, idcdvd]
+                msg += f'  DAMPER type={typed} idt={idtd} idc={idtd} idtdv={idtdvd} idcdv={idcdvd}'
             if typeg in [1, 2]: # general, GENER?: 0=Null, 1=Table 2=Equation
                 # C:\NASA\m4\formats\git\examples\move_tpl\ar29scbt.bdf
                 #pbush1d, 206, 1.e+3, 10., , , , , , +pb6
