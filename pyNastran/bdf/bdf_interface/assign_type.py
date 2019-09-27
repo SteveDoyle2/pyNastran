@@ -40,8 +40,7 @@ RE_INT = re.compile('^[-+]?[0-9]+$', flags=0)
 # -1.032+2
 #RE_FLOAT_SHORT = re.compile('^[-+]?[0-9]+ \. [[0-9]+]? [-+] [0-9]+$', flags=0)
 
-def parse_components(card, ifield, fieldname):
-    # type: (BDFCard, int, str) -> str
+def parse_components(card: BDFCard, ifield: int, fieldname: str) -> str:
     """
     Parameters
     ----------
@@ -96,8 +95,10 @@ def parse_components(card, ifield, fieldname):
             raise SyntaxError(msg)
     return svalue3
 
-def components_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None):
-    # type: (BDFCard, int, str, Optional[str]) -> Optional[str]
+def components_or_blank(card: BDFCard,
+                        ifield: int,
+                        fieldname: str,
+                        default: Optional[str]=None) -> Optional[str]:
     """
     Parameters
     ----------
@@ -131,8 +132,7 @@ def components_or_blank(card: BDFCard, ifield: int, fieldname: str, default=None
         return parse_components(card, ifield, fieldname)
     return default
 
-def blank(card: BDFCard, ifield: int, fieldname: str, default=None):
-    # type: (BDFCard, int, str, None) -> None
+def blank(card: BDFCard, ifield: int, fieldname: str, default=None) -> None:
     """
     Parameters
     ----------
@@ -1035,8 +1035,8 @@ def exact_string_or_blank(card: BDFCard, ifield: int, fieldname: str, default=No
 # string/blank - done
 
 
-def interpret_value(value_raw, card=''):
-    # type: (Optional[str], Union[str, BDFCard]) -> Optional[Union[int, float, str]]
+def interpret_value(value_raw: Optional[str],
+                    card: Union[str, BDFCard]='') -> Union[int, float, str, None]:
     """
     Converts a value from nastran format into python format.
 

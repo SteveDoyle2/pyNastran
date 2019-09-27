@@ -14,7 +14,8 @@ All solid elements are defined in this file.  This includes:
 All solid elements are SolidElement and Element objects.
 
 """
-from typing import Any
+from __future__ import annotations
+from typing import Tuple, Any, TYPE_CHECKING
 import numpy as np
 from numpy import dot, cross
 from numpy.linalg import norm  # type: ignore
@@ -22,6 +23,8 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.bdf.cards.elements.elements import Element
 from pyNastran.utils.mathematics import Area
 from pyNastran.bdf.bdf_interface.assign_type import integer, integer_or_blank
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 _chexa_mapper = {
@@ -64,8 +67,7 @@ _chexa_faces = (
     (2, 6, 7, 3),
 )
 
-def volume4(n1, n2, n3, n4):
-    # type: (Any, Any, Any, Any) -> float
+def volume4(n1: Any, n2: Any, n3: Any, n4: Any) -> float:
     r"""
     Gets the volume, :math:`V`, of the tetrahedron.
 
@@ -75,7 +77,7 @@ def volume4(n1, n2, n3, n4):
     return volume
 
 
-def area_centroid(n1, n2, n3, n4):
+def area_centroid(n1: Any, n2: Any, n3: Any, n4: Any) -> Tuple[float, float]:
     """
     Gets the area, :math:`A`, and centroid of a quad.::
 
@@ -149,7 +151,7 @@ class SolidElement(Element):
         else:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         raise NotImplementedError('Element type=%r must implement cross_reference')
 
     def uncross_reference(self) -> None:
@@ -159,27 +161,22 @@ class SolidElement(Element):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def E(self):
-        # type: () -> float
+    def E(self) -> float:
         return self.pid_ref.mid_ref.E()
 
-    def G(self):
-        # type: () -> float
+    def G(self) -> float:
         return self.pid_ref.mid_ref.G()
 
-    def Nu(self):
-        # type: () -> float
-        return self.pid_ref.mid_ref.Nu()
+    def Nu(self) -> float:
+       return self.pid_ref.mid_ref.Nu()
 
-    def Volume(self):
-        # type: () -> float
+    def Volume(self) -> float:
         """
         Base volume method that should be overwritten
         """
         return 0.
 
-    def Mass(self):
-        # type: () -> float
+    def Mass(self) -> float:
         """
         Calculates the mass of the solid element
         Mass = Rho * Volume
@@ -187,15 +184,13 @@ class SolidElement(Element):
         #print('  rho=%e volume=%e' % (self.Rho(), self.Volume()))
         return self.Rho() * self.Volume()
 
-    def Mid(self):
-        # type: () -> int
+    def Mid(self) -> int:
         """
         Returns the material ID as an integer
         """
         return self.pid_ref.Mid()
 
-    def Rho(self):
-        # type: () -> float
+    def Rho(self) -> float:
         """
         Returns the density
         """
@@ -515,6 +510,17 @@ class CHEXA8(SolidElement):
             tuple(sorted([node_ids[3], node_ids[7]])),
         ]
 
+    def flip_normal(self):  ## TODO verify
+        """flips the element inside out"""
+        # reverse the lower and upper quad faces
+        n1, n2, n3, n4, n5, n6, n7, n8 = self.nodes
+        self.nodes = [n1, n4, n3, n2,
+                      n5, n8, n7, n6,]
+        if self.nodes_ref is not None:
+            n1_ref, n2_ref, n3_ref, n4_ref, n5_ref, n6_ref, n7_ref, n8_ref = self.nodes_ref
+            self.nodes_ref = [
+                n1_ref, n4_ref, n3_ref, n2_ref,
+                n5_ref, n8_ref, n7_ref, n6_ref,]
 
 class CHEXA20(SolidElement):
     """
@@ -2099,6 +2105,7 @@ class CTETRA4(SolidElement):
 
     def flip_normal(self):  ## TODO verify
         """flips the element inside out"""
+        # flip n2 with n3
         n1, n2, n3, n4 = self.nodes
         self.nodes = [n1, n3, n2, n4]
         if self.nodes_ref is not None:

@@ -767,8 +767,7 @@ class AddCards(AddMethods):
         self._add_seqgp_object(seqgp)
         return seqgp
 
-    def add_spoint(self, ids, comment=''):
-        # type: (Union[int, List[int]], str) -> SPOINTs
+    def add_spoint(self, ids: Union[int, List[int]], comment: str='') -> SPOINTs:
         """
         Creates the SPOINTs card that contains many SPOINTs
 
@@ -784,8 +783,7 @@ class AddCards(AddMethods):
         self._add_spoint_object(spoint)
         return spoint
 
-    def add_epoint(self, ids, comment=''):
-        # type: (Union[int, List[int]], str) -> EPOINTs
+    def add_epoint(self, ids: Union[int, List[int]], comment: str='') -> EPOINTs:
         """
         Creates the EPOINTs card that contains many EPOINTs
 

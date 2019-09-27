@@ -215,8 +215,9 @@ class BaseCard:
         fields2 = card.raw_fields()
         return self._is_same_fields(fields1, fields2)
 
-    def _is_same_fields(self, fields1, fields2):
-        # type: (List[Optional[Union[int, float, str]]], List[Optional[Union[int, float, str]]]) -> bool
+    def _is_same_fields(self,
+                        fields1: List[Union[int, float, str, None]],
+                        fields2: List[Union[int, float, str, None]]) -> bool:
         for (field1, field2) in zip(fields1, fields2):
             if not is_same(field1, field2):
                 return False
@@ -230,14 +231,12 @@ class BaseCard:
             out.append(is_samei)
         return out
 
-    def print_raw_card(self, size=8, is_double=False):
-        # type: (int, bool) -> str
+    def print_raw_card(self, size: int=8, is_double: bool=False) -> str:
         """A card's raw fields include all defaults for all fields"""
         list_fields = self.raw_fields()
         return self.comment + print_card(list_fields, size=size, is_double=is_double)
 
-    def repr_fields(self):
-    # type: () -> List[Optional[Union[int, float, str]]]
+    def repr_fields(self) -> List[Union[int, float, str, None]]:
         """
         Gets the fields in their simplified form
 
@@ -306,20 +305,17 @@ class BaseCard:
         """
         raise NotImplementedError('%s has not overwritten write_card' % self.__class__.__name__)
 
-    def write_card_16(self, is_double=False):
-        # type: (int, bool) -> str
+    def write_card_16(self, is_double: bool=False) -> str:
         fields = self.repr_fields()
         return print_card(fields, size=16, is_double=False)
 
 class Property(BaseCard):
     """Base Property Class"""
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         """dummy init"""
         pass
 
-    def Pid(self):
-        # type: () -> int
+    def Pid(self) -> int:
         """
         returns the property ID of an property
 
@@ -331,8 +327,7 @@ class Property(BaseCard):
         """
         return self.pid
 
-    def Mid(self):
-        # type: () -> int
+    def Mid(self) -> int:
         """
         returns the material ID of an element
 
@@ -346,19 +341,16 @@ class Property(BaseCard):
             return self.mid
         return self.mid_ref.mid
 
-    def write_card_8(self):
-        # type: () -> str
+    def write_card_8(self) -> str:
         return self.write_card()
 
-    def write_card_16(self, is_double=False):
-        # type: (bool) -> str
+    def write_card_16(self, is_double: bool=False) -> str:
         return self.write_card()
 
 
 class Material(BaseCard):
     """Base Material Class"""
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         """dummy init"""
         BaseCard.__init__(self)
 
@@ -370,7 +362,6 @@ class Material(BaseCard):
 
     @TRef.setter
     def TRef(self, tref: float) -> None:
-        # type: (float) -> None
         """sets the self.Tref attributes"""
         if not hasattr(self, 'tref'):
             raise AttributeError('%r object has no attribute tref' % self.type)
