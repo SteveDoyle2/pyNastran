@@ -267,10 +267,10 @@ class TestNsm(unittest.TestCase):
         model.cross_reference()
         model.pop_xref_errors()
 
-        mass, unused_cg, unused_I = model.mass_properties_nsm(nsm_id=5000)
+        mass, unused_cg, unused_I = mass_properties_nsm(model, nsm_id=5000)
         self.assertAlmostEqual(mass, 8.0)
         model2 = save_load_deck(model)
-        mass, unused_cg, unused_I = model2.mass_properties_nsm(nsm_id=5000)
+        mass, unused_cg, unused_I = mass_properties_nsm(model2, nsm_id=5000)
 
     #def test_nsm(self):
         #"""tests a complete nsm example"""
@@ -278,9 +278,9 @@ class TestNsm(unittest.TestCase):
         #bdf_filename = os.path.join(MODEL_PATH, 'nsm', 'TEST_NSM_SOL101.bdf')
         #model = read_bdf(bdf_filename)
         #print('    %6s %-9s %s' % ('nsm_id', 'mass', 'nsm'))
-        #mass0 = model.mass_properties_nsm(debug=False)[0]
+        #mass0 = .mass_properties_nsm(model, debug=False)[0]
         #for nsm_id in sorted(chain(model.nsms, model.nsmadds)):
-            #mass, cg, I = model.mass_properties_nsm(nsm_id=nsm_id, debug=False)
+            #mass, cg, I = .mass_properties_nsm(model, nsm_id=nsm_id, debug=False)
             #print('    %-6s %-9.4g %.4g' % (nsm_id, mass, mass-mass0))
 
         #area_breakdown = model.get_area_breakdown()

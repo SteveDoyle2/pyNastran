@@ -27,7 +27,7 @@ class TestElements(unittest.TestCase):
         model.uncross_reference()
         model.safe_cross_reference()
         save_load_deck(model, xref='standard', punch=True,
-                       run_renumber=False)
+                       run_renumber=False)  # PLOTEL xref
 
     def test_cbush_01(self):
         """tests a CBUSH"""

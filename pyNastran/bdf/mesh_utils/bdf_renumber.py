@@ -1101,7 +1101,7 @@ def _update_case_control(model, mapper):
         'TITLE', 'ECHO', 'ANALYSIS', 'SUBTITLE', 'LABEL', 'SUBSEQ', 'OUTPUT',
         'TCURVE', 'XTITLE', 'YTITLE', 'AECONFIG', 'AESYMXZ', 'MAXLINES', 'PARAM', 'CONTOUR',
         'PTITLE', 'PLOTTER', 'K2PP', 'CSCALE', 'XGRID LINES', 'YGRID LINES', 'YMIN', 'YMAX',
-        'LINE',
+        'LINE', 'XAXIS', 'YAXIS',
         ] + skip_keys_temp
     warn_keys = ['CLOAD', 'RANDOM']
 
