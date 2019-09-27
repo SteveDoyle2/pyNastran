@@ -7,7 +7,9 @@ import numpy as np
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf import CORD2C, GRID, FORCE
+from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moments_elements
 model_path = os.path.join(pyNastran.__path__[0], '..', 'models')
+
 
 log = None
 class TestLoadSum(unittest.TestCase):
@@ -470,10 +472,10 @@ class TestLoadSum(unittest.TestCase):
 
         loadcase_id = 2
         F, M = sum_forces_moments(model, p0, loadcase_id, include_grav=False,
-                                        xyz_cid0=None)
+                                  xyz_cid0=None)
         F2, M2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
-                                                   include_grav=False,
-                                                   xyz_cid0=None)
+                                             include_grav=False,
+                                             xyz_cid0=None)
         assert np.allclose(F, F2), 'F=%s F2=%s' % (F, F2)
         assert np.allclose(M, M2), 'M=%s M2=%s' % (M, M2)
         F2_expected = np.array([0., 2.2, 0.])

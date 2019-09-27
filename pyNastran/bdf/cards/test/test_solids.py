@@ -10,9 +10,10 @@ from pyNastran.bdf.cards.elements.solid import (
     #CTETRA10, CHEXA20,
     CPENTA15
 )
+from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #mass_properties_breakdown
-from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moments_elements
 
 
 class TestSolids(unittest.TestCase):
