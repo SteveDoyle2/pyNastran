@@ -311,6 +311,7 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
 
     #os.remove(bdf_merged_filename)
     #os.remove(bdf_renumber_filename)
+    os.remove('model_join.bdf')
     return out_bdf_filename
 
     #bdf_model.write_bdf(bdf_renumber_filename, interspersed=False)
