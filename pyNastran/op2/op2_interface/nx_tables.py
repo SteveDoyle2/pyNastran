@@ -49,7 +49,7 @@ NX_MATRIX_TABLES = [
     ##b'KELM',
 
     # hasn't been validated
-    #b'MELM', b'BELM',
+    b'MELM', # b'BELM',
 
     b'BHH', b'KHH',
     b'DSCM2',
@@ -133,9 +133,6 @@ NX_EXTRA_TABLES = [
     # glue
     b'OBG1', # glue normal and tangential tractions at grid points in basic coordinate system
 
-    # what?
-    #b'XSOP2DIR',
-
     # RMAXMIN - Defines parameters to output the minimum, maximum, absolute
     #           value maximum, average, and RMS value of stress, force, and
     #           displacement results for SOLs 101, 109, and 112.
@@ -150,18 +147,15 @@ NX_EXTRA_TABLES = [
 ]
 
 NX_RESULT_TABLES = [
-    # GEOM table
-    #b'ICASE',
-
     #-----------------------
     # OESVM1  - OES Table of           element stresses
     # OESVM1C - OES Table of composite element stresses
     #           for frequency response analysis that includes von Mises stress
     #           output in SORT1 format.
     b'OESVM1',
-    b'OESVM2', # b'OESVM1C',
+    b'OESVM2', b'OESVM1C',
     b'OSTRVM1',
-    b'OSTRVM2', # b'OSTRVM1C',
+    b'OSTRVM2', b'OSTRVM1C',
 
     b'OES2C', b'OSTR2C',
 
