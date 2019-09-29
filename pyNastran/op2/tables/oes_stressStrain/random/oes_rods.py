@@ -183,6 +183,7 @@ class RandomRodArray(OES_Object):
         return page_num
 
     def _write_sort1_as_sort1(self, header, page_stamp, page_num, f06_file, msg_temp):
+        print('update the RandomRodArray header')
         ntimes = self.data.shape[0]
 
         eids = self.element
@@ -199,9 +200,7 @@ class RandomRodArray(OES_Object):
 
             #print("self.data.shape=%s itime=%s ieids=%s" % (str(self.data.shape), itime, str(ieids)))
             axial = self.data[itime, :, 0]
-            SMa = self.data[itime, :, 1]
-            torsion = self.data[itime, :, 2]
-            SMt = self.data[itime, :, 3]
+            torsion = self.data[itime, :, 1]
 
             out = []
             for eid, axiali, torsioni in zip(eids, axial, torsion):
@@ -273,6 +272,14 @@ class RandomRodStrainArray(RandomRodArray, StrainObject):
         return headers
 
     def _get_msgs(self):
+        # TODO: update this...
+        #
+        #                                     S T R E S S E S   I N   R O D   E L E M E N T S      ( C T U B E )
+        #                                                     ( ROOT MEAN SQUARE )
+        #
+        #     ELEMENT         AXIAL                   TORSIONAL                ELEMENT         AXIAL                   TORSIONAL
+        #       ID.          STRESS                     STRESS                   ID.          STRESS                     STRESS
+        #        3306      1.038912E+01              7.809715E-02                 3307      6.633282E-02              0.0
         base_msg = ['       ELEMENT       AXIAL       TORSIONAL     SAFETY       ELEMENT       AXIAL       TORSIONAL     SAFETY\n',
                     '         ID.        STRAIN         STRAIN      MARGIN         ID.        STRAIN         STRAIN      MARGIN\n']
         crod_msg = ['                                       S T R A I N S   I N   R O D   E L E M E N T S      ( C R O D )\n', ]

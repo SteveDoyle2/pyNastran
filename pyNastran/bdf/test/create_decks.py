@@ -68,31 +68,73 @@ def update_with_post(fname, dirname):
     for i, line in enumerate(lines):
         line_upper = line.upper().split('$')[0].rstrip()
 
-        if line_upper.startswith('SOL'):
-            line_upper = line_upper.replace('\t', ' ')
+        line_upper = line_upper.replace('\t', ' ').strip()
+        if line_upper.startswith('SOL '):
             while '  ' in line_upper:
                 line_upper = line_upper.replace('  ', ' ')
 
-            if ('SOL 101' in line_upper or 'SOL STATIC' in line_upper or
+            if ('SOL 1' in line_upper or
+                'SOL 3' in line_upper or # modal
+                'SOL 5' in line_upper or
+                'SOL 7' in line_upper or
+                'SOL 8' in line_upper or
+                'SOL 21' in line_upper or
+                'SOL 24' in line_upper or
+                'SOL 25' in line_upper or
+                'SOL 26' in line_upper or
+                'SOL 27' in line_upper or
+                'SOL 28' in line_upper or
+                'SOL 29' in line_upper or
+                'SOL 47' in line_upper or
+                'SOL 48' in line_upper or
+                'SOL 60' in line_upper or
+                'SOL 61' in line_upper or
+                'SOL 62' in line_upper or
+                'SOL 63' in line_upper or
+                'SOL 64' in line_upper or
+                'SOL 66' in line_upper or
+                'SOL 67' in line_upper or
+                'SOL 68' in line_upper or
+                'SOL 74' in line_upper or
+                'SOL 75' in line_upper or
+                'SOL 76' in line_upper or
+                'SOL 81' in line_upper or
+                'SOL 82' in line_upper or
+                'SOL 83' in line_upper or
+                'SOL 88' in line_upper or
+                'SOL 89' in line_upper or
+                'SOL 91' in line_upper or
+                'SOL 99' in line_upper or
+                #'SOL 3' in line_upper or
+                'SOL 100'  in line_upper or
+                'SOL USERDMAP' in line_upper or
+                'SOL MAIN' in line_upper or
+                'SOL XXX' in line_upper or
+                'SOL 101' in line_upper or 'SOL STATIC' in line_upper or 'SOL SESTATIC' in line_upper or
                 'SOL 103' in line_upper or 'SOL SEMODES' in line_upper or
                 'SOL 105' in line_upper or 'SOL BUCKLING' in line_upper or
-                'SOL 106' in line_upper or
-                'SOL 107' in line_upper or
-                'SOL 108' in line_upper or
-                'SOL 109' in line_upper or
-                'SOL 110' in line_upper or
-                'SOL 111' in line_upper or
-                'SOL 112' in line_upper or
+                'SOL 106' in line_upper or 'SOL NLSTATIC' in line_upper or # nonlinear static
+                'SOL 107' in line_upper or 'SOL SEMFREQ' in line_upper or # direct complex frequency response
+                'SOL 108' in line_upper or 'SOL SEDFREQ' in line_upper or # direct frequency response
+                'SOL 109' in line_upper or 'SOL SEDTRAN' in line_upper or # time linear?
+                'SOL 110' in line_upper or 'SOL SEDCEIG' in line_upper or # modal complex eigenvalue
+                'SOL 111' in line_upper or 'SOL SEMFREQ' in line_upper or # modal frequency response
+                'SOL 112' in line_upper or 'SOL SEMTRAN' in line_upper or # modal transient response
+                'SOL 114' in line_upper or  #
+                'SOL 115' in line_upper or  #
+                'SOL 118' in line_upper or  #
                 'SOL 126' in line_upper or
-                'SOL 129' in line_upper or
+                'SOL 129' in line_upper or 'SOL NLTRAN' in line_upper or # time nonlinear
                 #'SOL 112' in line_upper or
                 #'SOL 112' in line_upper or
                 #'SOL 112' in line_upper or
-                'SOL 144' in line_upper or
-                'SOL 145' in line_upper or
-                'SOL 146' in line_upper or
-                'SOL 159' in line_upper or
-                'SOL 200' in line_upper):
+                'SOL 144' in line_upper or # static aero
+                'SOL 145' in line_upper or # flutter
+                'SOL 146' in line_upper or # gust
+                'SOL 153' in line_upper or 'SOL NLSCSH' in line_upper or # nonlinear thermal
+                'SOL 159' in line_upper or # nonlinear transient thermal
+                'SOL 190' in line_upper or 'SOL DBTRANS' in line_upper or
+                'SOL 200' in line_upper):  # optimization
                 continue
 
             print('%r' % line_upper)

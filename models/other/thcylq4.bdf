@@ -1,0 +1,66 @@
+ID NXN, THCYLQ4  
+TIME	5  $ MINUTES
+SOL	106 $ STATIC ANALYSIS SCR=YES NAS=68
+$compile phase0 souin=mscsou noref nolist
+$alter 331
+$ tabpt ett// $
+CEND
+TEMP(INIT) = 10
+TITLE = THERMAL TEST STTWCQ4                                   THCYLQ4
+  TEMP(LOAD)  = 1
+  NLPARM = 1
+  SET 1 = 1 10000 10001 
+  DISPL = 1
+  OLOAD = ALL
+  SPCFO = ALL
+  STRES = ALL
+PARAM,LGDISP,1
+PARAM,TESTNEG,1
+PARAM,DBDRNL,-1
+PARAM       POST      -2
+BEGIN BULK
+$
+NLPARM  1       1               ITER    1                       NO      +
++                               -2                                      +
++
+CORD2C	1		0.	0.	0.	0.	0.	1.	+C1
++C1	1.	0.	0.
+PARAM	AUTOSPC	YES
+$
+TEMPD	10	0.
+TEMP	1	10000	200.
+TEMP	1	10001	200.
+TEMP	1	10100	171.94
+TEMP	1	10101	171.94
+TEMP	1	10200	138.75
+TEMP	1	10201	138.75
+TEMP	1	10300	99.86
+TEMP	1	10301	99.86
+TEMP	1	10400	52.37
+TEMP	1	10401	52.37
+TEMP	1	10500	0.
+TEMP	1	10501	0.
+$
+CQUAD4  101     100     10000   10001   10101   10100                           
+CQUAD4  102     100     10100   10101   10201   10200                           
+CQUAD4  103     100     10200   10201   10301   10300                           
+CQUAD4  104     100     10300   10301   10401   10400                           
+CQUAD4  105     100     10400   10401   10501   10500                           
+$
+GRID    1       1       3.      0.              1       23456                   
+GRID    10000   1       3.      -5.     0.0     1       23456                   
+GRID    10001   1       3.      5.      0.0     1       23456                   
+GRID    10100   1       3.5     -5.     0.0     1       23456                   
+GRID    10101   1       3.5     5.      0.0     1       23456                   
+GRID    10200   1       4.2     -5.     0.0     1       23456                   
+GRID    10201   1       4.2     5.      0.0     1       23456                   
+GRID    10300   1       5.2     -5.     0.0     1       23456                   
+GRID    10301   1       5.2     5.      0.0     1       23456                   
+GRID    10400   1       6.75    -5.     0.0     1       23456                   
+GRID    10401   1       6.75    5.      0.0     1       23456                   
+GRID    10500   1       9.      -5.     0.0     1       23456                   
+GRID    10501   1       9.      5.      0.0     1       23456                   
+$
+MATHP   100     1.9231E6        4.1667E6        3.E-6
+PLPLANE	100	100	
+ENDDATA 

@@ -470,7 +470,7 @@ class TableArray(ScalarObject):  # displacement style table
 
             gridtype_str = self.gridtype_str
             ugridtype_str = np.unique(gridtype_str)
-            if len(ugridtype_str) == 1 and gridtype_str[0] in ['S', 'E']:
+            if len(ugridtype_str) == 1 and gridtype_str[0] in ['S', 'M', 'E']:
                 nnodes = self.node_gridtype.shape[0]
                 node_gridtype = [self.node_gridtype[:, 0], [gridtype_str[0]] * nnodes]
 
@@ -1152,9 +1152,9 @@ class RealTableArray(TableArray):
                 if sgridtype in ['G', 'H', 'L']:
                     f06_file.write('%14s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                         write_float_12e(dt), sgridtype, dx, dy, dz, rx, ry, rz))
-                elif sgridtype == 'S':
+                elif sgridtype in ['S', 'M', 'E']:
                     f06_file.write('%14s %6s     %s\n' % (node_id, sgridtype, dx))
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError(sgridtype)
             f06_file.write(page_stamp % page_num)
             page_num += 1
@@ -1187,10 +1187,10 @@ class RealTableArray(TableArray):
                 if sgridtype in ['G', 'H', 'L']:
                     f06_file.write('%14i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %s\n' % (
                         node_id, sgridtype, dx, dy, dz, rx, ry, rz))
-                elif sgridtype == 'S':
+                elif sgridtype in ['S', 'M', 'E']:
                     f06_file.write('%14i %6s     %s\n' % (node_id, sgridtype, dx))
-                else:
-                    raise NotImplementedError(sgridtype)
+                else:  # pragma: no cover
+                    raise NotImplementedError(f'node_id={node_id} sgridtype={sgridtype} vals={vals2}')
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
@@ -1411,21 +1411,16 @@ class ComplexTableArray(TableArray):
                 vals2 = write_imag_floats_13e(vals, is_mag_phase)
                 [dxr, dyr, dzr, rxr, ryr, rzr,
                  dxi, dyi, dzi, rxi, ryi, rzi] = vals2
-                if sgridtype == 'G':
+                if sgridtype in ['G', 'H']:
                     f06_file.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
                                    '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
                                        node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
                                        '', '', dxi, dyi, dzi, rxi, ryi, rzi))
-                elif sgridtype == 'S':
+                elif sgridtype in ['S', 'M', 'E']:
                     f06_file.write('0 %12i %6s     %-13s\n'
                                    '  %12s %6s     %-13s\n' % (node_id, sgridtype, dxr, '', '', dxi))
-                elif sgridtype == 'H':
-                    f06_file.write('0 %12i %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n'
-                                   '  %12s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
-                                       node_id, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
-                                       '', '', dxi, dyi, dzi, rxi, ryi, rzi))
-                else:
-                    raise NotImplementedError(sgridtype)
+                else:  # pragma: no cover
+                    raise NotImplementedError(f'node_id={node_id} sgridtype={sgridtype} vals={vals2}')
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num
@@ -1463,7 +1458,7 @@ class ComplexTableArray(TableArray):
                                    '  %13s %6s     %-13s  %-13s  %-13s  %-13s  %-13s  %-s\n' % (
                                        sdt, sgridtype, dxr, dyr, dzr, rxr, ryr, rzr,
                                        '', '', dxi, dyi, dzi, rxi, ryi, rzi))
-                elif sgridtype == 'S':
+                elif sgridtype in ['S', 'M', 'E']:
                     f06_file.write('0 %12s %6s     %-13s\n'
                                    '  %12s %6s     %-13s\n' % (sdt, sgridtype, dxr, '', '', dxi))
                 else:

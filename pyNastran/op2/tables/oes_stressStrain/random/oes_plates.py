@@ -380,7 +380,8 @@ class RandomPlateArray(OES_Object):
         oyy = self.data[itime, :, 1]
         txy = self.data[itime, :, 2]
 
-        eids = self.element
+        eids = self.element_node[:, 0]
+        #nids = self.element_node[:, 1]
 
         ilayer0 = True
         for eid, fd, oxx, oyy, txy in zip(eids, fds, oxx, oyy, txy):
@@ -409,10 +410,11 @@ class RandomPlateArray(OES_Object):
         oyy = self.data[itime, :, 1]
         txy = self.data[itime, :, 2]
 
-        eids = self.element
+        eids = self.element_node[:, 0]
+        nids = self.element_node[:, 1]
 
         ilayer0 = True
-        for eid, fd, doxx, doyy, dtxy in zip(eids, fds, oxx, oyy, txy):
+        for eid, nid, fd, doxx, doyy, dtxy in zip(eids, nids, fds, oxx, oyy, txy):
             sfd = write_float_13e(fd)
             soxx = write_float_13e(doxx)
             soyy = write_float_13e(doyy)

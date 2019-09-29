@@ -21,7 +21,7 @@ class RealMPCForcesArray(RealTableArray):
             words += ['                                             ( POWER SPECTRAL DENSITY FUNCTION )']
         elif self.table_name in ['OQGRMS1', 'OQGRMS2', 'OQMRMS1', 'OQMRMS2']:
             words += ['                                                     ( ROOT MEAN SQUARE )']
-        elif self.table_name in ['OQGCRM1', 'OQGCRM2']:
+        elif self.table_name in ['OQGCRM1', 'OQGCRM2', 'OQMCRM1']:
             words += ['                                               ( CUMULATIVE ROOT MEAN SQUARE )']
         elif self.table_name in ['OQGNO1', 'OQGNO2']:
             words += ['                                                 ( NUMBER OF ZERO CROSSINGS )']

@@ -60,7 +60,7 @@ def get_all_files(folders_file, file_type, max_size=4.2):
         path to the file with a list of folders
     file_type : str
         a file extension
-    max_size : float; default=100.0
+    max_size : float; default=4.2
         size in MB for max file size
 
     Returns
@@ -116,7 +116,7 @@ def run(regenerate=True, make_geom=False, write_bdf=False, build_pandas=True,
     stop_on_failure = False
     get_skip_cards = False
 
-    max_size = 1000. # MB
+    max_size = 4000. # MB
     failed_cases_filename = 'failed_cases%s%s.in' % (sys.version_info[:2])
     if get_skip_cards:
         files2 = parse_skipped_cards('skipped_cards.out')

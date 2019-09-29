@@ -232,7 +232,7 @@ class BDFAttributes:
         self.rsolmap_to_str = {
             66: 'NONLIN',
             101: 'SESTSTATIC',  # linear static
-            103: 'SEMODES',  # modal
+            103: 'SEMODES',   # modal
             105: 'BUCKLING',  # buckling
             106: 'NLSTATIC',  # non-linear static
             107: 'SEDCEIG',  # direct complex frequency response
