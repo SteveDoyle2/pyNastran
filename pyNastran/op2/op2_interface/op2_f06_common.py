@@ -537,6 +537,7 @@ class OP2_F06_Common:
         self.conm2_strain_energy = {}
         self.rbe1_strain_energy = {}
         self.rbe3_strain_energy = {}
+        self.weldc_strain_energy = {}
 
     def _get_result_length(self, res_types, res_key):
         """
@@ -835,6 +836,7 @@ class OP2_F06_Common:
             'genel_strain_energy',
             'conm2_strain_energy',
             'rbe1_strain_energy', 'rbe3_strain_energy',
+            'weldc_strain_energy',
 
             # unused?
             'displacement_scaled_response_spectra_nrl',

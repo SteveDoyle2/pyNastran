@@ -1489,7 +1489,7 @@ class Cord2x(Coord):
      - CORD2C
      - CORD2S
     """
-    def __init__(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
+    def __init__(self, cid: int, origin, zaxis, xzplane, rid: int=0, setup: bool=True, comment: str=''):
         """
         This method emulates the CORD2x card.
 
@@ -1534,6 +1534,7 @@ class Cord2x(Coord):
             self.e3 = np.asarray(xzplane)
 
         self.rid_ref = None
+        # if setup:
         self._finish_setup()
 
     @classmethod
@@ -1767,7 +1768,7 @@ class Cord2x(Coord):
         e2 = np.array(data[5:8], dtype='float64')
         e3 = np.array(data[8:11], dtype='float64')
         assert len(data) == 11, 'data = %s' % (data)
-        return cls(cid, e1, e2, e3, rid=rid, comment=comment)
+        return cls(cid, e1, e2, e3, rid=rid, setup=False, comment=comment)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2542,7 +2543,7 @@ class CORD2R(Cord2x, RectangularCoord):
     type = 'CORD2R'
     Type = 'R'
 
-    def __init__(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
+    def __init__(self, cid, origin, zaxis, xzplane, rid=0, setup=True, comment=''):
         """
         Creates the CORD2R card, which defines a rectangular coordinate
         system using 3 vectors.
@@ -2564,7 +2565,7 @@ class CORD2R(Cord2x, RectangularCoord):
             a comment for the card
 
         """
-        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid=rid, comment=comment)
+        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid=rid, setup=setup, comment=comment)
 
     def _verify(self, xref):
         """
@@ -2603,7 +2604,7 @@ class CORD2C(Cord2x, CylindricalCoord):
     type = 'CORD2C'
     Type = 'C'
 
-    def __init__(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
+    def __init__(self, cid, origin, zaxis, xzplane, rid=0, setup=True, comment=''):
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
         system using 3 vectors.
@@ -2625,7 +2626,7 @@ class CORD2C(Cord2x, CylindricalCoord):
             a comment for the card
 
         """
-        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid, comment=comment)
+        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid, setup=setup, comment=comment)
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)
@@ -2649,7 +2650,7 @@ class CORD2S(Cord2x, SphericalCoord):
     type = 'CORD2S'
     Type = 'S'
 
-    def __init__(self, cid, origin, zaxis, xzplane, rid=0, comment=''):
+    def __init__(self, cid, origin, zaxis, xzplane, rid=0, setup=True, comment=''):
         """
         Creates the CORD2C card, which defines a spherical coordinate
         system using 3 vectors.
@@ -2671,7 +2672,7 @@ class CORD2S(Cord2x, SphericalCoord):
             a comment for the card
 
         """
-        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid, comment=comment)
+        Cord2x.__init__(self, cid, origin, zaxis, xzplane, rid, setup=setup, comment=comment)
 
     def raw_fields(self):
         rid = set_blank_if_default(self.Rid(), 0)

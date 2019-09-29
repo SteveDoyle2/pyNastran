@@ -429,7 +429,7 @@ class RandomPlateArray(OES_Object):
     def _is_nx_random(self):
         if self.table_name in BASIC_RANDOM_TABLES:
             is_nx_random = False
-        elif self.table_name in ['OESXRMS1', ]:
+        elif self.table_name in ['OESXRMS1', 'OESXNO1']:
             is_nx_random = True
         else:
             msg = 'self.table_name=%s self.table_name_str=%s' % (self.table_name, self.table_name_str)

@@ -1616,7 +1616,7 @@ class DYNAMICS(GeomCommon):
         assert (len(data) - n) % ntotal == 0
         struc = Struct(self._endian + b'i 4s 2i 4s 2i i')
 
-        allowed = {'DISP', 'VELO', 'ACCEL', 'OLOAD', 'SPCF', 'MPCF', 'STRESS', 'STRAIN', 'FORCE'}
+        allowed = {'DISP', 'VELO', 'ACCEL', 'OLOAD', 'SPCF', 'MPCF', 'STRESS', 'STRAIN', 'FORCE', 'PRESS'}
         #DISP Displacement Vector
         #VELO Velocity Vector
         #ACCEL Acceleration Vector
@@ -1636,6 +1636,7 @@ class DYNAMICS(GeomCommon):
             'ACCE' : 'ACCEL',
             'FORC' : 'FORCE',
             'STRE' : 'STRESS',
+            'PRES' : 'PRESS',
         }
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]

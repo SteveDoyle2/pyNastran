@@ -824,7 +824,7 @@ class AddCards(AddMethods):
                    origin: Optional[Union[List[float], np.ndarray]],
                    zaxis: Optional[Union[List[float], np.ndarray]],
                    xzplane: Optional[Union[List[float], np.ndarray]],
-                   rid: int=0, comment: str='') -> CORD2R:
+                   rid: int=0, setup: bool=True, comment: str='') -> CORD2R:
         """
         Creates the CORD2R card, which defines a rectangular coordinate
         system using 3 vectors.
@@ -846,7 +846,7 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        coord = CORD2R(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
+        coord = CORD2R(cid, origin, zaxis, xzplane, rid=rid, setup=setup, comment=comment)
         self._add_coord_object(coord)
         return coord
 
@@ -854,7 +854,7 @@ class AddCards(AddMethods):
                    origin: Optional[Union[List[float], np.ndarray]],
                    zaxis: Optional[Union[List[float], np.ndarray]],
                    xzplane: Optional[Union[List[float], np.ndarray]],
-                   rid: int=0, comment: str='') -> CORD2C:
+                   rid: int=0, setup: bool=True, comment: str='') -> CORD2C:
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
         system using 3 vectors.
@@ -876,7 +876,7 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        coord = CORD2C(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
+        coord = CORD2C(cid, origin, zaxis, xzplane, rid=rid, setup=setup, comment=comment)
         self._add_coord_object(coord)
         return coord
 
@@ -884,7 +884,7 @@ class AddCards(AddMethods):
                    origin: Optional[Union[List[float], np.ndarray]],
                    zaxis: Optional[Union[List[float], np.ndarray]],
                    xzplane: Optional[Union[List[float], np.ndarray]],
-                   rid: int=0, comment: str='') -> CORD2S:
+                   rid: int=0, setup: bool=True, comment: str='') -> CORD2S:
         """
         Creates the CORD2C card, which defines a spherical coordinate
         system using 3 vectors.
@@ -907,7 +907,7 @@ class AddCards(AddMethods):
 
         """
         coord = CORD2S(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                       comment=comment)
+                       setup=setup, comment=comment)
         self._add_coord_object(coord)
         return coord
 

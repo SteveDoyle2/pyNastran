@@ -14,6 +14,8 @@ from pyNastran.op2.op2_interface.write_utils import write_table_header, export_t
 GRID_TYPE_INT_TO_STR = {
     1 : 'G', # GRID
     2 : 'S', # SPOINT
+    3 : 'E', # EXTRA POINT
+    4 : 'M', # MODAL POINT
     7 : 'L', # RIGID POINT (e.g. RBE3)
     0 : 'H', # SECTOR/HARMONIC/RING POINT
 }

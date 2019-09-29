@@ -287,6 +287,7 @@ class Subcase:
                 self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
+
         elif table_name == 'OAG1':
             if table_code == 11:
                 thermal = data_code['thermal']
@@ -335,6 +336,22 @@ class Subcase:
                 self.add('SACCELERATION', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
+
+        elif table_name == 'OPHSA':
+            if table_code == 14:
+                self.add('SVECTOR', 'ALL', options, 'STRESS-type')
+            else:
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['OUXY1', 'OUXY2']:
+            if table_code == 15:
+                self.add('SDISPLACEMENT', 'ALL', options, 'STRESS-type')
+            elif table_code == 16:
+                self.add('SVELOCITY', 'ALL', options, 'STRESS-type')
+            elif table_code == 17:
+                self.add('SACCELERATION', 'ALL', options, 'STRESS-type')
+            else:
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+
 
         elif table_name in ['OQG1', 'OQG2', 'OQGV1']:
             if table_code == 3:

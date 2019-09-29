@@ -79,6 +79,8 @@ SORT2_TABLE_NAME_MAP = {
     'OQG2' : 'OQG1',
     'OQMG2' : 'OQMG1',
     'OPG2' : 'OPG1',
+    'OPNL2' : 'OPNL1',
+    'OUXY2' : 'OUXY1',
 }
 table_name_to_table_code = {
     # displacement (msc/nx)

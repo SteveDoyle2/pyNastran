@@ -1,21 +1,171 @@
 from collections import Counter
 import numpy as np
 
+NX_GEOM_TABLES = [
+    b'CASECC',
+    b'PVT', b'PVT0', b'PVTS',
+    #b'GPLS',
+    b'LAMA', b'CLAMA',
+    b'OGPWG',
+    b'EDT', b'EDTS',
+    b'CONTACT', b'CONTACTS', # surface contact definition
+    b'GEOM1', b'GEOM2', b'GEOM3', b'GEOM4', b'EPT', b'MPT', b'DYNAMIC', b'DIT', b'EDOM',
+    b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S', b'EPTS', b'MPTS', b'DYNAMICS',
+    b'GEOM1VU', b'GEOM2VU',
+    b'GEOM1N',
+    b'VIEWTB',
+    b'R1TABRG',
+    b'ERRORN',
+]
+
+NX_MATRIX_TABLES = [
+    b'XSOP2DIR',
+    b'RADEFMP', # Modal Effective Inertia Matrix - Modal Matrix (per Vibrata)
+
+    # hasn't been validated
+    #b'RAFGEN', # Load Set Modal Forces  - Modal generalized force vectors  (per Vibrata)
+    #b'RADAMPZ',
+    #b'RADAMPG',
+
+    b'EFMFSMS', b'EFMASSS', b'RBMASSS', b'EFMFACS', b'MPFACS', b'MEFMASS', b'MEFWTS',
+
+    # hasn't been validated
+    #b'K4HH', b'KELMP', b'MELMP',
+
+    # not-MATPOOL
+    # hasn't been validated
+    #b'DELTAK', b'DELTAM', b'RBM0', b'DELTAM0',
+
+    # MATPOOL
+    # hasn't been validated
+    #b'MRGGT', b'UEXPT',
+
+    # MATRIX/MATPOOL - testing-remove this
+    # hasn't been validated
+    #b'PATRN', b'IDENT', b'RANDM', b'CMPLX',
+    #b'MPATRN', b'MIDENT', b'MRANDM', b'MCMPLX',
+
+    b'MATPOOL',
+    ##b'KELM',
+
+    # hasn't been validated
+    #b'MELM', b'BELM',
+
+    b'BHH', b'KHH',
+    b'DSCM2',
+]
+
+NX_EXTRA_TABLES = [
+    # geometry, but buggy in the geometry block...
+    b'ICASE',
+
+    # geometry
+    b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
+    b'DESCYC',
+    b'DSCMCOL', # design sensitivity parameters
+    b'DBCOPT',  # design optimization history for post-processing
+    #--------------------------------------------------------------------------
+
+    # RADx...
+    b'RADCONS', b'RADEFFM', b'RADEATC',
+
+    # displacements
+    b'BOUGV1',
+    b'OUGV2',
+    b'OUGATO2', b'OUGCRM2',
+    b'OUGNO1', b'OUGPSD2',
+    b'OUGRMS1',
+
+    # temperature
+    b'TOUGV1',
+
+    # eigenvectors
+    b'BOPHIG',
+
+    # spc forces
+    b'OQG1', b'OQG2',
+    b'OQGGF1', b'OQGGF2', # ???
+    b'OQGCF1', b'OQGCF2', # ???
+
+    # mpc forces
+    b'OQMG2',
+
+    # load vector
+    b'OPG1', b'OPG2',
+    b'OPNL1', b'OPNL2',  # Nonlinear loads in SORT2 format for the h-set or d-set.
+    b'OPGNO1',
+    b'OPGRMS1',
+
+    # stress
+    b'OES1', b'OES1X', b'OES1X1', b'OES1C',
+    b'OES2',
+    b'OESNLXR', b'OESNLBR', b'OESNLXD',  # nonlinear
+    b'OESNLXR2', b'OESNLBR2',
+    b'OESCP', # ???
+    b'OESRT', # ???
+    b'OESXRMS1', # random with RMS von mises stress
+
+    # strain
+    b'OSTR1', b'OSTR1X', b'OSTR1C',
+    b'OSTR2',
+    b'OESTRCP', # ???
+
+    # force
+    b'OEF1', b'OEF2',
+
+    # heat flux
+    b'HOEF1',
+
+    # Grid point stresses
+    b'OGS1',
+
+    # strain energy
+    b'ONRGY1', b'ONRGY2', b'ONRGY',
+
+    # failure indicies
+    b'OEFIT',
+
+    # contact
+    b'OSPDSI1', b'OSPDSI2', # intial separation distance
+    b'OSPDS1', b'OSPDS2',   # final separation distance
+    b'OBC1', b'OBC2',       # contact pressures and tractions at grid points
+
+    # glue
+    b'OBG1', # glue normal and tangential tractions at grid points in basic coordinate system
+
+    # what?
+    #b'XSOP2DIR',
+
+    # RMAXMIN - Defines parameters to output the minimum, maximum, absolute
+    #           value maximum, average, and RMS value of stress, force, and
+    #           displacement results for SOLs 101, 109, and 112.
+    b'OUGV1MX', # max displacement?
+    b'OES1MX',  # max stress?
+    b'OEF1MX',  # max force?
+    b'OSMPF2M',
+    b'OFMPF2M',
+    b'OPMPF2M',
+    b'OLMPF2M',
+    b'OEKE1',
+]
+
 NX_RESULT_TABLES = [
     # GEOM table
-    b'ICASE',
+    #b'ICASE',
 
     #-----------------------
     # OESVM1  - OES Table of           element stresses
     # OESVM1C - OES Table of composite element stresses
     #           for frequency response analysis that includes von Mises stress
     #           output in SORT1 format.
-    b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2',
-    b'OESVM1C', b'OSTRVM1C',
+    b'OESVM1',
+    b'OESVM2', # b'OESVM1C',
+    b'OSTRVM1',
+    b'OSTRVM2', # b'OSTRVM1C',
 
-    b'OES2C',
-    b'OSTR2C',
+    b'OES2C', b'OSTR2C',
 
+    # hasn't been validated
     b'OESPSD2C', b'OSTPSD2C',
     b'OSTRRMS1', b'OSTRMS1C',
     b'OSTRNO1', b'OSTNO1C',
@@ -34,13 +184,13 @@ NX_RESULT_TABLES = [
     b'OES1G',   # Grid point stress or strain table in SORT1 format and interpolated from the centroidal stress table, OES1M.
 
     #----------------------
+    # hasn't been validated...
     b'MDICT', b'BDICT', b'KDICTP', b'MDICTP',
 
     #----------------------
     # displacement/velocity/acceleration/eigenvector/temperature
     # OUGV1  - Displacements in the global coordinate system
     b'OUGV1',
-
     b'OPHIG', # Eigenvectors in the basic coordinate system.
 
     #----------------------
@@ -57,55 +207,70 @@ NX_RESULT_TABLES = [
     # nx2019.2
 
     # geometry
-    b'GPDTS',
-    # results
+    #b'GPDTS',
+
+    # results - supported
+    b'OPHSA',   # Displacement output table in SORT1
+    b'OUXY1',   # Displacements in SORT1 format for h-set or d-set.
+    b'OUXY2',   # Displacements in SORT2 format for h-set or d-set.
+    b'OTEMP1',  # Grid point temperature output
+
     b'LAMAS', # Normal modes eigenvalue summary table for the structural portion of the model
     b'LAMAF', # Normal modes eigenvalue summary table for the fluid portion of the model
-    b'GPLS',
-    b'TRMBU',  # Transfomration matrices from undeformed to basic
-    b'TRMBD',  # Transformation matrices from deformed to basic
-    b'PVTS', # PVT0?
-    b'OGPFB2',   # Table of grid point forces in SORT2 format
-    b'OEFMXORD', # Data block that contains a list of element IDs with maximum frequency and element order diagnostics for FEMAO solution
+
     b'BOPHIGF',  # Eigenvectors in the basic coordinate system for the fluid portion of the model.
-    b'BOPHIGS',  # Eigenvectors in the basic coordinate system for the structural portion of the model.
-    b'OUGMC1',   # Table of modal contributions for displacements, velocities, accelerations.
-    b'OUXY1',    # Table of displacements in SORT1 format for h-set or d-set.
-    b'OUXY2',    # Table of displacements in SORT2 format for h-set or d-set.
-    b'OSLIDE1',  # Incremental and total slide output for contact/glue.
-    b'OSLIDEG1', # Glue slide distance output
-    b'OBCKL',    # Table of load factor vs. cumulative arc-length in SORT2 format
-    b'OJINT',    # Table of J-integral for a crack defined by CRAKTP.
-    b'OPHSA',
-    b'ONMD',     # Normalized material density for topology optimization output
-    b'OACPERF',  # Performance data that indicates computation time in seconds and memory consumed in GB per frequency per subcase for FEMAO analysis.
-    b'OGSTR1',   # Output table of grid point strains of superelement
-    b'OELAR',    # Element status (active or inactive)
-    b'OPNL2',   # Table of nonlinear loads in SORT2 format for the h-set or d-set.
-    b'OSHT1',   # Output shell element thickness results.
-    b'OTEMP1',  # Grid point temperature output
-    b'OEFIIS',  # Data block for inter-laminar shear failure indices.
-    b'OBOLT1',  # Bolt output data block
+
+    # hasn't been validated
+    #b'BOPHIGS',  # Eigenvectors in the basic coordinate system for the structural portion of the model.
+
+    # Grid Point Forces - SORT1/SORT2
+    b'OGPFB1', b'OGPFB2',
+
+    # ---------------
+    # new results
     b'PSDF',    # Power spectral density table.
 
-    b'ODAMGPFE', # Table of damage energy for ply failure
-    b'ODAMGPFD', # Table of damage values for ply failure
-    b'ODAMGPFS', # Table of damage status for ply failure
-    b'ODAMGPFR', # Table of crack density for ply failure EUD model from SOL 401. Crack density at corner grids on the middle of plies. The values are unitless
-
-    b'OCONST1',  # Contact status in SORT1 format
-
-    b'OCPSDF',  # Output table of cross-power-spectral-density functions.
-    b'OCCORF',  # Output table of cross-correlation functions.
-    b'OCPSDFC', # Table of cross-power spectral density functions for composites.
-    b'OCCORFC', # Table of cross-correlation functions for composites.
-
+    # random stress
     b'OESXRM1C', # Table of composite element RMS stresses in SORT1 format for random analysis that includes von Mises stress output.
     b'OESXNO1C',
     b'OESXNO1',
 
-    b'OEDE1', # Elemental energy loss.
+    # ---------------
+    # results - unsupported
+    b'GPLS',  # needs to be here to prevent a crash
+    b'TRMBU',  # Transfomration matrices from undeformed to basic
+    b'TRMBD',  # Transformation matrices from deformed to basic
+    #b'PVTS', # PVT0?
+    b'OEFMXORD', # List of element IDs with maximum frequency and element order diagnostics for FEMAO solution
+    b'OBCKL',    # Load factor vs. cumulative arc-length in SORT2 format
+    b'ONMD',     # Normalized material density for topology optimization output
+    b'OACPERF',  # Performance data that indicates computation time in seconds and memory consumed in GB per frequency per subcase for FEMAO analysis.
+    b'OGSTR1',   # Grid point strains of superelement
+    b'OSHT1',   # Shell element thickness results (created by SHELLTHK)
+    b'OEFIIS',  # Inter-laminar shear failure indices.
 
+    # bolt
+    b'OBOLT1',  # Bolt output data block
+
+    # damage
+    b'OELAR',    # Element status (active or inactive)
+    b'OJINT',    # J-integral for a crack defined by CRAKTP.
+    b'ODAMGPFE', # Damage energy for ply failure
+    b'ODAMGPFD', # Damage values for ply failure
+    b'ODAMGPFS', # Damage status for ply failure
+    b'ODAMGPFR', # Crack density for ply failure EUD model from SOL 401. Crack density at corner grids on the middle of plies. The values are unitless
+
+    # contact / glue
+    b'OSLIDEG1', # Glue slide distance output
+    b'OCONST1',  # Contact status in SORT1 format
+    b'OSLIDE1',  # Incremental and total slide output for contact/glue.
+
+    b'OCPSDF',  # Cross-power-spectral-density functions.
+    b'OCCORF',  # Cross-correlation functions.
+    b'OCPSDFC', # Cross-power spectral density functions for composites.
+    b'OCCORFC', # Cross-correlation functions for composites.
+
+    b'OEDE1', # Elemental energy loss.
 
     # grid point pressure
     b'OPRNO1',   # SORT1 - NO
@@ -115,15 +280,16 @@ NX_RESULT_TABLES = [
     b'OPRCRM2',  # SORT2 - CRMS
 
     # modal contribution
-    b'OUGMC2', # Table of modal contributions for displacements, velocities, accelerations.
-    b'OQGMC1', # Table of modal contributions of single point constraint forces - SORT1
-    b'OQGMC2', # Table of modal contributions of single point constraint forces - SORT2
-    b'OESMC1', # Element stress modal contributions - SORT1
-    b'OESMC2', # Element stress modal contributions - SORT2
-    b'OSTRMC1', # Table of modal contributions of element strains - SORT1
-    b'OSTRMC2', # Table of modal contributions of element strains - SORT2
-    b'OEFMC1', # Table of modal contributions of element forces - SORT1
-    b'OEFMC2', # Table of modal contributions of element forces - SORT2
+    b'OUGMC1',  # Modal contributions for displacements, velocities, accelerations.
+    b'OUGMC2',  # Modal contributions for displacements, velocities, accelerations.
+    b'OQGMC1',  # Modal contributions of single point constraint forces - SORT1
+    b'OQGMC2',  # Modal contributions of single point constraint forces - SORT2
+    b'OESMC1',  # Element stress modal contributions - SORT1
+    b'OESMC2',  # Element stress modal contributions - SORT2
+    b'OSTRMC1', # Modal contributions of element strains - SORT1
+    b'OSTRMC2', # Modal contributions of element strains - SORT2
+    b'OEFMC1',  # Modal contributions of element forces - SORT1
+    b'OEFMC2',  # Modal contributions of element forces - SORT2
 
     # modal strain energy
     b'OMSEC1',  # Constant modal strain energy - SORT1
@@ -153,7 +319,7 @@ NX_RESULT_TABLES = [
     b'OUGGC2',  # Table of grid contributions - SORT2
     b'OUGRC1',  # Reciprocal panel contributions - SORT1
     b'OUGRC2',  # Reciprocal panel contributions - SORT2
-    b'BOUGF1',  # Data block of acoustic pressures at microphone points in SORT1 format - basic frame
+    b'BOUGF1',  # Acoustic pressures at microphone points in SORT1 format - basic frame
 
     # acoustic acceleration
     b'OACCQ',    # Acoustic coupling quality
@@ -177,6 +343,8 @@ if len(NX_RESULT_TABLES) != len(np.unique(NX_RESULT_TABLES)):
         if cvaluei != 1:
             _MSG += '%s = %s\n' % (key, cvaluei)
     raise RuntimeError(_MSG)
+
+NX_RESULT_TABLES += NX_EXTRA_TABLES
 
 NX_TABLE_CONTENT = {
     # nx 8.5
@@ -240,8 +408,10 @@ NX_TABLE_CONTENT = {
     65 : 'OSPDS - Contact Separation Distance',
     66 : 'OBG - Glue force results (normal and in-plane tractions)',
     67 : 'OQG - Glue force resutls',
-    68 : '??? - Tosca normalized material properties',
+    #68 : '??? - Tosca normalized material properties',
     # nx 2019.2
     72 : 'OTEMP1 - grid point temperatures',
-    805 : 'OESXRMS1 - ???',
+    804 : 'OEFRMS1 - ???',
+    805 : 'OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.',
+    905 : 'OESXNO1C - Cumulative Root Mean Square output',
 }

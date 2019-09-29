@@ -149,6 +149,8 @@ class OP2Reader:
             # Equivalence between external and internal grid/scalar numbers
             b'EQEXIN' : self.read_eqexin,
             b'EQEXINS' : self.read_eqexin,
+
+            b'XSOP2DIR' : self.read_xsop2dir,
         }
         #self.op2_skip = OP2Skip(op2)
     def read_nastran_version(self, mode):
@@ -273,6 +275,64 @@ class OP2Reader:
         self.log.debug('mode = %r' % mode)
         self.op2.set_mode(mode)
         self.op2.set_table_type()
+
+    def read_xsop2dir(self):
+        """
+        Matrix datablocks are named with the matrix name, and they contain
+        only the matrices with no row and column DOF information.
+
+        External superelements are written to the OP2 in the XSOP2DIR datablock
+        which contains the directory of matrices, and multiple EXTDB datablocks
+        that contain these matrices.  The information in XSOP2DIR can be used
+        to rename the EXTDB datablocks to their corresponding matrix name.
+
+        The MATPOOL datablock contains matrices of several different formats.
+        MATPOOL matrices are DMIG-formatted matrices. Matrices from all of
+        these sources can be stored as structured array.
+
+        """
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\extse04c_cnv1_0.op2
+        if self.read_mode == 2:
+            table_name = self._read_table_name(rewind=True)
+            self._skip_table(table_name, warn=False)
+            return
+
+        op2 = self.op2
+        unused_table_name = self._read_table_name(rewind=False)
+
+        self.read_markers([-1])
+        # (101, 14, 0, 0, 0, 0, 0)
+        data = self._read_record()
+
+        #self.read_markers([-2, 1, 0])
+        #data = self._read_record()
+
+        itable = -2
+        self.read_markers([itable, 1, 0])
+        marker = self.get_marker1(rewind=True, macro_rewind=False)
+        struct_8s = Struct(self._endian + b'8s')
+        while marker != 0:
+            itable -= 1
+            data = self._read_record()
+            name = struct_8s.unpack(data)[0]
+            self.log.warning(name)
+            self.read_markers([itable, 1, 0])
+            marker = self.get_marker1(rewind=True, macro_rewind=False)
+        self.read_markers([0])
+        #b'XSOP2DIR',
+        #b'PVT0    '
+        #b'GEOM1EX '
+        # b'GEOM2EX '
+        # b'GEOM4EX '
+        # b'GEOM1EXA'
+        #b'MATK    '
+        #b'MATM    '
+        #b'MATV    '
+        #b'TUG1    '
+        #b'MUG1    '
+        #b'TES1    '
+        #b'MES1    '
 
     def read_eqexin(self):
         """isat_random.op2"""
@@ -972,6 +1032,7 @@ class OP2Reader:
          - nx_spike\extse04c_0.op2
 
         """
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\extse04c_cnv1_0.op2
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
         self.log.debug('table_name = %r' % op2.table_name)
@@ -986,24 +1047,54 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
 
+        if 1: # old
+            marker = -2
+            while 1:
+                try:
+                    self.read_markers([marker, 1, 0])
+                except FortranMarkerError:
+                    op2.show_ndata(100)
+                    raise
+                nfields = self.get_marker1(rewind=True)
+                if nfields > 0:
+                    unused_data = self._read_record()
+                    #self.show_data(data, types='s', endian=None)
+                elif nfields == 0:
+                    #self.show_ndata(100, types='ifs')
+                    break
+                else:
+                    raise RuntimeError('nfields=%s' % nfields)
+                marker -= 1
+            unused_marker_end = self.get_marker1(rewind=False)
+            return
         marker = -2
-        while 1:
-            try:
-                self.read_markers([marker, 1, 0])
-            except FortranMarkerError:
-                op2.show_ndata(100)
-                raise
-            nfields = self.get_marker1(rewind=True)
-            if nfields > 0:
-                unused_data = self._read_record()
-                #self.show_data(data, types='s', endian=None)
-            elif nfields == 0:
-                #self.show_ndata(100, types='ifs')
-                break
-            else:
-                raise RuntimeError('nfields=%s' % nfields)
-            marker -= 1
-        unused_marker_end = self.get_marker1(rewind=False)
+
+        #b'GEOM1   '
+        self.read_markers([marker, 1, 0]) # -2
+        data = self._read_record()
+        marker -= 1
+
+        self.read_markers([marker, 1, 0]) # -3
+        data = self._read_record()
+        marker -= 1
+
+        self.read_markers([marker, 1, 0]) # -4
+        data = self._read_record()
+        marker -= 1
+
+        self.read_markers([marker, 1, 0]) # -5
+        data = self._read_record()
+        marker -= 1
+
+        self.read_markers([marker, 1, 0]) # -6
+        #self.read_markers([0])
+        #data = self._read_record()
+
+        self.show_data(data, types='ifs', endian=None)
+
+
+        self.show(200, types='ifs', endian=None)
+        #aaa
 
     def read_fol(self):
         """
