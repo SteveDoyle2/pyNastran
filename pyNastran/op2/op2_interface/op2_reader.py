@@ -596,7 +596,7 @@ class OP2Reader:
         self.op2.matdicts[name] = matdict
 
     def _read_destab(self):
-        """unused"""
+        """reads the DESTAB table"""
         #if self.read_mode == 1:
             #return ndata
         op2 = self.op2
@@ -620,6 +620,7 @@ class OP2Reader:
         markers = self.read_markers([itable, 1, 0])
 
         desvars = []
+        structi = Struct('2i 8s 4f')
         while 1:
             markers = self.get_nmarkers(1, rewind=True)
             if markers == [0]:
@@ -667,7 +668,7 @@ class OP2Reader:
             #(11, 20, b'BETA    ', 0.0010000, 1.000e+20, 0.200, 0.0)
             #        id       label   xinit   xlb   xub delxv
             #desvar  20       beta    0.8     0.001	xub	0.20
-            desvar = Struct('2i 8s 4f').unpack(data)
+            desvar = structi.unpack(data)
             #internal_id, desvar_id, label, lower, upper, delxv, dunno = desvar
             #print(desvar)
             #assert np.allclose(desvar[5], -0.5), desvar  # -0.5 is the default
@@ -676,6 +677,7 @@ class OP2Reader:
             itable -= 1
             markers = self.read_markers([itable, 1, 0])
 
+        self.op2.op2_results.desvars = desvars
         if self.read_mode == 2:
             self.log.warning('DESTAB results were read, but not saved')
         markers = self.read_markers([0])

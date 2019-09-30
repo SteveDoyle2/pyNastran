@@ -287,8 +287,10 @@ class OP2_F06_Common:
         self.grid_point_weight = GridPointWeight()
         self.oload_resultant = None
 
-        #: ESE
+        #: LAMA
         self.eigenvalues = {}
+        self.eigenvalues_fluid = {}
+        self.eigenvalues_structure = {}
 
         #self.convergence_history = {}
         #self.response1_table = {}
@@ -308,8 +310,10 @@ class OP2_F06_Common:
         #: but we need this for the FOL frequencies for the MONPNT1 and MONPNT3
         self._frequencies = None
 
-        #: ESE
+        #: LAMA
         self.eigenvalues = {}
+        self.eigenvalues_fluid = {}
+        self.eigenvalues_structure = {}
 
         #: OUG - displacement
         self.displacements = {}           # tCode=1 thermal=0
@@ -689,13 +693,22 @@ class OP2_F06_Common:
             'cplstn3_strain', 'cplstn4_strain', 'cplstn6_strain', 'cplstn8_strain',
             'cplsts3_strain', 'cplsts4_strain', 'cplsts6_strain', 'cplsts8_strain',
         ]
+        utables = unique(table_types)
+        if len(table_types) != len(utables):
+            msg = 'Non-unique tables: '
+            for i, table_type in enumerate(table_types):
+                if table_type in table_types[i+1:]:
+                    msg += table_type + ', '
+            raise AssertionError(msg)
 
         table_types += [
             # PVT/PVT0
             'params',
 
             # LAMA
-            'eigenvalues',
+            'eigenvalues', # LAMA, CLAMA, BLAMA
+            'eigenvalues_fluid', # LAMAF
+            'eigenvalues_structure', # LAMAS
 
             # HISADD
             #'convergence_history',
@@ -795,7 +808,6 @@ class OP2_F06_Common:
             # OESNLXR - solid
             'nonlinear_ctetra_stress_strain', 'nonlinear_cpenta_stress_strain', 'nonlinear_chexa_stress_strain',
 
-            #'hyperelastic_plate_stress',
             'hyperelastic_cquad4_strain',
 
             # OES - CEALS1 224, CELAS3 225

@@ -65,13 +65,14 @@ class LAMA(OP2Common):
         if self.read_mode == 1:
             return ndata
 
-        ntotal = 4 * 6
+        ntotal = 24 # 4 * 6
         nmodes = ndata // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
         clama = ComplexEigenvalues(self.title, self.table_name, nmodes)
+        #assert self.title not in self.eigenvalues, f'table={self.table_name_str} title={self.title} optimization_count={self._count}'
         self.eigenvalues[self.title] = clama
-        #self.eigenvalues[self.isubcase] = lama
+        #self.eigenvalues[self.isubcase] = clama
         structi = Struct(self._endian + b'ii4f')
         for i in range(nmodes):
             edata = data[n:n+ntotal]
@@ -94,11 +95,12 @@ class LAMA(OP2Common):
         if self.read_mode == 1:
             return ndata
 
-        ntotal = 4 * 7
+        ntotal = 28 # 4 * 7
         nmodes = ndata // ntotal
         n = 0
         #assert self.isubcase != 0, self.isubcase
         blama = BucklingEigenvalues(self.title, self.table_name, nmodes)
+        #assert self.title not in self.eigenvalues, f'table={self.table_name_str} title={self.title} optimization_count={self._count}'
         self.eigenvalues[self.title] = blama
         #self.eigenvalues[self.isubcase] = lama
         structi = Struct(self._endian + b'ii5f')
@@ -156,13 +158,24 @@ class LAMA(OP2Common):
         """parses the Real Eigenvalues Table 4 Data"""
         if self.read_mode == 1:
             return ndata
-        #self.show_data(data)
         nmodes = ndata // 28
         n = 0
         ntotal = 28
         #assert self.isubcase != 0, self.isubcase
         lama = RealEigenvalues(self.title, self.table_name, nmodes=nmodes)
-        self.eigenvalues[self.title] = lama
+
+        if self.table_name == b'LAMA':
+            result_name = 'eigenvalues'
+        elif self.table_name == b'LAMAF':
+            result_name = 'eigenvalues_fluid'
+        elif self.table_name == b'LAMAS':
+            result_name = 'eigenvalues_structure'
+        else:  # pragma: no cover
+            raise NotImplementedError(self.table_name)
+        slot = getattr(self, result_name)
+        #assert self.title not in slot, f'{result_name}: table={self.table_name_str} title={self.title!r} optimization_count={self._count}'
+        slot[self.title] = lama
+
         structi = Struct(self._endian + b'ii5f')
         for i in range(nmodes):
             edata = data[n:n+28]

@@ -2486,7 +2486,14 @@ class TestOP2(Tester):
         folder = os.path.join(MODEL_PATH, 'random')
         op2_filename = os.path.join(folder, 'rms_tri_oesrmx1.op2')
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
-        unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
+        #unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
+            write_op2=False, write_hdf5=False, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=False, build_pandas=False, subcases=None,
+            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
 
     def test_aero_cpmopt(self):
         """test optimization with multiple GEOM1 tables and multiple CSTM tables"""

@@ -455,7 +455,7 @@ def attach_op2_results_to_bdf(bdf_model: BDF, op2_model: Optional[OP2]=None, val
         return op2_geom_model
 
     variables = [
-        'op2_filename', 'matrices', 'eigenvalues',
+        'op2_filename', 'matrices', 'eigenvalues', 'eigenvalues_fluid', 'eigenvalues_structure',
         'displacements', 'load_vectors', 'eigenvectors',
     ]
     for key in variables:
