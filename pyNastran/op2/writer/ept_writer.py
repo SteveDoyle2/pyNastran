@@ -50,6 +50,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
 
         if name == 'PBARL':
             key = (9102, 91, 52)
+            itable = write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=endian)
             continue
         elif name == 'PCOMP':
             itable = write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=endian)
@@ -219,6 +220,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
                 #shock_type : None
                 shcok
 
+            types = idts = idcs = idtdus = idcdus = 0
             if 'SPRING' in prop.vars:
                 #optional_vars['SPRING'] = [types_str, idts, idcs, idtdus, idcdus]
                 #spring_idc : None
@@ -233,6 +235,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
                 idtdus = prop.spring_idtdu if prop.spring_idtdu is not None else 0
                 idcdus = prop.spring_idcdu if prop.spring_idcdu is not None else 0
 
+            typed = idtd = idtd = idtdvd = idcdvd = 0
             if 'DAMPER' in prop.vars:
                 #optional_vars['DAMPER'] = [typed_str, idtd, idcd, idtdvd, idcdvd]
                 #damper_idc : None
@@ -241,7 +244,6 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
                 #damper_idtdv : None
                 #damper_type : 'TABLE'
                 typed = type_map[prop.damper_type]
-                #optional_vars['DAMPER'] = [typed_str, idts, idcs, idtdvd, idcdvd]
                 idtd = prop.damper_idt if prop.damper_idt is not None else 0
                 idcd = prop.damper_idc if prop.damper_idc is not None else 0
                 idtdvd = prop.damper_idtdv if prop.damper_idtdv is not None else 0
@@ -596,9 +598,52 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
 
 
 def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
+    """writes the PBARL"""
+    key = (9102, 91, 52)
     #nproperties = len(pids)
+    fmt0 = endian + b'2i8s8sf'
+
+    ndims = 0
+    nproperties = len(pids)
     for pid in sorted(pids):
         prop = obj.properties[pid]
+        ndim = len(prop.dim)
+        ndims += ndim
+
+    nvalues = 7 * nproperties + ndims + 3 # +3 comes from the keys
+    nbytes = nvalues * 4
+    op2.write(pack('3i', *[4, nvalues, 4]))
+    op2.write(pack('i', nbytes)) #values, nbtyes))
+
+    op2.write(pack('3i', *key))
+    op2_ascii.write('%s %s\n' % (name, str(key)))
+
+    for pid in sorted(pids):
+        prop = obj.properties[pid]
+
+        # value is the first term in dim
+        #(pid, mid, group, beam_type, value) = out
+        bar_type = ('%-8s' % prop.beam_type).encode('ascii')
+        group = ('%-8s' % prop.group).encode('ascii')
+        data_in = [prop.pid, prop.mid, group, bar_type]
+
+        ndim = len(prop.dim)
+        fmti = b'%if' % ndim
+        struct1 = Struct(fmt0 + fmti)
+        data_in += prop.dim
+        data_in.append(prop.nsm)
+        #print(data_in)
+        op2.write(struct1.pack(*data_in))
+        op2_ascii.write(str(data_in) + '\n')
+
+    op2.write(pack('i', nbytes))
+    itable -= 1
+    data = [
+        4, itable, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
     return itable
 
 def write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):

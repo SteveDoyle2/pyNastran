@@ -328,6 +328,7 @@ class EPT(GeomCommon):
         PBARL(9102,91,52) - the marker for Record 12
         TODO: buggy
         It's possible to have a PBARL and a PBAR at the same time.
+        NSM is at the end of the element.
         """
         valid_types = {
             "ROD": 1,
@@ -377,8 +378,13 @@ class EPT(GeomCommon):
             iformat = self._endian + b'%if' % expected_length
 
             ndelta = expected_length * 4
-            data_in += list(unpack(iformat, data[n:n+ndelta]))
+            dims_nsm = list(unpack(iformat, data[n:n+ndelta]))
+            data_in += dims_nsm
+            #print("  pid=%s mid=%s group=%r beam_type=%r value=%s dims_nsm=%s" % (
+                #pid, mid, group, beam_type, value, dims_nsm))
+
             # TODO why do i need the +4???
+            #      is that for the nsm?
             #min_len =  expected_length * 4 + 4
             #if len(data)
             #data = data[n + expected_length * 4 + 4:]
