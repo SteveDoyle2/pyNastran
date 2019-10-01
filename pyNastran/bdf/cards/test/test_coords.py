@@ -4,8 +4,9 @@ defines:
 
 """
 # pylint: disable=R0201,C0103
-import unittest
 from io import StringIO
+from copy import deepcopy
+import unittest
 import numpy as np
 from numpy import array, allclose, array_equal, cross
 
@@ -578,6 +579,7 @@ class TestCoords(unittest.TestCase):
         make_tri(model)
 
         assert coord == card, 'card:\n%r\ncoord:\n%r' % (str(coord), str(card))
+        model.cross_reference()
         save_load_deck(model, run_renumber=False)
 
     def test_cord1s_01(self):
@@ -605,10 +607,15 @@ class TestCoords(unittest.TestCase):
 
         make_tri(model)
         coord.cross_reference(model)
+        model2 = deepcopy(model)
+        model2.cross_reference()
+        save_load_deck(model2, run_renumber=False)
         unused_cord2s = coord.to_cord2x(model, rid=0)
 
         model.pop_parse_errors()
+        model.pop_xref_errors()
         model.coords[cid] = coord
+        model.cross_reference()
         save_load_deck(model, run_renumber=False)
 
     def test_cord2r_02(self):

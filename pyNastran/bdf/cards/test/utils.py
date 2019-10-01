@@ -48,8 +48,6 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         model.write_bdfs(bdf_filenames)
         os.remove('junk.bdf')
 
-    if run_remove_unused:
-        remove_unused(model)
     if run_convert:
         units_to = ['m', 'kg', 's']
         units = ['ft', 'lbm', 's']
@@ -145,6 +143,10 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
             call_frame = inspect.getouterframes(frame, 2)
             op2_geom_model.log.warning('skipping op2 reader for %s' % call_frame[1][3])
         op2_geom_model.log = bkp_log
+
+    if run_remove_unused:
+        remove_unused(model)
+
     return model3
 
 def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):
