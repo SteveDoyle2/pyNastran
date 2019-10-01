@@ -366,13 +366,14 @@ class EPT(GeomCommon):
 
             out = struct1.unpack(edata)
             (pid, mid, group, beam_type, value) = out
+            if pid > 100000000 or pid < 1:
+                self.log.debug("  pid=%s mid=%s group=%r beam_type=%r value=%s" % (
+                    pid, mid, group, beam_type, value))
+                raise RuntimeError('bad parsing...')
+
             beam_type = beam_type.strip().decode('latin1')
             group = group.strip().decode('latin1')
             data_in = [pid, mid, group, beam_type, value]
-            #self.log.debug("  pid=%s mid=%s group=%r beam_type=%r value=%s" % (
-                #pid, mid, group, beam_type, value))
-            if pid > 100000000 or pid < 1:
-                raise RuntimeError('bad parsing...')
 
             expected_length = valid_types[beam_type]
             iformat = self._endian + b'%if' % expected_length
@@ -402,8 +403,10 @@ class EPT(GeomCommon):
             #self.properties[pid] = prop
             #print(prop.get_stats())
             #print(self.show_data(data[n-8:-100]))
-            n += 4  # TODO: not entirely sure why this is here...
 
+            # the PBARL ends with a -1 flag
+            #value, = unpack(self._endian + b'i', data[n:n+4])
+            n += 4
         if len(self._type_to_id_map['PBAR']) == 0 and 'PBAR' in self.card_count:
             del self._type_to_id_map['PBAR']
             del self.card_count['PBAR']

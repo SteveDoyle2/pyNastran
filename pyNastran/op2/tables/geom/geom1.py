@@ -512,20 +512,28 @@ class GEOM1(GeomCommon):
             (seid, superelement_type, rseid, method, tol, loc, media, unit) = out
             if superelement_type == 1:
                 superelement_type = 'PRIMARY'
+            elif superelement_type == 5:
+                superelement_type = 'EXTOP2'
             elif superelement_type == 6:
                 superelement_type = 'MIRROR'
             elif superelement_type == 7:
                 superelement_type = 'FRFOP2'
+            else:  # pragma: no cover
+                raise NotImplementedError(f'superelement_type={superelement_type} not in [PRIMARY, EXTOP2, MIRROR, FRFOP2]')
 
             if loc == 1:
                 loc = 'YES'
             elif loc == 2:
                 loc = 'NO'
+            else:  # pragma: no cover
+                raise NotImplementedError(f'loc={loc} not in [YES, NO]')
 
             if method == 1:
                 method = 'AUTO'
             elif method == 2:
                 method = 'MANUAL'
+            else:  # pragma: no cover
+                raise NotImplementedError(f'method={method} not in [AUTO, MANUAL]')
 
             if self.is_debug_file:
                 self.binary_debug.write('  SEBULK=%s\n' % str(out))

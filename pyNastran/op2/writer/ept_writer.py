@@ -206,21 +206,28 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
              #unused_ut, unused_uc) = out
 
             typea = cvt = cvc = expvt = expvc = idtsu = idtcu = idtsud = idcsud = 0
-            if 'SHOCK' in prop.vars:
-                typea = type_map[typea_str]
+            if 'SHOCKA' in prop.vars:
                 #optional_vars['SHOCKA'] = [typea_str, cvt, cvc, expvt, expvc,
                                            #idts, idets, idtcu, idtsud, idcsud]
                 #shock_cvc : None
-                #shock_cvt : None
-                #shock_exp_vc : None
-                #shock_exp_vt : None
+                #shock_cvt : 1000.0
+                #shock_exp_vc : 1.0
+                #shock_exp_vt : 1.0
                 #shock_idecs : None
                 #shock_idecsd : None
                 #shock_idets : None
                 #shock_idetsd : None
                 #shock_idts : None
-                #shock_type : None
-                shcok
+                #shock_type : 'TABLE'
+                typea = type_map[prop.shock_type]
+                cvt = prop.shock_cvc if prop.shock_cvc is not None else 0
+                cvc = prop.shock_cvt if prop.shock_cvt is not None else 0
+                expvt = prop.shock_exp_vc if prop.shock_exp_vc is not None else 0
+                expvc = prop.shock_exp_vt if prop.shock_exp_vt is not None else 0
+                idtsu = prop.shock_idts if prop.shock_idts is not None else 0
+                idtcu = prop.shock_idecs if prop.shock_idecs is not None else 0
+                idtsud = prop.shock_idetsd if prop.shock_idetsd is not None else 0
+                idcsud = prop.shock_idecsd if prop.shock_idecsd is not None else 0
 
             types = idts = idcs = idtdus = idcdus = 0
             if 'SPRING' in prop.vars:
@@ -602,7 +609,6 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
 def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
     """writes the PBARL"""
     key = (9102, 91, 52)
-    #nproperties = len(pids)
     fmt0 = endian + b'2i8s8sf'
 
     ndims = 0
@@ -612,7 +618,7 @@ def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
         ndim = len(prop.dim)
         ndims += ndim
 
-    nvalues = 7 * nproperties + ndims + 3 # +3 comes from the keys
+    nvalues = 8 * nproperties + ndims + 3 # +3 comes from the keys
     nbytes = nvalues * 4
     op2.write(pack('3i', *[4, nvalues, 4]))
     op2.write(pack('i', nbytes)) #values, nbtyes))
@@ -630,11 +636,11 @@ def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
         data_in = [prop.pid, prop.mid, group, bar_type]
 
         ndim = len(prop.dim)
-        fmti = b'%if' % ndim
+        fmti = b'%ifi' % ndim
         struct1 = Struct(fmt0 + fmti)
         data_in += prop.dim
         data_in.append(prop.nsm)
-        #print(data_in)
+        data_in.append(-1)
         op2.write(struct1.pack(*data_in))
         op2_ascii.write(str(data_in) + '\n')
 

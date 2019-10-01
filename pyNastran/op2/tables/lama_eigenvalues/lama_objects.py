@@ -409,6 +409,18 @@ class ComplexEigenvalues(BaseScalarObject):
     def is_complex(self):
         return True
 
+    def add_op2_line(self, data, i):
+        (root_num, extract_order, eigr, eigi, cycle, damping) = data
+        self.mode[i] = root_num
+        self.extraction_order[i] = extract_order
+        self.eigenvalues[i] = complex(eigr, eigi)
+        self.cycles[i] = cycle
+        self.damping[i] = damping
+
+    def add_op2_data(self, data):
+        for imode, line in enumerate(data):
+            self.add_op2_line(line, imode)
+
     def get_headers(self):
         headers = ['eigenvalue', 'frequency', 'damping']
         return headers
@@ -687,6 +699,20 @@ class BucklingEigenvalues(BaseScalarObject):
 
     def is_buckling(self):
         return True
+
+    def add_op2_line(self, data, imode):
+        (root_num, extract_order, eigr, omega, freq, mass, stiff) = data
+        self.mode[imode] = root_num
+        self.extraction_order[imode] = extract_order
+        self.eigenvalues[imode] = eigr
+        self.freqs[imode] = freq
+        self.omegas[imode] = omega
+        self.generalized_mass[imode] = mass
+        self.generalized_stiffness[imode] = stiff
+
+    #def add_op2_data(self, data):
+        #for i, line in enumerate(data):
+            #self.add_op2_line(line, i)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
