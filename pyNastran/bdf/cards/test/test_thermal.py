@@ -74,6 +74,8 @@ class TestThermal(unittest.TestCase):
         g1 = 11
         g2 = 12
         pid = 10
+        # fails on AREA4 because op2 doesn't support it
+        Type = 'LINE'
         chbdyp = model.add_chbdyp(
             eid, pid, Type, g1, g2,
             g0=0, gmid=None, ce=0,

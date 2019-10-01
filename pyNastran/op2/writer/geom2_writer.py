@@ -218,9 +218,13 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
              #dislin, ce, e1, e2, e3) = out
             nids = elem.node_ids
             dislin = 0 if elem.gmid is None else elem.gmid
+            g0 = 0 if elem.g0 is None else elem.g0
+            e1 = 0. if elem.e1 is None else elem.e1
+            e2 = 0. if elem.e2 is None else elem.e2
+            e3 = 0. if elem.e3 is None else elem.e3
             data = (eid, pid, surface_type_int, elem.iview_front, elem.iview_back,
-                    elem.g1, elem.g2, elem.g0, elem.rad_mid_front, elem.rad_mid_back,
-                    dislin, elem.ce, elem.e1, elem.e2, elem.e3)
+                    elem.g1, elem.g2, g0, elem.rad_mid_front, elem.rad_mid_back,
+                    dislin, elem.ce, e1, e2, e3)
             #data = [eid, 0, surface_type_int,
                     #elem.iview_front, elem.iview_back,
                     #elem.rad_mid_front, elem.rad_mid_back, 0] + all_nids
