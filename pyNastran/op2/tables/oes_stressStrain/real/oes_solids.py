@@ -363,7 +363,7 @@ class RealSolidArray(OES_Object):
             for i, deid, node_id, doxx, doyy, dozz, dtxy, dtyz, dtxz, do1, do2, do3, dp, dovm in zip(
                     count(), eids2, nodes, oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, p, ovm):
 
-                j = where(eids3 == deid)[0]
+                j = where(eids3 == deid)[0][0]
                 cid = cids3[j]
                 A = [[doxx, dtxy, dtxz],
                      [dtxy, doyy, dtyz],

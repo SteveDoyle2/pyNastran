@@ -243,8 +243,8 @@ def A_I1_I2_I12(prop, beam_type: str,
     assert A == prop.Area(), prop
     return A, I1, I2, I12
 
-def _bar_areaL(class_name, beam_type, dim, prop):
-    # type: (str, str, List[float], Any) -> float
+def _bar_areaL(class_name: str, beam_type: str, dim: List[float],
+               prop: Any) -> float:
     """
     Area(x) method for the PBARL and PBEAML classes (pronounced **Area-L**)
 
@@ -1317,8 +1317,7 @@ class PBAR(LineProperty):
             assert isinstance(nsm, float), 'nsm=%r' % nsm
             assert isinstance(mpa, float), 'mass_per_length=%r' % mpa
 
-    def MassPerLength(self):
-        # type: () -> float
+    def MassPerLength(self) -> float:
         r"""
         Gets the mass per length :math:`\frac{m}{L}` of the CBAR.
 
@@ -2620,8 +2619,7 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
             self.comment = comment
         raise NotImplementedError(data)
 
-    def Nsm(self):
-        # type: () -> List[float]
+    def Nsm(self) -> List[float]:
         """
         Gets the non-structural mass :math:`nsm`.
         .. warning:: nsm field not supported fully on PBEAM3 card
@@ -3103,8 +3101,7 @@ class PBEND(LineProperty):
         assert isinstance(self.A, float), self.get_stats()
         return self.A * rho + self.nsm
 
-    def raw_fields(self):
-        # type: () -> List[Union[str, float, int, None]]
+    def raw_fields(self) -> List[Union[str, float, int, None]]:
         return self.repr_fields()
 
     def repr_fields(self):
@@ -3175,8 +3172,7 @@ def split_arbitrary_thickness_section(key, value):
     return key_id, out
 
 
-def get_beam_sections(line):
-    # type: (str) -> List[str]
+def get_beam_sections(line: str) -> List[str]:
     """
     Splits a PBRSECT/PBMSECT line
 

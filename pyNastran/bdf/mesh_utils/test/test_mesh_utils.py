@@ -472,6 +472,7 @@ class TestMeshUtils(unittest.TestCase):
         os.remove('caero_aesurf.bdf')
         os.remove('caero_caero.bdf')
         os.remove('caero_paero.bdf')
+        os.remove('caero_no_sub.bdf')
 
     def test_export_mcids(self):
         """creates material coordinate systems"""

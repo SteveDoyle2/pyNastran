@@ -625,7 +625,7 @@ class TestOP2(Tester):
                 build_pandas=IS_PANDAS, log=log)
 
     def test_bdf_op2_other_01(self):
-        """checks ofprand1.bdf"""
+        """checks ofprand1.bdf which tests nonlinear elements"""
         log = get_logger(level='warning')
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.bdf')
         #f06_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.test_op2.f06')
@@ -640,14 +640,14 @@ class TestOP2(Tester):
 
         op2, is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True, read_bdf=False, xref_safe=True,
-            write_f06=False, write_op2=False,
+            write_f06=True, write_op2=False,
             is_mag_phase=False,
             is_sort2=False, is_nx=None, delete_f06=True,
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=True,
             quiet=True,
             stop_on_failure=True, dev=False,
-            build_pandas=False, log=log)
+            build_pandas=False, log=log)  # TODO: enable pandas...
         if IS_PANDAS:
             op2.cbush_stress[1].build_dataframe()
         #op2 = read_op2_geom(op2_filename, debug=False)
@@ -1085,6 +1085,32 @@ class TestOP2(Tester):
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
+
+    def test_bdf_op2_other_20(self):
+        """checks gpst17.bdf, which tests GridPointStressesVolumeDirectArray"""
+        log = get_logger(level='error')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'gpst17.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'gpst17.op2')
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model.safe_cross_reference()
+        #save_load_deck(model, xref=False, run_renumber=False, run_op2_writer=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
+
 
     def test_set_results(self):
         """tests setting only a subset of results"""
@@ -2460,7 +2486,14 @@ class TestOP2(Tester):
         folder = os.path.join(MODEL_PATH, 'random')
         op2_filename = os.path.join(folder, 'rms_tri_oesrmx1.op2')
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
-        unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
+        #unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
+            write_op2=False, write_hdf5=False, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=False, build_pandas=False, subcases=None,
+            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
 
     def test_aero_cpmopt(self):
         """test optimization with multiple GEOM1 tables and multiple CSTM tables"""

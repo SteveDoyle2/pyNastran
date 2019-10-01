@@ -231,6 +231,100 @@ class LOAD(LoadCombination):
         self.load_ids = self.get_load_ids()
         self.load_ids_ref = None
 
+class CLOAD(LoadCombination):
+    """
+    Static Load Combination for Superelement Loads (Superposition)
+
+    references excite ids (e.g., an LSEQ); looks like a LOAD
+    """
+    type = 'CLOAD'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        scale = 1.
+        scale_factors = [1.]
+        load_ids = [1]
+        return cls(sid, scale, scale_factors, load_ids, comment='')
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        load_ids2 = []
+        msg = ', which is required by CLOAD=%s' % (self.sid)
+        for load_id in self.load_ids:
+            if load_id == self.sid:
+                msg = 'Type=%s sid=%s load_id=%s creates a recursion error' % (
+                    self.type, self.sid, load_id)
+                raise RuntimeError(msg)
+            #print(model.load_combinations)
+
+            load_id2 = []
+            for loadset, load_combinations in model.load_combinations.items():
+                for load in load_combinations:
+                    if load.type in ['CLOAD']:
+                        continue
+                    if load_id == load.excite_id:
+                        load_id2.append(load)
+
+            #load_id2 = model.Load(load_id, consider_load_combinations=True, msg=msg)
+            assert isinstance(load_id2, list), load_id2
+            assert len(load_id2) > 0, f'could not find references for CLOAD load_id={load_id}'
+            load_ids2.append(load_id2)
+        self.load_ids_ref = load_ids2
+
+    def safe_cross_reference(self, model, xref_errors, debug=True):
+        self.cross_reference(model)
+
+    def get_load_ids(self):
+        if self.load_ids_ref is None:
+            return self.load_ids
+        excite_ids = []
+        #print(self.load_ids_ref)
+        for loads in self.load_ids_ref:
+            excite_idsi = set([])
+            for load in loads:
+                excite_id = load.excite_id
+                excite_idsi.add(excite_id)
+            assert len(excite_idsi) == 1, excite_idsi
+            excite_ids.append(excite_idsi.pop())
+        assert len(excite_ids) > 0, excite_ids
+        return excite_ids
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.load_ids = self.get_load_ids()
+        self.load_ids_ref = None
+
+    def raw_fields(self):
+        list_fields = ['CLOAD', self.sid, self.scale]
+        load_ids = self.get_load_ids()
+        for (scale_factor, load_id) in zip(self.scale_factors, load_ids):
+            load_idi = self.LoadID(load_id)
+            list_fields += [scale_factor, load_idi]
+        if len(load_ids) != len(self.scale_factors):
+            msg = 'nload_ids=%s nscale_factors=%s and arent the same\n' % (
+                len(load_ids), len(self.scale_factors))
+            msg = 'load_ids=%s\n' % (load_ids)
+            msg += 'scale_factors=%s\n' % (self.scale_factors)
+            msg += print_card_8(list_fields)
+            msg += str(self.get_stats())
+            raise IndexError(msg)
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.raw_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        else:
+            return self.comment + print_card_16(card)
 
 class GRAV(BaseCard):
     """

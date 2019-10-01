@@ -15,22 +15,19 @@ class AddMethods(BDFAttributes):
         self.dmis[name] = dmi
         self._type_to_id_map[dmi.type].append(name)
 
-    def _add_dmig_object(self, dmig, allow_overwrites=False):
-        # type: (Any, bool) -> None
+    def _add_dmig_object(self, dmig: Any, allow_overwrites: bool=False) -> None:
         """adds a DMIG object"""
         name = dmig.name
         self.dmigs[name] = dmig
         self._type_to_id_map[dmig.type].append(name)
 
-    def _add_dmij_object(self, dmij, allow_overwrites=False):
-        # type: (Any, bool) -> None
+    def _add_dmij_object(self, dmij: Any, allow_overwrites: bool=False) -> None:
         """adds a DMIJ object"""
         name = dmij.name
         self.dmijs[name] = dmij
         self._type_to_id_map[dmij.type].append(name)
 
-    def _add_dmiji_object(self, dmiji, allow_overwrites=False):
-        # type: (Any, bool) -> None
+    def _add_dmiji_object(self, dmiji: Any, allow_overwrites: bool=False) -> None:
         """adds a DMIJI object"""
         name = dmiji.name
         self.dmijis[name] = dmiji

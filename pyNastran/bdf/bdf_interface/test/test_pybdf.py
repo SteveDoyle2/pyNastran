@@ -166,6 +166,7 @@ class TestPyBDF(unittest.TestCase):
                            consider_superelements=False, log=None, debug=False)
         bulk_data_lines = pybdf.get_lines(bdf_filename, punch=False, make_ilines=True)[3]
         #print('bulk_data_linesC =', bulk_data_lines)
+        os.remove('junk.bdf')
 
     def test_no_punch(self):
         """tests not definng punch"""

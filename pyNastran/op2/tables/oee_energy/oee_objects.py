@@ -851,7 +851,7 @@ class ComplexStrainEnergyArray(BaseElement):
                 raise ValueError(msg)
 
 
-        if not np.array_equal(self.data, table.data):
+        if not np.array_equal(self.data, table.data):  # pragma: no cover
             msg = 'table_name=%r class_name=%s\n' % (self.table_name, self.__class__.__name__)
             msg += '%s\n' % str(self.code_information())
             i = 0

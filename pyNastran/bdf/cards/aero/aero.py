@@ -17,9 +17,10 @@ All aero cards are defined in this file.  This includes:
 All cards are BaseCard objects.
 
 """
+from __future__ import annotations
 from itertools import count
 import math
-from typing import List, Union
+from typing import List, Union, Any
 
 import numpy as np
 
@@ -70,8 +71,9 @@ class AECOMP(BaseCard):
         lists = [1]
         return AECOMP(name, list_type, lists, comment='')
 
-    def __init__(self, name, list_type, lists, comment=''):
-        # type: (str, List[str], Union[int, List[int]], str) -> None
+    def __init__(self, name: str, list_type: List[str],
+                 lists: Union[int, List[int]],
+                 comment: str='') -> None:
         """
         Creates an AECOMP card
 
@@ -105,15 +107,13 @@ class AECOMP(BaseCard):
         self.lists = lists
         self.lists_ref = None
 
-    def validate(self):
-        # type: () -> None
+    def validate(self) -> None:
         if not self.list_type in ['SET1', 'AELIST', 'CAERO', 'CMPID']:
             msg = 'list_type=%r not in [SET1, AELIST, CAERO, CMPID]' % self.list_type
             raise RuntimeError(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
-        # type: (Any, str) -> AECOMP
+    def add_card(cls, card: Any, comment: str='') -> AECOMP:
         """
         Adds an AECOMP card from ``BDF.add_card(...)``
 
@@ -249,8 +249,9 @@ class AECOMPL(BaseCard):
         labels = 'ELEV'
         return AECOMPL(name, labels, comment='')
 
-    def __init__(self, name, labels, comment=''):
-        # type: (str, List[str]) -> None
+    def __init__(self, name: str,
+                 labels: List[str],
+                 comment: str='') -> None:
         """
         Creates an AECOMPL card
 
@@ -278,8 +279,7 @@ class AECOMPL(BaseCard):
         #self.labels_ref = None
 
     @classmethod
-    def add_card(cls, card, comment=''):
-        # type: (Any, str) -> AECOMP
+    def add_card(cls, card: BDFCard, comment: str='') -> AECOMP:
         """
         Adds an AECOMPL card from ``BDF.add_card(...)``
 
@@ -461,9 +461,10 @@ class AELINK(BaseCard):
         linking_coefficents = [1., 2.]
         return AELINK(aelink_id, label, independent_labels, linking_coefficents, comment='')
 
-    def __init__(self, aelink_id, label, independent_labels, linking_coefficents,
-                 comment=''):
-        # type: (Union[int,str], str, List[str], List[float], str) -> None
+    def __init__(self, aelink_id: Union[int, str],
+                 label: str, independent_labels: List[str],
+                 linking_coefficents: List[float],
+                 comment: str='') -> None:
         """
         Creates an AELINK card, which defines an equation linking
         AESTAT and AESURF cards
@@ -629,8 +630,7 @@ class AELIST(BaseCard):
     def _init_from_empty(cls):
         return AELIST(1, [1], comment='')
 
-    def __init__(self, sid, elements, comment=''):
-        # type: (int, List[int], str) -> None
+    def __init__(self, sid: int, elements: List[int], comment: str='') -> None:
         """
         Creates an AELIST card, which defines the aero boxes for
         an AESURF/SPLINEx.
@@ -740,8 +740,7 @@ class AEPARM(BaseCard):
         units = ''
         return AEPARM(aeparm_id, label, units, comment='')
 
-    def __init__(self, aeparm_id, label, units, comment=''):
-        # type: (int, str, str, str) -> None
+    def __init__(self, aeparm_id: int, label: str, units: str, comment: str='') -> None:
         """
         Creates an AEPARM card, which defines a new trim variable.
 
@@ -866,12 +865,16 @@ class AESURF(BaseCard):
                       crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
                       hmllim=None, hmulim=None, tqllim=None, tqulim=None, comment='')
 
-    def __init__(self, aesid, label, cid1, alid1, cid2=None, alid2=None, eff=1.0, ldw='LDW',
-                 crefc=1.0, crefs=1.0, pllim=-np.pi/2., pulim=np.pi/2.,
-                 hmllim=None, hmulim=None, # hinge moment lower/upper limits
-                 tqllim=None, tqulim=None, # TABLEDi deflection limits vs. dynamic pressure
-                 comment=''):
-        # type: (int, str, int, int, Optional[int], Optional[int], float, str, float, float, float, float, Optional[int], Optional[int], Optional[int], Optional[int], str) -> None
+    def __init__(self, aesid: int, label: str, cid1: int, alid1: int,
+                 cid2: Optional[int]=None, alid2: Optional[int]=None,
+                 eff: float=1.0, ldw: str='LDW',
+                 crefc: float=1.0, crefs: float=1.0,
+                 pllim: float=-np.pi/2., pulim: float=np.pi/2.,
+                  # hinge moment lower/upper limits
+                 hmllim: Optional[int]=None, hmulim: Optional[int]=None,
+                  # TABLEDi deflection limits vs. dynamic pressure
+                 tqllim: Optional[int]=None, tqulim: Optional[int]=None,
+                 comment='') -> None:
         """
         Creates an AESURF card, which defines a control surface
 
@@ -1181,8 +1184,9 @@ class AESURFS(BaseCard):
         list2 = 2
         return AESURFS(aesid, label, list1, list2, comment='')
 
-    def __init__(self, aesid, label, list1, list2, comment=''):
-        # type: (int, str, List[int], List[int]) -> None
+    def __init__(self, aesid: int, label: str,
+                 list1: List[int], list2: List[int],
+                 comment: str='') -> None:
         """
         Creates an AESURFS card
 

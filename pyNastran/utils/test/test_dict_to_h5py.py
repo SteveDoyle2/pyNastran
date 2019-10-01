@@ -1,5 +1,6 @@
 # coding: utf-8
 """tests for dict_to_h5py"""
+import os
 import unittest
 import numpy as np
 from cpylog import get_logger
@@ -50,8 +51,8 @@ class TestDictToH5(unittest.TestCase):
         export_obj_to_hdf5('test_new.h5', new_dict, log=log)
 
 
-        #os.remove('test.h5')
-        #os.remove('test_new.h5')
+        os.remove('test.h5')
+        os.remove('test_new.h5')
 
         #obj = {
             #'key' : 'value',

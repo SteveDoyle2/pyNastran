@@ -19,6 +19,7 @@ class Results:
         self.crm = CumulativeRootMeansSquareObjects()
 
         self.modal_contribution = ModalContribution()
+        self.solution_set = SolutionSet()
         self.strength_ratio = StrengthRatio()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
 
@@ -45,6 +46,7 @@ class Results:
         sum_objs = [
             self.ato, self.psd, self.rms, self.no, self.crm,
             self.modal_contribution, self.strength_ratio,
+            self.solution_set,
             self.ROUGV1,
             self.RADEFFM,
             self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS,
@@ -54,6 +56,20 @@ class Results:
         for objs in sum_objs:
             base.extend(objs.get_table_types())
         return base
+
+class SolutionSet:
+    def __init__(self):
+        self.displacements = {}
+        self.velocities = {}
+        self.accelerations = {}
+        self.eigenvectors = {}
+
+    def get_table_types(self):
+        tables = [
+            'displacements', 'velocities', 'accelerations', 'eigenvectors',
+        ]
+        return ['solution_set.' + table for table in tables]
+
 
 class ModalContribution:
     def __init__(self):

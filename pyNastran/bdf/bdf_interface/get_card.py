@@ -48,8 +48,7 @@ from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 
 class GetCard(GetMethods):
     """defines various methods to access high level BDF data"""
-    def __init__(self):
-        # type: () -> Any
+    def __init__(self) -> None:
         self._type_to_slot_map = {}
         GetMethods.__init__(self)
 

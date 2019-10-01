@@ -57,6 +57,7 @@ RESULT_NAME_MAP = {
     'CONM2' : 'conm2_strain_energy',
     'RBE1' : 'rbe1_strain_energy',
     'RBE3' : 'rbe3_strain_energy',
+    'WELDC' : 'weldc_strain_energy',
 }
 
 class ONR(OP2Common):

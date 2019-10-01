@@ -1,0 +1,32 @@
+C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1
+C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2
+
+# desktop1
+F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike
+
+# nx 10.1
+F:\work\pyNastran\femap_examples\Support\nast\demo
+F:\work\pyNastran\femap_examples\Support\nast\misc\doc\advdynamics
+F:\work\pyNastran\femap_examples\Support\nast\misc\doc\desopt
+F:\work\pyNastran\femap_examples\Support\nast\misc\doc\dynamics
+F:\work\pyNastran\femap_examples\Support\nast\misc\doc\linstat
+F:\work\pyNastran\femap_examples\Support\nast\misc\doc\thermal
+F:\work\pyNastran\femap_examples\Support\nast\misc\sssalter
+F:\work\pyNastran\femap_examples\Support\nast\misc\sssalter\IA
+F:\work\pyNastran\femap_examples\Support\nast\tpl
+F:\Program Files\Siemens\NXNastran\nxn10p1\nxn10p1\nast\tpl
+
+#-------------------------------------------------
+# desktop2
+
+# these don't work - nx 10.2
+"C:\Program Files\Siemens\NXNastran\nxn10p2\nxn10p2\nast"
+"C:\Program Files\Siemens\NXNastran\nxn10p2\nxn10p2\doc"
+"C:\Program Files\Siemens\NXNastran\nxn10p2\nxn10p2\demo"
+"C:\Program Files\Siemens\NXNastran\nxn10p2\nxn10p2\tpl"
+
+# nx 12.0
+"C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\nast"
+"C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\doc"
+"C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\demo"
+"C:\Program Files\Siemens\NX 12.0\NXNASTRAN\nxn12\tpl"

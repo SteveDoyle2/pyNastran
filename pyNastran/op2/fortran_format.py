@@ -8,13 +8,6 @@ from pyNastran.utils import object_attributes
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 
-# this is still a requirement, but disabling it so readthedocs works
-if sys.version_info < (2, 7, 7):
-    IMAJOR, MINOR1, MINOR2 = sys.version_info[:3]
-    # makes sure we don't get the following bug:
-    #   Issue #19099: The struct module now supports Unicode format strings.
-    raise ImportError('Upgrade your Python to >= 2.7.7; version=(%s.%s.%s)' % (
-        IMAJOR, MINOR1, MINOR2))
 
 class FortranFormat:
     """defines basic methods for reading Fortran formatted data files"""

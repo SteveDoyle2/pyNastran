@@ -255,7 +255,9 @@ class TestCuttingPlane(unittest.TestCase):
         unique_geometry_array, unique_results_array, unused_rods = cut_face_model_by_coord(
             bdf_filename, coord, ytol,
             nodal_result, plane_atol=1e-5, skip_cleanup=True,
-            csv_filename='cut_face.csv')
+            csv_filename='cut_face.csv',
+            plane_bdf_filename='plane_face.bdf',
+        )
         #print(unique_geometry_array)
         #print(unique_results_array)
         unique_geometry_array = np.array(unique_geometry_array)
@@ -269,6 +271,8 @@ class TestCuttingPlane(unittest.TestCase):
         assert unique_results_array.shape == (40, 7), unique_results_array.shape
         #print(unique_geometry_array)
         #print(unique_results_array)
+        os.remove('cut_face.csv')
+        os.remove('plane_face.bdf')
 
     def test_cut_shell_model_1(self):
         """

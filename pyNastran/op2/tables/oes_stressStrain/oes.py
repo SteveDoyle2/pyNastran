@@ -1125,6 +1125,23 @@ class OES(OP2Common):
         elif self.table_name in [b'OESXRMS2']: # wrong...
             self.sort_bits[1] = 1 # sort2
             prefix = 'rms.'
+
+        elif self.table_name in [b'OESXNO1']:
+            prefix = 'no.'
+            print(self.code_information())
+        elif self.table_name in [b'OESXNO1C']:
+            # - ply-by-ply Stresses including:
+            #    - von Mises Stress for PSDF (OESPSD1C),
+            #    - Cumulative Root Mean Square output (OESXNO1C)
+            #    - Positive Crossing (OESCRM1C) output sets
+            # - ply-by-ply Strains for:
+            #    - PSDF (OSTPSD1C)
+            #    - Cumulative Root Mean Square (OSTCRM1C) output sets
+            prefix = 'crm.'
+        elif self.table_name in [b'OESXRM1C']:
+            prefix = 'rms.'
+            #print(self.code_information())
+
         elif self.table_name in [b'OESRMS1', b'OSTRRMS1']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
@@ -2121,6 +2138,12 @@ class OES(OP2Common):
                         out = s2.unpack(edata)
                         # (grid, sd, sxc, sxd, sxe, sxf, smax, smin, mst, msc) = out
                         obj.add_sort1(dt, eid, *out)
+        elif self.format_code in [2] and self.num_wide in [67] and self.table_name in [b'OESXNO1']:  # CBEAM
+            #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+            msg = 'skipping random CBEAM; numwide=67'
+            n = self._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal
@@ -3000,6 +3023,19 @@ class OES(OP2Common):
             #return self._not_implemented_or_skip(data, ndata, msg)
         elif self.format_code in [1, 2] and self.num_wide == 67:  # CHEXA
             msg = 'skipping random CHEXA; numwide=67'
+            n = self._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
+
+        elif self.format_code in [1, 2] and self.num_wide in [60] and self.table_name in [b'OESXRMS1', b'OESXNO1']:  # CPENTA
+            #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+            msg = 'skipping random CPENTA; numwide=60'
+            n = self._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
+        elif self.format_code in [1, 2] and self.num_wide in [76] and self.table_name in [b'OESXRMS1', b'OESXNO1']:  # CHEXA
+            # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+            msg = 'skipping random CHEXA; numwide=76'
             n = self._not_implemented_or_skip(data, ndata, msg)
             nelements = None
             ntotal = None
@@ -4317,6 +4353,19 @@ class OES(OP2Common):
             #msg = '%s-CTRIA6-numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
                 #self.table_name_str, self.num_wide, numwide_real, numwide_imag, numwide_random)
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
+
+        elif self.format_code in [1, 2] and self.num_wide in [46] and self.table_name in [b'OESXRMS1', b'OESXNO1']:  # CTRIA6
+            #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+            msg = 'skipping random CTRIA6; numwide=46'
+            n = self._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
+        elif self.format_code in [1, 2] and self.num_wide in [57] and self.table_name in [b'OESXRMS1', b'OESXNO1']:  # CQUAD8
+            #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\tr1081x.op2
+            msg = 'skipping random CQUAD8; numwide=57'
+            n = self._not_implemented_or_skip(data, ndata, msg)
+            nelements = None
+            ntotal = None
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         return n, nelements, ntotal

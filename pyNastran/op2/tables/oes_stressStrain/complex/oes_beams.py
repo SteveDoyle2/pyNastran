@@ -200,7 +200,7 @@ class ComplexBeamArray(OES_Object):
             line1 = '                    STAT DIST/     LOCATION         LOCATION         LOCATION         LOCATION'
             line2 = '   ELEMENT-ID  GRID   LENGTH          C                D                E                F\n'
         else:
-            raise NotImplementedError('sort2')
+            raise NotImplementedError('sort2 f06 writing')
             #line1 = '                                       LOCATION       LOCATION       LOCATION       LOCATION             AVERAGE\n'
             #if name == 'freq':
                 #line2 = '           FREQUENCY                       1              2              3              4             AXIAL STRESS\n'

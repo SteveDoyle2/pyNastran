@@ -70,7 +70,7 @@ from pyNastran.bdf.cards.dynamic import (
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
-from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
+from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                                     PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
                                                     GMLOAD)
@@ -437,6 +437,7 @@ CARD_MAP = {
 
     'LSEQ' : LSEQ,
     'LOAD' : LOAD,
+    'CLOAD' : CLOAD,
     'LOADCYN' : LOADCYN,
 
     'GRAV' : GRAV,
@@ -767,8 +768,7 @@ class AddCards(AddMethods):
         self._add_seqgp_object(seqgp)
         return seqgp
 
-    def add_spoint(self, ids, comment=''):
-        # type: (Union[int, List[int]], str) -> SPOINTs
+    def add_spoint(self, ids: Union[int, List[int]], comment: str='') -> SPOINTs:
         """
         Creates the SPOINTs card that contains many SPOINTs
 
@@ -784,8 +784,7 @@ class AddCards(AddMethods):
         self._add_spoint_object(spoint)
         return spoint
 
-    def add_epoint(self, ids, comment=''):
-        # type: (Union[int, List[int]], str) -> EPOINTs
+    def add_epoint(self, ids: Union[int, List[int]], comment: str='') -> EPOINTs:
         """
         Creates the EPOINTs card that contains many EPOINTs
 
@@ -825,7 +824,7 @@ class AddCards(AddMethods):
                    origin: Optional[Union[List[float], np.ndarray]],
                    zaxis: Optional[Union[List[float], np.ndarray]],
                    xzplane: Optional[Union[List[float], np.ndarray]],
-                   rid: int=0, comment: str='') -> CORD2R:
+                   rid: int=0, setup: bool=True, comment: str='') -> CORD2R:
         """
         Creates the CORD2R card, which defines a rectangular coordinate
         system using 3 vectors.
@@ -847,7 +846,7 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        coord = CORD2R(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
+        coord = CORD2R(cid, origin, zaxis, xzplane, rid=rid, setup=setup, comment=comment)
         self._add_coord_object(coord)
         return coord
 
@@ -855,7 +854,7 @@ class AddCards(AddMethods):
                    origin: Optional[Union[List[float], np.ndarray]],
                    zaxis: Optional[Union[List[float], np.ndarray]],
                    xzplane: Optional[Union[List[float], np.ndarray]],
-                   rid: int=0, comment: str='') -> CORD2C:
+                   rid: int=0, setup: bool=True, comment: str='') -> CORD2C:
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
         system using 3 vectors.
@@ -877,7 +876,7 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        coord = CORD2C(cid, origin, zaxis, xzplane, rid=rid, comment=comment)
+        coord = CORD2C(cid, origin, zaxis, xzplane, rid=rid, setup=setup, comment=comment)
         self._add_coord_object(coord)
         return coord
 
@@ -885,7 +884,7 @@ class AddCards(AddMethods):
                    origin: Optional[Union[List[float], np.ndarray]],
                    zaxis: Optional[Union[List[float], np.ndarray]],
                    xzplane: Optional[Union[List[float], np.ndarray]],
-                   rid: int=0, comment: str='') -> CORD2S:
+                   rid: int=0, setup: bool=True, comment: str='') -> CORD2S:
         """
         Creates the CORD2C card, which defines a spherical coordinate
         system using 3 vectors.
@@ -908,7 +907,7 @@ class AddCards(AddMethods):
 
         """
         coord = CORD2S(cid, rid=rid, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                       comment=comment)
+                       setup=setup, comment=comment)
         self._add_coord_object(coord)
         return coord
 
@@ -3504,6 +3503,28 @@ class AddCards(AddMethods):
 
         """
         load = LOAD(sid, scale, scale_factors, load_ids, comment=comment)
+        self._add_load_combination_object(load)
+        return load
+
+    def add_cload(self, sid, scale, scale_factors, load_ids, comment=''):
+        """
+        Creates a CLOAD card
+
+        Parameters
+        ----------
+        sid : int
+            load id
+        scale : float
+            overall scale factor
+        scale_factors : List[float]
+            individual scale factors (corresponds to load_ids)
+        load_ids : List[int]
+            individual load_ids (corresponds to scale_factors)
+        comment : str; default=''
+            a comment for the card
+
+        """
+        load = CLOAD(sid, scale, scale_factors, load_ids, comment=comment)
         self._add_load_combination_object(load)
         return load
 

@@ -633,6 +633,9 @@ class TestNastranGUI(unittest.TestCase):
         #test.on_wireframe()
         #test.on_surface()
 
+        os.remove('0_NodeID.csv')
+        os.remove('1_ElementID.csv')
+
         with open('rotate.py', 'w') as pyfile:
             pyfile.write('self.rotate(20.)\n')
         test.on_run_script('rotate.py')

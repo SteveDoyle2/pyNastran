@@ -47,8 +47,8 @@ class TestVectorized(unittest.TestCase):
 
     def test_isat(self):
         """tests isat"""
-        log = SimpleLogger(level='warning')
-        logw = SimpleLogger(level='warning')
+        log = SimpleLogger(level='error')
+        logw = SimpleLogger(level='error')
         bdf_filename = os.path.join(MODEL_PATH, 'iSat', 'ISat_Dploy_Sm.dat')
         out_filename_v = 'spike_v.bdf'
         out_filename_nv = 'spike_nv.bdf'

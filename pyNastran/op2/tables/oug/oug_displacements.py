@@ -16,6 +16,8 @@ class RealDisplacementArray(RealTableArray):
         #'      POINT ID.   TYPE          T1             T2             T3             R1             R2             R3\n']
         if self.table_name in ['OUGV1', 'OUGV2', 'BOUGV1', 'OUPV1', 'OUGV1PAT', 'OUG1', 'OUG2']:
             pass
+        elif  self.table_name in ['OUXY1', 'OUXY2']:
+            words = ['                                       D I S P L A C E M E N T   V E C T O R   (SOLUTION SET)']
         elif self.table_name in ['ROUGV1', 'ROUGV2']:
             words += ['                                                (RELATIVE TO ENFORCED MOTION INPUT)']
         elif self.table_name in ['OUGATO1', 'OUGATO2']:

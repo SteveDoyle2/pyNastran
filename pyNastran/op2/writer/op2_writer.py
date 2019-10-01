@@ -267,8 +267,15 @@ class OP2Writer(OP2_F06_Common):
 
         total_case_count = 0
         pretables = ['LAMA', 'BLAMA', ] # 'CLAMA'
+
         if 'eigenvalues' not in skips:
             for unused_title, eigenvalue in obj.eigenvalues.items():
+                res_categories2[eigenvalue.table_name].append(eigenvalue)
+        if 'eigenvalues_fluid' not in skips:
+            for unused_title, eigenvalue in obj.eigenvalues_fluid.items():
+                res_categories2[eigenvalue.table_name].append(eigenvalue)
+        if 'eigenvalues_structure' not in skips:
+            for unused_title, eigenvalue in obj.eigenvalues_structure.items():
                 res_categories2[eigenvalue.table_name].append(eigenvalue)
 
         for table_name in pretables + table_order:

@@ -232,7 +232,7 @@ class BDFAttributes:
         self.rsolmap_to_str = {
             66: 'NONLIN',
             101: 'SESTSTATIC',  # linear static
-            103: 'SEMODES',  # modal
+            103: 'SEMODES',   # modal
             105: 'BUCKLING',  # buckling
             106: 'NLSTATIC',  # non-linear static
             107: 'SEDCEIG',  # direct complex frequency response
@@ -729,7 +729,7 @@ class BDFAttributes:
             'csupext' : ['CSUPEXT'],
 
             # loads
-            'load_combinations' : ['LOAD', 'LSEQ'],
+            'load_combinations' : ['LOAD', 'LSEQ', 'CLOAD'],
             'loads' : [
                 'FORCE', 'FORCE1', 'FORCE2',
                 'MOMENT', 'MOMENT1', 'MOMENT2',

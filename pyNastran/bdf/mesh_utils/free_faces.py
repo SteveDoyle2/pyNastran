@@ -9,11 +9,12 @@ defines:
 """
 from copy import deepcopy
 from collections import defaultdict
+from typing import List, Optional, Any
 
 from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.bdf import read_bdf
+from pyNastran.bdf.bdf import read_bdf, BDF
 
-def get_element_faces(model, element_ids=None):
+def get_element_faces(model: BDF, element_ids: Optional[List[int]]=None) -> Any:
     """
     Gets the elements and faces that are skinned from solid elements.
     This includes internal faces.
@@ -51,8 +52,7 @@ def get_element_faces(model, element_ids=None):
     return eid_faces
 
 
-def get_solid_skin_faces(model):
-    # type: (BDF) -> Any
+def get_solid_skin_faces(model: BDF) -> Any:
     """
     Gets the elements and faces that are skinned from solid elements
     This doesn't include internal faces.

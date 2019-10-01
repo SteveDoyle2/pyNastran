@@ -94,7 +94,7 @@ from pyNastran.bdf.cards.dynamic import (
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
-from pyNastran.bdf.cards.loads.static_loads import (LOAD, GRAV, ACCEL, ACCEL1, FORCE,
+from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                                     PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
                                                     GMLOAD)
@@ -389,7 +389,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'RANDPS', 'RANDT1', # random
 
             ## loads
-            'LOAD', 'LSEQ', 'LOADCYN',
+            'LOAD', 'CLOAD', 'LSEQ', 'LOADCYN',
             'SLOAD',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -1976,6 +1976,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'LSEQ' : (LSEQ, self._add_lseq_object),
             'LOAD' : (LOAD, self._add_load_combination_object),
+            'CLOAD' : (CLOAD, self._add_load_combination_object),
             'LOADCYN' : (LOADCYN, self._add_load_object),
 
             'GRAV' : (GRAV, self._add_load_object),

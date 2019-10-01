@@ -224,6 +224,13 @@ class OUG(OP2Common):
 
         #print self.code_information()
         #
+        if self.num_wide == 8:
+            self.format_code = 1
+            self.data_code['format_code'] = 1
+        elif self.num_wide == 14 and self.analysis_code == 5 and self.random_code == 0 and self.format_code in [0, 1]:
+            self.format_code = 2
+            self.data_code['format_code'] = 2  # real/imaginary
+
         self.fix_format_code()
         if self.num_wide == 8:
             self.format_code = 1
@@ -358,6 +365,17 @@ class OUG(OP2Common):
             msg = 'invalid analysis_code...analysis_code=%s' % self.analysis_code
             raise RuntimeError(msg)
 
+        if self.num_wide == 8:
+            self.format_code = 1
+            self.data_code['format_code'] = 1
+        elif self.num_wide == 14 and self.analysis_code == 5 and self.random_code == 0 and self.format_code in [0, 1]:
+            self.format_code = 2
+            self.data_code['format_code'] = 2  # real/imaginary
+        #else:
+            #print(self.code_information())
+            #print(self.num_wide == 14, self.analysis_code == 5, self.random_code == 0, self.format_code)
+            #aaa
+
         self.fix_format_code()
         if self.num_wide == 8:
             #self.sort_bits[0] = 0 # real
@@ -405,6 +423,19 @@ class OUG(OP2Common):
         elif self.table_code == 10:
             n = self._read_oug_velocity(data, ndata)
         elif self.table_code == 11:
+            n = self._read_oug_acceleration(data, ndata)
+
+        elif self.table_code == 14:  # eigenvector (solution set)
+            assert self.table_name in [b'OPHSA'], self.table_name
+            n = self._read_oug_eigenvector(data, ndata)
+        elif self.table_code == 15:  # displacement (solution set)
+            assert self.table_name in [b'OUXY1', b'OUXY2'], self.table_name
+            n = self._read_oug_displacement(data, ndata, is_cid=False)
+        elif self.table_code == 16:  # velocity (solution set)
+            assert self.table_name in [b'OUXY1', b'OUXY2'], self.table_name
+            n = self._read_oug_velocity(data, ndata)
+        elif self.table_code == 17:  # acceleration (solution set)
+            assert self.table_name in [b'OUXY1', b'OUXY2'], self.table_name
             n = self._read_oug_acceleration(data, ndata)
         else:
             raise NotImplementedError(self.code_information())
@@ -465,7 +496,9 @@ class OUG(OP2Common):
             else:  # pragma: no cover
                 msg = 'displacements; table_name=%s' % self.table_name
                 raise NotImplementedError(msg)
-
+        elif self.table_name in [b'OUXY1', b'OUXY2']:
+            assert self.thermal == 0, self.code_information()
+            result_name = 'solution_set.displacements'
         elif self.table_name in [b'OUPV1']:
             #result_name = 'temperatures'
             assert self.thermal in [2, 4, 8], self.code_information()
@@ -496,7 +529,7 @@ class OUG(OP2Common):
         if self.thermal == 0:
             #result_name = 'displacements'
             #storage_obj = self.displacements
-            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2', b'OUG1', b'OCRUG', b'OUGV1PAT'], self.table_name
+            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2', b'OUG1', b'OCRUG', b'OUGV1PAT', b'OUXY1', b'OUXY2'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,
@@ -547,6 +580,9 @@ class OUG(OP2Common):
         if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1']:
             assert self.thermal in [0, 1], self.code_information()
             result_name = 'velocities'
+        elif self.table_name in [b'OUXY1', b'OUXY2']:
+            assert self.thermal == 0, self.code_information()
+            result_name = 'solution_set.velocities'
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
             result_name = 'velocities_ROUGV1'
             assert self.thermal == 0, self.code_information()
@@ -601,6 +637,9 @@ class OUG(OP2Common):
         if self.table_name in [b'OUGV1', b'OUGV2', b'OAG1', b'BOUGV1']:
             result_name = 'accelerations'
             assert self.thermal == 0, self.code_information()
+        elif self.table_name in [b'OUXY1', b'OUXY2']:
+            assert self.thermal == 0, self.code_information()
+            result_name = 'solution_set.accelerations'
         elif self.table_name in [b'ROUGV1', b'ROUGV2']:
             result_name = 'accelerations_ROUGV1'
             assert self.thermal == 0, self.code_information()
@@ -624,7 +663,7 @@ class OUG(OP2Common):
             raise NotImplementedError(msg)
 
         if self.thermal == 0:
-            if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2', b'OAG1', b'BOUGV1']:
+            if self.table_name in [b'OUGV1', b'OUGV2', b'ROUGV1', b'ROUGV2', b'OAG1', b'BOUGV1', b'OUXY1', b'OUXY2']:
                 assert result_name is not None, self.table_name
                 if self._results.is_not_saved(result_name):
                     return ndata
@@ -679,16 +718,25 @@ class OUG(OP2Common):
         table_code = 7
         """
         assert self.thermal == 0, self.code_information()
-        self._setup_op2_subcase('VECTOR')
-        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'OPHIG', b'BOPHIG', b'OUG1']:
+        if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'OPHIG', b'BOPHIG', b'OUG1', b'BOPHIGF']:
+            self._setup_op2_subcase('VECTOR')
             result_name = 'eigenvectors'
+        elif self.table_name == b'OPHSA':
+            self._setup_op2_subcase('SVECTOR')
+            assert self.thermal == 0, self.code_information()
+            result_name = 'solution_set.eigenvectors'
+
         elif self.table_name == b'RADCONS':
+            self._setup_op2_subcase('VECTOR')
             result_name = 'RADCONS.eigenvectors'
         elif self.table_name == b'RADEFFM':
+            self._setup_op2_subcase('VECTOR')
             result_name = 'RADEFFM.eigenvectors'
         elif self.table_name == b'RADEATC':
+            self._setup_op2_subcase('VECTOR')
             result_name = 'RADEATC.eigenvectors'
         elif self.table_name in [b'ROUGV1', 'ROUGV2']:
+            self._setup_op2_subcase('VECTOR')
             result_name = 'ROUGV1.eigenvectors'
         else:  # pragma: no cover
             msg = 'eigenvectors; table_name=%s' % self.table_name

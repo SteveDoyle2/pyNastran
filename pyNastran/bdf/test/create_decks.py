@@ -1,3 +1,4 @@
+"""simple script for mass running of Nastran jobs to create OP2 files"""
 import  os
 import sys
 from pyNastran.op2.test.op2_test import get_files_of_type # get_all_files,
@@ -5,6 +6,9 @@ from pyNastran.bdf.bdf_interface.utils import to_fields
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.utils.nastran_utils import run_nastran
 
+
+# no files are written if RUN_NASTRAN is False
+RUN_NASTRAN = False
 
 def main():
     nastran_path = r'C:\Program Files\Siemens\SimcenterNastran_2019.2\bin\nastran.exe'
@@ -39,18 +43,116 @@ def main():
     for fname in files:
         #print(fname)
         fname2 = update_with_post(fname, export_dir)
+        if fname2 is None:
+            continue
+        if not RUN_NASTRAN:
+            continue
         keywords = 'scr=yes old=no news=no'
         run_nastran(fname2, nastran_cmd=nastran_path, keywords=keywords, run=True, run_in_bdf_dir=True)
 
 def update_with_post(fname, dirname):
+    basename = os.path.basename(fname)
+    base = os.path.splitext(basename)[0]
+    bdf_name2 = os.path.join(dirname, basename)
+    f04_name2 = os.path.join(dirname, base + '.f04')
+    f06_name2 = os.path.join(dirname, base + '.f06')
+    op2_name2 = os.path.join(dirname, base + '.op2')
+    log_name2 = os.path.join(dirname, base + '.log')
+
     with open(fname, 'r') as bdf_file:
         lines = bdf_file.readlines()
 
-    post = -2
+    post = -1
     found_post = False
     lines2 = None
     for i, line in enumerate(lines):
         line_upper = line.upper().split('$')[0].rstrip()
+
+        line_upper = line_upper.replace('\t', ' ').strip()
+        if line_upper.startswith('SOL '):
+            while '  ' in line_upper:
+                line_upper = line_upper.replace('  ', ' ')
+
+            if ('SOL 1' in line_upper or
+                'SOL 3' in line_upper or # modal
+                'SOL 5' in line_upper or
+                'SOL 7' in line_upper or
+                'SOL 8' in line_upper or
+                'SOL 21' in line_upper or
+                'SOL 24' in line_upper or
+                'SOL 25' in line_upper or
+                'SOL 26' in line_upper or
+                'SOL 27' in line_upper or
+                'SOL 28' in line_upper or
+                'SOL 29' in line_upper or
+                'SOL 47' in line_upper or
+                'SOL 48' in line_upper or
+                'SOL 60' in line_upper or
+                'SOL 61' in line_upper or
+                'SOL 62' in line_upper or
+                'SOL 63' in line_upper or
+                'SOL 64' in line_upper or
+                'SOL 66' in line_upper or
+                'SOL 67' in line_upper or
+                'SOL 68' in line_upper or
+                'SOL 74' in line_upper or
+                'SOL 75' in line_upper or
+                'SOL 76' in line_upper or
+                'SOL 81' in line_upper or
+                'SOL 82' in line_upper or
+                'SOL 83' in line_upper or
+                'SOL 88' in line_upper or
+                'SOL 89' in line_upper or
+                'SOL 91' in line_upper or
+                'SOL 99' in line_upper or
+                #'SOL 3' in line_upper or
+                'SOL 100'  in line_upper or
+                'SOL USERDMAP' in line_upper or
+                'SOL MAIN' in line_upper or
+                'SOL XXX' in line_upper or
+                'SOL 101' in line_upper or 'SOL STATIC' in line_upper or 'SOL SESTATIC' in line_upper or
+                'SOL 103' in line_upper or 'SOL SEMODES' in line_upper or
+                'SOL 105' in line_upper or 'SOL BUCKLING' in line_upper or
+                'SOL 106' in line_upper or 'SOL NLSTATIC' in line_upper or # nonlinear static
+                'SOL 107' in line_upper or 'SOL SEMFREQ' in line_upper or # direct complex frequency response
+                'SOL 108' in line_upper or 'SOL SEDFREQ' in line_upper or # direct frequency response
+                'SOL 109' in line_upper or 'SOL SEDTRAN' in line_upper or # time linear?
+                'SOL 110' in line_upper or 'SOL SEDCEIG' in line_upper or # modal complex eigenvalue
+                'SOL 111' in line_upper or 'SOL SEMFREQ' in line_upper or # modal frequency response
+                'SOL 112' in line_upper or 'SOL SEMTRAN' in line_upper or # modal transient response
+                'SOL 114' in line_upper or  #
+                'SOL 115' in line_upper or  #
+                'SOL 118' in line_upper or  #
+                'SOL 126' in line_upper or
+                'SOL 129' in line_upper or 'SOL NLTRAN' in line_upper or # time nonlinear
+                #'SOL 112' in line_upper or
+                #'SOL 112' in line_upper or
+                #'SOL 112' in line_upper or
+                'SOL 144' in line_upper or # static aero
+                'SOL 145' in line_upper or # flutter
+                'SOL 146' in line_upper or # gust
+                'SOL 153' in line_upper or 'SOL NLSCSH' in line_upper or # nonlinear thermal
+                'SOL 159' in line_upper or # nonlinear transient thermal
+                'SOL 190' in line_upper or 'SOL DBTRANS' in line_upper or
+                'SOL 200' in line_upper):  # optimization
+                continue
+
+            print('%r' % line_upper)
+            if '601' in line_upper:
+                # SOL 601 doesn't have a valid license
+                #SOL 601,129
+                if os.path.exists(bdf_name2):
+                    print(f'removing {bdf_name2}')
+                    os.remove(bdf_name2)
+                if os.path.exists(f04_name2):
+                    os.remove(f04_name2)
+                if os.path.exists(f06_name2):
+                    os.remove(f06_name2)
+                if os.path.exists(op2_name2):
+                    os.remove(op2_name2)
+                if os.path.exists(log_name2):
+                    os.remove(log_name2)
+                return None
         if line_upper.startswith(('LABEL', 'TITLE', 'SUBTITLE')):
             pass
         elif 'PRGPOST' in line_upper or 'POSTEXT' in line_upper:
@@ -107,18 +209,18 @@ def update_with_post(fname, dirname):
         elif 'ENDATA' in line_upper:
             print(fname)
             print('*en_data')
-            ddd
+            raise RuntimeError('ENDATA...')
 
     if lines2 is None:
         lines2 = lines[i:] + [f'PARAM,POST,{post}\n'] + lines[i:]
 
     assert lines2 is not None, fname
 
-    basename = os.path.basename(fname)
-    fname2 = os.path.join(dirname, basename)
-    with  open(fname2, 'w') as bdf_file:
+    if not RUN_NASTRAN:
+        return None
+    with open(bdf_name2, 'w') as bdf_file:
         bdf_file.writelines(lines2)
-    return fname2
+    return bdf_name2
 
 if __name__ == '__main__':
     main()
