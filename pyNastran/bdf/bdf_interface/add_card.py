@@ -7310,11 +7310,11 @@ class AddCards(AddMethods):
         return load
 
     def add_chbdyg(self, eid, surface_type, nodes,
-                   iview_front=0, ivew_back=0,
+                   iview_front=0, iview_back=0,
                    rad_mid_front=0, rad_mid_back=0, comment=''):
         """Creates a CHBDYG card"""
         elem = CHBDYG(eid, surface_type, nodes,
-                      iview_front=iview_front, ivew_back=ivew_back,
+                      iview_front=iview_front, iview_back=iview_back,
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       comment=comment)
         self._add_thermal_element_object(elem)
@@ -7322,7 +7322,7 @@ class AddCards(AddMethods):
 
     def add_chbdyp(self, eid, pid, surface_type, g1, g2,
                    g0=0, gmid=None, ce=0,
-                   iview_front=0, ivew_back=0,
+                   iview_front=0, iview_back=0,
                    rad_mid_front=0, rad_mid_back=0,
                    e1=None, e2=None, e3=None,
                    comment=''):
@@ -7340,7 +7340,7 @@ class AddCards(AddMethods):
             Must be {POINT, LINE, ELCYL, FTUBE, TUBE}
         iview_front : int; default=0
             A VIEW entry identification number for the front face.
-        ivew_back : int; default=0
+        iview_back : int; default=0
             A VIEW entry identification number for the back face.
         g1 / g2 : int
             Grid point identification numbers of grids bounding the surface
@@ -7364,7 +7364,7 @@ class AddCards(AddMethods):
         """
         elem = CHBDYP(eid, pid, surface_type, g1, g2,
                       g0=g0, gmid=gmid, ce=ce,
-                      iview_front=iview_front, ivew_back=ivew_back,
+                      iview_front=iview_front, iview_back=iview_back,
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       e1=e1, e2=e2, e3=e3,
                       comment=comment)
@@ -7372,7 +7372,7 @@ class AddCards(AddMethods):
         return elem
 
     def add_chbdye(self, eid, eid2, side,
-                   iview_front=0, ivew_back=0,
+                   iview_front=0, iview_back=0,
                    rad_mid_front=0, rad_mid_back=0,
                    comment=''):
         """
@@ -7388,7 +7388,7 @@ class AddCards(AddMethods):
             a consistent element side identification number (1-6)
         iview_front: int; default=0
             a VIEW entry identification number for the front face
-        ivew_back: int; default=0
+        iview_back: int; default=0
             a VIEW entry identification number for the back face
         rad_mid_front: int; default=0
             RADM identification number for front face of surface element
@@ -7399,7 +7399,7 @@ class AddCards(AddMethods):
 
         """
         elem = CHBDYE(eid, eid2, side,
-                      iview_front=iview_front, ivew_back=ivew_back,
+                      iview_front=iview_front, iview_back=iview_back,
                       rad_mid_front=rad_mid_front, rad_mid_back=rad_mid_back,
                       comment=comment)
         self._add_thermal_element_object(elem)

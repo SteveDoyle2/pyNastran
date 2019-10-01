@@ -25,7 +25,8 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         #'CTETRA', 'CHEXA', 'CPENTA',
     #]
     etypes_to_skip = [
-        'CHBDYE', 'CHBDYG', 'CHBDYP', 'CBEND',
+        'CHBDYE', 'CBEND',
+        #'CHBDYP',
     ]
     out = defaultdict(list)
     for eid, element in obj.elements.items():
@@ -35,8 +36,11 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
     if nplotels:
         out['PLOTEL'] = list(obj.plotels.keys())
 
+    # elements with fixed lengths
     mapper = {
         # key, spack, nfields
+        'CHBDYP' : ((10908, 109, 407), b'12i 3f', 15),
+        'CHBDYG' : ((10808, 108, 406), b'16i', 16),
         'PLOTEL' : ((5201, 52, 11), b'3i', 3),
         'CTUBE' : ((3701, 37, 49), b'4i', 4),
         'CSHEAR' : ((3101, 31, 61), b'6i', 6),
@@ -196,6 +200,60 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                 data = [eid, pid] + nids
             #print(name, data)
             op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+            op2.write(spack.pack(*data))
+    elif name == 'CHBDYP':
+        surface_type_str_to_int = {
+            'POINT' : 1,
+            'LINE' : 2,
+            'ELCYL' : 6,
+            'FTUBE' : 7,
+            'TUBE' : 10,
+        }
+        for eid in sorted(eids):
+            elem = obj.elements[eid]
+            pid = elem.pid
+            #print(elem.get_stats())
+            surface_type_int = surface_type_str_to_int[elem.surface_type]
+            #(eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
+             #dislin, ce, e1, e2, e3) = out
+            nids = elem.node_ids
+            dislin = 0 if elem.gmid is None else elem.gmid
+            data = (eid, pid, surface_type_int, elem.iview_front, elem.iview_back,
+                    elem.g1, elem.g2, elem.g0, elem.rad_mid_front, elem.rad_mid_back,
+                    dislin, elem.ce, elem.e1, elem.e2, elem.e3)
+            #data = [eid, 0, surface_type_int,
+                    #elem.iview_front, elem.iview_back,
+                    #elem.rad_mid_front, elem.rad_mid_back, 0] + all_nids
+            assert None not in data, data
+            op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+            op2.write(spack.pack(*data))
+
+    elif name == 'CHBDYG':
+        surface_type_str_to_int = {
+            'REV' : 3,
+            'AREA3' : 4,
+            'AREA4' : 5,
+            'AREA6' : 8,
+            'AREA8' : 9,
+        }
+        for eid in sorted(eids):
+            elem = obj.elements[eid]
+            #print(elem.get_stats())
+            nids = elem.node_ids
+            #if None in nids:
+                #nids = [nid if nid is not None else 0 for nid in nids]
+            all_nids = [0] * 8
+            nnodes = len(nids)
+            all_nids[:nnodes] = nids
+            assert None not in nids, nids
+            surface_type_int = surface_type_str_to_int[elem.surface_type]
+            #(eid, unused_blank, Type, iviewf, iviewb, radmidf, radmidb, unused_blank2,
+             #g1, g2, g3, g4, g5, g6, g7, g8) = out
+            data = [eid, 0, surface_type_int,
+                    elem.iview_front, elem.iview_back,
+                    elem.rad_mid_front, elem.rad_mid_back, 0] + all_nids
+            assert None not in data, data
+            op2_ascii.write('  eid=%s nids=%s\n' % (eid, str(nids)))
             op2.write(spack.pack(*data))
     elif name == 'PLOTEL':
         for eid in sorted(eids):
