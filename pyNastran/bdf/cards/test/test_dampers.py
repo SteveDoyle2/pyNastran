@@ -148,6 +148,14 @@ class TestDampers(unittest.TestCase):
         pbush1d = model.add_pbush1d(pid, k=k, c=c, m=m, sa=sa, se=se,
                                     optional_vars=None, comment='pbush1d')
 
+        card_lines = [
+            'pbush1d, 204, 1.e+5, 1000., , , , , , +pb4',
+            '+pb4, shocka, table, 1000., , 1., , 214, , +pb41',
+            '+pb41, spring, table, 205',
+        ]
+        model.add_card_lines(card_lines, 'PBUSH1D', comment='', has_none=True)
+        str(model.properties[204])
+
         E = 3.0e7
         G = None
         nu = 0.3
@@ -237,7 +245,7 @@ class TestDampers(unittest.TestCase):
         model.cross_reference()
         model.update_model_by_desvars()
 
-        save_load_deck(model, run_op2_writer=False)
+        save_load_deck(model)
 
     def test_pbusht(self):
         """tests CBUSH, PBUSH, PBUSHT"""

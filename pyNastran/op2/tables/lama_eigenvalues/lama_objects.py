@@ -4,7 +4,7 @@ from struct import pack
 import numpy as np
 
 from pyNastran.op2.result_objects.op2_objects import BaseScalarObject
-from pyNastran.op2.op2_interface.write_utils import set_table3_field, write_table_header
+from pyNastran.op2.op2_interface.write_utils import write_table_header # set_table3_field,
 from pyNastran.f06.f06_formatting import write_floats_13e
 
 
@@ -379,13 +379,8 @@ class ComplexEigenvalues(BaseScalarObject):
     """
     def __init__(self, title, table_name, nmodes):
         BaseScalarObject.__init__(self)
-        #self.rootNumber = []
         self.title = title
         self.table_name = table_name
-        #self.extraction_order = {}
-        #self.eigenvalues = {}
-        #self.cycles = {}
-        #self.damping = {}
 
         self.mode = np.zeros(nmodes, dtype='int32')
         self.extraction_order = np.zeros(nmodes, dtype='int32')
@@ -413,18 +408,6 @@ class ComplexEigenvalues(BaseScalarObject):
     @property
     def is_complex(self):
         return True
-
-    def add_f06_line(self, data, i):
-        (root_num, extract_order, eigr, eigi, cycle, damping) = data
-        self.mode[i] = root_num
-        self.extraction_order[i] = extract_order
-        self.eigenvalues[i] = complex(eigr, eigi)
-        self.cycles[i] = cycle
-        self.damping[i] = damping
-
-    def add_f06_data(self, data):
-        for imode, line in enumerate(data):
-            self.add_f06_line(line, imode)
 
     def get_headers(self):
         headers = ['eigenvalue', 'frequency', 'damping']
@@ -705,20 +688,6 @@ class BucklingEigenvalues(BaseScalarObject):
     def is_buckling(self):
         return True
 
-    def add_f06_line(self, data, imode):
-        (root_num, extract_order, eigr, omega, freq, mass, stiff) = data
-        self.mode[imode] = root_num
-        self.extraction_order[imode] = extract_order
-        self.eigenvalues[imode] = eigr
-        self.freqs[imode] = freq
-        self.omegas[imode] = omega
-        self.generalized_mass[imode] = mass
-        self.generalized_stiffness[imode] = stiff
-
-      #def add_f06_data(self, data):
-        #for i, line in enumerate(data):
-            #self.add_f06_line(line, i)
-
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
@@ -773,15 +742,3 @@ class BucklingEigenvalues(BaseScalarObject):
                 imode, order, eigr, omega, freq, mass, stiff))
         f06_file.write(page_stamp % page_num)
         return page_num
-
-    #def __repr__(self):
-        #msg = '%-7s %15s %15s %10s %10s %10s\n' % (
-            #'RootNum', 'ExtractionOrder', 'Eigenvalue', '', 'Cycles', 'Damping')
-        #msg += '%-7s %15s %15s %10s\n' % ('', '', 'Real', 'Imaginary')
-        #for root_num, extract_order in sorted(self.extraction_order.items())):
-            #eigenvalue = self.eigenvalues[root_num]
-            #cycle = self.cycles[root_num]
-            #damping = self.damping[root_num]
-            #msg += '%-7s %15s %15s %10s %10s %10s\n' % (
-                #root_num, extract_order, eigenvalue[0], eigenvalue[1], cycle, damping)
-        #return msg

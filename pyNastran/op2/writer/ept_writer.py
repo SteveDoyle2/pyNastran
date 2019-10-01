@@ -15,7 +15,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
 
     #if not hasattr(obj, 'nodes'):
         #return
-    nproperties = len(obj.properties)
+    nproperties = len(obj.properties) + len(obj.properties_mass) + len(out)
     if nproperties == 0:
         return
     write_geom_header(b'EPT', op2, op2_ascii, endian=endian)
@@ -32,19 +32,21 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
     #out = obj.get_card_ids_by_card_types(ptypes)
     for pid, prop in obj.properties.items():
         out[prop.type].append(pid)
+    for pid, prop in obj.properties_mass.items():
+        out[prop.type].append(pid)
 
     skip_properties = [
         'PBEND', 'PBUSH',  #'PBUSH1D',
-        'PMASS', 'PBCOMP',
-
+        'PBCOMP',
+        'PGAP',
         #'PCOMPG',
 
     ]
     for name, pids in out.items():
         nproperties = len(pids)
-        if nproperties == 0:
+        if nproperties == 0:  # pragma: no cover
             continue
-        elif name in skip_properties:
+        elif name in skip_properties:  # pragma: no cover
             obj.log.warning('skipping EPT-%s' % name)
             continue
 
@@ -572,7 +574,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             op2.write(spack.pack(*data))
     elif name == 'PMASS':
         for pid in sorted(pids):
-            prop = obj.properties[pid]
+            prop = obj.properties_mass[pid]
             data = [pid, prop.mass]
             op2_ascii.write('  pid=%s mass=%s\n' % (pid, prop.mass))
             op2.write(spack.pack(*data))

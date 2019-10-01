@@ -1,8 +1,6 @@
 """defines the GridPointWeight class"""
 from io import StringIO
 
-from numpy import zeros
-
 from pyNastran.utils import object_attributes, object_methods
 
 
@@ -151,138 +149,6 @@ class GridPointWeight:
         msg = f.getvalue()
         return msg
 
-    def read_grid_point_weight(self, lines):
-        """
-         0-                                 REFERENCE POINT =        0
-         1-                                           M O
-         2- *  2.338885E+05  2.400601E-13 -7.020470E-15 -1.909968E-11  2.851745E+06 -5.229834E+07 *
-         3- *  2.400601E-13  2.338885E+05 -2.520547E-13 -2.851745E+06  2.151812E-10  2.098475E+08 *
-         4- * -7.020470E-15 -2.520547E-13  2.338885E+05  5.229834E+07 -2.098475E+08 -1.960403E-10 *
-         5- * -1.909968E-11 -2.851745E+06  5.229834E+07  2.574524E+10 -5.566238E+10 -4.054256E+09 *
-         6- *  2.851745E+06  2.151812E-10 -2.098475E+08 -5.566238E+10  2.097574E+11 -2.060162E+09 *
-         7- * -5.229834E+07  2.098475E+08 -1.960403E-10 -4.054256E+09 -2.060162E+09  2.336812E+11 *
-         8-                                           S
-         9-                      *  1.000000E+00  0.000000E+00  0.000000E+00 *
-        10-                      *  0.000000E+00  1.000000E+00  0.000000E+00 *
-        11-                      *  0.000000E+00  0.000000E+00  1.000000E+00 *
-        12-        DIRECTION
-        13-     MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
-        14-             X            2.338885E+05     -8.166148E-17  2.236038E+02  1.219276E+01
-        15-             Y            2.338885E+05      8.972118E+02  9.200164E-16  1.219276E+01
-        16-             Z            2.338885E+05      8.972118E+02  2.236038E+02 -8.381786E-16
-        17-                                         I(S)
-        18-                    *  1.401636E+10  8.739690E+09  1.495636E+09 *
-                               *  8.739690E+09  2.144496E+10  1.422501E+09 *
-                               *  1.495636E+09  1.422501E+09  3.370946E+10 *
-                                                    I(Q)
-                               *  3.389001E+10                             *
-                               *                8.073297E+09               *
-                               *                              2.720748E+10 *
-                                                     Q
-                               * -3.599259E-02 -8.305739E-01  5.557441E-01 *
-                               * -8.850329E-02 -5.512702E-01 -8.296194E-01 *
-                               *  9.954254E-01 -7.904533E-02 -5.366689E-02 *
-
-        .. note::
-            pyNastran's BDF mass_properties method uses the following (not
-            totally correct as there technically isn't one xcg):
-
-                               DIRECTION
-                          MASS AXIS SYSTEM (S)     MASS              X-C.G.        Y-C.G.        Z-C.G.
-                                  X            mass              0.000000E+00  ycg           zcg
-                                  Y            mass              xcg           0.000000E+00  zcg
-                                  Z            nass              xcg           ycg           0.000000E+00
-
-            The inertias are close to I(S), but not exact as the method doesn't
-            use the mass matrix, but is close for sufficiently complex models.  The terms are:
-                *  Ixx  Ixy  Ixz *
-                *  Iyx  Iyy  Iyz *
-                *  Izz  Izy  Izz *
-            or inertia = [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
-        """
-        self.reference_point = int(lines[0].split('=')[1])
-        assert lines[1] == 'M O', lines[1]
-
-        self.MO = zeros((6, 6), dtype='float64')
-        self.S  = zeros((3, 3), dtype='float64')
-
-        self.mass = zeros(3, dtype='float64')
-        self.cg = zeros((6, 6), dtype='float64')
-
-        self.IS = zeros((3, 3), dtype='float64')
-        self.IQ = zeros(3, dtype='float64')
-        self.Q  = zeros((3, 3), dtype='float64')
-
-        #========================================
-        # MO
-        n = 2
-        for i in range(6):
-            line = lines[n + i][1:-1]  # get rid of the * characters
-            sline = line.split()
-            for j in range(6):
-                self.MO[i, j] = sline[j]
-        #print("MO =", self.MO)
-        n += i + 1
-
-        #========================================
-        # S
-        assert lines[n] == 'S', lines[n]
-        n += 1
-        for i in range(3):
-            line = lines[n + i][1:-1]  # get rid of the * characters
-            sline = line.split()
-            for j in range(3):
-                self.S[i, j] = sline[j]
-        #print("S =", self.S)
-        n += i + 1
-
-        #========================================
-        assert lines[n] == 'DIRECTION', lines[n]
-        n += 2
-        for i in range(3):
-            line = lines[n + i][1:]  # get rid of the * characters
-            sline = line.split()
-
-            self.mass[i] = sline[0]
-            for j in range(3):
-                self.cg[i, j] = sline[j + 1]
-
-        #print("mass =", self.mass)
-        #print("mass =", self.cg)
-        n += 3
-
-        #========================================
-        assert lines[n] == 'I(S)', lines[n]
-        n += 1
-        for i in range(3):
-            line = lines[n + i][1:-1]  # get rid of the * characters
-            sline = line.split()
-            for j in range(3):
-                self.IS[i, j] = sline[j]
-        #print("IS =", self.IS)
-        n += i + 1
-
-        #========================================
-        assert lines[n] == 'I(Q)', lines[n]
-        n += 1
-        for i in range(3):
-            sline = lines[n + i][1:-1].strip().split()  # get rid of the * characters
-            self.IQ[i] = sline[0]
-        #print("IQ =", self.IQ)
-        n += i + 1
-
-        #========================================
-        # S
-        assert lines[n] == 'Q', lines[n]
-        n += 1
-        for i in range(3):
-            line = lines[n + i][1:-1]  # get rid of the * characters
-            sline = line.split()
-            for j in range(3):
-                self.Q[i, j] = sline[j]
-        #print("Q =", self.Q)
-        n += i
-
     def write_f06(self, f06_file, page_stamp, page_num):
         """
         writes the f06
@@ -336,5 +202,4 @@ class GridPointWeight:
             msg.append('                                           * %13.6E %13.6E %13.6E *' % tuple(self.Q[i, :]))
         msg.append('\n' + page_stamp % page_num + '\n')
         f06_file.write('\n'.join(msg))
-        #print('\n'.join(msg))
         return page_num + 1

@@ -331,21 +331,7 @@ def _mirror_elements(model: BDF, mirror_model: BDF,
                           plane=plane)
 
     if model.masses:
-        for eid, element in sorted(model.masses.items()):
-            eid_mirror = eid + eid_offset
-
-            if element.type == 'CONM2':
-                old_nid = element.nid
-                new_nid = old_nid + nid_offset
-                mass = element.mass
-                cid = element.cid
-                X = element.X
-                I = element.I
-                mirror_model.add_conm2(eid_mirror, new_nid, mass, cid=cid, X=X, I=I, comment='')
-            else:  # pragma: no cover
-                #print(element.get_stats())
-                mirror_model.log.warning('skipping mass element:\n%s' % str(element))
-        del eid_mirror
+        __mirror_masses(model, mirror_model, nid_offset, eid_offset)
 
     if model.rigid_elements:
         __mirror_rigid_elements(model, mirror_model, nid_offset, eid_offset)
@@ -530,6 +516,50 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
         model.log.warning(f'verify material coordinate systems %s' % cids)
         _asymmetrically_mirror_coords(model, element_cids, cid_offset, plane)
     return
+
+def __mirror_masses(model, mirror_model, nid_offset, eid_offset):
+    """mirrors model.masses"""
+    for eid, element in sorted(model.masses.items()):
+        eid_mirror = eid + eid_offset
+
+        if element.type == 'CONM2':
+            old_nid = element.nid
+            new_nid = old_nid + nid_offset
+            mass = element.mass
+            cid = element.cid
+            X = element.X
+            I = element.I
+            mirror_model.add_conm2(eid_mirror, new_nid, mass, cid=cid, X=X, I=I, comment='')
+        elif element.type == 'CONM1':
+            new_nid = element.node_ids[0] + nid_offset
+            mass_matrix = element.mass_matrix
+            cid = element.Cid()
+            mirror_model.add_conm1(eid_mirror, new_nid, mass_matrix, cid=cid, comment='')
+        elif element.type == 'CMASS1':
+            old_node_ids = [element.G1(), element.G2()]
+            new_nids = [nid + nid_offset if nid is not None else None
+                        for nid in old_node_ids]
+            mirror_model.add_cmass1(eid_mirror, element.Pid(), new_nids,
+                                    c1=element.c1, c2=element.c2, comment='')
+        elif element.type == 'CMASS2':
+            old_node_ids = [element.G1(), element.G2()]
+            new_nids = [nid + nid_offset if nid is not None else None
+                        for nid in old_node_ids]
+            mirror_model.add_cmass2(eid_mirror, element.mass, new_nids,
+                                    c1=element.c1, c2=element.c2, comment='')
+        elif element.type == 'CMASS3':
+            # this uses SPOINTs, so we don't need as fancy checking as CMASS1 and CMASS2
+            new_nids = [nid + nid_offset if nid is not None else None
+                        for nid in element.node_ids]
+            mirror_model.add_cmass3(eid_mirror, element.Pid(), new_nids, comment='')
+        elif element.type == 'CMASS4':
+            # this uses SPOINTs, so we don't need as fancy checking as CMASS1 and CMASS2
+            new_nids = [nid + nid_offset if nid is not None else None
+                        for nid in element.node_ids]
+            mirror_model.add_cmass4(eid_mirror, element.mass, new_nids, comment='')
+        else:  # pragma: no cover
+            mirror_model.log.warning('skipping mass element:\n%s' % str(element))
+    del eid_mirror
 
 def __mirror_rigid_elements(model: BDF, mirror_model: BDF,
                             nid_offset: int, eid_offset: int) -> None:

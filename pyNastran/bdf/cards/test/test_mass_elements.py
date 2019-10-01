@@ -254,7 +254,7 @@ class TestMassElements(unittest.TestCase):
         model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
         model.add_pshell(pid, mid, t=0.1)
         model.add_mat1(mid, 3.0e7, None, 0.3)
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model)
 
     def test_nsm1(self):
         """tests the NSM1 card"""
@@ -274,7 +274,7 @@ class TestMassElements(unittest.TestCase):
         model.add_cquad4(2, pid, [1, 2, 3, 4]) # A=1.0
         model.add_pshell(pid, mid, t=0.1)
         model.add_mat1(mid, 3.0e7, None, 0.3)
-        save_load_deck(model, run_convert=False)
+        save_load_deck(model)
 
 
 if __name__ == '__main__':  # pragma: no cover

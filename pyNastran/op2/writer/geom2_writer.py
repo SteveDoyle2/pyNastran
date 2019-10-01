@@ -67,7 +67,7 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         'CVISC' : ((3901, 39, 50), b'4i', 4),
         'CTRAX3' : ((6111, 61, 996), b'5if', 6),
         'CQUADX4' : ((6112, 61, 997), b'6if', 7),
-        'CQUADX8' : ((6114,61,999),  b'10if', 11),
+        'CQUADX8' : ((6114, 61, 999), b'10if', 11),
         'CTRAX6' : ((6113, 61, 998), b'8if', 9),
         #'PLOTEL' : (, , ),
     }
@@ -100,7 +100,7 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
             else:  # pragma: no cover
                 raise NotImplementedError(name)
             nfields = nnodes + 2
-            spack = Struct(endian + b'%ii' % (nfields))
+            spack = Struct(endian + b'%ii' % nfields)
 
         elif name in mapper:
             key, spacki, nfields = mapper[name]
