@@ -1,6 +1,7 @@
 """defines various shell element tests"""
-import unittest
+import os
 from io import StringIO
+import unittest
 import numpy as np
 from numpy import array
 
@@ -1324,7 +1325,11 @@ class TestShells(unittest.TestCase):
 
         thetad = np.linspace(0., 90., num=91)
         if IS_MATPLOTLIB:
-            plot_equivalent_lamina_vs_theta(pcomp8, mat8, thetad, show=False)
+            plot_equivalent_lamina_vs_theta(
+                pcomp8, mat8, thetad, plot=True, show=False, close=True,
+                png_filename='lamina.png')
+            os.remove('lamina_stiffness.png')
+            os.remove('lamina_nu.png')
 
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     """makes a series of DVCREL1 and a DESVAR"""

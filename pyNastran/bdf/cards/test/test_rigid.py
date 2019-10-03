@@ -52,6 +52,7 @@ class TestRigid(unittest.TestCase):
         card = bdf._process_card(lines)
         card = BDFCard(card)
         rbe = RBE2.add_card(card)
+        rbe.write_card(size=16)
         fields = rbe.raw_fields()
         msg = print_card_8(fields).rstrip()
         #print(msg)
@@ -289,9 +290,28 @@ class TestRigid(unittest.TestCase):
         cb = '123'
         model.add_grid(10, [0., 0., 0.])
         model.add_grid(20, [0., 0., 0.])
-        model.add_rbar1(eid, nids, cb)
+        rbar1 = model.add_rbar1(eid, nids, cb, comment='rbar1')
+        rbar1.raw_fields()
         save_load_deck(model)
 
+    def test_rspline(self):
+        """tests an RSPLINE"""
+        model = BDF(debug=False)
+        eid = 100
+        independent_nid = 10
+        dependent_nids = [20, 30]
+        dependent_components = [4, 3]
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [0., 0., 0.])
+        model.add_grid(30, [0., 0., 0.])
+        rspline = model.add_rspline(eid, independent_nid, dependent_nids,
+                                    dependent_components,
+                                    diameter_ratio=0.1,
+                                    comment='rspline')
+        rspline.write_card(size=8)
+        rspline.write_card(size=8)
+        rspline.raw_fields()
+        save_load_deck(model)
 
 
 def check_rbe(rbe):

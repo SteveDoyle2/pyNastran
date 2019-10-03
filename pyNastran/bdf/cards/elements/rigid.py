@@ -436,13 +436,6 @@ class RBAR(RigidElement):
     #             card += [gm, cm, Ai]
     #     return card
 
-    #def write_code_aster(self):
-        #msg = ''
-        #msg += "BLOCAGE=AFFE_CHAR_MECA(  # RBAR\n"
-        #msg += "        MODELE=MODELE,\n"  # rigid element
-        #msg += "        \n"
-        #return msg
-
     def Ga(self):
         if self.ga_ref is not None:
             return self.ga_ref.nid
@@ -1092,31 +1085,6 @@ class RBE2(RigidElement):
         #rbe3 = ['RBE3', eid, ref_node, dof, wf, sDof] + rbe3_nodes
         #return rbe3
 
-    def write_code_aster(self):
-        """
-        Converts to a LIAISON SOLIDE for dofs 123456.
-        For other dof combinations, general MPC equations are written
-        """
-        msg = ''
-        msg += "BLOCAGE=AFFE_CHAR_MECA(  # RBE2 ID=%s\n" % (self.eid)
-        msg += "        MODELE=MODELE,\n"  # rigid element
-        if self.cm == 123456:
-            msg += "        LIASON_SOLIDE=(\n"
-            msg += "        _F(NOEUD=\n"
-            msg += "           "
-            for nid in self.Gmi:
-                msg += "'N%i'," % (nid)
-            msg = msg[:-1]
-            msg += '\n'
-        else:
-            msg += "        _F(NOEUD=  # doesnt handle coordinate systems\n"
-            msg += "           "
-            for nid in self.Gmi:
-                msg += "'N%i'," % (nid)
-            msg = msg[:-1]
-            msg += '\n'
-        return msg
-
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -1646,7 +1614,8 @@ class RSPLINE(RigidElement):
         eid = integer(card, 1, 'eid')
         diameter_ratio = double_or_blank(card, 2, 'diameter_ratio', 0.1)
         nfields = len(card)
-        assert nfields % 2 == 1, 'nfields=%s card=%s'  % (nfields, card)
+        #assert (nfields) % 2 == 1, 'nfields=%s card=%s'  % (nfields, card)
+        assert (nfields - 4) % 2 == 0, 'nfields=%s card=%s'  % (nfields, card)
 
         dependent_nids = []
         dependent_components = []

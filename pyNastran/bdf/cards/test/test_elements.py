@@ -76,6 +76,7 @@ class TestElements(unittest.TestCase):
         self.assertEqual(cgap.Pid(), 90)
         cgap.write_card(size=8)
         cgap.raw_fields()
+        model.elements[899] = cgap
 
         lines = ['PGAP    90                      1.E+5']
         card = model._process_card(lines)
@@ -86,6 +87,28 @@ class TestElements(unittest.TestCase):
         pgap.write_card(size=16)
         self.assertEqual(pgap.Pid(), 90)
         pgap.raw_fields()
+        model.properties[90] = pgap
+
+        model.add_grid(3, [-1., 0., 0.])
+        model.add_grid(21, [0., 0., 0.])
+        model.add_grid(99, [1., 0., 0.])
+        eid = 100
+        pid = 90
+        nids = [21, 99]
+        x = None
+        g0 = 3
+        cid = None
+        cgap = model.add_cgap(eid, pid, nids,
+                 x, g0, cid, comment='cgap')
+        node_ids = cgap.node_ids
+        assert node_ids == [21, 99], node_ids
+        self.assertEqual(cgap.eid, 100)
+        self.assertEqual(cgap.Pid(), 90)
+        cgap.write_card(size=8)
+        cgap.raw_fields()
+
+        model.cross_reference()
+        save_load_deck(model, run_op2_reader=False)
 
     def test_cfast(self):
         """tests a CFAST/PFAST"""
@@ -363,7 +386,7 @@ class TestElements(unittest.TestCase):
         genel.raw_fields()
         str(genel)
         assert len(genel.ul.ravel()) == 2, genel.ul
-        save_load_deck(model, xref='standard', punch=True, run_mirror=False)
+        save_load_deck(model, xref='standard', punch=True)
 
 
 if __name__ == '__main__':  # pragma: no cover

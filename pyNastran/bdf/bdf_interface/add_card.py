@@ -1996,6 +1996,11 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
+    def add_baror(self, pid, is_g0, g0, x, offt='GGG', comment: str='') -> BAROR:
+        baror = BAROR(pid, is_g0, g0, x, offt=offt, comment=comment)
+        self._add_baror_object(baror)
+        return baror
+
     def add_cbarao(self, eid: int, scale: str, x: List[float], comment: str='') -> CBARAO:
         """
         Creates a CBARAO card, which defines additional output locations
@@ -3062,12 +3067,12 @@ class AddCards(AddMethods):
         return prop
 
     def add_genel_stiffness(self, eid, ul, ud, k, s=None):
-        """creates a GENEL card using the stiffness approach"""
+        """creates a GENEL card using the stiffness (K) approach"""
         assert k is not None
         return GENEL(eid, ul, ud, k, None, s)
 
     def add_genel_flexibility(self, eid, ul, ud, z, s=None):
-        """creates a GENEL card using the flexiblity approach"""
+        """creates a GENEL card using the flexiblity (Z) approach"""
         assert z is not None
         return GENEL(eid, ul, ud, None, z, s)
 
