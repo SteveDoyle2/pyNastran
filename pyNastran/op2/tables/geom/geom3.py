@@ -554,8 +554,6 @@ class GEOM3(GeomCommon):
             n += 28
         self.card_count['PLOADX'] = nentries
         return n
-        #self.log.info('skipping PLOADX in GEOM3')
-        #return len(data)
 
     def _read_ploadx1(self, data, n):
         """
