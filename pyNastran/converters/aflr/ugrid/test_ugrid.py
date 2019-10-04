@@ -11,6 +11,7 @@ from pyNastran.converters.nastran.nastran_to_ugrid3d import merge_ugrid3d_and_bd
 from pyNastran.converters.aflr.ugrid.ugrid3d_to_nastran import ugrid3d_to_nastran
 from pyNastran.converters.aflr.ugrid.ugrid3d_to_tecplot import (
     ugrid_to_tecplot, ugrid3d_to_tecplot_filename, read_ugrid)
+from pyNastran.converters.type_converter import cmd_line_format_converter
 
 PKG_PATH = pyNastran.__path__[0]
 UGRID_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models')
@@ -39,6 +40,9 @@ class TestUgrid(unittest.TestCase):
             convert_pyram_to_penta=False,
             encoding=None, size=16,
             is_double=False, log=log)
+        argv = ['format_converter', 'ugrid', ugrid_filename,
+                'nastran', 'shell_solid_bending.bdf']
+        cmd_line_format_converter(argv=argv, quiet=True)
 
         nastran_filename3 = os.path.join(NASTRAN_PATH, 'solid_bending', 'solid_bending3.bdf')
         tris, quads = ugrid_model.skin_solids()
@@ -48,7 +52,7 @@ class TestUgrid(unittest.TestCase):
 
         ugrid_model.write_bdf(nastran_filename3)
 
-        unused_bdf_model = read_bdf(nastran_filename3)
+        unused_bdf_model = read_bdf(nastran_filename3, log=log)
         #print(bdf_model.get_bdf_stats())
         assert os.path.exists(nastran_filename3), nastran_filename3
 
@@ -57,7 +61,7 @@ class TestUgrid(unittest.TestCase):
         #assert os.path.exists(tecplot_filename1), tecplot_filename1
 
         tecplot_filename2 = os.path.join(NASTRAN_PATH, 'solid_bending', 'solid_bending2.plt')
-        tecplot, unused_zone = ugrid_to_tecplot(ugrid_model)
+        tecplot, unused_zone = ugrid_to_tecplot(ugrid_model, log=log)
         tecplot.write_tecplot(tecplot_filename2, res_types=None,
                               adjust_nids=True)
         assert os.path.exists(tecplot_filename2), tecplot_filename2
@@ -67,7 +71,7 @@ class TestUgrid(unittest.TestCase):
         merge_ugrid3d_and_bdf_to_ugrid3d_filename(
             ugrid_filename, nastran_filename3, ugrid_filename_out,
             pshell_pids_to_remove,
-            update_equivalence=True, tol=0.01)
+            update_equivalence=True, tol=0.01, log=log)
         assert os.path.exists(ugrid_filename_out), ugrid_filename_out
 
     def test_ugrid3d_gui_box(self):
@@ -77,9 +81,9 @@ class TestUgrid(unittest.TestCase):
         tecplot_filename2 = os.path.join(UGRID_PATH, 'box.plt')
 
         ugrid_model = read_ugrid(ugrid_filename, log=log)
-        tecplot = ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename2)
-        tecplot, unused_zone = ugrid_to_tecplot(ugrid_filename)
-        tecplot, unused_zone = ugrid_to_tecplot(ugrid_model)
+        tecplot = ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename2, log=log)
+        tecplot, unused_zone = ugrid_to_tecplot(ugrid_filename, log=log)
+        tecplot, unused_zone = ugrid_to_tecplot(ugrid_model, log=log)
         tecplot.write_tecplot(tecplot_filename2, res_types=None,
                               adjust_nids=True)
         assert os.path.exists(tecplot_filename2), tecplot_filename2

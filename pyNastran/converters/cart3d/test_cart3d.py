@@ -11,7 +11,7 @@ from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 from pyNastran.converters.cart3d.cart3d_to_tecplot import cart3d_to_tecplot
 from pyNastran.converters.cart3d.input_c3d_reader import read_input_c3d
 import pyNastran.converters.cart3d.input_cntl_reader
-from pyNastran.converters.type_converter import run_format_converter
+from pyNastran.converters.type_converter import cmd_line_format_converter
 
 
 PKG_PATH = pyNastran.__path__[0]
@@ -145,23 +145,35 @@ class TestCart3d(unittest.TestCase):
         log = get_logger(level='warning', encoding='utf-8')
         cart3d_filename = os.path.join(TEST_PATH, 'threePlugs.bin.tri')
         stl_filename = os.path.join(TEST_PATH, 'threePlugs.stl')
-        cart3d_to_stl_filename(cart3d_filename, stl_filename, log=log)
-        #os.remove(stl_filename)
+
+        argv = ['format_converter', 'cart3d', cart3d_filename,
+                'stl', stl_filename, '-b', '--scale', '2.0']
+        cmd_line_format_converter(argv=argv, quiet=True)
+        #cart3d_to_stl_filename(cart3d_filename, stl_filename, log=log)
+        os.remove(stl_filename)
 
     def test_cart3d_to_tecplot(self):
         """convert to tecplot"""
         log = get_logger(level='warning', encoding='utf-8')
         cart3d_filename = os.path.join(TEST_PATH, 'threePlugs.bin.tri')
         tecplot_filename = os.path.join(TEST_PATH, 'threePlugs.plt')
-        cart3d_to_tecplot(cart3d_filename, tecplot_filename, log=log)
-        #os.remove(tecplot_filename)
+        #cart3d_to_tecplot(cart3d_filename, tecplot_filename, log=log)
+
+        argv = ['format_converter', 'cart3d', cart3d_filename,
+                'tecplot', tecplot_filename, '--scale', '2.0']
+        cmd_line_format_converter(argv=argv, quiet=True)
+        os.remove(tecplot_filename)
 
     def test_cart3d_to_nastran_01(self):
         """convert to nastran small field"""
         log = get_logger(level='warning', encoding='utf-8')
         cart3d_filename = os.path.join(TEST_PATH, 'threePlugs.bin.tri')
         bdf_filename = os.path.join(TEST_PATH, 'threePlugs.bdf')
-        cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=log)
+        #cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=log)
+
+        argv = ['format_converter', 'cart3d', cart3d_filename,
+                'nastran', bdf_filename, '-b', '--scale', '2.0']
+        cmd_line_format_converter(argv=argv, quiet=True)
         os.remove(bdf_filename)
 
     def test_cart3d_to_nastran_02(self):

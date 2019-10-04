@@ -66,10 +66,10 @@ def process_cart3d(cart3d_filename, fmt2, fname2, log, data, quiet=False):
         cart3d_to_stl_filename(model, fname2, is_binary=data['--binary'])
     elif fmt2 == 'nastran':
         from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename
-        cart3d_to_nastran_filename(model, fname2)
+        cart3d_to_nastran_filename(model, fname2, log=log)
     elif fmt2 == 'tecplot':
         from pyNastran.converters.cart3d.cart3d_to_tecplot import cart3d_to_tecplot
-        cart3d_to_tecplot(model, fname2)
+        cart3d_to_tecplot(model, fname2, log=log)
     elif fmt2 == 'cart3d':
         model.write_cart3d(fname2, is_binary=data['--binary'])
     # elif fmt2 == 'ugrid':
@@ -240,7 +240,10 @@ def run_format_converter(fmt1, fname1, fmt2, fname2, data, log, quiet=False):
     elif fmt1 == 'ugrid':
         process_ugrid(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     else:
-        raise NotImplementedError('fmt1=%s is not supported by run' % fmt2)
+        format1s = ['nastran', 'nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
+        #format2s = ['nastran', 'nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
+        raise NotImplementedError(f'fmt1={fmt1} is not supported by run; '
+                                  f'use {", ".join(format1s)}')
 
 
 def cmd_line_format_converter(argv=None, quiet=False):
@@ -248,6 +251,8 @@ def cmd_line_format_converter(argv=None, quiet=False):
     if argv is None:
         argv = sys.argv
     msg = "Usage:\n"
+    #format1s = ['nastran', 'nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
+    #format2s = ['nastran', 'nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
     msg += "  format_converter nastran   <INPUT> <format2> <OUTPUT> [-o <OP2>] --no_xref\n"
     msg += "  format_converter <format1> <INPUT> tecplot   <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>] [--scale SCALE]\n"
     msg += "  format_converter <format1> <INPUT> stl       <OUTPUT> [-b]  [--scale SCALE]\n"
@@ -260,7 +265,7 @@ def cmd_line_format_converter(argv=None, quiet=False):
     msg += "\n"
     msg += "Required Arguments:\n"
     msg += "  format1        format type (nastran, cart3d, stl, ugrid, tecplot)\n"
-    msg += "  format2        format type (nastran, cart3d, stl, ugrid, tecplot)\n"
+    msg += "  format2        format type (nastran, cart3d, stl, ugrid, tecplot, abaqus)\n"
     msg += "  INPUT          path to input file\n"
     msg += "  OUTPUT         path to output file\n"
 
