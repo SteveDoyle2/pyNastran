@@ -976,7 +976,7 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         #model.safe_cross_reference()
         #save_load_deck(model)
 
@@ -1320,7 +1320,7 @@ class TestOP2(Tester):
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
             dev=False, log=log)
-        assert len(op2.displacements) == 1, len(op2.displacements).v
+        assert len(op2.displacements) == 1, len(op2.displacements)
         assert len(op2.eigenvectors) == 1, len(op2.eigenvectors)
 
     def test_op2_transient_solid_shell_bar_01_geom(self):
@@ -2533,7 +2533,7 @@ class TestOP2(Tester):
         bdf_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'b3bend.op2')
         model = read_bdf(bdf_filename, debug=False, log=log)
-        save_load_deck(model, run_op2_reader=True)
+        save_load_deck(model)
 
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)

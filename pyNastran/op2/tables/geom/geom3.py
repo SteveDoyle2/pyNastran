@@ -435,6 +435,7 @@ class GEOM3(GeomCommon):
 
     def _read_rbar(self, data, n):
         """RBAR(6601,66,292) - Record 22"""
+        print('read_rbar')
         n = self._read_dual_card(data, n, self._read_rbar_nx, self._read_rbar_msc,
                                  'RBAR', self._add_op2_rigid_element)
         return n

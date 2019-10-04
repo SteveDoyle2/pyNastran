@@ -338,34 +338,9 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
         del fields, fmt
 
     elif card_type == 'RBAR':
-        # MSC
-        key = (6601, 66, 292)
-        if nastran_format == 'msc':
-            fmt = endian + b'7if' * ncards
-            fields = []
-            for rbar in cards:
-                fields += [
-                    rbar.eid, rbar.ga, rbar.gb,
-                    int(rbar.cna), int(rbar.cnb),
-                    int(rbar.cma), int(rbar.cmb),
-                    rbar.alpha]
-        elif nastran_format == 'nx':
-            fmt = endian + b'7i' * ncards
-            fields = []
-            for rbar in cards:
-                cna = int(rbar.cna)
-                cma = int(rbar.cma)
-                cnb = int(rbar.cnb) if rbar.cnb != '' else 0
-                cmb = int(rbar.cmb)
-                fields += [
-                    rbar.eid, rbar.ga, rbar.gb,
-                    cna, cnb, cma, cmb]
-        else:  # pragma: no cover
-            raise NotImplementedError(nastran_format)
-        nfields = len(fields)
-        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
-        op2.write(pack(fmt, *fields))
-        del fields, fmt
+        nbytes = _write_rbar(card_type, cards, ncards, op2, op2_ascii,
+                             endian, nastran_format=nastran_format)
+
 
     elif card_type == 'SPC1':
         key = (5481, 58, 12)
@@ -509,4 +484,40 @@ def write_header(name, nfields, ncards, key, op2, op2_ascii):
     """writes the op2 card header given the number of cards and the fields per card"""
     nvalues = nfields * ncards
     nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+    return nbytes
+
+def _write_rbar(card_type, cards, ncards, op2, op2_ascii, endian, nastran_format='nx'):
+    """writes an RBAR"""
+    # MSC
+    key = (6601, 66, 292)
+    if nastran_format == 'msc':
+        fmt = endian + b'7if' * ncards
+        fields = []
+        for rbar in cards:
+            cna = int(rbar.cna)
+            cma = int(rbar.cma)
+            cnb = int(rbar.cnb)# if rbar.cnb != '' else 0
+            cmb = int(rbar.cmb)
+            fields += [
+                rbar.eid, rbar.ga, rbar.gb,
+                cna, cnb,
+                cma, cmb,
+                rbar.alpha]
+    elif nastran_format == 'nx':
+        fmt = endian + b'7i' * ncards
+        fields = []
+        for rbar in cards:
+            cna = int(rbar.cna)
+            cma = int(rbar.cma) if rbar.cma != '' else 0
+            cnb = int(rbar.cnb) if rbar.cnb != '' else 0
+            cmb = int(rbar.cmb)
+            fields += [
+                rbar.eid, rbar.ga, rbar.gb,
+                cna, cnb, cma, cmb]
+    else:  # pragma: no cover
+        raise NotImplementedError(nastran_format)
+    nfields = len(fields)
+    nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+    op2.write(pack(fmt, *fields))
+    del fields, fmt
     return nbytes

@@ -7,14 +7,14 @@ from cpylog import get_logger
 set_printoptions(suppress=True, precision=3)
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf, RROD, CaseControlDeck
+from pyNastran.bdf.bdf import BDF, BDFCard, DAREA, PLOAD4, read_bdf, CaseControlDeck
 from pyNastran.bdf.cards.base_card import expand_thru_by
 from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.mesh_utils.loads import sum_forces_moments, sum_forces_moments_elements
 #from pyNastran.bdf.errors import DuplicateIDsError
 
-from pyNastran.op2.op2 import OP2, read_op2
+from pyNastran.op2.op2 import read_op2 # OP2,
 
 bdf = BDF(debug=False)
 TEST_PATH = pyNastran.__path__[0]
@@ -242,7 +242,7 @@ class TestLoads(unittest.TestCase):
         p0 = [0., 0., 0.]
         loadcase_id = sid
         forces1, moments1 = sum_forces_moments(model, p0, loadcase_id,
-                                                     include_grav=False, xyz_cid0=None)
+                                               include_grav=False, xyz_cid0=None)
         forces2, moments2 = sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                                                         include_grav=False, xyz_cid0=None)
         assert np.array_equal(forces1, forces2)
@@ -950,7 +950,7 @@ class TestLoads(unittest.TestCase):
         model2 = read_bdf('ploadx1.temp', debug=None)
         model2._verify_bdf()
         os.remove('ploadx1.temp')
-        save_load_deck(model2, run_convert=False, run_mass_properties=False, run_op2_reader=True)
+        save_load_deck(model2, run_convert=False, run_mass_properties=False)
 
     def test_loads_combo(self):
         r"""
@@ -1091,24 +1091,6 @@ class TestLoads(unittest.TestCase):
         ]
         unused_mpc = model.add_mpc(conid, nodes, components, coefficients, comment='mpc')
 
-        eid = 1
-        ga = 9
-        gb = 10
-        cna = '123456'
-        cnb = ''
-        cma = ''
-        cmb = ''
-        unused_rbar = model.add_rbar(eid, [ga, gb], cna, cnb, cma, cmb, alpha=0.,
-                                     comment='rbar')
-
-        eid = 2
-        ga = 10
-        gb = 13
-        rrod_a = RROD(eid, [ga, gb], cma='42', cmb='33')
-        with self.assertRaises(RuntimeError):
-            rrod_a.validate()
-        unused_rrod_b = model.add_rrod(eid, [ga, gb], cma='3', cmb=None, alpha=0.0, comment='')
-
         conid = 43
         nodes = [10, 11]
         components = ['1', '0']
@@ -1243,7 +1225,7 @@ class TestLoads(unittest.TestCase):
         model2.write_skin_solid_faces('skin.bdf', write_solids=False,
                                       write_shells=True)
         os.remove('skin.bdf')
-        save_load_deck(model2, run_op2_writer=False)
+        save_load_deck(model2)
 
     def test_load(self):
         """makes sure LOAD cards don't get sorted"""

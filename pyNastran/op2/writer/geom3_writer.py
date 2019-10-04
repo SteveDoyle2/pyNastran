@@ -56,7 +56,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
         #elif load_type not in supported_cards:
             #continue
-
+        print('GEOM3', itable, load_type)
         try:
             nbytes = write_card(op2, op2_ascii, load_type, loads, endian, obj.log,
                                 nastran_format=nastran_format)
@@ -181,90 +181,10 @@ def write_card(op2, op2_ascii, load_type, loads, endian, log,
             op2_ascii.write('  PLOAD1 data=%s\n' % str(data))
             op2.write(spack.pack(*data))
     elif load_type == 'PLOAD2':
-        key = (6802, 68, 199)
-        nfields = 3
-        spack = Struct(endian + b'ifi')
-        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
-        for load in loads:
-            #(sid, p, eid) = out
-            for eid in load.eids:
-                data = [load.sid, load.pressure, eid]
-                op2_ascii.write('  PLOAD2 data=%s\n' % str(data))
-                op2.write(spack.pack(*data))
+        nbytes = _write_pload2(load_type, loads, op2, op2_ascii, endian)
     elif load_type == 'PLOAD4': # msc
-        key = (7209, 72, 299)
-
-        nloads = 0
-        for load in loads:
-            nloads += len(load.eids)
-
-        if nastran_format == 'msc':
-            nfields = 16
-            spack = Struct(endian + b'2i 4f 3i 3f 8s 8s')
-            nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
-            for load in loads:
-                #surf_or_line = surf_or_line.rstrip().decode('latin1')
-                #line_load_dir = line_load_dir.rstrip().decode('latin1')
-                #if line_load_dir == '':
-                    ## TODO: not 100%
-                    #line_load_dir = 'NORM'
-
-                ## forces NX pload4 function to get called if it should be
-                #assert surf_or_line in ['SURF', 'LINE']
-                #assert line_load_dir in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM'], 'line_load_dir=%r' % line_load_dir
-
-                #self.pressures = np.asarray(pressures, dtype='float64')
-                #self.nvector = nvector
-                #self.surf_or_line = surf_or_line
-                #self.line_load_dir = line_load_dir
-                pressures = list(load.pressures)
-                g1 = load.g1 if load.g1 is not None else 0
-                g34 = load.g34 if load.g34 is not None else 0
-                cid = load.cid if load.cid is not None else 0
-                nids_cid = [g1, g34, cid]
-                nvector = list(load.nvector)
-                assert len(load.pressures) == 4, load.pressures
-                assert None not in nids_cid, nids_cid
-
-                pnn = pressures + nids_cid + nvector
-                for eid in load.eids:
-                    #(sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3, surf_or_line, line_load_dir) = out
-                    surf_or_line = load.surf_or_line.encode('ascii')
-                    line_load_dir = load.line_load_dir.encode('ascii')
-                    data = [load.sid, eid] + pnn + [surf_or_line, line_load_dir]
-                    assert None not in data, data
-                    op2_ascii.write('  PLOAD4 data=%s\n' % str(data))
-                    op2.write(spack.pack(*data))
-        elif nastran_format == 'nx':
-            #Word Name Type Description
-            #1 SID          I Load set identification number
-            #2 EID          I Element identification number
-            #3 P(4)        RS Pressures
-            #7 G1           I Grid point identification number at a corner of the face
-            #8 G34          I Grid point identification number at a diagonal from G1 or CTETRA corner
-            #9  CID         I Coordinate system identification number
-            #10 N(3)       RS Components of a vector coordinate system defined by CID
-            nfields = 12
-            spack = Struct(endian + b'2i 4f 3i 3f')
-            nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
-            for load in loads:
-                pressures = list(load.pressures)
-                g1 = load.g1 if load.g1 is not None else 0
-                g34 = load.g34 if load.g34 is not None else 0
-                cid = load.cid if load.cid is not None else 0
-                nids_cid = [g1, g34, cid]
-                nvector = list(load.nvector)
-                assert len(load.pressures) == 4, load.pressures
-                assert None not in nids_cid, nids_cid
-
-                pnn = pressures + nids_cid + nvector
-                for eid in load.eids:
-                    #(sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3) = out
-                    data = [load.sid, eid] + pnn
-
-                    assert None not in data, data
-                    op2_ascii.write('  PLOAD4 data=%s\n' % str(data))
-                    op2.write(spack.pack(*data))
+        nbytes = _write_pload4(load_type, loads, op2, op2_ascii,
+                               endian, nastran_format=nastran_format)
 
     elif load_type == 'PLOADX1':
         key = (7309, 73, 351)
@@ -305,27 +225,9 @@ def write_card(op2, op2_ascii, load_type, loads, endian, log,
             op2_ascii.write('  RFORCE data=%s\n' % str(data))
             op2.write(spack.pack(*data))
     elif load_type == 'TEMP':
-        key = (5701, 57, 27)
-        nfields = 3
-        spack = Struct(endian + b'iif')
-        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
-        for load in loads:
-            for nid, temp in sorted(load.temperatures.items()):
-                #(sid, g, T) = out
-                data = [load.sid, nid, temp]
-                op2_ascii.write('  TEMP data=%s\n' % str(data))
-                op2.write(spack.pack(*data))
+        nbytes = _write_temp(load_type, loads, op2, op2_ascii, endian)
     elif load_type == 'QVOL':
-        key = (2309, 23, 416)
-        nfields = 4
-        spack = Struct(endian + b'if2i')
-        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
-        for load in loads:
-            #(sid, qvol, cntrlnd, eid) = out
-            for eid in load.elements:
-                data = [load.sid, load.qvol, load.control_point, eid]
-                op2_ascii.write('  QVOL data=%s\n' % str(data))
-                op2.write(spack.pack(*data))
+        nbytes = _write_qvol(load_type, loads, op2, op2_ascii, endian)
     elif load_type == 'QBDY1':
         key = (4509, 45, 239)
         nfields = 3
@@ -352,16 +254,8 @@ def write_card(op2, op2_ascii, load_type, loads, endian, log,
             op2_ascii.write('  QBDY2 data=%s\n' % str(data))
             op2.write(spack.pack(*data))
     elif load_type == 'QBDY3':
-        key = (2109, 21, 414)
-        nfields = 4
-        spack = Struct(endian + b'ifii')
-        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
-        for load in loads:
-            #(sid, q0, cntrlnd, eid) = out
-            for eid in load.eids:
-                data = [load.sid, load.q0, load.cntrlnd, eid]
-                op2_ascii.write('  QBDY3 data=%s\n' % str(data))
-                op2.write(spack.pack(*data))
+        nbytes = _write_qbdy3(load_type, loads, op2, op2_ascii, endian)
+
     elif load_type == 'TEMPP1':
         key = (8109, 81, 201)
         nfields = 6
@@ -384,58 +278,7 @@ def write_card(op2, op2_ascii, load_type, loads, endian, log,
             op2.write(spack.pack(*data))
 
     elif load_type == 'QHBDY':
-        key = (4309, 43, 233)
-        nfields = 12
-        spack = Struct(endian + b'2i 2f 8i')
-        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
-        for load in loads:
-            #1 SID   I Load set identification number
-            #2 FLAG  I Face type
-            #3 Q0   RS Magnitude of thermal flux into face
-            #4 AF   RS Area factor
-            #5 G(8)  I Grid point identification numbers
-            #print(load.get_stats())
-
-            nids = [0] * 8
-            #if flag == 1:
-                #flag = 'POINT'
-            #elif flag == 2:
-                #flag = 'LINE'
-            #elif flag == 5:
-                #flag = 'AREA4'
-            #elif flag == 9:
-                #flag = 'AREA8'
-
-            if load.flag == 'POINT':
-                # C:\NASA\m4\formats\git\examples\move_tpl\ex8a.op2 - flag=1
-                flag = 1 # 0?
-                nnodes = 1
-            elif load.flag == 'LINE':
-                flag = 2
-                nnodes = 2
-            elif load.flag == 'AREA4':
-                flag = 5
-                nnodes = 4
-            elif load.flag == 'AREA8':
-                flag = 9
-                nnodes = 8
-            else:  # pragma: no cover
-                print(load.get_stats())
-                raise NotImplementedError(load.get_stats())
-
-            grids = load.grids
-            for i in range(nnodes):
-                nids[i] = grids[i]
-                if nids[i] <= 0:
-                    log.warning(f'QHBDY: nids[{i}]={nids[i]} nids={nids}')
-                #assert nids[i] > 0, f'QHBDY: nids[{i}]={nids[i]} nids={nids}'
-
-            data = [
-                load.sid, flag, load.q0,
-                0.0 if load.af is None else load.af,
-                ] + nids
-            op2_ascii.write('  QHBDY data=%s\n' % str(data))
-            op2.write(spack.pack(*data))
+        nbytes = _write_qhbdy(load_type, loads, nloads, op2, op2_ascii, endian, log)
 
     #elif load_type == 'ACCEL1':
         #key = (7401,74,601)
@@ -538,4 +381,219 @@ def write_card(op2, op2_ascii, load_type, loads, endian, log,
     else:  # pragma: no cover
         load0 = loads[0]
         raise NotImplementedError(load0)
+    return nbytes
+
+def _write_pload4(load_type, loads, op2, op2_ascii, endian, nastran_format='nx'):
+    """writes the PLOAD4s"""
+    key = (7209, 72, 299)
+
+    nloads = 0
+    for load in loads:
+        nloads += len(load.eids)
+
+    if nastran_format == 'msc':
+        nfields = 16
+        spack = Struct(endian + b'2i 4f 3i 3f 8s 8s')
+        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+        for load in loads:
+            #surf_or_line = surf_or_line.rstrip().decode('latin1')
+            #line_load_dir = line_load_dir.rstrip().decode('latin1')
+            #if line_load_dir == '':
+                ## TODO: not 100%
+                #line_load_dir = 'NORM'
+
+            ## forces NX pload4 function to get called if it should be
+            #assert surf_or_line in ['SURF', 'LINE']
+            #assert line_load_dir in ['LINE', 'X', 'Y', 'Z', 'TANG', 'NORM'], 'line_load_dir=%r' % line_load_dir
+
+            #self.pressures = np.asarray(pressures, dtype='float64')
+            #self.nvector = nvector
+            #self.surf_or_line = surf_or_line
+            #self.line_load_dir = line_load_dir
+            pressures = list(load.pressures)
+            g1 = load.g1 if load.g1 is not None else 0
+            g34 = load.g34 if load.g34 is not None else 0
+            cid = load.cid if load.cid is not None else 0
+            nids_cid = [g1, g34, cid]
+            nvector = list(load.nvector)
+            assert len(load.pressures) == 4, load.pressures
+            assert None not in nids_cid, nids_cid
+
+            pnn = pressures + nids_cid + nvector
+            for eid in load.eids:
+                #(sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3, surf_or_line, line_load_dir) = out
+                surf_or_line = load.surf_or_line.encode('ascii')
+                line_load_dir = load.line_load_dir.encode('ascii')
+                data = [load.sid, eid] + pnn + [surf_or_line, line_load_dir]
+                assert None not in data, data
+                op2_ascii.write('  PLOAD4 data=%s\n' % str(data))
+                op2.write(spack.pack(*data))
+    elif nastran_format == 'nx':
+        #Word Name Type Description
+        #1 SID          I Load set identification number
+        #2 EID          I Element identification number
+        #3 P(4)        RS Pressures
+        #7 G1           I Grid point identification number at a corner of the face
+        #8 G34          I Grid point identification number at a diagonal from G1 or CTETRA corner
+        #9  CID         I Coordinate system identification number
+        #10 N(3)       RS Components of a vector coordinate system defined by CID
+        nfields = 12
+        spack = Struct(endian + b'2i 4f 3i 3f')
+        nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+        for load in loads:
+            pressures = list(load.pressures)
+            g1 = load.g1 if load.g1 is not None else 0
+            g34 = load.g34 if load.g34 is not None else 0
+            cid = load.cid if load.cid is not None else 0
+            nids_cid = [g1, g34, cid]
+            nvector = list(load.nvector)
+            assert len(load.pressures) == 4, load.pressures
+            assert None not in nids_cid, nids_cid
+
+            pnn = pressures + nids_cid + nvector
+            for eid in load.eids:
+                #(sid, eid, p1, p2, p3, p4, g1, g34, cid, n1, n2, n3) = out
+                data = [load.sid, eid] + pnn
+
+                assert None not in data, data
+                op2_ascii.write('  PLOAD4 data=%s\n' % str(data))
+                op2.write(spack.pack(*data))
+    return nbytes
+
+def _get_nloads_from_eids(loads):
+    nloads = 0
+    for load in loads:
+        nloads += len(load.eids)
+    return nloads
+
+def _get_nloads_from_elements(loads):
+    nloads = 0
+    for load in loads:
+        nloads += len(load.elements)
+    return nloads
+
+def _write_pload2(load_type, loads, op2, op2_ascii, endian):
+    """writes the PLOAD2s"""
+    key = (6802, 68, 199)
+    nfields = 3
+    spack = Struct(endian + b'ifi')
+
+    nloads = _get_nloads_from_eids(loads)
+    nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+    for load in loads:
+        #(sid, p, eid) = out
+        for eid in load.eids:
+            data = [load.sid, load.pressure, eid]
+            op2_ascii.write('  PLOAD2 data=%s\n' % str(data))
+            op2.write(spack.pack(*data))
+    return nbytes
+
+def _write_qbdy3(load_type, loads, op2, op2_ascii, endian):
+    """writes the QBDY3s"""
+    key = (2109, 21, 414)
+    nfields = 4
+    spack = Struct(endian + b'ifii')
+
+    nloads = _get_nloads_from_eids(loads)
+    nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+    for load in loads:
+        #(sid, q0, cntrlnd, eid) = out
+        for eid in load.eids:
+            data = [load.sid, load.q0, load.cntrlnd, eid]
+            op2_ascii.write('  QBDY3 data=%s\n' % str(data))
+            op2.write(spack.pack(*data))
+    return nbytes
+
+def _write_qhbdy(load_type, loads, nloads, op2, op2_ascii, endian, log):
+    """writes the QHBDYs"""
+    key = (4309, 43, 233)
+    nfields = 12
+    spack = Struct(endian + b'2i 2f 8i')
+    nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+    for load in loads:
+        #1 SID   I Load set identification number
+        #2 FLAG  I Face type
+        #3 Q0   RS Magnitude of thermal flux into face
+        #4 AF   RS Area factor
+        #5 G(8)  I Grid point identification numbers
+        #print(load.get_stats())
+
+        nids = [0] * 8
+        #if flag == 1:
+            #flag = 'POINT'
+        #elif flag == 2:
+            #flag = 'LINE'
+        #elif flag == 5:
+            #flag = 'AREA4'
+        #elif flag == 9:
+            #flag = 'AREA8'
+
+        if load.flag == 'POINT':
+            # C:\NASA\m4\formats\git\examples\move_tpl\ex8a.op2 - flag=1
+            flag = 1 # 0?
+            nnodes = 1
+        elif load.flag == 'LINE':
+            flag = 2
+            nnodes = 2
+        elif load.flag == 'AREA4':
+            flag = 5
+            nnodes = 4
+        elif load.flag == 'AREA8':
+            flag = 9
+            nnodes = 8
+        else:  # pragma: no cover
+            print(load.get_stats())
+            raise NotImplementedError(load.get_stats())
+
+        grids = load.grids
+        for i in range(nnodes):
+            nids[i] = grids[i]
+            if nids[i] <= 0:
+                log.warning(f'QHBDY: nids[{i}]={nids[i]} nids={nids}')
+            #assert nids[i] > 0, f'QHBDY: nids[{i}]={nids[i]} nids={nids}'
+
+        data = [
+            load.sid, flag, load.q0,
+            0.0 if load.af is None else load.af,
+            ] + nids
+        op2_ascii.write('  QHBDY data=%s\n' % str(data))
+        op2.write(spack.pack(*data))
+    return nbytes
+
+def _write_qvol(load_type, loads, op2, op2_ascii, endian):
+    """writes the QVOLs"""
+    key = (2309, 23, 416)
+    nfields = 4
+    spack = Struct(endian + b'if2i')
+
+    nloads = _get_nloads_from_elements(loads)
+    nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+    for load in loads:
+        #(sid, qvol, cntrlnd, eid) = out
+        for eid in load.elements:
+            data = [load.sid, load.qvol, load.control_point, eid]
+            op2_ascii.write('  QVOL data=%s\n' % str(data))
+            op2.write(spack.pack(*data))
+    return nbytes
+
+def _get_nloads_from_temperatures(loads):
+    nloads = 0
+    for load in loads:
+        nloads += len(load.temperatures)
+    return nloads
+
+def _write_temp(load_type, loads, op2, op2_ascii, endian):
+    """writes the TEMPs"""
+    key = (5701, 57, 27)
+    nfields = 3
+    spack = Struct(endian + b'iif')
+
+    nloads = _get_nloads_from_temperatures(loads)
+    nbytes = write_header(load_type, nfields, nloads, key, op2, op2_ascii)
+    for load in loads:
+        for nid, temp in sorted(load.temperatures.items()):
+            #(sid, g, T) = out
+            data = [load.sid, nid, temp]
+            op2_ascii.write('  TEMP data=%s\n' % str(data))
+            op2.write(spack.pack(*data))
     return nbytes

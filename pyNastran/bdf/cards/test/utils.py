@@ -28,7 +28,8 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                    run_convert=True, run_renumber=True, run_mirror=True,
                    run_save_load=True, run_quality=True, write_saves=True,
                    run_save_load_hdf5=True, run_mass_properties=True, run_loads=True,
-                   run_test_bdf=True, run_op2_writer=True, run_op2_reader=True):
+                   run_test_bdf=True, run_op2_writer=True, run_op2_reader=True,
+                   op2_log_level: str='warning'):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
     model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                             nxref_errors=0, stop_on_xref_error=True)
@@ -133,7 +134,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
 
         op2_filename = 'spike.op2'
         bkp_log = op2_geom_model.log
-        op2_geom_model.log = get_logger(log=None, level='warning', encoding='utf-8')
+        op2_geom_model.log = get_logger(log=None, level=op2_log_level, encoding='utf-8')
         op2_geom_model.write_op2(op2_filename, post=-1, endian=b'<', skips=None,
                                  nastran_format='nx')
         if run_op2_reader:

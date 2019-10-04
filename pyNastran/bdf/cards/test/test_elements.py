@@ -99,7 +99,7 @@ class TestElements(unittest.TestCase):
         g0 = 3
         cid = None
         cgap = model.add_cgap(eid, pid, nids,
-                 x, g0, cid, comment='cgap')
+                              x, g0, cid, comment='cgap')
         node_ids = cgap.node_ids
         assert node_ids == [21, 99], node_ids
         self.assertEqual(cgap.eid, 100)

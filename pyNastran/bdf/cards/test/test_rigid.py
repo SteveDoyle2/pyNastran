@@ -1,5 +1,5 @@
 import unittest
-from pyNastran.bdf.bdf import BDF, BDFCard, RBE1, RBE2, RBE3
+from pyNastran.bdf.bdf import BDF, BDFCard, RBE1, RBE2, RBE3, RROD
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.cards.test.utils import save_load_deck
 
@@ -33,10 +33,10 @@ class TestRigid(unittest.TestCase):
     def test_rbe3_02(self):
         """RBE3 Gmi/Cmi default"""
         model = BDF(debug=None, log=None, mode='msc')
-        model.add_grid(1, [0.,0.,0])
-        model.add_grid(4, [1.,0.,0])
-        model.add_grid(5, [0.,1.,0])
-        model.add_grid(6, [1.,1.,0])
+        model.add_grid(1, [0., 0., 0])
+        model.add_grid(4, [1., 0., 0])
+        model.add_grid(5, [0., 1., 0])
+        model.add_grid(6, [1., 1., 0])
         rbe3 = model.add_rbe3(eid=1, refgrid=1, refc=1, weights=[.1, .5, 3.], comps=['123']*3,
                               Gmi=None, Cmi=None, Gijs=[4, 5, 6])
         rbe3.write_card()
@@ -313,6 +313,40 @@ class TestRigid(unittest.TestCase):
         rspline.raw_fields()
         save_load_deck(model)
 
+    def test_rbar(self):
+        """tests an RBAR"""
+        model = BDF(debug=False)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [0., 0., 0.])
+        eid = 2
+        ga = 10
+        gb = 20
+        cna = '123456'
+        cnb = ''
+        cma = ''
+        cmb = ''
+        rbar = model.add_rbar(eid, [ga, gb], cna, cnb, cma, cmb, alpha=0.,
+                                     comment='rbar')
+        rbar.write_card(size=8)
+        rbar.write_card(size=8)
+        rbar.raw_fields()
+        save_load_deck(model)
+
+    def test_rrod(self):
+        model = BDF(debug=False)
+        model.add_grid(10, [0., 0., 0.])
+        model.add_grid(20, [0., 0., 0.])
+        eid = 2
+        ga = 10
+        gb = 20
+        rrod_a = RROD(eid, [ga, gb], cma='42', cmb='33')
+        with self.assertRaises(RuntimeError):
+            rrod_a.validate()
+        rrod = model.add_rrod(eid, [ga, gb], cma='3', cmb=None, alpha=0.0, comment='')
+        rrod.write_card(size=8)
+        rrod.write_card(size=8)
+        rrod.raw_fields()
+        save_load_deck(model)
 
 def check_rbe(rbe):
     """simple RBE checks"""
