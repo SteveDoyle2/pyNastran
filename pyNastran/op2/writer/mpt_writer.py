@@ -9,9 +9,18 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
         return
     nmaterials = len(obj.materials) + len(obj.thermal_materials)
 
-    materials_to_skip = ['NLPARM',
-                         'MATS3', 'MATS8',
-                         'MATT3', 'MATT9']
+    materials_to_skip = [
+        'MAT11',
+        'MATS3', 'MATS8',
+        'MATT3', 'MATT9',
+        #  other
+        'NLPARM', 'NLPCI', 'TSTEPNL',
+        'RADBC',
+    ]
+    # these are specifically for material dependency objects (e.g., model.MATS1)
+    # in general, materials (e.g., MAT1) just need to be removed from the
+    # skip list to become active.  If it's a material dependency type,  it must
+    # be in this list.
     mtypes = [
         'MATS1', 'MATS3', 'MATS8',
         'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9',
@@ -27,6 +36,21 @@ def write_mpt(op2, op2_ascii, obj, endian=b'<'):
         out[mtype] = list(mat_dict.keys())
     if len(obj.nlparms):
         out['NLPARM'] = obj.nlparms.keys()
+    if len(obj.nlpcis):
+        out['NLPCI'] = obj.nlpcis.keys()
+
+    if len(obj.bcs):
+        #'bcs' : ['CONV', 'CONVM', 'RADBC', 'RADM', 'TEMPBC'],
+        for obj in obj.bcs.values():
+            if obj.type == 'RADBC':
+                out[obj.type].append(key)
+
+    if len(obj.tstepnls):
+        # strangely TSTEPs are stored in the DYNAMIC table, but TSTEPNLs are
+        # stored in the MPT table
+        #'tstepnls' : ['TSTEPNL', 'TSTEP1'],
+        out['TSTEPNL'] = obj.tstepnls.keys()
+
 
     if nmaterials == 0 and len(out) == 0:
         return
