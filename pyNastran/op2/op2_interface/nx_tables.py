@@ -69,33 +69,6 @@ NX_EXTRA_TABLES = [
     # RADx...
     b'RADCONS', b'RADEFFM', b'RADEATC',
 
-    # displacements
-    b'BOUGV1',
-    b'OUGV2',
-    b'OUGATO2', b'OUGCRM2',
-    b'OUGNO1', b'OUGPSD2',
-    b'OUGRMS1',
-
-    # temperature
-    b'TOUGV1',
-
-    # eigenvectors
-    b'BOPHIG',
-
-    # spc forces
-    b'OQG1', b'OQG2',
-    b'OQGGF1', b'OQGGF2', # ???
-    b'OQGCF1', b'OQGCF2', # ???
-
-    # mpc forces
-    b'OQMG2',
-
-    # load vector
-    b'OPG1', b'OPG2',
-    b'OPNL1', b'OPNL2',  # Nonlinear loads in SORT2 format for the h-set or d-set.
-    b'OPGNO1',
-    b'OPGRMS1',
-
     # stress
     b'OES1', b'OES1X', b'OES1X1', b'OES1C',
     b'OES2',
@@ -109,21 +82,6 @@ NX_EXTRA_TABLES = [
     b'OSTR1', b'OSTR1X', b'OSTR1C',
     b'OSTR2',
     b'OESTRCP', # ???
-
-    # force
-    b'OEF1', b'OEF2',
-
-    # heat flux
-    b'HOEF1',
-
-    # Grid point stresses
-    b'OGS1',
-
-    # strain energy
-    b'ONRGY1', b'ONRGY2', b'ONRGY',
-
-    # failure indicies
-    b'OEFIT',
 
     # contact
     b'OSPDSI1', b'OSPDSI2', # intial separation distance
@@ -147,15 +105,68 @@ NX_EXTRA_TABLES = [
 ]
 
 NX_RESULT_TABLES = [
+    # displacements, velocity, acceleration
+    # BOUGV1 - G-set results (displacement, velocity, acceleration, eigenvector)
+    #          in the global (CD) frame
+    # OUGVi  - Displacements in the global (CD) coordinate system
+    b'BOUGV1',  # G-set results boundary in the basic (cid=0) frame
+    b'OUGV1', b'OUGV2',
+    b'OUGATO2', b'OUGCRM2', b'OUGPSD2',
+    b'OUGNO1', b'OUGRMS1',
+
+    # eigenvectors
+    b'OPHIG', # Eigenvectors in the basic (cid=0) coordinate system
+
+    # eigenvectors
+    b'BOPHIG',  # basic (cid=0) frame
+
+    # temperature
+    b'TOUGV1',
+
+    #------------------------
+    # solution set
+    # OUXYi - ??? set in ??? frame
+    #------------------------
+
+    # spc forces
+    # OQGx   - SPC forces in the G-set
+    #        - can also be MPC forces, but generally not anymore for NX Nastran
+    # OQGCFx - ???
+    # OQGGFx - ???
+    b'OQG1', b'OQG2',
+    b'OQGCF1', b'OQGCF2', # ???
+    b'OQGGF1', b'OQGGF2', # ???
+
+    # mpc forces
+    # OQMGx - MPC forces in the G-set
+    b'OQMG1', b'OQMG2',
+
+    # load vector
+    # OPGi  - G-set load vectors in the global (CD) frame
+    # OPNLi - Nonlinear loads in for the h-set or d-set.
+    b'OPG1', b'OPG2',
+    b'OPNL1', b'OPNL2',
+    b'OPGNO1',
+    b'OPGRMS1',
+
+    # Grid point stresses
+    b'OGS1',
+
+    # strain energy
+    b'ONRGY1', b'ONRGY2', b'ONRGY',
+
+    # failure indicies
+    b'OEFIT',
+
     #-----------------------
     # OESVM1  - OES Table of           element stresses
     # OESVM1C - OES Table of composite element stresses
     #           for frequency response analysis that includes von Mises stress
     #           output in SORT1 format.
-    b'OESVM1',
-    b'OESVM2', b'OESVM1C',
-    b'OSTRVM1',
-    b'OSTRVM2', b'OSTRVM1C',
+    b'OESVM1', b'OESVM1C',
+    b'OESVM2',
+    b'OSTRVM1', b'OSTRVM1C',
+    b'OSTRVM2',
 
     b'OES2C', b'OSTR2C',
 
@@ -182,20 +193,16 @@ NX_RESULT_TABLES = [
     b'MDICT', b'BDICT', b'KDICTP', b'MDICTP',
 
     #----------------------
-    # displacement/velocity/acceleration/eigenvector/temperature
-    # OUGV1  - Displacements in the global coordinate system
-    b'OUGV1',
-    b'OPHIG', # Eigenvectors in the basic coordinate system.
-
-    #----------------------
-    # mpc forces - gset - sort 1
-    b'OQMG1',
-
-    #----------------------
     # forces
     # OEF1X - Element forces with intermediate (CBAR and CBEAM) station forces
     #         and forces on nonlinear elements
+    # OEFx  - Element forces for shells/solids/rods
     b'OEF1X',
+    b'OEF1', b'OEF2',
+
+    # heat flux
+    b'HOEF1',
+
 
     # ---------------------------------------------
     # nx2019.2
@@ -359,7 +366,7 @@ NX_TABLE_CONTENT = {
     14: 'OUG - Eigenvector (solution set)',
     15: 'OUG - Displacement vector (solution set)',
     16: 'OUG - Velocity vector (solution set)',
-    17: 'OUG - Acceleration vector (solutin set)',
+    17: 'OUG - Acceleration vector (solution set)',
     18: 'OEE - Element strain energy',
     19: 'OGF - Grid point force balance',
     20: 'OES - Stresses at grid points',

@@ -87,36 +87,19 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
             #continue
 
         if name in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM']:
-            if name == 'CTETRA':
-                key = (5508, 55, 217)
-                nnodes = 10
-                # 12 = eid, pid, n1, n2, n3, n4, ..., n10
-            elif name == 'CHEXA':
-                key = (7308, 73, 253)
-                nnodes = 20
-            elif name == 'CPENTA':
-                key = (4108, 41, 280)
-                nnodes = 15
-            elif name == 'CPYRAM':
-                key = (17200, 172, 1000)
-                nnodes = 13
-            else:  # pragma: no cover
-                raise NotImplementedError(name)
-            nfields = nnodes + 2
-            spack = Struct(endian + b'%ii' % (nfields))
+            itable = _write_solid(obj, name, eids, nelements, itable, op2, op2_ascii, endian)
+            continue
 
         elif name in mapper:
             key, spacki, nfields = mapper[name]
             spack = Struct(endian + spacki)
             #print(name, spacki)
         elif name == 'CBAR':
-            key = (2408, 24, 180)
-            spack = None
-            nfields = 16
+            itable = _write_cbar(obj, name, eids, nelements, itable, op2, op2_ascii, endian)
+            continue
         elif name == 'CBEAM':
-            key = (5408, 54, 261)
-            spack = None
-            nfields = 18
+            itable = _write_cbeam(obj, name, eids, nelements, itable, op2, op2_ascii, endian)
+            continue
         elif name == 'CBUSH':
             key = (2608, 26, 60)
             spack = None
@@ -142,28 +125,15 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         #if self.is_debug_file:
             #self.binary_debug.write('ndata=%s\n' % (nelements * 44))
 
-        nvalues = nfields * nelements + 3 # +3 comes from the keys
-        nbytes = nvalues * 4
-        op2.write(pack('3i', *[4, nvalues, 4]))
-        op2.write(pack('i', nbytes)) #values, nbtyes))
-
-        op2.write(pack('3i', *key))
-        op2_ascii.write('%s %s\n' % (name, str(key)))
+        nbytes = _write_intermediate_block(name, key, nfields, nelements, op2, op2_ascii)
 
         try:
             write_card(name, eids, spack, obj, op2, op2_ascii, endian)
         except:
             obj.log.error('failed GEOM2-%s' % name)
             raise
-        op2.write(pack('i', nbytes))
 
-        itable -= 1
-        data = [
-            4, itable, 4,
-            4, 1, 4,
-            4, 0, 4]
-        op2.write(pack('9i', *data))
-        op2_ascii.write(str(data) + '\n')
+        itable = _write_end_block(nbytes, itable, op2, op2_ascii)
 
     #-------------------------------------
     #print('itable', itable)
@@ -171,36 +141,188 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
 
     #-------------------------------------
 
-def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
-    op2_ascii.write('GEOM2-%s\n' % name)
-    if name in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM']:
-        if name == 'CTETRA':
-            nnodes = 10
-        elif name == 'CHEXA':
-            nnodes = 20
-        elif name == 'CPENTA':
-            nnodes = 15
-        elif name == 'CPYRAM':
-            nnodes = 13
-        else:  # pragma: no cover
-            raise NotImplementedError(name)
+def _write_intermediate_block(name, key, nfields, nelements, op2, op2_ascii):
+    """writes the start of the geometry block; goes in the middle of the writer"""
+    nvalues = nfields * nelements + 3 # +3 comes from the keys
+    nbytes = nvalues * 4
+    op2.write(pack('3i', *[4, nvalues, 4]))
+    op2.write(pack('i', nbytes)) #values, nbtyes))
 
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
-            nids = elem.node_ids
-            pid = elem.pid
-            if None in nids:
-                nids = [nid if nid is not None else 0 for nid in nids]
-            nnids = len(nids)
-            if nnids < nnodes:
-                nids2 = [0] * (nnodes - nnids)
-                data = [eid, pid] + nids + nids2
-            else:
-                data = [eid, pid] + nids
-            #print(name, data)
-            op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
-            op2.write(spack.pack(*data))
-    elif name == 'CHBDYP':
+    op2.write(pack('3i', *key))
+    op2_ascii.write('%s %s\n' % (name, str(key)))
+    return nbytes
+
+def _write_end_block(nbytes, itable, op2, op2_ascii):
+    """closes off the geometry block"""
+    op2.write(pack('i', nbytes))
+
+    itable -= 1
+    data = [
+        4, itable, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
+    return itable
+
+def _write_cbeam(obj, name, eids, nelements, itable, op2, op2_ascii, endian):
+    """writes the CBEAM"""
+    key = (5408, 54, 261)
+    spack = None
+    nfields = 18
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2, op2_ascii)
+
+    s1 = Struct(endian + b'6i3f3i6f')
+    s3 = Struct(endian + b'12i6f')
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        ga, gb = elem.node_ids
+        pid = elem.pid
+
+        # per DMAP: F = FE bit-wise AND with 3
+        #f = fe & 3
+        w1a, w2a, w3a = elem.wa
+        w1b, w2b, w3b = elem.wb
+        pa = elem.pa
+        pb = elem.pb
+        sa = elem.sa
+        sb = elem.sb
+        if elem.g0 is None:
+            x1, x2, x3 = elem.x
+            fe = 0
+            #(eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
+             #pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+            data = [
+                eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
+                pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
+            op2.write(s1.pack(*data))
+        else:
+            fe = 2
+            g0 = elem.g0
+            #(eid, pid, ga, gb, sa, sb, g0, xxa, xxb, fe,
+            # pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+            data = [
+                eid, pid, ga, gb, sa, sb, g0, 0, 0, fe,
+                pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
+            op2.write(s3.pack(*data))
+
+    itable = _write_end_block(nbytes, itable, op2, op2_ascii)
+    return itable
+
+def _write_cbar(obj, name, eids, nelements, itable, op2, op2_ascii, endian):
+    """writes the CBAR"""
+    key = (2408, 24, 180)
+    spack = None
+    nfields = 16
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2, op2_ascii)
+
+    s1 = Struct(endian + b'4i3f3i6f')
+    s3 = Struct(endian + b'7ii2i6f')
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        ga, gb = elem.node_ids
+        pid = elem.pid
+
+        # per DMAP: F = FE bit-wise AND with 3
+        #f = fe & 3
+        w1a, w2a, w3a = elem.wa
+        w1b, w2b, w3b = elem.wb
+        pa = elem.pa
+        pb = elem.pb
+        if elem.g0 is None:
+            x1, x2, x3 = elem.x
+            fe = 0
+            #(eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
+             #w1a, w2a, w3a, w1b, w2b, w3b) = out; fe=0
+             #(eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
+              #w1a, w2a, w3a, w1b, w2b, w3b) = out; fe=1
+            data = [
+                eid, pid, ga, gb, x1, x2, x3, fe, pa, pb,
+                w1a, w2a, w3a, w1b, w2b, w3b, ]
+            assert None not in data, 'CBAR-1; data=%s' % (data)
+            #print('CBAR data1 =', data)
+            op2.write(s1.pack(*data))
+        else:
+            fe = 2
+            g0 = elem.g0
+            #(eid, pid, ga, gb, g0, junk, junk, _f, pa,
+             #pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+            data = [
+                eid, pid, ga, gb, g0, 0, 0, fe, pa, pb,
+                w1a, w2a, w3a, w1b, w2b, w3b]
+            assert None not in data, 'CBAR-1; data=%s' % (data)
+            #print('CBAR data2 =', data)
+            op2.write(s3.pack(*data))
+
+        #if f == 0:
+            #out = s1.unpack(edata)
+            #(eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
+             #w1a, w2a, w3a, w1b, w2b, w3b) = out
+            #data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                       #[f, x1, x2, x3]]
+        #elif f == 1:
+            #out = s2.unpack(edata)
+            #(eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
+             #w1a, w2a, w3a, w1b, w2b, w3b) = out
+            #data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
+                       #[f, x1, x2, x3]]
+        #elif f == 2:
+            #out = s3.unpack(edata)
+            #(eid, pid, ga, gb, g0, junk, junk, _f, pa,
+             #pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
+            #data_in = [[eid, pid, ga, gb, pa, pb, w1a,
+                        #w2a, w3a, w1b, w2b, w3b], [f, g0]]
+        #else:
+            #raise RuntimeError('invalid f value...f=%s' % (f))
+        op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, ga, gb))
+
+    itable = _write_end_block(nbytes, itable, op2, op2_ascii)
+    return itable
+
+def _write_solid(model, name, eids, nelements, itable, op2, op2_ascii, endian):
+    """writes the solid elements"""
+    if name == 'CTETRA':
+        key = (5508, 55, 217)
+        nnodes = 10
+        # 12 = eid, pid, n1, n2, n3, n4, ..., n10
+    elif name == 'CHEXA':
+        key = (7308, 73, 253)
+        nnodes = 20
+    elif name == 'CPENTA':
+        key = (4108, 41, 280)
+        nnodes = 15
+    elif name == 'CPYRAM':
+        key = (17200, 172, 1000)
+        nnodes = 13
+    else:  # pragma: no cover
+        raise NotImplementedError(name)
+    nfields = nnodes + 2
+    spack = Struct(endian + b'%ii' % (nfields))
+
+    nbytes = _write_intermediate_block(name, key, nfields, nelements, op2, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        nids = elem.node_ids
+        pid = elem.pid
+        if None in nids:
+            nids = [nid if nid is not None else 0 for nid in nids]
+        nnids = len(nids)
+        if nnids < nnodes:
+            nids2 = [0] * (nnodes - nnids)
+            data = [eid, pid] + nids + nids2
+        else:
+            data = [eid, pid] + nids
+        #print(name, data)
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        op2.write(spack.pack(*data))
+
+    itable = _write_end_block(nbytes, itable, op2, op2_ascii)
+    return itable
+
+def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
+    """writes the GEOM2 elements"""
+    op2_ascii.write('GEOM2-%s\n' % name)
+    if name == 'CHBDYP':
         surface_type_str_to_int = {
             'POINT' : 1,
             'LINE' : 2,
@@ -353,101 +475,6 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
                 data = [eid, pid, ga, gb, g0, 0, 0, f, cid]
                 print('CGAP g0; x=%s gab0=%s data=%s' % (g0, [ga, gb, g0], data))
                 op2.write(structi.pack(*data))
-
-    elif name == 'CBAR':
-        s1 = Struct(endian + b'4i3f3i6f')
-        s3 = Struct(endian + b'7ii2i6f')
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
-            ga, gb = elem.node_ids
-            pid = elem.pid
-
-            # per DMAP: F = FE bit-wise AND with 3
-            #f = fe & 3
-            w1a, w2a, w3a = elem.wa
-            w1b, w2b, w3b = elem.wb
-            pa = elem.pa
-            pb = elem.pb
-            if elem.g0 is None:
-                x1, x2, x3 = elem.x
-                fe = 0
-                #(eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
-                 #w1a, w2a, w3a, w1b, w2b, w3b) = out; fe=0
-                 #(eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
-                  #w1a, w2a, w3a, w1b, w2b, w3b) = out; fe=1
-                data = [
-                    eid, pid, ga, gb, x1, x2, x3, fe, pa, pb,
-                    w1a, w2a, w3a, w1b, w2b, w3b, ]
-                assert None not in data, 'CBAR-1; data=%s' % (data)
-                #print('CBAR data1 =', data)
-                op2.write(s1.pack(*data))
-            else:
-                fe = 2
-                g0 = elem.g0
-                #(eid, pid, ga, gb, g0, junk, junk, _f, pa,
-                 #pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                data = [
-                    eid, pid, ga, gb, g0, 0, 0, fe, pa, pb,
-                    w1a, w2a, w3a, w1b, w2b, w3b]
-                assert None not in data, 'CBAR-1; data=%s' % (data)
-                #print('CBAR data2 =', data)
-                op2.write(s3.pack(*data))
-
-            #if f == 0:
-                #out = s1.unpack(edata)
-                #(eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
-                 #w1a, w2a, w3a, w1b, w2b, w3b) = out
-                #data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
-                           #[f, x1, x2, x3]]
-            #elif f == 1:
-                #out = s2.unpack(edata)
-                #(eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
-                 #w1a, w2a, w3a, w1b, w2b, w3b) = out
-                #data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
-                           #[f, x1, x2, x3]]
-            #elif f == 2:
-                #out = s3.unpack(edata)
-                #(eid, pid, ga, gb, g0, junk, junk, _f, pa,
-                 #pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                #data_in = [[eid, pid, ga, gb, pa, pb, w1a,
-                            #w2a, w3a, w1b, w2b, w3b], [f, g0]]
-            #else:
-                #raise RuntimeError('invalid f value...f=%s' % (f))
-            op2_ascii.write('  eid=%s pid=%s nids=[%s, %s]\n' % (eid, pid, ga, gb))
-    elif name == 'CBEAM':
-        s1 = Struct(endian + b'6i3f3i6f')
-        s3 = Struct(endian + b'12i6f')
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
-            ga, gb = elem.node_ids
-            pid = elem.pid
-
-            # per DMAP: F = FE bit-wise AND with 3
-            #f = fe & 3
-            w1a, w2a, w3a = elem.wa
-            w1b, w2b, w3b = elem.wb
-            pa = elem.pa
-            pb = elem.pb
-            sa = elem.sa
-            sb = elem.sb
-            if elem.g0 is None:
-                x1, x2, x3 = elem.x
-                fe = 0
-                #(eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
-                 #pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                data = [
-                    eid, pid, ga, gb, sa, sb, x1, x2, x3, fe,
-                    pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
-                op2.write(s1.pack(*data))
-            else:
-                fe = 2
-                g0 = elem.g0
-                #(eid, pid, ga, gb, sa, sb, g0, xxa, xxb, fe,
-                # pa, pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
-                data = [
-                    eid, pid, ga, gb, sa, sb, g0, 0, 0, fe,
-                    pa, pb, w1a, w2a, w3a, w1b, w2b, w3b]
-                op2.write(s3.pack(*data))
 
     elif name in ['CQUAD4', 'CQUADR']:
         for eid in sorted(eids):
