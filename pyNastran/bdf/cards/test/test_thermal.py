@@ -48,7 +48,7 @@ class TestThermal(unittest.TestCase):
         eid = 2
         Type = 'AREA3'
         chbdyg = CHBDYG(eid, Type, nodes,
-                        iview_front=0, ivew_back=0,
+                        iview_front=0, iview_back=0,
                         rad_mid_front=0, rad_mid_back=0,
                         comment='chbdyg')
         with self.assertRaises(ValueError):
@@ -56,7 +56,7 @@ class TestThermal(unittest.TestCase):
 
         Type = 'AREA4'
         chbdyg = model.add_chbdyg(eid, Type, nodes,
-                                  iview_front=0, ivew_back=0,
+                                  iview_front=0, iview_back=0,
                                   rad_mid_front=0, rad_mid_back=0,
                                   comment='chbdyg')
         chbdyg.raw_fields()
@@ -65,7 +65,7 @@ class TestThermal(unittest.TestCase):
         eid2 = 4
         side = 1
         chbdye = model.add_chbdye(eid, eid2, side,
-                                  iview_front=0, ivew_back=0,
+                                  iview_front=0, iview_back=0,
                                   rad_mid_front=0, rad_mid_back=0,
                                   comment='chbdye')
         chbdye.raw_fields()
@@ -74,10 +74,12 @@ class TestThermal(unittest.TestCase):
         g1 = 11
         g2 = 12
         pid = 10
+        # fails on AREA4 because op2 doesn't support it
+        Type = 'LINE'
         chbdyp = model.add_chbdyp(
             eid, pid, Type, g1, g2,
             g0=0, gmid=None, ce=0,
-            iview_front=0, ivew_back=0,
+            iview_front=0, iview_back=0,
             rad_mid_front=0, rad_mid_back=0,
             e1=None, e2=None, e3=None,
             comment='chbdyp')

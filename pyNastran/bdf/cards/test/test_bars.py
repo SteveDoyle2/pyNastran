@@ -183,7 +183,8 @@ class TestBars(unittest.TestCase):
         nids = [10, 20]
         x = None
         g0 = 30
-        model.add_cbar(eid, pid, nids, x, g0, comment='cbar')
+        cbar = model.add_cbar(eid, pid, nids, x, g0, comment='cbar')
+        cbar.write_card_16(is_double=False)
 
         E = 1.0e7
         G = None
@@ -577,6 +578,19 @@ class TestBars(unittest.TestCase):
         card_lines = ['CBAR', eid, pid, n1, n2]
         model.add_card(card_lines, 'CBAR', comment='', is_list=True, has_none=True)
         model.pop_parse_errors()
+        save_load_deck(model)
+
+    def test_baror_2(self):
+        model = BDF(debug=False)
+        pid = 12
+        is_g0 = True
+        g0 = 42
+        x = None
+        baror = model.add_baror(pid, is_g0, g0, x, offt='GGG', comment='baror')
+        baror.raw_fields()
+        baror.write_card(size=8)
+        baror.write_card(size=16)
+        save_load_deck(model)
 
     def test_cbend(self):
         """tests a CBEND"""
@@ -624,6 +638,7 @@ class TestBars(unittest.TestCase):
         x = None
         g0 = 4
         cbeam3 = model.add_cbeam3(eid, pid, nids, x, g0, wa=None, wb=None, wc=None, tw=None, s=None, comment='cbeam3')
+        cbeam3.raw_fields()
 
         A = 1.
         iz = 2.

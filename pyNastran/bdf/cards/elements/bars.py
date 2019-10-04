@@ -178,6 +178,8 @@ class BAROR(BaseCard):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
+        if x is None:
+            x = np.array([0., 0., 0.])
         self.n = 0
         self.pid = pid
         self.is_g0 = is_g0

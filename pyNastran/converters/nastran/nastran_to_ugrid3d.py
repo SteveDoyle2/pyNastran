@@ -12,6 +12,7 @@ import os
 from struct import Struct
 from numpy import array, unique #, hstack
 
+from cpylog import get_logger2
 from pyNastran.utils import check_path
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
@@ -23,7 +24,7 @@ from pyNastran.converters.aflr.ugrid.ugrid_reader import (
 
 def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugrid_filename_out,
                                               pshell_pids_to_remove,
-                                              update_equivalence=True, tol=0.01):
+                                              update_equivalence=True, tol=0.01, log=None):
     """
     assumes cid=0
 
@@ -44,13 +45,14 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
     """
     #base, ext = os.path.splitext(ugrid_filename_out)
     #bdf_filename = base + '.bdf'
-    print('merge_ugrid3d_and_bdf_to_ugrid3d_filename - bdf_filename = ', bdf_filename)
-    print('merge_ugrid3d_and_bdf_to_ugrid3d_filename - ugrid_filename = ', ugrid_filename)
+    log = get_logger2(log, debug=True)
+    log.debug(f'merge_ugrid3d_and_bdf_to_ugrid3d_filename - bdf_filename = {bdf_filename}')
+    log.debug(f'merge_ugrid3d_and_bdf_to_ugrid3d_filename - ugrid_filename = {ugrid_filename}')
 
     if update_equivalence:
         bdf_filename2 = equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
                                                            pshell_pids_to_remove,
-                                                           tol, renumber=True)
+                                                           tol, renumber=True, log=log)
     else:
         base = os.path.splitext(bdf_filename)[0]
         #bdf_merged_filename = base + '_merged.bdf'
@@ -58,8 +60,8 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
         bdf_renumber_filename = base + '_renumber.bdf'
         bdf_filename2 = bdf_renumber_filename
 
-    print('**** bdf_filename2 = ', bdf_filename2)
-    model = read_bdf(bdf_filename2, xref=False)
+    log.debug(f'**** bdf_filename2 = {bdf_filename2}')
+    model = read_bdf(bdf_filename2, xref=False, log=log)
 
     outi = determine_dytpe_nfloat_endian_from_ugrid_filename(ugrid_filename)
     ndarray_float, float_fmt, nfloat, endian, ugrid_filename = outi
@@ -196,7 +198,7 @@ def merge_ugrid3d_and_bdf_to_ugrid3d_filename(ugrid_filename, bdf_filename, ugri
 
 def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
                                        pshell_pids_to_remove,
-                                       tol=0.01, renumber=True):
+                                       tol=0.01, renumber=True, log=None):
     """
     Merges a UGRID3D (*.ugrid) with a BDF and exports a BDF that is
     equivalenced and renumbered.
@@ -218,8 +220,9 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
     out_bdf_filename : str
         the output BDF filename
     """
-    print('equivalence_ugrid3d_and_bdf_to_bdf - bdf_filename=%s' % bdf_filename)
-    print('equivalence_ugrid3d_and_bdf_to_bdf - ugrid_filename=%s' % ugrid_filename)
+    log = get_logger2(log, debug=True)
+    log.info(f'equivalence_ugrid3d_and_bdf_to_bdf - bdf_filename={bdf_filename}')
+    log.info(f'equivalence_ugrid3d_and_bdf_to_bdf - ugrid_filename={ugrid_filename}')
     check_path(ugrid_filename, 'ugrid_filename')
 
     base = os.path.splitext(bdf_filename)[0]
@@ -229,10 +232,10 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
 
     update_merge = True
     if update_merge:
-        ugrid_model = UGRID(log=None, debug=False)
+        ugrid_model = UGRID(log=log, debug=False)
         ugrid_model.read_ugrid(ugrid_filename)
 
-        bdf_model = read_bdf(bdf_filename, xref=False)
+        bdf_model = read_bdf(bdf_filename, xref=False, log=log)
         #bdf_model.write_bdf(bdf_merged_filename, interspersed=False, enddata=False)
 
         tol = 0.01
@@ -292,7 +295,7 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
         bdf_model.write_bdf('model_join.bdf', interspersed=False)
         bdf_model.cross_reference()
         bdf_equivalence_nodes(bdf_model, bdf_equivalence_filename, tol,
-                              renumber_nodes=False, neq_max=10, xref=False)
+                              renumber_nodes=False, neq_max=10, xref=False, log=log)
 
     if renumber:
         starting_ids_dict = {
@@ -303,7 +306,7 @@ def equivalence_ugrid3d_and_bdf_to_bdf(ugrid_filename, bdf_filename,
             'mid' : 1,
         }
         bdf_renumber(bdf_equivalence_filename, bdf_renumber_filename, size=16, is_double=False,
-                     starting_id_dict=starting_ids_dict)
+                     starting_id_dict=starting_ids_dict, log=log)
         #os.remove(bdf_equivalence_filename)
         out_bdf_filename = bdf_renumber_filename
     else:

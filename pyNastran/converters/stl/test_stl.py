@@ -9,6 +9,7 @@ import pyNastran
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran, stl_to_nastran_filename
 from pyNastran.converters.stl.stl_to_cart3d import stl_to_cart3d
+from pyNastran.converters.type_converter import cmd_line_format_converter
 
 warnings.simplefilter('always')
 np.seterr(all='raise')
@@ -172,12 +173,19 @@ class TestSTL(unittest.TestCase):
         log = get_logger(level='warning')
         stl_filename = os.path.join(TEST_PATH, 'sphere.stl')
         bdf_filename_8 = os.path.join(TEST_PATH, 'sphere_8.bdf')
+        bdf_filename_8b = os.path.join(TEST_PATH, 'sphere_8b.bdf')
         bdf_filename_16 = os.path.join(TEST_PATH, 'sphere_16.bdf')
         bdf_filename_double = os.path.join(TEST_PATH, 'sphere_double.bdf')
         stl_to_nastran_filename(stl_filename, bdf_filename_8, log=log)
         stl_to_nastran(stl_filename, bdf_filename_16, size=16, log=log)
         stl_to_nastran(stl_filename, bdf_filename_double, size=16, is_double=True, log=log)
+
+        argv = ['format_converter', 'stl', stl_filename,
+                'nastran', bdf_filename_8b]
+        cmd_line_format_converter(argv=argv, quiet=True)
+
         os.remove(bdf_filename_8)
+        os.remove(bdf_filename_8b)
         os.remove(bdf_filename_16)
         os.remove(bdf_filename_double)
 
@@ -185,7 +193,10 @@ class TestSTL(unittest.TestCase):
         log = get_logger(level='warning')
         stl_filename = os.path.join(TEST_PATH, 'sphere.stl')
         cart3d_filename = os.path.join(TEST_PATH, 'sphere.tri')
-        stl_to_cart3d(stl_filename, cart3d_filename, log=log)
+        #stl_to_cart3d(stl_filename, cart3d_filename, log=log)
+        argv = ['format_converter', 'stl', stl_filename,
+                'cart3d', cart3d_filename]
+        cmd_line_format_converter(argv=argv, quiet=True)
         os.remove(cart3d_filename)
 
 def main():  # pragma: no cover

@@ -51,11 +51,48 @@ commercial program.
 # News
 
 <!---
-### pyNastran v1.3 has not been released (2019/4/15xx)
+### pyNastran v1.3 has not been released (2019/10/15xx)
+
+
+Programmatics:
+ - Supports Python 3.7 and 3.8
+ - Dropping Python 2.7 and 3.6 support
+ - GUI is compatible with PyQt5 and PySide2
+ - improved testing of old versions of packages
+ 
+BDF:
+ - 383 cards supported (up from 373)
+ - improved mesh utilities
+    - bdf mirror, bdf convert, bdf export_caero_mesh
+    - additional `bdf scale`, which takes arbitrary mass, length, time, pressure, or velocity scale factors (3 of 5) to apply a scaling law
+ - improved bdf_mirror
+ - improved bdf_convert
+ - impo
 OP2:
  - OP2 write support
+ - fixed pandas deprecation warnings/added support for pandas 0.25 
+ - much improved NX 2019.2 support
+   - various geometry cards added
+   - additional results:
+       - random stress/strain (OESVM1/2, OESVM1C, OSTRVM1/2, OSTRVM2, OESXRM1C, OESXNO1, OESXNO1C)
+       - eigenvectors (BOPHIGF)
+       - grid point forces SORT2 (OGPFB2)
+     - temperature (OTEMP1)
+     - other (XSOP2DIR)
+   - some SOL 401/402 results added
+     - eigenvalue_fluid (LAMAF, LAMAS)
+     - eigenvectors (BOPHIGF, BOPHIGS)
+     - solution set
+       - results: displacement, velocity, acceleration, eigenvectors:
+       - tables: OUXY1, OUXY2, OPHSA
+ - supports more PARAM reading
  - TODO: stress transforms.  This is probably a bit of work.
  - TODO: CD transforms for cylindrical/spherical displacement, velocity, acceleration, forces.  This shouldn't be terrible.
+
+GUI:
+ - partial custom results many now be loaded
+ - much improved ASCII tecplot reader
+ - added export result option to right-click menu
 
 This should be hidden...
 

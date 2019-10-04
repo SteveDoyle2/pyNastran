@@ -874,8 +874,7 @@ class AddMethods(BDFAttributes):
             #self.aeroz[key] = aeroz
             #self._type_to_id_map[aeroz.type].append(key)
 
-    def _add_baror_object(self, baror):
-        # type: (Any) -> None
+    def _add_baror_object(self, baror: Any) -> None:
         """adds an BAROR object"""
         # only one BAROR card allowed
         assert self.baror is None, '\nBAROR=\n%s old=\n%s' % (baror, self.baror)

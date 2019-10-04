@@ -653,7 +653,6 @@ class UGRID:
         if nquads:
             quads = zeros((nquads, 4), dtype='int32')
 
-        print('ntris=%s nquads=%s' % (ntris, nquads))
         ntri_start = 0
         nquad_start = 0
         if ntets:

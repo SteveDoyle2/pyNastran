@@ -13,12 +13,8 @@ if IS_MATPLOTLIB:
 #import warnings
 #warnings.filterwarnings('ignore', 'missing __init__.py*')
 from pyNastran.gui.qt_version import qt_version
-if qt_version == 'pyqt4':
-    import PyQt4  # pylint: disable=unused-import
-elif qt_version == 'pyqt5':
+if qt_version == 'pyqt5':
     import PyQt5  # pylint: disable=unused-import
-elif qt_version == 'pyside':
-    import PySide  # pylint: disable=unused-import
 elif qt_version == 'pyside2':
     import PySide2  # pylint: disable=unused-import
 else:  # pragma: no cover
