@@ -250,7 +250,7 @@ class TestMaterials(unittest.TestCase):
         model.pop_xref_errors()
         #matt3.write_card(size=16, is_double=False)
 
-        save_load_deck(model, run_op2_writer=False)
+        save_load_deck(model)
 
     def test_mat4_01(self):
         """tests MAT4, MATT4"""
@@ -546,7 +546,7 @@ class TestMaterials(unittest.TestCase):
         mat3d.write_card(size=16, is_double=False)
         mat3d.write_card(size=16, is_double=True)
         save_load_deck(model, xref='standard', punch=True,
-                       run_remove_unused=False, run_op2_writer=False)
+                       run_remove_unused=False)
         #mat = MAT11(mid, e1, e2, e3, nu12, nu13, nu23, g12, g13, g23,
                     #rho=0.0, a1=0.0, a2=0.0, a3=0.0, tref=0.0, ge=0.0, comment='')
 

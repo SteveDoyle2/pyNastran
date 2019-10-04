@@ -51,19 +51,17 @@ class TestParametric(unittest.TestCase):
 
         #model.write_bdf
         save_load_deck(model, xref='standard', punch=True,
-                      run_remove_unused=False,
-                      run_convert=False,
-                      run_renumber=False,
-                      run_mirror=False,
-                      run_save_load=True,
-                      run_quality=False,
-                      write_saves=True,
-                      run_save_load_hdf5=True,
-                      run_mass_properties=False,
-                      run_loads=False,
-                      run_test_bdf=False,
-                      run_op2_writer=False,
-                      run_op2_reader=False)
+                       run_remove_unused=False,
+                       run_convert=False,
+                       run_renumber=False,
+                       run_mirror=False,
+                       run_save_load=True,
+                       run_quality=False,
+                       write_saves=True,
+                       run_save_load_hdf5=True,
+                       run_mass_properties=False,
+                       run_loads=False,
+                       run_test_bdf=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

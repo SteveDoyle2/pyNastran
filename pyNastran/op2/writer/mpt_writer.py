@@ -18,7 +18,7 @@ def write_mpt(op2, op2_ascii, model, endian=b'<'):
         'MATS3', 'MATS8',
         'MATT3', 'MATT9',
         #  other
-        'NLPARM', 'NLPCI', 'TSTEPNL',
+        'NLPARM', 'NLPCI', 'TSTEPNL', 'MAT3D',
         'RADBC',
     ]
     # these are specifically for material dependency objects (e.g., model.MATS1)

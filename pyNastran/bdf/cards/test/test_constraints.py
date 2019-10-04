@@ -216,7 +216,7 @@ class TestConstraints(unittest.TestCase):
         model.add_grid(4, [0., 0., 0.])
         model.cross_reference()
         check_mpc_spc(model)
-        save_load_deck(model, run_op2_writer=False)
+        save_load_deck(model)
 
     def test_spcadd(self):
         """tests SPCADD"""
@@ -331,7 +331,7 @@ class TestConstraints(unittest.TestCase):
         model.safe_cross_reference()
         str(gmspc)
         check_mpc_spc(model)
-        save_load_deck(model, run_op2_writer=False)
+        save_load_deck(model)
 
     def test_spcax(self):
         """tests SPCAX"""
@@ -356,7 +356,7 @@ class TestConstraints(unittest.TestCase):
         model.safe_cross_reference()
         str(spcax)
         check_mpc_spc(model)
-        save_load_deck(model, run_op2_writer=False)
+        save_load_deck(model)
 
 def check_card(msg_expected, msg_actual):
     if isinstance(msg_expected, tuple):

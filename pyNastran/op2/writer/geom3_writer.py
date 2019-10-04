@@ -20,6 +20,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
     # return if no supported cards are found
     cards_to_skip = [
+        'CLOAD',
     ]
     supported_cards = [
         'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -57,7 +58,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
         #elif load_type not in supported_cards:
             #continue
-        print('GEOM3', itable, load_type)
+        #print('GEOM3', itable, load_type)
         try:
             nbytes = write_card(op2, op2_ascii, load_type, loads, endian, obj.log,
                                 nastran_format=nastran_format)

@@ -261,7 +261,7 @@ class TestDampers(unittest.TestCase):
         model._verify_bdf()
         model.cross_reference()
         model._verify_bdf()
-        save_load_deck(model, xref='standard', punch=True, run_op2_writer=False)
+        save_load_deck(model, xref='standard', punch=True)
 
 
     def test_pdamp(self):

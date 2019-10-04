@@ -786,7 +786,7 @@ class TestOP2(Tester):
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         model.safe_cross_reference()
-        save_load_deck(model, run_op2_writer=False)  # nsm problem
+        save_load_deck(model)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
@@ -930,7 +930,7 @@ class TestOP2(Tester):
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         model.safe_cross_reference()
-        save_load_deck(model, run_op2_writer=False,)
+        save_load_deck(model)
 
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False, write_hdf5=False,
@@ -1098,7 +1098,10 @@ class TestOP2(Tester):
 
         model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         model.safe_cross_reference()
-        #save_load_deck(model, xref=False, run_renumber=False, run_op2_writer=False)
+
+        # run_op2_reader - super strange PLOAD4 bug
+        #save_load_deck(model, xref=False, run_renumber=False,
+                       #run_op2_reader=False, run_op2_writer=False)
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,

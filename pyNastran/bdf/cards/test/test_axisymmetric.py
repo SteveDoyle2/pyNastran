@@ -96,8 +96,7 @@ class TestAxi(unittest.TestCase):
         cconeax.raw_fields()
         pconeax.raw_fields()
         axic.raw_fields()
-        save_load_deck(model, run_convert=False, run_mass_properties=False, run_test_bdf=False,
-                       run_op2_writer=False)
+        save_load_deck(model, run_convert=False, run_mass_properties=False, run_test_bdf=False)
 
 
 if __name__ == '__main__':  # pragma: no cover

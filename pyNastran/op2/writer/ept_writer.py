@@ -12,6 +12,10 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
         out[phbdy.type].append(pid)
     for pid, pelast in obj.pelast.items():
         out[pelast.type].append(pid)
+    for pid, pdampt in obj.pdampt.items():
+        out[pdampt.type].append(pid)
+    for pid, pbusht in obj.pbusht.items():
+        out[pbusht.type].append(pid)
 
     #if not hasattr(obj, 'nodes'):
         #return
