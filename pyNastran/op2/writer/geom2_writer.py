@@ -73,7 +73,6 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
         'CQUADX4' : ((6112, 61, 997), b'6if', 7),
         'CQUADX8' : ((6114,61,999),  b'10if', 11),
         'CTRAX6' : ((6113, 61, 998), b'8if', 9),
-        #'PLOTEL' : (, , ),
     }
     for name, eids in sorted(out.items()):
         nelements = len(eids)

@@ -338,7 +338,7 @@ class CodeAsterConverter(BDF):
                     msg += "VALE=(%g,0.,0.)\n" % self.k
                 elif self.c1 == 2:
                     msg += "VALE=(0.,%g,0.)\n" % self.k
-                elif self.c1 == 2:
+                elif self.c1 == 3:
                     msg += "VALE=(0.,0.,%g)\n" % self.k
                 else:
                     raise ValueError('unsupported value of c1=%s' % self.c1)
@@ -734,6 +734,38 @@ def code_aster_beam_section(prop, iface, istart, dims):
     msg2 += '1)\n'
     msg2 += "geompy.addToStudy(Face_%i, 'Face_%i')\n" % (iface, iface)
     return msg1 + msg2
+
+def write_rbe2(rigid_element):
+    """
+    Converts to a LIAISON SOLIDE for dofs 123456.
+    For other dof combinations, general MPC equations are written
+    """
+    msg = ''
+    msg += "BLOCAGE=AFFE_CHAR_MECA(  # RBE2 ID=%s\n" % (rigid_element.eid)
+    msg += "        MODELE=MODELE,\n"  # rigid element
+    if rigid_element.cm == 123456:
+        msg += "        LIASON_SOLIDE=(\n"
+        msg += "        _F(NOEUD=\n"
+        msg += "           "
+        for nid in rigid_element.Gmi:
+            msg += "'N%i'," % (nid)
+        msg = msg[:-1]
+        msg += '\n'
+    else:
+        msg += "        _F(NOEUD=  # doesnt handle coordinate systems\n"
+        msg += "           "
+        for nid in rigid_element.Gmi:
+            msg += "'N%i'," % (nid)
+        msg = msg[:-1]
+        msg += '\n'
+    return msg
+
+#def write_rbar(self):
+    #msg = ''
+    #msg += "BLOCAGE=AFFE_CHAR_MECA(  # RBAR\n"
+    #msg += "        MODELE=MODELE,\n"  # rigid element
+    #msg += "        \n"
+    #return msg
 
 
 
