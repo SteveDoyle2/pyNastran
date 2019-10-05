@@ -312,7 +312,7 @@ MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
     b'AEMONPT',
     #b'KDICT',
 ]
-if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):
+if len(MSC_RESULT_TABLES) != len(np.unique(MSC_RESULT_TABLES)):  # pragma: no cover
     counter = Counter(MSC_RESULT_TABLES)
     _MSG = 'Invalid count:\n'
     for key, cvaluei in counter.items():

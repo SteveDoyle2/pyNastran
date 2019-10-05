@@ -129,6 +129,7 @@ def element_slice(tecplot, data):
     # if zslice is not None:
         # zslice = data['--zz']
         # tecplot.slice_z(zslice)
+    #print(tecplot)
     tecplot.slice_xyz(xslice, yslice, zslice)
 
 
@@ -217,7 +218,7 @@ def process_ugrid(ugrid_filename, fmt2, fname2, log, data=None, quiet=False):
     elif fmt2 == 'tecplot':
         from pyNastran.converters.aflr.ugrid.ugrid3d_to_tecplot import ugrid_to_tecplot
         # ugrid_to_tecplot(model, fname2)
-        tecplot = ugrid_to_tecplot(model)
+        tecplot, unused_zone = ugrid_to_tecplot(model)
         element_slice(tecplot, data)
         tecplot_filename = fname2
         tecplot.write_tecplot(tecplot_filename)

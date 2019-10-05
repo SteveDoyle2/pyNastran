@@ -1,4 +1,5 @@
 from numpy import vstack
+from cpylog import get_logger2
 from pyNastran.converters.stl.stl import STL
 
 
@@ -32,6 +33,7 @@ def merge_stl_files(stl_filenames, stl_out_filename=None, remove_bad_elements=Fa
     assert isinstance(stl_filenames, (list, tuple)), type(stl_filenames)
     assert len(stl_filenames) > 0, stl_filenames
 
+    log = get_logger2(log=log, debug=False, encoding='utf-8')
     if len(stl_filenames) == 1:
         model = STL(log=log)
         model.read_stl(stl_filenames[0])
@@ -45,7 +47,8 @@ def merge_stl_files(stl_filenames, stl_out_filename=None, remove_bad_elements=Fa
     elements = []
 
     n0 = 0
-    for fname in stl_filenames:
+    for i, fname in enumerate(stl_filenames):
+        log.debug(f'reading file {i}: {fname}')
         model = STL(log=log)  # TODO: you shouldn't need to to reinstantiate the STL
         model.read_stl(fname)
         nnodes = model.nodes.shape[0]

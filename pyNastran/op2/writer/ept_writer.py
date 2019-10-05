@@ -42,7 +42,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
     skip_properties = [
         'PBEND', 'PBUSH',  #'PBUSH1D',
         'PBCOMP',
-        'PGAP',
+        #'PGAP',
         #'PCOMPG',
 
     ]
@@ -54,6 +54,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             obj.log.warning('skipping EPT-%s' % name)
             continue
 
+        #print('EPT', itable, name)
         if name == 'PBARL':
             key = (9102, 91, 52)
             itable = write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=endian)
@@ -86,7 +87,7 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
             nfields = 5
             spack = Struct(endian + b'2i3f')
         elif name == 'PGAP':
-            key = (3201, 32, 55)
+            key = (2102, 21, 121)
             nfields = 11
             spack = Struct(endian + b'i10f')
         elif name == 'PBAR':
@@ -191,118 +192,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             data = [pid, prop.ce, prop.cr]
             op2.write(spack.pack(*data))
     elif name == 'PBUSH1D':
-        type_map = {
-            None : 0,  # NULL
-            'EQUAT' : 1,
-            'TABLE' : 2,
-        }
-
-        alpha = 0.
-        for pid in sorted(pids):
-            prop = obj.properties[pid]
-            #print(prop.get_stats())
-            #(pid, k, c, m, unused_alpha, sa, se,
-             #typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
-             #types, idts, idcs, idtdus, idcdus,
-             #typed, idtd, idcd, idtdvd, idcdvd,
-             #typeg, idtg, idcg, idtdug, idcdug, idtdvg, idcdvg,
-             #typef, idtf, idcf,
-             #unused_ut, unused_uc) = out
-
-            typea = cvt = cvc = expvt = expvc = idtsu = idtcu = idtsud = idcsud = 0
-            if 'SHOCKA' in prop.vars:
-                #optional_vars['SHOCKA'] = [typea_str, cvt, cvc, expvt, expvc,
-                                           #idts, idets, idtcu, idtsud, idcsud]
-                #shock_cvc : None
-                #shock_cvt : 1000.0
-                #shock_exp_vc : 1.0
-                #shock_exp_vt : 1.0
-                #shock_idecs : None
-                #shock_idecsd : None
-                #shock_idets : None
-                #shock_idetsd : None
-                #shock_idts : None
-                #shock_type : 'TABLE'
-                typea = type_map[prop.shock_type]
-                cvt = prop.shock_cvc if prop.shock_cvc is not None else 0
-                cvc = prop.shock_cvt if prop.shock_cvt is not None else 0
-                expvt = prop.shock_exp_vc if prop.shock_exp_vc is not None else 0
-                expvc = prop.shock_exp_vt if prop.shock_exp_vt is not None else 0
-                idtsu = prop.shock_idts if prop.shock_idts is not None else 0
-                idtcu = prop.shock_idecs if prop.shock_idecs is not None else 0
-                idtsud = prop.shock_idetsd if prop.shock_idetsd is not None else 0
-                idcsud = prop.shock_idecsd if prop.shock_idecsd is not None else 0
-
-            types = idts = idcs = idtdus = idcdus = 0
-            if 'SPRING' in prop.vars:
-                #optional_vars['SPRING'] = [types_str, idts, idcs, idtdus, idcdus]
-                #spring_idc : None
-                #spring_idcdu : None
-                #spring_idt : 205
-                #spring_idtc : None
-                #spring_idtdu : None
-                #spring_type : 'TABLE'
-                types = type_map[prop.spring_type]
-                idts = prop.spring_idt if prop.spring_idt is not None else 0
-                idcs = prop.spring_idc if prop.spring_idc is not None else 0
-                idtdus = prop.spring_idtdu if prop.spring_idtdu is not None else 0
-                idcdus = prop.spring_idcdu if prop.spring_idcdu is not None else 0
-
-            typed = idtd = idtd = idtdvd = idcdvd = 0
-            if 'DAMPER' in prop.vars:
-                #optional_vars['DAMPER'] = [typed_str, idtd, idcd, idtdvd, idcdvd]
-                #damper_idc : None
-                #damper_idcdv : None
-                #damper_idt : 206
-                #damper_idtdv : None
-                #damper_type : 'TABLE'
-                typed = type_map[prop.damper_type]
-                idtd = prop.damper_idt if prop.damper_idt is not None else 0
-                idcd = prop.damper_idc if prop.damper_idc is not None else 0
-                idtdvd = prop.damper_idtdv if prop.damper_idtdv is not None else 0
-                idcdvd = prop.damper_idcdv if prop.damper_idcdv is not None else 0
-
-            typeg = idtg = idcg = idtdug = idcdug = idtdvg = idcdvg = 0
-            if 'GENER' in prop.vars:
-                #typeg = type_map[typeg_str]
-                #optional_vars['GENER'] = [idtg, idcg, idtdug, idcdug, idtdvg, idcdvg]
-                gener
-
-            typef = idtf = idcf = 0  #type_map[typef_str]  # FUSE...what is this???
-            ut = uc = 0
-            data = [pid, prop.k, prop.c, prop.m, alpha, prop.sa, prop.se,
-                    typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
-                    types, idts, idcs, idtdus, idcdus,
-                    typed, idtd, idtd, idtdvd, idcdvd,
-                    typeg, idtg, idcg, idtdug, idcdug, idtdvg, idcdvg,
-                    typef, idtf, idcf,
-                    ut, uc]
-            assert len(data) == 38, len(data)
-            op2.write(spack.pack(*data))
-        #ntotal = 152  # 38*4
-        #struct1 = Struct(self._endian + b'i 6f i 4f 24i 2f')
-        #nentries = (len(data) - n) // ntotal
-        #for unused_i in range(nentries):
-            #edata = data[n:n+152]
-            #out = struct1.unpack(edata)
-            ##  test_op2_other_05
-            ##pbush1d, 204, 1.e+5, 1000., , , , , , +pb1
-            ##+pb1, spring, table, 205, , , , , , +pb2
-            ##+pb2, damper, table, 206
-            ##pid=204 k=100000.0 c=1000.0 m=0.0 sa=nan se=nan
-
-
-            #msg = f'PBUSH1D pid={pid} k={k} c={c} m={m} sa={sa} se={se}'
-            #optional_vars = {}
-            #typea_str = type_map[typea]
-            #types_str = type_map[types]
-            #typed_str = type_map[typed]
-            #unused_typeg_str = type_map[typeg]
-            #unused_typef_str = type_map[typef]
-
-            #if min([typea, types, typed, typeg, typef]) < 0:
-                #raise RuntimeError(f'typea={typea} types={types} typed={typed} typeg={typeg} typef={typef}')
-
+        _write_pbush1d(name, obj, pids, spack, op2, op2_ascii, endian)
     elif name == 'PTUBE':
         #.. todo:: OD2 only exists for heat transfer...
         #          how do i know if there's heat transfer?
@@ -340,107 +230,7 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
             assert None not in data, data
             op2.write(spack.pack(*data))
     elif name == 'PBEAM':  # probably wrong stations
-        struct1 = Struct(endian + b'4if')
-        struct2 = Struct(endian + b'16f')
-        struct3 = Struct(endian + b'16f')
-        for pid in sorted(pids):
-            nfieldsi = 0
-            prop = obj.properties[pid]
-            nsegments = len(prop.xxb)
-            if nsegments == 1:
-                #  ccf = constant cross section flag
-                ccf = 1 # True
-                #print(prop.get_stats())
-            elif nsegments == 2:
-                #  ccf = constant cross section flag
-                ccf = 1 # True
-            elif nsegments > 2:
-                ccf = 0 # False
-            else:
-                raise NotImplementedError(nsegments)
-
-            #(pid, mid, nsegments, ccf, x) = data_in
-            x = 0.
-            data = [pid, prop.mid, nsegments, ccf, x]
-            nfieldsi += len(data)
-            op2.write(struct1.pack(*data))
-
-            nzero_segments = nsegments - 1
-            j = 0
-            for i in range(11):
-                if i > nzero_segments:
-                    data = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                            0., 0., 0., 0., 0., 0.]
-                else:
-                    #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
-                     #d1, d2, e1, e2, f1, f2) = pack
-                    xxb = prop.xxb[j]
-                    so_str = prop.so[j]
-                    a = prop.A[j]
-                    i1 = prop.i1[j]
-                    i2 = prop.i2[j]
-                    i12 = prop.i12[j]
-                    nsm = prop.nsm[j]
-                    c1 = prop.c1[j]
-                    c2 = prop.c2[j]
-                    d1 = prop.d1[j]
-                    d2 = prop.d2[j]
-                    e1 = prop.e1[j]
-                    e2 = prop.e2[j]
-                    f1 = prop.f1[j]
-                    f2 = prop.f2[j]
-
-                    if so_str == 'NO':
-                        soi = 0.0
-                    elif so_str == 'YES':
-                        soi = 1.0
-                    elif so_str == 'YESA':  # TODO: not sure...
-                        soi = 1.0
-                    else:
-                        try:
-                            soi = float(so_str)
-                        except ValueError:  # pragma: no cover
-                            print(prop.get_stats())
-                            raise NotImplementedError('SO=%s SO%s=%r' % (prop.so, j, so_str))
-                    j += 1
-                    data = [
-                        soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
-                        d1, d2, e1, e2, f1, f2]
-                    #so_str = str(soi)
-                assert None not in data, data
-                nfieldsi += len(data)
-                op2.write(struct2.pack(*data))
-
-            #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
-
-            # Constant cross-section flag: 1=yes and 0=no
-            # what is 2?
-            #if ccf not in [0, 1, 2]:
-                #msg = ('  PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s; '
-                       #'ccf must be in [0, 1, 2]\n' % tuple(data_in))
-                #raise ValueError(msg)
-
-            #(k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
-             #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = endpack # 8 -> 16
-            data = [
-                prop.k1, prop.k2, prop.s1, prop.s2,
-                prop.nsia, prop.nsib,
-                prop.cwa, prop.cwb,
-                prop.m1a, prop.m2a, prop.m1b, prop.m2b,
-                prop.n1a, prop.n2a, prop.n1b, prop.n2b,
-            ]
-            #k1 / k2 : float; default=1.
-            #s1 / s2 : float; default=0.
-            #nsia / nsia : float; default=0. / nsia
-            #cwa / cwb : float; default=0. / cwa
-            #m1a / m2a : float; default=0. / m1a
-            #m1b / m2b : float; default=0. / m1b
-            #n1a / n2a : float; default=0. / n1a
-            #n1b / n2b : float; default=0. / n1b
-            assert None not in data, data
-            nfieldsi += len(data)
-            op2.write(struct3.pack(*data))
-            assert nfieldsi == 197, nfieldsi
+        _write_pbeam(name, obj, pids, op2, op2_ascii, endian)
 
     elif name == 'PSOLID':
         #pid = data[0]
@@ -830,3 +620,221 @@ def write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
     op2_ascii.write(str(data) + '\n')
 
     return itable
+
+def _write_pbeam(name, model, pids, op2, op2_ascii, endian):
+    struct1 = Struct(endian + b'4if')
+    struct2 = Struct(endian + b'16f')
+    struct3 = Struct(endian + b'16f')
+    for pid in sorted(pids):
+        nfieldsi = 0
+        prop = model.properties[pid]
+        nsegments = len(prop.xxb)
+        if nsegments == 1:
+            #  ccf = constant cross section flag
+            ccf = 1 # True
+            #print(prop.get_stats())
+        elif nsegments == 2:
+            #  ccf = constant cross section flag
+            ccf = 1 # True
+        elif nsegments > 2:
+            ccf = 0 # False
+        else:
+            raise NotImplementedError(nsegments)
+
+        #(pid, mid, nsegments, ccf, x) = data_in
+        x = 0.
+        data = [pid, prop.mid, nsegments, ccf, x]
+        nfieldsi += len(data)
+        op2.write(struct1.pack(*data))
+
+        nzero_segments = nsegments - 1
+        j = 0
+        for i in range(11):
+            if i > nzero_segments:
+                data = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                        0., 0., 0., 0., 0., 0.]
+            else:
+                #(soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                 #d1, d2, e1, e2, f1, f2) = pack
+                xxb = prop.xxb[j]
+                so_str = prop.so[j]
+                a = prop.A[j]
+                i1 = prop.i1[j]
+                i2 = prop.i2[j]
+                i12 = prop.i12[j]
+                nsm = prop.nsm[j]
+                c1 = prop.c1[j]
+                c2 = prop.c2[j]
+                d1 = prop.d1[j]
+                d2 = prop.d2[j]
+                e1 = prop.e1[j]
+                e2 = prop.e2[j]
+                f1 = prop.f1[j]
+                f2 = prop.f2[j]
+
+                if so_str == 'NO':
+                    soi = 0.0
+                elif so_str == 'YES':
+                    soi = 1.0
+                elif so_str == 'YESA':  # TODO: not sure...
+                    soi = 1.0
+                else:
+                    try:
+                        soi = float(so_str)
+                    except ValueError:  # pragma: no cover
+                        print(prop.get_stats())
+                        raise NotImplementedError('SO=%s SO%s=%r' % (prop.so, j, so_str))
+                j += 1
+                data = [
+                    soi, xxb, a, i1, i2, i12, j, nsm, c1, c2,
+                    d1, d2, e1, e2, f1, f2]
+                #so_str = str(soi)
+            assert None not in data, data
+            nfieldsi += len(data)
+            op2.write(struct2.pack(*data))
+
+        #self.log.info('PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s' % tuple(data_in))
+
+        # Constant cross-section flag: 1=yes and 0=no
+        # what is 2?
+        #if ccf not in [0, 1, 2]:
+            #msg = ('  PBEAM pid=%s mid=%s nsegments=%s ccf=%s x=%s; '
+                   #'ccf must be in [0, 1, 2]\n' % tuple(data_in))
+            #raise ValueError(msg)
+
+        #(k1, k2, s1, s2, nsia, nsib, cwa, cwb, # 8
+         #m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b) = endpack # 8 -> 16
+        data = [
+            prop.k1, prop.k2, prop.s1, prop.s2,
+            prop.nsia, prop.nsib,
+            prop.cwa, prop.cwb,
+            prop.m1a, prop.m2a, prop.m1b, prop.m2b,
+            prop.n1a, prop.n2a, prop.n1b, prop.n2b,
+        ]
+        #k1 / k2 : float; default=1.
+        #s1 / s2 : float; default=0.
+        #nsia / nsia : float; default=0. / nsia
+        #cwa / cwb : float; default=0. / cwa
+        #m1a / m2a : float; default=0. / m1a
+        #m1b / m2b : float; default=0. / m1b
+        #n1a / n2a : float; default=0. / n1a
+        #n1b / n2b : float; default=0. / n1b
+        assert None not in data, data
+        nfieldsi += len(data)
+        op2.write(struct3.pack(*data))
+        assert nfieldsi == 197, nfieldsi
+    return
+
+def _write_pbush1d(name, model, pids, spack, op2, op2_ascii, endian):
+    type_map = {
+        None : 0,  # NULL
+        'EQUAT' : 1,
+        'TABLE' : 2,
+    }
+
+    alpha = 0.
+    for pid in sorted(pids):
+        prop = model.properties[pid]
+        #print(prop.get_stats())
+        #(pid, k, c, m, unused_alpha, sa, se,
+         #typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
+         #types, idts, idcs, idtdus, idcdus,
+         #typed, idtd, idcd, idtdvd, idcdvd,
+         #typeg, idtg, idcg, idtdug, idcdug, idtdvg, idcdvg,
+         #typef, idtf, idcf,
+         #unused_ut, unused_uc) = out
+
+        typea = cvt = cvc = expvt = expvc = idtsu = idtcu = idtsud = idcsud = 0
+        if 'SHOCKA' in prop.vars:
+            #optional_vars['SHOCKA'] = [typea_str, cvt, cvc, expvt, expvc,
+                                       #idts, idets, idtcu, idtsud, idcsud]
+            #shock_cvc : None
+            #shock_cvt : 1000.0
+            #shock_exp_vc : 1.0
+            #shock_exp_vt : 1.0
+            #shock_idecs : None
+            #shock_idecsd : None
+            #shock_idets : None
+            #shock_idetsd : None
+            #shock_idts : None
+            #shock_type : 'TABLE'
+            typea = type_map[prop.shock_type]
+            cvt = prop.shock_cvc if prop.shock_cvc is not None else 0
+            cvc = prop.shock_cvt if prop.shock_cvt is not None else 0
+            expvt = prop.shock_exp_vc if prop.shock_exp_vc is not None else 0
+            expvc = prop.shock_exp_vt if prop.shock_exp_vt is not None else 0
+            idtsu = prop.shock_idts if prop.shock_idts is not None else 0
+            idtcu = prop.shock_idecs if prop.shock_idecs is not None else 0
+            idtsud = prop.shock_idetsd if prop.shock_idetsd is not None else 0
+            idcsud = prop.shock_idecsd if prop.shock_idecsd is not None else 0
+
+        types = idts = idcs = idtdus = idcdus = 0
+        if 'SPRING' in prop.vars:
+            #optional_vars['SPRING'] = [types_str, idts, idcs, idtdus, idcdus]
+            #spring_idc : None
+            #spring_idcdu : None
+            #spring_idt : 205
+            #spring_idtc : None
+            #spring_idtdu : None
+            #spring_type : 'TABLE'
+            types = type_map[prop.spring_type]
+            idts = prop.spring_idt if prop.spring_idt is not None else 0
+            idcs = prop.spring_idc if prop.spring_idc is not None else 0
+            idtdus = prop.spring_idtdu if prop.spring_idtdu is not None else 0
+            idcdus = prop.spring_idcdu if prop.spring_idcdu is not None else 0
+
+        typed = idtd = idtd = idtdvd = idcdvd = 0
+        if 'DAMPER' in prop.vars:
+            #optional_vars['DAMPER'] = [typed_str, idtd, idcd, idtdvd, idcdvd]
+            #damper_idc : None
+            #damper_idcdv : None
+            #damper_idt : 206
+            #damper_idtdv : None
+            #damper_type : 'TABLE'
+            typed = type_map[prop.damper_type]
+            idtd = prop.damper_idt if prop.damper_idt is not None else 0
+            idcd = prop.damper_idc if prop.damper_idc is not None else 0
+            idtdvd = prop.damper_idtdv if prop.damper_idtdv is not None else 0
+            idcdvd = prop.damper_idcdv if prop.damper_idcdv is not None else 0
+
+        typeg = idtg = idcg = idtdug = idcdug = idtdvg = idcdvg = 0
+        if 'GENER' in prop.vars:
+            #typeg = type_map[typeg_str]
+            #optional_vars['GENER'] = [idtg, idcg, idtdug, idcdug, idtdvg, idcdvg]
+            gener
+
+        typef = idtf = idcf = 0  #type_map[typef_str]  # FUSE...what is this???
+        ut = uc = 0
+        data = [pid, prop.k, prop.c, prop.m, alpha, prop.sa, prop.se,
+                typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
+                types, idts, idcs, idtdus, idcdus,
+                typed, idtd, idtd, idtdvd, idcdvd,
+                typeg, idtg, idcg, idtdug, idcdug, idtdvg, idcdvg,
+                typef, idtf, idcf,
+                ut, uc]
+        assert len(data) == 38, len(data)
+        op2.write(spack.pack(*data))
+    #ntotal = 152  # 38*4
+    #struct1 = Struct(self._endian + b'i 6f i 4f 24i 2f')
+    #nentries = (len(data) - n) // ntotal
+    #for unused_i in range(nentries):
+        #edata = data[n:n+152]
+        #out = struct1.unpack(edata)
+        ##  test_op2_other_05
+        ##pbush1d, 204, 1.e+5, 1000., , , , , , +pb1
+        ##+pb1, spring, table, 205, , , , , , +pb2
+        ##+pb2, damper, table, 206
+        ##pid=204 k=100000.0 c=1000.0 m=0.0 sa=nan se=nan
+
+
+        #msg = f'PBUSH1D pid={pid} k={k} c={c} m={m} sa={sa} se={se}'
+        #optional_vars = {}
+        #typea_str = type_map[typea]
+        #types_str = type_map[types]
+        #typed_str = type_map[typed]
+        #unused_typeg_str = type_map[typeg]
+        #unused_typef_str = type_map[typef]
+
+        #if min([typea, types, typed, typeg, typef]) < 0:
+            #raise RuntimeError(f'typea={typea} types={types} typed={typed} typeg={typeg} typef={typef}')
+    return

@@ -32,7 +32,6 @@ def calc_phasedeg(vec):
 class TestMaterialCoordComplex(unittest.TestCase):
     def test_force(self):
         log = get_logger(level='warning')
-        is_failed = False
         for folder, prefix, freqs in CASES:
             bdf = BDF(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
@@ -42,13 +41,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
                 debug=False, log=log,
                 exclude_results=['stress', 'strain'],
             )
-            try:
-                op2_new = data_in_material_coord(bdf, op2)
-            except ValueError as error:
-                op2.log.error('failed rotating %r' % prefix)
-                is_failed = True
-                #continue
-                raise
+            op2_new = data_in_material_coord(bdf, op2)
 
             for freq in freqs:
                 for vecname in force_vectors:
@@ -73,12 +66,8 @@ class TestMaterialCoordComplex(unittest.TestCase):
                     assert np.allclose(np.abs(data[:, :]), mag, rtol=RTOL)
                     assert np.allclose(calc_phasedeg(data), phase, rtol=RTOL)
 
-        if is_failed:
-            raise ValueError('see previous message')
-
     def test_stress(self):
         log = get_logger(level='warning')
-        is_failed = False
         for folder, prefix, freqs in CASES:
             bdf = BDF(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
@@ -88,13 +77,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
                 debug=False, log=log,
                 exclude_results=['element_forces', 'strain'],
             )
-            try:
-                op2_new = data_in_material_coord(bdf, op2)
-            except ValueError as error:
-                op2.log.error('failed rotating %r' % prefix)
-                is_failed = True
-                #continue
-                raise
+            op2_new = data_in_material_coord(bdf, op2)
 
             for freq in freqs:
                 for vecname in stress_vectors:
@@ -122,12 +105,9 @@ class TestMaterialCoordComplex(unittest.TestCase):
                     else:
                         assert np.allclose(np.abs(data[check]), mag, rtol=RTOL)
                         assert np.allclose(calc_phasedeg(data[check]), phase, rtol=RTOL)
-        if is_failed:
-            raise ValueError('see previous message')
 
     def test_strain(self):
         log = get_logger(level='warning')
-        is_failed = False
         for folder, prefix, freqs in CASES:
             bdf = BDF(debug=False, log=log)
             basepath = os.path.join(pkg_path, 'op2', 'test', 'examples', folder)
@@ -137,14 +117,7 @@ class TestMaterialCoordComplex(unittest.TestCase):
                 debug=False, log=log,
                 exclude_results=['element_forces', 'stress'],
             )
-
-            try:
-                op2_new = data_in_material_coord(bdf, op2)
-            except ValueError as error:
-                op2.log.error('failed rotating %r' % prefix)
-                is_failed = True
-                #continue
-                raise
+            op2_new = data_in_material_coord(bdf, op2)
 
             for freq in freqs:
                 for vecname in strain_vectors:
@@ -169,8 +142,6 @@ class TestMaterialCoordComplex(unittest.TestCase):
                     assert np.allclose(np.abs(data[check]), mag, rtol=RTOL)
                     phase[np.isclose(mag, 0)] = 0
                     assert np.allclose(calc_phasedeg(data[check]), phase, rtol=RTOL)
-        if is_failed:
-            raise ValueError('see previous message')
 
 
 if __name__ == '__main__':  # pragma: no cover

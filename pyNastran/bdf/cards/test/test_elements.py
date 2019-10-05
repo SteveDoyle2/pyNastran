@@ -108,7 +108,7 @@ class TestElements(unittest.TestCase):
         cgap.raw_fields()
 
         model.cross_reference()
-        save_load_deck(model, run_op2_reader=False)
+        save_load_deck(model)
 
     def test_cfast(self):
         """tests a CFAST/PFAST"""

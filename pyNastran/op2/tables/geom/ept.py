@@ -1456,7 +1456,7 @@ class EPT(GeomCommon):
 
     def _read_pgap(self, data, n):
         """
-        PGAP(3201,32,55) - the marker for Record 42
+        PGAP(2102,21,121) - the marker for Record 42
         """
         ntotal = 44
         struct_i10f = Struct(self._endian + b'i10f')

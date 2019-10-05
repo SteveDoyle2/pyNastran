@@ -1,6 +1,7 @@
 import os
 import unittest
 import warnings
+import shutil
 
 import numpy as np
 from cpylog import get_logger
@@ -8,7 +9,7 @@ from cpylog import get_logger
 import pyNastran
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran, stl_to_nastran_filename
-from pyNastran.converters.stl.stl_to_cart3d import stl_to_cart3d
+#from pyNastran.converters.stl.stl_to_cart3d import stl_to_cart3d
 from pyNastran.converters.type_converter import cmd_line_format_converter
 
 warnings.simplefilter('always')
@@ -40,7 +41,8 @@ class TestSTL(unittest.TestCase):
             'endsolid\n'
         )
         log = get_logger(level='warning')
-        stl_filename = os.path.join(TEST_PATH, 'tris.stl')
+        #stl_filename = os.path.join(TEST_PATH, 'tris.stl')
+        stl_filename = 'tris1.stl'
         with open(stl_filename, 'w') as stl_file:
             stl_file.write(lines)
 
@@ -64,7 +66,18 @@ class TestSTL(unittest.TestCase):
         stl.create_mirror_model(xyz, tol)
         assert len(stl.nodes) == 12, 'nodes=%s' % len(stl.nodes)
         assert len(stl.elements) == 4, 'nelements=%s' % len(stl.elements)
+
+        stl_filename2 = 'tris2.stl'
+        stl_filename3 = 'tris3.stl'
+        shutil.copyfile(stl_filename, stl_filename2)
+        if os.path.exists(stl_filename3):
+            os.remove(stl_filename3)
+        argv = ['format_converter', 'stl', 'tris*.stl', 'stl', stl_filename3]
+        cmd_line_format_converter(argv=argv, quiet=True)
+
         os.remove(stl_filename)
+        os.remove(stl_filename2)
+        os.remove(stl_filename3)
 
     def test_stl_io_02(self):
         lines = (
@@ -190,7 +203,7 @@ class TestSTL(unittest.TestCase):
         os.remove(bdf_filename_double)
 
     def test_stl_to_cart3d_01(self):
-        log = get_logger(level='warning')
+        #log = get_logger(level='warning')
         stl_filename = os.path.join(TEST_PATH, 'sphere.stl')
         cart3d_filename = os.path.join(TEST_PATH, 'sphere.tri')
         #stl_to_cart3d(stl_filename, cart3d_filename, log=log)

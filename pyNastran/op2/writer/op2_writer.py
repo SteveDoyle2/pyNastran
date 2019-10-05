@@ -1,5 +1,4 @@
 #pylint: disable=W0201,C0301,C0111
-from datetime import date
 from collections import defaultdict
 from struct import pack, Struct
 from cpylog import get_logger2
@@ -24,45 +23,12 @@ class TrashWriter:
     def close(self):
         pass
 
-def make_stamp(title: str, today=None) -> str:
-    if 'Title' is None:
-        title = ''
-
-    #lenghts = [7, 8, 5, 5, 3, 4, 4, 6, 9, 7, 8, 8]
-    months = [' January', 'February', 'March', 'April', 'May', 'June',
-              'July', 'August', 'September', 'October', 'November', 'December']
-    if today is None:
-        today = date.today()
-        str_month = months[today.month - 1].upper()
-        str_today = '%-9s %2s, %4s' % (str_month, today.day, today.year)
-    else:
-        (month, day, year) = today
-        str_month = months[month - 1].upper()
-        str_today = '%-9s %2s, %4s' % (str_month, day, year)
-    str_today = str_today  #.strip()
-
-    #release_date = '02/08/12'  # pyNastran.__releaseDate__
-    release_date = ''
-    build = 'pyNastran v%s %s' % (pyNastran.__version__, release_date)
-    if title is None:
-        title = ''
-    out = '1    %-67s   %-19s %-22s PAGE %%5i\n' % (title.strip(), str_today, build)
-    return out
-
 
 class OP2Writer(OP2_F06_Common):
     def __init__(self, log=None, debug=False):
         self.log = get_logger2(log, debug)
         OP2_F06_Common.__init__(self)
         self.card_count = {}
-
-    #def make_f06_header(self):
-        #"""If this class is inherited, the F06 Header may be overwritten"""
-        #return make_f06_header()
-
-    def make_stamp(self, title, today):
-        """If this class is inherited, the PAGE stamp may be overwritten"""
-        return make_stamp(title, today)
 
     def write_op2(self, op2_outname: str, obj=None, #is_mag_phase=False,
                   post: int=-1, endian: bytes=b'<', skips=None, nastran_format='nx') -> int:

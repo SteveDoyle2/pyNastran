@@ -337,7 +337,7 @@ NX_RESULT_TABLES = [
     b'OAPPSD2', # Acoustic power for the PSD function - SORT2
 ]
 
-if len(NX_RESULT_TABLES) != len(np.unique(NX_RESULT_TABLES)):
+if len(NX_RESULT_TABLES) != len(np.unique(NX_RESULT_TABLES)):  # pragma: no cover
     counter = Counter(NX_RESULT_TABLES)
     _MSG = 'Invalid count:\n'
     for key, cvaluei in counter.items():

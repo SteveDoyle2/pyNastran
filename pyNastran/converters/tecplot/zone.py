@@ -61,6 +61,8 @@ class Zone:
 
     @property
     def title(self):
+        if 'TITLE' not in self.headers_dict:
+            self.headers_dict['TITLE'] = 'tecplot geometry and solution file'
         return self.headers_dict['TITLE']
     @title.setter
     def title(self, title):
@@ -103,7 +105,7 @@ class Zone:
 
         title2 = '  T = %r\n' % self.headers_dict['T'] if 'T' in self.headers_dict else ''
         msg = (
-            'Zone():'
+            'Zone:'
             #'  filename = %r\n'
             #'  is_mesh = %s\n'
             '  variables = %s\n'

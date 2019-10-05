@@ -6,9 +6,9 @@ from collections import defaultdict
 import numpy as np
 import scipy
 
-
 from pyNastran.utils import is_binary_file
 from cpylog import get_logger2
+
 
 def read_stl(stl_filename, remove_elements_with_bad_normals=False,
              log=None, debug=False):

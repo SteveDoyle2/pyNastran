@@ -628,6 +628,42 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             #mass : float; default=None
                 #lumped mass of the CBUSH
                 #This is an MSC only parameter.
+        elif prop.type == 'PBUSH1D':
+            #pid    : 9
+            prop.c *= damping_scale # Viscous damping (force/velocity)
+            prop.k *= stiffness_scale
+            prop.m *= mass_scale
+            prop.sa /= area_scale  # Stress recovery coefficient [1/area]
+            prop.se /= xyz_scale   # Strain recovery coefficient [1/length]
+            for var in prop.vars:
+                print(prop.get_stats())
+                if var == 'SHOCKA':
+                     # Viscous damping coefficient (force/velocity)
+                    prop.shock_cvc = prop.shock_cvc * damping_scale if prop.shock_cvc is not None else None
+                    prop.shock_cvt = prop.shock_cvt * damping_scale if prop.shock_cvt is not None else None
+                    #if shock_type == 'TABLE':
+
+                    #shock_exp_vc : 1.0
+                    #shock_exp_vt : 1.0
+                    #shock_idecs : None
+                    #shock_idecsd : None
+                    #shock_idets : None
+                    #shock_idetsd : None
+                    #shock_idts : None
+                    #shock_type : 'TABLE'
+                else:
+                    raise RuntimeError('var=%r\n%s' % (var, str(prop)))
+            #damper_idc : None
+            #damper_idcdv : None
+            #damper_idt : None
+            #damper_idtdv : None
+            #damper_type : None
+            #spring_idc : None
+            #spring_idcdu : None
+            #spring_idt : None
+            #spring_idtdu : None
+            #spring_type : None
+            #type   : 'PBUSH1D'
         elif prop.type in ['PBUSH1D', 'PBUSH2D']:
             model.log.warning('skipping:\n%s' % str(prop))
 

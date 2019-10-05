@@ -859,7 +859,11 @@ class Tecplot:
             break
 
         #"tecplot geometry and solution file"
-        msg = 'TITLE = %s\n' % self.title
+        title = self.title
+        if '"' in title or "'" in title:
+            msg = 'TITLE = %s\n' % self.title
+        else:
+            msg = 'TITLE = "%s"\n' % self.title
         msg += 'VARIABLES = "X"\n'
         if is_y:
             msg += '"Y"\n'

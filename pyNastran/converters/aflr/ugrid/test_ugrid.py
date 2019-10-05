@@ -79,6 +79,7 @@ class TestUgrid(unittest.TestCase):
         ugrid_filename = os.path.join(UGRID_PATH, 'box.b8.ugrid')
         log = get_logger(level='warning')
         tecplot_filename2 = os.path.join(UGRID_PATH, 'box.plt')
+        tecplot_filename3 = os.path.join(UGRID_PATH, 'slice.plt')
 
         ugrid_model = read_ugrid(ugrid_filename, log=log)
         tecplot = ugrid3d_to_tecplot_filename(ugrid_filename, tecplot_filename2, log=log)
@@ -87,6 +88,9 @@ class TestUgrid(unittest.TestCase):
         tecplot.write_tecplot(tecplot_filename2, res_types=None,
                               adjust_nids=True)
         assert os.path.exists(tecplot_filename2), tecplot_filename2
+
+        argv = ['format_converter', 'ugrid', ugrid_filename, 'tecplot', tecplot_filename3, '-z 0.0']
+        cmd_line_format_converter(argv=argv, quiet=True)
 
 
 if __name__ == '__main__':  # pragma: no cover
