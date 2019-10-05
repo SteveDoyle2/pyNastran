@@ -290,7 +290,7 @@ class TestDynamic(unittest.TestCase):
         model2.uncross_reference()
         #print(out)
         #print(outs)
-        save_load_deck(model, run_renumber=False)
+        save_load_deck(model, run_renumber=False, run_convert=False)
 
     def test_rload(self):
         """tests DLOAD, RLOAD1, RLOAD2, TABLED2 cards"""
@@ -409,7 +409,7 @@ class TestDynamic(unittest.TestCase):
         model2.uncross_reference()
         #print(out)
         #print(outs)
-        save_load_deck(model, run_renumber=False)
+        save_load_deck(model, run_renumber=False, run_convert=False)
 
     def test_ascre(self):
         """tests ASCRE, DELAY, DPHASE, TABLED2"""

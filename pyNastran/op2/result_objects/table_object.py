@@ -779,13 +779,13 @@ class TableArray(ScalarObject):  # displacement style table
             field5 = self.modes[itime]
             field6 = self.eigns[itime]
             field7 = self.mode_cycles[itime]
-            assert isinstance(field6, float_types), type(field6)
-            assert isinstance(field7, float_types), type(field7)
+            assert isinstance(field6, float_types), f'field6={field6} type={type(field6)}'
+            assert isinstance(field7, float_types), f'field5={field5} field6={field6} field7={field7} type={type(field7)}'
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
             ftable3 = set_table3_field(ftable3, 7, b'f') # field 7
         elif self.analysis_code == 5:
             field5 = self.freqs[itime]
-            assert isinstance(field5, float_types), type(field5)
+            assert isinstance(field5, float_types), f'field5={field5} type={type(field5)}'
             ftable3 = set_table3_field(ftable3, 5, b'f') # field 5
         elif self.analysis_code == 6:
             if hasattr(self, 'dts'):
@@ -805,7 +805,7 @@ class TableArray(ScalarObject):  # displacement style table
                 field6 = self.eigrs[itime]
             else:  # pragma: no cover
                 raise NotImplementedError('cant find eigns or eigrs on analysis_code=8')
-            assert isinstance(field6, float_types), type(field6)
+            assert isinstance(field6, float_types), f'field6={field6} type={type(field6)}'
             ftable3 = set_table3_field(ftable3, 6, b'f') # field 6
         elif self.analysis_code == 9:  # complex eigenvalues
             field5 = self.modes[itime]

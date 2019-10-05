@@ -327,9 +327,11 @@ def _write_mats1(model, name, mids, nmaterials, op2, op2_ascii, endian):
             Type = 1
         elif mat.Type == 'PLASTIC':
             Type = 2
+        elif mat.Type == 'PLSTRN':
+            Type = 3
         else:
             raise RuntimeError(f'Invalid Type:  Type={mat.Type}; must be 1=NLELAST '
-                               'or 2=PLASTIC')
+                               '2=PLASTIC or 3=PLSTRN')
         data = [mid,
                 # not sure
                 0 if mat.tid is None else mat.tid,

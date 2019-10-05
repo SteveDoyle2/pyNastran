@@ -541,6 +541,9 @@ def _write_qhbdy(load_type, loads, nloads, op2, op2_ascii, endian, log):
         elif load.flag == 'LINE':
             flag = 2
             nnodes = 2
+        elif load.flag == 'REV':
+            flag = 3
+            nnodes = 2
         elif load.flag == 'AREA4':
             flag = 5
             nnodes = 4

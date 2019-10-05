@@ -172,7 +172,9 @@ class OUG(OP2Common):
             # eigenvalue
             self.eign = self.add_data_parameter(data, 'eign', b'f', 6, False)
             # mode or cycle .. todo:: confused on the type - F1???
-            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)
+            # float - C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mftank.op2
+            #self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # nope...
+            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False) # radians
             self.update_mode_cycle('mode_cycle')
             self.data_names = self.apply_data_code_value('data_names', ['mode', 'eign', 'mode_cycle'])
         #elif self.analysis_code == 3: # differential stiffness
@@ -302,7 +304,10 @@ class OUG(OP2Common):
             # real eigenvalue
             self.eigr = self.add_data_parameter(data, 'eigr', b'f', 6, False)
             ## mode or cycle .. todo:: confused on the type - F1???
-            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)  # mode or cycle .. todo:: confused on the type - F1???
+            # float - C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\mftank.op2
+             # mode or cycle .. todo:: confused on the type - F1???
+            self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'i', 7, False)
+            #self.mode_cycle = self.add_data_parameter(data, 'mode_cycle', b'f', 7, False)
             self.data_names = self.apply_data_code_value('data_names', ['node_id', 'eigr', 'mode_cycle'])
             self.apply_data_code_value('analysis_method', 'mode')
         #elif self.analysis_code == 3: # differential stiffness

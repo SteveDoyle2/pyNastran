@@ -700,7 +700,7 @@ class GEOM3(GeomCommon):
             out = struct_if.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  QHBDY=%s\n' % str(out))
-            #(sid, T) = out
+            #(sid, flag, q0, af, n1-n8) = out
             load = QHBDY.add_op2_data(out)
             #self.add_thermal_load(load)
             self._add_load_object(load)
