@@ -3,10 +3,10 @@ from collections import defaultdict
 from struct import pack, Struct
 from cpylog import get_logger2
 
-import pyNastran
+#import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.write_utils import _write_markers
-from pyNastran.op2.errors import FatalError
+#from pyNastran.op2.errors import FatalError
 from .geom1_writer import write_geom1
 from .geom2_writer import write_geom2
 from .geom3_writer import write_geom3
@@ -86,6 +86,7 @@ class OP2Writer(OP2_F06_Common):
                    post: int=-1, endian: bytes=b'<', skips=None, nastran_format='nx') -> int:
         """actually writes the op2"""
         struct_3i = Struct(endian + b'3i')
+        date = obj.date
         #op2_ascii.write('writing [3, 7, 0] header\n')
         #if markers == [3,]:  # PARAM, POST, -1
             #self.op2_reader.read_markers([3])
@@ -135,13 +136,10 @@ class OP2Writer(OP2_F06_Common):
             #write_dynamic(fop2, fop2_ascii, obj)
         if 'grid_point_weight' not in skips:
             if obj.grid_point_weight.reference_point is not None:
-                if hasattr(obj.grid_point_weight, 'write_op2'):
-                    obj.grid_point_weight.write_op2(fop2, endian=endian)
-                else:
-                    raise NotImplementedError("*op2 - grid_point_weight not written")
+                obj.grid_point_weight.write_op2(fop2, fop2_ascii, date, endian=endian)
 
         #is_mag_phase = False
-        # we writte all the other tables
+        # we write all the other tables
         # nastran puts the tables in order of the Case Control deck,
         # but we're lazy so we just hardcode the order
 
@@ -158,6 +156,7 @@ class OP2Writer(OP2_F06_Common):
         return case_count
 
     def _write(self, obj, fop2, fop2_ascii, struct_3i, endian, skips):
+        date = obj.date
         res_categories2 = defaultdict(list)
         table_order = [
             'OUGV1',
@@ -271,7 +270,7 @@ class OP2Writer(OP2_F06_Common):
                             #table_name, result.__class__.__name__,
                             #isubcase, element_name, itable, new_result))
                         itable = result.write_op2(fop2, fop2_ascii, itable, new_result,
-                                                  obj.date, is_mag_phase=False, endian=endian)
+                                                  date, is_mag_phase=False, endian=endian)
                     except:
                         print(' %s - isubcase=%s%s' % (result.__class__.__name__,
                                                        isubcase, element_name))

@@ -25,12 +25,24 @@ class OGPWG(OP2Common):
         self.parse_approach_code(data)
         self.reference_point = self.add_data_parameter(data, 'reference_point', b'i', 3, add_to_dict=False)
 
+        #13 OGPWG Grid Point Weight Generator
+        #approach_code   = 1
+        #tCode           = 13
+        #isubcase        = 0
+        #reference_point = 0
+        #print('  approach_code   = %r' % self.approach_code)
+        #print('  tCode           = %r' % self.tCode)
+        #print('  isubcase        = %r' % self.isubcase)
+        #print('  reference_point = %r' % self.reference_point)
         if self.is_debug_file:
             self.binary_debug.write('  approach_code  = %r\n' % self.approach_code)
             self.binary_debug.write('  tCode          = %r\n' % self.tCode)
             self.binary_debug.write('  isubcase       = %r\n' % self.isubcase)
 
         self._read_title(data)
+        #print('title = %r' % self.title)
+        #print('subtitle = %r' % self.subtitle)
+        #print('label = %r' % self.label)
         self._write_debug_bits()
 
     def _read_ogpwg_4(self, data, ndata):
@@ -39,6 +51,7 @@ class OGPWG(OP2Common):
         """
         if self.read_mode == 1:
             return ndata
+        #print('  num_wide = %r' % self.num_wide)
         MO = array(unpack('36f', data[:4*36]))
         MO = MO.reshape(6, 6)
 
@@ -60,6 +73,9 @@ class OGPWG(OP2Common):
 
         self.grid_point_weight.set_grid_point_weight(
             self.reference_point,
-            MO, S, mass, cg, IS, IQ, Q)
+            MO, S, mass, cg, IS, IQ, Q,
+            approach_code=self.approach_code, table_code=self.table_code,
+            title=self.title, subtitle=self.subtitle, label=self.label,
+        )
         #del self.reference_point
         return ndata

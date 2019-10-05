@@ -2,7 +2,7 @@ import unittest
 from io import StringIO
 
 from cpylog import get_logger
-from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, read_bdf#, get_logger2
+from pyNastran.bdf.bdf import BDF, BDFCard, PDAMP, CDAMP1, read_bdf#, get_logger2
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.cards.test.test_shells import (
     make_dvprel_optimization, make_dvcrel_optimization,
@@ -31,6 +31,29 @@ class TestDampers(unittest.TestCase):
         model.add_card(fields, card_name, comment='', is_list=True,
                        has_none=True)
         assert len(model.properties) == 2, model.properties
+        save_load_deck(model)
+
+
+    def test_cdamp1_01(self):
+        """tests a CDAMP1"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        lines = ['CDAMP1, 2001, 20, 1001, 1']
+        card = model._process_card(lines)
+        card = BDFCard(card)
+
+        size = 8
+        elem = CDAMP1.add_card(card)
+        self.assertEqual(elem.eid, 2001)
+        self.assertEqual(elem.Pid(), 20)
+        node_ids = elem.node_ids
+        assert node_ids == [1001, None], node_ids
+        elem.write_card(size, 'dummy')
+        elem.raw_fields()
+
+        pid = 1
+        tbid = 2
+        model.add_pdampt(pid, tbid, comment='pdampt')
         save_load_deck(model)
 
     def test_damper_02(self):

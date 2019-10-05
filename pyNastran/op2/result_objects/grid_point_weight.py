@@ -1,9 +1,17 @@
 """defines the GridPointWeight class"""
 from io import StringIO
+from struct import pack
+import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods
+from pyNastran.op2.result_objects.op2_objects import _write_table_header
 
+float_types = (float, np.float32)
+integer_types = (int, np.int32)
 
+#                                                                       ?           ?       ?                                     ?
+#good = (4, 2, 4, 8, 1464878927, 538976327, 8, 4, -1, 4, 4, 7, 4, 28, 101, 0, 0, 0, 0,   0, 1, 28, 4, -2, 4, 4, 1, 4, 4, 0, 4, 4, 2, 4, 8,  1464878927, 538976327, 8, 4,                   -3, 4, 4, 1, 4, 4, 0, 4, 4, 146, 4)
+#bad  = (4, 2, 4, 8, 1464878927, 538976327, 8, 4, -1, 4, 4, 7, 4, 28, 102, 0, 0, 0, 512, 0, 0, 28, 4, -2, 4, 4, 1, 4, 4, 0, 4, 4, 7, 4, 28, 1464878927, 538976327, 9, 27, 19, 0, 1, 28, 4, -3, 4, 4, 1, 4, 4)
 class GridPointWeight:
     def __init__(self):
         """
@@ -84,8 +92,14 @@ class GridPointWeight:
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    def set_grid_point_weight(self, reference_point, MO, S, mass, cg, IS, IQ, Q):
+    def set_grid_point_weight(self, reference_point, MO, S, mass, cg, IS, IQ, Q,
+                              approach_code=1, table_code=13,
+                              title='', subtitle='', label=''):
+        """used by the op2 reader to set the table parameters"""
         self.reference_point = reference_point
+        self.approach_code = approach_code
+        self.table_code = table_code
+
         self.MO = MO
         self.S = S
         self.mass = mass
@@ -93,6 +107,10 @@ class GridPointWeight:
         self.IS = IS
         self.IQ = IQ
         self.Q = Q
+
+        self.title = title
+        self.subtitle = subtitle
+        self.label = label
 
     def get_stats(self, short=True):
         if self.reference_point is None:
@@ -148,6 +166,178 @@ class GridPointWeight:
         self.write_f06(f, page_stamp, page_num)
         msg = f.getvalue()
         return msg
+
+    def _write_table_3(self, op2_file, fascii, new_result, table_name, itable=-3):
+        import inspect
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        fascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        if new_result and itable != -3:
+            header = [
+                4, 146, 4,
+            ]
+        else:
+            header = [
+                4, itable, 4,
+                4, 1, 4,
+                4, 0, 4,
+                4, 146, 4,
+            ]
+        op2_file.write(pack(b'%ii' % len(header), *header))
+        fascii.write('table_3_header = %s\n' % header)
+        #op2_file.write(pack('12i', *[4, itable, 4,
+                              #4, 1, 4,
+                              #4, 0, 4,
+                              #4, 146, 4,
+                              #]))
+
+        approach_code = self.approach_code
+        table_code = self.table_code
+        #isubcase = self.isubcase
+        #random_code = self.random_code
+        #format_code = 1
+        isubcase = 0
+        num_wide = 79 # self.num_wide
+        #acoustic_flag = self.acoustic_flag if hasattr(self, 'acoustic_flag') else 0
+        reference_point = self.reference_point
+        reference_point = 22
+        #thermal = self.thermal
+        title = b'%-128s' % self.title.encode('ascii')
+        subtitle = b'%-128s' % self.subtitle.encode('ascii')  # missing superelement_adaptivity_index
+        label = b'%-128s' % self.label.encode('ascii')
+
+        #1, 13, 0, 0, 0, 0, 0, 0, 0, 78, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        ftable3 = b'i' * 50 + b'128s 128s 128s'
+
+        #print(self.get_stats())
+        table3 = [
+            approach_code, table_code, reference_point, isubcase, 0,
+            0, 0, 0, 0, num_wide,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0,
+            title, subtitle, label,
+        ]
+
+        n = 0
+        from itertools import count
+        for i, val, ftable3i in zip(count(), table3, ftable3.decode('ascii')):
+            assert val is not None, 'i=%s val=%s ftable3i=%s\n%s' % (i, val, ftable3i, self.get_stats())
+            if isinstance(val, integer_types):
+                n += 4
+                assert ftable3i == 'i', 'i=%s val=%s type=%s' % (i, val, ftable3i)
+            elif isinstance(val, float_types):
+                n += 4
+                assert ftable3i == 'f', 'i=%s val=%s type=%s' % (i, val, ftable3i)
+            else:
+                n += len(val)
+        assert n == 584, n
+        data = [584] + table3 + [584]
+        fmt = b'i' + ftable3 + b'i'
+
+        #op2_file.write(pack(fascii, '%s header 3c' % table_name, fmt, data))
+        fascii.write('%s header 3c = %s\n' % (table_name, data))
+
+        #j = 7
+        #print(ftable3[:j])
+        #print(table3[:j])
+        #pack(ftable3[:j], *table3[:j])
+        op2_file.write(pack(fmt, *data))
+
+    def write_op2(self, op2_file, op2_ascii, date, endian=b'<'):
+        itable = -1
+        import inspect
+        #allowed_tables = [
+            #'OUGV1', 'BOUGV1', 'BOPHIG', 'BOPG1',
+            #'OUPV1',
+            #'OQP1', 'OQMG1', 'OQG1', 'OQGV1', 'OPNL1',
+            #'OPG1', 'OPGV1',
+            #'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
+            #'OQGPSD1',
+            #'OCRPG', 'OCRUG', 'OUG1',
+            #'OUGV1PAT',
+        #]
+        #assert self.table_name in allowed_tables, self.table_name
+        table_name = 'OGPWG'
+
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write('%s.write_op2: %s\n' % (self.__class__.__name__, call_frame[1][3]))
+
+        subtable_name = b'OGPWG'
+        if itable == -1:
+            _write_table_header(op2_file, op2_ascii, date, table_name, subtable_name)
+            itable = -3
+
+        #s = Struct(op2_format)
+
+        #unused_node = self.node_gridtype[:, 0]
+        #gridtype = self.node_gridtype[:, 1]
+        #format_table4_1 = Struct(self._endian + b'15i')
+        #format_table4_2 = Struct(self._endian + b'3i')
+
+        # table 4 info
+        #ntimes = self.data.shape[0]
+        #nnodes = self.data.shape[1]
+        #nnodes_device = self.node_gridtype[:, 0] * 10 + self.device_code
+
+        #(2+6) => (node_id, gridtypei, t1i, t2i, t3i, r1i, r2i, r3i)
+        #ntotal = nnodes * (2 + 6)
+
+        #print('shape = %s' % str(self.data.shape))
+        #assert nnodes > 1, nnodes
+        #assert ntotal > 1, ntotal
+
+        #unused_device_code = self.device_code
+        #fascii.write('  ntimes = %s\n' % self.ntimes)
+
+        #fmt = '%2i %6f'
+        #print('ntotal=%s' % (ntotal))
+        #for itime in range(self.ntimes):
+
+        # good = (4, -4, 4, 4, 1, 4, 4, 0, 4, 4, 78, 4, 312,    1057795080, 0, 0, 0, 0, 0, 0, 1057795080, 0, 0, 0, 1111254630, 0, 0, 1057795080, 0, -1036229018, 0, 0, 0, 0, 1143715840, -1451229184, 0, 0, 0, -1036229018, -1451229184, 1169886464, 0, 0, 1111254630, 0, 0, 0, 1171293184, 1065353216)
+        #bad   = (4, -4, 4, 4, 1, 4, 4, 0, 4, 4, 78, 4, 312,    1057795080, 0, 0, 0, 0, 0, 0, 1057795080, 0, 0, 0, 1111254630, 0, 0, 1057795080, 0, -1036229018, 0, 0, 0, 0, 1143715840, -1451229184, 0, 0, 0, -1036229018, -1451229184, 1169886464, 0, 0, 1111254630, 0, 0, 0, 1171293184, 1065353216, 0, 0, 0, 1065353216, 0, 0, 0, 1065353216, 1057795080, 0, -2147483648, 0, 1057795080, 1118530999, 0, -2147483648, 1057795080, 1118530999, 0, 0, 1143715840, 696254464, 0, 696254464, 1156812654, 0, 0, 0, 1160033719, 1143715840, 1156812654, 1160033719, 1065353216, 0, 0, 0, 1065353216, 0, 0, 0, 1065353216, 312, -5, 4, 4, 1, 4, 4, 0, 4, 4, 0, 4, 4, 4, 2, 4, 8, 1447515471, 538976305)
+        ntotal = 78  # 79 * 4 = 316
+        new_result = True
+        self._write_table_3(op2_file, op2_ascii, new_result, table_name, itable)
+
+        # record 4
+        itable -= 1
+        header = [4, itable, 4,
+                  4, 1, 4,
+                  4, 0, 4,
+                  4, ntotal, 4,
+                  4*ntotal]
+        op2_file.write(pack(b'%ii' % len(header), *header))
+        op2_ascii.write('r4 [4, 0, 4]\n')
+        op2_ascii.write('r4 [4, %s, 4]\n' % (itable))
+        op2_ascii.write('r4 [4, %i, 4]\n' % (4*ntotal))
+
+        # -------------------------------------------------------
+        fmt = endian + b'78f'
+        mcg = np.zeros((3, 4), dtype=self.cg.dtype)
+        mcg[:, 0] = self.mass
+        mcg[:, 1:] = self.cg
+        data = (self.MO.ravel().tolist() + self.S.ravel().tolist() +
+                mcg.ravel().tolist() + self.IS.ravel().tolist() + self.IQ.ravel().tolist() +
+                self.Q.ravel().tolist())
+        assert None not in data, data
+        msgi = pack(fmt, *data)
+        op2_file.write(msgi)
+        # -------------------------------------------------------
+        itable -= 1
+        header = [4 * ntotal,
+                  4, itable, 4,
+                  4, 1, 4,
+                  4, 0, 4,
+                  4, 0, 4, ]
+        op2_file.write(pack(endian + b'13i', *header))
+        op2_ascii.write('footer = %s\n' % header)
+        return itable
+
 
     def write_f06(self, f06_file, page_stamp, page_num):
         """

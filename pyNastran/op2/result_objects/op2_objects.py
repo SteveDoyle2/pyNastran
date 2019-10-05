@@ -579,69 +579,81 @@ class ScalarObject(BaseScalarObject):
         return column_names, column_values
 
     def _write_table_header(self, op2_file, fascii, date):
-        table_name = '%-8s' % self.table_name # 'BOUGV1  '
-        fascii.write('%s._write_table_header\n' % table_name)
-        #get_nmarkers- [4, 0, 4]
-        #marker = [4, 2, 4]
-        #table_header = [8, 'BOUGV1  ', 8]
-        write_table_header(op2_file, fascii, table_name)
-
-
-        #read_markers -> [4, -1, 4]
-        #get_nmarkers- [4, 0, 4]
-        #read_record - marker = [4, 7, 4]
-        #read_record - record = [28, recordi, 28]
-
-        #write_markers(op2_file, fascii, '  %s header1a' % self.table_name, [-1, 0, 7])
-        data_a = [4, -1, 4,]
-        #data_a = []
-        #data_b = [4, -1, 4,]
-        data_c = [4, 7, 4,]
-        data = data_a + data_c
-        blank = ' ' * len(self.table_name)
-        fascii.write('%s header1a_i = %s\n' % (self.table_name, data_a))
-        #fascii.write('%s            = %s\n' % (blank, data_b))
-        fascii.write('%s            = %s\n' % (blank, data_c))
-        op2_file.write(pack('<6i', *data))
-
-        table1_fmt = b'<9i'
-        table1 = [
-            28,
-            102, 0, 0, 0, 512, 0, 0,
-            28,
-        ]
-        fascii.write('%s header1b = %s\n' % (self.table_name, table1))
-        op2_file.write(pack(table1_fmt, *table1))
-
-        #recordi = [subtable_name, month, day, year, 0, 1]
-
-        data = [
-            4, -2, 4,
-            4, 1, 4,
-            4, 0, 4,
-            4, 7, 4,
-        ]
-        fascii.write('%s header2a = %s\n' % (self.table_name, data))
-        op2_file.write(pack(b'<12i', *data))
-
-        month, day, year = date
         try:
-            unused_subtable_name = self.subtable_name
+            subtable_name = self.subtable_name
         except AttributeError:
+            subtable_name = b'OUG1    '
             #print('attrs =', self.object_attributes())
             #raise
             pass
+        _write_table_header(op2_file, fascii, date, self.table_name, subtable_name)
 
-        self.subtable_name = b'OUG1    '
+def _write_table_header(op2_file, fascii, date, table_name, subtable_name):
+    table_name = '%-8s' % table_name # 'BOUGV1  '
+    fascii.write('%s._write_table_header\n' % table_name)
+    #get_nmarkers- [4, 0, 4]
+    #marker = [4, 2, 4]
+    #table_header = [8, 'BOUGV1  ', 8]
+    write_table_header(op2_file, fascii, table_name)
+
+
+    #read_markers -> [4, -1, 4]
+    #get_nmarkers- [4, 0, 4]
+    #read_record - marker = [4, 7, 4]
+    #read_record - record = [28, recordi, 28]
+
+    #write_markers(op2_file, fascii, '  %s header1a' % table_name, [-1, 0, 7])
+    data_a = [4, -1, 4,]
+    #data_a = []
+    #data_b = [4, -1, 4,]
+    data_c = [4, 7, 4,]
+    data = data_a + data_c
+    blank = ' ' * len(table_name)
+    fascii.write('%s header1a_i = %s\n' % (table_name, data_a))
+    #fascii.write('%s            = %s\n' % (blank, data_b))
+    fascii.write('%s            = %s\n' % (blank, data_c))
+    op2_file.write(pack('<6i', *data))
+
+    table1_fmt = b'<9i'
+    table1 = [
+        28,
+        102, 0, 0, 0, 512, 0, 0,
+        28,
+    ]
+    fascii.write('%s header1b = %s\n' % (table_name, table1))
+    op2_file.write(pack(table1_fmt, *table1))
+
+    #recordi = [subtable_name, month, day, year, 0, 1]
+
+    data = [
+        4, -2, 4,
+        4, 1, 4,
+        4, 0, 4,
+        4, 7, 4,
+    ]
+    fascii.write('%s header2a = %s\n' % (table_name, data))
+    op2_file.write(pack(b'<12i', *data))
+
+    month, day, year = date
+    if subtable_name:
         table2 = [
             28,  # 4i -> 13i
             # subtable,todays date 3/6/2014, 0, 1  ( year=year-2000)
-            b'%-8s' % self.subtable_name, month, day, year - 2000, 0, 1,
+            b'%-8s' % subtable_name, month, day, year - 2000, 0, 1,
             28,
-            ]
+        ]
         table2_format = 'i8s6i'
-        fascii.write('%s header2b = %s\n' % (self.table_name, table2))
-        op2_file.write(pack(table2_format, *table2))
+    else:
+        table2 = [
+            28,  # 4i -> 13i
+            # todays date 3/6/2014, 0, 1  ( year=year-2000)
+            month, day, year - 2000, 0, 1,
+            28,
+        ]
+        table2_format = 'i6i'
+
+    fascii.write('%s header2b = %s\n' % (table_name, table2))
+    op2_file.write(pack(table2_format, *table2))
 
 
 class BaseElement(ScalarObject):

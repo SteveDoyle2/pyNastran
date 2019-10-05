@@ -783,7 +783,7 @@ def _write_pbush1d(name, model, pids, spack, op2, op2_ascii, endian):
             idtdus = prop.spring_idtdu if prop.spring_idtdu is not None else 0
             idcdus = prop.spring_idcdu if prop.spring_idcdu is not None else 0
 
-        typed = idtd = idtd = idtdvd = idcdvd = 0
+        typed = idtd = idcd = idtdvd = idcdvd = 0
         if 'DAMPER' in prop.vars:
             #optional_vars['DAMPER'] = [typed_str, idtd, idcd, idtdvd, idcdvd]
             #damper_idc : None
@@ -808,7 +808,7 @@ def _write_pbush1d(name, model, pids, spack, op2, op2_ascii, endian):
         data = [pid, prop.k, prop.c, prop.m, alpha, prop.sa, prop.se,
                 typea, cvt, cvc, expvt, expvc, idtsu, idtcu, idtsud, idcsud,
                 types, idts, idcs, idtdus, idcdus,
-                typed, idtd, idtd, idtdvd, idcdvd,
+                typed, idtd, idcd, idtdvd, idcdvd,
                 typeg, idtg, idcg, idtdug, idcdug, idtdvg, idcdvg,
                 typef, idtf, idcf,
                 ut, uc]

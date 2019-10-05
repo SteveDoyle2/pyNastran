@@ -66,7 +66,8 @@ def scale_by_terms(bdf_filename, terms, scales, bdf_filename_out=None,
        the scaled BDF
 
     """
-    mass_scale, xyz_scale, time_scale = _setup_scale_by_terms(scales, terms)
+    quiet = not debug
+    mass_scale, xyz_scale, time_scale = _setup_scale_by_terms(scales, terms, quiet=quiet)
 
     #-------------------------------------------------
     weight_scale = mass_scale * xyz_scale / time_scale ** 2
@@ -158,18 +159,18 @@ def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_
         _convert_coordinates(model, xyz_scale)
 
     if convert_elements:
-        _convert_elements(model, xyz_scale, mass_scale, weight_scale)
+        _convert_elements(model, xyz_scale, time_scale, mass_scale, weight_scale)
     if convert_properties:
-        _convert_properties(model, xyz_scale, mass_scale, weight_scale)
+        _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale)
     if convert_materials:
-        _convert_materials(model, xyz_scale, mass_scale, weight_scale)
+        _convert_materials(model, xyz_scale, mass_scale, weight_scale, temperature_scale)
 
     if convert_aero:
         _convert_aero(model, xyz_scale, time_scale, weight_scale)
     if convert_constraints:
         _convert_constraints(model, xyz_scale)
     if convert_loads:
-        _convert_loads(model, xyz_scale, weight_scale, temperature_scale)
+        _convert_loads(model, xyz_scale, time_scale, weight_scale, temperature_scale)
     #_convert_sets(model)
     if convert_optimization:
         _convert_optimization(model, xyz_scale, mass_scale, weight_scale)
@@ -266,7 +267,7 @@ def _convert_coordinates(model, xyz_scale):
         #else:
             #raise NotImplementedError(coord)
 
-def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
+def _convert_elements(model, xyz_scale, time_scale, mass_scale, weight_scale):
     """
     Converts the elements
 
@@ -283,7 +284,6 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
     *intentionally
 
     """
-    time_scale = 1.
     force_scale = weight_scale
     area_scale = xyz_scale ** 2
     velocity_scale = xyz_scale / time_scale
@@ -439,19 +439,21 @@ def _convert_elements(model, xyz_scale, mass_scale, weight_scale):
         else:
             raise NotImplementedError(elem)
 
-def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
+def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale):
     """
     Converts the properties
 
     Supports:  PELAS, PDAMP, PDAMP5, PVISC, PROD, PBAR, PBARL, PBEAM, PBEAML,
                PSHELL, PSHEAR, PCOMP, PCOMPG, PELAS, PTUBE, PBUSH,
-               PCONEAX, PGAP,
+               PCONEAX, PGAP, PBUSH1D
     Skips : PSOLID, PLSOLID, PLPLANE, PIHEX
 
     Skips are unscaled (intentionally)
 
     """
-    time_scale = 1.
+    if len(model.properties) == 0:
+        return
+
     force_scale = weight_scale
     moment_scale = force_scale * xyz_scale
     area_scale = xyz_scale ** 2
@@ -629,20 +631,19 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
                 #lumped mass of the CBUSH
                 #This is an MSC only parameter.
         elif prop.type == 'PBUSH1D':
-            #pid    : 9
             prop.c *= damping_scale # Viscous damping (force/velocity)
             prop.k *= stiffness_scale
             prop.m *= mass_scale
             prop.sa /= area_scale  # Stress recovery coefficient [1/area]
             prop.se /= xyz_scale   # Strain recovery coefficient [1/length]
+            spring_tables = set([])
+            damper_tables = set([])
             for var in prop.vars:
-                print(prop.get_stats())
                 if var == 'SHOCKA':
+                    print(prop.get_stats())
                      # Viscous damping coefficient (force/velocity)
                     prop.shock_cvc = prop.shock_cvc * damping_scale if prop.shock_cvc is not None else None
                     prop.shock_cvt = prop.shock_cvt * damping_scale if prop.shock_cvt is not None else None
-                    #if shock_type == 'TABLE':
-
                     #shock_exp_vc : 1.0
                     #shock_exp_vt : 1.0
                     #shock_idecs : None
@@ -651,20 +652,45 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
                     #shock_idetsd : None
                     #shock_idts : None
                     #shock_type : 'TABLE'
+                elif var == 'DAMPER':
+                    if prop.damper_type == 'TABLE':
+                        for key in ('damper_idc', 'damper_idcdv', 'damper_idt', 'damper_idtdv'):
+                            value = getattr(prop, key)
+                            if value is None:
+                                continue
+                            elif isinstance(value, int):
+                                damper_tables.add(value)
+                            else:
+                                raise TypeError('key=%r value=%r' % (key, value))
+                    else:
+                        print(prop.get_stats())
+                        raise NotImplementedError(prop.damper_type)
+                elif var == 'SPRING':
+                    if prop.spring_type == 'TABLE':
+                        for key in ('spring_idc', 'spring_idcdu', 'spring_idt', 'spring_idtdu'):
+                            value = getattr(prop, key)
+                            if value is None:
+                                continue
+                            elif isinstance(value, int):
+                                spring_tables.add(value)
+                            else:
+                                raise TypeError('key=%r value=%r' % (key, value))
+                    else:
+                        raise NotImplementedError(prop.damper_type)
                 else:
+                    print(prop.get_stats())
                     raise RuntimeError('var=%r\n%s' % (var, str(prop)))
+                if damper_tables:
+                    model.log.warning(f'scale PBUSH1D damper_tables={damper_tables}')
+                if spring_tables:
+                    model.log.warning(f'scale PBUSH1D spring_tables={spring_tables}')
             #damper_idc : None
             #damper_idcdv : None
             #damper_idt : None
             #damper_idtdv : None
             #damper_type : None
-            #spring_idc : None
-            #spring_idcdu : None
-            #spring_idt : None
-            #spring_idtdu : None
-            #spring_type : None
             #type   : 'PBUSH1D'
-        elif prop.type in ['PBUSH1D', 'PBUSH2D']:
+        elif prop.type in ['PBUSH2D']:
             model.log.warning('skipping:\n%s' % str(prop))
 
         #elif prop.type == 'PCOMPS':
@@ -702,8 +728,6 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
             #pass
         #elif prop.type == 'PBUSHT':
             #pass
-        #elif prop.type == 'PBUSH1D':
-            #pass
         #elif prop.type == 'PDAMPT':
             #pass
         #elif prop.type == 'PDAMP5':
@@ -725,19 +749,21 @@ def _convert_properties(model, xyz_scale, mass_scale, weight_scale):
         else:
             raise NotImplementedError(prop_type)
 
-def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
+def _convert_materials(model, xyz_scale, mass_scale, weight_scale, temperature_scale):
     """
     Converts the materials
 
     Supports: MAT1, MAT2, MAT3, MAT8, MAT9, MAT10, MAT11
 
     """
+    nmaterials = len(model.materials)
+    if nmaterials == 0:
+        return
+
     force_scale = weight_scale
     stress_scale = force_scale / xyz_scale ** 2
-
     density_scale = mass_scale / xyz_scale ** 3
-    temp_scale = 1.
-    a_scale = 1. / temp_scale # thermal expansion
+    a_scale = 1. / temperature_scale # thermal expansion
 
     model.log.debug('--Material Scales--')
     model.log.debug('density_scale (L^3)= %g' % density_scale)
@@ -749,7 +775,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.e *= stress_scale
             mat.g *= stress_scale
             mat.a *= a_scale
-            mat.tref *= temp_scale
+            mat.tref *= temperature_scale
             mat.rho *= density_scale
             mat.St *= stress_scale
             mat.Sc *= stress_scale
@@ -770,7 +796,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
                 mat.a2 *= a_scale
             if mat.a3 is not None:
                 mat.a3 *= a_scale
-            mat.tref *= temp_scale
+            mat.tref *= temperature_scale
             if mat.St is not None:
                 mat.St *= stress_scale
             if mat.Sc is not None:
@@ -788,7 +814,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.ax *= a_scale
             mat.ath *= a_scale
             mat.az *= a_scale
-            mat.tref *= temp_scale
+            mat.tref *= temperature_scale
 
         #elif mat_type == 'MAT4':
             #mat.k
@@ -842,7 +868,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             mat.rho *= density_scale
             mat.A = [ai * a_scale if ai is not None else None
                      for ai in mat.A]
-            mat.tref *= temp_scale
+            mat.tref *= temperature_scale
         elif mat.type == 'MAT3D':
             mat.e1 *= stress_scale
             mat.e2 *= stress_scale
@@ -862,7 +888,7 @@ def _convert_materials(model, xyz_scale, mass_scale, weight_scale):
             #mat.a1 = a1
             #mat.a2 = a2
             #mat.a3 = a3
-            mat.tref *= temp_scale
+            mat.tref *= temperature_scale
             #mat.ge = ge
         elif mat.type == 'MAT10':
             model.log.warning('skipping %s convert' % mat.type)
@@ -904,7 +930,7 @@ def _get_dload_scale(dload, xyz_scale, velocity_scale, accel_scale, force_scale)
         raise RuntimeError(dload)
     return scale
 
-def _convert_loads(model, xyz_scale, weight_scale, temperature_scale):
+def _convert_loads(model, xyz_scale, time_scale, weight_scale, temperature_scale):
     """
     Converts the loads
 
@@ -917,7 +943,9 @@ def _convert_loads(model, xyz_scale, weight_scale, temperature_scale):
     * probably not done
 
     """
-    time_scale = 1.
+    #if not model.loads:
+        #return
+
     frequency_scale = 1. / time_scale
     force_scale = weight_scale
     moment_scale = xyz_scale * weight_scale
@@ -925,8 +953,6 @@ def _convert_loads(model, xyz_scale, weight_scale, temperature_scale):
     accel_scale = weight_scale / xyz_scale
     velocity_scale = xyz_scale / time_scale
 
-    if not model.loads:
-        return
     model.log.debug('--Load Scales--')
     model.log.debug('force_scale = %s' % force_scale)
     model.log.debug('moment_scale = %s' % moment_scale)

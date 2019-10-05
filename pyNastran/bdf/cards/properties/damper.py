@@ -143,6 +143,7 @@ class PDAMP5(DamperProperty):
         """
         Defines the damping multiplier and references the material properties
         for damping. CDAMP5 is intended for heat transfer analysis only.
+
         """
         DamperProperty.__init__(self)
         if comment:
@@ -168,6 +169,7 @@ class PDAMP5(DamperProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         mid = integer(card, 2, 'mid')
@@ -186,6 +188,7 @@ class PDAMP5(DamperProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         pid = data[0]
         mid = data[1]
@@ -206,6 +209,7 @@ class PDAMP5(DamperProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         self.mid_ref = model.Material(self.mid)
 
@@ -272,6 +276,7 @@ class PDAMPT(DamperProperty):
             a BDFCard object
         comment : str; default=''
             a comment for the card
+
         """
         pid = integer(card, 1, 'pid')
         tbid = integer_or_blank(card, 2, 'tbid', 0)
@@ -289,6 +294,7 @@ class PDAMPT(DamperProperty):
             a list of fields defined in OP2 format
         comment : str; default=''
             a comment for the card
+
         """
         pid = data[0]
         tbid = data[1]
@@ -306,6 +312,7 @@ class PDAMPT(DamperProperty):
         ----------
         model : BDF()
             the BDF object
+
         """
         self.tbid_ref = model.TableD(self.tbid)
 
