@@ -998,7 +998,7 @@ class RealTableArray(TableArray):
         import inspect
         allowed_tables = [
             'OUGV1', 'BOUGV1', 'BOPHIG', 'BOPG1',
-            'OUPV1',
+            'OUPV1', 'OUXY1',
             'OQP1', 'OQMG1', 'OQG1', 'OQGV1', 'OPNL1',
             'OPG1', 'OPGV1',
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',

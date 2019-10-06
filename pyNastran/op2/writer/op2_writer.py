@@ -161,7 +161,7 @@ class OP2Writer(OP2_F06_Common):
         table_order = [
             'OUGV1',
             'BOUGV1', 'BOPHIG', 'BOPG1',
-            'OUPV1',
+            'OUPV1', 'OUXY1', 'OUXY2',
             'TOUGV1',
             'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
             'OAGATO2', 'OAGCRM2', 'OAGNO2', 'OAGPSD2', 'OAGRMS2',

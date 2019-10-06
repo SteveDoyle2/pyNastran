@@ -10,47 +10,74 @@ from pyNastran.converters.tecplot.tecplot import read_tecplot
 from pyNastran.converters.cart3d.cart3d import Cart3D
 
 
-def tecplot_to_cart3d_filename(tecplot_filename, cart3d_filename, debug=True):
+def tecplot_to_cart3d_filename(tecplot_filename, cart3d_filename,
+                               remove_degenerate_tris=False, log=None, debug=True):
     """Converts a Tecplot file to Cart3d."""
-    return tecplot_to_cart3d(tecplot_filename, cart3d_filename, debug=debug)
+    return tecplot_to_cart3d(tecplot_filename, cart3d_filename,
+                             remove_degenerate_tris=remove_degenerate_tris, log=log, debug=debug)
 
 
-def tecplot_to_cart3d(tecplot_filename, cart3d_filename=None, debug=True):
+def tecplot_to_cart3d(tecplot_filename, cart3d_filename=None,
+                      remove_degenerate_tris=False, log=None, debug=True):
     """
     Converts a Tecplot file to Cart3d.
 
-    It's assumed that quads are actually degenerate triangles
+    Parameters
+    ----------
+    remove_degenerate_tris : bool; default=False
+        removes degenerate triangles (triangles with an area of 0.0)
     """
     if isinstance(tecplot_filename, str):
-        model = read_tecplot(tecplot_filename, debug=debug)
+        model = read_tecplot(tecplot_filename, log=log, debug=debug)
     else:
         model = tecplot_filename
 
-    if len(model.tri_elements) and len(model.quad_elements):
-        tris = np.vstack([
-            model.tri_elements,
-            model.quad_elements[:, :3],
-        ])
-    elif len(model.tri_elements):
-        tris = model.tri_elements
-    elif len(model.quad_elements):
-        tris = model.quad_elements[:, :3]
-    else:
-        raise NotImplementedError('need quads/tris')
+    assert len(model.zones) == 1, 'only 1 zone is supported'
+    for izone, zone in enumerate(model.zones):
+        ntris = len(zone.tri_elements)
+        nquads = len(zone.quad_elements)
+        if ntris and nquads:
+            # double stack the quads to size the array
+            # then overwrite the second set of quads
+            tris = np.vstack([
+                zone.tri_elements,
+                zone.quad_elements[:, :3],
+                zone.quad_elements[:, :3],
+            ])
+            tris[ntris+nquads:, [0, 1]] = zone.quad_elements[:, 3:]
+            tris[ntris+nquads:, 2] = zone.quad_elements[:, 0]
+        elif ntris:
+            tris = zone.tri_elements
+        elif nquads:
+            # double stack the quads to size the array
+            # then overwrite the second set of quads
+            tris = np.vstack([
+                zone.quad_elements[:, :3],
+                zone.quad_elements[:, :3],
+            ])
+            tris[ntris+nquads:, [0, 1]] = zone.quad_elements[:, 3:]
+            tris[ntris+nquads:, 2] = zone.quad_elements[:, 0]
+        else:
+            raise NotImplementedError('need quads/tris')
 
-    npoints = model.xyz.shape[0]
-    nelements = tris.shape[0]
-    assert tris.shape[1] == 3, tris.shape
-    #print('npoints=%s nelements=%s' % (npoints, nelements))
+        xyz = zone.get_xyz()
+        #print(zone)
+        npoints = xyz.shape[0]
+        assert npoints > 0, xyz.shape
+        nelements = tris.shape[0]
+        assert nelements > 0, nelements
+        assert tris.shape[1] == 3, tris.shape
+        #print('npoints=%s nelements=%s' % (npoints, nelements))
 
-    #removed_nodes = False
-    regions = np.zeros(nelements, dtype='int32')
-    ones_float = np.ones(npoints, dtype='float64')
+        #removed_nodes = False
+        regions = np.zeros(nelements, dtype='int32')
+        ones_float = np.ones(npoints, dtype='float64')
 
-    cart3d_model = Cart3D()
-    cart3d_model.points = model.xyz
+    cart3d_model = Cart3D(log=log)
+    cart3d_model.points = xyz
     cart3d_model.regions = regions
-    cart3d_model.elements = tris + 1
+    cart3d_model.elements = tris # + 1
+    assert npoints > 0, npoints
 
     headers_no_xyz = model.variables[3:] # drop the xyz, get what's left
     if 'cp' in headers_no_xyz:

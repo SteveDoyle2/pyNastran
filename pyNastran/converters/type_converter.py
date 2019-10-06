@@ -63,7 +63,7 @@ def process_cart3d(cart3d_filename, fmt2, fname2, log, data, quiet=False):
 
     if fmt2 == 'stl':
         from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
-        cart3d_to_stl_filename(model, fname2, is_binary=data['--binary'])
+        cart3d_to_stl_filename(model, fname2, log=log, is_binary=data['--binary'])
     elif fmt2 == 'nastran':
         from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename
         cart3d_to_nastran_filename(model, fname2, log=log)
@@ -147,7 +147,7 @@ def process_tecplot(tecplot_filename, fmt2, fname2, log, data=None, quiet=False)
     assert len(tecplot_filenames) > 0, tecplot_filename
     from pyNastran.converters.tecplot.utils import merge_tecplot_files
     from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
-    #from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
+    from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
 
     model = merge_tecplot_files(tecplot_filenames, tecplot_filename_out=None, log=log)
     #if fmt2 == 'cart3d':
@@ -168,15 +168,18 @@ def process_tecplot(tecplot_filename, fmt2, fname2, log, data=None, quiet=False)
     elif fmt2 == 'nastran':
         tecplot_to_nastran_filename(model, fname2)
     elif fmt2 == 'stl':
-        tecplot_to_nastran_filename(model, fname2 + '.bdf')
-        process_nastran(fname2 + '.bdf', fmt2, fname2, log, data=data, quiet=quiet)
+        cart3d_filename = fname2 + '.tri'
+        tecplot_to_cart3d_filename(model, cart3d_filename, log=log)
+        process_cart3d(cart3d_filename, fmt2, fname2, log, data=data, quiet=quiet)
+        #tecplot_to_nastran_filename(model, fname2 + '.bdf')
+        #process_nastran(fname2 + '.bdf', fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt2 == 'cart3d':
         # supports tris/quads, not loads
-        tecplot_to_nastran_filename(model, fname2 + '.bdf')
-        process_nastran(fname2 + '.bdf', fmt2, fname2, log, data=data, quiet=quiet)
+        #tecplot_to_nastran_filename(model, fname2 + '.bdf')
+        #process_nastran(fname2 + '.bdf', fmt2, fname2, log, data=data, quiet=quiet)
 
         # supports quads/loads, not tris
-        #tecplot_to_cart3d_filename(model, fname2)
+        tecplot_to_cart3d_filename(model, fname2, log=log)
     else:
         raise NotImplementedError('fmt2=%s is not supported by process_tecplot' % fmt2)
 

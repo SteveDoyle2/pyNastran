@@ -1017,12 +1017,14 @@ class Tecplot:
         return model
 
 
-def split_headers(header):
+def split_headers(header_in):
     #allowed_keys = ['TITLE', 'VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING',
                     #'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
                     #'I', 'J', 'K'
                     #]
-    header = header.replace('""', '","')
+    #print(f'header1 = {header_in}')
+    header = header_in.replace('""', '","')
+    #print(f'header2 = {header}')
     cheaders = header.split(',')
 
     #print(header)
@@ -1080,6 +1082,10 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str], varia
     nheaders = len(headers) - 1
     for iheader, header in enumerate(headers):
         header = header.strip()
+        #print(f'{iheader} {header!r}')
+
+    for iheader, header in enumerate(headers):
+        header = header.strip()
         #print('%2i %s' % (iheader, header))
         #print('iheader=%s header=%r' % (iheader, header))
         if '=' in header:
@@ -1108,6 +1114,7 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str], varia
 
         if parse:
             #print('  parsing')
+            #print('sline =', sline)
             key = sline[0].strip().upper()
             if key.startswith('ZONE '):
                 # the key is not "ZONE T" or "ZONE E"
@@ -1129,6 +1136,7 @@ def _header_lines_to_header_dict(title_line: str, header_lines: List[str], varia
                             'I', 'J', 'K']
             assert key in allowed_keys, 'key=%r; allowed=[%s]' % (key, ', '.join(allowed_keys))
             parse = False
+    #print('headers_dict', headers_dict)
     #print(headers_dict.keys())
 
     _simplify_header(headers_dict, variables)
@@ -1438,6 +1446,11 @@ def _read_header_lines(lines, iline, line, log):
     vars_found = []
     header_lines = []
     #print('-----------------------------')
+    #for iii, linei in enumerate(lines):
+        #if iii > 10:
+            #break
+        #print(linei)
+    #print('-----------------------------')
     while i < 30:
         #print(iline, i, line.strip())
         #self.n = 0
@@ -1488,6 +1501,7 @@ def _read_header_lines(lines, iline, line, log):
         iline += 1
 
     log.debug('vars_found = %s' % vars_found)
+    #print('header_lines', header_lines)
     #print("title = %r" % title_line)
     #print("variables_line = %r" % variables_line)
 

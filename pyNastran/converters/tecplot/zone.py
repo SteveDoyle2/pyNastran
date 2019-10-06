@@ -89,6 +89,22 @@ class Zone:
         self.log.warning('depecrecated tecplot.results for tecplot.nodal_results')
         self.nodal_results = nodal_results
 
+    def get_xyz(self):
+        """turns 2d points into 3d points"""
+        nnodes3d = self.xyz.shape[0]
+        nnodes2d = self.xy.shape[0]
+        if nnodes2d and nnodes3d:
+            raise RuntimeError('2d and 3d nodes is not supported')
+        elif nnodes2d:
+            npoints = self.xy.shape[0]
+            xyz = np.zeros((npoints, 3), dtype=self.xy.dtype)
+            xyz[:, :2] = self.xy
+        elif nnodes3d:
+            xyz = self.xyz
+        else:  # pragma: no cover
+            raise RuntimeError('failed to find 2d/3d nodes')
+        return xyz
+
     def __repr__(self):
         xy_shape = str(self.xy.shape)
         xyz_shape = str(self.xyz.shape)
