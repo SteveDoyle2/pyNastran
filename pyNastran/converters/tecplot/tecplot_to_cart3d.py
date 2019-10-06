@@ -11,14 +11,14 @@ from pyNastran.converters.cart3d.cart3d import Cart3D
 
 
 def tecplot_to_cart3d_filename(tecplot_filename, cart3d_filename,
-                               remove_degenerate_tris=False, log=None, debug=True):
+                               remove_degenerate_tris=True, log=None, debug=True):
     """Converts a Tecplot file to Cart3d."""
     return tecplot_to_cart3d(tecplot_filename, cart3d_filename,
                              remove_degenerate_tris=remove_degenerate_tris, log=log, debug=debug)
 
 
 def tecplot_to_cart3d(tecplot_filename, cart3d_filename=None,
-                      remove_degenerate_tris=False, log=None, debug=True):
+                      remove_degenerate_tris=True, log=None, debug=True):
     """
     Converts a Tecplot file to Cart3d.
 
@@ -34,34 +34,15 @@ def tecplot_to_cart3d(tecplot_filename, cart3d_filename=None,
 
     assert len(model.zones) == 1, 'only 1 zone is supported'
     for izone, zone in enumerate(model.zones):
-        ntris = len(zone.tri_elements)
-        nquads = len(zone.quad_elements)
-        if ntris and nquads:
-            # double stack the quads to size the array
-            # then overwrite the second set of quads
-            tris = np.vstack([
-                zone.tri_elements,
-                zone.quad_elements[:, :3],
-                zone.quad_elements[:, :3],
-            ])
-            tris[ntris+nquads:, [0, 1]] = zone.quad_elements[:, 3:]
-            tris[ntris+nquads:, 2] = zone.quad_elements[:, 0]
-        elif ntris:
-            tris = zone.tri_elements
-        elif nquads:
-            # double stack the quads to size the array
-            # then overwrite the second set of quads
-            tris = np.vstack([
-                zone.quad_elements[:, :3],
-                zone.quad_elements[:, :3],
-            ])
-            tris[ntris+nquads:, [0, 1]] = zone.quad_elements[:, 3:]
-            tris[ntris+nquads:, 2] = zone.quad_elements[:, 0]
-        else:
-            raise NotImplementedError('need quads/tris')
-
-        xyz = zone.get_xyz()
         #print(zone)
+        tris, xyz = get_zone_tris_xyz(zone)
+        if remove_degenerate_tris:
+            assert tris.shape[0] > 0, tris.shape
+            assert xyz.shape[0] > 0, xyz.shape
+            A = _get_tri_area(tris, xyz)
+            iarea = np.where(A > 0.)[0]
+            tris = tris[iarea, :]
+
         npoints = xyz.shape[0]
         assert npoints > 0, xyz.shape
         nelements = tris.shape[0]
@@ -99,11 +80,50 @@ def tecplot_to_cart3d(tecplot_filename, cart3d_filename=None,
         cart3d_model.write_cart3d(cart3d_filename)
     return cart3d_model
 
-def main():
+def _get_tri_area(tris, xyz):
+    n1 = xyz[tris[:, 0], :]
+    n2 = xyz[tris[:, 1], :]
+    n3 = xyz[tris[:, 2], :]
+    normal = np.cross(n2 - n1, n3 - n1)
+    A = np.linalg.norm(normal, axis=1)
+    return A
+
+def get_zone_tris_xyz(zone):
+    """gets the tris and associated xyz points"""
+    ntris = len(zone.tri_elements)
+    nquads = len(zone.quad_elements)
+    if ntris and nquads:
+        # double stack the quads to size the array
+        # then overwrite the second set of quads
+        tris = np.vstack([
+            zone.tri_elements,
+            zone.quad_elements[:, :3],
+            zone.quad_elements[:, :3],
+        ])
+        tris[ntris+nquads:, [0, 1]] = zone.quad_elements[:, 3:]
+        tris[ntris+nquads:, 2] = zone.quad_elements[:, 0]
+    elif ntris:
+        tris = zone.tri_elements
+    elif nquads:
+        # double stack the quads to size the array
+        # then overwrite the second set of quads
+        tris = np.vstack([
+            zone.quad_elements[:, :3],
+            zone.quad_elements[:, :3],
+        ])
+        tris[ntris+nquads:, [0, 1]] = zone.quad_elements[:, 3:]
+        tris[ntris+nquads:, 2] = zone.quad_elements[:, 0]
+    else:
+        raise NotImplementedError('need quads/tris')
+
+    xyz = zone.get_xyz()
+    return tris, xyz
+
+def main():  # pragma: no cover
     """runs the test problem"""
     tecplot_filename2 = r'PressureMapping\point_fmt.dat'
     cart3d_filename2 = 'wing.tri'
     tecplot_to_cart3d_filename(tecplot_filename2, cart3d_filename2, debug=True)
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     main()

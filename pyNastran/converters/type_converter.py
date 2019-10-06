@@ -157,7 +157,7 @@ def process_tecplot(tecplot_filename, fmt2, fname2, log, data=None, quiet=False)
     # elif fmt2 == 'ugrid':
         # tecplot_to_ugrid(model, fname2)
     res_types = data['RESTYPE']
-    is_points = not data['--block']
+    unused_is_points = not data['--block']
     if fmt2 == 'tecplot':
         if not quiet:  # pragma: no cover
             print(data)

@@ -73,6 +73,11 @@ class TestUgrid(unittest.TestCase):
             pshell_pids_to_remove,
             update_equivalence=True, tol=0.01, log=log)
         assert os.path.exists(ugrid_filename_out), ugrid_filename_out
+        os.remove(nastran_filename2)
+        os.remove(nastran_filename3)
+        os.remove(tecplot_filename2)
+        os.remove(ugrid_filename)
+        os.remove(ugrid_filename_out)
 
     def test_ugrid3d_gui_box(self):
         """simple UGRID3D box model"""
@@ -91,6 +96,17 @@ class TestUgrid(unittest.TestCase):
 
         argv = ['format_converter', 'ugrid', ugrid_filename, 'tecplot', tecplot_filename3, '-z 0.0']
         cmd_line_format_converter(argv=argv, quiet=True)
+        os.remove(tecplot_filename2)
+        os.remove(tecplot_filename3)
+
+    def test_ugrid3d_convert(self):
+        argv = ['format_converter', 'afrl', 'junk.b8.ugrid', 'stl', 'cart3d.stl']
+        with self.assertRaises(NotImplementedError):
+            cmd_line_format_converter(argv=argv, quiet=True)
+
+        argv = ['format_converter', 'ugrid', 'junk.b8.ugrid', 'abaqus', 'cart3d.stl']
+        with self.assertRaises(AssertionError):
+            cmd_line_format_converter(argv=argv, quiet=True)
 
 
 if __name__ == '__main__':  # pragma: no cover
