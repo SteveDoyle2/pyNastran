@@ -998,10 +998,12 @@ class RealTableArray(TableArray):
         import inspect
         allowed_tables = [
             'OUGV1', 'BOUGV1', 'BOPHIG', 'BOPG1',
-            'OUPV1', 'OUXY1',
+            'OUPV1', 'OUXY1', # solution set
             'OQP1', 'OQMG1', 'OQG1', 'OQGV1', 'OPNL1',
             'OPG1', 'OPGV1',
-            'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1',
+                       'OUGCRM1', 'OUGNO1', 'OUGPSD1', 'OUGRMS1', # disp/vel/acc/eigenvector
+            'OAGATO1', 'OAGCRM1', 'OAGNO1', 'OAGPSD1', 'OAGRMS1', # acceleration
+                                  'OPGNO1',            'OPGRMS1', # load vector
             'OQGPSD1',
             'OCRPG', 'OCRUG', 'OUG1',
             'OUGV1PAT',
@@ -1477,6 +1479,7 @@ class ComplexTableArray(TableArray):
             'OUGV1', 'BOUGV1',
             'OQG1', 'OQMG1',
             'OPG1',
+            'OUXY1',
         ]
         assert self.table_name in allowed_tables, self.table_name
 

@@ -164,12 +164,10 @@ class LAMA(OP2Common):
         #assert self.isubcase != 0, self.isubcase
         lama = RealEigenvalues(self.title, self.table_name, nmodes=nmodes)
 
-        if self.table_name == b'LAMA':
+        if self.table_name in [b'LAMA', b'LAMAS']:
             result_name = 'eigenvalues'
         elif self.table_name == b'LAMAF':
             result_name = 'eigenvalues_fluid'
-        elif self.table_name == b'LAMAS':
-            result_name = 'eigenvalues_structure'
         else:  # pragma: no cover
             raise NotImplementedError(self.table_name)
         slot = getattr(self, result_name)

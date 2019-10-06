@@ -288,9 +288,8 @@ class OP2_F06_Common:
         self.oload_resultant = None
 
         #: LAMA
-        self.eigenvalues = {}
-        self.eigenvalues_fluid = {}
-        self.eigenvalues_structure = {}
+        self.eigenvalues = {}  # LAMA, LAMAS
+        self.eigenvalues_fluid = {}  # LAMAF
 
         #self.convergence_history = {}
         #self.response1_table = {}
@@ -311,9 +310,8 @@ class OP2_F06_Common:
         self._frequencies = None
 
         #: LAMA
-        self.eigenvalues = {}
-        self.eigenvalues_fluid = {}
-        self.eigenvalues_structure = {}
+        self.eigenvalues = {}  # LAMA, CLAMA, BLAMA, LAMAS
+        self.eigenvalues_fluid = {}  # LAMAF
 
         #: OUG - displacement
         self.displacements = {}           # tCode=1 thermal=0
@@ -706,9 +704,8 @@ class OP2_F06_Common:
             'params',
 
             # LAMA
-            'eigenvalues', # LAMA, CLAMA, BLAMA
+            'eigenvalues', # LAMA, CLAMA, BLAMA, LAMAS
             'eigenvalues_fluid', # LAMAF
-            'eigenvalues_structure', # LAMAS
 
             # HISADD
             #'convergence_history',

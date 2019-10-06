@@ -1638,6 +1638,7 @@ class DYNAMICS(GeomCommon):
             'STRE' : 'STRESS',
             'PRES' : 'PRESS',
             'STRA' : 'STRAIN',
+            'OLOA' : 'OLOAD',
         }
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]

@@ -7,13 +7,16 @@ from struct import Struct, pack
 import warnings
 
 import numpy as np
-from numpy import zeros, float32, searchsorted, unique, where
+from numpy import zeros, searchsorted, unique, where, float32
 from numpy import allclose, asarray, vstack
 
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
 from pyNastran.op2.result_objects.table_object import append_sort1_sort2
 from pyNastran.f06.f06_formatting import write_floats_13e, write_float_12e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
+
+float_types = (float, np.float32)
+integer_types = (int, np.int32)
 
 
 SORT2_TABLE_NAME_MAP = {
@@ -475,7 +478,7 @@ class RealScalarTableArray(ScalarTableArray):  # temperature style table
 
         n = 0
         for v in table3:
-            if isinstance(v, (int, float)):
+            if isinstance(v, (integer_types, float_types)):
                 n += 4
             else:
                 n += len(v)

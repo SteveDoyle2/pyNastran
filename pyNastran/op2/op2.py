@@ -968,7 +968,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
         subcase_key2 = {}
         for result_type in result_types:
-            if result_type in ['eigenvalues', 'eigenvalues_fluid', 'eigenvalues_structure', 'params', 'gpdt', 'bgpdt', 'eqexin']:
+            if result_type in ['eigenvalues', 'eigenvalues_fluid', 'params', 'gpdt', 'bgpdt', 'eqexin']:
                 continue
             result = self.get_result(result_type)
             case_keys = list(result.keys())
@@ -1023,7 +1023,7 @@ class OP2(OP2_Scalar, OP2Writer):
                 continue
             for key in result_type_dict:
                 if isinstance(key, str):
-                    if table_type not in ['eigenvalues', 'eigenvalues_fluid', 'eigenvalues_structure', 'params']:
+                    if table_type not in ['eigenvalues', 'eigenvalues_fluid', 'params']:
                         self.log.warning('table_type = %s' % table_type)
                     continue
                 if key not in keys:
