@@ -9,7 +9,7 @@ from cpylog import get_logger
 import pyNastran
 from pyNastran.converters.stl.stl import read_stl
 from pyNastran.converters.stl.stl_to_nastran import stl_to_nastran, stl_to_nastran_filename
-#from pyNastran.converters.stl.stl_to_cart3d import stl_to_cart3d
+from pyNastran.converters.stl.stl_to_cart3d import stl_to_cart3d
 from pyNastran.converters.type_converter import cmd_line_format_converter
 
 warnings.simplefilter('always')
@@ -51,10 +51,12 @@ class TestSTL(unittest.TestCase):
         scale = 1.0
         stl.scale_nodes(scale)
         stl.shift_nodes(0., 0., 0.)
+        stl.log.info('end of shift')
 
         axes = 'xy'
         stl.flip_axes(axes, scale)
         stl.flip_axes(axes, scale)  # flip back
+        stl.log.info('end of flip')
 
         #stl = STL(log=None, debug=False)
         #stl.read_stl(stl_filename)
@@ -63,9 +65,11 @@ class TestSTL(unittest.TestCase):
 
         xyz = 'y'
         tol = 0.00001
+        stl.log.info('mirror')
         stl.create_mirror_model(xyz, tol)
         assert len(stl.nodes) == 12, 'nodes=%s' % len(stl.nodes)
         assert len(stl.elements) == 4, 'nelements=%s' % len(stl.elements)
+        stl.log.info('end of mirror')
 
         stl_filename2 = 'tris2.stl'
         stl_filename3 = 'tris3.stl'
@@ -203,10 +207,10 @@ class TestSTL(unittest.TestCase):
         os.remove(bdf_filename_double)
 
     def test_stl_to_cart3d_01(self):
-        #log = get_logger(level='warning')
+        log = get_logger(level='warning')
         stl_filename = os.path.join(TEST_PATH, 'sphere.stl')
         cart3d_filename = os.path.join(TEST_PATH, 'sphere.tri')
-        #stl_to_cart3d(stl_filename, cart3d_filename, log=log)
+        unused_model = stl_to_cart3d(stl_filename, cart3d_filename=None, log=log)
         argv = ['format_converter', 'stl', stl_filename,
                 'cart3d', cart3d_filename]
         cmd_line_format_converter(argv=argv, quiet=True)
