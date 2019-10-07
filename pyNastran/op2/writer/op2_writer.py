@@ -192,6 +192,8 @@ class OP2Writer(OP2_F06_Common):
             'OPGATO1', 'OPGCRM1', 'OPGNO1', 'OPGPSD1', 'OPGRMS1', # load vector
             'OPGATO2', 'OPGCRM2', 'OPGNO2', 'OPGPSD2', 'OPGRMS2',
 
+            'RADCONS', 'RADEATC', 'RADEFFM',
+
             # ---------------
             # force/heat flux
             'DOEF1', 'HOEF1',
@@ -202,9 +204,9 @@ class OP2Writer(OP2_F06_Common):
             # ---------------
             # stress
             'OESNLXD', 'OESNLXR', 'OESNL1X',
-            'OES1', 'OES1X', 'OES1X1', 'OESVM1', 'OSTRVM1',
-            'OES1C', 'OESCP',
-            'OESVM2',
+            'OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESVM1',
+            'OES2', 'OESVM2',
+            'OESCP',
 
             'OCRPG', 'OCRUG',
             'OESATO1', 'OESCRM1', 'OESNO1', 'OESPSD1', 'OESRMS1',
@@ -213,14 +215,16 @@ class OP2Writer(OP2_F06_Common):
 
             # ---------------
             #strain
+
+            'OSTR1', 'OSTR1X', 'OSTR1C', 'OSTRVM1',
+            'OSTR2',
+            'OESTRCP',
+
             'OSTRATO1', 'OSTRCRM1', 'OSTRNO1', 'OSTRPSD1', 'OSTRRMS1',
             'OSTRATO2', 'OSTRCRM2', 'OSTRNO2', 'OSTRPSD2', 'OSTRRMS2',
             'OSTRVM2',
 
-            'OESTRCP',
-            'OSTR1C',
-            'OSTR1X',
-            'OSTR1',
+
             # ---------------
 
             'OGPFB1',

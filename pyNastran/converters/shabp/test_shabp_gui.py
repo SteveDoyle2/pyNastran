@@ -5,6 +5,7 @@ from cpylog import get_logger
 import pyNastran
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.shabp.shabp_io import ShabpIO
+from pyNastran.converters.shabp.shabp import read_shabp
 
 PKG_PATH = pyNastran.__path__[0]
 model_path = os.path.join(PKG_PATH, 'converters', 'shabp')
@@ -25,8 +26,13 @@ class TestShabpGUI(unittest.TestCase):
         test.log = log
         shabp_infilename = os.path.join(model_path, 'models', 'flap', 'flap_inviscid.mk5')
         shabp_outfilename = os.path.join(model_path, 'models', 'flap', 'SHABP.OUT')
+
         #test.model.load_shabp_geometry(shabp_infilename)
         test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
+        model = read_shabp(shabp_infilename, log=None, debug=None)
+        model.get_area_by_patch()
+        model.get_area_by_component()
+        model.get_area_xlength_by_component()
         test.on_load_results(shabp_outfilename)
 
     def _test_shabp_geometry_02(self):

@@ -122,7 +122,8 @@ class SHABP(ShabpOut):
     def get_area_by_patch(self, ipatches=None):
         """gets the area of a set of patches"""
         if ipatches is None:
-            ipatches = arange(ipatches)
+            npatches = len(self.X)
+            ipatches = arange(npatches)
 
         areas = zeros(len(ipatches), dtype='float32')
         for i, ipatch in enumerate(ipatches):
@@ -153,6 +154,7 @@ class SHABP(ShabpOut):
         """reads an SHABP.INP / SHABP.mk5 file"""
         with open(shabp_filename) as shabp_file:
             lines = shabp_file.readlines()
+
         if shabp_filename.lower().endswith(".geo"):
             i = 0
         else:  # this supports standard .inp and .mk5 files
@@ -174,6 +176,7 @@ class SHABP(ShabpOut):
                 #name2 = header[29:].strip()
                 #print lines[i].strip()
                 flag = name[4]
+                self.log.debug(f'name={name} flag={flag}')
             else:
                 stream_cross = header[5]       # heat/tk A-10
                 symmetry = header[16]          # heat/tk A-10
@@ -182,6 +185,7 @@ class SHABP(ShabpOut):
                 #nadj2 = header[20:22]  # not used
                 #nadj3 = header[22:24]  # not used
                 #nadj4 = header[24:26]  # not used
+                self.log.debug(f'stream_cross={stream_cross} symmetry={symmetry} scale_factor={scale_factor}')
 
                 vis_type = int(header[26])
                 #if vis_type == 0:
@@ -194,8 +198,8 @@ class SHABP(ShabpOut):
                     #print("inviscid_B")
 
                 name_old = header[:7].strip()
-                self.log.info('name=%r stream_cross=%r symmetry=%r scale_factor=%r vis_type=%r' % (
-                    name, stream_cross, symmetry, scale_factor, vis_type))
+                self.log.info(f'name={name!r} stream_cross={stream_cross!r} symmetry={symmetry!r} '
+                              f'scale_factor={scale_factor!r} vis_type={vis_type!r}')
 
                 header2 = lines[i+1]
                 xsc = header2[0:10].strip()
@@ -215,13 +219,14 @@ class SHABP(ShabpOut):
                 is_last_patch = False
             else:
                 raise RuntimeError('last patch flag = %r; must be 0 or 1' % flag)
-            #print("name=%r nrows=%i ncols=%i name2=%r" % (name, nrows, ncols, name2))
+            #print(f'name={name} nrows={nrows} ncols={ncols:d} name2={name2!r}')
 
             i += 2
             row = []
             while 1:
                 #-1071.0480   77.2500  -66.94202 -987.7440   77.2500  -66.94200         3
                 line = lines[i]
+                #print(i, line, end='')
                 i += 1
 
                 #t1 = int(line[30])    # STAT - status flag - p. 27
@@ -284,8 +289,8 @@ class SHABP(ShabpOut):
         try:
             self.parse_trailer()
         except (RuntimeError, ValueError):
-            #raise
             self.log.warning('failed parsing trailer')
+            #raise
 
     def build_patches(self, patches):
         X = []
@@ -391,120 +396,104 @@ class SHABP(ShabpOut):
         #for line in self.trailer:
             #print line.rstrip()
         self.title = self.trailer[0].strip()
-        print('title = %r' % self.title)
+        #print('title = %r' % self.title)
         line2 = self.trailer[1]
-        unused_npatches = line2[:2]
+
+        #print('line2 = %r' % line2[:20])
+        methods, summation_flag = _get_methods(line2)
+        #print('methods =', methods)
+        #print('summation_flag =', summation_flag)
+
+        npatches = line2[:2]
+        #print('npatches =', npatches)
 
         mach_line = self.trailer[2].rstrip()
-        mach = float(mach_line[0 :10].strip())
-        #alt = float(mach_line[10:20].strip())
-        #pstag = float(mach_line[20:30].strip())
-        #tstag = float(mach_line[30:40].strip())
-        #igas = int(mach_line[40:41].strip())
-        nalpha_beta = int(mach_line[41:43].strip())
+        mach, alt, pstag, tstag, igas, nalpha_beta, ideriv, dangle = _parse_flight_condition(mach_line)
+        #print(f'mach={mach} alt={alt} pstag={pstag} tstag={tstag} igas={igas} '
+              #f'nalpha_beta={nalpha_beta} ideriv={ideriv} dangle={dangle}')
 
-        #ref_line = self.trailer[3].rstrip()
-        #sref = float(ref_line[0:10].strip())
-        #cref = float(ref_line[10:20].strip())
-        #bref = float(ref_line[20:30].strip())
-        #xcg = float(ref_line[30:40].strip())
-        #ycg = float(ref_line[40:50].strip())
-        #zcg = float(ref_line[50:60].strip())
+        ref_line = self.trailer[3].rstrip()
+        unused_reference_quantities = _parse_reference_conditions(ref_line)
+        #sref, cref, bref, xcg, ycg, zcg = reference_quantities
+        #print(f'sref={sref} cref={cref} bref={bref} cg=[{xcg},{ycg},{zcg}]')
 
         i = 4
         for n in range(nalpha_beta):
             alpha_line = self.trailer[i].rstrip()
-            #print "alpha_line =", alpha_line
-            alpha = float(alpha_line[0:10])
-            beta = float(alpha_line[10:20])
+            alpha, beta, roll, cdelta, qi, ri, pi = _read_alpha_beta_line(alpha_line)
+            #print(f'alpha={alpha} beta={beta} roll={roll} cdelta={cdelta} pqr=[{qi},{ri},{pi}]')
+
             self.shabp_cases[n] = [mach, alpha, beta]
             i += 1
 
         #self.getMethods()
-        ncomponents_line = self.trailer[i].rstrip()
-        #print "comp line =", ncomponents_line
-        ncomponents = int(ncomponents_line[:2])
-        zero = ncomponents_line[2:3]
-        assert zero == '0', 'zero=%r; %s' % (zero, ncomponents_line)
-
-        i += 1
-        for icomponent in range(ncomponents):
-            #print "lines[%i] = %s" % (i, self.trailer[i].rstrip())
-            #print "lines[%i] = %s\n" % (i+1, self.trailer[i+1].rstrip())
-
-            line2 = self.trailer[i+1].rstrip()
-            impact = int(line2[0:2].strip())
-            shadow = int(line2[2:4].strip())
-            iprint = int(line2[4:5].strip())
-            ipin = int(line2[5:6].strip())
-            isave = int(line2[6:7].strip())
-            pdata1 = float(line2[10:20].strip())
-            pdata2 = float(line2[20:30].strip())
-            pdata3 = float(line2[30:40].strip())
-            pdata4 = float(line2[40:50].strip())
-            pdata5 = float(line2[50:60].strip())
-            pdata6 = float(line2[60:70].strip())
-            self.component_to_params[icomponent] = [
-                impact, shadow, iprint,
-                ipin, isave, pdata1, pdata2, pdata3, pdata4, pdata5, pdata6
-            ]
-            i += 2
+        for method in methods:
+            line = self.trailer[i].rstrip()
+            if method == 3:
+                print('inviscid_pressure', line)
+                i, ncomponents, ifsave, params = parse_inviscid_pressure(self.trailer, line, i)
+                self.component_to_params = params
+            elif method == 5:
+                i = parse_special_routines(self.trailer, line, i)
+            else:
+                raise NotImplementedError(method)
 
         #print "ncomps =", len(self.component_to_params)
         #print "keys =", sorted(self.component_to_params.keys())
         #print "**lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip())
         #i += 1
 
-        methods = []
-        print("methods %r" % self.trailer[i].strip())
-        for v in self.trailer[i].strip():
-            v2 = int(v)
-            if v2 > 0:
-                methods.append(v2)
-        #print "methods =", methods
+        if 0:  # pragma: no cover
+            methods = []
+            print("methods %r" % self.trailer[i].strip())
+            for v in self.trailer[i].strip():
+                v2 = int(v)
+                if v2 > 0:
+                    methods.append(v2)
+            #print "methods =", methods
 
-        val1 = self.trailer[i][0:2]
-       #print "val1 = ", val1
-        i += 1
-        if val1 == '10':
-            #print "****10****"
+            val1 = self.trailer[i][0:2]
+            print("val1 = ", val1)
             i += 1
-        elif val1 == '13':
-            #print "****13****"
-            val2 = int(self.trailer[i][2:4])
-            assert val2 == ncomponents, 'val2=%r ncomponents=%r' % (val2, ncomponents)
-            i += 1
-            for v in range(val2):
-                #print "  lines[%i] = %s" % (i+1, self.trailer[i].rstrip())
+            if val1 == '10':
+                #print "****10****"
                 i += 1
-        else:
-            print("*lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip()))
-            raise RuntimeError()
+            elif val1 == '13':
+                #print "****13****"
+                val2 = int(self.trailer[i][2:4])
+                assert val2 == ncomponents, 'val2=%r ncomponents=%r' % (val2, ncomponents)
+                i += 1
+                for v in range(val2):
+                    #print "  lines[%i] = %s" % (i+1, self.trailer[i].rstrip())
+                    i += 1
+            else:
+                print("*lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip()))
+                raise RuntimeError()
 
         # component names   7
         comp_names_line = self.trailer[i].rstrip()
-        #print "comp_names_line = %r" % comp_names_line
+        print("comp_names_line = %r" % comp_names_line)
         ncomps = int(comp_names_line.strip().split()[2])
         i += 1
 
         for icomp in range(ncomps):
             line = self.trailer[i]
-            #print "line =", line.strip()
+            #print("line =", line.strip())
             unused_npatches = int(line[:2])
             name = line[2:].strip()
 
             line = self.trailer[i+1] + ' '
             patches = []
             for n in range(0, len(line), 2):
-                #print "n =", n
+                #print("n =", n)
                 ipatch = line[n:n+2].strip()
                 if len(ipatch) == 0:
                     break
                 int_ipatch = int(ipatch)
-                #print "int_ipatch =", int_ipatch
+                #print("int_ipatch =", int_ipatch)
                 patches.append(int_ipatch)
                 self.patch_to_component_num[int_ipatch-1] = icomp+1
-            #print "patches =", patches, '\n'
+            #print("patches =", patches, '\n')
             self.component_name_to_patch[name] = patches
             self.component_num_to_name[icomp] = name
             self.component_name_to_num[name] = icomp
@@ -512,4 +501,148 @@ class SHABP(ShabpOut):
 
         # 2noseconeright
         #3142
-        #print 'done with trailer'
+        print('done with trailer')
+
+
+def _parse_flight_condition(mach_line):
+    mach = float(mach_line[0 :10].strip())
+    alt = float(mach_line[10:20].strip())
+    pstag = float(mach_line[20:30].strip())
+    tstag = float(mach_line[30:40].strip())
+    igas = int(mach_line[40:41].strip())
+    nalpha_beta = int(mach_line[41:43].strip())
+
+    # 0-no derivatives
+    # 1: pitch static stability derivatives
+    # 2: pitch control derivatives
+    # 3: pitch dynamic derivatives
+    # 4: lat/dir static stability derivatives
+    # 5: lat/dir control derivatives
+    # 6: lat/dir dynamic derivatives
+    # 7: ideriv=1,2,3 (all pitch)
+    # 8: ideriv=4,5,6 (all lat/dir)
+    # 9: ideriv=1-6 (all)
+    try:
+        ideriv = int(mach_line[43].strip()) # 0-9
+        dangle = float(mach_line[45:55].strip())  # used for ideriv=1,2,4,5
+    except:  # old SHABP
+        raise # old SHABP
+        #iDeriv = 0
+        #dAngle = 0.0
+    assert igas in [0, 1], igas # 0=air, 1=helium
+    return mach, alt, pstag, tstag, igas, nalpha_beta, ideriv, dangle
+
+def _get_methods(line):
+    """
+    per vecc A-53
+    1 - Flow Field Analysis
+    2 - Shielding Analysis
+    3 - Inviscid Pressures
+    4 - Viscous Methods
+    5 - Special Routines
+    """
+    fields = line[:20]
+    assert len(fields) == 20, fields
+    methods = []
+    for inti in line[:20]:
+        if inti == '0':
+            continue
+        methodi = int(inti)
+        methods.append(methodi)
+        summation_flag = int(line[20])
+    return methods, summation_flag
+
+def _read_alpha_beta_line(alpha_line):
+    """reads the alpha line"""
+    #print("alpha_line =", alpha_line)
+    alpha = float(alpha_line[0:10])
+    beta = float(alpha_line[10:20])
+    roll = float(alpha_line[20:30])
+    cdelta = float(alpha_line[30:40]) # unused
+    qi = float(alpha_line[40:50])
+    ri = float(alpha_line[50:60])
+    #pi = float(alpha_line[60:70])
+    pi = None
+    return alpha, beta, roll, cdelta, qi, ri, pi
+
+def _parse_reference_conditions(ref_line):
+    """reads the reference quantities line"""
+    sref = float(ref_line[0:10].strip())
+    cref = float(ref_line[10:20].strip())
+    bref = float(ref_line[20:30].strip())
+    xcg = float(ref_line[30:40].strip())
+    ycg = float(ref_line[40:50].strip())
+    zcg = float(ref_line[50:60].strip())
+    return sref, cref, bref, xcg, ycg, zcg
+
+def parse_inviscid_pressure(lines, line, i):
+    """reads inviscid pressure (method=3)"""
+    ncomponents = int(line[0:2])
+    # 0 : save component force data; use new Unit 9
+    # 1 : save component force data; use old Unit 9
+    # 2 : dont save force data
+    ifsave = int(line[2:3])
+    title = line[6:66].strip()
+    assert ifsave == 0, 'ifsave=%r; %s' % (ifsave, line)
+    #print(line)
+    #print(f'ncomponents={ncomponents} ifsave={ifsave} title={title!r}')
+    i += 1
+    #return i, ncomponents, ifsave
+
+    params = {}
+    for icomponent in range(ncomponents):
+        hinge_line = lines[i].rstrip()
+        #print('hinge_line = %r' % hinge_line)
+        #print "icount=",icount
+        # get deflection angle, check for a hinge
+        #n+=1
+        #print "n = ",n
+        #print "trailer[",n+1,"] = ",trailer[n+1].strip()
+        hinge_method = int(hinge_line[7:8])
+        dangle = hinge_line[12:18]
+        hinge_patch = int(hinge_line[1:3])
+        #print(f'hinge_method={hinge_method} dangle={dangle} hinge_patch={hinge_patch}')
+        i += 1
+
+        line2 = lines[i].rstrip()
+        #print(line2)
+        impact = int(line2[0:2].strip())
+        shadow = int(line2[2:4].strip())
+        iprint = int(line2[4:5].strip())
+        ipin = int(line2[5:6].strip())
+        isave = int(line2[6:7].strip())
+        pdata1 = float(line2[10:20].strip())
+        pdata2 = float(line2[20:30].strip())
+        pdata3 = float(line2[30:40].strip())
+        pdata4 = float(line2[40:50].strip())
+        pdata5 = float(line2[50:60].strip())
+        pdata6 = float(line2[60:70].strip())
+        #print(f'icomponent={icomponent} impact={impact} shadow={shadow} iprint={iprint}')
+        params[icomponent] = [
+            impact, shadow, iprint,
+            ipin, isave, pdata1, pdata2, pdata3, pdata4, pdata5, pdata6
+        ]
+        i += 1
+
+        if hinge_method == 0:
+            pass
+        elif hinge_method == 3:
+            hinge_line = lines[i].rstrip()
+            #print('hinge_line2 = %r' % hinge_line)
+            x1 = float(hinge_line[0:10])
+            y1 = float(hinge_line[10:20])
+            z1 = float(hinge_line[20:30])
+            x2 = float(hinge_line[30:40])
+            y2 = float(hinge_line[40:50])
+            z2 = float(hinge_line[50:60])
+            hinge = (x1, y1, z1, x2, y2, z2)
+            i += 1
+            #print('hinge =', hinge)
+        else:
+            print(hinge_line)
+            raise NotImplementedError(hinge_method)
+    return i, ncomponents, ifsave, params
+
+def parse_special_routines(lines, line, i):
+    """parses the special routines (method=5)"""
+    raise RuntimeError('special routines')

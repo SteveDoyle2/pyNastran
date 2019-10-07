@@ -1523,7 +1523,7 @@ class DYNAMICS(GeomCommon):
             ntimesi = ints[i + 1]
             dti = ints[i + 1]
             noi = ints[i + 3]
-            dtf =  floats[i + 2]
+            dtf = floats[i + 2]
             i += 4
             n += 16
             while (ntimesi, dti, noi) != (-1, -1, -1):
@@ -1534,7 +1534,7 @@ class DYNAMICS(GeomCommon):
                 ntimesi = ints[i]
                 dti = ints[i + 1]
                 noi = ints[i + 2]
-                dtf =  floats[i + 1]
+                dtf = floats[i + 1]
                 i += 3
                 n += 12
             #print('sid=%s ntimes=%s dt=%s no=%s' % (sid, ntimes, dt, no))
@@ -1642,9 +1642,7 @@ class DYNAMICS(GeomCommon):
         }
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
-            #self.show_data(edata)
             out = struc.unpack(edata)
-            #print(out)
             (sid, rtype1, id1, comp1, rtype2, id2, comp2, curid) = out
             if self.is_debug_file:
                 self.binary_debug.write('  RCROSS=%s\n' % str(out))

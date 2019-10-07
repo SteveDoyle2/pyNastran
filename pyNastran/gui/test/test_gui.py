@@ -143,7 +143,7 @@ def run_docopt(argv=None):
     if len(sys.argv) == 1:
         sys.exit(msg)
     ver = str(pyNastran.__version__)
-    data = docopt(msg, argv=argv, help=True, version=ver, options_first=False)
+    data = docopt(msg, argv=argv, version=ver, options_first=False) # help=True,
 
     isdir = data['INPUT_DIRECTORY'] or not data['INPUT_FILENAME'] or data['--dir']
     if isdir or data['--dir']:
