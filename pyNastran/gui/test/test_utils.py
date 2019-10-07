@@ -16,9 +16,10 @@ MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
 class GuiUtils(unittest.TestCase):
     def test_check_version(self):
         """tests ``check_for_newer_version``"""
-        unused_version_latest, unused_version_current, is_newer = check_for_newer_version('1.0.0')
+        unused_version_latest, unused_version_current, is_newer = check_for_newer_version(
+            '1.0.0', quiet=True)
         assert is_newer is True, is_newer
-        check_for_newer_version()
+        check_for_newer_version(quiet=True)
         assert is_newer is True, is_newer
 
     def test_gui_csv_01(self):
@@ -59,7 +60,7 @@ class GuiUtils(unittest.TestCase):
         result_type = 'node'
 
         header0 = headers[0]
-        result0 = A[header0]
+        unused_result0 = A[header0]
         #nrows = result0.shape[0]
         #assert nrows == self.nnodes, 'nrows=%s nnodes=%s' % (nrows, self.nnodes)
         header = header0
@@ -287,8 +288,8 @@ class GuiUtils(unittest.TestCase):
         assert len(np.unique(icases_disp)) == 1
         assert len(np.unique(phases)) == 1
         assert np.allclose(analysis_time, 2.0), analysis_time
-        expected_scales  = [ 0., 0.25, 0.5, 0.75, 1., 0.75, 0.5, 0.25, 0.,
-                             -0.25, -0.5, -0.75, -1., -0.75, -0.5, -0.25]
+        expected_scales = [0., 0.25, 0.5, 0.75, 1., 0.75, 0.5, 0.25, 0.,
+                           -0.25, -0.5, -0.75, -1., -0.75, -0.5, -0.25]
         assert_array(scales, expected_scales, 'scales')
 
     #msg = '%s = %s\n' % (actual_name, actual_array)
@@ -447,8 +448,8 @@ def assert_array(actual_array, expected_array, name):
         raise AssertionError('Invalid Length\n'
                              '%s=%s; len=%s\n'
                              '%s=%s; len=%s' % (
-            actual_name, actual_array.tolist(), len(actual_array),
-            expected_name, expected_array.tolist(), len(expected_array)))
+                                 actual_name, actual_array.tolist(), len(actual_array),
+                                 expected_name, expected_array.tolist(), len(expected_array)))
 
     if not np.allclose(actual_array, expected_array):
         raise AssertionError('%s=scales=%s; len=%s\nexpected=%s; len=%s' % (

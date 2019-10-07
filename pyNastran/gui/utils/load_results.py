@@ -16,6 +16,7 @@ import sys
 import traceback
 import urllib.request
 import urllib.error
+from typing import List, Tuple, Optional, Any
 
 import numpy as np
 import pyNastran
@@ -26,7 +27,55 @@ from pyNastran.converters.nastran.displacements import DisplacementResults, Forc
 from pyNastran.converters.stl.stl import read_stl
 
 
-def check_for_newer_version(version_current=None):
+def get_data_from_website(target_url: str) -> Tuple[Optional[List[str]], bool]:
+    """downloads the byte data from the website"""
+    is_failed = True
+    data = ''
+    try:
+        # it's a file like object and works just like a file
+        data_bytes = urllib.request.urlopen(target_url)
+        is_failed = False
+    except (urllib.error.HTTPError, urllib.error.URLError):  #  forbidden, page not found
+        pass
+    #except: #  urllib2.URLError  # e.g., timeout
+        #print(help(urllib))
+        #raise
+
+    lines = [] # type: List[str]
+    if not is_failed:
+        data = data_bytes.read().decode('utf-8')
+        lines = data.split('\n')  # basically data.readlines()
+    return lines, is_failed
+
+def split_version(version: str, sline: List[str], msg: str) -> Tuple[int, int, int]:
+    try:
+        major, minor, rev = version.split('+')[0].split('.')
+    except ValueError:
+        print('sline = %s' % sline)
+        print(f'version_{msg} = {version}')
+        raise
+    imajor = int(major)
+    iminor = int(minor)
+    irev = int(rev)
+    tuple_version = (imajor, iminor, irev)
+    return tuple_version
+
+def get_latest_version_from_data(data: str) -> Tuple[Optional[str], List[str]]:
+    """finds the latest released version"""
+    version_latest = None
+    for line in data: # files are iterable
+        line_lower = line.lower()
+        #print(line_lower.rstrip())
+        if 'has been released' in line_lower:
+            sline = line_lower.split()
+            version_latest = [slot for slot in sline if slot.startswith('v')][0][1:]
+            break
+    if version_latest is None:
+        return version_latest, []
+    return version_latest, sline
+
+def check_for_newer_version(version_current: Optional[str]=None,
+                            quiet=False) -> Tuple[Optional[str], Optional[str], bool]:
     """
     Checks to see if a newer version of pyNastran has been released.
     Only checks this for the GUI.
@@ -46,60 +95,37 @@ def check_for_newer_version(version_current=None):
     if version_current is None:
         version_current = pyNastran.__version__
     target_url = 'https://raw.githubusercontent.com/SteveDoyle2/pyNastran/master/README.md'
-    try:
-        # it's a file like object and works just like a file
-        data = urllib.request.urlopen(target_url)
-    except (urllib.error.HTTPError, urllib.error.URLError):
-    #except: #  urllib2.URLError
-        #print(help(urllib))
-        #raise
+    data, is_failed = get_data_from_website(target_url)
+    if is_failed:
         return None, None, is_newer
 
-    for btye_line in data: # files are iterable
-        line_lower = btye_line.lower().decode('utf-8')
-        if 'has been released' in line_lower:
-            sline = line_lower.split()
-            version_latest = [slot for slot in sline if slot.startswith('v')][0][1:]
-            break
+    version_latest, sline = get_latest_version_from_data(data)  # type: ignore
+    if version_latest is None:
+        raise RuntimeError("can't parse website")
+        #return None, None, is_newer
 
-    is_dev = False
-    if 'dev' in version_current:
-        is_dev = True
+    is_dev = 'dev' in version_current
+    tuple_current_version = split_version(version_current, sline, 'current')
+    tuple_latest_version = split_version(version_latest, sline, 'latest')
 
-    try:
-        major, minor, rev = version_current.split('+')[0].split('.')
-    except ValueError:
-        print('sline = %s' % sline)
-        print('version_current = %s' % version_current)
-        raise
-    major = int(major)
-    minor = int(minor)
-    rev = int(rev)
-    tuple_current_version = (major, minor, rev)
-
-    try:
-        major, minor, rev = version_latest.split('_')[0].split('.')
-    except ValueError:
-        print('sline = %s' % sline)
-        print('version_latest = %s' % version_latest)
-        raise
-
-    major = int(major)
-    minor = int(minor)
-    rev = int(rev)
-    tuple_latest_version = (major, minor, rev)
     #print('tuple_latest_version = %s' % str(tuple_latest_version))  # (0,7,2)
     #print('tuple_current_version = %s' % str(tuple_current_version))  # (0,8,0)
 
     if (tuple_current_version < tuple_latest_version or
             (is_dev and tuple_current_version == tuple_latest_version)):
-        print('pyNastran %s is now availible; current=%s' % (version_latest, version_current))
+        msg = 'pyNastran %s is now availible; current=%s' % (version_latest, version_current)
+
+        if not quiet:  # pragma: no cover
+            print(msg)
         is_newer = True
     return version_latest, version_current, is_newer
 
-def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
-                   is_deflection=False, is_force=False,
-                   dim_max=None, xyz_cid0=None, colormap='jet'):
+def create_res_obj(islot: int,
+                   headers: List[str], # str too?
+                   header: str,  # List[str] too?
+                   A, fmt_dict, result_type,
+                   is_deflection: bool=False, is_force: bool=False,
+                   dim_max=None, xyz_cid0=None, colormap: str='jet') -> Tuple[Any, str]:
     """
     Parameters
     ----------
@@ -115,7 +141,7 @@ def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
             secondary dimension
             N/A : 1D array
             3 : deflection
-    headers : List[str]???
+    headers : List[str]
         the titles???
     fmt_dict : dict[header] = fmt
         the format of the arrays
@@ -185,7 +211,7 @@ def create_res_obj(islot, headers, header, A, fmt_dict, result_type,
         raise RuntimeError('vector_size=%s' % (vector_size))
     return res_obj, title
 
-def load_deflection_csv(out_filename, encoding='latin1'):
+def load_deflection_csv(out_filename: str, encoding: str='latin1'):
     """
     The GUI deflection CSV loading function.
 
