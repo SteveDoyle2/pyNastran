@@ -64,7 +64,7 @@ class TestF06Utils(unittest.TestCase):
         """tests plot_flutter_f06"""
         f06_filename = os.path.join(MODEL_PATH, 'aero', 'bah_plane', 'bah_plane.f06')
         log = get_logger2(log=None, debug=None, encoding='utf-8')
-        plot_flutter_f06(f06_filename, show=False, log=log)
+        plot_flutter_f06(f06_filename, show=False, close=True, log=log)
 
     def test_plot_flutter2(self):
         """tests plot_flutter_f06"""
