@@ -68,6 +68,7 @@ class BlockMesh:
         """
         #k = bias = ** 1/N  # close to this-ish
         k = 1.
+        assert isinstance(ncells, int), ncells
         ipoints = np.arange(ncells + 1) # ipoint
         # xmax = d0 * k**n
         kn = k**ipoints
@@ -107,12 +108,12 @@ class BlockMesh:
                 n2 = self.nodes[i2, :]
                 n3 = self.nodes[i3, :]
                 n4 = self.nodes[i4, :]
-                unused_ncells_x = grading[idir]
+                ncells_x = grading[idir]
                 ncells_y = grading[iface]
                 bias_x = bias[idir]
                 bias_y = bias[iface]
 
-                unused_npx, x = self.make_hex_bar(bias_x, ncells_y)
+                unused_npx, x = self.make_hex_bar(bias_x, ncells_x)
                 unused_npy, y = self.make_hex_bar(bias_y, ncells_y)
 
                 da = n1 - n2
@@ -122,14 +123,18 @@ class BlockMesh:
                 xa = La * x
                 xb = Lb * x
 
+                ncells = min(ncells_x, ncells_y)  ## TODO: what should this be?
+
                 for i in range(1, ncells):
+                    #print(n2)
+                    #print(xa[i])
                     p1 = n2 + xa[i]
                     p2 = n4 + xb[i]
                     dp = p2 - p1
                     L = norm(dp)
                     unused_yout = L * y
 
-                    unused_new_points = p1 + dp * y
+                    #unused_new_points = p1 + dp * y
                     points.append(1)
                     i / L
                     #p1 =
