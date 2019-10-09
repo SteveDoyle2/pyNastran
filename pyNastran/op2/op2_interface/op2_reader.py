@@ -237,7 +237,7 @@ class OP2Reader:
                 elif version in [b'XXXXXXXX']:
                     #self.log.warning('Assuming MSC Nastran')
                     mode = 'msc'
-                elif version in [b'OS11XXXX', b'OS12.210',
+                elif version in [b'OS11XXXX', b'OS12.210', b'OS14.210',
                                  b'OS2017.1', b'OS2017.2', b'OS2018.1']:
                     # should this be called optistruct or radioss?
                     mode = 'optistruct'
