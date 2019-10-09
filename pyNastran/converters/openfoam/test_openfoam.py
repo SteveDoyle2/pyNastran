@@ -6,7 +6,6 @@ from cpylog import get_logger
 from pyNastran.converters.openfoam.block_mesh import BlockMesh, read_block_mesh, mirror_block_mesh
 from pyNastran.converters.openfoam.points_file import read_points_file
 from pyNastran.converters.openfoam.face_file import FaceFile
-from pyNastran.converters.openfoam.openfoam_io import OpenFoamIO
 from pyNastran.utils import check_path
 
 
