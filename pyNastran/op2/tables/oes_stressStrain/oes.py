@@ -19,6 +19,7 @@ MODCON           OSTRMC        Modal contributions
 
 """
 from struct import Struct
+from typing import Union
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
@@ -3338,8 +3339,8 @@ class OES(OP2Common):
                         txy1 = complex(txy1r, txy1i)
                         txy2 = complex(txy2r, txy2i)
 
-                    obj.add_new_eid_sort1(dt, eid, cen, fd1, sx1, sy1, txy1)
-                    obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
+                    obj.add_eid_sort1(dt, eid, cen, fd1, sx1, sy1, txy1)
+                    obj.add_eid_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
 
                     for unused_inode in range(nnodes):  # nodes pts
                         edata = data[n:n+60]  # 4*15=60
@@ -3365,8 +3366,8 @@ class OES(OP2Common):
                             sy2 = complex(sy2r, sy2i)
                             txy1 = complex(txy1r, txy1i)
                             txy2 = complex(txy2r, txy2i)
-                        obj.add_new_node_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
-                        obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
+                        obj.add_eid_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
+                        obj.add_eid_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
         elif self.format_code in [1, 2] and self.num_wide == 9: # random msc
             # _oes_cquad4 is the same as _oes_ctria3
             element_id = self.nonlinear_factor
@@ -3564,9 +3565,9 @@ class OES(OP2Common):
             # von Mises stress output in SORT1 format.
             element_id = self.nonlinear_factor
             if self.is_stress:  # TODO: add new complex type
-                obj_vector_random = ComplexPlateStressArray
+                obj_vector_complex = ComplexPlateStressArray
             else:
-                obj_vector_random = ComplexPlateStrainArray
+                obj_vector_complex = ComplexPlateStrainArray
             self.data_code['nonlinear_factor'] = element_id
 
             if self._results.is_not_saved(result_name):
@@ -3580,7 +3581,7 @@ class OES(OP2Common):
             nnodes_expected = 1
 
             auto_return, is_vectorized = self._create_oes_object4(
-                nlayers, result_name, slot, obj_vector_random)
+                nlayers, result_name, slot, obj_vector_complex)
             if auto_return:
                 self._data_factor = 2
                 return nelements * ntotal, None, None
@@ -3595,43 +3596,15 @@ class OES(OP2Common):
                            #0.5,   1.7285730838775635, 0.0, -7.103837490081787, 0.0,  2.8560397624969482, 0.0, 9.497518539428711)
 
             obj = self.obj
-            if is_vectorized and self.use_vector:  # pragma: no cover
-                self.log.debug('vectorize CQUAD4-33 complex OESVMx SORT%s' % self.sort_method)
-            struct1 = Struct(self._endian + self._analysis_code_fmt + b'16f')
-            cen = 0 # CEN/4
-            for unused_i in range(nelements):
-                edata = data[n:n+ntotal]
-                out = struct1.unpack(edata)
+            if is_vectorized and self.use_vector and self.sort_method == 1 and 0:  # pragma: no cover
+                raise NotImplementedError(self.table_name_str)
+            else:
+                if is_vectorized and self.use_vector:  # pragma: no cover
+                    self.log.debug('vectorize CQUAD4-33 complex '
+                                   f'{self.table_name_str} SORT{self.sort_method}')
+                n = oes_quad4_33_complex_17(self, data, obj, nelements, ntotal,
+                                            is_magnitude_phase)
 
-                (eid_device,
-                 fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i, max_shear1,
-                 fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, max_shear2) = out
-
-                eid, dt = get_eid_dt_from_eid_device(
-                    eid_device, self.nonlinear_factor, self.sort_method)
-                if self.is_debug_file:
-                    self.binary_debug.write('  eid=%i C=[%s]\n' % (
-                        eid, ', '.join(['%r' % di for di in out])))
-
-                if is_magnitude_phase:
-                    sx1 = polar_to_real_imag(sx1r, sx1i)
-                    sx2 = polar_to_real_imag(sx2r, sx2i)
-                    sy1 = polar_to_real_imag(sy1r, sy1i)
-                    sy2 = polar_to_real_imag(sy2r, sy2i)
-                    txy1 = polar_to_real_imag(txy1r, txy1i)
-                    txy2 = polar_to_real_imag(txy2r, txy2i)
-                else:
-                    sx1 = complex(sx1r, sx1i)
-                    sx2 = complex(sx2r, sx2i)
-                    sy1 = complex(sy1r, sy1i)
-                    sy2 = complex(sy2r, sy2i)
-                    txy1 = complex(txy1r, txy1i)
-                    txy2 = complex(txy2r, txy2i)
-                #print(dt, eid, cen, sx1, sy1, txy1, max_shear1)
-                #print(dt, eid, cen, sx2, sy2, txy2, max_shear2)
-                obj.add_new_eid_sort1(dt, eid, cen, fd1, sx1, sy1, txy1)
-                obj.add_new_eid_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
-                n += ntotal
         else:  # pragma: no cover
             raise RuntimeError(self.code_information())
         assert self.obj.element_name == self.element_name, self.obj
@@ -3797,8 +3770,8 @@ class OES(OP2Common):
                         sy2 = complex(sy2r, sy2i)
                         txy1 = complex(txy1r, txy1i)
                         txy2 = complex(txy2r, txy2i)
-                    obj.add_new_eid_sort1(dt, eid, cen, fd1, sx1, sy1, txy1)
-                    obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
+                    obj.add_eid_sort1(dt, eid, cen, fd1, sx1, sy1, txy1)
+                    obj.add_eid_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
                     n += ntotal
         #elif self.format_code == 1 and self.num_wide == 9: # random?
             #msg = self.code_information()
@@ -4218,8 +4191,8 @@ class OES(OP2Common):
                         txy1 = complex(txy1r, txy1i)
                         txy2 = complex(txy2r, txy2i)
 
-                    obj.add_new_eid_sort1(dt, eid, grid_center, fd1, sx1, sy1, txy1)
-                    obj.add_sort1(dt, eid, grid_center, fd2, sx2, sy2, txy2)
+                    obj.add_eid_sort1(dt, eid, grid_center, fd1, sx1, sy1, txy1)
+                    obj.add_eid_sort1(dt, eid, grid_center, fd2, sx2, sy2, txy2)
 
                     for unused_node_id in range(nnodes):  # nodes pts
                         edata = data[n:n + 60]  # 4*15=60
@@ -4246,8 +4219,8 @@ class OES(OP2Common):
                             txy1 = complex(txy1r, txy1i)
                             txy2 = complex(txy2r, txy2i)
 
-                        obj.add_new_node_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
-                        obj.add_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
+                        obj.add_eid_sort1(dt, eid, grid, fd1, sx1, sy1, txy1)
+                        obj.add_eid_sort1(dt, eid, grid, fd2, sx2, sy2, txy2)
         #elif self.format_code == 1 and self.num_wide == numwide_random: # random
             #msg = self.code_information()
             #msg += '  numwide=%s numwide_real=%s numwide_imag=%s numwide_random=%s' % (
@@ -6243,6 +6216,54 @@ class OES(OP2Common):
             eids = ints[:, 0] // 10
             assert eids.min() > 0, eids.min()
             obj.element[ielement:ielement2] = eids
+
+
+def oes_quad4_33_complex_17(self, data: bytes,
+                            obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
+                            nelements: int, ntotal: int,
+                            is_magnitude_phase: bool):
+    """
+    OESVM1/2 - Table of element stresses or strains with von Mises
+    OSTRVM1/2  for frequency response results.
+
+    """
+    n = 0
+    struct1 = Struct(self._endian + self._analysis_code_fmt + b'16f')
+    cen = 0 # CEN/4
+    for unused_i in range(nelements):
+        edata = data[n:n+ntotal]
+        out = struct1.unpack(edata)
+
+        (eid_device,
+         fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i, von_mises1,
+         fd2, sx2r, sx2i, sy2r, sy2i, txy2r, txy2i, von_mises2) = out
+
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        if self.is_debug_file:
+            self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                eid, ', '.join(['%r' % di for di in out])))
+
+        if is_magnitude_phase:
+            sx1 = polar_to_real_imag(sx1r, sx1i)
+            sx2 = polar_to_real_imag(sx2r, sx2i)
+            sy1 = polar_to_real_imag(sy1r, sy1i)
+            sy2 = polar_to_real_imag(sy2r, sy2i)
+            txy1 = polar_to_real_imag(txy1r, txy1i)
+            txy2 = polar_to_real_imag(txy2r, txy2i)
+        else:
+            sx1 = complex(sx1r, sx1i)
+            sx2 = complex(sx2r, sx2i)
+            sy1 = complex(sy1r, sy1i)
+            sy2 = complex(sy2r, sy2i)
+            txy1 = complex(txy1r, txy1i)
+            txy2 = complex(txy2r, txy2i)
+        #print(dt, eid, cen, sx1, sy1, txy1, max_shear1)
+        #print(dt, eid, cen, sx2, sy2, txy2, max_shear2)
+        obj.add_eid_ovm_sort1(dt, eid, cen, fd1, sx1, sy1, txy1, von_mises1)
+        obj.add_eid_ovm_sort1(dt, eid, cen, fd2, sx2, sy2, txy2, von_mises1)
+        n += ntotal
+    return n
 
 def oes_quad4_33_random_9(self, data, obj, nelements, ntotal):
     n = 0

@@ -7,12 +7,14 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_float_13e
 
-BASIC_RANDOM_TABLES = [
+BASIC_TABLES = {
     'OESATO1', 'OESCRM1', 'OESPSD1', 'OESRMS1', 'OESNO1',
     'OESATO2', 'OESCRM2', 'OESPSD2', 'OESRMS2', 'OESNO2',
     'OSTRATO1', 'OSTRCRM1', 'OSTRPSD1', 'OSTRRMS1', 'OSTRNO1',
     'OSTRATO2', 'OSTRCRM2', 'OSTRPSD2', 'OSTRRMS2', 'OSTRNO2',
-]
+}
+VM_TABLES = {'OESXRMS1', 'OESXNO1'}
+
 
 class RandomPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -139,7 +141,7 @@ class RandomPlateArray(OES_Object):
 
         # [oxx, oyy, txy]
         nresults = 3
-        if self._is_nx_random():
+        if self.has_von_mises:
             # ovm
             nresults += 1
 
@@ -428,15 +430,17 @@ class RandomPlateArray(OES_Object):
                     '', sfd, soxx, soyy, stxy))
             ilayer0 = not ilayer0
 
-    def _is_nx_random(self):
-        if self.table_name in BASIC_RANDOM_TABLES:
-            is_nx_random = False
-        elif self.table_name in ['OESXRMS1', 'OESXNO1']:
-            is_nx_random = True
+    @property
+    def has_von_mises(self):
+        """what is the form of the table (NX includes Von Mises)"""
+        if self.table_name in BASIC_TABLES:  # no von mises
+            has_von_mises = False
+        elif self.table_name in VM_TABLES:
+            has_von_mises = True
         else:
             msg = 'self.table_name=%s self.table_name_str=%s' % (self.table_name, self.table_name_str)
             raise NotImplementedError(msg)
-        return is_nx_random
+        return has_von_mises
 
 def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
     #if self.is_von_mises:
@@ -545,10 +549,11 @@ class RandomPlateStressArray(RandomPlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RandomPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
+        str(self.has_von_mises)
 
     def _get_headers(self):
         headers = ['oxx', 'oyy', 'txy']
-        if self._is_nx_random():
+        if self.has_von_mises:
             headers.append('ovm')
         return headers
 
@@ -559,12 +564,13 @@ class RandomPlateStrainArray(RandomPlateArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RandomPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
+        str(self.has_von_mises)
         assert self.is_strain, self.stress_bits
 
     def _get_headers(self):
         headers = ['exx', 'eyy', 'exy']
-        if self._is_nx_random():
-            headers.append('ovm')
+        if self.has_von_mises:
+            headers.append('evm')
         return headers
 
     def get_headers(self):
