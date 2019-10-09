@@ -87,6 +87,7 @@ class Cart3dIO:
         self.gui.eid_maps[name] = {}
         self.gui.nid_maps[name] = {}
         model = read_cart3d(cart3d_filename, log=self.gui.log, debug=False)
+        self.model = model
         self.gui.model_type = 'cart3d'
         nodes = model.nodes
         elements = model.elements

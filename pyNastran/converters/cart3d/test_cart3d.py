@@ -15,7 +15,7 @@ from pyNastran.converters.type_converter import cmd_line_format_converter
 
 
 PKG_PATH = pyNastran.__path__[0]
-TEST_PATH = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
+MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
 
 class TestCart3d(unittest.TestCase):
 
@@ -44,8 +44,8 @@ class TestCart3d(unittest.TestCase):
             "6\n"
         )
         log = get_logger(level='warning', encoding='utf-8')
-        infile_name = os.path.join(TEST_PATH, 'flat_full.tri')
-        out_name = os.path.join(TEST_PATH, 'combined.tri')
+        infile_name = os.path.join(MODEL_PATH, 'flat_full.tri')
+        out_name = os.path.join(MODEL_PATH, 'combined.tri')
         with open(infile_name, 'w') as f:
             f.write(lines)
 
@@ -92,7 +92,7 @@ class TestCart3d(unittest.TestCase):
             "5.\n"
             "5. 5. 5. 5. 5.\n"
         )
-        cart3d_filename = os.path.join(TEST_PATH, 'flat.tri')
+        cart3d_filename = os.path.join(MODEL_PATH, 'flat.tri')
         with open(cart3d_filename, 'w') as f:
             f.write(lines)
 
@@ -107,7 +107,7 @@ class TestCart3d(unittest.TestCase):
         assert len(cart3d.loads) == 14, 'nloads=%s' % len(cart3d.loads)  # was 10
         assert len(cart3d.loads['Cp']) == 5, 'nCp=%s' % len(cart3d.loads['Cp'])
 
-        outfile_name = os.path.join(TEST_PATH, 'flat.bin.tri')
+        outfile_name = os.path.join(MODEL_PATH, 'flat.bin.tri')
         cart3d.loads = None
         cart3d.write_cart3d(outfile_name, is_binary=True)
         cnormals = cart3d.get_normals()
@@ -118,10 +118,10 @@ class TestCart3d(unittest.TestCase):
     def test_cart3d_io_03(self):
         """read/write geometry in ascii/binary"""
         log = get_logger(level='warning', encoding='utf-8')
-        infile_name = os.path.join(TEST_PATH, 'threePlugs.bin.tri')
-        outfile_name = os.path.join(TEST_PATH, 'threePlugs_out.tri')
-        outfile_name_bin = os.path.join(TEST_PATH, 'threePlugs_bin2.tri')
-        outfile_name_bin_out = os.path.join(TEST_PATH, 'threePlugs_bin_out.tri')
+        infile_name = os.path.join(MODEL_PATH, 'threePlugs.bin.tri')
+        outfile_name = os.path.join(MODEL_PATH, 'threePlugs_out.tri')
+        outfile_name_bin = os.path.join(MODEL_PATH, 'threePlugs_bin2.tri')
+        outfile_name_bin_out = os.path.join(MODEL_PATH, 'threePlugs_bin_out.tri')
 
         cart3d = read_cart3d(infile_name, log=log, debug=False)
         cart3d.write_cart3d(outfile_name, is_binary=False)
@@ -148,8 +148,8 @@ class TestCart3d(unittest.TestCase):
     def test_cart3d_to_stl(self):
         """convert to stl"""
         log = get_logger(level='warning', encoding='utf-8')
-        cart3d_filename = os.path.join(TEST_PATH, 'threePlugs.bin.tri')
-        stl_filename = os.path.join(TEST_PATH, 'threePlugs.stl')
+        cart3d_filename = os.path.join(MODEL_PATH, 'threePlugs.bin.tri')
+        stl_filename = os.path.join(MODEL_PATH, 'threePlugs.stl')
 
         argv = ['format_converter', 'cart3d', cart3d_filename,
                 'stl', stl_filename, '-b', '--scale', '2.0']
@@ -160,8 +160,8 @@ class TestCart3d(unittest.TestCase):
     def test_cart3d_to_tecplot(self):
         """convert to tecplot"""
         log = get_logger(level='warning', encoding='utf-8')
-        cart3d_filename = os.path.join(TEST_PATH, 'threePlugs.bin.tri')
-        tecplot_filename = os.path.join(TEST_PATH, 'threePlugs.plt')
+        cart3d_filename = os.path.join(MODEL_PATH, 'threePlugs.bin.tri')
+        tecplot_filename = os.path.join(MODEL_PATH, 'threePlugs.plt')
         #cart3d_to_tecplot(cart3d_filename, tecplot_filename, log=log)
 
         argv = ['format_converter', 'cart3d', cart3d_filename,
@@ -172,8 +172,8 @@ class TestCart3d(unittest.TestCase):
     def test_cart3d_to_nastran_01(self):
         """convert to nastran small field"""
         log = get_logger(level='warning', encoding='utf-8')
-        cart3d_filename = os.path.join(TEST_PATH, 'threePlugs.bin.tri')
-        bdf_filename = os.path.join(TEST_PATH, 'threePlugs.bdf')
+        cart3d_filename = os.path.join(MODEL_PATH, 'threePlugs.bin.tri')
+        bdf_filename = os.path.join(MODEL_PATH, 'threePlugs.bdf')
         #cart3d_to_nastran_filename(cart3d_filename, bdf_filename, log=log)
 
         argv = ['format_converter', 'cart3d', cart3d_filename,
@@ -184,8 +184,8 @@ class TestCart3d(unittest.TestCase):
     def test_cart3d_to_nastran_02(self):
         """convert to nastran large field"""
         log = get_logger(level='warning', encoding='utf-8')
-        cart3d_filename = os.path.join(TEST_PATH, 'threePlugs.bin.tri')
-        bdf_filename = os.path.join(TEST_PATH, 'threePlugs2.bdf')
+        cart3d_filename = os.path.join(MODEL_PATH, 'threePlugs.bin.tri')
+        bdf_filename = os.path.join(MODEL_PATH, 'threePlugs2.bdf')
         model = cart3d_to_nastran_model(cart3d_filename, log=log)
         model.write_bdf(bdf_filename, size=16)
         self.assertAlmostEqual(model.nodes[1].xyz[0], 1.51971436,
@@ -199,14 +199,28 @@ class TestCart3d(unittest.TestCase):
     #def test_cart3d_input_cntl(self):
         #"""tests the input.cntl reading"""
         #from pyNastran.converters.cart3d.input_cntl_reader import read_input_cntl
-        #input_cntl_filename = os.path.join(TEST_PATH, '')
+        #input_cntl_filename = os.path.join(MODEL_PATH, '')
         #read_input_cntl(input_cntl_filename, log=None, debug=False)
 
     def test_cart3d_input_c3d(self):
         """tests the input.c3d reading"""
         log = get_logger(level='warning', encoding='utf-8')
-        input_c3d_filename = os.path.join(TEST_PATH, 'input.c3d')
+        input_c3d_filename = os.path.join(MODEL_PATH, 'input.c3d')
         read_input_c3d(input_c3d_filename, log=log, debug=False, stack=True)
+
+    def test_bjet(self):
+        log = get_logger(level='warning', encoding='utf-8')
+        geometry_filename = os.path.join(MODEL_PATH, 'business_jet', 'bJet.a.tri')
+
+        model = read_cart3d(geometry_filename, log=log)
+        #print(model.points.min(axis=0))
+        #print(model.points.max(axis=0))
+        model.make_half_model(axis='z', remap_nodes=True)  # keep +z
+        #print(model.points.min(axis=0))
+        #print(model.points.max(axis=0))
+        geometry_filename_half = os.path.join(MODEL_PATH, 'half_bjet.a.tri')
+        model.write_cart3d(geometry_filename_half)
+        read_cart3d(geometry_filename_half, log=log)
 
 def check_array(points, points2):
     nnodes = points.shape[0]
