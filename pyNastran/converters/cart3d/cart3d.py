@@ -20,6 +20,7 @@ import sys
 from struct import pack, unpack
 from math import ceil
 from collections import defaultdict
+from typing import Tuple, Union
 
 import numpy as np
 from cpylog import get_logger2
@@ -538,7 +539,7 @@ class Cart3D(Cart3dIO):
         #nelements = elements.shape[0]
         #assert nelements > 0, 'nelements=%s' % nelements
 
-        #ax = self._get_ax(axis)
+        #ax, ax0 = self._get_ax(axis)
         #if ax in [0, 1, 2]:  # positive x, y, z values; mirror to -side
             #iy0 = np.where(nodes[:, ax] > tol)[0]
             #ax2 = ax
@@ -594,7 +595,7 @@ class Cart3D(Cart3dIO):
         #self.log.info('---finished make_mirror_model---')
         #return (nodes2, elements2, regions2, loads2)
 
-    def _get_ax(self, axis):
+    def _get_ax(self, axis: Union[str, int]) -> Tuple[int, int]:
         """helper method to convert an axis_string into an integer"""
         if isinstance(axis, str):
             axis = axis.lower().strip()
@@ -614,8 +615,11 @@ class Cart3D(Cart3dIO):
             ax = 5
         else:  # pragma: no cover
             raise NotImplementedError('axis=%r' % axis)
-        self.log.info("axis=%r ax=%s" % (axis, ax))
-        return ax
+        self.log.debug("axis=%r ax=%s" % (axis, ax))
+
+        # shift ax to the actual column index in the nodes array
+        ax0 = ax if ax in [0, 1, 2] else ax - 3
+        return ax, ax0
 
     def make_half_model(self, axis='y', remap_nodes=True):
         """
@@ -640,15 +644,33 @@ class Cart3D(Cart3dIO):
         assert nelements > 0, 'nelements=%s'  % nelements
 
         self.log.info('---starting make_half_model---')
-        ax = self._get_ax(axis)
+        ax, ax0 = self._get_ax(axis)
 
-        # location of notes to keep
-        if ax in [0, 1, 2]:  # remove values > 0
-            inodes_save = np.where(nodes[:, ax] >= 0.0)[0]
-        elif ax in [3, 4, 5]:  # remove values < 0
-            inodes_save = np.where(nodes[:, ax-3] <= 0.0)[0]
+        self.log.debug('find elements to remove')
+        #print(f'axis={axis} ax={ax}')
+
+        ynode = nodes[:, ax0]
+        y1 = ynode[elements[:, 0]]
+        y2 = ynode[elements[:, 1]]
+        y3 = ynode[elements[:, 2]]
+        if ax in [0, 1, 2]:  # keep values > 0
+            ielements_save = np.where((y1 >= 0.0) & (y2 >= 0.0) & (y3 >= 0.0))[0]
+        elif ax in [3, 4, 5]:  # keep values < 0
+            ielements_save = np.where((y1 <= 0.0) & (y2 <= 0.0) & (y3 <= 0.0))[0]
         else:
             raise NotImplementedError('axis=%r ax=%s' % (axis, ax))
+
+        elements2 = elements[ielements_save, :]
+        regions2 = regions[ielements_save]
+
+        nelements2 = elements2.shape[0]
+        assert 0 < nelements2 < nelements, 'nelements=%s nelements2=%s'  % (nelements, nelements2)
+
+        # location of nodes to keep
+        inodes_save = np.unique(elements2.ravel())
+
+        #------------------------------------------
+        #checks
 
         #inodes_map = np.arange(len(inodes_save))
         is_nodes = 0 < len(inodes_save) < nnodes
@@ -660,35 +682,8 @@ class Cart3D(Cart3dIO):
         nodes2 = nodes[inodes_save, :]
         nnodes2 = nodes2.shape[0]
         assert 0 < nnodes2 < nnodes, 'no nodes were removed; nnodes=%s nnodes2=%s'  % (nnodes, nnodes2)
-
-        # +1 is so we don't have to shift inode
-        inodes_save += 1
-
-        # TODO: this could be vectoirzed pretty easily
-        #       it's actually pretty slow
-        self.log.debug('find elements to remove')
-        ielements_save = []
-        for ielement in range(nelements):
-            save_element = True
-            element = elements[ielement, :]
-
-            # could be faster...
-            for inode in element:
-                if inode not in inodes_save:
-                    save_element = False
-                    break
-
-            if save_element:
-                ielements_save.append(ielement)
-
-        # we don't need to sort anything since ielements_save is sorted
-        ielements_save_array = np.array(ielements_save, dtype='int32')
-        elements2 = elements[ielements_save_array, :]
-        regions2 = regions[ielements_save_array]
-
+        #------------------------------------------
         # renumbers mesh
-        nelements2 = elements2.shape[0]
-        assert 0 < nelements2 < nelements, 'nelements=%s nelements2=%s'  % (nelements, nelements2)
 
         # node id renumbering
         emin0 = elements2.min()
@@ -709,6 +704,7 @@ class Cart3D(Cart3dIO):
 
         min_e = elements2.min()
         assert min_e == 0, 'min(elements)=%s' % min_e
+        #------------------------------------------
 
         loads2 = {} # 'Cp', 'Mach', 'U', etc.
         for key, load in loads.items():
