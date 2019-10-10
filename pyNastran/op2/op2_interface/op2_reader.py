@@ -70,7 +70,7 @@ IS_TESTING = True
 class SubTableReadError(Exception):
     pass
 
-NX_VERSIONS = ['8.0', '8.5', '9.1', '10.1', '11.0', '2019.2']
+NX_VERSIONS = ['8.0', '8.5', '9.1', '10.1', '11.0', '12.0.2', '2019.2']
 
 DENSE_MATRICES = [
     b'KELM',
@@ -298,7 +298,7 @@ class OP2Reader:
             self._skip_table(table_name, warn=False)
             return
 
-        op2 = self.op2
+        #op2 = self.op2
         unused_table_name = self._read_table_name(rewind=False)
 
         self.read_markers([-1])

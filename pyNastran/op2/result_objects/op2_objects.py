@@ -2,6 +2,7 @@
 import copy
 from itertools import count
 from struct import pack
+from typing import List, Tuple
 import numpy as np
 
 from pyNastran import is_release
@@ -71,15 +72,15 @@ class BaseScalarObject(Op2Codes):
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
-    def __eq__(self, table):  # pragma: no cover
+    def __eq__(self, table) -> bool:  # pragma: no cover
         #raise NotImplementedError(str(self.get_stats()))
         return False
 
-    def __ne__(self, table):
+    def __ne__(self, table) -> bool:
         return not self == table
 
     @property
-    def class_name(self):
+    def class_name(self) -> str:
         return self.__class__.__name__
 
     def get_headers(self):  # pragma: no cover
@@ -88,16 +89,16 @@ class BaseScalarObject(Op2Codes):
     def _get_stats_short(self):  # pragma: no cover
         raise NotImplementedError('_get_stats_short')
 
-    def build_dataframe(self):  # pragma: no cover
+    def build_dataframe(self) -> None:  # pragma: no cover
         """creates a pandas dataframe"""
         print('build_dataframe is not implemented in %s' % self.__class__.__name__)
 
-    def export_to_hdf5(self, group, log):
+    def export_to_hdf5(self, group, log) -> None:
         """exports the object to HDF5 format"""
         export_to_hdf5(self, group, log)
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num=1, is_mag_phase=False, is_sort1=True) -> int:
         if header is None:
             header = []
         if self.nonlinear_factor not in (None, np.nan):
@@ -110,14 +111,14 @@ class BaseScalarObject(Op2Codes):
         return page_num
 
     def _write_f06_transient(self, header, page_stamp, page_num=1, f06_file=None,
-                             is_mag_phase=False, is_sort1=True):
+                             is_mag_phase=False, is_sort1=True) -> int:
         msg = '_write_f06_transient is not implemented in %s\n' % self.__class__.__name__
         f06_file.write(msg)
         print(msg[:-1])
         #raise NotImplementedError(msg)
         return page_num
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ''.join(self.get_stats())
 
     def get_stats(self, short=False):
@@ -193,7 +194,7 @@ class ScalarObject(BaseScalarObject):
             self._set_data_members()
         #print(self.code_information())
 
-    def _get_stats_short(self):
+    def _get_stats_short(self) -> List[str]:
         msg = []
         class_name = self.__class__.__name__
         if hasattr(self, 'data'):
@@ -205,7 +206,7 @@ class ScalarObject(BaseScalarObject):
                 class_name, self.isubcase, shape, headers_str))
         return msg
 
-    def __eq__(self, table):  # pragma: no cover
+    def __eq__(self, table) -> bool:  # pragma: no cover
         self._eq_header(table)
         #raise NotImplementedError(self.class_name)
         #raise NotImplementedError(str(self.get_stats()))
@@ -268,7 +269,7 @@ class ScalarObject(BaseScalarObject):
         group = subcase_group.create_group(self.result_name)
         return group
 
-    def _get_code(self):
+    def _get_code(self) -> Tuple[int, int, int, int, int, str, str]:
         code = self.isubcase
         ogs = 0
         if hasattr(self, 'ogs'):
@@ -286,7 +287,7 @@ class ScalarObject(BaseScalarObject):
         return code
 
     #@property
-    def _sort_method(self):
+    def _sort_method(self) -> int:
         try:
             sort_method, unused_is_real, unused_is_random = self._table_specs()
         except:

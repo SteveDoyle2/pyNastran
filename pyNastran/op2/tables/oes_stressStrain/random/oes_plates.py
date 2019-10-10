@@ -20,6 +20,7 @@ class RandomPlateArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)   ## why???
         self.element_node = None
+        self.fiber_curvature = None
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -302,7 +303,7 @@ class RandomPlateArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-        self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1, ovm1]
+        self.data[self.itime, self.itotal] = [oxx2, oyy2, txy2, ovm2]
         self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
         self.fiber_curvature[self.itotal] = fd2
         self.itotal += 1

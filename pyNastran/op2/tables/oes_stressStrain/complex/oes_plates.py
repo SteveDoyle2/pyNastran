@@ -10,9 +10,11 @@ from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
 BASIC_TABLES = {
     'OES1X', 'OES1',
+    'OES2',
     'OSTR1X',
 }
-VM_TABLES = {'OESVM1'}
+VM_TABLES = {'OESVM1', 'OESVM2',
+             'OSTRVM1', 'OSTRVM2'}
 
 
 class ComplexTriaxStressArray(OES_Object):
