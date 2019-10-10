@@ -12,6 +12,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 
 
 class SU2_IO:
+    """supports 2d single zone SU2 models"""
     def __init__(self, gui):
         self.gui = gui
 
@@ -33,6 +34,7 @@ class SU2_IO:
 
         nnodes = 0
         nelements = 0
+        nzones = len(zones)
         for i, zone in zones.items():
             nodes, elements, regions = zone
             nnodes += nodes.shape[0]
@@ -40,7 +42,11 @@ class SU2_IO:
                 nsub_elements = elems.shape[0]
                 if nsub_elements:
                     nelements += nsub_elements
-                    #print('min of type = %s' % elems.min())
+                #print('min of type = %s' % elems.min())
+
+            if nzones > 1:
+                self.log.warning('only reading a single zone')
+                break
         assert nnodes > 0, nnodes
         assert nelements > 0, nelements
 
@@ -78,7 +84,6 @@ class SU2_IO:
             # ndim=3
 
         points = numpy_to_vtk_points(nodes)
-
 
         #nelements = 0
         #elements = {

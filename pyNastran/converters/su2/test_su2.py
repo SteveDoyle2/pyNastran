@@ -20,19 +20,28 @@ class TestSU2(unittest.TestCase):
         """tests mesh_naca0012_inv.su2"""
         log = get_logger(level='info')
         geometry_filename = os.path.join(MODEL_PATH, 'mesh_naca0012_inv.su2')
-        read_su2(geometry_filename, log=log)
+        geometry_filename2 = os.path.join(MODEL_PATH, 'mesh_naca0012_inv_out.su2')
+        model, unused_zones = read_su2(geometry_filename, log=log)
+        model.write_su2(geometry_filename2)
+        os.remove(geometry_filename2)
 
     def test_su2_02(self):
         """tests sliding_interface_pipe.su2"""
         log = get_logger(level='info')
         geometry_filename = os.path.join(MODEL_PATH, 'sliding_interface_pipe.su2')
-        read_su2(geometry_filename, log=log)
+        geometry_filename2 = os.path.join(MODEL_PATH, 'sliding_interface_pipe_out.su2')
+        model, unused_zones = read_su2(geometry_filename, log=log)
+        model.write_su2(geometry_filename2)
+        os.remove(geometry_filename2)
 
     def test_su2_03(self):
         """tests fea_fsi_wall_channel_2d_mesh_fea.su2"""
         log = get_logger(level='info')
         geometry_filename = os.path.join(MODEL_PATH, 'fea_fsi_wall_channel_2d_mesh_fea.su2')
-        read_su2(geometry_filename, log=log)
+        geometry_filename2 = os.path.join(MODEL_PATH, 'fea_fsi_wall_channel_2d_mesh_fea_out.su2')
+        model, unused_zones = read_su2(geometry_filename, log=log)
+        model.write_su2(geometry_filename2)
+        os.remove(geometry_filename2)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

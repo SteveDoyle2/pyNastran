@@ -2,7 +2,7 @@ import numpy as np
 
 
 def read_su2(su2_filename, log=None, debug=False):
-    """reads a 2d/3d SU2 single zone model"""
+    """reads a 2d/3d SU2 multi-zone model"""
     model = SU2Reader(log=log, debug=debug)
     unused_ndim, zones = model.read_su2(su2_filename)
     #model.to_cart3d()
@@ -11,20 +11,13 @@ def read_su2(su2_filename, log=None, debug=False):
 class SU2Reader:
     """SU2 reader/writer"""
     etype_nnodes_map = {
-        #Line       3
-        #Triangle   5
-        #Quadrilateral  9
-        #Tetrahedral    10
-        #Hexahedral 12
-        #Wedge      13
-        #Pyramid    14
-        3 : 2,
-        5 : 3,
-        9 : 4,
-        10 : 4,
-        12 : 8,
-        13 : 6,
-        14 : 5,
+        3 : 2,  # line
+        5 : 3,  # triangle
+        9 : 4,  # quad
+        10 : 4,  # tetra
+        12 : 8,  # hexa
+        13 : 6,  # wedge / penta
+        14 : 5,  # pyramid
     }
     def __init__(self, log=None, debug=False):
         """initializes the SU2Reader object"""
@@ -34,7 +27,7 @@ class SU2Reader:
         self.ndim = None
         self.zones = {}
 
-    def read_2d(self, lines, i, ndim, nelem):
+    def _read_2d(self, lines, i, ndim, nelem):
         """reads a 2d SU2 zone"""
         # elements
         tris = []
@@ -80,13 +73,17 @@ class SU2Reader:
         i, regions = self._read_2d_bcs(lines, i, bcs)
 
         assert len(tris) > 0 or len(quads) > 0
-        elements = {
-            5 : tris,
-            9 : quads,
-        }
+        elements = {}
+        if tris.shape[0] > 0:
+            elements[5] = tris
+        if quads.shape[0] > 0:
+            elements[9] = quads
+        assert len(elements), 'no 2d elements found'
+
         return i, nodes, elements, regions
 
     def _read_2d_bcs(self, lines, i, bcs):
+        """reads the 1d boundary conditions for a 2d SU2 zone"""
         regions = {}
         nmark = bcs['nmark']
         line = lines[i]
@@ -94,7 +91,7 @@ class SU2Reader:
         for imark in range(nmark):
             nelements_mark = bcs['marker_elems']
             name = bcs['marker_tag']
-            assert name != name_old, 'name=%r name_old=%r' % (name, name_old)
+            assert name != name_old, 'name={name!r} name_old={name_old!r}'
 
             lines2d = []
             #np.zeros((nelements_mark, 2), dtype='int32')
@@ -110,7 +107,7 @@ class SU2Reader:
                 if etype == '3':
                     assert len(nodesi) == 2, f'nnodes={len(nodesi)} nodes={nodesi}'
                     lines2d.append(nodesi)
-                else:
+                else:  # pragma: no cover
                     raise NotImplementedError(etype)
                 i += 1
 
@@ -118,11 +115,12 @@ class SU2Reader:
             if imark != nmark - 1:
                 i, bcs = read_header(lines, i, self.log)
             regionsi = {3 : lines2d}
+            assert len(lines2d), 'no 3d bcs found'
             regions[name] = regionsi
             name_old = name
         return i, regions
 
-    def read_3d(self, lines, i, unused_ndim, nelem):
+    def _read_3d(self, lines, i, unused_ndim, nelem):
         """reads a 3d SU2 zone"""
         tets = []
         hexs = []
@@ -149,19 +147,24 @@ class SU2Reader:
             elif etype == '14':  # pyram
                 assert len(nodesi) == 5, f'nnodes={len(nodesi)} nodes={nodesi}'
                 pyramids.append(nodesi)
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(f'etype={etype} data={data}')
             i += 1
         tets = np.array(tets, dtype='int32')
-        #pents = np.array(pents, dtype='int32')
-        wedges = np.array(wedges, dtype='int32')
+        hexs = np.array(hexs, dtype='int32')
+        wedges = np.array(wedges, dtype='int32')  # penta element
         pyramids = np.array(pyramids, dtype='int32')
-        elements = {
-            10 : tets,
-            12 : hexs,
-            13 : wedges,
-            14 : pyramids,
-        }
+
+        elements = {}
+        if tets.shape[0] > 0:
+            elements[10] = tets
+        if hexs.shape[0] > 0:
+            elements[12] = hexs
+        if wedges.shape[0] > 0:
+            elements[13] = wedges
+        if pyramids.shape[0] > 0:
+            elements[14] = pyramids
+        assert len(elements), 'no 3d elements found'
 
         i, points_dict = read_header(lines, i, self.log)
         nnodes = points_dict['npoints']
@@ -179,10 +182,9 @@ class SU2Reader:
 
 
     def _read_3d_bcs(self, lines, i, bcs):
+        """reads the 2d boundary conditions for a 3d SU2 zone"""
         regions = {}
         nmark = bcs['nmark']
-        #line = lines[i]
-        #print(line)
         name_old = None
         for imark in range(nmark):
             #print(f'imark={imark} nmark={nmark} look_ahead={imark != nmark - 1}')
@@ -200,22 +202,23 @@ class SU2Reader:
                 elif etype == '5':
                     assert len(nodesi) == 3, f'nnodes={len(nodesi)} nodes={nodesi}'
                     tris.append(nodesi)
+                else:  # pragma: no cover
+                    raise RuntimeError(line.strip())
                 i += 1
             if imark != nmark - 1:
                 i, bcs = read_header(lines, i, self.log)
-                #print('*bcs', bcs)
 
             tris = np.array(tris, dtype='int32')
             quads = np.array(quads, dtype='int32')
-            #print(i, imark, tris)
 
-            regionsi = {
-                5 : tris,
-                9 : quads,
-            }
+            regionsi = {}
+            if tris.shape[0] > 0:
+                regionsi[5] = tris
+            if quads.shape[0] > 0:
+                regionsi[9] = quads
+            assert len(regionsi), 'no 3d bcs found'
             regions[name] = regionsi
             name_old = name
-            #print('---------')
         return i, regions
 
     def read_su2(self, su2_filename):
@@ -227,7 +230,6 @@ class SU2Reader:
 
         i = 0
         zones = {}
-        #print('---------------------------')
         i, zone_dict = read_header(lines, i, self.log)
         nzones = zone_dict['nzones']
         for izone in range(nzones):
@@ -235,10 +237,10 @@ class SU2Reader:
             nelem = zone_dict['nelem']
 
             if ndim == 2:
-                i, nodes, elements, regions = self.read_2d(lines, i, ndim, nelem)
+                i, nodes, elements, regions = self._read_2d(lines, i, ndim, nelem)
             elif ndim == 3:
-                i, nodes, elements, regions = self.read_3d(lines, i, ndim, nelem)
-            else:
+                i, nodes, elements, regions = self._read_3d(lines, i, ndim, nelem)
+            else:  # pragma: no cover
                 raise RuntimeError(ndim)
 
             if izone != nzones - 1:
@@ -249,25 +251,57 @@ class SU2Reader:
         self.zones = zones
         return ndim, zones
 
-    def write_su2(self, su2_filename, nodes, elements, unused_regions):
-        nnodes, ndim = nodes.shape
-        nnodes, ndim = nodes.shape
-        with open(su2_filename, 'wb') as su2_file:
-            su2_file.write('NDIM = %i\n' % ndim)
-            if ndim == 2:
-                for etype, elementsi in sorted(elements.items()):
-                    element_num = self.etype_nnodes_map[etype]
-                    fmt = '%%s' + ' %%s' * (element_num-1) + '\n'
+    def write_su2(self, su2_filename, zones=None):
+        """writes a 2d/3d multizone SU2 file"""
+        if zones is None:
+            zones = self.zones
+
+        nzones = len(zones)
+        with open(su2_filename, 'w') as su2_file:
+            su2_file.write(f'NZONE = {nzones:d}\n')
+            for izone, zone in zones.items():
+                nodes, elements, regions = zone
+                nnodes, ndim = nodes.shape
+                su2_file.write(f'IZONE = {nzones:d}\n')
+                su2_file.write(f'NDIM = {ndim:d}\n')
+
+                nelements = 0
+                for etype, elementsi in elements.items():
+                    nelements += elementsi.shape[0]
+                su2_file.write(f'NELEM = {nelements:d}\n')
+
+                for etype, elementsi in elements.items():
+                    nnodesi = self.etype_nnodes_map[etype]
+                    fmt = str(etype) + ' %s' * nnodesi + '\n'
                     for element in elementsi:
-                        su2_file.write(fmt % element)
+                        su2_file.write(fmt % tuple(element))
 
                 su2_file.write('NPOINTS = %i\n' % nnodes)
-                for inode, node in enumerate(nodes):
-                    su2_file.write('%i %i %i\n' % (node[0], node[1], inode))
-            elif ndim == 3:
-                su2_file.write('NPOINTS = %i\n' % nnodes)
-                for inode, node in enumerate(nodes):
-                    su2_file.write('%i %i %i %i\n' % (node[0], node[1], node[2], inode))
+                if ndim == 2:
+                    for inode, node in enumerate(nodes):
+                        su2_file.write('%f %f %i\n' % (node[0], node[1], inode))
+                elif ndim == 3:
+                    su2_file.write('NPOINTS = %i\n' % nnodes)
+                    for inode, node in enumerate(nodes):
+                        su2_file.write('%f %f %f %i\n' % (node[0], node[1], node[2], inode))
+                else:  # pragma: no cover
+                    raise RuntimeError(ndim)
+
+                nregions = len(regions)
+                su2_file.write(f'NMARK = {nregions:d}\n')
+                for name, region in regions.items():
+                    nmarker_elementsi = 0
+                    for etype, elementsi in region.items():
+                        nmarker_elementsi += elementsi.shape[0]
+
+                    su2_file.write(f'MARKER_ELEMS = {nmarker_elementsi:d}\n')
+                    su2_file.write(f'MARKER_TAG = {name}\n')
+                    for etype, elementsi in region.items():
+                        nnodesi = self.etype_nnodes_map[etype]
+                        fmt = str(etype) + ' %s' * (nnodesi) + '\n'
+                        for element in elementsi:
+                            su2_file.write(fmt % tuple(element))
+
 
 def read_header(lines, i, log):
     """reads the header and stores it as a dictionary"""
@@ -304,12 +338,14 @@ def read_header(lines, i, log):
 
         elif word == 'NPOIN':
             headers['npoints'] = int(value)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError('word=%r' % word)
         i += 1
         line = lines[i]
 
     assert len(headers) > 0, headers
+
+    # if this is the first zone and nzones isn't defined, add it
     if i0 == 0 and 'nzones' not in headers and ('izone' in headers or'ndim' in headers):
         headers['nzones'] = 1
 
