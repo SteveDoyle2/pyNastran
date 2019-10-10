@@ -18,14 +18,20 @@ class TestSU2(unittest.TestCase):
 
     def test_su2_01(self):
         """tests mesh_naca0012_inv.su2"""
-        log = get_logger(level='debug')
+        log = get_logger(level='info')
         geometry_filename = os.path.join(MODEL_PATH, 'mesh_naca0012_inv.su2')
         read_su2(geometry_filename, log=log)
 
     def test_su2_02(self):
         """tests sliding_interface_pipe.su2"""
-        log = get_logger(level='debug')
+        log = get_logger(level='info')
         geometry_filename = os.path.join(MODEL_PATH, 'sliding_interface_pipe.su2')
+        read_su2(geometry_filename, log=log)
+
+    def test_su2_03(self):
+        """tests fea_fsi_wall_channel_2d_mesh_fea.su2"""
+        log = get_logger(level='info')
+        geometry_filename = os.path.join(MODEL_PATH, 'fea_fsi_wall_channel_2d_mesh_fea.su2')
         read_su2(geometry_filename, log=log)
 
 if __name__ == '__main__':  # pragma: no cover

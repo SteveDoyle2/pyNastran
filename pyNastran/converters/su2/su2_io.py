@@ -29,15 +29,18 @@ class SU2_IO:
 
         model = SU2(log=self.gui.log, debug=False)
         #self.model_type = model.model_type
-        ndim, nodes, elements, unused_regions = model.read_su2(su2_filename)
+        ndim, zones = model.read_su2(su2_filename)
 
-        nnodes = nodes.shape[0]
+        nnodes = 0
         nelements = 0
-        for etype, elems in elements.items():
-            nsub_elements = elems.shape[0]
-            if nsub_elements:
-                nelements += nsub_elements
-                #print('min of type = %s' % elems.min())
+        for i, zone in zones.items():
+            nodes, elements, regions = zone
+            nnodes += nodes.shape[0]
+            for etype, elems in elements.items():
+                nsub_elements = elems.shape[0]
+                if nsub_elements:
+                    nelements += nsub_elements
+                    #print('min of type = %s' % elems.min())
         assert nnodes > 0, nnodes
         assert nelements > 0, nelements
 
