@@ -295,75 +295,77 @@ class Part:
             else:
                 self.log.warning('key=%r is an invalid material' % key)
 
+    @property
+    def nelements(self):
+        """Gets the total number of elements"""
+        n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
+
+        # plane strain
+        n_cpe3 = self.cpe3.shape[0] if self.cpe3 is not None else 0
+        n_cpe4 = self.cpe4.shape[0] if self.cpe4 is not None else 0
+        n_cpe4r = self.cpe4r.shape[0] if self.cpe4r is not None else 0
+
+        # plane stress
+        n_cps3 = self.cps3.shape[0] if self.cps3 is not None else 0
+        n_cps4 = self.cps4.shape[0] if self.cps4 is not None else 0
+        n_cps4r = self.cps4r.shape[0] if self.cps4r is not None else 0
+
+        n_coh2d4 = self.coh2d4.shape[0] if self.coh2d4 is not None else 0
+        n_c3d10h = self.c3d10h.shape[0] if self.c3d10h is not None else 0
+
+        n_cohax4 = self.cohax4.shape[0] if self.cohax4 is not None else 0
+        n_cax3 = self.cax3.shape[0] if self.cax3 is not None else 0
+        n_cax4r = self.cax4r.shape[0] if self.cax4r is not None else 0
+
+        n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0
+
+        neids = (n_r2d2 +
+                 n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
+                 n_cps3 + n_cps4 + n_cps4r +  # plane stress
+                 n_coh2d4 +
+                 n_c3d10h + n_cohax4 + n_cax3 + n_cax4r +
+                 n_c3d8r)
+        assert neids > 0, neids
+        return neids
 
     def __repr__(self):
         """prints a summary for the part"""
         nnodes = self.nodes.shape[0]
-        n_r2d2 = 0
+        n_r2d2 = self.r2d2.shape[0] if self.r2d2 is not None else 0
 
         # plane strain
-        n_cpe3 = 0
-        n_cpe4 = 0
-        n_cpe4r = 0
+        n_cpe3 = self.cpe3.shape[0] if self.cpe3 is not None else 0
+        n_cpe4 = self.cpe4.shape[0] if self.cpe4 is not None else 0
+        n_cpe4r = self.cpe4r.shape[0] if self.cpe4r is not None else 0
 
         # plane stress
-        n_cps3 = 0
-        n_cps4 = 0
-        n_cps4r = 0
+        n_cps3 = self.cps3.shape[0] if self.cps3 is not None else 0
+        n_cps4 = self.cps4.shape[0] if self.cps4 is not None else 0
+        n_cps4r = self.cps4r.shape[0] if self.cps4r is not None else 0
 
-        n_coh2d4 = 0
-        n_c3d10h = 0
+        n_coh2d4 = self.coh2d4.shape[0] if self.coh2d4 is not None else 0
+        n_c3d10h = self.c3d10h.shape[0] if self.c3d10h is not None else 0
 
-        n_cohax4 = 0
-        n_cax3 = 0
-        n_cax4r = 0
-        if self.r2d2 is not None:
-            n_r2d2 = self.r2d2.shape[0]
+        n_cohax4 = self.cohax4.shape[0] if self.cohax4 is not None else 0
+        n_cax3 = self.cax3.shape[0] if self.cax3 is not None else 0
+        n_cax4r = self.cax4r.shape[0] if self.r2d2 is not None else 0
 
-        # plane strain
-        if self.cpe3 is not None:
-            n_cpe3 = self.cpe3.shape[0]
-        if self.cpe4 is not None:
-            n_cpe4 = self.cpe4.shape[0]
-        if self.cpe4r is not None:
-            n_cpe4r = self.cpe4r.shape[0]
+        n_c3d8r = self.c3d8r.shape[0] if self.c3d8r is not None else 0
 
-        # plane stress
-        if self.cps3 is not None:
-            n_cps3 = self.cps3.shape[0]
-        if self.cps4 is not None:
-            n_cps4 = self.cps4.shape[0]
-        if self.cps4r is not None:
-            n_cps4r = self.cps4r.shape[0]
-
-        if self.coh2d4 is not None:
-            n_coh2d4 = self.coh2d4.shape[0]
-        if self.c3d10h is not None:
-            n_c3d10h = self.c3d10h.shape[0]
-
-        if self.cohax4 is not None:
-            n_cohax4 = self.cohax4.shape[0]
-        if self.cax3 is not None:
-            n_cax3 = self.cax3.shape[0]
-        if self.cax4r is not None:
-            n_cax4r = self.cax4r.shape[0]
-        if self.cps4r is not None:
-            n_cps4r = self.cps4r.shape[0]
-
-        neids = (n_r2d2 + 
+        neids = (n_r2d2 +
                  n_cpe3 + n_cpe4 + n_cpe4r +  # plane strain
                  n_cps3 + n_cps4 + n_cps4r +  # plane stress
                  n_coh2d4 +
-                 n_c3d10h + n_cohax4 + n_cax3 + n_cax4r)
+                 n_c3d10h + n_cohax4 + n_cax3 + n_cax4r +
+                 n_c3d8r)
+        assert neids == self.nelements, 'something is out of date...'
         msg = (
-            'Part(name=%r, nnodes=%i, neids=%i,\n'
-            '     n_r2d2=%i, n_cps3=%i, n_cpe3=%i, n_cpe4=%i, n_cpe4r=%i, n_coh2d4=%i,\n'
-            '     n_cohax4=%i, n_cax3=%i, n_cax4r=%i, n_cps4r=%i,\n'
-            '     n_c3d10h=%i)\n' % (
-                self.name, nnodes, neids,
-                n_r2d2, n_cps3, n_cpe3, n_cpe4, n_cpe4r, n_coh2d4,
-                n_cohax4, n_cax3, n_cax4r, n_cps4r,
-                n_c3d10h,)
+            f'Part(name={self.name}, nnodes={nnodes:d}, neids={neids:d},\n'
+            f'     n_r2d2={n_r2d2}, n_cps3={n_cps3}, n_cpe3={n_cpe3}, '
+            f'n_cpe4={n_cpe4}, n_cpe4r={n_cpe4r}, n_coh2d4={n_coh2d4},\n'
+            f'     n_cohax4={n_cohax4}, n_cax3={n_cax3}, n_cax4r={n_cax4r},'
+            f' n_cps4r={n_cps4r},\n'
+            f'     n_c3d10h={n_c3d10h}, n_c3d8r=n_c3d8r)\n'
         )
         nsets = list(self.node_sets.keys())
         esets = list(self.element_sets.keys())

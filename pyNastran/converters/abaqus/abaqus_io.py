@@ -185,26 +185,6 @@ class AbaqusIO:
 
 def get_nodes_nnodes_nelements(model, stop_for_no_elements=True):
     """helper method"""
-    n_r2d2 = 0
-
-    # plane strain
-    n_cpe3 = 0
-    n_cpe4 = 0
-    n_cpe4r = 0
-
-    # plane stress
-    n_cps3 = 0
-    n_cps4 = 0
-    n_cps4r = 0
-
-    n_coh2d4 = 0
-    n_c3d10h = 0
-
-    n_cohax4 = 0
-    n_cax3 = 0
-    n_cax4r = 0
-    n_c3d8r = 0
-
     nnodes = 0
     nelements = 0
     all_nodes = []
@@ -213,47 +193,9 @@ def get_nodes_nnodes_nelements(model, stop_for_no_elements=True):
         nodes = part.nodes
 
         nnodes += nodes.shape[0]
-        if part.r2d2 is not None:
-            n_r2d2 += part.r2d2.shape[0]
-
-        # shells
-        # plane strain
-        if part.cpe3 is not None:
-            n_cpe3 += part.cpe3.shape[0]
-        if part.cpe4 is not None:
-            n_cpe4 += part.cpe4.shape[0]
-        if part.cpe4r is not None:
-            n_cpe4r += part.cpe4r.shape[0]
-
-        # plane stress
-        if part.cps3 is not None:
-            n_cps3 += part.cps3.shape[0]
-        if part.cps4 is not None:
-            n_cps4 += part.cps4.shape[0]
-        if part.cps4r is not None:
-            n_cps4r += part.cps4r.shape[0]
-
-        if part.coh2d4 is not None:
-            n_coh2d4 += part.coh2d4.shape[0]
-        if part.cohax4 is not None:
-            n_cohax4 += part.cohax4.shape[0]
-        if part.cax3 is not None:
-            n_cax3 += part.cax3.shape[0]
-        if part.cax4r is not None:
-            n_cax4r += part.cax4r.shape[0]
-
-        if part.c3d10h is not None:
-            n_c3d10h += part.c3d10h.shape[0]
-        if part.c3d8r is not None:
-            n_c3d8r += part.c3d8r.shape[0]
+        nelements += part.nelements
 
         all_nodes.append(nodes)
-    nelements += (
-        n_r2d2 +
-        n_cpe3 + n_cpe4 + n_cpe4r +
-        n_cps3 + n_cps4 + n_cps4r +
-        n_coh2d4 + n_c3d10h + n_cohax4 + n_cax3 + n_cax4r + n_c3d8r
-    )
     if nelements == 0 and stop_for_no_elements:
         raise RuntimeError('nelements=0')
     return nnodes, all_nodes, nelements
@@ -269,9 +211,10 @@ def add_lines(grid, nids, eids_lines, nid_offset):
         node_ids = elem_nids + nid_offset
         for unused_eid, node_idsi in zip(eids, node_ids):
             elem = vtkLine()
-            elem.GetPointIds().SetId(0, node_idsi[0])
-            elem.GetPointIds().SetId(1, node_idsi[1])
-            grid.InsertNextCell(3, elem.GetPointIds())
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, node_idsi[0])
+            point_ids.SetId(1, node_idsi[1])
+            grid.InsertNextCell(3, point_ids)
     return nelements
 
 
@@ -286,10 +229,11 @@ def add_tris(grid, nids, eids_tris, nid_offset):
         node_ids = elem_nids + nid_offset
         for unused_eid, node_idsi in zip(eids, node_ids):
             elem = vtkTriangle()
-            elem.GetPointIds().SetId(0, node_idsi[0])
-            elem.GetPointIds().SetId(1, node_idsi[1])
-            elem.GetPointIds().SetId(2, node_idsi[2])
-            grid.InsertNextCell(5, elem.GetPointIds())
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, node_idsi[0])
+            point_ids.SetId(1, node_idsi[1])
+            point_ids.SetId(2, node_idsi[2])
+            grid.InsertNextCell(5, point_ids)
     return nelements
 
 
@@ -306,11 +250,12 @@ def add_quads(grid, nids, eids_quads, nid_offset):
         #node_ids = inids # + nid_offset + 1
         for unused_eid, node_idsi in zip(eids, node_ids):
             elem = vtkQuad()
-            elem.GetPointIds().SetId(0, node_idsi[0])
-            elem.GetPointIds().SetId(1, node_idsi[1])
-            elem.GetPointIds().SetId(2, node_idsi[2])
-            elem.GetPointIds().SetId(3, node_idsi[3])
-            grid.InsertNextCell(9, elem.GetPointIds())
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, node_idsi[0])
+            point_ids.SetId(1, node_idsi[1])
+            point_ids.SetId(2, node_idsi[2])
+            point_ids.SetId(3, node_idsi[3])
+            grid.InsertNextCell(9, point_ids)
     return nelements
 
 
@@ -325,11 +270,12 @@ def add_tetras(grid, nids, eids_tetras, nid_offset):
         node_ids = elem_nids + nid_offset
         for unused_eid, node_idsi in zip(eids, node_ids):
             elem = vtkTetra()
-            elem.GetPointIds().SetId(0, node_idsi[0])
-            elem.GetPointIds().SetId(1, node_idsi[1])
-            elem.GetPointIds().SetId(2, node_idsi[2])
-            elem.GetPointIds().SetId(3, node_idsi[3])
-            grid.InsertNextCell(10, elem.GetPointIds())
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, node_idsi[0])
+            point_ids.SetId(1, node_idsi[1])
+            point_ids.SetId(2, node_idsi[2])
+            point_ids.SetId(3, node_idsi[3])
+            grid.InsertNextCell(10, point_ids)
     return nelements
 
 
@@ -344,13 +290,14 @@ def add_hexas(grid, nids, eids_hexas, nid_offset):
         node_ids = elem_nids + nid_offset
         for unused_eid, node_idsi in zip(eids, node_ids):
             elem = vtkHexahedron()
-            elem.GetPointIds().SetId(0, node_idsi[0])
-            elem.GetPointIds().SetId(1, node_idsi[1])
-            elem.GetPointIds().SetId(2, node_idsi[2])
-            elem.GetPointIds().SetId(3, node_idsi[3])
-            elem.GetPointIds().SetId(4, node_idsi[4])
-            elem.GetPointIds().SetId(5, node_idsi[5])
-            elem.GetPointIds().SetId(6, node_idsi[6])
-            elem.GetPointIds().SetId(7, node_idsi[7])
-            grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+            point_ids = elem.GetPointIds()
+            point_ids.SetId(0, node_idsi[0])
+            point_ids.SetId(1, node_idsi[1])
+            point_ids.SetId(2, node_idsi[2])
+            point_ids.SetId(3, node_idsi[3])
+            point_ids.SetId(4, node_idsi[4])
+            point_ids.SetId(5, node_idsi[5])
+            point_ids.SetId(6, node_idsi[6])
+            point_ids.SetId(7, node_idsi[7])
+            grid.InsertNextCell(elem.GetCellType(), point_ids)
     return nelements
