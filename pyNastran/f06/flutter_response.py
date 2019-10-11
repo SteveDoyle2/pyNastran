@@ -1,5 +1,5 @@
 from itertools import count
-from typing import  List, Any, Optional, Dict, Union, Tuple
+from typing import  List, Dict, Union, Tuple, Iterable, Optional, Any
 
 import numpy as np
 
@@ -20,10 +20,13 @@ from pyNastran.utils import object_attributes, object_methods
 class FlutterResponse:
     """storage object for single subcase SOL 145 results"""
 
-    def __init__(self, subcase, configuration, xysym, xzsym, mach, density_ratio, method,
-                 modes, results,
-                 f06_units=None, out_units=None, make_alt=False):
-        # type: (int, str, str, str, float, float, str, List[int], Any, Optional[Union[str, Dict[str, str]]], Optional[Union[str, Dict[str, str]]], Optional[bool]) -> None
+    def __init__(self, subcase: int, configuration: str,
+                 xysym: str, xzsym: str,
+                 mach: float, density_ratio: float, method: str,
+                 modes: List[int], results: Any,
+                 f06_units: Union[None, str, Dict[str, str]]=None,
+                 out_units: Union[None, str, Dict[str, str]]=None,
+                 make_alt: bool=False) -> None:
         """
         Parameters
         ----------
@@ -291,18 +294,18 @@ class FlutterResponse:
                        png_filename=png_filename,
                        **kwargs)
 
-    @property
-    def flutter_speed(self, modes=None):
-        """gets the flutter speed"""
-        if modes is None:
-            modes = self.modes
-        else:
-            modes = np.asarray(modes)
+    #@property
+    #def flutter_speed(self, modes=None):
+        #"""gets the flutter speed"""
+        #if modes is None:
+            #modes = self.modes
+        #else:
+            #modes = np.asarray(modes)
 
     def plot_root_locus(self, modes=None,
                         fig=None, axes=None,
                         xlim=None, ylim=None,
-                        show=True, clear=False, legend=True,
+                        show=True, clear=False, close=False, legend=True,
                         png_filename=None,
                         **kwargs):
         """
@@ -347,14 +350,14 @@ class FlutterResponse:
         scatter = True
         self._plot_x_y(ix, iy, xlabel, ylabel, scatter,
                        modes=modes, fig=fig, axes=axes, xlim=xlim, ylim=ylim,
-                       show=show, clear=clear, legend=legend,
+                       show=show, clear=clear, close=close, legend=legend,
                        png_filename=png_filename,
                        **kwargs)
 
     def _plot_x_y(self, ix, iy, xlabel, ylabel, scatter, modes=None,
                   fig=None, axes=None,
                   xlim=None, ylim=None,
-                  show=True, clear=False, legend=True,
+                  show=True, clear=False, close=False, legend=True,
                   png_filename=None,
                   **kwargs):
         """builds the plot"""
@@ -405,13 +408,15 @@ class FlutterResponse:
             plt.savefig(png_filename)
         if clear:
             fig.clear()
+        if close:
+            plt.close()
         return axes
 
     def _plot_x_y2(self, ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter, modes=None,
                    fig=None, axes1=None, axes2=None,
                    xlim=None, ylim1=None, ylim2=None,
                    nopoints=False, noline=False,
-                   show=True, clear=False, legend=True,
+                   show=True, clear=False, close=False, legend=True,
                    png_filename=None,
                    **kwargs):
         """builds the plot"""
@@ -438,8 +443,8 @@ class FlutterResponse:
         if nopoints: # and noline is False:
             scatter = False
 
-        showline = not noline
-        showpoints = not nopoints
+        #showline = not noline
+        #showpoints = not nopoints
 
         for i, imode, mode in zip(count(), imodes, modes):
             symbol = symbols[i]
@@ -504,12 +509,14 @@ class FlutterResponse:
             plt.savefig(png_filename)
         if clear:
             fig.clear()
+        if close:
+            plt.close()
 
     def plot_kfreq_damping(self, modes=None,
                            plot_type='tas',
                            fig=None, damp_axes=None, freq_axes=None,
                            xlim=None,
-                           show=True, clear=False, legend=True,
+                           show=True, clear=False, close=False, legend=True,
                            png_filename=None,
                            ylim_damping=None,
                            ylim_kfreq=None,
@@ -531,8 +538,7 @@ class FlutterResponse:
                         modes=modes, fig=fig, axes1=damp_axes, axes2=freq_axes,
                         xlim=xlim, ylim1=ylim_damping, ylim2=ylim_kfreq,
                         nopoints=nopoints, noline=noline,
-                        show=show,
-                        clear=clear,
+                        show=show, clear=clear, close=close,
                         legend=legend,
                         png_filename=png_filename,
                         **kwargs)
@@ -540,7 +546,7 @@ class FlutterResponse:
     def plot_kfreq_damping2(self, modes=None,
                             fig=None,
                             xlim=None, ylim=None,
-                            show=True, clear=False, legend=True,
+                            show=True, clear=False, close=False, legend=True,
                             png_filename=None,
                             **kwargs):
         """
@@ -557,8 +563,7 @@ class FlutterResponse:
         scatter = True
         self._plot_x_y2(ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
                         modes=modes, fig=fig, xlim=xlim, ylim=ylim,
-                        show=show,
-                        clear=clear,
+                        show=show, clear=clear, close=close,
                         legend=legend,
                         png_filename=png_filename,
                         **kwargs)
@@ -594,7 +599,7 @@ class FlutterResponse:
 
     def plot_vg_vf(self, fig=None, damp_axes=None, freq_axes=None, modes=None,
                    plot_type='tas',
-                   clear=False, legend=True,
+                   clear=False, close=False, legend=True,
                    xlim=None, ylim_damping=None, ylim_freq=None,
                    nopoints=False, noline=False, png_filename=None, show=None):
         """
@@ -689,9 +694,10 @@ class FlutterResponse:
             plt.savefig(png_filename)
         if clear:
             fig.clear()
+        if close:
+            plt.close()
 
-    def export_to_veas(self, veas_filename, modes=None):
-        # type: (str, Optional[List[int]]) -> None
+    def export_to_veas(self, veas_filename: str, modes: Optional[List[int]]=None) -> None:
         """
         Exports a ZONA .veas file
 
@@ -750,7 +756,7 @@ class FlutterResponse:
             imodes = modes - 1
         return imodes
 
-    def _modes_nmodes(self, modes):
+    def _modes_nmodes(self, modes: Optional[Iterable[int]]) -> Tuple[Iterable[int], int]:
         """gets the modes and nmodes"""
         if modes is None:
             nmodes = self.results.shape[0]
@@ -759,8 +765,10 @@ class FlutterResponse:
             nmodes = max(modes)
         return modes, nmodes
 
-    def export_to_f06(self, f06_filename, modes=None, page_stamp=None, page_num=1) -> int:
-        # type: (str, Optional[List[int]], Optional[str], int) -> None
+    def export_to_f06(self, f06_filename: str,
+                      modes: Optional[List[int]]=None,
+                      page_stamp: Optional[str]=None,
+                      page_num: int=1) -> int:
         if page_stamp is None:
             page_stamp = 'PAGE %i'
         # nmodes, vel, res
@@ -789,9 +797,11 @@ class FlutterResponse:
                 page_num += 1
         return page_num
 
-    def export_to_zona(self, zona_filename, modes=None, xlim=None, plot_type='tas',
-                       damping_ratios=None):
-        # type: (str, Optional[List[int]], Optional[List[int]], str, Optional[List[int]]) -> str
+    def export_to_zona(self, zona_filename: str,
+                       modes: Optional[List[int]]=None,
+                       xlim: Optional[List[float]]=None,
+                       plot_type: str='tas',
+                       damping_ratios: Optional[List[float]]=None) -> str:
         """
         Writes a custom ZONA flutter file
 

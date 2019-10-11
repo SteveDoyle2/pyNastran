@@ -7,11 +7,17 @@ from numpy.linalg import norm  # type: ignore
 from pyNastran.gui.gui_objects.gui_result import GuiResultCommon
 
 class NastranTable(GuiResultCommon):
-    def __init__(self, subcase_id, location,
-                 titles, headers, dxyz, linked_scale_factor, #xyz, scalar,
-                 scales, data_formats=None,
-                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                 set_max_min=False, uname='NastranGeometry'):
+    def __init__(self, subcase_id: int, location: str,
+                 titles: List[str], headers: List[str],
+                 dxyz: Any, linked_scale_factor: bool, #xyz, scalar,
+                 scales,
+                 data_formats: Optional[str]=None,
+                 nlabels: Optional[int]=None,
+                 labelsize: Optional[int]=None,
+                 ncolors: Optional[int]=None,
+                 colormap: str='jet',
+                 set_max_min: bool=False,
+                 uname: str='NastranGeometry'):
         """
         Defines a Displacement/Eigenvector result
 

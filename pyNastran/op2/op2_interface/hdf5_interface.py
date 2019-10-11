@@ -10,7 +10,6 @@ defines:
  export_op2_to_hdf5_file(hdf5_file, op2_model)
 
 """
-import os
 import numpy as np
 import h5py
 
@@ -1045,7 +1044,7 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
         'class_name', 'headers', 'is_real', 'is_complex',
         'is_sort1', 'is_sort2', 'table_name_str',
         'is_curvature', 'is_fiber_distance', 'is_max_shear', 'is_von_mises',
-        'is_strain', 'is_stress', 'nnodes_per_element']
+        'is_strain', 'is_stress', 'nnodes_per_element', 'has_von_mises']
 
     #if result_name == 'eigenvectors':
         #debug = True
@@ -1279,7 +1278,7 @@ def _read_h5_matrix(h5_file, model, key, log):
             #[u'col', u'data', u'form', u'is_matpool', u'name', u'row', u'shape_str']
             name = _cast(h5_matrix.get('name'))
             form = _cast(h5_matrix.get('form'))
-            is_matpool = _cast(h5_matrix.get('is_matpool'))
+            unused_is_matpool = _cast(h5_matrix.get('is_matpool'))
             matrix_obj = Matrix(name, form, is_matpool=False)
 
             #matrix = scipy.sparse.coo_matrix(

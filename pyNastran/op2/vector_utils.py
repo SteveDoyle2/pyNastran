@@ -25,13 +25,14 @@ defines some methods for working with arrays:
                               debug=False, log=None)
 
 """
+from __future__ import annotations
 from struct import calcsize
 from itertools import count
 from typing import Optional, Dict, TYPE_CHECKING
 import numpy as np
 from numpy import arccos, sqrt, pi, in1d, cos, unique, cross, ndarray
-#if TYPE_CHECKING:
-from pyNastran.bdf.bdf import CORDx # , CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import CORDx # , CORD1R, CORD1C, CORD1S, CORD2R, CORD2C, CORD2S
 
 
 def filter1d(a: ndarray, b: Optional[ndarray]=None, zero_tol: float=0.001):

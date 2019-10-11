@@ -1,9 +1,21 @@
+import warnings
+from typing import List, Tuple
+
 import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
+
+BASIC_TABLES = {
+    'OES1X', 'OES1',
+    'OES2',
+    'OSTR1X',
+}
+VM_TABLES = {'OESVM1', 'OESVM2',
+             'OSTRVM1', 'OSTRVM2'}
+
 
 class ComplexTriaxStressArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -22,21 +34,21 @@ class ComplexTriaxStressArray(OES_Object):
             #raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
 
-    def get_nnodes(self):
+    def get_nnodes(self) -> int:
         return 1
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
-    def build(self):
+    def build(self) -> None:
         """sizes the vectorized attributes of the ComplexPlateArray"""
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
@@ -75,13 +87,13 @@ class ComplexTriaxStressArray(OES_Object):
         # [oxx, oyy, txy]
         self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
 
-    def _get_headers(self):
+    def _get_headers(self) -> List[str]:
         return ['oxx', 'oyy', 'txy']
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return self._get_headers()
 
-    def get_stats(self, short=False):
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -192,7 +204,18 @@ class ComplexTriaxStressArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
+
 class ComplexPlateArray(OES_Object):
+    r"""
+       ELEMENT      FIBER                                     - STRESSES IN ELEMENT  COORDINATE SYSTEM -
+          ID.       DISTANCE              NORMAL-X                       NORMAL-Y                      SHEAR-XY               VON MISES
+    0     101  -5.000000E-01  -8.152692E-01 /  0.0           -1.321875E+00 /  0.0           -3.158517E+00 /  0.0            5.591334E+00
+                5.000000E-01   1.728573E+00 /  0.0           -7.103837E+00 /  0.0            2.856040E+00 /  0.0            9.497519E+00
+
+    floats = (1011,
+              -0.5, -0.8152692, 0.0, -1.321874, 0.0, -3.158516, 0.0, 5.591334,
+               0.5,  1.7285730, 0.0, -7.103837, 0.0,  2.856039, 0.0, 9.497518)
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)   ## why???
         self.element_node = None
@@ -209,21 +232,33 @@ class ComplexPlateArray(OES_Object):
             #raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def has_von_mises(self) -> bool:
+        """what is the form of the table (NX includes Von Mises)"""
+        if self.table_name in BASIC_TABLES:  # no von mises
+            has_von_mises = False
+        elif self.table_name in VM_TABLES:
+            has_von_mises = True
+        else:
+            msg = 'self.table_name=%s self.table_name_str=%s' % (self.table_name, self.table_name_str)
+            raise NotImplementedError(msg)
+        return has_von_mises
+
+    @property
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
 
-    def _reset_indices(self):
+    def _reset_indices(self) -> None:
         self.itotal = 0
         self.ielement = 0
 
-    def get_nnodes(self):
+    def get_nnodes(self) -> int:
         return get_nnodes(self)
 
-    def build(self):
+    def build(self) -> None:
         """sizes the vectorized attributes of the ComplexPlateArray"""
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
@@ -254,17 +289,21 @@ class ComplexPlateArray(OES_Object):
         # the number is messed up because of the offset for the element's properties
 
         if not self.nelements * nnodes * 2 == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
-                                                                           self.nelements, nnodes,
-                                                                           self.nelements * nnodes,
-                                                                           self.ntotal)
+            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                self.ntimes, self.nelements, nnodes,
+                self.nelements * nnodes, self.ntotal)
             raise RuntimeError(msg)
 
         self.fiber_curvature = zeros(self.ntotal, 'float32')
-        # [oxx, oyy, txy]
-        self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
 
-    def build_dataframe(self):
+        if self.has_von_mises:
+            # [oxx, oyy, txy, ovm]
+            self.data = zeros((self.ntimes, self.ntotal, 4), 'complex64')
+        else:
+            # [oxx, oyy, txy]
+            self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')
+
+    def build_dataframe(self) -> None:
         """creates a pandas dataframe"""
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
@@ -343,17 +382,17 @@ class ComplexPlateArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    def add_new_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
-        self.add_eid_sort1(dt, eid, node_id, fdr, oxx, oyy, txy)
+    #def add_new_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
+        #self.add_eid_sort1(dt, eid, node_id, fdr, oxx, oyy, txy)
 
-    def add_sort1(self, dt, eid, gridC, fdr, oxx, oyy, txy):
-        """unvectorized method for adding SORT1 transient data"""
-        self.add_eid_sort1(dt, eid, gridC, fdr, oxx, oyy, txy)
+    #def add_sort1(self, dt, eid, gridC, fdr, oxx, oyy, txy):
+        #"""unvectorized method for adding SORT1 transient data"""
+        #self.add_eid_sort1(dt, eid, gridC, fdr, oxx, oyy, txy)
 
-    def add_new_node_sort1(self, dt, eid, gridc, fdr, oxx, oyy, txy):
-        self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
+    #def add_new_node_sort1(self, dt, eid, gridc, fdr, oxx, oyy, txy):
+        #self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
 
-    def add_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
+    def add_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy) -> None:
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -366,7 +405,20 @@ class ComplexPlateArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def add_eid_ovm_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy, ovm) -> None:
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        self._times[self.itime] = dt
+        #print(self.element_types2, element_type, self.element_types2.dtype)
+        #print('itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.itotal, dt, eid, node_id, oxx))
+
+        assert isinstance(node_id, int), node_id
+        self.data[self.itime, self.itotal] = [oxx, oyy, txy, ovm]
+        self.element_node[self.itotal, :] = [eid, node_id]  # 0 is center
+        self.fiber_curvature[self.itotal] = fdr
+        #self.ielement += 1
+        self.itotal += 1
+
+    def get_stats(self, short: bool=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -381,7 +433,7 @@ class ComplexPlateArray(OES_Object):
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
             msg.append('  type=%s ntimes=%i nelements=%i nnodes=%i; table_name=%r\n' % (
-                       self.__class__.__name__, ntimes, nelements, nnodes, self.table_name))
+                self.__class__.__name__, ntimes, nelements, nnodes, self.table_name))
         else:
             msg.append('  type=%s nelements=%i nnodes=%i; table_name=%r\n' % (
                 self.__class__.__name__, nelements, nnodes, self.table_name))
@@ -394,10 +446,13 @@ class ComplexPlateArray(OES_Object):
         return msg
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',
-                  page_num=1, is_mag_phase=False, is_sort1=True):
+                  page_num=1, is_mag_phase=False, is_sort1=True) -> int:
         if header is None:
             header = []
         msg_temp, nnodes, is_bilinear = _get_plate_msg(self, is_mag_phase, is_sort1)
+        if self.is_von_mises:
+            warnings.warn(f'{self.class_name} doesnt support writing von Mises')
+            f06_file.write(f'{self.class_name} doesnt support writing von Mises\n')
 
         ntimes = self.data.shape[0]
         for itime in range(ntimes):
@@ -429,7 +484,8 @@ class ComplexPlateArray(OES_Object):
             page_num += 1
         return page_num - 1
 
-    def _write_f06_tri3_transient(self, f06_file, itime, n, is_magnitude_phase, cen):
+    def _write_f06_tri3_transient(self, f06_file, itime, unused_n,
+                                  is_magnitude_phase, unused_cen) -> None:
         """
         CQUAD4 linear
         CTRIA3
@@ -440,10 +496,10 @@ class ComplexPlateArray(OES_Object):
         txy = self.data[itime, :, 2]
 
         eids = self.element_node[:, 0]
-        nodes = self.element_node[:, 1]
+        #nodes = self.element_node[:, 1]
 
         ilayer0 = True
-        for eid, node, fd, doxx, doyy, dtxy in zip(eids, nodes, fds, oxx, oyy, txy):
+        for eid, fd, doxx, doyy, dtxy in zip(eids, fds, oxx, oyy, txy):
             fdr = write_float_13e(fd)
             [oxxr, oyyr, txyr,
              oxxi, oyyi, txyi,] = write_imag_floats_13e([doxx, doyy, dtxy], is_magnitude_phase)
@@ -456,7 +512,8 @@ class ComplexPlateArray(OES_Object):
                     '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
             ilayer0 = not ilayer0
 
-    def _write_f06_quad4_bilinear_transient(self, f06_file, itime, n, is_magnitude_phase, cen):
+    def _write_f06_quad4_bilinear_transient(self, f06_file, itime,
+                                            unused_n, is_magnitude_phase, cen) -> None:
         """
         CQUAD4 bilinear
         CQUAD8
@@ -489,7 +546,7 @@ class ComplexPlateArray(OES_Object):
             ilayer0 = not ilayer0
 
     def write_op2(self, op2, op2_ascii, itable, new_result,
-                  date, is_mag_phase=False, endian='>'):
+                  date, is_mag_phase=False, endian='>') -> int:
         """writes an OP2"""
         import inspect
         from struct import Struct, pack
@@ -537,9 +594,9 @@ class ComplexPlateArray(OES_Object):
         op2_ascii.write('  #elementi = [eid_device, node, fds, oxx, oyy, txy...\n')
 
         if self.is_sort1:
-            struct1 = Struct(b'i 4s i 7f')
-            struct2 = Struct(b'i 7f')
-            struct3 = Struct(b'7f')
+            struct1 = Struct(endian + b'i 4s i 7f')
+            struct2 = Struct(endian + b'i 7f')
+            struct3 = Struct(endian + b'7f')
         else:
             raise NotImplementedError('SORT2')
 
@@ -576,7 +633,6 @@ class ComplexPlateArray(OES_Object):
             nwide = 0
 
             for eid_device, eid, node, fd, doxx, doyy, dtxy in zip(eids_device, eids, nodes, fds, oxx, oyy, txy):
-                ilyaer0 = True
                 if node == 0 and ilayer0:
                     data = [eid_device, b'CEN/', node, fd,
                             doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
@@ -611,7 +667,7 @@ class ComplexPlateArray(OES_Object):
         return itable
 
     def _write_op2_ctria3(self, op2, op2_ascii, new_result, itable,
-                          ntotal, eids_device):
+                          ntotal, eids_device) -> int:
         from struct import Struct, pack
         struct1 = Struct(b'i 7f')
         struct2 = Struct(b'7f')
@@ -641,7 +697,7 @@ class ComplexPlateArray(OES_Object):
             nwide = 0
 
             for eid_device, eid, fd, doxx, doyy, dtxy in zip(eids_device, eids, fds, oxx, oyy, txy):
-                ilyaer0 = True
+                #ilyaer0 = True
                 if ilayer0:
                     data = [eid_device, fd,
                             doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
@@ -668,7 +724,7 @@ class ComplexPlateArray(OES_Object):
             new_result = False
         return itable
 
-def _get_plate_msg(self, is_mag_phase=True, is_sort1=True):
+def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> Tuple[List[str], int, bool]:
     #if self.is_von_mises:
         #von_mises = 'VON MISES'
     #else:
@@ -765,9 +821,13 @@ class ComplexPlateStressArray(ComplexPlateArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
+        str(self.has_von_mises)
 
     def _get_headers(self):
-        return ['oxx', 'oyy', 'txy']
+        headers = ['oxx', 'oyy', 'txy']
+        if self.has_von_mises:
+            headers.append('ovm')
+        return headers
 
     def get_headers(self):
         return self._get_headers()
@@ -777,9 +837,13 @@ class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
         ComplexPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
         assert self.is_strain, self.stress_bits
+        str(self.has_von_mises)
 
     def _get_headers(self):
-        return ['exx', 'eyy', 'exy']
+        headers = ['exx', 'eyy', 'exy']
+        if self.has_von_mises:
+            headers.append('evm')
+        return headers
 
     def get_headers(self):
         return self._get_headers()

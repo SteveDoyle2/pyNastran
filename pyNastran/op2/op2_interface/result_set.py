@@ -30,7 +30,7 @@ class ResultSet:
     It's an interface tool between the code and the results the user requests.
 
     """
-    def __init__(self, allowed_results, log):
+    def __init__(self, allowed_results, unused_log):
         #self.log = log
         # the full set of allowable results
         self.allowed = set(allowed_results)
@@ -92,7 +92,7 @@ class ResultSet:
                 #raise RuntimeError('%r is not a valid result to remove\nallowed=[%s]' % (
                     #result, ', '.join(allowed)))
                 raise RuntimeError('%r is not a valid result to remove\n%s' % (
-                                   result, self))
+                    result, self))
             all_matched_results.extend(matched_results)
         return all_matched_results
 

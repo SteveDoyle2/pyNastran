@@ -266,7 +266,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                      vg_vf_filename=None,
                      root_locus_filename=None,
                      kfreq_damping_filename=None,
-                     plot=True, show=True, clear=False,
+                     plot=True, show=True, clear=False, close=False,
                      log=None):
     """
     Plots a flutter (SOL 145) deck
@@ -345,7 +345,7 @@ def plot_flutter_f06(f06_filename, f06_units=None, out_units=None, make_alt=Fals
                            vg_vf_filename=vg_vf_filename,
                            root_locus_filename=root_locus_filename,
                            kfreq_damping_filename=kfreq_damping_filename,
-                           show=show, clear=clear)
+                           show=show, clear=clear, close=close)
     return flutters
 
 def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfreq,
@@ -360,7 +360,7 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfre
                        vg_vf_filename=None,
                        root_locus_filename=None,
                        kfreq_damping_filename=None,
-                       show=True, clear=False,):
+                       show=True, clear=False, close=False):
     """actually makes the flutter plots"""
     for subcase, flutter in sorted(flutters.items()):
         if plot_vg:
@@ -368,7 +368,7 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfre
             flutter.plot_vg(modes=modes,
                             plot_type=plot_type,
                             xlim=xlim, ylim_damping=ylim_damping,
-                            png_filename=filenamei, show=False, clear=clear)
+                            png_filename=filenamei, show=False, clear=clear, close=close)
         if plot_vg_vf:
             filenamei = None if vg_vf_filename is None else vg_vf_filename % subcase
             flutter.plot_vg_vf(modes=modes,
@@ -377,7 +377,7 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfre
                                ylim_damping=ylim_damping, ylim_freq=ylim_freq,
                                nopoints=nopoints, noline=noline,
                                legend=legend,
-                               png_filename=filenamei, show=False, clear=clear)
+                               png_filename=filenamei, show=False, clear=clear, close=close)
         if plot_root_locus:
             filenamei = None if root_locus_filename is None else root_locus_filename % subcase
             flutter.plot_root_locus(modes=modes,
@@ -385,7 +385,7 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfre
                                     xlim=None, ylim=None,
                                     clear=clear, legend=True,
                                     png_filename=filenamei,
-                                    show=False)
+                                    show=False, close=close)
 
         if plot_kfreq_damping:
             filenamei = None if kfreq_damping_filename is None else kfreq_damping_filename % subcase
@@ -394,7 +394,7 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfre
                                        ylim_damping=ylim_damping,
                                        ylim_kfreq=ylim_kfreq,
                                        nopoints=nopoints, noline=noline,
-                                       png_filename=filenamei, show=False, clear=clear)
+                                       png_filename=filenamei, show=False, clear=clear, close=close)
         if export_zona_filename:
             flutter.export_to_zona(export_zona_filename, modes=modes,
                                    xlim=xlim, plot_type=plot_type)
@@ -404,6 +404,8 @@ def make_flutter_plots(modes, flutters, xlim, ylim_damping, ylim_freq, ylim_kfre
             flutter.export_to_f06(export_f06_filename, modes=modes)
     if show:
         plt.show()
+    #if close:
+        #plt.close()
 
 if __name__ == '__main__':  # pragma: no cover
     plot_flutter_f06('bah_plane.f06')

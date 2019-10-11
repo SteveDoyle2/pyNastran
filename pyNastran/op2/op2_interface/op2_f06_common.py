@@ -1,4 +1,6 @@
+from __future__ import annotations
 from collections import defaultdict
+from typing import List, TYPE_CHECKING
 from numpy import unique, int32, int64
 
 from pyNastran import is_release
@@ -11,6 +13,9 @@ from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 from pyNastran.op2.result_objects.design_response import Responses
 from pyNastran.op2.result_objects.op2_results import Results
+
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
 
 class OP2_F06_Common:
@@ -884,8 +889,8 @@ class OP2_F06_Common:
             assert table in table_types, table
         return table_types
 
-    def get_f06_stats(self):
-        return self.get_op2_stats()
+    #def get_f06_stats(self):
+        #return self.get_op2_stats()
 
     def get_op2_stats(self, short=False):
         """
@@ -928,122 +933,148 @@ class OP2_F06_Common:
         displacements[1]; RealDisplacementArray; [1, 72, 6]; [t1, t2, t3, r1, r2, r3]
 
         """
-        def compare(key_value):
-            key = key_value[0]
-            if isinstance(key, (int, int32, int64, str, bytes)):
-                return key
-            else:
-                #print('key=%s type=%s' % (key, type(key)))
-                #self.log.debug(type(key))
-                return key[0]
-
-        msg = []
-        msg += self.responses.get_stats(short=short)
-        if self.grid_point_weight:
-            msg += self.grid_point_weight.get_stats(short=short)
-
-        table_types = self._get_table_types_testing()
-        def _write_params(params):
-            msg = []
-            for key, param in sorted(params.items()):
-                msg.append('PARAM[%s] = %s\n' % (key, param.values))
-            return msg
-
-        if short:
-            no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
-            for table_type in table_types:
-                if table_type in ['params']:
-                    msg.extend(_write_params(self.params))
-                    continue
-                elif table_type in ['gpdt', 'bgpdt', 'eqexin']:
-                    obj = self.get_result(table_type)
-                    if obj is None:
-                        continue
-                    stats = obj.get_stats(short=True)
-                    msg.extend(stats)
-                    continue
-
-                table = self.get_result(table_type)
-                for isubcase, subcase in sorted(table.items(), key=compare):
-                    class_name = subcase.__class__.__name__
-                    if class_name in no_data_classes:
-                        msg.append('%s[%r]\n' % (table_type, isubcase))
-                    elif hasattr(subcase, 'data'):
-                        #data = subcase.data
-                        #shape = [int(i) for i in subcase.data.shape]
-                        #headers = subcase.get_headers()
-                        #headers_str = str(', '.join(headers))
-                        #msg.append('%s[%s]; %s; %s; [%s]\n' % (
-                        #table_type, isubcase, class_name, shape, headers_str))
-                        msg.append('%s[%s]\n' % (table_type, isubcase))
-                    elif table_type == 'params':
-                        msgi = str(subcase)
-                    elif hasattr(subcase, 'get_stats'):
-                        msgi = '%s[%s] # unvectorized\n' % (table_type, isubcase)
-                        msg.append(msgi)
-                    else:
-                        msgi = 'skipping %r %s[%s]\n' % (class_name, table_type, isubcase)
-                        msg.append(msgi)
-                        #raise RuntimeError(msgi)
-        else:
-            for table_type in table_types:
-                table = self.get_result(table_type)
-                if table_type == 'params':
-                    msg.extend(_write_params(self.params))
-                    continue
-                elif table_type in ['gpdt', 'bgpdt', 'eqexin']:
-                    obj = self.get_result(table_type)
-                    if obj is None:
-                        continue
-                    elif isinstance(obj, dict):
-                        print(obj)
-                    stats = obj.get_stats(short=False)
-                    msg.extend(stats)
-                    continue
-
-                try:
-                    for isubcase, subcase in sorted(table.items(), key=compare):
-                        class_name = subcase.__class__.__name__
-                        if hasattr(subcase, 'get_stats'):
-                            try:
-                                stats = subcase.get_stats() # short=short
-                            except:
-                                msgi = 'errored reading %s %s[%s]\n\n' % (
-                                    class_name, table_type, isubcase)
-                                msg.append(msgi)
-                                raise
-                            else:
-                                msg.append('%s[%s]\n' % (table_type, isubcase))
-                                msg.extend(stats)
-                                msg.append('\n')
-                        else:
-                            msgi = 'skipping %s %s[%s]\n\n' % (class_name, table_type, isubcase)
-                            msg.append(msgi)
-                            raise RuntimeError(msgi)
-                except:
-                    self.log.warning('type(table)=%s' % type(table))
-                    self.log.warning(table)
-                    raise
-
-        for unused_name, matrix in sorted(self.matrices.items()):
-            #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
-            msg.append(str(matrix) + '\n')
-
-        for unused_name, matrix_dict in sorted(self.matdicts.items()):
-            #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
-            msg.append(str(matrix_dict) + '\n')
-        try:
-            return ''.join(msg)
-        except TypeError:
-            for msgi in msg:
-                print('TypeError...%r' % msgi.rstrip())
-                assert isinstance(msgi, str), msgi
-        except UnicodeDecodeError:
-            for msgi in msg:
-                print('UnicodeDecodeError...%r' % msgi.rstrip())
-                assert isinstance(msgi, str), msgi
-            raise
+        return _get_op2_stats(self, short=short)
 
 class Op2F06Attributes(OP2_F06_Common):
     def __init__(self):
         OP2_F06_Common.__init__(self)
+
+
+def _get_op2_stats(model: OP2, short=False):
+    """see OP2.get_op2_stats(...)"""
+    msg = []
+    msg += model.responses.get_stats(short=short)
+    if model.grid_point_weight:
+        msg += model.grid_point_weight.get_stats(short=short)
+
+    table_types = model._get_table_types_testing()
+
+    if short:
+        msg += _get_op2_stats_short(model, table_types, model.log)
+    else:
+        msg += _get_op2_stats_full(model, table_types, model.log)
+
+    if model.matrices:
+        msg.append('matrices:\n')
+        for unused_name, matrix in sorted(model.matrices.items()):
+            #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
+            msg.append('  ' + str(matrix) + '\n')
+
+    if model.matdicts:
+        msg.append('matdicts:\n')
+        for unused_name, matrix_dict in sorted(model.matdicts.items()):
+            #msg.append('matrices[%s].shape = %s\n' % (name, matrix.data.shape))
+            msg.append('  ' + str(matrix_dict) + '\n')
+    try:
+        return ''.join(msg)
+    except TypeError:
+        for msgi in msg:
+            print('TypeError...%r' % msgi.rstrip())
+            assert isinstance(msgi, str), msgi
+    except UnicodeDecodeError:
+        for msgi in msg:
+            print('UnicodeDecodeError...%r' % msgi.rstrip())
+            assert isinstance(msgi, str), msgi
+        raise
+
+def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
+    """helper for get_op2_stats(...)"""
+    msg = []
+    no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
+    for table_type in table_types:
+        #table_type_print = ''
+        if table_type in ['params']:
+            msg.extend(_write_params(model.params))
+            continue
+        elif table_type in ['gpdt', 'bgpdt', 'eqexin']:
+            obj = model.get_result(table_type)
+            if obj is None:
+                continue
+            stats = obj.get_stats(short=True)
+            msg.extend(f'op2_results.{table_type}: ' + stats)  # TODO: a hack...not quite right...
+            continue
+
+        table_type_print = 'op2_results.' + table_type if '.' in table_type  else table_type
+        table = model.get_result(table_type)
+        for isubcase, subcase in sorted(table.items(), key=_compare):
+            class_name = subcase.__class__.__name__
+            if class_name in no_data_classes:
+                msg.append('%s[%r]\n' % (table_type_print, isubcase))
+            elif hasattr(subcase, 'data'):
+                #data = subcase.data
+                #shape = [int(i) for i in subcase.data.shape]
+                #headers = subcase.get_headers()
+                #headers_str = str(', '.join(headers))
+                #msg.append('%s[%s]; %s; %s; [%s]\n' % (
+                #table_type, isubcase, class_name, shape, headers_str))
+                msg.append('%s[%s]\n' % (table_type_print, isubcase))
+            elif table_type == 'params':  #  TODO: remove
+                msgi = str(subcase)
+            elif hasattr(subcase, 'get_stats'):
+                msgi = '%s[%s] # unvectorized\n' % (table_type_print, isubcase)
+                msg.append(msgi)
+            else:
+                msgi = 'skipping %r %s[%s]\n' % (class_name, table_type_print, isubcase)
+                msg.append(msgi)
+                #raise RuntimeError(msgi)
+    return msg
+
+def _get_op2_stats_full(model: OP2, table_types: List[str], log):
+    """helper for get_op2_stats(...)"""
+    msg = []
+    for table_type in table_types:
+        table = model.get_result(table_type)
+        if table_type == 'params':
+            msg.extend(_write_params(model.params))
+            continue
+        elif table_type in ['gpdt', 'bgpdt', 'eqexin']:
+            obj = model.get_result(table_type)
+            if obj is None:
+                continue
+            elif isinstance(obj, dict):
+                print(obj)
+            stats = obj.get_stats(short=False)
+            msg.extend(f'op2_results.{table_type}: ' + stats)  # TODO: a hack...not quite right...
+            continue
+
+        table_type_print = 'op2_results.' + table_type if '.' in table_type else table_type
+        try:
+            for isubcase, subcase in sorted(table.items(), key=_compare):
+                class_name = subcase.__class__.__name__
+                if hasattr(subcase, 'get_stats'):
+                    try:
+                        stats = subcase.get_stats() # short=short
+                    except:
+                        msgi = 'errored reading %s %s[%s]\n\n' % (
+                            class_name, table_type_print, isubcase)
+                        msg.append(msgi)
+                        raise
+                    else:
+                        msg.append('%s[%s]\n' % (table_type_print, isubcase))
+                        msg.extend(stats)
+                        msg.append('\n')
+                else:
+                    msgi = 'skipping %s %s[%s]\n\n' % (class_name, table_type_print, isubcase)
+                    msg.append(msgi)
+                    raise RuntimeError(msgi)
+        except:
+            log.warning('type(table)=%s' % type(table))
+            log.warning(table)
+            raise
+    return msg
+
+def _write_params(params):
+    """helper for get_op2_stats(...)"""
+    msg = ['params:\n']
+    for key, param in sorted(params.items()):
+        msg.append('  %s = %s\n' % (key, param.values))
+    return msg
+
+COMPARE_KEYS = (int, int32, int64, str, bytes)
+def _compare(key_value):
+    """helper for get_op2_stats(...)"""
+    key = key_value[0]
+    if isinstance(key, COMPARE_KEYS):
+        return key
+    #print('key=%s type=%s' % (key, type(key)))
+    return key[0]

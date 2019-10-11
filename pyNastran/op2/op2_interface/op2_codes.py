@@ -1,3 +1,4 @@
+from typing import List, Tuple, Union
 from pyNastran.op2.op2_interface.nx_tables import NX_TABLE_CONTENT
 from pyNastran.op2.op2_interface.msc_tables import MSC_TABLE_CONTENT
 
@@ -782,7 +783,7 @@ class Op2Codes:
         """TODO: not done"""
         return ''
 
-    def code_information(self, include_time=True):
+    def code_information(self, include_time=True) -> str:
         """
         prints the general table information
         DMAP - page 60-63
@@ -953,7 +954,7 @@ class Op2Codes:
             force_flux = 'Force (or Flux); thermal=%r' % thermal
         return force_flux
 
-    def get_disp_temp(self, thermal):
+    def get_disp_temp(self, thermal) -> str:
         if thermal == 0:
             disp_temp = 'Displacement'
         elif thermal == 1:
@@ -964,7 +965,7 @@ class Op2Codes:
             disp_temp = 'Displacement/Temperature; thermal=%r' % thermal
         return disp_temp
 
-    def get_table_code_name(self, disp_temp='', force_flux='', stress_word=''):
+    def get_table_code_name(self, disp_temp='', force_flux='', stress_word='') -> Tuple[int, str]:
         table = '???'
         table_code = self.table_code
         if table_code in [501, 510, 511]:
@@ -993,7 +994,7 @@ class Op2Codes:
         return table_code, table
 
     @property
-    def table_name_str(self):
+    def table_name_str(self) -> str:
         """
         Converts the table_name from bytes/str to a str
 
@@ -1010,7 +1011,7 @@ class Op2Codes:
         return table_name
 
     #----
-    def is_thermal(self):
+    def is_thermal(self) -> Union[bool, str]:
         """is this result thermal solution?"""
         if self.thermal == 0:
             return False
@@ -1025,7 +1026,7 @@ class Op2Codes:
             return True
         return False
 
-    def is_sort1_new(self): # pragma: no cover
+    def is_sort1_new(self) -> bool: # pragma: no cover
         #is_sort1_table = self.is_sort1
         table_name = self.table_name_str
         if table_name in SORT1_TABLES:
@@ -1045,7 +1046,7 @@ class Op2Codes:
         return is_sort1_table
 
     @property
-    def is_sort1(self):
+    def is_sort1(self) -> bool:
         #is_sort1_table = self.is_sort1
         try:
             sort_method, is_real, is_random = self._table_specs()
@@ -1064,7 +1065,7 @@ class Op2Codes:
             return is_sort1_table
 
     @property
-    def is_sort2(self):
+    def is_sort2(self) -> bool:
         #return not self.is_sort1
         try:
             sort_method, is_real, is_random = self._table_specs()
@@ -1115,7 +1116,7 @@ class Op2Codes:
         }
         unused_t_code = map_sort_bits[(is_complex, is_sort2, is_random)]
 
-    def _table_specs(self):
+    def _table_specs(self) -> Tuple[int, bool, bool]:
         """
         +-------+-----------+-------------+----------+
         | Value | Sort Type | Data Format | Random ? |
@@ -1182,7 +1183,7 @@ class Op2Codes:
 
     #----
 
-def get_scode_word(s_code, stress_bits):
+def get_scode_word(s_code: int, stress_bits: List[int]) -> str:
     if s_code == 0:
         s_word = 'Coordinate Element - Stress Max Shear (Octahedral)'
         assert stress_bits == [0, 0, 0, 0, 0], stress_bits
@@ -1229,7 +1230,7 @@ def get_scode_word(s_code, stress_bits):
         s_word = '???'
     return s_word
 
-def determine_sort_bits_meaning(table_code, sort_code, sort_bits):
+def determine_sort_bits_meaning(table_code, sort_code, sort_bits) -> Tuple[int, bool, bool]:
     """
     Value Sort type Data format Random
     ===== ========= =========== ======
