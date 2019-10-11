@@ -6,10 +6,82 @@ from cpylog import get_logger
 from pyNastran.converters.openfoam.block_mesh import BlockMesh, read_block_mesh, mirror_block_mesh
 from pyNastran.converters.openfoam.points_file import read_points_file
 from pyNastran.converters.openfoam.face_file import FaceFile
+from pyNastran.converters.openfoam.boundary_file import read_boundary, read_boundary_file
+
 from pyNastran.utils import check_path
 
 
 class TestOpenFOAM(unittest.TestCase):
+    def test_boundary_1(self):
+        """tests the PointsFile, FaceFile, Boundary class using the Boundary"""
+        #points_filename = 'points.foam'
+        boundary_filename = 'boundary.foam'
+        #with open(points_filename, 'w') as points_file:
+            #points_file.write(
+                #'4\n\n'
+                #'(0. 0. 0.)\n'
+                #'(1. 0. 0.)\n'
+                #'(2. 0. 0.)\n'
+                #'(3. 0. 0.)\n'
+            #)
+        #nfaces = 2
+        boundary_msg = (
+            '6\n'
+            '(\n'
+            '    inlet\n'
+            '    {\n'
+            '        type            patch;\n'
+            '        nFaces          50;\n'
+            '        startFace       10325;\n'
+            '    }\n'
+            '    outlet\n'
+            '    {\n'
+            '        type            patch;\n'
+            '        nFaces          40;\n'
+            '        startFace       10375;\n'
+            '    }\n'
+            '    bottom\n'
+            '    {\n'
+            '        type            symmetryPlane;\n'
+            '        inGroups        1(symmetryPlane);\n'
+            '        nFaces          25;\n'
+            '        startFace       10415;\n'
+            '    }\n'
+            '    top\n'
+            '    {\n'
+            '        type            symmetryPlane;\n'
+            '        inGroups        1(symmetryPlane);\n'
+            '        nFaces          125;\n'
+            '        startFace       10440;\n'
+            '    }\n'
+            '    obstacle\n'
+            '    {\n'
+            '        type            patch;\n'
+            '        nFaces          110;\n'
+            '        startFace       10565;\n'
+            '    }\n'
+            '    defaultFaces\n'
+            '    {\n'
+            '        type            empty;\n'
+            '        inGroups        1(empty);\n'
+            '        nFaces          10500;\n'
+            '        startFace       10675;\n'
+            '    }\n'
+            ')\n'
+            '\n'
+            '// *************************************** //\n'
+        )
+        with open(boundary_filename, 'w') as boundary_file_obj:
+            boundary_file_obj.write(boundary_msg)
+
+        log = get_logger(level='warning', encoding='utf-8')
+        boundary_file = read_boundary_file(
+            boundary_filename, log=log, debug=False)
+        #boundary = read_boundary(
+            #point_filename, face_filename, boundary_filename,
+            #log=None, debug=False)
+
+
     def test_points_1(self):
         """tests the PointsFile class"""
         points_filename = 'points.foam'

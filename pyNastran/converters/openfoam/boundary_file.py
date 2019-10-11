@@ -14,6 +14,16 @@ from pyNastran.converters.openfoam.points_file import PointFile
 from pyNastran.converters.openfoam.face_file import FaceFile
 from pyNastran.utils import check_path
 
+def read_boundary(point_filename, face_filename, boundary_filename,
+                  log=None, debug=False):
+    boundary = Boundary(log=log, debug=debug)
+    boundary.read_openfoam(point_filename, face_filename, boundary_filename)
+    return boundary
+
+def read_boundary_file(boundary_filename, log=None, debug=False):
+    boundary_file = BoundaryFile(log=log, debug=debug)
+    boundary_file.read_boundary_file(boundary_filename)
+    return boundary_file
 
 class BoundaryFile:
     def __init__(self, log=None, debug=False):
@@ -24,54 +34,58 @@ class BoundaryFile:
         #lines = p.read_foam_file()
         #self.log.info('converting')
         i = 0
-        nboundaries = 0
-
         with open(boundary_filename, 'r') as boundary_file:
-            while nboundaries == 0:
-                line = boundary_file.readline()
-                i += 1
-                try:
-                    nboundaries = int(line)
-                except ValueError:
-                    pass
-            line = boundary_file.readline()
+            lines = boundary_file.readlines()
+
+        nboundaries = 0
+        while nboundaries == 0:
+            lineb = lines[i]
             i += 1
+            try:
+                nboundaries = int(lineb)
+            except ValueError:
+                print(lineb)
+                raise
+        lineb = lines[i]
+        i += 1
 
-            self.log.info('nboundaries = %s' % nboundaries)
-            #self.log.info('lineA = %r' % line)
+        self.log.info('nboundaries = %s' % nboundaries)
+        #self.log.info('lineA = %r' % line)
 
-            self.log.info('building boundaries')
-            boundaries = OrderedDict()
-            boundaries = self._read_boundaries(boundary_file, i, nboundaries, boundaries)
+        self.log.info('building boundaries')
+        boundaries = OrderedDict()
+        boundaries = self._read_boundaries(lines, i, nboundaries, boundaries)
+
         return boundaries
 
-    def _read_boundaries(self, boundary_file, i, nboundaries, boundaries, basename=''):
+    def _read_boundaries(self, lines, i, nboundaries, boundaries, basename=''):
         assert nboundaries > 0, nboundaries
         #read_next = 0
         for unused_j in range(nboundaries):
+            #print('iboundary', unused_j)
             # 3(a b c) to [a, b, c]
             # 4(a b c d) to [a, b, c, d]
-            nameline = boundary_file.readline()
+            nameline = lines[i]
             i += 1
             name = nameline.strip()
             self.log.info('name = %r' % (basename + name))
 
-            unused_openline = boundary_file.readline()
+            unused_openline = lines[i]
             i += 1
-            typeline = boundary_file.readline()
+            typeline = lines[i]
             i += 1
             word, boundary_type = typeline.strip('\n\r\t ;').split()
 
-            nfacesline = boundary_file.readline()
+            nfacesline = lines[i]
             i += 1
             sline = nfacesline.strip('\n\r\t ;').split()
             word = sline[0]
             if word == 'inGroups' and len(sline) == 1:
-                #nboundary_line = boundary_file.readline(); i+=1
+                #nboundary_line = lines[i]; i+=1
                 #nboundaries2 = int(nboundary_line)
                 #openline = boundary_file.readline(); i+=1
                 for unused_ii in range(7):
-                    groupline = boundary_file.readline()
+                    groupline = lines[i]
                     i += 1
                     #self.log.info(ii, groupline)
                 sline = groupline.strip('\n\r\t ;').split()
@@ -80,12 +94,12 @@ class BoundaryFile:
                 nfaces = int(nfaces)
                 self.log.info('nfaces = %r' % nfaces)
 
-                startfacesline = boundary_file.readline()
+                startfacesline = lines[i]
                 i += 1
                 self.log.info('startfacesline = %r' % startfacesline)
                 word, startfaces = startfacesline.strip('\n\r\t ;').split()
                 startfaces = int(startfaces)
-                unused_closeline = boundary_file.readline()
+                unused_closeline = lines[i]
                 i += 1
 
                 boundary_name = basename + name
@@ -99,7 +113,7 @@ class BoundaryFile:
             else:
                 if word == 'inGroups' and len(sline) == 2:
                     unused_ingroups = nfaces
-                    nfacesline = boundary_file.readline()
+                    nfacesline = lines[i]
                     i += 1
                     word, nfaces = nfacesline.strip('\n\r\t ;').split()
                 else:
@@ -108,13 +122,13 @@ class BoundaryFile:
                 nfaces = int(nfaces)
                 self.log.info('nfaces = %r' % (nfaces))
 
-                startfacesline = boundary_file.readline()
+                startfacesline = lines[i]
                 i += 1
                 self.log.info('startfacesline = %r' % startfacesline)
                 word, startfaces = startfacesline.strip('\n\r\t ;').split()
                 startfaces = int(startfaces)
 
-                unused_closeline = boundary_file.readline()
+                unused_closeline = lines[i]
                 i += 1
 
                 boundary_name = basename + name
