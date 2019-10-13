@@ -1,5 +1,11 @@
 from typing import List, Dict, Union, Set, Any
 from pyNastran.bdf.bdf_interface.subcase_utils import write_set
+from pyNastran.utils.numpy_utils import bytes_type
+
+def decode_bytes_list(bytes_list, encoding):
+    out = [bytes_str.decode(encoding) if isinstance(bytes_str, bytes_type) else bytes_str
+           for bytes_str in bytes_list]
+    return out
 
 class CaseControlCard:
     """basic card similar to the BaseCard class for the BDF"""
@@ -930,32 +936,50 @@ class EXTSEOUT(CaseControlCard):
     def export_to_hdf5(self, hdf5_file, encoding):
         if isinstance(self.data, list):
             data_group = hdf5_file.create_group('data')
-            keys = []
             values = []
+            keys = []
+            keys_none = []
             for (key, value) in self.data:
-                keys.append(key)
-                values.append(value)
-            #print('keys = ', keys)
-            #print('values = ', values)
-            keys_bytes = [
-                key.encode(encoding) if isinstance(key, str) else key
-                for key in keys]
-            values_bytes = [
-                value.encode(encoding) if isinstance(value, str) else value
-                for value in values]
-            data_group.create_dataset('keys', data=keys_bytes)
+                if value is None:
+                    keys_none.append(key)
+                else:
+                    keys.append(key)
+                    values.append(value)
 
-            if None in values_bytes:
-                value_group = data_group.create_group('values')
-                for i, value in enumerate(values):
-                    if value is None:
-                        continue
-                    value_group.create_dataset(str(i), data=value)
-            else:
+            if keys_none:
+                keys_none_bytes = [key.encode(encoding) for key in keys_none]
+                data_group.create_dataset('keys_none', data=keys_none_bytes)
+            if keys:
+                keys_bytes = [key.encode(encoding) for key in keys]
+                values_bytes = [value.encode(encoding) if isinstance(value, str) else value
+                                for value in values]
+                data_group.create_dataset('keys', data=keys_bytes)
                 data_group.create_dataset('values', data=values_bytes)
-            #hdf5_file.create_dataset('data', data=data_bytes)
         else:
             raise NotImplementedError(self.data)
+
+    @classmethod
+    def load_hdf5(self, subgroup, encoding):
+        """loads EXTSEOUT from an h5py HDF5 file"""
+        from pyNastran.utils.dict_to_h5py import _cast
+        for key in subgroup.keys():
+            subgroupi = subgroup[key]
+            if key == 'data':
+                data_keys = _cast(subgroupi['keys'])
+                data_keys = decode_bytes_list(data_keys, encoding)
+
+                keys_none = subgroupi['keys_none']
+                keys_none = decode_bytes_list(keys_none, encoding)
+
+                data_values = _cast(subgroupi['values'])
+                data_values = decode_bytes_list(data_values, encoding)
+
+                keys = data_keys + keys_none
+                values = data_values + [None] * len(keys_none)
+                data = [(key, value) for (key, value) in zip(keys, values)]
+            else:
+                raise NotImplementedError(key)
+        return EXTSEOUT(data), []
 
     @classmethod
     def add_from_case_control(cls, line):

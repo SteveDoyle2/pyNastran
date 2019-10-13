@@ -1615,7 +1615,11 @@ class RSPLINE(RigidElement):
         diameter_ratio = double_or_blank(card, 2, 'diameter_ratio', 0.1)
         nfields = len(card)
         #assert (nfields) % 2 == 1, 'nfields=%s card=%s'  % (nfields, card)
-        assert (nfields - 4) % 2 == 0, 'nfields=%s card=%s'  % (nfields, card)
+        #assert (nfields - 4) % 2 == 0, 'nfields=%s card=%s'  % (nfields, card)
+
+        # blanks are allowed
+        if (nfields - 4) % 2 != 0:
+            nfields += 1
 
         dependent_nids = []
         dependent_components = []
@@ -1623,7 +1627,7 @@ class RSPLINE(RigidElement):
         j = 2
         for i in range(4, nfields, 2):
             nid = integer(card, i, 'nid_%s' % j)
-            comp = components_or_blank(card, i+1, 'components_%i' % j)
+            comp = components_or_blank(card, i+1, 'components_%i' % j, default='')
             dependent_nids.append(nid)
             dependent_components.append(comp)
             j += 1
@@ -1664,29 +1668,16 @@ class RSPLINE(RigidElement):
         #self.Gmi = self.Gmi_node_ids
         #del self.Gni_ref, self.Gmi_ref
 
-    #@property
-    #def Gni_node_ids(self):
-        #if len(self.Gni) == 0:
-            #return []
-        #return self._node_ids(nodes=self.Gni, allow_empty_nodes=True)
-
-    #@property
-    #def Gmi_node_ids(self):
-        #if len(self.Gmi) == 0:
-            #return []
-        #return self._node_ids(nodes=self.Gmi, allow_empty_nodes=True)
-
     @property
     def independent_nodes(self):
         """gets the independent node ids"""
+        # TODO: not quite right as it doesn't support blank entries
         return [self.independent_nid]
-        #return self.Gni_node_ids
 
     @property
     def dependent_nodes(self):
         """gets the dependent node ids"""
-        #nodes = self.Gmi_node_ids
-        #return nodes
+        # TODO: not quite right as it doesn't support blank entries
         return self.dependent_nids
 
     def raw_fields(self):

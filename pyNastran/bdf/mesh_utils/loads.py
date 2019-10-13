@@ -933,12 +933,22 @@ def _pload4_helper_line(load, load_dir, elem, scale, pressures, nodes, xyz, p):
         area_edge = thickness * np.linalg.norm(xyz2 - xyz1)
 
         # TODO: fails on case where p1 and p2 are nan
+
+        #The SORL field is ignored by all elements except QUADR and TRIAR. For QUADR or TRIAR
+        #only, if SORL=LINE, the consistent edge loads are defined by the PLOAD4 entry. P1, P2, P3 and
+        #P4 are load per unit length at the corner of the element.
+        #If all four Ps are given, then the line loads along all four edges of the element are defined.
+        #If any P is blank, then the line loads for only two edges are defined.
+        #For example, if P1 is blank, the line loads of the two edges connecting to G1 are zero.
+        #If two Ps are given, then the line load of the edge connecting to the two grid points is defined.
+        #If only one P is given, the second P value default to the first P value. For example, P1 denotes
+        #that the line load along edge G1 and G2 has the constant value of P1.
         if isnan(p1):
             p1 = p2
         if isnan(p2):
             p2 = p1
-        assert abs(p1) >= 0.0, p1
-        assert abs(p2) >= 0.0, p2
+        assert abs(p1) >= 0.0, f'pressures={pressures}\n{str(load)}{str(elem)}'
+        assert abs(p2) >= 0.0, f'pressures={pressures}\n{str(load)}{str(elem)}'
 
         centroid1 = (xyz2 + xyz1) / 2.
         if p1 > p2:

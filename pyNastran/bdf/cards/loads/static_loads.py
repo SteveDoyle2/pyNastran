@@ -2988,7 +2988,7 @@ class PLOAD4(Load):
 
 def update_pload4_vector(pload4, normal, cid):
     """helper method"""
-    if cid in [0, None] and np.abs(pload4.nvector).max() == 0.:
+    if np.abs(pload4.nvector).max() == 0.:
         # element surface normal
         pass
     else:
