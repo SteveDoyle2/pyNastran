@@ -15,7 +15,7 @@ from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.gui.utils.load_results import load_user_geom
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
-from pyNastran.utils.numpy_utils import loadtxt_nice
+from pyNastran.femutils.io import loadtxt_nice
 
 
 class ToolActions:

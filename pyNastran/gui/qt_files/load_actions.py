@@ -5,7 +5,7 @@ import time as time_module
 
 import numpy as np
 from qtpy.compat import getopenfilename
-from qtpy.QtWidgets import QFileDialog
+#from qtpy.QtWidgets import QFileDialog
 from pyNastran.bdf.patran_utils.read_patran_custom_results import load_patran_nod
 from pyNastran.utils import print_bad_path
 

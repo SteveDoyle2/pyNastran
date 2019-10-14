@@ -21,7 +21,8 @@ from typing import List, Tuple, Optional, Any
 import numpy as np
 import pyNastran
 from pyNastran.utils import _filename
-from pyNastran.utils.numpy_utils import loadtxt_nice
+
+from pyNastran.femutils.io import loadtxt_nice
 from pyNastran.gui.gui_objects.gui_result import GuiResult
 from pyNastran.converters.nastran.displacements import DisplacementResults, ForceTableResults
 from pyNastran.converters.stl.stl import read_stl

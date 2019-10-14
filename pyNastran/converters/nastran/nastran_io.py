@@ -56,7 +56,9 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
 
 #from pyNastran import is_release
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.utils.numpy_utils import isfinite_and_nonzero, isfinite_and_greater_than, isfinite
+from pyNastran.femutils.nan import (
+    isfinite, isfinite_and_greater_than, isfinite_and_nonzero)
+
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
                                CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
