@@ -34,6 +34,11 @@ REQS = {
         'scipy' : ('1.0', '>=1.0'),
         'matplotlib' : ('2.2', '>=2.2'),  # 2.2.4 adds Python 3.7 support
     },
+    '3.8' : {  # TODO: not updated
+        'numpy' : ('1.14', '>=1.14'),
+        'scipy' : ('1.0', '>=1.0'),
+        'matplotlib' : ('2.2', '>=2.2'),  # 2.2.4 adds Python 3.7 support
+    },
 }
 
 def check_python_version():

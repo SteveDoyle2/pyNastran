@@ -1,10 +1,27 @@
 """defines various methods to access low level BDF data"""
+from __future__ import annotations
 from itertools import chain
-from typing import Any
+from typing import List, Union, Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.utils.numpy_utils import integer_types
+if TYPE_CHECKING:
+    from pyNastran.bdf.cards.coordinate_systems import Coord
+    from pyNastran.bdf.cards.nodes import POINT # , GRID, GRDSET, SPOINTs, EPOINTs, SEQGP, GRIDB
+    from pyNastran.bdf.cards.aero.aero import (
+        #AECOMP, AECOMPL
+        AEFACT, AELINK,
+        AELIST,
+        AEPARM, AESURF, # AESURFS,
+        CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
+        PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
+        #MONPNT1, MONPNT2, MONPNT3,
+        SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5
+    )
+    from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS # CSSCHD, TRIM, TRIM2, DIVERG
+    from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST
+    # MKAERO1, MKAERO2
 
 class GetMethods(BDFAttributes):
     """defines various methods to access low level BDF data"""
@@ -78,8 +95,7 @@ class GetMethods(BDFAttributes):
                 msg += 'epoints=%s\n' % np.unique(list(self.epoints.keys()))
             raise KeyError(msg)
 
-    def EmptyNodes(self, nids, msg=''):
-        # type: (List[int], str) -> List[Optional[Any]]
+    def EmptyNodes(self, nids: list[int], msg: str='') -> List[Optional[Any]]:
         """
         Returns a series of node objects given a list of IDs
 
@@ -104,8 +120,7 @@ class GetMethods(BDFAttributes):
 
         return nodes
 
-    def Nodes(self, nids, msg=''):
-        # type: (List[int], str) -> List[Any]
+    def Nodes(self, nids: List[int], msg: str='') -> List[Any]:
         """
         Returns a series of node objects given a list of IDs
 
@@ -127,8 +142,7 @@ class GetMethods(BDFAttributes):
                 nodes.append(self.Node(nid, msg=msg))
         return nodes
 
-    def Point(self, nid, msg=''):
-        # type: (int, str) -> Any
+    def Point(self, nid: int, msg: str='') -> POINT:
         """Returns a POINT card"""
         if nid in self.points:
             return self.points[nid]
@@ -137,7 +151,7 @@ class GetMethods(BDFAttributes):
             nid_list = np.unique(list(self.points.keys()))
             raise KeyError('nid=%s is not a POINT%s\n%s' % (nid, msg, nid_list))
 
-    def Points(self, nids, msg=''):
+    def Points(self, nids: List[int], msg: str='') -> List[POINT]:
         """
         Returns a series of POINT objects given a list of IDs
         """
@@ -506,7 +520,7 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # COORDINATES CARDS
-    def Coord(self, cid: int, msg: str='') -> Any:
+    def Coord(self, cid: int, msg: str='') -> Coord:
         """gets an COORDx"""
         try:
             return self.coords[cid]
@@ -516,9 +530,7 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # AERO CARDS
-
-    def AEList(self, aelist, msg=''):
-        # type: (int, str) -> Any
+    def AEList(self, aelist: int, msg: str='') -> AELIST:
         """gets an AELIST"""
         try:
             return self.aelists[aelist]
@@ -526,8 +538,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('aelist=%s not found%s.  Allowed AELIST=%s'
                            % (aelist, msg, np.unique(list(self.aelists.keys()))))
 
-    def AEFact(self, aefact, msg=''):
-        # type: (int, str) -> Any
+    def AEFact(self, aefact: int, msg: str='') -> AEFACT:
         """gets an AEFACT"""
         try:
             return self.aefacts[aefact]
@@ -535,8 +546,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('aefact=%s not found%s.  Allowed AEFACT=%s'
                            % (aefact, msg, np.unique(list(self.aefacts.keys()))))
 
-    def AESurf(self, aesurf_id, msg=''):
-        # type: (int, str) -> Any
+    def AESurf(self, aesurf_id: int, msg: str='') -> AESURF:
         """gets an AESURF"""
         try:
             return self.aesurf[aesurf_id]
@@ -544,8 +554,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('aesurf=%s not found%s.  Allowed AESURF=%s'
                            % (aesurf_id, msg, np.unique(list(self.aesurf.keys()))))
 
-    def Acsid(self, msg=''):
-        # type: (int, str) -> Any
+    def Acsid(self, msg: str='') -> Coord:
         """gets the aerodynamic coordinate system"""
         if self.aero is not None:
             acsid_aero = self.aero.Acsid()
@@ -556,16 +565,15 @@ class GetMethods(BDFAttributes):
             if self.aeros is not None:
                 assert acsid_aero == acsid_aeros, 'AERO acsid=%s, AEROS acsid=%s' % (acsid_aero,
                                                                                      acsid_aeros)
-            cid = self.Coord(acsid_aero, msg=msg)
+            coord = self.Coord(acsid_aero, msg=msg)
         elif self.aeros is not None:
-            cid = self.Coord(acsid_aeros, msg=msg)
+            coord = self.Coord(acsid_aeros, msg=msg)
         else:
             msg = 'neither AERO nor AEROS cards exist.'
             raise RuntimeError(msg)
-        return cid
+        return coord
 
-    def safe_acsid(self, msg=''):
-        # type: (str) -> Any
+    def safe_acsid(self, msg: str='') -> Optional[Coord]:
         """gets the aerodynamic coordinate system"""
         if self.aero is not None:
             acsid_aero = self.aero.Acsid()
@@ -576,31 +584,28 @@ class GetMethods(BDFAttributes):
             if self.aeros is not None:
                 assert acsid_aero == acsid_aeros, 'AERO acsid=%s, AEROS acsid=%s' % (acsid_aero,
                                                                                      acsid_aeros)
-            cid = self.Coord(acsid_aero, msg=msg)
+            coord = self.Coord(acsid_aero, msg=msg)
         elif self.aeros is not None:
-            cid = self.Coord(acsid_aeros, msg=msg)
+            coord = self.Coord(acsid_aeros, msg=msg)
         else:
             ## TODO: consider changing this...
             self.log.error('neither AERO nor AEROS cards exist; assuming global (cid=0).')
             return self.Coord(0, msg=msg)
-        return cid
+        return coord
 
-    def Aero(self, msg=''):
-        # type: (str) -> Any
+    def Aero(self, msg: str='') -> AERO:
         """gets the AERO"""
         if self.aero is not None:
             return self.aero
         raise RuntimeError('no AERO card found%s.' % (msg))
 
-    def Aeros(self, msg=''):
-        # type: (str) -> Any
+    def Aeros(self, msg: str='') -> AEROS:
         """gets the AEROS"""
         if self.aeros is not None:
             return self.aeros
         raise RuntimeError('no AEROS card found%s.' % (msg))
 
-    def Spline(self, eid, msg=''):
-        # type: (int, str) -> Any
+    def Spline(self, eid: int, msg: str='') -> Union[SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5]:
         """gets a SPLINEx"""
         try:
             return self.splines[eid]
@@ -608,8 +613,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('eid=%s not found%s.  Allowed SPLINEx=%s'
                            % (eid, msg, np.unique(list(self.splines.keys()))))
 
-    def CAero(self, eid, msg=''):
-        # type: (int, str) -> Any
+    def CAero(self, eid: int, msg: str='') -> Union[CAERO1, CAERO2, CAERO3, CAERO4, CAERO5]:
         """gets an CAEROx"""
         try:
             return self.caeros[eid]
@@ -617,7 +621,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('eid=%s not found%s.  Allowed CAEROx=%s'
                            % (eid, msg, np.unique(list(self.caero_ids))))
 
-    def PAero(self, pid, msg=''):
+    def PAero(self, pid: int, msg: str='') -> Union[PAERO1, PAERO2, PAERO3, PAERO4, PAERO5]:
         # type: (int, str) -> Any
         """gets a PAEROx"""
         try:
@@ -626,8 +630,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('pid=%s not found%s.  Allowed PAEROx=%s'
                            % (pid, msg, np.unique(list(self.paeros.keys()))))
 
-    def Gust(self, sid, msg=''):
-        # type: (int, str) -> Any
+    def Gust(self, sid: int, msg: str='') -> GUST:
         """gets a GUST"""
         try:
             return self.gusts[sid]
@@ -637,8 +640,7 @@ class GetMethods(BDFAttributes):
 
     #--------------------
     # AERO CONTROL SURFACE CARDS
-    def AEStat(self, aid, msg=''):
-        # type: (int, str) -> Any
+    def AEStat(self, aid: int, msg: str='') -> AESTAT:
         """gets an AESTAT"""
         try:
             return self.aestats[aid]
@@ -646,8 +648,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('aid=%s not found%s.  Allowed AESTATs=%s'
                            % (aid, msg, np.unique(list(self.aestats.keys()))))
 
-    def AELIST(self, aid, msg=''):
-        # type: (int, str) -> Any
+    def AELIST(self, aid: int, msg: str='') -> AELIST:
         """gets an AELIST"""
         try:
             return self.aelists[aid]
@@ -655,8 +656,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('id=%s not found%s.  Allowed AELISTs=%s'
                            % (aid, msg, np.unique(list(self.aelists.keys()))))
 
-    def AELink(self, link_id, msg=''):
-        # type: (int, str) -> Any
+    def AELink(self, link_id: int, msg: str='') -> AELINK:
         """gets an AELINK"""
         try:
             return self.aelinks[link_id]
@@ -664,8 +664,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('link_id=%s not found%s.  Allowed AELINKs=%s'
                            % (link_id, msg, np.unique(list(self.aelinks.keys()))))
 
-    def AEParam(self, aid, msg=''):
-        # type: (int, str) -> Any
+    def AEParam(self, aid: int, msg: str='') -> AEPARM:
         """gets an AEPARM"""
         try:
             return self.aeparams[aid]
@@ -676,8 +675,7 @@ class GetMethods(BDFAttributes):
     #--------------------
     # FLUTTER CARDS
 
-    def FLFACT(self, sid, msg=''):
-        # type: (int, str) -> Any
+    def FLFACT(self, sid: int, msg: str='') -> FLFACT:
         """gets an FLFACT"""
         try:
             return self.flfacts[sid]
@@ -685,8 +683,7 @@ class GetMethods(BDFAttributes):
             raise KeyError('sid=%s not found%s.  Allowed FLFACTs=%s'
                            % (sid, msg, np.unique(list(self.flfacts.keys()))))
 
-    def Flutter(self, fid, msg=''):
-        # type: (int, str) -> Any
+    def Flutter(self, fid: int, msg: str='') -> FLUTTER:
         """gets a FLUTTER"""
         try:
             return self.flutters[fid]

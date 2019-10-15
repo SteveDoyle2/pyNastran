@@ -10,6 +10,7 @@ import numpy as np
 from numpy import array, cross, allclose, mean
 from numpy.linalg import norm  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.bdf.utils import get_xyz_cid0_dict
 from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 
 def isnan(value):
@@ -63,7 +64,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
 
     F = array([0., 0., 0.])
     M = array([0., 0., 0.])
-    xyz = _get_xyz_cid0_dict(model, xyz_cid0=xyz_cid0)
+    xyz = get_xyz_cid0_dict(model, xyz_cid0=xyz_cid0)
 
     unsupported_types = set()
     for load, scale in zip(loads, scale_factors):
@@ -176,6 +177,14 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
         model.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, load_type))
     return (F, M)
 
+def _pload1_elements(model, loadcase_id, load, scale, eids, xyz, F, M, p):
+    """helper method for ``sum_forces_moments_elements``"""
+    #elem = model.elements[load.eid]
+    elem = load.eid_ref
+    if elem.eid not in eids:
+        return
+    _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p)
+
 def _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p):
     """helper method for ``sum_forces_moments``"""
     elem = load.eid_ref
@@ -186,22 +195,6 @@ def _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p):
             loadcase_id, elem.type, load.type))
     else:
         raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
-    return F, M
-
-def _pload1_elements(model, loadcase_id, load, scale, eids, xyz, F, M, p):
-    """helper method for ``sum_forces_moments_elements``"""
-    #elem = model.elements[load.eid]
-    elem = load.eid_ref
-    if elem.eid not in eids:
-        return
-    if elem.type in ['CBAR', 'CBEAM']:
-        _pload1_bar_beam(model, loadcase_id, load, elem, scale, xyz, F, M, p)
-    elif elem.type == 'CBEND':
-        model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
-            loadcase_id, elem.type, load.type))
-    else:
-        raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
-    return F, M
 
 def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p):
     """
@@ -406,7 +399,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     F = array([0., 0., 0.])
     M = array([0., 0., 0.])
 
-    xyz = _get_xyz_cid0_dict(model, xyz_cid0)
+    xyz = get_xyz_cid0_dict(model, xyz_cid0)
 
     unsupported_types = set()
     shell_elements = [
@@ -794,7 +787,7 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
             #nface, ni, normal, area, face_centroid))
     else:
         eid = elem.eid
-        msg = 'PLOAd4: case=%s eid=%s etype=%r loadtype=%r not supported\n%s%s' % (
+        msg = 'PLOAD4: case=%s eid=%s etype=%r loadtype=%r not supported\n%s%s' % (
             loadcase_id, eid, etype, load.type, str(load), str(elem))
         raise NotImplementedError(msg)
     return nodes, area, face_centroid, normal, nface
@@ -852,26 +845,6 @@ def _mean_pressure_on_pload4(pressures, load, unused_elem):
     else:
         pressure = load.pressures[0]
     return pressure
-
-def _get_xyz_cid0_dict(model, xyz_cid0=None):
-    """
-    helper method
-
-    Parameters
-    ----------
-    model : BDF()
-        a BDF object
-    xyz_cid0 : None / Dict[int] = (3, ) ndarray
-        the nodes in the global coordinate system
-
-    """
-    if xyz_cid0 is None:
-        xyz = {}
-        for nid, node in model.nodes.items():
-            xyz[nid] = node.get_position()
-    else:
-        xyz = xyz_cid0
-    return xyz
 
 def _get_load_summation_point(model, p0, cid=0):
     """
@@ -943,6 +916,13 @@ def _pload4_helper_line(load, load_dir, elem, scale, pressures, nodes, xyz, p):
         #If two Ps are given, then the line load of the edge connecting to the two grid points is defined.
         #If only one P is given, the second P value default to the first P value. For example, P1 denotes
         #that the line load along edge G1 and G2 has the constant value of P1.
+
+        #The direction of the line load (SORL=LINE) is defined by either (CID, N1, N2, N3) or LDIR.
+        #Fatal error will be issued if both methods are given. TANG denotes that the line load is in
+        #tangential direction of the edge, pointing from G1 to G2 if the edge is connecting G1 and G2.
+        #NORM denotes that the line load is in the mean plan, normal to the edge, and pointing outward
+        #from the element. X, Y, or Z denotes the line load is in the X, Y, or Z direction of the element
+        #coordinate system.
         if isnan(p1):
             p1 = p2
         if isnan(p2):
