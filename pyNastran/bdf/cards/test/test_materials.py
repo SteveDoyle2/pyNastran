@@ -146,6 +146,7 @@ class TestMaterials(unittest.TestCase):
                               a1=None, a2=None, a3=None, tref=0.,
                               ge=0., St=None, Sc=None, Ss=None,
                               mcsid=None, comment='mat2')
+        mat2.raw_fields()
         mat2.write_card(size=16, is_double=False)
         mat2.validate()
 
@@ -213,6 +214,8 @@ class TestMaterials(unittest.TestCase):
                               tref=0., ge=0.,
                               comment='mat3')
         mat3.write_card(size=16, is_double=False)
+        mat3.Rho()
+        mat3.raw_fields()
         mat3.validate()
 
         matt3 = model.add_matt3(
@@ -314,6 +317,9 @@ class TestMaterials(unittest.TestCase):
         mat5 = model.add_mat5(mid, kxx=0., kxy=0., kxz=0., kyy=0., kyz=0.,
                               kzz=0., cp=0.,
                               rho=1., hgen=1., comment='mat5')
+        mat5.K()
+        mat5.get_density()
+        mat5.Rho()
         mat5.write_card(size=16, is_double=False)
         mat5.validate()
 
@@ -466,6 +472,7 @@ class TestMaterials(unittest.TestCase):
                               rho=0., A=None, tref=0., ge=0.,
                               comment='mat9')
         mat9.write_card(size=16, is_double=False)
+        mat9.Rho()
         mat9.validate()
 
         matt9 = model.add_matt9(
@@ -640,7 +647,110 @@ class TestMaterials(unittest.TestCase):
             model.ThermalMaterial(-1)
         save_load_deck(model)
 
+    def test_mathe(self):
+        """tests the MATHE"""
+        log = get_logger(level='warning')
+        bdf_model = BDF(log=log)
+
+        mid = 10
+        bulk = 1.
+        mus = []
+        alphas = []
+        betas = []
+        mooney = []
+        sussbat = []
+        aboyce = []
+        gent = []
+        model = 'JUNK'
+        mat_mooney = bdf_model.add_mathe(mid, model, bulk, mus, alphas, betas,
+                                         mooney, sussbat, aboyce, gent,
+                                         rho=0., texp=0., tref=0., ge=0., comment='mathe')
+        with self.assertRaises(ValueError):
+            mat_mooney.validate()
+
+        #MOONEY, OGDEN, FOAM, ABOYCE, SUSSBAT, ABOYCE, GENT
+        mat_mooney.model = 'MOONEY'
+        with self.assertRaises(AssertionError):
+            mat_mooney.validate()
+        #mooney = [
+            #c10, c01,
+            #c20, c11, c02,
+            #c30, c21, c12, c03,
+        #]
+        mat_mooney.mooney = [1., 2., 3., 4., 5., 6., 7., 8., 9.]
+        mat_mooney.validate()
+
+        model = 'OGDEN'
+        mid = 11
+        mat_ogden = bdf_model.add_mathe(mid, model, bulk, mus, alphas, betas,
+                                        mooney, sussbat, aboyce, gent,
+                                        rho=0., texp=0., tref=0., ge=0., comment='mathe')
+        mat_ogden.validate()
+
+        model = 'FOAM'
+        mid = 12
+        mat_foam = bdf_model.add_mathe(mid, model, bulk, mus, alphas, betas,
+                                       mooney, sussbat, aboyce, gent,
+                                       rho=0., texp=0., tref=0., ge=0., comment='mathe')
+        mat_foam.validate()
+
+
+        model = 'SUSSBAT'
+        mid = 13
+
+        sussbat = [1, 'PIG', 3.14] # #(tab1, sstype, relerr)
+        mat_sussbat = bdf_model.add_mathe(mid, model, bulk, mus, alphas, betas,
+                                          mooney, sussbat, aboyce, gent,
+                                          rho=0., texp=0., tref=0., ge=0., comment='mathe')
+        mat_sussbat.validate()
+
+        model = 'ABOYCE'
+        mid = 14
+        aboyce = [1.1, 2.2] # (nkt, n)
+        mat_aboyce = bdf_model.add_mathe(mid, model, bulk, mus, alphas, betas,
+                                         mooney, sussbat, aboyce, gent,
+                                         rho=0., texp=0., tref=0., ge=0., comment='mathe')
+        mat_aboyce.validate()
+
+        model = 'GENT'
+        mid = 15
+        gent = [1.11, 2.22, 3.33, 4.44, 5.55, 6.66, 7.77, 8.88]  # (nkt, n, im, d1, d2, d3, d4, d5)
+        mat_gent = bdf_model.add_mathe(mid, model, bulk, mus, alphas, betas,
+                                       mooney, sussbat, aboyce, gent,
+                                       rho=0., texp=0., tref=0., ge=0., comment='mathe')
+        mat_gent.validate()
+
+        mat_mooney.raw_fields()
+        mat_foam.raw_fields()
+        mat_ogden.raw_fields()
+        mat_sussbat.raw_fields()
+        mat_aboyce.raw_fields()
+        mat_gent.raw_fields()
+        bdf_model.pop_parse_errors()
+
+        save_load_deck(bdf_model) # , run_remove_unused=False
+
+    def test_matg(self):
+        """tests the MATG"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+        mid = 10
+        idmem = 2
+        behav = 3
+        tabld = 4
+        tablu = [50, 51, 52, 53]
+        yprs = 6.
+        epl = 7.
+        gpl = 8.
+        matg = model.add_matg(mid, idmem, behav, tabld, tablu, yprs, epl, gpl,
+                              gap=0., tab_yprs=None, tab_epl=None, tab_gpl=None, tab_gap=None,
+                              comment='matg')
+        matg.validate()
+        matg.raw_fields()
+        save_load_deck(model, run_convert=False, run_op2_writer=False, run_remove_unused=False)
+
     def test_nxstrat(self):
+        """tests the NXSTRAT"""
         params = {
             #'AUTO' : 1,
             #'MAXITE' : 30,

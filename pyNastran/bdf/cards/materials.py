@@ -2646,6 +2646,18 @@ class MATG(Material):
         #8: 'g12', 9:'g13', 10:'g23', 11:'rho', 12:'a1', 13:'a2', 14:'a3',
         #15:'tref', 16: 'ge',
     #}
+    @classmethod
+    def _init_from_empty(cls):
+        mid = 10
+        idmem = 1
+        behav = 2
+        tabld = 3
+        tablu = [4, 5, 6, 7]
+        yprs = 6.
+        epl = 7.
+        gpl = 8.
+        return MATG(mid, idmem, behav, tabld, tablu, yprs, epl, gpl, comment='')
+
     def __init__(self, mid, idmem, behav, tabld, tablu, yprs, epl, gpl,
                  gap=0., tab_yprs=None, tab_epl=None, tab_gpl=None, tab_gap=None, comment=''):
         Material.__init__(self)
@@ -2669,6 +2681,9 @@ class MATG(Material):
         self.tab_gap = tab_gap
 
         #self._validate_input()
+
+    def validate(self):
+        assert isinstance(self.tablu, list) and len(self.tablu) == 4, self.tablu
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -2708,6 +2723,9 @@ class MATG(Material):
         return MATG(mid, idmem, behav, tabld, tablu, yprs, epl, gpl, gap,
                     tab_yprs, tab_epl, tab_gpl, tab_gap,
                     comment=comment)
+
+    def uncross_reference(self):
+        pass
 
     def raw_fields(self):
         list_fields = [
@@ -3218,10 +3236,6 @@ class MATHE(HyperelasticMaterial):
         mid = 1
         model = 'OGDEN'
         bulk = 3.
-        rho = 4.
-        texp = 5.
-        ref = 0.
-        ge = 0.
         mus = [6.]
         alphas = [7.]
         betas = [8.]
@@ -3229,11 +3243,13 @@ class MATHE(HyperelasticMaterial):
         sussbat = []
         aboyce = []
         gent = []
-        return MATHE(mid, model, bulk, rho, texp, tref, ge, mus, alphas, betas,
-                     mooney, sussbat, aboyce, gent, comment='')
+        return MATHE(mid, model, bulk, mus, alphas, betas,
+                     mooney, sussbat, aboyce, gent,
+                     rho=0., texp=0., tref=0., ge=0., comment='')
 
-    def __init__(self, mid, model, bulk, rho, texp, tref, ge,
-                 mus, alphas, betas, mooney, sussbat, aboyce, gent, comment=''):
+    def __init__(self, mid, model, bulk, mus, alphas, betas,
+                 mooney, sussbat, aboyce, gent,
+                 rho=0., texp=0., tref=0., ge=0., comment=''):
         HyperelasticMaterial.__init__(self)
         if comment:
             self.comment = comment
@@ -3263,9 +3279,17 @@ class MATHE(HyperelasticMaterial):
         self.gent = gent
 
     def validate(self):
+        #assert model in ['OGDEN', 'FOAM', 'MOONEY', 'SUSSBAT', 'ABOYCE', 'GENT'], f'model={model!r}'
         if self.model not in ['MOONEY', 'OGDEN', 'FOAM', 'ABOYCE', 'SUSSBAT', 'ABOYCE', 'GENT']:
             msg = "model=%r not in [MOONEY, OGDEN, FOAM, ABOYCE, SUSSBAT, ABOYCE, GENT]" % self.model
             raise ValueError(msg)
+        if self.model == 'MOONEY':
+            #mooney = [ # floats
+                #c10, c01,
+                #c20, c11, c02,
+                #c30, c21, c12, c03,
+            #]
+            assert len(self.mooney) == 9, self.mooney
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -3365,30 +3389,19 @@ class MATHE(HyperelasticMaterial):
             d3 = double_or_blank(card, 19, 'd3')
             d4 = double_or_blank(card, 20, 'd4')
             d5 = double_or_blank(card, 21, 'd5')
-            print(card.write_card())
-            assert len(card) <= 21, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
+
+            # TODO: should this be 21?
+            assert len(card) <= 22, 'len(MATHE card) = %i\ncard=%s' % (len(card), card)
 
             gent = [nkt, n, im, d1, d2, d3, d4, d5]
         else:  # pragma: no cover
             raise NotImplementedError('model=%r' % (model))
 
-        return MATHE(mid, model, bulk, rho, texp, tref, ge,
-                     mus, alphas, betas, mooney, sussbat, aboyce, gent,
-                     comment=comment)
+        return MATHE(mid, model, bulk, mus, alphas, betas,
+                     mooney, sussbat, aboyce, gent,
+                     rho=rho, texp=texp, tref=tref, ge=ge, comment=comment)
 
     def raw_fields(self):
-        #list_fields = ['MATHP', self.mid, self.a10, self.a01, self.d1, self.rho,
-                       #self.av, self.tref, self.ge,
-                       #None, self.na, self.nd, None, None, None, None, None,
-                       #self.a20, self.a11, self.a02, self.d2, None, None, None,
-                       #None,
-                       #self.a30, self.a21, self.a12, self.a03, self.d3, None,
-                       #None, None,
-                       #self.a40, self.a31, self.a22, self.a13, self.a04, self.d4,
-                       #None, None,
-                       #self.a50, self.a41, self.a32, self.a23, self.a14, self.a05,
-                       #self.d5, None,
-                       #self.tab1, self.tab2, self.tab4, None, None, None, self.tabd]
         list_fields = self.repr_fields()
         return list_fields
 
@@ -3471,11 +3484,20 @@ class MATHE(HyperelasticMaterial):
                            self.bulk, self.rho, self.texp, None, None,
                            nkt, n]
         elif self.model == 'GENT':
-            print(self.get_stats())
             (nkt, n, im, d1, d2, d3, d4, d5) = self.gent
+            #[1.11, 2.22, 3.33, 4, 5.55, 6.66, 7.77, 8.88]
+            #+-------+-------+----------+--------+------+--------+-------+----+
+            #|   1   |   2   |    3     |   4    |  5   |   6    |   7   |  8 |
+            #+=======+=======+==========+========+======+========+=======+====+
+            #| MATHE |  MID  |   Model  |        |  K   |   RHO  |  TEXP |    |
+            #+-------+-------+----------+--------+------+--------+-------+----+
+            #|       |  NKT  |    N1    |        |      |        |       |    |
+            #+-------+-------+----------+--------+------+--------+-------+----+
+            #|       |   D1  |    D2    |   D3   |  D4  |   D5   |       |    |
+            #+-------+-------+----------+--------+------+--------+-------+----+
             list_fields = ['MATHE', self.mid, self.model, None,
                            self.bulk, self.rho, self.texp, None, None,
-                           nkt, n, im, None, None, None, None,
+                           nkt, n, im, None, None, None, None, None,
                            d1, d2, d3, d4, d5]
         else:  # pragma: no cover
             raise NotImplementedError(self.model)
@@ -3483,7 +3505,6 @@ class MATHE(HyperelasticMaterial):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
-        print(self.comment + print_card_8(card))
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
@@ -3885,11 +3906,11 @@ def get_mat_props_S(mid_ref):
             [      0.,       0.,       0.,    0.,    0., 1/g12],
         ])
         denom = 1 - nu12 * nu21
-        C2 = np.array([
-            [e1, -nu21 * e1, 0.],
-            [nu12 * e2, e2, 0.],
-            [0., 0., g12 * denom],
-        ]) / denom
+        #C2 = np.array([
+            #[e1, -nu21 * e1, 0.],
+            #[nu12 * e2, e2, 0.],
+            #[0., 0., g12 * denom],
+        #]) / denom
 
     else:
         raise NotImplementedError(mid_ref.get_stats())
