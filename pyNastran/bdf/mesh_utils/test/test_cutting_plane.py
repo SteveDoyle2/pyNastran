@@ -308,7 +308,7 @@ class TestCuttingPlane(unittest.TestCase):
             plane_atol=1e-5)
         result_array = np.array(result_array)
         assert result_array.shape == (1, 8, 7), result_array.shape
-        os.remove('plane_edge.bdf')
+        #os.remove('plane_edge.bdf')
         os.remove('plane_face.bdf')
 
     def test_cut_shell_model_2(self):
@@ -352,7 +352,7 @@ class TestCuttingPlane(unittest.TestCase):
         os.remove('tris.bdf')
         os.remove('cut_edge_2.csv')
         os.remove('cut_face_2.csv')
-        os.remove('plane_edge.bdf')
+        #os.remove('plane_edge.bdf')
         os.remove('plane_face.bdf')
 
     def test_connect_face_rows(self):
