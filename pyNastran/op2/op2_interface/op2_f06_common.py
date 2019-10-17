@@ -14,7 +14,7 @@ from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 from pyNastran.op2.result_objects.design_response import Responses
 from pyNastran.op2.result_objects.op2_results import Results
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 

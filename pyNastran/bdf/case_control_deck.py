@@ -38,7 +38,7 @@ from pyNastran.bdf.bdf_interface.subcase_cards import (
     split_by_mixed_commas_parentheses,
 )
 from pyNastran.utils import object_attributes
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 

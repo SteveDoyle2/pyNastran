@@ -9,15 +9,20 @@ defines:
  - slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5)
 
 """
-import  os
+from __future__ import annotations
+import os
 import warnings
 from itertools import count
+from typing import Tuple, Union, Any, TYPE_CHECKING
 
 import numpy as np
-#from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 from pyNastran.bdf.mesh_utils.cut_edge_model_by_plane import cut_edge_model_by_coord
+
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.cards.coordinate_systems import Coord
 
 NUMPY_VERSION = np.lib.NumpyVersion(np.__version__)
 if NUMPY_VERSION < '1.13.0':
@@ -25,7 +30,7 @@ if NUMPY_VERSION < '1.13.0':
     #raise RuntimeError('numpy version=%s required>=1.13.0' % np.__version__)
 
 
-def _setup_faces(bdf_filename):
+def _setup_faces(bdf_filename: Union[str, BDF]) -> Tuple[Any, Any, Any, Any]:
     """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
     out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
@@ -60,7 +65,7 @@ def _setup_faces(bdf_filename):
     #edge_to_eid_map = out['edge_to_eid_map']
     return nids, xyz_cid0, faces, face_eids
 
-def cut_face_model_by_coord(bdf_filename, coord, tol,
+def cut_face_model_by_coord(bdf_filename: Union[str, BDF], coord, tol,
                             nodal_result, plane_atol=1e-5, skip_cleanup=True,
                             csv_filename=None,
                             plane_bdf_filename='plane_face.bdf', plane_bdf_offset=0.):
@@ -100,7 +105,7 @@ def cut_face_model_by_coord(bdf_filename, coord, tol,
     return unique_geometry_array, unique_results_array, rods_array
 
 
-def export_face_cut(csv_filename, geometry_arrays, results_arrays, header=''):
+def export_face_cut(csv_filename: str, geometry_arrays, results_arrays, header: str='') -> None:
     """
     Writes a face cut file of the format:
 
@@ -158,8 +163,8 @@ def _project_z_axis(p1, p2, z_global):
     return i, k, origin, zaxis, xzplane
 
 
-def _p1_p2_zaxis_to_cord2r(model, p1, p2, zaxis, method='Z-Axis Projection',
-                           cid_p1=0, cid_p2=0, cid_zaxis=0):
+def _p1_p2_zaxis_to_cord2r(model: BDF, p1, p2, zaxis, method: str='Z-Axis Projection',
+                           cid_p1: int=0, cid_p2: int=0, cid_zaxis: int=0) -> Any:
     """Creates the coordinate system that will define the cutting plane"""
     p1 = np.asarray(p1)
     p2 = np.asarray(p2)
@@ -187,9 +192,10 @@ def _p1_p2_zaxis_to_cord2r(model, p1, p2, zaxis, method='Z-Axis Projection',
     #return local_points_dict, global_points_dict, result_dict
     #return NotImplementedError()
 
-def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord, tol,
-                             nodal_result, plane_atol=1e-5, skip_cleanup=True,
-                             plane_bdf_filename='plane_face.bdf', plane_bdf_offset=0.):
+def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord: Coord, tol: float,
+                             nodal_result, plane_atol: float=1e-5, skip_cleanup: bool=True,
+                             plane_bdf_filename: str='plane_face.bdf',
+                             plane_bdf_offset: float=0.) -> Tuple[Any, Any, ANy]:
     """
     Cuts a Nastran model with a cutting plane
 
@@ -219,6 +225,9 @@ def _cut_face_model_by_coord(nids, xyz_cid0, faces, face_eids, coord, tol,
         ???
     unique_results_array : ???
         ???
+    rods_array : ???
+        ???
+
     """
     xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
     #face_eids = np.asarray(face_eids)
@@ -285,7 +294,7 @@ def get_close_faces(faces, face_eids, unused_nids_close):
             #tri_faces.append(face)
     #return tri_face_eids, tri_faces
 
-def split_to_trias(model):
+def split_to_trias(model: BDF) -> None:
     elements2 = {}
     neids = len(model.elements)
     for eid, elem in model.elements.items():

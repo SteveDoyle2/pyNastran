@@ -2,13 +2,17 @@
 defines:
  - local_points_array, global_points_array, result_array = cut_edge_model_by_axes(
         bdf_filename, view_up, p1, p2, tol,
-        nodal_result, plane_atol=1e-5)
+        nodal_result, plane_atol=1e-5,
+        plane_bdf_filename=None)
  - local_points_array, global_points_array, result_array = cut_edge_model_by_coord(
         bdf_filename, coord, tol,
-        nodal_result, plane_atol=1e-5)
- - slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5)
+        nodal_result, plane_atol=1e-5,
+        plane_bdf_filename=None)
+ - slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5,
+               plane_bdf_filename=None)
 
 """
+from io import StringIO
 import numpy as np
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -80,7 +84,7 @@ def _setup_edges(bdf_filename):
     return nids, xyz_cid0, edges
 
 def _cut_model(nids, xyz_cp, edges, view_up, p1, p2, tol,
-               nodal_result, plane_atol=1e-5):
+               nodal_result, plane_atol=1e-5, plane_bdf_filename=None):
     """
     Helper method for cut_edge_model_by_axes
 
@@ -97,6 +101,17 @@ def _cut_model(nids, xyz_cp, edges, view_up, p1, p2, tol,
         excessive computations
     plane_atol : float; default=1e-5
         the tolerance for a line that's located on the y=0 local plane
+    plane_bdf_filename : str; default=None
+        optionally write a BDF of the cut
+
+   Returns
+    -------
+    local_points_array : (N, 3) float ndarray
+        the xyz points in the cutting plane coordinate system
+    global_points_array : (N, 3) float ndarray
+        the xyz points in the global xyz coordinate system
+    result_array : (N, 7) float ndarray
+        inid, x, y, z, xg, yg, zg, result
 
     """
     #view_up = camera.GetViewUp()
@@ -122,11 +137,12 @@ def _cut_model(nids, xyz_cp, edges, view_up, p1, p2, tol,
                    comment='')
     local_points_array, global_points_array, result_array = _cut_edge_model_by_coord(
         nids, xyz_cp, edges, coord, tol, nodal_result,
-        plane_atol=plane_atol)
+        plane_atol=plane_atol, plane_bdf_filename=plane_bdf_filename)
     return local_points_array, global_points_array, result_array
 
 def _cut_edge_model_by_coord(nids, xyz_cid0, edges, coord, tol,
-                             nodal_result, plane_atol=1e-5):
+                             nodal_result, plane_atol=1e-5,
+                             plane_bdf_filename=None):
     """
     Cuts a Nastran model with a cutting plane
 
@@ -147,6 +163,17 @@ def _cut_edge_model_by_coord(nids, xyz_cid0, edges, coord, tol,
         the result to cut the model with
     plane_atol : float; default=1e-5
         the tolerance for a line that's located on the y=0 local plane
+    plane_bdf_filename : str; default=None
+        optionally write a BDF of the cut
+
+   Returns
+    -------
+    local_points_array : (N, 3) float ndarray
+        the xyz points in the cutting plane coordinate system
+    global_points_array : (N, 3) float ndarray
+        the xyz points in the global xyz coordinate system
+    result_array : (N, 7) float ndarray
+        inid, x, y, z, xg, yg, zg, result
 
     """
     xyz_cid = coord.transform_node_to_local_array(xyz_cid0)
@@ -175,7 +202,8 @@ def _cut_edge_model_by_coord(nids, xyz_cid0, edges, coord, tol,
     #print(iclose_edges_array)
 
     local_points_array, global_points_array, result_array = slice_edges(
-        xyz_cid0, xyz_cid, iclose_edges_array, nodal_result, plane_atol=plane_atol)
+        xyz_cid0, xyz_cid, iclose_edges_array, nodal_result, plane_atol=plane_atol,
+        plane_bdf_filename=plane_bdf_filename)
 
     #print(coord)
     return local_points_array, global_points_array, result_array
@@ -197,6 +225,8 @@ def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5,
         the result to cut the model with
     plane_atol : float; default=1e-5
         the tolerance for a line that's located on the y=0 local plane
+    plane_bdf_filename : str; default=None
+        optionally write a BDF of the cut
 
     Returns
     -------
@@ -206,14 +236,14 @@ def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5,
         the xyz points in the global xyz coordinate system
     result_array : (N, 7) float ndarray
         inid, x, y, z, xg, yg, zg, result
+
     TODO: split result_array, so we don't have mixed int/float/complex
           results being all casted to the highest data type
 
     """
-    plane_bdf_filename = 'plane_edge.bdf'
-    #fbdf = None
-    #if plane_bdf_filename:
-    fbdf = open(plane_bdf_filename, 'w')
+    #plane_bdf_filename = 'plane_edge.bdf'
+
+    fbdf = StringIO()
     fbdf.write('$pyNastran: punch=True\n')
     fbdf.write('MAT1,1,3.0e7,,0.3\n')
 
@@ -341,6 +371,11 @@ def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5,
                     ipoint += 2
                     nid_new += 2
                     eid_new += 1
+
+    # a hack to avoid making complicated code to sometimes write to the bdf
+    if plane_bdf_filename:
+        with open(plane_bdf_filename, 'w') as bdf_file:
+            bdf_file.write(fbdf.getvalue())
 
     local_points_array = np.array(local_points)
     global_points_array = np.array(global_points)

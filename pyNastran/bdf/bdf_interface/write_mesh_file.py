@@ -9,7 +9,7 @@ import os
 from typing import Any, Union, Optional, Any
 from collections import defaultdict
 from typing import Optional, TYPE_CHECKING
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
 #from pyNastran.bdf.bdf import BDF
 

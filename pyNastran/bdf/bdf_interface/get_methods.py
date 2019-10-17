@@ -6,7 +6,7 @@ import numpy as np
 
 from pyNastran.bdf.bdf_interface.attributes import BDFAttributes
 from pyNastran.utils.numpy_utils import integer_types
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.coordinate_systems import Coord
     from pyNastran.bdf.cards.nodes import POINT # , GRID, GRDSET, SPOINTs, EPOINTs, SEQGP, GRIDB
     from pyNastran.bdf.cards.aero.aero import (

@@ -17,7 +17,7 @@ from typing import Union, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default

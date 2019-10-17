@@ -78,6 +78,7 @@ class TestUgrid(unittest.TestCase):
         os.remove(tecplot_filename2)
         os.remove(ugrid_filename)
         os.remove(ugrid_filename_out)
+        os.remove('shell_solid_bending.bdf')
 
     def test_ugrid3d_gui_box(self):
         """simple UGRID3D box model"""

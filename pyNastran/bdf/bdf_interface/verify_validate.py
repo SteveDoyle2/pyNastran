@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 import traceback
 from typing import List, Dict, Tuple, Any, TYPE_CHECKING
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 

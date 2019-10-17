@@ -124,6 +124,7 @@ class GuiParsing(unittest.TestCase):
         remove_args(out, *keys_to_remove)
         assert out == {'format': ['nastran'], 'output': [], 'postscript': 'myscript.py', 'input': ['fem.bdf'], 'geomscript': None}, out
         os.remove('fem.bdf')
+        os.remove('myscript.py')
 
 
 def remove_args(dicti, *keys_to_remove):
