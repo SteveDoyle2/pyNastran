@@ -11,11 +11,9 @@ import numpy as np
 from numpy.testing import assert_equal, assert_array_equal
 
 import pyNastran
-from pyNastran.utils.numpy_utils import (
-    loadtxt_nice, augmented_identity, savetxt_nice,
-)
+from pyNastran.femutils.io import loadtxt_nice, savetxt_nice
 from pyNastran.femutils.matrix3d import dot_n33_n33, transpose3d, triple_n33_n33, triple_n33_33
-from pyNastran.femutils.utils import perpendicular_vector, perpendicular_vector2d
+from pyNastran.femutils.utils import augmented_identity, perpendicular_vector, perpendicular_vector2d
 from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
 
 from pyNastran.femutils.test.utils import is_array_close

@@ -1550,9 +1550,9 @@ class CAERO1(BaseCard):
         if self.x12 <= 0.:
             msg += 'X12=%s and must be greater than or equal to 0\n' % (self.x12)
             is_failed = True
-        if self.x43 <= 0.:
-            msg += 'X43=%s and must be greater than or equal to 0\n' % (self.x43)
-            is_failed = True
+        #if self.x43 <= 0.:
+            #msg += 'X43=%s and must be greater than or equal to 0\n' % (self.x43)
+            #is_failed = True
 
         if self.nspan == 0 and self.lspan == 0:
             msg += 'NSPAN or LSPAN must be greater than 0; nspan=%r nlspan=%s\n' % (

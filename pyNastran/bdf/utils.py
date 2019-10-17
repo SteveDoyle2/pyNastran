@@ -7,7 +7,9 @@ Defines various utilities including:
  - transform_load
 
 """
+from __future__ import annotations
 from copy import deepcopy
+from typing import List, Dict, TYPE_CHECKING
 import numpy as np  # type: ignore
 from numpy import cross, dot  # type: ignore
 
@@ -16,6 +18,10 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.patran_utils.colon_syntax import (
     parse_patran_syntax, parse_patran_syntax_dict, parse_patran_syntax_dict_map,
     write_patran_syntax_dict)  # pragma: disable=unused-import
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.cards.coordinate_systems import Coord
+
 
 
 def Position(xyz, cid, model):
@@ -109,7 +115,7 @@ def transform_load(F, M, cid: int, cid_new: int, model):
     return Fxyz_local_2, Mxyz_local_2
 
 
-def PositionWRT(xyz, cid, cid_new, model):
+def PositionWRT(xyz: List[float], cid: int, cid_new: int, model: BDF) -> List[float]:
     """
     Gets the location of the GRID which started in some arbitrary system and
     returns it in the desired coordinate system
@@ -164,7 +170,31 @@ def PositionWRT(xyz, cid, cid_new, model):
     return xyz_local
 
 
-def split_eids_along_nids(model, eids, nids):
+def get_xyz_cid0_dict(model: BDF,
+                      xyz_cid0: Dict[int, List[float]]=None) -> Dict[int, List[float]]:
+    """
+    helper method
+
+    Parameters
+    ----------
+    model : BDF()
+        a BDF object
+    xyz_cid0 : None / Dict[int] = (3, ) ndarray
+        the nodes in the global coordinate system
+
+    Returns
+    -------
+    xyz_cid0_dict
+    """
+    if xyz_cid0 is None:
+        xyz = {}
+        for nid, node in model.nodes.items():
+            xyz[nid] = node.get_position()
+    else:
+        xyz = xyz_cid0
+    return xyz
+
+def split_eids_along_nids(model: BDF, eids: List[int], nids: List[int]) -> None:
     """
     Dissassociate a list of elements along a list of nodes.
 
@@ -214,7 +244,7 @@ def split_eids_along_nids(model, eids, nids):
             assert len(np.unique(nodes)) == len(nodes), 'nodes=%s' % nodes
         elem.nodes = nodes
 
-def _coord(model, cid):
+def _coord(model: BDF, cid: int) -> Coord:
     """helper method"""
     if isinstance(cid, integer_types):
         cp_ref = model.Coord(cid)

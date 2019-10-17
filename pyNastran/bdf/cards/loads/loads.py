@@ -589,7 +589,7 @@ class DAREA(BaseCard):
     def add(self, darea):
         assert self.sid == darea.sid, 'sid=%s darea.sid=%s' % (self.sid, darea.sid)
         if darea.comment:
-            if hasattr('_comment'):
+            if hasattr(self, '_comment'):
                 self._comment += darea.comment
             else:
                 self._comment = darea.comment

@@ -3366,11 +3366,13 @@ class AddCards(AddMethods):
         self._add_structural_material_object(mat)
         return mat
 
-    def add_mathe(self, mid, model, bulk, rho, texp, mus, alphas, betas, mooney,
-                  sussbat, aboyce, comment=''):
+    def add_mathe(self, mid, model, bulk, mus, alphas, betas,
+                  mooney, sussbat, aboyce, gent,
+                  rho=0., texp=0., tref=0., ge=0., comment=''):
         """Creates a MATHE card"""
-        mat = MATHE(mid, model, bulk, rho, texp, mus, alphas, betas, mooney,
-                    sussbat, aboyce, comment=comment)
+        mat = MATHE(mid, model, bulk, mus, alphas, betas,
+                    mooney, sussbat, aboyce, gent,
+                    rho=rho, texp=texp, tref=tref, ge=ge, comment=comment)
         self._add_hyperelastic_material_object(mat)
         return mat
 

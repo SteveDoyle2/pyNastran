@@ -308,6 +308,11 @@ class TestRigid(unittest.TestCase):
                                     dependent_components,
                                     diameter_ratio=0.1,
                                     comment='rspline')
+        card_lines = [
+            #'$RSPLIN	eid 	D/L	G1	G2  	C2  	G3  	C3  	G4',
+            'RSPLINE	17601		13	17601	123456	17603	13456	14'
+        ]
+        model.add_card(card_lines, 'RSPLINE', is_list=False)
         rspline.write_card(size=8)
         rspline.write_card(size=8)
         rspline.raw_fields()
