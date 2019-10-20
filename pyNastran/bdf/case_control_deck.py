@@ -71,6 +71,31 @@ class CaseControlDeck:
         self.debug = False
 
         self.sol_200_map = {
+            #101 - Linear Static
+            #103 - Modal
+            #105 - Buckling
+            #106 - Non-Linear Static
+            #107 - Direct Complex Eigenvalue
+            #108 - Direct Frequency Response
+            #109 - Direct Transient Response
+            #110 - Modal Complex Eigenvalue
+            #111 - Modal Frequency Response
+            #112 - Modal Transient Response
+            #129 - Nonlinear Transient
+            #144 - Static Aeroelastic Analysis
+            #145 - Flutter / Aeroservoelastic analysis
+            #146 - Dynamic Aeroelastic Analysis
+            #153 - Non-Linear static coupled with heat transfer
+            #159 - Nonlinear Transient coupled with Heat transfer
+            #187 - Dynamic Design Analysis Method
+            #200 - Design Optimization and Sensitivity analysis
+            #400 - Non-Linear Static and Dynamic (implicit) (MSC.NASTRAN native, supersedes 106, 129, 153 and 159 - part of MSC.NASTRAN)
+            #401 - Non-Linear Static (SAMCEF based for NX.NASTRAN)
+            #402 - Non-Linear Static and Dynamic (implicit) (SAMCEF based for NX.NASTRAN)
+            #600 - Non-Linear Static and Dynamic (implicit) (front end to MSC.Marc - part of MSC.NASTRAN)
+            #601 - Implicit Non-Linear (ADINA for NX Nastran, will no longer be available in NX NASTRAN after 2020)
+            #700 - Explicit Non-Linear (LS Dyna plus MSC.Dytran - part of MSC.NASTRAN)
+            #701 - Explicit Non-Linear (ADINA for NX Nastran, will no longer be available in NX NASTRAN after 2020)
             'STATICS' : 101,
             'STATIC' : 101,
 

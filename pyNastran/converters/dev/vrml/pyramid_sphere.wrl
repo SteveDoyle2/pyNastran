@@ -1,0 +1,68 @@
+#VRML V2.0 utf8
+#
+# Pyramid with 4-component 1D pixel texture
+
+WorldInfo {
+	title "Texture-mapped pyramid"
+	info  "Gravity: on"
+}
+Background {
+	skyColor 0.1 0.3 1
+}
+NavigationInfo {
+    type "EXAMINE"
+	headlight TRUE
+}
+Shape {
+    appearance Appearance{
+         texture DEF PICBAND PixelTexture {
+             image 1 10 4 0xFFFFFF77 0xFF0000FF 0xFFCC0077 0xFFFF00FF
+                          0x77FF00FF 0x00FF00FF 0x00FFFFFF 0x0000FFFF
+                          0x7700FF77 0x444444FF
+         }
+    }
+    geometry Sphere{}
+}
+Transform{
+ children[
+   Shape{
+   appearance Appearance{
+      texture DEF PICBAND ImageTexture {
+         url "http://www.rt.cs.boeing.com/people/davidk/wrl/geo/colors.jpg"
+         repeatS FALSE
+         repeatT FALSE
+      }
+   }
+     geometry IndexedFaceSet {
+	   coord Coordinate{
+          point[
+            -2 -2 0,
+             2 -2 0,
+             2  2 0,
+	        -2  2 0,
+             0  0 5,
+          ]
+         } # end Coordinate
+         coordIndex [
+           0, 1, 4, -1, # face 0
+           1, 2, 4, -1, # face 1
+           2, 3, 4, -1, # face 2
+           3, 0, 4, -1, # face 3
+           3, 2, 1, 0, -1, # face 4, base
+         ]
+         texCoord TextureCoordinate {
+            point [
+              0 0,
+              0 .3,
+              0 .5,
+              0 .7,
+              0 1,
+           ]
+         }
+#        colorPerVertex TRUE
+
+        } # end IFS
+       }  #end Shape
+	] # end children
+} # end Transform
+
