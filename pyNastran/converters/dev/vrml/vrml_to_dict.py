@@ -48,8 +48,8 @@ def tolist(data):
     data2 = []
     for datai in data:
         if isinstance(datai, ParseResults):
-           datai2 = tolist(datai)
-           data2.append(datai2)
+            datai2 = tolist(datai)
+            data2.append(datai2)
         elif isinstance(datai, (int, float, str)):
             data2.append(datai)
         else:
@@ -66,7 +66,7 @@ def to_quads_tris(coord_indexs):
     tris = []
     for i1 in iminus1:
         datai = coord_indexs[i0:i1]
-        print(datai)
+        #print(datai)
         ndata = len(datai)
         if ndata == 3:
             tris.append(datai)
@@ -76,8 +76,10 @@ def to_quads_tris(coord_indexs):
             raise NotImplementedError(datai)
         i0 = i1 + 1
 
-    quads = np.array(quads)
-    tris = np.array(tris)
+    if quads:
+        quads = np.array(quads)
+    if tris:
+        tris = np.array(tris)
     return coord_indexs, quads, tris
 
 def read_indexed_face_set(data):
@@ -107,8 +109,10 @@ def read_indexed_face_set(data):
             coord_indexs = tolist(coord_index)
             coord_indexs, quads, tris = to_quads_tris(coord_indexs)
             #indexed_face_set['coord_index'] = coord_index
-            indexed_face_set['quads'] = quads
-            indexed_face_set['tris'] = tris
+            if len(quads):
+                indexed_face_set['quads'] = quads
+            if len(tris):
+                indexed_face_set['tris'] = tris
             i += 1
 
         elif datai == 'normal':
@@ -147,6 +151,7 @@ def read_indexed_face_set(data):
             i += 1
         else:
             raise NotImplementedError(f'datai={datai!r} type={type(datai)}')
+    #print(type(indexed_face_set))
     return indexed_face_set
 
 def toshape(data):
@@ -202,8 +207,8 @@ def toshape(data):
             elif datai == 'IndexedFaceSet':
                 i += 1
                 datai = data[i]
-                index_face_set = read_indexed_face_set(datai)
-                shape['index_face_set'] = index_face_set
+                indexed_face_set = read_indexed_face_set(datai)
+                shape['indexed_face_set'] = indexed_face_set
             else:
                 raise NotImplementedError(f'datai={datai!r} type={type(datai)}')
             i += 1

@@ -33,6 +33,7 @@ FORMAT_TO_EXTENSION = {
     'obj' : ['.obj'],
     'fast' : ['.fgrid'],
     'avl' : ['.avl'],
+    'vrml' : ['.wrl'],
     #'abaqus' : []
 
     # no duplicate extensions are allowed; use the explicit --format option
@@ -56,7 +57,7 @@ def determine_format(input_filename, allowed_formats=None):
             'surf', 'lawgs', 'degen_geom', 'shabp', 'avus', 'fast', 'abaqus',
             'usm3d', 'bedge', 'su2', 'tetgen', 'obj',
             'openfoam_hex', 'openfoam_shell', 'openfoam_faces',
-            'avl',
+            'avl', 'vrml',
         ]
 
     ext = os.path.splitext(input_filename)[1].lower()

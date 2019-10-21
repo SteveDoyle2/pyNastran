@@ -930,6 +930,7 @@ class GuiAttributes:
         if not IS_TESTING:  # pragma: no cover
             print('supported_formats = %s' % self.supported_formats)
         #assert 'cart3d' in self.supported_formats, self.supported_formats
+        assert 'vrml' in self.supported_formats, self.supported_formats
         if len(fmts) == 0:
             print('supported_formats = %s' % self.supported_formats)
             raise RuntimeError('no modules were loaded...')

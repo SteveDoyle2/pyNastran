@@ -243,9 +243,11 @@ def run_format_converter(fmt1, fname1, fmt2, fname2, data, log, quiet=False):
         process_tecplot(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt1 == 'ugrid':
         process_ugrid(fname1, fmt2, fname2, log, data=data, quiet=quiet)
+    elif fmt1 == 'vrml':
+        process_vrml(fname1, fmt2, fname2, log, data=data, quiet=quiet)
     else:
-        format1s = ['nastran', 'nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
-        #format2s = ['nastran', 'nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
+        format1s = ['nastran', 'cart3d', 'stl', 'tecplot', 'ugrid', 'vrml']
+        #format2s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
         raise NotImplementedError(f'fmt1={fmt1} is not supported by run; '
                                   f'use {", ".join(format1s)}')
 
@@ -255,8 +257,8 @@ def cmd_line_format_converter(argv=None, quiet=False):
     if argv is None:
         argv = sys.argv
     msg = "Usage:\n"
-    #format1s = ['nastran', 'nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
-    #format2s = ['nastran', 'nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
+    #format1s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot', 'vrml']
+    #format2s = ['nastran', 'cart3d', 'stl', 'ugrid', 'tecplot']
     msg += "  format_converter nastran   <INPUT> <format2> <OUTPUT> [-o <OP2>] --no_xref\n"
     msg += "  format_converter <format1> <INPUT> tecplot   <OUTPUT> [-r RESTYPE...] [-b] [--block] [-x <X>] [-y <Y>] [-z <Z>] [--scale SCALE]\n"
     msg += "  format_converter <format1> <INPUT> stl       <OUTPUT> [-b]  [--scale SCALE]\n"
@@ -268,7 +270,7 @@ def cmd_line_format_converter(argv=None, quiet=False):
     msg += '  format_converter -v | --version\n'
     msg += "\n"
     msg += "Required Arguments:\n"
-    msg += "  format1        format type (nastran, cart3d, stl, ugrid, tecplot)\n"
+    msg += "  format1        format type (nastran, cart3d, stl, ugrid, tecplot, vrml)\n"
     msg += "  format2        format type (nastran, cart3d, stl, ugrid, tecplot, abaqus)\n"
     msg += "  INPUT          path to input file\n"
     msg += "  OUTPUT         path to output file\n"
@@ -349,6 +351,21 @@ def cmd_line_format_converter(argv=None, quiet=False):
 
     run_format_converter(format1, input_filename, format2, output_filename, data, log=log, quiet=quiet)
 
+
+def process_vrml(vrml_filename, fmt2, fname2, log, data, quiet=False):
+    """
+    Converts VRML to Nastran
+    """
+    assert fmt2 in ['nastran'], 'format2=%s' % fmt2
+    #if data['--scale'] != 1.0:
+        #model.points *= data['--scale']
+        #data['--scale'] = 1.0
+
+    if fmt2 == 'nastran':
+        from pyNastran.converters.dev.vrml.vrml import vrml_to_nastran
+        vrml_to_nastran(vrml_filename, fname2, log=log)
+    else:
+        raise NotImplementedError('fmt2=%s is not supported by process_vrml' % fmt2)
 
 if __name__ == '__main__':  # pragma: no cover
     cmd_line_format_converter()

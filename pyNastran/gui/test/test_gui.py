@@ -42,6 +42,7 @@ FORMAT_TO_EXTENSION = {
     'tetgen' : ['.smesh', '.ele'],
     'avus' : ['.grd'],
     'avl' : ['.avl'],
+    'vrml' : ['.wrl'],
 
     # no duplicates are allowed
     #'panair' : ['.inp'],
