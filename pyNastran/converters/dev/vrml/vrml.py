@@ -9,6 +9,18 @@ def read_vrml(vrml_filename: str, debug=False, log=None):
     nodes, quads, tris = _load_geometry(dict_model, log)
     return nodes, quads, tris
 
+def vrml_to_stl(vrml_filename: str, stl_filename: str, debug=False, log=None):
+    """
+    Converts a vrml file into a Nastran BDF.  Doesn't consider:
+     - non-faceted geometry (only quads/tris, no spheres)
+     - transforms
+
+    """
+    nastran_filename = 'model.bdf'
+    from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl_filename
+    vrml_to_nastran(vrml_filename, nastran_filename, debug=debug, log=log)
+    nastran_to_stl_filename(nastran_filename, stl_filename, is_binary=True)
+
 def vrml_to_nastran(vrml_filename: str, nastran_filename: str, debug=False, log=None):
     """
     Converts a vrml file into a Nastran BDF.  Doesn't consider:
@@ -19,16 +31,29 @@ def vrml_to_nastran(vrml_filename: str, nastran_filename: str, debug=False, log=
     from pyNastran.bdf.field_writer import print_card_8, print_card_16
 
     nodes, quads, tris = read_vrml(vrml_filename, debug=debug, log=log)
+
+    cp = 0
+    mid = 1
+    thickness = 0.1
+    pid = 1
+    E = 3.0e7
+    G = None
+    nu = 0.3
+
+    ntris = len(tris)
+    nquads = len(quads)
     with open(nastran_filename, 'w') as bdf_file:
         bdf_file.write('$ pyNastran: punch=True\n')
-        cp = 0
+        card = ['PSHELL', pid, mid, thickness]
+        bdf_file.write(print_card_8(card))
+
+        card = ['MAT1', mid, E, G, nu]
+        bdf_file.write(print_card_8(card))
+
         for i, xyz in enumerate(nodes):
             card = ['GRID', i + 1, cp, ] + xyz.tolist()
             bdf_file.write(print_card_16(card))
 
-        pid = 1
-        ntris = len(tris)
-        nquads = len(quads)
         if ntris:
             for ie, n123 in enumerate(tris + 1):
                 card = ['CTRIA3', ie + 1, pid, ] + n123.tolist()
@@ -44,8 +69,8 @@ class VRML:
         self.log = log
 
     def read_vrml(self, vrml_filename: str):
-        with open(vrml_filename, 'r') as f:
-            lines = f.readlines()
+        with open(vrml_filename, 'r') as vrml_file:
+            lines = vrml_file.readlines()
 
         vrml_format = get_vrml_format()
 
@@ -146,22 +171,22 @@ def get_indexed_face_set(indexed_face_set):
             #print('      ', key, value)
     return points, quads, tris
 
-def spherified_cube(faces):
-    """
-    https://medium.com/game-dev-daily/four-ways-to-create-a-mesh-for-a-sphere-d7956b825db4
-    """
-    for f in faces:
-        origin = get_origin(f)
-        right = get_right_dir(f)
-        up = get_up_dir(f)
-        for j in div_count:
-            for i in div_count:
-                p = origin + 2.0 * (right * i + up * j) / div_count
-                p2 = p * p
-                rx = sqrt(1.0 - 0.5 * (p2.y + p2.z) + p2.y*p2.z/3.0)
-                ry = sqrt(1.0 - 0.5 * (p2.z + p2.x) + p2.z*p2.x/3.0)
-                rz = sqrt(1.0 - 0.5 * (p2.x + p2.y) + p2.x*p2.y/3.0)
-                return (rx, ry, rz)
+#def spherified_cube(faces):
+    #"""
+    #https://medium.com/game-dev-daily/four-ways-to-create-a-mesh-for-a-sphere-d7956b825db4
+    #"""
+    #for f in faces:
+        #origin = get_origin(f)
+        #right = get_right_dir(f)
+        #up = get_up_dir(f)
+        #for j in div_count:
+            #for i in div_count:
+                #p = origin + 2.0 * (right * i + up * j) / div_count
+                #p2 = p * p
+                #rx = sqrt(1.0 - 0.5 * (p2.y + p2.z) + p2.y*p2.z/3.0)
+                #ry = sqrt(1.0 - 0.5 * (p2.z + p2.x) + p2.z*p2.x/3.0)
+                #rz = sqrt(1.0 - 0.5 * (p2.x + p2.y) + p2.x*p2.y/3.0)
+                #return (rx, ry, rz)
 #model = Vrml_io()
 #model.load_vrml_geometry(vrml_filename)
 

@@ -94,6 +94,7 @@ def get_vrml_format():
 
     name_float = pword + pfloat
     name_float3 = pword + Group(pfloat * 3)
+    name_float4 = pword + Group(pfloat * 4)
 
     #pfloat_pos = Combine(Optional('+') + pint + '.' + Optional(pint))
     #pfloat_neg = Combine(Optional('-') + pint + '.' + Optional(pint))
@@ -103,8 +104,8 @@ def get_vrml_format():
 
     #name_name_float_list = pword + pword + float_list
 
-    pword_triple = pword + pfloat * 3
-    pword_float = pword + pfloat
+    #pword_triple = pword + pfloat * 3
+    #pword_float = pword + pfloat
 
 
     #print(pword_float.parseString('1.'))
@@ -112,10 +113,10 @@ def get_vrml_format():
     # color    1.000 1.000 1.000
     # direction -0.577 -0.577 -0.577
     # out = pword_triple.parseString('color    1.000 1.000 1.000', parseAll=False)  # works
-    unused_out = pword_triple.parseString('direction -0.577 -0.577 -0.577', parseAll=False)  # works
+    unused_out = name_float3.parseString('direction -0.577 -0.577 -0.577', parseAll=False)  # works
 
     # ambientIntensity 1.0
-    unused_out = pword_float.parseString('ambientIntensity 1.0', parseAll=False)
+    unused_out = name_float.parseString('ambientIntensity 1.0', parseAll=False)
     #print(out, dir(type(out)))  # ParsingResults
     #print(out.asDict())
     #print(out.asList())
@@ -251,7 +252,10 @@ def get_vrml_format():
     """
     child = OneOrMore(shape)
     children = Literal('children') + list_open + Group(child) + list_close
-    transform1 = Literal('Transform') + dict_open + children + dict_close
+    translation = Literal('translation') + name_float3
+    rotation = Literal('rotation') + name_float4
+    transform_values = children | translation | rotation
+    transform1 = Literal('Transform') + dict_open + transform_values + dict_close
     transform2 = Literal('DEF') + pword_num_underscore + transform1
     transform = transform1 | transform2
     geometry_str = """
@@ -385,7 +389,7 @@ def get_vrml_format():
         # t_no_float_regex = 63 sec
         # t_float_regex = 31 sec
         t0 = time.time()
-        data = vrml_format.parseString(txt, parseAll=True)
+        vrml_format.parseString(txt, parseAll=True)
         print(time.time() - t0)
 
         #for datai in data:

@@ -13,12 +13,14 @@ class Vrml_io:
         self.gui = gui
 
     def get_vrml_wildcard_geometry_results_functions(self):
+        """gets the loader methods"""
         data = ('VRML',
                 'VRML(*.wrl)', self.load_vrml_geometry,
                 None, None)
         return data
 
     def load_vrml_geometry(self, vrml_filename, name='main', plot=True):
+        """loads a VRML file into the GUI"""
         model_name = name
         #key = self.case_keys[self.icase]
         #case = self.result_cases[key]
