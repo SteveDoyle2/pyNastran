@@ -72,7 +72,7 @@ setup(
             #'test_abaqus = pyNastran.converters.abaqus.test_abaqus:main',
             'test_pynastrangui = pyNastran.gui.test.test_gui:main',
 
-            'format_converter = pyNastran.converters.type_converter:cmd_line_format_converter',
+            'format_converter = pyNastran.converters.format_converter:cmd_line_format_converter',
             'pyNastranGUI = pyNastran.gui.gui:cmd_line',
             'bdf = pyNastran.bdf.mesh_utils.utils:cmd_line',
             'f06 = pyNastran.f06.utils:cmd_line',
