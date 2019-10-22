@@ -9,7 +9,7 @@ from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_f
 from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
 from pyNastran.converters.nastran.nastran_to_tecplot import (
     nastran_to_tecplot, nastran_to_tecplot_filename)
-from pyNastran.converters.type_converter import cmd_line_format_converter
+from pyNastran.converters.format_converter import cmd_line_format_converter
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models')

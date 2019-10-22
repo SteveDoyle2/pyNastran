@@ -11,7 +11,7 @@ from pyNastran.converters.nastran.nastran_to_ugrid3d import merge_ugrid3d_and_bd
 from pyNastran.converters.aflr.ugrid.ugrid3d_to_nastran import ugrid3d_to_nastran
 from pyNastran.converters.aflr.ugrid.ugrid3d_to_tecplot import (
     ugrid_to_tecplot, ugrid3d_to_tecplot_filename, read_ugrid)
-from pyNastran.converters.type_converter import cmd_line_format_converter
+from pyNastran.converters.format_converter import cmd_line_format_converter
 
 PKG_PATH = pyNastran.__path__[0]
 UGRID_PATH = os.path.join(PKG_PATH, 'converters', 'aflr', 'ugrid', 'models')

@@ -6,7 +6,7 @@ from cpylog import get_logger
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
 
-from pyNastran.converters.type_converter import cmd_line_format_converter
+from pyNastran.converters.format_converter import cmd_line_format_converter
 from pyNastran.converters.nastran.nastran_to_cart3d import nastran_to_cart3d, nastran_to_cart3d_filename
 from pyNastran.converters.nastran.nastran_to_stl import nastran_to_stl
 from pyNastran.converters.nastran.nastran_to_surf import nastran_to_surf, clear_out_solids

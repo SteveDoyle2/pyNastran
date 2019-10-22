@@ -10,7 +10,7 @@ from pyNastran.converters.stl.test_stl import TestSTL
 from pyNastran.converters.tecplot.test_tecplot import TestTecplot
 from pyNastran.converters.abaqus.test_unit_abaqus import TestAbaqus
 from pyNastran.converters.su2.test_su2 import TestSU2
-from pyNastran.converters.su2.test_shabp import TestShabp
+from pyNastran.converters.shabp.test_shabp import TestShabp
 from pyNastran.converters.usm3d.test_usm3d import TestUsm3d
 
 from pyNastran.converters.aflr.aflr2.test_bedge import TestBEdge

@@ -1,9 +1,13 @@
+"""
+http://gun.teipir.gr/VRML-amgem/spec/part1/examples.html
+"""
 import numpy as np
 from pyNastran.converters.dev.vrml.vrml_pyparsing import remove_comments, get_vrml_format
 from pyNastran.converters.dev.vrml.vrml_to_dict import todict
 
 
 def read_vrml(vrml_filename: str, debug=False, log=None):
+    """reads a VRML file"""
     model = VRML(debug=debug, log=log)
     dict_model = model.read_vrml(vrml_filename)
     nodes, quads, tris = _load_geometry(dict_model, log)
@@ -189,18 +193,3 @@ def get_indexed_face_set(indexed_face_set):
                 #return (rx, ry, rz)
 #model = Vrml_io()
 #model.load_vrml_geometry(vrml_filename)
-
-if 0:
-    print('reading vrml file')
-    ##txt = read_vrml('gbu.wrl')
-
-    vrml_filename = 'gbu.wrl'
-    #vrml_filename = 'pyramid_sphere.wrl'
-    #txt = read_vrml(vrml_filename)
-    #model = vrml_format.parseString(txt)
-    _load_geometry(vrml_filename)
-    #print(model)
-
-    #dict_model = todict(model)
-    # print(dict_model)
-    #aaa

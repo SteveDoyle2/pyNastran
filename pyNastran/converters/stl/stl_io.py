@@ -5,7 +5,7 @@ from numpy import arange
 import vtk
 
 from pyNastran.converters.stl.stl import read_stl
-from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_type, numpy_to_vtk_points)
 
@@ -80,7 +80,7 @@ class STL_IO:
     def _fill_stl_case(self, cases, ID, elements, nodes, normals, areas):
         """adds the sidebar results"""
         self.gui.isubcase_name_map[ID] = ('STL', '')
-
+        colormap = 'jet'
         nelements = elements.shape[0]
         nnodes = nodes.shape[0]
         icase = 0
@@ -99,12 +99,17 @@ class STL_IO:
                            location='centroid', scalar=normals[:, 1])
         nz_res = GuiResult(ID, header='NormalZ', title='NormalZ',
                            location='centroid', scalar=normals[:, 2])
+        nxyz_res = NormalResult(0, 'Normals', 'Normals',
+                                nlabels=2, labelsize=5, ncolors=2,
+                                colormap=colormap, data_format='%.1f',
+                                uname='NormalResult')
         cases[icase] = (eid_res, (itime, 'ElementID'))
         cases[icase + 1] = (nid_res, (itime, 'NodeID'))
         cases[icase + 2] = (area_res, (itime, 'Area'))
         cases[icase + 3] = (nx_res, (itime, 'NormalX'))
         cases[icase + 4] = (ny_res, (itime, 'NormalY'))
         cases[icase + 5] = (nz_res, (itime, 'NormalZ'))
+        cases[icase + 6] = (nxyz_res, (itime, 'Normal'))
 
         form = [
             ('ElementID', icase, []),
@@ -113,5 +118,6 @@ class STL_IO:
             ('NormalX', icase + 3, []),
             ('NormalY', icase + 4, []),
             ('NormalZ', icase + 5, []),
+            ('Normal', icase + 6, []),
         ]
         return form, cases, nids, eids
