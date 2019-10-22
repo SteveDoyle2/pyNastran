@@ -130,11 +130,19 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
                 #log.debug('line%i_FSb = %r' % (iline, line))
                 #log.debug('line%i_FSb = %r' % (iline-1, last_line.replace('     ', ' ')))
                 sline = last_line.strip().split()
-                isubcase = sline.index('SUBCASE')
-                subcase = int(sline[isubcase + 1])
+                try:
+                    isubcase = sline.index('SUBCASE')
+                    subcase = int(sline[isubcase + 1])
+                except ValueError:
+                    log.error(f"expected: SUBCASE line -> ['SUBCASE', 1]")
+                    log.error(f'found: i={iline} sline={sline}')
+                    log.error(f'assuming subcase=1')
+                    subcase = 1
+                    #raise
                 log.debug('subcase = %s' % subcase)
 
             configuration_sline = f06_file.readline().split()
+            #log.error(f'configuration_sline={configuration_sline}')
             iline += 1
             configuration = configuration_sline[2]
             xysym = configuration_sline[5]
@@ -164,8 +172,18 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
                 #print(iline, mode, method)
                 f06_file.readline()
                 iline += 1
+            elif method == 'KE':
+                #KFREQ       1./KFREQ       VELOCITY          DAMPING       FREQUENCY          COMPLEX   EIGENVALUE
+                    #0.5500  1.8181818E+00   2.2589194E+01  -2.4541089E-03   3.3374373E+00  -5.6140173E-01     4.5752050E+02
+                mach = None
+                density_ratio = None
+                #if mode == 1:
+                    #print('# iline mode method')
+                #print(iline, mode, method)
+                f06_file.readline()
+                iline += 1
             else:
-                raise NotImplementedError(point_sline)
+                raise NotImplementedError(f'method={method!r} point_sline={point_sline}')
 
             found_existing_mode = mode in modes
             #if found_existing_mode:
@@ -188,6 +206,10 @@ def make_flutter_response(f06_filename, f06_units=None, out_units=None, make_alt
                 nvalues = 7
             elif method == 'PKNL':
                 nvalues = 9
+            elif method == 'KE':
+                #KFREQ       1./KFREQ       VELOCITY          DAMPING       FREQUENCY          COMPLEX   EIGENVALUE
+                    #0.5500  1.8181818E+00   2.2589194E+01  -2.4541089E-03   3.3374373E+00  -5.6140173E-01     4.5752050E+02
+                nvalues = 7
             else:
                 raise NotImplementedError(method)
 

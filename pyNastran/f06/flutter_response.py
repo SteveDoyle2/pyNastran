@@ -109,7 +109,7 @@ class FlutterResponse:
         self.ikfreq_inv = 1
 
         results = _asarray(results)
-        if self.method == 'PK':
+        if self.method in ['PK', 'KE']:
             self.ivelocity = 2
             self.idamping = 3
             self.ifreq = 4
@@ -1007,6 +1007,7 @@ def _asarray(results):
         results = np.asarray(results, dtype='float64')
     except:
         results2 = []
+        fix_kfreq = False
         for mode_result in results:
             mode_result2 = []
             for row in mode_result:
@@ -1018,8 +1019,13 @@ def _asarray(results):
                         fix_kfreq = True
                     elif i == 1 and 'INF' in row_entry:
                         row_entry2 = np.inf
+                    elif i in [2, 3, 4] and row_entry in ['UNSTABL-SYSTEM', 'STABLE-SYSTEM-']:
+                        row_entry2 = np.nan
                     else:
-                        row_entry2 = float(row_entry)
+                        try:
+                            row_entry2 = float(row_entry)
+                        except:
+                            raise ValueError(f'i={i} row_entry={row_entry!r}')
                     row2.append(row_entry2)
                 mode_result2.append(row2)
             results2.append(mode_result2)

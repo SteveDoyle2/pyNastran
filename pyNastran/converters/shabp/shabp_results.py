@@ -6,6 +6,10 @@ class ShabpOut:
         self.X = model.X
         self.npatches = len(model.X)
 
+    #@property
+    #def component_name_to_num(self):
+        #return self.model.component_name_to_num
+
     def readline(self, f, i):
         i += 1
         return f.readline(), i
@@ -128,14 +132,13 @@ class ShabpOut:
             Delta = []
             while 1:
                 while line[0] == '0':
-                    (unused_del_ca, unused_del_cy, unused_del_cn,
-                     unused_del_cll, unused_del_clm, unused_del_cln,
-                     cp, unused_area) = (
+                    (del_ca, del_cy, del_cn, del_cll, del_clm, del_cln, cp, area) = (
                         line[8 :20], line[21:33],
                         line[35:47], line[49:63],
                         line[63:75], line[77:89],
                         line[91:103], line[105:117],
                     )
+                    del del_ca, del_cy, del_cn, del_cll, del_clm, del_cln, area
 
                     line, i = self.readline(f, i)
                     unused_ca, unused_cy, unused_cn, unused_cll, unused_clm, unused_cln, delta = (
