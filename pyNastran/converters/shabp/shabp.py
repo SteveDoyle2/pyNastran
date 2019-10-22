@@ -339,18 +339,8 @@ class SHABP(ShabpOut):
         shadow = ones(nelements, dtype='int32')
 
         for ipatch in range(npatches):
-            if ipatch not in self.patch_to_component_num:
-                comp_num = 0
-                #raise RuntimeError('ipatch=%s keys=%s' % (
-                    #ipatch, sorted(self.patch_to_component_num)))
-                impact_val = 0
-                shadow_val = 0
-                #continue
-            else:
-                comp_num = self.patch_to_component_num[ipatch]
-                data = self.component_to_params[comp_num-1]
-                impact_val = data[0]
-                shadow_val = data[1]
+            comp_num, impact_val, shadow_val = self.get_impact_shadow(ipatch)
+
             nrows, ncols = self.X[ipatch].shape
             npointsi = nrows * ncols
             nelementsi = (nrows-1) * (ncols-1)
@@ -382,6 +372,39 @@ class SHABP(ShabpOut):
             ipoint += npointsi
             ielement += nelementsi
         return xyz, elements2, patches, components, impact, shadow
+
+    def get_impact_shadow(self, ipatch):
+        """We may not have inviscid pressure"""
+        comp_num = 0
+        impact_val = 0
+        shadow_val = 0
+        if ipatch not in self.patch_to_component_num:
+            self.log.debug(f'skipping ipatch={ipatch} comp_num={comp_num}')
+            return comp_num, impact_val, shadow_val
+            #raise RuntimeError('ipatch=%s keys=%s' % (
+                #ipatch, sorted(self.patch_to_component_num)))
+
+        comp_num = self.patch_to_component_num[ipatch]
+        if comp_num not in self.component_num_to_name:
+            self.log.debug(f'skipping ipatch={ipatch} comp_num={comp_num}')
+            return comp_num, impact_val, shadow_val
+
+        name = self.component_num_to_name[comp_num]
+        patch = self.component_name_to_patch[name]
+        if comp_num-1 not in self.component_to_params:
+            self.log.debug(f'skipping ipatch={ipatch} comp_num={comp_num} name={name!r} patch={patch}')
+            return comp_num, impact_val, shadow_val
+
+        data = self.component_to_params[comp_num-1]
+        #except KeyError:
+            #name = self.component_num_to_name[comp_num]
+            #self.log.error(f'ipatch={ipatch} comp_num={comp_num} name={name}')
+            #print(self.component_to_params)
+            #raise
+        impact_val = data[0]
+        shadow_val = data[1]
+        self.log.debug(f'loading ipatch={ipatch} comp_num={comp_num} name={name!r} patch={patch}')
+        return comp_num, impact_val, shadow_val
 
     def parse_trailer(self):
         """parses the case information (e.g., number of angles of attack, control surface info)"""
@@ -427,12 +450,15 @@ class SHABP(ShabpOut):
             i += 1
 
         #self.getMethods()
+        print('methods =', methods)
         for method in methods:
             line = self.trailer[i].rstrip()
             if method == 3:
                 print('inviscid_pressure', line)
                 i, ncomponents, ifsave, params = parse_inviscid_pressure(self.trailer, line, i)
                 self.component_to_params = params
+            elif method == 4:
+                i = parse_viscous(self.trailer, line, i)
             elif method == 5:
                 i = parse_special_routines(self.trailer, line, i)
             else:
@@ -472,7 +498,7 @@ class SHABP(ShabpOut):
 
         # component names   7
         comp_names_line = self.trailer[i].rstrip()
-        print("comp_names_line = %r" % comp_names_line)
+        #print("comp_names_line = %r" % comp_names_line)
         ncomps = int(comp_names_line.strip().split()[2])
         i += 1
 
@@ -505,6 +531,7 @@ class SHABP(ShabpOut):
 
 
 def _parse_flight_condition(mach_line):
+    """reads a flight condition line"""
     mach = float(mach_line[0 :10].strip())
     alt = float(mach_line[10:20].strip())
     pstag = float(mach_line[20:30].strip())
@@ -643,6 +670,67 @@ def parse_inviscid_pressure(lines, line, i):
             raise NotImplementedError(hinge_method)
     return i, ncomponents, ifsave, params
 
+def parse_viscous(lines, line, i):
+    """
+    Parses the viscous table (method=4)
+
+    140   viscous_run (level 2)
+      11  1
+    000
+     5 5000       0.0000    1.0000    0.0000    1.0000    3.0000    3.0000
+     2 0 4 1 1 1 1 1 0 0 0 1 1 0 1
+       1.500000E2   3.000000E2   1.600000E1   3.000000E1   9.000000E1
+       5.000000E2  8.000000E-1   1.200000E1   0.000000E0   0.000000E0
+      21  1
+      ...
+    """
+    line = lines[i].rstrip()
+    # Skin Friction Base & Title card; A-73
+    ncomp = int(line[0:2])
+    ifsave = line[2:3]
+    title = line[6:66].strip()
+    #print(f'ncomp={ncomp} ifsave={ifsave} title={title}')
+    i += 1
+    #print('***', line)
+
+    for icomp in range(ncomp):
+        #geometry data source card; A-73
+        line = lines[i].rstrip()
+        #print(line)
+        a, b = line.split()
+        icomp = int(line[:3])
+        # 0=skin friction method cards will be read for each alpha/beta
+        # 1=read only one skin friction method card and assume it applies to all alpha/betas for this component
+        # 2=use the same skin friction data as for the prepvious component (skip reading data)
+        isk = line[3]
+
+        nskin_friction_elements = line[4:7]
+        #print(f'icomp={icomp} isk={isk} nskin_friction_elements={nskin_friction_elements}')
+        i += 6
+        # skin friction method cards; A-74
+        # 0=level 2 viscous
+        # 1=level 1 viscous
+        #isfmeth =
+
+        # 0=dont print
+        # 1=print detailed skin friction intermediate results
+        #iprint =
+
+        # 0=don't save
+        # 1=write skin friction coefficient for each element
+        #isave =
+    line = lines[i].rstrip()
+    #print(line)
+    return i
+
 def parse_special_routines(lines, line, i):
-    """parses the special routines (method=5)"""
+    """
+    Parses the special routines (method=5)
+
+    10000000000000000000
+    01100   1 3 0 0 0 0
+    01100   2 4 0 0 0 0
+    11100   3 1 2 5 6 7
+
+    """
     raise RuntimeError('special routines')
