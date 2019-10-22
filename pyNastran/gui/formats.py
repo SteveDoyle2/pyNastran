@@ -136,4 +136,5 @@ try:
     from pyNastran.converters.dev.vrml.vrml_io import Vrml_io
     CLASS_MAP['vrml'] = Vrml_io
 except ImportError:  # pragma: no cover
-    raise
+    #raise
+    pass

@@ -11,10 +11,10 @@ from cpylog import get_logger2
 from pyNastran.converters.shabp.shabp_results import ShabpOut
 #from pyNastran.converters.shabp.parse_trailer import parse_trailer
 
-def read_shabp(shabp_filename, log=None, debug=False):
+def read_shabp(shabp_filename, read_special_routines=False, log=None, debug=False):
     """reads an S/HABP file"""
     model = SHABP(log=log, debug=debug)
-    model.read_shabp(shabp_filename)
+    model.read_shabp(shabp_filename, read_special_routines=read_special_routines)
     return model
 
 class SHABP(ShabpOut):
@@ -52,9 +52,9 @@ class SHABP(ShabpOut):
         self.header = ''
         self.shabp_cases = {}
 
-    def write_shabp(self, out_filename):
-        """writes an S/HABP file"""
-        pass
+    #def write_shabp(self, out_filename):
+        #"""writes an S/HABP file"""
+        #pass
 
     def get_area_xlength_by_component(self, components=None):
         """gets the area and length of a set of components"""
@@ -102,7 +102,7 @@ class SHABP(ShabpOut):
 
             areas[name] = area
             lengths[name] = xmax - xmin
-        return areas
+        return areas, lengths
 
     def get_area_by_component(self, components=None):
         """gets the area of a set of components"""
@@ -150,7 +150,7 @@ class SHABP(ShabpOut):
             areas[i] = area
         return areas
 
-    def read_shabp(self, shabp_filename):
+    def read_shabp(self, shabp_filename, read_special_routines=False):
         """reads an SHABP.INP / SHABP.mk5 file"""
         with open(shabp_filename) as shabp_file:
             lines = shabp_file.readlines()
@@ -210,7 +210,7 @@ class SHABP(ShabpOut):
                 dely = header2[40:50].strip()
                 delz = header2[50:60].strip()
                 self.log.info('sc=%s,%s,%s del=%r,%r,%r' % (xsc, ysc, zsc, delx, dely, delz))
-                print(lines[i].strip())
+                #print(lines[i].strip())
                 flag = name_old[4]
 
             if flag == '1':
@@ -287,9 +287,9 @@ class SHABP(ShabpOut):
         self.trailer = lines[i:]
         self.build_patches(patches)
         try:
-            self.parse_trailer()
+            self.parse_trailer(read_special_routines)
         except (RuntimeError, ValueError):
-            self.log.warning('failed parsing trailer')
+            self.log.error('failed parsing trailer')
             #raise
 
     def build_patches(self, patches):
@@ -406,7 +406,7 @@ class SHABP(ShabpOut):
         self.log.debug(f'loading ipatch={ipatch} comp_num={comp_num} name={name!r} patch={patch}')
         return comp_num, impact_val, shadow_val
 
-    def parse_trailer(self):
+    def parse_trailer(self, read_special_routines=False):
         """parses the case information (e.g., number of angles of attack, control surface info)"""
         #out = parse_trailer(self.trailer)
         #order, component_names, cases, components = out
@@ -427,7 +427,7 @@ class SHABP(ShabpOut):
         #print('methods =', methods)
         #print('summation_flag =', summation_flag)
 
-        npatches = line2[:2]
+        unused_npatches = line2[:2]
         #print('npatches =', npatches)
 
         mach_line = self.trailer[2].rstrip()
@@ -450,17 +450,18 @@ class SHABP(ShabpOut):
             i += 1
 
         #self.getMethods()
-        print('methods =', methods)
+        self.log.debug(f'methods = {methods}')
         for method in methods:
             line = self.trailer[i].rstrip()
             if method == 3:
-                print('inviscid_pressure', line)
+                self.log.debug(f'inviscid_pressure: {line}')
                 i, ncomponents, ifsave, params = parse_inviscid_pressure(self.trailer, line, i)
                 self.component_to_params = params
             elif method == 4:
                 i = parse_viscous(self.trailer, line, i)
             elif method == 5:
-                i = parse_special_routines(self.trailer, line, i)
+                i = parse_special_routines(self.trailer, line, i,
+                                           read_special_routines=read_special_routines)
             else:
                 raise NotImplementedError(method)
 
@@ -468,33 +469,6 @@ class SHABP(ShabpOut):
         #print "keys =", sorted(self.component_to_params.keys())
         #print "**lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip())
         #i += 1
-
-        if 0:  # pragma: no cover
-            methods = []
-            print("methods %r" % self.trailer[i].strip())
-            for v in self.trailer[i].strip():
-                v2 = int(v)
-                if v2 > 0:
-                    methods.append(v2)
-            #print "methods =", methods
-
-            val1 = self.trailer[i][0:2]
-            print("val1 = ", val1)
-            i += 1
-            if val1 == '10':
-                #print "****10****"
-                i += 1
-            elif val1 == '13':
-                #print "****13****"
-                val2 = int(self.trailer[i][2:4])
-                assert val2 == ncomponents, 'val2=%r ncomponents=%r' % (val2, ncomponents)
-                i += 1
-                for v in range(val2):
-                    #print "  lines[%i] = %s" % (i+1, self.trailer[i].rstrip())
-                    i += 1
-            else:
-                print("*lines[%i] = %s\n" % (i+1, self.trailer[i].rstrip()))
-                raise RuntimeError()
 
         # component names   7
         comp_names_line = self.trailer[i].rstrip()
@@ -527,7 +501,7 @@ class SHABP(ShabpOut):
 
         # 2noseconeright
         #3142
-        print('done with trailer')
+        self.log.debug('done with trailer')
 
 
 def _parse_flight_condition(mach_line):
@@ -609,7 +583,7 @@ def parse_inviscid_pressure(lines, line, i):
     # 1 : save component force data; use old Unit 9
     # 2 : dont save force data
     ifsave = int(line[2:3])
-    title = line[6:66].strip()
+    unused_title = line[6:66].strip()
     assert ifsave == 0, 'ifsave=%r; %s' % (ifsave, line)
     #print(line)
     #print(f'ncomponents={ncomponents} ifsave={ifsave} title={title!r}')
@@ -626,8 +600,8 @@ def parse_inviscid_pressure(lines, line, i):
         #print "n = ",n
         #print "trailer[",n+1,"] = ",trailer[n+1].strip()
         hinge_method = int(hinge_line[7:8])
-        dangle = hinge_line[12:18]
-        hinge_patch = int(hinge_line[1:3])
+        unused_dangle = hinge_line[12:18]
+        unused_hinge_patch = int(hinge_line[1:3])
         #print(f'hinge_method={hinge_method} dangle={dangle} hinge_patch={hinge_patch}')
         i += 1
 
@@ -662,7 +636,7 @@ def parse_inviscid_pressure(lines, line, i):
             x2 = float(hinge_line[30:40])
             y2 = float(hinge_line[40:50])
             z2 = float(hinge_line[50:60])
-            hinge = (x1, y1, z1, x2, y2, z2)
+            unused_hinge = (x1, y1, z1, x2, y2, z2)
             i += 1
             #print('hinge =', hinge)
         else:
@@ -687,24 +661,24 @@ def parse_viscous(lines, line, i):
     line = lines[i].rstrip()
     # Skin Friction Base & Title card; A-73
     ncomp = int(line[0:2])
-    ifsave = line[2:3]
-    title = line[6:66].strip()
+    unused_ifsave = line[2:3]
+    unused_title = line[6:66].strip()
     #print(f'ncomp={ncomp} ifsave={ifsave} title={title}')
     i += 1
     #print('***', line)
 
-    for icomp in range(ncomp):
+    for unused_icompi in range(ncomp):
         #geometry data source card; A-73
         line = lines[i].rstrip()
         #print(line)
-        a, b = line.split()
-        icomp = int(line[:3])
+        unused_a, unused_b = line.split()
+        unused_icomp = int(line[:3])
         # 0=skin friction method cards will be read for each alpha/beta
         # 1=read only one skin friction method card and assume it applies to all alpha/betas for this component
         # 2=use the same skin friction data as for the prepvious component (skip reading data)
-        isk = line[3]
+        unused_isk = line[3]
 
-        nskin_friction_elements = line[4:7]
+        unused_nskin_friction_elements = line[4:7]
         #print(f'icomp={icomp} isk={isk} nskin_friction_elements={nskin_friction_elements}')
         i += 6
         # skin friction method cards; A-74
@@ -723,7 +697,7 @@ def parse_viscous(lines, line, i):
     #print(line)
     return i
 
-def parse_special_routines(lines, line, i):
+def parse_special_routines(lines, line, i, read_special_routines=False):
     """
     Parses the special routines (method=5)
 
@@ -733,4 +707,16 @@ def parse_special_routines(lines, line, i):
     11100   3 1 2 5 6 7
 
     """
-    raise RuntimeError('special routines')
+    #if not read_special_routines:
+        #raise RuntimeError('special routines')
+    line = lines[i].rstrip()
+    #print('***', line)
+    special_lines = []
+    while line[0:1] in ['0', '1']:
+        special_lines.append(line)
+        i += 1
+        line = lines[i].rstrip()
+    #print('***', line)
+    #print('**2', lines[i])
+
+    return i

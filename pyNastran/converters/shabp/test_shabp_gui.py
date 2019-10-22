@@ -8,7 +8,7 @@ from pyNastran.converters.shabp.shabp_io import ShabpIO
 from pyNastran.converters.shabp.shabp import read_shabp
 
 PKG_PATH = pyNastran.__path__[0]
-model_path = os.path.join(PKG_PATH, 'converters', 'shabp')
+MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'shabp', 'models')
 
 
 class ShabpGUI(ShabpIO, FakeGUIMethods):
@@ -20,51 +20,36 @@ class ShabpGUI(ShabpIO, FakeGUIMethods):
 
 class TestShabpGUI(unittest.TestCase):
 
-    def test_shabp_geometry_01(self):
+    def test_shabp_results_1(self):
         log = get_logger(level='warning')
         test = ShabpGUI()
         test.log = log
-        shabp_infilename = os.path.join(model_path, 'models', 'flap', 'flap_inviscid.mk5')
-        shabp_outfilename = os.path.join(model_path, 'models', 'flap', 'SHABP.OUT')
+        shabp_infilename = os.path.join(MODEL_PATH, 'flap', 'flap_inviscid.mk5')
+        shabp_outfilename = os.path.join(MODEL_PATH, 'flap', 'SHABP.OUT')
 
         #test.model.load_shabp_geometry(shabp_infilename)
         test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
-        model = read_shabp(shabp_infilename, log=None, debug=None)
-        model.get_area_by_patch()
-        model.get_area_by_component()
-        model.get_area_xlength_by_component()
+        unused_model = read_shabp(shabp_infilename, log=None, debug=None)
+        #model.get_area_by_patch()
+        #model.get_area_by_component()
+        #model.get_area_xlength_by_component()
         test.on_load_results(shabp_outfilename)
 
-    def _test_shabp_geometry_02(self):
+    def _test_shabp_geometry_1(self):
         test = ShabpGUI()
-        shabp_infilename = os.path.join(model_path, 'models', 'orbiter.mk5')
+        shabp_infilename = os.path.join(MODEL_PATH, 'orbiter.mk5')
         test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
 
-    def _test_shabp_geometry_03(self):
+    def _test_shabp_geometry_2(self):
         test = ShabpGUI()
-        shabp_infilename = os.path.join(model_path, 'models', 'shuttle.mk5')
+        shabp_infilename = os.path.join(MODEL_PATH, 'shuttle.mk5')
         test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
 
-    def test_shabp_geometry_04(self):
+    def test_shabp_geometry_3(self):
         test = ShabpGUI()
-        shabp_infilename = os.path.join(model_path, 'models', 'nose', 'noseX_working.mk5')
+        shabp_infilename = os.path.join(MODEL_PATH, 'nose', 'noseX_working.mk5')
         test.on_load_geometry(shabp_infilename, geometry_format='shabp', raise_error=True)
-
-
-    #def test_shabp_results(self):
-        #pass
-        #geometry_filename = os.path.join(model_path, 'M100.inp')
-        #agps_filename = os.path.join(model_path, 'agps')
-        #out_filename = os.path.join(model_path, 'panair.out')
-
-        #test = ShabpGUI()
-        #test.model.load_panair_geometry(geometry_filename)
-        #test.model.load_panair_results(agps_filename)
-
-        #model = ShabpOut()
-        #model.read_shabp_out('SHABP.OUT')
 
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
-

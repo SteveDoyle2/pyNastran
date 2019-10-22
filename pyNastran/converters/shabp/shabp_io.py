@@ -234,7 +234,7 @@ class ShabpIO:
         #print(self.model)
         model = self.gui.bkp
         out_model = ShabpOut(model, log=self.gui.log, debug=self.gui.debug)
-        Cpd, unused_deltad = out_model.read_shabp_out(shabp_filename)
+        Cpd, deltad = out_model.read_shabp_out(shabp_filename)
 
         cases = self.gui.result_cases
         icase = len(cases)
@@ -245,7 +245,7 @@ class ShabpIO:
         mach_forms = defaultdict(list)
         for case_id, Cp in sorted(Cpd.items()):
             Cp = Cpd[case_id]
-            #delta = deltad[case_id]
+            delta = deltad[case_id]
 
             try:
                 mach, alpha, unused_beta = model.shabp_cases[case_id]
@@ -262,10 +262,14 @@ class ShabpIO:
             ID = 1
             cp_res = GuiResult(ID, header='Cp', title='Cp',
                                location='centroid', scalar=Cp) # data_format='%.2f
+            delta_res = GuiResult(ID, header='delta', title='delta',
+                                  location='centroid', scalar=delta) # data_format='%.2f
             itime = 0
             cases[icase] = (cp_res, (itime, name))
+            cases[icase + 1] = (delta_res, (itime, name))
             mach_forms[mach].append(('Cp', icase, []))
-            icase += 1
+            mach_forms[mach].append(('delta', icase + 1, []))
+            icase += 2
             #self.result_cases[(name, 'delta', 1, 'centroid', '%.3f')] = delta
 
         for mach, mach_form in sorted(mach_forms.items()):

@@ -30,6 +30,7 @@ class ShabpOut:
             nelementsi = (nrows-1) * (ncols-1)
             istart[ipatch] = nelements
             nelements += nelementsi
+        #print('istart =', istart)
 
         Cp_out = {}
         delta_out = {}
@@ -37,43 +38,50 @@ class ShabpOut:
         # all of case 1, then all of case 2
         Cp_dict, delta_dict, ncases = self._parse_results(out_filename)
         #unused_ncomps = len(self.component_num_to_name)
-
+        #print('Cp_dict =', Cp_dict)
         components = self.model.component_name_to_patch.keys()
         for icase in range(ncases):
+            #print(f'ncases={ncases} components={components} nelements={nelements}')
             Cp = zeros(nelements, dtype='float32')
             delta = zeros(nelements, dtype='float32')
             for name in sorted(components):
-                icomp = self.component_name_to_num[name]
-                patches = self.component_name_to_patch[name]
+                icomp = self.model.component_name_to_num[name]
+                patches = self.model.component_name_to_patch[name]
+                #print(f'  name={name} icomp={icomp} patches={patches}')
 
                 Cp_array = Cp_dict[icomp]
+                #print(f'  Cp_array={Cp_array}')
                 delta_array = delta_dict[icomp]
                 ndata = len(Cp_array) // ncases
                 jelement_start = ndata * icase
                 for unused_i, ipatch in enumerate(patches):  # ipatch starts at 1
                     X = self.X[ipatch-1]
                     iistart = istart[ipatch-1]
+                    #print(f'    X.shape={X.shape} iistart={iistart}')
 
                     nrows, ncols = X.shape
                     nelementsi = (nrows-1) * (ncols-1)
                     Cp[iistart:iistart+nelementsi] = Cp_array[jelement_start:jelement_start+nelementsi]
                     delta[iistart:iistart+nelementsi] = delta_array[jelement_start:jelement_start+nelementsi]
                     jelement_start += nelementsi
+            #print('Cp =', Cp)
+            #print('delta =', delta)
             Cp_out[icase] = Cp
             delta_out[icase] = delta
+            #break
         return Cp_out, delta_out
 
     def _parse_results(self, out_filename):
-        f = open(out_filename, 'r')
-        i = 0
-        line, i = self.readline(f, i)
-        while '******** MAIN PROGRAM NOW HAS CONTROL OF SYSTEM ********' not in line:
-            line, i = self.readline(f, i)
+        with open(out_filename, 'r') as resfile:
+            i = 0
+            line, i = self.readline(resfile, i)
+            while '******** MAIN PROGRAM NOW HAS CONTROL OF SYSTEM ********' not in line:
+                line, i = self.readline(resfile, i)
 
-        while '*** PRESSURE CALCULATION PROGRAM' not in line:
-            line, i = self.readline(f, i)
+            while '*** PRESSURE CALCULATION PROGRAM' not in line:
+                line, i = self.readline(resfile, i)
 
-        out = self._read_inviscid_pressure(f, i)
+            out = self._read_inviscid_pressure(resfile, i)
         line, i, Cp_dict_components, delta_dict_components, ncases = out
         #self._read_viscous2(line, i)
         return Cp_dict_components, delta_dict_components, ncases
@@ -179,11 +187,14 @@ class ShabpOut:
                     while 'ALPHA  BETA     C N        C A        C M        C L        C D        L/D        C Y        C LN       C LL' not in line:
                         line, i = self.readline(f, i)
 
+                    # this is a weird way to read this...
                     ncases = 0
                     while 'S/HABP' not in line:
-                        ncases += 1
+                        #ncases += 1
                         line, i = self.readline(f, i)
-                    ncases -= 2  # correct for reading too many lines
+                        #print(line.rstrip())
+                    ncases += 1
+                    #ncases -= 2  # correct for reading too many lines
 
                     line, i = self.readline_n(f, i, 3)
                     break

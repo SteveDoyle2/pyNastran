@@ -271,15 +271,15 @@ if 1:
     # 54.56 sec, 52.45 sec, 49, 35 by moving numpy import
     coord_indicies = pp.OneOrMore(comma.suppress() | pint.setParseAction(cvt_int) | pminus1.setParseAction(cvt_int)) # works and parses
     coord_index = (pp.Literal('coordIndex') + list_open + pp.Group(coord_indicies) + list_close).setName('coord_index')  # works wiht A
-elif 0:
+elif 0:  # pragma: no cover
     # back to 51.2 sec
     coord_indicies = pp.OneOrMore(comma.suppress() | pp.Word(pp.nums + '-').setParseAction(cvt_int)) # works and parses
     coord_index = (pp.Literal('coordIndex') + list_open + pp.Group(coord_indicies) + list_close).setName('coord_index')  # works wiht A
-elif 0:
+elif 0:  # pragma: no cover
     # has issues with the big problem
     coord_indicies = pp.delimitedList(pint.setParseAction(cvt_int) | pminus1.setParseAction(cvt_int)) # good
     coord_index = (pp.Literal('coordIndex') + list_open + coord_indicies + list_close).setName('coord_index')
-else:
+else:  # pragma: no cover
     # has issues with the big problem
     # probably will be benefical in other cases
     import numpy as np
@@ -450,4 +450,4 @@ Shape {
     }
 }
 """)
-print('done with pre-parsing!')
+#print('done with pre-parsing!')
