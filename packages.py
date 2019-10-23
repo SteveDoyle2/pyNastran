@@ -241,3 +241,24 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
     #print(all_reqs)
     print('install_requires =', install_requires)
     return all_reqs, install_requires
+
+def update_version_file():
+    import pyNastran
+    if 'install' not in sys.argv:
+        return
+
+    pkg_path = pyNastran.__path__[0]
+    init_filename = os.path.join(pkg_path, '__init__.py')
+    version_filename = os.path.join(pkg_path, 'version.py')
+    with open(version_filename, 'w') as version_file:
+        version_file.write(f'__version__ = {pyNastran.__version__!r}\n')
+        version_file.write(f'__releaseDate__ = {pyNastran.__releaseDate__!r}\n')
+
+    with open(init_filename, 'r') as init_file:
+        data = init_file.read()
+
+    data2 = data.replace('is_installed = False', 'is_installed = True')
+    with open(init_filename, 'w') as init_file:
+        data = init_file.write(data2)
+
+    #__version__ = '1.3.0+%s' % revision

@@ -508,12 +508,16 @@ class GuiQtCommon(GuiAttributes):
         self.is_max_actor = True
 
         if location == 'node':
-            if self.xyz_cid0 is None:
+            if hasattr(self, 'xyz_cid0') and self.xyz_cid0 is None:
                 return
-            xyzs = [
-                self.xyz_cid0[imin, :], # min
-                self.xyz_cid0[imax, :], # max
-            ]
+            points = self.grid.GetPoints()
+            xyz_min = np.array(points.GetPoint(imin), dtype='float64')
+            xyz_max = np.array(points.GetPoint(imax), dtype='float64')
+            xyzs = [xyz_min, xyz_max]
+            #xyzs = [
+            #    self.xyz_cid0[imin, :], # min
+            #    self.xyz_cid0[imax, :], # max
+            #]
         elif location == 'centroid':
             #print(self.models['main'].elements)
             #print('neids', len(self.models['main'].elements))

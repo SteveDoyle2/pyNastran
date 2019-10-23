@@ -3,15 +3,16 @@ Defines various utilities for BDF parsing including:
  - to_fields
 
 """
+from __future__ import annotations
 import os
-#import sys
 from io import StringIO
 from collections import defaultdict
-from typing import List, Dict, Tuple, Optional, Any
+from typing import List, Dict, Tuple, Optional, Any, TYPE_CHECKING
 
 #import pyNastran
 from pyNastran.bdf.errors import CardParseSyntaxError
-
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 _REMOVED_LINES = [
     '$EXECUTIVE CONTROL DECK',
@@ -361,8 +362,7 @@ def _get_card_name(lines: List[str], active_filename: str) -> Optional[str]:
         raise CardParseSyntaxError(msg)
     return card_name.upper()
 
-def fill_dmigs(model):
-    # type : (BDF) -> None
+def fill_dmigs(model: BDF) -> None:
     """fills the DMIx cards with the column data that's been stored"""
     for name, card_comments in model._dmig_temp.items():
         card0, unused_comment0 = card_comments[0]

@@ -105,6 +105,18 @@ class TestCart3dGUI(unittest.TestCase):
         key = ('centroid', 'Node')
         out = test.model.data_map[key](data)
         #print(out)
+
+        test.setup_fake_text_actors()
+        icase = 0
+        icase2 = icase + 1
+        while icase2 < len(test.result_cases):
+            #test.on_cycle_results(case=icase2, show_msg=True)
+            unused_result_name = 'dummy'
+            test._set_case(unused_result_name, icase2, explicit=False, cycle=False,
+                           skip_click_check=False, min_value=None, max_value=None,
+                           is_legend_shown=None, show_msg=True)
+            icase2 += 1
+
         os.remove(geometry_filename)
 
     def test_nastran_to_cart3d_01(self):

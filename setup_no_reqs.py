@@ -4,7 +4,7 @@ import os
 import sys
 from setuptools import setup, find_packages
 
-from packages import check_python_version, get_package_requirements
+from packages import check_python_version, get_package_requirements, update_version_file
 check_python_version()
 
 import pyNastran
@@ -28,6 +28,13 @@ for exclude_word in exclude_words:
     packages = [package for package in packages if exclude_word not in package]
 #print(packages, len(packages)) # 83
 all_reqs, install_requires = get_package_requirements(is_gui=True)
+
+#revision = get_git_revision_short_hash()
+#__version__ = '1.3.0+%s' % revision
+#__releaseDate__ = '2019/6/xx'
+#__releaseDate2__ = 'JUNE xx, 2019'
+
+update_version_file()
 
 setup(
     name='pyNastran',

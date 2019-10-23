@@ -4,7 +4,8 @@ import sys
 
 # this variable is automatically set by the .spec file; should be False
 is_pynastrangui_exe = False
-if is_pynastrangui_exe:
+is_installed = False
+if is_pynastrangui_exe or is_installed:
     # pyInstaller
     from pyNastran.version import __version__, __releaseDate__
 else:

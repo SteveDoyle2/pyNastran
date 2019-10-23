@@ -1067,7 +1067,7 @@ class DMIG_UACCEL(BaseCard):
 
     def raw_fields(self):
         list_fields = [
-            'DMI', 'UACCEL', 0, 9, self.tin, None, None, None, self.ncol
+            'DMIG', 'UACCEL', 0, 9, self.tin, None, None, None, self.ncol
         ]
         for lseq, ncx in sorted(self.load_sequences.items()):
             list_fields += [lseq, None, None]
@@ -1111,7 +1111,8 @@ class DMIG_UACCEL(BaseCard):
         for lseq, ncx in sorted(self.load_sequences.items()):
             list_fields += [lseq, None, None]
             for ncxi in ncx:
-                list_fields += ncxi
+                #nnone = (4 - len(ncxi))
+                list_fields += ncxi  #+ [None]  #* nnone
         #print('list_fields= %s' % list_fields)
         msg += func(list_fields)
         #print(msg)
@@ -1121,6 +1122,8 @@ class DMIG_UACCEL(BaseCard):
             #msg += self._get_real_fields(func)
         return msg
 
+    def __repr__(self):
+        return self.write_card(size=8)
 
 class DMIG(NastranMatrix):
     """
