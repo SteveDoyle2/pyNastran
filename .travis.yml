@@ -27,10 +27,10 @@ language: python
 matrix:
   allow_failures:
     # latest versions of package
-    #- name: "Python 3.8 (PyQt5)"
-    #  python: '3.8'
-    #  env:
-    #  - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25'
+    - name: "Python 3.8 (PyQt5)"
+      python: '3.8'
+      env:
+      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25'
 
     # latest versions of package
     - name: "Python 3.8 (no vtk/qt)"
