@@ -50,6 +50,17 @@ matrix:
   include:
      #--------------------------------------------------------------------------------------------------
       # latest versions of package
+    - name: "Python 3.8 (PyQt5)"
+      python: '3.8'
+      env:
+      - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25'
+
+    - name: "Python 3.8 (no vtk/qt)"
+      python: '3.8'
+      env:
+      - NUMPY='numpy scipy matplotlib h5py pandas>=0.25'
+      - NOGUI='_no_gui'
+
     - name: "Python 3.7 (PyQt5)"
       python: '3.7'
       env:
@@ -73,6 +84,12 @@ matrix:
 
     #--------------------------------------------------------------------------------------------------
     # the most basic of pyNastran - no matplotlib, h5py, pandas, or even six
+    - name: "Python 3.8 (no gui)"
+      python: '3.8'
+      env:
+      - NUMPY='numpy scipy'
+      - NOGUI='_no_gui'
+
     - name: "Python 3.7 (no gui)"
       python: '3.7'
       env:

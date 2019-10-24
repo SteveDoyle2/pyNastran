@@ -1041,9 +1041,6 @@ class DMIG_UACCEL(BaseCard):
         ncol = integer_or_blank(card, 8, 'ncol')
         return DMIG_UACCEL(tin, ncol, load_sequences={}, comment=comment)
 
-    def _add_column_uaccel(self, comment=''):
-        raise NotImplementedError('UACCEL')
-
     def _add_column(self, card, comment=''):
         if comment:
             if hasattr(self, '_comment'):
@@ -1052,13 +1049,20 @@ class DMIG_UACCEL(BaseCard):
                 self.comment = comment
         load_seq = integer(card, 2, 'load_seq')
 
-        g1 = integer(card, 5, 'nid1')
-        c1 = parse_components(card, 6, 'c1')
-        x1 = double(card, 7, 'x1')
-        assert len(card) <= 8, 'len=%s card=%s' % (len(card), card)
+        i = 0
+        ifield = 5
+        self.load_sequences[load_seq] = []
+        assert len(card) >= 8, 'len=%s card=%s' % (len(card), card)
+        while ifield < len(card):
+            g1 = integer(card, ifield, 'nid%d' % i)
+            c1 = parse_components(card, ifield+1, 'c%d' % i)
+            x1 = double(card, ifield+2, 'x%d' % i)
+            #assert len(card) <= 8, 'len=%s card=%s' % (len(card), card)
+            gcx = [g1, c1, x1]
+            self.load_sequences[load_seq].append(gcx)
+            ifield += 4
+            i += 1
 
-        gcx = [g1, c1, x1]
-        self.load_sequences[load_seq] = [gcx]
 
     @staticmethod
     def finalize():
@@ -1107,14 +1111,13 @@ class DMIG_UACCEL(BaseCard):
         ]
         msg += func(list_fields)
 
-        list_fields = ['DMIG', 'UACCEL']
         for lseq, ncx in sorted(self.load_sequences.items()):
+            list_fields = ['DMIG', 'UACCEL']
             list_fields += [lseq, None, None]
             for ncxi in ncx:
-                #nnone = (4 - len(ncxi))
-                list_fields += ncxi  #+ [None]  #* nnone
-        #print('list_fields= %s' % list_fields)
-        msg += func(list_fields)
+                list_fields += ncxi + [None]
+            list_fields.pop()
+            msg += func(list_fields)
         #print(msg)
         #if self.is_complex:
             #msg += self._get_complex_fields(func)

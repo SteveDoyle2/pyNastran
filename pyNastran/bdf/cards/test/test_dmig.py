@@ -538,7 +538,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
 
     def test_dmig_uaccel(self):
         """tests DMIG,UACCEL"""
-        model = BDF(debug=True)
+        model = BDF(debug=None)
 
         lines = [
             ['DMIG', 'UACCEL', '0', 9, 1, None, None, None, 4],
@@ -547,22 +547,25 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
             ['DMIG', 'UACCEL', 4, None, None, 2, 6, 1.0],
         ]
         for line in lines:
-            #print(line)
             model.add_card(line, 'DMIG')
         fill_dmigs(model)
         str(model.dmigs)
         str(model.get_bdf_stats())
-        if 0:  # pragma: no cover
-            tin = 2
-            ncol = 3
-            load_sequences = {
-                # lseq : [ncx]
-                10 : [[101, 102, 103]],
-                20 : [[202], [203]],
-            }
-            uaccel = model.add_dmig_uaccel(tin, ncol, load_sequences, comment='uaccel')
-            uaccel.raw_fields()
-        #save_load_deck(model)
+
+        tin = 1
+        ncol = 3
+        load_sequences = {
+            # lseq : [ncx]
+            10 : [[1001, 4, 1003.0]],
+            20 : [[1, 2, 3.], [11, 12, 13.], ],
+            30 : [[1, 2, 3.], [11, 12, 13.], [101, 4, 103.]],
+        }
+        uaccel = model.add_dmig_uaccel(tin, ncol, load_sequences, comment='uaccel')
+        uaccel.raw_fields()
+        str(uaccel)
+        uaccel.tin = 2
+        str(uaccel)
+        save_load_deck(model)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
