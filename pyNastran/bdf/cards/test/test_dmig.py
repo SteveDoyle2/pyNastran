@@ -565,7 +565,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         str(uaccel)
         uaccel.tin = 2
         str(uaccel)
-        save_load_deck(model)
+        save_load_deck(model, run_save_load_hdf5=False)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
