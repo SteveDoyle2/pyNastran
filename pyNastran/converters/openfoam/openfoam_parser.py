@@ -11,7 +11,7 @@ def remove_c_comments(lines):
 
     lines3 = []
     for line in lines2:
-        line3 = line.split('|')[0].split('/*')[0].split('\*')[0]
+        line3 = line.split('|')[0].split('/*')[0].split('\\*')[0]
         if line3.strip():
             lines3.append(line3)
     return lines3

@@ -202,7 +202,7 @@ def hexa_coord(xyz1, xyz2, xyz3, xyz4,
     #return coords
 
 def _coordinate_system_from_vector_2d(v21, normal):
-    """
+    r"""
     Helper method::
 
          3

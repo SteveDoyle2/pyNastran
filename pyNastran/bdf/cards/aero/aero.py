@@ -4309,7 +4309,7 @@ class PAERO2(BaseCard):
         self.thn = thn
         if self.lrsb == 0:
             self.lrsb = None
-        if self.lrib is 0:
+        if self.lrib == 0:
             self.lrib = None
         self.lrsb_ref = None
         self.lrib_ref = None
