@@ -438,7 +438,7 @@ NX_TABLE_CONTENT = {
     85 : 'ODAMGPFD - Damage values for PFA',
     86 : 'ODAMGPFE - Damage energy for PFA',
     87 : 'ODAMGPFS - Damage status for PFA',
-    88 : 'ODAMGPFR - Damage crack density for PFA \ EUD',
+    88 : 'ODAMGPFR - Damage crack density for PFA / EUD',
     89 : '??? - Composite strength ratios',
     90 : 'TRMBD - Transformation matrices from deformed to basic',
     91 : 'TRMBU - Transfomration matrices from undeformed to basic',

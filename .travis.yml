@@ -32,6 +32,7 @@ matrix:
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25'
       - LIB='libblas-dev liblapack-dev'
+      - LIBH5='libhdf5-dev'
 
     # latest versions of package
     - name: "Python 3.8 (no vtk/qt)"
@@ -40,6 +41,7 @@ matrix:
       - NUMPY='numpy scipy matplotlib h5py pandas>=0.25'
       - NOGUI='_no_gui'
       - LIB='libblas-dev liblapack-dev'
+      - LIBH5='libhdf5-dev'
 
     # the most basic of pyNastran - no matplotlib, h5py, pandas, or even six
     - name: "Python 3.8 (no gui)"
@@ -134,7 +136,7 @@ install:
   # atlas
   - echo "python=$TRAVIS_PYTHON_VERSION ${NUMPY}"
   - sudo apt-get update
-  - sudo apt-get install ${LIB} gfortran
+  - sudo apt-get install ${LIB} ${LIBH5} gfortran
 
   # We do this conditionally because it saves us some downloading if the
   # version is the same.

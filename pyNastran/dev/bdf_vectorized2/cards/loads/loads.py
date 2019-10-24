@@ -1484,7 +1484,7 @@ class LSEQv(BaseLoad):
         excite_id = integer(card, 2, 'excite_id')
         load_id = integer_or_blank(card, 3, 'lid', 0)
         temp_id = integer_or_blank(card, 4, 'tid', 0)
-        if load_id is 0 and temp_id is 0:
+        if load_id != 0 and temp_id != 0:
             msg = 'LSEQ load_id/temp_id are both 0; load_id=%s temp_id=%s' % (load_id, temp_id)
             raise RuntimeError(msg)
         assert len(card) <= 5, 'len(LSEQ card) = %i\ncard=%s' % (len(card), card)

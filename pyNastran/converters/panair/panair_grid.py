@@ -1278,7 +1278,7 @@ def remove_comments(lines, log):
         line = line.rstrip().lower()
         if '=' in line:
             #print "line -> %r" % (line)
-            if '=' is not line[0]:
+            if line[0] != '=':
                 log.debug("line[0] -> %s" % line[0])
                 line = line.split('=')[0]
                 #log.debug("******")

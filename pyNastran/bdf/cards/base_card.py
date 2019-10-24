@@ -483,7 +483,7 @@ class Element(BaseCard):
                 #raise IndexError(msg)
 
             # remove 0 nodes
-            nodes = [nid if nid is not 0 else None
+            nodes = [nid if nid != 0 else None
                      for nid in self.nodes]
         else:
             nodes = self.nodes

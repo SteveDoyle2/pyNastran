@@ -138,6 +138,6 @@ class BDFCard:
             the value on the ith field
 
         """
-        if i < self.nfields and self.card[i] is not None and self.card[i] is not '':
+        if i < self.nfields and self.card[i] is not None and self.card[i] != '':
             return self.card[i]
         return default

@@ -3332,7 +3332,7 @@ class DVCREL2(DVXREL2):
                 #print("%s = %s" % (dvid_name, dvid))
                 if dvid:
                     assert dvid is not None
-                    assert dvid is not 'DESVAR'
+                    assert dvid != 'DESVAR'
                     dvids.append(dvid)
                     n += 1
 
@@ -3344,7 +3344,7 @@ class DVCREL2(DVXREL2):
                 label = string(card, i, label_name)
                 #print("%s = %s" % (label_name, label))
                 if label:
-                    assert label is not 'DTABLE'
+                    assert label != 'DTABLE'
                     labels.append(label)
         return DVCREL2(oid, element_type, pid, cp_name, dequation, dvids, labels,
                        cp_min, cp_max, comment=comment)
@@ -3881,7 +3881,7 @@ class DVMREL2(DVXREL2):
                 #print("%s = %s" % (dvid_name, dvid))
                 if dvid:
                     assert dvid is not None
-                    assert dvid is not 'DESVAR'
+                    assert dvid != 'DESVAR'
                     dvids.append(dvid)
                     n += 1
 
@@ -3893,7 +3893,7 @@ class DVMREL2(DVXREL2):
                 label = string(card, i, label_name)
                 #print("%s = %s" % (label_name, label))
                 if label:
-                    assert label is not 'DTABLE'
+                    assert label != 'DTABLE'
                     labels.append(label)
         return DVMREL2(oid, mat_type, mid, mp_name, dequation, dvids, labels,
                        mp_min=mp_min, mp_max=mp_max, comment=comment)
@@ -4597,7 +4597,7 @@ class DVPREL2(DVXREL2):
                 #print("%s = %s" % (dvid_name, dvid))
                 if dvid:
                     assert dvid is not None
-                    assert dvid is not 'DESVAR'
+                    assert dvid != 'DESVAR'
                     dvids.append(dvid)
                     n += 1
 
@@ -4609,7 +4609,7 @@ class DVPREL2(DVXREL2):
                 label = string(card, i, label_name)
                 #print("%s = %s" % (label_name, label))
                 if label:
-                    assert label is not 'DTABLE'
+                    assert label != 'DTABLE'
                     labels.append(label)
 
         dvprel = DVPREL2(oid, prop_type, pid, pname_fid, dequation, dvids, labels,
