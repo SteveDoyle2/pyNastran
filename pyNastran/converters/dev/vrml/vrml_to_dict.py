@@ -1,10 +1,10 @@
 import numpy as np
 from pyparsing import ParseResults
 
-def todicti(data):
+def todicti(data, log):
     i = 0
     dicti = {}
-    print('------')
+    log.debug('------')
     while i < len(data):
         #print(dicti)
         key = data[i]
@@ -15,7 +15,7 @@ def todicti(data):
             dicti[key] = value
         elif isinstance(value, ParseResults):
             value2 = value.asList()
-            print(f'  key={key} value={value2}')
+            log.debug(f'  key={key} value={value2}')
             dicti[key] = value2
         else:
             print(f'  key={key} value={value}')
@@ -217,7 +217,7 @@ def toshape(data):
     return shape
 
 
-def todict(pmodel):
+def todict(pmodel, log):
     out_model = {
         'transforms' : [],
     }
@@ -227,17 +227,17 @@ def todict(pmodel):
         if modeli == 'WorldInfo':
             i += 1
             data = pmodel[i]
-            out_model[modeli] = todicti(data)
+            out_model[modeli] = todicti(data, log)
             i += 1
         elif modeli == 'Background':
             i += 1
             data = pmodel[i]
-            out_model[modeli] = todicti(data)
+            out_model[modeli] = todicti(data, log)
             i += 1
         elif modeli == 'NavigationInfo':
             i += 1
             data = pmodel[i]
-            out_model[modeli] = todicti(data)
+            out_model[modeli] = todicti(data, log)
             i += 1
         elif modeli == 'Shape':
             i += 1
@@ -276,7 +276,7 @@ def todict(pmodel):
         elif modeli == 'DEF': # DEF Body__115117 Transform
             i += 1
             modeli = pmodel[i]
-            print('%r' % modeli)
+            log.debug('%r' % modeli)
             i += 1
             #modeli = pmodel[i]
             #print('%r' % modeli)

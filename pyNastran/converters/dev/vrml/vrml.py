@@ -1,7 +1,11 @@
 """
 http://gun.teipir.gr/VRML-amgem/spec/part1/examples.html
 """
+import os
 import numpy as np
+
+from cpylog import get_logger2
+from pyNastran.utils import print_bad_path
 from pyNastran.converters.dev.vrml.vrml_pyparsing import remove_comments, get_vrml_format
 from pyNastran.converters.dev.vrml.vrml_to_dict import todict
 
@@ -68,11 +72,13 @@ def vrml_to_nastran(vrml_filename: str, nastran_filename: str, debug=False, log=
                 bdf_file.write(print_card_8(card))
 
 class VRML:
-    def __init__(self, debug=False, log=None):
+    def __init__(self, log=None, debug=False):
         self.debug = debug
-        self.log = log
+        self.log = get_logger2(log=log, debug=debug, encoding='utf-8')
 
     def read_vrml(self, vrml_filename: str):
+        """reads a VRML file"""
+        assert os.path.exists(vrml_filename), print_bad_path(vrml_filename)
         with open(vrml_filename, 'r') as vrml_file:
             lines = vrml_file.readlines()
 
@@ -82,7 +88,7 @@ class VRML:
         txt = '\n'.join(lines)
         model = vrml_format.parseString(txt, parseAll=True)
 
-        dict_model = todict(model)
+        dict_model = todict(model, self.log)
         return dict_model
 
 
