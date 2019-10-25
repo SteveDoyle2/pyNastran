@@ -371,15 +371,17 @@ def fill_dmigs(model: BDF) -> None:
 
         if card_name == 'DMIG':
             # if field2 == 'UACCEL':  # special DMIG card
-            card = model.dmigs[name]
+            card = model.dmig[name]
         elif card_name == 'DMI':
-            card = model.dmis[name]
+            card = model.dmi[name]
         elif card_name == 'DMIJ':
-            card = model.dmijs[name]
+            card = model.dmij[name]
         elif card_name == 'DMIJI':
-            card = model.dmijis[name]
+            card = model.dmiji[name]
         elif card_name == 'DMIK':
-            card = model.dmiks[name]
+            card = model.dmik[name]
+        elif card_name == 'DMIAX':
+            card = model.dmiax[name]
         else:  # pragma: no cover
             raise NotImplementedError(card_name)
 

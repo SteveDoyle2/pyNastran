@@ -70,11 +70,12 @@ def load_bdf_from_hdf5_file(h5_file, model):
         'aelinks' : hdf5_load_aelinks,
         'desvars' : hdf5_load_desvars,
 
-        'dmigs' : hdf5_load_dmigs,
-        'dmijs' : hdf5_load_dmigs,
-        'dmiks' : hdf5_load_dmigs,
-        'dmijis' : hdf5_load_dmigs,
-        'dmis' : hdf5_load_dmigs,
+        'dmig' : hdf5_load_dmigs,
+        'dmiax' : hdf5_load_dmigs,
+        'dmij' : hdf5_load_dmigs,
+        'dmik' : hdf5_load_dmigs,
+        'dmiji' : hdf5_load_dmigs,
+        'dmi' : hdf5_load_dmigs,
         'dti' : hdf5_load_dti,
 
         'dconstrs' : hdf5_load_dconstrs,
@@ -1330,7 +1331,7 @@ def _put_keys_values_into_dict(model, name, keys, values, cast_int_keys=True):
     slot = getattr(model, name)
     card_count = model.card_count
 
-    # 'dmigs', 'dmiks', 'dmijs', 'dmijis', 'dmis'
+    # 'dmig', 'dmik', 'dmij', 'dmiji', 'dmi', 'dmiax'
     if cast_int_keys and name not in ['dscreen', 'dti', 'aecomps', 'seconct', 'sebndry']:
         #print('keys =', keys, cast_int_keys, name)
         try:

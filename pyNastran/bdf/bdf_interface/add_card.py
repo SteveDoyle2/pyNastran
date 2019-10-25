@@ -121,7 +121,7 @@ from pyNastran.bdf.cards.bdf_sets import (
     RADSET,
 )
 from pyNastran.bdf.cards.params import PARAM
-from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
+from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -7665,6 +7665,14 @@ class AddCards(AddMethods):
         dmi = DMI(name, form, tin, tout, nrows, ncols, GCj, GCi, Real,
                   Complex, comment=comment)
         self._add_dmi_object(dmi)
+        return dmi
+
+    def add_dmiax(self, name, matrix_form, tin, tout, polar, ncols,
+                  GCNj, GCNi, Real, Complex=None, comment=''):
+        """Creates a DMIAX card"""
+        dmi = DMIAX(name, matrix_form, tin, tout, polar, ncols,
+                    GCNj, GCNi, Real, Complex=Complex, comment=comment)
+        self._add_dmiax_object(dmi)
         return dmi
 
     def add_dmij(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
