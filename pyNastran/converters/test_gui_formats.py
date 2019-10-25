@@ -31,5 +31,10 @@ from pyNastran.converters.dev.obj.test_obj import TestObjGUI
 #except ImportError:
     #pass
 
+try:
+    from pyNastran.converters.dev.vrml.test_vrml_gui import TestVrmlGui
+except ImportError:  # pragma: no cover
+    pass
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()
