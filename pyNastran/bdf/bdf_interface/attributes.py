@@ -410,11 +410,12 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
-        self.dmis = {}  # type: Dict[str, Any]
-        self.dmigs = {}  # type: Dict[str, Any]
-        self.dmijs = {}  # type: Dict[str, Any]
-        self.dmijis = {}  # type: Dict[str, Any]
-        self.dmiks = {}  # type: Dict[str, Any]
+        self.dmi = {}  # type: Dict[str, Any]
+        self.dmig = {}  # type: Dict[str, Any]
+        self.dmij = {}  # type: Dict[str, Any]
+        self.dmiji = {}  # type: Dict[str, Any]
+        self.dmik = {}  # type: Dict[str, Any]
+        self.dmiax = {}  # type: Dict[str, Any]
         self.dti = {}  # type: Dict[str, Any]
         self._dmig_temp = defaultdict(list)  # type: Dict[str, List[str]]
 
@@ -802,11 +803,12 @@ class BDFAttributes:
             'frequencies' : ['FREQ', 'FREQ1', 'FREQ2', 'FREQ3', 'FREQ4', 'FREQ5'],
 
             # direct matrix input cards
-            'dmigs' : ['DMIG'],
-            'dmijs' : ['DMIJ'],
-            'dmijis' : ['DMIJI'],
-            'dmiks' : ['DMIK'],
-            'dmis' : ['DMI'],
+            'dmig' : ['DMIG'],
+            'dmiax' : ['DMIAX'],
+            'dmij' : ['DMIJ'],
+            'dmiji' : ['DMIJI'],
+            'dmik' : ['DMIK'],
+            'dmi' : ['DMI'],
             'dti' : ['DTI'],
 
             # optimzation

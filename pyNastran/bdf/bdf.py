@@ -140,7 +140,7 @@ from pyNastran.bdf.cards.bdf_sets import (
     RADSET,
 )
 from pyNastran.bdf.cards.params import PARAM
-from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
+from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DMIAX
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
                                                QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
@@ -462,6 +462,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # direct matrix input cards
             'DMIG', 'DMIJ', 'DMIJI', 'DMIK', 'DMI', 'DTI',
+            'DMIAX',
 
             # optimization cards
             'DEQATN', 'DTABLE',
@@ -716,6 +717,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'nnodes', 'npoints', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros', 'nid_map',
             'is_bdf_vectorized', 'type_slot_str',
+            'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
@@ -2218,6 +2220,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'DTI' : self._prepare_dti,
             'DMIG' : self._prepare_dmig,
+            'DMIAX' : self._prepare_dmiax,
             'DMI' : self._prepare_dmi,
             'DMIJ' : self._prepare_dmij,
             'DMIK' : self._prepare_dmik,
@@ -2475,6 +2478,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             name = string(card_obj, 1, 'name')
             self._dmig_temp[name].append((card_obj, comment))
         return dmix
+
+    def _prepare_dmiax(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+        """adds a DMIAX"""
+        return self._prepare_dmix(DMIAX, self._add_dmiax_object, card_obj, comment=comment)
 
     def _prepare_dmi(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
         """adds a DMI"""
@@ -4168,7 +4175,9 @@ class BDF(BDF_):
         'nnodes', 'node_ids', 'point_ids', 'npoints',
         'nelements', 'element_ids', 'nproperties', 'property_ids',
         'nmaterials', 'material_ids', 'ncoords', 'coord_ids',
-        'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map']
+        'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map',
+        'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
+    ]
 
     def __init__(self, debug: Optional[bool]=True, log: Any=None, mode: str='msc') -> None:
         """

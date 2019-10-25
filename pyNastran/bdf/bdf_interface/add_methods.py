@@ -8,36 +8,56 @@ class AddMethods(BDFAttributes):
     """defines methods to add card objects to the BDF"""
     def __init__(self) -> None:
         BDFAttributes.__init__(self)
-
+    @property
+    def dmis(self):
+        return self.dmi
+    @property
+    def dmigs(self):
+        return self.dmig
+    @property
+    def dmiks(self):
+        return self.dmik
+    @property
+    def dmijs(self):
+        return self.dmij
+    @property
+    def dmijis(self):
+        return self.dmiji
     def _add_dmi_object(self, dmi: Any, allow_overwrites: bool=False) -> None:
         """adds a DMI object"""
         name = dmi.name
-        self.dmis[name] = dmi
+        self.dmi[name] = dmi
         self._type_to_id_map[dmi.type].append(name)
 
     def _add_dmig_object(self, dmig: Any, allow_overwrites: bool=False) -> None:
         """adds a DMIG object"""
         name = dmig.name
-        self.dmigs[name] = dmig
+        self.dmig[name] = dmig
         self._type_to_id_map[dmig.type].append(name)
+
+    def _add_dmiax_object(self, dmiax: Any, allow_overwrites: bool=False) -> None:
+        """adds a DMI object"""
+        name = dmiax.name
+        self.dmiax[name] = dmiax
+        self._type_to_id_map[dmiax.type].append(name)
 
     def _add_dmij_object(self, dmij: Any, allow_overwrites: bool=False) -> None:
         """adds a DMIJ object"""
         name = dmij.name
-        self.dmijs[name] = dmij
+        self.dmij[name] = dmij
         self._type_to_id_map[dmij.type].append(name)
 
     def _add_dmiji_object(self, dmiji: Any, allow_overwrites: bool=False) -> None:
         """adds a DMIJI object"""
         name = dmiji.name
-        self.dmijis[name] = dmiji
+        self.dmiji[name] = dmiji
         self._type_to_id_map[dmiji.type].append(name)
 
     def _add_dmik_object(self, dmik, allow_overwrites=False):
         # type: (Any, bool) -> None
         """adds a DMIK object"""
         name = dmik.name
-        self.dmiks[name] = dmik
+        self.dmik[name] = dmik
         self._type_to_id_map[dmik.type].append(name)
 
     def _add_dti_object(self, dti, allow_overwrites=False):

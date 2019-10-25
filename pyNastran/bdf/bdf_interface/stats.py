@@ -47,7 +47,7 @@ def get_bdf_stats(model, return_type='string', word=''):
         'rotors',
 
         # direct matrix input - DMIG - dict
-        'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',
+        'dmi', 'dmig', 'dmij', 'dmiji', 'dmik', 'dmiax',
         'dequations',
         'transfer_functions',
         'tics',

@@ -1217,7 +1217,7 @@ class DMIG(NastranMatrix):
                                finalize=finalize)
 
 
-class DMIAX:
+class DMIAX(BaseCard):
     """
     Direct Matrix Input for Axisymmetric Analysis
 
@@ -1226,19 +1226,36 @@ class DMIAX:
     more column entries. Only one header entry is required. A column
     entry is required for each column with nonzero elements.
 
-    +-------+------+----+-----+-----+------+-------+----+------+
-    |   1   |  2   | 3  |  4  |  5  |   6  |   7   | 8  |  9   |
-    +=======+======+====+=====+=====+======+=======+====+======+
-    | DMIAX | NAME | 0  | IFO | TIN | TOUT | POLAR |    | NCOL |
-    +-------+------+----+-----+-----+------+-------+----+------+
-    | DMIAX | NAME | GJ | CJ  |     |  G1  |  C1   | A1 |  B1  |
-    +-------+------+----+-----+-----+------+-------+----+------+
-    |       |  G2  | C2 | A2  |  B2 |      |       |    |      |
-    +-------+------+----+-----+-----+------+-------+----+------+
+    +-------+------+----+--------+------+--------+-------+----+------+
+    |   1   |  2   | 3  |    4   |   5  |   6    |   7   | 8  |  9   |
+    +=======+======+====+========+======+========+=======+====+======+
+    | DMIAX | NAME | 0  |   IFO  | TIN  |  TOUT  |       |    |      |
+    +-------+------+----+--------+------+--------+-------+----+------+
+
+    +-------+------+----+--------+------+--------+-------+----+------+
+    |   1   |  2   | 3  |    4   |   5  |   6    |   7   | 8  |  9   |
+    +=======+======+====+========+======+========+=======+====+======+
+    | DMlAX | NAME | GJ |   CJ   |  NJ  |        |       |    |      |
+    +-------+------+----+--------+------+--------+-------+----+------+
+    |       |  G1  | C1 |   N1   |  A1  |   B1   |       |    |      |
+    +-------+------+----+--------+------+--------+-------+----+------+
+    |       |  G2  | C2 |  etc.  |      |        |       |    |      |
+    +-------+------+----+--------+------+--------+-------+----+------+
+
+    +-------+------+----+--------+------+--------+-------+----+------+
+    |   1   |  2   | 3  |    4   |   5  |   6    |   7   | 8  |  9   |
+    +=======+======+====+========+======+========+=======+====+======+
+    | DMIAX | B2PP | 0  |   1    |  3   |        |       |    |      |
+    +-------+------+----+--------+------+--------+-------+----+------+
+    | DMIAX | B2PP | 32 |        |      |        |       |    |      |
+    +-------+------+----+--------+------+--------+-------+----+------+
+    |       | 1027 | 3  | 4.25+6 |      | 2.27+3 |       |    |      |
+    +-------+------+----+--------+------+--------+-------+----+------+
+
     """
     type = 'DMIAX'
 
-    def __init__(self, name, matrix_form, tin, tout, polar,
+    def __init__(self, name, matrix_form, tin, tout, polar, ncols,
                  GCNj, GCNi, Real, Complex=None, comment=''):
         """
         Creates a DMIAX card
@@ -1297,7 +1314,7 @@ class DMIAX:
 
         self.name = name
 
-        #: 4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
+        #: ifo/4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
         self.matrix_form = matrix_form
 
         #: 1-Real, Single Precision; 2=Real,Double Precision;
@@ -1318,17 +1335,29 @@ class DMIAX:
         self.Real = Real
         if len(Complex) or self.is_complex or self.polar == 1:
             self.Complex = Complex
-            if matrix_form not in [4, 5, 6, 8]:
+            if matrix_form not in [1]:  #4, 5, 6, 8
                 msg = (
-                    '%s name=%r matrix_form=%r must be [4, 5, 6, 8]\n'
+                    f'{self.type} name={name!r} matrix_form={matrix_form!r} '
+                    'must be [1, 2, 6]\n'
+                    '  1: Square\n'
+                    '  2: General Rectangular\n'
                     '  4: Lower Triangular\n'
                     '  5: Upper Triangular\n'
                     '  6: Symmetric\n'
-                    '  8: Identity (m=nRows, n=m)\n' % (self.type, name, matrix_form))
+                    '  8: Identity (m=nRows, n=m)\n')
                 raise ValueError(msg)
 
         assert isinstance(matrix_form, integer_types), 'matrix_form=%r type=%s' % (matrix_form, type(matrix_form))
         assert not isinstance(matrix_form, bool), 'matrix_form=%r type=%s' % (matrix_form, type(matrix_form))
+
+    def finalize(self):
+        """converts the lists into numpy arrays"""
+        return
+        #self.GCi = np.asarray(self.GCi)
+        #self.GCj = np.asarray(self.GCj)
+        self.Real = np.asarray(self.Real)
+        if self.is_complex:
+            self.Complex = np.asarray(self.Complex)
 
     @property
     def is_real(self):
@@ -1368,11 +1397,11 @@ class DMIAX:
         tout = integer_or_blank(card, 5, 'tout', 0)
         polar = integer_or_blank(card, 6, 'polar', 0)
         if matrix_form == 1: # square
-            unused_ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
+            ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form == 6: # symmetric
-            unused_ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
+            ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form in [2, 9]: # rectangular
-            unused_ncols = integer(card, 8, 'matrix_form=%s; ncol' % (matrix_form))
+            ncols = integer(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         else:
             # technically right, but nulling this will fix bad decks
             #self.ncols = blank(card, 8, 'matrix_form=%s; ncol' % self.matrix_form)
@@ -1382,7 +1411,7 @@ class DMIAX:
         GCi = []
         Real = []
         Complex = []
-        return DMIAX(name, matrix_form, tin, tout, polar,
+        return DMIAX(name, matrix_form, tin, tout, polar, ncols,
                      GCj, GCi, Real, Complex, comment=comment)
 
     def _add_column(self, card, comment=''):
@@ -1398,7 +1427,7 @@ class DMIAX:
         # Cj = integer(card, 3, 'Cj')
         Cj = integer_or_blank(card, 3, 'Cj', 0)
         #Cj = parse_components(card, 3, 'Cj')
-        Nj = integer(card, 4, 'Nj')
+        Nj = integer_or_blank(card, 4, 'Nj')
 
         assert 0 <= Cj <= 6, 'C%i must be between [0, 6]; Cj=%s' % (0, Cj)
 
@@ -1407,27 +1436,28 @@ class DMIAX:
         #print("card[5:] =", card[5:])
         #print("(nfields - 5) %% 4 = %i" % ((nfields - 5) % 4))
 
-        nloops = (nfields - 5) // 4
-        if (nfields - 5) % 4 in [2, 3]:  # real/complex
+        nloops = (nfields - 8) // 8
+        if nfields - 8 % 8:
             nloops += 1
         #assert nfields <= 8,'nfields=%s' % nfields
         #print("nloops = %i" % nloops)
         assert nloops > 0, 'nloops=%s' % nloops
 
-        for i in range(nloops):
-            self.GCNj.append((Gj, Cj, Nj))
-
+        self.GCNj.append((Gj, Cj, Nj))
+        GCNi = []
+        self.GCNi.append(GCNi)
         if self.is_complex:
             for i in range(nloops):
-                n = 5 + 4 * i
-                Gi = integer(card, n, 'Gi')
+                #print(dir(card))
+                n = 9 + 8 * i
+                Gi = integer(card, n, f'Gi{i}')
                 # Ci = integer(card, n + 1, 'Ci')
-                Ci = integer_or_blank(card, n + 1, 'Ci', 0)
+                Ci = integer_or_blank(card, n + 1, f'Ci{i}', 0)
                 #Ci = parse_components(card, n + 1, 'Ci')
-                Ni = integer(card, n + 2, 'Ni')
+                Ni = integer_or_blank(card, n + 2, f'Ni{i}')
 
                 assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
-                self.GCNi.append((Gi, Ci, Ni))
+                GCNi.append((Gi, Ci, Ni))
                 reali = double(card, n + 3, 'real')
                 complexi = double(card, n + 4, 'complex')
                 self.Real.append(reali)
@@ -1435,7 +1465,7 @@ class DMIAX:
         else:
             # real
             for i in range(nloops):
-                n = 5 + 4 * i
+                n = 9 + 9 * i
                 Gi = integer(card, n, 'Gi')
                 # Ci = integer(card, n + 1, 'Ci')
                 Ci = integer_or_blank(card, n + 1, 'Ci', 0)
@@ -1444,7 +1474,7 @@ class DMIAX:
 
                 assert 0 <= Ci <= 6, 'C%i must be between [0, 6]; Ci=%s' % (i + 1, Ci)
                 reali = double(card, n + 3, 'real')
-                self.GCNi.append((Gi, Ci, Ni))
+                GCNi.append((Gi, Ci, Ni))
                 self.Real.append(reali)
                 #print("GC=%s,%s real=%s" % (Gi, Ci, reali))
 
@@ -1453,6 +1483,90 @@ class DMIAX:
         #if self.is_complex:
             #self.Complex(double(card, v, 'complex')
 
+    def raw_fields(self):
+        list_fields = [
+            'DMIAX', self.name, 0, self.matrix_form, self.tin, self.polar, None, None, self.ncols,
+        ]
+        k = 0
+        if self.is_real:
+            for i, GCNj in enumerate(self.GCNj):
+                gj, cj, nj = GCNj
+                list_fields += ['DMIAX', self.name, gj, cj, nj, None, None, None, None]
+                for j, GCNi in enumerate(self.GCNi[i]):
+                    gi, ci, ni = GCNi
+                    reali = self.Real[k]
+                    list_fields += [gi, ci, ni, reali, None, None, None, None]
+                    k += 1
+        else:
+            for i, GCNj in enumerate(self.GCNj):
+                gj, cj, nj = GCNj
+                list_fields += ['DMIAX', self.name, gj, cj, nj, None, None, None, None]
+                for j, GCNi in enumerate(self.GCNi[i]):
+                    gi, ci, ni = GCNi
+                    reali = self.Real[k]
+                    imagi = self.Complex[k]
+                    list_fields += [gi, ci, ni, reali, imagi, None, None, None, None]
+                    k += 1
+
+        self.write_card()
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        if self.tin in [1, 3]:
+            is_double = False
+            msg = self.write_card_8()
+        elif self.tin in [2, 4]:
+            is_double = True
+            size = 16
+            msg = self.write_card_16()
+        else:
+            raise RuntimeError('tin=%r must be 1, 2, 3, or 4' % self.tin)
+        return msg
+
+    def write_card_8(self):
+        """writes the card in small field format"""
+        return self._write_card(print_card_8)
+
+    def write_card_16(self):
+        """writes the card in small large format"""
+        return self._write_card(print_card_16)
+
+    def _write_card(self, func):
+        """writes the card"""
+        msg = '\n$' + '-' * 80
+        msg += f'\n$ DMIAX Matrix {self.name}\n'
+        list_fields = [
+            'DMIAX', self.name, 0, self.matrix_form, self.tin, self.polar, None, None, self.ncols,
+        ]
+        msg += func(list_fields)
+        k = 0
+        assert len(self.GCNj) > 0, self.get_stats()
+        assert len(self.GCNi) > 0, self.get_stats()
+        if self.is_real:
+            for i, GCNj in enumerate(self.GCNj):
+                gj, cj, nj = GCNj
+                list_fields = ['DMIAX', self.name, gj, cj, nj, None, None, None, None]
+                for j, GCNi in enumerate(self.GCNi[i]):
+                    gi, ci, ni = GCNi
+                    reali = self.Real[k]
+                    list_fields += [gi, ci, ni, reali, None, None, None, None]
+                    k += 1
+                msg += func(list_fields)
+        else:
+            for i, GCNj in enumerate(self.GCNj):
+                gj, cj, nj = GCNj
+                list_fields = ['DMIAX', self.name, gj, cj, nj, None, None, None, None]
+                for j, GCNi in enumerate(self.GCNi[i]):
+                    gi, ci, ni = GCNi
+                    reali = self.Real[k]
+                    imagi = self.Complex[k]
+                    list_fields += [gi, ci, ni, reali, imagi, None, None, None]
+                    k += 1
+                msg += func(list_fields)
+        return msg
+
+    def __repr__(self):
+        return self.write_card(size=8)
 
 class DMIJ(NastranMatrix):
     """

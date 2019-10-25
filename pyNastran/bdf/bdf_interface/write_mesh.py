@@ -567,6 +567,8 @@ class WriteMesh(BDFAttributes):
             bdf_file.write(dmiji.write_card(size, is_double))
         for (unused_name, dmik) in sorted(self.dmiks.items()):
             bdf_file.write(dmik.write_card(size, is_double))
+        for (unused_name, dmiax) in sorted(self.dmiax.items()):
+            bdf_file.write(dmiax.write_card(size, is_double))
 
     def _write_dynamic(self, bdf_file: Any, size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:

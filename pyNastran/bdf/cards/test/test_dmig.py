@@ -567,5 +567,56 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         str(uaccel)
         save_load_deck(model, run_save_load_hdf5=False)
 
+
+    def test_dmiax(self):
+        """tests DMIAX"""
+        model = BDF(debug=None)
+
+        ifo = 1  # square
+        tin = 1
+        tout = None
+        polar = None
+        ncol = None
+        gj = 2
+        cj = 8
+        g1 = 10
+        c1 = 20
+        a1 = 30
+        b1 = 40
+        lines = [
+
+            ['DMIAX', 'B2PP', 0, 1, 3],
+            ['DMIAX', 'B2PP', 32, None, None, None, None, None, None,
+             1027, 3, None, 4.25+6, '2.27+3'],
+            #['DMIAX', 'AX', '0', ifo, tin, tout, polar, None, ncol],
+            #['DMIAX', 'AX', gj, cj, None, g1, c1, a1, b1],
+        ]
+        for line in lines:
+            model.add_card(line, 'DMIAX')
+        fill_dmigs(model)
+        str(model.dmigs)
+        str(model.get_bdf_stats())
+
+        name = 'B2PPB'
+        tin = 1
+        ncols = 3
+        GCNj = [(1, 2, 3)]
+        GCNi = [[(10, 6, 30)]]
+        Real = [0.1]
+        matrix_form = 1
+        #load_sequences = {
+            # lseq : [ncx]
+            #10 : [[1001, 4, 1003.0]],
+            #20 : [[1, 2, 3.], [11, 12, 13.], ],
+            #30 : [[1, 2, 3.], [11, 12, 13.], [101, 4, 103.]],
+        #}
+        uaccel = model.add_dmiax(name, matrix_form, tin, tout, polar, ncols,
+                                 GCNj, GCNi, Real, Complex=None, comment='dmiax')
+        uaccel.raw_fields()
+        str(uaccel)
+        #uaccel.tin = 2
+        #str(uaccel)
+        save_load_deck(model, run_save_load_hdf5=False)
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

@@ -53,7 +53,7 @@ dict_int_obj_attrs = [
     'convection_properties',
     'csuper', 'csupext', 'dareas',
     'dconadds', 'ddvals', 'delays', 'dequations', 'divergs', 'dlinks',
-    'dmigs', 'dmijis', 'dmijs', 'dmiks', 'dmis',
+    'dmig', 'dmiji', 'dmij', 'dmik', 'dmi', 'dmiax',
     'dphases',
     'dscreen', 'dti', 'dvcrels', 'dvmrels', 'dvprels',
     'epoints', 'flfacts',
@@ -428,7 +428,7 @@ def _export_dict_int_list_obj_attrs(model, hdf5_file, encoding):
         keys = list(dict_obj.keys())
         keys.sort()
         #model.log.debug('keys = %s' % keys)
-        if attr in ['dmigs', 'dmijs', 'dmis', 'dmiks', 'dmijis']:
+        if attr in ['dmig', 'dmij', 'dmi', 'dmik', 'dmiji', 'dmiax']:
             #print('keys =', keys)
             key0 = keys[0]
             value = dict_obj[key0]
@@ -831,7 +831,7 @@ def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
     skip_attrs = ['comment', '_field_map']
 
     keys_write = list(keys)
-    if name in ['dmigs', 'dmijs', 'dmiks', 'dmijis', 'dmis', 'dresps']:
+    if name in ['dmig', 'dmij', 'dmik', 'dmiji', 'dmiax', 'dmi', 'dresps']:
         keys = list(keys)
         #print(group)
         key0 = keys_write[0]
