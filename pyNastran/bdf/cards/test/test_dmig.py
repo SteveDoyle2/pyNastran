@@ -572,17 +572,17 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         """tests DMIAX"""
         model = BDF(debug=None)
 
-        ifo = 1  # square
+        #ifo = 1  # square
         tin = 1
         tout = None
         polar = None
-        ncol = None
-        gj = 2
-        cj = 8
-        g1 = 10
-        c1 = 20
-        a1 = 30
-        b1 = 40
+        #ncol = None
+        #gj = 2
+        #cj = 8
+        #g1 = 10
+        #c1 = 20
+        #a1 = 30
+        #b1 = 40
         lines = [
 
             ['DMIAX', 'B2PP', 0, 1, 3],

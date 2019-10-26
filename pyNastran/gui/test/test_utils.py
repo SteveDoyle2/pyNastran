@@ -1,12 +1,20 @@
 """defines various GUI unit tests"""
 import os
+import shutil
 import unittest
 import numpy as np
+
+try:
+    import matplotlib.pyplot as plt
+    IS_MATPLOTLIB = True
+except ImportError:
+    IS_MATPLOTLIB = False
 
 import pyNastran
 from pyNastran.gui.utils.load_results import (
     load_csv, load_deflection_csv, load_user_geom, create_res_obj, check_for_newer_version)
-from pyNastran.gui.menus.legend.write_gif import setup_animation, make_two_sided, make_symmetric
+from pyNastran.gui.menus.legend.write_gif import (
+    setup_animation, make_two_sided, make_symmetric, write_gif, IS_IMAGEIO)
 from pyNastran.gui.menus.results_sidebar_utils import get_cases_from_tree, build_pruned_tree
 
 PKG_PATH = pyNastran.__path__[0]
@@ -438,6 +446,38 @@ class GuiUtils(unittest.TestCase):
         cases = [0, 1, 7]
         tree2 = build_pruned_tree(tree, cases)
         assert tree2 == [(u'Geometry', None, [(u'NodeID', 0, []), (u'ElementID', 1, []), (u'Element Checks', None, [(u'Min Interior Angle', 7, [])])])], tree2
+
+    def test_write_gif(self):
+        """tests the write_gif method"""
+        png_filenames = []
+        gif_filename = os.path.join('mydir', 'line.gif')
+        png_filenames = ['line.png', 'line.png']
+        if os.path.exists('line.png'):
+            os.remove('line.png')
+        success = write_gif(gif_filename, png_filenames, time=2.0,
+                            onesided=True, nrepeat=0,
+                            delete_images=False, make_gif=False)
+        if IS_IMAGEIO:
+            self.assertTrue(success)
+        else:
+            self.assertFalse(success)
+
+        if IS_MATPLOTLIB:
+            fig = plt.figure(1)
+            ax = fig.gca()
+            ax.clear()
+            xrange = np.linspace(0., 1)
+            ax.plot(xrange)
+            fig.savefig('line.png')
+            png_filenames = ['line.png', 'line.png']
+
+            gif_filename = os.path.join('mydir', 'line.gif')
+            success = write_gif(gif_filename, png_filenames, time=2.0,
+                                onesided=True, nrepeat=0,
+                                delete_images=True, make_gif=True)
+            self.assertTrue(success)
+            shutil.rmtree('mydir')
+
 
 def assert_array(actual_array, expected_array, name):
     """checks the arrays for equivalence and the correct length"""
