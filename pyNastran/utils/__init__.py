@@ -50,6 +50,13 @@ def b(string: str) -> bytes:
                 #print('key=%r is dropped?' % key)
     #return dict_out
 
+def remove_files(filenames):
+    """remvoes a series of files; quietly continues if the file can't be removed"""
+    for filename in filenames:
+        try:
+            os.remove(filename)
+        except OSError:
+            pass
 
 def is_binary_file(filename: str) -> bool:
     """
@@ -108,6 +115,7 @@ def print_bad_path(path: str) -> str:
     msg : str
         string with informations whether access to parts of the path
         is possible
+
     """
     #raw_path = path
     if len(path) > 255:

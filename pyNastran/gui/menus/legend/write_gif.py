@@ -6,14 +6,17 @@ Defines:
 
 """
 import os
+from typing import List
+
 import numpy as np
 try:
     import imageio
+    import PIL
     IS_IMAGEIO = True
 except ImportError:
     IS_IMAGEIO = False
 from pyNastran.utils.numpy_utils import integer_types
-
+from pyNastran.utils import remove_files
 
 def setup_animation(scale, istep=None,
                     animate_scale=True, animate_phase=False, animate_time=False,
@@ -529,9 +532,9 @@ def make_two_sided(scales, phases, icases_fringe, icases_disp, icases_vector, is
     #print('scales2     =%s n=%s, isteps2=%s' % (scales, len(scales), isteps))
     return scales, phases, icases_fringe, icases_disp, icases_vector, isteps
 
-def write_gif(gif_filename, png_filenames, time=2.0,
-              onesided=True, nrepeat=0,
-              delete_images=False, make_gif=True):
+def write_gif(gif_filename: str, png_filenames: List[str], time: float=2.0,
+              onesided: bool=True, nrepeat: int=0,
+              delete_images: bool=False, make_gif: bool=True) -> bool:
     """
     Makes an animated gif
 
@@ -543,9 +546,6 @@ def write_gif(gif_filename, png_filenames, time=2.0,
         the pictures to make the gif from
     time : float; default=2.0
         the runtime of the gif (seconds)
-
-    Options
-    -------
     onesided : bool; default=True
         should the animation go up and back down
         True : the video will use images [0...N]
@@ -554,24 +554,26 @@ def write_gif(gif_filename, png_filenames, time=2.0,
         0 : loop infinitely
         1 : loop 1 time
         2 : loop 2 times
-
-    Final Control Options
-    ---------------------
     delete_images : bool; default=False
         cleanup the png files at the end
     make_gif : bool; default=True
         actually make the gif at the end
 
-    Other local variables
-    ---------------------
-    duration : float
-        frame time (seconds)
+    Returns
+    -------
+    success : bool
+        was the gif made
+
     """
     if not IS_IMAGEIO:
         return False
 
     #assert fps >= 1, fps
     nframes = len(png_filenames)
+    assert nframes > 0, png_filenames
+
+    # duration : float
+    # frame time (seconds)
     duration = time / nframes
 
     gif_dirname = os.path.dirname(os.path.abspath(gif_filename))
@@ -598,9 +600,5 @@ def write_gif(gif_filename, png_filenames, time=2.0,
             raise IOError('%s is likely open' % gif_filename)
 
     if delete_images:
-        for png_filename in png_filenames:
-            try:
-                os.remove(png_filename)
-            except OSError:
-                pass
+        remove_files(png_filenames)
     return True
