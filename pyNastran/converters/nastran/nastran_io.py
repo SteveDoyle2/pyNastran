@@ -7154,7 +7154,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     cases, model, key, icase, itime,
                     strain_energy_dict, header_dict, keys_map)
 
-                # strain energy
+                # grid point stresses
                 icase = self._fill_op2_time_gpstress(
                     cases, model, key, icase, itime,
                     gpstress_dict, header_dict, keys_map)
@@ -7166,6 +7166,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #print('******form_time =', form_time)
             #print(header)
 
+        # ----------------------------------------------------------------------
         #print('Key,itime:')
         #for key_itimei in key_itime:
             #print('  %s' % str(key_itimei))
@@ -7183,6 +7184,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             print('key_itime =', key_itime)
             return form
 
+        for key, value in header_dict.items():
+            print(key, value)
         # (isubcase, analysis_code, sort_method,
         #  count, ogs, superelement_adaptivity_index) = key
         key_itime0 = key_itime[0]
@@ -7240,11 +7243,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             try:
                 header = header_dict[(key, itime)]
-            except KeyError:
+            except KeyError:  # this hits for strain energy
                 msg = 'Missing (key, itime) in header_dict\n'
                 msg += '  key=%s\n' % str(key)
                 msg += '  itime=%s\n' % itime
-                msg += 'Possible (key, itme):\n'
+                msg += 'Possible (key, time):\n'
                 for keyi in header_dict:
                     msg += '  %s\n' % str(keyi)
                 #print(msg.rstrip())

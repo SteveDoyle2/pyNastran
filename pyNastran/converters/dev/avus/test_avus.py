@@ -4,7 +4,7 @@ import unittest
 from cpylog import get_logger
 
 import pyNastran
-from pyNastran.converters.dev.avus.avus_grid import AvusGrid, read_avus
+from pyNastran.converters.dev.avus.avus_grid import read_avus
 
 PKG_PATH = pyNastran.__path__[0]
 test_path = os.path.join(PKG_PATH, 'converters', 'dev', 'avus')
@@ -14,7 +14,6 @@ class TestAvus(unittest.TestCase):
     def test_avus_io_01(self):
         """geometry"""
         ndim = 3
-        zones = 1
         npatches = -1
         nzones = 1
         npoints = 7

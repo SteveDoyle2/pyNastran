@@ -518,5 +518,12 @@ class DisplacementResults(NastranTable):
     def __repr__(self):
         """defines str(self)"""
         msg = 'DisplacementResults\n'
-        msg += '    uname=%r\n' % self.uname
+        msg += f'    title={self.titles!r}\n'
+        msg += f'    subcase_id={self.subcase_id}\n'
+        msg += f'    data_type={self.data_type!r}\n'
+        msg += f'    is_real={self.is_real} is_complex={self.is_complex}\n'
+        msg += f'    location={self.location!r}\n'
+        msg += f'    header={self.headers!r}\n'
+        msg += f'    data_format={self.data_formats!r}\n'
+        msg += f'    uname={self.uname!r}\n'
         return msg
