@@ -322,10 +322,14 @@ def _get_nastran_header(case: Any, dt: Union[int, float], itime: int) -> str:
     except KeyError:
         return 'Static'
 
-    if isinstance(dt, float):
+    if isinstance(dt, (float, np.float32)):
         header = ' %s = %.4E' % (code_name, dt)
-    else:
+    elif isinstance(dt, (int, np.int32)):
         header = ' %s = %i' % (code_name, dt)
+    elif dt is None:
+        return 'Static'
+    else:  # pragma: no cover
+        print(case, dt, type(dt))
 
     # cases:
     #   1. lsftsfqs
@@ -341,15 +345,36 @@ def _get_nastran_header(case: Any, dt: Union[int, float], itime: int) -> str:
         cycle = np.abs(eigi) / (2. * np.pi)
         header += '; freq = %g Hz' % cycle
     elif hasattr(case, 'eigns'):  #  eign is not eigr; it's more like eigi
-        eigi = case.eigrs[itime] #  but |eigi| = sqrt(|eign|)
-        cycle = np.sqrt(np.abs(eigi)) / (2. * np.pi)
-        header += '; freq = %g Hz' % cycle
-    elif hasattr(case, 'dt'):
+        eigi = case.eigns[itime] #  but |eigi| = sqrt(|eign|)
+        freq = np.sqrt(np.abs(eigi))
+        cycle = freq / (2. * np.pi)
+        header += '; freq = %g Hz' % freq
+    elif hasattr(case, 'freqs'):
+        header += '; freq = %g Hz' % case.freqs[itime]
+
+    elif hasattr(case, 'times'):
         time = case._times[itime]
         header += '; time = %g sec' % time
-    elif hasattr(case, 'lftsfqs') or hasattr(case, 'lsdvmns') or hasattr(case, 'loadIDs'):
-        pass
-        #raise RuntimeError(header)
+    elif hasattr(case, 'dts'):
+        time = case._times[itime]
+        header += '; time = %g sec' % time
+        #print(header)
+
+    elif hasattr(case, 'lftsfqs'):
+        step = case.lftsfqs[itime]
+        header += '; step = %g' % step
+    elif hasattr(case, 'lsdvmns'):
+        step = case.lsdvmns[itime]
+        header += '; step = %g' % step
+    elif hasattr(case, 'loadIDs'):
+        step = case.loadIDs[itime]
+        header += '; step = %g' % step
+    elif hasattr(case, 'loadFactors'):
+        step = case.loadFactors[itime]
+        header += '; step = %g' % step
+    elif hasattr(case, 'load_steps'):
+        step = case.load_steps[itime]
+        header += '; step = %g' % step
     else:
         msg = 'unhandled case; header=%r\n%s' % (header, str(case))
         print(msg)

@@ -7127,7 +7127,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if ncases:
                 # can potentially make a double listing, but we need it
-                # eigenvector only cases
+                # for eigenvector only cases
                 for itime, unused_dt in enumerate(times):
                     new_key = (key, itime)
                     key_itime.append(new_key)
@@ -7184,8 +7184,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             print('key_itime =', key_itime)
             return form
 
-        for key, value in header_dict.items():
-            print(key, value)
+        #for key, value in header_dict.items():
+            #print(key, value)
         # (isubcase, analysis_code, sort_method,
         #  count, ogs, superelement_adaptivity_index) = key
         key_itime0 = key_itime[0]
@@ -7246,13 +7246,25 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             except KeyError:  # this hits for strain energy
                 msg = 'Missing (key, itime) in header_dict\n'
                 msg += '  key=%s\n' % str(key)
+
+                (subcase, analysis_code, sort_method,
+                 count, ogs, superelement_adaptivity_index, pval_step) = key
+                msg += f'    subcase={subcase}\n'
+                msg += f'    analysis_code={analysis_code}\n'
+                msg += f'    sort_method={sort_method}\n'
+                msg += f'    count={count}\n'
+                msg += f'    ogs={ogs}\n'
+                msg += f'    superelement_adaptivity_index={superelement_adaptivity_index!r}\n'
+                msg += f'    pval_step={pval_step!r}\n'
+
                 msg += '  itime=%s\n' % itime
+                msg += '  %s\n' % str((key, itime))
                 msg += 'Possible (key, time):\n'
                 for keyi in header_dict:
                     msg += '  %s\n' % str(keyi)
                 #print(msg.rstrip())
                 #print('expected = (%s, %r)\n' % (str(key), itime))
-                self.log.error(msg.rstrip())
+                self.log.error(msg.rstrip() + '\n')
                 #self.log.error('expected = (%s, %r)\n' % (str(key), itime))
                 continue
                 #raise KeyError(msg)

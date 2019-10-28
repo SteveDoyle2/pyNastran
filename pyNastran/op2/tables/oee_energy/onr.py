@@ -189,7 +189,7 @@ class ONR(OP2Common):
             #self.show_data(data)
             #self.cycle = 0.
             #self.update_mode_cycle('cycle')
-            self.data_names = self.apply_data_code_value('data_names', ['mode'])
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'freq'])
             #print("mode(5)=%s eign(6)=%s mode_cycle(7)=%s" % (
                 #self.mode, self.eign, self.mode_cycle))
         #elif self.analysis_code == 3: # differential stiffness
@@ -210,7 +210,9 @@ class ONR(OP2Common):
             self.data_names = self.apply_data_code_value('data_names', ['mode'])
         elif self.analysis_code == 9:  # complex eigenvalues
             self.mode = self.add_data_parameter(data, 'mode', b'i', 5)  ## mode number
-            self.data_names = self.apply_data_code_value('data_names', ['mode'])
+            self.eigr = self.eigen_real
+            self.eigi = self.eigen_imag
+            self.data_names = self.apply_data_code_value('data_names', ['mode', 'eigr', 'eign'])
         elif self.analysis_code == 10:  # nonlinear statics
             self.loadFactor = self.add_data_parameter(data, 'loadFactor', b'f', 5)  ## load factor
             self.data_names = self.apply_data_code_value('data_names', ['loadFactor'])

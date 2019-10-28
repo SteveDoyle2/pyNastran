@@ -623,7 +623,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 sed_res = GuiResult(subcase_id, header='Strain Energy Density: ' + header,
                                     title='Strain Energy Density', data_format='%.3e',
                                     location='centroid', scalar=strain_energy_density)
-                cases[icase + 1] = (sed_res, (subcase_id, 'Strain Energy Density'))
+                cases[icase] = (sed_res, (subcase_id, 'Strain Energy Density'))
                 form_dict[(key, itime)].append(('Strain Energy Density', icase, []))
                 icase += 1
 
@@ -1065,6 +1065,7 @@ class NastranGuiResults(NastranGuiAttributes):
         form0 = (word, None, [])
         unused_formis = form0[2]
         subcase_id = key[2]
+        header = header_dict[(key, itime)]
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
                 print_empty_elements(self.model, self.element_ids, is_element_on, self.log_error)
@@ -1081,7 +1082,6 @@ class NastranGuiResults(NastranGuiAttributes):
 
         #print('max/min', max_principal.max(), max_principal.min())
         # header = _get_nastran_header(case, dt, itime)
-        header = header_dict[(key, itime)]
         if np.any(np.isfinite(oxx)):
             oxx_res = GuiResult(subcase_id, header=word + f'XX: {header}', title=word + 'XX',
                                 location='centroid', scalar=oxx, data_format=fmt)
