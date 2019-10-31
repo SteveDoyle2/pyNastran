@@ -2104,12 +2104,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
     #yaxis = np.array([0., 1., 0.])
     #zaxis = np.array([0., 0., 1.])
 
-    # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
-    data = np.zeros((nelements, 12), dtype='float64')
-    for etype, nids_list in nids_dict.items():
-        eids = np.hstack(eids_dict[etype])
-        ieids = np.searchsorted(all_eids, eids)
-        nids = np.vstack(nids_list)
+    def _get_mass(etype, eids, nids):
         nelementsi = nids.shape[0]
         #print(etype, nelementsi, eids)
         #Ax = 0.
@@ -2550,6 +2545,24 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
         else:
             model.log.warning('skipping mass_properties_breakdown for %s' % etype)
+            return None, None, None
+        return mass, nsm, centroid
+
+
+    data = np.zeros((nelements, 12), dtype='float64')
+    for etype, nids_list in nids_dict.items():
+        eids = np.hstack(eids_dict[etype])
+        ieids = np.searchsorted(all_eids, eids)
+        try:
+            nids = np.vstack(nids_list)
+        except ValueError as e:
+            msg = f'error exctracting mass for {etype}; nids:\n'
+            for nidsi in nids_list:
+                msg += f'  {nidsi}; n={len(nidsi)}\n'
+            raise ValueError(msg) from e
+
+        mass, nsm, centroid = _get_mass(etype, eids, nids)
+        if mass is None:
             continue
 
         # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
@@ -2564,7 +2577,6 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         #data[ieids, 12] = Ax
         #data[ieids, 13] = Ay
         #data[ieids, 14] = Az
-        del nelementsi # , pids # , ipids, e2, telem
 
     if nmasses and nelements:
         # [mass + nsm, mass, nsm], [x, y, z], [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
@@ -2808,7 +2820,9 @@ def _breakdown_property_dicts(model):
 
             thickness_dict['shell'].append(thickness)
             mass_per_area_dict['shell'].append(rhoi * thickness)
-            nsm_per_area_dict['shell'].append(prop.nsm)
+            model.log.warning('assuming nsm for PLPLANE is 0.0')
+            nsm_per_area_dict['shell'].append(0.0)
+            # nsm_per_area_dict['shell'].append(prop.nsm)
         elif ptype == 'PPLANE':
             pids_per_area_dict['shell'].append(pid)
             mid_ref = prop.mid_ref

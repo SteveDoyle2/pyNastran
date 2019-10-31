@@ -1,0 +1,72 @@
+ID NXN, tst1d3 
+SOL 109
+TIME 5
+CEND
+TITLE = 1-D ELEMENT STRAIN OUTPUT                              tst1d3
+SUBTITLE = QAJOB-TST1D3
+LABEL = DIRECT TRANSIENT RESPONSE
+  LOADSET = 35
+  SET 55 = 11,22,33,44,55
+  SPC = 1
+  DISP = ALL
+  STRESS = ALL
+  STRAIN(SORT1) = ALL
+  IC = 10
+  TSTEP = 20
+SUBCASE 10
+  DLOAD = 1
+BEGIN BULK
+PARAM       POST      -2
+$.......2.......3.......4.......5.......6.......7.......8.......9.......10.....
+TSTEP   20      10      0.1     5
+SPOINT,91,93
+GRID    1               0.0     0.0     0.0             123456
+GRID    2               1.0     0.0     0.0
+GRID    4               0.0     0.0     2.0             123456
+GRID    5               1.0     0.0     2.0
+GRID    6               0.0     0.0     4.0             123456
+GRID    7               1.0     0.0     4.0
+GRID    8               0.0     0.0     6.0             123456
+GRID    9               1.0     0.0     6.0
+CBAR    11      12      1       2                       1.0
+CBARAO  11      FR      0.5
+PBAR    12      21      0.5     2.0     1.0     1.25                    +PB1
++PB1    -0.5    -0.5    -0.5    0.5     0.5     -0.5    0.5     0.5
+CBEAM   22      13      4       5                       1.0
+PBEAM   13      21      0.5     2.0     1.0             1.25            +PB2
++PB2    -0.5    -0.5    -0.5    0.5     0.5     -0.5    0.5     0.5     +PB3
++PB3    YESA    0.5                                                     +PB4
++PB4    YESA    1.0
+CBEND   33      14      6       7       5.0     5.0     0.0     1
+PBEND   14      21      0.5     0.0833  0.0833  0.05
+CTUBE   44      16      8       9
+PTUBE   16      21      0.5     0.1
+CELAS3  55      17      91      93
+PELAS   17      5.0+3           0.5
+SLOAD   1       93      -500.0
+MAT1    21      2.0+4   1.0+4           0.1
+CONM2   121     2               64.0                                    +CONM1
++CONM1  1.0             16.                     16.
+CMASS2  131     -63.    2       1
+CONM2   122     5               64.0                                    +CONM2
++CONM2  1.0             16.                     16.
+CMASS2  132     -63.    5       1
+CONM2   123     7               64.0                                    +CONM3
++CONM3  1.0             16.                     16.
+CMASS2  133     -63.    7       1
+DLOAD   1       1.      1.      10
+FORCE   1       9               10.0    1.0     0.0     0.0
+PLOAD1  1       11      FY      FR      0.0     -2.0+4  1.0     -2.0+4
+PLOAD1  1       22      FY      FR      0.0     -2.0+4  1.0     -2.0+4
+PLOAD1  1       33      FY      FR      0.0     -2.0+3  1.0     -2.0+3
+LSEQ    35      10      1
+TIC     10      2       1       0.001
+TIC     10      5       1       0.001
+TIC     10      7       1       0.001
+TIC     10      9       1       0.001
+TLOAD1  10      10                      24
+TABLED1 24                                                              +T1
++T1     0.0     0.0     0.1     0.0     1.1     1.0     1.125   0.0     +T2
++T2     2.1     0.0     ENDT
+SPC1    1       1       91
+ENDDATA

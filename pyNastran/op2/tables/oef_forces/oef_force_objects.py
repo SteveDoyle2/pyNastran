@@ -3592,10 +3592,13 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
                 column_values, column_names,
                 headers, self.element, self.data)
         else:
-            data_frame = pd.Panel(self.data,
-                                  major_axis=self.element, minor_axis=headers).to_frame()
+            # Static               fx  sfy  sfz         u         v    w   sv   sw
+            # ElementID
+            # 1          1.253610e-10 -0.0  0.0  0.250722 -0.852163  0.0  0.0  0.0
+            # 21         1.253610e-10 -0.0  0.0  0.250722 -0.852163  0.0  0.0  0.0
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+            data_frame.index.name = 'ElementID'
             data_frame.columns.names = ['Static']
-            data_frame.index.names = ['ElementID', 'Item']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover

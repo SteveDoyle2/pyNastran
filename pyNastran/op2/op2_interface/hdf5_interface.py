@@ -156,6 +156,11 @@ TABLE_OBJ_MAP = {
     'acceleration_scaled_response_spectra_nrl' : (RealAccelerationArray, ComplexAccelerationArray),
     'acceleration_scaled_response_spectra_srss' : (RealAccelerationArray, ComplexAccelerationArray),
 
+    'solution_set.displacements' : (RealDisplacementArray, ComplexDisplacementArray, ),
+    'solution_set.velocities' : (RealVelocityArray, ComplexVelocityArray, ),
+    'solution_set.accelerations' : (RealAccelerationArray, ComplexAccelerationArray, ),
+    'solution_set.eigenvectors' : (RealEigenvectorArray, ),
+
     'spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'spc_forces_v' : (RealSPCForcesArray, ComplexSPCForcesArray),
     'no.spc_forces' : (RealSPCForcesArray, ComplexSPCForcesArray),
@@ -511,6 +516,7 @@ TABLE_OBJ_MAP = {
     'psd.cquadr_stress' : (RandomPlateStressArray, ),
     'rms.cquadr_stress' : (RandomPlateStressArray, ),
     'no.cquadr_stress' : (RandomPlateStressArray, ),
+    'modal_contribution.cquadr_stress' : (RealPlateStressArray, ),
 
     'cquad4_strain' : (RealPlateStrainArray, ComplexPlateStrainArray),
     'ato.cquad4_strain' : (RandomPlateStrainArray, ),
@@ -561,6 +567,7 @@ TABLE_OBJ_MAP = {
     'psd.cquadr_strain' : (RandomPlateStrainArray, ),
     'rms.cquadr_strain' : (RandomPlateStrainArray, ),
     'no.cquadr_strain' : (RandomPlateStrainArray, ),
+    'modal_contribution.cquadr_strain' : (RealPlateStrainArray, ),
 
     'ctriax_stress' : (RealTriaxStressArray, ComplexTriaxStressArray,),
 
@@ -786,6 +793,8 @@ TABLE_OBJ_MAP = {
     'ctetra_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'cpenta_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'chexa_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'cpyram_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+
     'cdum8_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'ctriax_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
     'ctriax6_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
@@ -1182,6 +1191,11 @@ def _export_subcases(hdf5_file, op2_model):
             #print('working on %s' % class_name)
             obj.object_attributes()
             subcase_name = 'Subcase=%s' % str(key)
+            if '/' in subcase_name:
+                name = obj.class_name
+                op2_model.log.warning(f"'/' in titles are not supported by HDF5 for {name}; "
+                                      "changing to ';'")
+                subcase_name = subcase_name.replace('/', ';')
             if subcase_name in subcase_groups:
                 subcase_group = subcase_groups[subcase_name]
             else:
@@ -1256,6 +1270,8 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
                     #log.debug('  loaded %r' % result_name)
                 else:
                     log.warning('  unhandled %r...' % result_name)
+                    h5_result = h5_subcase.get(result_name)
+                    print(h5_result)
                     raise NotImplementedError('  unhandled %r...' % result_name)
             #print(h5_subcase.keys())
         elif key == 'info':

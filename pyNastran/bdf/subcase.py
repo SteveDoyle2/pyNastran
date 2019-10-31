@@ -395,7 +395,7 @@ class Subcase:
         elif table_name in ['OESRMS1', 'OESRMS2', 'OESXRMS1']:
             options.append('RMS')
             self.add('STRESS', 'ALL', options, 'STRESS-type')
-        elif table_name in ['OESNO1', 'OESNO2']:
+        elif table_name in ['OESNO1', 'OESNO2', 'OESXNO1']:
             options.append('NO')
             self.add('STRESS', 'ALL', options, 'STRESS-type')
         elif table_name in ['OESPSD1', 'OESPSD2']:
@@ -476,7 +476,7 @@ class Subcase:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')
             else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name in ['OSTRVM1', 'OSTRVM1C']:
+        elif table_name in ['OSTRVM1', 'OSTRVM1C', 'OSTRVM2']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')

@@ -103,11 +103,22 @@ class RealBar10NodesArray(OES_Object):
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
+            #Time                      0.0           0.5           1.0
+            #ElementID Item
+            #11        sd     0.000000e+00  0.000000e+00  0.000000e+00
+            #          sxc    0.000000e+00  1.000876e-01  2.200609e-01
+            #          sxd    0.000000e+00 -1.000876e-01 -2.200609e-01
+            #          sxe    0.000000e+00  1.000876e-01  2.200609e-01
+            #          sxf    0.000000e+00 -1.000876e-01 -2.200609e-01
+            #          axial  1.000000e-03 -5.566661e-05  4.833280e-05
+            #          smax   1.000000e-03  1.000319e-01  2.201092e-01
+            #          smin   1.000000e-03 -1.001432e-01 -2.200126e-01
+            #          MS     1.401298e-45  1.401298e-45  1.401298e-45
+            #          sd     5.000000e-01  5.000000e-01  5.000000e-01
             column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = pd.Panel(self.data, items=column_values,
-                                  major_axis=self.element, minor_axis=headers).to_frame()
-            data_frame.columns.names = column_names
-            data_frame.index.names = ['ElementID', 'Item']
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
         else:
             # >=25.0
             #Static      sd  sxc  sxd  sxe  sxf     axial      smax      smin            MS
