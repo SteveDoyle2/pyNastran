@@ -140,6 +140,11 @@ def update_label2(label2, isubcase):
             slabel = label2.split('=')
             assert len(slabel) == 2, slabel
             label2 = ''
+        elif label2.startswith('NONLINEAR '):
+            # 'NONLINEAR    SUBCASE   1'
+            # sline =['', '   SUBCASE   1']
+            sline = label2.split('NONLINEAR ', 1)
+            label2 = 'NONLINEAR ' + sline[1].strip()
         elif 'PVAL ID=' in label2 and 'SUBCASE=' in label2:
             # 'PVAL ID=       1                       SUBCASE=       1'
             # '    PVAL ID=       1                       SUBCASE=       1'

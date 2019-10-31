@@ -68,15 +68,35 @@ class RandomRodArray(OES_Object):
         import pandas as pd
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
+            #ElementID                  1101          1102
+            #ElementID Item
+            #1102      axial    1.079339e+02  4.400043e-03
+            #          torsion  2.439666e-04  0.000000e+00
+            #          axial    3.145797e+01  1.282420e-03
+            #          torsion  7.110654e-05  0.000000e+00
+            #          axial    1.572898e+01  6.412102e-04
+            #          torsion  3.555327e-05  0.000000e+00
+            #          axial    3.495329e+00  1.424911e-04
+            #          torsion  7.900725e-06  0.000000e+00
+            #          axial    2.928574e-07  1.193838e-11
+            #          torsion  6.618416e-13  0.000000e+00
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
+            #if is_v25:
+                #print(f'skipping pandas {self.class_name}')
+                #return
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, self.element, self.data)
+            #column_names, column_values = self._build_dataframe_transient_header()
+            #self.data_frame = pd.Panel(self.data, items=column_values,
+                                       #major_axis=self.element, minor_axis=headers).to_frame()
+            #self.data_frame.columns.names = column_names
+            #self.data_frame.index.names = ['ElementID', 'Item']
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+            data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
+            data_frame.columns.names = ['Static']
+            data_frame.index.names = ['ElementID', 'Item']
+        self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -210,7 +230,7 @@ class RandomRodArray(OES_Object):
             for i in range(0, nwrite, 2):
                 f06_file.write(
                     '      %8i %-13s  %-13s %-8i   %-13s  %-s\n' % (
-                    tuple(out[i] + out[i + 1])))
+                        tuple(out[i] + out[i + 1])))
             if is_odd:
                 f06_file.write('      %8i %-13s  %13s\n' % (tuple(out[-1])))
             f06_file.write(page_stamp % page_num)

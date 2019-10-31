@@ -1065,6 +1065,8 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
 
 def _write_params(params):
     """helper for get_op2_stats(...)"""
+    if not params:
+        return []
     msg = ['params:\n']
     for key, param in sorted(params.items()):
         msg.append('  %s = %s\n' % (key, param.values))

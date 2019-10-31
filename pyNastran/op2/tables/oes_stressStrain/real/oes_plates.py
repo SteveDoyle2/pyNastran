@@ -118,7 +118,14 @@ class RealPlateArray(OES_Object):
         else:
             fiber_distance = ['Mean', 'Curvature'] * nelements
         fd = np.array(fiber_distance, dtype='unicode')
-        element_node = [self.element_node[:, 0], self.element_node[:, 1], fd]
+
+        node = pd.Series(data=self.element_node[:, 1])
+        node.replace(to_replace=0, value='CEN', inplace=True)
+        element_node = [
+            self.element_node[:, 0],
+            node,
+            fd,
+        ]
 
         if self.nonlinear_factor not in (None, np.nan):
             # Mode                                                 1             2             3
@@ -144,10 +151,13 @@ class RealPlateArray(OES_Object):
             #                           von_mises       7.663484e-12  2.881133e-06  1.173255e-11
             # 9         0      Top      fiber_distance -1.250000e-01 -1.250000e-01 -1.250000e-01
             column_names, column_values = self._build_dataframe_transient_header()
+            names = ['ElementID', 'NodeID', 'Location', 'Item']
             data_frame = self._build_pandas_transient_element_node(
                 column_values, column_names,
-                headers, self.element_node, self.data)
-            data_frame.index.names = ['ElementID', 'NodeID', 'Location']
+                headers, element_node, self.data, from_tuples=False, from_array=True,
+                names=names,
+            )
+            data_frame.index.names = names
         else:
             # option B - nice!
             df1 = pd.DataFrame(element_node).T
@@ -155,8 +165,7 @@ class RealPlateArray(OES_Object):
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)
-        self.data_frame = data_frame.reset_index().replace(
-            {'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID', 'Location'])
+            self.data_frame = data_frame.reset_index().set_index(['ElementID', 'NodeID', 'Location'])
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1

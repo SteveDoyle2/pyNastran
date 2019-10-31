@@ -732,7 +732,8 @@ class BaseElement(ScalarObject):
         return data_frame
 
     def _build_pandas_transient_element_node(self, column_values, column_names, headers,
-                                             element_node, data, from_tuples=True, from_array=False):
+                                             element_node, data, names=None,
+                                             from_tuples=True, from_array=False):
         """common method to build a transient dataframe"""
         # Freq                  0.00001  10.00000 20.00000 30.00000                 40.00000 50.00000 60.00000
         # ElementID NodeID Item
@@ -755,7 +756,8 @@ class BaseElement(ScalarObject):
         nheaders = len(headers)
         A = data.reshape(ntimes, nelements*nheaders).T
 
-        names = ['ElementID', 'NodeID', 'Item']
+        if names is None:
+            names = ['ElementID', 'NodeID', 'Item']
         if from_tuples:
             eid_nid_item = []
             for eid, nid in element_node:

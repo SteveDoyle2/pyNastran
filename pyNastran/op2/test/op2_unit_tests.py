@@ -21,9 +21,6 @@ try:
 except ImportError:  # pragma: no cover
     IS_H5PY = False
 
-IS_TRANSIENT_PANDAS = False
-if IS_PANDAS and (np.lib.NumpyVersion(np.__version__) < '1.13.0'):
-    IS_TRANSIENT_PANDAS = True
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
@@ -394,7 +391,6 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        build_pandas = IS_TRANSIENT_PANDAS
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
@@ -402,7 +398,7 @@ class TestOP2(Tester):
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
-                stop_on_failure=True, dev=False, build_pandas=build_pandas, log=log)
+                stop_on_failure=True, dev=False, build_pandas=True, log=log)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -418,7 +414,6 @@ class TestOP2(Tester):
         diff_cards2.sort()
         assert len(diff_cards2) == 0, diff_cards2
 
-        build_pandas = IS_TRANSIENT_PANDAS
         run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
@@ -426,7 +421,7 @@ class TestOP2(Tester):
                 subcases=None, exclude=None, short_stats=False,
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
-                stop_on_failure=True, dev=False, build_pandas=build_pandas, log=log)
+                stop_on_failure=True, dev=False, build_pandas=True, log=log)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -574,7 +569,7 @@ class TestOP2(Tester):
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=IS_PANDAS, log=log)
+                build_pandas=True, log=log)
 
     def test_bdf_op2_thermal_05(self):
         """checks htflw47.bdf"""
@@ -598,7 +593,7 @@ class TestOP2(Tester):
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=IS_PANDAS, log=log)
+                build_pandas=True, log=log)
 
 
     def test_cbar100(self):
@@ -622,7 +617,7 @@ class TestOP2(Tester):
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=IS_PANDAS, log=log)
+                build_pandas=True, log=log)
 
     def test_bdf_op2_other_01(self):
         """checks ofprand1.bdf which tests nonlinear elements"""
@@ -700,7 +695,7 @@ class TestOP2(Tester):
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=False, log=log)
+                build_pandas=False, log=log)  # TODO:enable pandas
 
     def test_bdf_op2_other_04(self):
         """checks v10111.bdf, which is an conical problem"""
@@ -1165,11 +1160,10 @@ class TestOP2(Tester):
         make_geom = False
         write_bdf = False
         write_f06 = True
-        build_pandas = True
         op2 = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
                       write_f06=write_f06,
                       debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
-                      build_pandas=build_pandas, log=log)[0]
+                      build_pandas=True, log=log)[0]
         assert os.path.exists(debug_file), os.listdir(folder)
 
         op2.save('op2_model.pik')
@@ -1332,7 +1326,6 @@ class TestOP2(Tester):
         folder = os.path.join(MODEL_PATH, 'sol_101_elements')
         op2_filename = os.path.join(folder, 'transient_solid_shell_bar.op2')
         f06_filename = os.path.join(folder, 'transient_solid_shell_bar.test_op2.f06')
-        build_pandas = IS_TRANSIENT_PANDAS
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=False, write_op2=False,
@@ -1340,7 +1333,7 @@ class TestOP2(Tester):
             subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, binary_debug=False,
             quiet=True, stop_on_failure=True,
-            dev=False, build_pandas=build_pandas, log=log)
+            dev=False, build_pandas=True, log=log)
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
@@ -2004,13 +1997,12 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
 
-        build_pandas = IS_TRANSIENT_PANDAS
         read_op2(op2_filename, debug=debug, log=log)
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=make_geom, write_bdf=write_bdf,
             write_f06=write_f06,
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
-            build_pandas=build_pandas, log=log)
+            build_pandas=True, log=log)
         isubcase = 1
         # rod_force = op2.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
@@ -2067,7 +2059,7 @@ class TestOP2(Tester):
         assert grid_point_forces.ntotal == 130, grid_point_forces.ntotal
         assert grid_point_forces.data.shape == (21, 130, 6), grid_point_forces.data.shape
 
-        if IS_TRANSIENT_PANDAS:
+        if IS_PANDAS:
             rod_force.build_dataframe()
             rod_stress.build_dataframe()
             cbar_force.build_dataframe()
@@ -2561,7 +2553,7 @@ class TestOP2(Tester):
         unused_op2, unused_is_passed = run_op2(
             op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
-            is_nx=None, delete_f06=True, build_pandas=IS_PANDAS, subcases=None,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
             exclude=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
@@ -2569,7 +2561,7 @@ class TestOP2(Tester):
         unused_op2, unused_is_passed = run_op2(
             op2_filename2, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
-            is_nx=None, delete_f06=True, build_pandas=IS_PANDAS, subcases=None,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
             exclude=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)

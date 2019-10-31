@@ -2370,7 +2370,11 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         """creates a pandas dataframe"""
         import pandas as pd
         headers = self.get_headers()
-        element_node = [self.element_node[:, 0], self.element_node[:, 1]]
+
+        node = pd.Series(self.element_node[:, 1])
+        node.replace({'NodeID': {0:'CEN'}}, inplace=True)
+        element_node = [self.element_node[:, 0], node]
+
         if self.nonlinear_factor not in (None, np.nan):
             # Mode                              1             2             3
             # Freq                   1.482246e-10  3.353940e-09  1.482246e-10
@@ -2396,9 +2400,8 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)
-        data_frame = data_frame.reset_index().replace({'NodeID': {0:'CEN'}}).set_index(['ElementID', 'NodeID'])
+            data_frame = data_frame.reset_index().set_index(['ElementID', 'NodeID'])
         self.data_frame = data_frame
-        #print(self.data_frame)
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)
