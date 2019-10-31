@@ -150,6 +150,21 @@ class RealPlateArray(OES_Object):
             #                           omin           -8.747680e-12 -1.026920e-06  3.712415e-12
             #                           von_mises       7.663484e-12  2.881133e-06  1.173255e-11
             # 9         0      Top      fiber_distance -1.250000e-01 -1.250000e-01 -1.250000e-01
+            #
+            #LoadStep                                         1.0
+            #ElementID NodeID Location Item
+            #2001      CEN    Top      fiber_distance   -0.635000
+            #                 Bottom   oxx              26.197712
+            #2007      CEN    Top      oyy              65.378319
+            #                 Bottom   txy             -28.221191
+            #2008      CEN    Top      angle           -62.383610
+            #...                                              ...
+            #2024      CEN    Bottom   txy             -28.961452
+            #2025      CEN    Top      angle           -21.011902
+            #                 Bottom   omax            -23.810177
+            #2033      CEN    Top      omin           -110.334686
+            #                 Bottom   von_mises       100.566292
+            #
             column_names, column_values = self._build_dataframe_transient_header()
             names = ['ElementID', 'NodeID', 'Location', 'Item']
             data_frame = self._build_pandas_transient_element_node(
@@ -157,7 +172,6 @@ class RealPlateArray(OES_Object):
                 headers, element_node, self.data, from_tuples=False, from_array=True,
                 names=names,
             )
-            data_frame.index.names = names
         else:
             # option B - nice!
             df1 = pd.DataFrame(element_node).T
@@ -165,7 +179,8 @@ class RealPlateArray(OES_Object):
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
             data_frame = df1.join(df2)
-            self.data_frame = data_frame.reset_index().set_index(['ElementID', 'NodeID', 'Location'])
+            data_frame = data_frame.reset_index().set_index(['ElementID', 'NodeID', 'Location'])
+        self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
