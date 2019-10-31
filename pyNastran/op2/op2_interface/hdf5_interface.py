@@ -254,7 +254,10 @@ TABLE_OBJ_MAP = {
     'no.celas4_strain' : (RealSpringStrainArray, ),
     'modal_contribution.celas4_strain' : (RealSpringStrainArray, ComplexSpringStrainArray, ),
 
+    'ctria3_composite_force_failure_indicies': (FailureIndicesArray, ),
+    'ctria6_composite_force_failure_indicies': (FailureIndicesArray, ),
     'cquad4_composite_force_failure_indicies': (FailureIndicesArray, ),
+    'cquad8_composite_force_failure_indicies': (FailureIndicesArray, ),
 
     'celas1_force' : (RealSpringForceArray, ComplexSpringForceArray),
     'ato.celas1_force' : (RealSpringForceArray, ),
@@ -1216,13 +1219,14 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
             h5_subcase = h5_file.get(key)
             #log.debug('subcase:')
             for result_name in h5_subcase.keys():
-                if result_name == 'eigenvalues':
+                if result_name in ['eigenvalues', 'eigenvalues_fluid']:
                     #log.warning('    skipping %r...' % result_name)
                     h5_result = h5_subcase.get(result_name)
                     obj = _load_eigenvalue(h5_result, log=log)
                     if obj is None:
                         continue
-                    model.eigenvalues[obj.title] = obj
+                    slot = getattr(model, result_name)  # get model.eigenvalues
+                    slot[obj.title] = obj
                     log.debug('  loaded %r' % result_name)
                 elif result_name in TABLE_OBJ_KEYS:
                     if debug:

@@ -702,7 +702,7 @@ class OP2(OP2_Scalar, OP2Writer):
                 if class_name in no_sort2_classes:
                     try:
                         obj.build_dataframe()
-                        #assert obj.data_frame is not None
+                        assert obj.data_frame is not None
                     except MemoryError:
                         raise
                     except:

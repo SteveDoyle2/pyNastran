@@ -759,12 +759,16 @@ class BaseElement(ScalarObject):
         if names is None:
             names = ['ElementID', 'NodeID', 'Item']
         if from_tuples:
+            nvars = element_node.shape[1]
+            assert len(names) == nvars + 1, f'names={names} element_node={element_node} {element_node.shape}'
             eid_nid_item = []
             for eid, nid in element_node:
                 for header in headers:
                     eid_nid_item.append([eid, nid, header])
             index = pd.MultiIndex.from_tuples(eid_nid_item, names=names)
         elif from_array:
+            nvars = len(element_node)
+            assert len(names) == nvars + 1, f'names={names} element_node={element_node} (n={len(element_node)})'
             eid_nid_item = []
             for eid in element_node:
                 eidi = np.vstack([eid]*nheaders)

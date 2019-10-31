@@ -523,7 +523,7 @@ class TestOP2(Tester):
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=False, log=log)
+                build_pandas=True, log=log)
         #op2 = read_op2_geom(op2_filename, debug=False)
         #op2.write_f06(f06_filename)
         #os.remove(f06_filename)
@@ -546,7 +546,7 @@ class TestOP2(Tester):
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=False, log=log)
+                build_pandas=True, log=log)
 
     def test_bdf_op2_thermal_04(self):
         """checks time_thermal_elements.bdf"""
@@ -671,7 +671,7 @@ class TestOP2(Tester):
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=IS_PANDAS, log=log)
+                build_pandas=True, log=log)
 
     def test_bdf_op2_other_03(self):
         """checks ac10901a.bdf, which is an acoustic problem"""
@@ -959,7 +959,7 @@ class TestOP2(Tester):
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=False, log=log)
+                build_pandas=True, log=log)
 
     def test_bdf_op2_other_15(self):
         """checks dbxdra2.bdf, which is an ComplexTriaxStressArray example"""
@@ -1109,6 +1109,33 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
 
+    def test_bdf_op2_other_21(self):
+        """checks cqra00366.bdf, which tests RealBush1DStressArray"""
+        #log = get_logger(level='error')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'cqra00366.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'cqra00366.op2')
+
+        #  can't parse replication
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        #model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+
+        #save_load_deck(model)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=True, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
 
     def test_set_results(self):
         """tests setting only a subset of results"""
@@ -2385,7 +2412,7 @@ class TestOP2(Tester):
                 compare=True, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=False, log=log)
+                build_pandas=True, log=log)
 
         model = read_bdf(bdf_filename, debug=False, log=log)
         save_load_deck(model, run_op2_reader=False)
@@ -2501,8 +2528,8 @@ class TestOP2(Tester):
 
         unused_op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
-            write_op2=False, write_hdf5=False, is_mag_phase=False, is_sort2=False,
-            is_nx=None, delete_f06=False, build_pandas=False, subcases=None,
+            write_op2=True, write_hdf5=False, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=False, build_pandas=True, subcases=None,
             exclude=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)

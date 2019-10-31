@@ -322,7 +322,7 @@ class Subcase:
                 self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
-        elif table_name in ['OPHIG', 'BOPHIG']:
+        elif table_name in ['OPHIG', 'BOPHIG', 'BOPHIGF']:
             if table_code == 7:
                 self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
             else:
@@ -421,17 +421,17 @@ class Subcase:
         elif table_name in ['OEFIT', 'OEFITSTN']:
             if table_code in [25]:
                 self.add('FORCE', 'ALL', options, 'STRESS-type')
-            else:
+            else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OQMG1', 'OQMG2']:
             if table_code in [3, 39]:
                 self.add('MPCFORCES', 'ALL', options, 'STRESS-type')
-            else:
+            else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OGPFB1', 'RAGCONS', 'RAGEATC']:
             if table_code == 19:
                 self.add('GPFORCE', 'ALL', options, 'STRESS-type')
-            else:
+            else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
         # stress
@@ -442,26 +442,31 @@ class Subcase:
             options.append('SORT1')
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
-            else:
+            else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OES2', 'OES2C', 'OESVM2', ]:
             options.append('SORT2')
             if table_code == 5:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
-            else:
+            else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OSTR2', 'OSTR2C']:
             options.append('SORT2')
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')
-            else:
+            else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
         elif table_name in ['OESRT']:
             #assert data_code['is_stress_flag'] == True, data_code
-            if table_code == 25:
+            if table_code in [25, 89]:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
-            else:
+            else:  # pragma: no cover
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['OCRUG']:
+            if table_code in [1]:
+                self.add('DISP', 'ALL', options, 'STRESS-type')
+            else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
         # strain
@@ -469,13 +474,13 @@ class Subcase:
             assert data_code['is_strain_flag'] is True, data_code
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')
-            else:
+            else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OSTRVM1', 'OSTRVM1C']:
             #assert data_code['is_stress_flag'] == True, data_code
             if table_code == 5:
                 self.add('STRAIN', 'ALL', options, 'STRESS-type')
-            else:
+            else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 
         # special tables
@@ -488,7 +493,7 @@ class Subcase:
                             'OSTRMS1C', 'OSTRRMS1', 'OSTRRMS1C',
                             'OQMPSD2']:
             pass
-        else:
+        else:  # pragma: no cover
             self._write_op2_error_msg(log, self.log, msg, data_code)
         #print(self)
 
