@@ -21,6 +21,7 @@ class Results:
         self.modal_contribution = ModalContribution()
         self.solution_set = SolutionSet()
         self.strength_ratio = StrengthRatio()
+        self.failure_indices = FailureIndices()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
 
         self.RADEFFM = RADEFFM() # eigenvectors
@@ -45,7 +46,7 @@ class Results:
         """combines all the table_types from all objects and sub-objects"""
         sum_objs = [
             self.ato, self.psd, self.rms, self.no, self.crm,
-            self.modal_contribution, self.strength_ratio,
+            self.modal_contribution, self.strength_ratio, self.failure_indices,
             self.solution_set,
             self.ROUGV1,
             self.RADEFFM,
@@ -205,3 +206,19 @@ class StrengthRatio:
             'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
         ]
         return ['strength_ratio.' + table for table in tables]
+
+class FailureIndices:
+    def __init__(self):
+        self.cquad4_composite_force = {}
+        self.cquad8_composite_force = {}
+        self.ctria3_composite_force = {}
+        self.ctria6_composite_force = {}
+
+    def get_table_types(self):
+        tables = [
+            'cquad4_composite_force',
+            'cquad8_composite_force',
+            'ctria3_composite_force',
+            'ctria6_composite_force',
+        ]
+        return ['failure_indices.' + table for table in tables]

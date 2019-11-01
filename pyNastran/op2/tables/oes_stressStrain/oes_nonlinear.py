@@ -188,7 +188,6 @@ class RealNonlinearPlateArray(OES_Object):
                 #column_values, column_names,
                 #headers, element, self.data[:, :, 1:])
 
-            print(self.data.shape, len(self.element))
             data_frame = self._build_pandas_transient_element_node(
                 column_values, column_names,
                 headers[iheader:], element_fd, self.data[:, :, iheader:],

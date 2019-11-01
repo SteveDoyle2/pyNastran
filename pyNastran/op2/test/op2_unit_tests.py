@@ -1112,7 +1112,7 @@ class TestOP2(Tester):
     def test_bdf_op2_other_21(self):
         """checks cqra00366.bdf, which tests RealBush1DStressArray"""
         #log = get_logger(level='error')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'cqra00366.bdf')
+        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'cqra00366.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'cqra00366.op2')
 
         #  can't parse replication
@@ -1140,7 +1140,7 @@ class TestOP2(Tester):
     def test_bdf_op2_other_22(self):
         """checks dbxdra7.bdf, which tests RealBush1DStressArray"""
         #log = get_logger(level='error')
-        bdf_filename = os.path.join(MODEL_PATH, 'other', 'dbxdra7.bdf')
+        #bdf_filename = os.path.join(MODEL_PATH, 'other', 'dbxdra7.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'other', 'dbxdra7.op2')
 
         #  can't parse replication
@@ -1225,6 +1225,66 @@ class TestOP2(Tester):
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
+
+    def test_bdf_op2_other_25(self):
+        """checks trncomp12.bdf, which tests FailureIndicesArray"""
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'trncomp12.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'trncomp12.op2')
+
+        ##  can't parse replication
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            '', bdf_filename,
+            run_skin_solids=False)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model.safe_cross_reference()
+
+        save_load_deck(model, run_renumber=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
+    def test_bdf_op2_other_26(self):
+        """checks tr1091x.bdf, which tests RealBendForceArray"""
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.op2')
+
+        ##  can't parse replication
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            #'', bdf_filename,
+            #run_skin_solids=False)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+
+        #save_load_deck(model, run_renumber=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
 
     def test_set_results(self):
         """tests setting only a subset of results"""
@@ -2676,6 +2736,38 @@ class TestOP2(Tester):
 
         unused_op2, unused_is_passed = run_op2(
             op2_filename2, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_msc_2014(self):
+        """test MSC 2014 version"""
+        log = get_logger(level='warning')
+        op2_filename1 = os.path.join(MODEL_PATH, 'bugs', 'msc_2014', 'sdof_crod_2014.op2')
+        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        WRITE_OP2 = True
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_sol_106(self):
+        """tests SOL 106 pandas bug"""
+        log = get_logger(level='warning')
+        op2_filename1 = os.path.join(MODEL_PATH, 'bugs', 'sol_106_pandas', 'test.op2')
+        #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
+        #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
+
+        WRITE_OP2 = False
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
             write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
             exclude=None, short_stats=False, compare=True, debug=False, log=log,

@@ -89,27 +89,55 @@ def update_subtitle_with_adaptivity_index(subtitle, superelement_adaptivity_inde
         title + 'SUPERELEMENT 0'
         title + 'SUPERELEMENT 0, 1'
         title + 'ADAPTIVITY_INDEX=1'
+        title + 'SUPERELEMENT 0 (id=2000)'
     """
-    if adpativity_index:
-        #print('adpativity_index = %r' % adpativity_index.strip())
-        if 'ADAPTIVITY INDEX=' not in adpativity_index:
-            msg = f'subtitle={subtitle}\nsuperelement_adaptivity_index={superelement_adaptivity_index} adpativity_index={adpativity_index}'
-            raise AssertionError(msg)
-        # F:\work\pyNastran\examples\Dropbox\move_tpl\pet1018.op2
-        #'ADAPTIVITY INDEX=      1'
-        split_adpativity_index = adpativity_index.split()
-        assert len(split_adpativity_index) == 3, split_adpativity_index
-        word1, word2, adpativity_index_value = split_adpativity_index
-        assert word1 == 'ADAPTIVITY', 'split_adpativity_index=%s' % split_adpativity_index
-        assert word2 == 'INDEX=', 'split_adpativity_index=%s' % split_adpativity_index
+    if adpativity_index.strip():
+        def hexi(src):
+            return ''.join(str(ord(c)) for c in src)
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrsee101q3.op2
+        adpativity_index2 = (
+            adpativity_index \
+            .replace('\x02\x00\x00\x00', hexi('\x02\x00\x00\x00')) \
+            .replace('\x03\x00\x00\x00', hexi('\x03\x00\x00\x00')) \
+            .replace('\x04\x00\x00\x00', hexi('\x04\x00\x00\x00')) \
+            .replace('\x05\x00\x00\x00', hexi('\x05\x00\x00\x00')) \
 
-        adpativity_index_value = int(adpativity_index_value)
-        subtitle2 = '%s; ADAPTIVITY_INDEX=%s' % (subtitle, adpativity_index_value)
-        if superelement_adaptivity_index:
-            superelement_adaptivity_index = '%s; ADAPTIVITY_INDEX=%s' % (
-                superelement_adaptivity_index, adpativity_index_value)
+            # form feed; \f
+            .replace('\x0c\x00\x00\x00', hexi('\x0c\x00\x00\x00')) \
+
+            #  carriage return
+            .replace('\r\x00\x00\x00', hexi('\r\x00\x00\x00')) \
+
+            .replace('\x0f\x00\x00\x00', hexi('\x0f\x00\x00\x00')) \
+            # null
+            .replace('\x00\x00\x00\x00', hexi('\x00\x00\x00\x00')) \
+            .strip()
+        )
+        #print('adpativity_index = %r' % adpativity_index.strip())
+        if adpativity_index2.isdigit():
+            print(adpativity_index2)
+            subtitle2 = '%s; %s' % (subtitle, adpativity_index2)
+            superelement_adaptivity_index = adpativity_index2
         else:
-            superelement_adaptivity_index = 'ADAPTIVITY_INDEX=%s' % adpativity_index_value
+            if 'ADAPTIVITY INDEX=' not in adpativity_index2:
+                msg = f'subtitle={subtitle!r}\nsuperelement_adaptivity_index={superelement_adaptivity_index!r} adpativity_index={adpativity_index2!r}'
+                raise AssertionError(msg)
+
+            # F:\work\pyNastran\examples\Dropbox\move_tpl\pet1018.op2
+            #'ADAPTIVITY INDEX=      1'
+            split_adpativity_index = adpativity_index2.split()
+            assert len(split_adpativity_index) == 3, split_adpativity_index
+            word1, word2, adpativity_index_value = split_adpativity_index
+            assert word1 == 'ADAPTIVITY', 'split_adpativity_index=%s' % split_adpativity_index
+            assert word2 == 'INDEX=', 'split_adpativity_index=%s' % split_adpativity_index
+
+            adpativity_index_value = int(adpativity_index_value)
+            subtitle2 = '%s; ADAPTIVITY_INDEX=%s' % (subtitle, adpativity_index_value)
+            if superelement_adaptivity_index:
+                superelement_adaptivity_index = '%s; ADAPTIVITY_INDEX=%s' % (
+                    superelement_adaptivity_index, adpativity_index_value)
+            else:
+                superelement_adaptivity_index = 'ADAPTIVITY_INDEX=%s' % adpativity_index_value
     else:
         subtitle2 = subtitle
     return subtitle2, superelement_adaptivity_index

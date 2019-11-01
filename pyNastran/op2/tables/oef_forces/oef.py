@@ -171,11 +171,11 @@ class OEF(OP2Common):
                 assert self.thermal in [2, 4, 8], self.code_information() # abs
         elif self.table_name in [b'OEFIT']:
             assert self.table_code in [25], self.code_information()
-            postfix = '_failure_indicies'
+            prefix = 'failure_indices.'
             #raise NotImplementedError(self.code_information())
         elif self.table_name in [b'OEFITSTN']: # composite failure indicies
             assert self.table_code in [25], self.code_information()
-            postfix = '_failure_indicies'
+            prefix = 'failure_indices.'
         else:
             raise NotImplementedError('%r' % self.table_name)
         return prefix, postfix

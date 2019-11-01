@@ -262,6 +262,7 @@ class Subcase:
         table_name = table_name.strip()
         #if 'TITLE' in
         #print(data_code)
+        #print(f'table_name={table_name!r} type={type(table_name)}')
         options = []
         if data_code['title']:
             self.add('TITLE', data_code['title'], options, 'STRING-type')
@@ -436,8 +437,9 @@ class Subcase:
 
         # stress
         elif table_name in ['OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESCP',
-                            'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP',
-                            'OESVM1', 'OESVM1C', 'OESNL1X', 'RASCONS', 'RASEATC']:
+                            'OESNL2', 'OESNLXD', 'OESNLXR', 'OESNLBR', 'OESTRCP',
+                            'OESVM1', 'OESVM1C', 'OESNL1X',
+                            'OESNLXR2', 'RASCONS', 'RASEATC']:
             #assert data_code['is_stress_flag'] == True, data_code
             options.append('SORT1')
             if table_code == 5:
@@ -450,6 +452,17 @@ class Subcase:
                 self.add('STRESS', 'ALL', options, 'STRESS-type')
             else:  # pragma: no cover
                 self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['OESXRM1C']:
+            if table_code == 805:
+                self.add('STRESS', 'ALL', options, 'STRESS-type')
+            else:  # pragma: no cover
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+        elif table_name in ['OESXNO1C']:
+            if table_code == 905:
+                self.add('STRESS', 'ALL', options, 'STRESS-type')
+            else:  # pragma: no cover
+                self._write_op2_error_msg(log, self.log, msg, data_code)
+
         elif table_name in ['OSTR2', 'OSTR2C']:
             options.append('SORT2')
             if table_code == 5:
@@ -510,6 +523,7 @@ class Subcase:
             print(msg)
             print(data_code)
             raise RuntimeError(data_code)
+        raise RuntimeError(data_code)
 
     def __contains__(self, param_name: str) -> bool:
         """

@@ -32,6 +32,10 @@ class ResultSet:
     """
     def __init__(self, allowed_results, unused_log):
         #self.log = log
+        #allowed_results.sort()
+        #for a in allowed_results:
+            #print(a)
+
         # the full set of allowable results
         self.allowed = set(allowed_results)
 

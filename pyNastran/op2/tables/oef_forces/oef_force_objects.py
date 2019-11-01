@@ -319,11 +319,29 @@ class FailureIndicesArray(RealForceObject):
 
         element_layer = [self.element_layer[:, 0], self.element_layer[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
+            # Time                                                              0.00          0.05
+            # ElementID NodeID Item
+            # 2         1      failure_index_for_ply (direct stress/strain)      0.0  5.431871e-14
+            #           2      failure_index_for_bonding (interlaminar stresss)  0.0  3.271738e-16
+            #           3      max_value                                         NaN           NaN
+            #           1      failure_index_for_ply (direct stress/strain)      0.0  5.484873e-30
+            #           2      failure_index_for_bonding (interlaminar stresss)  0.0  3.271738e-16
+            #           3      max_value                                         NaN           NaN
+            #           1      failure_index_for_ply (direct stress/strain)      0.0  5.431871e-14
+            #           2      failure_index_for_bonding (interlaminar stresss)  NaN           NaN
+            #           3      max_value                                         0.0  5.431871e-14
             column_names, column_values = self._build_dataframe_transient_header()
-            data_frame = pd.Panel(self.data, items=column_values,
-                                  major_axis=element_layer, minor_axis=headers).to_frame()
-            data_frame.columns.names = column_names
-            data_frame.index.names = ['ElementID', 'Layer', 'Item']
+            names = ['ElementID', 'Layer', 'Item']
+            data_frame = self._build_pandas_transient_element_node(
+                column_values, column_names, headers,
+                element_layer, self.data, names=names,
+                from_tuples=False, from_array=True)
+
+            #column_names, column_values = self._build_dataframe_transient_header()
+            #data_frame = pd.Panel(self.data, items=column_values,
+                                  #major_axis=element_layer, minor_axis=headers).to_frame()
+            #data_frame.columns.names = column_names
+            #data_frame.index.names = ['ElementID', 'Layer', 'Item']
         else:
             #Static           failure_index_for_ply (direct stress/strain)  failure_index_for_bonding (interlaminar stresss)     max_value
             #ElementID Layer
@@ -3760,17 +3778,20 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
             # TODO: add NodeA, NodeB
             element = self.element_node[:, 0]
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = pd.Panel(self.data, items=column_values,
-                                       major_axis=element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = column_names
-            self.data_frame.index.names = ['ElementID', 'Item']
-            #print(self.data_frame)
+            data_frame = self._build_pandas_transient_elements(
+                column_values, column_names,
+                headers, element, self.data)
+            #data_frame = pd.Panel(self.data, items=column_values,
+                                  #major_axis=element, minor_axis=headers).to_frame()
+            #data_frame.columns.names = column_names
+            #data_frame.index.names = ['ElementID', 'Item']
         else:
             df1 = pd.DataFrame(self.element_node)
             df1.columns = ['ElementID', 'NodeA', 'NodeB']
             df2 = pd.DataFrame(self.data[0])
             df2.columns = headers
-            self.data_frame = df1.join(df2)
+            data_frame = df1.join(df2)
+        self.data_frame = data_frame
 
     def add_sort1(self, dt, eid,
                   nid_a, bending_moment_1a, bending_moment_2a, shear_1a, shear_2a, axial_a, torque_a,

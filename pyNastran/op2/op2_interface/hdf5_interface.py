@@ -259,10 +259,10 @@ TABLE_OBJ_MAP = {
     'no.celas4_strain' : (RealSpringStrainArray, ),
     'modal_contribution.celas4_strain' : (RealSpringStrainArray, ComplexSpringStrainArray, ),
 
-    'ctria3_composite_force_failure_indicies': (FailureIndicesArray, ),
-    'ctria6_composite_force_failure_indicies': (FailureIndicesArray, ),
-    'cquad4_composite_force_failure_indicies': (FailureIndicesArray, ),
-    'cquad8_composite_force_failure_indicies': (FailureIndicesArray, ),
+    'failure_indices.ctria3_composite_force': (FailureIndicesArray, ),
+    'failure_indices.ctria6_composite_force': (FailureIndicesArray, ),
+    'failure_indices.cquad4_composite_force': (FailureIndicesArray, ),
+    'failure_indices.cquad8_composite_force': (FailureIndicesArray, ),
 
     'celas1_force' : (RealSpringForceArray, ComplexSpringForceArray),
     'ato.celas1_force' : (RealSpringForceArray, ),

@@ -117,6 +117,9 @@ MSC_MATRIX_TABLES = [
 ] # type: List[bytes]
 
 MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
+    # ???
+    b'QUALINFO',
+
     # new
     b'TOLD',
     b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS',
