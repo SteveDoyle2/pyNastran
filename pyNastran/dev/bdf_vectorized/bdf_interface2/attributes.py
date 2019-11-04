@@ -600,7 +600,8 @@ class BDFAttributes:
         self.is_msc = False
 
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -637,7 +638,8 @@ class BDFAttributes:
             '_card_parser', '_card_parser_b',
             'object_methods', 'object_attributes',
         ]
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                 filter_properties=filter_properties)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         """

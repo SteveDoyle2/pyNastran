@@ -51,7 +51,8 @@ class BaseScalarObject(Op2Codes):
         #self.ntotal = 0
         #assert isinstance(self.name, (str, bytes)), 'name=%s type=%s' % (self.name, type(self.name))
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         if keys_to_skip is None:
             keys_to_skip = []
         elif isinstance(keys_to_skip, str):
@@ -60,7 +61,8 @@ class BaseScalarObject(Op2Codes):
         my_keys_to_skip = [
             'object_methods', 'object_attributes',
         ]
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                 filter_properties=filter_properties)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         if keys_to_skip is None:

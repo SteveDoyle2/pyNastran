@@ -1060,7 +1060,7 @@ class OP2_F06_Common:
             'op2_reader', 'table_count']
 
         table_types = self.get_table_types()
-        tables = object_attributes(self, 'public')
+        tables = object_attributes(self, 'public', filter_properties=True)
         tables = [table for table in tables
                   if isinstance(getattr(self, table), dict)
                   and table not in skipped_attributes]
@@ -1068,9 +1068,6 @@ class OP2_F06_Common:
             if self.make_geom:
                 break
             #value = getattr(self, table)
-            if isinstance(getattr(type(self), table, None), property):
-                #print(f'{table} - property!')
-                continue
 
             assert table in table_types, table
         return table_types

@@ -11,7 +11,7 @@ Defines the main OP2 class.  Defines:
    - build_dataframe()
    - combine_results(combine=True)
    - create_objects_from_matrices()
-   - object_attributes(mode='public', keys_to_skip=None)
+   - object_attributes(mode='public', keys_to_skip=None, filter_properties=False)
    - object_methods(mode='public', keys_to_skip=None)
    - print_subcase_key()
    - read_op2(op2_filename=None, combine=True, build_dataframe=None,
@@ -86,7 +86,8 @@ class OP2(OP2_Scalar, OP2Writer):
         if hasattr(self, 'h5_file') and self.h5_file is not None:
             self.h5_file.close()
 
-    def object_attributes(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
+    def object_attributes(self, mode: str='public', keys_to_skip: Optional[List[str]]=None,
+                          filter_properties: bool=False) -> List[str]:
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -115,7 +116,8 @@ class OP2(OP2_Scalar, OP2Writer):
         my_keys_to_skip = [
             'object_methods', 'object_attributes',
         ]
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                 filter_properties=filter_properties)
 
     def object_methods(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """
@@ -416,14 +418,6 @@ class OP2(OP2_Scalar, OP2Writer):
             obj = load(obj_file)
 
         keys_to_skip = [
-            'total_effective_mass_matrix',
-            'effective_mass_matrix',
-            'rigid_body_mass_matrix',
-            'modal_effective_mass_fraction',
-            'modal_participation_factors',
-            'modal_effective_mass',
-            'modal_effective_weight',
-
             'ask',
             'binary_debug',
             '_close_op2',
@@ -449,11 +443,12 @@ class OP2(OP2_Scalar, OP2Writer):
             'num_wide',
             'op2_reader',
             'table_name',
-            'table_name_str',
             'use_vector',
             'words',
         ]
-        for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
+        keys = object_attributes(self, mode="all", keys_to_skip=keys_to_skip,
+                                 filter_properties=True)
+        for key in keys:
             if key.startswith('__') and key.endswith('__'):
                 continue
 

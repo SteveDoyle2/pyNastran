@@ -118,14 +118,16 @@ class Matrix:
             #print('WARNING: matrix type=%s does not support writing' % type(matrix))
         mat.write(np.compat.asbytes('\n\n'))
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         if keys_to_skip is None:
             keys_to_skip = []
 
         my_keys_to_skip = [
             'object_methods', 'object_attributes',
         ]
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                 filter_properties=filter_properties)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         if keys_to_skip is None:

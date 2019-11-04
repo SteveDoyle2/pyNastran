@@ -1652,14 +1652,16 @@ class DRESP1(OptConstraint):
         """exports the dresps in a vectorized way"""
         _export_dresps_to_hdf5(h5_file, model, encoding)
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
 
         my_keys_to_skip = ['rtype', 'ptype']
         return super(DRESP1, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+            filter_properties=filter_properties)
 
     @property
     def rtype(self):
@@ -3104,14 +3106,16 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
     def OptID(self):
         return self.oid
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
 
         my_keys_to_skip = ['Type']
         return super(DVCREL1, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+            filter_properties=filter_properties)
 
     @property
     def Type(self):
@@ -3349,14 +3353,16 @@ class DVCREL2(DVXREL2):
         return DVCREL2(oid, element_type, pid, cp_name, dequation, dvids, labels,
                        cp_min, cp_max, comment=comment)
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
 
         my_keys_to_skip = ['Type']
         return super(DVCREL2, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+            filter_properties=filter_properties)
 
     @property
     def Type(self):
@@ -3643,14 +3649,16 @@ class DVMREL1(DVXREL1):
         return DVMREL1(oid, mat_type, mid, mp_name, dvids, coeffs,
                        mp_min=mp_min, mp_max=mp_max, c0=c0, comment=comment)
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
 
         my_keys_to_skip = ['Type']
         return super(DVMREL1, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+            filter_properties=filter_properties)
 
     def update_model(self, model, desvar_values):
         """doesn't require cross-referencing"""
@@ -3957,14 +3965,17 @@ class DVMREL2(DVXREL2):
             raise NotImplementedError('mat_type=%r is not supported' % self.mat_type)
         return mid
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
 
         my_keys_to_skip = ['Type']
         return super(DVMREL2, self).object_attributes(
-            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+            mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+            filter_properties=filter_properties,
+        )
 
     def DEquation(self):
         if self.dequation_ref is None:

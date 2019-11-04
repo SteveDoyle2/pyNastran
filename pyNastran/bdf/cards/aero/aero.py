@@ -511,13 +511,15 @@ class AELINK(BaseCard):
         self.deprecated('Cis', 'linking_coefficents', '1.2')
         self.linking_coefficents = linking_coefficents
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = ['Cis']
         return BaseCard.object_attributes(self, mode=mode,
-                                          keys_to_skip=keys_to_skip+my_keys_to_skip)
+                                          keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                          filter_properties=filter_properties)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
@@ -4027,7 +4029,7 @@ class PAERO1(BaseCard):
         """
         self.caero_body_ids[n - 1] = value
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None, filter_properties=False):
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -4053,7 +4055,8 @@ class PAERO1(BaseCard):
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = ['Bi']
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                 filter_properties=filter_properties)
 
     @property
     def Bi(self):
