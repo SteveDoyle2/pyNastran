@@ -3410,9 +3410,9 @@ class OES(OP2Common):
                         ints = frombuffer(data, dtype=self.idtype)
                         ints1 = ints.reshape(nelements, 9)
                         eids = ints1[:, 0] // 10
-                        nids = np.zeros(len(eids), dtype='int32')
                         assert eids.min() > 0, eids.min()
-                        eids = np.vstack([eids, nids]).T.ravel()
+
+                        # TODO: what about layer 1/2?
                         obj.element_node[itotal:itotal2, 0] = eids
 
                     floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)[:, 1:]
@@ -3423,6 +3423,7 @@ class OES(OP2Common):
                     #             fd2, sx2, sy2, txy2,]
                     nf2 = floats2.shape[0]
                     floats3 = floats2.reshape(nf2*2, 4)
+
                     obj.fiber_curvature[itotal:itotal2] = floats3[:, 0].copy()
                     obj.data[obj.itime, itotal:itotal2, :] = floats3[:, 1:].copy()
                     obj.itotal = itotal2
@@ -3547,27 +3548,8 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
-                cen = 0 # CEN/4
-                for unused_i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    out = struct1.unpack(edata)
+                n = oes_quad4_33_random_11(self, data, obj, nelements, ntotal)
 
-                    (eid_device,
-                     fd1, sx1, sy1, txy1, ovm1,
-                     fd2, sx2, sy2, txy2, ovm2,) = out
-
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i C=[%s]\n' % (
-                            eid, ', '.join(['%r' % di for di in out])))
-
-                    obj.add_eid_ovm_sort1(dt, eid, cen,
-                                          fd1, sx1, sy1, txy1, ovm1,
-                                          fd2, sx2, sy2, txy2, ovm2)
-                    n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 17 and self.table_name in [b'OESVM1', b'OESVM2', b'OSTRVM1', b'OSTRVM2']: # freq
             # Table of element stresses for frequency response analysis that includes
             # von Mises stress output in SORT1 format.
@@ -6268,8 +6250,8 @@ def oes_quad4_33_complex_17(self, data: bytes,
             txy2 = complex(txy2r, txy2i)
         #print(dt, eid, cen, sx1, sy1, txy1, max_shear1)
         #print(dt, eid, cen, sx2, sy2, txy2, max_shear2)
-        obj.add_eid_ovm_sort1(dt, eid, cen, fd1, sx1, sy1, txy1, von_mises1)
-        obj.add_eid_ovm_sort1(dt, eid, cen, fd2, sx2, sy2, txy2, von_mises1)
+        obj.add_ovm_sort1(dt, eid, cen, fd1, sx1, sy1, txy1, von_mises1)
+        obj.add_ovm_sort1(dt, eid, cen, fd2, sx2, sy2, txy2, von_mises1)
         n += ntotal
     return n
 
@@ -6370,31 +6352,102 @@ def oes_ctria3_random_9(self, data, obj, nelements, ntotal):
             n += ntotal
     return n
 
+def oes_quad4_33_random_11(self, data: bytes,
+                           obj: Union[ComplexPlateStressArray, ComplexPlateStrainArray],
+                           nelements: int, ntotal: int):
+    struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
+    cen = 0 # CEN/4
+    n = 0
+    if self.sort_method == 1:
+        for unused_i in range(nelements):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+
+            (eid_device,
+             fd1, sx1, sy1, txy1, ovm1,
+             fd2, sx2, sy2, txy2, ovm2,) = out
+
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, self.nonlinear_factor, self.sort_method)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                    eid, ', '.join(['%r' % di for di in out])))
+
+            obj.add_ovm_sort1(dt, eid, cen,
+                              fd1, sx1, sy1, txy1, ovm1,
+                              fd2, sx2, sy2, txy2, ovm2)
+            n += ntotal
+    else:
+        for unused_i in range(nelements):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+
+            (eid_device,
+             fd1, sx1, sy1, txy1, ovm1,
+             fd2, sx2, sy2, txy2, ovm2,) = out
+
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, self.nonlinear_factor, self.sort_method)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                    eid, ', '.join(['%r' % di for di in out])))
+
+            obj.add_ovm_sort2(dt, eid, cen,
+                              fd1, sx1, sy1, txy1, ovm1,
+                              fd2, sx2, sy2, txy2, ovm2)
+            n += ntotal
+    return n
 def oes_ctria3_random_11(self, data, obj, nelements, ntotal):
     #print('ctria3_11')
     n = 0
     struct1 = Struct(self._endian + self._analysis_code_fmt + b'10f')
-    cen = 0 # CEN/4
-    for unused_i in range(nelements):
-        edata = data[n:n+ntotal]
-        out = struct1.unpack(edata)
 
-        (eid_device,
-         fd1, sx1, sy1, txy1, ovm1,
-         fd2, sx2, sy2, txy2, ovm2,) = out
-        #print('CTRIA3', out)
+    if self.sort_method == 1:
+        cen = 0 # CEN/4
+        for unused_i in range(nelements):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
 
-        eid, dt = get_eid_dt_from_eid_device(
-            eid_device, self.nonlinear_factor, self.sort_method)
+            (eid_device,
+             fd1, sx1, sy1, txy1, ovm1,
+             fd2, sx2, sy2, txy2, ovm2,) = out
+            #print('CTRIA3', out)
 
-        if self.is_debug_file:
-            self.binary_debug.write('  eid=%i C=[%s]\n' % (
-                eid, ', '.join(['%r' % di for di in out])))
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, self.nonlinear_factor, self.sort_method)
 
-        obj.add_eid_ovm_sort1(dt, eid, cen,
+            if self.is_debug_file:
+                self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                    eid, ', '.join(['%r' % di for di in out])))
+
+            obj.add_ovm_sort1(dt, eid, cen,
                               fd1, sx1, sy1, txy1, ovm1,
                               fd2, sx2, sy2, txy2, ovm2)
-        n += ntotal
+            n += ntotal
+    else:
+        cen = 0 # CEN/4
+        for unused_i in range(nelements):
+            edata = data[n:n+ntotal]
+            out = struct1.unpack(edata)
+
+            (eid_device,
+             fd1, sx1, sy1, txy1, ovm1,
+             fd2, sx2, sy2, txy2, ovm2,) = out
+            #print('CTRIA3', out)
+
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, self.nonlinear_factor, self.sort_method)
+
+            if self.is_debug_file:
+                self.binary_debug.write('  eid=%i C=[%s]\n' % (
+                    eid, ', '.join(['%r' % di for di in out])))
+
+            obj.add_ovm_sort2(dt, eid, cen,
+                              fd1, sx1, sy1, txy1, ovm1,
+                              fd2, sx2, sy2, txy2, ovm2)
+            n += ntotal
     return n
 
 def oes_quad4_144_random(self, data, obj, nelements, ntotal, nnodes, ndata):

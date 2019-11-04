@@ -1014,7 +1014,7 @@ class OP2(OP2_Scalar, OP2Writer):
         keys = []
         table_types = self.get_table_types()
         for table_type in sorted(table_types):
-            if table_type in ['gpdt', 'bgpdt', 'eqexin']:
+            if table_type in ['gpdt', 'bgpdt', 'eqexin', 'grid_point_weight']:
                 continue
             result_type_dict = self.get_result(table_type)
             #if result_type_dict is None: # gpdt, eqexin

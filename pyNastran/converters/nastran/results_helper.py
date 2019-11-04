@@ -1,7 +1,9 @@
 """Interface for converting OP2 results to the GUI format"""
 # pylint: disable=C1801, C0103
+from __future__ import annotations
 #from copy import deepcopy
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -16,6 +18,8 @@ from pyNastran.op2.result_objects.stress_object import (
     get_bar_stress_strain, get_bar100_stress_strain, get_beam_stress_strain,
     get_plate_stress_strain, get_solid_stress_strain)
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
 
 class NastranGuiResults(NastranGuiAttributes):
@@ -474,7 +478,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
         return icase
 
-    def _fill_op2_time_centroidal_strain_energy(self, cases, model,
+    def _fill_op2_time_centroidal_strain_energy(self, cases, model: OP2,
                                                 key, icase, itime,
                                                 form_dict, header_dict, keys_map):
         """
@@ -486,44 +490,45 @@ class NastranGuiResults(NastranGuiAttributes):
         #  count, ogs, superelement_adaptivity_index, pval_step) = key ????
         subcase_id = key[0]
 
+        strain_energy = model.op2_results.strain_energy
         strain_energies = [
             # results_dict, name, flag of the element being supported
-            (model.cquad4_strain_energy, 'CQUAD4', True),
-            (model.cquad8_strain_energy, 'CQUAD8', True),
-            (model.cquadr_strain_energy, 'CQUADR', True),
-            (model.cquadx_strain_energy, 'CQUADX', True),
+            (strain_energy.cquad4_strain_energy, 'CQUAD4', True),
+            (strain_energy.cquad8_strain_energy, 'CQUAD8', True),
+            (strain_energy.cquadr_strain_energy, 'CQUADR', True),
+            (strain_energy.cquadx_strain_energy, 'CQUADX', True),
 
-            (model.ctria3_strain_energy, 'CTRIA3', True),
-            (model.ctria6_strain_energy, 'CTRIA6', True),
-            (model.ctriar_strain_energy, 'CTRIAR', True),
-            (model.ctriax_strain_energy, 'CTRIAX', True),
-            (model.ctriax6_strain_energy, 'CTRIAX6', True),
+            (strain_energy.ctria3_strain_energy, 'CTRIA3', True),
+            (strain_energy.ctria6_strain_energy, 'CTRIA6', True),
+            (strain_energy.ctriar_strain_energy, 'CTRIAR', True),
+            (strain_energy.ctriax_strain_energy, 'CTRIAX', True),
+            (strain_energy.ctriax6_strain_energy, 'CTRIAX6', True),
 
-            (model.ctetra_strain_energy, 'CTETRA', True),
-            (model.cpenta_strain_energy, 'CPENTA', True),
-            (model.chexa_strain_energy, 'CHEXA', True),
-            (model.cpyram_strain_energy, 'CPYRAM', True),
+            (strain_energy.ctetra_strain_energy, 'CTETRA', True),
+            (strain_energy.cpenta_strain_energy, 'CPENTA', True),
+            (strain_energy.chexa_strain_energy, 'CHEXA', True),
+            (strain_energy.cpyram_strain_energy, 'CPYRAM', True),
 
-            (model.crod_strain_energy, 'CROD', True),
-            (model.ctube_strain_energy, 'CTUBE', True),
-            (model.conrod_strain_energy, 'CONROD', True),
+            (strain_energy.crod_strain_energy, 'CROD', True),
+            (strain_energy.ctube_strain_energy, 'CTUBE', True),
+            (strain_energy.conrod_strain_energy, 'CONROD', True),
 
-            (model.cbar_strain_energy, 'CBAR', True),
-            (model.cbeam_strain_energy, 'CBEAM', True),
+            (strain_energy.cbar_strain_energy, 'CBAR', True),
+            (strain_energy.cbeam_strain_energy, 'CBEAM', True),
 
-            (model.cgap_strain_energy, 'CGAP', True),
-            (model.celas1_strain_energy, 'CELAS1', True),
-            (model.celas2_strain_energy, 'CELAS2', True),
-            (model.celas3_strain_energy, 'CELAS3', True),
-            (model.celas4_strain_energy, 'CELAS4', True),
-            (model.cdum8_strain_energy, 'CDUM8', False),
-            (model.cbush_strain_energy, 'CBUSH', True),
-            #(model.chexa8fd_strain_energy, '', False),
-            (model.cbend_strain_energy, 'CBEND', False),
-            (model.dmig_strain_energy, 'DMIG', False),
-            (model.genel_strain_energy, 'GENEL', False),
-            (model.cshear_strain_energy, 'CSHEAR', True),
-            (model.conm2_strain_energy, 'CONM2', False),
+            (strain_energy.cgap_strain_energy, 'CGAP', True),
+            (strain_energy.celas1_strain_energy, 'CELAS1', True),
+            (strain_energy.celas2_strain_energy, 'CELAS2', True),
+            (strain_energy.celas3_strain_energy, 'CELAS3', True),
+            (strain_energy.celas4_strain_energy, 'CELAS4', True),
+            (strain_energy.cdum8_strain_energy, 'CDUM8', False),
+            (strain_energy.cbush_strain_energy, 'CBUSH', True),
+            #(strain_energy.chexa8fd_strain_energy, '', False),
+            (strain_energy.cbend_strain_energy, 'CBEND', False),
+            (strain_energy.dmig_strain_energy, 'DMIG', False),
+            (strain_energy.genel_strain_energy, 'GENEL', False),
+            (strain_energy.cshear_strain_energy, 'CSHEAR', True),
+            (strain_energy.conm2_strain_energy, 'CONM2', False),
         ]
         #  find the cases that have results for this key
         has_strain_energy = [key in res[0] for res in strain_energies]

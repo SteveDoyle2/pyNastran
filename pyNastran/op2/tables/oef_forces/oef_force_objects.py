@@ -2774,16 +2774,18 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
         else:
             ntimes = self.nelements
             nelements = self.ntimes
-            ntotal = self.ntotal
+            ntotal = nelements * 2
             name = self.analysis_method + 's'
             self._build(ntimes, nelements, ntotal, self._times_dtype)
             setattr(self, name, self._times)
             self.data_code['name'] = self.analysis_method
             self.data_names[0] = name
+            #print(f'data_names -> {self.data_names}')
 
     def _build(self, ntimes, nelements, ntotal, dtype):
         self.ntimes = ntimes
         self.nelements = nelements
+        self.ntotal = ntotal
         #print(f"*ntimes={ntimes} nelements={nelements} ntotal={ntotal} data_names={self.data_names}")
         #dtype = 'float32'
         #if isinstance(self.nonlinear_factor, integer_types):
@@ -2801,11 +2803,6 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            #column_values = [modes, freq]
-            #data_frame = pd.Panel(self.data, items=column_values,
-                                  #major_axis=self.element, minor_axis=headers).to_frame()
-            #data_frame.columns.names = column_names
-            #data_frame.index.names = ['ElementID', 'Item']
             data_frame = self._build_pandas_transient_elements(
                 column_values, column_names,
                 headers, self.element, self.data)

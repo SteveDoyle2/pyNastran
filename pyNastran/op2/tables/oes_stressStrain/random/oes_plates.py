@@ -252,6 +252,7 @@ class RandomPlateArray(OES_Object):
         self.itotal += 1
 
         self.data[self.itime, self.itotal] = [oxx2, oyy2, txy2]
+        self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
         self.fiber_curvature[self.itotal] = fd2
         self.itotal += 1
 
@@ -270,9 +271,18 @@ class RandomPlateArray(OES_Object):
             #print(self.element_node.shape)
         #else:
         ielement = self.itime
+
+        #ibase = 2 * ielement # ctria3/cquad4-33
+        ibase = 2 * (ielement * nnodes + inid)
+        ie_upper = ibase
+        ie_lower = ibase + 1
+
         #if self.element_name == 'CTRIAR': # and self.table_name == 'OESATO2':
-            #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ielement={self.itime} inid={inid} nid={nid} itotal={itotal} dt={dt} eid={eid} nid={nid} fd={fd1:.2f} oxx={oxx1:.2f}')
-            #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ielement={self.itime} inid={inid} nid={nid} itotal={itotal+1} dt={dt} eid={eid} nid={nid} fd={fd2:.2f} oxx={oxx2:.2f}')
+        debug = False
+        #if self.element_name == 'CTRIA3' and self.table_name in ['OSTRRMS1', 'OSTRRMS2']:
+            #debug = True
+            #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_upper={ie_upper} ielement={self.itime} inid={inid} nid={nid} itotal={itotal} dt={dt} eid={eid} nid={nid} fd={fd1:.2f} oxx={oxx1:.2f}')
+            #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ie_lower={ie_lower} ielement={self.itime} inid={inid} nid={nid} itotal={itotal+1} dt={dt} eid={eid} nid={nid} fd={fd2:.2f} oxx={oxx2:.2f}')
 
         self._times[itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -282,10 +292,6 @@ class RandomPlateArray(OES_Object):
         #ielement = self.itime
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
 
-        #ibase = 2 * ielement # ctria3/cquad4-33
-        ibase = 2 * (ielement * nnodes + inid)
-        ie_upper = ibase
-        ie_lower = ibase + 1
         if itime == 0:
             self.element_node[ie_upper, :] = [eid, nid]  # 0 is center
             self.element_node[ie_lower, :] = [eid, nid]  # 0 is center
@@ -299,12 +305,13 @@ class RandomPlateArray(OES_Object):
 
         self.itotal += 2
         self.ielement += 1
-        #print(self.element_node)
+        if debug:
+            print(self.element_node)
     #---------------------------------------------------------------------------
 
-    def add_eid_ovm_sort1(self, dt, eid, nid,
-                          fd1, oxx1, oyy1, txy1, ovm1,
-                          fd2, oxx2, oyy2, txy2, ovm2):
+    def add_ovm_sort1(self, dt, eid, nid,
+                      fd1, oxx1, oyy1, txy1, ovm1,
+                      fd2, oxx2, oyy2, txy2, ovm2):
         """unvectorized method for adding SORT1 transient data"""
         assert self.is_sort1, self.sort_method
         self._times[self.itime] = dt
@@ -324,6 +331,15 @@ class RandomPlateArray(OES_Object):
         self.fiber_curvature[self.itotal] = fd2
         self.itotal += 1
         #print(self.element_node)
+
+    def add_ovm_sort2(self, dt, eid, nid,
+                      fd1, oxx1, oyy1, txy1, ovm1,
+                      fd2, oxx2, oyy2, txy2, ovm2):
+        """unvectorized method for adding SORT2 transient data"""
+        #self.add_sort2(dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2)
+        self.add_ovm_sort1(dt, eid, nid,
+                           fd1, oxx1, oyy1, txy1, ovm1,
+                           fd2, oxx2, oyy2, txy2, ovm2)
 
     #---------------------------------------------------------------------------
 
