@@ -212,7 +212,7 @@ class OP2GeomCommon(OP2, GEOM1, GEOM2, GEOM3, GEOM4, EPT, MPT, EDT, EDOM, DIT, D
             eid, cid, nx, ny, nz, junk_imth, mineid, maxeid, mingid, maxgid, *nids = intsi
             mth = data[n+20:n+24].decode('latin1')
             #print(eid, cid, [nx, ny, nz], mth, [mineid, maxeid, mingid, maxgid], nids)
-            assert mth in ['DIRE'], mth
+            assert mth in ['DIRE', 'EXTR'], mth
             n += 72
         return n
 

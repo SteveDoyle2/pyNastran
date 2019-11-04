@@ -96,7 +96,7 @@ class ONR(OP2Common):
         prefix = ''
         postfix = ''
         if self.table_name in [b'ONRGY1', b'ONRGY2', b'ONRGY']:
-            pass
+            prefix = 'strain_energy.'
         elif self.table_name in [b'RANEATC']: #, b'OSTRMS1C']:
             self.format_code = 1
             self.sort_bits[0] = 0 # real
@@ -105,7 +105,6 @@ class ONR(OP2Common):
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RANCONS.'
-
         else:
             raise NotImplementedError(self.table_name)
         self.data_code['sort_bits'] = self.sort_bits

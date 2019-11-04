@@ -83,22 +83,14 @@ class RealRodArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
-        #is_v25 = pd.__version__ >= '0.25'
 
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
-            #if is_v25:
-                #print(f'skipping pandas {self.class_name}')
-                #return
             data_frame = self._build_pandas_transient_elements(
                 column_values, column_names,
                 headers, self.element, self.data)
-            #data_frame = pd.Panel(self.data, items=column_values, major_axis=self.element, minor_axis=headers).to_frame()
-            #data_frame.columns.names = column_names
-            #data_frame.index.names = ['ElementID', 'Item']
         else:
-            #if is_v25:
             #Static     axial           SMa  torsion           SMt
             #ElementID
             #14           0.0  1.401298e-45      0.0  1.401298e-45
@@ -106,12 +98,6 @@ class RealRodArray(OES_Object):
             data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
             data_frame.index.name = 'ElementID'
             data_frame.columns.names = ['Static']
-            #print(data_frame)
-            #else:
-            #    NodeID Type      t1           t2            t3   r1   r2   r3
-            # 0        1    G     0.0     0.000000  0.000000e+00  0.0  0.0  0.0
-            # 1        2    G     0.0     0.000000  0.000000e+00  0.0  0.0  0.0
-            # 2        3    G     0.0     0.000000  0.000000e+00  0.0  0.0  0.0
             #Static                        0
             #ElementID Item
             #14        axial    0.000000e+00

@@ -471,7 +471,7 @@ class OEF(OP2Common):
         elif self.analysis_code == 6:  # transient
             self._analysis_code_fmt = b'f'
             self.data_names = self.apply_data_code_value('data_names', ['element_id'])
-            self.apply_data_code_value('analysis_method', 'dt')
+            self.apply_data_code_value('analysis_method', 'time')
         elif self.analysis_code == 7:  # pre-buckling
             self._analysis_code_fmt = b'i'
             self.data_names = self.apply_data_code_value('data_names', ['element_id'])
@@ -1791,6 +1791,8 @@ class OEF(OP2Common):
         # 21-CDAMP2
         # 22-CDAMP3
         # 23-CDAMP4
+        if prefix == '' and postfix == '':
+            prefix = 'force.'
         if self.element_type == 11:
             result_name = prefix + 'celas1_force' + postfix
             obj_real = RealSpringForceArray
@@ -2084,20 +2086,9 @@ class OEF(OP2Common):
                 obj.data[obj.itime, itotal:itotal2, :] = floats[:, 1:].copy()
                 obj.itotal = itotal2
                 obj.ielement = ielement2
+            # elif self.use_vector and is_vectorized and self.sort_method == 1:
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'8f')  # 9
-                for unused_i in range(nelements):
-                    edata = data[n:n + 36]
-
-                    out = s.unpack(edata)
-                    if self.is_debug_file:
-                        self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
-                    (eid_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    #data_in = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
-                    obj.add_sort1(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
-                    n += ntotal
+                n = oef_cbar_real(self, data, obj, nelements, ntotal)
         elif self.format_code in [2, 3] and self.num_wide == 17: # imag
             slot = self.cbar_force
 
@@ -3809,3 +3800,34 @@ class OEF(OP2Common):
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
+
+def oef_cbar_real(self, data, obj: RealCBarForceArray, nelements, ntotal):
+    n = 0
+    s = Struct(self._endian + self._analysis_code_fmt + b'8f')  # 9
+    if self.is_sort1:
+        for unused_i in range(nelements):
+            edata = data[n:n + 36]
+
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
+            (eid_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, self.nonlinear_factor, self.sort_method)
+            #data_in = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
+            obj.add_sort1(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
+            n += ntotal
+    else:
+        for unused_i in range(nelements):
+            edata = data[n:n + 36]
+
+            out = s.unpack(edata)
+            if self.is_debug_file:
+                self.binary_debug.write('OEF_CBar - %s\n' % (str(out)))
+            (eid_device, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq) = out
+            eid, dt = get_eid_dt_from_eid_device(
+                eid_device, self.nonlinear_factor, self.sort_method)
+            #data_in = [eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
+            obj.add_sort2(dt, eid, bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq)
+            n += ntotal
+    return n

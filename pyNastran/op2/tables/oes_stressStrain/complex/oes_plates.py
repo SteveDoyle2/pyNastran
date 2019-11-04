@@ -762,7 +762,7 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> Tuple[List[str], i
     ## TODO: validation on header formatting...
     if self.is_stress:
         cquad4_bilinear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']
-        cquad4_linear = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']  # good
+        cquad4_centroid = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']  # good
         cquad8 = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
         cquadr = ['                C O M P L E X   S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']
         ctria3 = ['                   C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']  # good
@@ -770,7 +770,7 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> Tuple[List[str], i
         ctriar = ['                   C O M P L E X   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n']
     else:
         cquad4_bilinear = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n']
-        cquad4_linear = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']
+        cquad4_centroid = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n']
         cquad8 = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n']
         cquadr = ['                C O M P L E X   S T R A I N S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n']
         ctria3 = ['                C O M P L E X   S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A 3 )\n']
@@ -781,10 +781,10 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> Tuple[List[str], i
     is_bilinear = False
     if self.element_type == 144: # CQUAD4
         is_bilinear = True
-        msg += cquad4_linear + mag_real + grid_msg_temp
+        msg += cquad4_bilinear + mag_real + grid_msg_temp
     elif self.element_type == 33: # CQUAD4
         is_bilinear = False
-        msg += cquad4_bilinear + mag_real + fiber_msg_temp
+        msg += cquad4_centroid + mag_real + fiber_msg_temp
     elif self.element_type == 64:  #CQUAD8
         msg += cquad8 + mag_real + grid_msg_temp
         is_bilinear = True

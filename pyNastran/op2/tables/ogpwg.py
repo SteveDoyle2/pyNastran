@@ -1,6 +1,7 @@
 from struct import unpack
 from numpy import array
 from pyNastran.op2.op2_interface.op2_common import OP2Common
+from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 
 
 class OGPWG(OP2Common):
@@ -71,11 +72,21 @@ class OGPWG(OP2Common):
         Q = array(unpack('9f', data[4*(36+9+12+9+3):4*(36+9+12+9+3+9)]))
         Q = Q.reshape(3, 3)
 
-        self.grid_point_weight.set_grid_point_weight(
+        #print(self.object_attributes())
+        #print(self._count)
+        #print(self.title)
+        #print(self.subtitle)
+        #print(self.label)
+        #print(self.pval_step)
+        #print(self.superelement_adaptivity_index)
+        weight = GridPointWeight()
+        weight.set_grid_point_weight(
             self.reference_point,
             MO, S, mass, cg, IS, IQ, Q,
             approach_code=self.approach_code, table_code=self.table_code,
             title=self.title, subtitle=self.subtitle, label=self.label,
+            superelement_adaptivity_index=self.superelement_adaptivity_index,
         )
+        self.grid_point_weight[self.superelement_adaptivity_index] = weight
         #del self.reference_point
         return ndata

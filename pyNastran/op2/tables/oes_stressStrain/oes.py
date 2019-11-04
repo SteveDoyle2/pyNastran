@@ -3396,54 +3396,67 @@ class OES(OP2Common):
 
             obj = self.obj
             assert obj.is_built is True, obj.is_built
-            if self.use_vector and is_vectorized and 0:
+            if self.use_vector and is_vectorized:
                 n = nelements * 4 * self.num_wide
-                ielement = obj.ielement
-                ielement2 = ielement + nelements
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * 2
 
                 if self.sort_method == 1:
+                    ielement = obj.ielement
+                    ielement2 = ielement + nelements
+
                     obj._times[obj.itime] = dt
                     if obj.itime == 0:
                         ints = frombuffer(data, dtype=self.idtype)
                         ints1 = ints.reshape(nelements, 9)
                         eids = ints1[:, 0] // 10
                         nids = np.zeros(len(eids), dtype='int32')
-                        #print(eids)
                         assert eids.min() > 0, eids.min()
                         eids = np.vstack([eids, nids]).T.ravel()
-                        #print(eids.shape)
-                        #print(eids)
-                        #print(obj.element)
                         obj.element_node[itotal:itotal2, 0] = eids
 
                     floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)[:, 1:]
-                    #print(floats.shape)
-                    #fd, sx, sy, txy,
+                    #fd1, sx1, sy1, txy1, fd2, fx2, fy2, txy2
                     floats2 = floats.reshape(nelements * nnodes_expected, 8)
-                else:
-                    print(obj)
-                    obj.element_node[obj.itime] = dt
+
+                    #[eid_device, fd1, sx1, sy1, txy1,
+                    #             fd2, sx2, sy2, txy2,]
+                    nf2 = floats2.shape[0]
+                    floats3 = floats2.reshape(nf2*2, 4)
+                    obj.fiber_curvature[itotal:itotal2] = floats3[:, 0].copy()
+                    obj.data[obj.itime, itotal:itotal2, :] = floats3[:, 1:].copy()
+                    obj.itotal = itotal2
+                    obj.ielement = ielement2
+
+                elif self.sort_method == 2:
+                    ielement = obj.itime
+                    ie_upper = 2 * ielement
+                    ie_lower = 2 * ielement + 1
+
+                    obj.element_node[ie_upper, 0] = dt
+                    obj.element_node[ie_lower, 0] = dt
                     #obj._times[obj.itime] = dt
 
                     floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)# [:, 1:]
+                    # itime is actually ielement
+                    # we grab the element id from the ints for all times
                     if self._analysis_code_fmt == b'i' and obj.itime == 0:
-                        print(self._analysis_code_fmt)
-                        ints = frombuffer(data, dtype=self.idtype)
-                        ints1 = ints.reshape(nelements, 9)
-                        eids = ints1[:, 0] // 10
-                        nids = np.zeros(len(eids), dtype='int32')
+                        print('analysis_code ', self.analysis_code, self._analysis_code_fmt)
+                        ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
+                        eids = ints[:, 0] // 10
+                        #nids = np.zeros(len(eids), dtype='int32')
                         print(eids)
-                        eids = np.vstack([eids, nids]).T.ravel()
+                        #eids = np.vstack([eids, nids]).T.ravel()
                         #print(eids.shape)
                         #print(eids)
                         #print(obj.element)
-                        assert eids.min() > 0, eids.min()
-                        obj.element[itotal:itotal2, 0] = eids
+                        #assert eids.min() > 0, eids.min()
+                        #obj.element[itotal:itotal2, 0] = eids
+                        obj._times[itotal:itotal2] = eids
+                        aaa
                     elif self._analysis_code_fmt == b'f' and obj.itime == 0:
-                        print(floats[:, 0])
-                        print(floats[:, 0].shape, obj._times.shape)
+                        #print(floats[:, 0])
+                        #print(floats[:, 0].shape, obj._times.shape)
                         obj._times[itotal:itotal2] = floats[:, 0]
 
                     floats1 = floats[:, 1:]
@@ -3451,24 +3464,19 @@ class OES(OP2Common):
                     #print(floats1.shape)
                     #fd, sx, sy, txy,
                     floats2 = floats1.reshape(nelements * nnodes_expected, 8)
-
-                #[eid_device, fd1, sx1, sy1, txy1,
-                #             fd2, sx2, sy2, txy2,]
-                #print(floats2.shape)
-                nf2 = floats2.shape[0]
-                floats3 = floats2.reshape(nf2*2, 4)
-                #print(floats3)
-                #isave1 = [1, 3, 5]
-                #isave2 = [2, 4, 6]
-                #real_imag = apply_mag_phase(floats2, is_magnitude_phase, isave1, isave2)
-                #print(obj.data.shape)
-                #print(obj.itime)
-                #print(itotal, itotal2)
-                obj.fiber_curvature[itotal:itotal2] = floats3[:, 0].copy()
-                obj.data[obj.itime, itotal:itotal2, :] = floats3[:, 1:].copy()
+                    nf2 = floats2.shape[0]
+                    # reshape it into 2 layers
+                    floats3 = floats2.reshape(nf2*2, 4)
+                    # we only need to grab the first two fiber/curvature values
+                    # as they're duplicated many times for the same element
+                    obj.fiber_curvature[2*obj.itime:2*obj.itime+2] = floats3[:2, 0].copy()
+                    # we apply the data across 2 rows because we have 2 layers
+                    obj.data[:, ie_upper, :] = floats3[::2, 1:].copy()
+                    obj.data[:, ie_lower, :] = floats3[1::2, 1:].copy()
+                else:
+                    raise NotImplementedError(self.code_information())
                 obj.itotal = itotal2
-                obj.ielement = ielement2
-                #bbb
+                #obj.ielement = ielement2
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CQUAD4-33 random numwide=9 SORT%s' % self.sort_method)
@@ -6265,7 +6273,7 @@ def oes_quad4_33_complex_17(self, data: bytes,
         n += ntotal
     return n
 
-def oes_quad4_33_random_9(self, data, obj, nelements, ntotal):
+def oes_quad4_33_random_9(self, data, obj: RandomPlateStressArray, nelements, ntotal):
     n = 0
     if self.sort_method == 1:
         #print('cquad33_9 - SORT1')
@@ -6285,9 +6293,9 @@ def oes_quad4_33_random_9(self, data, obj, nelements, ntotal):
             if self.is_debug_file:
                 self.binary_debug.write('  eid=%i C=[%s]\n' % (
                     eid, ', '.join(['%r' % di for di in out])))
-            obj.add_eid_sort1(dt, eid, 0,
-                              fd1, sx1, sy1, txy1,
-                              fd2, sx2, sy2, txy2)
+            obj.add_sort1(dt, eid, 0,
+                          fd1, sx1, sy1, txy1,
+                          fd2, sx2, sy2, txy2)
             n += ntotal
     else:
         #print('cquad33_9 - SORT2')
@@ -6308,9 +6316,9 @@ def oes_quad4_33_random_9(self, data, obj, nelements, ntotal):
                 self.binary_debug.write('  eid=%i C=[%s]\n' % (
                     eid, ', '.join(['%r' % di for di in out])))
 
-            obj.add_eid_sort2(dt, eid, 0,
-                              fd1, sx1, sy1, txy1,
-                              fd2, sx2, sy2, txy2)
+            obj.add_sort2(dt, eid, 0,
+                          fd1, sx1, sy1, txy1,
+                          fd2, sx2, sy2, txy2)
             n += ntotal
     return n
 
@@ -6335,9 +6343,9 @@ def oes_ctria3_random_9(self, data, obj, nelements, ntotal):
                 self.binary_debug.write('  eid=%i C=[%s]\n' % (
                     eid, ', '.join(['%r' % di for di in out])))
 
-            obj.add_eid_sort1(dt, eid, cen,
-                              fd1, sx1, sy1, txy1,
-                              fd2, sx2, sy2, txy2)
+            obj.add_sort1(dt, eid, cen,
+                          fd1, sx1, sy1, txy1,
+                          fd2, sx2, sy2, txy2)
             n += ntotal
     else:
         #print('ctria3_9 - SORT2')
@@ -6356,9 +6364,9 @@ def oes_ctria3_random_9(self, data, obj, nelements, ntotal):
                 self.binary_debug.write('  eid=%i C=[%s]\n' % (
                     eid, ', '.join(['%r' % di for di in out])))
 
-            obj.add_eid_sort2(dt, eid, cen,
-                              fd1, sx1, sy1, txy1,
-                              fd2, sx2, sy2, txy2)
+            obj.add_sort2(dt, eid, cen,
+                          fd1, sx1, sy1, txy1,
+                          fd2, sx2, sy2, txy2)
             n += ntotal
     return n
 
@@ -6470,9 +6478,9 @@ def oes_quad4_144_random(self, data, obj, nelements, ntotal, nnodes, ndata):
             if self.is_debug_file:
                 self.binary_debug.write('  eid=%i; C=[%s]\n' % (eid, ', '.join(['%r' % di for di in out])))
 
-            obj.add_eid_sort2(dt, eid, grid_center,
-                              fd1, sx1, sy1, txy1,
-                              fd2, sx2, sy2, txy2)
+            obj.add_sort2(dt, eid, grid_center,
+                          fd1, sx1, sy1, txy1,
+                          fd2, sx2, sy2, txy2)
             n += 44
             for inode in range(nnodes):
                 out = ns.unpack(data[n:n + 36])
@@ -6490,8 +6498,8 @@ def oes_quad4_144_random(self, data, obj, nelements, ntotal, nnodes, ndata):
                 assert grid > 0, grid
 
                 # leaving off grid
-                obj.add_eid_sort2(dt, eid, grid,
-                                  fd1, sx1, sy1, txy1,
-                                  fd2, sx2, sy2, txy2)
+                obj.add_sort2(dt, eid, grid,
+                              fd1, sx1, sy1, txy1,
+                              fd2, sx2, sy2, txy2)
                 n += 36
     return n

@@ -102,6 +102,7 @@ class OP2Reader:
             b'BGPDT' : self.read_bgpdt,
             b'BGPDTS' : self.read_bgpdt,
             b'BGPDTOLD' : self.read_bgpdt,
+            b'BGPDTVU' : self.read_bgpdt,
 
             #b'MEFF' : self.read_meff,
             b'INTMOD' : self.read_intmod,

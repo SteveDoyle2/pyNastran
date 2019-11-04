@@ -76,10 +76,14 @@ class RandomPlateArray(OES_Object):
             #ntotal = self.ntotal
             nx = ntimes
             ny = nelements * 2
+            nlayers = nelements * 2 * nnodes
             #ntotal = nelements * 2
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
             #print(f"SORT1 ntimes={ntimes} nelements={nelements} ntotal={ntotal}")
         elif self.is_sort2:
+            # ntotal=164
+            # len(_ntotals) = 4580 -> nelements=4580
+            # nfreqs=82
             # flip this to sort1?
             #ntimes = self.ntotal
             #nnodes = self.ntimes
@@ -97,14 +101,15 @@ class RandomPlateArray(OES_Object):
             #ntimes = ntotal // 2
             #ntimes, nelements = nelements_real, ntimes_real
             #ntotal = self.ntotal
-            ny = ntotal # nelements * 2 * nnodes
+            nlayers = nelements * 2 * nnodes
+            ny = nlayers # nelements * 2 * nnodes
             nx = ntimes
             #if self.element_name in ['CTRIA3', 'CQUAD8']:
-            #print(f"SORT2 ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes}")
+            #if self.element_name in ['CQUAD4']:
+                #print(f"SORT2 ntimes={ntimes} nelements={nelements} ntotal={ntotal} nnodes={nnodes} nlayers={nlayers}")
         else:  # pragma: no cover
             raise RuntimeError('expected sort1/sort2\n%s' % self.code_information())
 
-        nlayers = nelements * 2 * nnodes
         #self.ntotal
         self.itime = 0
         self.ielement = 0
@@ -162,6 +167,8 @@ class RandomPlateArray(OES_Object):
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
         self._eq_header(table)
+        assert self.element_node[:, 0].min() > 0, self.element_node
+        assert table.element_node[:, 0].min() > 0, table.element_node
         if not np.array_equal(self.element_node, table.element_node):
             assert self.element_node.shape == table.element_node.shape, 'shape=%s element_node.shape=%s' % (
                 self.element_node.shape, table.element_node.shape)
@@ -179,7 +186,7 @@ class RandomPlateArray(OES_Object):
             i = 0
             if self.is_sort1:
                 for itime in range(ntimes):
-                    for ieid, (eid, nid) in enumerate(self.element):
+                    for ieid, (eid, nid) in enumerate(self.element_node):
                         t1 = self.data[itime, ieid, :]
                         t2 = table.data[itime, ieid, :]
                         (oxx1, oyy1, txy1) = t1
@@ -227,7 +234,7 @@ class RandomPlateArray(OES_Object):
         #print(self.element_node)
         #aaa
 
-    def add_eid_sort1(self, dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2):
+    def add_sort1(self, dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2):
         assert self.is_sort1, self.sort_method
         #assert self.element_node.max() == 0, self.element_node
         #if self.element_name in ['CTRIA3', 'CQUAD8']:
@@ -248,13 +255,13 @@ class RandomPlateArray(OES_Object):
         self.fiber_curvature[self.itotal] = fd2
         self.itotal += 1
 
-    def add_eid_sort2(self, dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2):
+    def add_sort2(self, dt, eid, nid, fd1, oxx1, oyy1, txy1, fd2, oxx2, oyy2, txy2):
         #if self.element_name == 'CTRIA3':
         #assert self.element_node.max() == 0, self.element_node
         #print(self.element_node, nid)
         nnodes = self.get_nnodes()
         itime = self.ielement // nnodes
-        #inid = self.ielement % nnodes
+        inid = self.ielement % nnodes
         itotal = self.itotal
         #if itime >= self.data.shape[0]:# or itotal >= self.element_node.shape[0]:
             #print(f'*SORT2 {self.element_name}: itime={itime} ielement={self.itime} inid={inid} itotal={itotal} dt={dt} eid={eid} nid={nid} fd={fd1:.2f} oxx={oxx1:.2f}')
@@ -262,24 +269,33 @@ class RandomPlateArray(OES_Object):
             #print(self.data.shape)
             #print(self.element_node.shape)
         #else:
-            #print(f'SORT2 {self.element_name}: itime={itime} ielement={self.itime} inid={inid} itotal={itotal} dt={dt} eid={eid} nid={nid} fd={fd1:.2f} oxx={oxx1:.2f}')
-            #print(f'SORT2 {self.element_name}: itime={itime} ielement={self.itime} inid={inid} itotal={itotal+1} dt={dt} eid={eid} nid={nid} fd={fd2:.2f} oxx={oxx2:.2f}')
+        ielement = self.itime
+        #if self.element_name == 'CTRIAR': # and self.table_name == 'OESATO2':
+            #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ielement={self.itime} inid={inid} nid={nid} itotal={itotal} dt={dt} eid={eid} nid={nid} fd={fd1:.2f} oxx={oxx1:.2f}')
+            #print(f'SORT2 {self.table_name} {self.element_name}: itime={itime} ielement={self.itime} inid={inid} nid={nid} itotal={itotal+1} dt={dt} eid={eid} nid={nid} fd={fd2:.2f} oxx={oxx2:.2f}')
 
         self._times[itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
 
         #itime = self.ielement
+        #itime = self.itime
         #ielement = self.itime
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
 
+        #ibase = 2 * ielement # ctria3/cquad4-33
+        ibase = 2 * (ielement * nnodes + inid)
+        ie_upper = ibase
+        ie_lower = ibase + 1
         if itime == 0:
-            self.element_node[itotal, :] = [eid, nid]  # 0 is center
-            self.element_node[itotal+1, :] = [eid, nid]  # 0 is center
-            self.fiber_curvature[itotal] = fd1
-            self.fiber_curvature[itotal+1] = fd2
+            self.element_node[ie_upper, :] = [eid, nid]  # 0 is center
+            self.element_node[ie_lower, :] = [eid, nid]  # 0 is center
+            self.fiber_curvature[ie_upper] = fd1
+            self.fiber_curvature[ie_lower] = fd2
+            #if self.element_name == 'CQUAD4':
+                #print(self.element_node)
 
-        self.data[itime, itotal, :] = [oxx1, oyy1, txy1]
-        self.data[itime, itotal+1, :] = [oxx2, oyy2, txy2]
+        self.data[itime, ie_upper, :] = [oxx1, oyy1, txy1]
+        self.data[itime, ie_lower, :] = [oxx2, oyy2, txy2]
 
         self.itotal += 2
         self.ielement += 1

@@ -145,7 +145,7 @@ class FortranFormat:
         # For a PCOMP, it's ntotal=sum(nelements*nlayers),
         # where each element can have a different number
         # of layers
-        if self.obj.ntotal == self.obj.data.shape[1]:
+        if self.obj.ntotal == self.obj.data.shape[1] or 1:
             #if self.table_name_str in ['OESRMS2', 'OESNO2', 'OSTRRMS2', 'OSTRNO2', 'OESATO2']:
                 #print('resetting %r indicies; itime=%s; shape=%s' % (
                     #self.obj.class_name, self.obj.itime, self.obj.data.shape))
@@ -156,6 +156,8 @@ class FortranFormat:
             # This happens when self._data_factor hasn't been reset
             # or is set wrong.
             # can it happen any other time?
+            #
+            # yup, when you have sort2...
             msga = 'self.obj.name=%r has itime' % self.obj.__class__.__name__
             self.log.debug(msga)
             msgb = 'ntotal=%s shape=%s shape[1]=%s _data_factor=%s\n' % (

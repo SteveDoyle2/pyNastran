@@ -96,7 +96,6 @@ class RealBarArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
-        is_v25 = pd.__version__ >= '0.25'
 
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
@@ -108,14 +107,9 @@ class RealBarArray(OES_Object):
             #data_frame.columns.names = column_names
             #data_frame.index.names = ['ElementID', 'Item']
         else:
-            if is_v25:
-                data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
-                data_frame.index.name = 'ElementID'
-                data_frame.columns.names = ['Static']
-            else:
-                data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-                data_frame.columns.names = ['Static']
-                data_frame.index.names = ['ElementID', 'Item']
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+            data_frame.index.name = 'ElementID'
+            data_frame.columns.names = ['Static']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover

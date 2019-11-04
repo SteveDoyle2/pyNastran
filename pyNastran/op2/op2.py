@@ -297,7 +297,7 @@ class OP2(OP2_Scalar, OP2Writer):
             return True
 
         # does this ever hit?
-        if not any(word in aname for word in ['Array', 'Eigenvalues']):
+        if not any(word in aname for word in ['Array', 'Eigenvalues', 'GridPointWeight']):
             msg = '%s is not an Array ... assume equal' % aname
             self.log.warning(msg)
             raise NotImplementedError('%s __eq__' % aname)
@@ -686,7 +686,7 @@ class OP2(OP2_Scalar, OP2Writer):
                     #continue
 
         for result_type in result_types:
-            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin']:
+            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight']:
                 #self.log.debug('skipping %s' % result_type)
                 continue
 
@@ -844,7 +844,7 @@ class OP2(OP2_Scalar, OP2Writer):
         """
         self.combine = combine
         result_types = self.get_table_types()
-        results_to_skip = ['bgpdt', 'gpdt', 'eqexin', ]
+        results_to_skip = ['bgpdt', 'gpdt', 'eqexin', 'grid_point_weight']
 
         # set subcase_key
         for result_type in result_types:
@@ -968,7 +968,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
         subcase_key2 = {}
         for result_type in result_types:
-            if result_type in ['eigenvalues', 'eigenvalues_fluid', 'params', 'gpdt', 'bgpdt', 'eqexin']:
+            if result_type in ['eigenvalues', 'eigenvalues_fluid', 'params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight']:
                 continue
             result = self.get_result(result_type)
             case_keys = list(result.keys())

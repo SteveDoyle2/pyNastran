@@ -1,4 +1,5 @@
 from collections import Counter
+from typing import List, Dict
 import numpy as np
 
 MSC_GEOM_TABLES = [
@@ -371,4 +372,4 @@ MSC_TABLE_CONTENT = {
     #53: 'OPMPF2M - ???',
     #54: 'OLMPF2M - ???',
     #55: 'OGMPF2M - ???',
-}
+} # type: Dict[int, str]

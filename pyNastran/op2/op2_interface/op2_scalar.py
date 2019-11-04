@@ -52,7 +52,6 @@ from cpylog import get_logger
 
 from pyNastran import is_release, __version__
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 from pyNastran.op2.op2_interface.op2_reader import OP2Reader
 from pyNastran.bdf.cards.params import PARAM
 
@@ -410,7 +409,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self.result_names = set()
 
-        self.grid_point_weight = GridPointWeight()
+        self.grid_point_weight = {}
         self.words = []
         self.debug = debug
         self._last_comment = None

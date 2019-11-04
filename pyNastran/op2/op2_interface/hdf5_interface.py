@@ -16,6 +16,7 @@ import h5py
 import pyNastran
 from pyNastran.op2.op2 import OP2
 
+from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 from pyNastran.op2.tables.lama_eigenvalues.lama_objects import RealEigenvalues, ComplexEigenvalues, BucklingEigenvalues
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray, ComplexDisplacementArray
 from pyNastran.op2.tables.oug.oug_velocities import RealVelocityArray, ComplexVelocityArray
@@ -264,56 +265,56 @@ TABLE_OBJ_MAP = {
     'failure_indices.cquad4_composite_force': (FailureIndicesArray, ),
     'failure_indices.cquad8_composite_force': (FailureIndicesArray, ),
 
-    'celas1_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'force.celas1_force' : (RealSpringForceArray, ComplexSpringForceArray),
     'ato.celas1_force' : (RealSpringForceArray, ),
     'crm.celas1_force' : (RealSpringForceArray, ),
     'psd.celas1_force' : (RealSpringForceArray, ),
     'rms.celas1_force' : (RealSpringForceArray, ),
     'no.celas1_force' : (RealSpringForceArray, ),
 
-    'celas2_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'force.celas2_force' : (RealSpringForceArray, ComplexSpringForceArray),
     'ato.celas2_force' : (RealSpringForceArray, ),
     'crm.celas2_force' : (RealSpringForceArray, ),
     'psd.celas2_force' : (RealSpringForceArray, ),
     'rms.celas2_force' : (RealSpringForceArray, ),
     'no.celas2_force' : (RealSpringForceArray, ),
 
-    'celas3_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'force.celas3_force' : (RealSpringForceArray, ComplexSpringForceArray),
     'ato.celas3_force' : (RealSpringForceArray, ),
     'crm.celas3_force' : (RealSpringForceArray, ),
     'psd.celas3_force' : (RealSpringForceArray, ),
     'rms.celas3_force' : (RealSpringForceArray, ),
     'no.celas3_force' : (RealSpringForceArray, ),
 
-    'celas4_force' : (RealSpringForceArray, ComplexSpringForceArray),
+    'force.celas4_force' : (RealSpringForceArray, ComplexSpringForceArray),
     'ato.celas4_force' : (RealSpringForceArray, ),
     'crm.celas4_force' : (RealSpringForceArray, ),
     'psd.celas4_force' : (RealSpringForceArray, ),
     'rms.celas4_force' : (RealSpringForceArray, ),
     'no.celas4_force' : (RealSpringForceArray, ),
 
-    'cdamp1_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'force.cdamp1_force' : (RealDamperForceArray, ComplexDamperForceArray),
     'ato.cdamp1_force' : (RealDamperForceArray, ),
     'crm.cdamp1_force' : (RealDamperForceArray, ),
     'psd.cdamp1_force' : (RealDamperForceArray, ),
     'rms.cdamp1_force' : (RealDamperForceArray, ),
     'no.cdamp1_force' : (RealDamperForceArray, ),
 
-    'cdamp2_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'force.cdamp2_force' : (RealDamperForceArray, ComplexDamperForceArray),
     'ato.cdamp2_force' : (RealDamperForceArray, ),
     'crm.cdamp2_force' : (RealDamperForceArray, ),
     'psd.cdamp2_force' : (RealDamperForceArray, ),
     'rms.cdamp2_force' : (RealDamperForceArray, ),
     'no.cdamp2_force' : (RealDamperForceArray, ),
 
-    'cdamp3_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'force.cdamp3_force' : (RealDamperForceArray, ComplexDamperForceArray),
     'ato.cdamp3_force' : (RealDamperForceArray, ),
     'crm.cdamp3_force' : (RealDamperForceArray, ),
     'psd.cdamp3_force' : (RealDamperForceArray, ),
     'rms.cdamp3_force' : (RealDamperForceArray, ),
     'no.cdamp3_force' : (RealDamperForceArray, ),
 
-    'cdamp4_force' : (RealDamperForceArray, ComplexDamperForceArray),
+    'force.cdamp4_force' : (RealDamperForceArray, ComplexDamperForceArray),
     'ato.cdamp4_force' : (RealDamperForceArray, ),
     'crm.cdamp4_force' : (RealDamperForceArray, ),
     'psd.cdamp4_force' : (RealDamperForceArray, ),
@@ -768,44 +769,44 @@ TABLE_OBJ_MAP = {
 
     'cbush1d_stress_strain' : (RealBush1DStressArray, ComplexCBush1DStressArray),
 
-    'celas1_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'celas2_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'celas3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'celas4_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.celas1_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.celas2_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.celas3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.celas4_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
 
-    'conrod_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'crod_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'ctube_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.conrod_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.crod_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.ctube_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
 
-    'cbush_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cbar_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cbeam_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cbush_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cbar_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cbeam_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
 
-    'ctria3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'ctria6_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'ctriar_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cquad4_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cquad8_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cquadr_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cshear_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cquadx_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.ctria3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.ctria6_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.ctriar_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cquad4_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cquad8_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cquadr_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cshear_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cquadx_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
 
-    'ctetra_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cpenta_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'chexa_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cpyram_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.ctetra_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cpenta_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.chexa_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cpyram_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
 
-    'cdum8_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'ctriax_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'ctriax6_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cgap_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'cbend_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'genel_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'dmig_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'conm2_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'rbe1_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'rbe3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
-    'weldc_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cdum8_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.ctriax_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.ctriax6_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cgap_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.cbend_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.genel_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.dmig_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.conm2_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.rbe1_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.rbe3_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
+    'strain_energy.weldc_strain_energy' : (RealStrainEnergyArray, ComplexStrainEnergyArray),
 
     'RANCONS.cbush_strain_energy' : (RealStrainEnergyArray, ),
     'RANCONS.cbar_strain_energy' : (RealStrainEnergyArray, ),
@@ -946,6 +947,29 @@ TABLE_OBJ_MAP = {
 }
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())
+
+def _load_grid_point_weight(h5_result):
+    """Loads a GridPointWeight"""
+    obj = GridPointWeight()
+    #IQ
+    #IS
+    #MO
+    #Q
+    #S
+    #approach_code
+    #cg
+    #label
+    #mass
+    #reference_point
+    #subtitle
+    #table_code
+    #title
+    for key in h5_result.keys():
+        value = _cast(h5_result.get(key))
+        #if key not in ['IQ', 'IS', 'Q', 'S', 'mass', 'MO', 'table_code', 'cg']:
+            #print(key, value)
+        setattr(obj, key, value)
+    return obj
 
 def _load_eigenvalue(h5_result, log):
     """Loads a RealEigenvalue"""
@@ -1242,6 +1266,11 @@ def load_op2_from_hdf5_file(model, h5_file, log, debug=False):
                     slot = getattr(model, result_name)  # get model.eigenvalues
                     slot[obj.title] = obj
                     log.debug('  loaded %r' % result_name)
+                elif result_name == 'grid_point_weight':
+                    h5_result = h5_subcase.get(result_name)
+                    obj = _load_grid_point_weight(h5_result)
+                    model.grid_point_weight[obj.superelement_adaptivity_index] = obj
+
                 elif result_name in TABLE_OBJ_KEYS:
                     if debug:
                         log.debug('  %s:' % result_name)
