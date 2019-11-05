@@ -87,7 +87,7 @@ class LOAD(LoadCombination):
         .. note:: requires a cross referenced load
         """
         load_types = []
-        for loads in self.load_ids:
+        for loads in self.load_ids_ref:
             for load in loads:
                 if isinstance(load, LOAD):
                     lid = load.lid
@@ -1039,6 +1039,9 @@ class Load0(BaseCard):
     @property
     def scaled_vector(self):
         return self.xyz * self.mag
+
+    def to_global(self):
+        return self.cid_ref.transform_vector_to_global(self.scaled_vector)
 
     def raw_fields(self):
         list_fields = [self.type, self.sid, self.node_id, self.Cid(),

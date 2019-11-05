@@ -462,7 +462,7 @@ class GuiUtils(unittest.TestCase):
         else:
             self.assertFalse(success)
 
-        if IS_MATPLOTLIB:
+        if IS_MATPLOTLIB and IS_IMAGEIO:
             fig = plt.figure(1)
             ax = fig.gca()
             ax.clear()

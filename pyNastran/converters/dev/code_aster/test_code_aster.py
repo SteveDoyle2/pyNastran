@@ -17,7 +17,7 @@ class TestCodeAster(unittest.TestCase):
         #bdf_filename = data['BDF_FILENAME']
         fname_base = os.path.basename(os.path.splitext(bdf_filename)[0])
 
-        ca = CodeAsterConverter()
+        ca = CodeAsterConverter(debug=False)
         ca.read_bdf(bdf_filename, encoding='ascii')
         ca.write_as_code_aster(fname_base)  # comm, py
 
