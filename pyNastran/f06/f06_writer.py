@@ -416,10 +416,12 @@ class F06Writer(OP2_F06_Common):
                 print('f06_outname =', f06_outname)
 
         page_stamp = self.make_stamp(self.title, self.date)
-        if self.grid_point_weight.reference_point is not None:
+        if self.grid_point_weight:
             if not quiet:
                 print(" grid_point_weight")
-            self.page_num = self.grid_point_weight.write_f06(f06, page_stamp, self.page_num)
+            for key, weight in self.grid_point_weight.items():
+                self.page_num = weight.write_f06(f06, page_stamp, self.page_num)
+
             if repr_check:
                 str(self.grid_point_weight)
             assert isinstance(self.page_num, int), self.grid_point_weight.__class__.__name__
@@ -559,12 +561,11 @@ class F06Writer(OP2_F06_Common):
         header_old = ['     DEFAULT                                                                                                                        \n',
                       '\n', ' \n']
         header = copy.deepcopy(header_old)
-        unallowed_results = ['eigenvectors', 'eigenvalues', 'params', 'gpdt', 'bgpdt', 'eqexin']
+        unallowed_results = ['eigenvectors', 'eigenvalues', 'params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight']
         res_types = list(self.get_result(table_type) for table_type in sorted(self.get_table_types())
                          if table_type not in unallowed_results)
 
         for isubcase, res_keys in sorted(res_keys_subcase.items()):
-            # print(res_keys)
             for res_key in res_keys:
                 if isinstance(res_key, tuple):
                     is_compressed = False

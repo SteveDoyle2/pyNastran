@@ -1,4 +1,5 @@
 from collections import Counter
+from typing import List, Dict
 import numpy as np
 
 MSC_GEOM_TABLES = [
@@ -117,6 +118,9 @@ MSC_MATRIX_TABLES = [
 ] # type: List[bytes]
 
 MSC_RESULT_TABLES = [b'ASSIG', b'ASEPS'] + [
+    # ???
+    b'QUALINFO',
+
     # new
     b'TOLD',
     b'RAPCONS', b'RAQCONS', b'RADCONS', b'RASCONS', b'RAFCONS', b'RAECONS',
@@ -368,4 +372,4 @@ MSC_TABLE_CONTENT = {
     #53: 'OPMPF2M - ???',
     #54: 'OLMPF2M - ???',
     #55: 'OGMPF2M - ???',
-}
+} # type: Dict[int, str]

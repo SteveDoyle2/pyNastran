@@ -45,7 +45,8 @@ def parse_table_names_from_f06(f06_filename):
 
 
 def run_lots_of_files(files, make_geom: bool=True, write_bdf: bool=False, write_f06: bool=True,
-                      delete_f06: bool=True, build_pandas: bool=True, write_op2: bool=False,
+                      delete_f06: bool=True, delete_op2: bool=True, delete_hdf5: bool=True,
+                      build_pandas: bool=True, write_op2: bool=False,
                       write_hdf5: bool=True, debug: bool=True, skip_files: Optional[List[str]]=None,
                       stop_on_failure: bool=False, nstart: int=0, nstop: int=1000000000,
                       short_stats: bool=False, binary_debug: bool=False,
@@ -86,6 +87,8 @@ def run_lots_of_files(files, make_geom: bool=True, write_bdf: bool=False, write_
                                      write_f06=write_f06, write_op2=write_op2,
                                      is_mag_phase=False,
                                      delete_f06=delete_f06,
+                                     delete_op2=delete_op2,
+                                     delete_hdf5=delete_hdf5,
                                      build_pandas=build_pandas,
                                      write_hdf5=write_hdf5,
                                      short_stats=short_stats,
@@ -113,7 +116,8 @@ def run_op2(op2_filename: str, make_geom: bool=False,
             write_hdf5: bool=True,
             is_mag_phase: bool=False, is_sort2: bool=False,
             is_nx: Optional[bool]=None, is_autodesk: Optional[bool]=None,
-            delete_f06: bool=False, build_pandas: bool=True,
+            delete_f06: bool=False, delete_op2: bool=False, delete_hdf5: bool=False,
+            build_pandas: bool=True,
             subcases: Optional[str]=None, exclude: Optional[str]=None,
             short_stats: bool=False, compare: bool=True,
             debug: bool=False, log: Any=None,
@@ -136,6 +140,8 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         should an F06 be written based on the results
     write_op2 : bool; default=False
         should an OP2 be written based on the results
+    write_hdf5 : bool; default=True
+        should an HDF5 be written based on the results
     is_mag_phase : bool; default=False
         False : write real/imag results
         True : write mag/phase results
@@ -153,6 +159,10 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         None : guess
     delete_f06 : bool; default=False
         deletes the F06 (assumes write_f06 is True)
+    delete_op2 : bool; default=False
+        deletes the OP2 (assumes write_op2 is True)
+    delete_hdf5 : bool; default=False
+        deletes the HDF5 (assumes write_hdf5 is True)
     subcases : List[int, ...]; default=None
         limits subcases to specified values; default=None -> no limiting
     exclude : List[str, ...]; default=None
@@ -313,16 +323,15 @@ def run_op2(op2_filename: str, make_geom: bool=False,
             h5_filename = model + '.test_op2.h5'
             op2.export_hdf5_filename(h5_filename)
             load_op2_from_hdf5_filename(h5_filename, log=op2.log)
+            if delete_hdf5:
+                remove_file(h5_filename)
         if write_f06:
             for is_sort2 in sort_methods:
-                op2.write_f06(model + '.test_op2.f06', is_mag_phase=is_mag_phase,
+                f06_filename = model + '.test_op2.f06'
+                op2.write_f06(f06_filename, is_mag_phase=is_mag_phase,
                               is_sort1=not is_sort2, quiet=quiet, repr_check=True)
-
             if delete_f06:
-                try:
-                    os.remove(model + '.test_op2.f06')
-                except:
-                    pass
+                remove_file(f06_filename)
 
         # we put it down here so we don't blame the dataframe for real errors
         if IS_PANDAS and build_pandas:
@@ -343,11 +352,8 @@ def run_op2(op2_filename: str, make_geom: bool=False,
                 op2a.read_op2(op2_filename2)
                 os.remove(op2_filename2)
             #read_op2(op2_filename2)
-            if delete_f06:
-                try:
-                    os.remove(op2_filename2)
-                except:
-                    pass
+            if delete_op2:
+                remove_file(op2_filename2)
 
         #table_names_f06 = parse_table_names_from_F06(op2.f06FileName)
         #table_names_op2 = op2.getTableNamesFromOP2()
@@ -542,6 +548,12 @@ def get_test_op2_data(argv):
     data['--is_sort2'] = bool(data['--is_sort2'])
     #print("data", data)
     return data
+
+def remove_file(filename):
+    try:
+        os.remove(filename)
+    except:
+        pass
 
 def main(argv=None, show_args=True):
     """the interface for test_op2"""

@@ -761,9 +761,9 @@ class TestBDF(Tester):
             assert fem.card_count['DOPTPRM'] == 1, fem.card_count
 
     def test_aero_02(self):
-        """checks solid_bending.dat"""
+        """checks 0012_flutter.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.bdf')
-        log = get_logger(log=None, level='error', encoding='utf-8')
+        #log = get_logger(log=None, level='error', encoding='utf-8')
         argv = ['test_bdf', bdf_filename, '-q']
         test_bdf(argv=argv)
         #self.run_bdf('', bdf_filename, log=log)

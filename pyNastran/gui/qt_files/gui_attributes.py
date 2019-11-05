@@ -363,6 +363,9 @@ class GuiAttributes:
 
     def set_glyph_scale_factor(self, scale):
         """sets the glyph scale factor"""
+        if scale == np.nan:
+            self.log.error('cannot set loads scale factor because no 1D, 2D, or 3D elements exist')
+            return
         self.glyph_scale_factor = scale
         self.glyphs.SetScaleFactor(scale)
 

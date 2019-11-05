@@ -51,7 +51,8 @@ class BaseScalarObject(Op2Codes):
         #self.ntotal = 0
         #assert isinstance(self.name, (str, bytes)), 'name=%s type=%s' % (self.name, type(self.name))
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         if keys_to_skip is None:
             keys_to_skip = []
         elif isinstance(keys_to_skip, str):
@@ -60,7 +61,8 @@ class BaseScalarObject(Op2Codes):
         my_keys_to_skip = [
             'object_methods', 'object_attributes',
         ]
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                 filter_properties=filter_properties)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         if keys_to_skip is None:
@@ -732,7 +734,8 @@ class BaseElement(ScalarObject):
         return data_frame
 
     def _build_pandas_transient_element_node(self, column_values, column_names, headers,
-                                             element_node, data, from_tuples=True, from_array=False):
+                                             element_node, data, names=None,
+                                             from_tuples=True, from_array=False):
         """common method to build a transient dataframe"""
         # Freq                  0.00001  10.00000 20.00000 30.00000                 40.00000 50.00000 60.00000
         # ElementID NodeID Item
@@ -755,14 +758,19 @@ class BaseElement(ScalarObject):
         nheaders = len(headers)
         A = data.reshape(ntimes, nelements*nheaders).T
 
-        names = ['ElementID', 'NodeID', 'Item']
+        if names is None:
+            names = ['ElementID', 'NodeID', 'Item']
         if from_tuples:
+            nvars = element_node.shape[1]
+            assert len(names) == nvars + 1, f'names={names} element_node={element_node} {element_node.shape}'
             eid_nid_item = []
             for eid, nid in element_node:
                 for header in headers:
                     eid_nid_item.append([eid, nid, header])
             index = pd.MultiIndex.from_tuples(eid_nid_item, names=names)
         elif from_array:
+            nvars = len(element_node)
+            assert len(names) == nvars + 1, f'names={names} element_node={element_node} (n={len(element_node)})'
             eid_nid_item = []
             for eid in element_node:
                 eidi = np.vstack([eid]*nheaders)

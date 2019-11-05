@@ -135,8 +135,8 @@ class OP2Writer(OP2_F06_Common):
         #if 'DYNAMIC' not in skips:
             #write_dynamic(fop2, fop2_ascii, obj)
         if 'grid_point_weight' not in skips:
-            if obj.grid_point_weight.reference_point is not None:
-                obj.grid_point_weight.write_op2(fop2, fop2_ascii, date, endian=endian)
+            for key, weight in obj.grid_point_weight.items():
+                weight.write_op2(fop2, fop2_ascii, date, endian=endian)
 
         #is_mag_phase = False
         # we write all the other tables
@@ -159,12 +159,13 @@ class OP2Writer(OP2_F06_Common):
         date = obj.date
         res_categories2 = defaultdict(list)
         table_order = [
-            'OUGV1',
-            'BOUGV1', 'BOPHIG', 'BOPG1',
-            'OUPV1', 'OUXY1', 'OUXY2',
-            'TOUGV1',
+            'OUGV1', 'OPHIG',
+            'BOUGV1', 'BOPHIG', 'BOPHIGF',
+            'OUPV1', 'OUXY1', 'OUXY2', 'OPHSA',
+            'TOUGV1', 'OTEMP1',
             'OUG1',
             'OUGV1PAT',
+            'BOPG1',
 
             'OQG1',
             'OQGV1',

@@ -1,0 +1,48 @@
+$ NASTRAN input file created by the Patran 2014 64-Bit input file
+$ translator on November  01, 2019 at 21:15:59.
+$ Direct Text Input for Nastran System Cell Section
+$ Direct Text Input for File Management Section
+$ Direct Text Input for Executive Control
+$ Normal Modes Analysis, Database
+SOL 103
+CEND
+$ Direct Text Input for Global Case Control Data
+TITLE = MSC.Nastran job created on 01-Nov-19 at 21:14:35
+ECHO = NONE
+$ Using Nastran default values for RESVEC
+SUBCASE 1
+   SUBTITLE=Default
+   METHOD = 1
+   SPC = 3
+   VECTOR(SORT1,REAL)=ALL
+   ESE=ALL
+$ Direct Text Input for this Subcase
+BEGIN BULK
+$ Direct Text Input for Bulk Data
+PARAM    POST    -1
+PARAM   PRTMAXIM YES
+EIGRL    1                       1       0                       MASS
+$ Elements and Element Properties for region : M
+CONM2    5       7              100.
+$ Elements and Element Properties for region : CROD
+PROD     1       1      1.
+$ Pset: "CROD" will be imported as: "prod.1"
+CROD     6       1       7       8
+$ Referenced Material Records
+$ Material Record : DummyMtrlWithZeroWeight
+$ Description of Material : Date: 01-Nov-19           Time: 21:11:36
+MAT1     1      100.            .3
+$ Nodes of Group : SDOF_CROD
+GRID*    7                              .02              0.
+*       .009999999776483
+GRID     8              .02      0.      0.
+$ Loads for Load Case : Default
+SPCADD   3       1       2
+$ Displacement Constraints of Load Set : FIX.1
+SPC1     1       123456  8
+$ Displacement Constraints of Load Set : GUIDE.2
+SPC1     2       12456   7
+$ Referenced Coordinate Frames
+CORD2R   1              .02      0.      0.     .02      0.     1.
+        1.02     0.      0.
+ENDDATA c1894a8b

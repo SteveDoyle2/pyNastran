@@ -11,7 +11,7 @@ Defines the main OP2 class.  Defines:
    - build_dataframe()
    - combine_results(combine=True)
    - create_objects_from_matrices()
-   - object_attributes(mode='public', keys_to_skip=None)
+   - object_attributes(mode='public', keys_to_skip=None, filter_properties=False)
    - object_methods(mode='public', keys_to_skip=None)
    - print_subcase_key()
    - read_op2(op2_filename=None, combine=True, build_dataframe=None,
@@ -86,7 +86,8 @@ class OP2(OP2_Scalar, OP2Writer):
         if hasattr(self, 'h5_file') and self.h5_file is not None:
             self.h5_file.close()
 
-    def object_attributes(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
+    def object_attributes(self, mode: str='public', keys_to_skip: Optional[List[str]]=None,
+                          filter_properties: bool=False) -> List[str]:
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -115,7 +116,8 @@ class OP2(OP2_Scalar, OP2Writer):
         my_keys_to_skip = [
             'object_methods', 'object_attributes',
         ]
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                 filter_properties=filter_properties)
 
     def object_methods(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """
@@ -297,7 +299,7 @@ class OP2(OP2_Scalar, OP2Writer):
             return True
 
         # does this ever hit?
-        if not any(word in aname for word in ['Array', 'Eigenvalues']):
+        if not any(word in aname for word in ['Array', 'Eigenvalues', 'GridPointWeight']):
             msg = '%s is not an Array ... assume equal' % aname
             self.log.warning(msg)
             raise NotImplementedError('%s __eq__' % aname)
@@ -416,14 +418,6 @@ class OP2(OP2_Scalar, OP2Writer):
             obj = load(obj_file)
 
         keys_to_skip = [
-            'total_effective_mass_matrix',
-            'effective_mass_matrix',
-            'rigid_body_mass_matrix',
-            'modal_effective_mass_fraction',
-            'modal_participation_factors',
-            'modal_effective_mass',
-            'modal_effective_weight',
-
             'ask',
             'binary_debug',
             '_close_op2',
@@ -449,11 +443,12 @@ class OP2(OP2_Scalar, OP2Writer):
             'num_wide',
             'op2_reader',
             'table_name',
-            'table_name_str',
             'use_vector',
             'words',
         ]
-        for key in object_attributes(self, mode="all", keys_to_skip=keys_to_skip):
+        keys = object_attributes(self, mode="all", keys_to_skip=keys_to_skip,
+                                 filter_properties=True)
+        for key in keys:
             if key.startswith('__') and key.endswith('__'):
                 continue
 
@@ -686,7 +681,7 @@ class OP2(OP2_Scalar, OP2Writer):
                     #continue
 
         for result_type in result_types:
-            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin']:
+            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight']:
                 #self.log.debug('skipping %s' % result_type)
                 continue
 
@@ -702,7 +697,7 @@ class OP2(OP2_Scalar, OP2Writer):
                 if class_name in no_sort2_classes:
                     try:
                         obj.build_dataframe()
-                        #assert obj.data_frame is not None
+                        assert obj.data_frame is not None
                     except MemoryError:
                         raise
                     except:
@@ -844,7 +839,7 @@ class OP2(OP2_Scalar, OP2Writer):
         """
         self.combine = combine
         result_types = self.get_table_types()
-        results_to_skip = ['bgpdt', 'gpdt', 'eqexin', ]
+        results_to_skip = ['bgpdt', 'gpdt', 'eqexin', 'grid_point_weight']
 
         # set subcase_key
         for result_type in result_types:
@@ -968,7 +963,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
         subcase_key2 = {}
         for result_type in result_types:
-            if result_type in ['eigenvalues', 'eigenvalues_fluid', 'params', 'gpdt', 'bgpdt', 'eqexin']:
+            if result_type in ['eigenvalues', 'eigenvalues_fluid', 'params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight']:
                 continue
             result = self.get_result(result_type)
             case_keys = list(result.keys())
@@ -1014,7 +1009,7 @@ class OP2(OP2_Scalar, OP2Writer):
         keys = []
         table_types = self.get_table_types()
         for table_type in sorted(table_types):
-            if table_type in ['gpdt', 'bgpdt', 'eqexin']:
+            if table_type in ['gpdt', 'bgpdt', 'eqexin', 'grid_point_weight']:
                 continue
             result_type_dict = self.get_result(table_type)
             #if result_type_dict is None: # gpdt, eqexin

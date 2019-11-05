@@ -21,6 +21,9 @@ class Results:
         self.modal_contribution = ModalContribution()
         self.solution_set = SolutionSet()
         self.strength_ratio = StrengthRatio()
+        self.failure_indices = FailureIndices()
+        self.force = Force()
+        self.strain_energy = StrainEnergy()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
 
         self.RADEFFM = RADEFFM() # eigenvectors
@@ -44,8 +47,9 @@ class Results:
     def get_table_types(self):
         """combines all the table_types from all objects and sub-objects"""
         sum_objs = [
+            self.force, self.strain_energy,
             self.ato, self.psd, self.rms, self.no, self.crm,
-            self.modal_contribution, self.strength_ratio,
+            self.modal_contribution, self.strength_ratio, self.failure_indices,
             self.solution_set,
             self.ROUGV1,
             self.RADEFFM,
@@ -205,3 +209,119 @@ class StrengthRatio:
             'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
         ]
         return ['strength_ratio.' + table for table in tables]
+
+class FailureIndices:
+    def __init__(self):
+        self.cquad4_composite_force = {}
+        self.cquad8_composite_force = {}
+        self.ctria3_composite_force = {}
+        self.ctria6_composite_force = {}
+
+    def get_table_types(self):
+        tables = [
+            'cquad4_composite_force',
+            'cquad8_composite_force',
+            'ctria3_composite_force',
+            'ctria6_composite_force',
+        ]
+        return ['failure_indices.' + table for table in tables]
+
+class Force:
+    def __init__(self):
+        self.celas1_force = {}
+        self.celas2_force = {}
+        self.celas3_force = {}
+        self.celas4_force = {}
+
+        self.cdamp1_force = {}
+        self.cdamp2_force = {}
+        self.cdamp3_force = {}
+        self.cdamp4_force = {}
+
+    def get_table_types(self):
+        tables = [
+            # 0d
+            'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
+            'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
+        ]
+        return ['force.' + table for table in tables]
+
+class StrainEnergy:
+    def __init__(self):
+        """
+        OEE - strain energy density; tCode=18
+        """
+        self.celas1_strain_energy = {}
+        self.celas2_strain_energy = {}
+        self.celas3_strain_energy = {}
+        self.celas4_strain_energy = {}
+
+        self.cquad4_strain_energy = {}
+        self.cquad8_strain_energy = {}
+        self.cquadr_strain_energy = {}
+        self.cquadx_strain_energy = {}
+
+        self.ctria3_strain_energy = {}
+        self.ctria6_strain_energy = {}
+        self.ctriar_strain_energy = {}
+        self.ctriax_strain_energy = {}
+        self.ctriax6_strain_energy = {}
+
+        self.ctetra_strain_energy = {}
+        self.cpenta_strain_energy = {}
+        self.chexa_strain_energy = {}
+        self.cpyram_strain_energy = {}
+
+        self.crod_strain_energy = {}
+        self.ctube_strain_energy = {}
+        self.conrod_strain_energy = {}
+
+        self.cbar_strain_energy = {}
+        self.cbeam_strain_energy = {}
+
+        self.cgap_strain_energy = {}
+        self.cdum8_strain_energy = {}
+        self.cbush_strain_energy = {}
+        #self.chexa8fd_strain_energy = {}
+        self.cbend_strain_energy = {}
+        self.dmig_strain_energy = {}
+        self.genel_strain_energy = {}
+        self.cshear_strain_energy = {}
+        self.conm2_strain_energy = {}
+        self.rbe1_strain_energy = {}
+        self.rbe3_strain_energy = {}
+        self.weldc_strain_energy = {}
+
+    def get_table_types(self):
+        tables = [
+            # OEE - strain energy density # tCode=18
+            'cquad4_strain_energy', 'cquad8_strain_energy', 'cquadr_strain_energy',
+            'cquadx_strain_energy',
+
+            'ctria3_strain_energy', 'ctria6_strain_energy', 'ctriar_strain_energy',
+            'ctriax_strain_energy', 'ctriax6_strain_energy',
+
+            'cshear_strain_energy',
+
+            'ctetra_strain_energy', 'cpenta_strain_energy',
+            'chexa_strain_energy', 'cpyram_strain_energy',
+
+            'crod_strain_energy', 'ctube_strain_energy', 'conrod_strain_energy',
+
+            'cbar_strain_energy', 'cbeam_strain_energy',
+
+            'cgap_strain_energy',
+            'cbush_strain_energy',
+            'celas1_strain_energy', 'celas2_strain_energy',
+            'celas3_strain_energy', 'celas4_strain_energy',
+
+            'cdum8_strain_energy',
+            #'chexa8fd_strain_energy'
+            'cbend_strain_energy',
+            'dmig_strain_energy',
+            'genel_strain_energy',
+            'conm2_strain_energy',
+            'rbe1_strain_energy', 'rbe3_strain_energy',
+            'weldc_strain_energy',
+        ]
+        return ['strain_energy.' + table for table in tables]

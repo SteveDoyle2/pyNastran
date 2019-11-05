@@ -435,12 +435,14 @@ class MPC(Constraint):
 
         self.nodes_ref = None
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = ['gids_ref', 'gids', 'constraints', 'enforced']
-        return super(Constraint, self).object_attributes(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return super(Constraint, self).object_attributes(mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                                         filter_properties=filter_properties)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""
@@ -721,12 +723,14 @@ class SPC(Constraint):
         self.enforced = enforced
         self.nodes_ref = None
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         my_keys_to_skip = ['gids_ref', 'gids']
         if keys_to_skip is None:
             keys_to_skip = []
-        return Constraint.object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return Constraint.object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                            filter_properties=filter_properties)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         """.. seealso:: `pyNastran.utils.object_methods(...)`"""

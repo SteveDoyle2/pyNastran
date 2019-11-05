@@ -1,0 +1,76 @@
+NASTRAN SYSTEM(700)=1
+ID NXN, TRNCOMP12
+$
+$ DESCRIPTION - transient ply stresses/strains and failure indeces
+$
+$ SOLUTION    - 112
+$
+SOL 112
+TIME 5
+CEND
+Title = EDS Test
+STRESS(SORT2)    = ALL
+STRAIN(SORT2)    = ALL
+ELFORCE(SORT2)   = ALL
+METHOD = 2
+DLOAD = 10
+BEGIN BULK
+$            SID   DAREA   DELAY   TYPE      T1      T2      F    PHASE
+TLOAD2        10      10                      0.      5.     10.        +T12
+$             C        B
++T12         -1.
+$            SID    N(1)   DT(1)   NO(1)
+TSTEP          5     100     .01       5
+$
+DAREA,10,9,3,.0001
+$
+FORCE,12,1,,2.,0.,0.,1.
+FORCE,12,14,,2.,0.,0.,-1.
+$
+LSEQ,10,10,12
+$
+TABDMP1      100    CRIT                                                +TDAMP
++TDAMP        0.    .01    200.     .01    ENDT
+$
+EIGR,2,MGIV,0.,200.
+$
+param,maxratio,1.e8
+PARAM       POST      -2
+GRID    1       0       720.0   360.0   0.0             6
+GRID    2       0       720.0   180.0   0.0             6
+GRID    3       0       720.0   0.0     0.0             6
+GRID    4       0       360.0   360.0   0.0             6
+GRID    5       0       360.0   180.0   0.0             6
+GRID    6       0       360.0   0.0     0.0             6
+GRID    7       0       180.0   360.0   0.0             6
+GRID    8       0       180.0   180.0   0.0             6
+GRID    9       0       180.0   0.0     0.0             6
+GRID    10      0       0.0     360.0   0.0             12356
+GRID    11      0       0.0     270.0   0.0             1356
+GRID    12      0       0.0     180.0   0.0             1356
+GRID    13      0       0.0     90.0    0.0             1356
+GRID    14      0       0.0     0.0     0.0             12356
+CQUADR  1       100     5       2       1       4       60.0
+CQUAD8  2       101     12      5       4       10      8               +Q8
++Q8     7       11                                      90.0
+CTRIAR  3       102     6       3       2       30.0
+CTRIAR  4       104     2       5       6       50.0
+CTRIA6  5       104     14      6       5       9                       +T61
++T61    45.0
+CTRIA6  6       101     5       12      14      8       13              +T62
++T62    23.0
+PCOMP   100                     1.E+3   STRN                            +P11
++P11    120     0.0333  45.0    YES     120     0.0333  0.0     YES     +P12
++P12    120     0.0333  45.0    YES
+PCOMP   101                     1.E+3   STRN                            +P21
++P21    120     0.0333  45.0    YES     120     0.0333  0.0     YES     +P22
++P22    120     0.0333  45.0    YES
+PCOMP   102                     1.E+3   STRN                            +P31
++P31    120     0.0333  45.0    YES     120     0.0333  0.0     YES     +P32
++P32    120     0.0333  45.0    YES
+PCOMP   104                     1.E+3   STRN                            +P41
++P41    120     0.0333  45.0    YES     120     0.0333  0.0     YES     +P42
++P42    120     0.0333  45.0    YES
+MAT8    120     1.0E7   1.0E6   0.3     4.0E6   4.0E6   4.0E6   .283    +M11
++M11                            2.+4            2.+3            1.4+4
+ENDDATA

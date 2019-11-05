@@ -147,7 +147,7 @@ def _filename(filename: str) -> str:
         return '\\\\?\\' + filename
     return filename
 
-def __object_attr(obj, mode, keys_to_skip, attr_type):
+def __object_attr(obj, mode, keys_to_skip, attr_type, filter_properties: bool=False):
     """list object attributes of a given type"""
     #print('keys_to_skip=%s' % keys_to_skip)
     keys_to_skip = [] if keys_to_skip is None else keys_to_skip
@@ -165,12 +165,17 @@ def __object_attr(obj, mode, keys_to_skip, attr_type):
     check = test[mode]
 
     out = []
-    for k in dir(obj):
-        if k in keys_to_skip:
+    obj_type = type(obj)
+    for key in dir(obj):
+        if key in keys_to_skip:
             continue
         try:
-            if check(k) and attr_type(getattr(obj, k)):
-                out.append(k)
+            if filter_properties:
+                if check(key) and attr_type(getattr(obj, key)) and not isinstance(getattr(obj_type, key, None), property):
+                    out.append(key)
+            else:
+                if check(key) and attr_type(getattr(obj, key)):
+                    out.append(key)
         except:
             pass
     out.sort()
@@ -208,7 +213,8 @@ def object_methods(obj: Any, mode: str='public',
 
 
 def object_attributes(obj: Any, mode: str='public',
-                      keys_to_skip: Optional[List[str]]=None) -> List[str]:
+                      keys_to_skip: Optional[List[str]]=None,
+                      filter_properties: bool=False) -> List[str]:
     """
     List the names of attributes of a class as strings. Returns public
     attributes as default.
@@ -225,6 +231,8 @@ def object_attributes(obj: Any, mode: str='public',
         * 'all' - all attributes that are defined for the object
     keys_to_skip : List[str]; default=None -> []
         names to not consider to avoid deprecation warnings
+    filter_properties: bool: default=False
+        filters the @property objects
 
     Returns
     -------
@@ -236,7 +244,8 @@ def object_attributes(obj: Any, mode: str='public',
         #keys_to_skip += obj.__properties__()
     return __object_attr(
         obj, mode, keys_to_skip,
-        lambda x: not isinstance(x, (MethodType, FunctionType))
+        lambda x: not isinstance(x, (MethodType, FunctionType)),
+        filter_properties=filter_properties,
     )
 
 

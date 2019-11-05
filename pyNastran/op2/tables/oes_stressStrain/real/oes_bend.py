@@ -243,10 +243,6 @@ class RealBendArray(OES_Object):
 
 def _get_cbend_msg(is_stress, is_mag_phase, is_sort1):
     """get the header for the CBEND result"""
-    if is_mag_phase:
-        raise NotImplementedError()
-    else:
-        realimag_magphase = '                                                          (REAL/IMAGINARY)'
 
     if is_stress:
         stress_strain = '                                  S T R E S S E S   I N   B E N D   E L E M E N T S        ( C B E N D )'

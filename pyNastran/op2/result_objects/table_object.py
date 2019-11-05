@@ -480,7 +480,8 @@ class TableArray(ScalarObject):  # displacement style table
                 data_frame = pd.DataFrame(A, columns=columns, index=index)
             else:
                 node_gridtype_item = []
-                for nid, gridtype in zip(self.node_gridtype[:, 0], gridtype_str):
+                node_ids = self.node_gridtype[:, 0]
+                for nid, gridtype in zip(node_ids, gridtype_str):
                     node_gridtype_item.extend([[nid, gridtype, 't1']])
                     node_gridtype_item.extend([[nid, gridtype, 't2']])
                     node_gridtype_item.extend([[nid, gridtype, 't3']])
@@ -492,7 +493,13 @@ class TableArray(ScalarObject):  # displacement style table
                 names = ['NodeID', 'Type', 'Item']
                 index = pd.MultiIndex.from_tuples(node_gridtype_item, names=names)
                 A = self.data.reshape(ntimes, nnodes*6).T
-                data_frame = pd.DataFrame(A, columns=columns, index=index)
+                try:
+                    data_frame = pd.DataFrame(A, columns=columns, index=index)
+                except ValueError:  # pragma: no cover
+                    print(f'data.shape={self.data.shape} A.shape={A.shape} '
+                          f'ntimes={ntimes} nnodes*6={nnodes*6} ngrids={len(node_ids)}\n'
+                          f'column_names={column_names} column_values={column_values} _times={self._times}')
+                    raise
                 #print(data_frame.to_string())
                 data_frame = pandas_extract_rows(data_frame, ugridtype_str, ['NodeID', 'Item'])
 

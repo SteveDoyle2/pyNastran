@@ -113,10 +113,61 @@ class RealNonlinearPlateArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
-        headers = self.get_headers()[1:]
-        #nelements = self.element.shape[0]
+        nelements = self.element.shape[0]
+        nelements2 = self.data.shape[1]
+        is_two_layers = nelements * 2 == nelements2
+        headers = self.get_headers()
+
+        if is_two_layers:
+            names = ['ElementID', 'Location', 'Item']
+            element = np.vstack([self.element, self.element]).T.flatten()
+            if self.is_fiber_distance:
+                fiber_distance = ['Top', 'Bottom'] * nelements
+            else:
+                fiber_distance = ['Mean', 'Curvature'] * nelements
+            fd = np.array(fiber_distance, dtype='unicode')
+            element_fd = [
+                element,
+                fd,
+            ]
+            iheader = 0
+        else:
+            names = ['ElementID', 'Item']
+            element_fd = [self.element]
+            iheader = 0
 
         if self.nonlinear_factor not in (None, np.nan):
+            # TODO: this varies depending on ???
+            #  - TestOP2.test_cgap_01
+            #  - TestOP2.test_bdf_op2_other_24
+            #
+            #LoadStep                                        1.0
+            #ElementID Location Item
+            #7401      Top      fiber_distance     -1.200000e+00
+            #    Bottom   oxx                -1.161999e+04
+            #    Top      oyy                 1.450191e-01
+            #    Bottom   ozz                 0.000000e+00
+            #    Top      txy                 4.668588e-05
+            #    Bottom   eff_plastic_strain  1.162006e+04
+            #    Top      eff_plastic_strain  0.000000e+00
+            #    Bottom   eff_creep_strain    0.000000e+00
+            #    Top      exx                -1.162003e-02
+            #    Bottom   eyy                 3.486142e-03
+            #    Top      ezz                 0.000000e+00
+            #    Bottom   exy                 1.213833e-10
+            #    Top      fiber_distance      1.200000e+00
+            #    Bottom   oxx                -1.161999e+04
+            #    Top      oyy                 1.449644e-01
+            #    Bottom   ozz                 0.000000e+00
+            #    Top      txy                -4.668589e-05
+            #    Bottom   eff_plastic_strain  1.162006e+04
+            #    Top      eff_plastic_strain  0.000000e+00
+            #    Bottom   eff_creep_strain    0.000000e+00
+            #    Top      exx                -1.162003e-02
+            #    Bottom   eyy                 3.486142e-03
+            #    Top      ezz                 0.000000e+00
+            #    Bottom   exy                -1.213833e-10
+            #
             #LoadStep                              0.25          0.50
             #ElementID Item
             #1         oxx                 1.725106e-05  1.075969e-05
@@ -131,10 +182,18 @@ class RealNonlinearPlateArray(OES_Object):
             #          ezz                 0.000000e+00  0.000000e+00
             #          exy                 0.000000e+00  0.000000e+00
             column_names, column_values = self._build_dataframe_transient_header()
-            element = np.vstack([self.element, self.element]).T.flatten()
-            data_frame = self._build_pandas_transient_elements(
+            #element = np.vstack([self.element, self.element]).T.flatten()
+            #element = self.element
+            #data_frame = self._build_pandas_transient_elements(
+                #column_values, column_names,
+                #headers, element, self.data[:, :, 1:])
+
+            data_frame = self._build_pandas_transient_element_node(
                 column_values, column_names,
-                headers, element, self.data[:, :, 1:])
+                headers[iheader:], element_fd, self.data[:, :, iheader:],
+                from_tuples=False, from_array=True,
+                names=names,
+            )
         else:
             # option B - nice!
             df1 = pd.DataFrame(self.element).T
@@ -144,7 +203,6 @@ class RealNonlinearPlateArray(OES_Object):
             data_frame = df1.join(df2)
             data_frame = data_frame.reset_index().set_index(['ElementID'])
         self.data_frame = data_frame
-        #print(self.data_frame)
 
     def add_new_eid_sort1(self, dt, eid, etype, fd, sx, sy, sz, txy, es, eps, ecs, ex, ey, ez, exy):
         self.element[self.ielement] = eid
@@ -276,7 +334,6 @@ class RealNonlinearPlateArray(OES_Object):
         #'              2.500000E-02   4.770547E+00   1.493975E-04                  1.907012E-04   4.770473E+00   0.0            0.0\n'
         #'                             4.770502E-05  -1.431015E-05                  4.958231E-09\n'
         #]
-
 
         # write the f06
         ntimes = self.data.shape[0]

@@ -1,0 +1,246 @@
+NASTRAN SYSTEM(700)=1
+NASTRAN PREFOPT=2 $HICORE=70000
+ID NXN, TR1091X 
+$SOL 69 $ TRANSIENT RESPONSE WITH EMG
+SOL 109
+$DIAG 8 $ PRINT MATRIX TRAILERS
+TIME 5 $ TIME FOR VAX
+$$ALTER 455 $  GET SORT1
+$$OFP      OUGV1,OPG1,OQG1,OEF1,OES1,//S,N,CARDNO $
+CEND
+TITLE = NEWELEM , TFORMAT                                  TR1 TR1091X
+SUBTI = OFP FORMATS FOR TRANSIENT RESPONSE
+SEALL=ALL
+$ ECHO = NONE SHOULD BE USED
+  ECHO = SORTED
+  SPC   = 1
+  DLOAD = 2
+  TSTEP = 1
+$ SET 1 = FREE POINTS
+   SET 1 = 10201,20101,30111,40222,50222,60001,60101,70101,
+           80201,90402,100101,110202,120111,130222
+$ SET 2 = ELEMENTS
+   SET 2 = 201,202,3301,3302,6701,6702,6703,6901,6902,7401,7402,
+           6401,6402,6411,6412,7501,7502,7511,7512,6801,6802,6811,6812
+SUBCASE 1
+  DISP = 1
+  STRE = 2
+  FORC = 2
+$ LAST MODIFIED 18-APR-1983
+BEGIN BULK
+PARAM,NEWSEQ,-1 $ S_PATEL 7-MAY-1992
+PARAM       POST      -2
+PARAM,DBCCONV,XL
+$
+$  GENERAL DATA ITEMS
+$
+EGRID   1               0.      0.      0.
+EGRID   2               1.      0.      0.
+EGRID   3               1.      1.      0.
+EGRID   4               0.      1.      0.
+EGRID   5               0.      0.      1.
+EGRID   6               1.      0.      1.
+EGRID   7               1.      1.      1.
+EGRID   8               0.      1.      1.
+PBEAM   201     1       1.      .0833   .0833           .05             +B5
++B5     -.5     -.5     -.5     +.5     +.5     +.5     +.5     -.5     +B6
++B6     YESA    .5                                                      +B7
++B7     YESA    1.                                                      +B8
++B8                                                     1.2
+PBEAM   202     1       1.      .0833   .0833           .05             +B9
++B9     -.5     -.5     -.5     +.5     +.5     +.5     +.5     -.5     +B10
++B10                                                    1.2
+PSHELL  3300    1       .05     1
+PSOLID  6700    1
+PSOLID  6800    1
+PSHELL  7400    1       .05     1
+PSHELL  6400    1       .05     1
+PSHELL  7500    1       .05     1
+MAT1    1       10.+6   4.+6    .25     2.038685                .03333  +MAT1
++MAT1   3.      5.
+PARAM   W3      1.
+PARAM   W4      1.
+RLOAD1  1       1                       1
+TLOAD2  2       1                               1.
+TABLED1 1                                                               +TAB1
++TAB1   0.      1.      1.      1.      ENDT
+FREQ    1       0.      2.5     10.
+TSTEP   1       3       1.-4    1
+RANDPS  10      1       1       4.              1
+RANDPS  10      2       2       8.              1
+TABRNDG 1       1       .2      6.
+$
+$ FIELD 1   QUAD4  (ELTYPE 33)
+$
+GRIDG   1               6       1       -1      -2      -3              +FLD1
++FLD1   2       -4
+CGEN    QUAD4   3301    3300    1
+SPCG    1       1       12345   AB      AD
+DAREA   1       10201   1       1.      10201   3       2.
+FORCE   1       10201           1.      1.
+FORCE   2       10201           1.              1.
+FORCE   3       10201           1.                      1.
+$
+$ FIELD 2   TRIA3  (ELTYPE 74)
+$
+GRIDG   2               6       1       -1      -2      -3              +FLD2
++FLD2   1       -4
+CGEN    TRIA3   7401    7400    2
+SPCG    1       2       12345   AB      AD
+DAREA   1       20101   1       1.      20101   3       2.
+FORCE   1       20101           1.      1.
+FORCE   2       20101           1.              1.
+FORCE   3       20101           1.                      1.
+$
+$ FIELD 3   HEXA   (ELTYPE 67)    8 ACTIVE
+$
+GRIDG   3               456     1       -1      -2      -3              +FLD3
++FLD3   1       -4      1       -5      -6      -7      -8
+CGEN    HEXA8   6701    6700    3
+SPCG    1       3       123     AC      AF      AH
+DAREA   1       30111   1       1.      30111   3       2.
+FORCE   1       30111           1.      1.
+FORCE   2       30111           1.              1.
+FORCE   3       30111           1.                      1.
+$
+$ FIELD 4   HEXA   (ELTYPE 67)   12 ACTIVE
+$
+GRIDG   4               456     2       -1      -2      -3              +FLD4
++FLD4   2       -4      2       -5      -6      -7      -8
+CGEN    HEXA20  6702    6700    4
+DELETE  4       0010    0012    0212
+DELETE  4       0100    0102    0122
+SPCG    1       4       123     AC      AF      AH
+DAREA   1       40222   1       1.      40222   3       2.
+FORCE   1       40222           1.      1.
+FORCE   2       40222           1.              1.
+FORCE   3       40222           1.                      1.
+$
+$ FIELD 5   HEXA   (ELTYPE 67)   20 ACTIVE
+$
+GRIDG   5               456     2       -1      -2      -3              +FLD5
++FLD5   2       -4      2       -5      -6      -7      -8
+CGEN    HEXA20  6703    6700    5
+SPCG    1       5       123     AC      AF      AH
+DAREA   1       50222   1       1.      50222   3       2.
+FORCE   1       50222           1.      1.
+FORCE   2       50222           1.              1.
+FORCE   3       50222           1.                      1.
+$
+$ FIELD 6   BEAM   (ELTYPE  2)
+$
+GRIDG   6                       -2      -1      -2      -3              +FLD6
++FLD6   1       -4
+LIST    2       .4      .6
+CBEAM   201             60000   60001   60100                           +B1
++B1                                                                     +B2
++B2     60100   60101
+CBEAM   202             60001   60002   60101                           +B3
++B3                                                                     +B4
++B4     60101   60102
+SPCG    1       6       123456  AD      BC
+SPCG    1       6       23456   CD
+DAREA   1       60001   1       1.      60001   3       2.
+DAREA   1       60001   4       1.
+FORCE   1       60001           1.      1.
+FORCE   2       60001           1.              1.
+FORCE   3       60001           1.                      1.
+$
+$
+$       FIELD 7    BEND  ( ELTYPE 69 )
+$
+GRIDG   7                       1       -1      -2      -3              +FLD7
++FLD7   1       -4
+CBEND   6901            70000   70101   70100                   1
+CBEND   6902            70000   70101   70001                   1
+PBEND   6901    1       1.      .0833   .0833   .05                     +PD1
++PD1    -.5     -.5     -.5     .5      .5      .5      .5      -.5     +PD2
++PD2                                            0.
+PBEND   6902    1       1       .3285   .4845
+SPC1    1       123456  70000   70001   70100
+FORCE   1       70101           1.      1.
+FORCE   2       70101           1.              1.
+MOMENT  3       70101           1.      1.      1.
+FORCE   3       70101           1.                      1.
+DAREA   1       70101   1       1.      70101   3       2.
+DAREA   1       70101   4       1.
+$
+$ FIELD 8, QUAD8 (ELTYPE 64) 4-ACTIVE
+$
+GRIDG   8               6       2       -1      -2      -3              +FLD8
++FLD8   4       -4
+CGEN    QUAD8   6401    6400    8
+SPCG    1       8       12345   AB      AD
+DELETE  8       0001
+DELETE  8       0401
+DELETE  -8      0100    0400
+DELETE  -8      0102    0402
+FORCE   1       80402           1.      1.
+FORCE   2       80402           1.              1.
+FORCE   3       80402           1.                      1.
+DAREA   1       80402   1       1.      80402   3       2.
+$
+$  FIELD 9  QUAD8 (ELTYPE 64)  8-ACTIVE
+$
+GRIDG   9               6       2       -1      -2      -3              +FLD9
++FLD9   4       -4
+CGEN    QUAD8   6411    6400    9
+SPCG    1       9       12345   AB      AD
+FORCE   1       90402           1.      1.
+FORCE   2       90402           1.              1.
+FORCE   3       90402           1.                      1.
+DAREA   1       90402   1       1.      90402   3       2.
+$
+$  FIELD 10  TRIA6  (ELTYPE 75)  3-ACTIVE
+$
+GRIDG   10              6       2       -1      -2      -3              +FLD10
++FLD10  2       -4
+CGEN    TRIA6   7501    7500    10
+SPCG    1       10      12345   AB      AD
+DELETE  10      0001    0201
+DELETE  10      0100    0102
+FORCE   1       100202          1.      1.
+FORCE   2       100202          1.              1.
+FORCE   3       100202          1.                      1.
+DAREA   1       100202  1       1.      100202  3       2.
+$
+$  FIELD 11  TRIA6  (ELTYPE 75)  6-ACTIVE
+$
+GRIDG   11              6       2       -1      -2      -3              +FLD11
++FLD11  2       -4
+CGEN    TRIA6   7511    7500    11
+SPCG    1       11      12345   AB      AD
+FORCE   1       110202          1.      1.
+FORCE   2       110202          1.              1.
+FORCE   3       110202          1.                      1.
+DAREA   1       110202  1       1.      110202  3       2.
+$
+$  FIELD 12  PENTA  (ELTYPE 68)  6-ACTIVE
+$
+GRIDG   12              456     1       -1      -2      -3              +FLD12
++FLD12  1       -4      1       -5      -6      -7      -8
+CPENTA  6801    6800    120000  120001  120010  120100  120101  120110
+CPENTA  6802    6800    120001  120011  120010  120101  120111  120110
+SPCG    1       12      123     AC      AF      AH
+FORCE   1       120111          1.      1.
+FORCE   2       120111          1.              1.
+FORCE   3       120111          1.                      1.
+DAREA   1       120111  1       1.      120111  3       2.
+$
+$  FIELD 13  PENTA  (ELTYPE 68)  15-ACTIVE
+$
+GRIDG   13              456     2       -1      -2      -3              +FLD13
++FLD13  2       -4      2       -5      -6      -7      -8
+CPENTA  6811    6800    130000  130002  130020  130200  130202  130220  +P681
++P681   130001  130011  130010  130100  130102  130120  130201  130211  +P682
++P682   130210
+CPENTA  6812    6800    130002  130022  130020  130202  130222  130220  +P683
++P683   130012  130021  130011  130102  130122  130120  130212  130221  +P684
++P684   130211
+PARAM   AUTOSPC YES
+SPCG    1       13      123     AC      AF      AH
+FORCE   1       130222          1.      1.
+FORCE   2       130222          1.              1.
+FORCE   3       130222          1.                      1.
+DAREA   1       130222  1       1.      130222  3       2.
+ENDDATA

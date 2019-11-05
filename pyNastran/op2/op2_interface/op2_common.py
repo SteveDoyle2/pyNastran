@@ -300,7 +300,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.pval_step = label2
 
         nsubtitle_break = 67
-        adpativity_index = subtitle[nsubtitle_break:99].strip()
+        adpativity_index = subtitle[nsubtitle_break:99]
         superelement = subtitle[99:].strip()
 
         #print('subtitle = %r' % subtitle)

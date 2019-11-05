@@ -1,4 +1,5 @@
 from collections import Counter
+from typing import List, Dict
 import numpy as np
 
 NX_GEOM_TABLES = [
@@ -16,7 +17,8 @@ NX_GEOM_TABLES = [
     b'VIEWTB',
     b'R1TABRG',
     b'ERRORN',
-]
+    b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
+]  # type: List[bytes]
 
 NX_MATRIX_TABLES = [
     b'XSOP2DIR',
@@ -53,14 +55,13 @@ NX_MATRIX_TABLES = [
 
     b'BHH', b'KHH',
     b'DSCM2',
-]
+]  # type: List[bytes]
 
 NX_EXTRA_TABLES = [
     # geometry, but buggy in the geometry block...
     b'ICASE',
 
     # geometry
-    b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
     b'DESCYC',
     b'DSCMCOL', # design sensitivity parameters
     b'DBCOPT',  # design optimization history for post-processing
@@ -102,7 +103,7 @@ NX_EXTRA_TABLES = [
     b'OPMPF2M',
     b'OLMPF2M',
     b'OEKE1',
-]
+]  # type: List[bytes]
 
 NX_RESULT_TABLES = [
     # displacements, velocity, acceleration
@@ -450,4 +451,4 @@ NX_TABLE_CONTENT = {
     804 : 'OEFRMS1 - ???',
     805 : 'OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.',
     905 : 'OESXNO1C - Cumulative Root Mean Square output',
-}
+}  # type: Dict[int, str]

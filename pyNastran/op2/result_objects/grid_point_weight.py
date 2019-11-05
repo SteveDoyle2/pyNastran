@@ -5,6 +5,7 @@ import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods
 from pyNastran.op2.result_objects.op2_objects import _write_table_header
+from pyNastran.op2.op2_interface.write_utils import export_to_hdf5
 
 float_types = (float, np.float32)
 integer_types = (int, np.int32)
@@ -73,14 +74,26 @@ class GridPointWeight:
         # same as I(s) except that the signs of the offdiagonal terms are reversed.
         self.Q = None
 
-    def object_attributes(self, mode='public', keys_to_skip=None):
+        self.title = ''
+        self.subtitle = ''
+        self.label = ''
+        self.superelement_adaptivity_index = ''
+
+    def export_to_hdf5(self, group, log) -> None:
+        """exports the object to HDF5 format"""
+        export_to_hdf5(self, group, log)
+
+    def object_attributes(self, mode='public', keys_to_skip=None,
+                          filter_properties=False):
         if keys_to_skip is None:
             keys_to_skip = []
 
         my_keys_to_skip = [
             'object_methods', 'object_attributes',
         ]
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_attributes(self, mode=mode,
+                                 keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                 filter_properties=filter_properties)
 
     def object_methods(self, mode='public', keys_to_skip=None):
         if keys_to_skip is None:
@@ -92,9 +105,32 @@ class GridPointWeight:
         ]
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
+    def __eq__(self, weight):
+        msg = ''
+        if not self.reference_point == weight.reference_point:
+            msg += f'reference_point: {self.reference_point} -> {weight.reference_point}\n'
+        if not np.array_equal(self.MO, weight.MO):
+            msg += f'reference_point: {self.MO} -> {weight.MO}\n'
+        if not np.array_equal(self.S, weight.S):
+            msg += f'reference_point: {self.S} -> {weight.S}\n'
+        if not np.array_equal(self.mass, weight.mass):
+            msg += f'reference_point: {self.mass} -> {weight.mass}\n'
+        if not np.array_equal(self.cg, weight.cg):
+            msg += f'reference_point: {self.cg} -> {weight.cg}\n'
+        if not np.array_equal(self.IS, weight.IS):
+            msg += f'reference_point: {self.IS} -> {weight.IS}\n'
+        if not np.array_equal(self.IQ, weight.IQ):
+            msg += f'reference_point: {self.IQ} -> {weight.IQ}\n'
+        if not np.array_equal(self.Q, weight.Q):
+            msg += f'reference_point: {self.Q} -> {weight.Q}'
+        if msg:
+            raise ValueError('GridPointWeight:\n' + msg)
+        return True
+
     def set_grid_point_weight(self, reference_point, MO, S, mass, cg, IS, IQ, Q,
                               approach_code=1, table_code=13,
-                              title='', subtitle='', label=''):
+                              title='', subtitle='', label='',
+                              superelement_adaptivity_index=''):
         """used by the op2 reader to set the table parameters"""
         self.reference_point = reference_point
         self.approach_code = approach_code
@@ -111,17 +147,17 @@ class GridPointWeight:
         self.title = title
         self.subtitle = subtitle
         self.label = label
+        self.superelement_adaptivity_index = superelement_adaptivity_index
 
-    def get_stats(self, short=True):
-        if self.reference_point is None:
-            return ''
+    def get_stats(self, key='', short=True):
+        key2 = f'[{key!r}]'
         if short:
-            msg = ('GridPointWeight: ref_point=%s mass=%g; '
+            msg = (f'GridPointWeight{key2}: ref_point=%s mass=%g; '
                    '[reference_point, M0, S, mass, cg, IS, IQ, Q]\n' % (
                        self.reference_point, self.mass.max()))
         else:
             msg = (
-                'GridPointWeight:'
+                f'GridPointWeight{key2}:'
                 '  reference_point=%s\n'
                 '  mass=[%10g %10g %10g]\n'
                 '  cg  =[%10g %10g %10g]\n'

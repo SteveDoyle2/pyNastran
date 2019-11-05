@@ -10,7 +10,6 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
-from pyNastran.op2.result_objects.grid_point_weight import GridPointWeight
 from pyNastran.op2.result_objects.design_response import Responses
 from pyNastran.op2.result_objects.op2_results import Results
 
@@ -116,9 +115,273 @@ class OP2_F06_Common:
             except AttributeError:
                 storage_obj = delattr(self.op2_results, result_name)
 
-    def deprecated(self, old_name, new_name, deprecated_version):
+    def deprecated(self, old_name: str, new_name: str, deprecated_version: str):
         """allows for simple OP2 vectorization"""
         return deprecated(old_name, new_name, deprecated_version, levels=[0, 1, 2])
+
+    # ------------------------------------------------------------------
+    # Strain Energy - Getter
+    @property
+    def ctetra_strain_energy(self):
+        self.deprecated('model.ctetra_strain_energy', 'model.op2_results.strain_energy.ctetra_strain_energy', '1.3')
+        return self.op2_results.strain_energy.ctetra_strain_energy
+    @property
+    def chexa_strain_energy(self):
+        return self.op2_results.strain_energy.chexa_strain_energy
+    @property
+    def cpenta_strain_energy(self):
+        return self.op2_results.strain_energy.cpenta_strain_energy
+    @property
+    def cpyram_strain_energy(self):
+        return self.op2_results.strain_energy.cpyram_strain_energy
+
+    @property
+    def celas1_strain_energy(self):
+        return self.op2_results.strain_energy.celas1_strain_energy
+    @property
+    def celas2_strain_energy(self):
+        return self.op2_results.strain_energy.celas2_strain_energy
+    @property
+    def celas3_strain_energy(self):
+        return self.op2_results.strain_energy.celas3_strain_energy
+    @property
+    def celas4_strain_energy(self):
+        return self.op2_results.strain_energy.celas4_strain_energy
+
+    @property
+    def cquad4_strain_energy(self):
+        return self.op2_results.strain_energy.cquad4_strain_energy
+    @property
+    def cquad8_strain_energy(self):
+        return self.op2_results.strain_energy.cquad8_strain_energy
+    @property
+    def cquadr_strain_energy(self):
+        return self.op2_results.strain_energy.cquadr_strain_energy
+    @property
+    def cquadx_strain_energy(self):
+        return self.op2_results.strain_energy.cquadx_strain_energy
+
+    @property
+    def ctria3_strain_energy(self):
+        return self.op2_results.strain_energy.ctria3_strain_energy
+    @property
+    def ctria6_strain_energy(self):
+        return self.op2_results.strain_energy.ctria6_strain_energy
+    @property
+    def ctriar_strain_energy(self):
+        return self.op2_results.strain_energy.ctriar_strain_energy
+    @property
+    def ctriax_strain_energy(self):
+        return self.op2_results.strain_energy.ctriax_strain_energy
+    @property
+    def ctriax6_strain_energy(self):
+        return self.op2_results.strain_energy.ctriax6_strain_energy
+
+    @property
+    def ctetra_strain_energy(self):
+        return self.op2_results.strain_energy.ctetra_strain_energy
+    @property
+    def cpenta_strain_energy(self):
+        return self.op2_results.strain_energy.cpenta_strain_energy
+    @property
+    def chexa_strain_energy(self):
+        return self.op2_results.strain_energy.chexa_strain_energy
+    @property
+    def cpyram_strain_energy(self):
+        return self.op2_results.strain_energy.cpyram_strain_energy
+
+    @property
+    def crod_strain_energy(self):
+        return self.op2_results.strain_energy.crod_strain_energy
+    @property
+    def ctube_strain_energy(self):
+        return self.op2_results.strain_energy.ctube_strain_energy
+    @property
+    def conrod_strain_energy(self):
+        return self.op2_results.strain_energy.conrod_strain_energy
+
+    @property
+    def cbar_strain_energy(self):
+        return self.op2_results.strain_energy.cbar_strain_energy
+    @property
+    def cbeam_strain_energy(self):
+        return self.op2_results.strain_energy.cbeam_strain_energy
+    @property
+    def cbend_strain_energy(self):
+        return self.op2_results.strain_energy.cbend_strain_energy
+
+    @property
+    def cgap_strain_energy(self):
+        return self.op2_results.strain_energy.cgap_strain_energy
+    @property
+    def cdamp1_strain_energy(self):
+        return self.op2_results.strain_energy.cdamp1_strain_energy
+    @property
+    def cdamp2_strain_energy(self):
+        return self.op2_results.strain_energy.cdamp2_strain_energy
+    @property
+    def cdamp3_strain_energy(self):
+        return self.op2_results.strain_energy.cdamp3_strain_energy
+    @property
+    def cdamp4_strain_energy(self):
+        return self.op2_results.strain_energy.cdamp4_strain_energy
+    @property
+    def cdum8_strain_energy(self):
+        return self.op2_results.strain_energy.cdum8_strain_energy
+    @property
+    def cbush_strain_energy(self):
+        return self.op2_results.strain_energy.cbush_strain_energy
+    @property
+    def dmig_strain_energy(self):
+        return self.op2_results.strain_energy.dmig_strain_energy
+    @property
+    def genel_strain_energy(self):
+        return self.op2_results.strain_energy.genel_strain_energy
+    @property
+    def cshear_strain_energy(self):
+        return self.op2_results.strain_energy.cshear_strain_energy
+    @property
+    def conm2_strain_energy(self):
+        return self.op2_results.strain_energy.conm2_strain_energy
+    @property
+    def cdum8_strain_energy(self):
+        return self.op2_results.strain_energy.cdum8_strain_energy
+    # ------------------------------------------------------------------
+    # Strain Energy - Setter
+
+    @celas1_strain_energy.setter
+    def celas1_strain_energy(self, celas1_strain_energy):
+        self.op2_results.strain_energy.celas1_strain_energy = celas1_strain_energy
+    @celas2_strain_energy.setter
+    def celas2_strain_energy(self, celas2_strain_energy):
+        self.op2_results.strain_energy.celas2_strain_energy = celas2_strain_energy
+    @celas3_strain_energy.setter
+    def celas3_strain_energy(self, celas3_strain_energy):
+        self.op2_results.strain_energy.celas3_strain_energy = celas3_strain_energy
+    @celas4_strain_energy.setter
+    def celas4_strain_energy(self, celas4_strain_energy):
+        self.op2_results.strain_energy.celas4_strain_energy = celas4_strain_energy
+
+
+    @cdamp1_strain_energy.setter
+    def cdamp1_strain_energy(self, cdamp1_strain_energy):
+        self.op2_results.strain_energy.cdamp1_strain_energy = cdamp1_strain_energy
+    @cdamp2_strain_energy.setter
+    def cdamp2_strain_energy(self, cdamp2_strain_energy):
+        self.op2_results.strain_energy.cdamp2_strain_energy = cdamp2_strain_energy
+    @cdamp3_strain_energy.setter
+    def cdamp3_strain_energy(self, cdamp3_strain_energy):
+        self.op2_results.strain_energy.cdamp3_strain_energy = cdamp3_strain_energy
+    @cdamp4_strain_energy.setter
+    def cdamp4_strain_energy(self, cdamp4_strain_energy):
+        self.op2_results.strain_energy.cdamp4_strain_energy = cdamp4_strain_energy
+
+    @ctetra_strain_energy.setter
+    def ctetra_strain_energy(self, ctetra_strain_energy):
+        self.op2_results.strain_energy.ctetra_strain_energy = ctetra_strain_energy
+    @chexa_strain_energy.setter
+    def chexa_strain_energy(self, chexa_strain_energy):
+        self.op2_results.strain_energy.chexa_strain_energy = chexa_strain_energy
+    @cpenta_strain_energy.setter
+    def cpenta_strain_energy(self, cpenta_strain_energy):
+        self.op2_results.strain_energy.cpenta_strain_energy = cpenta_strain_energy
+    @cpyram_strain_energy.setter
+    def cpyram_strain_energy(self, cpyram_strain_energy):
+        self.op2_results.strain_energy.cpyram_strain_energy = cpyram_strain_energy
+
+    # ------------------------------------------------------------------
+    # Force - Getter
+    @property
+    def celas1_force(self):
+        return self.op2_results.force.celas1_force
+    @property
+    def celas2_force(self):
+        return self.op2_results.force.celas2_force
+    @property
+    def celas3_force(self):
+        return self.op2_results.force.celas3_force
+    @property
+    def celas4_force(self):
+        return self.op2_results.force.celas4_force
+
+    @property
+    def cdamp1_force(self):
+        return self.op2_results.force.cdamp1_force
+    @property
+    def cdamp2_force(self):
+        return self.op2_results.force.cdamp2_force
+    @property
+    def cdamp3_force(self):
+        return self.op2_results.force.cdamp3_force
+    @property
+    def cdamp4_force(self):
+        return self.op2_results.force.cdamp4_force
+
+    # ------------------------------------------------------------------
+    # Force - Setter
+    @celas1_force.setter
+    def celas1_force(self, celas1_force):
+        self.op2_results.force.celas1_force = celas1_force
+    @celas2_force.setter
+    def celas2_force(self, celas2_force):
+        self.op2_results.force.celas2_force = celas2_force
+    @celas3_force.setter
+    def celas3_force(self, celas3_force):
+        self.op2_results.force.celas3_force = celas3_force
+    @celas4_force.setter
+    def celas4_force(self, celas4_force):
+        self.op2_results.force.celas4_force = celas4_force
+
+        #(model.cquad4_strain_energy, 'CQUAD4', True),
+        #(model.cquad8_strain_energy, 'CQUAD8', True),
+        #(model.cquadr_strain_energy, 'CQUADR', True),
+        #(model.cquadx_strain_energy, 'CQUADX', True),
+
+        #(model.ctria3_strain_energy, 'CTRIA3', True),
+        #(model.ctria6_strain_energy, 'CTRIA6', True),
+        #(model.ctriar_strain_energy, 'CTRIAR', True),
+        #(model.ctriax_strain_energy, 'CTRIAX', True),
+        #(model.ctriax6_strain_energy, 'CTRIAX6', True),
+
+        #(model.ctetra_strain_energy, 'CTETRA', True),
+        #(model.cpenta_strain_energy, 'CPENTA', True),
+        #(model.chexa_strain_energy, 'CHEXA', True),
+        #(model.cpyram_strain_energy, 'CPYRAM', True),
+
+        #(model.crod_strain_energy, 'CROD', True),
+        #(model.ctube_strain_energy, 'CTUBE', True),
+        #(model.conrod_strain_energy, 'CONROD', True),
+
+        #(model.cbar_strain_energy, 'CBAR', True),
+        #(model.cbeam_strain_energy, 'CBEAM', True),
+
+        #(model.cgap_strain_energy, 'CGAP', True),
+        #(model.celas1_strain_energy, 'CELAS1', True),
+        #(model.celas2_strain_energy, 'CELAS2', True),
+        #(model.celas3_strain_energy, 'CELAS3', True),
+        #(model.celas4_strain_energy, 'CELAS4', True),
+        #(model.cdum8_strain_energy, 'CDUM8', False),
+        #(model.cbush_strain_energy, 'CBUSH', True),
+        ##(model.chexa8fd_strain_energy, '', False),
+        #(model.cbend_strain_energy, 'CBEND', False),
+        #(model.dmig_strain_energy, 'DMIG', False),
+        #(model.genel_strain_energy, 'GENEL', False),
+        #(model.cshear_strain_energy, 'CSHEAR', True),
+        #(model.conm2_strain_energy, 'CONM2', False),
+
+    @celas1_force.setter
+    def cdamp1_force(self, cdamp1_force):
+        self.op2_results.force.cdamp1_force = cdamp1_force
+    @celas2_force.setter
+    def cdamp2_force(self, cdamp2_force):
+        self.op2_results.force.cdamp2_force = cdamp2_force
+    @celas3_force.setter
+    def cdamp3_force(self, cdamp3_force):
+        self.op2_results.force.cdamp3_force = cdamp3_force
+    @celas4_force.setter
+    def cdamp4_force(self, cdamp4_force):
+        self.op2_results.force.cdamp4_force = cdamp4_force
+    # ------------------------------------------------------------------
 
     def __objects_vector_init__(self):
         """
@@ -148,11 +411,10 @@ class OP2_F06_Common:
 
         #======================================================================
         # springs
-        self.celas1_force = {}
-        self.celas2_force = {}
-        self.celas3_force = {}
-        self.celas4_force = {}
-
+        #self.celas1_force = {}
+        #self.celas2_force = {}
+        #self.celas3_force = {}
+        #self.celas4_force = {}
         self.celas1_stress = {}
         self.celas2_stress = {}
         self.celas3_stress = {}
@@ -185,7 +447,6 @@ class OP2_F06_Common:
         self.cbar_force_nrl = {} # thermal=8
 
         self.cbar_stress = {}
-
         self.cbar_strain = {}
 
         self.cbar_force_10nodes = {}
@@ -211,11 +472,6 @@ class OP2_F06_Common:
         self.cquad4_force = {}
         self.cquad8_force = {}
         self.cquadr_force = {}
-
-        self.cquad4_composite_force_failure_indicies = {}
-        self.cquad8_composite_force_failure_indicies = {}
-        self.ctria3_composite_force_failure_indicies = {}
-        self.ctria6_composite_force_failure_indicies = {}
 
         self.ctria3_stress = {}
         self.ctria6_stress = {}
@@ -289,7 +545,7 @@ class OP2_F06_Common:
         #: create with:
         #:   PARAM   GRDPNT    0  (required for F06/OP2)
         #:   PARAM   POSTEXT YES  (required for OP2)
-        self.grid_point_weight = GridPointWeight()
+        self.grid_point_weight = {}
         self.oload_resultant = None
 
         #: LAMA
@@ -308,7 +564,7 @@ class OP2_F06_Common:
         #: create with:
         #:   PARAM   GRDPNT    0  (required for F06/OP2)
         #:   PARAM   POSTEXT YES  (required for OP2)
-        self.grid_point_weight = GridPointWeight()
+        self.grid_point_weight = {}
 
         #: self.frequencies already exists as a BDF object
         #: but we need this for the FOL frequencies for the MONPNT1 and MONPNT3
@@ -367,15 +623,15 @@ class OP2_F06_Common:
         self.cbush_force = {}
         self.coneax_force = {}
 
-        self.cdamp1_force = {}
-        self.cdamp2_force = {}
-        self.cdamp3_force = {}
-        self.cdamp4_force = {}
+        #self.cdamp1_force = {}
+        #self.cdamp2_force = {}
+        #self.cdamp3_force = {}
+        #self.cdamp4_force = {}
 
-        self.celas1_force = {}
-        self.celas2_force = {}
-        self.celas3_force = {}
-        self.celas4_force = {}
+        #self.celas1_force = {}
+        #self.celas2_force = {}
+        #self.celas3_force = {}
+        #self.celas4_force = {}
 
         self.cgap_force = {}
 
@@ -504,48 +760,6 @@ class OP2_F06_Common:
         self.applied_loads = {}       # tCode=19 thermal=0
         self.force_vectors = {}       # tCode=12 thermal=0
 
-
-        #: OEE - strain energy density; tCode=18
-        self.cquad4_strain_energy = {}
-        self.cquad8_strain_energy = {}
-        self.cquadr_strain_energy = {}
-        self.cquadx_strain_energy = {}
-
-        self.ctria3_strain_energy = {}
-        self.ctria6_strain_energy = {}
-        self.ctriar_strain_energy = {}
-        self.ctriax_strain_energy = {}
-        self.ctriax6_strain_energy = {}
-
-        self.ctetra_strain_energy = {}
-        self.cpenta_strain_energy = {}
-        self.chexa_strain_energy = {}
-        self.cpyram_strain_energy = {}
-
-        self.crod_strain_energy = {}
-        self.ctube_strain_energy = {}
-        self.conrod_strain_energy = {}
-
-        self.cbar_strain_energy = {}
-        self.cbeam_strain_energy = {}
-
-        self.cgap_strain_energy = {}
-        self.celas1_strain_energy = {}
-        self.celas2_strain_energy = {}
-        self.celas3_strain_energy = {}
-        self.celas4_strain_energy = {}
-        self.cdum8_strain_energy = {}
-        self.cbush_strain_energy = {}
-        #self.chexa8fd_strain_energy = {}
-        self.cbend_strain_energy = {}
-        self.dmig_strain_energy = {}
-        self.genel_strain_energy = {}
-        self.cshear_strain_energy = {}
-        self.conm2_strain_energy = {}
-        self.rbe1_strain_energy = {}
-        self.rbe3_strain_energy = {}
-        self.weldc_strain_energy = {}
-
     def _get_result_length(self, res_types, res_key):
         """
         gets the length of the output data so we can line up:
@@ -622,6 +836,7 @@ class OP2_F06_Common:
         base = self.op2_results.get_table_types()
 
         table_types = base + [
+            'grid_point_weight',
             # OUG - displacement, temperatures, eigenvectors, velocity, acceleration
             'displacements', 'displacements_scaled',
             'temperatures',
@@ -728,8 +943,8 @@ class OP2_F06_Common:
             #'ctriar_composite_force',
 
             # 0d
-            'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
-            'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
+            #'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
+            #'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
             'cvisc_force',
             'cbush_force',
             'coneax_force',
@@ -755,11 +970,6 @@ class OP2_F06_Common:
 
             #OEF - Fluxes - tCode=4 thermal=1
             'conv_thermal_load',
-
-            'cquad4_composite_force_failure_indicies',
-            'cquad8_composite_force_failure_indicies',
-            'ctria3_composite_force_failure_indicies',
-            'ctria6_composite_force_failure_indicies',
 
             #'thermalLoad_CHBDY',
             'chbdye_thermal_load', 'chbdye_thermal_load_flux',
@@ -822,35 +1032,6 @@ class OP2_F06_Common:
             'grid_point_stresses_volume_principal', # tCode =28
             'grid_point_stress_discontinuities',  # tCode=35,
 
-            # OEE - strain energy density # tCode=18
-            'cquad4_strain_energy', 'cquad8_strain_energy', 'cquadr_strain_energy',
-            'cquadx_strain_energy',
-
-            'ctria3_strain_energy', 'ctria6_strain_energy', 'ctriar_strain_energy',
-            'ctriax_strain_energy', 'ctriax6_strain_energy',
-
-            'cshear_strain_energy',
-
-            'ctetra_strain_energy', 'cpenta_strain_energy',
-            'chexa_strain_energy', 'cpyram_strain_energy',
-
-            'crod_strain_energy', 'ctube_strain_energy', 'conrod_strain_energy',
-
-            'cbar_strain_energy', 'cbeam_strain_energy',
-
-            'cgap_strain_energy',
-            'cbush_strain_energy',
-            'celas1_strain_energy', 'celas2_strain_energy',
-            'celas3_strain_energy', 'celas4_strain_energy',
-
-            'cdum8_strain_energy',
-            #'chexa8fd_strain_energy'
-            'cbend_strain_energy',
-            'dmig_strain_energy',
-            'genel_strain_energy',
-            'conm2_strain_energy',
-            'rbe1_strain_energy', 'rbe3_strain_energy',
-            'weldc_strain_energy',
 
             # unused?
             'displacement_scaled_response_spectra_nrl',
@@ -879,13 +1060,15 @@ class OP2_F06_Common:
             'op2_reader', 'table_count']
 
         table_types = self.get_table_types()
-        tables = object_attributes(self, 'public')
+        tables = object_attributes(self, 'public', filter_properties=True)
         tables = [table for table in tables
                   if isinstance(getattr(self, table), dict)
                   and table not in skipped_attributes]
         for table in tables:
             if self.make_geom:
                 break
+            #value = getattr(self, table)
+
             assert table in table_types, table
         return table_types
 
@@ -944,8 +1127,10 @@ def _get_op2_stats(model: OP2, short=False):
     """see OP2.get_op2_stats(...)"""
     msg = []
     msg += model.responses.get_stats(short=short)
-    if model.grid_point_weight:
-        msg += model.grid_point_weight.get_stats(short=short)
+
+    msg.extend(_write_params(model.params))
+    for key, weight in model.grid_point_weight.items():
+        msg += weight.get_stats(key, short=short)
 
     table_types = model._get_table_types_testing()
 
@@ -980,11 +1165,11 @@ def _get_op2_stats(model: OP2, short=False):
 def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
     """helper for get_op2_stats(...)"""
     msg = []
+    handled_previously = ['params', 'grid_point_weight']
     no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
     for table_type in table_types:
         #table_type_print = ''
-        if table_type in ['params']:
-            msg.extend(_write_params(model.params))
+        if table_type in handled_previously:
             continue
         elif table_type in ['gpdt', 'bgpdt', 'eqexin']:
             obj = model.get_result(table_type)
@@ -1022,10 +1207,10 @@ def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
 def _get_op2_stats_full(model: OP2, table_types: List[str], log):
     """helper for get_op2_stats(...)"""
     msg = []
+    handled_previously = ['params', 'grid_point_weight']
     for table_type in table_types:
         table = model.get_result(table_type)
-        if table_type == 'params':
-            msg.extend(_write_params(model.params))
+        if table_type in handled_previously:
             continue
         elif table_type in ['gpdt', 'bgpdt', 'eqexin']:
             obj = model.get_result(table_type)
@@ -1065,9 +1250,14 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
 
 def _write_params(params):
     """helper for get_op2_stats(...)"""
+    if not params:
+        return []
     msg = ['params:\n']
     for key, param in sorted(params.items()):
-        msg.append('  %s = %s\n' % (key, param.values))
+        if len(param.values) == 1:
+            msg.append(f'  {key} = {param.values[0]!r}\n')
+        else:
+            msg.append(f'  {key} = {param.values}\n')
     return msg
 
 COMPARE_KEYS = (int, int32, int64, str, bytes)

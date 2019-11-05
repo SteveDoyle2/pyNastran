@@ -89,14 +89,31 @@ class RealTriaxArray(OES_Object):
         headers = self.get_headers()
         element_node = [self.element_node[:, 0], self.element_node[:, 1]]
         if self.nonlinear_factor not in (None, np.nan):
+            # LoadStep                             1.0
+            # ElementID NodeID Item
+            #30011     0      radial     2.000005e+02
+            #          30011  azimuthal  2.000005e+02
+            #          30012  axial      1.960005e+02
+            #          30013  shear     -1.441057e-09
+            #30012     0      omax       2.000005e+02
+            #...                                  ...
+            #30021     30023  axial      1.934256e+02
+            #30022     0      shear      0.000000e+00
+            #          30021  omax       1.973730e+02
+            #          30023  oms        1.973730e+00
+            #          30024  ovm        3.947461e+00
             column_names, column_values = self._build_dataframe_transient_header()
+            names = ['ElementID', 'NodeID', 'Item']
+            data_frame = self._build_pandas_transient_element_node(
+                column_values, column_names,
+                headers, element_node, self.data, from_tuples=False, from_array=True,
+                names=names,
+            )
+
+            #column_names, column_values = self._build_dataframe_transient_header()
             #data_frame = self._build_pandas_transient_element_node(
                 #column_values, column_names,
                 #headers, self.element_node, self.data)
-            data_frame = pd.Panel(self.data, items=column_values,
-                                  major_axis=element_node, minor_axis=headers).to_frame()
-            data_frame.columns.names = column_names
-            data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         else:
             #                    radial  azimuthal     axial     shear      omax       oms       ovm
             #ElementID NodeID

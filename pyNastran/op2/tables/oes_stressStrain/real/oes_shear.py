@@ -75,7 +75,6 @@ class RealShearArray(OES_Object):
     def build_dataframe(self):
         """creates a pandas dataframe"""
         import pandas as pd
-        is_v25 = pd.__version__ >= '0.25'
 
         headers = self.get_headers()
         if self.nonlinear_factor not in (None, np.nan):
@@ -92,18 +91,13 @@ class RealShearArray(OES_Object):
                 column_values, column_names,
                 headers, self.element, self.data)
         else:
-            if is_v25:
-                #Static     axial           SMa  torsion           SMt
-                #ElementID
-                #14           0.0  1.401298e-45      0.0  1.401298e-45
-                #15           0.0  1.401298e-45      0.0  1.401298e-45
-                data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
-                data_frame.index.name = 'ElementID'
-                data_frame.columns.names = ['Static']
-            else:
-                data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-                data_frame.columns.names = ['Static']
-                data_frame.index.names = ['ElementID', 'Item']
+            #Static     axial           SMa  torsion           SMt
+            #ElementID
+            #14           0.0  1.401298e-45      0.0  1.401298e-45
+            #15           0.0  1.401298e-45      0.0  1.401298e-45
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+            data_frame.index.name = 'ElementID'
+            data_frame.columns.names = ['Static']
         self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover

@@ -112,7 +112,6 @@ def run(regenerate=True, make_geom=False, write_bdf=False, build_pandas=True,
     binary_debug = [True, False]  # catch any errors
     quiet = True
 
-    delete_f06 = True
     stop_on_failure = False
     get_skip_cards = False
 
@@ -153,8 +152,9 @@ def run(regenerate=True, make_geom=False, write_bdf=False, build_pandas=True,
     from pyNastran.op2.test.test_op2 import run_lots_of_files
     failed_files = run_lots_of_files(files, make_geom=make_geom, write_bdf=write_bdf,
                                      xref_safe=xref_safe,
-                                     write_f06=write_f06, delete_f06=delete_f06,
-                                     write_op2=write_op2, write_hdf5=write_hdf5,
+                                     write_f06=write_f06, delete_f06=True,
+                                     write_op2=write_op2, delete_op2=True,
+                                     write_hdf5=write_hdf5, delete_hdf5=True,
                                      build_pandas=build_pandas,
                                      debug=debug,
                                      skip_files=skip_files, stop_on_failure=stop_on_failure,

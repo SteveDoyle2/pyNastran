@@ -6,6 +6,7 @@ defines:
 """
 from typing import Any, Optional
 import numpy as np
+from pyNastran.utils.numpy_utils import integer_float_types
 
 REAL_TYPES = ['<i4', '<i8', '<f4', '<f8',
               '|i1', # this is a boolean
@@ -421,6 +422,124 @@ class GuiResult(GuiResultCommon):
                 self.max_default = self.scalar[ifinite].max()
         self.min_value = self.min_default
         self.max_value = self.max_default
+
+    #------------
+    def _validate(self, new):
+        subcase_id = self.subcase_id
+        header = self.header
+        title = self.title
+        location = self.location
+
+        if isinstance(new, integer_float_types):
+            return subcase_id, header, title, location
+
+        assert self.location == new.location, f'location={self.location} new.location={new.location}'
+        assert self.scalar.shape == new.scalar.shape, f'scalar.shape={self.scalar.shape} new.scalar.shape={new.scalar.shape}'
+        return subcase_id, header, title, location
+
+    def __neg__(self):
+        return self.__mul__(-1)
+
+    def __pos__(self):
+        return self.__mul__(1)
+
+    def __radd__(self, new):
+        self.__add__(new)
+
+    def __add__(self, new):
+        subcase_id, header, title, location = self._validate(new)
+        if isinstance(new, integer_float_types):
+            scalar = self.scalar + new
+        else:
+            scalar = self.scalar + new.scalar
+        return GuiResult(subcase_id, header, title, location, scalar,
+                         mask_value=self.max_value,
+                         nlabels=None, labelsize=None, ncolors=None,
+                         colormap='jet', data_map=None, data_format=None, uname='GuiResult')
+
+    def __rsub__(self, new):
+        subcase_id, header, title, location = self._validate(new)
+        if isinstance(new, integer_float_types):
+            scalar = new - self.scalar
+        else:
+            scalar = new.scalar - self.scalar
+        return GuiResult(subcase_id, header, title, location, scalar,
+                         mask_value=self.max_value,
+                         nlabels=None, labelsize=None, ncolors=None,
+                         colormap='jet', data_map=None, data_format=None, uname='GuiResult')
+
+    def __sub__(self, new):
+        return self.__add__(-new)
+
+    def __rmul__(self, new):
+        return self.__mul__(new)
+
+    def __mul__(self, new):
+        subcase_id, header, title, location = self._validate(new)
+        if isinstance(new, integer_float_types):
+            scalar = self.scalar * new
+        elif isinstance(new, GuiResult):
+            scalar = self.scalar * new.scalar
+        else:
+            raise NotImplementedError(new)
+        #subcase_id, header, title, location = self._validate(new)
+        return GuiResult(subcase_id, header, title, location, scalar,
+                         mask_value=self.max_value,
+                         nlabels=None, labelsize=None, ncolors=None,
+                         colormap='jet', data_map=None, data_format=None, uname='GuiResult')
+
+    def __mod__(self, new):
+        subcase_id, header, title, location = self._validate(new)
+        if isinstance(new, integer_float_types):
+            scalar = self.scalar % new
+        elif isinstance(new, GuiResult):
+            scalar = self.scalar % new.scalar
+        else:
+            raise NotImplementedError(new)
+        #subcase_id, header, title, location = self._validate(new)
+        return GuiResult(subcase_id, header, title, location, scalar,
+                         mask_value=self.max_value,
+                         nlabels=None, labelsize=None, ncolors=None,
+                         colormap='jet', data_map=None, data_format=None, uname='GuiResult')
+
+    def __abs__(self):
+        subcase_id, header, title, location = self._validate(self)
+        scalar = np.abs(self.scalar)
+        return GuiResult(subcase_id, header, title, location, scalar,
+                         mask_value=self.max_value,
+                         nlabels=None, labelsize=None, ncolors=None,
+                         colormap='jet', data_map=None, data_format=None, uname='GuiResult')
+
+    def __rtruediv__(self, new):
+        subcase_id, header, title, location = self._validate(new)
+        if isinstance(new, integer_float_types):
+            scalar = new / self.scalar
+        else:
+            raise NotImplementedError(new)
+        #subcase_id, header, title, location = self._validate(new)
+        return GuiResult(subcase_id, header, title, location, scalar,
+                         mask_value=self.max_value,
+                         nlabels=None, labelsize=None, ncolors=None,
+                         colormap='jet', data_map=None, data_format=None, uname='GuiResult')
+
+    def __truediv__(self, new):
+        return self.__mul__(1. / new)
+
+    def __pow__(self, new):
+        subcase_id, header, title, location = self._validate(self)
+        if isinstance(new, integer_float_types):
+            scalar = self.scalar ** new
+        elif isinstance(new, GuiResult):
+            scalar = self.scalar ** new.scalar
+        else:
+            raise NotImplementedError(new)
+        return GuiResult(subcase_id, header, title, location, scalar,
+                         mask_value=self.max_value,
+                         nlabels=None, labelsize=None, ncolors=None,
+                         colormap='jet', data_map=None, data_format=None, uname='GuiResult')
+
+    #def __div__(self, new):
+        #return self.__mul__(1. / new)
 
     #------------
     # getters

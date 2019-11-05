@@ -1,7 +1,9 @@
 """Interface for converting OP2 results to the GUI format"""
 # pylint: disable=C1801, C0103
+from __future__ import annotations
 #from copy import deepcopy
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -16,6 +18,8 @@ from pyNastran.op2.result_objects.stress_object import (
     get_bar_stress_strain, get_bar100_stress_strain, get_beam_stress_strain,
     get_plate_stress_strain, get_solid_stress_strain)
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
 
 class NastranGuiResults(NastranGuiAttributes):
@@ -178,7 +182,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     scale = self.gui.settings.dim_max / tnorm_abs_max * 0.25
                 scales.append(scale)
                 titles.append(title1)
-                headers.append(header)
+                headers.append(f'{title1}: {header}')
                 cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
                 formii = (title1, icase, [])
                 form_dict[(key, itime)].append(formii)
@@ -205,7 +209,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 scale = 1.
                 scales.append(scale)
                 titles.append(title1)
-                headers.append(header)
+                headers.append(f'{title1}: {header}')
                 cases[icase] = (nastran_res, (itime, title1))  # do I keep this???
                 formii = (title1, icase, [])
                 form_dict[(key, itime)].append(formii)
@@ -247,7 +251,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 assert len(nxyz) == nnodes, 'len(nxyz)=%s nnodes=%s' % (
                     len(nxyz), nnodes)
 
-                temp_res = GuiResult(subcase_idi, header=name, title=name,
+                temp_res = GuiResult(subcase_idi, header=f'{name}: {header}', title=name,
                                      location='node', scalar=loads[:, 0])
                 cases[icase] = (temp_res, (0, name))
                 form_dict[(key, itime)].append((name, icase, []))
@@ -474,52 +478,59 @@ class NastranGuiResults(NastranGuiAttributes):
 
         return icase
 
-    def _fill_op2_time_centroidal_strain_energy(self, cases, model,
+    def _fill_op2_time_centroidal_strain_energy(self, cases, model: OP2,
                                                 key, icase, itime,
-                                                form_dict, unused_header_dict, keys_map):
+                                                form_dict, header_dict, keys_map):
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
         case = None
-        subcase_id = key[2]
+
+        # (isubcase, analysis_code, sort_method,
+        #  count, ogs, superelement_adaptivity_index, pval_step) = key ????
+        subcase_id = key[0]
+
+        strain_energy = model.op2_results.strain_energy
         strain_energies = [
-            (model.cquad4_strain_energy, 'CQUAD4', True),
-            (model.cquad8_strain_energy, 'CQUAD8', True),
-            (model.cquadr_strain_energy, 'CQUADR', True),
-            (model.cquadx_strain_energy, 'CQUADX', True),
+            # results_dict, name, flag of the element being supported
+            (strain_energy.cquad4_strain_energy, 'CQUAD4', True),
+            (strain_energy.cquad8_strain_energy, 'CQUAD8', True),
+            (strain_energy.cquadr_strain_energy, 'CQUADR', True),
+            (strain_energy.cquadx_strain_energy, 'CQUADX', True),
 
-            (model.ctria3_strain_energy, 'CTRIA3', True),
-            (model.ctria6_strain_energy, 'CTRIA6', True),
-            (model.ctriar_strain_energy, 'CTRIAR', True),
-            (model.ctriax_strain_energy, 'CTRIAX', True),
-            (model.ctriax6_strain_energy, 'CTRIAX6', True),
+            (strain_energy.ctria3_strain_energy, 'CTRIA3', True),
+            (strain_energy.ctria6_strain_energy, 'CTRIA6', True),
+            (strain_energy.ctriar_strain_energy, 'CTRIAR', True),
+            (strain_energy.ctriax_strain_energy, 'CTRIAX', True),
+            (strain_energy.ctriax6_strain_energy, 'CTRIAX6', True),
 
-            (model.ctetra_strain_energy, 'CTETRA', True),
-            (model.cpenta_strain_energy, 'CPENTA', True),
-            (model.chexa_strain_energy, 'CHEXA', True),
-            (model.cpyram_strain_energy, 'CPYRAM', True),
+            (strain_energy.ctetra_strain_energy, 'CTETRA', True),
+            (strain_energy.cpenta_strain_energy, 'CPENTA', True),
+            (strain_energy.chexa_strain_energy, 'CHEXA', True),
+            (strain_energy.cpyram_strain_energy, 'CPYRAM', True),
 
-            (model.crod_strain_energy, 'CROD', True),
-            (model.ctube_strain_energy, 'CTUBE', True),
-            (model.conrod_strain_energy, 'CONROD', True),
+            (strain_energy.crod_strain_energy, 'CROD', True),
+            (strain_energy.ctube_strain_energy, 'CTUBE', True),
+            (strain_energy.conrod_strain_energy, 'CONROD', True),
 
-            (model.cbar_strain_energy, 'CBAR', True),
-            (model.cbeam_strain_energy, 'CBEAM', True),
+            (strain_energy.cbar_strain_energy, 'CBAR', True),
+            (strain_energy.cbeam_strain_energy, 'CBEAM', True),
 
-            (model.cgap_strain_energy, 'CGAP', True),
-            (model.celas1_strain_energy, 'CELAS1', True),
-            (model.celas2_strain_energy, 'CELAS2', True),
-            (model.celas3_strain_energy, 'CELAS3', True),
-            (model.celas4_strain_energy, 'CELAS4', True),
-            (model.cdum8_strain_energy, 'CDUM8', False),
-            (model.cbush_strain_energy, 'CBUSH', True),
-            #(model.chexa8fd_strain_energy, '', False),
-            (model.cbend_strain_energy, 'CBEND', False),
-            (model.dmig_strain_energy, 'DMIG', False),
-            (model.genel_strain_energy, 'GENEL', False),
-            (model.cshear_strain_energy, 'CSHEAR', True),
-            (model.conm2_strain_energy, 'CONM2', False),
+            (strain_energy.cgap_strain_energy, 'CGAP', True),
+            (strain_energy.celas1_strain_energy, 'CELAS1', True),
+            (strain_energy.celas2_strain_energy, 'CELAS2', True),
+            (strain_energy.celas3_strain_energy, 'CELAS3', True),
+            (strain_energy.celas4_strain_energy, 'CELAS4', True),
+            (strain_energy.cdum8_strain_energy, 'CDUM8', False),
+            (strain_energy.cbush_strain_energy, 'CBUSH', True),
+            #(strain_energy.chexa8fd_strain_energy, '', False),
+            (strain_energy.cbend_strain_energy, 'CBEND', False),
+            (strain_energy.dmig_strain_energy, 'DMIG', False),
+            (strain_energy.genel_strain_energy, 'GENEL', False),
+            (strain_energy.cshear_strain_energy, 'CSHEAR', True),
+            (strain_energy.conm2_strain_energy, 'CONM2', False),
         ]
+        #  find the cases that have results for this key
         has_strain_energy = [key in res[0] for res in strain_energies]
         if not any(has_strain_energy):
             return icase
@@ -549,11 +560,19 @@ class NastranGuiResults(NastranGuiAttributes):
 
             #print('key =', key)
             case = resdict[key]
+
+            dt = case._times[itime]
+            header = _get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
             keys_map[key] = (case.subtitle, case.label,
                              case.superelement_adaptivity_index, case.pval_step)
 
             if case.is_complex:
                 continue
+            #print('key =', key)
+            #print(case)
+            #print(case.get_headers())
+            #print(case.data)
             itotal = np.where(case.element[itime, :] == 100000000)[0][0]
             #print('itotal = ', itotal)
 
@@ -593,24 +612,25 @@ class NastranGuiResults(NastranGuiAttributes):
             #pass
 
         if np.any(np.isfinite(ese)):
-            ese_res = GuiResult(subcase_id, header='Strain Energy',
+            ese_res = GuiResult(subcase_id, header='Strain Energy: ' + header,
                                 title='Strain Energy', data_format='%.3e',
                                 location='centroid', scalar=ese)
-            percent_res = GuiResult(subcase_id, header='Percent of Total',
+            percent_res = GuiResult(subcase_id, header='Percent of Total: '+ header,
                                     title='Percent of Total', data_format='%.3f',
                                     location='centroid', scalar=percent)
-            sed_res = GuiResult(subcase_id, header='Strain Energy Density',
-                                title='Strain Energy Density', data_format='%.3e',
-                                location='centroid', scalar=strain_energy_density)
-
             cases[icase] = (ese_res, (subcase_id, 'Strain Energy'))
             cases[icase + 1] = (percent_res, (subcase_id, 'Percent'))
-            cases[icase + 2] = (sed_res, (subcase_id, 'Strain Energy Density'))
 
             form_dict[(key, itime)].append(('Strain Energy', icase, []))
             form_dict[(key, itime)].append(('Percent', icase + 1, []))
-            form_dict[(key, itime)].append(('Strain Energy Density', icase + 1, []))
-            icase += 3
+            icase += 2
+            if np.any(np.isfinite(strain_energy_density)):
+                sed_res = GuiResult(subcase_id, header='Strain Energy Density: ' + header,
+                                    title='Strain Energy Density', data_format='%.3e',
+                                    location='centroid', scalar=strain_energy_density)
+                cases[icase] = (sed_res, (subcase_id, 'Strain Energy Density'))
+                form_dict[(key, itime)].append(('Strain Energy Density', icase, []))
+                icase += 1
 
         return icase
 
@@ -817,17 +837,19 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase += 1
 
             if fx.min() != fx.max() or rx.min() != rx.max() and not num_off == nelements:
-                fx_res = GuiResult(subcase_id, header='Axial', title='Axial',
+                # header = _get_nastran_header(case, dt, itime)
+                header = header_dict[(key, itime)]
+                fx_res = GuiResult(subcase_id, header=f'Axial: {header}', title='Axial',
                                    location='centroid', scalar=fx)
-                fy_res = GuiResult(subcase_id, header='ShearY', title='ShearY',
+                fy_res = GuiResult(subcase_id, header=f'ShearY: {header}', title='ShearY',
                                    location='centroid', scalar=fy)
-                fz_res = GuiResult(subcase_id, header='ShearZ', title='ShearZ',
+                fz_res = GuiResult(subcase_id, header=f'ShearZ: {header}', title='ShearZ',
                                    location='centroid', scalar=fz)
-                mx_res = GuiResult(subcase_id, header='Torsion', title='Torsion',
+                mx_res = GuiResult(subcase_id, header=f'Torsion: {header}', title='Torsion',
                                    location='centroid', scalar=rx)
-                my_res = GuiResult(subcase_id, header='BendingY', title='BendingY',
+                my_res = GuiResult(subcase_id, header=f'BendingY: {header}', title='BendingY',
                                    location='centroid', scalar=ry)
-                mz_res = GuiResult(subcase_id, header='BendingZ', title='BendingZ',
+                mz_res = GuiResult(subcase_id, header=f'BendingZ: {header}', title='BendingZ',
                                    location='centroid', scalar=rz)
                 cases[icase] = (fx_res, (subcase_id, 'Axial'))
                 cases[icase + 1] = (fy_res, (subcase_id, 'ShearY'))
@@ -925,7 +947,8 @@ class NastranGuiResults(NastranGuiAttributes):
         #unused_formis = form0[2]
         subcase_id = key[2]
         if np.any(np.isfinite(oxx)):
-            oxx_res = GuiResultIDs(subcase_id, header=word + 'XX', title=word + 'XX',
+            header = header_dict[(key, itime)]
+            oxx_res = GuiResultIDs(subcase_id, header=word + f'XX: {header}', title=word + 'XX',
                                    location='centroid',
                                    ids=element_ids, scalar=oxx, data_format=fmt)
             cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
@@ -1047,6 +1070,7 @@ class NastranGuiResults(NastranGuiAttributes):
         form0 = (word, None, [])
         unused_formis = form0[2]
         subcase_id = key[2]
+        header = header_dict[(key, itime)]
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
                 print_empty_elements(self.model, self.element_ids, is_element_on, self.log_error)
@@ -1054,78 +1078,80 @@ class NastranGuiResults(NastranGuiAttributes):
                 is_element_on = np.isfinite(oxx)
                 is_element_on = is_element_on.astype('|i1')
                 stress_res = GuiResult(
-                    subcase_id, header='Stress - isElementOn', title='Stress\nisElementOn',
+                    subcase_id, header=f'Stress - isElementOn: {header}', title='Stress\nisElementOn',
                     location='centroid', scalar=is_element_on, mask_value=0, data_format=fmt)
+
                 cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
                 form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
                 icase += 1
 
         #print('max/min', max_principal.max(), max_principal.min())
+        # header = _get_nastran_header(case, dt, itime)
         if np.any(np.isfinite(oxx)):
-            oxx_res = GuiResult(subcase_id, header=word + 'XX', title=word + 'XX',
+            oxx_res = GuiResult(subcase_id, header=word + f'XX: {header}', title=word + 'XX',
                                 location='centroid', scalar=oxx, data_format=fmt)
             cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
             form_dict[(key, itime)].append((word + 'XX', icase, []))
             icase += 1
 
         if np.any(np.isfinite(oyy)):
-            oyy_res = GuiResult(subcase_id, header=word + 'YY', title=word + 'YY',
+            oyy_res = GuiResult(subcase_id, header=word + f'YY: {header}', title=word + 'YY',
                                 location='centroid', scalar=oyy, data_format=fmt)
             cases[icase] = (oyy_res, (subcase_id, word + 'YY'))
             form_dict[(key, itime)].append((word + 'YY', icase, []))
             icase += 1
 
         if np.any(np.isfinite(ozz)):
-            ozz_res = GuiResult(subcase_id, header=word + 'ZZ', title=word + 'ZZ',
+            ozz_res = GuiResult(subcase_id, header=word + f'ZZ: {header}', title=word + 'ZZ',
                                 location='centroid', scalar=ozz, data_format=fmt)
             cases[icase] = (ozz_res, (subcase_id, word + 'ZZ'))
             form_dict[(key, itime)].append((word + 'ZZ', icase, []))
             icase += 1
 
         if np.any(np.isfinite(txy)):
-            oxy_res = GuiResult(subcase_id, header=word + 'XY', title=word + 'XY',
+            oxy_res = GuiResult(subcase_id, header=word + f'XY: {header}', title=word + 'XY',
                                 location='centroid', scalar=txy, data_format=fmt)
             cases[icase] = (oxy_res, (subcase_id, word + 'XY'))
             form_dict[(key, itime)].append((word + 'XY', icase, []))
             icase += 1
 
         if np.any(np.isfinite(tyz)):
-            oyz_res = GuiResult(subcase_id, header=word + 'YZ', title=word + 'YZ',
+            oyz_res = GuiResult(subcase_id, header=word + f'YZ: {header}', title=word + 'YZ',
                                 location='centroid', scalar=tyz, data_format=fmt)
             cases[icase] = (oyz_res, (subcase_id, word + 'YZ'))
             form_dict[(key, itime)].append((word + 'YZ', icase, []))
             icase += 1
 
         if np.any(np.isfinite(txz)):
-            oxz_res = GuiResult(subcase_id, header=word + 'XZ', title=word + 'XZ',
+            oxz_res = GuiResult(subcase_id, header=word + f'XZ: {header}', title=word + 'XZ',
                                 location='centroid', scalar=txz, data_format=fmt)
             cases[icase] = (oxz_res, (subcase_id, word + 'XZ'))
             form_dict[(key, itime)].append((word + 'XZ', icase, []))
             icase += 1
 
         if np.any(np.isfinite(max_principal)):
-            maxp_res = GuiResult(subcase_id, header='MaxPrincipal', title='MaxPrincipal',
+            maxp_res = GuiResult(subcase_id, header=f'MaxPrincipal: {header}', title='MaxPrincipal',
                                  location='centroid', scalar=max_principal, data_format=fmt)
             cases[icase] = (maxp_res, (subcase_id, 'MaxPrincipal'))
             form_dict[(key, itime)].append(('Max Principal', icase, []))
             icase += 1
 
         if np.any(np.isfinite(mid_principal)):
-            midp_res = GuiResult(subcase_id, header='MidPrincipal', title='MidPrincipal',
+            midp_res = GuiResult(subcase_id, header=f'MidPrincipal: {header}', title='MidPrincipal',
                                  location='centroid', scalar=mid_principal, data_format=fmt)
             cases[icase] = (midp_res, (subcase_id, 'MidPrincipal'))
             form_dict[(key, itime)].append(('Mid Principal', icase, []))
             icase += 1
 
         if np.any(np.isfinite(min_principal)):
-            minp_res = GuiResult(subcase_id, header='MinPrincipal', title='MinPrincipal',
+            minp_res = GuiResult(subcase_id, header=f'MinPrincipal: {header}', title='MinPrincipal',
                                  location='centroid', scalar=min_principal, data_format=fmt)
             cases[icase] = (minp_res, (subcase_id, 'MinPrincipal'))
             form_dict[(key, itime)].append(('Min Principal', icase, []))
             icase += 1
 
         if vm_word is not None:
-            ovm_res = GuiResult(subcase_id, header=vm_word, title=vm_word,
+            ovm_res = GuiResult(subcase_id, header=f'{vm_word}: {header}', title=vm_word,
                                 location='centroid', scalar=ovm, data_format=fmt)
             cases[icase] = (ovm_res, (subcase_id, vm_word))
             form_dict[(key, itime)].append((vm_word, icase, []))

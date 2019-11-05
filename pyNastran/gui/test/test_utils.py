@@ -19,9 +19,59 @@ from pyNastran.gui.menus.results_sidebar_utils import get_cases_from_tree, build
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
-
+from pyNastran.gui.gui_objects.gui_result import GuiResult
 
 class GuiUtils(unittest.TestCase):
+    def test_gui_result(self):
+        """tests GuiResult"""
+        subcase_id = 1
+        header = 'cat'
+        title = 'dog'
+        location = 'node'
+        scalar = np.ones(10)
+        x = GuiResult(subcase_id, header, title, location, scalar,
+                      mask_value=None, nlabels=None, labelsize=None, ncolors=None,
+                      colormap='jet', data_map=None, data_format=None, uname='GuiResult')
+        y = x + x
+        #print(y.scalar)
+
+        y = x + 3
+        #print(y.scalar)
+
+        y = x - 3
+        #print(y.scalar)
+
+        y = x * 3
+        y = x / 3
+
+        y = 2 * x
+        y = 2 - x
+        y = 2 + x
+        #print(y.scalar)
+
+        y = (-x - 1) ** 3
+        #print(y.scalar)
+
+        y = (+x + 1) ** 3
+        #print(y.scalar)
+
+        scalar = np.ones(8) * 2.
+        x2 = GuiResult(subcase_id, header, title, location, scalar,
+                      mask_value=None, nlabels=None, labelsize=None, ncolors=None,
+                      colormap='jet', data_map=None, data_format=None, uname='GuiResult')
+        y2 = 3. / x2
+        #print(x2.scalar)
+        #print(y2.scalar)
+
+        x2 + y2
+        x2 / y2
+        x2 * y2
+        x2 ** y2
+        x2 % 3
+        x2 % y2
+
+
+
     def test_check_version(self):
         """tests ``check_for_newer_version``"""
         unused_version_latest, unused_version_current, is_newer = check_for_newer_version(

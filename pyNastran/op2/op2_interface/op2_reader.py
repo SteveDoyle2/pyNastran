@@ -102,6 +102,7 @@ class OP2Reader:
             b'BGPDT' : self.read_bgpdt,
             b'BGPDTS' : self.read_bgpdt,
             b'BGPDTOLD' : self.read_bgpdt,
+            b'BGPDTVU' : self.read_bgpdt,
 
             #b'MEFF' : self.read_meff,
             b'INTMOD' : self.read_intmod,
@@ -177,11 +178,11 @@ class OP2Reader:
             if op2.post is None:
                 op2.post = -1
             self.read_markers([3])
-            data = self.read_block()   # TODO: is this the date?
+            data = self.read_block()   # TODO: is this the date...pretty sure at least for MSC
             #assert len(data) == 12, len(data)
 
             self.read_markers([7])
-            data = self.read_block()
+            data = self.read_block()  # 'NASTRAN FORT TAPE ID CODE - '
 
             if data == b'NASTRAN FORT TAPE ID CODE - ':
                 macro_version = 'nastran'
@@ -210,43 +211,7 @@ class OP2Reader:
             #print('version = %r' % version_str)
 
             if macro_version == 'nastran':
-                if version.startswith(b'NX'):
-                    mode = 'nx'
-                    version_str = version[2:].strip().decode(self._encoding)
-                    if version_str not in NX_VERSIONS:
-                        self.log.warning('nx version=%r is not supported' % version_str)
-                elif version.startswith(b'MODEP'):
-                    # TODO: why is this separate?
-                    # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
-                    #print('found NX table?...')
-                    #self.log.warning('Assuming NX Nastran')
-                    mode = 'nx'
-                elif version.startswith(b'AEROFREQ'):
-                    # TODO: why is this separate?
-                    # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                    #print('found MSC table?...')
-                    #self.log.warning('Assuming MSC Nastran')
-                    mode = 'msc'
-                elif version.startswith(b'AEROTRAN'):
-                    # TODO: why is this separate?
-                    # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-                    #self.log.warning('Assuming MSC Nastran')
-                    mode = 'msc'
-                elif version in [b'V2005R3B']:
-                    mode = 'msc'
-                elif version in [b'XXXXXXXX']:
-                    #self.log.warning('Assuming MSC Nastran')
-                    mode = 'msc'
-                elif version in [b'OS11XXXX', b'OS12.210', b'OS14.210',
-                                 b'OS2017.1', b'OS2017.2', b'OS2018.1']:
-                    # should this be called optistruct or radioss?
-                    mode = 'optistruct'
-                #elif data[:20] == b'XXXXXXXX20141   0   ':
-                    #self.set_as_msc()
-                    #self.set_table_type()
-                else:
-                    raise RuntimeError('unknown version=%r' % version)
-
+                mode = self._parse_nastran_version(data, version, self.log)
             elif macro_version.startswith('IMAT'):
                 assert version.startswith(b'ATA'), version
                 op2._nastran_format = macro_version
@@ -275,6 +240,67 @@ class OP2Reader:
         self.log.debug('mode = %r' % mode)
         self.op2.set_mode(mode)
         self.op2.set_table_type()
+
+    def _parse_nastran_version(self, data, version, log):
+        """parses a Nastran version string"""
+        if len(data) == 32:
+            MSC_LONG_VERSION = [
+                b'XXXXXXXX20140',
+                b'XXXXXXXX20141',
+            ]
+            #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
+            #self.show_data(data[16:], types='ifsdqlILQ', endian=None)
+            if data[:16].strip() in MSC_LONG_VERSION:
+                # 'XXXXXXXX20140   0   \x00\x00\x00\x00        '
+                # 'XXXXXXXX20141   0   \x00\x00\x00\x00        '
+                mode = 'msc'
+            else:
+                raise NotImplementedError(data)
+        elif len(data) == 8:
+            mode = self._parse_nastran_version_8(data, version)
+        else:
+            raise NotImplementedError(version)
+        return mode
+
+    def _parse_nastran_version_8(self, data, version):
+        """parses an 8 character version string"""
+        if version.startswith(b'NX'):
+            mode = 'nx'
+            version_str = version[2:].strip().decode(self._encoding)
+            if version_str not in NX_VERSIONS:
+                self.log.warning('nx version=%r is not supported' % version_str)
+        elif version.startswith(b'MODEP'):
+            # TODO: why is this separate?
+            # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
+            #print('found NX table?...')
+            #self.log.warning('Assuming NX Nastran')
+            mode = 'nx'
+        elif version.startswith(b'AEROFREQ'):
+            # TODO: why is this separate?
+            # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
+            #print('found MSC table?...')
+            #self.log.warning('Assuming MSC Nastran')
+            mode = 'msc'
+        elif version.startswith(b'AEROTRAN'):
+            # TODO: why is this separate?
+            # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
+            #self.log.warning('Assuming MSC Nastran')
+            mode = 'msc'
+        elif version in [b'V2005R3B']:
+            mode = 'msc'
+        elif version in [b'XXXXXXXX']:
+            #self.log.warning('Assuming MSC Nastran')
+            mode = 'msc'
+        elif version in [b'OS11XXXX', b'OS12.210', b'OS14.210',
+                         b'OS2017.1', b'OS2017.2', b'OS2018.1']:
+            # should this be called optistruct or radioss?
+            mode = 'optistruct'
+        #elif data[:20] == b'XXXXXXXX20141   0   ':
+            #self.set_as_msc()
+            #self.set_table_type()
+        else:
+            raise RuntimeError('unknown version=%r' % version)
+        return mode
 
     def read_xsop2dir(self):
         """
@@ -3091,6 +3117,21 @@ class OP2Reader:
         return data_out, ndata
 
     #------------------------------------------------------------------
+    def unpack_table_name(self, data):
+        """table names can apparently be 8 or 32 characters"""
+        if len(data) == 8:
+            # 'GEOM4   '
+            structi = self.op2.struct_8s
+            table_name, = structi.unpack(data)
+        elif len(data) == 32:
+            # 'GEOM1   20140   0   _y\xfe\xffGEOM1   '
+            # ['GEOM1   ', '20140   ', '0   ', -10000, ' GEOM1   ']
+            structi = self.op2.struct_8s
+            table_name, = structi.unpack(data[:8])
+        else:
+            raise NotImplementedError(data)
+        return table_name.strip()
+
     def _read_table_name(self, rewind=False, stop_on_failure=True):
         """
         Reads the next OP2 table name (e.g. OUG1, OES1X1)
@@ -3107,10 +3148,10 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write('_read_table_name - rewind=%s\n' % rewind)
         ni = op2.n
-        structi = op2.struct_8s
         if stop_on_failure:
             data = self._read_record(debug=False, macro_rewind=rewind)
-            table_name, = structi.unpack(data)
+            table_name = self.unpack_table_name(data)
+
             if self.is_debug_file and not rewind:
                 self.binary_debug.write('marker = [4, 2, 4]\n')
                 self.binary_debug.write('table_header = [8, %r, 8]\n\n' % table_name)
@@ -3118,8 +3159,7 @@ class OP2Reader:
         else:
             try:
                 data = self._read_record(macro_rewind=rewind)
-                table_name, = structi.unpack(data)
-                table_name = table_name.strip()
+                table_name = self.unpack_table_name(data)
             except:
                 # we're done reading
                 op2.n = ni
@@ -3857,6 +3897,7 @@ class OP2Reader:
         .. warning:: 's' is apparently not Python 3 friendly
 
         """
+        #ifsdqlILQ
         return self._write_data(sys.stdout, data, types=types, endian=endian)
 
     def _write_data(self, f, data, types='ifs', endian=None):  # pragma: no cover
@@ -3896,7 +3937,7 @@ class OP2Reader:
 
         f.write('\nndata = %s:\n' % n)
         for typei in types:
-            assert typei in 'sifdq lIL', 'type=%r is invalid' % typei
+            assert typei in 'sifdq lILQ', 'type=%r is invalid' % typei
 
         if 's' in types:
             strings = unpack('%s%is' % (endian, n), data)
@@ -3923,6 +3964,9 @@ class OP2Reader:
         if 'q' in types:
             longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
             f.write("  long long (int64) = %s\n" % str(longs))
+        if 'Q' in types:
+            longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])
+            f.write("  unsigned long long (int64) = %s\n" % str(longs))
         f.write('\n')
         return strings, ints, floats
 

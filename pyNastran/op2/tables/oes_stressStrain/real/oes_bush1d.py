@@ -3,7 +3,7 @@ import numpy as np
 from numpy import zeros, searchsorted, ravel
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
@@ -97,13 +97,18 @@ class RealBush1DStressArray(OES_Object):
             #          axial_strain              NaN         NaN         NaN
             #          plastic_strain       0.000000    0.000000    0.000000
             column_names, column_values = self._build_dataframe_transient_header()
-            self.data_frame = self._build_pandas_transient_elements(
+            data_frame = self._build_pandas_transient_elements(
                 column_values, column_names,
                 headers, self.element, self.data)
         else:
-            self.data_frame = pd.Panel(self.data, major_axis=self.element, minor_axis=headers).to_frame()
-            self.data_frame.columns.names = ['Static']
-            self.data_frame.index.names = ['ElementID', 'Item']
+            #Static     element_force  axial_displacement  axial_velocity  axial_stress  axial_strain  plastic_strain
+            #ElementID
+            #17801                1.0                 0.1             0.0           0.0           0.0             0.0
+            #17807                1.0                 0.1             0.0           0.0           0.0             0.0
+            data_frame = pd.DataFrame(self.data[0], columns=headers, index=self.element)
+            data_frame.index.name = 'ElementID'
+            data_frame.columns.names = ['Static']
+        self.data_frame = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
