@@ -54,12 +54,12 @@ def mixed_type_unstructured_grid():
     unstructured grid.
     """
     pts = np.array([
-        [0,0,0], [1,0,0], [0,1,0], [0,0,1], # tetra
-        [2,0,0], [3,0,0], [3,1,0], [2,1,0],
-        [2,0,1], [3,0,1], [3,1,1], [2,1,1], # Hex
+        [0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], # tetra
+        [2, 0, 0], [3, 0, 0], [3, 1, 0], [2, 1, 0],
+        [2, 0, 1], [3, 0, 1], [3, 1, 1], [2, 1, 1], # Hex
         ], dtype='float32')
     # shift the points so we can show both.
-    pts[:,1] += 2.0
+    pts[:, 1] += 2.0
     npoints = len(pts)
     forces = pts
 
@@ -135,7 +135,7 @@ def main():
     force_scalar_array = numpy_to_vtk(scalars, deep=1)
 
     grid_mapper = vtk.vtkDataSetMapper()
-    vtk_version = int(VTK_VERSION[0])
+    #vtk_version = int(VTK_VERSION[0])
     grid_mapper.SetInputData(ug)
 
     if make_glyphs:

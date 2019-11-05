@@ -1,0 +1,44 @@
+# vtk DataFile Version 3.0
+All in VTK format
+ASCII
+DATASET UNSTRUCTURED_GRID
+POINTS 8 float
+-20 0 0
+-12.898 0 0
+-7.65367 18.4776 0
+-14.1421 14.1421 0
+-18.4776 7.65367 0
+-11.8832 4.95205 0
+-9.03623 9.14123 0
+-4.79931 11.937 0
+
+CELLS 3 15 
+4 0 1 5 4
+4 4 5 6 3 
+4 3 6 7 2
+CELL_TYPES 3
+9   
+9   
+9   
+CELL_DATA 3
+SCALARS oga_cell_type int 1
+LOOKUP_TABLE default
+5
+6   
+7
+SCALARS cell_tag int 1
+LOOKUP_TABLE default
+11  
+12  
+13
+POINT_DATA 8
+SCALARS point_tag int 1  
+LOOKUP_TABLE default
+101
+102
+103
+104
+105
+106
+107
+108

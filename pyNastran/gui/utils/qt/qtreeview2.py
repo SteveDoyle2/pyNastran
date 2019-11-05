@@ -286,7 +286,8 @@ class GenericRightClickTreeView(QTreeView2):
             #print('callback =', callback_func)
             callback_func(icase)
 
-        for (right_click_msg, callback_func, validate) in actions:
+        for actioni in actions:
+            (right_click_msg, callback_func, validate) = actioni
             action = self.right_click_menu.addAction(right_click_msg)
 
             true_false_callback = true_callback if validate else false_callback

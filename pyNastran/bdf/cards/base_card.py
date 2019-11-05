@@ -68,12 +68,14 @@ class BaseCard:
         pass
 
     def object_attributes(self, mode: str='public',
-                          keys_to_skip: Optional[List[str]]=None) -> List[str]:
+                          keys_to_skip: Optional[List[str]]=None,
+                          filter_properties: bool=False) -> List[str]:
         """.. seealso:: `pyNastran.utils.object_attributes(...)`"""
         if keys_to_skip is None:
             keys_to_skip = []
         my_keys_to_skip = []  # type: List[str]
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                 filter_properties=filter_properties)
 
     def object_methods(self, mode: str='public',
                        keys_to_skip: Optional[List[str]]=None) -> List[str]:
