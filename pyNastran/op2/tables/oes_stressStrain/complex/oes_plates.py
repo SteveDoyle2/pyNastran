@@ -382,17 +382,7 @@ class ComplexPlateArray(OES_Object):
                 raise ValueError(msg)
         return True
 
-    #def add_new_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy):
-        #self.add_eid_sort1(dt, eid, node_id, fdr, oxx, oyy, txy)
-
-    #def add_sort1(self, dt, eid, gridC, fdr, oxx, oyy, txy):
-        #"""unvectorized method for adding SORT1 transient data"""
-        #self.add_eid_sort1(dt, eid, gridC, fdr, oxx, oyy, txy)
-
-    #def add_new_node_sort1(self, dt, eid, gridc, fdr, oxx, oyy, txy):
-        #self.add_eid_sort1(dt, eid, gridc, fdr, oxx, oyy, txy)
-
-    def add_eid_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy) -> None:
+    def add_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy) -> None:
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -405,7 +395,7 @@ class ComplexPlateArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def add_eid_ovm_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy, ovm) -> None:
+    def add_ovm_sort1(self, dt, eid, node_id, fdr, oxx, oyy, txy, ovm) -> None:
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
         self._times[self.itime] = dt
         #print(self.element_types2, element_type, self.element_types2.dtype)
@@ -567,7 +557,7 @@ class ComplexPlateArray(OES_Object):
         #msg.append('  data.shape=%s\n' % str(self.data.shape).replace('L', ''))
 
         eids = self.element_node[:, 0]
-        nids = self.element_node[:, 1]
+        #nids = self.element_node[:, 1]
 
         eids_device = eids * 10 + self.device_code
 
@@ -631,32 +621,59 @@ class ComplexPlateArray(OES_Object):
 
             ilayer0 = True
             nwide = 0
-
-            for eid_device, eid, node, fd, doxx, doyy, dtxy in zip(eids_device, eids, nodes, fds, oxx, oyy, txy):
-                if node == 0 and ilayer0:
-                    data = [eid_device, b'CEN/', node, fd,
-                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
-                    op2.write(struct1.pack(*data))
-                    op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
-                    #f06_file.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
-                        #eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
-                elif ilayer0:    # TODO: assuming 2 layers?
-                    data = [node, fd,
-                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
-                    op2.write(struct2.pack(*data))
-                    op2_ascii.write('  node=%s data=%s' % (node, str(data[2:])))
-                    #f06_file.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
-                        #'', node, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
-                else:
-                    data = [fd,
-                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
-                    op2.write(struct3.pack(*data))
-                    op2_ascii.write('    data=%s' % (str(data[2:])))
-                    #f06_file.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % (
-                        #'', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
-                ilayer0 = not ilayer0
-
-                nwide += len(data)
+            if self.has_von_mises:
+                ovm = self.data[itime, :, 3]
+                for eid_device, eid, node, fd, doxx, doyy, dtxy, dovm in zip(eids_device, eids, nodes, fds, oxx, oyy, txy, ovm):
+                    if node == 0 and ilayer0:
+                        data = [eid_device, b'CEN/', node, fd,
+                                doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag,
+                                dovm.real]
+                        op2.write(struct1.pack(*data))
+                        op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
+                        #f06_file.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
+                            #eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                    elif ilayer0:    # TODO: assuming 2 layers?
+                        data = [node, fd,
+                                doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag,
+                                dovm.real]
+                        op2.write(struct2.pack(*data))
+                        op2_ascii.write('  node=%s data=%s' % (node, str(data[2:])))
+                        #f06_file.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
+                            #'', node, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                    else:
+                        data = [fd,
+                                doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                        op2.write(struct3.pack(*data))
+                        op2_ascii.write('    data=%s' % (str(data[2:])))
+                        #f06_file.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % (
+                            #'', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                    ilayer0 = not ilayer0
+                    nwide += len(data)
+            else:
+                for eid_device, eid, node, fd, doxx, doyy, dtxy in zip(eids_device, eids, nodes, fds, oxx, oyy, txy):
+                    if node == 0 and ilayer0:
+                        data = [eid_device, b'CEN/', node, fd,
+                                doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                        op2.write(struct1.pack(*data))
+                        op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
+                        #f06_file.write('0  %8i %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
+                            #eid, cen, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                    elif ilayer0:    # TODO: assuming 2 layers?
+                        data = [node, fd,
+                                doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                        op2.write(struct2.pack(*data))
+                        op2_ascii.write('  node=%s data=%s' % (node, str(data[2:])))
+                        #f06_file.write('   %8s %8i  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n' % (
+                            #'', node, fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                    else:
+                        data = [fd,
+                                doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                        op2.write(struct3.pack(*data))
+                        op2_ascii.write('    data=%s' % (str(data[2:])))
+                        #f06_file.write('   %8s %8s  %-13s   %-13s / %-13s   %-13s / %-13s   %-13s / %s\n\n' % (
+                            #'', '', fdr, oxxr, oxxi, oyyr, oyyi, txyr, txyi))
+                    ilayer0 = not ilayer0
+                    nwide += len(data)
 
             assert nwide == ntotal, "nwide=%s ntotal=%s" % (nwide, ntotal)
             itable -= 1
@@ -669,8 +686,13 @@ class ComplexPlateArray(OES_Object):
     def _write_op2_ctria3(self, op2, op2_ascii, new_result, itable,
                           ntotal, eids_device) -> int:
         from struct import Struct, pack
-        struct1 = Struct(b'i 7f')
-        struct2 = Struct(b'7f')
+        has_von_mises = self.has_von_mises
+        if has_von_mises:
+            struct1 = Struct(b'i 8f')
+            struct2 = Struct(b'8f')
+        else:
+            struct1 = Struct(b'i 7f')
+            struct2 = Struct(b'7f')
         for itime in range(self.ntimes):
             self._write_table_3(op2, op2_ascii, new_result, itable, itime)
             # record 4
@@ -696,27 +718,51 @@ class ComplexPlateArray(OES_Object):
             ilayer0 = True
             nwide = 0
 
-            for eid_device, eid, fd, doxx, doyy, dtxy in zip(eids_device, eids, fds, oxx, oyy, txy):
-                #ilyaer0 = True
-                if ilayer0:
-                    data = [eid_device, fd,
-                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
-                    op2.write(struct1.pack(*data))
-                    #op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
-                    op2_ascii.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
-                        eid, fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag))
-                else:
-                    data = [fd,
-                            doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
-                    op2.write(struct2.pack(*data))
-                    #op2_ascii.write('    data=%s' % (str(data[2:])))
-                    op2_ascii.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
-                        '', fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag))
-                ilayer0 = not ilayer0
-
-                nwide += len(data)
-
-            assert nwide == ntotal, "nwide=%s ntotal=%s" % (nwide, ntotal)
+            if self.has_von_mises:
+                ovm = self.data[itime, :, 3]
+                for eid_device, eid, fd, doxx, doyy, dtxy, dovm in zip(eids_device, eids, fds, oxx, oyy, txy, ovm):
+                    #ilyaer0 = True
+                    if ilayer0:
+                        ndatai = 0
+                        data = [eid_device, fd,
+                                doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag,
+                                dovm.real]
+                        op2.write(struct1.pack(*data))
+                        #op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
+                        op2_ascii.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
+                            eid, fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag, ))
+                    else:
+                        data = [fd,
+                                doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag,
+                                dovm.real]
+                        op2.write(struct2.pack(*data))
+                        #op2_ascii.write('    data=%s' % (str(data[2:])))
+                        op2_ascii.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
+                            '', fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag))
+                    ndatai += len(data)
+                    ilayer0 = not ilayer0
+                    nwide += len(data)
+                assert nwide == ntotal, f"numwide={self.num_wide} ndatai={ndatai} nwide={nwide} ntotal={ntotal} headers={self.get_headers()}"
+            else:
+                for eid_device, eid, fd, doxx, doyy, dtxy in zip(eids_device, eids, fds, oxx, oyy, txy):
+                    #ilyaer0 = True
+                    if ilayer0:
+                        data = [eid_device, fd,
+                                doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                        op2.write(struct1.pack(*data))
+                        #op2_ascii.write('eid=%s node=%s data=%s' % (eid, node, str(data[2:])))
+                        op2_ascii.write('0  %6i   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
+                            eid, fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag))
+                    else:
+                        data = [fd,
+                                doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag]
+                        op2.write(struct2.pack(*data))
+                        #op2_ascii.write('    data=%s' % (str(data[2:])))
+                        op2_ascii.write('   %6s   %-13s     %-13s / %-13s     %-13s / %-13s     %-13s / %s\n' % (
+                            '', fd, doxx.real, doxx.imag, doyy.real, doyy.imag, dtxy.real, dtxy.imag))
+                    ilayer0 = not ilayer0
+                    nwide += len(data)
+                assert nwide == ntotal, f"numwide={self.num_wide} nwide={nwide} ntotal={ntotal} headers={self.get_headers()}"
             itable -= 1
             header = [4 * ntotal,]
             op2.write(pack('i', *header))

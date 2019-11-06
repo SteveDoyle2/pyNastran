@@ -797,17 +797,20 @@ class EPT(GeomCommon):
         TODO: MSC has 24 fields in 2016.1 (not supported)
         MSC has 18 fields in the pre-2001 format (supported)
         """
-        n = self._read_dual_card(data, n, self._read_pbush_nx, self._read_pbush_nx,
+        # we're listing nx twice because NX/MSC used to be consistent
+        # the new form for MSC is not supported
+        n = self._read_dual_card(data, n, self._read_pbush_nx, self._read_pbush_msc,
                                  'PBUSH', self._add_op2_property)
         return n
 
     def _read_pbush_nx(self, data, n):
         """PBUSH(1402,14,37) - 18 fields"""
-        #if self.table_name == ['EPTS', 'EPT']:
         ntotal = 72
         struct1 = Struct(self._endian + b'i17f')
-        nentries = (len(data) - n) // ntotal
-        assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+        ndata = len(data) - n
+        nentries = ndata // ntotal
+        assert nentries > 0, 'table={self.table_name} len={ndata}'
+        assert ndata % ntotal == 0, f'table={self.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
         props = []
         for unused_i in range(nentries):
             edata = data[n:n+72]
@@ -823,11 +826,15 @@ class EPT(GeomCommon):
         return n, props
 
     def _read_pbush_msc(self, data, n):
-        """PBUSH(1402,14,37)"""
+        """PBUSH(1402,14,37) - 23 fields"""
         ntotal = 92  # 23*4
         struct1 = Struct(self._endian + b'i22f')
-        nentries = (len(data) - n) // ntotal
-        assert nentries > 0, 'table=%r len=%s' % (self.table_name, len(data) - n)
+
+        ndata = len(data) - n
+        nentries = ndata // ntotal
+        assert nentries > 0, 'table={self.table_name} len={ndata}'
+        assert ndata % ntotal == 0, f'table={self.table_name} leftover = {ndata} % {ntotal} = {ndata % ntotal}'
+
         props = []
         for unused_i in range(nentries):
             edata = data[n:n+92]

@@ -1286,6 +1286,36 @@ class TestOP2(Tester):
                 stop_on_failure=True, dev=False,
                 build_pandas=False, log=log)
 
+    def test_bdf_op2_other_27(self):
+        """checks ac10804.bdf, which tests ComplexPlateStressArray"""
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'tr1091x.op2')
+
+        ##  can't parse replication
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            #'', bdf_filename,
+            #run_skin_solids=False)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        #model.safe_cross_reference()
+
+        #save_load_deck(model, run_renumber=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
+
     def test_set_results(self):
         """tests setting only a subset of results"""
         log = get_logger(level='warning')

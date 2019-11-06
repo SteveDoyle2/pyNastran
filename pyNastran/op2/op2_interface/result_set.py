@@ -87,7 +87,7 @@ class ResultSet:
         all_matched_results = []
         for result in results:
             # tack on a word boundary if we have a * at the beginning of the regex
-            resulti = '\w' + result if result.startswith('*') else result
+            resulti = r'\w' + result if result.startswith('*') else result
             regex = re.compile(resulti)
             matched_results = list(filter(regex.match, self.allowed))
             if len(matched_results) == 0:

@@ -54,7 +54,7 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
     # return if no supported cards are found
     skip_cards = {
-        'SUPORT', 'SUPORT1', # suport
+        #'SUPORT', 'SUPORT1', # suport
 
         # spcs
         'GMSPC',
@@ -69,6 +69,8 @@ def write_geom4(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
     # not defined in DMAP
     not_defined_cards = {'RBAR1'}
     supported_cards = {
+        'SUPORT', 'SUPORT1', # suport
+
         # sets
         'ASET', 'BSET', 'CSET', 'QSET', 'OMIT',
         'ASET1', 'BSET1', 'QSET1', 'OMIT1',
@@ -196,6 +198,44 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
             fmt += b'%ii' % (nnodes * 2)
             for nid, comp in zip(set_obj.node_ids, set_obj.components):
                 data += [nid, int(comp)]
+        nfields = len(data)
+        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+        op2.write(pack(fmt, *data))
+        del data, fmt
+    elif card_type == 'SUPORT':
+        key = (5601, 56, 14)
+        data = []
+        fmt = endian
+        for suport in cards:
+            datai = []
+            nnodes = len(suport.Cs)
+            for nid, ci in zip(suport.node_ids, suport.Cs):
+                assert isinstance(nid, int), suport.get_stats()
+                assert isinstance(ci, str), suport.get_stats()
+                datai.extend([nid, int(ci)])
+            fmt += b'%ii' % (nnodes * 2)
+            data.extend(datai)
+            op2_ascii.write('  SUPORT data=%s\n' % str(datai))
+        nfields = len(data)
+        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+        op2.write(pack(fmt, *data))
+        del data, fmt
+
+    elif card_type == 'SUPORT1':
+        key = (10100, 101, 472)
+        data = []
+        fmt = endian
+        for suport1 in cards:
+            suport1i = [suport1.conid]
+            nnodes = len(suport1.Cs)
+            for nid, ci in zip(suport1.node_ids, suport1.Cs):
+                assert isinstance(nid, int), suport1.get_stats()
+                assert isinstance(ci, int), suport1.get_stats()
+                suport1i.extend([nid, ci])
+            suport1i.append(-1)
+            op2_ascii.write('  SUPORT1 data=%s\n' % str(suport1i))
+            fmt += b'%ii' % (2 * nnodes + 2)
+            data.extend(suport1i)
         nfields = len(data)
         nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
         op2.write(pack(fmt, *data))
@@ -404,55 +444,8 @@ def write_card(op2, op2_ascii, card_type, cards, endian, nastran_format='nx'):
         spack = Struct(endian + b'%ii' % nfields)
         op2.write(spack.pack(*data))
     elif card_type == 'SPC':
-        key = (5501, 55, 16)
-        #nastran_format = 'msc'
-        if nastran_format == 'msc':
-            nfields = 5
-            nbytes = write_header(card_type, nfields, ncards, key, op2, op2_ascii)
-            # MSC
-            # SPC(5501,55,16) - Record 44
-            #
-            # 1 SID   I    Set identification number
-            # 2 ID    I    Grid or scalar point identification number
-            # 3 C     I    Component numbers
-            # 4 UNDEF none Not used
-            # 5 D     RX   Enforced displacement
-            data = []
-            for spc in cards:
-                node_ids = spc.node_ids
-                for nid, comp, enforcedi in zip(node_ids, spc.components, spc.enforced):
-                    datai = [spc.conid, nid, int(comp), 0, enforcedi]
-                op2_ascii.write('  SPC data=%s\n' % str(datai))
-                data += datai
-            nfields = len(data)
-            nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
-            fmt = endian + b'4if' * (nfields // 5)
-            op2.write(pack(fmt, *data))
-
-        elif nastran_format == 'nx':
-            # NX
-            # SPC(5501,55,16) - Record 44
-            #
-            # 1 SID I  Set identification number
-            # 2 ID  I  Grid or scalar point identification number
-            # 3 C   I  Component numbers
-            # 4 D   RS Enforced displacement
-            data = []
-            for spc in cards:
-                node_ids = spc.node_ids
-                #assert len(node_ids) == 1, spc.get_stats()
-                datai = []
-                for nid, comp, enforcedi in zip(node_ids, spc.components, spc.enforced):
-                    datai = [spc.conid, nid, int(comp), enforcedi]
-                    op2_ascii.write('  SPC data=%s\n' % str(datai))
-                data += datai
-            nfields = len(data)
-            nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
-            fmt = endian + b'3if' * (nfields // 4)
-            op2.write(pack(fmt, *data))
-        else:  # pragma: no cover
-            raise RuntimeError(f'nastran_format={nastran_format} not msc, nx')
-
+        nbytes = _write_spc(card_type, cards, ncards, op2, op2_ascii, endian,
+                            nastran_format=nastran_format)
     #elif card_type == 'TEMPD':
         #key = (5641, 65, 98)
         #nfields = 6
@@ -484,6 +477,58 @@ def write_header(name, nfields, ncards, key, op2, op2_ascii):
     """writes the op2 card header given the number of cards and the fields per card"""
     nvalues = nfields * ncards
     nbytes = write_header_nvalues(name, nvalues, key, op2, op2_ascii)
+    return nbytes
+
+def _write_spc(card_type, cards, ncards, op2, op2_ascii, endian, nastran_format='nx'):
+    """writes an SPC"""
+    key = (5501, 55, 16)
+    #nastran_format = 'msc'
+    if nastran_format == 'msc':
+        # MSC
+        # SPC(5501,55,16) - Record 44
+        #
+        # 1 SID   I    Set identification number
+        # 2 ID    I    Grid or scalar point identification number
+        # 3 C     I    Component numbers
+        # 4 UNDEF none Not used
+        # 5 D     RX   Enforced displacement
+        nfields = 5
+        nbytes = write_header(card_type, nfields, ncards, key, op2, op2_ascii)
+        data = []
+        for spc in cards:
+            node_ids = spc.node_ids
+            for nid, comp, enforcedi in zip(node_ids, spc.components, spc.enforced):
+                datai = [spc.conid, nid, int(comp), 0, enforcedi]
+            op2_ascii.write('  SPC data=%s\n' % str(datai))
+            data += datai
+        nfields = len(data)
+        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+        fmt = endian + b'4if' * (nfields // 5)
+        op2.write(pack(fmt, *data))
+
+    elif nastran_format == 'nx':
+        # NX
+        # SPC(5501,55,16) - Record 44
+        #
+        # 1 SID I  Set identification number
+        # 2 ID  I  Grid or scalar point identification number
+        # 3 C   I  Component numbers
+        # 4 D   RS Enforced displacement
+        data = []
+        for spc in cards:
+            node_ids = spc.node_ids
+            #assert len(node_ids) == 1, spc.get_stats()
+            datai = []
+            for nid, comp, enforcedi in zip(node_ids, spc.components, spc.enforced):
+                datai = [spc.conid, nid, int(comp), enforcedi]
+                op2_ascii.write('  SPC data=%s\n' % str(datai))
+            data += datai
+        nfields = len(data)
+        nbytes = write_header_nvalues(card_type, nfields, key, op2, op2_ascii)
+        fmt = endian + b'3if' * (nfields // 4)
+        op2.write(pack(fmt, *data))
+    else:  # pragma: no cover
+        raise RuntimeError(f'nastran_format={nastran_format} not msc, nx')
     return nbytes
 
 def _write_rbar(card_type, cards, ncards, op2, op2_ascii, endian, nastran_format='nx'):

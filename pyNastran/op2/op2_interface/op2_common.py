@@ -1248,7 +1248,7 @@ class OP2Common(Op2Codes, F06Writer):
                 n += 56
         return n
 
-    def _check_id(self, eid_device, unused_flag, bdf_name, unused_out):
+    def _check_id(self, eid_device, unused_flag, unused_out):
         """
         Somewhat risky method for calculating the eid because the device code
         is ignored.  However, this might be the actual way to parse the id.

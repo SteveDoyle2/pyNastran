@@ -155,8 +155,7 @@ class PythonConsoleWidget(QDockWidget):
         hbox.addWidget(self.execute_and_clear_python_button)
         vbox.addLayout(hbox)
 
-        vbox_widget = QWidget()
-        vbox_widget.setLayout(vbox)
+        vbox_widget = layout_to_widget(vbox)
         self.setWidget(vbox_widget)
 
     def setup_connections(self):
@@ -228,6 +227,11 @@ def get_code_block():
         font.setFamily('Courier')
         enter_data.setFont(font)
     return enter_data
+
+def layout_to_widget(layout):
+    widget = QWidget()
+    widget.setLayout(layout)
+    return widget
 
 
 def main():  # pragma: no cover

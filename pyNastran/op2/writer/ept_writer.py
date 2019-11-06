@@ -40,32 +40,36 @@ def write_ept(op2, op2_ascii, obj, endian=b'<'):
         out[prop.type].append(pid)
 
     skip_properties = [
-        'PBEND', 'PBUSH',  #'PBUSH1D',
+        'PBEND', #'PBUSH1D',
         'PBCOMP',
         #'PGAP',
         #'PCOMPG',
 
     ]
+    nastran_format = 'nx'
     for name, pids in out.items():
         nproperties = len(pids)
         if nproperties == 0:  # pragma: no cover
             continue
-        elif name in skip_properties:  # pragma: no cover
+        if name in skip_properties:  # pragma: no cover
             obj.log.warning('skipping EPT-%s' % name)
             continue
 
         #print('EPT', itable, name)
         if name == 'PBARL':
-            key = (9102, 91, 52)
             itable = write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=endian)
             continue
         elif name == 'PCOMP':
             itable = write_pcomp(name, pids, itable, op2, op2_ascii, obj, endian=endian)
             continue
         elif name == 'PCOMPG':
-            #continue
             itable = write_pcompg(name, pids, itable, op2, op2_ascii, obj, endian=endian)
             continue
+        elif name == 'PBUSH':
+            itable = write_pbush(name, pids, itable, op2, op2_ascii, obj, endian=endian,
+                                 nastran_format=nastran_format)
+            continue
+
         elif name == 'PELAS':
             key = (302, 3, 46)
             nfields = 4
@@ -400,6 +404,75 @@ def write_card(op2, op2_ascii, obj, name, pids, spack, endian):
         raise NotImplementedError(name)
 
 
+def write_pbush(name, pids, itable, op2, op2_ascii, obj, endian=b'<',
+                nastran_format='nx'):
+    """writes the PBUSH"""
+
+    # TODO: there are 3 different types of PBUSH cards...
+    key = (1402, 14, 37) # 23 fields
+    fmt = endian + b'i22f'
+    struct1 = Struct(fmt)
+
+    nproperties = len(pids)
+
+    nvalues = 23 * nproperties + 3 # +3 comes from the keys
+    nbytes = nvalues * 4
+    op2.write(pack('3i', *[4, nvalues, 4]))
+    op2.write(pack('i', nbytes)) #values, nbtyes))
+
+    op2.write(pack('3i', *key))
+    op2_ascii.write('%s %s\n' % (name, str(key)))
+
+    for pid in sorted(pids):
+        prop = obj.properties[pid]
+        (b1, b2, b3, b4, b5, b6) = [
+            bi if bi is not None else 0.0 for bi in prop.Bi]  # damping
+        (k1, k2, k3, k4, k5, k6) = [
+            ki if ki is not None else 0.0 for ki in prop.Ki] # stiffness
+        (g1, g2, g3, g4, g5, g6) = [
+            gi if gi is not None else 0.0 for gi in prop.GEi] # ???
+        # TODO: not 100%
+        sa = prop.sa if prop.sa is not None else 0.
+        st = prop.st if prop.st is not None else 0.
+        ea = prop.ea if prop.ea is not None else 0.
+        et = prop.et if prop.et is not None else 0.
+        data_in = [pid,
+                   k1, k2, k3, k4, k5, k6,
+                   b1, b2, b3, b4, b5, b6,
+                   g1, g2, g3, g4, g5, g6,
+                   sa, st, ea, et]
+
+        assert len(data_in) == 23, data_in
+        assert None not in data_in
+        op2.write(struct1.pack(*data_in))
+        op2_ascii.write(str(data_in) + '\n')
+
+    op2.write(pack('i', nbytes))
+    itable -= 1
+    data = [
+        4, itable, 4,
+        4, 1, 4,
+        4, 0, 4]
+    op2.write(pack('9i', *data))
+    op2_ascii.write(str(data) + '\n')
+    return itable
+    #"""PBUSH"""
+    #ntotal = 92  # 23*4
+    #
+
+    #nentries = ndata // ntotal
+    #assert nentries > 0, 'table={self.table_name} len={ndata - n}'
+    #assert ndata % ntotal == 0, f'table={self.table_name} leftover=({ndata}%{ntotal}={ndata % ntotal}'
+
+    #props = []
+    #for unused_i in range(nentries):
+        #edata = data[n:n+92]
+        #out = struct1.unpack(edata)
+        ## = out
+        #prop = PBUSH.add_op2_data(out)
+        #props.append(prop)
+        #n += ntotal
+    #return n, props
 def write_pbarl(name, pids, itable, op2, op2_ascii, obj, endian=b'<'):
     """writes the PBARL"""
     key = (9102, 91, 52)
