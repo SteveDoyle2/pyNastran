@@ -22,6 +22,7 @@ from pyNastran.converters.dev.avus.test_avus import TestAvus
     #pass
 
 try:
+    from pyNastran.converters.dev.code_aster.test_code_aster import TestCodeAster
     from pyNastran.converters.dev.vrml.test_vrml import TestVrml
 except ImportError:  # pragma: no cover
     pass

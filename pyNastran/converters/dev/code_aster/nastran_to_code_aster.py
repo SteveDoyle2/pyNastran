@@ -1,5 +1,6 @@
 """very old code aster converter that was never quite working"""
 import os
+from typing import Optional, Any
 from pyNastran.bdf.bdf import BDF
 
 
@@ -12,7 +13,7 @@ class CodeAsterConverter(BDF):
        each other properly.
      * Just like Nastran, extra materials/properties are allowed.
        No idea how Code_Aster handles SPOINTs or unassociated GRIDs.
-     * Loads must be referenced by a single LOAD card in the Case Control deck.
+     * Loads must be referenced by a single LOAD card in the Case Contlrol deck.
        This is consistent with standard Nastran.
 
     Limitations:
@@ -37,10 +38,11 @@ class CodeAsterConverter(BDF):
       SPC, SPC1, MPC,
       RBE2, RBE3
     """
-    def __init__(self, language='english'):
+    def __init__(self, language='english', debug: Optional[bool]=True,
+                 log: Any=None, mode: str='msc'):
         self.language = language
         assert self.language in ['english']
-        BDF.__init__(self)
+        BDF.__init__(self, debug=debug, log=log, mode=mode)
         self.max_nid_len = 0
         self.max_eid_len = 0
         self.max_pid_len = 0
@@ -238,6 +240,7 @@ class CodeAsterConverter(BDF):
         istart = 0
         for pid, prop in sorted(self.properties.items()):
             ptype = prop.type
+            comm += _write_card(prop)
             if ptype == 'PBARL':
                 msg = '# BAR Type=%s pid=%s\n' % (ptype, pid)
                 msg2 = ''
@@ -361,11 +364,9 @@ class CodeAsterConverter(BDF):
                 msg += "              COQUE_NCOU=1,  # Number of Integration Layers\n"
                 msg += "              CARA=('NSM'), # ???\n"  #: .. todo:: check
                 msg += "              VALE=(%g),),\n" % prop.nsm
-                return msg
             else:
-                self.log.warning(msg)
                 msg = '# skipping %s because write_code_aster is not implemented\n' % ptype
-                continue
+                self.log.warning(msg)
             comm += msg
         comm += ');\n'
         #comm += ');\nFINSF\n\n'
@@ -388,18 +389,18 @@ class CodeAsterConverter(BDF):
         mats = self.get_elements_by_mid()
         for mid, material in sorted(self.materials.items()):
             #comm += 'GROUP_MA name = %s_%s\n' % (material.type, mid)
+            comm += _write_card(material)
             if material.type == 'MAT1':
-                # MAT1
-                pre = 'M%s = DEFI_MATRIAU(ELAS=_F(' % self.mid
+                pre = 'M%s = DEFI_MATRIAU(ELAS=_F(' % material.mid
                 spaces = ' ' * len(pre)
-                msg = '%sE=%g, # MAT1 mid=%s\n' % (pre, self.e, self.mid)
-                #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(self.mid)
-                #msg += spaces + 'E  =%g,\n'  %(self.e)
-                msg += spaces + 'NU=%g,\n' % (self.nu)
-                if '.' in '%g' % self.rho:
-                    msg += spaces + 'RHO=%g));\n' % (self.rho)
+                msg = '%sE=%g, # MAT1 mid=%s\n' % (pre, material.e, material.mid)
+                #msg  = 'M%s = DEFI_MATRIAU(ELAS=_F( # MAT1\n' %(material.mid)
+                #msg += spaces + 'E  =%g,\n'  %(material.e)
+                msg += spaces + 'NU=%g,\n' % (material.nu)
+                if '.' in '%g' % material.rho:
+                    msg += spaces + 'RHO=%g));\n' % (material.rho)
                 else:
-                    msg += spaces + 'RHO=%.1f));\n' % (self.rho)
+                    msg += spaces + 'RHO=%.1f));\n' % (material.rho)
             else:
                 raise NotImplementedError(material)
             comm += msg
@@ -419,7 +420,7 @@ class CodeAsterConverter(BDF):
 
     def ca_material_field(self):
         """
-        .. code-block:: ptyhon
+        .. code-block:: python
 
           MtrlFld=AFFE_MATERIAU(MAILLAGE=MESH,
                               AFFE=(_F(GROUP_MA=('P32','P33','P42','P43','P46','P47','P48','P49',
@@ -458,15 +459,13 @@ class CodeAsterConverter(BDF):
             #comm += ''
 
         isubcase = 1
-        param_name = 'LOAD'
-
         #skippedLids = {}
         if self.loads:
             comm += '# LOADS\n'
-            #loadKeys = self.loads.keys()
+            #load_keys = self.loads.keys()
 
-            key = self.case_control_deck.get_subcase_parameter(isubcase, param_name)[0]
-            loadcase = self.loads[key]
+            sid = self.case_control_deck.get_subcase_parameter(isubcase, 'LOAD')[0]
+            loadcase = self.Load(sid, consider_load_combinations=True, msg='')
             #print(loadcase)
             for i, load in enumerate(loadcase):
                 loadi = loadcase[i]
@@ -516,6 +515,9 @@ class CodeAsterConverter(BDF):
     def ca_mpcs(self):
         """creates MPC constraints"""
         comm = ''
+        if len(self.mpcs) == 0:
+            return comm
+
         comm += '# ca_mpcs\n'
         for subcase_id, subcase in self.subcases.items():
             if subcase_id == 0:
@@ -525,7 +527,7 @@ class CodeAsterConverter(BDF):
             mpc_id = subcase.get_parameter('MPC')[0]
 
             comm += '# SUBCASE %i; MPC=%s\n' % (subcase_id, mpc_id)
-            mpcs = self.get_reduced_spcs(mpc_id)
+            mpcs = self.get_reduced_mpcs(mpc_id)
             for mpc in mpcs:
                 for line in str(mpc).split('\n'):
                     comm += '#%s\n' % line
@@ -551,7 +553,7 @@ class CodeAsterConverter(BDF):
         self.max_pid_len = len(str(max(self.properties)))
         self.max_mid_len = len(str(max(self.materials)))
 
-    def write_as_code_aster(self, model):
+    def write_as_code_aster(self, model: BDF) -> None:
         """writes a BDF as a code aster formatted file"""
         comm = ''
         mail = ''
@@ -588,39 +590,41 @@ class CodeAsterConverter(BDF):
         comm += '# ENDDATA\n'
         assert comm != ''
 
-        print('pwd=', os.getcwd())
+        #print('pwd=', os.getcwd())
         if comm:
-            with open(model + '.comm', 'wb') as comm_file:
-                print("writing fname=%s" % (model + '.comm'))
+            with open(model + '.comm', 'w', encoding=self._encoding) as comm_file:
+                self.log.debug("writing comm=%s" % (model + '.comm'))
                 comm_file.write(comm)
 
         #print(comm)
         #print(mail)
         #print(py_ca)
         if mail:
-            print('mail')
-            with open(model + '.mail', 'wb') as mail_file:
-                print("writing fname=%s" % (model + '.mail'))
+            with open(model + '.mail', 'w', encoding=self._encoding) as mail_file:
+                self.log.debug("writing mail=%s" % (model + '.mail'))
                 mail_file.write(mail)
 
         if py_ca:
-            print('py_ca')
-            assert py_ca != ''
-            with open(model + '.py', 'wb') as py_file:
-                print("writing fname=%s" % (model + '.py'))
+            with open(model + '.py', 'w', encoding=self._encoding) as py_file:
+                self.log.debug("writing py_ca=%s" % (model + '.py'))
                 py_file.write(py_ca)
+
 
 
 def write_code_aster_load(load, model, grid_word='node'):
     """writes a BDF load card in CA format"""
     load_ids = load.get_load_ids()
+    #print(load)
     load_types = load.get_load_types()
 
     #msg = '# Loads\n'
+    if load.type == 'LOAD':
+        (types_found, force_loads, moment_loads,
+         force_constraints, moment_constraints,
+         gravity_loads) = organize_loads(model, load)
+    else:
+        raise NotImplementedError(load)
     msg = ''
-    (types_found, force_loads, moment_loads,
-     force_constraints, moment_constraints,
-     gravity_loads) = load.organize_loads(model)
 
     nids = []
     for nid in force_loads:
@@ -678,6 +682,71 @@ def write_code_aster_load(load, model, grid_word='node'):
         msg += 'CA_GRAVITY(%s);\n' % str(gravity_load)
     return msg, load_ids, load_types
 
+def organize_loads(model: BDF, load_case):
+    """
+    Figures out magnitudes of the loads to be applied to the various nodes.
+    This includes figuring out scale factors.
+    """
+    force_loads = {}  # spc enforced displacement (e.g. FORCE=0)
+    moment_loads = {}
+    force_constraints = {}
+    moment_constraints = {}
+    gravity_loads = []
+    #print("loadIDs = ",model.loadIDs)
+
+    types_found = set()
+    (loads, scale_factors, is_grav) = model.get_reduced_loads(load_case.sid)
+
+    for (scale_factor, load) in zip(scale_factors, loads):
+        #print("*load = ",load)
+        types_found.add(load.type)
+        is_load = True
+        if load.type in ['FORCE', 'FORCE1', 'FORCE2']:
+            nid = load.node
+            vector = load.to_global()
+            #(is_load, nid, vector) = out
+            if is_load:  # load
+                if nid not in force_loads:
+                    force_loads[nid] = vector * scale_factor
+                else:
+                    force_loads[nid] += vector * scale_factor
+            #else:  # constraint
+                #if nid not in force_loads:
+                    #force_constraints[nid] = vector * scale_factor
+                #else:
+                    #force_constraints[nid] += vector * scale_factor
+
+        elif load.type in ['MOMENT', 'MOMENT1', 'MOMENT2']:
+            is_load = True
+            vector = load.to_global()
+            nid = load.node
+            #(is_load, nid, vector) = out
+            if is_load:  # load
+                if nid not in moment_loads:
+                    moment_loads[nid] = vector * scale_factor
+                else:
+                    moment_loads[nid] += vector * scale_factor
+            #else:  # constraint
+                #if nid not in moment_loads:
+                    #moment_constraints[nid] = vector * scale_factor
+                #else:
+                    #moment_constraints[nid] += vector * scale_factor
+
+        elif isinstance(load, PLOAD4):
+            (is_load, nodes, vectors) = out
+            for (nid, vector) in zip(nodes, vectors):
+                # not the same vector for all nodes
+                force_loads[nid] = vector * scale_factor
+
+        elif isinstance(load, GRAV):
+            #(grav) = out
+            gravity_loads.append(out * scale_factor)  # grav
+        else:
+            msg = f'{load.type} not supported'
+            raise NotImplementedError(msg)
+
+    return (types_found, force_loads, moment_loads, force_constraints,
+            moment_constraints, gravity_loads)
 
 def write_matrix(matrix):
     """
@@ -769,15 +838,18 @@ def write_rbe2(rigid_element):
 
 
 
-def main():
+def main(argv=None, quiet=False):
     """runs nastranToCodeAster"""
+    if argv is None:
+        argv = sys.argv
+
     import sys
     import pyNastran
     from docopt import docopt
     msg = "Usage:\n"
-    msg += "  nastranToCodeAster [-o] BDF_FILENAME\n" #
-    msg += '  nastranToCodeAster -h | --help\n'
-    msg += '  nastranToCodeAster -v | --version\n'
+    msg += "  nastran_to_code_aster [-o] BDF_FILENAME\n" #
+    msg += '  nastran_to_code_aster -h | --help\n'
+    msg += '  nastran_to_code_aster -v | --version\n'
     msg += '\n'
 
     msg += "Positional Arguments:\n"
@@ -789,7 +861,7 @@ def main():
     msg += '  -h, --help     show this help message and exit\n'
     msg += "  -v, --version  show program's version number and exit\n"
 
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
@@ -804,6 +876,11 @@ def main():
     model = CodeAsterConverter()
     model.read_bdf(bdf_filename, encoding='ascii')
     model.write_as_code_aster(fname_base)  # comm, py
+
+def _write_card(card):
+    msg = '# ' + '\n# '.join(card.get_stats().split('\n')) + '\n'
+    msg += '# ' + '\n# '.join(str(card).strip().split('\n')) + '\n'
+    return msg
 
 if __name__ == '__main__':  # pragma: no cover
     main()
