@@ -71,16 +71,15 @@ def collapse_thru(fields, nthru=None):
 
 def _check_sort_fields(fields):
     if isinstance(fields, np.ndarray):
-        if isinstance(fields[0], np.int32):
-            pass
-        else:  # pragma: no cover
-            raise NotImplementedError(f'fields={fields} dtype={fields.dtype}')
+        # if an int array, we don't need to test it beyond that
+        if not isinstance(fields[0], (np.int32, np.int64)):  # pragma: no cover
+            raise NotImplementedError(f'fields={fields}; dtype={fields.dtype}')
         #'THRU' in fields
         #assert not np.any(''), fields
     elif isinstance(fields, (list, tuple)):
         assert 'THRU' not in fields, fields
     else:  # pragma: no cover
-        raise NotImplementedError(f'fields={fields} type={type(fields)}')
+        raise NotImplementedError(f'fields={fields}; type={type(fields)}')
     fields.sort()
 
 def collapse_thru_packs(fields):
