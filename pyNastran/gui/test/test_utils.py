@@ -12,7 +12,10 @@ except ImportError:
 
 import pyNastran
 from pyNastran.gui.utils.load_results import (
-    load_csv, load_deflection_csv, load_user_geom, create_res_obj, check_for_newer_version)
+    load_csv, load_deflection_csv, load_user_geom, create_res_obj)
+from pyNastran.gui.utils.version import check_for_newer_version
+from pyNastran.gui.utils.utils import find_next_value_in_sorted_list
+
 from pyNastran.gui.menus.legend.write_gif import (
     setup_animation, make_two_sided, make_symmetric, write_gif, IS_IMAGEIO)
 from pyNastran.gui.menus.results_sidebar_utils import get_cases_from_tree, build_pruned_tree

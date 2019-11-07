@@ -73,6 +73,8 @@ class MockResWidget:
     def update_method(self, methods):
         """fake method"""
         pass
+    def update_icase(self, icase):
+        pass
 
 class FakeGUIMethods(GuiVTKCommon):
     """all the methods in here are faked"""

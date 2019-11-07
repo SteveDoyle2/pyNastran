@@ -1,6 +1,10 @@
+"""
+defines:
+ - version_latest, version_current, is_newer = check_for_newer_version(version_current=None)
+"""
 import urllib.request
 import urllib.error
-from typing import List, Tuple, Optional, Any
+from typing import List, Tuple, Optional
 
 import pyNastran
 
