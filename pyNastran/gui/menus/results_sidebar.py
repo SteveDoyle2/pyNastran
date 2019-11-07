@@ -1,14 +1,35 @@
 import sys
+from typing import List, Dict, Union, Any
 
 # kills the program when you hit Cntl+C from the command line
 import signal
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 from qtpy.QtWidgets import (
-    QWidget, QVBoxLayout, QPushButton, QApplication,
-    QComboBox, QLabel, QHBoxLayout, QBoxLayout)
+    QWidget, QVBoxLayout, QPushButton, QApplication, QGridLayout,
+    QComboBox, QLabel, QHBoxLayout, QSpinBox, QLineEdit,
+)
+#from qtpy import QtCore
 from pyNastran.gui.utils.qt.results_window import ResultsWindow
+from pyNastran.gui.gui_objects.gui_result import GuiResult, NullResult
+from pyNastran.gui.utils.qt.utils import (
+    add_obj_to_vbox,
+    #create_hbox_with_widgets,
+    add_line_widgets_to_grid)
+from pyNastran.gui.utils.utils import find_next_value_in_sorted_list
 
+SkippableSpinBox = QSpinBox
+#class SkippableSpinBox(QSpinBox):
+    #stepChanged = QtCore.Signal() #  tested in PySide2, pyqtSignal?
+
+    #def stepBy(self, step):
+        #keys = self.parent().case_keys
+        #old = self.value()
+        #new = old + step
+        #find_next_value_in_sorted_list(keys, old, new)
+        #super(SkippableSpinBox, self).stepBy(step)
+        #if self.value() != value:
+            #self.stepChanged.emit()
 
 class Sidebar(QWidget):
     """
@@ -111,6 +132,11 @@ class Sidebar(QWidget):
     """
     def __init__(self, parent, debug=False, data=None, clear_data=True, name='main',
                  setup_dict=None,
+                 # buttons
+                 include_case_spinner=False,
+                 include_deflection_scale=False,
+                 include_vector_scale=False,
+                 # actions
                  include_clear=True,
                  include_export_case=False,
                  include_delete=True,
@@ -132,11 +158,21 @@ class Sidebar(QWidget):
             the active name
         setup_dict : Dict[irow] = List[QWidgets]
             a way to add additional widgets to the sidebar
+
         """
         QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
         self.setup_dict = setup_dict
+        self._update_case = True
+        self.case_keys = [0, 1, 2, 4, 75]
+        self.icase = 0  # default
+
+        # buttons
+        self.include_case_spinner = include_case_spinner
+        self.include_deflection_scale = include_deflection_scale
+        self.include_vector_scale = include_vector_scale
+
 
         choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
         if data is None:
@@ -161,7 +197,7 @@ class Sidebar(QWidget):
 
         self.show_pulldown = False
         if self.show_pulldown:
-            combo_options = ['a1', 'a2', 'a3']
+            #combo_options = ['a1', 'a2', 'a3']
             self.pulldown = QComboBox()
             self.pulldown.addItems(choices)
             self.pulldown.activated[str].connect(self.on_pulldown)
@@ -182,8 +218,109 @@ class Sidebar(QWidget):
         self.name_pulldown.addItem(name)
         self.name_pulldown.setDisabled(True)
 
+        if include_case_spinner:
+            self.case_spinner_label = QLabel('Case:')
+            self.case_spinner = SkippableSpinBox()
+            self.case_spinner.lineEdit().setReadOnly(True)
+
+            # -1 is actually invalid, but we'll correct it later
+            self.case_spinner.setMinimum(-1)
+            if self.has_cases:
+                self.set_max_case(self.parent.result_cases)
+        if include_deflection_scale:
+            self.deflection_label = QLabel('Deflection Scale:')
+            self.deflection_edit = QLineEdit()
+        if include_vector_scale:
+            self.vector_label = QLabel('Vector Scale:')
+            self.vector_edit = QLineEdit()
+        #if include_vector:
+
         self.setup_layout(data, choices, clear_data=clear_data)
+        self.set_connections()
+
+    def set_connections(self):
+        """creates the actions for the menu"""
         self.name_pulldown.currentIndexChanged.connect(self.on_update_name)
+        if self.include_case_spinner:
+            self.case_spinner.valueChanged.connect(self.on_case)
+        #if self.include_deflection_scale:
+            #self.deflection_edit.valueChanged.connect(self.on_deflection_scale)
+        #if self.include_vector_scale:
+            #self.vector_scale.valueChanged.connect(self.on_vector_scale)
+
+    def set_max_case(self, cases: Union[List[int], Dict[int, Any]]):
+        """
+        The max case id needs to be dynamic because additional results
+        can be added
+
+        """
+        if self.include_case_spinner and self.has_cases:
+            if len(cases) == 0:
+                return
+            # we add the +1, so we can wrap around
+            self.case_spinner.setMaximum(max(cases) + 1)
+            self.on_case()
+
+    def set_case_keys(self, case_keys: List[int]):
+        """set the availiable keys for the case spinner"""
+        self.case_keys = case_keys
+        if self.icase == -1:
+            self.icase = case_keys[0]
+        self.set_max_case(case_keys)
+
+    def update_icase(self, icase_frige):
+        """callback for updating the case spinner"""
+        self._update_case = False
+        self.case_spinner.setValue(icase_frige)
+        self._update_case = True
+
+    def on_case(self):
+        """callback for updating the GUI"""
+        if not self._update_case:
+            return
+        icase = self.case_spinner.value()
+
+        next_value = find_next_value_in_sorted_list(self.case_keys, self.icase, icase)
+        if icase != next_value:
+            self._update_case = False
+            self.case_spinner.setValue(next_value)
+
+        #print(f'changing from icase={self.icase} -> {icase} (next_value={next_value})')
+        icase = next_value
+        self.icase = icase
+        if self.has_cases:
+            result_name = None
+            self.parent._set_case(result_name, icase, explicit=True)
+            (obj, (i, name)) = self.parent.result_cases[icase]
+
+            deflection_is_visible = False
+            vector_is_visible = False
+            if isinstance(obj, (GuiResult, NullResult)):
+                self._set_buttons(deflection_is_visible, vector_is_visible)
+                return
+            #elif isinstance(obj, ForceTableResults):
+                # include_vector_scale
+            print(i, name)
+            print(obj)
+            #if self.include_deflection_scale:
+                #case =
+            #if self.include_vector_scale:
+                #case
+        self._update_case = True
+
+    def _set_buttons(self, deflection_is_visible, vector_is_visible):
+        """show/hide the additional buttons"""
+        if self.include_deflection_scale:
+            self.deflection_label.setVisible(deflection_is_visible)
+            self.deflection_edit.setVisible(deflection_is_visible)
+        if self.include_vector_scale:
+            self.vector_label.setVisible(vector_is_visible)
+            self.vector_edit.setVisible(vector_is_visible)
+
+    #def on_deflection_scale(self):
+        #pass
+    #def on_vector_scale(self):
+        #pass
 
     @property
     def result_case_window(self):
@@ -196,10 +333,10 @@ class Sidebar(QWidget):
 
     def setup_layout(self, data, choices, clear_data=True, init=True):
         """creates the sidebar visual layout"""
-        if not init:
+        #if not init:
             #self.frameGeometry().
-            width = self.frameGeometry().width()
-            height = self.frameGeometry().height()
+            #width = self.frameGeometry().width()
+            #height = self.frameGeometry().height()
             #print('width=%s height=%s' % (width, height))
 
         #print('init...')
@@ -253,6 +390,8 @@ class Sidebar(QWidget):
         irow += 1
         self._add_from_setup_dict(vbox, irow)
 
+        self._add_grid_to_vbox(vbox)
+
         vbox.addWidget(self.apply_button)
 
         irow += 1
@@ -268,6 +407,23 @@ class Sidebar(QWidget):
             #self.frameGeometry().height()
             #self.resize(width, height)
 
+    def _add_grid_to_vbox(self, vbox):
+        """creates the grid for some optional buttons"""
+        if self.include_case_spinner or self.include_deflection_scale or self.include_vector_scale:
+            grid = QGridLayout()
+            irow = 0
+
+            if self.include_case_spinner:
+                irow = add_line_widgets_to_grid(
+                    grid, irow, [self.case_spinner_label, self.case_spinner])
+            if self.include_deflection_scale:
+                irow = add_line_widgets_to_grid(
+                    grid, irow, [self.deflection_label, self.deflection_edit])
+            if self.include_vector_scale:
+                irow = add_line_widgets_to_grid(
+                    grid, irow, [self.vector_label, self.vector_edit])
+            vbox.addLayout(grid)
+
     def _add_from_setup_dict(self, vbox, irow):
         if self.setup_dict is None:
             return
@@ -277,16 +433,10 @@ class Sidebar(QWidget):
             assert widgets is not None, widgets
             if isinstance(widgets, list):
                 for widget_layout in widgets:
-                    if isinstance(widget_layout, QBoxLayout):
-                        vbox.addLayout(widget_layout)
-                    else:
-                        vbox.addWidget(widget_layout)
+                    add_obj_to_vbox(vbox, widget_layout)
             else:
-                widget_layout = widgets
-                if isinstance(widget_layout, QBoxLayout):
-                    vbox.addLayout(widget_layout)
-                else:
-                    vbox.addWidget(widget_layout)
+                # scalar
+                add_obj_to_vbox(vbox, widgets)
 
     def update_method(self, method):
         if isinstance(method, str):
@@ -408,6 +558,10 @@ class Sidebar(QWidget):
         i = keys_a
         result_name = None
         self.parent._set_case(result_name, i, explicit=True)
+
+    @property
+    def has_cases(self):
+        return hasattr(self.parent, 'result_cases')
 
     def on_clear_results(self):
         if hasattr(self.parent, 'on_clear_results'):

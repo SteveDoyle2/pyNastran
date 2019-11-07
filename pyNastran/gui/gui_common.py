@@ -158,7 +158,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         #self.res_widget.setReadOnly(True)
         #self.res_dock.setWidget(self.res_widget)
 
-        self.res_widget = Sidebar(self)
+        self.res_widget = Sidebar(
+            self,
+            include_case_spinner=True,
+            include_deflection_scale=False,
+            include_vector_scale=False,
+        )
         #self.res_widget.update_results(data)
         #self.res_widget.setWidget(sidebar)
 
@@ -2046,6 +2051,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             tuple_data = (i, [])
             data.append(tuple_data)
 
+        self.res_widget.set_case_keys(self.case_keys)
         self.res_widget.update_results(form, self.name)
 
         key = self.case_keys[0]

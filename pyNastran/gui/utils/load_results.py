@@ -32,6 +32,7 @@ def get_data_from_website(target_url: str) -> Tuple[Optional[List[str]], bool]:
     """downloads the byte data from the website"""
     is_failed = True
     data = ''
+    aaa
     try:
         # it's a file like object and works just like a file
         data_bytes = urllib.request.urlopen(target_url)

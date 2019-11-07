@@ -82,6 +82,7 @@ class GuiQtCommon(GuiAttributes):
                 break
             except IndexError:
                 icase -= 1
+        self.update_icase()
 
     def on_cycle_results(self, show_msg=True):
         """the gui method for calling cycle_results"""
@@ -104,6 +105,10 @@ class GuiQtCommon(GuiAttributes):
                 break
             except IndexError:
                 icase += 1
+        self.update_icase()
+
+    def update_icase(self):
+        self.res_widget.update_icase(self.icase)
 
     def cycle_results(self, case=None, show_msg=True):
         """
@@ -734,6 +739,7 @@ class GuiQtCommon(GuiAttributes):
 
             # we leave this, so we can still cycle the results without renumbering the cases
             #self.ncases -= 1
+        self.res_widget.set_case_keys(self.case_keys)
         self.log_command('delete_cases(icases_to_delete=%s, ask=%s)' % (icases_to_delete, ask))
 
     def _get_sidebar_data(self, unused_name):
