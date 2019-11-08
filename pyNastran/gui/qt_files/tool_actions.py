@@ -304,7 +304,7 @@ class ToolActions:
 
         coord_scale0 = self.settings.coord_scale
         coord_text_scale0 = self.settings.coord_text_scale
-        print('magnify =', magnify)
+        #print('magnify =', magnify)
         self.settings.update_coord_scale(
             coord_scale=coord_scale0*magnify,
             #coord_text_scale=coord_text_scale0*magnify,
