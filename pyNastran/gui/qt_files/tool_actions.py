@@ -1,7 +1,8 @@
 # coding: utf-8
+from __future__ import annotations
 import os
 import traceback
-from typing import Optional
+from typing import List, Optional, TYPE_CHECKING
 
 import numpy as np
 import vtk
@@ -16,6 +17,8 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
 from pyNastran.gui.utils.load_results import load_user_geom
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.femutils.io import loadtxt_nice
+if TYPE_CHECKING:
+    from pyNastran.gui.gui_objects.settings import Settings
 
 
 class ToolActions:
@@ -24,7 +27,7 @@ class ToolActions:
         self.itext = 0
 
     #---------------------------------------------------------------------------
-    def export_case_data(self, icases=None):
+    def export_case_data(self, icases: Optional[List[int]]=None) -> None:
         """exports CSVs of the requested cases"""
         if icases is None:
             icases = self.gui.result_cases.keys()
@@ -59,7 +62,7 @@ class ToolActions:
             self.gui.log_command(f'self.export_case_data(icases={icases})')
 
     #---------------------------------------------------------------------------
-    def create_corner_axis(self):
+    def create_corner_axis(self) -> None:
         """creates the axes that sits in the corner"""
         if not self.gui.run_vtk:
             return
@@ -72,7 +75,7 @@ class ToolActions:
 
     def create_coordinate_system(self, coord_id: int, dim_max: float, label: str='',
                                  origin=None, matrix_3x3=None,
-                                 coord_type: str='xyz'):
+                                 coord_type: str='xyz') -> None:
         """
         Creates a coordinate system
 
@@ -104,7 +107,6 @@ class ToolActions:
         self.settings.dim_max = dim_max
         scale = self.settings.coord_scale * dim_max
 
-        transform = make_vtk_transform(origin, matrix_3x3)
 
         create_actor = True
         if coord_id in self.gui.axes:
@@ -115,59 +117,8 @@ class ToolActions:
             axes.DragableOff()
             axes.PickableOff()
 
-        #axes.GetLength() # pi
-        #axes.GetNormalizedShaftLength() # (0.8, 0.8, 0.8)
-        #axes.GetNormalizedTipLength() # (0.2, 0.2, 0.2)
-        #axes.GetOrigin() # (0., 0., 0.)
-        #axes.GetScale() # (1., 1., 1.)
-        #axes.GetShaftType() # 1
-        #axes.GetTotalLength() # (1., 1., 1.)
-
-        axes.SetUserTransform(transform)
-        axes.SetTotalLength(scale, scale, scale)
-        if coord_type == 'xyz':
-            if label:
-                xlabel = u'x%s' % label
-                ylabel = u'y%s' % label
-                zlabel = u'z%s' % label
-                axes.SetXAxisLabelText(xlabel)
-                axes.SetYAxisLabelText(ylabel)
-                axes.SetZAxisLabelText(zlabel)
-        else:
-            if coord_type == 'Rtz':  # cylindrical
-                y = u'θ'
-                x = 'R'
-                z = 'z'
-                if font_file:
-                    #xprop = axes.GetXAxisCaptionActor2D().GetCaptionTextProperty()
-                    yprop = axes.GetYAxisCaptionActor2D().GetCaptionTextProperty()
-                    #zprop = axes.GetZAxisCaptionActor2D().GetCaptionTextProperty()
-                    set_vtk_property_to_unicode(yprop, font_file)
-                else:
-                    y = 't'
-
-            elif coord_type == 'Rtp':  # spherical
-                x = 'R'
-                y = u'θ'
-                z = u'Φ'
-                if font_file:
-                    #xprop = axes.GetXAxisCaptionActor2D().GetCaptionTextProperty()
-                    yprop = axes.GetYAxisCaptionActor2D().GetCaptionTextProperty()
-                    zprop = axes.GetZAxisCaptionActor2D().GetCaptionTextProperty()
-                    set_vtk_property_to_unicode(yprop, font_file)
-                    set_vtk_property_to_unicode(zprop, font_file)
-                else:
-                    y = 't'
-                    z = 'p'
-            else:  # pragma: no cover
-                raise RuntimeError('invalid axis type; coord_type=%r' % coord_type)
-
-            xlabel = '%s%s' % (x, label)
-            ylabel = '%s%s' % (y, label)
-            zlabel = '%s%s' % (z, label)
-            axes.SetXAxisLabelText(xlabel)
-            axes.SetYAxisLabelText(ylabel)
-            axes.SetZAxisLabelText(zlabel)
+        transform = make_vtk_transform(origin, matrix_3x3)
+        _set_base_axes(axes, transform, scale, coord_type, label)
 
         self.gui.transform[coord_id] = transform
         self.gui.axes[coord_id] = axes
@@ -271,7 +222,7 @@ class ToolActions:
         render_large.SetInput(self.rend)
 
         out = self._screenshot_setup(magnify, render_large)
-        line_widths0, point_sizes0, coord_scale0, axes_actor, magnify = out
+        line_widths0, point_sizes0, coord_scale0, coord_text_scale0, axes_actor, magnify = out
 
         nam, ext = os.path.splitext(fname)
         ext = ext.lower()
@@ -294,7 +245,8 @@ class ToolActions:
         #self.log_info("Saved screenshot: " + fname)
         if show_msg:
             self.gui.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
-        self._screenshot_teardown(line_widths0, point_sizes0, coord_scale0, axes_actor)
+        self._screenshot_teardown(line_widths0, point_sizes0,
+                                  coord_scale0, coord_text_scale0, axes_actor)
 
     def _get_screenshot_filename(self, fname: Optional[str]):
         """helper method for ``on_take_screenshot``"""
@@ -344,8 +296,6 @@ class ToolActions:
         if magnify is None:
             magnify_min = 1
             magnify = self.settings.magnify if self.settings.magnify > magnify_min else magnify_min
-        else:
-            magnify = magnify
 
         if not isinstance(magnify, integer_types):
             msg = 'magnify=%r type=%s' % (magnify, type(magnify))
@@ -353,9 +303,13 @@ class ToolActions:
         self.settings.update_text_size(magnify=magnify)
 
         coord_scale0 = self.settings.coord_scale
-        #coord_text_scale0 = self.settings.coord_text_scale
+        coord_text_scale0 = self.settings.coord_text_scale
+        print('magnify =', magnify)
         self.settings.update_coord_scale(
-            coord_scale=coord_scale0*magnify, render=False)
+            coord_scale=coord_scale0*magnify,
+            #coord_text_scale=coord_text_scale0*magnify,
+            linewidth=1.0*magnify,
+            render=False)
         render_large.SetMagnification(magnify)
 
         # multiply linewidth by magnify
@@ -381,9 +335,10 @@ class ToolActions:
         # hide corner axis
         axes_actor = self.gui.corner_axis.GetOrientationMarker()
         axes_actor.SetVisibility(False)
-        return line_widths0, point_sizes0, coord_scale0, axes_actor, magnify
+        return line_widths0, point_sizes0, coord_scale0, coord_text_scale0, axes_actor, magnify
 
-    def _screenshot_teardown(self, line_widths0, point_sizes0, coord_scale0, axes_actor):
+    def _screenshot_teardown(self, line_widths0, point_sizes0,
+                             coord_scale0, coord_text_scale0, axes_actor):
         """helper method for ``on_take_screenshot``"""
         self.settings.update_text_size(magnify=1.0)
 
@@ -401,7 +356,10 @@ class ToolActions:
                 pass
             else:
                 raise NotImplementedError(geom_actor)
-        self.settings.update_coord_scale(coord_scale=coord_scale0, render=True)
+        self.settings.update_coord_scale(coord_scale=coord_scale0,
+                                         #coord_text_scale=coord_text_scale0,
+                                         linewidth=1.0,
+                                         render=True)
 
     #---------------------------------------------------------------------------
     def on_load_user_geom(self, csv_filename=None, name=None, color=None):
@@ -747,7 +705,7 @@ class ToolActions:
         return self.rend.GetActiveCamera()
 
     @property
-    def settings(self):
+    def settings(self) -> Settings:
         return self.gui.settings
 
     @property
@@ -819,8 +777,8 @@ def add_user_geometry(alt_grid, geom_grid,
     return points
 
 
-def set_vtk_property_to_unicode(prop, font_file):
-    prop.SetFontFile(font_file)
+def set_vtk_property_to_unicode(prop, font_filei):
+    prop.SetFontFile(font_filei)
     prop.SetFontFamily(vtk.VTK_FONT_FILE)
 
 def make_vtk_transform(origin, matrix_3x3):
@@ -840,6 +798,64 @@ def make_vtk_transform(origin, matrix_3x3):
     else:
         raise RuntimeError('unexpected coordinate system')
     return transform
+
+
+def _set_base_axes(axes: vtk.vtkAxesActor,
+                   transform: vtk.vtkTransform,
+                   scale: float, coord_type: str, label: str) -> None:
+    #axes.GetLength() # pi
+    #axes.GetNormalizedShaftLength() # (0.8, 0.8, 0.8)
+    #axes.GetNormalizedTipLength() # (0.2, 0.2, 0.2)
+    #axes.GetOrigin() # (0., 0., 0.)
+    #axes.GetScale() # (1., 1., 1.)
+    #axes.GetShaftType() # 1
+    #axes.GetTotalLength() # (1., 1., 1.)
+
+    axes.SetUserTransform(transform)
+    axes.SetTotalLength(scale, scale, scale)
+    if coord_type == 'xyz':
+        if label:
+            xlabel = 'x%s' % label
+            ylabel = 'y%s' % label
+            zlabel = 'z%s' % label
+            axes.SetXAxisLabelText(xlabel)
+            axes.SetYAxisLabelText(ylabel)
+            axes.SetZAxisLabelText(zlabel)
+    else:
+        if coord_type == 'Rtz':  # cylindrical
+            y = 'θ'
+            x = 'R'
+            z = 'z'
+            if font_file:
+                #xprop = axes.GetXAxisCaptionActor2D().GetCaptionTextProperty()
+                yprop = axes.GetYAxisCaptionActor2D().GetCaptionTextProperty()
+                #zprop = axes.GetZAxisCaptionActor2D().GetCaptionTextProperty()
+                set_vtk_property_to_unicode(yprop, font_file)
+            else:
+                y = 't'
+
+        elif coord_type == 'Rtp':  # spherical
+            x = 'R'
+            y = 'θ'
+            z = 'Φ'
+            if font_file:
+                #xprop = axes.GetXAxisCaptionActor2D().GetCaptionTextProperty()
+                yprop = axes.GetYAxisCaptionActor2D().GetCaptionTextProperty()
+                zprop = axes.GetZAxisCaptionActor2D().GetCaptionTextProperty()
+                set_vtk_property_to_unicode(yprop, font_file)
+                set_vtk_property_to_unicode(zprop, font_file)
+            else:
+                y = 't'
+                z = 'p'
+        else:  # pragma: no cover
+            raise RuntimeError('invalid axis type; coord_type=%r' % coord_type)
+
+        xlabel = '%s%s' % (x, label)
+        ylabel = '%s%s' % (y, label)
+        zlabel = '%s%s' % (z, label)
+        axes.SetXAxisLabelText(xlabel)
+        axes.SetYAxisLabelText(ylabel)
+        axes.SetZAxisLabelText(zlabel)
 
 def _remove_invalid_filename_characters(basename):
     """

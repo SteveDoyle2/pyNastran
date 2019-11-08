@@ -7,14 +7,14 @@ signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 from qtpy.QtWidgets import (
     QWidget, QVBoxLayout, QPushButton, QApplication, QGridLayout,
-    QComboBox, QLabel, QHBoxLayout, QSpinBox, QLineEdit,
+    QComboBox, QLabel, QSpinBox, QLineEdit,
 )
 #from qtpy import QtCore
 from pyNastran.gui.utils.qt.results_window import ResultsWindow
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NullResult
 from pyNastran.gui.utils.qt.utils import (
     add_obj_to_vbox,
-    #create_hbox_with_widgets,
+    create_hbox_with_widgets,
     add_line_widgets_to_grid)
 from pyNastran.gui.utils.utils import find_next_value_in_sorted_list
 
@@ -165,7 +165,7 @@ class Sidebar(QWidget):
         self.debug = debug
         self.setup_dict = setup_dict
         self._update_case = True
-        self.case_keys = [0, 1, 2, 4, 75]
+        self.case_keys = []
         self.icase = 0  # default
 
         # buttons
@@ -221,6 +221,8 @@ class Sidebar(QWidget):
         if include_case_spinner:
             self.case_spinner_label = QLabel('Case:')
             self.case_spinner = SkippableSpinBox()
+            self.case_spinner_label.setVisible(False)
+            self.case_spinner.setVisible(False)
             self.case_spinner.lineEdit().setReadOnly(True)
 
             # -1 is actually invalid, but we'll correct it later
@@ -242,7 +244,7 @@ class Sidebar(QWidget):
         """creates the actions for the menu"""
         self.name_pulldown.currentIndexChanged.connect(self.on_update_name)
         if self.include_case_spinner:
-            self.case_spinner.valueChanged.connect(self.on_case)
+            self.case_spinner.valueChanged.connect(self._on_case)
         #if self.include_deflection_scale:
             #self.deflection_edit.valueChanged.connect(self.on_deflection_scale)
         #if self.include_vector_scale:
@@ -257,9 +259,11 @@ class Sidebar(QWidget):
         if self.include_case_spinner and self.has_cases:
             if len(cases) == 0:
                 return
+            self.case_spinner_label.setVisible(True)
+            self.case_spinner.setVisible(True)
             # we add the +1, so we can wrap around
             self.case_spinner.setMaximum(max(cases) + 1)
-            self.on_case()
+            self._on_case()
 
     def set_case_keys(self, case_keys: List[int]):
         """set the availiable keys for the case spinner"""
@@ -274,7 +278,7 @@ class Sidebar(QWidget):
         self.case_spinner.setValue(icase_frige)
         self._update_case = True
 
-    def on_case(self):
+    def _on_case(self):
         """callback for updating the GUI"""
         if not self._update_case:
             return
@@ -341,13 +345,11 @@ class Sidebar(QWidget):
 
         #print('init...')
         vbox = QVBoxLayout()
-        hbox = QHBoxLayout()
 
         irow = 0
         self._add_from_setup_dict(vbox, irow)
 
-        hbox.addWidget(self.name_label)
-        hbox.addWidget(self.name_pulldown)
+        hbox = create_hbox_with_widgets([self.name_label, self.name_pulldown])
         vbox.addLayout(hbox)
 
         irow += 1
@@ -496,7 +498,7 @@ class Sidebar(QWidget):
         if update_name:
             self.on_update_name(None)
 
-        if setup_layout and 0:
+        if setup_layout and 0:  # pragma: no cover
             #print('setup_layout******')
             ## TODO: screws up the width of the window
             choices = ['keys2', 'purse2', 'cellphone2', 'credit_card2', 'money2']
