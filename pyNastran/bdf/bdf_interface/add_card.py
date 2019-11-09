@@ -6412,6 +6412,12 @@ class AddCards(AddMethods):
         self._add_desvar_object(desvar)
         return desvar
 
+    def add_topvar(self, opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2, power=3):
+        """adds a TOPVAR"""
+        topvar = TOPVAR(opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2, power=3)
+        self._add_topvar_object(topvar)
+        return topvar
+
     def add_dresp1(self, dresp_id, label, response_type, property_type, region,
                    atta, attb, atti, validate=True, comment=''):
         """

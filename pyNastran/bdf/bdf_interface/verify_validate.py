@@ -46,6 +46,7 @@ def verify_bdf(model: BDF, xref: bool) -> None:
 
     _verify_dict(model.dequations, xref)
     _verify_dict(model.desvars, xref)
+    _verify_dict(model.topvar, xref)
     _verify_dict(model.dresps, xref)
     _verify_dict(model.dvcrels, xref)
     _verify_dict(model.dvmrels, xref)
@@ -281,6 +282,7 @@ def validate_bdf(model: BDF) -> None:
     _validate_dict_list(model, model.dconstrs)
 
     _validate_dict(model, model.desvars)
+    _validate_dict(model, model.topvar)
     _validate_dict(model, model.ddvals)
     _validate_dict(model, model.dlinks)
     _validate_dict(model, model.dresps)

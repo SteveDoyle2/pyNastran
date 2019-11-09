@@ -43,7 +43,7 @@ else:
     __releaseDate__ = '2019/6/xx'
     __releaseDate2__ = 'JUNE xx, 2019'
 
-__author__ = 'Steven Doyle, Michael Redmond, Saullo Castro, hurlei, Paul Blelloch, Nikita Kalutsky'
+__author__ = 'Steven Doyle, Michael Redmond, Saullo Castro, Nikita Kalutsky'
 __email__ = 'mesheb82@gmail.com'
 __desc__ = 'Nastran BDF/F06/OP2/OP4 File reader/editor/writer/viewer'
 __longdesc__ = __desc__

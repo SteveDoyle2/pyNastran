@@ -208,6 +208,7 @@ def _run_loads(model, nelements, run_loads=True):
             unused_subcase = model.case_control_deck.add_subcase(load_id)
             model.get_pressure_array(load_id, eids, stop_on_failure=True)
 
+    load_ids = list(set(list(model.load_combinations) + list(model.loads)))
     for subcase_id in model.subcases:
         model.get_load_arrays(subcase_id, eid_map, node_ids, normals, nid_map=None)
 

@@ -191,7 +191,7 @@ def export_bdf_to_hdf5_file(hdf5_file, model, exporter=None):
         'caeros', 'splines', 'flutters', 'trims', 'csschds', 'gusts',
 
         # other
-        'methods', 'tables', 'desvars',
+        'methods', 'tables', 'desvars', 'topvar',
     ]
     for group_name in groups_to_export:
         _hdf5_export_group(hdf5_file, model, group_name, encoding)

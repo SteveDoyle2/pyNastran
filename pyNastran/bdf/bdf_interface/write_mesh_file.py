@@ -509,12 +509,13 @@ class WriteMeshs(WriteMesh):
                            self.dresps or
                            self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
                            self.dlinks or self.dequations or self.dtable is not None or
-                           self.dvgrids or self.dscreen)
+                           self.dvgrids or self.dscreen or self.topvar)
         if is_optimization:
             write_bdfs_dict(bdf_files, self.dconadds, size, is_double, is_long_ids)
             write_bdfs_dict_list(bdf_files, self.dconadds, size, is_double, is_long_ids)
 
             write_bdfs_dict(bdf_files, self.desvars, size, is_double, is_long_ids)
+            write_bdfs_dict(bdf_files, self.topvar, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.ddvals, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.dlinks, size, is_double, is_long_ids)
             write_bdfs_dict(bdf_files, self.dresps, size, is_double, is_long_ids)

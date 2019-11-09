@@ -17,6 +17,8 @@ All optimization cards are defined in this file.  This includes:
 some missing optimization flags
 http://mscnastrannovice.blogspot.com/2014/06/msc-nastran-design-optimization-quick.html"""
 # pylint: disable=C0103,R0902,R0904,R0914
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from itertools import cycle, count
 import numpy as np
 
@@ -37,6 +39,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
 
 #TODO: replace this with formula
 valid_pcomp_codes = [3, #3-z0
@@ -862,6 +866,117 @@ class DESVAR(OptConstraint):
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
 
+class TOPVAR(BaseCard):
+    type = 'TOPVAR'
+    def __init__(self, opt_id, label, prop_type, xinit, pid, xlb=0.001, delxv=0.2, power=3,
+                 options=None, comment=''):
+        if comment:
+            self.comment = comment
+        if options is None:
+            options = {}
+        self.opt_id = opt_id
+        self.label = label
+        self.prop_type = prop_type
+        self.xinit = xinit
+        self.pid = pid
+        self.xlb = xlb
+        self.delxv = delxv
+        self.power = power
+        self.options = options
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a DESVAR card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        opt_id = integer(card, 1, 'opt_id')
+        label = string(card, 2, 'label')
+        prop_type = string(card, 3, 'prop_type')
+        xinit = double_or_blank(card, 4, 'xinit')
+        xlb = double_or_blank(card, 5, 'xlb', 0.001)
+        delxv = double_or_blank(card, 6, 'delxv', 0.2)
+        power = integer_or_blank(card, 7, 'power', 3)
+        pid = integer(card, 8, 'pid')
+        options = {}
+        if len(card) > 8:
+            name = string_or_blank(card, 9, 'SYM')
+            if name == 'SYM':
+                # CID MSi MSi MSi CS NCS
+                cid = integer_or_blank(card, 10, 'cid')
+                mirror_symmetry1 = string_or_blank(card, 11, 'mirror_symmetry1') # Character, XY, YZ, or ZX
+                mirror_symmetry2 = string_or_blank(card, 12, 'mirror_symmetry2')
+                mirror_symmetry3 = string_or_blank(card, 13, 'mirror_symmetry3')
+                cyclic_symmetry = string_or_blank(card, 14, 'cyclic_symmetry')  # X, Y, Z
+                #  Number of cyclic symmetric segments in 360 degrees
+                num_cyclic_symmetries = integer_or_blank(card, 15, 'num_cyclic_symmetries')
+                options[name] = {
+                    'cid' : cid,
+                    'mirror_symmetry1' : mirror_symmetry1,
+                    'mirror_symmetry2' : mirror_symmetry2,
+                    'mirror_symmetry3' : mirror_symmetry3,
+                    'cyclic_symmetry' : cyclic_symmetry,
+                    'num_cyclic_symmetries' : num_cyclic_symmetries,
+                }
+                assert len(card) <= 16, 'len(TOPVAR card) = %i\ncard=%s' % (len(card), card)
+            elif name == 'STRESS':
+                allowable = double(card, 10, 'allowable?')
+                options[name] = {'allowable' : allowable,}
+                assert len(card) <= 11, 'len(TOPVAR card) = %i\ncard=%s' % (len(card), card)
+            else:
+                assert len(card) <= 9, 'len(TOPVAR card) = %i\ncard=%s' % (len(card), card)
+        return TOPVAR(opt_id, label, prop_type, xinit, pid, xlb=xlb,
+                      power=power, options=options, comment=comment)
+
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form
+
+        Returns
+        -------
+        fields : List[varies]
+            the fields that define the card
+
+        """
+        power = set_blank_if_default(self.power, 3)
+        xlb = set_blank_if_default(self.xlb, 0.001)
+        delxv = set_blank_if_default(self.delxv, 0.2)
+
+        label = self.label.strip()
+        if len(label) <= 6:
+            label = ' %6s ' % label
+        list_fields = [
+            'TOPVAR', self.opt_id, label, self.prop_type, self.xinit, xlb, delxv, power, self.pid]
+        for name, option in sorted(self.options.items()):
+            if name == 'STRESS':
+                list_fields += [name, option['allowable'], None, None, None, None, None, None]
+            elif name == 'SYM':
+                list_fields += [
+                    name,
+                    option['cid'],
+                    option['mirror_symmetry1'],
+                    option['mirror_symmetry2'],
+                    option['mirror_symmetry3'],
+                    option['cyclic_symmetry'],
+                    option['num_cyclic_symmetries'],
+                    None,
+                ]
+            else:
+                raise NotImplementedError(name)
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
 
 class DDVAL(OptConstraint):
     """
@@ -5666,3 +5781,34 @@ def none_min(upper_bound, xub):
         return xub
     return min(upper_bound, xub)
 
+def solid_topology_optimization(model: BDF, pids_to_optimize: List[int]):
+    model.sol = 200
+    from copy import deepcopy
+    eids_dict = model.get_element_ids_dict_with_pids(pids_to_optimize)
+    pid = max(model.properties) + 1
+    model.uncross_reference()
+    for pid_old, eids in sorted(eids_dict.items()):
+        prop_old = model.properties[pid_old]
+        assert prop_old.type == 'PSOLID', prop_old.get_stats()
+
+        dresp_id = 101
+        model.add_topvar(opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2, power=3)
+        for eid in eids:
+            elem = model.elements[eid]
+            assert elem.type in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM'], elem.get_stats()
+            elem.pid = pid
+            model.properties[pid] = deepcopy(prop_old)
+
+            label = f'e{eid}'
+            response_type = 'STRESS'
+            property_type = 'PSHELL'
+            atta = 9 # von mises upper surface stress
+            region = None
+            attb = None
+            atti = [pid]
+            DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
+            model.add_dresp1(dresp_id, label, response_type, property_type, region,
+                             atta, attb, atti, validate=True, comment='')
+            pid += 1
+
+    model.properties[pid]

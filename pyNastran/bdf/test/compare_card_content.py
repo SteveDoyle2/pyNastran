@@ -340,6 +340,11 @@ def compare_optimization_content(fem1, fem2):
         card2 = fem2.desvars[key]
         assert_fields(card1, card2)
 
+    for key in fem1.topvar:
+        card1 = fem1.topvar[key]
+        card2 = fem2.topvar[key]
+        assert_fields(card1, card2)
+
     for key in fem1.ddvals:
         card1 = fem1.ddvals[key]
         card2 = fem2.ddvals[key]

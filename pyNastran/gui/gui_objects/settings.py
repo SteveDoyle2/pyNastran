@@ -74,6 +74,7 @@ class Settings:
         # floats
         self.coord_scale = 0.05  # in percent of max dimension
         self.coord_text_scale = 0.5 # percent of nominal
+        self.coord_linewidth = 2.0
 
         # string
         self.colormap = 'jet' # 'viridis'
@@ -120,6 +121,7 @@ class Settings:
         # float
         self.coord_scale = 0.05
         self.coord_text_scale = 0.5
+        self.coord_linewidth = 2.0
 
         # string
         self.colormap = 'jet' # 'viridis'
@@ -415,32 +417,56 @@ class Settings:
         """internal method for updating the coordinate system size"""
         if coord_scale is None:
             coord_scale = self.coord_scale
-        if coord_text_scale:
-            self.update_coord_text_scale(coord_text_scale=coord_text_scale, render=False)
+        #if coord_text_scale:
+            #self.update_coord_text_scale(coord_text_scale=coord_text_scale, render=False)
 
         dim_max = self.dim_max
         scale = coord_scale * dim_max
 
         for unused_coord_id, axes in self.parent.axes.items():
-            axes.SetTotalLength(scale, scale, scale)
+            axes.SetTotalLength(coord_scale, coord_scale, coord_scale)
+            #axes.SetScale(magnify, magnify, magnify)
             if linewidth:
-                xaxis = axes.GetXAxisShaftProperty()
-                yaxis = axes.GetXAxisShaftProperty()
-                zaxis = axes.GetXAxisShaftProperty()
+                #xaxis = axes.GetXAxisShaftProperty()
+                #yaxis = axes.GetXAxisShaftProperty()
+                #zaxis = axes.GetXAxisShaftProperty()
                 #lw = xaxis.GetLineWidth()  #  1.0
-                xaxis.SetLineWidth(linewidth)
-                yaxis.SetLineWidth(linewidth)
-                zaxis.SetLineWidth(linewidth)
-                #print(f'coord_scale coord_id={unused_coord_id} scale={scale} lw={linewidth}')
+                #xaxis.SetLineWidth(linewidth)
+                #yaxis.SetLineWidth(linewidth)
+                #zaxis.SetLineWidth(linewidth)
+                print(f'coord_scale coord_id={unused_coord_id} scale={scale} lw={linewidth}')
 
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
+
+    def scale_coord(self, magnify: float, render=True):
+        """internal method for scaling the coordinate system size"""
+        for unused_coord_id, axes in self.parent.axes.items():
+            axes.SetScale(magnify)
+        if render:
+            self.parent.vtk_interactor.GetRenderWindow().Render()
+
+
+    #def scale_coord_text(self, magnify: float, render=True):
+        #"""internal method for scaling the coordinate system text size"""
+        #for unused_coord_id, axes in self.parent.axes.items():
+            #texts = [
+                #axes.GetXAxisCaptionActor2D(),
+                #axes.GetYAxisCaptionActor2D(),
+                #axes.GetZAxisCaptionActor2D(),
+            #]
+            #for text in texts:
+                #text.SetScale(magnify)
+        #if render:
+            #self.parent.vtk_interactor.GetRenderWindow().Render()
 
     def update_coord_text_scale(self, coord_text_scale=None, render=True):
         """internal method for updating the coordinate system size"""
         if coord_text_scale is None:
             coord_text_scale = self.coord_text_scale
 
+        width = 1.0
+        height = 0.25
         for unused_coord_id, axes in self.parent.axes.items():
             #print(f'coord_text_scale coord_id={unused_coord_id} coord_text_scale={coord_text_scale}')
             texts = [
@@ -450,8 +476,6 @@ class Settings:
             ]
             # this doesn't set the width
             # this being very large (old=0.1) makes the width constraint inactive
-            width = 1.0
-            height = 0.25
             for text in texts:
                 text.SetWidth(coord_text_scale * width)
                 text.SetHeight(coord_text_scale * height)

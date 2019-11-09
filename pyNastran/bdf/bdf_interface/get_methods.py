@@ -353,11 +353,16 @@ class GetMethods(BDFAttributes):
 
         """
         assert isinstance(sid, integer_types), 'sid=%s is not an integer; type=%s\n' % (sid, type(sid))
+        load = []
         if consider_load_combinations and sid in self.load_combinations:
             load = self.load_combinations[sid]
         elif sid in self.loads:
             load = self.loads[sid]
-        else:
+
+        if sid in self.tempds:
+            load.append(self.tempds[sid])
+
+        if len(load) == 0:
             loads_ids = list(self.loads.keys())
             load_combination_ids = list(self.load_combinations.keys())
             raise KeyError('cannot find LOAD ID=%r%s.\nAllowed loads (e.g., FORCE)=%s; LOAD=%s' % (

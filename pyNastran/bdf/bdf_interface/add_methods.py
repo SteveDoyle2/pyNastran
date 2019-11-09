@@ -1128,6 +1128,15 @@ class AddMethods(BDFAttributes):
         self.desvars[key] = desvar
         self._type_to_id_map[desvar.type].append(key)
 
+    def _add_topvar_object(self, topvar):
+        """adds a TOPVAR object"""
+        key = topvar.opt_id
+        assert key not in self.topvar, 'TOPVAR=%s old=\n%snew=\n%s' % (
+            key, self.topvar[key], topvar)
+        assert key > 0
+        self.topvar[key] = topvar
+        self._type_to_id_map[topvar.type].append(key)
+
     def _add_ddval_object(self, ddval):
         """adds a DDVAL object"""
         key = ddval.oid

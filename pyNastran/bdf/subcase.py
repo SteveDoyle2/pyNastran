@@ -667,16 +667,29 @@ class Subcase:
             return value.value, options
         return value, options
 
-    def add(self, key, value, options, param_type):
+    def _validate_param_type(self, param_type):
         if param_type not in self.allowed_param_types:
-            msg = 'param_type=%r allowed_types=%s' % (param_type, ''.join(self.allowed_param_types))
+            msg = (
+                f'param_type={param_type!r} is not supported\n'
+                f'   allowed_types={self.allowed_param_types}\n'
+                '  - SET-type:     SET 5 = 1,2,3,4\n'
+                '  - CSV-type:     PARAM,FIXEDB,-1\n'
+                '  - KEY-type:     ANALYSIS = HEAT\n'
+                '  - STRESS-type:  LOAD = 5\n'
+                '  - STRESS-type:  STRESS = ALL\n'
+                '  - STRESS-type:  STRESS(PLOT) = ALL\n'
+                '  - STRESS-type:  DISP(PLOT) = ALL\n'
+                '  - STRING-type:  TITLE = SOME TITLE\n'
+                '  - OBJ-type:     ???\n'
+            )
             raise TypeError(msg)
+
+    def add(self, key, value, options, param_type):
+        self._validate_param_type(param_type)
         self._add_data(key, value, options, param_type)
 
     def update(self, key, value, options, param_type):
-        if param_type not in self.allowed_param_types:
-            msg = 'param_type=%r allowed_types=%s' % (param_type, ''.join(self.allowed_param_types))
-            raise TypeError(msg)
+        self._validate_param_type(param_type)
         assert key in self.params, 'key=%r is not in isubcase=%s' % (key, self.id)
         self._add_data(key, value, options, param_type)
 

@@ -118,7 +118,7 @@ from pyNastran.bdf.cards.aero.aero import (
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
 from pyNastran.bdf.cards.optimization import (
-    DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
+    DCONADD, DCONSTR, DESVAR, TOPVAR, DDVAL, DOPTPRM, DLINK,
     DRESP1, DRESP2, DRESP3,
     DVCREL1, DVCREL2,
     DVMREL1, DVMREL2,
@@ -466,7 +466,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             # optimization cards
             'DEQATN', 'DTABLE',
-            'DCONSTR', 'DESVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DRESP3',
+            'DCONSTR', 'DESVAR', 'TOPVAR', 'DDVAL', 'DRESP1', 'DRESP2', 'DRESP3',
             'DVCREL1', 'DVCREL2',
             'DVPREL1', 'DVPREL2',
             'DVMREL1', 'DVMREL2',
@@ -2017,6 +2017,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             'DOPTPRM' : (DOPTPRM, self._add_doptprm_object),
             'DESVAR' : (DESVAR, self._add_desvar_object),
+            'TOPVAR' : (TOPVAR, self._add_topvar_object),
             # BCTSET
 
             'TEMP' : (TEMP, self._add_thermal_load_object),

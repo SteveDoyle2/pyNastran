@@ -14,6 +14,7 @@ from pyNastran.bdf.test.test_openmdao import TestOpenMDAO
 # bdf_interface
 from pyNastran.bdf.bdf_interface.test.test_pybdf import TestPyBDF
 from pyNastran.bdf.bdf_interface.test.test_assign_type import TestAssignType
+from pyNastran.bdf.bdf_interface.test.test_bdf_interface import TestBDFInterface
 from pyNastran.bdf.bdf_interface.test.test_dev_utils import DevUtils
 from pyNastran.bdf.bdf_interface.test.test_case_control_deck import CaseControlTest
 

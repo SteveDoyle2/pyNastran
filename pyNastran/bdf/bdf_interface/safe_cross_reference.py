@@ -247,11 +247,11 @@ class SafeXrefMesh(XrefMesh):
                 missing_safe_xref.add(elem.type)
 
         for elem in self.rigid_elements.values():
-            if hasattr(elem, 'safe_cross_reference'):
-                elem.safe_cross_reference(self, xref_errors)
-            else:
-                missing_safe_xref.add(elem.type)
-                elem.cross_reference(self)
+            #if hasattr(elem, 'safe_cross_reference'):
+            elem.safe_cross_reference(self, xref_errors)
+            #else:
+                #missing_safe_xref.add(elem.type)
+                #elem.cross_reference(self)
 
         self._show_safe_xref_errors('elements', xref_errors)
 
@@ -325,16 +325,10 @@ class SafeXrefMesh(XrefMesh):
         #return
         xref_errors = defaultdict(list)
         for unused_key, deqatn in self.dequations.items():
-            if hasattr(deqatn, 'safe_cross_reference'):
-                deqatn.safe_cross_reference(self)
-            else:
-                deqatn.cross_reference(self)
+            deqatn.safe_cross_reference(self)
 
         for unused_key, dresp in self.dresps.items():
-            if hasattr(dresp, 'safe_cross_reference'):
-                dresp.safe_cross_reference(self, xref_errors)
-            else:  # pragma: no cover
-                dresp.cross_reference(self)
+            dresp.safe_cross_reference(self, xref_errors)
 
         for unused_key, dconstrs in self.dconstrs.items():
             for dconstr in dconstrs:
@@ -362,10 +356,10 @@ class SafeXrefMesh(XrefMesh):
                 dvprel.cross_reference(self)
 
         for unused_key, desvar in self.desvars.items():
-            if hasattr(desvar, 'safe_cross_reference'):
-                desvar.cross_reference(self)
-            else:  # pragma: no cover
-                desvar.cross_reference(self)
+            desvar.safe_cross_reference(self)
+
+        for unused_key, topvar in self.topvar.items():
+            topvar.safe_cross_reference(self)
 
     def safe_empty_nodes(self, nids, msg=''):
         """safe xref version of self.Nodes(nid, msg='')"""

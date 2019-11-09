@@ -36,7 +36,7 @@ defines various methods to access high level BDF data:
 # pylint: disable=C0103
 from copy import deepcopy
 from collections import defaultdict
-from typing import List, Dict, Set, Optional, Any, Tuple
+from typing import List, Dict, Set, Tuple, Optional, Union, Any
 
 import numpy as np
 
@@ -52,8 +52,10 @@ class GetCard(GetMethods):
         self._type_to_slot_map = {}
         GetMethods.__init__(self)
 
-    def get_card_ids_by_card_types(self, card_types=None, reset_type_to_slot_map=False,
-                                   stop_on_missing_card=False, combine=False):
+    def get_card_ids_by_card_types(self, card_types: List[str]=None,
+                                   reset_type_to_slot_map: bool=False,
+                                   stop_on_missing_card: bool=False,
+                                   combine: bool=False) -> Dict[str, List[int]]:
         """
         Parameters
         ----------
@@ -128,8 +130,7 @@ class GetCard(GetMethods):
             return out_list
         return out_dict
 
-    def _reset_type_to_slot_map(self):
-        # type: () -> Dict[Any, Any]
+    def _reset_type_to_slot_map(self) -> Dict[str, str]:
         """resets self._type_to_slot_map"""
         rslot_map = defaultdict(list)
         for dict_name, card_names in self._slot_to_type_map.items():
@@ -166,7 +167,7 @@ class GetCard(GetMethods):
                     raise NotImplementedError('%s; names=%s' % (type(adict), card_names))
         return rslot_map
 
-    def get_rslot_map(self, reset_type_to_slot_map=False):
+    def get_rslot_map(self, reset_type_to_slot_map=False) -> Dict[str, str]:
         """gets the rslot_map"""
         if (reset_type_to_slot_map or self._type_to_slot_map is None or
                 len(self._type_to_slot_map) == 0):
@@ -176,8 +177,7 @@ class GetCard(GetMethods):
         assert 'GRID' in rslot_map
         return rslot_map
 
-    def reset_rslot_map(self):
-        # type: () -> None
+    def reset_rslot_map(self) -> None:
         """helper method for get_rslot_map"""
         rslot_map = {}
         for key, values in self._slot_to_type_map.items():
@@ -186,8 +186,7 @@ class GetCard(GetMethods):
         self._type_to_slot_map = rslot_map
 
     @property
-    def nid_map(self):
-        # type: () -> Any
+    def nid_map(self) -> Dict[int, int]:
         """
         Gets the GRID/SPOINT/EPOINT ids to a sorted order.
 
@@ -211,8 +210,7 @@ class GetCard(GetMethods):
         """
         return self.get_nid_map(sort_ids=True)
 
-    def get_nid_map(self, sort_ids=True):
-        # type: (bool) -> Dict[int, int]
+    def get_nid_map(self, sort_ids: bool=True) -> Dict[int, int]:
         """
         Maps the GRID/SPOINT/EPOINT ids to a sorted/unsorted order.
 
@@ -259,8 +257,9 @@ class GetCard(GetMethods):
             nid_map[nid] = i
         return nid_map
 
-    def get_cards_by_card_types(self, card_types, reset_type_to_slot_map=False,
-                                stop_on_missing_card=False):
+    def get_cards_by_card_types(self, card_types: List[str],
+                                reset_type_to_slot_map: bool=False,
+                                stop_on_missing_card: bool=False) -> None:
         """
         Parameters
         ----------
@@ -279,7 +278,8 @@ class GetCard(GetMethods):
 
         """
         if not isinstance(card_types, (list, tuple)):
-            raise TypeError('card_types must be a list/tuple; type=%s' % type(card_types))
+            raise TypeError(f'card_types={card_types!r} must be a list/tuple; '
+                            f'type={type(card_types)}')
 
         #self._type_to_id_map = {
         #    'CQUAD4' : [1, 2, 3]
@@ -291,8 +291,8 @@ class GetCard(GetMethods):
         for card_type in card_types:
             if card_type not in self.card_count:
                 if stop_on_missing_card:
-                    raise RuntimeError('%r is not in the card_count; keys=%s'
-                                       % str(sorted(self.card_count.keys())))
+                    keys = str(sorted(self.card_count.keys()))
+                    raise RuntimeError(f'{card_type} is not in the card_count; keys={keys}')
                 out[card_type] = []
                 continue
 
@@ -342,8 +342,9 @@ class GetCard(GetMethods):
             out[card_type] = cards
         return out
 
-    def get_SPCx_node_ids(self, spc_id, consider_spcadd=True, stop_on_failure=True):
-        # type: (int, bool, bool) -> List[int]
+    def get_SPCx_node_ids(self, spc_id: int,
+                          consider_spcadd: bool=True,
+                          stop_on_failure: bool=True) -> List[int]:
         """
         Get the SPC/SPCADD/SPC1/SPCAX IDs.
 
@@ -381,7 +382,7 @@ class GetCard(GetMethods):
             self.log.warning("get_SPCx_node_ids doesn't consider:\n%s" % warnings.rstrip('\n'))
         return node_ids
 
-    def get_SPCx_node_ids_c1(self, spc_id, stop_on_failure=True):
+    def get_SPCx_node_ids_c1(self, spc_id: int, stop_on_failure: bool=True) -> Dict[str, List[int]]:
         """
         Get the SPC/SPCADD/SPC1/SPCAX IDs.
 
@@ -406,7 +407,7 @@ class GetCard(GetMethods):
         node_ids_c1 = defaultdict(str)
         #print('spcs = ', spcs)
         warnings = ''
-        for card in spcs:  # used to be sorted(spcs)
+        for card in spcs:
             if card.type == 'SPC':
                 for nid, c1 in zip(card.node_ids, card.components):
                     assert nid is not None, card.node_ids
@@ -428,8 +429,9 @@ class GetCard(GetMethods):
             self.log.warning("get_SPCx_node_ids_c1 doesn't consider:\n%s" % warnings.rstrip('\n'))
         return node_ids_c1
 
-    def get_MPCx_node_ids(self, mpc_id, consider_mpcadd=True, stop_on_failure=True):
-        # type: (int, bool, bool) -> List[List[int]]
+    def get_MPCx_node_ids(self, mpc_id: int,
+                          consider_mpcadd: bool=True,
+                          stop_on_failure: bool=True) -> List[List[int]]:
         r"""
         Get the MPC/MPCADD IDs.
 
@@ -479,8 +481,10 @@ class GetCard(GetMethods):
                 self.log.warning(msg)
         return lines
 
-    def get_MPCx_node_ids_c1(self, mpc_id, consider_mpcadd=True, stop_on_failure=True):
-        # type: (int, bool, bool) -> Tuple(Dict[str, List[int]], Dict[str, List[int]])
+    def get_MPCx_node_ids_c1(self, mpc_id: int,
+                             consider_mpcadd: bool=True,
+                             stop_on_failure: bool=True) -> Tuple[Dict[str, List[int]],
+                                                                  Dict[str, List[int]]]:
         r"""
         Get the MPC/MPCADD IDs.
 
@@ -501,7 +505,6 @@ class GetCard(GetMethods):
                 the DOF to constrain
             node_ids : List[int]
                 the constrained node ids
-
         dependent_node_ids_c1 : Dict[component] = node_ids
             component : str
                 the DOF to constrain
@@ -543,9 +546,10 @@ class GetCard(GetMethods):
                 if stop_on_failure:
                     raise RuntimeError(msg)
                 self.log.warning(msg)
-        return independent_node_ids_c1, dependent_node_ids_c1
+        return dict(independent_node_ids_c1), dict(dependent_node_ids_c1)
 
-    def get_load_arrays(self, subcase_id, eid_map, node_ids, normals, nid_map=None):
+    def get_load_arrays(self, subcase_id, eid_map, node_ids, normals, nid_map=None,
+                        stop_on_failure=True):
         """
         Gets the following load arrays for the GUI
 
@@ -593,12 +597,13 @@ class GetCard(GetMethods):
                 the SPCD load application
 
         """
+        subcase = self.subcases[subcase_id]
+
         #self.log.debug('get_load_arrays')
         if nid_map is None:
             nid_map = self.nid_map
         nnodes = len(node_ids)
         assert len(nid_map) == nnodes, 'len(nid_map)=%s nnodes=%s' % (len(nid_map), nnodes)
-        subcase = self.subcases[subcase_id]
         is_loads = False
         is_temperatures = False
 
@@ -621,15 +626,19 @@ class GetCard(GetMethods):
                 # print('no %s for isubcase=%s' % (key, subcase_id))
                 continue
             #self.log.debug('key=%s load_case_id=%s' % (key, load_case_id))
+
             try:
-                load_case = self.get_reduced_loads(
+                unused_load_case = self.get_reduced_loads(
                     load_case_id, scale=1.,
                     consider_load_combinations=True,
                     skip_scale_factor0=False,
-                    stop_on_failure=False,
+                    stop_on_failure=True,
                     msg='')
             except KeyError:
-                self.log.warning('LOAD=%s not found' % load_case_id)
+                msg = f'LOAD={load_case_id} not found'
+                if stop_on_failure:
+                    raise KeyError(msg)
+                self.log.warning(msg)
                 continue
 
             if key == 'LOAD':
@@ -648,7 +657,7 @@ class GetCard(GetMethods):
                 is_temperatures, temperatures = self._get_temperatures_array(
                     load_case_id, nid_map=nid_map)
                 temperature_key = key
-            else:
+            else:  # pragma: no cover
                 raise NotImplementedError(key)
         temperature_data = (temperature_key, temperatures)
         load_data = (centroidal_pressures, forces, spcd)
@@ -1144,6 +1153,9 @@ class GetCard(GetMethods):
             return False, None
         pressures = np.zeros(len(self.elements), dtype='float32')
 
+        shells = {
+            'CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
+            'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR'}
         etypes_skipped = set()
         iload = 0
         nloads = len(loads)
@@ -1162,8 +1174,7 @@ class GetCard(GetMethods):
                         # Nastran is NOT OK with missing element ids
                         continue
 
-                    if elem.type in ['CTRIA3', 'CTRIA6', 'CTRIA', 'CTRIAR',
-                                     'CQUAD4', 'CQUAD8', 'CQUAD', 'CQUADR', 'CSHEAR']:
+                    if elem.type in shells:
                         pressure = load.pressures[0] * scale
 
                         # single element per PLOAD
@@ -1508,6 +1519,7 @@ class GetCard(GetMethods):
         if unallowed_dload_ids is None:
             unallowed_dload_ids = []
 
+        assert isinstance(dload_case, list), dload_case
         for dload in dload_case:
             if dload.type == 'DLOAD':
                 dload_ids = dload.get_load_ids()
@@ -1681,9 +1693,13 @@ class GetCard(GetMethods):
                 raise RuntimeError(rigid_element.type)
         return dependent_nid_to_components
 
-    def _get_maps(self, eids=None, map_names=None,
-                  consider_0d=True, consider_0d_rigid=True,
-                  consider_1d=True, consider_2d=True, consider_3d=True):
+    def _get_maps(self, eids: Optional[List[int]]=None,
+                  map_names: Optional[List[str]]=None,
+                  consider_0d: bool=True,
+                  consider_0d_rigid: bool=True,
+                  consider_1d: bool=True,
+                  consider_2d: bool=True,
+                  consider_3d: bool=True) -> Any:
         """
         Gets a series of mappings (e.g. node_id to element_id)
 
@@ -1800,8 +1816,7 @@ class GetCard(GetMethods):
                 self.log.error('missing map %r' % key)
         return out
 
-    def get_node_ids_with_elements(self, eids, msg=''):
-        # type: (List[int], str) -> Set[int]
+    def get_node_ids_with_elements(self, eids: List[int], msg: str='') -> Set[int]:
         """
         Get the node IDs associated with a list of element IDs
 
@@ -1835,9 +1850,10 @@ class GetCard(GetMethods):
             nids2.update(nids)
         return nids2
 
-    def get_elements_nodes_by_property_type(self, dtype='int32',
-                                            save_element_types=False):
-        # type: (str, bool) -> Any
+    def get_elements_nodes_by_property_type(
+            self,
+            dtype: str='int32',
+            save_element_types: bool=False) -> Tuple[Dict[Tuple[str, int], Tuple[List[int], List[int]]]]:
         """
         Gets a dictionary of (etype, pid) to [eids, node_ids]
 
@@ -1893,9 +1909,10 @@ class GetCard(GetMethods):
         return self.get_elements_properties_nodes_by_element_type(
             dtype=dtype, solids=solids)
 
-    def get_elements_properties_nodes_by_element_type(self, dtype='int32', solids=None,
-                                                      stop_if_no_eids=True):
-        # type: (str, Optional[Dict[str, Any]], bool) -> Any
+    def get_elements_properties_nodes_by_element_type(self,
+                                                      dtype: str='int32',
+                                                      solids: Optional[Dict[str, Any]]=None,
+                                                      stop_if_no_eids: bool=True) -> np.array:
         """
         Gets a dictionary of element type to [eids, pids, node_ids]
 
@@ -2056,8 +2073,7 @@ class GetCard(GetMethods):
     #--------------------
     # ELEMENT CARDS
 
-    def get_element_ids_list_with_pids(self, pids=None):
-        # type: (Optional[List[int]]) -> List[int]
+    def get_element_ids_list_with_pids(self, pids: Optional[List[int]]=None) -> List[int]:
         """
         Gets all the element IDs with a specific property ID.
 
@@ -2079,6 +2095,8 @@ class GetCard(GetMethods):
           model.read_bdf(bdf_filename)
           pids = [1, 2, 3]
           eids_list = model.get_element_ids_list_with_pids(pids)
+          >>> eids_list
+          [10, 11, 20, 21, 30, 31]
 
         """
         etypes_no_pids = [
@@ -2102,8 +2120,11 @@ class GetCard(GetMethods):
                 eids2.append(eid)
         return eids2
 
-    def get_pid_to_node_ids_and_elements_array(self, pids=None, etypes=None,
-                                               idtype='int32', msg=''):
+    def get_pid_to_node_ids_and_elements_array(self,
+                                               pids: Union[List[int], int, None]=None,
+                                               etypes: Optional[List[str]]=None,
+                                               idtype: str='int32',
+                                               msg: str='') -> Tuple[Dict[int, str], np.ndarray]:
         """
         a work in progress
 
@@ -2120,7 +2141,7 @@ class GetCard(GetMethods):
             eid_ieid : (Nelements, 2) int ndarray
                 eid is the element id
                 ieid is the index in the node_ids array
-        node_ids : (nelements, nnodes)
+        node_ids : (nelements, nnodes) int ndarray
             nelements : int
                 the number of elements in the property type
             nnodes : int
@@ -2222,7 +2243,9 @@ class GetCard(GetMethods):
                 pids=pids, etypes=etypes, idtype='int64')
         return pid_to_eids_ieids_map
 
-    def get_element_ids_dict_with_pids(self, pids=None, stop_if_no_eids=True, msg=''):
+    def get_element_ids_dict_with_pids(self,
+                                       pids: Union[List[int], int, None]=None,
+                                       stop_if_no_eids: bool=True, msg: str='') -> Dict[int, List[int]]:
         """
         Gets all the element IDs with a specific property ID.
 
@@ -2252,9 +2275,21 @@ class GetCard(GetMethods):
           model.read_bdf(bdf_filename)
           pids = [4, 5, 6]
           eids_dict = model.get_element_ids_dict_with_pids(pids)
+          >>> eids_dict
+          {
+              4 : [40, 41],
+              5 : [50, 51],
+              6 : [60, 61],
+          }
 
           # consider all properties
           eids_dict = model.get_element_ids_dict_with_pids()
+          {
+              1 : [1, 2, 3],
+              4 : [40, 41],
+              5 : [50, 51],
+              6 : [60, 61],
+          }
 
         Notes
         -----
@@ -2301,8 +2336,7 @@ class GetCard(GetMethods):
             self.log.warning('no elements with properties found%s' % msg)
         return pid_to_eids_map
 
-    def get_node_id_to_element_ids_map(self):
-        # type: () -> Dict[int, List[int]]
+    def get_node_id_to_element_ids_map(self) -> Dict[int, List[int]]:
         """
         Returns a dictionary that maps node IDs to a list of elemnent IDs
 
@@ -2332,8 +2366,7 @@ class GetCard(GetMethods):
 
         return nid_to_eids_map
 
-    def get_node_id_to_elements_map(self):
-        # type: () -> Dict[int, List[int]]
+    def get_node_id_to_elements_map(self) -> Dict[int, List[int]]:
         """
         Returns a dictionary that maps node IDs to a list of elements.
 
@@ -2369,8 +2402,7 @@ class GetCard(GetMethods):
 
         return nid_to_elements_map
 
-    def get_property_id_to_element_ids_map(self, msg=''):
-        # type: (str) -> Dict[int, List[int]]
+    def get_property_id_to_element_ids_map(self, msg: str='') -> Dict[int, List[int]]:
         """
         Returns a dictionary that maps a property ID to a list of elements.
 
@@ -2412,8 +2444,7 @@ class GetCard(GetMethods):
                     raise KeyError('pid=%s is invalid for card%s=\n%s' % (pid, msg, str(element)))
         return pid_to_eids_map
 
-    def get_material_id_to_property_ids_map(self, msg=''):
-        # type: (str) -> Dict[int, List[int]]
+    def get_material_id_to_property_ids_map(self, msg: str='') -> Dict[int, List[int]]:
         """
         Returns a dictionary that maps a material ID to a list of properties
 
@@ -2479,7 +2510,9 @@ class GetCard(GetMethods):
                     raise KeyError('mid=%s is invalid for card %s=\n%s' % (mid, msg, str(prop)))
         return mid_to_pids_map
 
-    def get_reduced_nsms(self, nsm_id, consider_nsmadd=True, stop_on_failure=True):
+    def get_reduced_nsms(self, nsm_id: int,
+                         consider_nsmadd: bool=True,
+                         stop_on_failure: bool=True) -> List[Any]:
         """
         Get all traced NSMs that are part of a set
 
@@ -2535,8 +2568,9 @@ class GetCard(GetMethods):
                 nsms2.append(nsm)
         return nsms2
 
-    def get_reduced_mpcs(self, mpc_id, consider_mpcadd=False, stop_on_failure=True):
-        # type: (int, bool, bool) -> List[Any]
+    def get_reduced_mpcs(self, mpc_id: int,
+                         consider_mpcadd: bool=False,
+                         stop_on_failure: bool=True) -> List[Any]:
         """
         Get all traced MPCs that are part of a set
 
@@ -2592,7 +2626,9 @@ class GetCard(GetMethods):
                 mpcs2.append(mpc)
         return mpcs2
 
-    def get_reduced_spcs(self, spc_id, consider_spcadd=True, stop_on_failure=True):
+    def get_reduced_spcs(self, spc_id: int,
+                         consider_spcadd: bool=True,
+                         stop_on_failure: bool=True) -> List[Any]:
         """
         Get all traced SPCs that are part of a set
 
@@ -2648,7 +2684,9 @@ class GetCard(GetMethods):
                 spcs2.append(spc)
         return spcs2
 
-    def get_spcs(self, spc_id, consider_nodes=False, stop_on_failure=True):
+    def get_spcs(self, spc_id: int,
+                 consider_nodes: bool=False,
+                 stop_on_failure: bool=True) -> Tuple[List[int], List[str]]:
         """
         Gets the SPCs in a semi-usable form.
 
@@ -2705,7 +2743,8 @@ class GetCard(GetMethods):
                     comps.append(node.ps)
         return nids, comps
 
-    def get_mpcs(self, mpc_id, consider_mpcadd=True, stop_on_failure=True):
+    def get_mpcs(self, mpc_id: int, consider_mpcadd: bool=True,
+                 stop_on_failure: bool=True) -> Tuple[List[int], List[str]]:
         """
         Gets the MPCs in a semi-usable form.
 
@@ -2745,8 +2784,7 @@ class GetCard(GetMethods):
                 self.log.warning('not considering:\n%s' % str(mpc))
         return nids, comps
 
-    def get_mklist(self):
-        # type: () -> np.ndarray
+    def get_mklist(self) -> np.ndarray:
         """gets the MKLIST vector from MKAERO1/MKAERO2"""
         mklist = []
         mkarray = np.array([])

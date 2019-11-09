@@ -256,11 +256,11 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             ]
 
             tools = file_tools + [
-                ('label_clear', 'Clear Current Labels', '', None, 'Clear current labels', self.clear_labels),
+                ('label_clear', 'Clear Current Labels', '', 'CTRL+W', 'Clear current labels', self.clear_labels),
                 ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
 
-                ('legend', 'Modify Legend...', 'legend.png', None, 'Set Legend', self.legend_obj.set_legend_menu),
-                ('animation', 'Create Animation...', 'animation.png', None, 'Create Animation', self.legend_obj.set_animation_menu),
+                ('legend', 'Modify Legend...', 'legend.png', 'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu),
+                ('animation', 'Create Animation...', 'animation.png', 'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu),
                 ('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.clipping_obj.set_clipping_menu),
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
@@ -300,8 +300,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
                 ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
 
-                ('cycle_results', 'Cycle Results', 'cycle_results.png', 'CTRL+L', 'Changes the result case', self.on_cycle_results),
-                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'CTRL+K', 'Changes the result case', self.on_rcycle_results),
+                ('cycle_results', 'Cycle Results', 'cycle_results.png', 'L', 'Changes the result case', self.on_cycle_results),
+                ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'K', 'Changes the result case', self.on_rcycle_results),
 
                 ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.view_actions.update_camera('+x')),
                 ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y')),
@@ -319,7 +319,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('anti_alias_8', '8x', '', None, 'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8)),
 
                 # new
-                ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center', self.mouse_actions.on_rotation_center),
+                ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center),
 
                 ('measure_distance', 'Measure Distance', 'measure_distance.png', None, 'Measure the distance between two nodes', self.mouse_actions.on_measure_distance),
                 ('highlight_cell', 'Highlight Cell', '', None, 'Highlight a single cell', self.mouse_actions.on_highlight_cell),
@@ -329,7 +329,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.mouse_actions.on_zoom),
                 ('font_size_increase', 'Increase Font Size', 'text_up.png', 'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size),
                 ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size),
-                ('set_preferences', 'Preferences...', 'preferences.png', None, 'Set GUI Preferences', self.preferences_obj.set_preferences_menu),
+                ('set_preferences', 'Preferences...', 'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu),
                 ('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', None, 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu),
 
                 # picking

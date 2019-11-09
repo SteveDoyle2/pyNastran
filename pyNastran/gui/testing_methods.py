@@ -297,8 +297,8 @@ class FakeGUIMethods(GuiVTKCommon):
         #"""fake method"""
         #return None
 
-    def update_axes_length(self, value):
-        self.settings.dim_max = value
+    #def update_axes_length(self, value):
+        #self.settings.dim_max = value
 
     #def passer(self):
         #"""fake method"""

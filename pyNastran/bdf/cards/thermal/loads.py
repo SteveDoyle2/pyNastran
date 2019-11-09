@@ -1374,6 +1374,9 @@ class TEMPD(BaseCard):
     def cross_reference(self, model):
         pass
 
+    def safe_cross_reference(self, model, xref_errors):
+        pass
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         pass

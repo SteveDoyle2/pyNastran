@@ -472,6 +472,7 @@ class BDFAttributes:
         self.dconadds = {}  # type: Dict[int, Any]
         self.dconstrs = {}  # type: Dict[int, Any]
         self.desvars = {}  # type: Dict[int, Any]
+        self.topvar = {}  # type: Dict[int, Any]
         self.ddvals = {}  # type: Dict[int, Any]
         self.dlinks = {}  # type: Dict[int, Any]
         self.dresps = {}  # type: Dict[int, Any]
@@ -816,6 +817,7 @@ class BDFAttributes:
             'dtable' : ['DTABLE'],
             'dconstrs' : ['DCONSTR', 'DCONADD'],
             'desvars' : ['DESVAR'],
+            'topvar' : ['TOPVAR'],
             'ddvals' : ['DDVAL'],
             'dlinks' : ['DLINK'],
             'dresps' : ['DRESP1', 'DRESP2', 'DRESP3',],

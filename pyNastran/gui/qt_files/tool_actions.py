@@ -105,8 +105,9 @@ class ToolActions:
 
         """
         self.settings.dim_max = dim_max
-        scale = self.settings.coord_scale * dim_max
-
+        coord_scale = self.settings.coord_scale * dim_max
+        coord_text_scale = self.settings.coord_text_scale
+        linewidth = self.settings.coord_linewidth
 
         create_actor = True
         if coord_id in self.gui.axes:
@@ -118,7 +119,8 @@ class ToolActions:
             axes.PickableOff()
 
         transform = make_vtk_transform(origin, matrix_3x3)
-        _set_base_axes(axes, transform, scale, coord_type, label)
+        _set_base_axes(axes, transform, coord_type, label,
+                       coord_scale, coord_text_scale, linewidth)
 
         self.gui.transform[coord_id] = transform
         self.gui.axes[coord_id] = axes
@@ -129,7 +131,7 @@ class ToolActions:
             is_visible = True
         else:
             label = 'Coord %s' % label
-        self.gui.geometry_properties[label] = CoordProperties(label, coord_type, is_visible, scale)
+        self.gui.geometry_properties[label] = CoordProperties(label, coord_type, is_visible, coord_scale)
         self.gui.geometry_actors[label] = axes
         if create_actor:
             self.rend.AddActor(axes)
@@ -222,7 +224,7 @@ class ToolActions:
         render_large.SetInput(self.rend)
 
         out = self._screenshot_setup(magnify, render_large)
-        line_widths0, point_sizes0, coord_scale0, coord_text_scale0, axes_actor, magnify = out
+        line_widths0, point_sizes0, coord_scale0, coord_text_scale0, line_width0, axes_actor, magnify = out
 
         nam, ext = os.path.splitext(fname)
         ext = ext.lower()
@@ -246,7 +248,7 @@ class ToolActions:
         if show_msg:
             self.gui.log_command('on_take_screenshot(%r, magnify=%s)' % (fname, magnify))
         self._screenshot_teardown(line_widths0, point_sizes0,
-                                  coord_scale0, coord_text_scale0, axes_actor)
+                                  coord_scale0, coord_text_scale0, line_width0, axes_actor)
 
     def _get_screenshot_filename(self, fname: Optional[str]):
         """helper method for ``on_take_screenshot``"""
@@ -304,12 +306,15 @@ class ToolActions:
 
         coord_scale0 = self.settings.coord_scale
         coord_text_scale0 = self.settings.coord_text_scale
-        #print('magnify =', magnify)
-        self.settings.update_coord_scale(
-            coord_scale=coord_scale0*magnify,
+        linewidth0 = self.settings.coord_linewidth
+        self.settings.scale_coord(magnify, render=False)
+        self.settings.update_coord_text_scale(coord_text_scale0*magnify, render=False)
+        #self.settings.scale_coord_text(magnify, render=False)
+        #self.settings.update_coord_scale(
+            #coord_scale=coord_scale0*magnify,
             #coord_text_scale=coord_text_scale0*magnify,
-            linewidth=1.0*magnify,
-            render=False)
+            #linewidth=linewidth0*magnify,
+            #render=False)
         render_large.SetMagnification(magnify)
 
         # multiply linewidth by magnify
@@ -335,13 +340,13 @@ class ToolActions:
         # hide corner axis
         axes_actor = self.gui.corner_axis.GetOrientationMarker()
         axes_actor.SetVisibility(False)
-        return line_widths0, point_sizes0, coord_scale0, coord_text_scale0, axes_actor, magnify
+        return line_widths0, point_sizes0, coord_scale0, coord_text_scale0, linewidth0, axes_actor, magnify
 
     def _screenshot_teardown(self, line_widths0, point_sizes0,
-                             coord_scale0, coord_text_scale0, axes_actor):
+                             coord_scale0, coord_text_scale0, linewidth0, axes_actor):
         """helper method for ``on_take_screenshot``"""
         self.settings.update_text_size(magnify=1.0)
-
+        print('------------')
         # show corner axes
         axes_actor.SetVisibility(True)
 
@@ -356,10 +361,13 @@ class ToolActions:
                 pass
             else:
                 raise NotImplementedError(geom_actor)
-        self.settings.update_coord_scale(coord_scale=coord_scale0,
+        self.settings.scale_coord(magnify=1.0, render=False)
+        self.settings.update_coord_text_scale(coord_text_scale0, render=True)
+        #self.settings.scale_coord_text(magnify=1.0, render=True)
+        #self.settings.update_coord_scale(coord_scale=coord_scale0,
                                          #coord_text_scale=coord_text_scale0,
-                                         linewidth=1.0,
-                                         render=True)
+                                         #linewidth=linewidth0,
+                                         #render=True)
 
     #---------------------------------------------------------------------------
     def on_load_user_geom(self, csv_filename=None, name=None, color=None):
@@ -802,7 +810,8 @@ def make_vtk_transform(origin, matrix_3x3):
 
 def _set_base_axes(axes: vtk.vtkAxesActor,
                    transform: vtk.vtkTransform,
-                   scale: float, coord_type: str, label: str) -> None:
+                   coord_type: str, label: str,
+                   coord_scale: float, coord_text_scale: float, linewidth: int) -> None:
     #axes.GetLength() # pi
     #axes.GetNormalizedShaftLength() # (0.8, 0.8, 0.8)
     #axes.GetNormalizedTipLength() # (0.2, 0.2, 0.2)
@@ -811,8 +820,12 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
     #axes.GetShaftType() # 1
     #axes.GetTotalLength() # (1., 1., 1.)
 
+    xactor = axes.GetXAxisCaptionActor2D()
+    yactor = axes.GetYAxisCaptionActor2D()
+    zactor = axes.GetZAxisCaptionActor2D()
+
     axes.SetUserTransform(transform)
-    axes.SetTotalLength(scale, scale, scale)
+    axes.SetTotalLength(coord_scale, coord_scale, coord_scale)
     if coord_type == 'xyz':
         if label:
             xlabel = 'x%s' % label
@@ -821,15 +834,17 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
             axes.SetXAxisLabelText(xlabel)
             axes.SetYAxisLabelText(ylabel)
             axes.SetZAxisLabelText(zlabel)
+        #else:
+            #xlabel = 'x'
+            #ylabel = 'y'
+            #zlabel = 'z'
     else:
         if coord_type == 'Rtz':  # cylindrical
             y = 'θ'
             x = 'R'
             z = 'z'
             if font_file:
-                #xprop = axes.GetXAxisCaptionActor2D().GetCaptionTextProperty()
-                yprop = axes.GetYAxisCaptionActor2D().GetCaptionTextProperty()
-                #zprop = axes.GetZAxisCaptionActor2D().GetCaptionTextProperty()
+                yprop = yactor.GetCaptionTextProperty()
                 set_vtk_property_to_unicode(yprop, font_file)
             else:
                 y = 't'
@@ -839,9 +854,8 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
             y = 'θ'
             z = 'Φ'
             if font_file:
-                #xprop = axes.GetXAxisCaptionActor2D().GetCaptionTextProperty()
-                yprop = axes.GetYAxisCaptionActor2D().GetCaptionTextProperty()
-                zprop = axes.GetZAxisCaptionActor2D().GetCaptionTextProperty()
+                yprop = yactor.GetCaptionTextProperty()
+                zprop = zactor.GetCaptionTextProperty()
                 set_vtk_property_to_unicode(yprop, font_file)
                 set_vtk_property_to_unicode(zprop, font_file)
             else:
@@ -856,6 +870,22 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
         axes.SetXAxisLabelText(xlabel)
         axes.SetYAxisLabelText(ylabel)
         axes.SetZAxisLabelText(zlabel)
+
+    # this doesn't set the width
+    # this being very large (old=0.1) makes the width constraint inactive
+    width = 1.0
+    height = 0.25
+    for actor_text in [xactor, yactor, zactor]:
+        actor_text.SetWidth(coord_text_scale * width)
+        actor_text.SetHeight(coord_text_scale * height)
+
+    xaxis = axes.GetXAxisShaftProperty()
+    yaxis = axes.GetYAxisShaftProperty()
+    zaxis = axes.GetZAxisShaftProperty()
+    #lw = xaxis.GetLineWidth()  #  1.0
+    xaxis.SetLineWidth(linewidth)
+    yaxis.SetLineWidth(linewidth)
+    zaxis.SetLineWidth(linewidth)
 
 def _remove_invalid_filename_characters(basename):
     """

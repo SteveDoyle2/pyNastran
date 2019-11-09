@@ -832,7 +832,7 @@ class WriteMesh(BDFAttributes):
                            self.dresps or
                            self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
                            self.dlinks or self.dequations or self.dtable is not None or
-                           self.dvgrids or self.dscreen)
+                           self.dvgrids or self.dscreen or self.topvar)
         if is_optimization:
             bdf_file.write('$OPTIMIZATION\n')
             for (unused_id, dconadd) in sorted(self.dconadds.items()):
@@ -842,6 +842,8 @@ class WriteMesh(BDFAttributes):
                     bdf_file.write(dconstr.write_card(size, is_double))
             for (unused_id, desvar) in sorted(self.desvars.items()):
                 bdf_file.write(desvar.write_card(size, is_double))
+            for (unused_id, topvar) in sorted(self.topvar.items()):
+                bdf_file.write(topvar.write_card(size, is_double))
             for (unused_id, ddval) in sorted(self.ddvals.items()):
                 bdf_file.write(ddval.write_card(size, is_double))
             for (unused_id, dlink) in sorted(self.dlinks.items()):

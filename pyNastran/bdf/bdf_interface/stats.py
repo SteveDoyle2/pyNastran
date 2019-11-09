@@ -56,7 +56,7 @@ def get_bdf_stats(model, return_type='string', word=''):
         'frequencies',
 
         # optimization - dict
-        'dconadds', 'dconstrs', 'desvars', 'ddvals', 'dlinks', 'dresps',
+        'dconadds', 'dconstrs', 'desvars', 'topvar', 'ddvals', 'dlinks', 'dresps',
         'dvcrels', 'dvmrels', 'dvprels', 'dvgrids',
 
         # SESETx - dict
