@@ -830,6 +830,12 @@ class DESVAR(OptConstraint):
             msg = ', which is required by DESVAR desvar_id=%r' % self.desvar_id
             self.ddval_ref = model.DDVal(self.ddval, msg=msg)
 
+    def safe_cross_reference(self, model):
+        try:
+            self.cross_reference(model)
+        except KeyError:
+            self.log.warning('cant cross reference DESVAR {self.desvar_id} with DDVAL {self.ddval}')
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         self.ddval = self.DDVal()
@@ -1824,8 +1830,86 @@ class DRESP1(OptConstraint):
         return DRESP1(oid, label, response_type, property_type, region, atta, attb, atti,
                       comment=comment, validate=False)
 
-    def _verify(self, xref):
-        pass
+    def _verify(self, model: BDF, xref):
+        if not xref:
+            return
+        #properties = {'PSOLID', 'PSHELL', 'PCOMP', 'PBAR', 'PBEAM', 'PSHEAR'}
+        valid_properties_map = {
+            'PSOLID' : {'PSOLID'},
+            'PSHELL' : {'PSHELL'},
+            'PBAR' : {'PBAR'},
+            'PROD' : {'PROD'},
+            'PELAS' : {'PELAS'},
+            #'PDAMP' : {'PDAMP'},
+            'PBEAM' : {'PBEAM'},
+            'PSHEAR' : {'PSHEAR'},
+            'PCOMP' : {'PCOMP'}, # 'PCOMPG'},
+        }
+        properties = set(valid_properties_map)
+        property_to_etypes_map = {
+            'PSOLID' : {'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM'},
+            'PSHELL' : {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8'},
+            'PBAR' : {'CBAR'},
+            'PROD' : {'CROD'},
+            'PELAS' : {},  # no CELAS4
+            #'PDAMP' : {},  # no CDAMP4
+            'PBEAM' : {'CBEAM'},
+            'PSHEAR' : {'CSHEAR'},
+            'PCOMP' : {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8'},
+        }
+
+        node_types = {
+            'DISP', 'RMSDISP', 'TDISP', 'RFDISP',
+            'FRVELO', 'TVELO',
+            'RMSACCL', 'PSDACCL'}
+        no_validate = {
+            'FRMASS', 'WEIGHT', 'EIGN', 'LAMA', 'VOLUME', 'FREQ',
+            'FLUTTER', 'CFAILURE', 'CSTRAT', 'CEIG', 'GPFORCP'}
+        not_implemented = no_validate
+        no_validate.update(not_implemented)
+        no_validate.update(node_types)
+
+        elem_props = {'STRESS', 'STRAIN', 'FRSTRE', 'CSTRESS', 'FORCE'}
+        if self.response_type in no_validate:
+            return
+        elif self.response_type in elem_props:
+            property_type = self.property_type
+            if property_type == 'ELEM':
+                eids2 = self.atti
+                valid_etypes = {
+                    'CROD', 'CONROD',
+                    'CELAS',
+                    'CBAR', 'CBEAM',
+                    'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CSHEAR',
+                    'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM',
+                }
+            else:
+                valid_properties = valid_properties_map[property_type]
+                valid_etypes = property_to_etypes_map[property_type]
+                if property_type in properties:
+                    assert len(self.atti_ref) == 1, self.get_stats()
+                    prop = self.atti_ref[0]
+                    assert prop.type == property_type
+                else:
+                    print(self.get_stats())
+                    raise NotImplementedError(property_type)
+
+                pid = prop.pid
+                eids1 = model.get_element_ids_list_with_pids(pid)
+                eids_dict = model.get_element_ids_dict_with_pids()
+                assert pid in eids_dict, f'pid={pid} actual_properties={list(eids_dict.keys())}'
+                eids2 = eids_dict[pid]
+                eids1.sort()
+                eids2.sort()
+                assert eids1 == eids2
+                assert len(eids2) > 0, eids2
+
+            for eid in eids2:
+                element = model.elements[eid]
+                assert element.type in valid_etypes, f'valid={valid_etypes}\n{element.get_stats()}'
+        else:
+            print(self.get_stats())
+            raise NotImplementedError(self.response_type)
 
     def calculate(self, op2_model, subcase_id):
         rtype = self.rtype
@@ -2391,7 +2475,7 @@ class DRESP2(OptConstraint):
     def DRespID(self):
         return self.dresp_id
 
-    def _verify(self, xref):
+    def _verify(self, model, xref):
         pass
         #for (j, name), value_list in sorted(self.params.items()):
             #print('  DRESP2 verify - key=%s values=%s' % (name,
@@ -2496,6 +2580,9 @@ class DRESP2(OptConstraint):
             self.func = fortran_to_python_short(self.dequation, default_values)
         else:
             raise NotImplementedError(self.dequation)
+
+    def safe_cross_reference(self, model, xref_errors):
+        self.cross_reference(model)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -2814,6 +2901,9 @@ class DRESP3(OptConstraint):
             list_fields += build_table_lines(fields2, nstart=i, nend=j)
         return list_fields
 
+    def safe_cross_reference(self, model, xref_errors):
+        self.cross_reference(model)
+
     def cross_reference(self, model):
         """
         Cross links the card so referenced cards can be extracted directly
@@ -2892,7 +2982,7 @@ class DRESP3(OptConstraint):
         #if isinstance(self.dequation, integer_types):
             #del self.dequation_ref
 
-    def _verify(self, xref):
+    def _verify(self, model, xref):
         pass
 
     def raw_fields(self):
@@ -5780,35 +5870,3 @@ def none_min(upper_bound, xub):
     if upper_bound is None:
         return xub
     return min(upper_bound, xub)
-
-def solid_topology_optimization(model: BDF, pids_to_optimize: List[int]):
-    model.sol = 200
-    from copy import deepcopy
-    eids_dict = model.get_element_ids_dict_with_pids(pids_to_optimize)
-    pid = max(model.properties) + 1
-    model.uncross_reference()
-    for pid_old, eids in sorted(eids_dict.items()):
-        prop_old = model.properties[pid_old]
-        assert prop_old.type == 'PSOLID', prop_old.get_stats()
-
-        dresp_id = 101
-        model.add_topvar(opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2, power=3)
-        for eid in eids:
-            elem = model.elements[eid]
-            assert elem.type in ['CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM'], elem.get_stats()
-            elem.pid = pid
-            model.properties[pid] = deepcopy(prop_old)
-
-            label = f'e{eid}'
-            response_type = 'STRESS'
-            property_type = 'PSHELL'
-            atta = 9 # von mises upper surface stress
-            region = None
-            attb = None
-            atti = [pid]
-            DRESP1(dresp_id, label, response_type, property_type, region, atta, attb, atti)
-            model.add_dresp1(dresp_id, label, response_type, property_type, region,
-                             atta, attb, atti, validate=True, comment='')
-            pid += 1
-
-    model.properties[pid]

@@ -346,7 +346,6 @@ class ToolActions:
                              coord_scale0, coord_text_scale0, linewidth0, axes_actor):
         """helper method for ``on_take_screenshot``"""
         self.settings.update_text_size(magnify=1.0)
-        print('------------')
         # show corner axes
         axes_actor.SetVisibility(True)
 

@@ -5,16 +5,19 @@ class Responses:
     def __init__(self):
         self.convergence_data = None
         self.weight_response = None
+        self.displacement_response = None
         self.stress_response = None
         self.strain_response = None
         self.force_response = None
         self.composite_stress_response = None
         self.composite_strain_response = None
         self.flutter_response = None
+        self.fractional_mass_response = None
 
     def get_stats(self, short=False):
         objects = [
             self.convergence_data,
+            self.displacement_response,
             self.weight_response,
             self.stress_response,
             self.strain_response,
@@ -22,6 +25,7 @@ class Responses:
             self.composite_stress_response,
             self.composite_strain_response,
             self.flutter_response,
+            self.fractional_mass_response,
         ]
         msg = []
         for obj in objects:
@@ -159,7 +163,7 @@ class WeightResponse:
             return self.__repr__()
 
 
-class GeneralResponse:
+class PropertyResponse:
     """common class for StressResponse, StrainResponse, and ForceResponse"""
     def __init__(self):
         self.n = 1
@@ -198,11 +202,98 @@ class GeneralResponse:
         else:
             return self.__repr__()
 
-class ForceResponse(GeneralResponse):
+class FractionalMassResponse:
+    name = 'fractional_mass'
+    def __init__(self):
+        self.n = 1
+        self._n = 0
+        self._itable = 0
+        self.is_built = False
+        self.internal_id = []
+        self.dresp_id = []
+        self.region = []
+        self.response_label = []
+        self.subcase = []
+        self.type_flag = []
+        self.seid = []
+
+    def get_stats(self, short=False):
+        if short:
+            return 'responses.%s_response (%s)' % (self.name, self.n)
+        else:
+            return self.__repr__()
+
+    def append(self, internal_id, dresp_id, response_label, region,
+               subcase, type_flag, seid):
+        self.internal_id.append(internal_id)
+        self.dresp_id.append(dresp_id)
+        self.region.append(region)
+        self.response_label.append(response_label)
+        self.subcase.append(subcase)
+        self.type_flag.append(type_flag)
+        self.seid.append(seid)
+        self._n += 1
+
+    def __repr__(self):
+        msg = 'FractionalMassResponse()\n'
+        msg += '  response_label=%s\n' % np.array(self.response_label)
+        #msg += '  nid=%s\n' % np.array(self.nid)
+        msg += '  internal_id=%s\n' % np.array(self.internal_id)
+        msg += '  subcase=%s\n' % np.array(self.subcase)
+        msg += '  type_flag=%s\n' % np.array(self.type_flag)
+        msg += '  seid=%s\n' % np.array(self.seid)
+        return msg
+
+class DisplacementResponse:
+    name = 'displacement'
+    def __init__(self):
+        self.n = 1
+        self._n = 0
+        self._itable = 0
+        self.is_built = False
+        self.internal_id = []
+        self.dresp_id = []
+        self.region = []
+        self.response_label = []
+        self.subcase = []
+        self.nid = []
+        self.type_flag = []
+        self.seid = []
+
+    def append(self, internal_id, dresp_id, response_label, region,
+               subcase, type_flag, seid,
+               nid):
+        self.internal_id.append(internal_id)
+        self.dresp_id.append(dresp_id)
+        self.region.append(region)
+        self.response_label.append(response_label)
+        self.subcase.append(subcase)
+        self.nid.append(nid)
+        self.type_flag.append(type_flag)
+        self.seid.append(seid)
+        self._n += 1
+
+    def get_stats(self, short=False):
+        if short:
+            return 'responses.%s_response (%s)' % (self.name, self.n)
+        else:
+            return self.__repr__()
+
+    def __repr__(self):
+        msg = 'DisplacementResponse()\n'
+        msg += '  response_label=%s\n' % np.array(self.response_label)
+        msg += '  nid=%s\n' % np.array(self.nid)
+        msg += '  internal_id=%s\n' % np.array(self.internal_id)
+        msg += '  subcase=%s\n' % np.array(self.subcase)
+        msg += '  type_flag=%s\n' % np.array(self.type_flag)
+        msg += '  seid=%s\n' % np.array(self.seid)
+        return msg
+
+class ForceResponse(PropertyResponse):
     name = 'force'
-class StressResponse(GeneralResponse):
+class StressResponse(PropertyResponse):
     name = 'stress'
-class StrainResponse(GeneralResponse):
+class StrainResponse(PropertyResponse):
     name = 'strain'
 
 class FlutterResponse:

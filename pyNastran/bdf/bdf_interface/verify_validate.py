@@ -47,14 +47,12 @@ def verify_bdf(model: BDF, xref: bool) -> None:
     _verify_dict(model.dequations, xref)
     _verify_dict(model.desvars, xref)
     _verify_dict(model.topvar, xref)
-    _verify_dict(model.dresps, xref)
     _verify_dict(model.dvcrels, xref)
     _verify_dict(model.dvmrels, xref)
     _verify_dict(model.dvprels, xref)
-    _verify_dict(model.dresps, xref)
+    _verify_model_dict(model.dresps, model, xref)
     _verify_dict_list(model.dvgrids, xref)
 
-    _verify_dict(model.dresps, xref)
     for unused_id, gust in sorted(model.gusts.items()):
         gust._verify(model, xref)
     _verify_dict(model.tics, xref)
@@ -68,6 +66,15 @@ def _verify_dict(dict_obj: Dict[Any, Any], xref: bool) -> None:
     for unused_key, card in sorted(dict_obj.items()):
         try:
             card._verify(xref)
+        except:
+            print(str(card))
+            raise
+
+def _verify_model_dict(dict_obj: Dict[Any, Any], model: BDF, xref: bool) -> None:
+    """helper for ``verify_bdf``"""
+    for unused_key, card in sorted(dict_obj.items()):
+        try:
+            card._verify(model, xref)
         except:
             print(str(card))
             raise

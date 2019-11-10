@@ -287,6 +287,9 @@ class DEQATN(BaseCard):  # needs work...
         self.dtable_ref = self.dtable
         self._setup_equation()
 
+    def safe_cross_reference(self, model):
+        self.cross_reference(model)
+
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         del self.func

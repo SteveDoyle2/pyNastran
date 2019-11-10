@@ -58,8 +58,8 @@ from pyNastran.op2.result_objects.eqexin import EQEXIN
 from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
 
 from pyNastran.op2.result_objects.design_response import (
-    WeightResponse, StressResponse, StrainResponse, ForceResponse,
-    FlutterResponse, Convergence)
+    WeightResponse, DisplacementResponse, StressResponse, StrainResponse, ForceResponse,
+    FlutterResponse, FractionalMassResponse, Convergence)
 
 IS_TESTING = True
 
@@ -1951,7 +1951,10 @@ class OP2Reader:
                 #8 COMP I Displacement component
                 #9 UNDEF None
                 #10 GRID I Grid identification number
-                pass
+                if responses.displacement_response is None:
+                    responses.displacement_response = DisplacementResponse()
+                else:
+                    responses.displacement_response.n += 1
             elif response_type == 6:
                 if responses.stress_response is None:
                     responses.stress_response = StressResponse()
@@ -1973,6 +1976,11 @@ class OP2Reader:
                 #8 MODE I Mode number
                 #9 ICODE I 1: Real component or 2: Imaginary component
                 pass
+            elif response_type == 23:
+                if responses.flutter_response is None:
+                    responses.fractional_mass_response = FractionalMassResponse()
+                else:
+                    responses.fractional_mass_response.n += 1
             elif response_type == 84:
                 if responses.flutter_response is None:
                     responses.flutter_response = FlutterResponse()
@@ -2005,11 +2013,17 @@ class OP2Reader:
                 responses.weight_response.add_from_op2(out, self.log)
             elif response_type == 5:  # DISP
                 # out = (1, 101, 5, 'DISP1   ', 101, 1, 3, 0, 1, 0, 0, 0, 0, 0)
-
+                comp = out[6]
+                nid = out[8]
+                #msg = f'DISP - label={response_label!r} region={region} subcase={subcase} nid={nid}'
+                #print(msg)
                 #print(out[6:])
                 # (3,   0,  1,    0,   0,   0,   0,   0)
                 # (???, NA, comp, ???, ???, ???, ???, ???)
-                pass
+                responses.displacement_response.append(
+                    internal_id, dresp_id, response_label, region,
+                    subcase, type_flag, seid,
+                    nid)
             elif response_type == 6:  # STRESS
                 #                              -----   STRESS RESPONSES   -----
                 #  -------------------------------------------------------------------------------------------
@@ -2062,6 +2076,14 @@ class OP2Reader:
                 #print(msg)
             #elif response_type == 10:  # CSTRAIN
                 #pass
+            elif response_type == 23:  # fractional mass response
+                #msg = f'??? - label={response_label!r} region={region} subcase={subcase}'
+                #print(msg)
+                #print(out[6:])
+                responses.fractional_mass_response.append(
+                    internal_id, dresp_id, response_label, region,
+                    subcase, type_flag, seid)
+
             elif response_type == 24:  # FRSTRE
                 #8 ICODE I Stress item code
                 #9 UNDEF None

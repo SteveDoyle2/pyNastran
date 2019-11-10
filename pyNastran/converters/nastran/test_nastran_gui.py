@@ -659,9 +659,9 @@ class TestNastranGUI(unittest.TestCase):
 
         #test.on_take_screenshot(fname='chan.png', magnify=None, show_msg=True)
         out = test.tool_actions._screenshot_setup(magnify, render_large)
-        line_widths0, point_sizes0, coord_scale0, coord_text_scale0, fake_axes_actor, magnify = out
+        line_widths0, point_sizes0, coord_scale0, coord_text_scale0, linewidth0, fake_axes_actor, magnify = out
         test.tool_actions._screenshot_teardown(
-            line_widths0, point_sizes0, coord_scale0, coord_text_scale0, axes_actor)
+            line_widths0, point_sizes0, coord_scale0, coord_text_scale0, linewidth0, axes_actor)
 
     def test_gui_bar_chan1(self):
         """tests a PBARL/CHAN1"""

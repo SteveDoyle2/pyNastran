@@ -154,24 +154,29 @@ class NastranGuiResults(NastranGuiAttributes):
                                               scales,
                                               uname='NastranResult')
 
-            dmax = []
+            #dmax = []
             for itime in range(ntimes):
                 dt = case._times[itime]
 
-                if name == 'Displacement':
+                #if name == 'Displacement':
                     # (6673, )
-                    normiii = np.linalg.norm(t123[itime, :, :], axis=1)
+                    #normiii = np.linalg.norm(t123[itime, :, :], axis=1)
                     #print(normiii.shape)
                     #print('Displacement; itime=%s time=%s tnorm=%s' % (
                         #itime, dt, normiii.max()))
-                    dmax.append(normiii.max())
+                    #dmax.append(normiii.max())
+
+                if name == 'Eigenvectors':
+                    # independent
+                    tnorm_abs_max = np.linalg.norm(t123[itime, :, :], axis=1).max()
+                else:
+                    tnorm_abs_max = tnorm.max()
                 # mode = 2; freq = 75.9575 Hz
                 header = _get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
                 keys_map[key] = (case.subtitle, case.label,
                                  case.superelement_adaptivity_index, case.pval_step)
 
-                tnorm_abs_max = tnorm.max()
                 #if tnorm_abs_max == 0.0:
                     #scale = self.displacement_scale_factor
                 #else:
@@ -179,7 +184,7 @@ class NastranGuiResults(NastranGuiAttributes):
 
                 scale = self.gui.settings.dim_max
                 if tnorm_abs_max > 0.0:
-                    scale = self.gui.settings.dim_max / tnorm_abs_max * 0.25
+                    scale = self.gui.settings.dim_max / tnorm_abs_max * 0.10
                 scales.append(scale)
                 titles.append(title1)
                 headers.append(f'{title1}: {header}')
@@ -188,10 +193,10 @@ class NastranGuiResults(NastranGuiAttributes):
                 form_dict[(key, itime)].append(formii)
                 icase += 1
 
-            if name == 'Displacement':
+            #if name == 'Displacement':
                 # Displacement; itime=361 time=3.61 tnorm=1.46723
                 #print('dmax = ', max(dmax))
-                pass
+                #pass
             nastran_res.save_defaults()
         else:
             nastran_res = ForceTableResults(subcase_idi, titles, headers,
@@ -1194,6 +1199,14 @@ def _get_t123_tnorm(case, nids, nnodes: int, t123_offset: int=0):
         0 : translations / forces
         3 : rotations / moments
 
+    Returns
+    -------
+    t123 : (ntimes, nnodes, 3) float ndarray
+       the translations or rotations
+    tnorm : (ntimes, 3) float ndarray
+        ???
+    ntimes : int
+       number of times
     """
     assert case.is_sort1, case.is_sort1
 

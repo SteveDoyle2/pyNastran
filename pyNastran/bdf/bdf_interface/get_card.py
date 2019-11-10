@@ -2102,11 +2102,10 @@ class GetCard(GetMethods):
         etypes_no_pids = [
             'CELAS4', 'CDAMP4', 'CHBDYG', 'GENEL',
         ]
-
         if pids is None:
-            pids = self.properties.keys()
+            pids = set(list(self.properties.keys()))
         elif isinstance(pids, integer_types):
-            pids = [int]
+            pids = {pids}
         else:
             assert isinstance(pids, (list, tuple)), 'pids=%s type=%s' % (pids, type(pids))
 
