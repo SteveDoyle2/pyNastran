@@ -535,7 +535,6 @@ class ONR(OP2Common):
                 obj._times[obj.itime] = dt
 
                 strings = np.frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 5)
-                #print(strings)
                 if obj.itime == 0:
                     ints = np.frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
                     if obj.element_name == 'DMIG':
@@ -551,11 +550,6 @@ class ONR(OP2Common):
                         obj.element_type[obj.itime, itotal:itotal2, :] = s
 
                 #[energy, percent, density]
-                #print(floats)
-                #print(floats[:, 2:])
-                #print(floats[:, 3:])
-                #print(obj.data[obj.itime, itotal:itotal2, :])
-                #print(obj.data[obj.itime, itotal:itotal2, :].shape)
                 if obj.element_name == 'DMIG':
                     obj.data[obj.itime, itotal:itotal2, :] = floats[:, 2:]
                 else:
@@ -569,9 +563,6 @@ class ONR(OP2Common):
                     out = s.unpack(edata)
                     (word, energy, percent, density) = out
                     word = word.strip()
-                    #print "eType=%s" % (eType)
-                    #print "%s" %(self.get_element_type(self.element_type)), data_in
-                    #eid = self.obj.add_new_eid_sort1(out)
                     if self.is_debug_file:
                         self.binary_debug.write('  eid/word=%r; %s\n' % (word, str(out)))
                     obj.add_sort1(dt, word, energy, percent, density)

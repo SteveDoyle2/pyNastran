@@ -4,6 +4,7 @@ class Responses:
     """Defines SOL 200 responses"""
     def __init__(self):
         self.convergence_data = None
+        self.desvars = None
         self.weight_response = None
         self.displacement_response = None
         self.stress_response = None
@@ -17,6 +18,7 @@ class Responses:
     def get_stats(self, short=False):
         objects = [
             self.convergence_data,
+            self.desvars,
             self.displacement_response,
             self.weight_response,
             self.stress_response,
@@ -32,6 +34,16 @@ class Responses:
             if obj is not None:
                 msg += obj.get_stats(short=short) + '\n'
         return msg
+
+    def get_table_types(self):
+        tables = [
+            'convergence_data', 'desvars', 'displacement_response', 'weight_response',
+            'stress_response', 'strain_response', 'force_response',
+            'composite_stress_response', 'composite_strain_response', 'flutter_response',
+            'fractional_mass_response',
+        ]
+        return ['responses.' + table for table in tables
+                if getattr(self, table) is not None]
 
 class WeightResponse:
     def __init__(self):
@@ -160,7 +172,7 @@ class WeightResponse:
         if short:
             return 'responses.weight_response (%s)' % (self.n)
         else:
-            return self.__repr__()
+            return self.__repr__() + '\n'
 
 
 class PropertyResponse:
@@ -200,7 +212,7 @@ class PropertyResponse:
         if short:
             return 'responses.%s_response (%s)' % (self.name, self.n)
         else:
-            return self.__repr__()
+            return self.__repr__() + '\n'
 
 class FractionalMassResponse:
     name = 'fractional_mass'
@@ -221,7 +233,7 @@ class FractionalMassResponse:
         if short:
             return 'responses.%s_response (%s)' % (self.name, self.n)
         else:
-            return self.__repr__()
+            return self.__repr__() + '\n'
 
     def append(self, internal_id, dresp_id, response_label, region,
                subcase, type_flag, seid):
@@ -243,6 +255,7 @@ class FractionalMassResponse:
         msg += '  type_flag=%s\n' % np.array(self.type_flag)
         msg += '  seid=%s\n' % np.array(self.seid)
         return msg
+
 
 class DisplacementResponse:
     name = 'displacement'
@@ -277,7 +290,7 @@ class DisplacementResponse:
         if short:
             return 'responses.%s_response (%s)' % (self.name, self.n)
         else:
-            return self.__repr__()
+            return self.__repr__() + '\n'
 
     def __repr__(self):
         msg = 'DisplacementResponse()\n'
@@ -334,7 +347,49 @@ class FlutterResponse:
         if short:
             return 'responses.%s_response (%s)' % (self.name, self.n)
         else:
-            return self.__repr__()
+            return self.__repr__() + '\n'
+
+
+class Desvars:
+    def __init__(self, desvars):
+        #internal_id, desvar_id, label, lower, upper, delxv, dunno = desvar
+        ndesvars = len(desvars)
+        self.internal_id = np.zeros(ndesvars, dtype='int32')
+        self.desvar_id = np.zeros(ndesvars, dtype='int32')
+        self.label = np.zeros(ndesvars, dtype='|U8')
+        self.lower = np.zeros(ndesvars, dtype='float32')
+        self.upper = np.zeros(ndesvars, dtype='float32')
+        self.delxv = np.zeros(ndesvars, dtype='float32')
+        self.dunno = np.zeros(ndesvars, dtype='float32')
+
+        encoding = 'ascii'
+        for i, (internal_id, desvar_id, label, lower, upper, delxv, dunno) in enumerate(desvars):
+            self.internal_id[i] = internal_id
+            self.desvar_id[i] = desvar_id
+            self.label[i] = label.decode(encoding).strip()
+            self.lower[i] = lower
+            self.upper[i] = upper
+            self.delxv[i] = delxv
+            self.dunno[i] = dunno
+
+    def __repr__(self):
+        msg = 'Desvars()\n'
+        #msg += '  shape=(%s, %s)\n' % (self.n, self.ndesign_variables)
+        msg += '  internal_id = %s\n' % self.internal_id
+        msg += '  desvar_id = %s\n' % self.desvar_id
+        msg += '  label = %s\n' % self.label
+        msg += '  lower = %s\n' % self.lower
+        msg += '  upper = %s\n' % self.upper
+        msg += '  delxv = %s\n' % self.delxv
+        msg += '  dunno = %s\n' % self.dunno
+        return msg
+
+    def get_stats(self, short=False):
+        if short:
+            return 'responses.desvars\n'
+        else:
+            return self.__repr__() + '\n'
+
 
 class Convergence:
     def __init__(self, ndesign_variables):
@@ -412,6 +467,6 @@ class Convergence:
 
     def get_stats(self, short=False):
         if short:
-            return 'responses.convergence_data (%s, %s)' % (self.n, self.ndesign_variables)
+            return 'responses.convergence_data (%s, %s)\n' % (self.n, self.ndesign_variables)
         else:
-            return self.__repr__()
+            return self.__repr__() + '\n'

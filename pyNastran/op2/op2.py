@@ -210,11 +210,13 @@ class OP2(OP2_Scalar, OP2Writer):
 
         table_types = self.get_table_types()
         for table_type in table_types:
-            if table_type in skip_results:
+            if table_type in skip_results or table_type.startswith('responses.'):
                 continue
             # model.displacements
             adict = self.get_result(table_type)
             bdict = op2_model.get_result(table_type)
+            if adict is None and bdict is None:
+                continue
 
             # check number of subcases
             if len(adict) != len(bdict):
@@ -640,7 +642,7 @@ class OP2(OP2_Scalar, OP2Writer):
         """internal method"""
         result_types = self.get_table_types()
         for result_type in result_types:
-            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin']:
+            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin'] or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
             for obj in result.values():
@@ -843,7 +845,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
         # set subcase_key
         for result_type in result_types:
-            if result_type in results_to_skip:
+            if result_type in results_to_skip or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
             case_keys = sorted(result.keys())
@@ -882,7 +884,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
         self.log.debug('combine_results')
         for result_type in result_types:
-            if result_type in results_to_skip:
+            if result_type in results_to_skip or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
             if len(result) == 0:
@@ -962,8 +964,10 @@ class OP2(OP2_Scalar, OP2Writer):
         #print('subcase_key =', self.subcase_key)
 
         subcase_key2 = {}
+        not_results = ['eigenvalues', 'eigenvalues_fluid', 'params', 'gpdt', 'bgpdt',
+                       'eqexin', 'desvars', 'grid_point_weight']
         for result_type in result_types:
-            if result_type in ['eigenvalues', 'eigenvalues_fluid', 'params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight']:
+            if result_type in not_results or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
             case_keys = list(result.keys())

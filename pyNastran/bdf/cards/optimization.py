@@ -1859,17 +1859,24 @@ class DRESP1(OptConstraint):
         }
 
         node_types = {
-            'DISP', 'RMSDISP', 'TDISP', 'RFDISP',
-            'FRVELO', 'TVELO',
-            'RMSACCL', 'PSDACCL'}
+            'FRDISP', 'DISP', 'PSDDISP', 'RMSDISP', 'TDISP', # 'RFDISP',
+            'RMSVELO', 'FRVELO', 'TVELO',
+            'FRACCL', 'RMSACCL', 'PSDACCL', 'TACCL',
+            'FRSPCF',
+        }
         no_validate = {
             'FRMASS', 'WEIGHT', 'EIGN', 'LAMA', 'VOLUME', 'FREQ',
-            'FLUTTER', 'CFAILURE', 'CSTRAT', 'CEIG', 'GPFORCP'}
+            'FLUTTER', 'CFAILURE', 'CSTRAT', 'CEIG', 'DIVERG', 'STABDER', 'TRIM',
+            'GPFORCE', 'GPFORCP'}
         not_implemented = no_validate
         no_validate.update(not_implemented)
         no_validate.update(node_types)
 
-        elem_props = {'STRESS', 'STRAIN', 'FRSTRE', 'CSTRESS', 'FORCE'}
+        elem_props = {'STRESS', 'TSTRE', 'FRSTRE', 'CSTRESS',
+                      'STRAIN',
+                      'ESE', 'TOTSE',
+                      'FORCE', 'TFORC', 'FRFORC',
+                      'TSPCF', }
         if self.response_type in no_validate:
             return
         elif self.response_type in elem_props:

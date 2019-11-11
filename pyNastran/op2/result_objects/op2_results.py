@@ -5,6 +5,8 @@ from pyNastran.op2.op2_interface.random_results import (
     AutoCorrelationObjects, PowerSpectralDensityObjects, RootMeansSquareObjects,
     CumulativeRootMeansSquareObjects, NumberOfCrossingsObjects,
 )
+from pyNastran.op2.result_objects.design_response import Responses
+
 
 class Results:
     """storage object for even more op2_results (see op2.op2_results)"""
@@ -12,6 +14,8 @@ class Results:
         self.eqexin = None
         self.gpdt = None
         self.bgpdt = None
+        self.responses = Responses()
+
         self.ato = AutoCorrelationObjects()
         self.psd = PowerSpectralDensityObjects()
         self.rms = RootMeansSquareObjects()
@@ -47,6 +51,7 @@ class Results:
     def get_table_types(self):
         """combines all the table_types from all objects and sub-objects"""
         sum_objs = [
+            self.responses,
             self.force, self.strain_energy,
             self.ato, self.psd, self.rms, self.no, self.crm,
             self.modal_contribution, self.strength_ratio, self.failure_indices,
@@ -56,7 +61,7 @@ class Results:
             self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS,
             self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC,
         ]
-        base = ['eqexin', 'gpdt', 'bgpdt']
+        base = ['eqexin', 'gpdt', 'bgpdt',]
         for objs in sum_objs:
             base.extend(objs.get_table_types())
         return base

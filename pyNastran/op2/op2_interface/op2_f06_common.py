@@ -10,7 +10,6 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import deprecated
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
-from pyNastran.op2.result_objects.design_response import Responses
 from pyNastran.op2.result_objects.op2_results import Results
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -539,7 +538,6 @@ class OP2_F06_Common:
     def __objects_common_init__(self):
         #: the date the job was run on
         self.date = None
-        self.responses = Responses()
 
         #: Grid Point Weight Table
         #: create with:
@@ -1126,7 +1124,7 @@ class Op2F06Attributes(OP2_F06_Common):
 def _get_op2_stats(model: OP2, short=False):
     """see OP2.get_op2_stats(...)"""
     msg = []
-    msg += model.responses.get_stats(short=short)
+    #msg += model.op2_results.responses.get_stats(short=short)
 
     msg.extend(_write_params(model.params))
     for key, weight in model.grid_point_weight.items():
@@ -1171,7 +1169,7 @@ def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
         #table_type_print = ''
         if table_type in handled_previously:
             continue
-        elif table_type in ['gpdt', 'bgpdt', 'eqexin']:
+        elif table_type in ['gpdt', 'bgpdt', 'eqexin'] or table_type.startswith('responses.'):
             obj = model.get_result(table_type)
             if obj is None:
                 continue
@@ -1179,7 +1177,8 @@ def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
             msg.extend(f'op2_results.{table_type}: ' + stats)  # TODO: a hack...not quite right...
             continue
 
-        table_type_print = 'op2_results.' + table_type if '.' in table_type  else table_type
+        # # and not table_type.startswith('responses.')
+        table_type_print = 'op2_results.' + table_type if '.' in table_type else table_type
         table = model.get_result(table_type)
         for isubcase, subcase in sorted(table.items(), key=_compare):
             class_name = subcase.__class__.__name__
@@ -1212,12 +1211,12 @@ def _get_op2_stats_full(model: OP2, table_types: List[str], log):
         table = model.get_result(table_type)
         if table_type in handled_previously:
             continue
-        elif table_type in ['gpdt', 'bgpdt', 'eqexin']:
+        elif table_type in ['gpdt', 'bgpdt', 'eqexin'] or table_type.startswith('responses.'):
             obj = model.get_result(table_type)
             if obj is None:
                 continue
-            elif isinstance(obj, dict):
-                print(obj)
+            #elif isinstance(obj, dict):
+                #print(obj)
             stats = obj.get_stats(short=False)
             msg.extend(f'op2_results.{table_type}: ' + stats)  # TODO: a hack...not quite right...
             continue

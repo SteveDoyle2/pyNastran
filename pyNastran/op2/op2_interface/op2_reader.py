@@ -41,12 +41,13 @@ Defines various tables that don't fit in other sections:
     - read_results_table(self)
 
 """
+from __future__ import annotations
 import os
 import sys
 from copy import deepcopy
 from itertools import count
 from struct import unpack, Struct
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 import numpy as np
 import scipy  # type: ignore
 
@@ -59,7 +60,9 @@ from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
 
 from pyNastran.op2.result_objects.design_response import (
     WeightResponse, DisplacementResponse, StressResponse, StrainResponse, ForceResponse,
-    FlutterResponse, FractionalMassResponse, Convergence)
+    FlutterResponse, FractionalMassResponse, Convergence, Desvars)
+if TYPE_CHECKING:
+    from pyNastran.op2.op2 import OP2
 
 IS_TESTING = True
 
@@ -88,7 +91,7 @@ class OP2Reader:
         #: the h5 file object used to reduce memory usage
         self.h5_file = None
 
-        self.op2 = op2
+        self.op2 = op2  # type: OP2
 
         self.mapped_tables = {
             b'GPL' : self.read_gpl,
@@ -627,7 +630,7 @@ class OP2Reader:
             #return ndata
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
-        self.log.debug('table_name = %r' % op2.table_name)
+        #self.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
             self.binary_debug.write('_read_destab - %s\n' % op2.table_name)
 
@@ -703,9 +706,9 @@ class OP2Reader:
             itable -= 1
             markers = self.read_markers([itable, 1, 0])
 
-        self.op2.op2_results.desvars = desvars
-        if self.read_mode == 2:
-            self.log.warning('DESTAB results were read, but not saved')
+        self.op2.op2_results.desvars = Desvars(desvars)
+        #if self.read_mode == 2:
+            #self.log.warning('DESTAB results were read, but not saved')
         markers = self.read_markers([0])
 
 
@@ -1516,6 +1519,7 @@ class OP2Reader:
     def read_hisadd(self):
         """optimization history (SOL200) table"""
         op2 = self.op2
+        responses = op2.op2_results.responses
         op2.table_name = self._read_table_name(rewind=False)
 
         if self.read_mode == 1:
@@ -1525,13 +1529,13 @@ class OP2Reader:
             self._skip_record()
             self.read_markers([-3, 1, 0])
 
-            if op2.responses.convergence_data is None:
+            if responses.convergence_data is None:
                 data = self._read_record()
                 ndvs = len(data) // 4 - 7
-                op2.responses.convergence_data = Convergence(ndvs)
+                responses.convergence_data = Convergence(ndvs)
             else:
                 self._skip_record()
-                op2.responses.convergence_data.n += 1
+                responses.convergence_data.n += 1
 
             self.read_markers([-4, 1, 0, 0])
             return
@@ -1598,7 +1602,7 @@ class OP2Reader:
         ndvs = len(data) // 4 - 7
         desvar_values = unpack('%sf' % ndvs, data[28:])
 
-        op2.responses.convergence_data.append(
+        responses.convergence_data.append(
             design_iter, iconvergence, conv_result, obj_intial,
             obj_final, constraint_max, row_constraint_max, desvar_values)
         self.read_markers([-4, 1, 0, 0])
@@ -1922,7 +1926,7 @@ class OP2Reader:
 
         """
         op2 = self.op2
-        responses = op2.responses
+        responses = op2.op2_results.responses
         if op2._table4_count == 0:
             op2._count += 1
         op2._table4_count += 1
