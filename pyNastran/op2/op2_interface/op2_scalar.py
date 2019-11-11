@@ -382,6 +382,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.op2_filename = None
         self.bdf_filename = None
         self.f06_filename = None
+        self.des_filename = None
         self.h5_filename = None
         self._encoding = 'utf8'
 
@@ -1338,6 +1339,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.op2_filename = op2_filename
         self.bdf_filename = fname + '.bdf'
         self.f06_filename = fname + '.f06'
+        self.des_filename = fname + '.des'
         self.h5_filename = fname + '.h5'
 
         self.op2_reader.load_as_h5 = load_as_h5

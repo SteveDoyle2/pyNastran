@@ -1,7 +1,7 @@
 """Interface for converting OP2 results to the GUI format"""
 # pylint: disable=C1801, C0103
 from __future__ import annotations
-#from copy import deepcopy
+import os
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
@@ -20,6 +20,7 @@ from pyNastran.op2.result_objects.stress_object import (
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
 if TYPE_CHECKING:
     from pyNastran.op2.op2 import OP2
+    from pyNastran.op2.result_objects.design_response import Desvars
 
 
 class NastranGuiResults(NastranGuiAttributes):
@@ -166,11 +167,8 @@ class NastranGuiResults(NastranGuiAttributes):
                         #itime, dt, normiii.max()))
                     #dmax.append(normiii.max())
 
-                if name == 'Eigenvectors':
-                    # independent
-                    tnorm_abs_max = np.linalg.norm(t123[itime, :, :], axis=1).max()
-                else:
-                    tnorm_abs_max = tnorm.max()
+                tnorm_abs_max = get_tnorm_abs_max(case, t123, tnorm, itime)
+
                 # mode = 2; freq = 75.9575 Hz
                 header = _get_nastran_header(case, dt, itime)
                 header_dict[(key, itime)] = header
@@ -210,7 +208,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 keys_map[key] = (case.subtitle, case.label,
                                  case.superelement_adaptivity_index, case.pval_step)
 
-                tnorm_abs_max = tnorm.max()
+                #tnorm_abs_max = get_tnorm_abs_max(case, t123, tnorm, itime)
+                #tnorm_abs_max = tnorm.max()
                 scale = 1.
                 scales.append(scale)
                 titles.append(title1)
@@ -1165,6 +1164,52 @@ class NastranGuiResults(NastranGuiAttributes):
         #, case, header, form0
         return icase
 
+    def _fill_responses(self, cases, model: OP2, icase):
+        form_optimization = []
+        #fractional_mass_response = model.op2_results.responses.fractional_mass_response
+        #if fractional_mass_response is not None:
+            #print(fractional_mass_response)
+
+        des_filename = model.des_filename
+        if os.path.exists(des_filename):
+            des_desvars = read_des_filename(des_filename)
+            if des_desvars:
+                subcase_id = 0
+                eids = des_desvars['eids']
+                fractional_mass = des_desvars['fractional_mass']
+                minp_res = GuiResult(subcase_id, header=f'Fractional Mass', title='% Mass',
+                                     location='centroid', scalar=fractional_mass, ) # data_format=fmt
+                cases[icase] = (minp_res, (subcase_id, 'Fractional Mass'))
+                form_optimization.append(('Fractional Mass', icase, []))
+                icase += 1
+        #f06_filename = model.f06_filename
+        #print('f06_filename =', f06_filename)
+        #from pyNastran.f06.dev.read_sol_200 import read_sol_200
+        #read_sol_200(f06_filename)
+
+        #desvars = model.op2_results.responses.desvars  # type: Desvars
+        #if desvars is not None:
+            #itop = np.where(desvars.label == 'TOPVAR')[0]
+            #if len(itop):
+                #print(desvars)
+                #print('itop =', itop)
+                #asdf
+                #form_optimization.append(('TOPVAR', icase, []))
+
+            #minp_res = GuiResult(subcase_id, header=f'MinPrincipal: {header}', title='MinPrincipal',
+                                 #location='centroid', scalar=min_principal, data_format=fmt)
+            #cases[icase] = (minp_res, (subcase_id, 'MinPrincipal'))
+
+            #desvars.internal_id = np.zeros(ndesvars, dtype='int32')
+            #desvars.desvar_id = np.zeros(ndesvars, dtype='int32')
+            #desvars.label = np.zeros(ndesvars, dtype='|U8')
+            #desvars.lower = np.zeros(ndesvars, dtype='float32')
+            #desvars.upper = np.zeros(ndesvars, dtype='float32')
+            #desvars.delxv = np.zeros(ndesvars, dtype='float32')
+            #desvars.dunno = np.zeros(ndesvars, dtype='float32')
+        return icase, form_optimization
+
+
 def print_empty_elements(model, element_ids, is_element_on, log_error):
     """prints the first 20 elements that aren't supportedas part of the stress results"""
     ioff = np.where(is_element_on == 0)[0]
@@ -1278,9 +1323,10 @@ def _get_times(model, key):
     is_static = False
     times = None
     for table_type in table_types:
-        if not model.has_result(table_type):
+        if not model.has_result(table_type) or table_type.startswith('responses.'):
             #model.log.debug('no table_type=%s' % table_type)
             continue
+
         table = model.get_result(table_type)
         if len(table) == 0:
             continue
@@ -1306,3 +1352,63 @@ def _get_times(model, key):
             break
             #return is_data, is_static, is_real, times
     return is_data, is_static, is_real, times
+
+def get_tnorm_abs_max(case, t123, tnorm, itime):
+    if case.analysis_code in [1, 5, 6, 10, 11]:
+        # dependent
+        # 1-statics
+        # 5-frequency
+        # 6-transient
+        # 10-nonlinear statics
+        # 11-old nonlinear statics
+        tnorm_abs_max = tnorm.max()
+    elif case.analysis_code in [2, 7, 8, 9]:
+        # independent
+        # 2-eigenvectors
+        # 7-pre-buckling
+        # 8-post-buckling
+        # 9-complex eigenvalues
+        tnorm_abs_max = np.linalg.norm(t123[itime, :, :], axis=1).max()
+    else:
+        raise NotImplementedError(f'analysis_code={case.analysis_code}\ncase:\n{case}')
+    return tnorm_abs_max
+
+def read_des_filename(des_filename):
+    """
+    DESIGN CYCLE :    30
+    1
+    Topology Optimization Element Density Distribution
+    Total number of element     3912
+        1115       0
+    0.1408992E-01
+        1116       0
+    0.1628276E-01
+    """
+    with open(des_filename, 'r') as des_file:
+        lines = des_file.readlines()
+
+    i = 0
+    word, ncycles_str = lines[0].split(':')
+    word = word.strip()
+    ncycles = int(ncycles_str)
+    i += 3
+    assert lines[i].startswith('Total number of element'), lines[i]
+    nelements = int(lines[i].split()[-1])
+    i += 1
+
+    eids = []
+    fractional_mass = []
+    for ielement in range(nelements):
+        #print(lines[i].strip())
+        eid, zero = lines[i].split()
+        frac = float(lines[i+1])
+        assert zero == '0', lines[i].strip()
+        eids.append(eid)
+        fractional_mass.append(frac)
+        i += 2
+    eids = np.array(eids, dtype='int32')
+    fractional_mass = np.array(fractional_mass, dtype='float32')
+    desvars = {
+        'eids' : eids,
+        'fractional_mass' : fractional_mass,}
+    return desvars

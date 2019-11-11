@@ -6412,9 +6412,9 @@ class AddCards(AddMethods):
         self._add_desvar_object(desvar)
         return desvar
 
-    def add_topvar(self, opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2, power=3):
+    def add_topvar(self, opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2, power=3.0):
         """adds a TOPVAR"""
-        topvar = TOPVAR(opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2, power=3)
+        topvar = TOPVAR(opt_id, label, ptype, xinit, pid, xlb=xlb, delxv=delxv, power=power)
         self._add_topvar_object(topvar)
         return topvar
 

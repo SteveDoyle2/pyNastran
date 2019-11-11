@@ -874,7 +874,7 @@ class DESVAR(OptConstraint):
 
 class TOPVAR(BaseCard):
     type = 'TOPVAR'
-    def __init__(self, opt_id, label, prop_type, xinit, pid, xlb=0.001, delxv=0.2, power=3,
+    def __init__(self, opt_id, label, prop_type, xinit, pid, xlb=0.001, delxv=0.2, power=3.0,
                  options=None, comment=''):
         if comment:
             self.comment = comment
@@ -909,7 +909,7 @@ class TOPVAR(BaseCard):
         xinit = double_or_blank(card, 4, 'xinit')
         xlb = double_or_blank(card, 5, 'xlb', 0.001)
         delxv = double_or_blank(card, 6, 'delxv', 0.2)
-        power = integer_or_blank(card, 7, 'power', 3)
+        power = double_or_blank(card, 7, 'power', 3.0)
         pid = integer(card, 8, 'pid')
         options = {}
         if len(card) > 8:
@@ -1859,24 +1859,24 @@ class DRESP1(OptConstraint):
         }
 
         node_types = {
-            'FRDISP', 'DISP', 'PSDDISP', 'RMSDISP', 'TDISP', # 'RFDISP',
-            'RMSVELO', 'FRVELO', 'TVELO',
+            'DISP', 'FRDISP', 'PSDDISP', 'RMSDISP', 'TDISP', # 'RFDISP',
+            'FRVELO', 'RMSVELO', 'PSDVELO', 'TVELO',
             'FRACCL', 'RMSACCL', 'PSDACCL', 'TACCL',
             'FRSPCF',
         }
         no_validate = {
-            'FRMASS', 'WEIGHT', 'EIGN', 'LAMA', 'VOLUME', 'FREQ',
+            'FRMASS', 'WEIGHT', 'EIGN', 'LAMA', 'VOLUME', 'FREQ', 'ERP',
             'FLUTTER', 'CFAILURE', 'CSTRAT', 'CEIG', 'DIVERG', 'STABDER', 'TRIM',
-            'GPFORCE', 'GPFORCP'}
+            'GPFORCE', 'GPFORCP',}
         not_implemented = no_validate
         no_validate.update(not_implemented)
         no_validate.update(node_types)
 
         elem_props = {'STRESS', 'TSTRE', 'FRSTRE', 'CSTRESS',
-                      'STRAIN',
+                      'STRAIN', 'CSTRAIN',
                       'ESE', 'TOTSE',
                       'FORCE', 'TFORC', 'FRFORC',
-                      'TSPCF', }
+                      'SPCFORCE', 'TSPCF', }
         if self.response_type in no_validate:
             return
         elif self.response_type in elem_props:

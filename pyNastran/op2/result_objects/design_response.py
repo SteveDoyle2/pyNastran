@@ -249,8 +249,8 @@ class FractionalMassResponse:
     def __repr__(self):
         msg = 'FractionalMassResponse()\n'
         msg += '  response_label=%s\n' % np.array(self.response_label)
-        #msg += '  nid=%s\n' % np.array(self.nid)
         msg += '  internal_id=%s\n' % np.array(self.internal_id)
+        msg += '  region=%s\n' % np.array(self.region)
         msg += '  subcase=%s\n' % np.array(self.subcase)
         msg += '  type_flag=%s\n' % np.array(self.type_flag)
         msg += '  seid=%s\n' % np.array(self.seid)
@@ -364,6 +364,7 @@ class Desvars:
 
         encoding = 'ascii'
         for i, (internal_id, desvar_id, label, lower, upper, delxv, dunno) in enumerate(desvars):
+            #print((internal_id, desvar_id, label, lower, upper, delxv, dunno))
             self.internal_id[i] = internal_id
             self.desvar_id[i] = desvar_id
             self.label[i] = label.decode(encoding).strip()

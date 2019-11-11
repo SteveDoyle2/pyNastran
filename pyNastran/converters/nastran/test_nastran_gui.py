@@ -800,6 +800,14 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         #test.load_nastran_results(op2_filename)
 
+    def test_gui_optimization_mcpads4(self):
+        """tests mcpads4.bdf, which tests *.des and convergence"""
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'mcpads4.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'mcpads4.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
+
     def test_gui_patran(self):
         """tests patran format"""
         bdf_filename = os.path.join(MODEL_PATH, 'patran_fmt', '0012_20.bdf')

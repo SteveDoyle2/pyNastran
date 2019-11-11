@@ -1120,7 +1120,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
         pass
     elif sol in [5, 21, 26, 38, 47, 61, 68, 76, 78, 81, 88,
                  100, 128, 187, 190,
-                 400, 401, 600, 601, 700, 701, 'AEDB2XDB', 'UPWARD']:
+                 400, 401, 402, 600, 601, 700, 701, 'AEDB2XDB', 'UPWARD']:
         pass
     else:
         msg = 'SOL = %s\n' % (sol)

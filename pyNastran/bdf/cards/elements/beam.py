@@ -539,11 +539,14 @@ class CBEAM(LineElement):
         :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
         description of the OFFT flag.
 
+        is_passed: bool
+        out: (wa, wb, _ihat, jhat, khat)
         """
+        is_failed = True
         #TODO: not integrated with CBAR yet...
         if self.bit is not None:
             print(self.get_stats())
-            return False, None
+            return is_failed, None
 
         check_offt(self)
         is_failed = True

@@ -234,7 +234,7 @@ class OP2Writer(OP2_F06_Common):
             'OEFIT',
         ]
         for table_type in obj.get_table_types():
-            if table_type in ['gpdt', 'bgpdt', 'eqexin'] or table_type in skips:
+            if table_type in ['gpdt', 'bgpdt', 'eqexin'] or table_type in skips or table_type.startswith('responses.'):
                 continue
 
             res_dict = obj.get_result(table_type)

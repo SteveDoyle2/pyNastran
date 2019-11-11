@@ -706,7 +706,7 @@ class OP2Reader:
             itable -= 1
             markers = self.read_markers([itable, 1, 0])
 
-        self.op2.op2_results.desvars = Desvars(desvars)
+        self.op2.op2_results.responses.desvars = Desvars(desvars)
         #if self.read_mode == 2:
             #self.log.warning('DESTAB results were read, but not saved')
         markers = self.read_markers([0])

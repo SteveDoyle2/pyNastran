@@ -1,0 +1,2084 @@
+1
+ 
+ 
+ 
+ 
+                     THIS PROGRAM IS CONFIDENTIAL AND A TRADE SECRET OF MSC.SOFTWARE CORPORATION.  THE RECEIPT OR    
+                  POSSESSION OF THIS PROGRAM DOES NOT CONVEY ANY RIGHTS TO REPRODUCE OR DISCLOSE ITS CONTENTS, OR TO 
+                 MANUFACTURE, USE, OR SELL ANYTHING HEREIN, IN WHOLE OR IN PART, WITHOUT THE SPECIFIC WRITTEN CONSENT
+                                                    OF MSC.SOFTWARE CORPORATION.                                     
+ 
+ 
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * *                                 * *
+                                              * *           MSC.SOFTWARE          * *
+                                              * *               CORP              * *
+                                              * *                                 * *
+                                              * *      M S C . N a s t r a n      * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *        Version 2005.1.0         * *
+                                              * *             2005R2              * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * *          JUN 17, 2005           * *
+                                              * *                                 * *
+                                              * *              Intel              * *
+                                              * *MODEL PentiumIII/5857 (sdoyle-de * *
+                                              * *   Windows XP 6.1 (Build 7601)   * *
+                                              * *                                 * *
+                                              * *                                 * *
+                                              * * * * * * * * * * * * * * * * * * * *
+                                              * * * * * * * * * * * * * * * * * * * *
+1News file - (6/03/05):
+  
+ Thank you for choosing MSC.Nastran, the industry standard in FEA, and Welcome
+ to MSC.Nastran 2005 r2.
+  
+ You can find version-specific online documentation, and online technical support
+ at:
+  
+    http://www.mscsoftware.com/support/prod_support/nastran/
+  
+ Also at the technical support location is a searchable list of technical
+ application notes and the current error/avoidance list. Please don't hesitate
+ to contact your nearest technical support representative if you require
+ assistance.
+  
+    http://www.mscsoftware.com/about/locate/
+  
+ The arbitrary beam cross section, explicit nonlinear (SOL 700), and the new
+ nonlinear (SOL 400) solution sequences, are regarded as pre-release capabilities
+ and are still undergoing testing and verification.  These capabilities should
+ not be employed in any analysis except for the purpose of testing and verifying
+ the functionality and working of the capabilities themselves.
+  
+ MSC.Nastran 2005 r2 is mainly focused on improving quality, accuracy and
+ ease-of-use, but also introduces new capabilities, some of which were made
+ available as pre-release functionality in MSC.Nastran 2005 r1. In addition,
+ significant advancements have been made regarding performance and scalability of
+ the program.  Some of the new features and enhancements are listed below.
+  
+ Nonlinear
+ - MSC.Nastran Implicit Nonlinear (SOL 600) - We have addressed many known
+   issues, improved memory usage, improved output options, added beam, bar, and
+   shell offsets, and thermal contact
+ - MSC.Nastran Explicit Nonlinear (SOL 700) pre-release - you can now
+   execute LS-Dyna from inside MSC.Nastran to perform crash and impact
+   analyses
+  
+ Numeric Enhancements
+ - Multi-level DMP - an enhanced Lanczos modal extraction methodology that
+   improves scalability and efficiently handles large normal modes analyses with
+   very frequency ranges
+ - MDACMS enhanced robustness, improved handling of large masses, and improved
+   performance
+ - Distributed memory parallel MPYAD
+  
+ Elements
+ - CFAST - a new fastener element based on user defined stiffness values.
+ - Arbitrary beam cross section pre-release capability - you can specify cross
+   section shapes using POINT entries, and optimize them in SOL 200
+ - Enhanced nonstructural mass element summary printout - ELSUM
+1- spatially dependent heat transfer coefficient
+ - Heat transfer coefficient as a function of two variables
+ - Thermal analysis flux output
+  
+ Optimization
+ - MSC.Nastran Topology Optimization - this addition to the existing SOL 200
+   optimization solution sequence allows optimization analyses to be performed
+   that require many design variables
+  
+ Further Enhancements
+ - Larger XDB database support
+ - MATMOD option 16 - we have removed many previous limitations with this
+   matrix output capability
+1                                                                          DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE     1
+                                                                                                                                    
+0        N A S T R A N    F I L E    A N D    S Y S T E M    P A R A M E T E R    E C H O                                           
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     NASTRAN OP2NEW=0 $ MSC.NASTRAN .LCL FILE                                        
+     NASTRAN BUFFSIZE=8193 $(C:/MSC.SOFTWARE/MSC.NASTRAN/CONF/NAST20051.RCF[2])      
+     NASTRAN REAL=1605107712 $(PROGRAM DEFAULT)                                      
+1                                                                          DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE     2
+                                                                                                                                    
+0        N A S T R A N    E X E C U T I V E    C O N T R O L    E C H O                                                             
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+     ID MSC, MCPADS4 $ V2005 22-JAN-XMY                                                      
+     DIAG 5, 6                                                                               
+     SOL 200                                                                                 
+     CEND                                                                                    
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE     3
+                                                                                                                                    
+0                                                                                                                                   
+0                                        C A S E    C O N T R O L    E C H O                                                        
+                 COMMAND                                                                                                            
+                 COUNT                                                                                                              
+                  1      SEALL = ALL                                                                             
+                  2      SUPER = ALL                                                                             
+                  3      TITLE = COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                                  
+                  4      ECHO = NONE                                                                             
+                  5      MAXLINES = 999999999                                                                    
+                  6      ANALYSIS=STATIC                                                                         
+                  7      DESGLB = 1                                                                              
+                  8      SUBCASE 1                                                                               
+                  9      DESOBJ = 3                                                                              
+                 10         SUBTITLE=DEFAULT                                                                     
+                 11         SPC = 1                                                                              
+                 12         LOAD = 1                                                                             
+                 13      BEGIN BULK                                                                              
+0                             INPUT BULK DATA ENTRY COUNT =    1348
+0                       TOTAL COUNT=      1348
+
+
+                                        M O D E L   S U M M A R Y
+
+                                   NUMBER OF GRID     POINTS   =      693
+ 
+                                   NUMBER OF CQUAD4   ELEMENTS =      640
+ 
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE     4
+                                                                                                                                    
+0                                                                                                                                   
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE     5
+                                                                                                                                    
+0                                                                                                                                   
+
+ THERE ARE   640 QUAD4    ELEMENTS. FIRST EID =         1 LAST EID =       640
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE     6
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 4109 (OUTPX2)
+     THE LABEL IS XXXXXXXX FOR FORTRAN UNIT 12
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7 WORDS.)
+     (NUMBER OF FORTRAN RECORDS WRITTEN =          8 RECORDS.)
+     (TOTAL DATA WRITTEN FOR TAPE LABEL = WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM1X   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 0                 0                 8                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM1.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        5547 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        5578 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM2X   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102                 0                 0                 0              8192                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM2.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        8963 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        8994 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM3X   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    103                 0                 0                64                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM3.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          10 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          41 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK GEOM4X   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    104                 0                 0                 0                64                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS GEOM4.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =           8 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          39 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK EPTX     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    105                 0               512                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS EPT.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7054 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        7085 WORDS.)
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE     7
+                                                                                                                                    
+0                                                                                                                                   
+0                                                                                                                                   
+                                                                                                                                    
+                                                                                                                                    
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK MPTS     WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101             32768                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS MPTS.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        7695 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        7726 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK DESTAB   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101              1280              1280                 0              1280                 0               640
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS DESTAB.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =           8 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =        6410 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =       15380 WORDS.)
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=1          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE     8
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 7310 (VECPRN)
+     ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.
+     RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----      -3.000000E+02     ----       0.000000E+00     ----      -4.800000E+03                             
+               FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00 -3.000000E+02  0.000000E+00  0.000000E+00  0.000000E+00 -4.800000E+03
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    6.205444E+00
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   1          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE     9
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -2.8593718E-14          3.1492162E+04
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    10
+                                                                                                                                    
+0                                                                                                                                   
+0                                                  MAXIMUM  DISPLACEMENTS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   7.0222031E+01  2.0994774E+02  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.0000000E+00
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    11
+                                                                                                                                    
+0                                                                                                                                   
+0                                                  MAXIMUM  APPLIED LOADS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   0.0000000E+00  3.0000000E+02  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.0000000E+00
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   1          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    12
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    13
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    14
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                     THIS IS THE FIRST ANALYSIS - NO CONVERGENCE CHECK
+                     -------------------------------------------------------
+                      MAXIMUM VALUE OF CONSTRAINTS           :  0.0000E+00
+                     -------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    15
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                                ********************************************************************
+                                *                                                                  *
+                                *                                                                  *
+                                *                D E S I G N    O P T I M I Z A T I O N            *
+                                *                                                                  *
+                                *                                                                  *
+                                ********************************************************************
+
+
+
+                                         ***********************************************
+                                         *                                             *
+                                         *       I N I T I A L   A N A L Y S I S       *
+                                         *                                             *
+                                         ***********************************************
+
+
+
+                                    *******   ANALYSIS RESULTS BASED ON THE INITIAL DESIGN   *******
+
+
+                                                  -----   DESIGN OBJECTIVE   -----
+
+     ----------------------------------------------------------------------------------------------------
+                INTERNAL      TYPE                  MINIMIZE                                                           
+                RESPONSE       OF                      OR       SUPERELEMENT    SUBCASE
+                   ID       RESPONSE      LABEL     MAXIMIZE         ID            ID          VALUE   
+     ----------------------------------------------------------------------------------------------------
+                       1     DRESP1     COMP        MINIMIZE             0            1      6.2984E+04
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    16
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                                ********************************************************************
+                                *                                                                  *
+                                *                                                                  *
+                                *                D E S I G N    O P T I M I Z A T I O N            *
+                                *                                                                  *
+                                *                                                                  *
+                                ********************************************************************
+
+
+
+                                             *******************************************
+                                             *                                         *
+                                             *      D E S I G N   C Y C L E       1    *
+                                             *                                         *
+                                             *******************************************
+
+
+
+                                 *****   OPTIMIZATION RESULTS BASED ON THE APPROXIMATE MODEL   *****
+
+
+                                                  -----   DESIGN OBJECTIVE   -----
+
+     ---------------------------------------------------------------------------------------------------------------------------
+                INTERNAL      TYPE                  MINIMIZE                                                           
+                RESPONSE       OF                      OR       SUPERELEMENT    SUBCASE        INPUT          OUTPUT   
+                   ID       RESPONSE      LABEL     MAXIMIZE         ID            ID          VALUE           VALUE   
+     ---------------------------------------------------------------------------------------------------------------------------
+                       1     DRESP1     COMP        MINIMIZE             0            1      6.2984E+04      3.0207E+04
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    17
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=2          
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    5.832851E+00
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   2          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    18
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -1.2840095E-14          2.4548768E+04
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   2          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    19
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    20
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  2.2048E-01  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  1.3887E+04  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  5.4121E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    21
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=3          
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    9.637640E+00
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   3          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    22
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -1.0672662E-14          2.0087400E+04
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   3          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    23
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    24
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  1.8173E-01  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  8.9227E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  5.8413E-06  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    25
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=4          
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    1.241812E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   4          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    26
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -5.6881894E-14          1.6638121E+04
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   4          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    27
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    28
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  1.7171E-01  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  6.8986E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  5.9605E-07  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    29
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=5          
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    1.127315E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   5          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    30
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -1.2134624E-13          1.4963180E+04
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   5          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    31
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    32
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  1.0067E-01  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  3.3499E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  3.1352E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    33
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=6          
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    1.127601E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   6          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    34
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1          6.8385618E-14          1.2521016E+04
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   6          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    35
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    36
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  1.6321E-01  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  4.8843E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               : -1.1325E-06  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    37
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=7          
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    1.434729E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   7          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    38
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -2.6850467E-14          1.1037509E+04
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   7          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    39
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    40
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  1.1848E-01  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  2.9670E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  1.0014E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    41
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=8          
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    1.199985E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   8          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    42
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -7.1021795E-14          1.0034287E+04
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   8          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    43
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    44
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  9.0892E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  2.0064E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  4.5419E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    45
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=9          
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    1.566076E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   9          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    46
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -7.6957761E-14          9.1960557E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   9          
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    47
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    48
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  8.3537E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  1.6765E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  6.2466E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    49
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=10         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    3.191876E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   10         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    50
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1          4.3762682E-14          8.4866895E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   10         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    51
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    52
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  7.7138E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  1.4187E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  4.7684E-06  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    53
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2798E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2798E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=11         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    4.840252E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   11         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    54
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1          3.1036073E-15          7.8670337E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   11         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    55
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    56
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  7.3015E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  1.2393E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  3.3379E-06  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2798E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2798E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    57
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=12         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    6.800901E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   12         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    58
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1          9.1268512E-15          7.2963262E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   12         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    59
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    60
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  7.2544E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  1.1414E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  2.5988E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    61
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2795E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2795E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=13         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    8.886326E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   13         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    62
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -5.7013239E-14          6.9083770E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   13         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    63
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    64
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  5.3170E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  7.7590E+02  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  4.8876E-06  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2795E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2795E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    65
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2789E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2789E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=14         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    4.291883E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   14         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    66
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -1.3025339E-14          6.3219839E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   14         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    67
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    68
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  8.4881E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  1.1728E+03  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  1.6809E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2789E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2789E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    69
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=15         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    8.382632E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   15         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    70
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -4.0339937E-14          6.1953320E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   15         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    71
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    72
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  2.0034E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  2.5330E+02  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  4.6849E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    73
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=16         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    4.907811E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   16         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    74
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -9.9382152E-14          5.8144609E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   16         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    75
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    76
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  6.1477E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  7.6174E+02  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  9.6560E-06  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    77
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=17         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    3.435450E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   17         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    78
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -6.5263274E-15          5.5063740E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   17         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    79
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    80
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  5.2986E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  6.1617E+02  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  6.7115E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    81
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=18         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    3.780264E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   18         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    82
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1         -2.9479579E-14          5.2893564E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   18         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    83
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    84
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  3.9412E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  4.3404E+02  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  9.0599E-06  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    85
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=19         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    4.754455E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   19         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    86
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1          1.8878652E-14          4.9066787E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   19         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    87
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    88
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  7.2349E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  7.6536E+02  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  3.8147E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    89
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=20         
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    7.084570E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   20         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    90
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1          1.3331124E-13          4.8480674E+03
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   20         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    91
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    92
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  1.1945E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  1.1722E+02  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  4.4584E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+ *** SYSTEM INFORMATION MESSAGE 7603 (DMKCRD)
+     METHOD I IS SELECTED BY THE PROGRAM TO PERFORM TRIPLE MATRIX PRODUCT
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    93
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                                ********************************************************************
+                                *                                                                  *
+                                *                                                                  *
+                                *                D E S I G N    O P T I M I Z A T I O N            *
+                                *                                                                  *
+                                *                                                                  *
+                                ********************************************************************
+
+
+
+                                             *******************************************
+                                             *                                         *
+                                             *      D E S I G N   C Y C L E      20    *
+                                             *                                         *
+                                             *******************************************
+
+
+
+                                 *****   OPTIMIZATION RESULTS BASED ON THE APPROXIMATE MODEL   *****
+
+
+                                                  -----   DESIGN OBJECTIVE   -----
+
+     ---------------------------------------------------------------------------------------------------------------------------
+                INTERNAL      TYPE                  MINIMIZE                                                           
+                RESPONSE       OF                      OR       SUPERELEMENT    SUBCASE        INPUT          OUTPUT   
+                   ID       RESPONSE      LABEL     MAXIMIZE         ID            ID          VALUE           VALUE   
+     ---------------------------------------------------------------------------------------------------------------------------
+                       1     DRESP1     COMP        MINIMIZE             0            1      9.6961E+03      6.8903E+03
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    94
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                       ****************************************************************************************
+                       INSPECTION OF CONVERGENCE DATA FOR THE OPTIMAL DESIGN WITH RESPECT TO APPROXIMATE MODELS
+                                                  (SOFT CONVERGENCE DECISION LOGIC)                            
+                       ****************************************************************************************
+
+                          MAXIMUM OF RELATIVE PROP. CHANGES     7.2800E-01 MUST BE LESS THAN   1.0000E-03
+                                                        --- AND ---
+                          MAXIMUM OF RELATIVE D.V. CHANGES      7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                       ****************************************************************************************
+
+
+  
+ ^^^ USER INFORMATION MESSAGE 9024 (FEA) 
+ ^^^ STIFFNESS, MASS, DAMPING, AND LOAD GENERATION   INITIATED. DESIGN CYCLE NUMBER=21         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    95
+                                                                                                                                    
+0                                                                                                                                   
+ *** USER INFORMATION MESSAGE 7310 (VECPRN)
+     ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.
+     RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.
+0                                                  OLOAD    RESULTANT       
+  SUBCASE/    LOAD
+  DAREA ID    TYPE       T1            T2            T3            R1            R2            R3
+0        1     FX    0.000000E+00     ----          ----          ----       0.000000E+00  0.000000E+00                             
+               FY       ----      -3.000000E+02     ----       0.000000E+00     ----      -4.800000E+03                             
+               FZ       ----          ----       0.000000E+00  0.000000E+00  0.000000E+00     ----                                  
+               MX       ----          ----          ----       0.000000E+00     ----          ----                                  
+               MY       ----          ----          ----          ----       0.000000E+00     ----                                  
+               MZ       ----          ----          ----          ----          ----       0.000000E+00                             
+             TOTALS  0.000000E+00 -3.000000E+02  0.000000E+00  0.000000E+00  0.000000E+00 -4.800000E+03
+ *** SYSTEM INFORMATION MESSAGE 6916 (DFMSYN)
+     DECOMP ORDERING METHOD CHOSEN: BEND, ORDERING METHOD USED: BEND
+  
+ *** SYSTEM INFORMATION MESSAGE 4159 (DFMSA)
+     THE DECOMPOSITION OF KLL      YIELDS A MAXIMUM MATRIX-TO-FACTOR-DIAGONAL RATIO OF    6.205814E+01
+ ^^^ USER INFORMATION MESSAGE 9051 (FEA) 
+ ^^^ STATIC ANALYSIS INITIATED.  DESIGN CYCLE NUMBER=   21         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    96
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ *** USER INFORMATION MESSAGE 5293 (SSG3A)
+    FOR DATA BLOCK KLL     
+    LOAD SEQ. NO.             EPSILON              EXTERNAL WORK      EPSILONS LARGER THAN 0.001 ARE FLAGGED WITH ASTERISKS
+                1          1.2428283E-13          4.6831958E+03
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    97
+                                                                                                                                    
+0                                                                                                                                   
+0                                                  MAXIMUM  DISPLACEMENTS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   7.7968397E+00  3.1221304E+01  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.0000000E+00
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    98
+                                                                                                                                    
+0                                                                                                                                   
+0                                                  MAXIMUM  APPLIED LOADS   
+  SUBCASE/
+  DAREA ID        T1             T2             T3             R1             R2             R3
+0        1   0.0000000E+00  3.0000000E+02  0.0000000E+00  0.0000000E+00  0.0000000E+00  0.0000000E+00
+ ^^^ USER INFORMATION MESSAGE 9052 (FEA) 
+ ^^^ STATIC ANALYSIS COMPLETED.  DESIGN CYCLE NUMBER=   21         
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE    99
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE   100
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+                              CONVERGENCE NOT ACHIEVED YET   (HARD CONVERGENCE DECISION LOGIC)
+             ----------------------------------------------------------------------------------------------
+
+                      RELATIVE CHANGE IN OBJECTIVE           :  3.4008E-02  MUST BE LESS THAN   1.0000E-04
+              OR      ABSOLUTE CHANGE IN OBJECTIVE           :  3.2974E+02  MUST BE LESS THAN   1.0000E-20
+                                                      --- AND ---
+                      MAXIMUM CONSTRAINT VALUE               :  3.3021E-05  MUST BE LESS THAN   5.0000E-03
+                                             (CONVERGENCE TO A FEASIBLE DESIGN)
+                                                      --- OR ---
+                      MAXIMUM OF RELATIVE PROP. CHANGES      :  7.2800E-01  MUST BE LESS THAN   1.0000E-03
+              AND     MAXIMUM OF RELATIVE D.V. CHANGES       :  7.2800E-01  MUST BE LESS THAN   1.0000E-04
+                                     (CONVERGENCE TO A BEST COMPROMISE INFEASIBLE DESIGN)
+             ----------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK R1TABRG  WRITTEN ON FORTRAN UNIT 12, TRL =
+                    101                 2                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS R1TABRG.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =          15 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          20 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =          58 WORDS.)
+ *** USER INFORMATION MESSAGE 4114 (OUTPX2)
+     DATA BLOCK HISADD   WRITTEN ON FORTRAN UNIT 12, TRL =
+                    102              1280                 0                 0                 0                 0                 0
+     NAME OF DATA BLOCK WRITTEN ON FORTRAN UNIT IS HISADD.
+        (MAXIMUM POSSIBLE FORTRAN RECORD SIZE =       16386 WORDS.)
+     (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =        1287 WORDS.)
+           (NUMBER OF FORTRAN RECORDS WRITTEN =          15 RECORDS.)
+           (TOTAL DATA WRITTEN FOR DATA BLOCK =        1311 WORDS.)
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE   101
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+
+
+
+                                ********************************************************************
+                                *                                                                  *
+                                *                                                                  *
+                                *                D E S I G N    O P T I M I Z A T I O N            *
+                                *                                                                  *
+                                *                                                                  *
+                                ********************************************************************
+
+
+
+                                             *******************************************
+                                             *                                         *
+                                             *        F I N A L  A N A L Y S I S       *
+                                             *                                         *
+                                             *******************************************
+
+
+
+                                    *******   ANALYSIS RESULTS BASED ON THE FINAL DESIGN   *******
+
+
+                                                  -----   DESIGN OBJECTIVE   -----
+
+     ----------------------------------------------------------------------------------------------------
+                INTERNAL      TYPE                  MINIMIZE                                                           
+                RESPONSE       OF                      OR       SUPERELEMENT    SUBCASE
+                   ID       RESPONSE      LABEL     MAXIMIZE         ID            ID          VALUE   
+     ----------------------------------------------------------------------------------------------------
+                       1     DRESP1     COMP        MINIMIZE             0            1      9.3664E+03
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE   102
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+                                   ***************************************************************
+                                   S U M M A R Y   O F   D E S I G N    C Y C L E    H I S T O R Y
+                                   ***************************************************************
+
+
+                                       NUMBER OF FINITE ELEMENT ANALYSES COMPLETED          21
+                                       NUMBER OF OPTIMIZATIONS W.R.T. APPROXIMATE MODELS    20
+
+
+                                              OBJECTIVE AND MAXIMUM CONSTRAINT HISTORY
+           ---------------------------------------------------------------------------------------------------------------
+                              OBJECTIVE FROM           OBJECTIVE FROM          FRACTIONAL ERROR          MAXIMUM VALUE  
+             CYCLE              APPROXIMATE                 EXACT                    OF                       OF
+             NUMBER            OPTIMIZATION               ANALYSIS              APPROXIMATION             CONSTRAINT   
+           ---------------------------------------------------------------------------------------------------------------
+
+             INITIAL                                      6.298432E+04                                      0.000000E+00
+
+                   1             3.020653E+04             4.909754E+04            -3.847649E-01             5.412102E-05
+
+                   2             2.770654E+04             4.017480E+04            -3.103501E-01             5.841255E-06
+
+                   3             2.485428E+04             3.327624E+04            -2.530925E-01             5.960464E-07
+
+                   4             2.135331E+04             2.992636E+04            -2.864715E-01             3.135204E-05
+
+                   5             1.768348E+04             2.504203E+04            -2.938478E-01            -1.132488E-06
+
+                   6             1.618767E+04             2.207502E+04            -2.666974E-01             1.001358E-05
+
+                   7             1.440726E+04             2.006857E+04            -2.820986E-01             4.541874E-05
+
+                   8             1.295292E+04             1.839211E+04            -2.957352E-01             6.246567E-05
+
+                   9             1.251415E+04             1.697338E+04            -2.627192E-01             4.768372E-06
+
+                  10             1.153196E+04             1.573407E+04            -2.670703E-01             3.337860E-06
+
+                  11             1.055214E+04             1.459265E+04            -2.768865E-01             2.598763E-05
+
+                  12             1.013502E+04             1.381675E+04            -2.664687E-01             4.887581E-06
+
+                  13             9.565596E+03             1.264397E+04            -2.434657E-01             1.680851E-05
+
+                  14             9.339621E+03             1.239066E+04            -2.462372E-01             4.684925E-05
+
+                  15             8.617932E+03             1.162892E+04            -2.589225E-01             9.655952E-06
+
+                  16             8.005853E+03             1.101275E+04            -2.730377E-01             6.711483E-05
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE   103
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+           ---------------------------------------------------------------------------------------------------------------
+                              OBJECTIVE FROM           OBJECTIVE FROM          FRACTIONAL ERROR          MAXIMUM VALUE  
+             CYCLE              APPROXIMATE                 EXACT                    OF                       OF
+             NUMBER            OPTIMIZATION               ANALYSIS              APPROXIMATION             CONSTRAINT   
+           ---------------------------------------------------------------------------------------------------------------
+
+                  17             7.778980E+03             1.057871E+04            -2.646572E-01             9.059906E-06
+
+                  18             7.375697E+03             9.813357E+03            -2.484023E-01             3.814697E-05
+
+                  19             7.326601E+03             9.696135E+03            -2.443793E-01             4.458427E-05
+
+                  20             6.890280E+03             9.366392E+03            -2.643613E-01             3.302097E-05
+           ---------------------------------------------------------------------------------------------------------------
+ *** USER INFORMATION MESSAGE 6464 (DOM12E)
+     RUN TERMINATED DUE TO MAXIMUM NUMBER OF DESIGN CYCLES =       20.
+ *** USER INFORMATION MESSAGE 4110 (OUTPX2)
+                                 END-OF-DATA SIMULATION ON FORTRAN UNIT 12
+                                 (MAXIMUM SIZE OF FORTRAN RECORDS WRITTEN =      1 WORDS.)
+                                       (NUMBER OF FORTRAN RECORDS WRITTEN =      1 RECORDS.)
+                                       (TOTAL DATA WRITTEN FOR EOF MARKER =      1 WORDS.)
+1    COMPLIANCE TOPOLOGY MINIMIZATION WITH ADSCOD=4                        DECEMBER   5, 2011  MSC.NASTRAN  6/17/05   PAGE   104
+                                                                                                                                    
+0                                                                                                            SUBCASE 1              
+ * * * *  D B D I C T   P R I N T  * * * *      SUBDMAP = PRTSUM  ,  DMAP STATEMENT NO.     30
+
+
+
+0                                   * * * *  A N A L Y S I S  S U M M A R Y  T A B L E  * * * *
+0 SEID  PEID PROJ VERS APRCH      SEMG SEMR SEKR SELG SELR MODES DYNRED SOLLIN PVALID SOLNL LOOPID DESIGN CYCLE SENSITIVITY
+ --------------------------------------------------------------------------------------------------------------------------
+     0     0    1    1 '        '    T    T    T    T    T     F      F      T      0     F     -1           21           F
+0SEID = SUPERELEMENT ID.
+ PEID = PRIMARY SUPERELEMENT ID OF IMAGE SUPERELEMENT.
+ PROJ = PROJECT ID NUMBER.
+ VERS = VERSION ID.
+ APRCH = BLANK FOR STRUCTURAL ANALYSIS.  HEAT FOR HEAT TRANSFER ANALYSIS.
+ SEMG = STIFFNESS AND MASS MATRIX GENERATION STEP.
+ SEMR = MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES).
+ SEKR = STIFFNESS MATRIX REDUCTION STEP.
+ SELG = LOAD MATRIX GENERATION STEP.
+ SELR = LOAD MATRIX REDUCTION STEP. 
+ MODES = T (TRUE) IF NORMAL MODES OR BUCKLING MODES CALCULATED.
+ DYNRED = T (TRUE) MEANS GENERALIZED DYNAMIC AND/OR COMPONENT MODE REDUCTION PERFORMED.
+ SOLLIN = T (TRUE) IF LINEAR SOLUTION EXISTS IN DATABASE.
+ PVALID = P-DISTRIBUTION ID OF P-VALUE FOR P-ELEMENTS
+ LOOPID = THE LAST LOOPID VALUE USED IN THE NONLINEAR ANALYSIS.  USEFUL FOR RESTARTS.
+ SOLNL = T (TRUE) IF NONLINEAR SOLUTION EXISTS IN DATABASE.
+ DESIGN CYCLE = THE LAST DESIGN CYCLE (ONLY VALID IN OPTIMIZATION).
+ SENSITIVITY = SENSITIVITY MATRIX GENERATION FLAG.
+ 
+ No PARAM values were set in the Control File.
+ 
+1                                        * * * END OF JOB * * *
+ 
+ 

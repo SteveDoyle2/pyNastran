@@ -7098,6 +7098,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         keys_map = {}
         key_itime = []
 
+        icase, form_optimization = self._fill_responses(cases, model, icase)
         for key in keys:
             unused_is_data, unused_is_static, unused_is_real, times = _get_times(model, key)
             if times is None:
@@ -7174,14 +7175,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         unused_form_out = []
         is_results = False
 
-        form_resultsi = []
+        form_resultsi = form_optimization
         form_resultsi_subcase = []
         basename = os.path.basename(op2_filename).rstrip()
         form_results = (basename + '-Results', None, form_resultsi)
 
         if len(key_itime) == 0:
-            print('header_dict =', header_dict)
-            print('key_itime =', key_itime)
+            #print('header_dict =', header_dict)
+            #print('key_itime =', key_itime)
+            if form_optimization:
+                form.append(form_results)
+            else:
+                self.log.error('No OP2 results were found')
             return form
 
         #for key, value in header_dict.items():

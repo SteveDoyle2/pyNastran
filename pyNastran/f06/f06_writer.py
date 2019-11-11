@@ -563,7 +563,7 @@ class F06Writer(OP2_F06_Common):
         header = copy.deepcopy(header_old)
         unallowed_results = ['eigenvectors', 'eigenvalues', 'params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight']
         res_types = list(self.get_result(table_type) for table_type in sorted(self.get_table_types())
-                         if table_type not in unallowed_results)
+                         if table_type not in unallowed_results and not table_type.startswith('responses.'))
 
         for isubcase, res_keys in sorted(res_keys_subcase.items()):
             for res_key in res_keys:
