@@ -306,6 +306,7 @@ class Settings:
         settings.setValue('magnify', self.magnify)
 
         # float
+        settings.setValue('text_size', self.text_size)
         settings.setValue('coord_scale', self.coord_scale)
         settings.setValue('coord_text_scale', self.coord_text_scale)
 

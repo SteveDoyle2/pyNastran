@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
+#import sys
 import unittest
 
 import numpy as np
 
 import pyNastran
-from pyNastran.utils import is_binary_file, object_methods, object_attributes
+from pyNastran.utils import is_binary_file, object_methods, object_attributes, print_bad_path
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import (
     get_abs_max, get_max_index, get_min_index, get_abs_index,
@@ -45,11 +45,23 @@ class B1(A1):
 
 class TestUtils(unittest.TestCase):
 
+    def test_print_bad_path(self):
+        """tests ``print_bad_path``"""
+        # passed: C:\work
+        with open('junk_good.txt', 'w'):
+            pass
+        bad = print_bad_path('junk_bad.txt')
+        good = print_bad_path('junk_good.txt')
+        assert bad.count('failed') == 1, bad
+        assert good.count('failed') == 0, good
+        os.remove('junk_good.txt')
+
     def test_get_files_of_type(self):
         """tests the get_files_of_type function"""
         model_path = os.path.join(PKG_PATH, '..', 'models')
-        op2_files = get_files_of_type(model_path, extension='.op2', max_size=100.,
-                                      limit_file='no_dig.txt')
+        unused_op2_files = get_files_of_type(
+            model_path, extension='.op2', max_size=100.,
+            limit_file='no_dig.txt')
         #assert len(op2_files) == 98, len(op2_files)
 
     def test_is_list_ranged(self):
@@ -90,6 +102,12 @@ class TestUtils(unittest.TestCase):
         assert np.array_equal(min_values, [4.0, 2.1, 3.0, 5.0, 2.1]), min_values
         assert np.array_equal(max_values, [4.1, 2.2, 3.1, 5.1, 2.2]), max_values
         assert np.array_equal(abs_values, [4.1, 2.2, 3.1, 5.1, 2.2]), abs_values
+
+        min_values = np.array([-1.1, -1.0, -1., 0.0, 4.1])
+        max_values = np.array([-1.0, +0.9, 1.1, 0.2, 4.2])
+        abs_values = np.array([-1.1, -1.0, 1.1, 0.2, 4.2])
+        abs_max = get_abs_max(min_values, max_values)
+        assert np.allclose(abs_max, abs_values), abs_max - abs_values
 
     def test_is_binary(self):
         """tests if a file is binary"""
@@ -132,6 +150,10 @@ class TestUtils(unittest.TestCase):
     def test_object_methods_introspection(self):
         """object methods determines the public/private methods of a class"""
         b = B1(7)
+        b._getB()
+        b.getB()
+        b._getA()
+        b.getA()
         methods = object_methods(b)
         self.assertEqual(methods, ['getA', 'getB'])
 
@@ -161,29 +183,19 @@ class TestUtils(unittest.TestCase):
         """object methods determines the public/private attributes of a class"""
         b = B1(7)
         attributes = object_attributes(b, "all")
-        version_info = sys.version_info
-        if version_info < (3, 0):
-            self.assertEqual(attributes, [
-                '__class__', '__delattr__', '__dict__',
-                '__doc__', '__format__', '__getattribute__', '__hash__',
-                '__module__', '__new__', '__reduce__', '__reduce_ex__',
-                '__repr__', '__setattr__', '__sizeof__', '__str__',
-                '__subclasshook__', '__weakref__', '_a', '_b', 'a', 'b', 'c'])
-        else:
-            expected = [
-                '__class__', '__delattr__', '__dict__',
-                '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__',
-                '__gt__', '__hash__', '__le__', '__lt__', '__module__',
-                '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__',
-                '__setattr__', '__sizeof__', '__str__', '__subclasshook__',
-                '__weakref__', '_a', '_b', 'a', 'b', 'c']
-            if version_info > (3, 3): # inclusive
-                expected.append('__dir__')
-            if version_info > (3, 6):
-                expected.append('__init_subclass__')
-                #print('\nactual   = %s' % ','.join(list(sorted(attributes))))
-                #print('expected = %s' % ','.join(list(sorted(expected))))
-            self.assertEqual(sorted(attributes), sorted(expected))
+        #version_info = sys.version_info
+        expected = [
+            '__class__', '__delattr__', '__dict__',
+            '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__',
+            '__gt__', '__hash__', '__le__', '__lt__', '__module__',
+            '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__',
+            '__setattr__', '__sizeof__', '__str__', '__subclasshook__',
+            '__weakref__', '__dir__', '__init_subclass__',
+            '_a', '_b', 'a', 'b', 'c',
+        ]
+        #print('\nactual   = %s' % ','.join(list(sorted(attributes))))
+        #print('expected = %s' % ','.join(list(sorted(expected))))
+        self.assertEqual(list(sorted(attributes)), list(sorted(expected)))
 
 
 if __name__ == '__main__':  # pragma: no cover

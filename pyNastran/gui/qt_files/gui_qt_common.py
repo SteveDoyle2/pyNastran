@@ -8,6 +8,7 @@ This file defines functions related to the result updating that are VTK specific
 # pylint: disable=C0111
 import sys
 from copy import deepcopy
+from collections import namedtuple
 
 import numpy as np
 from numpy import full, issubdtype
@@ -29,6 +30,24 @@ IS_TESTING = 'test' in sys.argv[0]
 WHITE = (1., 1., 1.)
 BLUE = (0., 0., 1.)
 RED = (1., 0., 0.)
+
+FringeData = namedtuple(
+    'FringeData',
+    'icase, result_type, location, min_value, max_value, norm_value,'
+    'data_format, scale, methods,'
+    'subcase_id, subtitle, label,'
+    'nlabels, labelsize, ncolors, colormap,'
+    'imin, imax')
+
+DispData = namedtuple(
+    'DispData',
+    'icase, result_type, location, min_value, max_value, norm_value,'
+    'data_format, scale, phase, methods,'
+    'subcase_id, subtitle, label,'
+    'nlabels, labelsize, ncolors, colormap,'
+    'xyz_nominal, vector_data,'
+    'is_checked,'
+    'imin, imax')
 
 
 class GuiQtCommon(GuiAttributes):
@@ -289,7 +308,7 @@ class GuiQtCommon(GuiAttributes):
 
         #if min_value is None and max_value is None:
         min_value, max_value = obj.get_min_max(i, name)
-        unused_subtitle, label = self.get_subtitle_label(subcase_id)
+        subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
             label += '; ' + label2
 
@@ -304,9 +323,11 @@ class GuiQtCommon(GuiAttributes):
 
         grid_result = self.set_grid_values(name_tuple, normi, vector_size,
                                            min_value, max_value, norm_value)
-        data = (
+
+        data = FringeData(
             icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, methods,
+            subcase_id, subtitle, label,
             nlabels, labelsize, ncolors, colormap,
             imin, imax,
         )
@@ -411,12 +432,18 @@ class GuiQtCommon(GuiAttributes):
         max_value = None
         norm_value = None
 
-        data = (
+
+        imin = None
+        imax = None
+        subtitle = None
+        data = DispData(
             icase, result_type, location, min_value, max_value, norm_value,
             data_format, scale, phase, methods,
+            subcase_id, subtitle, label,
             nlabels, labelsize, ncolors, colormap,
             xyz_nominal, vector_data,
             is_checked,
+            imin, imax,
         )
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
@@ -437,12 +464,24 @@ class GuiQtCommon(GuiAttributes):
         if not is_valid:
             return is_valid
 
-        (
-            icase, result_type, location, min_value, max_value, norm_value,
-            data_format, scale, methods,
-            nlabels, labelsize, ncolors, colormap,
-            imin, imax,
-        ) = data
+        icase = data.icase
+        result_type = data.result_type
+        location = data.location
+        min_value = data.min_value
+        max_value = data.max_value
+        norm_value = data.norm_value
+        data_format = data.data_format
+        scale = data.scale
+        methods = data.methods
+        nlabels = data.nlabels
+        labelsize = data.labelsize
+        ncolors = data.ncolors
+        colormap = data.colormap
+        imin = data.imin
+        imax = data.imax
+        #subcase_id = data.subcase_id
+        #subtitle = data.subtitle
+        #label = data.label
 
         #is_legend_shown = True
         #if is_legend_shown is None:
@@ -553,12 +592,22 @@ class GuiQtCommon(GuiAttributes):
         #print("is_valid=%s scale=%s" % (is_valid, scale))
         if not is_valid:
             return is_valid, data
-        (
-            icase, unused_result_type, location, unused_min_value, unused_max_value, unused_norm_value,
-            unused_data_format, unused_scale, unused_methods,
-            unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
-            unused_imin, unused_imax,
-        ) = data
+
+        icase = data.icase
+        location = data.location
+        min_value = data.min_value
+        max_value = data.max_value
+        imin = data.imin
+        imax = data.imax
+        subcase_id = data.subcase_id
+        subtitle = data.subtitle
+        label = data.label
+        #(
+            #icase, unused_result_type, location, min_value, max_value, unused_norm_value,
+            # unused_data_format, unused_scale, unused_methods,
+            #unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
+            #imin, imax,
+        #) = data
 
         #-----------------------------------
         grid = self.grid
@@ -587,6 +636,10 @@ class GuiQtCommon(GuiAttributes):
             point_data.SetActiveScalars(name_str)
         else:
             raise RuntimeError(location)
+
+        self.tool_actions.update_text_actors(subcase_id, subtitle,
+                                             imin, min_value,
+                                             imax, max_value, label, location)
         is_valid = True
         return is_valid, data
 
@@ -620,14 +673,27 @@ class GuiQtCommon(GuiAttributes):
 
         if not is_valid:
             return
-        (
-            icase, unused_result_type, location,
-            unused_min_value, unused_max_value, unused_norm_value,
-            unused_data_format, scale, unused_phase, unused_methods,
-            unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
-            xyz_nominal, vector_data,
-            unused_is_checked,
-        ) = data
+        #(
+            #icase, unused_result_type, location,
+            #unused_min_value, unused_max_value, unused_norm_value,
+            #unused_data_format, scale, unused_phase, unused_methods,
+            #unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
+            #xyz_nominal, vector_data,
+            #unused_is_checked,
+        #) = data
+        icase = data.icase
+        scale = data.scale
+        location = data.location
+        min_value = data.min_value
+        max_value = data.max_value
+        xyz_nominal = data.xyz_nominal
+        vector_data = data.vector_data
+        #imin = data.imin
+        #imax = data.imax
+        #unused_subcase_id = data.subcase_id
+        #subtitle = data.subtitle
+        #unused_label = data.label
+
         #deflects = obj.deflects(i, res_name)
 
         #(obj, (obj_i, obj_name)) = self.result_cases[self.icase]
@@ -1023,7 +1089,7 @@ class GuiQtCommon(GuiAttributes):
         https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
         """
         if self._names_storage.has_exact_name(name):
-            return
+            return None
         #print('name=%r case=%r' % (name, case))
 
         if not hasattr(case, 'dtype'):
@@ -1742,9 +1808,6 @@ class GuiQtCommon(GuiAttributes):
             # The labeled data mapper will place labels at the points
             label_mapper = vtk.vtkLabeledDataMapper()
             label_mapper.SetFieldDataName("Isovalues")
-            #if vtk.VTK_MAJOR_VERSION <= 5:
-                #label_mapper.SetInput(label_poly_data)
-            #else:
             label_mapper.SetInputData(label_poly_data)
 
             label_mapper.SetLabelModeToLabelScalars()

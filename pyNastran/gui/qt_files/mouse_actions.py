@@ -795,6 +795,8 @@ def create_highlighted_actor(gui, ugrid, representation='wire', add_actor=True):
     elif representation == 'points':
         prop.SetRepresentationToPoints()
         prop.RenderPointsAsSpheresOn()
+        prop.SetLighting(False)
+        #prop.SetInterpolationToFlat()
         prop.SetPointSize(settings.highlight_point_size)
     elif representation == 'wire':
         prop.SetRepresentationToWireframe()

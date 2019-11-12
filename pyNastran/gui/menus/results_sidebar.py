@@ -302,10 +302,11 @@ class Sidebar(QWidget):
             if isinstance(obj, (GuiResult, NullResult)):
                 self._set_buttons(deflection_is_visible, vector_is_visible)
                 return
+            #DisplacementResults
             #elif isinstance(obj, ForceTableResults):
                 # include_vector_scale
-            print(i, name)
-            print(obj)
+            #print(i, name)
+            #print(obj)
             #if self.include_deflection_scale:
                 #case =
             #if self.include_vector_scale:

@@ -47,7 +47,7 @@ class PreferencesWindow(PyDialog):
         self._updated_preference = False
 
         self._default_font_size = data['font_size']
-        self._default_text_size = 14
+        self._default_text_size = data['text_size']
         self._default_annotation_size = 18
         self._default_coord_scale = 0.05 * 100.
         self._default_coord_text_scale = 0.5 * 100.

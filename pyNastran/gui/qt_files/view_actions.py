@@ -194,6 +194,8 @@ class ViewActions:
                     prop.SetRepresentationToWireframe()
                 #prop.SetRepresentationToPoints()
                 #prop.RenderPointsAsSpheresOn()
+                #prop.SetLighting(False)
+                #prop.SetInterpolationToFlat()
                 #prop.GetPointSize()
                 #prop.SetPointSize(5.0)
                 #prop.ShadingOff()

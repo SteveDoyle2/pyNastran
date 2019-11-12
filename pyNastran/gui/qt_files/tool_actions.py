@@ -649,6 +649,8 @@ class ToolActions:
         prop = actor.GetProperty()
         prop.SetRepresentationToPoints()
         prop.RenderPointsAsSpheresOn()
+        prop.SetLighting(False)
+        #prop.SetInterpolationToFlat()
         prop.SetPointSize(point_size)
 
     #---------------------------------------------------------------------------
@@ -703,6 +705,8 @@ class ToolActions:
         if representation == 'point':
             prop.SetRepresentationToPoints()
             prop.RenderPointsAsSpheresOn()
+            prop.SetLighting(False)
+            #prop.SetInterpolationToFlat()
             prop.SetPointSize(point_size)
         elif representation in ['surface', 'toggle']:
             prop.SetRepresentationToSurface()

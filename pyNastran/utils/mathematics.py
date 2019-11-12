@@ -48,15 +48,22 @@ from scipy.integrate import quad  # type: ignore
         # i.append(where(eids_all == eid)[0])
     # return hstack(i)
 
-def get_abs_max(min_values, max_values):
+def get_abs_max(min_values, max_values, dtype='float32'):
     """Get return the value with the greatest magnitude, preserving sign."""
-    nvalues = len(min_values)
-    data = array([min_values, max_values], dtype='float32')
-    i = argmax(abs(data), axis=0)
-    assert len(i) == nvalues
-    # return data[i, :]
-    k = arange(nvalues, dtype='int32')
-    return data[i[:], k]
+    min_values = np.asarray(min_values)
+    max_values = np.asarray(max_values)
+    imin = np.abs(min_values) > np.abs(max_values)
+    out = np.zeros(min_values.shape, dtype=dtype)
+    out[imin] = min_values[imin]
+    out[~imin] = max_values[~imin]
+    return out
+
+    #nvalues = len(min_values)
+    #data = array([min_values, max_values], dtype=dtype)
+    #i = argmax(abs(data), axis=0)
+    #assert len(i) == nvalues
+    #k = arange(nvalues, dtype='int32')
+    #return data[i[:], k]
 
 
 def get_abs_index(data, axis=1):
