@@ -3,7 +3,7 @@
 from __future__ import annotations
 import os
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import Tuple, Dict, Union, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -20,8 +20,9 @@ from pyNastran.op2.result_objects.stress_object import (
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
 if TYPE_CHECKING:
     from pyNastran.op2.op2 import OP2
-    from pyNastran.op2.result_objects.design_response import Desvars
+    #from pyNastran.op2.result_objects.design_response import Desvars
 
+GuiResults = Union[GuiResult, GuiResultIDs, GridPointForceResult]
 
 class NastranGuiResults(NastranGuiAttributes):
     """Defines OP2 specific methods NastranIO"""
@@ -59,8 +60,8 @@ class NastranGuiResults(NastranGuiAttributes):
         icase += 1
         return icase
 
-    def _fill_op2_oug_oqg(self, cases, model, key, icase,
-                          form_dict, header_dict, keys_map):
+    def _fill_op2_oug_oqg(self, cases, model: OP2, key, icase: int,
+                          form_dict, header_dict, keys_map) -> int:
         """
         loads nodal results bector results (e.g., dispalcements/temperatures)
         """
@@ -70,8 +71,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                                 form_dict, header_dict, keys_map)
         return icase
 
-    def _fill_nastran_displacements(self, cases, model, key, icase,
-                                    form_dict, header_dict, keys_map):
+    def _fill_nastran_displacements(self, cases, model: OP2, key, icase: int,
+                                    form_dict, header_dict, keys_map) -> int:
         """
         loads the nodal dispalcements/velocity/acceleration/eigenvector/spc/mpc forces
         """
@@ -110,9 +111,9 @@ class NastranGuiResults(NastranGuiAttributes):
                         name, t123_offset, result[key].__class__.__name__))
         return icase
 
-    def _fill_nastran_ith_displacement(self, result, name, deflects, t123_offset,
-                                       cases, model, key, icase,
-                                       form_dict, header_dict, keys_map):
+    def _fill_nastran_ith_displacement(self, result, name: str, deflects: bool, t123_offset,
+                                       cases, model: OP2, key, icase: int,
+                                       form_dict, header_dict, keys_map) -> int:
         """helper for ``_fill_nastran_displacements`` to unindent the code a bit"""
         nnodes = self.nnodes
         nids = self.node_ids
@@ -221,8 +222,8 @@ class NastranGuiResults(NastranGuiAttributes):
             nastran_res.save_defaults()
         return icase
 
-    def _fill_nastran_temperatures(self, cases, model, key, icase,
-                                   form_dict, header_dict, keys_map):
+    def _fill_nastran_temperatures(self, cases, model: OP2, key, icase: int,
+                                   form_dict, header_dict, keys_map) -> int:
         """loads the nodal temperatures"""
         nnodes = self.nnodes
         #nids = self.node_ids
@@ -262,8 +263,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase += 1
         return icase
 
-    def _fill_op2_force(self, cases, model, key, icase, itime,
-                        form_dict, header_dict, keys_map):
+    def _fill_op2_force(self, cases, model: OP2, key, icase: int, itime: int,
+                        form_dict, header_dict, keys_map) -> int:
         """creates the force plots"""
         #assert isinstance(key, int), key
         assert isinstance(icase, int), icase
@@ -273,8 +274,8 @@ class NastranGuiResults(NastranGuiAttributes):
             form_dict, header_dict, keys_map)
         return icase
 
-    def _fill_op2_stress(self, cases, model, key, icase, itime,
-                         form_dict, header_dict, keys_map, is_stress=True):
+    def _fill_op2_stress(self, cases, model: OP2, key, icase: int, itime: int,
+                         form_dict, header_dict, keys_map, is_stress=True) -> int:
         """creates the stress plots"""
         assert isinstance(icase, int), icase
         assert isinstance(form_dict, dict), form_dict
@@ -283,14 +284,14 @@ class NastranGuiResults(NastranGuiAttributes):
             is_stress=is_stress)
         return icase
 
-    def _fill_op2_strain(self, cases, model, key, icase, itime,
-                         form_dict, header_dict, keys_map):
+    def _fill_op2_strain(self, cases, model: OP2, key, icase: int, itime: int,
+                         form_dict, header_dict, keys_map) -> int:
         """creates the strain plots"""
         return self._fill_op2_stress(cases, model, key, icase, itime,
                                      form_dict, header_dict, keys_map,
                                      is_stress=False)
 
-    def _get_stress_times(self, model, isubcase):
+    def _get_stress_times(self, model: OP2, isubcase: int) -> Tuple[bool, bool, bool, Any]:
         table_types = self._get_stress_table_types()
         is_real = True
         is_data = False
@@ -315,7 +316,7 @@ class NastranGuiResults(NastranGuiAttributes):
                 #return is_data, is_static, is_real, times
         return is_data, is_static, is_real, times
 
-    def _get_stress_table_types(self):
+    def _get_stress_table_types(self) -> List[str]:
         """
         Gets the list of Nastran stress objects that the GUI supports
         """
@@ -418,9 +419,9 @@ class NastranGuiResults(NastranGuiAttributes):
         ]
         return table_types
 
-    def _fill_op2_time_gpstress(self, cases, model,
-                                key, icase, itime,
-                                form_dict, header_dict, keys_map):
+    def _fill_op2_time_gpstress(self, cases, model: OP2,
+                                key, icase: int, itime: int,
+                                form_dict, header_dict, keys_map) -> int:
         """
         Creates the time accurate grid point stress objects for the pyNastranGUI
         """
@@ -482,9 +483,9 @@ class NastranGuiResults(NastranGuiAttributes):
 
         return icase
 
-    def _fill_op2_time_centroidal_strain_energy(self, cases, model: OP2,
-                                                key, icase, itime,
-                                                form_dict, header_dict, keys_map):
+    def _fill_op2_time_centroidal_strain_energy(self, cases: Dict[int, GuiResults], model: OP2,
+                                                key, icase: int, itime: int,
+                                                form_dict, header_dict, keys_map) -> int:
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
@@ -557,10 +558,10 @@ class NastranGuiResults(NastranGuiAttributes):
         ese = np.full(nelements, np.nan, dtype='float32')
         percent = np.full(nelements, np.nan, dtype='float32')
         strain_energy_density = np.full(nelements, np.nan, dtype='float32')
-        for i, is_true in enumerate(has_strain_energy):
+        for istrain_energy, is_true in enumerate(has_strain_energy):
             if not is_true:
                 continue
-            resdict, unused_name, unused_flag = strain_energies[i]
+            resdict, name, unused_flag = strain_energies[istrain_energy]
 
             #print('key =', key)
             case = resdict[key]
@@ -577,13 +578,24 @@ class NastranGuiResults(NastranGuiAttributes):
             #print(case)
             #print(case.get_headers())
             #print(case.data)
-            itotal = np.where(case.element[itime, :] == 100000000)[0][0]
+            itotals = np.where(case.element[itime, :] == 100000000)[0]
+            assert len(itotals) == 1, itotals
+            itotal = itotals[0]
             #print('itotal = ', itotal)
 
             eidsi2 = case.element[itime, :itotal]
+
+            # find eids2i in eids
             i = np.searchsorted(eids, eidsi2)
+            if 0 and name == 'CELAS1':  # pragma: no cover
+                # check that the elements were mapped correctly
+                eids_actual = self.element_ids[i]
+                for eid in eids_actual:
+                    element = self.model.elements[eid]
+                    assert element.type == name, element
+                assert np.all(eids_actual == eidsi2)
             if len(i) != len(np.unique(i)):
-                msg = 'i%s=%s is not unique' % (case.element_name, str(i))
+                msg = 'Strain Energy i%s=%s is not unique' % (name, str(i))
                 #print('eids = %s\n' % str(list(eids)))
                 #print('eidsi = %s\n' % str(list(eidsi)))
                 model.log.warning(msg)
@@ -958,6 +970,7 @@ class NastranGuiResults(NastranGuiAttributes):
             cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
             form_dict[(key, itime)].append((word + 'XX', icase, []))
             icase += 1
+        return icase
 
     def _fill_op2_time_centroidal_stress(self, cases, model, key, icase, itime,
                                          form_dict, header_dict, keys_map,
@@ -1175,7 +1188,7 @@ class NastranGuiResults(NastranGuiAttributes):
             des_desvars = read_des_filename(des_filename)
             if des_desvars:
                 subcase_id = 0
-                eids = des_desvars['eids']
+                #eids = des_desvars['eids']
                 fractional_mass = des_desvars['fractional_mass']
                 minp_res = GuiResult(subcase_id, header=f'Fractional Mass', title='% Mass',
                                      location='centroid', scalar=fractional_mass, ) # data_format=fmt
@@ -1390,7 +1403,8 @@ def read_des_filename(des_filename):
     i = 0
     word, ncycles_str = lines[0].split(':')
     word = word.strip()
-    ncycles = int(ncycles_str)
+    assert word == 'DESIGN CYCLE'
+    unused_ncycles = int(ncycles_str)
     i += 3
     assert lines[i].startswith('Total number of element'), lines[i]
     nelements = int(lines[i].split()[-1])
@@ -1398,7 +1412,7 @@ def read_des_filename(des_filename):
 
     eids = []
     fractional_mass = []
-    for ielement in range(nelements):
+    for unused_ielement in range(nelements):
         #print(lines[i].strip())
         eid, zero = lines[i].split()
         frac = float(lines[i+1])

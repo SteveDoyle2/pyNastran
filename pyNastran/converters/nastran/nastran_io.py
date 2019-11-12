@@ -4156,7 +4156,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #print(normals)
         #----------------------------------------------------------
         # finishing up vtk
-        self.set_glyph_scale_factor(np.nanmean(min_edge_length) * 2.5)  # was 1.5
+        if nelements and isfinite(min_edge_length):
+            mean_edge_length = np.nanmean(min_edge_length)
+            self.set_glyph_scale_factor(mean_edge_length * 2.5)  # was 1.5
 
         grid.Modified()
         #----------------------------------------------------------
@@ -4288,8 +4290,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #print('nelements=%s eid_map=%s' % (nelements, self.eid_map))
         if nelements and isfinite(min_edge_length):
-            glyph_scale = np.nanmean(min_edge_length) * 2.5
-            self.gui.set_glyph_scale_factor(glyph_scale)  # was 1.5
+            mean_edge_length = np.nanmean(min_edge_length) * 2.5
+            self.gui.set_glyph_scale_factor(mean_edge_length)  # was 1.5
 
         if (self.make_offset_normals_dim or self.is_element_quality) and nelements:
             icase, normals = self._build_normals_quality(
@@ -4453,6 +4455,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             (0, 4, 7, 3), # (1, 5, 8, 4),
             (0, 6, 5, 4), # (1, 7, 6, 5),
         )
+        line_type = 3 # vtk.vtkLine().GetCellType()
+
         nid_to_pid_map = defaultdict(list)
         pid = 0
 
@@ -4850,7 +4854,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     if nid is not None:
                         nid_to_pid_map[nid].append(pid)
 
-                if node_ids[0] is None and  node_ids[0] is None: # CELAS2
+                if node_ids[0] is None and node_ids[0] is None: # CELAS2
                     self.log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
                     del self.eid_map[eid]
                     continue
@@ -4870,6 +4874,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     #c = nid_map[nid]
 
                     #if 1:
+                    #print(str(element))
                     elem = vtk.vtkVertex()
                     elem.GetPointIds().SetId(0, j)
                     #else:
@@ -4878,20 +4883,21 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         #if d == 0.:
                         #d = sphere_size
                         #elem.SetRadius(sphere_size)
+                    grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 else:
                     # 2 points
                     #d = norm(element.nodes[0].get_position() - element.nodes[1].get_position())
                     eid_to_nid_map[eid] = node_ids
                     elem = vtk.vtkLine()
+                    point_ids = elem.GetPointIds()
                     try:
-                        elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
-                        elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
+                        point_ids.SetId(0, nid_map[node_ids[0]])
+                        point_ids.SetId(1, nid_map[node_ids[1]])
                     except KeyError:
                         print("node_ids =", node_ids)
                         print(str(element))
                         continue
-
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                    grid.InsertNextCell(line_type, point_ids)
 
             elif etype in ('CBAR', 'CBEAM', 'CROD', 'CONROD', 'CTUBE'):
                 if etype == 'CONROD':
@@ -4925,7 +4931,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 point_ids = elem.GetPointIds()
                 point_ids.SetId(0, n1)
                 point_ids.SetId(1, n2)
-                grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                grid.InsertNextCell(line_type, elem.GetPointIds())
 
             elif etype == 'CBEND':
                 pid = element.Pid()

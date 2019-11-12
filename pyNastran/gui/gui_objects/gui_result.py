@@ -107,6 +107,10 @@ class GuiResultCommon:
     def get_default_phase(self, i, name):
         return None
 
+    def _get_complex_displacements_by_phase(self, i, phase):
+        raise NotImplementedError(self.class_name)
+
+
 class NullResult(GuiResultCommon):
     def __init__(self):
         super(NullResult, self).__init__()
@@ -152,6 +156,8 @@ class GridPointForceResult(GuiResultCommon):
         return None
     def get_title(self, i, name):
         return self.title
+    def get_location(self, i, name):
+        return self.location
     def get_header(self, i, name):
         return self.header
     def get_methods(self, i):

@@ -1327,7 +1327,9 @@ class GuiAttributes:
             geometry_properties)
 
     #---------------------------------------------------------------------------
-    def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
+    def update_text_actors(self, subcase_id, subtitle,
+                           imin, min_value,
+                           imax, max_value, label, location):
         """
         Updates the text actors in the lower left
 
@@ -1336,7 +1338,9 @@ class GuiAttributes:
         Subcase: 1 Subtitle:
         Label: SUBCASE 1; Static
         """
-        self.tool_actions.update_text_actors(subcase_id, subtitle, min_value, max_value, label)
+        self.tool_actions.update_text_actors(subcase_id, subtitle,
+                                             imin, min_value,
+                                             imax, max_value, label, location)
 
     def create_text(self, position, label, text_size=18):
         """creates the lower left text actors"""

@@ -553,13 +553,15 @@ class Sidebar(QWidget):
                     break
             print('*i=%s key=%s' % (i, str(key)))
             #self.parent.update_vtk_window_by_key(i)
-            result_name = key[1]
+            #result_name = key[1]
             #self.parent.cycle_results_explicit(result_name=result_name, explicit=True)
             #j = self.parent._get_icase(result_name)
             #j = i
         i = keys_a
-        result_name = None
-        self.parent._set_case(result_name, i, explicit=True)
+
+        self.case_spinner.setValue(i)
+        #result_name = None
+        #self.parent._set_case(result_name, i, explicit=True)
 
     @property
     def has_cases(self):

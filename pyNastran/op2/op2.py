@@ -683,7 +683,7 @@ class OP2(OP2_Scalar, OP2Writer):
                     #continue
 
         for result_type in result_types:
-            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight']:
+            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight'] or result_type.startswith('responses.'):
                 #self.log.debug('skipping %s' % result_type)
                 continue
 

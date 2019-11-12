@@ -156,7 +156,9 @@ class ToolActions:
         self.gui.text_actors[self.itext] = text_actor
         self.itext += 1
 
-    def update_text_actors(self, subcase_id, subtitle, min_value, max_value, label):
+    def update_text_actors(self, subcase_id, subtitle,
+                           imin, min_value,
+                           imax, max_value, label, location):
         """
         Updates the text actors in the lower left
 
@@ -166,6 +168,18 @@ class ToolActions:
         Label: SUBCASE 1; Static
 
         """
+        if location == 'node':
+            nodes = self.gui.node_ids
+            min_msgi = f'Node: %i' % nodes[imin]
+            max_msgi = f'Node: %i' % nodes[imax]
+        elif location == 'centroid':
+            elements = self.gui.element_ids
+            min_msgi = f'Element: %i' % elements[imin]
+            max_msgi = f'Element: %i' % elements[imax]
+        else:
+            raise NotImplementedError(location)
+
+
         if isinstance(max_value, integer_types):
             max_msg = 'Max:  %i' % max_value
             min_msg = 'Min:  %i' % min_value
@@ -175,8 +189,8 @@ class ToolActions:
         else:
             max_msg = 'Max:  %g' % max_value
             min_msg = 'Min:  %g' % min_value
-        self.gui.text_actors[0].SetInput(max_msg)
-        self.gui.text_actors[1].SetInput(min_msg)
+        self.gui.text_actors[0].SetInput(max_msg + '; %s' % max_msgi)
+        self.gui.text_actors[1].SetInput(min_msg + '; %s' % min_msgi)
         self.gui.text_actors[2].SetInput('Subcase: %s Subtitle: %s' % (subcase_id, subtitle))
 
         if label:
@@ -634,6 +648,7 @@ class ToolActions:
         actor = self.gui.geometry_actors[name]
         prop = actor.GetProperty()
         prop.SetRepresentationToPoints()
+        prop.RenderPointsAsSpheresOn()
         prop.SetPointSize(point_size)
 
     #---------------------------------------------------------------------------
@@ -687,6 +702,7 @@ class ToolActions:
 
         if representation == 'point':
             prop.SetRepresentationToPoints()
+            prop.RenderPointsAsSpheresOn()
             prop.SetPointSize(point_size)
         elif representation in ['surface', 'toggle']:
             prop.SetRepresentationToSurface()

@@ -193,6 +193,7 @@ class ViewActions:
                     prop = actor.GetProperty()
                     prop.SetRepresentationToWireframe()
                 #prop.SetRepresentationToPoints()
+                #prop.RenderPointsAsSpheresOn()
                 #prop.GetPointSize()
                 #prop.SetPointSize(5.0)
                 #prop.ShadingOff()

@@ -538,7 +538,9 @@ class GuiQtCommon(GuiAttributes):
             (imax, max_value, xyzs[1]),
         ]
 
-        for (unused_imin_max, unused_value, xyz), text_actor in zip(min_maxs, self.min_max_actors):
+        for (imin_max, unused_value, xyz), text_actor in zip(min_maxs, self.min_max_actors):
+            self.imin = imin
+            self.imax = imax
             text_actor.SetPosition(*xyz)
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(settings.annotation_size)
@@ -832,7 +834,7 @@ class GuiQtCommon(GuiAttributes):
         subcase_id = obj.subcase_id
         case = obj.get_result(i, name)
         result_type = obj.get_title(i, name)
-        vector_size = obj.get_vector_size(i, name)
+        vector_size0 = obj.get_vector_size(i, name)
         location = obj.get_location(i, name)
         methods = obj.get_methods(i)
         data_format = obj.get_data_format(i, name)
@@ -894,16 +896,17 @@ class GuiQtCommon(GuiAttributes):
             grid_result = self.set_grid_values(name, normi, vector_size,
                                                min_value, max_value, norm_value)
 
-        vector_size = 3
-        name_vector = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
-        if self._names_storage.has_exact_name(name_vector):
+        if vector_size0 == 1:
+            name_vector = None
             grid_result_vector = None
         else:
-            grid_result_vector = self.set_grid_values(name_vector, case, vector_size,
-                                                      min_value, max_value, norm_value)
-
-        self.update_text_actors(subcase_id, subtitle,
-                                min_value, max_value, label)
+            vector_size = 3
+            name_vector = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
+            if self._names_storage.has_exact_name(name_vector):
+                grid_result_vector = None
+            else:
+                grid_result_vector = self.set_grid_values(name_vector, case, vector_size,
+                                                          min_value, max_value, norm_value)
 
         self.final_grid_update(icase, name, grid_result,
                                name_vector, grid_result_vector,
@@ -927,6 +930,11 @@ class GuiQtCommon(GuiAttributes):
         self._update_min_max_actors(location, icase_fringe,
                                     imin, min_value,
                                     imax, max_value)
+
+        self.update_text_actors(subcase_id, subtitle,
+                                imin, min_value,
+                                imax, max_value, label, location)
+
 
         arrow_scale = 0.0
         self.legend_obj.update_legend(
@@ -1038,17 +1046,18 @@ class GuiQtCommon(GuiAttributes):
                 #case[50] = np.int32(1) / np.int32(0)
 
         if vector_size == 1:
-            nvalues = len(case)
-            if is_low_to_high:
-                if norm_value == 0:
-                    case2 = full((nvalues), 1.0 - min_value, dtype='float32')
-                else:
-                    case2 = 1.0 - (case - min_value) / norm_value
-            else:
-                if norm_value == 0:
-                    case2 = full((nvalues), min_value, dtype='float32')
-                else:
-                    case2 = (case - min_value) / norm_value
+            #nvalues = len(case)
+            #if is_low_to_high:
+                ## flips the min/max
+                #if norm_value == 0:
+                    #case2 = full((nvalues), 1.0 - min_value, dtype='float32')
+                #else:
+                    #case2 = 1.0 - (case - min_value) / norm_value
+            #else:
+                #if norm_value == 0:
+                    #case2 = full((nvalues), min_value, dtype='float32')
+                #else:
+                    #case2 = (case - min_value) / norm_value
 
             if case.flags.contiguous:
                 case2 = case
