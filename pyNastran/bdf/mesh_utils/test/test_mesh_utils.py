@@ -30,7 +30,7 @@ from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.utils import cmd_line
 
 # not tested
-from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s
+from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
 
 PKG_PATH = pyNastran.__path__[0]
 MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
@@ -64,6 +64,38 @@ class TestMeshUtils(unittest.TestCase):
         nx = 10
         ny = 20
         create_structured_cquad4s(model, pid, p1, p2, p3, p4, nx, ny, nid=1, eid=1, theta_mcid=0.)
+
+    def test_structured_chexas(self):
+        """tests test_structured_chexas"""
+        #1U CubeSat is 10 cm, 10 cm, 11.35 cm.
+        #2U CubeSat is 10 cm, 10 cm, 22.70 cm.
+        #6U CubeSat is 20 cm, 10 cm, 34.05 cm.
+        model = BDF()
+        pid = 1
+        i = 20.
+        j = 10.
+        k = 5.
+        p1 = [0., 0., 0.]
+        p2 = [i, 0., 0.]
+        p3 = [i, j, 0.]
+        p4 = [0., j, 0.]
+
+        p5 = [0., 0., k]
+        p6 = [i, 0., k]
+        p7 = [i, j, k]
+        p8 = [0., j, k]
+
+        nx = 2
+        ny = 2
+        nz = 2
+
+        x = np.linspace(0., i, nx + 1)
+        y = np.linspace(0., j, ny + 1)
+        z = np.linspace(0., k, nz + 1)
+
+        create_structured_chexas(model, pid,
+                                 x, y, z, nx, ny, nz, eid=1)
+        model.write_bdf('test_structured_chexas.bdf')
 
     def test_eq1(self):
         """Collapse nodes 2 and 3; consider 1-3"""
