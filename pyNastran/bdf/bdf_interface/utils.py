@@ -241,7 +241,22 @@ def _parse_pynastran_header(line: str) -> Tuple[Optional[str], Optional[str]]:
             msg = 'unrecognized pyNastran marker\n'
             msg += 'line=%r' % line
             raise SyntaxError(msg)
-        key, value = word.strip().split('=')
+        try:
+            key, value = word.strip().split('=')
+        except ValueError:
+            msg = (
+                'expected header of the form:\n'
+                '$ pyNastran: version=NX\n'
+                '$ pyNastran: encoding=latin-1\n'
+                '$ pyNastran: punch=True\n'
+                '$ pyNastran: dumplines=True\n'
+                '$ pyNastran: nnodes=10\n'
+                '$ pyNastran: nelements=100\n'
+                '$ pyNastran: skip_cards=PBEAM,CBEAM\n'
+                '$ pyNastran: units=in,lb,s\n'
+                '$ pyNastran: skip elements=12345,6,7,8\n'
+            )
+            raise SyntaxError(msg)
         key = key.strip()
         value = value.strip()
         if key in EXPECTED_HEADER_KEYS_CHECK:

@@ -6303,7 +6303,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     warp_res = GuiResult(
                         0, header='Max Warp Angle', title='MaxWarpAngle',
                         location='centroid', scalar=np.degrees(max_warp_angle))
-                    cases[icase + 4] = (warp_res, (0, 'Max Warp Angle'))
+                    cases[icase] = (warp_res, (0, 'Max Warp Angle'))
                     form_checks.append(('Max Warp Angle', icase, []))
                     icase += 1
 

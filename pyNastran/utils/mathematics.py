@@ -387,28 +387,34 @@ def gauss(n):  # pragma: no cover
 
     .. seealso:: http://en.wikipedia.org/wiki/Gaussian_quadrature"""
     if n == 1:
-        return [0.], [2.]
+        points = [0.]
+        weights = [2.]
     elif n == 2:
         p = 1. / sqrt(3)
-        return [-p, p], [1., 1.]
+        points = [-p, p]
+        weights = [1., 1.]
     elif n == 3:
         p = sqrt(3 / 5.)
-        return [-p, 0., p], [5 / 9., 8 / 9., 5 / 9.]
+        points = [-p, 0., p]
+        weights = [5 / 9., 8 / 9., 5 / 9.]
     elif n == 4:
         p1 = (3 - 2. * sqrt(6 / 5)) / 7.
         p2 = (3 + 2. * sqrt(6 / 5)) / 7.
         w1 = (18 + sqrt(30)) / 36.
         w2 = (18 - sqrt(30)) / 36.
-        return [-p2, -p1, p1, p2], [w2, w1, w1, w2]
+        points = [-p2, -p1, p1, p2]
+        weights = [w2, w1, w1, w2]
     elif n == 5:
         p1 = 1 / 3. * sqrt(5 - 2 * sqrt(10. / 7.))
         p2 = 1 / 3. * sqrt(5 + 2 * sqrt(10. / 7.))
         w1 = (322 + 13 * sqrt(70)) / 900.
         w2 = (322 - 13 * sqrt(70)) / 900.
-        return [-p2, -p1, 0, p1, p2], [w2, w1, 128 / 225., w1, w2]
-
-    raise NotImplementedError('The current implementation only supports up to '
-                              '5 quadrature points')
+        points = [-p2, -p1, 0, p1, p2]
+        weights = [w2, w1, 128 / 225., w1, w2]
+    else:
+        raise NotImplementedError('The current implementation only supports up to '
+                                  '5 quadrature points')
+    return points, weights
 
 def roundup(value, round_increment=100):
     """

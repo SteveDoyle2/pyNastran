@@ -246,6 +246,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
 
                 ('exit', '&Exit', 'texit.png', 'Ctrl+Q', 'Exit application', self.closeEvent), # QtGui.qApp.quit
 
+                ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
                 ('load_geometry', 'Load &Geometry...', 'load_geometry.png', 'Ctrl+O', 'Loads a geometry input file', self.on_load_geometry),
                 ('load_results', 'Load &Results...', 'load_results.png', 'Ctrl+R', 'Loads a results file', self.on_load_results),
                 ('load_csv_user_geom', 'Load CSV User Geometry...', '', None, 'Loads custom geometry file', self.on_load_user_geom),
@@ -256,60 +257,75 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             ]
 
             tools = file_tools + [
+                # labels
                 ('label_clear', 'Clear Current Labels', '', 'CTRL+W', 'Clear current labels', self.clear_labels),
                 ('label_reset', 'Clear All Labels', '', None, 'Clear all labels', self.reset_labels),
 
+                # view
+                ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
+                ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
+                ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
+
+                # core menus
                 ('legend', 'Modify Legend...', 'legend.png', 'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu),
                 ('animation', 'Create Animation...', 'animation.png', 'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu),
                 ('clipping', 'Set Clipping...', '', None, 'Set Clipping', self.clipping_obj.set_clipping_menu),
+                ('set_preferences', 'Preferences...', 'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu),
+                ('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', None, 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu),
+                ('geo_properties', 'Edit Geometry Properties...', '', 'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties),
+                ('map_element_fringe', 'Map Element Fringe', '', 'CTRL+F', 'Map Elemental Centroidal Fringe Result to Nodes', self.map_element_centroid_to_node_fringe_result),
+
                 #('axis', 'Show/Hide Axis', 'axis.png', None, 'Show/Hide Global Axis', self.on_show_hide_axes),
 
-                ('wireframe', 'Wireframe Model', 'twireframe.png', 'w', 'Show Model as a Wireframe Model', self.on_wireframe),
-                ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
-                ('geo_properties', 'Edit Geometry Properties...', '', 'CTRL+E', 'Change Model Color/Opacity/Line Width', self.edit_geometry_properties_obj.edit_geometry_properties),
+                # groups
                 ('modify_groups', 'Modify Groups...', '', None, 'Create/Edit/Delete Groups', self.on_set_modify_groups),
-
                 ('create_groups_by_visible_result', 'Create Groups By Visible Result', '', None, 'Create Groups', self.create_groups_by_visible_result),
                 ('create_groups_by_property_id', 'Create Groups By Property ID', '', None, 'Create Groups', self.create_groups_by_property_id),
                 #('create_list', 'Create Lists through Booleans', '', None, 'Create List', self.create_list),
 
+                # logging
                 ('show_info', 'Show INFO', 'show_info.png', None, 'Show "INFO" messages', self.on_show_info),
                 ('show_debug', 'Show DEBUG', 'show_debug.png', None, 'Show "DEBUG" messages', self.on_show_debug),
                 ('show_command', 'Show COMMAND', 'show_command.png', None, 'Show "COMMAND" messages', self.on_show_command),
                 ('show_warning', 'Show WARNING', 'show_warning.png', None, 'Show "COMMAND" messages', self.on_show_warning),
                 ('show_error', 'Show ERROR', 'show_error.png', None, 'Show "COMMAND" messages', self.on_show_error),
 
+                # zoom
                 ('magnify', 'Magnify', 'plus_zoom.png', 'm', 'Increase Magnfication', self.on_increase_magnification),
                 ('shrink', 'Shrink', 'minus_zoom.png', 'Shift+M', 'Decrease Magnfication', self.on_decrease_magnification),
+
+                # rotation
+                ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
+                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
+
 
                 #('cell_pick', 'Cell Pick', '', 'c', 'Centroidal Picking', self.on_cell_picker),
                 #('node_pick', 'Node Pick', '', 'n', 'Nodal Picking', self.on_node_picker),
 
-                ('rotate_clockwise', 'Rotate Clockwise', 'tclock.png', 'o', 'Rotate Clockwise', self.on_rotate_clockwise),
-                ('rotate_cclockwise', 'Rotate Counter-Clockwise', 'tcclock.png', 'Shift+O', 'Rotate Counter-Clockwise', self.on_rotate_cclockwise),
-
-                ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
-
+                # help
                 ('website', 'Open pyNastran Website...', '', None, 'Open the pyNastran website', self.open_website),
                 ('docs', 'Open pyNastran Docs Website...', '', None, 'Open the pyNastran documentation website', self.open_docs),
                 ('report_issue', 'Report a Bug/Feature Request...', '', None, 'Open the pyNastran issue tracker', self.open_issue),
                 ('discussion_forum', 'Discussion Forum Website...', '', None, 'Open the discussion forum to ask questions', self.open_discussion_forum),
                 ('about', 'About pyNastran GUI...', 'tabout.png', 'CTRL+H', 'About pyNastran GUI and help on shortcuts', self.about_dialog),
 
+                # camera
                 ('view', 'Camera View', 'view.png', None, 'Load the camera menu', self.camera_obj.set_camera_menu),
                 ('camera_reset', 'Reset Camera View', 'trefresh.png', 'r', 'Reset the camera view to default', self.on_reset_camera),
-                ('reload', 'Reload Model...', 'treload.png', '', 'Remove the model and reload the same geometry file', self.on_reload),
 
+                # results
                 ('cycle_results', 'Cycle Results', 'cycle_results.png', 'L', 'Changes the result case', self.on_cycle_results),
                 ('rcycle_results', 'Cycle Results', 'rcycle_results.png', 'K', 'Changes the result case', self.on_rcycle_results),
 
+                # view actions
                 ('back_view', 'Back View', 'back.png', 'x', 'Flips to +X Axis', lambda: self.view_actions.update_camera('+x')),
                 ('right_view', 'Right View', 'right.png', 'y', 'Flips to +Y Axis', lambda: self.view_actions.update_camera('+y')),
                 ('top_view', 'Top View', 'top.png', 'z', 'Flips to +Z Axis', lambda: self.view_actions.update_camera('+z')),
-
                 ('front_view', 'Front View', 'front.png', 'Shift+X', 'Flips to -X Axis', lambda: self.view_actions.update_camera('-x')),
                 ('left_view', 'Left View', 'left.png', 'Shift+Y', 'Flips to -Y Axis', lambda: self.view_actions.update_camera('-y')),
                 ('bottom_view', 'Bottom View', 'bottom.png', 'Shift+Z', 'Flips to -Z Axis', lambda: self.view_actions.update_camera('-z')),
+
+
                 ('edges', 'Show/Hide Edges', 'tedges.png', 'e', 'Show/Hide Model Edges', self.on_flip_edges),
                 ('edges_black', 'Color Edges', '', 'b', 'Set Edge Color to Color/Black', self.on_set_edge_visibility),
                 ('anti_alias_0', 'Off', '', None, 'Disable Anti-Aliasing', lambda: self.on_set_anti_aliasing(0)),
@@ -318,19 +334,18 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('anti_alias_4', '4x', '', None, 'Set Anti-Aliasing to 4x', lambda: self.on_set_anti_aliasing(4)),
                 ('anti_alias_8', '8x', '', None, 'Set Anti-Aliasing to 8x', lambda: self.on_set_anti_aliasing(8)),
 
-                # new
+                # mouse buttons
                 ('rotation_center', 'Set the rotation center', 'trotation_center.png', 'f', 'Pick a node for the rotation center/focal point', self.mouse_actions.on_rotation_center),
-
                 ('measure_distance', 'Measure Distance', 'measure_distance.png', None, 'Measure the distance between two nodes', self.mouse_actions.on_measure_distance),
                 ('highlight_cell', 'Highlight Cell', '', None, 'Highlight a single cell', self.mouse_actions.on_highlight_cell),
                 ('highlight_node', 'Highlight Node', '', None, 'Highlight a single node', self.mouse_actions.on_highlight_node),
                 ('probe_result', 'Probe', 'tprobe.png', None, 'Probe the displayed result', self.mouse_actions.on_probe_result),
                 ('quick_probe_result', 'Quick Probe', '', 'p', 'Probe the displayed result', self.mouse_actions.on_quick_probe_result),
                 ('zoom', 'Zoom', 'zoom.png', None, 'Zoom In', self.mouse_actions.on_zoom),
+
+                # font size
                 ('font_size_increase', 'Increase Font Size', 'text_up.png', 'Ctrl+Plus', 'Increase Font Size', self.on_increase_font_size),
                 ('font_size_decrease', 'Decrease Font Size', 'text_down.png', 'Ctrl+Minus', 'Decrease Font Size', self.on_decrease_font_size),
-                ('set_preferences', 'Preferences...', 'preferences.png', 'CTRL+P', 'Set GUI Preferences', self.preferences_obj.set_preferences_menu),
-                ('cutting_plane', 'Cutting Plane...', 'cutting_plane.png', None, 'Create Cutting Plane', self.cutting_plane_obj.set_cutting_plane_menu),
 
                 # picking
                 ('area_pick', 'Area Pick', 'tarea_pick.png', None, 'Get a list of nodes/elements', self.mouse_actions.on_area_pick),
@@ -432,17 +447,20 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             'load_geometry', 'load_results', '',
             'load_custom_result', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '', 'exit']
-        toolbar_tools = ['reload', 'load_geometry', 'load_results',
-                         'front_view', 'back_view', 'top_view', 'bottom_view',
-                         'left_view', 'right_view',
-                         'magnify', 'shrink', 'zoom',
-                         'rotate_clockwise', 'rotate_cclockwise',
-                         'rotation_center', 'measure_distance', 'probe_result',
-                         #'highlight_cell', 'highlight_node',
-                         'area_pick', 'highlight_nodes_elements',
-
-                         'wireframe', 'surface', 'edges']
-        toolbar_tools += ['camera_reset', 'view', 'screenshot', 'min', 'max', '', 'exit']
+        toolbar_tools = [
+            'reload', 'load_geometry', 'load_results',
+            'front_view', 'back_view', 'top_view', 'bottom_view',
+            'left_view', 'right_view',
+            'magnify', 'shrink', 'zoom',
+            'rotate_clockwise', 'rotate_cclockwise',
+            'rotation_center', 'measure_distance', 'probe_result',
+            #'highlight_cell', 'highlight_node',
+            'area_pick', 'highlight_nodes_elements',
+            'wireframe', 'surface', 'edges']
+        toolbar_tools += [
+            'camera_reset', 'view', 'screenshot', 'min', 'max', 'map_element_fringe',
+            '', # 'exit'
+        ]
         hidden_tools = ('cycle_results', 'rcycle_results',
                         'font_size_increase', 'font_size_decrease', 'highlight')
 
@@ -1788,14 +1806,26 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             is_valid, data = self._update_vtk_fringe(icase_fringe, normalized_frings_scale)
             if not is_valid:
                 return is_valid
-            (
-                unused_icase, result_type, unused_location, min_value, max_value, norm_value,
-                data_format, unused_scale, unused_methods,
-                nlabels, labelsize, ncolors, colormap,
-                unused_imin, unused_imax,
-            ) = data
+
+            icase = data.icase
+            result_type = data.result_type
+            #location = data.location
+            min_value = data.min_value
+            max_value = data.max_value
+            norm_value = data.norm_value
+            #imin = data.imin
+            #imax = data.imax
+            data_format = data.data_format
+            nlabels = data.nlabels
+            labelsize = data.labelsize
+            ncolors = data.ncolors
+            colormap = data.colormap
+            #subcase_id = data.subcase_id
+            #subtitle = data.subtitle
+            #label = data.label
+
             is_legend_shown = self.scalar_bar.is_shown
-            self.update_scalar_bar(result_type, min_value, max_value, norm_value,
+            self.update_scalar_bar(result_type, min_value, max_value,
                                    data_format,
                                    nlabels=nlabels, labelsize=labelsize,
                                    ncolors=ncolors, colormap=colormap,

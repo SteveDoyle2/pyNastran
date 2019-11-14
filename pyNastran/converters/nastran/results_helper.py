@@ -486,9 +486,7 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_time_centroidal_strain_energy(self, cases: Dict[int, GuiResults], model: OP2,
                                                 key, icase: int, itime: int,
                                                 form_dict, header_dict, keys_map) -> int:
-        """
-        Creates the time accurate strain energy objects for the pyNastranGUI
-        """
+        """Creates the time accurate strain energy objects"""
         case = None
 
         # (isubcase, analysis_code, sort_method,

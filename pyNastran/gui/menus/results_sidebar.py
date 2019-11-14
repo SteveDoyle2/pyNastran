@@ -160,6 +160,7 @@ class Sidebar(QWidget):
             a way to add additional widgets to the sidebar
 
         """
+        include_case_spinner = False
         QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
@@ -256,7 +257,7 @@ class Sidebar(QWidget):
         can be added
 
         """
-        if self.include_case_spinner and self.has_cases:
+        if self.has_cases:
             if len(cases) == 0:
                 return
             self.case_spinner_label.setVisible(True)
@@ -267,6 +268,8 @@ class Sidebar(QWidget):
 
     def set_case_keys(self, case_keys: List[int]):
         """set the availiable keys for the case spinner"""
+        if not self.include_case_spinner:
+            return
         self.case_keys = case_keys
         if self.icase == -1:
             self.icase = case_keys[0]
@@ -274,6 +277,8 @@ class Sidebar(QWidget):
 
     def update_icase(self, icase_frige):
         """callback for updating the case spinner"""
+        if not self.include_case_spinner:
+            return
         self._update_case = False
         self.case_spinner.setValue(icase_frige)
         self._update_case = True
@@ -288,9 +293,12 @@ class Sidebar(QWidget):
         if icase != next_value:
             self._update_case = False
             self.case_spinner.setValue(next_value)
+        self._set_case(next_value)
+        self._update_case = True
 
+    def _set_case(self, icase):
         #print(f'changing from icase={self.icase} -> {icase} (next_value={next_value})')
-        icase = next_value
+        #icase = next_value
         self.icase = icase
         if self.has_cases:
             result_name = None
@@ -311,7 +319,6 @@ class Sidebar(QWidget):
                 #case =
             #if self.include_vector_scale:
                 #case
-        self._update_case = True
 
     def _set_buttons(self, deflection_is_visible, vector_is_visible):
         """show/hide the additional buttons"""
@@ -560,9 +567,19 @@ class Sidebar(QWidget):
             #j = i
         i = keys_a
 
-        self.case_spinner.setValue(i)
-        #result_name = None
-        #self.parent._set_case(result_name, i, explicit=True)
+        #self.case_spinner.setValue(i)  # this might just work?
+
+        # set the spinner, but don't take any actions
+        if 0:
+            if self._update_case:
+                self._update_case = False
+                self.case_spinner.setValue(i)
+                self._update_case = True
+            else:
+                self.case_spinner.setValue(i)
+        result_name = None
+        #self._set_case(i)
+        self.parent._set_case(result_name, i, explicit=True)
 
     @property
     def has_cases(self):

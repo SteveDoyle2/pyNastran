@@ -9,12 +9,14 @@ matplotlib.use('Agg')
 import vtk
 
 from cpylog import SimpleLogger
+
 import pyNastran
+from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.gui.testing_methods import FakeGUIMethods
-from pyNastran.converters.nastran.nastran_io import NastranIO, BDF
-#from cpylog import get_logger2
+from pyNastran.converters.nastran.nastran_io import NastranIO
+
 
 class NastranGUI(NastranIO, FakeGUIMethods):
     def __init__(self, inputs=None):
@@ -173,7 +175,7 @@ class TestNastranGUI(unittest.TestCase):
         assert result_values == 2, 'result_values=%r' % result_values
         assert isinstance(xyz, list), xyz
 
-        node_xyz = None
+        #node_xyz = None
         cell_id = 5
         #out = test.mark_actions.get_result_by_xyz_cell_id(node_xyz, cell_id)
         #result_name, result_values, node_id, xyz = out
@@ -204,6 +206,30 @@ class TestNastranGUI(unittest.TestCase):
         test.mark_elements(eids, stop_on_failure=True, show_command=True)
         test.mark_elements_by_case(eids, stop_on_failure=True, show_command=True)
 
+        #for key, obj in test.result_cases.items():
+            #print(key)
+            #print(obj)
+
+        # fail mapping strain energy because we're on NodeID
+        test.icase = 0 # NodeID
+        test.icase_fringe = 0 # NodeID
+        is_passed = test.map_element_centroid_to_node_fringe_result(update_limits=True, show_msg=True)
+
+        obj, (itime, name) = test.result_cases[test.icase]
+        str(obj)
+        assert is_passed == False, f'map_element_centroid_to_node_fringe_result should fail for NodeID\n{obj}'
+
+        # map strain energy
+        icase = list(test.result_cases.keys())[-1]
+        obj, (itime, name) = test.result_cases[icase]
+        test.icase_fringe = icase
+        str(obj)
+
+        title = obj.get_title(itime, name)
+        assert title == 'Strain Energy Density', title
+        is_passed = test.map_element_centroid_to_node_fringe_result(update_limits=True, show_msg=False)
+        assert is_passed == True, 'map_element_centroid_to_node_fringe_result failed'
+
     def test_solid_shell_bar_02b(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
 
@@ -221,7 +247,7 @@ class TestNastranGUI(unittest.TestCase):
 
     def test_solid_bending(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_ogs.op2')
+        #op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_ogs.op2')
         deflection_filename1 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node.txt')
         deflection_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node_short.txt')
 
@@ -421,7 +447,6 @@ class TestNastranGUI(unittest.TestCase):
     def test_gui_elements_01b(self):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
-        from pyNastran.bdf.bdf import read_bdf, BDF
         #model = read_bdf(bdf_filename)
         model = BDF()
         model.disable_cards(['CHEXA', 'CTETRA', 'CPENTA',

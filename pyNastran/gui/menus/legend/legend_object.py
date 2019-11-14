@@ -492,7 +492,7 @@ class LegendObject:
                                                #is_low_to_high=is_low_to_high)
         #else:
         if update_legend:
-            self.gui.update_scalar_bar(title, min_value, max_value, norm_value,
+            self.gui.update_scalar_bar(title, min_value, max_value,
                                        data_format,
                                        nlabels=nlabels, labelsize=labelsize,
                                        ncolors=ncolors, colormap=colormap,
@@ -502,14 +502,14 @@ class LegendObject:
             self.gui.Render()
 
         msg = (
-            'self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
-            '                      scale=%r, phase=%r,\n'
-            '                      data_format=%r, is_low_to_high=%s, is_discrete=%s,\n'
-            '                      nlabels=%r, labelsize=%r, ncolors=%r, colormap=%r,\n'
-            '                      is_horizontal=%r, is_shown=%r)'
-            % (title, min_value, max_value, scale, phase,
-               data_format, is_low_to_high, is_discrete,
-               nlabels, labelsize, ncolors, colormap, is_horizontal, is_shown))
+            f'self.on_update_legend(title={title!r}, min_value={min_value}, max_value={max_value},\n'
+            f'                      scale={scale}, phase={phase},\n'
+            f'                      data_format={data_format!r}, is_low_to_high={is_low_to_high}, '
+            f'is_discrete={is_discrete},\n'
+            f'                      nlabels={nlabels}, labelsize={labelsize}, '
+            f'ncolors={ncolors}, colormap={colormap!r},\n'
+            f'                      is_horizontal={is_horizontal}, is_shown={is_shown})'
+        )
         self.gui.log_command(msg)
         #if is_shown:
             #pass

@@ -282,7 +282,7 @@ class ScalarBar:
         self.scalar_bar.SetNumberOfLabels(nvalues)
         self.scalar_bar.SetMaximumNumberOfColors(ncolors)
 
-    def update(self, title, min_value, max_value, norm_value,
+    def update(self, title, min_value, max_value,
                data_format,
                nlabels=None, labelsize=None, ncolors=None, colormap='jet', colormap_order=None,
                is_low_to_high=True, is_horizontal=True,

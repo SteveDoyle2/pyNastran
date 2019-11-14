@@ -998,7 +998,7 @@ def _get_cbeam_mass_no_nsm(model, elem, mass, cg, inertia, reference_point):
     if is_failed:
         model.log.error(str(out))
         raise RuntimeError(out)
-    print(is_failed, out)
+
     wa, wb, _ihat, jhat, khat = out
     p1 = xyz1 + wa
     p2 = xyz2 + wb

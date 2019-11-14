@@ -14,8 +14,7 @@ from math import log10, ceil
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox, QComboBox)
-import vtk
+    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox)
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
@@ -189,7 +188,7 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_edit = QDoubleSpinBox(self)
         self.coord_scale_edit.setRange(0.1, 1000.)
         self.coord_scale_edit.setDecimals(3)
-        self.coord_scale_edit.setSingleStep(2.5)
+        self.coord_scale_edit.setSingleStep(1.0)
         self.coord_scale_edit.setValue(self._coord_scale)
 
         self.coord_text_scale_label = QLabel('Coordinate System Text Scale:')
@@ -198,7 +197,7 @@ class PreferencesWindow(PyDialog):
         self.coord_text_scale_edit = QDoubleSpinBox(self)
         self.coord_text_scale_edit.setRange(0.1, 2000.)
         self.coord_text_scale_edit.setDecimals(3)
-        self.coord_text_scale_edit.setSingleStep(2.5)
+        self.coord_text_scale_edit.setSingleStep(2.)
         self.coord_text_scale_edit.setValue(self._coord_text_scale)
 
         # Show corner coord

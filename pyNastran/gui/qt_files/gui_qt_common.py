@@ -11,7 +11,7 @@ from copy import deepcopy
 from collections import namedtuple
 
 import numpy as np
-from numpy import full, issubdtype
+from numpy import issubdtype
 from numpy.linalg import norm  # type: ignore
 import vtk
 
@@ -80,7 +80,7 @@ class GuiQtCommon(GuiAttributes):
                 raise RuntimeError('max cycle count; i=%s' % i)
             i += 1
 
-    def on_rcycle_results(self):
+    def on_rcycle_results(self, show_msg=True):
         """the reverse of on_cycle_results"""
         if len(self.case_keys) <= 1:
             return
@@ -97,7 +97,7 @@ class GuiQtCommon(GuiAttributes):
             if icase == -1:
                 icase = self.ncases - 1
             try:
-                self.cycle_results(icase)
+                self.cycle_results(icase, show_msg=show_msg)
                 break
             except IndexError:
                 icase -= 1
@@ -127,6 +127,7 @@ class GuiQtCommon(GuiAttributes):
         self.update_icase()
 
     def update_icase(self):
+        """updates the Qt sidebar"""
         self.res_widget.update_icase(self.icase)
 
     def cycle_results(self, case=None, show_msg=True):
@@ -497,7 +498,7 @@ class GuiQtCommon(GuiAttributes):
 
         self.update_contour_filter(nlabels, location, min_value, max_value)
 
-        self.update_scalar_bar(result_type, min_value, max_value, norm_value,
+        self.update_scalar_bar(result_type, min_value, max_value,
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
@@ -982,7 +983,7 @@ class GuiQtCommon(GuiAttributes):
         if is_legend_shown is None:
             is_legend_shown = self.scalar_bar.is_shown
 
-        self.update_scalar_bar(result_type, min_value, max_value, norm_value,
+        self.update_scalar_bar(result_type, min_value, max_value,
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
@@ -1059,7 +1060,7 @@ class GuiQtCommon(GuiAttributes):
 
         #if is_legend_shown is None:
             #is_legend_shown = self.scalar_bar.is_shown
-        #self.update_scalar_bar(result_type, min_value, max_value, norm_value,
+        #self.update_scalar_bar(result_type, min_value, max_value,
                                #data_format,
                                #nlabels=nlabels, labelsize=labelsize,
                                #ncolors=ncolors, colormap=colormap,

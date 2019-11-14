@@ -11,7 +11,7 @@ from pyNastran.utils import is_binary_file, object_methods, object_attributes, p
 from pyNastran.utils.dev import list_print
 from pyNastran.utils.mathematics import (
     get_abs_max, get_max_index, get_min_index, get_abs_index,
-    is_list_ranged)
+    is_list_ranged, gauss)
 from pyNastran.utils.dev import get_files_of_type
 
 
@@ -45,6 +45,16 @@ class B1(A1):
 
 class TestUtils(unittest.TestCase):
 
+    def test_gauss(self):
+        """tests ``gauss``"""
+        gauss(1)
+        gauss(2)
+        gauss(3)
+        gauss(4)
+        gauss(5)
+        with self.assertRaises(NotImplementedError):
+            gauss(6)
+
     def test_print_bad_path(self):
         """tests ``print_bad_path``"""
         # passed: C:\work
@@ -58,10 +68,17 @@ class TestUtils(unittest.TestCase):
 
     def test_get_files_of_type(self):
         """tests the get_files_of_type function"""
-        model_path = os.path.join(PKG_PATH, '..', 'models')
-        unused_op2_files = get_files_of_type(
-            model_path, extension='.op2', max_size=100.,
+        model_path = os.path.join('some_incorrect_path')
+        files = get_files_of_type(
+            model_path, extension='.op2', max_size=1.0,
             limit_file='no_dig.txt')
+        assert len(files) == 0, files
+
+        model_path = os.path.join(PKG_PATH, '..', 'models')
+        op2_files = get_files_of_type(
+            model_path, extension='.op2', max_size=1.0,
+            limit_file='no_dig.txt')
+        assert len(op2_files) > 0, op2_files
         #assert len(op2_files) == 98, len(op2_files)
 
     def test_is_list_ranged(self):
