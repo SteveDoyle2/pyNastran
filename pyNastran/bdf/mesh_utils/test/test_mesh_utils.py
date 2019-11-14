@@ -7,12 +7,6 @@ from docopt import DocoptExit
 import numpy as np
 from cpylog import SimpleLogger
 
-#import pyNastran
-#from pyNastran.bdf.bdf import BDF
-
-#root_path = pyNastran.__path__[0]
-#test_path = os.path.join(root_path, 'bdf', 'test', 'unit')
-
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
@@ -29,7 +23,7 @@ from pyNastran.bdf.mesh_utils.make_half_model import make_symmetric_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.utils import cmd_line
 
-# not tested
+#from pyNastran.bdf.cards.elements
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
 
 PKG_PATH = pyNastran.__path__[0]
@@ -38,7 +32,7 @@ MODEL_PATH = os.path.abspath(os.path.join(PKG_PATH, '..', 'models'))
 np.set_printoptions(edgeitems=3, infstr='inf',
                     linewidth=75, nanstr='nan', precision=3,
                     suppress=True, threshold=1000, formatter=None)
-
+DIRNAME = os.path.dirname(__file__)
 
 class TestMeshUtils(unittest.TestCase):
     """various mesh_utils tests"""
@@ -50,8 +44,9 @@ class TestMeshUtils(unittest.TestCase):
 
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
         #log = get_logger(log=None, level='info', encoding='utf-8')
-        cmd_line(argv=['bdf', 'free_faces', bdf_filename, 'skin.bdf'], quiet=True)
-        os.remove('skin.bdf')
+        skin_filename = os.path.join(DIRNAME, 'skin.bdf')
+        cmd_line(argv=['bdf', 'free_faces', bdf_filename, skin_filename], quiet=True)
+        os.remove(skin_filename)
 
     def test_structured_cquads(self):
         """tests create_structured_cquad4s"""
@@ -71,31 +66,117 @@ class TestMeshUtils(unittest.TestCase):
         #2U CubeSat is 10 cm, 10 cm, 22.70 cm.
         #6U CubeSat is 20 cm, 10 cm, 34.05 cm.
         model = BDF()
-        pid = 1
-        i = 20.
-        j = 10.
-        k = 5.
+        pid1 = 1
+        pid2 = 2
+
+        xmax = 10.
+        ymax = 10.
+        zmax = 10.
         p1 = [0., 0., 0.]
-        p2 = [i, 0., 0.]
-        p3 = [i, j, 0.]
-        p4 = [0., j, 0.]
+        p2 = [xmax, 0., 0.]
+        p3 = [xmax, ymax, 0.]
+        p4 = [0., ymax, 0.]
 
-        p5 = [0., 0., k]
-        p6 = [i, 0., k]
-        p7 = [i, j, k]
-        p8 = [0., j, k]
+        p5 = [0., 0., zmax]
+        p6 = [xmax, 0., zmax]
+        p7 = [xmax, ymax, zmax]
+        p8 = [0., ymax, zmax]
 
-        nx = 2
-        ny = 2
+        # nnodes
+        nx = 20
+        ny = 20
         nz = 2
 
-        x = np.linspace(0., i, nx + 1)
-        y = np.linspace(0., j, ny + 1)
-        z = np.linspace(0., k, nz + 1)
+        x = np.linspace(0., xmax, nx)
+        y = np.linspace(0., ymax, ny)
+        z = np.linspace(0., zmax, nz)
 
-        create_structured_chexas(model, pid,
+        mid = 1
+        E = 69.e9  # Pa
+        G = None
+        nu = 0.30
+        rho = 2_710  #kg/m^3
+        uallow = 240.e6  # MPa
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0,
+                       comment='aluminum')
+        model.add_psolid(pid1, mid)
+        model.add_psolid(pid2, mid)
+        create_structured_chexas(model, pid2,
                                  x, y, z, nx, ny, nz, eid=1)
-        model.write_bdf('test_structured_chexas.bdf')
+
+
+        nodes = []
+        cm = 1.1
+        model.cross_reference()
+        for nid, node in model.nodes.items():
+            x, y, z = node.xyz
+            if (np.isclose(z, 0.) and
+                # corner on the bottom face
+                abs(x - xmax / 2.) >= (xmax / 2. - cm) and
+                abs(y - ymax / 2.) >= (ymax / 2. - cm)):
+                nodes.append(nid)
+
+        constrained_elements = set(model.elements.keys())
+        for eid, elem in model.elements.items():
+            x, y, z = elem.Centroid()
+            if (# corner elements
+                abs(x - xmax / 2.) >= (ymax / 2. - cm) and
+                abs(y - ymax / 2.) >= (ymax / 2. - cm)):
+                elem.pid = 1
+                constrained_elements.remove(eid)
+        constrained_elements = list(constrained_elements)
+        constrained_elements.sort()
+
+        spc_id = 100
+        components = '123'
+        model.add_spc1(spc_id, components, nodes, comment='floor')
+
+        g = 9.81  # m/s^2
+        Nx = [g, 0., 0.]
+        Ny = [0., g, 0.]
+        Nz = [0., 0., g]
+        model.add_grav(1001, -2., Nx, cid=0, mb=0, comment='-2 G Nx')
+        model.add_grav(1002, 2., Nx, cid=0, mb=0, comment='+2 G Nx')
+        model.add_grav(1003, -2., Ny, cid=0, mb=0, comment='-2 G Ny')
+        model.add_grav(1004, 2., Ny, cid=0, mb=0, comment='+2 G Ny')
+        model.add_grav(1005, -9., Nz, cid=0, mb=0, comment='-9 G Nz')
+        model.add_grav(1006, 2., Nz, cid=0, mb=0, comment='+2 G Nz')
+
+        subcases = model.create_subcases([1, 2, 3, 4, 5, 6])
+
+        options = []
+        param_type = 'STRESS-type'
+        dconstr_id = 101
+        dresp_id = 1001
+        response_type = 'STRESS'
+        property_type = 'ELEM'
+        region = None
+        atta = 13
+        attb = None  # mode
+        comment = 'VM Stress'
+        for eid in constrained_elements:
+            model.add_dconstr(dconstr_id, dresp_id, lid=-uallow, uid=uallow, lowfq=0.,
+                              highfq=1.e20, comment=comment)
+            label = f's{eid}'
+            atti = [eid]
+            model.add_dresp1(dresp_id, label, response_type, property_type,
+                            region, atta, attb,
+                            atti, validate=True,
+                            comment=comment)
+            dresp_id += 1
+            comment = ''
+
+        for subcase_id, subcase in subcases.items():
+            load_id = 1000 + subcase_id
+            subcase.add('LOAD', load_id, options, param_type)
+            subcase.add('SPC', spc_id, options, param_type)
+            #subcase.add('ANALYSIS', 'STATICS', options, 'KEY-type')
+            subcase.add('ANALYSIS', 'STATICS', options, param_type)
+            subcase.add('DESSUB', dconstr_id, options, param_type)
+
+        bdf_filename = os.path.join(DIRNAME, 'test_structured_chexas.bdf')
+        model.write_bdf(bdf_filename)
 
     def test_eq1(self):
         """Collapse nodes 2 and 3; consider 1-3"""
@@ -115,8 +196,8 @@ class TestMeshUtils(unittest.TestCase):
             'MAT1,1,3.0,, 0.3\n'
             'ENDDATA'
         )
-        bdf_filename = 'nonunique.bdf'
-        bdf_filename_out = 'unique.bdf'
+        bdf_filename = os.path.join(DIRNAME, 'nonunique.bdf')
+        bdf_filename_out = os.path.join(DIRNAME, 'unique.bdf')
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
@@ -161,8 +242,8 @@ class TestMeshUtils(unittest.TestCase):
             'MAT1,1000,3.0,, 0.3\n'
             'ENDDATA'
         )
-        bdf_filename = 'nonunique.bdf'
-        bdf_filename_out = 'unique.bdf'
+        bdf_filename = os.path.join(DIRNAME, 'nonunique.bdf')
+        bdf_filename_out = os.path.join(DIRNAME, 'unique.bdf')
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
@@ -291,8 +372,8 @@ class TestMeshUtils(unittest.TestCase):
             '$MATERIALS',
             'MAT1           1      3.              .3',
         ]
-        bdf_filename = 'nonunique2.bdf'
-        bdf_filename_out = 'unique2.bdf'
+        bdf_filename = os.path.join(DIRNAME, 'nonunique2.bdf')
+        bdf_filename_out = os.path.join(DIRNAME, 'unique2.bdf')
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write('\n'.join(lines))
@@ -340,8 +421,8 @@ class TestMeshUtils(unittest.TestCase):
         msg += 'PSHELL,100,1000,0.1\n'
         msg += 'MAT1,1000,3.0,, 0.3\n'
         msg += 'ENDDATA'
-        bdf_filename = 'nonunique.bdf'
-        bdf_filename_out = 'unique.bdf'
+        bdf_filename = os.path.join(DIRNAME, 'nonunique.bdf')
+        bdf_filename_out = os.path.join(DIRNAME, 'unique.bdf')
 
         with open(bdf_filename, 'w') as bdf_file:
             bdf_file.write(msg)
@@ -396,6 +477,11 @@ class TestMeshUtils(unittest.TestCase):
         read_bdf(bdf_filename_out1, log=log)
         read_bdf(bdf_filename_out2, log=log)
         read_bdf(bdf_filename_out3, log=log)
+
+
+        os.remove(bdf_filename_out1)
+        os.remove(bdf_filename_out2)
+        os.remove(bdf_filename_out3)
 
     def test_exit(self):
         """tests totally failing to run"""
@@ -826,7 +912,7 @@ class TestMeshUtils(unittest.TestCase):
             #print(nid, node.xyz)
 
 
-        out_filename = 'sym.bdf'
+        out_filename = os.path.join(DIRNAME, 'sym.bdf')
         write_bdf_symmetric(model, out_filename=out_filename, encoding=None, size=8,
                             is_double=False,
                             enddata=None,
@@ -837,7 +923,7 @@ class TestMeshUtils(unittest.TestCase):
         #print('cg1=%s cg2=%s' % (cg1, cg2))
         assert np.allclose(mass1*2, mass2), 'mass1=%s mass2=%s' % (mass1, mass2)
         assert np.allclose(cg2[1], 0.), 'cg2=%s stats=%s' % (cg2, model2.get_bdf_stats())
-        os.remove('sym.bdf')
+        os.remove(out_filename)
 
     def test_mirror2(self):
         """mirrors the BDF (we care about the aero cards)"""

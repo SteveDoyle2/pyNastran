@@ -1393,7 +1393,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
         if property_type == 'ELEM':
             if response_type == 'CFAILURE':
                 pass
-            elif response_type == 'STRESS':
+            elif response_type in ['STRESS', 'STRAIN']:
                 pass
             else:
                 raise RuntimeError(msg)
@@ -1442,10 +1442,14 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
         assert attb > 0, msg
         assert len(atti) > 0, msg
 
-    elif response_type == 'STRESS':
-        _validate_dresp1_stress(property_type, response_type, atta, attb, atti)
+    elif response_type in ['STRESS', 'STRAIN']:
+        _validate_dresp1_stress_strain(property_type, response_type, atta, attb, atti)
     elif response_type == 'FORCE':
         _validate_dresp1_force(property_type, response_type, atta, attb, atti)
+    elif response_type == 'ELEM':
+        assert len(atti) > 0, msg
+        for eid in atti:
+            assert isinstance(eid, int), msg
     else:
         msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
             property_type, response_type, atta, attb, atti)
@@ -1562,13 +1566,15 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
         raise RuntimeError(msg)
     return atta, atti
 
-def _validate_dresp1_stress(property_type, response_type, atta, attb, atti):
+def _validate_dresp1_stress_strain(property_type, response_type, atta, attb, atti):
     """helper for ``validate_dresp``"""
     msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
         property_type, response_type, atta, attb, atti)
 
     _blank_or_mode(attb, msg)
-    if property_type == 'PBARL':
+    if property_type == 'ELEM':
+        assert isinstance(atta, int), msg
+    elif property_type == 'PBARL':
         assert atta in [2, 3, 4, 5, 7, 8], msg
     elif property_type == 'PBAR':
         assert atta in [2, 6, 7, 8, 14, 15], msg
@@ -1589,8 +1595,10 @@ def _validate_dresp1_stress(property_type, response_type, atta, attb, atti):
             #raise TypeError(msg)
         #assert attb is None, 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
             #property_type, response_type, atta, attb, atti)
+    #elif property_type == 'PSOLID':
+
     else:
-        raise RuntimeError(msg)
+        raise RuntimeError(f'property_type={property_type} is not supported\n' + msg)
 
     assert attb is None, '%s; atta should be an integer' % msg
     assert len(atti) > 0, msg
