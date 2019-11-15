@@ -64,6 +64,7 @@ class TestBEdge(unittest.TestCase):
 
         model = UGRID2D_Reader(log=log, debug=True)
         model.read_ugrid(ugrid_filename)
+        os.remove(ugrid_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

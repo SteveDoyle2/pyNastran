@@ -24,7 +24,7 @@ from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.qt_files.gui_attributes import GuiAttributes
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, VTK_VERSION
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
-from pyNastran.gui import IS_DEV
+#from pyNastran.gui import IS_DEV
 IS_TESTING = 'test' in sys.argv[0]
 
 WHITE = (1., 1., 1.)
@@ -196,6 +196,8 @@ class GuiQtCommon(GuiAttributes):
                 return
             self._is_displaced = False
             self._update_grid(self._xyz_nominal)
+        if show_msg:
+            self.log_command(f'on_clear_results(show_msg={show_msg})')
 
     #def clear_grid_fringe(grid):
         point_data = grid.GetPointData()
@@ -322,8 +324,7 @@ class GuiQtCommon(GuiAttributes):
         name_str = self._names_storage.get_name_string(name)
         #return name, normi, vector_size, min_value, max_value, norm_value
 
-        grid_result = self.set_grid_values(name_tuple, normi, vector_size,
-                                           min_value, max_value, norm_value)
+        grid_result = self.set_grid_values(name_tuple, normi, vector_size)
 
         data = FringeData(
             icase, result_type, location, min_value, max_value, norm_value,
@@ -426,8 +427,7 @@ class GuiQtCommon(GuiAttributes):
         name_str = self._names_storage.get_name_string(name)
         #return name, normi, vector_size, min_value, max_value, norm_value
 
-        #grid_result = self.set_grid_values(name_tuple, normi, vector_size,
-                                           #min_value, max_value, norm_value)
+        #grid_result = self.set_grid_values(name_tuple, normi, vector_size)
         grid_result = None
         min_value = None
         max_value = None
@@ -470,7 +470,7 @@ class GuiQtCommon(GuiAttributes):
         location = data.location
         min_value = data.min_value
         max_value = data.max_value
-        norm_value = data.norm_value
+        #norm_value = data.norm_value
         data_format = data.data_format
         scale = data.scale
         methods = data.methods
@@ -705,8 +705,7 @@ class GuiQtCommon(GuiAttributes):
 
         #print('disp=%s location=%r' % (is_disp, location))
         if is_disp: # or obj.deflects(i, res_name):
-            #grid_result1 = self.set_grid_values(name, case, 1,
-                                                #min_value, max_value, norm_value)
+            #grid_result1 = self.set_grid_values(name, case, 1)
             #point_data.AddArray(grid_result1)
 
             self._is_displaced = True
@@ -953,15 +952,14 @@ class GuiQtCommon(GuiAttributes):
 
         #================================================
         # flips sign to make colors go from blue -> red
-        norm_value = float(max_value - min_value)
+        #norm_value = float(max_value - min_value)
 
         vector_size = 1
         name = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
         if self._names_storage.has_exact_name(name):
             grid_result = None
         else:
-            grid_result = self.set_grid_values(name, normi, vector_size,
-                                               min_value, max_value, norm_value)
+            grid_result = self.set_grid_values(name, normi, vector_size)
 
         if vector_size0 == 1:
             name_vector = None
@@ -972,8 +970,7 @@ class GuiQtCommon(GuiAttributes):
             if self._names_storage.has_exact_name(name_vector):
                 grid_result_vector = None
             else:
-                grid_result_vector = self.set_grid_values(name_vector, case, vector_size,
-                                                          min_value, max_value, norm_value)
+                grid_result_vector = self.set_grid_values(name_vector, case, vector_size)
 
         self.final_grid_update(icase, name, grid_result,
                                name_vector, grid_result_vector,
@@ -1084,8 +1081,7 @@ class GuiQtCommon(GuiAttributes):
                                 #min_value, max_value, label)
         self.vtk_interactor.Render()
 
-    def set_grid_values(self, name, case, vector_size, min_value, unused_max_value, norm_value,
-                        is_low_to_high=True):
+    def set_grid_values(self, name, case, vector_size, is_low_to_high=True):
         """
         https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
         """
@@ -1113,19 +1109,6 @@ class GuiQtCommon(GuiAttributes):
                 #case[50] = np.int32(1) / np.int32(0)
 
         if vector_size == 1:
-            #nvalues = len(case)
-            #if is_low_to_high:
-                ## flips the min/max
-                #if norm_value == 0:
-                    #case2 = full((nvalues), 1.0 - min_value, dtype='float32')
-                #else:
-                    #case2 = 1.0 - (case - min_value) / norm_value
-            #else:
-                #if norm_value == 0:
-                    #case2 = full((nvalues), min_value, dtype='float32')
-                #else:
-                    #case2 = (case - min_value) / norm_value
-
             if case.flags.contiguous:
                 case2 = case
             else:
@@ -1203,8 +1186,7 @@ class GuiQtCommon(GuiAttributes):
         unused_xyz_nominal, vector_data = obj.get_vector_result_by_scale_phase(
             i, res_name, arrow_scale, phase)
 
-        #grid_result1 = self.set_grid_values(name, case, 1,
-            #min_value, max_value, norm_value)
+        #grid_result1 = self.set_grid_values(name, case, 1)
         #point_data.AddArray(grid_result1)
 
         self._is_forces = True

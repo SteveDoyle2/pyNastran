@@ -150,8 +150,8 @@ class LegendObject:
          default_title, min_value, max_value, default_min, default_max) = self.get_legend_fringe(
              self.gui.icase_fringe)
 
-        nlabels, labelsize, ncolors, colormap = scalar_bar
-        default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
+        #nlabels, labelsize, ncolors, colormap = scalar_bar
+        #default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
 
         scale, phase, default_scale, default_phase = self.get_legend_disp(
             self.gui.icase_disp)
@@ -482,13 +482,12 @@ class LegendObject:
         if self.gui.icase_fringe is None:
             return
 
-        norm_value = float(max_value - min_value)
+        #norm_value = float(max_value - min_value)
         # if name not in self._loaded_names:
 
         #if isinstance(key, integer_types):  # vector 3
              #norm_plot_value = norm(plot_value, axis=1)
             #grid_result = self.set_grid_values(name, norm_plot_value, vector_size1,
-                                               #min_value, max_value, norm_value,
                                                #is_low_to_high=is_low_to_high)
         #else:
         if update_legend:

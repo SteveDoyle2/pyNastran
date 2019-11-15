@@ -816,6 +816,10 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'see103q4.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        os.remove('spike.bdf')
+        os.remove('super_12.bdf')
+        os.remove('super_13.bdf')
+        os.remove('super_15.bdf')
 
     def test_gui_dvprel(self):
         """tests dvprel"""

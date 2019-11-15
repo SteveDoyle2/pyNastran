@@ -9,13 +9,13 @@ from pyNastran.converters.openfoam.face_file import FaceFile
 from pyNastran.converters.openfoam.boundary_file import read_boundary, read_boundary_file
 
 from pyNastran.utils import check_path
-
+DIRNAME = os.path.dirname(__file__)
 
 class TestOpenFOAM(unittest.TestCase):
     def test_boundary_1(self):
         """tests the PointsFile, FaceFile, Boundary class using the Boundary"""
-        #points_filename = 'points.foam'
-        boundary_filename = 'boundary.foam'
+        #points_filename = os.path.join(DIRNAME, 'points.foam')
+        boundary_filename = os.path.join(DIRNAME, 'boundary.foam')
         #with open(points_filename, 'w') as points_file:
             #points_file.write(
                 #'4\n\n'
@@ -80,6 +80,7 @@ class TestOpenFOAM(unittest.TestCase):
         #boundary = read_boundary(
             #point_filename, face_filename, boundary_filename,
             #log=None, debug=False)
+        os.remove(boundary_filename)
 
 
     def test_points_1(self):

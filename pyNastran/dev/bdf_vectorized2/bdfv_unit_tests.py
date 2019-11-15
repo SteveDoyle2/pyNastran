@@ -115,7 +115,8 @@ class TestVectorized(unittest.TestCase):
         for nid, xyz1, xyz2 in zip(nid_cp_cd1[:, 0], xyz_cid1, xyz_cid2):
             if not np.allclose(xyz1, xyz2):
                 print('xyz_cid0: nid=%s xyz1=%s xyz2=%s' % (nid, xyz1, xyz2))
-
+        os.remove(out_filename_v)
+        os.remove(out_filename_nv)
 
     def test_static_elements(self):
         """tests static_elements"""

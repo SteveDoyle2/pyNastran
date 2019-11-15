@@ -579,7 +579,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 model.loads = _model2.loads
                 model.seloc = _model2.seloc
                 model.superelement_models = _model2.superelement_models
-                model.write_bdf('spike2.bdf')
+                #model.write_bdf('spike2.bdf')
+                #os.remove('spike2.bdf')
                 xref_nodes = True
                 xref_loads = True
                 model.safe_cross_reference(

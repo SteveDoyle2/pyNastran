@@ -180,7 +180,7 @@ class TestSTL(unittest.TestCase):
         assert len(stl_bin.elements) == 3, 'nelements=%s' % len(stl_bin.elements)
         os.remove(stl_filename)
         os.remove(stl_out_filename)
-        #os.remove(stl_bin_filename)
+        os.remove(stl_bin_filename)
 
         #outfile_name = os.path.join(TEST_PATH, 'flat.bin.tri')
         #cnormals = stl.get_normals()
