@@ -1219,16 +1219,16 @@ class TestShells(unittest.TestCase):
         log = get_logger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [0., 1., 0.])
-        model.add_grid(3, [0., 1., 1.])
-        model.add_grid(4, [0., 0., 1.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
 
         eid = 10
         pid = 100
         mid = 1000
         model.add_ctria3(eid, pid, [1, 2, 3], zoffset=0., theta_mcid=0, tflag=0,
-                        T1=None, T2=None, T3=None,
-                        comment='')
+                         T1=None, T2=None, T3=None,
+                         comment='')
 
         eid = 11
         model.add_cquad4(eid, pid, [1, 2,3, 4], theta_mcid=0, zoffset=0., tflag=0,

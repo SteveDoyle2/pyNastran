@@ -88,9 +88,9 @@ class TestRenumber(unittest.TestCase):
         check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check, log=log)
 
     def test_renumber_03(self):
-        bdf_filename = os.path.join(MODEL_PATH, 'cbush', 'cbush.dat')
-        bdf_filename_renumber = os.path.join(MODEL_PATH, 'cbush', 'cbush_renumber.dat')
-        bdf_filename_check = os.path.join(MODEL_PATH, 'cbush', 'cbush_check.dat')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'cbush', 'cbush.dat')
+        bdf_filename_renumber = os.path.join(MODEL_PATH, 'unit', 'cbush', 'cbush_renumber.dat')
+        bdf_filename_check = os.path.join(MODEL_PATH, 'unit', 'cbush', 'cbush_check.dat')
         check_renumber(bdf_filename, bdf_filename_renumber, bdf_filename_check)
 
     def test_renumber_04(self):

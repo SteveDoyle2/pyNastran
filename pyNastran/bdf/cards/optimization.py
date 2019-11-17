@@ -939,7 +939,7 @@ class TOPVAR(BaseCard):
             else:
                 assert len(card) <= 9, 'len(TOPVAR card) = %i\ncard=%s' % (len(card), card)
         return TOPVAR(opt_id, label, prop_type, xinit, pid, xlb=xlb,
-                      power=power, options=options, comment=comment)
+                      delxv=delxv, power=power, options=options, comment=comment)
 
     def repr_fields(self):
         """
@@ -1393,7 +1393,7 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
         if property_type == 'ELEM':
             if response_type == 'CFAILURE':
                 pass
-            elif response_type == 'STRESS':
+            elif response_type in ['STRESS', 'STRAIN']:
                 pass
             else:
                 raise RuntimeError(msg)
@@ -1442,8 +1442,8 @@ def validate_dresp1(property_type, response_type, atta, attb, atti):
         assert attb > 0, msg
         assert len(atti) > 0, msg
 
-    elif response_type == 'STRESS':
-        _validate_dresp1_stress(property_type, response_type, atta, attb, atti)
+    elif response_type in ['STRESS', 'STRAIN']:
+        _validate_dresp1_stress_strain(property_type, response_type, atta, attb, atti)
     elif response_type == 'FORCE':
         _validate_dresp1_force(property_type, response_type, atta, attb, atti)
     else:
@@ -1562,7 +1562,7 @@ def _validate_dresp_property_none(property_type, response_type, atta, attb, atti
         raise RuntimeError(msg)
     return atta, atti
 
-def _validate_dresp1_stress(property_type, response_type, atta, attb, atti):
+def _validate_dresp1_stress_strain(property_type, response_type, atta, attb, atti):
     """helper for ``validate_dresp``"""
     msg = 'DRESP1 ptype=%s rtype=%s atta=%s attb=%s atti=%s' % (
         property_type, response_type, atta, attb, atti)
@@ -1612,6 +1612,11 @@ def _validate_dresp1_force(property_type, response_type, atta, attb, atti):
         raise RuntimeError(msg)
     assert len(atti) > 0, msg
 
+
+DRESP_PROPERTIES = [
+    'PSHELL', 'PBAR', 'PROD', 'PCOMP', 'PCOMPG',
+    'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
+    'PBEAML', 'PSHEAR', 'PTUBE', 'PBMSECT']
 
 class DRESP1(OptConstraint):
     """
@@ -1834,39 +1839,18 @@ class DRESP1(OptConstraint):
         if not xref:
             return
         #properties = {'PSOLID', 'PSHELL', 'PCOMP', 'PBAR', 'PBEAM', 'PSHEAR'}
-        valid_properties_map = {
-            'PSOLID' : {'PSOLID'},
-            'PSHELL' : {'PSHELL'},
-            'PBAR' : {'PBAR'},
-            'PROD' : {'PROD'},
-            'PELAS' : {'PELAS'},
-            #'PDAMP' : {'PDAMP'},
-            'PBEAM' : {'PBEAM'},
-            'PSHEAR' : {'PSHEAR'},
-            'PCOMP' : {'PCOMP'}, # 'PCOMPG'},
-        }
-        properties = set(valid_properties_map)
-        property_to_etypes_map = {
-            'PSOLID' : {'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM'},
-            'PSHELL' : {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8'},
-            'PBAR' : {'CBAR'},
-            'PROD' : {'CROD'},
-            'PELAS' : {},  # no CELAS4
-            #'PDAMP' : {},  # no CDAMP4
-            'PBEAM' : {'CBEAM'},
-            'PSHEAR' : {'CSHEAR'},
-            'PCOMP' : {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8'},
-        }
 
         node_types = {
             'DISP', 'FRDISP', 'PSDDISP', 'RMSDISP', 'TDISP', # 'RFDISP',
             'FRVELO', 'RMSVELO', 'PSDVELO', 'TVELO',
             'FRACCL', 'RMSACCL', 'PSDACCL', 'TACCL',
             'FRSPCF',
+            'SPCFORCE', 'TSPCF',
         }
         no_validate = {
             'FRMASS', 'WEIGHT', 'EIGN', 'LAMA', 'VOLUME', 'FREQ', 'ERP',
             'FLUTTER', 'CFAILURE', 'CSTRAT', 'CEIG', 'DIVERG', 'STABDER', 'TRIM',
+            'ESE', 'TOTSE',
             'GPFORCE', 'GPFORCP',}
         not_implemented = no_validate
         no_validate.update(not_implemented)
@@ -1874,46 +1858,15 @@ class DRESP1(OptConstraint):
 
         elem_props = {'STRESS', 'TSTRE', 'FRSTRE', 'CSTRESS',
                       'STRAIN', 'CSTRAIN',
-                      'ESE', 'TOTSE',
                       'FORCE', 'TFORC', 'FRFORC',
-                      'SPCFORCE', 'TSPCF', }
+                      }
         if self.response_type in no_validate:
             return
         elif self.response_type in elem_props:
             property_type = self.property_type
-            if property_type == 'ELEM':
-                eids2 = self.atti
-                valid_etypes = {
-                    'CROD', 'CONROD',
-                    'CELAS',
-                    'CBAR', 'CBEAM',
-                    'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CSHEAR',
-                    'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM',
-                }
-            else:
-                valid_properties = valid_properties_map[property_type]
-                valid_etypes = property_to_etypes_map[property_type]
-                if property_type in properties:
-                    assert len(self.atti_ref) == 1, self.get_stats()
-                    prop = self.atti_ref[0]
-                    assert prop.type == property_type
-                else:
-                    print(self.get_stats())
-                    raise NotImplementedError(property_type)
-
-                pid = prop.pid
-                eids1 = model.get_element_ids_list_with_pids(pid)
-                eids_dict = model.get_element_ids_dict_with_pids()
-                assert pid in eids_dict, f'pid={pid} actual_properties={list(eids_dict.keys())}'
-                eids2 = eids_dict[pid]
-                eids1.sort()
-                eids2.sort()
-                assert eids1 == eids2
-                assert len(eids2) > 0, eids2
-
-            for eid in eids2:
-                element = model.elements[eid]
-                assert element.type in valid_etypes, f'valid={valid_etypes}\n{element.get_stats()}'
+            #if property_type is None:
+                #continue
+            _dresp_verify_eids(self, model, property_type)
         else:
             print(self.get_stats())
             raise NotImplementedError(self.response_type)
@@ -1984,9 +1937,7 @@ class DRESP1(OptConstraint):
         ]
         if self.property_type in ['ELEM']:
             self.atti_ref = model.Elements(self.atti, msg=msg)
-        elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP', 'PCOMPG',
-                                    'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                                    'PBEAML', 'PSHEAR', 'PTUBE',]:
+        elif self.property_type in DRESP_PROPERTIES:
             self.atti_ref = model.Properties(self.atti, msg=msg)
         elif self.response_type in ['FRSTRE']:
             self.atti_ref = model.Properties(self.atti, msg=msg)
@@ -2062,9 +2013,7 @@ class DRESP1(OptConstraint):
         ref_id = self.dresp_id
         if self.property_type == 'ELEM':
             self.atti_ref = model.safe_elements(self.atti, ref_id, xref_errors, msg=msg)
-        elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP', 'PCOMPG',
-                                    'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                                    'PBEAML', 'PSHEAR', 'PTUBE',]:
+        elif self.property_type in DRESP_PROPERTIES:
             self.atti_ref = model.Properties(self.atti, msg=msg)
         elif self.response_type in ['FRSTRE']:
             self.atti_ref = model.Properties(self.atti, msg=msg)
@@ -2152,10 +2101,7 @@ class DRESP1(OptConstraint):
         #print('self.atti_ref =', self.atti_ref)
         if self.property_type == 'ELEM':
             data = self._elements()
-        elif self.property_type in ['PSHELL', 'PBAR', 'PROD', 'PCOMP', 'PCOMPG',
-                                    'PSOLID', 'PELAS', 'PBARL', 'PBEAM',
-                                    'PBEAML', 'PSHEAR', 'PTUBE',
-                                    'FRSTRE']:
+        elif self.property_type in DRESP_PROPERTIES:
             data = self._properties()
         elif self.response_type == 'FRSTRE':
             data = self._properties()
@@ -2178,7 +2124,7 @@ class DRESP1(OptConstraint):
                                     'PSDVELO', 'PSDACCL']:
             data = self._nodes()
         elif self.response_type in ['FRFORC', 'TFORC',
-                                    'STRESS', 'ESE', 'CFAILURE', 'CSTRAIN']:
+                                    'STRESS', 'STRAIN', 'ESE', 'CFAILURE', 'CSTRAIN']:
             data = self._elements()
         elif self.response_type in op2_results:
             data = self.atti
@@ -2259,6 +2205,88 @@ class DRESP1(OptConstraint):
             return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)
 
+def _dresp_verify_eids(dresp: DRESP1, model: BDF, property_type):
+    if property_type == 'ELEM':
+        eids2 = dresp.atti
+        valid_etypes = {
+            'CROD', 'CONROD',
+            'CELAS',
+            'CBAR', 'CBEAM',
+            'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CSHEAR',
+            'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM',
+            'CFAST',
+        }
+        for eid in eids2:
+            element = model.elements[eid]
+            assert element.type in valid_etypes, f'valid={valid_etypes}\n{element.get_stats()}'
+    else:
+        valid_properties_map = {
+            'PSOLID' : {'PSOLID'},
+            'PSHELL' : {'PSHELL'},
+            'PBAR' : {'PBAR', 'PBARL'},
+            'PBARL' : {'PBARL'},
+            'PBEAM' : {'PBEAM', 'PBEAML'},
+            'PBEAML' : {'PBEAML'},
+            'PROD' : {'PROD'},
+            'PELAS' : {'PELAS'},
+            #'PDAMP' : {'PDAMP'},
+            'PSHEAR' : {'PSHEAR'},
+            'PCOMP' : {'PCOMP'}, # 'PCOMPG'},
+            'PTUBE' : {'PTUBE'},
+            'PBMSECT' : {'PBMSECT'},
+            'PBRSECT' : {'PBRSECT'},
+        }
+        properties = set(valid_properties_map)
+        property_to_etypes_map = {
+            'PSOLID' : {'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM'},
+            'PSHELL' : {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8', 'CQUADR'},
+            'PBAR' : {'CBAR'},
+            'PBARL' : {'CBAR'},
+            'PROD' : {'CROD'},
+            'PELAS' : {'CELAS1'},  # no CELAS4
+            #'PDAMP' : {},  # no CDAMP4
+            'PSHEAR' : {'CSHEAR'},
+            'PCOMP' : {'CTRIA3', 'CQUAD4', 'CTRIA6', 'CQUAD8'},
+            'PBEAM': {'CBEAM'},
+            'PBEAML': {'CBEAM'},
+            'PTUBE': {'CTUBE'},
+            'PCOMPG': {},
+            'PLPLANE': {},
+            #'PPPLANE': {},
+            'PBRSECT' : {'CBAR'},
+            'PBMSECT': {'CBEAM'},
+        }
+
+        try:
+            valid_properties = valid_properties_map[property_type]
+            valid_etypes = property_to_etypes_map[property_type]
+        except KeyError:
+            print(dresp.get_stats())
+            raise
+
+        if property_type in properties:
+            assert dresp.atti_ref is not None, dresp.get_stats()
+            assert len(dresp.atti_ref) > 0, dresp.get_stats()
+            props = dresp.atti_ref
+        else:
+            print(dresp.get_stats())
+            raise NotImplementedError(property_type)
+
+        for prop in props:
+            assert prop.type in valid_properties, f'prop.type={prop.type!r} property_type={property_type!r} valid_properties={valid_properties}\nproperty=\n{prop.get_stats()}'
+            pid = prop.pid
+            eids1 = model.get_element_ids_list_with_pids(pid)
+            eids_dict = model.get_element_ids_dict_with_pids()
+            assert pid in eids_dict, f'pid={pid} actual_properties={list(eids_dict.keys())}'
+            eids2 = eids_dict[pid]
+            eids1.sort()
+            eids2.sort()
+            assert eids1 == eids2
+            assert len(eids2) > 0, eids2
+
+            for eid in eids2:
+                element = model.elements[eid]
+                assert element.type in valid_etypes, f'valid={valid_etypes}\n{element.get_stats()}'
 
 class DRESP2(OptConstraint):
     """

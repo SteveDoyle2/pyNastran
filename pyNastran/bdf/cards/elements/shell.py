@@ -417,7 +417,10 @@ def _material_coordinate_system(element, normal, xyz1, xyz2):
     if isinstance(element.theta_mcid, integer_types):
         i = element.theta_mcid_ref.i
         jmat = np.cross(normal, i) # k x i
-        jmat /= np.linalg.norm(jmat)
+        try:
+            jmat /= np.linalg.norm(jmat)
+        except FloatingPointError:
+            raise ValueError(f'Cannot project i-axis onto element normal i={i} normal={normal}\n{element}')
         # we do an extra normalization here because
         # we had to project i onto the elemental plane
         # unlike in the next block
@@ -427,7 +430,10 @@ def _material_coordinate_system(element, normal, xyz1, xyz2):
         imat = xyz2 - xyz1
         imat /= np.linalg.norm(imat)
         jmat = np.cross(normal, imat) # k x i
-        jmat /= np.linalg.norm(jmat)
+        try:
+            jmat /= np.linalg.norm(jmat)
+        except FloatingPointError:
+            raise ValueError(f'Cannot project i-axis onto element normal i={i} normal={normal}\n{element}')
     else:
         raise RuntimeError(element.theta_mcid)
     return imat, jmat

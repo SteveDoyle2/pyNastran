@@ -42,7 +42,7 @@ from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #, mass_properties_breakdown
 from pyNastran.bdf.cards.dmig import NastranMatrix
-from pyNastran.bdf.test.compare_card_content import compare_card_content
+from pyNastran.bdf.bdf_interface.compare_card_content import compare_card_content
 #from pyNastran.bdf.mesh_utils.convert import convert
 #from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
@@ -1805,8 +1805,7 @@ def compute(cards1, cards2, quiet=False):
             print(msg)
 
 
-def get_element_stats(fem1, unused_fem2, quiet=False):
-    # type: (BDF, BDF, bool) -> None
+def get_element_stats(fem1: BDF, unused_fem2: BDF, quiet: bool=False) -> None:
     """verifies that the various element methods work"""
     for (unused_key, loads) in sorted(fem1.loads.items()):
         for load in loads:

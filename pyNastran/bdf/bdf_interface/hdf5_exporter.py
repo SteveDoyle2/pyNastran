@@ -160,7 +160,8 @@ def export_bdf_to_hdf5_file(hdf5_file, model, exporter=None):
         unused
 
     """
-    unused_attrs = object_attributes(model, mode='both', keys_to_skip=None)
+    unused_attrs = object_attributes(model, mode='both', keys_to_skip=None,
+                                     filter_properties=True)
     encoding = model.get_encoding()
 
     if 'GRID' in model.card_count:
@@ -556,7 +557,8 @@ def _h5_export_class(sub_group: Any, model: Any, key: str, value: Any,
         keys_to_skip = []
         if hasattr(value, '_properties'):
             keys_to_skip = value._properties
-        h5attrs = value.object_attributes(mode='both', keys_to_skip=keys_to_skip)
+        h5attrs = value.object_attributes(mode='both', keys_to_skip=keys_to_skip,
+                                          filter_properties=True)
         if hasattr(value, '_properties'):
             h5attrs.remove('_properties')
         #sub_group = hdf5_file.create_group(key)

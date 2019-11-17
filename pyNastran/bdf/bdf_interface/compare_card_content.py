@@ -1,11 +1,21 @@
+from __future__ import annotations
 from itertools import count
+from typing import TYPE_CHECKING
 
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
 from pyNastran.bdf.field_writer_16 import print_field_16
 
-def assert_fields(card1, card2):
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.cards.base_card import BaseCard
+
+#def compare_params(fem1, fem2):
+    #raise RuntimeError('is compare_parms used?')
+    #compute(fem1.params, fem2.params)
+
+def assert_fields(card1: BaseCard, card2: BaseCard) -> None:
     try:
         fields1 = wipe_empty_fields(card1.repr_fields())
         fields2 = wipe_empty_fields(card2.repr_fields())
@@ -53,6 +63,57 @@ def check_length(fem1, fem2, name):
         msg = 'len(fem1.%s)=%i len(fem2.%s)=%i' % (name, len(obj2), name, len(obj2))
         raise AssertionError(msg)
 
+
+def compare_params(fem1: BDF, fem2: BDF) -> None:
+    for key in fem1.params:
+        card1 = fem1.params[key]
+        card2 = fem2.params[key]
+        assert_fields(card1, card2)
+
+def compare_nodes(fem1: BDF, fem2: BDF) -> None:
+    for key in fem1.nodes:
+        card1 = fem1.nodes[key]
+        card2 = fem2.nodes[key]
+        assert_fields(card1, card2)
+
+def compare_elements(fem1: BDF, fem2: BDF) -> None:
+    for key in fem1.elements:
+        card1 = fem1.elements[key]
+        card2 = fem2.elements[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.rigid_elements:
+        card1 = fem1.rigid_elements[key]
+        card2 = fem2.rigid_elements[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.masses:
+        card1 = fem1.masses[key]
+        card2 = fem2.masses[key]
+        assert_fields(card1, card2)
+
+def compare_properties(fem1: BDF, fem2: BDF) -> None:
+    for key in fem1.properties:
+        card1 = fem1.properties[key]
+        card2 = fem2.properties[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.properties_mass:
+        card1 = fem1.properties_mass[key]
+        card2 = fem2.properties_mass[key]
+        assert_fields(card1, card2)
+
+def compare_materials(fem1: BDF, fem2: BDF) -> None:
+    for key in fem1.materials:
+        card1 = fem1.materials[key]
+        card2 = fem2.materials[key]
+        assert_fields(card1, card2)
+
+    for key in fem1.creep_materials:
+        card1 = fem1.creep_materials[key]
+        card2 = fem2.creep_materials[key]
+        assert_fields(card1, card2)
+
 def compare_card_content(fem1, fem2):
     check_obj_names = [
         'params', 'nodes', 'spoints', 'epoints', 'points', 'gridb',
@@ -67,40 +128,11 @@ def compare_card_content(fem1, fem2):
     for name in check_obj_names:
         check_length(fem1, fem2, name)
 
-    for key in fem1.params:
-        card1 = fem1.params[key]
-        card2 = fem2.params[key]
-        assert_fields(card1, card2)
-
-    for key in fem1.nodes:
-        card1 = fem1.nodes[key]
-        card2 = fem2.nodes[key]
-        assert_fields(card1, card2)
-
-    for key in fem1.elements:
-        card1 = fem1.elements[key]
-        card2 = fem2.elements[key]
-        assert_fields(card1, card2)
-
-    for key in fem1.rigid_elements:
-        card1 = fem1.rigid_elements[key]
-        card2 = fem2.rigid_elements[key]
-        assert_fields(card1, card2)
-
-    for key in fem1.properties:
-        card1 = fem1.properties[key]
-        card2 = fem2.properties[key]
-        assert_fields(card1, card2)
-
-    for key in fem1.materials:
-        card1 = fem1.materials[key]
-        card2 = fem2.materials[key]
-        assert_fields(card1, card2)
-
-    for key in fem1.creep_materials:
-        card1 = fem1.creep_materials[key]
-        card2 = fem2.creep_materials[key]
-        assert_fields(card1, card2)
+    compare_params(fem1, fem2)
+    compare_nodes(fem1, fem2)
+    compare_elements(fem1, fem2)
+    compare_properties(fem1, fem2)
+    compare_materials(fem1, fem2)
 
     nid_map = fem2.nid_map
     for key in fem1.loads:

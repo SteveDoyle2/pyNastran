@@ -1,0 +1,63 @@
+$pyNastran: version=msc
+$EXECUTIVE CONTROL DECK
+SOL 101
+CEND
+$CASE CONTROL DECK
+SUBCASE 1
+    DISPLACEMENT = ALL
+    LOAD = 1
+    SPC = 1
+BEGIN BULK
+$PARAMS
+PARAM,POST,-1
+$NODES
+$	cid	rid	origin			zaxis
+$CORD2C	1	0	0.	0.	0.	0.	0.	1.
+$	1.	0.	0.
+GRID, 11,, 0., 0., 1.
+GRID, 21,, 0., 0., 2.
+GRID, 31,, 0., 0., 3.
+GRID, 41,, 0., 0., 4.
+GRID, 51,, 0., 0., 5.
+GRID, 61,, 0., 0., 6.
+GRID, 71,, 0., 0., 7.
+GRID, 81,, 0., 0., 8.
+$
+GRID, 12,, 50., 0., 1.
+GRID, 22,, 50., 0., 2.
+GRID, 32,, 50., 0., 3.
+GRID, 42,, 50., 0., 4.
+GRID, 52,, 50., 0., 5.
+GRID, 62,, 50., 0., 6.
+GRID, 72,, 50., 0., 7.
+GRID, 82,, 50., 0., 8.
+$ELEMENTS
+$GGG Global Global Global
+$BGG Basic Global Global
+$GGO Global Global Offset
+$BGO Basic Global Offset
+$GOG Global Offset Global
+$BOG Basic Offset Global
+$GOO Global Offset Offset
+$BOO Basic Offset Offset
+$	$	$	$	$	$
+$	eid	pid	n1	n2	x1	x2	x3
+CBAR	10	100	11	12	0.	1.	0.	GGG
+CBAR	20	100	21	22	0.	1.	0.	BGG
+CBAR	30	100	31	32	0.	1.	0.	GGO
+CBAR	40	100	41	42	0.	1.	0.	BGO
+CBAR	50	100	51	52	0.	1.	0.	GOG
+CBAR	60	100	61	62	0.	1.	0.	BOG
+CBAR	70	100	71	72	0.	1.	0.	GOO
+CBAR	80	100	81	82	0.	1.	0.	BOO
+$PROPERTIES
+PBARL, 100, 1000,, BAR,,,,,
+,10., 30.
+$MATERIALS
+$LOADS
+GRAV,1,,2.,1.,0.,0.
+$SPCs
+MAT1, 1000, 3.0e7,,0.3
+SPC1	1	123456	11	21	31	41	51	61
+	71	81
+ENDDATA

@@ -555,7 +555,7 @@ class CHBDYP(ThermalElement):
         """hdf5 helper function"""
         if isinstance(self.nodes, np.ndarray):
             self.nodes = self.nodes.tolist()
-        self.nodes = [None if np.isnan(nid) else nid
+        self.nodes = [None if (nid is None or np.isnan(nid)) else nid
                       for nid in self.nodes]
 
     def __init__(self, eid, pid, surface_type, g1, g2, g0=0, gmid=None, ce=0,

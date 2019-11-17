@@ -410,8 +410,8 @@ class TestLoads(unittest.TestCase):
 
     def test_pload4_cpenta(self):
         """tests a PLOAD4 with a CPENTA"""
-        bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'cpenta.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'cpenta.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'cpenta.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'cpenta.op2')
         op2 = read_op2(op2_filename, log=log)
 
         model = read_bdf(bdf_filename, log=log)
@@ -505,8 +505,8 @@ class TestLoads(unittest.TestCase):
 
     def test_pload4_ctria3(self):
         """tests a PLOAD4 with a CTRIA3"""
-        bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'ctria3.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'ctria3.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'ctria3.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'ctria3.op2')
         op2 = read_op2(op2_filename, log=log)
 
         model = read_bdf(bdf_filename, log=log)
@@ -555,8 +555,8 @@ class TestLoads(unittest.TestCase):
 
     def test_pload4_cquad4(self):
         """tests a PLOAD4 with a CQUAD4"""
-        bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'cquad4.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'cquad4.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'cquad4.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'cquad4.op2')
         op2 = read_op2(op2_filename, log=log)
 
         model = read_bdf(bdf_filename, log=log)
@@ -608,8 +608,8 @@ class TestLoads(unittest.TestCase):
 
     def test_pload4_ctetra(self):
         """tests a PLOAD4 with a CTETRA"""
-        bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'ctetra.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'ctetra.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'ctetra.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'ctetra.op2')
         op2 = read_op2(op2_filename, log=log)
 
         model = read_bdf(bdf_filename, log=log)
@@ -703,8 +703,8 @@ class TestLoads(unittest.TestCase):
 
     def test_pload4_chexa(self):
         """tests a PLOAD4 with a CHEXA"""
-        bdf_filename = os.path.join(MODEL_PATH, 'pload4', 'chexa.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'chexa.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'chexa.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'chexa.op2')
         op2 = read_op2(op2_filename, log=log)
 
         model = read_bdf(bdf_filename, log=log)
