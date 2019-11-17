@@ -89,7 +89,7 @@ class Settings:
         self.nastran_is_3d_bars_update = True
         self.nastran_create_coords = True
         self.nastran_is_bar_axes = True
-        self.nastran_shell_mcids = True
+        self.nastran_is_shell_mcids = True
 
     def reset_settings(self):
         """helper method for ``setup_gui``"""
@@ -139,6 +139,7 @@ class Settings:
         self.nastran_is_3d_bars_update = True
         self.nastran_create_coords = True
         self.nastran_is_bar_axes = True
+        self.nastran_is_shell_mcids = True
 
     def load(self, settings):
         """helper method for ``setup_gui``"""
@@ -242,6 +243,8 @@ class Settings:
                           self.nastran_create_coords, True, auto_type=bool)
         self._set_setting(settings, setting_keys, ['nastran_is_bar_axes'],
                           self.nastran_is_bar_axes, True, auto_type=bool)
+        self._set_setting(settings, setting_keys, ['nastran_is_shell_mcids'],
+                          self.nastran_is_shell_mcids, True, auto_type=bool)
 
         #w = screen_shape.width()
         #h = screen_shape.height()
@@ -321,6 +324,7 @@ class Settings:
         settings.setValue('nastran_is_3d_bars_update', self.nastran_is_3d_bars_update)
         settings.setValue('nastran_create_coords', self.nastran_create_coords)
         settings.setValue('nastran_is_bar_axes', self.nastran_is_bar_axes)
+        settings.setValue('nastran_is_shell_mcids', self.nastran_is_shell_mcids)
 
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()

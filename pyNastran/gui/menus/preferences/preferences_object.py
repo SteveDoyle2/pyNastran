@@ -62,7 +62,7 @@ class PreferencesObject:
             'nastran_is_3d_bars' : settings.nastran_is_3d_bars,
             'nastran_is_3d_bars_update' : settings.nastran_is_3d_bars_update,
             'nastran_create_coords' : settings.nastran_create_coords,
-            'nastran_shell_mcids' : settings.nastran_shell_mcids,
+            'nastran_is_shell_mcids' : settings.nastran_is_shell_mcids,
 
             'clicked_ok' : False,
             'close' : False,

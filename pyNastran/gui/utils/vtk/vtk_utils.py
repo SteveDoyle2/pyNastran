@@ -16,7 +16,8 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     assert isinstance(nodes, np.ndarray), type(nodes)
     if points is None:
         points = vtk.vtkPoints()
-        nnodes = nodes.shape[0]
+        nnodes, ndim = nodes.shape
+        assert ndim == 3, nodes.shape
         points.SetNumberOfPoints(nnodes)
 
         # if we're in big endian, VTK won't work, so we byte swap
@@ -60,6 +61,15 @@ def create_vtk_cells_of_constant_element_type(grid, elements, etype):
 
     """
     nelements, nnodes_per_element = elements.shape
+    if etype == 1: # vertex
+        assert nnodes_per_element == 1, elements.shape
+    if etype == 3: # line
+        assert nnodes_per_element == 2, elements.shape
+    elif etype == 5:  # tri
+        assert nnodes_per_element == 3, elements.shape
+    elif etype in [9, 10]:  # quad, tet4
+        assert nnodes_per_element == 4, elements.shape
+
     # We were careful about how we defined the arrays, so the data
     # is contiguous when we ravel it.  Otherwise, you need to
     # deepcopy the arrays (deep=1).  However, numpy_to_vtk isn't so

@@ -449,7 +449,7 @@ class ForceTableResults(NastranTable):
 
     def __repr__(self):
         """defines str(self)"""
-        msg = 'DisplacementResults\n'
+        msg = 'ForceTableResults\n'
         msg += f'    title={self.titles!r}\n'
         msg += f'    subcase_id={self.subcase_id}\n'
         msg += f'    data_type={self.data_type!r}\n'

@@ -85,7 +85,7 @@ class PreferencesWindow(PyDialog):
         self._nastran_is_3d_bars_update = data['nastran_is_3d_bars_update']
         self._nastran_is_bar_axes = data['nastran_is_bar_axes']
         self._nastran_create_coords = data['nastran_create_coords']
-        self._nastran_shell_mcids = data['nastran_shell_mcids']
+        self._nastran_is_shell_mcids = data['nastran_is_shell_mcids']
 
         self.setWindowTitle('Preferences')
         self.create_widgets()
@@ -235,7 +235,7 @@ class PreferencesWindow(PyDialog):
 
         self.nastran_is_shell_mcid_checkbox = QCheckBox('Shell MCIDs')
         self.nastran_is_shell_mcid_checkbox.setToolTip('Calculate the Material Coordinate Systems for Shells')
-        self.nastran_is_shell_mcid_checkbox.setChecked(self._nastran_shell_mcids)
+        self.nastran_is_shell_mcid_checkbox.setChecked(self._nastran_is_shell_mcids)
 
         self.nastran_create_coords_checkbox = QCheckBox('Coords')
         self.nastran_create_coords_checkbox.setChecked(self._nastran_create_coords)
@@ -477,7 +477,7 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_3d_bars_update_checkbox.clicked.connect(self.on_nastran_is_3d_bars)
         self.nastran_is_bar_axes_checkbox.clicked.connect(self.on_nastran_is_bar_axes)
         self.nastran_create_coords_checkbox.clicked.connect(self.on_nastran_create_coords)
-        self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_shell_mcids)
+        self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
         #------------------------------------
 
         self.apply_button.clicked.connect(self.on_apply)
@@ -515,11 +515,11 @@ class PreferencesWindow(PyDialog):
         is_checked = self.nastran_create_coords_checkbox.isChecked()
         if self.win_parent is not None:
             self.win_parent.settings.nastran_create_coords = is_checked
-    def on_nastran_shell_mcids(self):
+    def on_nastran_is_shell_mcids(self):
         """set the nastran properties preferences"""
         is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
         if self.win_parent is not None:
-            self.win_parent.settings.nastran_shell_mcids = is_checked
+            self.win_parent.settings.nastran_is_shell_mcids = is_checked
 
     def on_font(self, value=None):
         """update the font for the current window"""
@@ -823,7 +823,7 @@ def main():  # pragma: no cover
         'nastran_is_3d_bars_update' : True,
         'nastran_is_bar_axes' : True,
         'nastran_create_coords' : True,
-        'nastran_shell_mcids' : True,
+        'nastran_is_shell_mcids' : True,
 
         'dim_max' : 502.,
 

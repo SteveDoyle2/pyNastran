@@ -74,6 +74,7 @@ from pyNastran.bdf.cards.elements.solid import (
 )
 from pyNastran.bdf.mesh_utils.delete_bad_elements import (
     tri_quality, quad_quality, get_min_max_theta)
+from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
 
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.utils.vtk.vtk_utils import (
@@ -4014,7 +4015,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             material_coord_res = GuiResult(
                 0, header='MaterialCoord', title='MaterialCoord',
                 location='centroid',
-                scalar=mcid_array, data_format='%i')
+                scalar=mcid_array, mask_value=-1, data_format='%i')
             cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
             form0.append(('MaterialCoord', icase, []))
             icase += 1
@@ -4176,6 +4177,39 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio)
             self.normals = normals
         return nid_to_pid_map, icase, cases, form
+
+    def _build_mcid_vectors(self, model: BDF, nplies: int):
+        """creates the shell material coordinate vectors"""
+        #nodes : (nnodes, 3) float list
+            #the nodes
+        #bars : (nbars, 2) int list
+            #the "bars" that represent the x/y axes of the coordinate systems
+
+        etype = 3 # vtkLine
+        for iply in range(nplies):
+            name = f'mcid ply={iply+1}'
+            nodes, bars = export_mcids(model, csv_filename=None, eids=None,
+                                       export_xaxis=True, export_yaxis=False,
+                                       iply=iply, log=None, debug=False)
+
+            nbars = len(bars)
+            assert nbars > 0, nbars
+
+            is_visible = False
+            self.gui.create_alternate_vtk_grid(
+                name, color=RED_FLOAT, line_width=3, opacity=1.0,
+                representation='surface', is_visible=is_visible, is_pickable=False)
+            grid = self.gui.alt_grids[name]
+            grid.Allocate(nbars, 1000)
+
+            # drop off the node/element id
+            nodes_array = np.array(nodes, dtype='float32')[:, 1:]
+            elements = np.array(bars, dtype='int32')[:, 1:] - 1
+            points = numpy_to_vtk_points(nodes_array, points=None, dtype='<f', deep=1)
+            grid.SetPoints(points)
+            create_vtk_cells_of_constant_element_type(grid, elements, etype)
+        return
+
 
     def _build_plotels(self, model):
         """creates the plotel actor"""
@@ -5144,7 +5178,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         elements, nelements, superelements = _get_elements_nelements_unvectorized(model)
 
         pids = np.zeros(nelements, 'int32')
-        material_coord = np.zeros(nelements, 'int32')
+        material_coord = np.full(nelements, -1, dtype='int32')
         material_theta = np.full(nelements, np.nan, dtype='float32')
         min_interior_angle = np.zeros(nelements, 'float32')
         max_interior_angle = np.zeros(nelements, 'float32')
@@ -6314,7 +6348,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             material_coord_res = GuiResult(
                 0, header='MaterialCoord', title='MaterialCoord',
                 location='centroid',
-                scalar=material_coord, data_format='%i')
+                scalar=material_coord, mask_value=-1, data_format='%i')
             cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
             form0.append(('MaterialCoord', icase, []))
             icase += 1
@@ -6483,6 +6517,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             'mids' : mids,
             'thickness' : thickness,
         }
+        nplies = None
+        if is_pshell:
+            nplies = 1
+        if is_pcomp:
+            nplies = nplies_pcomp.max()
+
+        if self.gui.settings.nastran_is_shell_mcids and nplies is not None:
+            self._build_mcid_vectors(model, nplies)
         return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
 
     def _build_materials(self, model, pcomp, pshell, is_pshell_pcomp,

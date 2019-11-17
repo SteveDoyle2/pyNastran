@@ -94,7 +94,7 @@ class TestNastranGUI(unittest.TestCase):
             #if hasattr(case, 'gpforce_array'):
                 #print(icase, case)
                 #asf
-        case, (unused_i, unused_name) = test.result_cases[60]
+        case, (unused_i, unused_name) = test.result_cases[59]
         str(case)
         gpforce = case.gpforce_array
         model_name = 'main'
