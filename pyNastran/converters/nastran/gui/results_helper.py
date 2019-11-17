@@ -9,7 +9,7 @@ import numpy as np
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult, GuiResultIDs
-from pyNastran.converters.nastran.geometry_helper import NastranGuiAttributes
+from pyNastran.converters.nastran.gui.geometry_helper import NastranGuiAttributes
 from pyNastran.converters.nastran.displacements import (
     DisplacementResults, ForceTableResults) #, TransientElementResults
 from pyNastran.op2.result_objects.stress_object import (
@@ -46,7 +46,7 @@ class NastranGuiResults(NastranGuiAttributes):
         nastran_res = GridPointForceResult(subcase_id, header, title, grid_point_forces)
 
         itime = 0
-
+        print('GridPointForceResult', icase)
         cases[icase] = (nastran_res, (itime, 'Grid Point Forces'))
         formii = ('Grid Point Forces', icase, [])
         form_dict[(key, itime)].append(formii)
@@ -264,7 +264,9 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_force(self, cases, model: OP2, key, icase: int, itime: int,
-                        form_dict, header_dict, keys_map) -> int:
+                        form_dict: Dict[Any, Any],
+                        header_dict: Dict[Any, Any],
+                        keys_map: Dict[Any, Any]) -> int:
         """creates the force plots"""
         #assert isinstance(key, int), key
         assert isinstance(icase, int), icase
@@ -275,7 +277,10 @@ class NastranGuiResults(NastranGuiAttributes):
         return icase
 
     def _fill_op2_stress(self, cases, model: OP2, key, icase: int, itime: int,
-                         form_dict, header_dict, keys_map, is_stress=True) -> int:
+                         form_dict: Dict[Any, Any],
+                         header_dict: Dict[Any, Any],
+                         keys_map: Dict[Any, Any],
+                         is_stress: bool=True) -> int:
         """creates the stress plots"""
         assert isinstance(icase, int), icase
         assert isinstance(form_dict, dict), form_dict
@@ -291,147 +296,17 @@ class NastranGuiResults(NastranGuiAttributes):
                                      form_dict, header_dict, keys_map,
                                      is_stress=False)
 
-    def _get_stress_times(self, model: OP2, isubcase: int) -> Tuple[bool, bool, bool, Any]:
-        table_types = self._get_stress_table_types()
-        is_real = True
-        is_data = False
-        is_static = False
-        times = None
-        for table_type in table_types:
-            if not hasattr(model, table_type):
-                # print('no table_type=%s' % table_type)
-                continue
-            table = getattr(model, table_type)
-            if isubcase in table:
-                is_data = True
-                case = table[isubcase]
-                is_real = case.is_real
-                if case.nonlinear_factor is not None:
-                    times = case._times
-                    is_static = False
-                else:
-                    is_static = True
-                    times = np.zeros(1, dtype='int32')
-                break
-                #return is_data, is_static, is_real, times
-        return is_data, is_static, is_real, times
-
-    def _get_stress_table_types(self) -> List[str]:
-        """
-        Gets the list of Nastran stress objects that the GUI supports
-        """
-        table_types = [
-            # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
-            # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
-            'celas1_stress',
-            'celas2_stress',
-            'celas3_stress',
-            'celas4_stress',
-
-            # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
-            'celas1_strain',
-            'celas2_strain',
-            'celas3_strain',
-            'celas4_strain',
-
-            # OES - isotropic CROD/CONROD/CTUBE stress
-            'crod_stress',
-            'conrod_stress',
-            'ctube_stress',
-
-            # OES - isotropic CROD/CONROD/CTUBE strain
-            'crod_strain',
-            'conrod_strain',
-            'ctube_strain',
-
-            # OES - isotropic CBAR stress
-            'cbar_stress',
-            # OES - isotropic CBAR strain
-            'cbar_strain',
-            # OES - isotropic CBEAM stress
-            'cbeam_stress',
-            # OES - isotropic CBEAM strain
-            'cbeam_strain',
-
-            # OES - isotropic CTRIA3/CQUAD4 stress
-            'ctria3_stress',
-            'cquad4_stress',
-
-            # OES - isotropic CTRIA3/CQUAD4 strain
-            'ctria3_strain',
-            'cquad4_strain',
-
-            # OES - isotropic CTETRA/CHEXA/CPENTA stress
-            'ctetra_stress',
-            'chexa_stress',
-            'cpenta_stress',
-
-            # OES - isotropic CTETRA/CHEXA/CPENTA strain
-            'ctetra_strain',
-            'chexa_strain',
-            'cpenta_strain',
-
-            # OES - CSHEAR stress
-            'cshear_stress',
-            # OES - CSHEAR strain
-            'cshear_strain',
-            # OES - CEALS1 224, CELAS3 225
-            'nonlinear_spring_stress',
-            # OES - GAPNL 86
-            'nonlinear_cgap_stress',
-            # OES - CBUSH 226
-            'nolinear_cbush_stress',
-        ]
-
-        table_types += [
-            # OES - CTRIAX6
-            'ctriax_stress',
-            'ctriax_strain',
-
-            'cbush_stress',
-            'cbush_strain',
-            'cbush1d_stress_strain',
-
-            # OES - nonlinear CROD/CONROD/CTUBE stress
-            'nonlinear_rod_stress',
-            'nonlinear_rod_strain',
-
-            # OESNLXR - CTRIA3/CQUAD4 stress
-            'nonlinear_plate_stress',
-            'nonlinear_plate_strain',
-            #'hyperelastic_plate_stress',
-            'hyperelastic_cquad4_strain',
-
-            # OES - composite CTRIA3/CQUAD4 stress
-            'cquad4_composite_stress',
-            'cquad8_composite_stress',
-            'ctria3_composite_stress',
-            'ctria6_composite_stress',
-
-            'cquad4_composite_strain',
-            'cquad8_composite_strain',
-            'ctria3_composite_strain',
-            'ctria6_composite_strain',
-
-            # OGS1 - grid point stresses
-            'grid_point_surface_stresses',        # tCode=26
-            'grid_point_volume_stresses',  # tCode=27
-        ]
-        return table_types
-
     def _fill_op2_time_gpstress(self, cases, model: OP2,
                                 key, icase: int, itime: int,
                                 form_dict, header_dict, keys_map) -> int:
         """
         Creates the time accurate grid point stress objects for the pyNastranGUI
         """
-        #print(key, icase, itime)
         if key in model.grid_point_stresses_volume_direct:
             case = model.grid_point_stresses_volume_direct[key]
 
-            #print(''.join(case.get_stats()))
             if case.is_complex:
-                return icase
+                return
 
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
@@ -560,8 +435,6 @@ class NastranGuiResults(NastranGuiAttributes):
             if not is_true:
                 continue
             resdict, name, unused_flag = strain_energies[istrain_energy]
-
-            #print('key =', key)
             case = resdict[key]
 
             dt = case._times[itime]
@@ -572,36 +445,30 @@ class NastranGuiResults(NastranGuiAttributes):
 
             if case.is_complex:
                 continue
-            #print('key =', key)
-            #print(case)
-            #print(case.get_headers())
-            #print(case.data)
             itotals = np.where(case.element[itime, :] == 100000000)[0]
             assert len(itotals) == 1, itotals
             itotal = itotals[0]
-            #print('itotal = ', itotal)
 
             eidsi2 = case.element[itime, :itotal]
 
             # find eids2i in eids
             i = np.searchsorted(eids, eidsi2)
-            if 0 and name == 'CELAS1':  # pragma: no cover
-                # check that the elements were mapped correctly
-                eids_actual = self.element_ids[i]
-                for eid in eids_actual:
-                    element = self.model.elements[eid]
-                    assert element.type == name, element
-                assert np.all(eids_actual == eidsi2)
+            #if 0 and name == 'CELAS1':  # pragma: no cover
+                ## check that the elements were mapped correctly
+                #eids_actual = self.element_ids[i]
+                #for eid in eids_actual:
+                    #element = self.model.elements[eid]
+                    #assert element.type == name, element
+                #assert np.all(eids_actual == eidsi2)
+
             if len(i) != len(np.unique(i)):
-                msg = 'Strain Energy i%s=%s is not unique' % (name, str(i))
-                #print('eids = %s\n' % str(list(eids)))
-                #print('eidsi = %s\n' % str(list(eidsi)))
+                msg = 'Strain Energy i%s=%s is not unique because there are missing elements' % (name, str(i))
                 model.log.warning(msg)
                 continue
-                #raise RuntimeError(msg)
 
             # verifies the try-except is what we think it is (missing elements)
             esei = case.data[itime, :itotal, 0]
+
             try:
                 ese[i] = esei
                 percent[i] = case.data[itime, :itotal, 1]
@@ -610,20 +477,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 model.log.warning('error reading Strain Energy')
                 continue
 
-        #ese
-
         # helicopter.dat
         #CBEAM : 10
         #CQUAD4 : 11388
         #CROD : 544
         #CTRIA3 : 151
         # nelements = 12093
-
-        #try:
-            #header = _get_nastran_header(case, dt, itime)
-            #header_dict[(key, itime)] = header
-        #except AttributeError:
-            #pass
 
         if np.any(np.isfinite(ese)):
             ese_res = GuiResult(subcase_id, header='Strain Energy: ' + header,
@@ -818,9 +677,12 @@ class NastranGuiResults(NastranGuiAttributes):
                          case.data[itime, 1::-1, 2]]).max(axis=0)
         return found_force, fx, fy, fz, rx, ry, rz, is_element_on
 
-    def _fill_op2_time_centroidal_force(self, cases, model,
-                                        key, icase, itime,
-                                        form_dict, header_dict, keys_map):
+    def _fill_op2_time_centroidal_force(self, cases, model: OP2,
+                                        key: Tuple[Any, int], icase: int, itime: int,
+                                        form_dict: Dict[Any, Any],
+                                        #form_dict: Dict[Tuple[Any, int], Any],
+                                        header_dict: Dict[Any, Any],
+                                        keys_map: Dict[Any, Any]) -> int:
         """
         Creates the time accurate strain energy objects for the pyNastranGUI
         """
@@ -923,9 +785,11 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase += 6
         return icase
 
-    def _fill_op2_time_centroidal_composite_stress(self, cases, model, key, icase, itime,
-                                                   form_dict, header_dict, keys_map,
-                                                   is_stress=True):
+    def _fill_op2_time_centroidal_composite_stress(self, cases, model, key, icase: int, itime: int,
+                                                   form_dict: Dict[Any, Any],
+                                                   header_dict: Dict[Any, Any],
+                                                   keys_map: Dict[Any, Any],
+                                                   is_stress: int=True) -> int:
         nelements = self.nelements
         #oxx = np.full(nelements, np.nan, dtype='float32')
         #oyy = np.full(nelements, np.nan, dtype='float32')
@@ -970,9 +834,12 @@ class NastranGuiResults(NastranGuiAttributes):
             icase += 1
         return icase
 
-    def _fill_op2_time_centroidal_stress(self, cases, model, key, icase, itime,
-                                         form_dict, header_dict, keys_map,
-                                         is_stress=True):
+    def _fill_op2_time_centroidal_stress(self, cases, model: OP2,
+                                         key, icase: int, itime: int,
+                                         form_dict: Dict[Any, Any],
+                                         header_dict: Dict[Any, Any],
+                                         keys_map: Dict[Any, Any],
+                                         is_stress=True) -> int:
         """
         Creates the time accurate stress objects for the pyNastranGUI
         """
@@ -1365,6 +1232,10 @@ def _get_times(model, key):
     return is_data, is_static, is_real, times
 
 def get_tnorm_abs_max(case, t123, tnorm, itime):
+    """
+    The normalization value is consistent for static, frequency, transient,
+    and load step cases, but is independent for modal cases.
+    """
     if case.analysis_code in [1, 5, 6, 10, 11]:
         # dependent
         # 1-statics
@@ -1424,3 +1295,133 @@ def read_des_filename(des_filename):
         'eids' : eids,
         'fractional_mass' : fractional_mass,}
     return desvars
+
+
+def _get_stress_table_types() -> List[str]:  # pragma: no cover
+    """
+    Gets the list of Nastran stress objects that the GUI supports
+    """
+    table_types = [
+        # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
+        # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
+        'celas1_stress',
+        'celas2_stress',
+        'celas3_stress',
+        'celas4_stress',
+
+        # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
+        'celas1_strain',
+        'celas2_strain',
+        'celas3_strain',
+        'celas4_strain',
+
+        # OES - isotropic CROD/CONROD/CTUBE stress
+        'crod_stress',
+        'conrod_stress',
+        'ctube_stress',
+
+        # OES - isotropic CROD/CONROD/CTUBE strain
+        'crod_strain',
+        'conrod_strain',
+        'ctube_strain',
+
+        # OES - isotropic CBAR stress
+        'cbar_stress',
+        # OES - isotropic CBAR strain
+        'cbar_strain',
+        # OES - isotropic CBEAM stress
+        'cbeam_stress',
+        # OES - isotropic CBEAM strain
+        'cbeam_strain',
+
+        # OES - isotropic CTRIA3/CQUAD4 stress
+        'ctria3_stress',
+        'cquad4_stress',
+
+        # OES - isotropic CTRIA3/CQUAD4 strain
+        'ctria3_strain',
+        'cquad4_strain',
+
+        # OES - isotropic CTETRA/CHEXA/CPENTA stress
+        'ctetra_stress',
+        'chexa_stress',
+        'cpenta_stress',
+
+        # OES - isotropic CTETRA/CHEXA/CPENTA strain
+        'ctetra_strain',
+        'chexa_strain',
+        'cpenta_strain',
+
+        # OES - CSHEAR stress
+        'cshear_stress',
+        # OES - CSHEAR strain
+        'cshear_strain',
+        # OES - CEALS1 224, CELAS3 225
+        'nonlinear_spring_stress',
+        # OES - GAPNL 86
+        'nonlinear_cgap_stress',
+        # OES - CBUSH 226
+        'nolinear_cbush_stress',
+    ]
+
+    table_types += [
+        # OES - CTRIAX6
+        'ctriax_stress',
+        'ctriax_strain',
+
+        'cbush_stress',
+        'cbush_strain',
+        'cbush1d_stress_strain',
+
+        # OES - nonlinear CROD/CONROD/CTUBE stress
+        'nonlinear_rod_stress',
+        'nonlinear_rod_strain',
+
+        # OESNLXR - CTRIA3/CQUAD4 stress
+        'nonlinear_plate_stress',
+        'nonlinear_plate_strain',
+        #'hyperelastic_plate_stress',
+        'hyperelastic_cquad4_strain',
+
+        # OES - composite CTRIA3/CQUAD4 stress
+        'cquad4_composite_stress',
+        'cquad8_composite_stress',
+        'ctria3_composite_stress',
+        'ctria6_composite_stress',
+
+        'cquad4_composite_strain',
+        'cquad8_composite_strain',
+        'ctria3_composite_strain',
+        'ctria6_composite_strain',
+
+        # OGS1 - grid point stresses
+        'grid_point_surface_stresses',        # tCode=26
+        'grid_point_volume_stresses',  # tCode=27
+    ]
+    return table_types
+
+def _get_stress_times(model: OP2, isubcase: int) -> Tuple[bool, bool, bool, Any]: # pragma: no cover
+    """Are there any stress/strain results?"""
+    table_types = _get_stress_table_types()
+    is_real = True
+    is_data = False
+    is_static = False
+    times = None
+    for table_type in table_types:
+        if not hasattr(model, table_type):
+            # print('no table_type=%s' % table_type)
+            continue
+        table = getattr(model, table_type)
+        if isubcase in table:
+            is_data = True
+            case = table[isubcase]
+            is_real = case.is_real
+            if case.nonlinear_factor is not None:
+                times = case._times
+                is_static = False
+            else:
+                is_static = True
+                times = np.zeros(1, dtype='int32')
+            break
+            #return is_data, is_static, is_real, times
+    return is_data, is_static, is_real, times

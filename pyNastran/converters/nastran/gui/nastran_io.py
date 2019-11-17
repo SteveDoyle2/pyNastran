@@ -6,6 +6,7 @@ import traceback
 from itertools import chain
 from io import StringIO
 from collections import defaultdict, OrderedDict
+from typing import List, Dict, Tuple, Any
 
 from pyNastran import __version__
 from pyNastran.op2.result_objects.stress_object import StressObject
@@ -34,12 +35,8 @@ from cpylog import properties as log_properties
 #: we have to call this before vtk; you can't just try-except it
 #: unused_import
 from pyNastran.gui.qt_version import qt_version
-if qt_version == 'pyqt4':
-    import PyQt4
-elif qt_version == 'pyqt5':
+if qt_version == 'pyqt5':
     import PyQt5
-elif qt_version == 'pyside':
-    import PySide
 elif qt_version == 'pyside2':
     import PySide2
 else:
@@ -57,7 +54,8 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
 #from pyNastran import is_release
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.nan import (
-    isfinite, isfinite_and_greater_than, isfinite_and_nonzero)
+    isfinite, isfinite_and_greater_than, isfinite_and_nonzero,
+    isgreater_int)
 
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -87,7 +85,8 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from .wildcards import IS_H5PY, GEOM_METHODS_BDF
 from .geometry_helper import NastranGeometryHelper, get_material_arrays, get_suport_node_ids
 from .results_helper import NastranGuiResults, _get_times
-from .displacements import ForceTableResults, ElementalTableResults
+from ..displacements import ForceTableResults, ElementalTableResults
+from .bdf_vectorized import map_elements_vectorized_fill, map_elements_vectorized_fill_spring
 from .menus.setup_model_sidebar import ModelSidebar
 
 from pyNastran.op2.op2 import OP2
@@ -493,7 +492,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         xyz_cid0 = {}
         nid_cp_cd = {}
         icd_transform = {}
-        nid_map = {}
+        #nid_map = {}
         #inode = 0
         for super_id, modeli in sorted(models.items()):
             out = modeli.get_displacement_index_xyz_cp_cd(
@@ -558,16 +557,17 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         all_nids = nid_cp_cd_out[:, 0]
         unids = np.unique(all_nids)
 
+        log = self.log
         if not len(all_nids) == len(unids):
             if model.sebulk and check_mirror:
                 from pyNastran.bdf.mesh_utils.bdf_renumber import superelement_renumber
                 bdf_filename_out = 'spike.bdf'
-                _model = superelement_renumber(
+                unused_model = superelement_renumber(
                     model, bdf_filename_out=bdf_filename_out,
                     size=8, is_double=False, starting_id_dict=None,
                     cards_to_skip=None, log=None, debug=False)
 
-                _model2 = BDF(debug=None, log=self.log, mode='msc')
+                _model2 = BDF(debug=None, log=log, mode='msc')
                 _model2.read_bdf(bdf_filename=bdf_filename_out,
                                  validate=False, xref=False, punch=False, read_includes=True,
                                  save_file_structure=False, encoding=model._encoding)
@@ -614,10 +614,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         #_model, mapper = bdf_renumber(
                             #superelement, bdf_filename_out, size=8, is_double=False,
                             #starting_id_dict=starting_id_dict, round_ids=False,
-                            #cards_to_skip=None, log=self.log, debug=False)
+                            #cards_to_skip=None, log=log, debug=False)
                         #starting_id_dict = get_starting_ids_dict_from_mapper(
                             #_model, mapper)
-                        #superelement2 = BDF(debug=True, log=self.log, mode='msc')
+                        #superelement2 = BDF(debug=True, log=log, mode='msc')
                         #superelement2.read_bdf(bdf_filename_out)
                         #model.superelement_models[seid] = superelement2
                         ##os.remove(bdf_filename_out)
@@ -687,21 +687,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if ext == '.pch':
             punch = True
 
+        log = self.gui.log
         self.model_type = 'nastran'
         if ext == '.op2':
-            model = OP2Geom(make_geom=True, debug=False, log=self.gui.log,
+            model = OP2Geom(make_geom=True, debug=False, log=log,
                             debug_file=None)
             model.clear_results()
             model.read_op2(op2_filename=bdf_filename)
         elif ext == '.h5' and IS_H5PY:
-            model = BDF(log=self.gui.log, debug=True)
+            model = BDF(log=log, debug=True)
             model.load_hdf5_filename(bdf_filename)
             model.validate()
         elif ext == '.obj':
-            model = BDF(log=self.gui.log, debug=True)
+            model = BDF(log=log, debug=True)
             model.load(obj_filename=bdf_filename)
         else:  # read the bdf/punch
-            model = BDF(log=self.gui.log, debug=True)
+            model = BDF(log=log, debug=True)
             model.read_bdf(bdf_filename,
                            punch=punch, xref=False,
                            validate=True)
@@ -830,9 +831,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nmasses = len(model.masses)
         nplotels = len(model.plotels)
         nrigid = len(model.rigid_elements)
-
-        #if 'CTRIAX6' in model.card_count and nelements == 0: # skipping...
-            #return
 
         #nmpc = len(model.mpcs)  # really should only be allowed if we have it in a subcase
         if len(model.superelement_models):
@@ -988,7 +986,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if nnodes_array.max() > -1:
                 nnodes_res = GuiResult(subcase_id, 'NNodes/Elem', 'NNodes/Elem',
                                        'centroid', nnodes_array,
-                                       mask_value=0,
+                                       mask_value=-1,
                                        nlabels=None,
                                        labelsize=None,
                                        ncolors=None,
@@ -1147,9 +1145,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         grid = self.gui.grid
 
         nelements = self.nelements
-        dim_array = np.zeros(nelements, 'int32')
+        dim_array = np.full(nelements, -1, dtype='int32')
         pids_array = np.zeros(nelements, 'int32')
-        nnodes_array = np.zeros(nelements, 'int32')
+        nnodes_array = np.full(nelements, -1, dtype='int32')
         #mids = np.zeros(nelements, 'int32')
         #material_coord = np.zeros(nelements, 'int32')
         #min_interior_angle = np.zeros(nelements, 'float32')
@@ -1250,104 +1248,121 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         nodes = model.nodes
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+        log = self.log
+        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.celas1, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.celas2, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.celas3, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.celas4, cell_type_line, cell_type_point)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cdamp1, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cdamp2, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cdamp3, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cdamp4, cell_type_line, cell_type_point)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cvisc, cell_type_line, cell_type_point)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.plotel, cell_type_line, nnodesi=2, dimi=2)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill_spring(
+        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cbush, cell_type_line, cell_type_point)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.conrod, cell_type_line, nnodesi=2, dimi=2)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.crod, cell_type_line, nnodesi=2, dimi=2)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.ctube, cell_type_line, nnodesi=2, dimi=2)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cbar, cell_type_line, nnodesi=2, dimi=1)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
@@ -1355,34 +1370,39 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.cbeam, cell_type_line, nnodesi=2, dimi=1)
 
         #model.cbend
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cshear, cell_type_quad4, nnodesi=4, dimi=2)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.ctria3, cell_type_tri3, nnodesi=3, dimi=2)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cquad4, cell_type_quad4, nnodesi=4, dimi=2)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.ctria6, cell_type_tri6, nnodesi=6, dimi=2,
             allow0=True, cell_type_allow=cell_type_tri3)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
@@ -1390,14 +1410,16 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.cquad8, cell_type_quad8, nnodesi=8, dimi=2,
             allow0=True, cell_type_allow=cell_type_quad8)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.ctriar, cell_type_tri6, nnodesi=6, dimi=2,
             allow0=True, cell_type_allow=cell_type_tri3)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
@@ -1405,53 +1427,61 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.cquadr, cell_type_tri6, nnodesi=6, dimi=2,
             allow0=True, cell_type_allow=cell_type_quad4)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.ctetra4, cell_type_tetra4, nnodesi=4, dimi=3)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cpenta6, cell_type_penta6, nnodesi=8, dimi=3)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.chexa8, cell_type_hexa8, nnodesi=8, dimi=3)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cpyram5, cell_type_pyram5, nnodesi=8, dimi=3)
 
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.ctetra10, cell_type_tetra10, nnodesi=4, dimi=3,
             allow0=True, cell_type_allow=cell_type_tetra4)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.cpenta15, cell_type_penta15, nnodesi=8, dimi=3,
             allow0=True, cell_type_allow=cell_type_penta6)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
             cell_types_array, cell_offsets_array,
             model.chexa20, cell_type_hexa20, nnodesi=8, dimi=3,
             allow0=True, cell_type_allow=cell_type_hexa8)
-        ieid0, cell_offset0 = self._map_elements_vectorized_fill(
+        ieid0, cell_offset0 = map_elements_vectorized_fill(
+            log,
             ieid0, cell_offset0,
             nodes, nids_list,
             eids_array, pids_array, nnodes_array, dim_array,
@@ -1517,7 +1547,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             ]
             for key in potential_elements_found:
                 if key not in etypes:
-                    self.log.warning('is %s an element?' % key)
+                    log.warning('is %s an element?' % key)
 
             msg = (
                 'Cell Type is not defined (cell_type=0).\n'
@@ -1573,171 +1603,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         grid.SetCells(vtk_cell_types, vtk_cell_offsets, vtk_cells)
         return results
 
-    def _map_elements_vectorized_fill_spring(self,
-                                             ieid0, cell_offset0,
-                                             nodes, nids_list,
-                                             eids_array, pids_array, nnodes_array, dim_array,
-                                             cell_types_array, cell_offsets_array,
-                                             model_obj, cell_type_line, cell_type_point):
-        """helper method for ``map_elements_vectorized``"""
-        nelems = len(model_obj)
-        if nelems:
-            ieid0_in = ieid0
-            dimi = 1
-            nnodesi = 2
-            elem = model_obj
-            elem.make_current()
-            self.log.debug('%s; nelem=%s nnodes=%s' % (
-                model_obj.card_name, nelems, model_obj.nids.shape[1]))
-
-            ieid = np.arange(ieid0, ieid0 + nelems)
-            eid_type = np.full(nelems, cell_type_line, dtype='int32')
-            dim = np.full(nelems, dimi, dtype='int32')
-            nnodes = np.full((nelems, 1), nnodesi, dtype='int32')
-            dim_array[ieid] = dim
-
-            eid = elem.eid
-            eids_array[ieid] = eid
-
-            nids = elem.nids
-            inonzero = np.where(nids[:, 1] > 0)[0]
-            izero = np.where(nids[:, 1] == 0)[0]
-
-            if len(inonzero):
-                cell_types_array[ieid[inonzero]] = cell_type_line
-
-            nzero = len(izero)
-            if nzero:
-                #raise NotImplementedError('izero')
-                eid_type[izero] = cell_type_point
-                nnodes[izero] = 1
-                cell_types_array[ieid[izero]] = cell_type_point
-            assert len(ieid) == len(nnodes), 'len(ieid)=%s len(nnodes)=%s' % (len(ieid), nnodes)
-            nnodes_array[ieid] = nnodes.ravel()
-
-            if hasattr(elem, 'pid'):
-                pid = elem.pid
-                pids_array[ieid] = pid
-            inids = nodes.get_node_index(nids, allow0=True)
-
-            nnodes_inids = np.hstack([nnodes, inids])#.ravel()
-            #print("  nnodes_inids=", nnodes_inids)
-            if nzero:
-                nnodes_inids_ravel = nnodes_inids.flatten()
-                index_minus1 = np.where(nnodes_inids_ravel != -1)[0]
-                nnodes_inids_cleaned = nnodes_inids_ravel[index_minus1]
-                assert -1 not in nnodes_inids_cleaned, nnodes_inids_cleaned
-                nids_list.append(nnodes_inids_cleaned)
-            else:
-                nids_list.append(nnodes_inids.ravel())
-
-            nnodes[0] = -1
-            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
-            #print("nnodes =", nnodes)
-            #print('offset0=%s cumsum=%s' % (cell_offset0, cumsum))
-            self.log.debug('  ieid = %s' % ieid)
-            assert len(ieid) == nelems
-            assert len(ieid) == len(cumsum)
-            cell_offsets_array[ieid] = cumsum
-            ieid0 += nelems
-            self.log.debug("  ieid0_in=%s ieid0_out=%s" % (ieid0_in, ieid0))
-            cell_offset0 += cumsum[-1]
-            #print('nids_list[%s] = %s' % (model_obj.card_name, nids_list[-1]))
-            #print('cell_offsets_array =', cell_offsets_array)
-        return ieid0, cell_offset0
-
-    def _map_elements_vectorized_fill(self,
-                                      ieid0, cell_offset0,
-                                      nodes, nids_list,
-                                      eids_array, pids_array, nnodes_array, dim_array,
-                                      cell_types_array, cell_offsets_array,
-                                      model_obj, cell_type, nnodesi=None, dimi=None,
-                                      allow0=False, cell_type_allow=None):
-        """helper method for ``map_elements_vectorized``"""
-        assert nnodesi is not None
-        assert dimi is not None
-
-        nelems = len(model_obj)
-        #print('nelements =', nelems)
-        if nelems:
-            ieid0_in = ieid0
-            elem = model_obj
-            elem.make_current()
-            try:
-                nnodes = model_obj.nids.shape[1]
-            except IndexError:
-                self.log.info('%s; nelem=%s nnodes=???' % (
-                    model_obj.card_name, nelems))
-                raise
-
-            self.log.debug('%s; nelem=%s nnodes=%s' % (
-                model_obj.card_name, nelems, nnodes))
-            eid = elem.eid
-            ieid = np.arange(ieid0, ieid0 + nelems)
-            dim = np.full(nelems, dimi, dtype='int32')
-            dim_array[ieid] = dim
-
-            nids = elem.nids
-            #print('nids =', nids)
-            if hasattr(elem, 'pid'):
-                pid = elem.pid
-                pids_array[ieid] = pid
-
-            try:
-                inids = nodes.get_node_index(nids, allow0=allow0)
-            except:
-                bdf_file = StringIO()
-                model_obj.write_card(bdf_file=bdf_file)
-                print(bdf_file.getvalue())
-                raise
-            if inids.min() == -1:
-                nrequired = elem.nrequired
-                #print('nrequired =', nrequired)
-                #print('nids.shape =', nids.shape)
-                #print('inids.shape =', inids.shape)
-                inids = inids[:, :nrequired]
-                nnodesi = nrequired
-                assert cell_type_allow is not None
-                unused_eid_type = np.full(nelems, cell_type_allow, dtype='int32')
-            else:
-                unused_eid_type = np.full(nelems, cell_type, dtype='int32')
-
-            nnodes = np.full((nelems, 1), nnodesi, dtype='int32')
-            if len(ieid) != len(nnodes):
-                msg = 'len(ieid)=%s len(nnodes)=%s' % (len(ieid), len(nnodes))
-                raise RuntimeError(msg)
-
-            # nnodes is a 2D column matrix and nnodes_array is a 1D array,
-            # so we ravel it
-            nnodes_array[ieid] = nnodes.ravel()
-            assert -1 not in inids, inids
-            nnodes_inids = np.hstack([nnodes, inids])
-            nids_list.append(nnodes_inids)
-            self.log.debug('  ieid = %s' % ieid)
-            assert len(ieid) == nelems
-
-            nnodes[0] = -1
-            cumsum = cell_offset0 + np.cumsum(nnodes + 1)
-            assert len(ieid) == len(cumsum)
-            try:
-                eids_array[ieid] = eid
-            except IndexError:
-                # this hits when an element doesn't correctly implement make_current()
-                self.log.error('nelems = %s' % nelems)
-                self.log.error('card_count = %s' % model_obj.model.card_count)
-                self.log.error('eids_array = %s' % eids_array)
-                self.log.error('eids_array.shape = %s' % str(eids_array.shape))
-                self.log.error('ieid.max() = %s' % ieid.max())
-                raise
-            cell_types_array[ieid] = cell_type
-            cell_offsets_array[ieid] = cumsum
-            ieid0 += nelems
-            cell_offset0 += cumsum[-1]
-            #print('nids_list[%s] = %s' % (model_obj.card_name, nids_list[-1]))
-            #print('cell_offsets_array =', cell_offsets_array)
-            self.log.debug("  ieid0_in=%s ieid0_out=%s" % (ieid0_in, ieid0))
-        return ieid0, cell_offset0
-
     def _get_model_vectorized(self, bdf_filename):
         """Loads the BDF/OP2 geometry"""
         ext = os.path.splitext(bdf_filename)[1].lower()
@@ -1746,16 +1611,17 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             punch = True
 
         self.model_type = 'nastran'
+        log = self.log
         if ext == '.op2':
             from pyNastran.dev.bdf_vectorized2.op2_geom_vectorized import (
                 OP2Geom as OP2Geom_)
-            model = OP2Geom_(make_geom=True, debug=False, log=self.log,
+            model = OP2Geom_(make_geom=True, debug=False, log=log,
                              debug_file=None)
             model.clear_results()
             model.read_op2(op2_filename=bdf_filename)
         else:  # read the bdf/punch
             from pyNastran.dev.bdf_vectorized2.bdf_vectorized import BDF as BDF_
-            model = BDF_(log=self.log, debug=True)
+            model = BDF_(log=log, debug=True)
 
             # static_elements.bdf
             #skip_cards = [
@@ -2074,7 +1940,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     raise RuntimeError(msg)
 
                 for unused_label, aesurf in sorted(labels_to_aesurfs.items()):
-                    reset_labels = False
+                    #reset_labels = False
                     cs_name = '%s_control_surface' % aesurf.label
                     self.set_caero_control_surface_grid(
                         cs_name, cs_box_ids[cs_name],
@@ -2748,7 +2614,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         spc_to_subcase = defaultdict(list)
         mpc_to_subcase = defaultdict(list)
-        suport1_to_subcase = defaultdict(list)
+        #suport1_to_subcase = defaultdict(list)
         for subcase_id, subcase in sorted(model.subcases.items()):
             if 'SPC' in subcase:
                 spc_id = subcase.get_parameter('SPC')[0]
@@ -3347,7 +3213,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         pids_array = np.zeros(nelements, dtype='int32')
         eids_array = np.zeros(nelements, dtype='int32')
         mcid_array = np.full(nelements, -1, dtype='int32')
-        theta_array = np.full(nelements, np.nan, dtype='float32')
+        material_theta_array = np.full(nelements, np.nan, dtype='float32')
         dim_array = np.full(nelements, -1, dtype='int32')
         nnodes_array = np.full(nelements, -1, dtype='int32')
 
@@ -3363,7 +3229,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         taper_ratio = np.zeros(nelements, 'float32')
         min_edge_length = np.zeros(nelements, 'float32')
         normals = np.full((nelements, 3), np.nan, 'float32')
-
 
         nids_list = []
         ieid = 0
@@ -3435,7 +3300,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 normali = np.cross(p1 - p2, p1 - p3)
                 if isinstance(elem.theta_mcid, float):
-                    theta_array[ieid] = elem.theta_mcid
+                    material_theta_array[ieid] = elem.theta_mcid
                 else:
                     mcid_array[ieid] = elem.theta_mcid
                 nnodes = 3
@@ -3452,7 +3317,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                 normali = np.cross(p1 - p3, p2 - p4)
                 if isinstance(elem.theta_mcid, float):
-                    theta_array[ieid] = elem.theta_mcid
+                    material_theta_array[ieid] = elem.theta_mcid
                 else:
                     mcid_array[ieid] = elem.theta_mcid
                 nnodes = 4
@@ -3477,7 +3342,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi) = out
                 normali = np.cross(p1 - p2, p1 - p3)
                 if isinstance(elem.theta_mcid, float):
-                    theta_array[ieid] = elem.theta_mcid
+                    material_theta_array[ieid] = elem.theta_mcid
                 else:
                     mcid_array[ieid] = elem.theta_mcid
                 dim = 2
@@ -3500,7 +3365,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                  min_thetai, max_thetai, dideal_thetai, min_edge_lengthi, max_warp) = out
                 normali = np.cross(p1 - p3, p2 - p4)
                 if isinstance(elem.theta_mcid, float):
-                    theta_array[ieid] = elem.theta_mcid
+                    material_theta_array[ieid] = elem.theta_mcid
                 else:
                     mcid_array[ieid] = elem.theta_mcid
                 nnodes = 4
@@ -3910,8 +3775,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.gui.log_error(sout)
                 print(sout)
 
-
-        #if mcid_array.max() > -1:
+        #if isgreater_int(mcid_array, -1):
             #mcid_res = GuiResult(subcase_id, 'Material Coordinate System', 'MaterialCoord',
                                  #'centroid', mcid_array,
                                  #mask_value=-1,
@@ -3948,7 +3812,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #material_coord = None
             #icase, normals = self._build_normals_quality(
                 #model, nelements, cases, form0, icase,
-                #xyz_cid0, material_coord,
+                #xyz_cid0, material_coord, material_theta,
                 #min_interior_angle, max_interior_angle, dideal_theta,
                 #area, max_skew_angle, taper_ratio,
                 #max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio)
@@ -4146,7 +4010,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             form0.append(('ElementDim', icase, []))
             icase += 1
 
-        if mcid_array is not None and np.abs(mcid_array).max() > 0:
+        if isgreater_int(mcid_array, -1):
             material_coord_res = GuiResult(
                 0, header='MaterialCoord', title='MaterialCoord',
                 location='centroid',
@@ -4154,6 +4018,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
             form0.append(('MaterialCoord', icase, []))
             icase += 1
+        if isfinite(material_theta_array):
+            material_theta_res = GuiResult(
+                0, header='MaterialTheta', title='MaterialTheta',
+                location='centroid',
+                scalar=material_theta_array, data_format='%.3f')
+            cases[icase] = (material_theta_res, (0, 'MaterialTheta'))
+            form0.append(('MaterialTheta', icase, []))
+            icase += 1
+
         #print(normals)
         #----------------------------------------------------------
         # finishing up vtk
@@ -4197,14 +4070,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if IS_TESTING:
             self._map_elements3(nid_map, model, j, dim_max,
                                 nid_cp_cd, xref_loads=xref_loads)
-        #return self._map_elements3(nid_map, model, j, dim_max,
-                                   #nid_cp_cd, plot=plot, xref_loads=xref_loads)
 
         if self.is_element_quality:
             out = self._map_elements1_quality(model, xyz_cid0, nid_cp_cd, dim_max, nid_map, j)
         else:
-            out = self._map_elements1(model, xyz_cid0, nid_cp_cd, dim_max, nid_map, j)
-        (nid_to_pid_map, xyz_cid0, superelements, pids, nelements, material_coord,
+            out = self._map_elements1_no_quality(model, xyz_cid0, nid_cp_cd, dim_max, nid_map, j)
+        (nid_to_pid_map, xyz_cid0, superelements, pids, nelements,
+         material_coord, material_theta,
          area, min_interior_angle, max_interior_angle, max_aspect_ratio,
          max_skew_angle, taper_ratio, dideal_theta,
          area_ratio, min_edge_length, max_warp_angle) = out
@@ -4297,7 +4169,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if (self.make_offset_normals_dim or self.is_element_quality) and nelements:
             icase, normals = self._build_normals_quality(
                 model, nelements, cases, form0, icase,
-                xyz_cid0, material_coord,
+                xyz_cid0,
+                material_coord, material_theta,
                 min_interior_angle, max_interior_angle, dideal_theta,
                 area, max_skew_angle, taper_ratio,
                 max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio)
@@ -4319,7 +4192,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 point_size=5, representation='wire', is_visible=True)
             self._add_nastran_lines_to_grid('plotel', lines, model)
 
-    def _map_elements1(self, model, xyz_cid0, nid_cp_cd, unused_dim_max, nid_map, j):
+    def _map_elements1_no_quality(self, model, xyz_cid0, nid_cp_cd, unused_dim_max, nid_map, j):
         """
         Helper for map_elements
 
@@ -4343,8 +4216,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             pids = None
             nelements = None
             material_coord = None
+            material_theta = None
             out = (
-                nid_to_pid_map, xyz_cid0, superelements, pids, nelements, material_coord,
+                nid_to_pid_map, xyz_cid0, superelements, pids, nelements,
+                material_coord, material_theta,
                 area, min_interior_angle, max_interior_angle, max_aspect_ratio,
                 max_skew_angle, taper_ratio, dideal_theta,
                 area_ratio, min_edge_length, max_warp_angle,
@@ -4371,7 +4246,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         elements, nelements, superelements = _get_elements_nelements_unvectorized(model)
 
         pids = np.zeros(nelements, 'int32')
-        material_coord = np.zeros(nelements, 'int32')
+        material_coord = np.full(nelements, -1, dtype='int32')
+        material_theta = np.full(nelements, np.nan, dtype='float32')
 
         # pids_good = []
         # pids_to_keep = []
@@ -4393,12 +4269,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #   \  |   /
         #    \ | /
         #      1
-        _ctetra_faces = (
-            (0, 1, 2), # (1, 2, 3),
-            (0, 3, 1), # (1, 4, 2),
-            (0, 3, 2), # (1, 3, 4),
-            (1, 3, 2), # (2, 4, 3),
-        )
+        #_ctetra_faces = (
+            #(0, 1, 2), # (1, 2, 3),
+            #(0, 3, 1), # (1, 4, 2),
+            #(0, 3, 2), # (1, 3, 4),
+            #(1, 3, 2), # (2, 4, 3),
+        #)
 
         # these normals point inwards
         #
@@ -4411,13 +4287,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #    /    \   /
         #   /      \ /
         # 1---------2
-        _cpyram_faces = (
-            (0, 1, 2, 3), # (1, 2, 3, 4),
-            (1, 4, 2), # (2, 5, 3),
-            (2, 4, 3), # (3, 5, 4),
-            (0, 3, 4), # (1, 4, 5),
-            (0, 4, 1), # (1, 5, 2),
-        )
+        #_cpyram_faces = (
+            #(0, 1, 2, 3), # (1, 2, 3, 4),
+            #(1, 4, 2), # (2, 5, 3),
+            #(2, 4, 3), # (3, 5, 4),
+            #(0, 3, 4), # (1, 4, 5),
+            #(0, 4, 1), # (1, 5, 2),
+        #)
 
         # these normals point inwards
         #       /6
@@ -4430,14 +4306,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # |  /    \   /
         # | /      \ /
         # 1---------2
-        _cpenta_faces = (
-            (0, 2, 1), # (1, 3, 2),
-            (3, 4, 5), # (4, 5, 6),
+        #_cpenta_faces = (
+            #(0, 2, 1), # (1, 3, 2),
+            #(3, 4, 5), # (4, 5, 6),
 
-            (0, 1, 4, 3), # (1, 2, 5, 4), # bottom
-            (1, 2, 5, 4), # (2, 3, 6, 5), # right
-            (0, 3, 5, 2), # (1, 4, 6, 3), # left
-        )
+            #(0, 1, 4, 3), # (1, 2, 5, 4), # bottom
+            #(1, 2, 5, 4), # (2, 3, 6, 5), # right
+            #(0, 3, 5, 2), # (1, 4, 6, 3), # left
+        #)
 
         # these normals point inwards
         #      8----7
@@ -4448,19 +4324,20 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # |  /  |  /
         # | /   | /
         # 1-----2
-        _chexa_faces = (
-            (4, 5, 6, 7), # (5, 6, 7, 8),
-            (0, 3, 2, 1), # (1, 4, 3, 2),
-            (1, 2, 6, 5), # (2, 3, 7, 6),
-            (2, 3, 7, 6), # (3, 4, 8, 7),
-            (0, 4, 7, 3), # (1, 5, 8, 4),
-            (0, 6, 5, 4), # (1, 7, 6, 5),
-        )
+        #_chexa_faces = (
+            #(4, 5, 6, 7), # (5, 6, 7, 8),
+            #(0, 3, 2, 1), # (1, 4, 3, 2),
+            #(1, 2, 6, 5), # (2, 3, 7, 6),
+            #(2, 3, 7, 6), # (3, 4, 8, 7),
+            #(0, 4, 7, 3), # (1, 5, 8, 4),
+            #(0, 6, 5, 4), # (1, 7, 6, 5),
+        #)
         line_type = 3 # vtk.vtkLine().GetCellType()
 
         nid_to_pid_map = defaultdict(list)
         pid = 0
 
+        log = self.log
         grid = self.gui.grid
         self._build_plotels(model)
 
@@ -4485,7 +4362,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3)):
                 if isinstance(element, (CTRIA3, CTRIAR)):
-                    material_coord[i] = _get_shell_material_coord_int(element)
+                    mcid, theta = _get_shell_material_coord(element)
+                    material_coord[i] = mcid
+                    material_theta[i] = theta
                 elem = vtkTriangle()
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -4506,7 +4385,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif isinstance(element, (CTRIA6, CPLSTN6, CTRIAX)):
                 # the CTRIAX is a standard 6-noded element
                 if isinstance(element, CTRIA6):
-                    material_coord[i] = _get_shell_material_coord_int(element)
+                    mcid, theta = _get_shell_material_coord(element)
+                    material_coord[i] = mcid
+                    material_theta[i] = theta
                 node_ids = element.node_ids
                 pid = element.Pid()
                 eid_to_nid_map[eid] = node_ids[:3]
@@ -4570,8 +4451,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
                 if isinstance(element, (CQUAD4, CQUADR)):
-                    material_coord[i] = _get_shell_material_coord_int(element)
-                #print('eid=%s theta=%s' % (eid, material_coord[i]))
+                    mcid, theta = _get_shell_material_coord(element)
+                    material_coord[i] = mcid
+                    material_theta[i] = theta
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -4602,7 +4484,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD8, CPLSTN8, CQUADX8)):
                 if isinstance(element, CQUAD8):
-                    material_coord[i] = _get_shell_material_coord_int(element)
+                    mcid, theta = _get_shell_material_coord(element)
+                    material_coord[i] = mcid
+                    material_theta[i] = theta
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -4631,7 +4515,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD, CQUADX)):
                 # CQUAD, CQUADX are 9 noded quads
-                material_coord[i] = _get_shell_material_coord_int(element)
+                mcid, theta = _get_shell_material_coord(element)
+                material_coord[i] = mcid
+                material_theta[i] = theta
 
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -4856,7 +4742,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         nid_to_pid_map[nid].append(pid)
 
                 if node_ids[0] is None and node_ids[0] is None: # CELAS2
-                    self.log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
+                    log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
                     del self.eid_map[eid]
                     continue
                 if None in node_ids:  # used to be 0...
@@ -4869,7 +4755,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid = node_ids[slot]
                     if nid not in nid_map:
                         # SPOINT
-                        self.log.warning('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
+                        log.warning('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
                         continue
 
                     #c = nid_map[nid]
@@ -5024,8 +4910,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 try:
                     mapped_inids = SIDE_MAP[element_solid.type][side]
                 except KeyError:  # pragma: no cover
-                    self.log.warning('removing\n%s' % (element))
-                    self.log.warning('removing eid=%s; %s' % (eid, element.type))
+                    log.warning('removing\n%s' % (element))
+                    log.warning('removing eid=%s; %s' % (eid, element.type))
                     del self.eid_map[eid]
                     self.gui.log_info("skipping %s" % element.type)
                     continue
@@ -5074,8 +4960,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(0, nid_map[node_ids[0]])
                 elem.GetPointIds().SetId(1, nid_map[node_ids[1]])
             else:
-                self.log.warning('removing\n%s' % (element))
-                self.log.warning('removing eid=%s; %s' % (eid, element.type))
+                log.warning('removing\n%s' % (element))
+                log.warning('removing eid=%s; %s' % (eid, element.type))
                 del self.eid_map[eid]
                 self.gui.log_info("skipping %s" % element.type)
                 continue
@@ -5104,7 +4990,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         pids = pids[:nelements]
 
         out = (
-            nid_to_pid_map, xyz_cid0, superelements, pids, nelements, material_coord,
+            nid_to_pid_map, xyz_cid0, superelements, pids, nelements,
+            material_coord, material_theta,
             area, min_interior_angle, max_interior_angle, max_aspect_ratio,
             max_skew_angle, taper_ratio, dideal_theta,
             area_ratio, min_edge_length, max_warp_angle,
@@ -5218,6 +5105,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             pids = None
             nelements = None
             material_coord = None
+            material_theta = None
             area = None
             min_interior_angle = None
             max_interior_angle = None
@@ -5257,6 +5145,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         pids = np.zeros(nelements, 'int32')
         material_coord = np.zeros(nelements, 'int32')
+        material_theta = np.full(nelements, np.nan, dtype='float32')
         min_interior_angle = np.zeros(nelements, 'float32')
         max_interior_angle = np.zeros(nelements, 'float32')
         dideal_theta = np.zeros(nelements, 'float32')
@@ -5354,6 +5243,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         nid_to_pid_map = defaultdict(list)
         pid = 0
 
+        log = self.log
         grid = self.gui.grid
         self._build_plotels(model)
 
@@ -5390,7 +5280,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3)):
                 if isinstance(element, (CTRIA3, CTRIAR)):
-                    material_coord[i] = _get_shell_material_coord_int(element)
+                    mcid, theta = _get_shell_material_coord(element)
+                    material_coord[i] = mcid
+                    material_theta[i] = theta
                 elem = vtkTriangle()
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -5414,7 +5306,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif isinstance(element, (CTRIA6, CPLSTN6, CTRIAX)):
                 # the CTRIAX is a standard 6-noded element
                 if isinstance(element, CTRIA6):
-                    material_coord[i] = _get_shell_material_coord_int(element)
+                    mcid, theta = _get_shell_material_coord(element)
+                    material_coord[i] = mcid
+                    material_theta[i] = theta
                 node_ids = element.node_ids
                 pid = element.Pid()
                 eid_to_nid_map[eid] = node_ids[:3]
@@ -5484,8 +5378,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
                 if isinstance(element, (CQUAD4, CQUADR)):
-                    material_coord[i] = _get_shell_material_coord_int(element)
-                #print('eid=%s theta=%s' % (eid, material_coord[i]))
+                    mcid, theta = _get_shell_material_coord(element)
+                    material_coord[i] = mcid
+                    material_theta[i] = theta
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -5519,7 +5414,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD8, CPLSTN8, CQUADX8)):
                 if isinstance(element, CQUAD8):
-                    material_coord[i] = _get_shell_material_coord_int(element)
+                    mcid, theta = _get_shell_material_coord(element)
+                    material_coord[i] = mcid
+                    material_theta[i] = theta
                 node_ids = element.node_ids
                 pid = element.Pid()
                 for nid in node_ids:
@@ -5551,7 +5448,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD, CQUADX)):
                 # CQUAD, CQUADX are 9 noded quads
-                material_coord[i] = _get_shell_material_coord_int(element)
+                mcid, theta = _get_shell_material_coord(element)
+                material_coord[i] = mcid
+                material_theta[i] = theta
 
                 node_ids = element.node_ids
                 pid = element.Pid()
@@ -5795,7 +5694,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         nid_to_pid_map[nid].append(pid)
 
                 if node_ids[0] is None and  node_ids[0] is None: # CELAS2
-                    self.log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
+                    log.warning('removing CELASx eid=%i -> no node %s' % (eid, node_ids[0]))
                     del self.eid_map[eid]
                     continue
                 if None in node_ids:  # used to be 0...
@@ -5808,7 +5707,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     nid = node_ids[slot]
                     if nid not in nid_map:
                         # SPOINT
-                        self.log.warning('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
+                        log.warning('removing CELASx eid=%i -> SPOINT %i' % (eid, nid))
                         continue
 
                     #c = nid_map[nid]
@@ -5964,7 +5863,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                 else:
                     #print('removing\n%s' % (element))
-                    self.log.warning('removing eid=%s; %s' % (eid, element.type))
+                    log.warning('removing eid=%s; %s' % (eid, element.type))
                     del self.eid_map[eid]
                     self.gui.log_info("skipping %s" % element.type)
                     continue
@@ -6000,8 +5899,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 try:
                     mapped_inids = SIDE_MAP[element_solid.type][side]
                 except KeyError:  # pragma: no cover
-                    self.log.warning('removing\n%s' % (element))
-                    self.log.warning('removing eid=%s; %s' % (eid, element.type))
+                    log.warning('removing\n%s' % (element))
+                    log.warning('removing eid=%s; %s' % (eid, element.type))
                     del self.eid_map[eid]
                     self.gui.log_info("skipping %s" % element.type)
                     continue
@@ -6089,8 +5988,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 #nnodes = len(nids)
                 #dim = 1
             else:
-                self.log.warning('removing\n%s' % (element))
-                self.log.warning('removing eid=%s; %s' % (eid, element.type))
+                log.warning('removing\n%s' % (element))
+                log.warning('removing eid=%s; %s' % (eid, element.type))
                 del self.eid_map[eid]
                 self.gui.log_info("skipping %s" % element.type)
                 continue
@@ -6139,18 +6038,20 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         pids = pids[:nelements]
 
         out = (
-            nid_to_pid_map, xyz_cid0, superelements, pids, nelements, material_coord,
+            nid_to_pid_map, xyz_cid0, superelements, pids, nelements,
+            material_coord, material_theta,
             area, min_interior_angle, max_interior_angle, max_aspect_ratio,
             max_skew_angle, taper_ratio, dideal_theta,
             area_ratio, min_edge_length, max_warp_angle,
         )
         return out
 
-    def _build_normals_quality(self, model, nelements, cases, form0, icase,
-                               xyz_cid0, material_coord,
+    def _build_normals_quality(self, model: BDF, nelements: int, cases, form0, icase: int,
+                               xyz_cid0,
+                               material_coord, material_theta,
                                min_interior_angle, max_interior_angle, dideal_theta,
                                area, max_skew_angle, taper_ratio,
-                               max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio):
+                               max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio) -> Tuple[int, Any]:
         """
         Creates some nastran specific results
 
@@ -6164,6 +6065,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          - Taper Ratio
          - Area Ratio
          - MaterialCoord
+         - MaterialTheta
         """
         colormap = self.gui.settings.colormap
         #ielement = 0
@@ -6408,7 +6310,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             form0.append(('ElementDim', icase, []))
             icase += 1
 
-        if material_coord is not None and np.abs(material_coord).max() > 0:
+        if isgreater_int(material_coord, -1):
             material_coord_res = GuiResult(
                 0, header='MaterialCoord', title='MaterialCoord',
                 location='centroid',
@@ -6416,10 +6318,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
             form0.append(('MaterialCoord', icase, []))
             icase += 1
+        if isfinite(material_theta):
+            material_theta_res = GuiResult(
+                0, header='MaterialTheta', title='MaterialTheta',
+                location='centroid',
+                scalar=material_theta, data_format='%.3f')
+            cases[icase] = (material_theta_res, (0, 'MaterialTheta'))
+            form0.append(('MaterialTheta', icase, []))
+            icase += 1
         return icase, normals
 
-    def _build_properties(self, model, nelements, eids, pids,
-                          cases, form0, icase):
+    def _build_properties(self, model: BDF, nelements: int, eids, pids,
+                          cases, form0, icase: int) -> int:
         """
         creates:
           - PropertyID
@@ -6708,7 +6618,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         form0.append((word, None, form_layer))
         return icase
 
-    def _build_optimization(self, model, pids, upids, nelements, cases, form0, icase):
+    def _build_optimization(self, model: BDF, pids: np.ndarray, upids: np.ndarray, nelements: int,
+                            cases, form0, icase: int) -> int:
         """
         Creates the optimization visualization.  Supports:
           - DVPREL1/2 shell thickness:
@@ -6763,7 +6674,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 form0.append(('Optimization', None, optimization_cases))
         return icase
 
-    def _plot_pressures(self, model, cases, form0, icase, subcase_id):
+    def _plot_pressures(self, model: BDF, cases, form0, icase: int, subcase_id: int) -> int:
         """
         pressure act normal to a shell (as opposed to anti-normal to a solid face)
         """
@@ -6944,13 +6855,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.scalar_bar_actor.VisibilityOn()
         self.scalar_bar_actor.Modified()
 
+        log = self.log
         if isinstance(results_filename, str):
             print("trying to read...%s" % results_filename)
             ext = os.path.splitext(results_filename)[1].lower()
 
             if ext == '.op2':
                 op2_filename = results_filename
-                model = OP2(log=self.log, debug=True)
+                model = OP2(log=log, debug=True)
 
                 if 0:  # pragma: no cover
                     model._results.saved = set()
@@ -6961,7 +6873,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 model.read_op2(op2_filename, combine=False)
 
                 if not IS_TESTING or self.is_testing_flag:
-                    self.log.info(model.get_op2_stats())
+                    log.info(model.get_op2_stats())
                 # print(model.get_op2_stats())
 
             elif ext == '.nod':
@@ -6969,13 +6881,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.cycle_results_explicit()  # start at nCase=0
                 return
             elif ext == '.h5' and IS_H5PY:
-                model = OP2(log=self.log, debug=True)
+                model = OP2(log=log, debug=True)
                 hdf5_filename = results_filename
                 model.load_hdf5_filename(hdf5_filename, combine=False)
             #elif ext == '.pch':
                 #raise NotImplementedError('*.pch is not implemented; filename=%r' % op2_filename)
             #elif ext == '.f06':
-                #model = F06(log=self.log, debug=True)
+                #model = F06(log=log, debug=True)
                 #model.set_vectorization(True)
                 #model.read_f06(op2_filename)
             else:
@@ -6997,7 +6909,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             icd_transform = self.icd_transform
             #transforms = self.transforms
         except AttributeError:
-            self.log.error('Skipping displacment transformation')
+            log.error('Skipping displacment transformation')
         else:
             model.transform_displacements_to_global(
                 icd_transform, self.model.coords, xyz_cid0=self.xyz_cid0)
@@ -7017,6 +6929,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.isubcase_name_map = model.isubcase_name_map
         # self.isubcase_name_map = model.subcase_key
         #print(self.isubcase_name_map)
+        log = self.gui.log
         for isubcase, values in model.isubcase_name_map.items():
             if not isinstance(isubcase, integer_types):
                 print('isubcase type =', type(isubcase))
@@ -7024,14 +6937,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if isinstance(values, str):
                 # eigenvalue???
                 label = values
-                self.gui.log.debug('label_str = %r' % label)
+                log.debug('label_str = %r' % label)
             elif isinstance(values, list):
-                self.gui.log.debug(str(values))
+                log.debug(str(values))
                 subtitle, superelement_adaptivity, analysis_code, label = values
                 del analysis_code
             else:
-                self.gui.log.debug(str(values))
-                self.gui.log.debug(str(type(values)))
+                log.debug(str(values))
+                log.debug(str(type(values)))
                 raise RuntimeError(values)
 
             if superelement_adaptivity:
@@ -7358,15 +7271,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.element_ids = None
         self.node_ids = None
 
-def _get_shell_material_coord_int(element):
+def _get_shell_material_coord(element) -> Tuple[int, float]:
     """
     used by:
      - CQUAD4, CQUADR, CQUAD8, CQUAD, CQUADX
      - CTRIA3, CTRIAR, CTRIA6
     """
-    return 0 if isinstance(element.theta_mcid, float) else element.theta_mcid
+    if isinstance(element.theta_mcid, float):
+        return -1, element.theta_mcid
+    else:
+        return element.theta_mcid, np.nan
 
-def _get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp):
+def _get_nastran_gui_layer_word(i: int, ilayer: int, is_pshell_pcomp: bool) -> str:
     """gets the PSHELL/PCOMP layer word"""
     ## TODO: this makes no sense...
     is_pshell, unused_is_pcomp = is_pshell_pcomp
@@ -7386,9 +7302,9 @@ def _get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp):
             word += 'PCOMP: ilayer=%i' % (ilayer)
     return word
 
-def check_for_missing_control_surface_boxes(name, cs_box_ids,
-                                            box_id_to_caero_element_map,
-                                            log, store_msg=False):
+def check_for_missing_control_surface_boxes(name: str, cs_box_ids: List[int],
+                                            box_id_to_caero_element_map: Dict[int, int],
+                                            log, store_msg: bool=False) -> Tuple[List[int], str]:
     """helper method for creating control surface"""
     boxes_to_show = []
     missing_boxes = []
@@ -7411,7 +7327,7 @@ def check_for_missing_control_surface_boxes(name, cs_box_ids,
         out_msg = store_error(log, store_msg, msg.rstrip())
     return boxes_to_show, out_msg
 
-def store_error(log, store_msg, msg):
+def store_error(log, store_msg: bool, msg: str) -> str:
     out_msg = ''
     if store_msg:
         n, filename = log_properties(nframe=2)
@@ -7420,7 +7336,7 @@ def store_error(log, store_msg, msg):
         log.warning(msg)
     return out_msg
 
-def store_warning(log, store_msg, msg):
+def store_warning(log, store_msg: bool, msg: str) -> str:
     out_msg = ''
     if store_msg:
         n, filename = log_properties(nframe=2)
@@ -7430,13 +7346,13 @@ def store_warning(log, store_msg, msg):
     return out_msg
 
 
-def make_nid_map(nid_map, nids):
+def make_nid_map(nid_map: Dict[int, int], nids: List[int]) -> Dict[int, int]:
     """make the node map"""
     for i, nid in enumerate(nids):
         nid_map[nid] = i
     return nid_map
 
-def _get_elements_nelements_unvectorized(model):
+def _get_elements_nelements_unvectorized(model: BDF) -> Tuple[Any, int, List[Dict[int, Any]]]:
     nelements = len(model.elements)
     #eid_map = self.gui.eid_map
     elements = model.elements
@@ -7456,20 +7372,20 @@ def _get_elements_nelements_unvectorized(model):
         assert len(superelements) == nelements, 'len(superelements)=%s nelements=%s' % (len(superelements), nelements)
     return elements, nelements, superelements
 
-def jsonify(comment_lower):
+def jsonify(comment_lower: str) -> str:
     """pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}"""
     sline = comment_lower.split('=')
     rhs = sline[1].rstrip()
     return rhs.replace("'", '"').replace('}', ',}').replace(',,}', ',}')
 
-def build_offset_normals_dims(model, eid_map, nelements):
+def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: int):
     normals = np.full((nelements, 3), np.nan, dtype='float32')
     offset = np.full(nelements, np.nan, dtype='float32')
     xoffset = np.full(nelements, np.nan, dtype='float32')
     yoffset = np.full(nelements, np.nan, dtype='float32')
     zoffset = np.full(nelements, np.nan, dtype='float32')
     element_dim = np.full(nelements, -1, dtype='int32')
-    nnodes_array = np.full(nelements, np.nan, dtype='int32')
+    nnodes_array = np.full(nelements, -1, dtype='int32')
     log = model.log
 
     #eid_map = self.gui.eid_map
@@ -7543,28 +7459,28 @@ def build_offset_normals_dims(model, eid_map, nelements):
                 elif etype == 'CTRAX3':
                     #node_ids = self.nodes[3:]
                     nnodesi = 3
-                    z0 = 0.
+                    z0 = np.nan
                 elif etype == 'CTRAX6':
                     #node_ids = self.nodes[3:]
                     nnodesi = 6
-                    z0 = 0.
+                    z0 = np.nan
                 elif etype in ['CTRIAX', 'CTRIAX6']:
                     # the CTRIAX6 uses a non-standard node orientation
                     #node_ids = self.nodes[3:]
-                    z0 = 0.
+                    z0 = np.nan
                     nnodesi = 6
                 elif etype == 'CQUADX':
                     #node_ids = self.nodes[4:]
                     nnodesi = 9
-                    z0 = 0.
+                    z0 = np.nan
                 elif etype == 'CQUADX4':
                     #node_ids = self.nodes[4:]
                     nnodesi = 4
-                    z0 = 0.
+                    z0 = np.nan
                 elif etype == 'CQUADX8':
                     #node_ids = self.nodes[4:]
                     nnodesi = 8
-                    z0 = 0.
+                    z0 = np.nan
                 else:
                     raise NotImplementedError(element)
             else:
@@ -7626,19 +7542,20 @@ def build_offset_normals_dims(model, eid_map, nelements):
             nnodesi = 2
         elif etype == 'CHBDYG':
             ieid = eid_map[eid]
-            if element.surface_type == 'AREA3':
+            surface_type = element.surface_type
+            if surface_type == 'AREA3':
                 nnodesi = 3
                 element_dimi = 2
-            elif element.surface_type == 'AREA4':
+            elif surface_type == 'AREA4':
                 nnodesi = 4
                 element_dimi = 2
-            elif element.surface_type == 'AREA6':
+            elif surface_type == 'AREA6':
                 nnodesi = 6
                 element_dimi = 2
-            elif element.surface_type == 'AREA8':
+            elif surface_type == 'AREA8':
                 nnodesi = 8
                 element_dimi = 2
-            #elif element.surface_type == 'REV':
+            #elif surface_type == 'REV':
                 #nnodesi = 2 # ???
                 #element_dimi = 1 # ???
             else:
@@ -7664,7 +7581,7 @@ def build_offset_normals_dims(model, eid_map, nelements):
 
     return normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array
 
-def build_map_centroidal_result(model, nid_map):
+def build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
     """
     Sets up map_centroidal_result.  Used for:
      - cutting plane
@@ -7677,7 +7594,7 @@ def build_map_centroidal_result(model, nid_map):
         model.log.error('Cannot run build_map_centroidal_result')
         model.log.error(str(error))
 
-def _build_map_centroidal_result(model, nid_map):
+def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
     """
     Sets up map_centroidal_result.  Used for:
      - cutting plane

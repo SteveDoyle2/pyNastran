@@ -15,7 +15,7 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.gui.testing_methods import FakeGUIMethods
-from pyNastran.converters.nastran.nastran_io import NastranIO
+from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 
 
 class NastranGUI(NastranIO, FakeGUIMethods):
@@ -89,7 +89,13 @@ class TestNastranGUI(unittest.TestCase):
         zaxis = [0., 0., 1.]
         #print('test.result_cases', test.result_cases)
         #gpforce = test.model.grid_point_forces[1]
-        case, (unused_i, unused_name) = test.result_cases[58]
+
+        #for icase, (case, dummy) in test.result_cases.items():
+            #if hasattr(case, 'gpforce_array'):
+                #print(icase, case)
+                #asf
+        case, (unused_i, unused_name) = test.result_cases[60]
+        str(case)
         gpforce = case.gpforce_array
         model_name = 'main'
         test.shear_moment_torque_obj.plot_shear_moment_torque(
