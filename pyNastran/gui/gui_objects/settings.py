@@ -89,6 +89,7 @@ class Settings:
         self.nastran_is_3d_bars_update = True
         self.nastran_create_coords = True
         self.nastran_is_bar_axes = True
+        self.nastran_shell_mcids = True
 
     def reset_settings(self):
         """helper method for ``setup_gui``"""
