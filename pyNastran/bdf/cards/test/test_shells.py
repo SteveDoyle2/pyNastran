@@ -340,7 +340,7 @@ class TestShells(unittest.TestCase):
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
 
         p = PCOMP.add_op2_data(data)
-        self.assertFalse(p.is_symmetrical())
+        self.assertFalse(p.is_symmetrical)
         self.assertEqual(p.nplies, 3)
 
         self.assertAlmostEqual(p.Thickness(), 0.6)
@@ -470,7 +470,7 @@ class TestShells(unittest.TestCase):
         sout = [1, 1, 0]  # 0-NO, 1-YES
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
         p = PCOMP.add_op2_data(data)
-        self.assertTrue(p.is_symmetrical())
+        self.assertTrue(p.is_symmetrical)
         self.assertEqual(p.nplies, 6)
 
         self.assertAlmostEqual(p.Thickness(), 1.2)

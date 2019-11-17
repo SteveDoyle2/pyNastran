@@ -4193,7 +4193,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                                        iply=iply, log=None, debug=False)
 
             nbars = len(bars)
-            assert nbars > 0, nbars
+            if nbars == 0:
+                # isotropic
+                continue
+            assert nbars > 0, model.card_count
 
             is_visible = False
             self.gui.create_alternate_vtk_grid(

@@ -2841,12 +2841,12 @@ def _breakdown_property_dicts(model):
             mids_ref = prop.mids_ref
 
             #rhoi = [mid_ref.Rho() for mid_ref in mids_ref]
-            ksym = 2 if prop.is_symmetrical() else 1
+            ksym = 2 if prop.is_symmetrical else 1
             mpai = [ksym * mid_ref.Rho() * t for mid_ref, t in zip(mids_ref, prop.thicknesses)]
             thickness = ksym * sum(prop.thicknesses)
             #nlayers = ksym * len(prop.thicknesses)
             #ti = np.zeros((nlayers, 3, 3), dtype='float64')
-            #if prop.is_symmetrical():
+            #if prop.is_symmetrical:
                 #theta = np.radians(np.hstack([
                     #prop.thetas[::-1],
                     #prop.thetas,

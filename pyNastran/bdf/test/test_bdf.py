@@ -37,6 +37,7 @@ from pyNastran.bdf.errors import (
 )
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.subcase import Subcase
+from pyNastran.bdf.mesh_utils.export_mcids import export_mcids, export_mcids2
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #, mass_properties_breakdown
@@ -541,11 +542,13 @@ def run_nastran(bdf_model: BDF, nastran: str, post: int=-1,
         op2 = read_op2(op2_model2)
         print(op2.get_op2_stats())
 
-def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size, is_double,
-             run_extract_bodies=False, run_skin_solids=True, save_file_structure=False, hdf5=False,
-             encoding=None, crash_cards=None, safe_xref=True,
-             pickle_obj=False, stop=False):
-    # type: (BDF, str, str, str, bool, bool, bool, int, int, bool, bool, bool, Any, Any, bool, bool, bool) -> BDF
+def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
+             xref: bool, punch: bool, sum_load: bool,
+             size: int, is_double: bool,
+             run_extract_bodies: bool=False, run_skin_solids: bool=True,
+             save_file_structure: bool=False, hdf5: bool=False,
+             encoding: Optional[str]=None, crash_cards: Optional[List[str]]=None,
+             safe_xref: bool=True, pickle_obj: bool=False, stop: bool=False) -> BDF:
     """
     Reads/writes the BDF
 
@@ -645,6 +648,10 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 fem1.get_node_id_to_element_ids_map()
                 fem1.get_node_id_to_elements_map()
 
+                export_mcids(fem1, csv_filename=None, eids=None,
+                             export_xaxis=True, export_yaxis=False, iply=0, log=None, debug=False)
+
+                export_mcids2(fem1)
 
                 fem1._xref = True
                 read_bdf(fem1.bdf_filename, encoding=encoding, xref=False,
@@ -761,8 +768,9 @@ def check_for_cd_frame(fem1: BDF) -> None:
     is_grid_points = any([card_name in fem1.card_count
                           for card_name in ['GRID', 'SPOINT', 'EPOINT', 'RINGAX']])
     if is_grid_points:
-        unused_icd_transform, unused_icp_transform, unused_xyz_cp, nid_cp_cd = fem1.get_displacement_index_xyz_cp_cd(
+        out = fem1.get_displacement_index_xyz_cp_cd(
             fdtype='float64', idtype='int64', sort_ids=True)
+        unused_icd_transform, unused_icp_transform, unused_xyz_cp, nid_cp_cd = out
         cds = np.unique(nid_cp_cd[:, 2])
         cd_coords = []
         for cd in cds:
@@ -779,11 +787,11 @@ def check_for_cd_frame(fem1: BDF) -> None:
             )
             fem1.log.warning(msg)
 
-def run_fem2(bdf_model, out_model, xref, punch,
-             sum_load, size, is_double, mesh_form,
-             safe_xref=False,
-             encoding=None, debug=False, quiet=False,
-             stop_on_failure=True, ierror=0, nerrors=100, log=None):
+def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
+             sum_load: bool, size: int, is_double: bool, mesh_form: str,
+             safe_xref: bool=False,
+             encoding: Optional[str]=None, debug: bool=False, quiet: bool=False,
+             stop_on_failure: bool=True, ierror: int=0, nerrors: int=100, log=None) -> BDF:
     """
     Reads/writes the BDF to verify nothing has been lost
 

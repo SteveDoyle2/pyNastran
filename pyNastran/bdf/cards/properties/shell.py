@@ -110,6 +110,7 @@ class CompositeShellProperty(Property):
         """Removes cross-reference links"""
         self.mids_ref = None
 
+    @property
     def is_symmetrical(self):
         """
         Is the laminate symmetrical?
@@ -185,6 +186,7 @@ class CompositeShellProperty(Property):
             if iply < self.nplies:
                 iply = nplies - iply - 1
             else:
+                print(self.get_stats())
                 raise IndexError('invalid value for nplies=%s iply=%r (iply is 0-based)\n%s' % (
                     nplies, iply, str(self)))
         elif iply < 0:
@@ -216,7 +218,7 @@ class CompositeShellProperty(Property):
         #nplies = len(self.thicknesses)
         if iply == 'all':  # get all layers
             thick = sum(self.thicknesses)
-            if self.is_symmetrical():
+            if self.is_symmetrical:
                 return thick * 2.
             return thick
         else:
@@ -238,7 +240,7 @@ class CompositeShellProperty(Property):
 
             """
         nplies = len(self.thicknesses)
-        if self.is_symmetrical():
+        if self.is_symmetrical:
             return nplies * 2
         return nplies
 
@@ -516,7 +518,7 @@ class CompositeShellProperty(Property):
                 t = self.thicknesses[iplyi]
                 mass_per_area += rho * t
 
-            if self.is_symmetrical():
+            if self.is_symmetrical:
                 return 2. * mass_per_area + self.nsm
             return mass_per_area + self.nsm
         else:
@@ -570,7 +572,7 @@ class CompositeShellProperty(Property):
             t = self.thicknesses[iply]
             mass_per_area += rho * t
 
-        ksym = 2. if self.is_symmetrical() else 1.
+        ksym = 2. if self.is_symmetrical else 1.
         return ksym * mass_per_area
 
 class PCOMP(CompositeShellProperty):
@@ -1044,7 +1046,7 @@ class PCOMP(CompositeShellProperty):
 
     def _verify(self, xref):
         pid = self.Pid()
-        is_sym = self.is_symmetrical()
+        is_sym = self.is_symmetrical
         nplies = self.nplies
         nsm = self.Nsm()
         mids = self.Mids()
@@ -1365,7 +1367,7 @@ class PCOMPG(CompositeShellProperty):
 
     def _verify(self, xref):
         pid = self.Pid()
-        is_sym = self.is_symmetrical()
+        is_sym = self.is_symmetrical
         nplies = self.nplies
         nsm = self.Nsm()
         mids = self.Mids()
