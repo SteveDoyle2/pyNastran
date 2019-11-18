@@ -21,10 +21,11 @@ Defines the main OP2 class.  Defines:
    - transform_gpforce_to_global(nids_all, nids_transform, i_transform, coords, xyz_cid0=None)
 
 """
+from __future__ import annotations
 import sys
 from collections import defaultdict
 from pickle import load, dump, dumps
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Tuple, Optional, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -42,6 +43,8 @@ from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 from pyNastran.op2.op2_interface.transforms import (
     transform_displacement_to_global, transform_gpforce_to_globali)
 from pyNastran.utils import check_path
+if TYPE_CHECKING:
+    from h5py import File as H5File
 
 
 class OP2(OP2_Scalar, OP2Writer):
@@ -119,7 +122,8 @@ class OP2(OP2_Scalar, OP2Writer):
         return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
                                  filter_properties=filter_properties)
 
-    def object_methods(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
+    def object_methods(self, mode: str='public',
+                       keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """
         List the names of methods of a class as strings. Returns public methods
         as default.
@@ -154,7 +158,6 @@ class OP2(OP2_Scalar, OP2Writer):
         return object_methods(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
 
     def __eq__(self, op2_model) -> bool:
-        # type (OP2) -> bool
         """
         Diffs the current op2 model vs. another op2 model.
         Crashes if they're not equal.
@@ -167,7 +170,8 @@ class OP2(OP2_Scalar, OP2Writer):
             raise
         return is_equal
 
-    def assert_op2_equal(self, op2_model, skip_results=None, stop_on_failure=True, debug=False):
+    def assert_op2_equal(self, op2_model, skip_results: Optional[List[str]]=None,
+                         stop_on_failure: bool=True, debug: bool=False) -> None:
         """
         Diffs the current op2 model vs. another op2 model.
 
@@ -239,7 +243,8 @@ class OP2(OP2_Scalar, OP2Writer):
                     return is_equal
         return True
 
-    def _is_op2_case_equal(self, table_type, key, a_obj, b_obj,
+    def _is_op2_case_equal(self, table_type: str,
+                           key, a_obj, b_obj,
                            stop_on_failure: bool=True, debug: bool=False) -> bool:
         """
         Helper method for ``assert_op2_equal``
@@ -355,7 +360,8 @@ class OP2(OP2_Scalar, OP2Writer):
                 'include_results=%r\n' % (exclude_results, include_results)
             )
             raise RuntimeError(msg)
-        elif exclude_results:
+
+        if exclude_results:
             self.remove_results(exclude_results)
         elif include_results:
             self.set_results(include_results)
@@ -470,70 +476,6 @@ class OP2(OP2_Scalar, OP2Writer):
 
         #self.case_control_deck = CaseControlDeck(self.case_control_lines, log=self.log)
         self.log.debug('done loading!')
-
-    #def _set_ask_vectorized(self, ask=False):
-        #"""
-        #Enables vectorization
-
-        #The code will degenerate to dictionary based results when
-        #a result does not support vectorization.
-
-        #Vectorization is always True here.
-
-        #Parameters
-        #----------
-        #ask: bool
-            #Do you want to see a GUI of result types.
-
-        #+--------+---------------+---------+------------+
-        #| Case # | Vectorization |  Ask    | Read Modes |
-        #+========+===============+=========+============+
-        #|    1   | True          |  True   |  1, 2      |
-        #+--------+---------------+---------+------------+
-        #|    2   | True          |  False  |  1, 2      |
-        #+--------+---------------+---------+------------+
-        #|    3   | False         |  True   |  1, 2      |
-        #+--------+---------------+---------+------------+
-        #|    4   | False         |  False  |  0         |
-        #+--------+---------------+---------+------------+
-
-        #Definitions
-        #===========
-          #Vectorization - A storage structure that allows for faster read/access
-                          #speeds and better memory usage, but comes with a more
-                          #difficult to use data structure.
-
-                          #It limits the node IDs to all be integers (e.g. element
-                          #centroid).  Composite plate elements (even for just CTRIA3s)
-                          #with an inconsistent number of layers will have a more
-                          #difficult data structure.
-          #Scanning   - a quick check used to figure out how many results to process
-                      #that takes almost no time
-          #Reading    - process the op2 data
-          #Build      - call the __init__ on a results object (e.g. RealDisplacementArray)
-          #Start Over - Go to the start of the op2 file
-          #Ask        - launch a GUI dialog to let the user click which results to load
-
-        #Read Mode Definitions
-        #=====================
-          #0.   The default OP2 dictionary based-approach with no asking GUI (removed)
-          #1.   The first read of a result to get the shape of the data
-          #2.   The second read of a result to get the results
-
-        #Cases
-        #======
-          #1.   Scan the block to get the size, build the object (read_mode=1),
-               #ask the user, start over, fill the objects (read_mode=2).
-               #Degenerate to read_mode=0 when read_mode=2 cannot be used based
-               #upon the value of ask.
-          #2.   Same as case #1, but don't ask the user.
-               #Scan the block to get the size, build the object (read_mode=1),
-               #start over, fill the objects (read_mode=2).
-          #3.   Scan the block to get the object types (read_mode=1), ask the user,
-               #build the object & fill it (read_mode=2)
-          #4.   Read the block to get the size, build the object & fill it (read_mode=0; removed)
-        #"""
-        #self.ask = ask
 
     @property
     def is_geometry(self) -> bool:
@@ -732,7 +674,7 @@ class OP2(OP2_Scalar, OP2Writer):
                     self.log.error('build_dataframe is broken for %s' % class_name)
                     raise
 
-    def load_hdf5(self, hdf5_filename: str, combine: bool=True) -> None:
+    def load_hdf5(self, hdf5_filename: str, combine: bool=True) -> None:  # praga: no cover
         """Loads an h5 file into an OP2 object"""
         self.deprecated('load_hdf5', 'load_hdf5_filename', '1.2')
         return self.load_hdf5_filename(hdf5_filename, combine=True)
@@ -760,7 +702,7 @@ class OP2(OP2_Scalar, OP2Writer):
             load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
         self.combine_results(combine=combine)
 
-    def load_hdf5_file(self, h5_file: Any, combine: bool=True) -> None:
+    def load_hdf5_file(self, h5_file: H5File, combine: bool=True) -> None:
         """
         Loads an h5 file object into an OP2 object
 
@@ -774,7 +716,6 @@ class OP2(OP2_Scalar, OP2Writer):
         """
         from pyNastran.op2.op2_interface.hdf5_interface import load_op2_from_hdf5_file
         #self.op2_filename = hdf5_filename
-
         #self.log.info('hdf5_op2_filename = %r' % hdf5_filename)
         debug = False
         load_op2_from_hdf5_file(self, h5_file, self.log, debug=debug)
@@ -796,7 +737,7 @@ class OP2(OP2_Scalar, OP2Writer):
         from pyNastran.op2.op2_interface.hdf5_interface import export_op2_to_hdf5_filename
         export_op2_to_hdf5_filename(hdf5_filename, self)
 
-    def export_hdf5_file(self, hdf5_file, exporter=None) -> None:
+    def export_hdf5_file(self, hdf5_file: H5File, exporter=None) -> None:
         """
         Converts the OP2 objects into hdf5 object
 
@@ -952,8 +893,8 @@ class OP2(OP2_Scalar, OP2Writer):
                     if not hasattr(res1, 'combine'):
                         self.log.info("res=%s has no method combine" % res1.__class__.__name__)
                         continue
-                    else:
-                        self.log.info("res=%s has combine" % res1.__class__.__name__)
+
+                    self.log.info("res=%s has combine" % res1.__class__.__name__)
                     res2 = result[key2]
                     del result[key1]
                     del result[key2]
@@ -1006,7 +947,7 @@ class OP2(OP2_Scalar, OP2Writer):
         self.subcase_key = subcase_key2
         #print('subcase_key = %s' % self.subcase_key)
 
-    def get_key_order(self) -> List[Union[int, str]]:
+    def get_key_order(self) -> List[Tuple[int, int, int, int, int, str]]:
         """
         Returns
         -------

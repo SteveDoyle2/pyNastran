@@ -8,7 +8,7 @@ import pyNastran
 #from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import read_op2_geom#, OP2Geom,
 from pyNastran.op2.op2 import read_op2
-from pyNastran.op2.test.test_op2 import run_op2
+#from pyNastran.op2.test.test_op2 import run_op2
 #from pyNastran.op2.writer.op2_writer import OP2Writer
 
 PKG_PATH = pyNastran.__path__[0]
@@ -232,7 +232,7 @@ class TestOP2Writer(unittest.TestCase):
         exclude_results = [
             'ctria6_force', 'ctriar_force', 'cshear_force',
             'cvisc_force',
-            'cshear_stress', #'*strain_energy',
+            'cshear_stress',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)
@@ -255,7 +255,7 @@ class TestOP2Writer(unittest.TestCase):
 
         exclude_results = [
             'cshear_force',
-            'cvisc_force', 'cshear_stress', 'grid_point_forces', '*strain_energy',
+            'cvisc_force', 'cshear_stress', 'grid_point_forces',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)
@@ -306,8 +306,6 @@ class TestOP2Writer(unittest.TestCase):
             'chbdyg_thermal_load',
             'crod_thermal_load',
             'cquad4_thermal_load',
-            #'chbdye_thermal_load',
-            #'chexa_thermal_load',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, debug=True, log=log)

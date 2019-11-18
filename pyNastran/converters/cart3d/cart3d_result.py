@@ -65,7 +65,7 @@ class Cart3dGeometry(GuiResultCommon):
         self.colormap[j] = colormap
 
     def get_location(self, i, name):
-        j = self.titles.index(name)
+        #j = self.titles.index(name)
         if name == 'NodeID':
             return 'node'
         elif name == 'ElementID':
@@ -238,7 +238,7 @@ class Cart3dResult(GuiResultCommon):
         #asdf
 
     def get_vector_size(self, i, name):
-        j = self.titles.index(name)
+        #j = self.titles.index(name)
         return 1
 
     def get_methods(self, i):

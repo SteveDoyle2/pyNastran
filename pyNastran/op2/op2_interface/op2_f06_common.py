@@ -1,5 +1,4 @@
 from __future__ import annotations
-from collections import defaultdict
 from typing import List, TYPE_CHECKING
 from numpy import unique, int32, int64
 
@@ -23,7 +22,6 @@ class OP2_F06_Common:
         self.isubcase_name_map = {}
         self.generalized_tables = {}
         self.case_control_deck = CaseControlDeck([], log=self.log)
-        self.labels = {}
         self.expected_times = {}
         self.params = {}
         self.table_names = []

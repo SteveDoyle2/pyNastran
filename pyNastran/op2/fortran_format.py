@@ -3,7 +3,6 @@ Defines:
  - FortranFormat
 
 """
-import sys
 from pyNastran.utils import object_attributes
 from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.op2.errors import FortranMarkerError, SortCodeError
@@ -221,7 +220,7 @@ class FortranFormat:
         ]
         msg = ''
         if hasattr(self, 'words'):
-            if not len(self.words) in [0, 28]:
+            if len(self.words) not in [0, 28]:
                 msg = 'table_name=%r len(self.words)=%s words=%s' % (
                     self.table_name, len(self.words), self.words)
                 raise RuntimeError(msg)

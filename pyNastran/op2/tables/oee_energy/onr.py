@@ -490,7 +490,7 @@ class ONR(OP2Common):
                 #if obj.itime == 0:
                 ints = np.frombuffer(data, dtype=self.idtype).reshape(nelements, 4)
                 eids = ints[:, 0] // 10
-                assert eids.min() > 0, eids.min()
+                assert eids.min() > 0, f'etype={self.element_name} isubtable={self.isubtable} eids.min()={eids.min()}'
                 obj.element[itime, ielement:ielement2] = eids
 
                 #[energy, percent, density]

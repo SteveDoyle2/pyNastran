@@ -160,7 +160,7 @@ class RealStrainEnergyArray(BaseElement):
             # we can get into this in a linear case
             # F:\work\pyNastran\examples\Dropbox\move_tpl\setp04.op2
 
-            nvalues = ntimes * nelements
+            #nvalues = ntimes * nelements
 
             #if self.nonlinear_factor not in (None, np.nan):
             column_names, column_values = self._build_dataframe_transient_header()
@@ -552,13 +552,13 @@ class RealStrainEnergyArray(BaseElement):
         subtitle = b'%-128s' % self.subtitle.encode('ascii')
         label = b'%-128s' % self.label.encode('ascii')
         ftable3 = b'50i 128s 128s 128s'
-        oCode = 0
+        #oCode = 0
         load_set = 0
         #print(self.code_information())
 
         ftable3 = b'i' * 50 + b'128s 128s 128s'
-        field6 = 0
-        field7 = 0
+        #field6 = 0
+        #field7 = 0
         if 0:
             pass
         elif self.analysis_code == 1:
@@ -970,7 +970,7 @@ class ComplexStrainEnergyArray(BaseElement):
 
 
             fmt1 = ' ' * 23 + '%10i      %-13s /  %-13s               %7.4f             %s\n'
-            fmt2 = '\n                        TYPE = %-8s SUBTOTAL       %13s                 %.4f\n'
+            #fmt2 = '\n                        TYPE = %-8s SUBTOTAL       %13s                 %.4f\n'
 
             for (eid, energyri, energyii, percenti, densityi) in zip(eids, energyr, energyi, percent, density):
                 senergyr = write_float_13e(energyri)
