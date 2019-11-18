@@ -640,6 +640,9 @@ class OP2(OP2_Scalar, OP2Writer):
 
     def _finalize(self) -> None:
         """internal method"""
+        if hasattr(self, 'subcase'):
+            del self.subcase
+
         result_types = self.get_table_types()
         for result_type in result_types:
             if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin'] or result_type.startswith('responses.'):

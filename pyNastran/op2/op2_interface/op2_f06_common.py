@@ -22,7 +22,6 @@ class OP2_F06_Common:
         #: subcase_id
         self.isubcase_name_map = {}
         self.generalized_tables = {}
-        self.subtitles = defaultdict(list)
         self.case_control_deck = CaseControlDeck([], log=self.log)
         self.labels = {}
         self.expected_times = {}

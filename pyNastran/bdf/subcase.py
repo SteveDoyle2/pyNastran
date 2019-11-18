@@ -265,11 +265,11 @@ class Subcase:
         #print(f'table_name={table_name!r} type={type(table_name)}')
         options = []
         if data_code['title']:
-            self.add('TITLE', data_code['title'], options, 'STRING-type')
+            self.add('TITLE', data_code['title'], [], 'STRING-type')
         if data_code['subtitle']:
-            self.add('SUBTITLE', data_code['subtitle'], options, 'STRING-type')
+            self.add('SUBTITLE', data_code['subtitle'], [], 'STRING-type')
         if data_code['label']:
-            self.add('LABEL', data_code['label'], options, 'STRING-type')
+            self.add('LABEL', data_code['label'], [], 'STRING-type')
 
         if table_name in ['OUGV1', 'BOUGV1', 'OUGV2', 'OUG1', 'OUGV1PAT']:
             if table_code == 1:
@@ -277,7 +277,7 @@ class Subcase:
                 if thermal == 0:
                     self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
                 elif thermal == 1:
-                    self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
+                    self.add('ANALYSIS', 'HEAT', [], 'KEY-type')
                 else:
                     self._write_op2_error_msg(log, self.log, msg, data_code)
             elif table_code == 7:
@@ -325,7 +325,7 @@ class Subcase:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name in ['OPHIG', 'BOPHIG', 'BOPHIGF']:
             if table_code == 7:
-                self.add('ANALYSIS', 'HEAT', options, 'KEY-type')
+                self.add('ANALYSIS', 'HEAT', [], 'KEY-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
         elif table_name == 'OUPV1':

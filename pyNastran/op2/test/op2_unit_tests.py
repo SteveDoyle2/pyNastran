@@ -1373,6 +1373,14 @@ class TestOP2(Tester):
                       build_pandas=True, log=log)[0]
         assert os.path.exists(debug_file), os.listdir(folder)
 
+        subcase = op2.case_control_deck.subcases[1]
+        value, options = subcase['TITLE']
+        assert options == [], subcase
+        value, options = subcase['SUBTITLE']
+        assert options == [], subcase
+        value, options = subcase['LABEL']
+        assert options == [], subcase
+
         op2.save('op2_model.pik')
         op2_load = OP2()
         op2_load.load('op2_model.pik')
