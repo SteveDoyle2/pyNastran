@@ -4,11 +4,15 @@ defines NastranGuiAttributes, which defines
 GUI specific geometry functions that don't involve PyQt/VTK
 this is no longer true...but should be
 """
+from __future__ import annotations
 import sys
 from collections import defaultdict
+from typing import TYPE_CHECKING
+
 import numpy as np
 from numpy.linalg import norm
 import vtk
+
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.elements.beam_connectivity import (
     rod_faces, tube_faces, chan1_faces,
@@ -18,6 +22,8 @@ from pyNastran.bdf.cards.elements.beam_connectivity import (
 )
 from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.gui.gui_objects.settings import Settings
 
 
 from pyNastran.gui.qt_files.colors import BLUE_FLOAT
@@ -31,6 +37,9 @@ BEAM_GEOM_TYPES = [
 class NastranGuiAttributes:
     """GUI specific geometry functions that don't involve PyQt/VTK"""
     def __init__(self):
+        self.stress = {}
+        self.strain = {}
+
         # new options, no way to access them through the gui
         # they control results generation
         self.make_xyz = False
@@ -75,6 +84,20 @@ class NastranGuiAttributes:
         self.has_caero = False
         self.dependents_nodes = set()
         self.icd_transform = {}
+
+    #@property
+    #def settings(self) -> Settings:
+        #return self.gui.settings
+
+    @property
+    def is_element_quality(self) -> bool:
+        return self.gui.settings.nastran_is_element_quality
+    @property
+    def is_properties(self) -> bool:
+        return self.gui.settings.nastran_is_properties
+    @property
+    def gui(self):
+        return self
 
 
 class NastranGeometryHelper(NastranGuiAttributes):

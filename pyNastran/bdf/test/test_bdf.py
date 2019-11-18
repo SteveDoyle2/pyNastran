@@ -37,7 +37,7 @@ from pyNastran.bdf.errors import (
 )
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.subcase import Subcase
-from pyNastran.bdf.mesh_utils.export_mcids import export_mcids, export_mcids2
+from pyNastran.bdf.mesh_utils.export_mcids import export_mcids, export_mcids_all
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #, mass_properties_breakdown
@@ -651,7 +651,7 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                 export_mcids(fem1, csv_filename=None, eids=None,
                              export_xaxis=True, export_yaxis=False, iply=0, log=None, debug=False)
 
-                export_mcids2(fem1)
+                export_mcids_all(fem1)
 
                 fem1._xref = True
                 read_bdf(fem1.bdf_filename, encoding=encoding, xref=False,

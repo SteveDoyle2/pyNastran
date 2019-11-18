@@ -379,6 +379,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         test.group_actions.create_groups_by_property_id()
         test.group_actions.create_groups_by_visible_result(nlimit=50)
+        test.toggle_conms()
 
     def test_femap_rougv1_01(self):
         """tests the exhaust manifold and it's funny eigenvectors"""

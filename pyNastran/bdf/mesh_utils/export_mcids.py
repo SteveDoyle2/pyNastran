@@ -156,9 +156,9 @@ def _get_elements(model, eids):
         elements = {eid : model.elements[eid] for eid in eids}
     return elements
 
-def export_mcids2(bdf_filename: Union[BDF, str],
-                  eids: Optional[List[int]]=None,
-                  log=None, debug=False):
+def export_mcids_all(bdf_filename: Union[BDF, str],
+                     eids: Optional[List[int]]=None,
+                     log=None, debug=False):
     """
     Exports the element material coordinates systems for non-isotropic
     materials.
@@ -338,6 +338,10 @@ def _make_element_coord_quad(elem, pid_ref, nids, nodes, bars):
     _rotate_coords(elem, pid_ref, nplies, nids, nodes, bars, dxyz, centroid, imat, jmat, normal)
 
 def _rotate_coords(elem, pid_ref, nplies, nids, nodes, bars, dxyz, centroid, imat, jmat, normal):
+    # element coordinate system
+    iaxis = centroid + imat * dxyz
+    nids[-1] = _export_xaxis(nids[-1], nodes[-1], bars[-1], centroid, iaxis)
+
     for iply in range(nplies):
         imati, unused_jmat = _rotate_mcid(
             elem, pid_ref, iply, imat, jmat, normal,
@@ -346,10 +350,6 @@ def _rotate_coords(elem, pid_ref, nplies, nids, nodes, bars, dxyz, centroid, ima
         iaxis = centroid + imati * dxyz
         #jaxis = centroid + jmati * dxyz
         nids[iply] = _export_xaxis(nids[iply], nodes[iply], bars[iply], centroid, iaxis)
-
-    # element coordinate system
-    iaxis = centroid + imat * dxyz
-    nids[-1] = _export_xaxis(nids[-1], nodes[-1], bars[-1], centroid, iaxis)
 
 def _export_tri_all(model: BDF,
                     elem, nplies: int,

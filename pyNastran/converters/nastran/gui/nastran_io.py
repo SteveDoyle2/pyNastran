@@ -74,7 +74,7 @@ from pyNastran.bdf.cards.elements.solid import (
 )
 from pyNastran.bdf.mesh_utils.delete_bad_elements import (
     tri_quality, quad_quality, get_min_max_theta)
-from pyNastran.bdf.mesh_utils.export_mcids import export_mcids
+from pyNastran.bdf.mesh_utils.export_mcids import export_mcids_all
 
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.utils.vtk.vtk_utils import (
@@ -85,9 +85,9 @@ from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 
 from .wildcards import IS_H5PY, GEOM_METHODS_BDF
 from .geometry_helper import NastranGeometryHelper, get_material_arrays, get_suport_node_ids
-from .results_helper import NastranGuiResults, _get_times
+from .results_helper import NastranGuiResults, fill_responses, _get_times
 from ..displacements import ForceTableResults, ElementalTableResults
-from .bdf_vectorized import map_elements_vectorized_fill, map_elements_vectorized_fill_spring
+from .bdf_vectorized import add_vectorized_elements
 from .menus.setup_model_sidebar import ModelSidebar
 
 from pyNastran.op2.op2 import OP2
@@ -174,21 +174,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def __init__(self):
         super(NastranIO, self).__init__()
         self.nid_release_map = {}
-        self.stress = {}
-        self.strain = {}
         #self.is_element_quality = True
         #self.is_properties = True
         self.make_spc_mpc_supports = True
-
-    @property
-    def is_element_quality(self):
-        return self.gui.settings.nastran_is_element_quality
-    @property
-    def is_properties(self):
-        return self.gui.settings.nastran_is_properties
-    @property
-    def gui(self):
-        return self
 
     #def __init__(self, gui):
         #super(NastranIO, self).__init__()
@@ -1146,353 +1134,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         grid = self.gui.grid
 
         nelements = self.nelements
-        dim_array = np.full(nelements, -1, dtype='int32')
-        pids_array = np.zeros(nelements, 'int32')
-        nnodes_array = np.full(nelements, -1, dtype='int32')
-        #mids = np.zeros(nelements, 'int32')
-        #material_coord = np.zeros(nelements, 'int32')
-        #min_interior_angle = np.zeros(nelements, 'float32')
-        #max_interior_angle = np.zeros(nelements, 'float32')
-        #dideal_theta = np.zeros(nelements, 'float32')
-        #max_skew_angle = np.zeros(nelements, 'float32')
-        #max_warp_angle = np.zeros(nelements, 'float32')
-        #max_aspect_ratio = np.zeros(nelements, 'float32')
-        #area = np.zeros(nelements, 'float32')
-        #area_ratio = np.zeros(nelements, 'float32')
-        #taper_ratio = np.zeros(nelements, 'float32')
-        #min_edge_length = np.zeros(nelements, 'float32')
         if nelements == 0:
             return None
-
-        if len(model.ctria3):
-            model.ctria3.quality()
-        #if len(model.tria6):
-            #model.tria6.quality()
-        #if len(model.quad4):
-            #model.quad4.quality()
-        #if len(model.cquad8):
-            #model.cquad8.quality()
-        #if len(model.cquad):
-            #model.cquad.quality()
-
-        nids_list = []
-        unused_ieid = 0
-        unused_cell_offset = 0
-        dtype = get_numpy_idtype_for_vtk()
-
-        nelements = self.nelements
-        eids_array = np.zeros(nelements, dtype=dtype)
-        cell_types_array = np.zeros(nelements, dtype=dtype)
-        cell_offsets_array = np.zeros(nelements, dtype=dtype)
-
-        results = {
-            'pid' : pids_array,
-            'eid' : eids_array,
-            'nnodes' : nnodes_array,
-            'dim' : dim_array,
-        }
-
-        cell_type_point = vtk.vtkVertex().GetCellType()
-        cell_type_line = vtk.vtkLine().GetCellType()
-        cell_type_tri3 = vtkTriangle().GetCellType()
-        cell_type_tri6 = vtkQuadraticTriangle().GetCellType()
-        cell_type_quad4 = vtkQuad().GetCellType()
-        cell_type_quad8 = vtkQuadraticQuad().GetCellType()
-        cell_type_tetra4 = vtkTetra().GetCellType()
-        cell_type_tetra10 = vtkQuadraticTetra().GetCellType()
-        cell_type_pyram5 = vtkPyramid().GetCellType()
-        cell_type_pyram13 = vtk.vtkQuadraticPyramid().GetCellType()
-        cell_type_penta6 = vtkWedge().GetCellType()
-        cell_type_penta15 = vtkQuadraticWedge().GetCellType()
-        cell_type_hexa8 = vtkHexahedron().GetCellType()
-        cell_type_hexa20 = vtkQuadraticHexahedron().GetCellType()
-
-        unused_all_eids = model.elements2.eids
-        #print('type(eids) =', type(all_eids)) # list
-        #print('all_eids =', all_eids)
-
-        #ncelas1 = len(model.celas1)
-        #ncelas2 = len(model.celas2)
-        #ncelas3 = len(model.celas3)
-        #ncelas4 = len(model.celas4)
-
-        #ncdamp1 = len(model.cdamp1)
-        #ncdamp2 = len(model.cdamp2)
-        #ncdamp3 = len(model.cdamp3)
-        #ncdamp4 = len(model.cdamp4)
-        #ncdamp5 = len(model.cdamp5)
-
-        #nconrod = len(model.conrod)
-        #ncrod = len(model.crod)
-        #nctube = len(model.ctube)
-
-        #ncbar = len(model.cbar)
-        #ncbeam = len(model.cbeam)
-
-        #ncshear = len(model.cshear)
-
-        #nctria3 = len(model.ctria3)
-        #ncquad4 = len(model.cquad4)
-        #nctria6 = len(model.ctria6)
-        #ncquad8 = len(model.cquad8)
-        #ncquad = len(model.cquad)
-
-        #nctetra4 = len(model.ctetra4)
-        #ncpenta6 = len(model.cpenta6)
-        #nchexa8 = len(model.chexa8)
-        #ncpyram5 = len(model.cpyram5)
-        #nsolids = nctetra4 + ncpenta6 + nchexa8
-
-        ieid0 = 0
-        cell_offset0 = 0
-        nids_list = []
-
-        nodes = model.nodes
-
+        idtype = get_numpy_idtype_for_vtk()
         log = self.log
-        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.celas1, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.celas2, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.celas3, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.celas4, cell_type_line, cell_type_point)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cdamp1, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cdamp2, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cdamp3, cell_type_line, cell_type_point)
-        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cdamp4, cell_type_line, cell_type_point)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cvisc, cell_type_line, cell_type_point)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.plotel, cell_type_line, nnodesi=2, dimi=2)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cbush, cell_type_line, cell_type_point)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.conrod, cell_type_line, nnodesi=2, dimi=2)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.crod, cell_type_line, nnodesi=2, dimi=2)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.ctube, cell_type_line, nnodesi=2, dimi=2)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cbar, cell_type_line, nnodesi=2, dimi=1)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cbeam, cell_type_line, nnodesi=2, dimi=1)
-
-        #model.cbend
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cshear, cell_type_quad4, nnodesi=4, dimi=2)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.ctria3, cell_type_tri3, nnodesi=3, dimi=2)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cquad4, cell_type_quad4, nnodesi=4, dimi=2)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.ctria6, cell_type_tri6, nnodesi=6, dimi=2,
-            allow0=True, cell_type_allow=cell_type_tri3)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cquad8, cell_type_quad8, nnodesi=8, dimi=2,
-            allow0=True, cell_type_allow=cell_type_quad8)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.ctriar, cell_type_tri6, nnodesi=6, dimi=2,
-            allow0=True, cell_type_allow=cell_type_tri3)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cquadr, cell_type_tri6, nnodesi=6, dimi=2,
-            allow0=True, cell_type_allow=cell_type_quad4)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.ctetra4, cell_type_tetra4, nnodesi=4, dimi=3)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cpenta6, cell_type_penta6, nnodesi=8, dimi=3)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.chexa8, cell_type_hexa8, nnodesi=8, dimi=3)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cpyram5, cell_type_pyram5, nnodesi=8, dimi=3)
-
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.ctetra10, cell_type_tetra10, nnodesi=4, dimi=3,
-            allow0=True, cell_type_allow=cell_type_tetra4)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cpenta15, cell_type_penta15, nnodesi=8, dimi=3,
-            allow0=True, cell_type_allow=cell_type_penta6)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.chexa20, cell_type_hexa20, nnodesi=8, dimi=3,
-            allow0=True, cell_type_allow=cell_type_hexa8)
-        ieid0, cell_offset0 = map_elements_vectorized_fill(
-            log,
-            ieid0, cell_offset0,
-            nodes, nids_list,
-            eids_array, pids_array, nnodes_array, dim_array,
-            cell_types_array, cell_offsets_array,
-            model.cpyram13, cell_type_pyram13, nnodesi=8, dimi=3,
-            allow0=True, cell_type_allow=cell_type_pyram5)
-
-        # model.chbdyg
-        # model.chbdye
-        # model.chbdyp
+        cell_types_array, cell_offsets_array, nids_list, eids_array, results = add_vectorized_elements(
+            model, nelements, idtype, log)
 
         if cell_types_array.min() == 0:
 
@@ -1764,55 +1411,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #for msgi in msg:
             #model.log.debug(msgi)
 
-        nconm2 = 0
-        if 'CONM2' in model.card_count:
-            nconm2 += model.card_count['CONM2']
-        if 'CMASS1' in model.card_count:
-            nconm2 += model.card_count['CMASS1']
-        if 'CMASS2' in model.card_count:
-            nconm2 += model.card_count['CMASS2']
-        # CMASS3, CMASS4 are applied to SPOINTs
-
-        update_conm2s_function = None
-        if nconm2 > 0:
-            def update_conm2s_function(unused_nid_map, unused_ugrid, points, nodes):
-                j2 = 0
-                mass_grid = self.gui.alt_grids['conm2']
-                for unused_eid, element in sorted(model.masses.items()):
-                    if isinstance(element, CONM2):
-                        nid = element.nid
-                        inid = np.searchsorted(self.node_ids, nid)
-                        xyz_nid = nodes[inid, :]
-                        centroid = element.offset(xyz_nid)
-                        points.SetPoint(j2, *centroid)
-
-                    elif element.type in ('CMASS1', 'CMASS2'):
-                        n1, n2 = element.nodes
-                        factor = 0.
-                        if element.nodes[0] is not None:
-                            inid = np.searchsorted(self.node_ids, n1)
-                            p1 = nodes[inid, :]
-                            factor += 1.
-                        if element.nodes[1] is not None:
-                            inid = np.searchsorted(self.node_ids, n2)
-                            p2 = nodes[inid, :]
-                            factor += 1.
-                        centroid = (p1 + p2) / factor
-                        points.SetPoint(j2, *centroid)
-
-                        elem = vtk.vtkVertex()
-                        elem.GetPointIds().SetId(0, j2)
-                        mass_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-                    else:
-                        continue
-                        #self.gui.log_info("skipping %s" % element.type)
-                    j2 += 1
-                return
-
-            self.gui.create_alternate_vtk_grid(
-                'conm2', color=ORANGE_FLOAT, line_width=5, opacity=1., point_size=4,
-                follower_function=update_conm2s_function,
-                representation='point')
+        nconm2 = self._create_masses(model)
 
         # Allocate grids
         self.gui.grid.Allocate(self.nelements, 1000)
@@ -1894,6 +1493,68 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.gui._finish_results_io2(model_name, [form], cases, reset_labels=reset_labels)
         else:
             self.gui._set_results([form], cases)
+
+    def _create_masses(self, model: BDF):
+        nconm2 = 0
+        if 'CONM2' in model.card_count:
+            nconm2 += model.card_count['CONM2']
+        if 'CMASS1' in model.card_count:
+            nconm2 += model.card_count['CMASS1']
+        if 'CMASS2' in model.card_count:
+            nconm2 += model.card_count['CMASS2']
+        # CMASS3, CMASS4 are applied to SPOINTs
+
+        if nconm2 == 0:
+            return nconm2
+        update_conm2s_function = None
+
+        gui = self.gui
+        if not gui.settings.nastran_is_update_conm2:
+            gui.create_alternate_vtk_grid(
+                'conm2', color=ORANGE_FLOAT, line_width=5, opacity=1., point_size=4,
+                follower_function=update_conm2s_function,
+                representation='point')
+            return nconm2
+
+        def update_conm2s_function(unused_nid_map, unused_ugrid, points, nodes):
+            j2 = 0
+            mass_grid = gui.alt_grids['conm2']
+            for unused_eid, element in sorted(model.masses.items()):
+                if isinstance(element, CONM2):
+                    nid = element.nid
+                    inid = np.searchsorted(self.node_ids, nid)
+                    xyz_nid = nodes[inid, :]
+                    centroid = element.offset(xyz_nid)
+                    points.SetPoint(j2, *centroid)
+
+                elif element.type in ('CMASS1', 'CMASS2'):
+                    n1, n2 = element.nodes
+                    factor = 0.
+                    if element.nodes[0] is not None:
+                        inid = np.searchsorted(self.node_ids, n1)
+                        p1 = nodes[inid, :]
+                        factor += 1.
+                    if element.nodes[1] is not None:
+                        inid = np.searchsorted(self.node_ids, n2)
+                        p2 = nodes[inid, :]
+                        factor += 1.
+                    centroid = (p1 + p2) / factor
+                    points.SetPoint(j2, *centroid)
+
+                    elem = vtk.vtkVertex()
+                    elem.GetPointIds().SetId(0, j2)
+                    mass_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
+                else:
+                    continue
+                    #self.gui.log_info("skipping %s" % element.type)
+                j2 += 1
+            return
+
+        gui.create_alternate_vtk_grid(
+            'conm2', color=ORANGE_FLOAT, line_width=5, opacity=1., point_size=4,
+            follower_function=update_conm2s_function,
+            representation='point')
+        return nconm2
 
     def update_caeros(self, obj):
         """the update call for the ModifyMenu"""
@@ -2021,12 +1682,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.gui.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
 
 
-    def _set_caero_representation(self, has_control_surface):
+    def _set_caero_representation(self, has_control_surface: bool) -> None:
         """
         Parameters
         ----------
         has_control_surface : bool
             is there a control surface
+
         """
         geometry_actors = self.gui.geometry_actors
         if 'caero_control_surfaces' in geometry_actors:
@@ -2045,7 +1707,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if has_control_surface and hasattr(geometry_actors['caero_subpanels'], 'Update'):
                 geometry_actors['caero_control_surfaces'].Update()
 
-    def _create_splines(self, model, box_id_to_caero_element_map, caero_points):
+    def _create_splines(self, model: BDF, box_id_to_caero_element_map: Dict[int, int], caero_points):
         """
         Sets the following actors:
           - spline_%s_structure_points % spline_id
@@ -4186,13 +3848,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #the "bars" that represent the x/y axes of the coordinate systems
 
         etype = 3 # vtkLine
-        for iply in range(nplies):
-            name = f'mcid ply={iply+1}'
-            nodes, bars = export_mcids(model, csv_filename=None, eids=None,
-                                       export_xaxis=True, export_yaxis=False,
-                                       iply=iply, log=None, debug=False)
 
-            nbars = len(bars)
+        nodes, bars = export_mcids_all(model, eids=None, log=None, debug=False)
+        for iply, nodesi in nodes.items():
+            barsi = bars[iply]
+            if iply == -1:
+                name = 'element coord'
+            else:
+                name = f'mcid ply={iply+1}'
+
+        #for iply in range(nplies):
+            #name = f'mcid ply={iply+1}'
+            #nodes, bars = export_mcids(model, csv_filename=None, eids=None,
+                                       #export_xaxis=True, export_yaxis=False,
+                                       #iply=iply, log=None, debug=False)
+
+            nbars = len(barsi)
             if nbars == 0:
                 # isotropic
                 continue
@@ -4206,8 +3877,11 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             grid.Allocate(nbars, 1000)
 
             # drop off the node/element id
-            nodes_array = np.array(nodes, dtype='float32')[:, 1:]
-            elements = np.array(bars, dtype='int32')[:, 1:] - 1
+            #nodes_array = np.array(nodes, dtype='float32')[:, 1:]
+            #elements = np.array(bars, dtype='int32')[:, 1:] - 1
+            nodes_array = np.array(nodesi, dtype='float32')
+            elements = np.array(barsi, dtype='int32')
+            assert elements.min() == 0, elements.min()
             points = numpy_to_vtk_points(nodes_array, points=None, dtype='<f', deep=1)
             grid.SetPoints(points)
             create_vtk_cells_of_constant_element_type(grid, elements, etype)
@@ -7048,6 +6722,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
           - EigenvectorXYZ
           - Stress
         """
+        log = self.log
         keys = model.get_key_order()
         assert keys is not None, keys
         #print('keys_order =', keys)
@@ -7063,7 +6738,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         keys_map = {}
         key_itime = []
 
-        icase, form_optimization = self._fill_responses(cases, model, icase)
+        icase, form_optimization = fill_responses(cases, model, icase)
         for key in keys:
             unused_is_data, unused_is_static, unused_is_real, times = _get_times(model, key)
             if times is None:
@@ -7083,7 +6758,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             ncases_old = icase
             icase = self._fill_op2_oug_oqg(cases, model, key, icase,
-                                           disp_dict, header_dict, keys_map)
+                                           disp_dict, header_dict, keys_map,
+                                           log)
 
             icase = self._fill_grid_point_forces(cases, model, key, icase,
                                                  disp_dict, header_dict, keys_map)

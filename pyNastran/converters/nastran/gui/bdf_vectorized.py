@@ -1,14 +1,376 @@
 from io import StringIO
+from typing import List, Tuple
 import numpy as np
+import vtk
 #from typing import List
+
+#VTK_TRIANGLE = 5
+#VTK_QUADRATIC_TRIANGLE = 22
+
+#VTK_QUAD = 9
+#VTK_QUADRATIC_QUAD = 23
+
+#VTK_TETRA = 10
+#VTK_QUADRATIC_TETRA = 24
+
+#VTK_WEDGE = 13
+#VTK_QUADRATIC_WEDGE = 26
+
+#VTK_HEXAHEDRON = 12
+#VTK_QUADRATIC_HEXAHEDRON = 25
+
+def add_vectorized_elements(model, nelements: int, idtype: str, log):
+    dim_array = np.full(nelements, -1, dtype='int32')
+    pids_array = np.zeros(nelements, 'int32')
+    nnodes_array = np.full(nelements, -1, dtype='int32')
+    #mids = np.zeros(nelements, 'int32')
+    #material_coord = np.zeros(nelements, 'int32')
+    #min_interior_angle = np.zeros(nelements, 'float32')
+    #max_interior_angle = np.zeros(nelements, 'float32')
+    #dideal_theta = np.zeros(nelements, 'float32')
+    #max_skew_angle = np.zeros(nelements, 'float32')
+    #max_warp_angle = np.zeros(nelements, 'float32')
+    #max_aspect_ratio = np.zeros(nelements, 'float32')
+    #area = np.zeros(nelements, 'float32')
+    #area_ratio = np.zeros(nelements, 'float32')
+    #taper_ratio = np.zeros(nelements, 'float32')
+    #min_edge_length = np.zeros(nelements, 'float32')
+
+    if len(model.ctria3):
+        model.ctria3.quality()
+    #if len(model.tria6):
+        #model.tria6.quality()
+    #if len(model.quad4):
+        #model.quad4.quality()
+    #if len(model.cquad8):
+        #model.cquad8.quality()
+    #if len(model.cquad):
+        #model.cquad.quality()
+
+    nids_list = []  # type: List[int]
+    unused_ieid = 0
+    unused_cell_offset = 0
+
+    eids_array = np.zeros(nelements, dtype=idtype)
+    cell_types_array = np.zeros(nelements, dtype=idtype)
+    cell_offsets_array = np.zeros(nelements, dtype=idtype)
+
+    results = {
+        'pid' : pids_array,
+        'eid' : eids_array,
+        'nnodes' : nnodes_array,
+        'dim' : dim_array,
+    }
+
+    cell_type_point = vtk.vtkVertex().GetCellType()
+    cell_type_line = vtk.vtkLine().GetCellType()
+    cell_type_tri3 = 5
+    cell_type_tri6 = 22
+    cell_type_quad4 = 9
+    cell_type_quad8 = 23
+    cell_type_tetra4 = 10
+    cell_type_tetra10 = 24
+    cell_type_pyram5 = vtk.vtkPyramid().GetCellType()
+    cell_type_pyram13 = vtk.vtkQuadraticPyramid().GetCellType()
+    cell_type_hexa8 = 12
+    cell_type_hexa20 = 25
+    cell_type_penta6 = 13
+    cell_type_penta15 = 26
+
+    unused_all_eids = model.elements2.eids
+    #print('type(eids) =', type(all_eids)) # list
+    #print('all_eids =', all_eids)
+
+    #ncelas1 = len(model.celas1)
+    #ncelas2 = len(model.celas2)
+    #ncelas3 = len(model.celas3)
+    #ncelas4 = len(model.celas4)
+
+    #ncdamp1 = len(model.cdamp1)
+    #ncdamp2 = len(model.cdamp2)
+    #ncdamp3 = len(model.cdamp3)
+    #ncdamp4 = len(model.cdamp4)
+    #ncdamp5 = len(model.cdamp5)
+
+    #nconrod = len(model.conrod)
+    #ncrod = len(model.crod)
+    #nctube = len(model.ctube)
+
+    #ncbar = len(model.cbar)
+    #ncbeam = len(model.cbeam)
+
+    #ncshear = len(model.cshear)
+
+    #nctria3 = len(model.ctria3)
+    #ncquad4 = len(model.cquad4)
+    #nctria6 = len(model.ctria6)
+    #ncquad8 = len(model.cquad8)
+    #ncquad = len(model.cquad)
+
+    #nctetra4 = len(model.ctetra4)
+    #ncpenta6 = len(model.cpenta6)
+    #nchexa8 = len(model.chexa8)
+    #ncpyram5 = len(model.cpyram5)
+    #nsolids = nctetra4 + ncpenta6 + nchexa8
+
+    ieid0 = 0
+    cell_offset0 = 0
+    nids_list = []
+
+    nodes = model.nodes
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.celas1, cell_type_line, cell_type_point)
+    ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.celas2, cell_type_line, cell_type_point)
+    ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.celas3, cell_type_line, cell_type_point)
+    ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.celas4, cell_type_line, cell_type_point)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cdamp1, cell_type_line, cell_type_point)
+    ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cdamp2, cell_type_line, cell_type_point)
+    ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cdamp3, cell_type_line, cell_type_point)
+    ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cdamp4, cell_type_line, cell_type_point)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cvisc, cell_type_line, cell_type_point)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.plotel, cell_type_line, nnodesi=2, dimi=2)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill_spring(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cbush, cell_type_line, cell_type_point)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.conrod, cell_type_line, nnodesi=2, dimi=2)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.crod, cell_type_line, nnodesi=2, dimi=2)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.ctube, cell_type_line, nnodesi=2, dimi=2)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cbar, cell_type_line, nnodesi=2, dimi=1)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cbeam, cell_type_line, nnodesi=2, dimi=1)
+
+    #model.cbend
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cshear, cell_type_quad4, nnodesi=4, dimi=2)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.ctria3, cell_type_tri3, nnodesi=3, dimi=2)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cquad4, cell_type_quad4, nnodesi=4, dimi=2)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.ctria6, cell_type_tri6, nnodesi=6, dimi=2,
+        allow0=True, cell_type_allow=cell_type_tri3)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cquad8, cell_type_quad8, nnodesi=8, dimi=2,
+        allow0=True, cell_type_allow=cell_type_quad8)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.ctriar, cell_type_tri6, nnodesi=6, dimi=2,
+        allow0=True, cell_type_allow=cell_type_tri3)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cquadr, cell_type_tri6, nnodesi=6, dimi=2,
+        allow0=True, cell_type_allow=cell_type_quad4)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.ctetra4, cell_type_tetra4, nnodesi=4, dimi=3)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cpenta6, cell_type_penta6, nnodesi=8, dimi=3)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.chexa8, cell_type_hexa8, nnodesi=8, dimi=3)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cpyram5, cell_type_pyram5, nnodesi=8, dimi=3)
+
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.ctetra10, cell_type_tetra10, nnodesi=4, dimi=3,
+        allow0=True, cell_type_allow=cell_type_tetra4)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cpenta15, cell_type_penta15, nnodesi=8, dimi=3,
+        allow0=True, cell_type_allow=cell_type_penta6)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.chexa20, cell_type_hexa20, nnodesi=8, dimi=3,
+        allow0=True, cell_type_allow=cell_type_hexa8)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cpyram13, cell_type_pyram13, nnodesi=8, dimi=3,
+        allow0=True, cell_type_allow=cell_type_pyram5)
+
+    # model.chbdyg
+    # model.chbdye
+    # model.chbdyp
+    return cell_types_array, cell_offsets_array, nids_list, eids_array, results
 
 def map_elements_vectorized_fill(log,
                                  ieid0: int, cell_offset0: int,
-                                 nodes, nids_list,
+                                 nodes, nids_list: List[int],
                                  eids_array, pids_array, nnodes_array, dim_array,
                                  cell_types_array, cell_offsets_array,
-                                 model_obj, cell_type, nnodesi=None, dimi=None,
-                                 allow0=False, cell_type_allow=None):
+                                 model_obj, cell_type: int, nnodesi=None, dimi=None,
+                                 allow0=False, cell_type_allow=None) -> Tuple[int, int]:
     """helper method for ``map_elements_vectorized``"""
     assert nnodesi is not None
     assert dimi is not None
@@ -95,11 +457,11 @@ def map_elements_vectorized_fill(log,
     return ieid0, cell_offset0
 
 def map_elements_vectorized_fill_spring(log,
-                                        ieid0, cell_offset0,
+                                        ieid0: int, cell_offset0: int,
                                         nodes, nids_list,
                                         eids_array, pids_array, nnodes_array, dim_array,
                                         cell_types_array, cell_offsets_array,
-                                        model_obj, cell_type_line, cell_type_point):
+                                        model_obj, cell_type_line: int, cell_type_point: int) -> Tuple[int, int]:
     """helper method for ``map_elements_vectorized``"""
     nelems = len(model_obj)
     if nelems:

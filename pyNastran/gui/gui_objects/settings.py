@@ -90,6 +90,7 @@ class Settings:
         self.nastran_create_coords = True
         self.nastran_is_bar_axes = True
         self.nastran_is_shell_mcids = True
+        self.nastran_is_update_conm2 = True
 
     def reset_settings(self):
         """helper method for ``setup_gui``"""
@@ -140,6 +141,7 @@ class Settings:
         self.nastran_create_coords = True
         self.nastran_is_bar_axes = True
         self.nastran_is_shell_mcids = True
+        self.nastran_is_update_conm2 = True
 
     def load(self, settings):
         """helper method for ``setup_gui``"""
