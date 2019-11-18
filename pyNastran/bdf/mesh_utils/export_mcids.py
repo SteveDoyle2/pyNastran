@@ -89,8 +89,10 @@ def export_mcids(bdf_filename: Union[BDF, str], csv_filename: Optional[str]=None
 
     elements = _get_elements(model, eids)
     pid_to_nplies, nplies_max = get_pid_to_nplies(model)
+    if nplies_max == 0:
+        return {}, 0
     if iply >= nplies_max:
-        raise RuntimeError('no ply {iply} found')
+        raise RuntimeError(f'no ply {iply} found')
 
     eid = 1
     nid = 1
@@ -204,6 +206,8 @@ def export_mcids2(bdf_filename: Union[BDF, str],
         model.safe_cross_reference()
 
     pid_to_nplies, nplies_max = get_pid_to_nplies(model)
+    if nplies_max == 0:
+        return {}, 0
 
     elements = _get_elements(model, eids)
 
@@ -250,9 +254,9 @@ def get_pid_to_nplies(model: BDF) -> Tuple[Dict[int, int], int]:
 
     all_plies = list(pid_to_nplies.values())
     if len(all_plies) == 0:
-        return {}, {}
+        return {}, 0
     nplies_max = max(all_plies)
-
+    assert isinstance(nplies_max, int), nplies_max
     return pid_to_nplies, nplies_max
 
 def get_pid_ref_prop_type(model: BDF, elem) -> Tuple[Union[PCOMP, PCOMPG, PSHELL], str]:
