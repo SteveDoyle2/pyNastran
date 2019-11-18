@@ -1,12 +1,13 @@
 # pylint: disable=E1101,C1801,C0103
 """Defines the GUI IO file for Nastran."""
+from __future__ import annotations
 import os
 import sys
 import traceback
 from itertools import chain
 from io import StringIO
 from collections import defaultdict, OrderedDict
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, Tuple, Any, TYPE_CHECKING
 
 from pyNastran import __version__
 from pyNastran.op2.result_objects.stress_object import StressObject
@@ -29,7 +30,6 @@ from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
 
 import numpy as np
 from numpy.linalg import norm  # type: ignore
-from cpylog import properties as log_properties
 
 #: makes vtk work on certain builds of vtk
 #: we have to call this before vtk; you can't just try-except it
@@ -66,7 +66,6 @@ from pyNastran.bdf.bdf import (BDF,
                                CQUADX4, CQUADX8, CQUADX,
                                CONM2)
 from pyNastran.bdf.cards.aero.zona import CAERO7, BODY7
-from pyNastran.bdf.cards.elements.shell import ShellElement
 from pyNastran.bdf.cards.elements.solid import (
     CTETRA4, CTETRA10, CPENTA6, CPENTA15,
     CHEXA8, CHEXA20, CIHEX1, CIHEX2,
@@ -83,11 +82,16 @@ from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 
 
+from ..displacements import ForceTableResults, ElementalTableResults
 from .wildcards import IS_H5PY, GEOM_METHODS_BDF
 from .geometry_helper import NastranGeometryHelper, get_material_arrays, get_suport_node_ids
 from .results_helper import NastranGuiResults, fill_responses, _get_times
-from ..displacements import ForceTableResults, ElementalTableResults
 from .bdf_vectorized import add_vectorized_elements
+from .utils import (
+    build_offset_normals_dims, build_map_centroidal_result,
+    get_nastran_gui_layer_word, check_for_missing_control_surface_boxes,
+    get_elements_nelements_unvectorized, get_shell_material_coord,
+    make_nid_map, store_warning)
 from .menus.setup_model_sidebar import ModelSidebar
 
 from pyNastran.op2.op2 import OP2
@@ -97,14 +101,8 @@ from pyNastran.op2.op2_geom import OP2Geom
 from pyNastran.gui.qt_files.colors import (
     RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
     YELLOW_FLOAT, ORANGE_FLOAT)
-#GREEN = (0., 1., 0.)
-#BLUE = (0., 0., 1.)
-#LIGHT_GREEN = (0.5, 1., 0.5)
-#PINK = (0.98, 0.4, 0.93)
-#ORANGE = (219/255., 168/255., 13/255.)
-#RED = (1., 0., 0.)
-#YELLOW = (1., 1., 0.)
-#PURPLE = (1., 0., 1.)
+if TYPE_CHECKING:
+    from pyNastran.gui.gui_objects.settings import Settings
 
 SIDE_MAP = {}
 SIDE_MAP['CHEXA'] = {
@@ -174,8 +172,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def __init__(self):
         super(NastranIO, self).__init__()
         self.nid_release_map = {}
-        #self.is_element_quality = True
-        #self.is_properties = True
         self.make_spc_mpc_supports = True
 
     #def __init__(self, gui):
@@ -468,69 +464,22 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 del name
         return skip_reading
 
-    def get_xyz_in_coord(self, model, cid=0, fdtype='float32', check_mirror=True):
+    def get_xyz_in_coord(self, model, cid=0, fdtype: str='float32', check_mirror: bool=True):
         """
         Creates the grid points efficiently
 
         Used by ``load_nastran_geometry_unvectorized``
         """
-        models = {0 : model}
-        models.update(model.superelement_models)
-        #nmodels = len(models)
-
-        xyz_cid0 = {}
-        nid_cp_cd = {}
-        icd_transform = {}
-        #nid_map = {}
-        #inode = 0
-        for super_id, modeli in sorted(models.items()):
-            out = modeli.get_displacement_index_xyz_cp_cd(
-                fdtype=fdtype, idtype='int32', sort_ids=True)
-            icd_transformi, icp_transformi, xyz_cpi, nid_cp_cdi = out
-            icd_transform[super_id] = icd_transformi
-
-            xyz_cid0i = modeli.transform_xyzcp_to_xyz_cid(
-                xyz_cpi, nid_cp_cdi[:, 0], icp_transformi, cid=cid,
-                in_place=False)
-
-            if super_id in model.seloc and super_id: # in model.initial_superelement_models and 0:
-                # TODO: when should seloc get applied?
-                #       during superelement creation or now?
-                #       I'm going with superelement creation...
-                #       I think we need to update the node locations for the superelements
-                #       that exist before mirroring
-                seloc = model.seloc[super_id]
-                xyz_cid0i = seloc.transform(model, xyz_cid0i)
-
-            #print('model.spoints =', model.spoints)
-            #import json
-            #for spoint_id, spoint in model.spoints.items():
-                #if spoint.comment: # or spoint._comment?
-                    #print('SPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
-                    #comment_lower = spoint.comment.lower()
-                    #print('comment_lower = %r' % comment_lower)
-                    ## pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}
-                    #if 'pynastran' in comment_lower and 'spoint' in comment_lower:
-                        #dict_str = jsonify(comment_lower)
-                        #print('dict_str = %r' % dict_str)
-                        #dicti = json.loads(dict_str)
-                        #print(dicti)
-            #for epoint_id, epoint in model.epoints.items():
-                #if epoints.comment:
-                    #print('EPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
-            #sys.stdout.flush()
-
-            #------------------------------
-            nid_cp_cd[super_id] = nid_cp_cdi
-            xyz_cid0[super_id] = xyz_cid0i
+        xyz_cid0, nid_cp_cd, icd_transform = build_superelement_model(model, cid=cid, fdtype=fdtype)
 
         if len(xyz_cid0) == 1:
+            super_id = 0
             nid_mapi = self.gui.nid_map
-            make_nid_map(nid_mapi, nid_cp_cdi[:, 0])
+            make_nid_map(nid_mapi, nid_cp_cd[super_id][:, 0])
             self._add_nastran_spoints_to_grid(model.spoints, nid_mapi)
 
-            self.icd_transform = icd_transform[0]
-            return xyz_cid0[0], nid_cp_cd[0]
+            self.icd_transform = icd_transform[super_id]
+            return xyz_cid0[super_id], nid_cp_cd[super_id]
 
         # superelements
         self.icd_transform = icd_transform
@@ -1069,8 +1018,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 'thickness' : nplies,
                 'nplies' : nplies,
             }
-            icase = self._build_materials(model, pshell, pcomp, is_pshell_pcomp,
-                                          cases, form0, icase)
+            icase = _build_materials(model, pshell, pcomp, is_pshell_pcomp,
+                                     cases, form0, icase)
 
         #------------------------------------------------------------
         # add alternate actors
@@ -1612,6 +1561,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _set_subcases_unvectorized(self, model, form, cases, icase, xref_nodes, xref_loads):
         """helper for ``load_nastran_geometry_unvectorized``"""
+        settings = self.gui.settings  # type: Settings
+        colormap = settings.colormap
         form0 = form[2]
         assert icase is not None
         nsubcases = len(model.subcases)
@@ -1639,7 +1590,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             assert icase is not None
             if self.normals is not None and self.plot_applied_loads:
                 icase = self._plot_applied_loads(
-                    model, cases, formii, icase, subcase_idi, xref_loads=xref_loads)
+                    model, cases, formii, icase, subcase_idi, xref_loads=xref_loads,
+                    colormap=colormap,
+                )
                 #plot_pressures = False
                 plot_pressures = True
             else:
@@ -1669,17 +1622,18 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
          - caero_control_surfaces
         """
         if self.has_caero:
-            self.gui.create_alternate_vtk_grid(
+            gui = self.gui
+            gui.create_alternate_vtk_grid(
                 'caero', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
                 representation='toggle', is_visible=True, is_pickable=False)
-            self.gui.create_alternate_vtk_grid(
+            gui.create_alternate_vtk_grid(
                 'caero_subpanels', color=YELLOW_FLOAT, line_width=3, opacity=1.0,
                 representation='toggle', is_visible=False, is_pickable=False)
 
-            self.gui.alt_grids['caero'].Allocate(ncaeros, 1000)
-            self.gui.alt_grids['caero_subpanels'].Allocate(ncaeros_sub, 1000)
+            gui.alt_grids['caero'].Allocate(ncaeros, 1000)
+            gui.alt_grids['caero_subpanels'].Allocate(ncaeros_sub, 1000)
             if has_control_surface:
-                self.gui.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
+                gui.alt_grids['caero_control_surfaces'].Allocate(ncaeros_cs, 1000)
 
 
     def _set_caero_representation(self, has_control_surface: bool) -> None:
@@ -1692,7 +1646,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """
         geometry_actors = self.gui.geometry_actors
         if 'caero_control_surfaces' in geometry_actors:
-            self.geometry_properties['caero_control_surfaces'].opacity = 0.5
+            self.gui.geometry_properties['caero_control_surfaces'].opacity = 0.5
 
             if 'caero' not in geometry_actors:
                 return
@@ -1780,7 +1734,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if stored_msg:
             model.log.warning('\n' + '\n'.join(stored_msg))
 
-    def make_caeros(self, model):
+    def make_caeros(self, model: BDF) -> Tuple[np.ndarray, int, int, int, int, bool,
+                                               Dict[int, int], List[int]]:
         """
         Creates the CAERO panel inputs including:
          - caero
@@ -1829,7 +1784,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # when caeros is empty, SPLINEx/AESURF cannot be defined
         if len(model.caeros) == 0:
-            #print('returning early')
             caero_points = np.empty((0, 3))
             out = (
                 has_caero, caero_points, ncaeros, ncaeros_sub, ncaeros_cs,
@@ -1838,62 +1792,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             )
             return out
 
-        # count caeros
-        # sorting doesn't matter here because we're just trying to size the array
-        for caero in model.caeros.values():
-            if hasattr(caero, 'panel_points_elements'):
-                npoints, ncelements = caero.get_npanel_points_elements()
-                ncaeros_sub += npoints
-                ncaero_sub_points += ncelements
-            elif isinstance(caero, (CAERO2, BODY7)):
-                pass
-            else:  # pragma: no cover
-                msg = '%r doesnt support panel_points_elements\n%s' % (caero.type, caero.rstrip())
-                raise NotImplementedError(msg)
-
-        for unused_eid, caero in sorted(model.caeros.items()):
-            if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5, CAERO7)):
-                ncaeros_points += 4
-                ncaeros += 1
-            elif isinstance(caero, (CAERO2, BODY7)):
-                points, elems = caero.get_points_elements_3d()
-                if points is None:
-                    continue
-                ncaeros_points += points.shape[0]
-                ncaeros += elems.shape[0]
-            else:  # pragma: no cover
-                msg = '%r doesnt support panel counter\n%s' % (caero.type, caero.rstrip())
-                raise NotImplementedError(msg)
-
-        num_prev = 0
-        ncaeros_sub = 0
-        if model.caeros:
-            caero_points = []
-            for unused_eid, caero in sorted(model.caeros.items()):
-                if caero.type in ('CAERO1', 'CAERO4', 'CAERO7'):
-                    box_ids = caero.box_ids
-                    nboxes = len(box_ids.ravel())
-                    if nboxes > 1000:
-                        print('skipping nboxes=%s for:\n%s' % (nboxes, str(caero)))
-                        continue
-
-                    ncaeros_sub += 1
-                    pointsi, elementsi = caero.panel_points_elements()
-                    caero_points.append(pointsi)
-
-                    for i, box_id in enumerate(caero.box_ids.flat):
-                        box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
-                    num_prev += pointsi.shape[0]
-                elif caero.type in ('CAERO2', 'BODY7'):
-                    pass
-                else:
-                    print('caero\n%s' % caero)
-            if ncaeros_sub:
-                caero_points = np.vstack(caero_points)
-            has_caero = True
-
-        if ncaeros_sub == 0:
-            caero_points = np.empty((0, 3))
+        ncaeros, ncaeros_sub, ncaeros_points, ncaero_sub_points = get_caero_count(model)
+        caero_points, has_caero = get_caero_points(model, box_id_to_caero_element_map)
 
         # check for any control surfcaes
         if model.aesurf:
@@ -1963,6 +1863,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             the bdf model
 
         """
+        gui = self.gui
         points = vtk.vtkPoints()
         points.SetNumberOfPoints(ncaeros_points)
 
@@ -1970,7 +1871,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         min_cpoints = []
 
         zfighting_offset = 0.0001
-        caero_grid = self.gui.alt_grids['caero']
+        caero_grid = gui.alt_grids['caero']
         j = 0
         for unused_eid, element in sorted(model.caeros.items()):
             if isinstance(element, (CAERO1, CAERO3, CAERO4, CAERO5, CAERO7)):
@@ -2037,13 +1938,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                     caero_grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
                     j += 4
             else:
-                self.gui.log_info("skipping %s" % element.type)
+                gui.log_info("skipping %s" % element.type)
 
         if ncaeros_points and len(max_cpoints):
-            self.gui.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
-            self.gui.log_info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
+            gui.log_info('CAERO.max = %s' % np.vstack(max_cpoints).max(axis=0))
+            gui.log_info('CAERO.min = %s' % np.vstack(min_cpoints).min(axis=0))
         caero_grid.SetPoints(points)
-        #self.gui.alt_grids['caero']
+        #gui.alt_grids['caero']
         #edge_mapper.SetResolveCoincidentTopologyToPolygonOffset()
 
     def set_caero_subpanel_grid(self, ncaero_sub_points, model):
@@ -2120,8 +2021,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             ???
 
         """
+        gui = self.gui
+        log = self.gui.log
         boxes_to_show, stored_msg = check_for_missing_control_surface_boxes(
-            name, cs_box_ids, box_id_to_caero_element_map, self.gui.log,
+            name, cs_box_ids, box_id_to_caero_element_map, log,
             store_msg=store_msg)
         #if not boxes_to_show:
             #print('*%s' % name)
@@ -2133,12 +2036,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         vtk_type = vtkQuad().GetCellType()
 
         all_points = []
-        #if name not in self.gui.alt_grids:
+        #if name not in gui.alt_grids:
             #print('**%s' % name)
             #return
 
         j = 0
-        grid = self.gui.alt_grids[name]
+        grid = gui.alt_grids[name]
         grid.Reset()
         for box_id in boxes_to_show:
             elementi = box_id_to_caero_element_map[box_id]
@@ -2162,7 +2065,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             j += 4
 
         if len(all_points) == 0:
-            self.log.error('deleting %r' % name)
+            log.error('deleting %r' % name)
 
             # name = spline_1000_boxes
             sname = name.split('_')
@@ -2170,10 +2073,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             # points_name = spline_1000_structure_points
             points_name = '_'.join(sname)
-            self.log.error('deleting %r' % points_name)
+            log.error('deleting %r' % points_name)
 
-            self.gui.remove_alt_grid(name, remove_geometry_property=True)
-            self.gui.remove_alt_grid(points_name, remove_geometry_property=True)
+            gui.remove_alt_grid(name, remove_geometry_property=True)
+            gui.remove_alt_grid(points_name, remove_geometry_property=True)
             return stored_msg
 
         # combine all the points
@@ -2187,15 +2090,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #if missing_boxes:
             #msg = 'Missing CAERO AELIST boxes: ' + str(missing_boxes)
-            #self.gui.log_error(msg)
+            #gui.log_error(msg)
         if note:
             # points_list (15, 4, 3) = (elements, nodes, 3)
             x, y, z = np.average(centroids, weights=areas, axis=0)
             text = str(note)
-            #slot = self.gui.label_actors[-1]
+            #slot = gui.label_actors[-1]
 
-            slot = self.gui.reset_label_actors(name)
-            annotation = self.gui.create_annotation(text, x, y, z)
+            slot = gui.reset_label_actors(name)
+            annotation = gui.create_annotation(text, x, y, z)
             slot.append(annotation)
 
         grid.SetPoints(points)
@@ -2562,7 +2465,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         if nlines == 0:
             return
 
-        assert name != u'Bar Nodes', name
+        assert name != 'Bar Nodes', name
         grid = self.gui.alt_grids[name]
 
         bar_eids = np.asarray(eids, dtype='int32')
@@ -2799,6 +2702,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         TDOO: Not quite done on:
                - ???
         """
+        settings = self.gui.settings # type: Settings
+
         # these normals point inwards
         #      4
         #    / | \
@@ -2871,7 +2776,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             (0, 6, 5, 4), # (1, 7, 6, 5),
         )
 
-        elements, nelements, unused_superelements = _get_elements_nelements_unvectorized(model)
+        elements, nelements, unused_superelements = get_elements_nelements_unvectorized(model)
         xyz_cid0 = self.xyz_cid0
         pids_array = np.zeros(nelements, dtype='int32')
         eids_array = np.zeros(nelements, dtype='int32')
@@ -3350,7 +3255,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         # this intentionally makes a deepcopy
         cds = np.array(nid_cp_cd[:, 2])
-        colormap = self.gui.settings.colormap
+        colormap = settings.colormap
         nid_res = GuiResult(subcase_id, 'NodeID', 'NodeID', 'node', all_nids,
                             mask_value=0,
                             nlabels=None,
@@ -3422,14 +3327,14 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #form0.append(('PropertyID', icase, []))
         #icase += 1
 
-        if len(model.properties) and nelements and self.is_properties:
+        if len(model.properties) and nelements and settings.nastran_is_properties:
             icase, upids, pcomp, pshell, is_pshell_pcomp = self._build_properties(
                 model, nelements, eids_array, pids_array, cases, form0, icase)
-            icase = self._build_materials(model, pcomp, pshell, is_pshell_pcomp,
-                                          cases, form0, icase)
+            icase = _build_materials(model, pcomp, pshell, is_pshell_pcomp,
+                                     cases, form0, icase)
             try:
-                icase = self._build_optimization(model, pids_array, upids,
-                                                 nelements, cases, form0, icase)
+                icase = _build_optimization(model, pids_array, upids,
+                                            nelements, cases, form0, icase)
             except:
                 #raise
                 s = StringIO()
@@ -3473,12 +3378,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         #if self.make_offset_normals_dim and nelements:
             #material_coord = None
-            #icase, normals = self._build_normals_quality(
-                #model, nelements, cases, form0, icase,
+            #icase, normals = _build_normals_quality(
+                #model, self.gui.eid_map, nelements, cases, form0, icase,
                 #xyz_cid0, material_coord, material_theta,
                 #min_interior_angle, max_interior_angle, dideal_theta,
                 #area, max_skew_angle, taper_ratio,
-                #max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio)
+                #max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio,
+                #make_offset_normals_dim=self.make_offset_normals_dim)
             #self.normals = normals
 
         #----------------------------------------------------------
@@ -3729,12 +3635,13 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             use for ???
         """
         grid = self.gui.grid
+        settings = self.gui.settings
 
         if IS_TESTING:
             self._map_elements3(nid_map, model, j, dim_max,
                                 nid_cp_cd, xref_loads=xref_loads)
 
-        if self.is_element_quality:
+        if settings.nastran_is_element_quality:
             out = self._map_elements1_quality(model, xyz_cid0, nid_cp_cd, dim_max, nid_map, j)
         else:
             out = self._map_elements1_no_quality(model, xyz_cid0, nid_cp_cd, dim_max, nid_map, j)
@@ -3800,15 +3707,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             icase += 1
 
         # subcase_id, resultType, vector_size, location, dataFormat
-        if len(model.properties) and nelements and self.is_properties:
+        if len(model.properties) and nelements and settings.nastran_is_properties:
             icase, upids, pcomp, pshell, is_pshell_pcomp = self._build_properties(
                 model, nelements, eids, pids, cases, form0, icase)
-            icase = self._build_materials(model, pcomp, pshell, is_pshell_pcomp,
-                                          cases, form0, icase)
+            icase = _build_materials(model, pcomp, pshell, is_pshell_pcomp,
+                                     cases, form0, icase)
 
             try:
-                icase = self._build_optimization(model, pids, upids, nelements,
-                                                 cases, form0, icase)
+                icase = _build_optimization(model, pids, upids, nelements,
+                                            cases, form0, icase)
             except:
                 if IS_TESTING or self.is_testing_flag:
                     raise
@@ -3829,14 +3736,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             mean_edge_length = np.nanmean(min_edge_length) * 2.5
             self.gui.set_glyph_scale_factor(mean_edge_length)  # was 1.5
 
-        if (self.make_offset_normals_dim or self.is_element_quality) and nelements:
-            icase, normals = self._build_normals_quality(
-                model, nelements, cases, form0, icase,
+        if (self.make_offset_normals_dim or settings.nastran_is_element_quality) and nelements:
+            icase, normals = _build_normals_quality(
+                settings, model, self.gui.eid_map, nelements, cases, form0, icase,
                 xyz_cid0,
                 material_coord, material_theta,
                 min_interior_angle, max_interior_angle, dideal_theta,
                 area, max_skew_angle, taper_ratio,
-                max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio)
+                max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio,
+                make_offset_normals_dim=self.make_offset_normals_dim)
             self.normals = normals
         return nid_to_pid_map, icase, cases, form
 
@@ -3892,6 +3800,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         """creates the plotel actor"""
         nplotels = len(model.plotels)
         if nplotels:
+            # sorting these don't matter, but why not?
+            #lines = [element.node_ids for unused_eid, element in sorted(model.plotels.items())]
             lines = []
             for unused_eid, element in sorted(model.plotels.items()):
                 node_ids = element.node_ids
@@ -3954,7 +3864,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # pid = pids_dict[eid]
         pids_dict = {}
 
-        elements, nelements, superelements = _get_elements_nelements_unvectorized(model)
+        elements, nelements, superelements = get_elements_nelements_unvectorized(model)
 
         pids = np.zeros(nelements, 'int32')
         material_coord = np.full(nelements, -1, dtype='int32')
@@ -4073,7 +3983,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3)):
                 if isinstance(element, (CTRIA3, CTRIAR)):
-                    mcid, theta = _get_shell_material_coord(element)
+                    mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
                     material_theta[i] = theta
                 elem = vtkTriangle()
@@ -4096,7 +4006,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif isinstance(element, (CTRIA6, CPLSTN6, CTRIAX)):
                 # the CTRIAX is a standard 6-noded element
                 if isinstance(element, CTRIA6):
-                    mcid, theta = _get_shell_material_coord(element)
+                    mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
                     material_theta[i] = theta
                 node_ids = element.node_ids
@@ -4162,7 +4072,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
                 if isinstance(element, (CQUAD4, CQUADR)):
-                    mcid, theta = _get_shell_material_coord(element)
+                    mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
                     material_theta[i] = theta
                 node_ids = element.node_ids
@@ -4195,7 +4105,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD8, CPLSTN8, CQUADX8)):
                 if isinstance(element, CQUAD8):
-                    mcid, theta = _get_shell_material_coord(element)
+                    mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
                     material_theta[i] = theta
                 node_ids = element.node_ids
@@ -4226,7 +4136,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD, CQUADX)):
                 # CQUAD, CQUADX are 9 noded quads
-                mcid, theta = _get_shell_material_coord(element)
+                mcid, theta = get_shell_material_coord(element)
                 material_coord[i] = mcid
                 material_theta[i] = theta
 
@@ -4852,7 +4762,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # pid = pids_dict[eid]
         pids_dict = {}
 
-        elements, nelements, superelements = _get_elements_nelements_unvectorized(model)
+        elements, nelements, superelements = get_elements_nelements_unvectorized(model)
 
         pids = np.zeros(nelements, 'int32')
         material_coord = np.full(nelements, -1, dtype='int32')
@@ -4991,7 +4901,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3)):
                 if isinstance(element, (CTRIA3, CTRIAR)):
-                    mcid, theta = _get_shell_material_coord(element)
+                    mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
                     material_theta[i] = theta
                 elem = vtkTriangle()
@@ -5017,7 +4927,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             elif isinstance(element, (CTRIA6, CPLSTN6, CTRIAX)):
                 # the CTRIAX is a standard 6-noded element
                 if isinstance(element, CTRIA6):
-                    mcid, theta = _get_shell_material_coord(element)
+                    mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
                     material_theta[i] = theta
                 node_ids = element.node_ids
@@ -5089,7 +4999,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
                 if isinstance(element, (CQUAD4, CQUADR)):
-                    mcid, theta = _get_shell_material_coord(element)
+                    mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
                     material_theta[i] = theta
                 node_ids = element.node_ids
@@ -5125,7 +5035,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD8, CPLSTN8, CQUADX8)):
                 if isinstance(element, CQUAD8):
-                    mcid, theta = _get_shell_material_coord(element)
+                    mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
                     material_theta[i] = theta
                 node_ids = element.node_ids
@@ -5159,7 +5069,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             elif isinstance(element, (CQUAD, CQUADX)):
                 # CQUAD, CQUADX are 9 noded quads
-                mcid, theta = _get_shell_material_coord(element)
+                mcid, theta = get_shell_material_coord(element)
                 material_coord[i] = mcid
                 material_theta[i] = theta
 
@@ -5757,288 +5667,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         )
         return out
 
-    def _build_normals_quality(self, model: BDF, nelements: int, cases, form0, icase: int,
-                               xyz_cid0,
-                               material_coord, material_theta,
-                               min_interior_angle, max_interior_angle, dideal_theta,
-                               area, max_skew_angle, taper_ratio,
-                               max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio) -> Tuple[int, Any]:
-        """
-        Creates some nastran specific results
-
-        creates:
-         - ElementDim
-         - Normal X/Y/Z
-         - NNodes/Elem
-         - Area
-         - Min/Max Interior Angle
-         - Skew Angle
-         - Taper Ratio
-         - Area Ratio
-         - MaterialCoord
-         - MaterialTheta
-        """
-        colormap = self.gui.settings.colormap
-        #ielement = 0
-        nelements = self.element_ids.shape[0]
-
-        normals = None
-        offset = None
-        xoffset = None
-        yoffset = None
-        zoffset = None
-        element_dim = None
-        nnodes_array = None
-        if self.make_offset_normals_dim:
-            out = build_offset_normals_dims(model, self.gui.eid_map, nelements)
-            normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array = out
-
-        # if not a flat plate
-        #if min(nxs) == max(nxs) and min(nxs) != 0.0:
-        #is_element_dim = element_dim is not None and np.max(element_dim) != np.min(element_dim)
-        is_element_dim = element_dim is not None
-        if is_element_dim and isfinite_and_greater_than(element_dim, -1):
-            eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
-                                    location='centroid', scalar=element_dim, mask_value=-1)
-            cases[icase] = (eid_dim_res, (0, 'ElementDim'))
-
-        #is_shell = normals is not None and np.abs(normals).max() > 0.  # NaN -> 2.0
-        is_shell = normals is not None and isfinite(normals)  # using NaNs
-
-        # we have to add the 2nd/3rd lines to make sure bars are getting into this check
-        is_solid = (
-            isfinite_and_nonzero(min_interior_angle) and
-            isfinite_and_nonzero(max_interior_angle)
-        )
-
-        #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
-        if is_shell:
-            if self.make_offset_normals_dim:
-                nx_res = GuiResult(
-                    0, header='NormalX', title='NormalX',
-                    location='centroid', scalar=normals[:, 0], data_format='%.2f')
-                ny_res = GuiResult(
-                    0, header='NormalY', title='NormalY',
-                    location='centroid', scalar=normals[:, 1], data_format='%.2f')
-                nz_res = GuiResult(
-                    0, header='NormalZ', title='NormalZ',
-                    location='centroid', scalar=normals[:, 2], data_format='%.2f')
-                nxyz_res = NormalResult(0, 'Normals', 'Normals',
-                                        nlabels=2, labelsize=5, ncolors=2,
-                                        colormap=colormap, data_format='%.1f',
-                                        uname='NormalResult')
-
-            if self.is_element_quality:
-                area_res = GuiResult(0, header='Area', title='Area',
-                                     location='centroid', scalar=area)
-                min_edge_length_res = GuiResult(
-                    0, header='Min Edge Length', title='Min Edge Length',
-                    location='centroid', scalar=min_edge_length)
-
-                min_theta_res = GuiResult(
-                    0, header='Min Interior Angle', title='Min Interior Angle',
-                    location='centroid', scalar=np.degrees(min_interior_angle))
-                max_theta_res = GuiResult(
-                    0, header='Max Interior Angle', title='Max Interior Angle',
-                    location='centroid', scalar=np.degrees(max_interior_angle))
-                dideal_theta_res = GuiResult(
-                    0, header='Delta Ideal Angle', title='Delta Ideal Angle',
-                    location='centroid', scalar=np.degrees(dideal_theta))
-
-                skew = np.degrees(max_skew_angle)
-                skew_res = GuiResult(
-                    0, header='Max Skew Angle', title='MaxSkewAngle',
-                    location='centroid', scalar=skew)
-                aspect_res = GuiResult(
-                    0, header='Aspect Ratio', title='AspectRatio',
-                    location='centroid', scalar=max_aspect_ratio)
-
-            form_checks = []
-            form0.append(('Element Checks', None, form_checks))
-            if is_element_dim:
-                form_checks.append(('ElementDim', icase, []))
-
-            if self.make_offset_normals_dim and self.make_nnodes_result:
-                nnodes_res = GuiResult(
-                    0, header='NNodes/Elem', title='NNodes/Elem',
-                    location='centroid', scalar=nnodes_array)
-                form_checks.append(('NNodes', icase + 1, []))
-                cases[icase + 1] = (nnodes_res, (0, 'NNodes'))
-                icase += 1
-
-            if self.make_offset_normals_dim:
-                # 0 is element_dim
-                cases[icase + 1] = (nx_res, (0, 'NormalX'))
-                cases[icase + 2] = (ny_res, (0, 'NormalY'))
-                cases[icase + 3] = (nz_res, (0, 'NormalZ'))
-                cases[icase + 4] = (nxyz_res, (0, 'Normal'))
-
-                form_checks.append(('NormalX', icase + 1, []))
-                form_checks.append(('NormalY', icase + 2, []))
-                form_checks.append(('NormalZ', icase + 3, []))
-                form_checks.append(('Normal', icase + 4, []))
-                icase += 5
-
-            if self.is_element_quality:
-                cases[icase] = (area_res, (0, 'Area'))
-                cases[icase + 1] = (min_edge_length_res, (0, 'Min Edge Length'))
-                cases[icase + 2] = (min_theta_res, (0, 'Min Interior Angle'))
-                cases[icase + 3] = (max_theta_res, (0, 'Max Interior Angle'))
-                cases[icase + 4] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
-                cases[icase + 5] = (skew_res, (0, 'Max Skew Angle'))
-                cases[icase + 6] = (aspect_res, (0, 'Aspect Ratio'))
-
-                form_checks.append(('Area', icase, []))
-                form_checks.append(('Min Edge Length', icase + 1, []))
-                form_checks.append(('Min Interior Angle', icase + 2, []))
-                form_checks.append(('Max Interior Angle', icase + 3, []))
-                form_checks.append(('Delta Ideal Angle', icase + 4, []))
-                form_checks.append(('Max Skew Angle', icase + 5, []))
-                form_checks.append(('Aspect Ratio', icase + 6, []))
-                icase += 7
-
-                if np.any(np.isfinite(area_ratio)) and np.nanmax(area_ratio) > 1.:
-                    arearatio_res = GuiResult(
-                        0, header='Area Ratio', title='Area Ratio',
-                        location='centroid', scalar=area_ratio)
-                    cases[icase] = (arearatio_res, (0, 'Area Ratio'))
-                    form_checks.append(('Area Ratio', icase, []))
-                    icase += 1
-
-                if np.any(np.isfinite(taper_ratio)) and np.nanmax(taper_ratio) > 1.:
-                    taperratio_res = GuiResult(
-                        0, header='Taper Ratio', title='Taper Ratio',
-                        location='centroid', scalar=taper_ratio)
-                    cases[icase] = (taperratio_res, (0, 'Taper Ratio'))
-                    form_checks.append(('Taper Ratio', icase, []))
-                    icase += 1
-
-                if isfinite_and_nonzero(max_warp_angle):
-                    warp_res = GuiResult(
-                        0, header='Max Warp Angle', title='MaxWarpAngle',
-                        location='centroid', scalar=np.degrees(max_warp_angle))
-                    cases[icase] = (warp_res, (0, 'Max Warp Angle'))
-                    form_checks.append(('Max Warp Angle', icase, []))
-                    icase += 1
-
-                #if (np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or
-                    #np.abs(zoffset).max() > 0.0):
-                #if isfinite(max_warp_angle):
-
-                # offsets
-                if self.make_offset_normals_dim:
-                    offset_res = GuiResult(
-                        0, header='Offset', title='Offset',
-                        location='centroid', scalar=offset, data_format='%g')
-                    offset_x_res = GuiResult(
-                        0, header='OffsetX', title='OffsetX',
-                        location='centroid', scalar=xoffset, data_format='%g')
-                    offset_y_res = GuiResult(
-                        0, header='OffsetY', title='OffsetY',
-                        location='centroid', scalar=yoffset, data_format='%g')
-                    offset_z_res = GuiResult(
-                        0, header='OffsetZ', title='OffsetZ',
-                        location='centroid', scalar=zoffset, data_format='%g')
-
-                    cases[icase] = (offset_res, (0, 'Offset'))
-                    cases[icase + 1] = (offset_x_res, (0, 'OffsetX'))
-                    cases[icase + 2] = (offset_y_res, (0, 'OffsetY'))
-                    cases[icase + 3] = (offset_z_res, (0, 'OffsetZ'))
-
-                    form_checks.append(('Offset', icase, []))
-                    form_checks.append(('OffsetX', icase + 1, []))
-                    form_checks.append(('OffsetY', icase + 2, []))
-                    form_checks.append(('OffsetZ', icase + 3, []))
-                    icase += 4
-
-            if 0:  # pragma: no cover
-                xyz_offset = np.vstack([xoffset, yoffset, zoffset]).T
-                titles = ['Offset XYZ']
-                headers = titles
-                assert xyz_offset.shape[1] == 3, xyz_offset.shape
-                assert xyz_offset.shape[0] == len(offset)
-                scales = [1.0]
-                subcase_id = 0
-                offset_xyz_res = ElementalTableResults(
-                    subcase_id, titles, headers, xyz_offset, offset, scales)
-                offset_xyz_res.save_defaults()
-                cases[icase] = (offset_z_res, (0, 'OffsetZ'))
-                form_checks.append(('OffsetXYZ', icase, []))
-                icase += 1
-
-            if self.make_xyz or IS_TESTING:
-                x_res = GuiResult(
-                    0, header='X', title='X',
-                    location='node', scalar=xyz_cid0[:, 0], data_format='%g')
-                y_res = GuiResult(
-                    0, header='Y', title='Y',
-                    location='node', scalar=xyz_cid0[:, 1], data_format='%g')
-                z_res = GuiResult(
-                    0, header='Z', title='Z',
-                    location='node', scalar=xyz_cid0[:, 2], data_format='%g')
-                cases[icase] = (x_res, (0, 'X'))
-                cases[icase + 1] = (y_res, (0, 'Y'))
-                cases[icase + 2] = (z_res, (0, 'Z'))
-                form_checks.append(('X', icase + 0, []))
-                form_checks.append(('Y', icase + 1, []))
-                form_checks.append(('Z', icase + 2, []))
-                icase += 3
-
-        elif is_solid:
-            # only solid elements
-            form_checks = []
-            form0.append(('Element Checks', None, form_checks))
-
-            if is_element_dim:
-                form_checks.append(('ElementDim', icase, []))
-                icase += 1
-
-            if self.is_element_quality:
-                min_edge_length_res = GuiResult(
-                    0, header='Min Edge Length', title='Min Edge Length',
-                    location='centroid', scalar=min_edge_length)
-                min_theta_res = GuiResult(
-                    0, header='Min Interior Angle', title='Min Interior Angle',
-                    location='centroid', scalar=np.degrees(min_interior_angle))
-                max_theta_res = GuiResult(
-                    0, header='Max Interior Angle', title='Max Interior Angle',
-                    location='centroid', scalar=np.degrees(max_interior_angle))
-                #skew = 90. - np.degrees(max_skew_angle)
-                #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
-                                        #location='centroid', scalar=skew)
-
-                form_checks.append(('Min Edge Length', icase, []))
-                form_checks.append(('Min Interior Angle', icase + 1, []))
-                form_checks.append(('Max Interior Angle', icase + 2, []))
-                #form_checks.append(('Max Skew Angle', icase + 3, []))
-                cases[icase] = (min_edge_length_res, (0, 'Min Edge Length'))
-                cases[icase + 1] = (min_theta_res, (0, 'Min Interior Angle'))
-                cases[icase + 2] = (max_theta_res, (0, 'Max Interior Angle'))
-                #cases[icase + 3] = (skew_res, (0, 'Max Skew Angle'))
-                icase += 3
-
-        else:
-            form0.append(('ElementDim', icase, []))
-            icase += 1
-
-        if isgreater_int(material_coord, -1):
-            material_coord_res = GuiResult(
-                0, header='MaterialCoord', title='MaterialCoord',
-                location='centroid',
-                scalar=material_coord, mask_value=-1, data_format='%i')
-            cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
-            form0.append(('MaterialCoord', icase, []))
-            icase += 1
-        if isfinite(material_theta):
-            material_theta_res = GuiResult(
-                0, header='MaterialTheta', title='MaterialTheta',
-                location='centroid',
-                scalar=material_theta, data_format='%.3f')
-            cases[icase] = (material_theta_res, (0, 'MaterialTheta'))
-            form0.append(('MaterialTheta', icase, []))
-            icase += 1
-        return icase, normals
-
     def _build_properties(self, model: BDF, nelements: int, eids, pids,
                           cases, form0, icase: int) -> int:
         """
@@ -6204,195 +5832,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self._build_mcid_vectors(model, nplies)
         return icase, upids, pcomp, pshell, (is_pshell, is_pcomp)
 
-    def _build_materials(self, model, pcomp, pshell, is_pshell_pcomp,
-                         cases, form0, icase):
-        """
-        creates:
-          - Thickness
-          - nPlies (composite only)
-          - Material ID
-          - E_11
-          - E_22
-          - E_33
-          - Is Isotropic?
-        """
-        for i, pshell_pcompi in enumerate([pshell, pcomp]):
-            mids = pshell_pcompi['mids']
-            thickness = pshell_pcompi['thickness']
-
-            if 'nplies' in pshell_pcompi:
-                nplies = pshell_pcompi['nplies']
-                if nplies is not None and nplies.max() > 0:
-                    nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
-                                           location='centroid', scalar=nplies, mask_value=0)
-                    cases[icase] = (nplies_res, (0, 'Number of Plies'))
-                    form0.append(('Number of Plies', icase, []))
-                    icase += 1
-
-            if mids is None:
-                continue
-            nlayers = mids.shape[1]
-            for ilayer in range(nlayers):
-                if len(thickness.shape) == 2:
-                    thicknessi = thickness[:, ilayer]
-                else:
-                    ## TODO: I think this is used by a non-PSHELL/PCOMP case
-                    #print('B-shape...i=%s ilayer=%s' % (i, ilayer))
-                    thicknessi = thickness
-
-                form_layer = []
-                #if i == 1 and ilayer == 0:
-                    #print('thicknessi = ', thicknessi)
-                if isfinite_and_nonzero(thicknessi):
-                    if i == 1 and ilayer == 0:
-                        tword = 'Total Thickness'  # thickness is nan
-                    elif i == 0 and ilayer == 1:
-                        tword = '12/t^3'
-                    elif i == 0 and ilayer == 2:
-                        tword = 'ts/t'
-                    elif i == 0 and ilayer == 3:
-                        tword = 'mid4'
-                    else:
-                        tword = 'Thickness'
-                    if tword != 'mid4':
-                        t_res = GuiResult(0, header=tword, title=tword,
-                                          location='centroid', scalar=thicknessi)
-                        cases[icase] = (t_res, (0, tword))
-                        form_layer.append((tword, icase, []))
-                        icase += 1
-
-                midsi = mids[:, ilayer]
-                if midsi.max() == 0:
-                    pass
-                    #if not(i == 1 and ilayer == 0):
-                        #print('cant find anything in ilayer=%s' % ilayer)
-                    #continue
-                else:
-                    imids_masked = midsi == 0
-                    has_mat8, has_mat11, e11, e22, e33 = get_material_arrays(model, midsi)
-                    mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
-                                        location='centroid', scalar=midsi, mask_value=0)
-                    cases[icase] = (mid_res, (0, 'MaterialID'))
-                    form_layer.append(('MaterialID', icase, []))
-                    icase += 1
-
-                    if has_mat11: # also implicitly has_mat8
-                        is_orthotropic = not (np.array_equal(e11, e22) and np.array_equal(e11, e33))
-                    elif has_mat8:
-                        is_orthotropic = not np.array_equal(e11, e22)
-                    else:
-                        is_orthotropic = False
-
-                    # np.nanmax(e11) > 0. can fail if e11=[nan, nan]
-                    e112 = np.fmax.reduce(e11)
-                    is_e11 = True
-                    if np.isnan(e112):
-                        is_e11 = False
-                        #
-                    if is_orthotropic:
-                        e11_res = GuiResult(0, header='E_11', title='E_11',
-                                            location='centroid', scalar=e11, data_format='%.3e')
-                        e22_res = GuiResult(0, header='E_22', title='E_22',
-                                            location='centroid', scalar=e22, data_format='%.3e')
-                        cases[icase] = (e11_res, (0, 'E_11'))
-                        cases[icase + 1] = (e22_res, (0, 'E_22'))
-                        form_layer.append(('E_11', icase, []))
-                        form_layer.append(('E_22', icase + 1, []))
-                        icase += 2
-
-                        is_isotropic = np.zeros(len(e11), dtype='int8')
-                        is_isotropic[imids_masked] = -1
-                        if has_mat11:
-                            is_isotropic[(e11 == e22) | (e11 == e33)] = 1
-                            e33_res = GuiResult(0, header='E_33', title='E_33',
-                                                location='centroid', scalar=e33, data_format='%.3e')
-                            cases[icase] = (e33_res, (0, 'E_33'))
-                            form_layer.append(('E_33', icase, []))
-                            icase += 1
-                        else:
-                            is_isotropic[e11 == e22] = 1
-
-                        iso_res = GuiResult(
-                            0, header='IsIsotropic?', title='IsIsotropic?',
-                            location='centroid', scalar=is_isotropic, data_format='%i',
-                            mask_value=-1)
-                        cases[icase] = (iso_res, (0, 'Is Isotropic?'))
-                        form_layer.append(('Is Isotropic?', icase, []))
-                        icase += 1
-                    elif is_e11:
-                        # isotropic
-                        assert np.nanmax(e11) > 0, np.nanmax(e11)
-                        e11_res = GuiResult(0, header='E', title='E',
-                                            location='centroid', scalar=e11, data_format='%.3e')
-                        cases[icase] = (e11_res, (0, 'E'))
-                        form_layer.append(('E', icase, []))
-                        icase += 1
-
-                #print('form_layer =', form_layer)
-                if form_layer:
-                    if nlayers == 1:
-                        form0 += form_layer
-                    else:
-                        word = _get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp)
-                        form0.append((word, None, form_layer))
-        return icase
-
-    def _build_optimization(self, model: BDF, pids: np.ndarray, upids: np.ndarray, nelements: int,
-                            cases, form0, icase: int) -> int:
-        """
-        Creates the optimization visualization.  Supports:
-          - DVPREL1/2 shell thickness:
-             - DV Region
-             - DVPREL Init - t
-             - DVPREL Min - t
-             - DVPREL Max - t
-        """
-        if upids is None:
-            return icase
-        if len(model.properties) and len(model.dvprels):
-            # len(model.dvprels) + len(model.dvcrels) + len(model.dvmrels) + len(model.desvars)
-            #dvmrel_init = np.zeros(nelements, dtype='int32')
-            #dvgrel_init = np.zeros(nelements, dtype='int32')
-            out_dict = model._get_dvprel_ndarrays(nelements, pids)
-
-            optimization_cases = []
-            for key, dvprel_data in out_dict.items():
-                design_region, dvprel_init, dvprel_min, dvprel_max = dvprel_data
-                if np.nanmax(design_region) == 0:
-                    continue
-
-                region_res = GuiResult(
-                    0, header='DV Region', title='DV Region',
-                    location='centroid', scalar=design_region, mask_value=0)
-                t_init_res = GuiResult(
-                    0, header='DVPREL Init - %s' % key, title='DVPREL Init - %s' % key,
-                    location='centroid', scalar=dvprel_init)
-                opt_cases = []
-                cases[icase] = (region_res, (0, 'DV Region'))
-                cases[icase + 1] = (t_init_res, (0, 'DVPREL Init - %s' % key))
-                opt_cases.append(('DV Region', icase, []))
-                opt_cases.append(('DVPREL Init - %s' % key, icase + 1, []))
-                icase += 2
-
-                if np.any(np.isfinite(dvprel_min)):
-                    t_min_res = GuiResult(
-                        0, header='DVPREL Min - %s' % key, title='DVPREL Min - %s' % key,
-                        location='centroid', scalar=dvprel_min)
-                    cases[icase] = (t_min_res, (0, 'DVPREL Min - %s' % key))
-                    opt_cases.append(('DVPREL Min - %s' % key, icase, []))
-                    icase += 1
-                if np.any(np.isfinite(dvprel_max)):
-                    t_max_res = GuiResult(
-                        0, header='DVPREL Max - %s' % key, title='DVPREL Max - %s' % key,
-                        location='centroid', scalar=dvprel_max)
-                    cases[icase] = (t_max_res, (0, 'DVPREL Max - %s' % key))
-                    opt_cases.append(('DVPREL Max - %s' % key, icase, []))
-                    icase += 1
-                optimization_cases.append((key, None, opt_cases))
-            if optimization_cases:
-                form0.append(('Optimization', None, optimization_cases))
-        return icase
-
     def _plot_pressures(self, model: BDF, cases, form0, icase: int, subcase_id: int) -> int:
         """
         pressure act normal to a shell (as opposed to anti-normal to a solid face)
@@ -6437,7 +5876,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         return icase
 
     def _plot_applied_loads(self, model, cases, form0, icase, subcase_id,
-                            xref_loads=True):
+                            xref_loads=True, colormap='jet'):
         """
         Applied loads include:
         ----------------------
@@ -6457,7 +5896,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model.log.debug('returning from plot_applied_loads_early')
             return icase
 
-        colormap = self.gui.settings.colormap
         try:
             #form = []
             out = model.get_load_arrays(
@@ -6574,7 +6012,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.scalar_bar_actor.VisibilityOn()
         self.scalar_bar_actor.Modified()
 
-        log = self.log
+        log = self.gui.log
         if isinstance(results_filename, str):
             print("trying to read...%s" % results_filename)
             ext = os.path.splitext(results_filename)[1].lower()
@@ -6596,8 +6034,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 # print(model.get_op2_stats())
 
             elif ext == '.nod':
-                self.load_patran_nod(results_filename)
-                self.cycle_results_explicit()  # start at nCase=0
+                self.gui.load_patran_nod(results_filename)
+                self.gui.cycle_results_explicit()  # start at icase=0
                 return
             elif ext == '.h5' and IS_H5PY:
                 model = OP2(log=log, debug=True)
@@ -6648,7 +6086,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.isubcase_name_map = model.isubcase_name_map
         # self.isubcase_name_map = model.subcase_key
         #print(self.isubcase_name_map)
-        log = self.gui.log
         for isubcase, values in model.isubcase_name_map.items():
             if not isinstance(isubcase, integer_types):
                 print('isubcase type =', type(isubcase))
@@ -6675,8 +6112,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         # self.isubcase_name_map = {subcase_id : label for
                                 # in model.isubcase_name_map.items()}
 
-        form = self._fill_op2_output(results_filename, cases, model, form, icase)
-        self._finish_results_io2(model_name, form, cases)
+        form = self._fill_op2_output(results_filename, cases, model, form, icase, log)
+        self.gui._finish_results_io2(model_name, form, cases)
 
         #name = 'spike'
         #eids = np.arange(10, 40)
@@ -6684,7 +6121,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         #self.post_group_by_name(name)
 
 
-    def _fill_op2_output(self, op2_filename, cases, model, form, icase):
+    def _fill_op2_output(self, op2_filename, cases, model, form, icase, log):
         """
         SOL 101 (Static)
         ----------------
@@ -6722,7 +6159,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
           - EigenvectorXYZ
           - Stress
         """
-        log = self.log
         keys = model.get_key_order()
         assert keys is not None, keys
         #print('keys_order =', keys)
@@ -6814,12 +6250,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #print('  %s' % str(key_itimei))
 
         unused_form_out = []
-        is_results = False
 
         form_resultsi = form_optimization
-        form_resultsi_subcase = []
         basename = os.path.basename(op2_filename).rstrip()
-        form_results = (basename + '-Results', None, form_resultsi)
+        form_results = (basename + '-Results', None, form_optimization)
 
         if len(key_itime) == 0:
             #print('header_dict =', header_dict)
@@ -6827,161 +6261,15 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if form_optimization:
                 form.append(form_results)
             else:
-                self.log.error('No OP2 results were found')
+                log.error('No OP2 results were found')
             return form
 
-        #for key, value in header_dict.items():
-            #print(key, value)
-        # (isubcase, analysis_code, sort_method,
-        #  count, ogs, superelement_adaptivity_index) = key
-        key_itime0 = key_itime[0]
-        key0 = key_itime0[0]
-        # (isubcase, analysis_code, sort_method,
-        #  count, ogs, superelement_adaptivity_index, pval_step) = key
-        subcase_id_old = key0[0]
-        count_old = key0[3]
-        ogs_old = key0[4]
-        subtitle_old = key0[5]
-        subtitle_old, label_old, superelement_adaptivity_index_old, unused_pval_step_old = keys_map[key0]
-        del label_old
-        del superelement_adaptivity_index_old
-
-        # now that we have the data built, we put it in the form
-        # in sorted order
-        #
-        # TODO: consider pval_step
-        for key, itime in key_itime:
-            # (isubcase, analysis_code, sort_method,
-            #  count, ogs, superelement_adaptivity_index, pval_step) = key
-            #print('key =', key)
-            subcase_id = key[0]
-            count = key[3]
-            ogs = key[4]
-            #print('*ogs =', ogs)
-            #subtitle = key[4]
-            try:
-                subtitle, unused_label, superelement_adaptivity_index, unused_pval_step = keys_map[key]
-            except:
-                subcase_id = subcase_id_old
-                subtitle = subtitle_old + '?'
-                superelement_adaptivity_index = '?'
-                raise
-
-            #print('key =', key)
-            if subcase_id != subcase_id_old or subtitle != subtitle_old or ogs != ogs_old:
-                count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
-                ogs_str = '' if ogs == 0 else '; OGS=%s' % ogs_old
-                subcase_str = 'Subcase %s; %s%s%s%s' % (
-                    subcase_id_old, subtitle_old, superelement_adaptivity_index, count_str, ogs_str)
-                #print(subcase_str)
-                res = (
-                    subcase_str.rstrip('; '),
-                    None,
-                    form_resultsi_subcase
-                )
-                form_resultsi.append(res)
-                form_resultsi_subcase = []
-                subcase_id_old = subcase_id
-                subtitle_old = subtitle
-                count_old = count
-                ogs_old = ogs
-
-
-            try:
-                header = header_dict[(key, itime)]
-            except KeyError:  # this hits for strain energy
-                msg = 'Missing (key, itime) in header_dict\n'
-                msg += '  key=%s\n' % str(key)
-
-                (subcase, analysis_code, sort_method,
-                 count, ogs, superelement_adaptivity_index, pval_step) = key
-                msg += f'    subcase={subcase}\n'
-                msg += f'    analysis_code={analysis_code}\n'
-                msg += f'    sort_method={sort_method}\n'
-                msg += f'    count={count}\n'
-                msg += f'    ogs={ogs}\n'
-                msg += f'    superelement_adaptivity_index={superelement_adaptivity_index!r}\n'
-                msg += f'    pval_step={pval_step!r}\n'
-
-                msg += '  itime=%s\n' % itime
-                msg += '  %s\n' % str((key, itime))
-                msg += 'Possible (key, time):\n'
-                for keyi in header_dict:
-                    msg += '  %s\n' % str(keyi)
-                #print(msg.rstrip())
-                #print('expected = (%s, %r)\n' % (str(key), itime))
-                self.log.error(msg.rstrip() + '\n')
-                #self.log.error('expected = (%s, %r)\n' % (str(key), itime))
-                continue
-                #raise KeyError(msg)
-            try:
-                header = header.strip()
-            except:
-                print('header = %r' % header)
-                raise
-
-
-            form_outi = []
-            form_out = (header, None, form_outi)
-            disp_formi = disp_dict[(key, itime)]
-            stress_formi = stress_dict[(key, itime)]
-            strain_formi = strain_dict[(key, itime)]
-            force_formi = force_dict[(key, itime)]
-            strain_energy_formi = strain_energy_dict[(key, itime)]
-            gpstress_formi = gpstress_dict[(key, itime)]
-            if disp_formi:
-                form_outi += disp_formi
-                #form_outi.append(('Disp', None, disp_formi))
-            if stress_formi:
-                form_outi.append(('Stress', None, stress_formi))
-                is_results = True
-            if strain_formi:
-                form_outi.append(('Strain', None, strain_formi))
-                is_results = True
-            if force_formi:
-                form_outi.append(('Force', None, force_formi))
-                is_results = True
-            if strain_energy_formi:
-                form_outi.append(('Strain Energy', None, strain_energy_formi))
-                is_results = True
-            if gpstress_formi:
-                form_outi.append(('Grid Point Stresses', None, gpstress_formi))
-                is_results = True
-
-            if form_outi:
-                is_results = True
-                form_resultsi_subcase.append(form_out)
-                #break
-
-        #print("subcase_id = ", subcase_id)
-        if subcase_id:
-            count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
-            ogs_str = '' if ogs == 0 else '; OGS=%s' % ogs_old
-            subcase_str = 'Subcase %s; %s%s%s' % (subcase_id, subtitle, count_str, ogs_str)
-            #print('*', subcase_str)
-            res = (
-                subcase_str.strip('; '),
-                None,
-                form_resultsi_subcase
-            )
-            form_resultsi.append(res)
-            assert len(form_out) > 0, form_out
-            form_resultsi_subcase = []
-
-        if is_results:
-            form.append(form_results)
-            assert len(form_out) > 0, form_out
-            #print('formi =', formi)
-            #print('form_out =', form_out)
-        #print('form_resultsi =', form_resultsi)
-        #print('form_results =', form_results)
-            #print(form)
-        #if len(formi):
-            #form.append(form0)
-        #print(form)
-        #aa
-        #print('form', form)
-        #print('form_results =', form_results)
+        form = _build_sort1_table(
+            key_itime, keys_map, header_dict,
+            form, form_results, form_resultsi,
+            disp_dict, stress_dict, strain_dict, force_dict,
+            strain_energy_dict, gpstress_dict,
+            log)
         return form
 
     def clear_nastran(self):
@@ -6992,410 +6280,763 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         self.element_ids = None
         self.node_ids = None
 
-def _get_shell_material_coord(element) -> Tuple[int, float]:
-    """
-    used by:
-     - CQUAD4, CQUADR, CQUAD8, CQUAD, CQUADX
-     - CTRIA3, CTRIAR, CTRIA6
-    """
-    if isinstance(element.theta_mcid, float):
-        return -1, element.theta_mcid
-    else:
-        return element.theta_mcid, np.nan
-
-def _get_nastran_gui_layer_word(i: int, ilayer: int, is_pshell_pcomp: bool) -> str:
-    """gets the PSHELL/PCOMP layer word"""
-    ## TODO: this makes no sense...
-    is_pshell, unused_is_pcomp = is_pshell_pcomp
-    word = ''
-    if i == 0:
-        if ilayer == 0:
-            if is_pshell:
-                word += 'PSHELL: ilayer=1 & others'
-            else:
-                word += 'Other Properties'
-        else:
-            word += 'PSHELL: ilayer=%i' % (ilayer + 1)
-    else:
-        if ilayer == 0:
-            word += 'PCOMP: Total'
-        else:
-            word += 'PCOMP: ilayer=%i' % (ilayer)
-    return word
-
-def check_for_missing_control_surface_boxes(name: str, cs_box_ids: List[int],
-                                            box_id_to_caero_element_map: Dict[int, int],
-                                            log, store_msg: bool=False) -> Tuple[List[int], str]:
-    """helper method for creating control surface"""
-    boxes_to_show = []
-    missing_boxes = []
-    for box_id in cs_box_ids:
-        try:
-            unused_ipoints = box_id_to_caero_element_map[box_id]
-        except KeyError:
-            missing_boxes.append(box_id)
-            continue
-        boxes_to_show.append(box_id)
-
-    out_msg = ''
-    if missing_boxes:
-        #print('\nboxes_to_show =', boxes_to_show)
-        msg = 'Missing CAERO AELIST/SPLINE control surface %r boxes: %s\n' % (
-            name, str(missing_boxes))
-        if not boxes_to_show:
-            msg += 'boxes_to_show=%s\n' % boxes_to_show
-
-        out_msg = store_error(log, store_msg, msg.rstrip())
-    return boxes_to_show, out_msg
-
-def store_error(log, store_msg: bool, msg: str) -> str:
-    out_msg = ''
-    if store_msg:
-        n, filename = log_properties(nframe=2)
-        out_msg = 'ERROR: %s:%s %s\n' % (filename, n, msg)
-    else:
-        log.warning(msg)
-    return out_msg
-
-def store_warning(log, store_msg: bool, msg: str) -> str:
-    out_msg = ''
-    if store_msg:
-        n, filename = log_properties(nframe=2)
-        out_msg = 'WARNING: %s:%s %s\n' % (filename, n, msg)
-    else:
-        log.warning(msg)
-    return out_msg
-
-
-def make_nid_map(nid_map: Dict[int, int], nids: List[int]) -> Dict[int, int]:
-    """make the node map"""
-    for i, nid in enumerate(nids):
-        nid_map[nid] = i
-    return nid_map
-
-def _get_elements_nelements_unvectorized(model: BDF) -> Tuple[Any, int, List[Dict[int, Any]]]:
-    nelements = len(model.elements)
-    #eid_map = self.gui.eid_map
-    elements = model.elements
-    superelements = None
-    if model.superelement_models:
-        superelements = []
-        if nelements:
-            superelements.append(np.zeros(nelements, dtype='int32'))
-        for super_id, superelement in sorted(model.superelement_models.items()):
-            nelements2 = len(superelement.elements)
-            if nelements2:
-                superelements.append(np.ones(nelements2, dtype='int32') * super_id)
-            nelements += nelements2
-            elements.update(superelement.elements)
-            #eid_map.update(superelement.eid_map)
-        superelements = np.hstack(superelements)
-        assert len(superelements) == nelements, 'len(superelements)=%s nelements=%s' % (len(superelements), nelements)
-    return elements, nelements, superelements
-
 def jsonify(comment_lower: str) -> str:
     """pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}"""
     sline = comment_lower.split('=')
     rhs = sline[1].rstrip()
     return rhs.replace("'", '"').replace('}', ',}').replace(',,}', ',}')
 
-def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: int):
-    normals = np.full((nelements, 3), np.nan, dtype='float32')
-    offset = np.full(nelements, np.nan, dtype='float32')
-    xoffset = np.full(nelements, np.nan, dtype='float32')
-    yoffset = np.full(nelements, np.nan, dtype='float32')
-    zoffset = np.full(nelements, np.nan, dtype='float32')
-    element_dim = np.full(nelements, -1, dtype='int32')
-    nnodes_array = np.full(nelements, -1, dtype='int32')
-    log = model.log
+def _build_sort1_table(key_itime, keys_map, header_dict,
+                       form, form_results, form_resultsi,
+                       disp_dict, stress_dict, strain_dict, force_dict,
+                       strain_energy_dict, gpstress_dict, log):
+    """combines the SORT1-based OP2 results into a SORT1 table"""
+    is_results = False
+    form_resultsi_subcase = []
+    #for key, value in header_dict.items():
+        #print(key, value)
+    # (isubcase, analysis_code, sort_method,
+    #  count, ogs, superelement_adaptivity_index) = key
+    key_itime0 = key_itime[0]
+    key0 = key_itime0[0]
+    # (isubcase, analysis_code, sort_method,
+    #  count, ogs, superelement_adaptivity_index, pval_step) = key
+    subcase_id_old = key0[0]
+    count_old = key0[3]
+    ogs_old = key0[4]
+    subtitle_old = key0[5]
+    subtitle_old, label_old, superelement_adaptivity_index_old, unused_pval_step_old = keys_map[key0]
+    del label_old
+    del superelement_adaptivity_index_old
 
-    #eid_map = self.gui.eid_map
-    assert eid_map is not None
-    for eid, element in sorted(model.elements.items()):
-        etype = element.type
-        if isinstance(element, ShellElement):
-            ieid = None
-            element_dimi = 2
-            #assert element.nodes_ref is not None, element.nodes_ref
-            try:
-                normali = element.Normal()
-            except AttributeError:
-                msg = str(element)
-                msg += 'nodes_ref = %s\n' % element
-                msg += 'nodes = %s' % element.node_ids
-                raise AttributeError(msg)
-            except RuntimeError:
-                # this happens when you have a degenerate tri
-                msg = (
-                    'eid=%i normal=NaN...\n'
-                    '%s'
-                    'nodes = %s' % (eid, element, str(element.nodes)))
-                log.error(msg)
-                normali = np.ones(3) * np.nan
-                #raise
+    # now that we have the data built, we put it in the form
+    # in sorted order
+    #
+    # TODO: consider pval_step
+    for key, itime in key_itime:
+        # (isubcase, analysis_code, sort_method,
+        #  count, ogs, superelement_adaptivity_index, pval_step) = key
+        #print('key =', key)
+        subcase_id = key[0]
+        count = key[3]
+        ogs = key[4]
+        #print('*ogs =', ogs)
+        #subtitle = key[4]
+        try:
+            subtitle, unused_label, superelement_adaptivity_index, unused_pval_step = keys_map[key]
+        except:
+            subcase_id = subcase_id_old
+            subtitle = subtitle_old + '?'
+            superelement_adaptivity_index = '?'
+            raise
 
-            prop = element.pid_ref
-            if prop is None:
-                # F:\work\pyNastran\examples\Dropbox\move_tpl\ehbus69.op2
-                # CTRIAX
-                z0 = np.nan
+        #print('key =', key)
+        if subcase_id != subcase_id_old or subtitle != subtitle_old or ogs != ogs_old:
+            count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
+            ogs_str = '' if ogs == 0 else '; OGS=%s' % ogs_old
+            subcase_str = 'Subcase %s; %s%s%s%s' % (
+                subcase_id_old, subtitle_old, superelement_adaptivity_index, count_str, ogs_str)
+            #print(subcase_str)
+            res = (
+                subcase_str.rstrip('; '),
+                None,
+                form_resultsi_subcase
+            )
+            form_resultsi.append(res)
+            form_resultsi_subcase = []
+            subcase_id_old = subcase_id
+            subtitle_old = subtitle
+            count_old = count
+            ogs_old = ogs
+
+
+        try:
+            header = header_dict[(key, itime)]
+        except KeyError:  # this hits for strain energy
+            msg = 'Missing (key, itime) in header_dict\n'
+            msg += '  key=%s\n' % str(key)
+
+            (subcase, analysis_code, sort_method,
+             count, ogs, superelement_adaptivity_index, pval_step) = key
+            msg += f'    subcase={subcase}\n'
+            msg += f'    analysis_code={analysis_code}\n'
+            msg += f'    sort_method={sort_method}\n'
+            msg += f'    count={count}\n'
+            msg += f'    ogs={ogs}\n'
+            msg += f'    superelement_adaptivity_index={superelement_adaptivity_index!r}\n'
+            msg += f'    pval_step={pval_step!r}\n'
+
+            msg += '  itime=%s\n' % itime
+            msg += '  %s\n' % str((key, itime))
+            msg += 'Possible (key, time):\n'
+            for keyi in header_dict:
+                msg += '  %s\n' % str(keyi)
+            #print(msg.rstrip())
+            #print('expected = (%s, %r)\n' % (str(key), itime))
+            log.error(msg.rstrip() + '\n')
+            #self.log.error('expected = (%s, %r)\n' % (str(key), itime))
+            continue
+            #raise KeyError(msg)
+        try:
+            header = header.strip()
+        except:
+            print('header = %r' % header)
+            raise
+
+
+        form_outi = []
+        form_out = (header, None, form_outi)
+        disp_formi = disp_dict[(key, itime)]
+        stress_formi = stress_dict[(key, itime)]
+        strain_formi = strain_dict[(key, itime)]
+        force_formi = force_dict[(key, itime)]
+        strain_energy_formi = strain_energy_dict[(key, itime)]
+        gpstress_formi = gpstress_dict[(key, itime)]
+        if disp_formi:
+            form_outi += disp_formi
+            #form_outi.append(('Disp', None, disp_formi))
+        if stress_formi:
+            form_outi.append(('Stress', None, stress_formi))
+            is_results = True
+        if strain_formi:
+            form_outi.append(('Strain', None, strain_formi))
+            is_results = True
+        if force_formi:
+            form_outi.append(('Force', None, force_formi))
+            is_results = True
+        if strain_energy_formi:
+            form_outi.append(('Strain Energy', None, strain_energy_formi))
+            is_results = True
+        if gpstress_formi:
+            form_outi.append(('Grid Point Stresses', None, gpstress_formi))
+            is_results = True
+
+        if form_outi:
+            is_results = True
+            form_resultsi_subcase.append(form_out)
+            #break
+
+    #print("subcase_id = ", subcase_id)
+    if subcase_id:
+        count_str = '' if count == 0 else ' ; opt_count=%s' % count_old
+        ogs_str = '' if ogs == 0 else '; OGS=%s' % ogs_old
+        subcase_str = 'Subcase %s; %s%s%s' % (subcase_id, subtitle, count_str, ogs_str)
+        #print('*', subcase_str)
+        res = (
+            subcase_str.strip('; '),
+            None,
+            form_resultsi_subcase
+        )
+        form_resultsi.append(res)
+        assert len(form_out) > 0, form_out
+        form_resultsi_subcase = []
+
+    if is_results:
+        form.append(form_results)
+        assert len(form_out) > 0, form_out
+        #print('formi =', formi)
+        #print('form_out =', form_out)
+    #print('form_resultsi =', form_resultsi)
+    #print('form_results =', form_results)
+        #print(form)
+    #if len(formi):
+        #form.append(form0)
+    #print(form)
+    #aa
+    #print('form', form)
+    #print('form_results =', form_results)
+    return form
+
+def _build_normals_quality(settings: Settings,
+                           model: BDF, eid_map, nelements: int, cases, form0, icase: int,
+                           xyz_cid0,
+                           material_coord, material_theta,
+                           min_interior_angle, max_interior_angle, dideal_theta,
+                           area, max_skew_angle, taper_ratio,
+                           max_warp_angle, area_ratio, min_edge_length, max_aspect_ratio,
+                           make_offset_normals_dim=True,
+                           make_xyz=False, make_nnodes_result=False) -> Tuple[int, Any]:
+    """
+    Creates some nastran specific results
+
+    creates:
+     - ElementDim
+     - Normal X/Y/Z
+     - NNodes/Elem
+     - Area
+     - Min/Max Interior Angle
+     - Skew Angle
+     - Taper Ratio
+     - Area Ratio
+     - MaterialCoord
+     - MaterialTheta
+    """
+    colormap = settings.colormap
+    #ielement = 0
+    #nelements = self.element_ids.shape[0]
+
+    normals = None
+    offset = None
+    xoffset = None
+    yoffset = None
+    zoffset = None
+    element_dim = None
+    nnodes_array = None
+    if make_offset_normals_dim:
+        out = build_offset_normals_dims(model, eid_map, nelements)
+        normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array = out
+
+    # if not a flat plate
+    #if min(nxs) == max(nxs) and min(nxs) != 0.0:
+    #is_element_dim = element_dim is not None and np.max(element_dim) != np.min(element_dim)
+    is_element_dim = element_dim is not None
+    if is_element_dim and isfinite_and_greater_than(element_dim, -1):
+        eid_dim_res = GuiResult(0, header='ElementDim', title='ElementDim',
+                                location='centroid', scalar=element_dim, mask_value=-1)
+        cases[icase] = (eid_dim_res, (0, 'ElementDim'))
+
+    #is_shell = normals is not None and np.abs(normals).max() > 0.  # NaN -> 2.0
+    is_shell = normals is not None and isfinite(normals)  # using NaNs
+
+    # we have to add the 2nd/3rd lines to make sure bars are getting into this check
+    is_solid = (
+        isfinite_and_nonzero(min_interior_angle) and
+        isfinite_and_nonzero(max_interior_angle)
+    )
+
+    #print('is_shell=%s is_solid=%s' % (is_shell, is_solid))
+    if is_shell:
+        if make_offset_normals_dim:
+            nx_res = GuiResult(
+                0, header='NormalX', title='NormalX',
+                location='centroid', scalar=normals[:, 0], data_format='%.2f')
+            ny_res = GuiResult(
+                0, header='NormalY', title='NormalY',
+                location='centroid', scalar=normals[:, 1], data_format='%.2f')
+            nz_res = GuiResult(
+                0, header='NormalZ', title='NormalZ',
+                location='centroid', scalar=normals[:, 2], data_format='%.2f')
+            nxyz_res = NormalResult(0, 'Normals', 'Normals',
+                                    nlabels=2, labelsize=5, ncolors=2,
+                                    colormap=colormap, data_format='%.1f',
+                                    uname='NormalResult')
+
+        if settings.nastran_is_element_quality:
+            area_res = GuiResult(0, header='Area', title='Area',
+                                 location='centroid', scalar=area)
+            min_edge_length_res = GuiResult(
+                0, header='Min Edge Length', title='Min Edge Length',
+                location='centroid', scalar=min_edge_length)
+
+            min_theta_res = GuiResult(
+                0, header='Min Interior Angle', title='Min Interior Angle',
+                location='centroid', scalar=np.degrees(min_interior_angle))
+            max_theta_res = GuiResult(
+                0, header='Max Interior Angle', title='Max Interior Angle',
+                location='centroid', scalar=np.degrees(max_interior_angle))
+            dideal_theta_res = GuiResult(
+                0, header='Delta Ideal Angle', title='Delta Ideal Angle',
+                location='centroid', scalar=np.degrees(dideal_theta))
+
+            skew = np.degrees(max_skew_angle)
+            skew_res = GuiResult(
+                0, header='Max Skew Angle', title='MaxSkewAngle',
+                location='centroid', scalar=skew)
+            aspect_res = GuiResult(
+                0, header='Aspect Ratio', title='AspectRatio',
+                location='centroid', scalar=max_aspect_ratio)
+
+        form_checks = []
+        form0.append(('Element Checks', None, form_checks))
+        if is_element_dim:
+            form_checks.append(('ElementDim', icase, []))
+
+        if make_offset_normals_dim and make_nnodes_result:
+            nnodes_res = GuiResult(
+                0, header='NNodes/Elem', title='NNodes/Elem',
+                location='centroid', scalar=nnodes_array)
+            form_checks.append(('NNodes', icase + 1, []))
+            cases[icase + 1] = (nnodes_res, (0, 'NNodes'))
+            icase += 1
+
+        if make_offset_normals_dim:
+            # 0 is element_dim
+            cases[icase + 1] = (nx_res, (0, 'NormalX'))
+            cases[icase + 2] = (ny_res, (0, 'NormalY'))
+            cases[icase + 3] = (nz_res, (0, 'NormalZ'))
+            cases[icase + 4] = (nxyz_res, (0, 'Normal'))
+
+            form_checks.append(('NormalX', icase + 1, []))
+            form_checks.append(('NormalY', icase + 2, []))
+            form_checks.append(('NormalZ', icase + 3, []))
+            form_checks.append(('Normal', icase + 4, []))
+            icase += 5
+
+        if settings.nastran_is_element_quality:
+            cases[icase] = (area_res, (0, 'Area'))
+            cases[icase + 1] = (min_edge_length_res, (0, 'Min Edge Length'))
+            cases[icase + 2] = (min_theta_res, (0, 'Min Interior Angle'))
+            cases[icase + 3] = (max_theta_res, (0, 'Max Interior Angle'))
+            cases[icase + 4] = (dideal_theta_res, (0, 'Delta Ideal Angle'))
+            cases[icase + 5] = (skew_res, (0, 'Max Skew Angle'))
+            cases[icase + 6] = (aspect_res, (0, 'Aspect Ratio'))
+
+            form_checks.append(('Area', icase, []))
+            form_checks.append(('Min Edge Length', icase + 1, []))
+            form_checks.append(('Min Interior Angle', icase + 2, []))
+            form_checks.append(('Max Interior Angle', icase + 3, []))
+            form_checks.append(('Delta Ideal Angle', icase + 4, []))
+            form_checks.append(('Max Skew Angle', icase + 5, []))
+            form_checks.append(('Aspect Ratio', icase + 6, []))
+            icase += 7
+
+            if np.any(np.isfinite(area_ratio)) and np.nanmax(area_ratio) > 1.:
+                arearatio_res = GuiResult(
+                    0, header='Area Ratio', title='Area Ratio',
+                    location='centroid', scalar=area_ratio)
+                cases[icase] = (arearatio_res, (0, 'Area Ratio'))
+                form_checks.append(('Area Ratio', icase, []))
+                icase += 1
+
+            if np.any(np.isfinite(taper_ratio)) and np.nanmax(taper_ratio) > 1.:
+                taperratio_res = GuiResult(
+                    0, header='Taper Ratio', title='Taper Ratio',
+                    location='centroid', scalar=taper_ratio)
+                cases[icase] = (taperratio_res, (0, 'Taper Ratio'))
+                form_checks.append(('Taper Ratio', icase, []))
+                icase += 1
+
+            if isfinite_and_nonzero(max_warp_angle):
+                warp_res = GuiResult(
+                    0, header='Max Warp Angle', title='MaxWarpAngle',
+                    location='centroid', scalar=np.degrees(max_warp_angle))
+                cases[icase] = (warp_res, (0, 'Max Warp Angle'))
+                form_checks.append(('Max Warp Angle', icase, []))
+                icase += 1
+
+            #if (np.abs(xoffset).max() > 0.0 or np.abs(yoffset).max() > 0.0 or
+                #np.abs(zoffset).max() > 0.0):
+            #if isfinite(max_warp_angle):
+
+            # offsets
+            if make_offset_normals_dim:
+                offset_res = GuiResult(
+                    0, header='Offset', title='Offset',
+                    location='centroid', scalar=offset, data_format='%g')
+                offset_x_res = GuiResult(
+                    0, header='OffsetX', title='OffsetX',
+                    location='centroid', scalar=xoffset, data_format='%g')
+                offset_y_res = GuiResult(
+                    0, header='OffsetY', title='OffsetY',
+                    location='centroid', scalar=yoffset, data_format='%g')
+                offset_z_res = GuiResult(
+                    0, header='OffsetZ', title='OffsetZ',
+                    location='centroid', scalar=zoffset, data_format='%g')
+
+                cases[icase] = (offset_res, (0, 'Offset'))
+                cases[icase + 1] = (offset_x_res, (0, 'OffsetX'))
+                cases[icase + 2] = (offset_y_res, (0, 'OffsetY'))
+                cases[icase + 3] = (offset_z_res, (0, 'OffsetZ'))
+
+                form_checks.append(('Offset', icase, []))
+                form_checks.append(('OffsetX', icase + 1, []))
+                form_checks.append(('OffsetY', icase + 2, []))
+                form_checks.append(('OffsetZ', icase + 3, []))
+                icase += 4
+
+        if 0:  # pragma: no cover
+            xyz_offset = np.vstack([xoffset, yoffset, zoffset]).T
+            titles = ['Offset XYZ']
+            headers = titles
+            assert xyz_offset.shape[1] == 3, xyz_offset.shape
+            assert xyz_offset.shape[0] == len(offset)
+            scales = [1.0]
+            subcase_id = 0
+            offset_xyz_res = ElementalTableResults(
+                subcase_id, titles, headers, xyz_offset, offset, scales)
+            offset_xyz_res.save_defaults()
+            cases[icase] = (offset_z_res, (0, 'OffsetZ'))
+            form_checks.append(('OffsetXYZ', icase, []))
+            icase += 1
+
+        if make_xyz or IS_TESTING:
+            x_res = GuiResult(
+                0, header='X', title='X',
+                location='node', scalar=xyz_cid0[:, 0], data_format='%g')
+            y_res = GuiResult(
+                0, header='Y', title='Y',
+                location='node', scalar=xyz_cid0[:, 1], data_format='%g')
+            z_res = GuiResult(
+                0, header='Z', title='Z',
+                location='node', scalar=xyz_cid0[:, 2], data_format='%g')
+            cases[icase] = (x_res, (0, 'X'))
+            cases[icase + 1] = (y_res, (0, 'Y'))
+            cases[icase + 2] = (z_res, (0, 'Z'))
+            form_checks.append(('X', icase + 0, []))
+            form_checks.append(('Y', icase + 1, []))
+            form_checks.append(('Z', icase + 2, []))
+            icase += 3
+
+    elif is_solid:
+        # only solid elements
+        form_checks = []
+        form0.append(('Element Checks', None, form_checks))
+
+        if is_element_dim:
+            form_checks.append(('ElementDim', icase, []))
+            icase += 1
+
+        if settings.nastran_is_element_quality:
+            min_edge_length_res = GuiResult(
+                0, header='Min Edge Length', title='Min Edge Length',
+                location='centroid', scalar=min_edge_length)
+            min_theta_res = GuiResult(
+                0, header='Min Interior Angle', title='Min Interior Angle',
+                location='centroid', scalar=np.degrees(min_interior_angle))
+            max_theta_res = GuiResult(
+                0, header='Max Interior Angle', title='Max Interior Angle',
+                location='centroid', scalar=np.degrees(max_interior_angle))
+            #skew = 90. - np.degrees(max_skew_angle)
+            #skew_res = GuiResult(0, header='Max Skew Angle', title='MaxSkewAngle',
+                                    #location='centroid', scalar=skew)
+
+            form_checks.append(('Min Edge Length', icase, []))
+            form_checks.append(('Min Interior Angle', icase + 1, []))
+            form_checks.append(('Max Interior Angle', icase + 2, []))
+            #form_checks.append(('Max Skew Angle', icase + 3, []))
+            cases[icase] = (min_edge_length_res, (0, 'Min Edge Length'))
+            cases[icase + 1] = (min_theta_res, (0, 'Min Interior Angle'))
+            cases[icase + 2] = (max_theta_res, (0, 'Max Interior Angle'))
+            #cases[icase + 3] = (skew_res, (0, 'Max Skew Angle'))
+            icase += 3
+
+    else:
+        form0.append(('ElementDim', icase, []))
+        icase += 1
+
+    if isgreater_int(material_coord, -1):
+        material_coord_res = GuiResult(
+            0, header='MaterialCoord', title='MaterialCoord',
+            location='centroid',
+            scalar=material_coord, mask_value=-1, data_format='%i')
+        cases[icase] = (material_coord_res, (0, 'MaterialCoord'))
+        form0.append(('MaterialCoord', icase, []))
+        icase += 1
+    if isfinite(material_theta):
+        material_theta_res = GuiResult(
+            0, header='MaterialTheta', title='MaterialTheta',
+            location='centroid',
+            scalar=material_theta, data_format='%.3f')
+        cases[icase] = (material_theta_res, (0, 'MaterialTheta'))
+        form0.append(('MaterialTheta', icase, []))
+        icase += 1
+    return icase, normals
+
+def _build_materials(model, pcomp, pshell, is_pshell_pcomp,
+                     cases, form0, icase):
+    """
+    creates:
+      - Thickness
+      - nPlies (composite only)
+      - Material ID
+      - E_11
+      - E_22
+      - E_33
+      - Is Isotropic?
+    """
+    for i, pshell_pcompi in enumerate([pshell, pcomp]):
+        mids = pshell_pcompi['mids']
+        thickness = pshell_pcompi['thickness']
+
+        if 'nplies' in pshell_pcompi:
+            nplies = pshell_pcompi['nplies']
+            if nplies is not None and nplies.max() > 0:
+                nplies_res = GuiResult(0, header='Number of Plies', title='nPlies',
+                                       location='centroid', scalar=nplies, mask_value=0)
+                cases[icase] = (nplies_res, (0, 'Number of Plies'))
+                form0.append(('Number of Plies', icase, []))
+                icase += 1
+
+        if mids is None:
+            continue
+        nlayers = mids.shape[1]
+        for ilayer in range(nlayers):
+            if len(thickness.shape) == 2:
+                thicknessi = thickness[:, ilayer]
             else:
-                ptype = prop.type
-                if ptype == 'PSHELL':
-                    z0 = prop.z1
-                elif ptype in ['PCOMP', 'PCOMPG']:
-                    z0 = prop.z0
-                elif ptype == 'PLPLANE':
-                    z0 = 0.
-                elif ptype == 'PSHEAR':
-                    z0 = np.nan
-                elif ptype in ['PSOLID', 'PLSOLID']:
-                    z0 = np.nan
-                else:
-                    raise NotImplementedError(ptype) # PSHEAR, PCOMPG
+                ## TODO: I think this is used by a non-PSHELL/PCOMP case
+                #print('B-shape...i=%s ilayer=%s' % (i, ilayer))
+                thicknessi = thickness
 
-            if z0 is None:
-                if etype in ['CTRIA3', 'CTRIAR']:
-                    #node_ids = self.nodes[3:]
-                    z0 = (element.T1 + element.T2 + element.T3) / 3.
-                    nnodesi = 3
-                elif etype == 'CTRIA6':
-                    #node_ids = self.nodes[3:]
-                    z0 = (element.T1 + element.T2 + element.T3) / 3.
-                    nnodesi = 6
-                elif etype in ['CQUAD4', 'CQUADR']:
-                    #node_ids = self.nodes[4:]
-                    z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
-                    nnodesi = 4
-                elif etype == 'CQUAD8':
-                    #node_ids = self.nodes[4:]
-                    z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
-                    nnodesi = 8
-                elif etype == 'CQUAD':
-                    #node_ids = self.nodes[4:]
-                    z0 = (element.T1 + element.T2 + element.T3 + element.T4) / 4.
-                    nnodesi = 9
-
-                # axisymmetric
-                elif etype == 'CTRAX3':
-                    #node_ids = self.nodes[3:]
-                    nnodesi = 3
-                    z0 = np.nan
-                elif etype == 'CTRAX6':
-                    #node_ids = self.nodes[3:]
-                    nnodesi = 6
-                    z0 = np.nan
-                elif etype in ['CTRIAX', 'CTRIAX6']:
-                    # the CTRIAX6 uses a non-standard node orientation
-                    #node_ids = self.nodes[3:]
-                    z0 = np.nan
-                    nnodesi = 6
-                elif etype == 'CQUADX':
-                    #node_ids = self.nodes[4:]
-                    nnodesi = 9
-                    z0 = np.nan
-                elif etype == 'CQUADX4':
-                    #node_ids = self.nodes[4:]
-                    nnodesi = 4
-                    z0 = np.nan
-                elif etype == 'CQUADX8':
-                    #node_ids = self.nodes[4:]
-                    nnodesi = 8
-                    z0 = np.nan
+            form_layer = []
+            #if i == 1 and ilayer == 0:
+                #print('thicknessi = ', thicknessi)
+            if isfinite_and_nonzero(thicknessi):
+                if i == 1 and ilayer == 0:
+                    tword = 'Total Thickness'  # thickness is nan
+                elif i == 0 and ilayer == 1:
+                    tword = '12/t^3'
+                elif i == 0 and ilayer == 2:
+                    tword = 'ts/t'
+                elif i == 0 and ilayer == 3:
+                    tword = 'mid4'
                 else:
-                    raise NotImplementedError(element)
+                    tword = 'Thickness'
+                if tword != 'mid4':
+                    t_res = GuiResult(0, header=tword, title=tword,
+                                      location='centroid', scalar=thicknessi)
+                    cases[icase] = (t_res, (0, tword))
+                    form_layer.append((tword, icase, []))
+                    icase += 1
+
+            midsi = mids[:, ilayer]
+            if midsi.max() == 0:
+                pass
+                #if not(i == 1 and ilayer == 0):
+                    #print('cant find anything in ilayer=%s' % ilayer)
+                #continue
             else:
-                if etype in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CPLSTN3']:
-                    nnodesi = 3
-                elif etype in ['CTRIA6', 'CTRIAX', 'CTRIAX6', 'CPLSTN6', 'CTRAX6']:
-                    # no a CTRIAX really has 6 nodes because reasons...
-                    nnodesi = 6
+                imids_masked = midsi == 0
+                has_mat8, has_mat11, e11, e22, e33 = get_material_arrays(model, midsi)
+                mid_res = GuiResult(0, header='MaterialID', title='MaterialID',
+                                    location='centroid', scalar=midsi, mask_value=0)
+                cases[icase] = (mid_res, (0, 'MaterialID'))
+                form_layer.append(('MaterialID', icase, []))
+                icase += 1
 
-                elif etype in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CSHEAR', 'CQUADX4']:
-                    nnodesi = 4
-                elif etype in ['CQUAD8', 'CPLSTN8', 'CQUADX8']:
-                    nnodesi = 8
-                elif etype in ['CQUAD', 'CQUADX']:
-                    nnodesi = 9
+                if has_mat11: # also implicitly has_mat8
+                    is_orthotropic = not (np.array_equal(e11, e22) and np.array_equal(e11, e33))
+                elif has_mat8:
+                    is_orthotropic = not np.array_equal(e11, e22)
                 else:
-                    raise NotImplementedError(element)
+                    is_orthotropic = False
 
-            ieid = eid_map[eid]
-            normals[ieid, :] = normali
-            if element.type in ['CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8']:
-                element_dim[ieid] = element_dimi
-                nnodes_array[ieid] = nnodesi
-                log.debug('continue...element.type=%r' % element.type)
+                # np.nanmax(e11) > 0. can fail if e11=[nan, nan]
+                e112 = np.fmax.reduce(e11)
+                is_e11 = True
+                if np.isnan(e112):
+                    is_e11 = False
+                    #
+                if is_orthotropic:
+                    e11_res = GuiResult(0, header='E_11', title='E_11',
+                                        location='centroid', scalar=e11, data_format='%.3e')
+                    e22_res = GuiResult(0, header='E_22', title='E_22',
+                                        location='centroid', scalar=e22, data_format='%.3e')
+                    cases[icase] = (e11_res, (0, 'E_11'))
+                    cases[icase + 1] = (e22_res, (0, 'E_22'))
+                    form_layer.append(('E_11', icase, []))
+                    form_layer.append(('E_22', icase + 1, []))
+                    icase += 2
+
+                    is_isotropic = np.zeros(len(e11), dtype='int8')
+                    is_isotropic[imids_masked] = -1
+                    if has_mat11:
+                        is_isotropic[(e11 == e22) | (e11 == e33)] = 1
+                        e33_res = GuiResult(0, header='E_33', title='E_33',
+                                            location='centroid', scalar=e33, data_format='%.3e')
+                        cases[icase] = (e33_res, (0, 'E_33'))
+                        form_layer.append(('E_33', icase, []))
+                        icase += 1
+                    else:
+                        is_isotropic[e11 == e22] = 1
+
+                    iso_res = GuiResult(
+                        0, header='IsIsotropic?', title='IsIsotropic?',
+                        location='centroid', scalar=is_isotropic, data_format='%i',
+                        mask_value=-1)
+                    cases[icase] = (iso_res, (0, 'Is Isotropic?'))
+                    form_layer.append(('Is Isotropic?', icase, []))
+                    icase += 1
+                elif is_e11:
+                    # isotropic
+                    assert np.nanmax(e11) > 0, np.nanmax(e11)
+                    e11_res = GuiResult(0, header='E', title='E',
+                                        location='centroid', scalar=e11, data_format='%.3e')
+                    cases[icase] = (e11_res, (0, 'E'))
+                    form_layer.append(('E', icase, []))
+                    icase += 1
+
+            #print('form_layer =', form_layer)
+            if form_layer:
+                if nlayers == 1:
+                    form0 += form_layer
+                else:
+                    word = get_nastran_gui_layer_word(i, ilayer, is_pshell_pcomp)
+                    form0.append((word, None, form_layer))
+    return icase
+
+def _build_optimization(model: BDF, pids: np.ndarray, upids: np.ndarray, nelements: int,
+                        cases, form0, icase: int) -> int:
+    """
+    Creates the optimization visualization.  Supports:
+      - DVPREL1/2 shell thickness:
+         - DV Region
+         - DVPREL Init - t
+         - DVPREL Min - t
+         - DVPREL Max - t
+    """
+    if upids is None:
+        return icase
+    if len(model.properties) and len(model.dvprels):
+        # len(model.dvprels) + len(model.dvcrels) + len(model.dvmrels) + len(model.desvars)
+        #dvmrel_init = np.zeros(nelements, dtype='int32')
+        #dvgrel_init = np.zeros(nelements, dtype='int32')
+        out_dict = model._get_dvprel_ndarrays(nelements, pids)
+
+        optimization_cases = []
+        for key, dvprel_data in out_dict.items():
+            design_region, dvprel_init, dvprel_min, dvprel_max = dvprel_data
+            if np.nanmax(design_region) == 0:
                 continue
 
-            offset[ieid] = z0
-            xoffset[ieid] = z0 * normali[0]
-            yoffset[ieid] = z0 * normali[1]
-            zoffset[ieid] = z0 * normali[2]
+            region_res = GuiResult(
+                0, header='DV Region', title='DV Region',
+                location='centroid', scalar=design_region, mask_value=0)
+            t_init_res = GuiResult(
+                0, header='DVPREL Init - %s' % key, title='DVPREL Init - %s' % key,
+                location='centroid', scalar=dvprel_init)
+            opt_cases = []
+            cases[icase] = (region_res, (0, 'DV Region'))
+            cases[icase + 1] = (t_init_res, (0, 'DVPREL Init - %s' % key))
+            opt_cases.append(('DV Region', icase, []))
+            opt_cases.append(('DVPREL Init - %s' % key, icase + 1, []))
+            icase += 2
 
-        elif etype == 'CTETRA':
-            ieid = eid_map[eid]
-            element_dimi = 3
-            nnodesi = 4
-        elif etype == 'CPENTA':
-            ieid = eid_map[eid]
-            element_dimi = 3
-            nnodesi = 6
-        elif etype == 'CPYRAM':
-            ieid = eid_map[eid]
-            element_dimi = 3
-            nnodesi = 5
-        elif etype in ['CHEXA', 'CIHEX1', 'CIHEX2']:
-            ieid = eid_map[eid]
-            element_dimi = 3
-            nnodesi = 8
+            if np.any(np.isfinite(dvprel_min)):
+                t_min_res = GuiResult(
+                    0, header='DVPREL Min - %s' % key, title='DVPREL Min - %s' % key,
+                    location='centroid', scalar=dvprel_min)
+                cases[icase] = (t_min_res, (0, 'DVPREL Min - %s' % key))
+                opt_cases.append(('DVPREL Min - %s' % key, icase, []))
+                icase += 1
+            if np.any(np.isfinite(dvprel_max)):
+                t_max_res = GuiResult(
+                    0, header='DVPREL Max - %s' % key, title='DVPREL Max - %s' % key,
+                    location='centroid', scalar=dvprel_max)
+                cases[icase] = (t_max_res, (0, 'DVPREL Max - %s' % key))
+                opt_cases.append(('DVPREL Max - %s' % key, icase, []))
+                icase += 1
+            optimization_cases.append((key, None, opt_cases))
+        if optimization_cases:
+            form0.append(('Optimization', None, optimization_cases))
+    return icase
 
-        elif etype in ['CROD', 'CONROD', 'CBEND', 'CBAR', 'CBEAM', 'CGAP', 'CTUBE']:
-            ieid = eid_map[eid]
-            element_dimi = 1
-            nnodesi = 2
-        elif etype in ['CBUSH', 'CBUSH1D', 'CBUSH2D',
-                       'CFAST', 'CVISC',
-                       'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5']:
-            ieid = eid_map[eid]
-            element_dimi = 0
-            nnodesi = 2
-        elif etype == 'CHBDYG':
-            ieid = eid_map[eid]
-            surface_type = element.surface_type
-            if surface_type == 'AREA3':
-                nnodesi = 3
-                element_dimi = 2
-            elif surface_type == 'AREA4':
-                nnodesi = 4
-                element_dimi = 2
-            elif surface_type == 'AREA6':
-                nnodesi = 6
-                element_dimi = 2
-            elif surface_type == 'AREA8':
-                nnodesi = 8
-                element_dimi = 2
-            #elif surface_type == 'REV':
-                #nnodesi = 2 # ???
-                #element_dimi = 1 # ???
-            else:
-                element_dimi = -1
-                nnodesi = -1
-                print('element.type=%s doesnt have a dimension' % element.type)
-        elif etype == 'CHBDYP':
-            continue
-        else:
-            try:
-                ieid = eid_map[eid]
-            except KeyError:
-                print('didnt add element to eid_map')
-                print(model.elements[eid])
-                raise
-            element_dimi = -1
-            nnodesi = -1
-            print('element.type=%s doesnt have a dimension' % element.type)
-        assert ieid is not None
-        element_dim[ieid] = element_dimi
-        nnodes_array[ieid] = nnodesi
-        #ielement += 1
+def build_superelement_model(model: BDF, cid: int=0, fdtype: str='float32'):
+    models = {0 : model}
+    models.update(model.superelement_models)
+    #nmodels = len(models)
 
-    return normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array
+    xyz_cid0 = {}
+    nid_cp_cd = {}
+    icd_transform = {}
+    #nid_map = {}
+    #inode = 0
 
-def build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
-    """
-    Sets up map_centroidal_result.  Used for:
-     - cutting plane
-     - nodal stress/strain
-    """
-    try:
-        # test_gui_superelement_1
-        _build_map_centroidal_result(model, nid_map)
-    except Exception as error:
-        model.log.error('Cannot run build_map_centroidal_result')
-        model.log.error(str(error))
+    for super_id, modeli in sorted(models.items()):
+        out = modeli.get_displacement_index_xyz_cp_cd(
+            fdtype=fdtype, idtype='int32', sort_ids=True)
+        icd_transformi, icp_transformi, xyz_cpi, nid_cp_cdi = out
+        icd_transform[super_id] = icd_transformi
 
-def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
-    """
-    Sets up map_centroidal_result.  Used for:
-     - cutting plane
-     - nodal stress/strain
-    """
-    if hasattr(model, 'map_centroidal_result'):
-        return
-    mapped_node_ids = []
-    nnodes = model.npoints
-    node_count = np.zeros(nnodes, dtype='float32')
+        xyz_cid0i = modeli.transform_xyzcp_to_xyz_cid(
+            xyz_cpi, nid_cp_cdi[:, 0], icp_transformi, cid=cid,
+            in_place=False)
 
-    eids = []
-    etypes_all_nodes = set([
-        'CBEAM', 'CBAR', 'CROD', 'CONROD', 'CTUBE', 'CBEND',
-        'CTRIA3', 'CQUAD4', 'CQUADR', 'CTRIAR', 'CSHEAR',
-        'CGAP', 'CFAST', 'CVISC', 'CBUSH', 'CBUSH1D', 'CBUSH2D'])
+        if super_id in model.seloc and super_id: # in model.initial_superelement_models and 0:
+            # TODO: when should seloc get applied?
+            #       during superelement creation or now?
+            #       I'm going with superelement creation...
+            #       I think we need to update the node locations for the superelements
+            #       that exist before mirroring
+            seloc = model.seloc[super_id]
+            xyz_cid0i = seloc.transform(model, xyz_cid0i)
 
-    springs_dampers = ('CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                       'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4')
-    nnodes_map = {
-        'CTRIA6' : (3, 6),
-        'CQUAD8' : (4, 8),
-        'CHEXA' : (8, 20),
-        'CTETRA' : (4, 10),
-        'CPENTA' : (6, 15),
-        'CPYRAM' : (5, 13),
-        'CQUADX' : (4, 9),
-        'CTRIAX' : (3, 6),
-        'CQUADX8' : (4, 8),
-        'CTRIAX6' : (3, 6),
-    }
-    #['CTRIA6', 'CQUAD8', 'CHEXA', 'CTETRA', 'CPENTA', 'CPYRAM', 'CQUADX', 'CTRIAX']
-    etypes_mixed_nodes = set(list(nnodes_map.keys()))
+        #print('model.spoints =', model.spoints)
+        #import json
+        #for spoint_id, spoint in model.spoints.items():
+            #if spoint.comment: # or spoint._comment?
+                #print('SPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
+                #comment_lower = spoint.comment.lower()
+                #print('comment_lower = %r' % comment_lower)
+                ## pyNastran: SPOINT={'id':10, 'xyz':[10.,10.,10.]}
+                #if 'pynastran' in comment_lower and 'spoint' in comment_lower:
+                    #dict_str = jsonify(comment_lower)
+                    #print('dict_str = %r' % dict_str)
+                    #dicti = json.loads(dict_str)
+                    #print(dicti)
+        #for epoint_id, epoint in model.epoints.items():
+            #if epoints.comment:
+                #print('EPOINT comment=%r _comment=%r' % (spoint.comment, spoint._comment))
+        #sys.stdout.flush()
 
-    for eid, elem in sorted(model.elements.items()):
-        if elem.type in etypes_all_nodes:
-            try:
-                node_ids = [nid_map[nid] for nid in elem.nodes]
-            except KeyError:  # pragma: no cover
-                print(elem)
-                raise
-        elif elem.type in etypes_mixed_nodes:
-            node_ids = [nid_map[nid] if nid is not None else 0
-                        for nid in elem.nodes]
-            nnodes_min, nnodes_max = nnodes_map[elem.type]
-            nnodesi = len(node_ids)
-            if nnodesi == nnodes_min:
+        #------------------------------
+        nid_cp_cd[super_id] = nid_cp_cdi
+        xyz_cid0[super_id] = xyz_cid0i
+    return xyz_cid0, nid_cp_cd, icd_transform
+
+def get_caero_count(model: BDF) -> Tuple[int, int, int, int]:
+    ncaeros = 0
+    ncaeros_sub = 0
+    #ncaeros_cs = 0
+    ncaeros_points = 0
+    ncaero_sub_points = 0
+    # count caeros
+    # sorting doesn't matter here because we're just trying to size the array
+    for caero in model.caeros.values():
+        if hasattr(caero, 'panel_points_elements'):
+            npoints, ncelements = caero.get_npanel_points_elements()
+            ncaeros_sub += npoints
+            ncaero_sub_points += ncelements
+        elif isinstance(caero, (CAERO2, BODY7)):
+            pass
+        else:  # pragma: no cover
+            msg = '%r doesnt support panel_points_elements\n%s' % (caero.type, caero.rstrip())
+            raise NotImplementedError(msg)
+
+    for unused_eid, caero in sorted(model.caeros.items()):
+        if isinstance(caero, (CAERO1, CAERO3, CAERO4, CAERO5, CAERO7)):
+            ncaeros_points += 4
+            ncaeros += 1
+        elif isinstance(caero, (CAERO2, BODY7)):
+            points, elems = caero.get_points_elements_3d()
+            if points is None:
+                continue
+            ncaeros_points += points.shape[0]
+            ncaeros += elems.shape[0]
+        else:  # pragma: no cover
+            msg = '%r doesnt support panel counter\n%s' % (caero.type, caero.rstrip())
+            raise NotImplementedError(msg)
+    return ncaeros, ncaeros_sub, ncaeros_points, ncaero_sub_points
+
+def get_caero_points(model: BDF, box_id_to_caero_element_map: Dict[int, Any]):
+    has_caero = False
+    num_prev = 0
+    ncaeros_sub = 0
+    if model.caeros:
+        caero_points = []
+        for unused_eid, caero in sorted(model.caeros.items()):
+            if caero.type in ('CAERO1', 'CAERO4', 'CAERO7'):
+                box_ids = caero.box_ids
+                nboxes = len(box_ids.ravel())
+                if nboxes > 1000:
+                    print('skipping nboxes=%s for:\n%s' % (nboxes, str(caero)))
+                    continue
+
+                ncaeros_sub += 1
+                pointsi, elementsi = caero.panel_points_elements()
+                caero_points.append(pointsi)
+
+                for i, box_id in enumerate(caero.box_ids.flat):
+                    box_id_to_caero_element_map[box_id] = elementsi[i, :] + num_prev
+                num_prev += pointsi.shape[0]
+            elif caero.type in ('CAERO2', 'BODY7'):
                 pass
-            elif 0 in node_ids:
-                node_ids = node_ids[:nnodes_min]
-                assert len(node_ids) == nnodes_min, 'nnodes=%s min=%s\n%s' % (len(node_ids), nnodes_min, elem)
             else:
-                assert nnodesi == nnodes_max, 'nnodes=%s max=%s\n%s' % (nnodesi, nnodes_max, elem)
-        elif elem.type in springs_dampers:
-            node_ids = [nid_map[nid] for nid in elem.nodes
-                        if nid is not None]
-        elif elem.type in ('CHBDYP', 'CHBDYG'):
-            node_ids = [nid_map[nid] for nid in elem.nodes
-                        if nid not in [0, None]]
-        else:
-            raise NotImplementedError(elem)
-        #print(elem.nodes, node_ids)
-        mapped_node_ids.append(node_ids)
-        eids.append(eid)
+                print('caero\n%s' % caero)
+        if ncaeros_sub:
+            caero_points = np.vstack(caero_points)
+        has_caero = True
 
-        # these are indicies
-        for node_id in node_ids:
-            node_count[node_id] += 1
-
-    # calculate inv_node_count
-    izero = np.where(node_count == 0)
-    node_count[izero] = 1.
-    inv_node_count = 1. / node_count
-
-    # build the centroidal mapper
-    def map_centroidal_result(centroidal_data):
-        """maps centroidal data onto nodal data"""
-        nodal_data = np.zeros(nnodes, dtype=centroidal_data.dtype)
-        for unused_eid, datai, node_ids in zip(eids, centroidal_data, mapped_node_ids):
-            for nid in node_ids:
-                nodal_data[nid] += datai
-        return nodal_data * inv_node_count
-    model.map_centroidal_result = map_centroidal_result
+    if ncaeros_sub == 0:
+        caero_points = np.empty((0, 3))
+    return caero_points, has_caero

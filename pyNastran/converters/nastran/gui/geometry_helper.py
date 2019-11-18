@@ -23,7 +23,7 @@ from pyNastran.bdf.cards.elements.beam_connectivity import (
 from pyNastran.bdf.cards.elements.bars import rotate_v_wa_wb
 from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, numpy_to_vtk
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.gui.gui_objects.settings import Settings
+    from pyNastran.bdf.bdf import BDF
 
 
 from pyNastran.gui.qt_files.colors import BLUE_FLOAT
@@ -85,16 +85,6 @@ class NastranGuiAttributes:
         self.dependents_nodes = set()
         self.icd_transform = {}
 
-    #@property
-    #def settings(self) -> Settings:
-        #return self.gui.settings
-
-    @property
-    def is_element_quality(self) -> bool:
-        return self.gui.settings.nastran_is_element_quality
-    @property
-    def is_properties(self) -> bool:
-        return self.gui.settings.nastran_is_properties
     @property
     def gui(self):
         return self
@@ -107,10 +97,10 @@ class NastranGeometryHelper(NastranGuiAttributes):
     def __init__(self):
         super(NastranGeometryHelper, self).__init__()
 
-    def _get_bar_yz_arrays(self, model, bar_beam_eids, scale, debug):
+    def _get_bar_yz_arrays(self, model: BDF, bar_beam_eids: List[int],
+                           scale: float, debug: bool) -> None:
         lines_bar_y = []
         lines_bar_z = []
-        points_list = []
 
         bar_types = {
             # PBEAML/PBARL
@@ -143,17 +133,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
             # PBEAML specfic
             "L" : [],
         }  # for GROUP="MSCBML0"
-        allowed_types = [
-            'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
-            'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
-            'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z',
-            'bar', 'beam', 'pbcomp',
-        ]
 
-        # bar_types['bar'] = [ [...], [...], [...] ]
-        #bar_types = defaultdict(lambda : defaultdict(list))
-
-        found_bar_types = set()
         #neids = len(self.element_ids)
         for bar_type, data in bar_types.items():
             eids = []
@@ -162,97 +142,8 @@ class NastranGeometryHelper(NastranGuiAttributes):
             bar_types[bar_type] = (eids, lines_bar_y, lines_bar_z)
             #bar_types[bar_type] = [eids, lines_bar_y, lines_bar_z]
 
-        ugrid = vtk.vtkUnstructuredGrid()
-        node0 = 0
-
-        nid_release_map = defaultdict(list)
-
-        #debug = True
-        bar_nids = set()
-        #print('bar_beam_eids = %s' % bar_beam_eids)
-        for eid in bar_beam_eids:
-            if eid not in self.eid_map:
-                self.log.error('eid=%s is not a valid bar/beam element...' % eid)
-                if debug:  # pragma: no cover
-                    print('eid=%s is not a valid bar/beam element...' % eid)
-                continue
-            #unused_ieid = self.eid_map[eid]
-            elem = model.elements[eid]
-            pid_ref = elem.pid_ref
-            if pid_ref is None:
-                pid_ref = model.Property(elem.pid)
-            assert not isinstance(pid_ref, integer_types), elem
-
-            ptype = pid_ref.type
-            bar_type = _get_bar_type(ptype, pid_ref)
-
-            if debug:  # pragma: no cover
-                print('%s' % elem)
-                print('  bar_type = %s' % bar_type)
-            found_bar_types.add(bar_type)
-
-            (nid1, nid2) = elem.node_ids
-            bar_nids.update([nid1, nid2])
-            node1 = model.nodes[nid1]
-            node2 = model.nodes[nid2]
-            n1 = node1.get_position()
-            n2 = node2.get_position()
-
-            # wa/wb are not considered in i_offset
-            # they are considered in ihat
-            i = n2 - n1
-            Li = norm(i)
-            ihat = i / Li
-
-            if elem.pa != 0:
-                nid_release_map[nid1].append((eid, elem.pa))
-            if elem.pb != 0:
-                nid_release_map[nid2].append((eid, elem.pb))
-
-            if isinstance(elem.offt, int):
-                continue
-            unused_v, wa, wb, xform = rotate_v_wa_wb(
-                model, elem,
-                n1, n2, node1, node2,
-                ihat, i, eid, Li, model.log)
-            if wb is None:
-                # one or more of v, wa, wb are bad
-                continue
-
-            yhat = xform[1, :]
-            zhat = xform[2, :]
-
-            ## concept has a GOO
-
-            #if debug:  # pragma: no cover
-                #print('  centroid = %s' % centroid)
-                #print('  ihat = %s' % ihat)
-                #print('  yhat = %s' % yhat)
-                #print('  zhat = %s' % zhat)
-                #print('  scale = %s' % scale)
-            #if eid == 616211:
-                #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
-                      #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
-
-                #print('adding bar %s' % bar_type)
-                #print('   centroid=%s' % centroid)
-                #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
-                #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
-                #print('   Li=%s scale=%s' % (Li, scale))
-            if bar_type not in allowed_types:
-                msg = 'bar_type=%r allowed=[%s]' % (bar_type, ', '.join(allowed_types))
-                raise RuntimeError(msg)
-
-            if bar_type in BEAM_GEOM_TYPES:
-                node0 = add_3d_bar_element(
-                    bar_type, ptype, pid_ref,
-                    n1+wa, n2+wb, xform,
-                    ugrid, node0, points_list)
-
-            centroid = (n1 + n2) / 2.
-            bar_types[bar_type][0].append(eid)
-            bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
-            bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
+        node0, ugrid, points_list, bar_nids, nid_release_map = _create_bar_types_dict(
+            model, bar_types, bar_beam_eids, self.eid_map, self.log, scale, debug=debug)
 
         if node0: # and '3d_bars' not in self.alt_grids:
             def update_grid_function(unused_nid_map, ugrid, points, nodes):  # pragma: no cover
@@ -345,11 +236,6 @@ class NastranGeometryHelper(NastranGuiAttributes):
                         print('eid=%s centroid=%s cy=%s cz=%s' % (
                             eid, line_y[0], line_y[1], line_z[1]))
 
-        #print('found_bar_types =', found_bar_types)
-        #no_axial_torsion = (no_axial, no_torsion)
-        #no_shear_bending = (no_shear_y, no_shear_z, no_bending_y, no_bending_z)
-        #no_dofs = (no_bending, no_bending_bad, no_6_16, no_0_456,
-                   #no_0_56, no_56_456, no_0_6, no_0_16)
         return bar_nids, bar_types, nid_release_map
 
 def _make_points_array(points_list):
@@ -638,3 +524,106 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
         ugrid.InsertNextCell(vtk.VTK_POLYHEDRON, face_idlist)
     points_list.append(pointsi)
     return node0
+
+def _create_bar_types_dict(model: BDF, bar_types,
+                           bar_beam_eids, eid_map, log, scale, debug=False):
+    node0 = 0
+    found_bar_types = set()
+    nid_release_map = defaultdict(list)
+    ugrid = vtk.vtkUnstructuredGrid()
+    points_list = []
+
+    allowed_types = [
+        'BAR', 'BOX', 'BOX1', 'CHAN', 'CHAN1', 'CHAN2', 'CROSS', 'DBOX',
+        'H', 'HAT', 'HAT1', 'HEXA', 'I', 'I1', 'L', 'ROD',
+        'T', 'T1', 'T2', 'TUBE', 'TUBE2', 'Z',
+        'bar', 'beam', 'pbcomp',
+    ]
+
+    #debug = True
+    bar_nids = set()
+    #print('bar_beam_eids = %s' % bar_beam_eids)
+    for eid in bar_beam_eids:
+        if eid not in eid_map:
+            log.error('eid=%s is not a valid bar/beam element...' % eid)
+            if debug:  # pragma: no cover
+                print('eid=%s is not a valid bar/beam element...' % eid)
+            continue
+        #unused_ieid = self.eid_map[eid]
+        elem = model.elements[eid]
+        pid_ref = elem.pid_ref
+        if pid_ref is None:
+            pid_ref = model.Property(elem.pid)
+        assert not isinstance(pid_ref, integer_types), elem
+
+        ptype = pid_ref.type
+        bar_type = _get_bar_type(ptype, pid_ref)
+
+        if debug:  # pragma: no cover
+            print('%s' % elem)
+            print('  bar_type = %s' % bar_type)
+        found_bar_types.add(bar_type)
+
+        (nid1, nid2) = elem.node_ids
+        bar_nids.update([nid1, nid2])
+        node1 = model.nodes[nid1]
+        node2 = model.nodes[nid2]
+        n1 = node1.get_position()
+        n2 = node2.get_position()
+
+        # wa/wb are not considered in i_offset
+        # they are considered in ihat
+        i = n2 - n1
+        Li = norm(i)
+        ihat = i / Li
+
+        if elem.pa != 0:
+            nid_release_map[nid1].append((eid, elem.pa))
+        if elem.pb != 0:
+            nid_release_map[nid2].append((eid, elem.pb))
+
+        if isinstance(elem.offt, int):
+            continue
+        unused_v, wa, wb, xform = rotate_v_wa_wb(
+            model, elem,
+            n1, n2, node1, node2,
+            ihat, i, eid, Li, model.log)
+        if wb is None:
+            # one or more of v, wa, wb are bad
+            continue
+
+        yhat = xform[1, :]
+        zhat = xform[2, :]
+
+        ## concept has a GOO
+
+        #if debug:  # pragma: no cover
+            #print('  centroid = %s' % centroid)
+            #print('  ihat = %s' % ihat)
+            #print('  yhat = %s' % yhat)
+            #print('  zhat = %s' % zhat)
+            #print('  scale = %s' % scale)
+        #if eid == 616211:
+            #print('  check - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
+                  #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+
+            #print('adding bar %s' % bar_type)
+            #print('   centroid=%s' % centroid)
+            #print('   yhat=%s len=%s' % (yhat, np.linalg.norm(yhat)))
+            #print('   zhat=%s len=%s' % (zhat, np.linalg.norm(zhat)))
+            #print('   Li=%s scale=%s' % (Li, scale))
+        if bar_type not in allowed_types:
+            msg = 'bar_type=%r allowed=[%s]' % (bar_type, ', '.join(allowed_types))
+            raise RuntimeError(msg)
+
+        if bar_type in BEAM_GEOM_TYPES:
+            node0 = add_3d_bar_element(
+                bar_type, ptype, pid_ref,
+                n1+wa, n2+wb, xform,
+                ugrid, node0, points_list)
+
+        centroid = (n1 + n2) / 2.
+        bar_types[bar_type][0].append(eid)
+        bar_types[bar_type][1].append((centroid, centroid + yhat * Li * scale))
+        bar_types[bar_type][2].append((centroid, centroid + zhat * Li * scale))
+    return node0, ugrid, points_list, bar_nids, nid_release_map
