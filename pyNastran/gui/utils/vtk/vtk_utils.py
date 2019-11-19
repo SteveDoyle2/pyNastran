@@ -3,8 +3,10 @@ defines:
  - create_vtk_cells_of_constant_element_type(grid, elements, etype)
 
 """
+from collections import defaultdict
 import numpy as np
 import vtk
+from vtk.util.numpy_support import numpy_to_vtk # vtk_to_numpy
 from pyNastran.gui.utils.vtk.base_utils import (
     vtkConstants, numpy_to_vtk, numpy_to_vtkIdTypeArray,
     get_numpy_idtype_for_vtk)
@@ -14,7 +16,8 @@ def numpy_to_vtk_points(nodes, points=None, dtype='<f', deep=1):
     assert isinstance(nodes, np.ndarray), type(nodes)
     if points is None:
         points = vtk.vtkPoints()
-        nnodes = nodes.shape[0]
+        nnodes, ndim = nodes.shape
+        assert ndim == 3, nodes.shape
         points.SetNumberOfPoints(nnodes)
 
         # if we're in big endian, VTK won't work, so we byte swap
@@ -58,6 +61,15 @@ def create_vtk_cells_of_constant_element_type(grid, elements, etype):
 
     """
     nelements, nnodes_per_element = elements.shape
+    if etype == 1: # vertex
+        assert nnodes_per_element == 1, elements.shape
+    if etype == 3: # line
+        assert nnodes_per_element == 2, elements.shape
+    elif etype == 5:  # tri
+        assert nnodes_per_element == 3, elements.shape
+    elif etype in [9, 10]:  # quad, tet4
+        assert nnodes_per_element == 4, elements.shape
+
     # We were careful about how we defined the arrays, so the data
     # is contiguous when we ravel it.  Otherwise, you need to
     # deepcopy the arrays (deep=1).  However, numpy_to_vtk isn't so
@@ -246,3 +258,87 @@ def find_point_id_closest_to_xyz(grid, cell_id, node_xyz):
             #point_min = point
     point_id = cell.GetPointId(imin)
     return point_id
+
+def map_element_centroid_to_node_fringe_result(ugrid, location, log):
+    """
+    Maps elemental fringe results to nodal fringe results.
+
+    If you have a 5-noded CQUAD4 (e.g., centroid + 4 nodes), only the
+    centroidal value will be mapped, even though you could map the
+    average the nodal values instead.  It's not wrong to do it this
+    way, but it could be more accurate.
+
+    If you have CQUAD4 with centroidal only or something like strain
+    energy, this will map properly.
+    """
+    is_passed = False
+    failed_out = (None, None, None, None)
+    if location == 'node':
+        log.error('Not a centroidal result.')
+        return is_passed, failed_out
+    assert location == 'centroid', location
+    #cells = ugrid.GetCells()
+    #ncells = cells.GetNumberOfCells()
+    # points = ugrid.GetPoints()
+
+
+    cell_data = ugrid.GetCellData()
+    point_data = ugrid.GetPointData()
+    # nnodes = point_data.GetNumberOfPoints()  # bad
+    nnodes = ugrid.GetNumberOfPoints()
+
+    #print('get scalars')
+    vtk_cell_results = cell_data.GetScalars()
+    if vtk_cell_results is None:
+        log.error('Expected centroidal results, but found none.  '
+                  'The result has already been mapped.')
+        return is_passed, failed_out
+    cell_results = vtk.util.numpy_support.vtk_to_numpy(vtk_cell_results)
+
+    icells = np.where(np.isfinite(cell_results))[0]
+    if not len(icells):
+        log.error('No cells found with finite results.')
+        return is_passed, failed_out
+    filtered_cell_results = cell_results[icells]
+    out_results_node = defaultdict(list)
+
+    # there are no NaNs in the data
+    for cell_id, res in zip(icells, filtered_cell_results):
+        cell = ugrid.GetCell(int(cell_id))
+        #point_ids = cell.GetPointIds()
+        nnodesi = cell.GetNumberOfPoints()
+        #for point_id in point_ids:
+        for ipoint in range(nnodesi):
+            point_id = cell.GetPointId(ipoint)
+            out_results_node[point_id].append(res)
+
+    #print('averaging')
+    point_results = np.full(nnodes, np.nan, dtype='float32')
+    for point_id, res in out_results_node.items():
+        meani = np.average(res)
+        point_results[point_id] = meani
+    vtk_point_results = numpy_to_vtk(point_results, deep=0, array_type=vtk.VTK_FLOAT)
+    vtk_point_results.SetName('name')
+
+    #points.SetData(points_array)
+    point_data.AddArray(vtk_point_results)
+
+    try:
+        imin = np.nanargmin(point_results)
+        imax = np.nanargmax(point_results)
+    except ValueError:
+        # nan; just fake the result
+        imin = 0
+        imax = 0
+
+    max_value = point_results[imax]
+    min_value = point_results[imin]
+
+    #out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+    #nlabels, labelsize, ncolors, colormap = out
+
+
+    cell_data.SetActiveScalars(None)
+    point_data.SetActiveScalars('name')
+    is_passed = True
+    return is_passed, (imin, imax, min_value, max_value)

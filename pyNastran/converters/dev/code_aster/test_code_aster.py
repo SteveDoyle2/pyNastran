@@ -20,6 +20,8 @@ class TestCodeAster(unittest.TestCase):
         ca = CodeAsterConverter(debug=False)
         ca.read_bdf(bdf_filename, encoding='ascii')
         ca.write_as_code_aster(fname_base)  # comm, py
+        os.remove('solid_bending.mail')
+        os.remove('solid_bending.comm')
 
 
 if __name__ == '__main__':  # pragma: no cover

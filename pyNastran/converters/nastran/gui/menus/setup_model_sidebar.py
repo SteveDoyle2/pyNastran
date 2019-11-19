@@ -9,11 +9,11 @@ from qtpy.QtWidgets import QApplication, QPushButton
 
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.results_window import ResultsWindow
-from pyNastran.converters.nastran.wildcards import GEOM_BDF_SAVE
+from ..wildcards import GEOM_BDF_SAVE
 
-from pyNastran.converters.nastran.menus.modify_map import MODIFY_MAP, UPDATE_MAP
-from pyNastran.converters.nastran.menus.modify_menu import  ModifyMenu
-from pyNastran.converters.nastran.menus.model_sidebar import Sidebar
+from .modify_map import MODIFY_MAP, UPDATE_MAP
+from .modify_menu import  ModifyMenu
+from .model_sidebar import Sidebar
 
 
 def build_form_from_model(model):

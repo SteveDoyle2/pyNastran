@@ -489,27 +489,37 @@ class GEOM2(GeomCommon):
         s3 = Struct(self._endian + b'7ii2i6f')
         for unused_i in range(nelements):
             edata = data[n:n + 64]  # 16*4
-            fe, = self.struct_i.unpack(edata[28:32])
+            # we need this flag before we can figure out how to read f
             # per DMAP: F = FE bit-wise AND with 3
+            fe, = self.struct_i.unpack(edata[28:32])
             f = fe & 3
+
             if f == 0:
+                # nodes defined in cid=0
+                # XYZ option -- basic coordinate system
                 out = s1.unpack(edata)
                 (eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
                  w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
+                #print(f'eid={eid} fe,f={fe},{f} x=[{x1},{x2},{x3}]')
             elif f == 1:
+                # nodes defined in a coordinate system
+                #XYZ option -- global coordinate system
                 out = s2.unpack(edata)
                 (eid, pid, ga, gb, x1, x2, x3, _f, pa, pb,
                  w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a, w2a, w3a, w1b, w2b, w3b],
                            [f, x1, x2, x3]]
+                #print(f'eid={eid} fe,f={fe},{f} x=[{x1},{x2},{x3}]')
             elif f == 2:
+                # Grid option
                 out = s3.unpack(edata)
                 (eid, pid, ga, gb, g0, unused_junk1, unused_junk2, _f, pa,
                  pb, w1a, w2a, w3a, w1b, w2b, w3b) = out
                 data_in = [[eid, pid, ga, gb, pa, pb, w1a,
                             w2a, w3a, w1b, w2b, w3b], [f, g0]]
+                #print(f'eid={eid} fe,f={fe},{f} g0={g0}')
             else:
                 raise RuntimeError('invalid f value...f=%s' % (f))
             elem = CBAR.add_op2_data(data_in)

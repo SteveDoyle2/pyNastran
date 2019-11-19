@@ -340,7 +340,7 @@ class TestShells(unittest.TestCase):
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
 
         p = PCOMP.add_op2_data(data)
-        self.assertFalse(p.is_symmetrical())
+        self.assertFalse(p.is_symmetrical)
         self.assertEqual(p.nplies, 3)
 
         self.assertAlmostEqual(p.Thickness(), 0.6)
@@ -470,7 +470,7 @@ class TestShells(unittest.TestCase):
         sout = [1, 1, 0]  # 0-NO, 1-YES
         data = [pid, z0, nsm, sb, ft, tref, ge, lam, Mid, T, theta, sout]
         p = PCOMP.add_op2_data(data)
-        self.assertTrue(p.is_symmetrical())
+        self.assertTrue(p.is_symmetrical)
         self.assertEqual(p.nplies, 6)
 
         self.assertAlmostEqual(p.Thickness(), 1.2)
@@ -1219,16 +1219,16 @@ class TestShells(unittest.TestCase):
         log = get_logger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [0., 1., 0.])
-        model.add_grid(3, [0., 1., 1.])
-        model.add_grid(4, [0., 0., 1.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
 
         eid = 10
         pid = 100
         mid = 1000
         model.add_ctria3(eid, pid, [1, 2, 3], zoffset=0., theta_mcid=0, tflag=0,
-                        T1=None, T2=None, T3=None,
-                        comment='')
+                         T1=None, T2=None, T3=None,
+                         comment='')
 
         eid = 11
         model.add_cquad4(eid, pid, [1, 2,3, 4], theta_mcid=0, zoffset=0., tflag=0,

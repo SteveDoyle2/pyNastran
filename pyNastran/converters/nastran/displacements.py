@@ -294,6 +294,54 @@ class NastranTable(GuiResultCommon):
                 i, name, self.scales[i], self.phases[i])
         return xyz, deflected_xyz
 
+    def __repr__(self):
+        """defines str(self)"""
+        #self.subcase_id = subcase_id
+        #self.location = location
+        #assert location in ['node', 'centroid'], 'location=%r' % location
+        #self.linked_scale_factor = linked_scale_factor
+
+        #self.dxyz = dxyz
+        #self.dim = len(self.dxyz.shape)
+
+
+        self.uname = uname
+        #self.dxyz_norm = norm(dxyz, axis=1)
+
+        #self.deflects = deflects
+        #self.titles = titles
+        #self.headers = headers
+        #self.scales = scales
+        #self.subcase_id = subcase_id
+        #self.data_type = self.dxyz.dtype.str # '<c8', '<f4'
+        #self.nlabels = nlabels
+        #self.labelsize = labelsize
+        #self.ncolors = ncolors
+        #self.colormap = colormap
+        #self.data_formats = data_formats
+        #self.titles_default = deepcopy(self.titles)
+        #self.headers_default = deepcopy(self.headers)
+        #self.scales_default = deepcopy(self.scales)
+        #self.data_formats_default = deepcopy(self.data_formats)
+        ##elif self.dim == 3:
+        #self.default_mins[itime] = normi.min().real
+        #self.default_maxs[itime] = normi.max().real
+
+        #self.phases = np.zeros(ntimes)
+        #self.min_values = deepcopy(self.default_mins)
+        #self.max_values = deepcopy(self.default_maxs)
+
+        msg = 'NastranTable:\n'
+        msg += f'    title={self.titles!r}\n'
+        msg += f'    subcase_id={self.subcase_id}\n'
+        msg += f'    data_type={self.data_type!r}\n'
+        msg += f'    is_real={self.is_real} is_complex={self.is_complex}\n'
+        msg += f'    location={self.location!r}\n'
+        msg += f'    header={self.headers!r}\n'
+        msg += f'    data_format={self.data_formats!r}\n'
+        msg += f'    uname={self.uname!r}\n'
+        return msg
+
 
 class ElementalTableResults(NastranTable):
     def __init__(self, subcase_id, titles, headers, dxyz, unused_scalar,
@@ -398,6 +446,19 @@ class ForceTableResults(NastranTable):
             deflected_xyz = self._get_complex_displacements_by_phase(i, phase)
         assert len(deflected_xyz.shape) == 2, deflected_xyz.shape
         return xyz, deflected_xyz
+
+    def __repr__(self):
+        """defines str(self)"""
+        msg = 'ForceTableResults\n'
+        msg += f'    title={self.titles!r}\n'
+        msg += f'    subcase_id={self.subcase_id}\n'
+        msg += f'    data_type={self.data_type!r}\n'
+        msg += f'    is_real={self.is_real} is_complex={self.is_complex}\n'
+        msg += f'    location={self.location!r}\n'
+        msg += f'    header={self.headers!r}\n'
+        msg += f'    data_format={self.data_formats!r}\n'
+        msg += f'    uname={self.uname!r}\n'
+        return msg
 
 
 class DisplacementResults(NastranTable):

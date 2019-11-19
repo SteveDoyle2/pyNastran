@@ -164,7 +164,7 @@ class FakeGUIMethods(GuiVTKCommon):
     #def show_legend(self):
         #pass
 
-    #def update_scalar_bar(self, title, min_value, max_value, norm_value,
+    #def update_scalar_bar(self, title, min_value, max_value,
                           #data_format,
                           #nlabels=None, labelsize=None,
                           #ncolors=None, colormap='jet',

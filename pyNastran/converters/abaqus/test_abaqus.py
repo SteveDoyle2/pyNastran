@@ -11,7 +11,7 @@ import numpy as np
 #warnings.simplefilter('always')
 
 import pyNastran
-from pyNastran.utils.numpy_utils import integer_types
+#from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.converters.abaqus.abaqus import read_abaqus
 
 np.seterr(all='raise')
@@ -39,7 +39,7 @@ def main():
     """
     The main function for the command line ``test_abaqus`` script.
     """
-    encoding = sys.getdefaultencoding()
+    #encoding = sys.getdefaultencoding()
     from docopt import docopt
     msg = "Usage:\n"
     msg += "  test_abaqus ABAQUS_FILENAME [-d] [-w]\n"
@@ -65,9 +65,9 @@ def main():
         sys.exit(msg)
 
     ver = str(pyNastran.__version__)
-    type_defaults = {
-        '--nerrors' : [int, 100],
-    }
+    #type_defaults = {
+        #'--nerrors' : [int, 100],
+    #}
     data = docopt(msg, version=ver)
 
     #print(data)

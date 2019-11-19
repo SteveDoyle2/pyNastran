@@ -756,7 +756,7 @@ class GuiAttributes:
             nlabels=nlabels, labelsize=labelsize, ncolors=ncolors, colormap=colormap,
             is_shown=is_shown, render=render)
 
-    def update_scalar_bar(self, title, min_value, max_value, norm_value,
+    def update_scalar_bar(self, title, min_value, max_value,
                           data_format,
                           nlabels=None, labelsize=None,
                           ncolors=None, colormap=None,
@@ -790,8 +790,8 @@ class GuiAttributes:
         """
         if colormap is None:
             colormap = self.settings.colormap
-        #print("update_scalar_bar min=%s max=%s norm=%s" % (min_value, max_value, norm_value))
-        self.scalar_bar.update(title, min_value, max_value, norm_value, data_format,
+        #print("update_scalar_bar min=%s max=%s" % (min_value, max_value))
+        self.scalar_bar.update(title, min_value, max_value, data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
                                is_low_to_high=self.legend_obj.is_low_to_high,

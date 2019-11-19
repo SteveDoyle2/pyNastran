@@ -9,12 +9,14 @@ matplotlib.use('Agg')
 import vtk
 
 from cpylog import SimpleLogger
+
 import pyNastran
+from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.gui.testing_methods import FakeGUIMethods
-from pyNastran.converters.nastran.nastran_io import NastranIO, BDF
-#from cpylog import get_logger2
+from pyNastran.converters.nastran.gui.nastran_io import NastranIO
+
 
 class NastranGUI(NastranIO, FakeGUIMethods):
     def __init__(self, inputs=None):
@@ -87,7 +89,13 @@ class TestNastranGUI(unittest.TestCase):
         zaxis = [0., 0., 1.]
         #print('test.result_cases', test.result_cases)
         #gpforce = test.model.grid_point_forces[1]
-        case, (unused_i, unused_name) = test.result_cases[58]
+
+        #for icase, (case, dummy) in test.result_cases.items():
+            #if hasattr(case, 'gpforce_array'):
+                #print(icase, case)
+                #asf
+        case, (unused_i, unused_name) = test.result_cases[59]
+        str(case)
         gpforce = case.gpforce_array
         model_name = 'main'
         test.shear_moment_torque_obj.plot_shear_moment_torque(
@@ -173,7 +181,7 @@ class TestNastranGUI(unittest.TestCase):
         assert result_values == 2, 'result_values=%r' % result_values
         assert isinstance(xyz, list), xyz
 
-        node_xyz = None
+        #node_xyz = None
         cell_id = 5
         #out = test.mark_actions.get_result_by_xyz_cell_id(node_xyz, cell_id)
         #result_name, result_values, node_id, xyz = out
@@ -204,6 +212,30 @@ class TestNastranGUI(unittest.TestCase):
         test.mark_elements(eids, stop_on_failure=True, show_command=True)
         test.mark_elements_by_case(eids, stop_on_failure=True, show_command=True)
 
+        #for key, obj in test.result_cases.items():
+            #print(key)
+            #print(obj)
+
+        # fail mapping strain energy because we're on NodeID
+        test.icase = 0 # NodeID
+        test.icase_fringe = 0 # NodeID
+        is_passed = test.map_element_centroid_to_node_fringe_result(update_limits=True, show_msg=True)
+
+        obj, (itime, name) = test.result_cases[test.icase]
+        str(obj)
+        assert is_passed == False, f'map_element_centroid_to_node_fringe_result should fail for NodeID\n{obj}'
+
+        # map strain energy
+        icase = list(test.result_cases.keys())[-1]
+        obj, (itime, name) = test.result_cases[icase]
+        test.icase_fringe = icase
+        str(obj)
+
+        title = obj.get_title(itime, name)
+        assert title == 'Strain Energy Density', title
+        is_passed = test.map_element_centroid_to_node_fringe_result(update_limits=True, show_msg=False)
+        assert is_passed == True, 'map_element_centroid_to_node_fringe_result failed'
+
     def test_solid_shell_bar_02b(self):
         bdf_filename = os.path.join(MODEL_PATH, 'sol_101_elements', 'mode_solid_shell_bar.bdf')
 
@@ -221,7 +253,7 @@ class TestNastranGUI(unittest.TestCase):
 
     def test_solid_bending(self):
         bdf_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_ogs.op2')
+        #op2_filename = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_ogs.op2')
         deflection_filename1 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node.txt')
         deflection_filename2 = os.path.join(MODEL_PATH, 'solid_bending', 'solid_bending_multi_deflection_node_short.txt')
 
@@ -347,6 +379,7 @@ class TestNastranGUI(unittest.TestCase):
         test.load_nastran_geometry(bdf_filename)
         test.group_actions.create_groups_by_property_id()
         test.group_actions.create_groups_by_visible_result(nlimit=50)
+        test.toggle_conms()
 
     def test_femap_rougv1_01(self):
         """tests the exhaust manifold and it's funny eigenvectors"""
@@ -421,7 +454,6 @@ class TestNastranGUI(unittest.TestCase):
     def test_gui_elements_01b(self):
         bdf_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.bdf')
         op2_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.op2')
-        from pyNastran.bdf.bdf import read_bdf, BDF
         #model = read_bdf(bdf_filename)
         model = BDF()
         model.disable_cards(['CHEXA', 'CTETRA', 'CPENTA',
@@ -523,7 +555,7 @@ class TestNastranGUI(unittest.TestCase):
     def test_gui_pload_01(self):
         """tests a PLOAD4/CTETRA"""
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'ctetra.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'ctetra.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'ctetra.op2')
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
@@ -531,7 +563,7 @@ class TestNastranGUI(unittest.TestCase):
     def test_gui_pload_02(self):
         """tests a PLOAD4/CHEXA"""
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'chexa.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'chexa.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'chexa.op2')
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
@@ -539,7 +571,7 @@ class TestNastranGUI(unittest.TestCase):
     def test_gui_pload_03(self):
         """tests a PLOAD4/CPENTA"""
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'cpenta.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'cpenta.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'cpenta.op2')
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
@@ -547,7 +579,7 @@ class TestNastranGUI(unittest.TestCase):
     def test_gui_pload_04(self):
         """tests a PLOAD4/CQUAD4"""
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'cquad4.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'cquad4.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'cquad4.op2')
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
@@ -555,7 +587,7 @@ class TestNastranGUI(unittest.TestCase):
     def test_gui_pload_05(self):
         """tests a PLOAD4/CTRIA3"""
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'ctria3.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'pload4', 'ctria3.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'ctria3.op2')
         test = NastranGUI()
         test.load_nastran_geometry(op2_filename)
         test.load_nastran_results(op2_filename)
@@ -563,27 +595,27 @@ class TestNastranGUI(unittest.TestCase):
     #def test_gui_pload_06(self):
         #"""tests a PLOAD1/CBAR"""
         #bdf_filename = os.path.join(MODEL_PATH, 'elements', 'pload1.bdf')
-        #op2_filename = os.path.join(MODEL_PATH, 'pload4', 'pload1.op2')
+        #op2_filename = os.path.join(MODEL_PATH, 'unit', 'pload4', 'pload1.op2')
         #test = NastranGUI()
         #test.load_nastran_geometry(op2_filename)
         #test.load_nastran_results(op2_filename)
 
     #def test_gui_bar_rod(self):
         #"""tests a PBARL/ROD"""
-        #bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_rod.bdf')
+        #bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_rod.bdf')
         #test = NastranGUI()
         #test.load_nastran_geometry(bdf_filename)
 
     #def test_gui_bar_tube2(self):
     def test_gui_bar_tube(self):
         """tests a PBARL/TUBE"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_tube.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_tube.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_bar_chan(self):
         """tests a PBARL/CHAN"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_chan.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_chan.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.on_pan_left(None)
@@ -642,7 +674,7 @@ class TestNastranGUI(unittest.TestCase):
         os.remove('rotate.py')
 
     def test_gui_screenshot(self):
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_chan.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_chan.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
@@ -665,38 +697,38 @@ class TestNastranGUI(unittest.TestCase):
 
     def test_gui_bar_chan1(self):
         """tests a PBARL/CHAN1"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_chan1.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_chan1.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
     #def test_gui_bar_chan2(self):
 
     def test_gui_bar_bar(self):
         """tests a PBARL/BAR"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_bar.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_bar.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_bar_box(self):
         """tests a PBARL/BOX"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_box.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_box.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_bar_z(self):
         """tests a PBARL/Z"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_z.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_z.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_bar_t(self):
         """tests a PBARL/T"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_t.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_bar_t1(self):
         """tests a PBARL/T1"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t1.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_t1.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         str(test.geometry_properties)
@@ -711,43 +743,43 @@ class TestNastranGUI(unittest.TestCase):
 
     def test_gui_bar_t2(self):
         """tests a PBARL/T2"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_t2.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_t2.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_bar_hexa(self):
         """tests a PBARL/HEXA"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_hexa.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_hexa.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_bar_hat(self):
         """tests a PBARL/HAT"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_hat.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_hat.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_bar_i(self):
         """tests a PBARL/I"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_i.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_i.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_bar_i1(self):
         """tests a PBARL/I1"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_i1.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_i1.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_bar_h(self):
         """tests a PBARL/H"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_h.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_h.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
     def test_gui_beam_l(self):
         """tests a PBEAML/L"""
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbeaml_l.bdf')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbeaml_l.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         total_length = test.model.get_length_breakdown()[100]
@@ -791,6 +823,10 @@ class TestNastranGUI(unittest.TestCase):
         bdf_filename = os.path.join(MODEL_PATH, 'superelements', 'see103q4.bdf')
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
+        os.remove('spike.bdf')
+        os.remove('super_12.bdf')
+        os.remove('super_13.bdf')
+        os.remove('super_15.bdf')
 
     def test_gui_dvprel(self):
         """tests dvprel"""

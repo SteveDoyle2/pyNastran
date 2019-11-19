@@ -1,4 +1,8 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.gui.menus.preferences.preferences import PreferencesWindow
+if TYPE_CHECKING:
+    from pyNastran.gui.gui_objects.settings import Settings
 
 
 class PreferencesObject:
@@ -7,12 +11,12 @@ class PreferencesObject:
         self._preferences_window_shown = False
         self._preferences_window = None
 
-    def set_font_size(self, font_size):
+    def set_font_size(self, font_size: int) -> None:
         """sets the font size for the preferences window"""
         if self._preferences_window_shown:
             self._preferences_window.set_font_size(font_size)
 
-    def set_preferences_menu(self):
+    def set_preferences_menu(self) -> None:
         """
         Opens a dialog box to set:
 
@@ -26,7 +30,7 @@ class PreferencesObject:
 
         camera = self.gui.GetCamera()
         min_clip, max_clip = camera.GetClippingRange()
-        settings = self.gui.settings
+        settings = self.gui.settings  # type: Settings
         data = {
             'font_size' : settings.font_size,
             'annotation_size' : settings.annotation_size, # int
@@ -58,6 +62,7 @@ class PreferencesObject:
             'nastran_is_3d_bars' : settings.nastran_is_3d_bars,
             'nastran_is_3d_bars_update' : settings.nastran_is_3d_bars_update,
             'nastran_create_coords' : settings.nastran_create_coords,
+            'nastran_is_shell_mcids' : settings.nastran_is_shell_mcids,
 
             'clicked_ok' : False,
             'close' : False,

@@ -327,7 +327,7 @@ class TestShells(unittest.TestCase):
         #p.build()
         p = model.properties_shell.pcomp
         m = model.materials.mat1
-        #self.assertFalse(p.is_symmetrical())
+        #self.assertFalse(p.is_symmetrical)
         self.assertEqual(p.get_nplies_by_property_id(), 3)
 
         self.assertAlmostEqual(p.get_thickness_by_property_id(pid), 0.6)

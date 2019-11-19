@@ -13,7 +13,7 @@ language: python
   #  dist: xenial
   #  sudo: true
 #  - "3.8-dev" # 3.8 development branch
-#  - "nightly" # currently points to 3.7-dev
+#  - "nightly" # currently points to 3.8-dev
 
 # numpy:
 #  - 1.12 min for 3.6 (bumped for reqs)
@@ -129,8 +129,6 @@ matrix:
 # Setup anaconda
 before_install:
  - sudo -H pip install auxlib
-# removed...
-# - sudo pip install conda
 
 
 # per http://conda.pydata.org/docs/travis.html

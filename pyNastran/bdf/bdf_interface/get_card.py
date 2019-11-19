@@ -663,7 +663,8 @@ class GetCard(GetMethods):
         load_data = (centroidal_pressures, forces, spcd)
         return is_loads, is_temperatures, temperature_data, load_data
 
-    def _get_dvprel_ndarrays(self, nelements, pids, fdtype='float32', idtype='int32'):
+    def _get_dvprel_ndarrays(self, nelements: int, pids: np.ndarray,
+                             fdtype='float32', idtype='int32'):
         """
         Creates arrays for dvprel results
 

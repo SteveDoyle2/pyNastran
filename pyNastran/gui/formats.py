@@ -74,7 +74,7 @@ except ImportError:  # pragma: no cover
     raise
 
 
-from pyNastran.converters.nastran.nastran_io import NastranIO
+from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 #CLASS_MAP['nastran'] = NastranIO
 
 

@@ -189,12 +189,20 @@ class ToolActions:
         else:
             max_msg = 'Max:  %g' % max_value
             min_msg = 'Min:  %g' % min_value
-        self.gui.text_actors[0].SetInput(max_msg + '; %s' % max_msgi)
-        self.gui.text_actors[1].SetInput(min_msg + '; %s' % min_msgi)
-        self.gui.text_actors[2].SetInput('Subcase: %s Subtitle: %s' % (subcase_id, subtitle))
 
+        texts = [
+            max_msg + '; %s' % max_msgi,
+            min_msg + '; %s' % min_msgi,
+            'Subcase: %s Subtitle: %s' % (subcase_id, subtitle),
+        ]
         if label:
-            self.gui.text_actors[3].SetInput('Label: %s' % label)
+            texts.append('Label: %s' % label)
+
+        ntext = len(texts)
+        for itext, text in enumerate(texts):
+            self.gui.text_actors[itext].SetInput(text)
+
+        if ntext == 4:  # label
             self.gui.text_actors[3].VisibilityOn()
         else:
             self.gui.text_actors[3].VisibilityOff()

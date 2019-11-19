@@ -198,7 +198,7 @@ class TestBDF(Tester):
 
     def test_bdf_03(self):
         """checks cbush.dat"""
-        bdf_filename = os.path.join(MODEL_PATH, 'cbush', 'cbush.dat')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'cbush', 'cbush.dat')
         log = get_logger(log=None, level='error', encoding='utf-8')
         fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
 

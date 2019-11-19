@@ -8,6 +8,7 @@ from pyNastran.gui.qt_version import qt_version
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui.qt_files.gui_qt_common import GuiQtCommon
 from pyNastran.gui.qt_files.mark_actions import create_annotation
+from pyNastran.gui.utils.vtk.vtk_utils import map_element_centroid_to_node_fringe_result
 from pyNastran.gui.menus.menus import Group
 
 
@@ -517,6 +518,71 @@ class GuiVTKCommon(GuiQtCommon):
         group.element_ids = eids
         self.log_command('create_group_with_name(%r, %r)' % (name, eids))
         self.groups[name] = group
+
+    def map_element_centroid_to_node_fringe_result(self, update_limits=True, show_msg=True):
+        """
+        Maps elemental fringe results to nodal fringe results.
+
+        If you have a 5-noded CQUAD4 (e.g., centroid + 4 nodes), only the
+        centroidal value will be mapped, even though you could map the
+        average the nodal values instead.  It's not wrong to do it this
+        way, but it could be more accurate.
+
+        If you have CQUAD4 with centroidal only or something like strain
+        energy, this will map properly.
+
+        >>> is_passed = self.map_element_centroid_to_node_fringe_result(update_limits=True)
+        """
+        is_passed = False
+        icase_fringe = self.icase_fringe
+        if icase_fringe is None:
+            self.log.error('No fringe result shown')
+            return is_passed
+
+        (obj, (i, name)) = self.result_cases[icase_fringe]
+        location = obj.get_location(i, name)
+        is_passed, out_data = map_element_centroid_to_node_fringe_result(
+            self.grid, location, self.log)
+        if not is_passed:
+            return is_passed
+        imin, imax, min_value_actual, max_value_actual = out_data
+
+        title = obj.get_title(i, name)
+        min_value, max_value = obj.get_min_max(i, name)
+        if update_limits:
+            min_value = min_value_actual
+            max_value = max_value_actual
+
+        data_format = obj.get_data_format(i, name)
+        nlabels, labelsize, ncolors, colormap = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
+        is_legend_shown = self.scalar_bar.is_shown
+
+        self.update_scalar_bar(title, min_value, max_value,
+                               data_format,
+                               nlabels=nlabels, labelsize=labelsize,
+                               ncolors=ncolors, colormap=colormap,
+                               is_shown=is_legend_shown)
+
+        location_nodal = 'node'
+        self._update_min_max_actors(location_nodal, icase_fringe,
+                                    imin, min_value_actual,
+                                    imax, max_value_actual)
+
+        subcase_id = obj.subcase_id
+        subtitle, label = self.get_subtitle_label(subcase_id)
+        label2 = obj.get_header(i, name)
+        if label2:
+            label += '; ' + label2
+
+        self.update_text_actors(subcase_id, subtitle,
+                                imin, min_value_actual,
+                                imax, max_value_actual, label, location_nodal)
+
+        self.vtk_interactor.Render()
+        self.log_command(f'map_element_centroid_to_node_fringe_result('
+                         f'update_limits={update_limits}, show_msg={show_msg})')
+        return is_passed
+
 
 
 def build_glyph(grid):

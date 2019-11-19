@@ -11,9 +11,10 @@ All shell properties are defined in this file.  This includes:
 All shell properties are Property objects.
 
 """
+from __future__ import annotations
 import warnings
 from itertools import count
-from typing import List, Optional, Union, Any
+from typing import List, Optional, Union, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -25,7 +26,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-
+if TYPE_CHECKING:
+    from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT9
 
 class CompositeShellProperty(Property):
     """
@@ -49,35 +51,35 @@ class CompositeShellProperty(Property):
         self.mids_ref = None
 
     @property
-    def TRef(self):
+    def TRef(self) -> float:
         return self.tref
     @TRef.setter
-    def TRef(self, tref):
+    def TRef(self, tref: float) -> None:
         self.tref = tref
 
-    def MassPerArea(self, iply='all', method='nplies', tflag=1, tscales=None):
+    def MassPerArea(self, iply='all', method='nplies', tflag: int=1, tscales=None):
         return self.get_mass_per_area(iply, method)
 
-    def MassPerArea_structure(self):
+    def MassPerArea_structure(self) -> float:
         rhos = [mat_ref.get_density() for mat_ref in self.mids_ref]
         return self.get_mass_per_area_structure(rhos)
 
-    def Thickness(self, iply='all', tflag=1, tscales=None):
+    def Thickness(self, iply: Union[int, str]='all', tflag: int=1, tscales=None):
         return self.get_thickness(iply)
 
-    def Nsm(self):
+    def Nsm(self) -> float:
         return self.get_nonstructural_mass()
 
-    def Rho(self, iply):
+    def Rho(self, iply: int) -> float:
         return self.get_density(iply)
 
-    def Theta(self, iply):
+    def Theta(self, iply: int) -> float:
         return self.get_theta(iply)
 
-    def sout(self, iply):
+    def sout(self, iply: int) -> str:
         return self.get_sout(iply)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -110,7 +112,8 @@ class CompositeShellProperty(Property):
         """Removes cross-reference links"""
         self.mids_ref = None
 
-    def is_symmetrical(self):
+    @property
+    def is_symmetrical(self) -> bool:
         """
         Is the laminate symmetrical?
 
@@ -124,8 +127,7 @@ class CompositeShellProperty(Property):
             return True
         return False
 
-    def _adjust_ply_id(self, iply):
-        # type: (int) -> int
+    def _adjust_ply_id(self, iply: int) -> int:
         """
         Gets the ply ID that's stored in **self.plies**.
 
@@ -192,12 +194,12 @@ class CompositeShellProperty(Property):
                 nplies, iply, str(self)))
         return iply
 
-    def get_material_id(self, iply):
+    def get_material_id(self, iply: int) -> int:
         iply = self._adjust_ply_id(iply)
         mid = self.mids[iply]
         return mid
 
-    def get_thickness(self, iply='all'):
+    def get_thickness(self, iply: Union[int, str]='all') -> float:
         """
         Gets the thickness of the :math:`i^{th}` ply.
 
@@ -216,7 +218,7 @@ class CompositeShellProperty(Property):
         #nplies = len(self.thicknesses)
         if iply == 'all':  # get all layers
             thick = sum(self.thicknesses)
-            if self.is_symmetrical():
+            if self.is_symmetrical:
                 return thick * 2.
             return thick
         else:
@@ -225,7 +227,7 @@ class CompositeShellProperty(Property):
             return thick
 
     @property
-    def nplies(self):
+    def nplies(self) -> int:
         r"""
         Gets the number of plies including the core.
 
@@ -238,19 +240,19 @@ class CompositeShellProperty(Property):
 
             """
         nplies = len(self.thicknesses)
-        if self.is_symmetrical():
+        if self.is_symmetrical:
             return nplies * 2
         return nplies
 
-    def get_nonstructural_mass(self):
+    def get_nonstructural_mass(self) -> float:
         """Gets the non-structural mass :math:`i^{th}` ply"""
         return self.nsm
 
-    def Mids(self):
+    def Mids(self) -> List[int]:
         return self.material_ids
 
     @property
-    def material_ids(self):
+    def material_ids(self) -> List[int]:
         """
         Gets the material IDs of all the plies
 
@@ -265,7 +267,7 @@ class CompositeShellProperty(Property):
             mids.append(self.Mid(iply))
         return mids
 
-    def get_density(self, iply):
+    def get_density(self, iply) -> float:
         """
         Gets the density of the :math:`i^{th}` ply
 
@@ -279,7 +281,7 @@ class CompositeShellProperty(Property):
         mid_ref = self.mids_ref[iply]
         return mid_ref.rho
 
-    def Mid(self, iply):
+    def Mid(self, iply) -> int:
         """
         Gets the Material ID of the :math:`i^{th}` ply.
 
@@ -302,7 +304,7 @@ class CompositeShellProperty(Property):
             mid = self.mids[iply]
         return mid
 
-    def Material(self, iply):
+    def Material(self, iply) -> Union[MAT1, MAT8, MAT9]:
         """
         Gets the material of the :math:`i^{th}` ply (not the ID unless
         it is not cross-referenced).
@@ -320,7 +322,7 @@ class CompositeShellProperty(Property):
             mid = self.mids[iply]
         return mid
 
-    def get_theta(self, iply):
+    def get_theta(self, iply) -> float:
         """
         Gets the ply angle of the :math:`i^{th}` ply (not the ID)
 
@@ -334,7 +336,7 @@ class CompositeShellProperty(Property):
         theta = self.thetas[iply]
         return theta
 
-    def get_sout(self, iply):
+    def get_sout(self, iply) -> str:
         """
         Gets the the flag identifying stress/strain outpur of the
         :math:`i^{th}` ply (not the ID).  default='NO'.
@@ -356,21 +358,21 @@ class CompositeShellProperty(Property):
             thickness.append(thick)
         return np.array(thickness, dtype='int32')
 
-    def get_thicknesses(self):
+    def get_thicknesses(self) -> np.ndarray:
         thickness = []
         for i in range(self.nplies):
             thick = self.get_thickness(i)
             thickness.append(thick)
         return np.array(thickness, dtype='float64')
 
-    def get_thetas(self):
+    def get_thetas(self) -> np.ndarray:
         thetas = []
         for i in range(self.nplies):
             theta = self.get_theta(i)
             thetas.append(theta)
         return np.array(thetas, dtype='float64')
 
-    def get_z_locations(self):
+    def get_z_locations(self) -> np.ndarray:
         """
         Gets the z locations for the various plies.
 
@@ -392,7 +394,7 @@ class CompositeShellProperty(Property):
             z.append(zi)
         return np.array(z)
 
-    def get_mass_per_area(self, iply='all', method='nplies'):
+    def get_mass_per_area(self, iply='all', method: str='nplies') -> float:
         r"""
         Gets the Mass/Area for the property.
 
@@ -448,7 +450,8 @@ class CompositeShellProperty(Property):
         rhos = [mat_ref.get_density() for mat_ref in self.mids_ref]
         return self.get_mass_per_area_rho(rhos, iply, method)
 
-    def get_mass_per_area_rho(self, rhos, iply='all', method='nplies'):
+    def get_mass_per_area_rho(self, rhos: List[float],
+                              iply='all', method: str='nplies') -> float:
         r"""
         Gets the Mass/Area for the property.
 
@@ -467,6 +470,8 @@ class CompositeShellProperty(Property):
 
         Parameters
         ----------
+        rhos : List[float]
+            the densities of each ply
         iply : str/int; default='all'
             the mass per area of the :math:`i^{th}` ply
         method : str
@@ -516,7 +521,7 @@ class CompositeShellProperty(Property):
                 t = self.thicknesses[iplyi]
                 mass_per_area += rho * t
 
-            if self.is_symmetrical():
+            if self.is_symmetrical:
                 return 2. * mass_per_area + self.nsm
             return mass_per_area + self.nsm
         else:
@@ -550,17 +555,17 @@ class CompositeShellProperty(Property):
                 raise NotImplementedError('method=%r is not supported' % method)
             return mass_per_area
 
-    def get_mass_per_area_structure(self, rhos):
+    def get_mass_per_area_structure(self, rhos: List[float]) -> float:
         r"""
-        Gets the Mass/Area for the property structure only.
+        Gets the Mass/Area for the property structure only
+        (doesn't consider nsm).
 
         .. math:: \frac{m}{A} = \sum(\rho t)
 
-        where :math:`nsm_i` is the non-structural mass of the
-        :math:`i^{th}` ply
-
         Parameters
         ----------
+        rhos : List[float]
+            the densities of each ply
 
         """
         nplies = len(self.thicknesses)
@@ -570,8 +575,9 @@ class CompositeShellProperty(Property):
             t = self.thicknesses[iply]
             mass_per_area += rho * t
 
-        ksym = 2. if self.is_symmetrical() else 1.
+        ksym = 2. if self.is_symmetrical else 1.
         return ksym * mass_per_area
+
 
 class PCOMP(CompositeShellProperty):
     """
@@ -625,7 +631,7 @@ class PCOMP(CompositeShellProperty):
             raise NotImplementedError('property_type=%r has not implemented %r in pname_map' % (
                 self.type, pname_fid))
 
-    def _update_field_helper(self, n, value):
+    def _update_field_helper(self, n: int, value) -> None:
         if n == 3:
             self.z0 = value
             return
@@ -695,11 +701,15 @@ class PCOMP(CompositeShellProperty):
                      thetas=None, souts=None, nsm=0., sb=0., ft=None,
                      tref=0., ge=0., lam=None, z0=None, comment='')
 
-    def __init__(self, pid,
-                 mids, thicknesses, thetas=None, souts=None,
-                 nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None,
-                 comment=''):
-        # type: (int, List[int], List[float], Optional[List[float]], Optional[List[str]], float, float, Optional[str], float, float, Optional[str], Optional[float], str) -> None
+    def __init__(self, pid: int,
+                 mids: List[int], thicknesses: List[float],
+                 thetas: Optional[List[float]]=None,
+                 souts: Optional[List[str]]=None,
+                 nsm: float=0., sb: float=0.,
+                 ft: Optional[str]=None,
+                 tref: float=0., ge: float=0.,
+                 lam: Optional[str]=None, z0: Optional[float]=None,
+                 comment: str=''):
         """
         Creates a PCOMP card
 
@@ -800,7 +810,7 @@ class PCOMP(CompositeShellProperty):
             #raise ValueError(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment=''):
         """
         Adds a PCOMP card from ``BDF.add_card(...)``
 
@@ -963,7 +973,7 @@ class PCOMP(CompositeShellProperty):
             #self.souts[i] = sout
             #i += 1
 
-    def get_ABD_matrices(self, theta_offset=0.):
+    def get_ABD_matrices(self, theta_offset: float=0.) -> np.ndarray:
         """
         Gets the ABD matrix
 
@@ -1014,7 +1024,7 @@ class PCOMP(CompositeShellProperty):
         #print(ABD)
         return ABD
 
-    def get_Qbar_matrix(self, mid_ref, theta):
+    def get_Qbar_matrix(self, mid_ref, theta: float) -> np.ndarray:
         """theta must be in radians"""
         S2, unused_S3 = get_mat_props_S(mid_ref)
         T = get_2d_plate_transform(theta)
@@ -1036,15 +1046,15 @@ class PCOMP(CompositeShellProperty):
         #Qbar = np.linalg.inv(Sbar)
         return Qbar
 
-    def get_Sbar_matrix(self, mid_ref, theta):
+    def get_Sbar_matrix(self, mid_ref, theta: float) -> np.ndarray:
         """theta must be in radians"""
         Qbar = self.get_Qbar_matrix(mid_ref, theta)
         Sbar = np.linalg.inv(Qbar)
         return Sbar
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         pid = self.Pid()
-        is_sym = self.is_symmetrical()
+        is_sym = self.is_symmetrical
         nplies = self.nplies
         nsm = self.Nsm()
         mids = self.Mids()
@@ -1133,13 +1143,13 @@ class PCOMPG(CompositeShellProperty):
         #8 : 'tst', #'T' : 't',
     }
     _properties = ['_field_map', 'plies', 'nplies', 'material_ids']
-    def update_by_pname_fid(self, pname_fid: Union[str, int], value):
+    def update_by_pname_fid(self, pname_fid: Union[str, int], value) -> None:
         if isinstance(pname_fid, int):
             self._update_field_helper(pname_fid, value)
         else:
             raise NotImplementedError('PCOMPG: pname_fid=%r' % pname_fid)
 
-    def _update_field_helper(self, n, value):
+    def _update_field_helper(self, n: int, value) -> None:
         nnew = n - 10
         if nnew <= 0:
             raise KeyError('Field %r=%r is an invalid %s entry.' % (n, value, self.type))
@@ -1174,7 +1184,7 @@ class PCOMPG(CompositeShellProperty):
                                                       #self.global_ply_ids):
 
     @property
-    def plies(self):
+    def plies(self) -> List[Tuple[int, float, float, str, int]]:
         plies = []
         for mid, t, theta, sout, global_ply_id in zip(self.mids, self.thicknesses,
                                                       self.thetas, self.souts,
@@ -1270,7 +1280,7 @@ class PCOMPG(CompositeShellProperty):
             z0 = -0.5 * self.Thickness()
         self.z0 = z0
 
-    def validate(self):
+    def validate(self) -> None:
         assert isinstance(self.global_ply_ids, list), self.global_ply_ids
         sorted_global_ply_ids = sorted(self.global_ply_ids)
         if not np.array_equal(sorted_global_ply_ids, np.unique(self.global_ply_ids)):
@@ -1297,7 +1307,7 @@ class PCOMPG(CompositeShellProperty):
             #raise ValueError(msg)
 
     @classmethod
-    def add_card(cls, card, comment=''):
+    def add_card(cls, card: BDFCard, comment: str=''):
         """
         Adds a PCOMPG card from ``BDF.add_card(...)``
 
@@ -1363,9 +1373,9 @@ class PCOMPG(CompositeShellProperty):
                       global_ply_ids, mids, thicknesses, thetas, souts,
                       nsm, sb, ft, tref, ge, lam, z0, comment=comment)
 
-    def _verify(self, xref):
+    def _verify(self, xref: bool) -> None:
         pid = self.Pid()
-        is_sym = self.is_symmetrical()
+        is_sym = self.is_symmetrical
         nplies = self.nplies
         nsm = self.Nsm()
         mids = self.Mids()
@@ -1408,7 +1418,7 @@ class PCOMPG(CompositeShellProperty):
                 #self.global_ply_ids[i] = global_ply_id
                 #i += 1
 
-    def GlobalPlyID(self, iply):
+    def GlobalPlyID(self, iply: int) -> int:
         """returns the global ply id for the specified layer"""
         global_ply_id = self.global_ply_ids[iply]
         return global_ply_id
@@ -1645,8 +1655,7 @@ class PPLANE(Property):
         return PPLANE(pid, mid, t, nsm, formulation_option,
                       comment=comment)
 
-    def cross_reference(self, model):
-        # type: (Any) -> None
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

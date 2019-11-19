@@ -31,6 +31,7 @@ from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
 
 from pyNastran.bdf.test.bdf_unit_tests import Tester
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.bdf_interface.compare_card_content import compare_elements
 
 #from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     #RealPlateBilinearForceArray, RealPlateForceArray)
@@ -599,8 +600,8 @@ class TestOP2(Tester):
     def test_cbar100(self):
         """tests a CBAR-100 model"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_bar_100.bdf')
-        op2_filename = os.path.join(MODEL_PATH, 'bars', 'pbarl_bar_100.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_bar_100.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'pbarl_bar_100.op2')
         unused_fem1, unused_fem2, diff_cards = self.run_bdf('', bdf_filename)
         diff_cards2 = list(set(diff_cards))
         diff_cards2.sort()
@@ -2530,9 +2531,49 @@ class TestOP2(Tester):
         op2.write_f06('junk.f06', quiet=True)
         os.remove('junk.f06')
 
+    def test_cbar_orientation(self):
+        """tests cbar_orientation.op2"""
+        bdf_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'cbar_orientation.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'bars', 'cbar_orientation.op2')
+        make_geom = True
+        write_bdf = True
+        write_f06 = True
+        log = get_logger(level='warning')
+        #debug_file = 'solid_bending.debug.out'
+        model = os.path.splitext(op2_filename)[0]
+        debug_file = model + '.debug.out'
+
+        fem1, unused_fem2, diff_cards = self.run_bdf(
+            '', bdf_filename,
+            run_skin_solids=False)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log)
+        save_load_deck(model)
+
+        if os.path.exists(debug_file):
+            os.remove(debug_file)
+        read_op2(op2_filename, log=log)
+
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=make_geom,
+            write_bdf=write_bdf, read_bdf=True,
+            write_f06=write_f06, write_op2=True, write_hdf5=True,
+            is_mag_phase=False, is_sort2=False, is_nx=None, delete_f06=False,
+            build_pandas=False, subcases=None, exclude=None, short_stats=False,
+            compare=True, debug=False, log=log, binary_debug=True,
+            quiet=True, stop_on_failure=True, dev=False, xref_safe=False,
+            post=None, load_as_h5=True)
+        #compare_elements(fem1, op2)
+
+        assert os.path.exists(debug_file), os.listdir(os.path.dirname(op2_filename))
+        os.remove(debug_file)
+
     def test_op2_cbush_01(self):
         """tests cbush/cbush.op2"""
-        op2_filename = os.path.join(MODEL_PATH, 'cbush', 'cbush.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'unit', 'cbush', 'cbush.op2')
         make_geom = True
         write_bdf = True
         write_f06 = True

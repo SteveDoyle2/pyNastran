@@ -14,8 +14,7 @@ from math import log10, ceil
 from qtpy import QtGui
 from qtpy.QtWidgets import (
     QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox, QComboBox)
-import vtk
+    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox)
 
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
@@ -86,6 +85,7 @@ class PreferencesWindow(PyDialog):
         self._nastran_is_3d_bars_update = data['nastran_is_3d_bars_update']
         self._nastran_is_bar_axes = data['nastran_is_bar_axes']
         self._nastran_create_coords = data['nastran_create_coords']
+        self._nastran_is_shell_mcids = data['nastran_is_shell_mcids']
 
         self.setWindowTitle('Preferences')
         self.create_widgets()
@@ -189,7 +189,7 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_edit = QDoubleSpinBox(self)
         self.coord_scale_edit.setRange(0.1, 1000.)
         self.coord_scale_edit.setDecimals(3)
-        self.coord_scale_edit.setSingleStep(2.5)
+        self.coord_scale_edit.setSingleStep(1.0)
         self.coord_scale_edit.setValue(self._coord_scale)
 
         self.coord_text_scale_label = QLabel('Coordinate System Text Scale:')
@@ -198,7 +198,7 @@ class PreferencesWindow(PyDialog):
         self.coord_text_scale_edit = QDoubleSpinBox(self)
         self.coord_text_scale_edit.setRange(0.1, 2000.)
         self.coord_text_scale_edit.setDecimals(3)
-        self.coord_text_scale_edit.setSingleStep(2.5)
+        self.coord_text_scale_edit.setSingleStep(2.)
         self.coord_text_scale_edit.setValue(self._coord_text_scale)
 
         # Show corner coord
@@ -215,22 +215,35 @@ class PreferencesWindow(PyDialog):
 
         #-----------------------------------------------------------------------
         self.nastran_is_element_quality_checkbox = QCheckBox('Element Quality')
-        self.nastran_is_properties_checkbox = QCheckBox('Properties')
-        self.nastran_is_3d_bars_checkbox = QCheckBox('3D Bars')
-        self.nastran_is_3d_bars_update_checkbox = QCheckBox('Update 3D Bars')
-        self.nastran_create_coords_checkbox = QCheckBox('Coords')
-        self.nastran_is_bar_axes_checkbox = QCheckBox('Bar Axes')
-        self.nastran_is_3d_bars_checkbox.setDisabled(True)
-        self.nastran_is_3d_bars_update_checkbox.setDisabled(True)
-        #self.nastran_is_bar_axes_checkbox.setDisabled(True)
-
+        self.nastran_is_element_quality_checkbox.setToolTip('Cacluate Aspect Ratio, Skew Angle, Max/Min Interior Angle, etc.')
         self.nastran_is_element_quality_checkbox.setChecked(self._nastran_is_element_quality)
+
+        self.nastran_is_properties_checkbox = QCheckBox('Properties')
+        self.nastran_is_properties_checkbox.setToolTip('Breakdown each layer of a PCOMP/PSHELL')
         self.nastran_is_properties_checkbox.setChecked(self._nastran_is_properties)
+
+        self.nastran_is_3d_bars_checkbox = QCheckBox('3D Bars')
+        self.nastran_is_3d_bars_checkbox.setToolTip('Crete 3D Bar/Beam geometry')
         self.nastran_is_3d_bars_checkbox.setChecked(self._nastran_is_3d_bars)
+        self.nastran_is_3d_bars_checkbox.setDisabled(True)
+
+        self.nastran_is_3d_bars_update_checkbox = QCheckBox('Update 3D Bars')
+        self.nastran_is_3d_bars_update_checkbox.setToolTip('Update the 3D Bar/Beam cross-sections when deformations are applied')
         #self.nastran_is_3d_bars_update_checkbox.setChecked(self._nastran_is_3d_bars_update)
         self.nastran_is_3d_bars_update_checkbox.setChecked(False)
-        self.nastran_is_bar_axes_checkbox.setChecked(self._nastran_is_bar_axes)
+        self.nastran_is_3d_bars_update_checkbox.setDisabled(True)
+
+        self.nastran_is_shell_mcid_checkbox = QCheckBox('Shell MCIDs')
+        self.nastran_is_shell_mcid_checkbox.setToolTip('Calculate the Material Coordinate Systems for Shells')
+        self.nastran_is_shell_mcid_checkbox.setChecked(self._nastran_is_shell_mcids)
+
+        self.nastran_create_coords_checkbox = QCheckBox('Coords')
         self.nastran_create_coords_checkbox.setChecked(self._nastran_create_coords)
+
+        self.nastran_is_bar_axes_checkbox = QCheckBox('Bar Axes')
+        self.nastran_is_bar_axes_checkbox.setChecked(self._nastran_is_bar_axes)
+        #self.nastran_is_bar_axes_checkbox.setDisabled(True)
+
 
         #-----------------------------------------------------------------------
         # closing
@@ -387,6 +400,9 @@ class PreferencesWindow(PyDialog):
         grid_nastran.addWidget(self.nastran_is_bar_axes_checkbox, irow, 0)
         irow += 1
 
+        grid_nastran.addWidget(self.nastran_is_shell_mcid_checkbox, irow, 0)
+        irow += 1
+
         grid_nastran.addWidget(self.nastran_is_3d_bars_checkbox, irow, 0)
         grid_nastran.addWidget(self.nastran_is_3d_bars_update_checkbox, irow, 1)
         irow += 1
@@ -461,6 +477,7 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_3d_bars_update_checkbox.clicked.connect(self.on_nastran_is_3d_bars)
         self.nastran_is_bar_axes_checkbox.clicked.connect(self.on_nastran_is_bar_axes)
         self.nastran_create_coords_checkbox.clicked.connect(self.on_nastran_create_coords)
+        self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
         #------------------------------------
 
         self.apply_button.clicked.connect(self.on_apply)
@@ -498,6 +515,11 @@ class PreferencesWindow(PyDialog):
         is_checked = self.nastran_create_coords_checkbox.isChecked()
         if self.win_parent is not None:
             self.win_parent.settings.nastran_create_coords = is_checked
+    def on_nastran_is_shell_mcids(self):
+        """set the nastran properties preferences"""
+        is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
+        if self.win_parent is not None:
+            self.win_parent.settings.nastran_is_shell_mcids = is_checked
 
     def on_font(self, value=None):
         """update the font for the current window"""
@@ -801,6 +823,7 @@ def main():  # pragma: no cover
         'nastran_is_3d_bars_update' : True,
         'nastran_is_bar_axes' : True,
         'nastran_create_coords' : True,
+        'nastran_is_shell_mcids' : True,
 
         'dim_max' : 502.,
 

@@ -1,4 +1,5 @@
 """Multi-input/output format converter"""
+import os
 import sys
 import glob
 
@@ -171,6 +172,7 @@ def process_tecplot(tecplot_filename, fmt2, fname2, log, data=None, quiet=False)
         cart3d_filename = fname2 + '.tri'
         tecplot_to_cart3d_filename(model, cart3d_filename, log=log)
         process_cart3d(cart3d_filename, fmt2, fname2, log, data=data, quiet=quiet)
+        os.remove(cart3d_filename)
         #tecplot_to_nastran_filename(model, fname2 + '.bdf')
         #process_nastran(fname2 + '.bdf', fmt2, fname2, log, data=data, quiet=quiet)
     elif fmt2 == 'cart3d':

@@ -17,7 +17,7 @@ from pyNastran.bdf.errors import (CrossReferenceError, CardParseSyntaxError,
 
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.gui.formats import CLASS_MAP
-from pyNastran.converters.nastran.nastran_io import NastranIO
+from pyNastran.converters.nastran.gui.nastran_io import NastranIO
 
 from pyNastran.gui.arg_handling import determine_format
 from pyNastran.utils import print_bad_path, check_path

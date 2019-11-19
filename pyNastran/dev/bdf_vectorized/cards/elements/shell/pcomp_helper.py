@@ -210,7 +210,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             for iply in range(nplies):
                 t += self.get_thickness(iply)
 
-            if self.is_symmetrical():
+            if self.is_symmetrical:
                 return t * 2.
             return t
         else:
@@ -231,7 +231,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
             returns nplies
         """
         nplies = len(self.plies)
-        if self.is_symmetrical():
+        if self.is_symmetrical:
             return nplies * 2
         return nplies
 
@@ -470,7 +470,7 @@ class CompositeShellProperty(ShellProperty, DeprecatedCompositeShellProperty):
                 t = self.plies[iply][1]
                 mass_per_area += rho * t
 
-            if self.is_symmetrical():
+            if self.is_symmetrical:
                 return 2. * mass_per_area + self.nsm
             return mass_per_area + self.nsm
         else:

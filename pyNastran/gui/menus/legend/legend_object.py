@@ -150,8 +150,8 @@ class LegendObject:
          default_title, min_value, max_value, default_min, default_max) = self.get_legend_fringe(
              self.gui.icase_fringe)
 
-        nlabels, labelsize, ncolors, colormap = scalar_bar
-        default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
+        #nlabels, labelsize, ncolors, colormap = scalar_bar
+        #default_nlabels, default_labelsize, default_ncolors, default_colormap = defaults_scalar_bar
 
         scale, phase, default_scale, default_phase = self.get_legend_disp(
             self.gui.icase_disp)
@@ -482,17 +482,16 @@ class LegendObject:
         if self.gui.icase_fringe is None:
             return
 
-        norm_value = float(max_value - min_value)
+        #norm_value = float(max_value - min_value)
         # if name not in self._loaded_names:
 
         #if isinstance(key, integer_types):  # vector 3
              #norm_plot_value = norm(plot_value, axis=1)
             #grid_result = self.set_grid_values(name, norm_plot_value, vector_size1,
-                                               #min_value, max_value, norm_value,
                                                #is_low_to_high=is_low_to_high)
         #else:
         if update_legend:
-            self.gui.update_scalar_bar(title, min_value, max_value, norm_value,
+            self.gui.update_scalar_bar(title, min_value, max_value,
                                        data_format,
                                        nlabels=nlabels, labelsize=labelsize,
                                        ncolors=ncolors, colormap=colormap,
@@ -502,14 +501,14 @@ class LegendObject:
             self.gui.Render()
 
         msg = (
-            'self.on_update_legend(title=%r, min_value=%s, max_value=%s,\n'
-            '                      scale=%r, phase=%r,\n'
-            '                      data_format=%r, is_low_to_high=%s, is_discrete=%s,\n'
-            '                      nlabels=%r, labelsize=%r, ncolors=%r, colormap=%r,\n'
-            '                      is_horizontal=%r, is_shown=%r)'
-            % (title, min_value, max_value, scale, phase,
-               data_format, is_low_to_high, is_discrete,
-               nlabels, labelsize, ncolors, colormap, is_horizontal, is_shown))
+            f'self.on_update_legend(title={title!r}, min_value={min_value}, max_value={max_value},\n'
+            f'                      scale={scale}, phase={phase},\n'
+            f'                      data_format={data_format!r}, is_low_to_high={is_low_to_high}, '
+            f'is_discrete={is_discrete},\n'
+            f'                      nlabels={nlabels}, labelsize={labelsize}, '
+            f'ncolors={ncolors}, colormap={colormap!r},\n'
+            f'                      is_horizontal={is_horizontal}, is_shown={is_shown})'
+        )
         self.gui.log_command(msg)
         #if is_shown:
             #pass

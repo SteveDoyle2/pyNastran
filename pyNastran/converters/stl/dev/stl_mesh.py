@@ -192,7 +192,7 @@ def project_curve_onto_stl(stl, points, npoints=11):
     out_points = project_points_onto_stl(stl, points)
     return out_points
 
-def main():
+def main():  # pragma: no cover
     import os
     import pyNastran
 
