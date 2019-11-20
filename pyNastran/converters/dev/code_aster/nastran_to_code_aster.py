@@ -732,13 +732,98 @@ def organize_loads(model: BDF, load_case):
                 #else:
                     #moment_constraints[nid] += vector * scale_factor
 
-        elif isinstance(load, PLOAD4):
+        elif load.type == 'PLOAD4':
             (is_load, nodes, vectors) = out
             for (nid, vector) in zip(nodes, vectors):
                 # not the same vector for all nodes
                 force_loads[nid] = vector * scale_factor
 
-        elif isinstance(load, GRAV):
+        elif load.type == 'PLOAD1': # CBAR/CBEAM
+            element = load.eid
+            (ga, gb) = element.nodeIDs()
+            load_type = load.Type
+
+            scale = load.scale
+            etype = element.type
+
+            if load_type in ['FX', 'FY', 'FZ']:
+                p1 = element.ga_ref.get_position()
+                p2 = element.gb_ref.get_pPosition()
+                r = p2 - p1
+
+            if load_type == 'FX':
+                Fv = array([1., 0., 0.])
+            elif load_type == 'FY':
+                Fv = array([0., 0., 1.])
+            elif load_type == 'FZ':
+                Fv = array([0., 0., 1.])
+
+            elif load_type == 'MX':
+                Fv = array([0., 0., 0.])
+                Mv = array([1., 0., 0.])
+            elif load_type == 'MY':
+                Fv = array([0., 0., 0.])
+                Mv = array([0., 1., 0.])
+            elif load_type == 'MZ':
+                Fv = array([0., 0., 0.])
+                Mv = array([0., 0., 1.])
+            # FXE, FYE, FZE, MXE, MYE, MZE
+            else:
+                raise NotImplementedError(load_type)
+
+            p1 = load.p1
+            p2 = load.p2
+            if scale == 'FR':
+                x1 = load.x1
+                x2 = load.x2
+            elif scale == 'LE':
+                L = element.Length()
+                x1 = load.x1 / L
+                x2 = load.x2 / L
+            else:
+                raise NotImplementedError('scale=%s is not supported.  Use "FR", "LE".')
+
+            assert x1 <= x2, '---load---\n%sx1=%r must be less than x2=%r' % (repr(self), self.x1, self.x2)
+            if  x1 == x2:
+                msg = 'Point loads are not supported on...\n%sTry setting x1=%r very close to x2=%r and\n' % (repr(self), self.x1, self.x2)
+                msg += 'scaling p1=%r and p2=%r by x2-x1 (for "FR") and (x2-x1)/L (for "LE").' % (self.p1, self.p2)
+                raise NotImplementedError(msg)
+                if p1 != p2:
+                    msg = 'p1=%r must be equal to p2=%r for x1=x2=%r'  %(self.p1, self.p2, self.x1)
+                    raise RuntimeError(msg)
+
+            dx = x2 - x1
+            m = (p2 - p1) / dx
+            #dx * (x2 + x1) = (x2^2-x1^2)
+            dx2 = x2**2 - x1**2
+            dx3 = x2**3 - x1**3
+            dx4 = x2**4 - x1**4
+            #F = (p1 - m * x1) * dx + m * dx2 / 2.
+            F = p1 * dx + m * (dx2 / 2. - x1 * dx)
+
+            F /= 2.
+
+            if etype in ['CBAR', 'CBEAM']:
+                if load_type in ['FX', 'FY', 'FZ']:
+                    M = p1 * dx3 / 6. + m * (dx4 / 12. - x1 * dx3 / 6.)
+                    Mv = M * cross(r, Fv) / 2. # divide by 2 for 2 nodes
+
+                    Fv *= F
+                    #Mv = M
+                    force_loads[ga] = Fv
+                    force_loads[gb] = Fv
+                    moment_loads[ga] = Mv
+                    moment_loads[gb] = Mv
+                elif load_type in ['MX', 'MY', 'MZ']:
+                    # these are really moments
+                    Mv *= F
+                    moment_loads[ga] = Mv
+                    moment_loads[gb] = Mv
+                else:
+                    raise NotImplementedError(load_type)
+            else:
+                raise NotImplementedError(eType)
+        elif load.type == 'GRAV':
             #(grav) = out
             gravity_loads.append(out * scale_factor)  # grav
         else:
