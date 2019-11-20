@@ -89,10 +89,9 @@ class TestMeshUtils(unittest.TestCase):
         ny = 2
         nz = 2
 
-        x = np.linspace(0., i, nx + 1)
-        y = np.linspace(0., j, ny + 1)
-        z = np.linspace(0., k, nz + 1)
-
+        x = np.linspace(0., i, nx)
+        y = np.linspace(0., j, ny)
+        z = np.linspace(0., k, nz)
         create_structured_chexas(model, pid,
                                  x, y, z, nx, ny, nz, eid=1)
         model.write_bdf('test_structured_chexas.bdf')

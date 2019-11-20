@@ -318,6 +318,10 @@ class AnimationWindow(PyDialog):
         self.gif_button = QPushButton('Default')
         self.gif_edit.setToolTip('Name of the gif')
         self.gif_button.setToolTip('Sets the name of the gif to %s.gif' % self._default_title)
+        if not IS_IMAGEIO:
+            self.gif_label.setEnabled(False)
+            self.gif_edit.setEnabled(False)
+            self.gif_button.setEnabled(False)
 
         # scale / phase
         if 1: # pragma: no cover
@@ -532,12 +536,13 @@ class AnimationWindow(PyDialog):
 
         self.make_images_checkbox.setEnabled(enable)
         self.delete_images_checkbox.setEnabled(enable)
-        self.make_gif_checkbox.setEnabled(enable)
         self.repeat_checkbox.setEnabled(enable)
         self.resolution_button.setEnabled(enable)
         self.resolution_edit.setEnabled(enable)
-        self.gif_edit.setEnabled(enable)
-        self.gif_button.setEnabled(enable)
+        if IS_IMAGEIO:
+            self.make_gif_checkbox.setEnabled(enable)
+            self.gif_edit.setEnabled(enable)
+            self.gif_button.setEnabled(enable)
         self.browse_folder_button.setEnabled(enable)
         self.browse_folder_edit.setEnabled(enable)
         self.step_button.setEnabled(enable)

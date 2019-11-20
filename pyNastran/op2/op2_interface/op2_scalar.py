@@ -888,8 +888,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'CONTACT' : [self._table_passer, self._table_passer],
             b'CONTACTS' : [self._table_passer, self._table_passer],
             b'OEKE1' : [self._table_passer, self._table_passer],
-            b'DSCMCOL' : [self._table_passer, self._table_passer],
-            b'DBCOPT' : [self._table_passer, self._table_passer],
+            #b'DSCMCOL' : [self._table_passer, self._table_passer],
+            #b'DBCOPT' : [self._table_passer, self._table_passer],
             #b'FRL0': [self._table_passer, self._table_passer],  # frequency response list
 
             #==================================

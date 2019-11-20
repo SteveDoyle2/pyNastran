@@ -107,6 +107,12 @@ class OP2Reader:
             b'BGPDTOLD' : self.read_bgpdt,
             b'BGPDTVU' : self.read_bgpdt,
 
+            # optimization
+            b'DESCYC' : self.read_descyc,
+            b'DBCOPT' : self.read_dbcopt,
+            b'DSCMCOL' : self.read_dscmcol,
+            b'DESTAB' :  self._read_destab,
+
             #b'MEFF' : self.read_meff,
             b'INTMOD' : self.read_intmod,
             b'HISADD' : self.read_hisadd,
@@ -124,7 +130,6 @@ class OP2Reader:
             b'IBULK' : self.read_ibulk,
             b'CDDATA' : self.read_ibulk,
             b'CMODEXT' : self._read_cmodext,
-            b'DESTAB' :  self._read_destab,
 
             # element matrices
             #b'KELM' : self._read_element_matrix,
@@ -1122,10 +1127,175 @@ class OP2Reader:
         #data = self._read_record()
 
         self.show_data(data, types='ifs', endian=None)
-
-
         self.show(200, types='ifs', endian=None)
-        #aaa
+
+    def read_descyc(self):
+        """reads the DESCYC table"""
+        op2 = self.op2
+        #op2.log.debug("table_name = %r" % op2.table_name)
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        ints = Struct(self._endian + b'7i').unpack(data)
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        name, = Struct(self._endian + b'8s').unpack(data)
+        assert name == b'DESCYC  ', name
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        design_cycle, design_cycle_type_bytes = Struct(self._endian + b'i8s').unpack(data)
+
+        #Design cycle type; 'D' for discretized design cycle
+        #Blank for continuous design cycle
+        if design_cycle_type_bytes == b'        ':
+            design_cycle_type_str = 'continuous'
+        elif design_cycle_type_bytes == b'D       ':
+            design_cycle_type_str = 'discrete'
+        else:
+            raise NotImplementedError(design_cycle_type_bytes)
+
+        self.read_markers([-4, 1, 0, 0])
+        #print('descyc')
+        #print('  ints =', ints)
+        #print('  name =', name)
+        #print(f'  design_cycle={design_cycle} type={design_cycle_type_str!r} count={op2._count}')
+
+    def read_dbcopt(self):
+        """reads the DBCOPT table, which is a design variable history table"""
+        #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cc577.op2
+        # ints    = (101, 11, 10, 3, 4, 0, 0)
+        # objective_function = [1175749.5, 711181.875, 369194.03125, 112453.1406, 229.4625, 50.9286, 50.8863, 50.8316, 50.7017, 49.7571, 49.3475]
+        # approx = [0.0, 651307.3125, 388093.0625, 150222.453125, 5894.2626, 50.9092, 50.8834, 50.8252, 49.4544, 49.6455, 49.2533]
+        # max_value_of_constraint = [nan, nan, nan, nan, nan, nan, nan, nan, nan, nan, nan]
+        # desvar_ids = [1, 2, 3]
+        # cycle_1_values = [1.0, 1.0, 1.0]
+        # cycle_n_values = [1.4, 0.6, 1.4,
+        #                   1.96, 0.36, 1.96,
+        #                   2.744, 0.216, 2.744,
+        #                   3.8416, 0.1296, 3.8416, ...]
+
+        # 1 NFEA I Number of finite element analyses
+        # 2 NAOP I Number of optimization cycles w.r.t. approximate model
+        # 3 NDV I Number of design variables
+        # 4 NCC I Convergence criterion
+        # 5 UNDEF(2 ) None
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        num, nopt, napprox, nvars, one, zeroa, zerob = Struct(self._endian + b'7i').unpack(data)
+        assert num == 101, num
+        assert zeroa == 0, zeroa
+        assert zerob == 0, zerob
+
+        # (101, 11, 10, 3, 4, 0, 0)
+        #self.show_data(data)
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        name, = Struct(self._endian + b'8s').unpack(data)
+        assert name == b'DBCOPT  ', name
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        #ndata = len(data) // 4
+        objective_function = np.frombuffer(data, dtype='float32') # .tolist()
+        #print(f'  objective_function = {objective_function}; n={len(objective_function)}')
+        assert len(objective_function) == nopt, f'len(objective_function)={len(objective_function)} nopt={nopt}'
+
+        self.read_markers([-4, 1, 0])
+        data = self._read_record()
+        approx = np.frombuffer(data, dtype='float32').copy()# .tolist()
+        napprox_actual = len(approx)
+        if approx[0] == 0.0:
+            approx[0] = np.nan
+            napprox_actual -= 1
+        #print(approx.tolist())
+        #assert napprox_actual == napprox, f'napprox_actual={napprox_actual} napprox={napprox}'
+        #print(f'  approx = {approx}; n={len(approx)}')
+
+        self.read_markers([-5, 1, 0])
+        data = self._read_record()
+        max_value_of_constraint = np.frombuffer(data, dtype='float32').tolist()
+        #print(f'  max_value_of_constraint = {max_va/lue_of_constraint}; n={len(max_value_of_constraint)}')
+
+
+        self.read_markers([-6, 1, 0])
+        data = self._read_record()
+        desvar_ids = np.frombuffer(data, dtype='int32').tolist()
+        assert len(desvar_ids) == nvars, f'len(desvars)={len(desvars)} nvars={nvars}'
+
+        self.read_markers([-7, 1, 0])
+        data = self._read_record()
+        cycle_1_values = np.frombuffer(data, dtype='float32').tolist()
+
+        self.read_markers([-8, 1, 0])
+        marker0 = self.get_marker1(rewind=True)
+        if marker0 == 0:
+            self.read_markers([0])
+            return
+        data = self._read_record()
+        cycle_n_values = np.frombuffer(data, dtype='float32')
+        cycle_n_values2 = cycle_n_values.reshape(len(cycle_n_values) // nvars, nvars)
+        cycle_n_values3 = np.vstack([cycle_1_values, cycle_n_values2])
+
+        approx_obj_constraint = np.vstack([approx, objective_function, max_value_of_constraint]).T
+        #print(f'  desvar_ids = {desvar_ids}')
+        #print(f'  approx_obj_constraint; {approx_obj_constraint.shape}:\n{approx_obj_constraint}')
+        #print(f'  cycle_n_values {cycle_n_values3.shape}:\n{cycle_n_values3}')
+
+        self.read_markers([-9, 1, 0, 0])
+        #data = self._read_record()
+        #self.show_data(data)
+        #self.show_ndata(100)
+
+    def read_dscmcol(self):
+        op2 = self.op2
+        op2.log.debug("table_name = %r" % op2.table_name)
+        op2.table_name = self._read_table_name(rewind=False)
+        self.read_markers([-1])
+        data = self._read_record()
+        num, ndesvars, one, zeroa, zerob, zeroc, zerod = Struct(self._endian + b'7i').unpack(data)
+        # (101, 3, 1, 0, 0, 0, 0)
+        self.show_data(data)
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        name, = Struct(self._endian + b'8s').unpack(data)
+        assert name == b'DSCMCOL ', name
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+
+        if self.read_mode == 2:
+            ndata = len(data) // 4
+            nresponses_dresp1 = ndata // 9
+            ints = np.frombuffer(data, dtype='int32')
+            floats = np.frombuffer(data, dtype='float32')
+            dscmcol_dresp1(nresponses_dresp1, ints, floats)
+
+            # Word Name Type Description
+            # 1 IRID      I Internal response identification number
+            # 2 RID       I External response identification number
+            # 3 SUBCASE   I Subcase identification number
+            # 4 DFLAG     I Dynamic response flag (See Note)
+            # 5 FREQTIME RS Frequency or time step
+            # 6 SEID      I Superelement identification number
+        # self.show_data(data[4*idata:])
+        self.read_markers([-4, 1, 0])
+        nfields = self.get_marker1(rewind=True)
+        if nfields == 0:
+            self.read_markers([0])
+            return
+
+        data = self._read_record()
+        if self.read_mode == 2:
+            ints = np.frombuffer(data, dtype='int32')
+            floats = np.frombuffer(data, dtype='float32')
+            nresponses_dresp2 = len(ints) // 6
+            dscmcol_dresp2(nresponses_dresp2, ints, floats)
+
+        self.read_markers([-5, 1, 0, 0])
+
 
     def read_fol(self):
         """
@@ -4086,3 +4256,373 @@ def get_table_size_from_ncolumns(table_name, nvalues, ncolumns):
             table_name, nvalues, ncolumns, nrows, nvalues / ncolumns)
         raise RuntimeError(msg)
     return nrows
+
+def dscmcol_dresp1(nresponses_dresp1, ints, floats):
+    """helper for DSCMCOL"""
+    idata = 0
+    for iresp in range(nresponses_dresp1):
+        # Record – Type 1 Responses
+        #   1 IRID  I Internal response identification number
+        #   2 RID   I External response identification number
+        #   3 RTYPE I Response Type
+        # RTYPE=3 Buckling
+        #   4 MODE    I Mode number
+        #   5 UNDEF None
+        #   6 SUBCASE I Subcase identification number
+        #   7 UNDEF(2) None
+        #   9 SEID    I Superelement identification number
+        # RTYPE=8 Static force
+        # 4 EID I Element identification number
+        # 5 COMP I Force component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 UNDEF None
+        # 8 VIEWID I View element identification number
+        # 9 SEID I Superelement identification number
+        # RTYPE=10 Composite stress
+        # 4 EID I Element identification number
+        # 5 COMP I Stress component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 UNDEF None
+        # 8 PLY I Ply number
+        # 9 SEID I Superelement identification number
+        # RTYPE=13 Static SPC force
+        # 4 GRID I Grid identification number
+        # 5 COMP I SPC force component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 UNDEF(2) None
+        # 9 SEID I Superelement identification number
+        # RTYPE=14 Element static strain energy
+        # 4 EID I Element identification number
+        # 5 COMP I Strain energy component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 UNDEF(2) None
+        # 9 SEID I Superelement identification number
+        # RTYPE=17 Compliance
+        # 4 UNDEF(2) None
+        # 6 SUBCASE I Subcase identification number
+        # 7 UNDEF(3) None
+        # RTYPE=21 Frequency response velocity
+        # 4 GRID I Grid identification number
+        # 5 COMP I Velocity component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 FREQ RS Frequency
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=22 Frequency response acceleration
+        # 4 GRID I Grid identification number
+        # 5 COMP I Acceleration component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 FREQ RS Frequency
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=23 Frequency response SPC Force
+        # 4 GRID I Grid identification number
+        # 5 COMP I SPC Force component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 FREQ RS Frequency
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=24 Frequency response stress
+        # 4 EID I Element identification number
+        # 5 COMP I Stress component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 FREQ RS Frequency
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=25 Frequency response force
+        # 4 EID I Element identification number
+        # 5 COMP I Force component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 FREQ RS Frequency
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=26 RMS displacement
+        # 4 GRID I Grid identification number
+        # 5 COMP I RMS displacement component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 UNDEF None
+        # 8 RANDPS I RANDPS ID
+        # 9 SEID I Superelement identification number
+        # RTYPE=27 RMS velocity
+        # 4 GRID I Grid identification number
+        # 5 COMP I RMS velocity component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 UNDEF None
+        # 8 RANDPS I RANDPS ID
+        # 9 SEID I Superelement identification number
+        # RTYPE=28 RMS acceleration
+        # 4 GRID I Grid identification number
+        # 5 COMP I RMS acceleration component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 UNDEF None
+        # 8 RANDPS I RANDPS ID
+        # 9 SEID I Superelement identification number
+        # RTYPE=30 PSD velocity
+        # 4 GRID I Grid identification number
+        # 5 COMP I PSD velocity component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 FREQ RS Frequency
+        # 8 RANDPS I RANDPS ID
+        # 9 SEID I Superelement identification number
+        # RTYPE=60 Transient response displacement
+        # 4 GRID I Grid identification number
+        # 5 COMP I Displacement component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 TIME RS Time
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=61 Transient response velocity
+        # 4 GRID I Grid identification number
+        # 5 COMP I Velocity component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 TIME RS Time
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=62 Transient response acceleration
+        # 4 GRID I Grid identification number
+        # 5 COMP I Acceleration component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 TIME RS Time
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=63 Transient response SPC Force
+        # 4 GRID I Grid identification number
+        # 5 COMP I SPC force component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 TIME RS Time
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=64 Transient response stress
+        # 4 EID I Element identification number
+        # 5 COMP I Stress component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 TIME RS Time
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=65 Transient response force
+        # 4 EID I Element identification number
+        # 5 COMP I Force component number
+        # 6 SUBCASE I Subcase identification number
+        # 7 TIME RS Time
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=81 Aeroelastic divergence
+        # 4 SUBCASE I Subcase identification number
+        # 5 UNDEF None
+        # 6 ROOT I Root
+        # 7 MACH RS Mach number
+        # 8 UNDEF None
+        # 9 SEID I Superelement identification number
+        # RTYPE=82 Aeroelastic trim
+        # 4 SUBCASE I Subcase identification number
+        # 5 UNDEF None
+        # 6 XID I XID
+        # 7 UNDEF(2) None
+        # 9 SEID I Superelement identification number
+        # RTYPE=83 Aeroelastic stability derivative
+        # 4 SUBCASE I Subcase identification number
+        # 5 RU I R/U
+        # 6 COMP I Component number
+        # 7 UNDEF None
+        # 8 XID I XID
+        # 9 SEID I Superelement identification number
+        # RTYPE=84 Aeroelastic flutter damping
+        # 4 SUBCASE I Subcase identification number
+        # 5 MODE I Mode number
+        # 6 DENSITY RS Density
+        # 7 MACH RS Mach number
+        # 8 VEL RS Velocity
+        # 9 SEID I Superelement identification number
+        # End RTYPE
+
+        internal_response_id = ints[idata]
+        external_response_id = ints[idata+1]
+        response_type = ints[idata+2]
+        #print(f'internal_response_id={internal_response_id} '
+              #f'external_response_id={external_response_id} response_type={response_type}')
+
+        if response_type == 1:
+            # RTYPE=1 Weight
+            #   4 UNDEF(5) None
+            #   9 SEID I Superelement identification number
+            seid = ints[idata+8]
+            #print(f'  seid={seid} (weight)')
+        elif response_type == 2:
+            # RTYPE=2 Volume
+            #   4 UNDEF(5) None
+            #   9 SEID I Superelement identification number
+            seid = ints[idata+8]
+            #print(f'  seid={seid} (volume)')
+
+        elif response_type == 4:
+            # RTYPE=4 Normal modes
+            #   4 MODE    I Mode number
+            #   5 UNDEF None
+            #   6 SUBCASE I Subcase identification number
+            #   7 UNDEF(2) None
+            #   9 SEID    I Superelement identification number
+            mode_num = ints[idata+3]
+            # blank
+            subcase = ints[idata+5]
+            seid = ints[idata+8]
+            #print(f'  mode_num={mode_num} subcase={subcase} seid={seid} (normal modes)')
+        elif response_type == 5:
+            # RTYPE=5 Static displacement
+            #   4 GRID    I Grid identification number
+            #   5 COMP    I Displacement component number
+            #   6 SUBCASE I Subcase identification number
+            #   7 UNDEF(2) None
+            #   9 SEID    I Superelement identification number
+            grid = ints[idata+3]
+            comp = ints[idata+4]
+            subcase = ints[idata+5]
+            seid = ints[idata+8]
+            #print(f'  grid={grid} comp={comp} subcase={subcase} seid={seid} (static displacement)')
+        elif response_type == 6:
+            # RTYPE=6 Static stress
+            # 4 EID     I Element identification number
+            # 5 COMP    I Stress component number
+            # 6 SUBCASE I Subcase identification number
+            # 7 UNDEF(2) None
+            # 9 SEID    I Superelement identification number
+            eid = ints[idata+3]
+            comp = ints[idata+4]
+            subcase = ints[idata+5]
+            seid = ints[idata+8]
+            #print(f'  eid={eid} comp={comp} subcase={subcase} seid={seid} (static stress)')
+        elif response_type == 7:
+            # RTYPE=7 Static strain
+            # 4 EID     I Element identification number
+            # 5 COMP    I Strain component number
+            # 6 SUBCASE I Subcase identification number
+            # 7 UNDEF None
+            # 8 VIEWID  I View element identification number
+            # 9 SEID    I Superelement identification number
+            eid = ints[idata+3]
+            comp = ints[idata+4]
+            subcase = ints[idata+5]
+            view_id = ints[idata+7]
+            seid = ints[idata+8]
+            #print(f'  eid={eid} comp={comp} subcase={subcase} view_id={view_id} seid={seid} (static strain)')
+        elif response_type == 9:
+            # RTYPE=9 Composite failure
+            #   4 EID     I Element identification number
+            #   5 COMP    I Failure component number
+            #   6 SUBCASE I Subcase identification number
+            #   7 UNDEF None
+            #   8 PLY     I Ply number
+            #   9 SEID    I Superelement identification number
+            eid = ints[idata+3]
+            comp = ints[idata+4]
+            subcase = ints[idata+5]
+            ply = ints[idata+7]
+            seid = ints[idata+8]
+            #print(f'  eid={eid} comp={comp} subcase={subcase} ply={ply} seid={seid} (composite failure)')
+        elif response_type == 11:
+            # RTYPE=11 Composite strain
+            #   4 EID     I Element identification number
+            #   5 COMP    I Strain component number
+            #   6 SUBCASE I Subcase identification number
+            #   7 UNDEF None
+            #   8 PLY     I Ply number
+            #   9 SEID    I Superelement identification number
+            eid = ints[idata+3]
+            comp = ints[idata+4]
+            subcase = ints[idata+5]
+            ply = ints[idata+7]
+            seid = ints[idata+8]
+            #print(f'  eid={eid} comp={comp} subcase={subcase} ply={ply} seid={seid} (composite strain)')
+        elif response_type == 15:
+            # CEIG
+            mode_num = ints[idata+3]
+            subcase = ints[idata+5]
+            seid = ints[idata+8]
+            print(ints[idata+4:idata+9])
+            print(floats[idata+4:idata+9])
+            print(f'internal_response_id={internal_response_id} '
+                  f'external_response_id={external_response_id} response_type={response_type}')
+            print(f'  mode_num={mode_num} subcase={subcase} seid={seid} (CEIG)')
+
+        elif response_type == 19:
+            # RTYPE=19 Equivalent radiated power
+            # 4 PANEL      I Element identification number
+            # 5 FLAG       I A subcase ID based code. +: magnitude; –:density
+            # 6 SUBCASE    I Subcase identification number
+            # 7 FREQUENCY RS Frequency
+            # 8 UNDEF None
+            # 9 SEID       I Superelement identification number
+            panel = ints[idata+3]
+            flag = ints[idata+4]
+            subcase = ints[idata+5]
+            freq = floats[idata+6]
+            seid = ints[idata+8]
+            #print(f'  panel={panel} flag={flag} subcase={subcase} freq={freq} seid={seid} '
+                  #'(equivalent radiated power)')
+        elif response_type == 20:
+            # RTYPE=20 Frequency response displacement
+            # 4 GRID    I Grid identification number
+            # 5 COMP    I Displacement component number
+            # 6 SUBCASE I Subcase identification number
+            # 7 FREQ    RS Frequency
+            # 8 UNDEF None
+            # 9 SEID    I Superelement identification number
+            grid = ints[idata+3]
+            comp = ints[idata+4]
+            subcase = ints[idata+5]
+            freq = floats[idata+6]
+            ply = ints[idata+7]
+            seid = ints[idata+8]
+            #print(f'  eid={eid} comp={comp} subcase={subcase} freq={freq} ply={ply} seid={seid} (frequency response displacement)')
+        elif response_type == 29:
+            # RTYPE=29 PSD displacement
+            # 4 GRID    I Grid identification number
+            # 5 COMP    I PSD displacement component number
+            # 6 SUBCASE I Subcase identification number
+            # 7 FREQ    RS Frequency
+            # 8 RANDPS  I RANDPS ID
+            # 9 SEID I   Superelement identification number
+            grid = ints[idata+3]
+            comp = ints[idata+4]
+            subcase = ints[idata+5]
+            freq = floats[idata+6]
+            randps = ints[idata+7]
+            seid = ints[idata+8]
+            #print(f'  grid={grid} comp={comp} subcase={subcase} freq={freq} randps={randps} seid={seid} (PSD displacement)')
+        elif response_type == 31:
+            # RTYPE=31 PSD acceleration
+            # 4 GRID    I Grid identification number
+            # 5 COMP    I PSD acceleration component number
+            # 6 SUBCASE I Subcase identification number
+            # 7 FREQ   RS Frequency
+            # 8 RANDPS  I RANDPS ID
+            # 9 SEID    I Superelement identification number
+            grid = ints[idata+3]
+            comp = ints[idata+4]
+            subcase = ints[idata+5]
+            freq = floats[idata+6]
+            randps = ints[idata+7]
+            seid = ints[idata+8]
+            #print(f'  grid={grid} comp={comp} subcase={subcase} freq={freq} randps={randps} seid={seid} (PSD acceleration)')
+
+        else:  # pragma: no cover
+            print(f'internal_response_id={internal_response_id} '
+                  f'external_response_id={external_response_id} response_type={response_type}')
+            raise NotImplementedError(response_type)
+        idata += 9
+    return
+
+def dscmcol_dresp2(nresponses_dresp2, ints, floats):
+    """helper for DSCMCOL"""
+    idata = 0
+    for iresp in range(nresponses_dresp2):
+        internal_response_id = ints[idata]
+        external_response_id = ints[idata+1]
+        subcase = ints[idata+2]
+        dflag = ints[idata+3]
+        freqtime = floats[idata+4]
+        seid = ints[idata+5]
+        #print(f'internal_response_id={internal_response_id} '
+              #f'external_response_id={external_response_id} '
+              #f'subcase={subcase} dflag={dflag} freq/time={freqtime} seid={seid}')
+        idata += 6
+    return
