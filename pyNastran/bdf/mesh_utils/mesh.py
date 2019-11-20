@@ -4,6 +4,25 @@ from pyNastran.bdf.cards.aero.utils import (
 
 def create_structured_chexas(model, pid,
                              x, y, z, nx, ny, nz, eid=1, nid=1):
+    """
+    Parameters
+    ----------
+    p1 / p2 / p3 / p4 : (3, ) float ndarray
+        points defining the quad
+    nx : int
+        points in the p1-p2 direction
+    ny : int
+        points in the p1-p4 direction
+    nid / eid : int
+        node / element id offset
+
+    Returns
+    -------
+    nid : int
+        ???
+    eid : int
+        ???
+    """
     nid0 = nid
     nnodes = nx * ny * nz
     nelements = (nx - 1) * (ny - 1) * (nz - 1)

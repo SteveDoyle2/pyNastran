@@ -121,6 +121,14 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
 
     #eid_map = self.gui.eid_map
     assert eid_map is not None
+    etype_to_nnodes_map = {
+        'CTRIA3' : 3, 'CTRIAR' : 3, 'CTRAX3' : 3, 'CPLSTN3' : 3,
+        # no a CTRIAX really has 6 nodes because reasons...
+        'CTRIA6' : 6, 'CTRIAX' : 6, 'CTRIAX6' : 6, 'CPLSTN6' : 6, 'CTRAX6' : 6,
+        'CQUAD4' : 4, 'CQUADR' : 4, 'CPLSTN4' : 4, 'CSHEAR' : 4, 'CQUADX4' : 4,
+        'CQUAD8' : 8, 'CPLSTN8' : 8, 'CQUADX8' : 8,
+        'CQUAD' : 9, 'CQUADX' : 9,
+    }
     for eid, element in sorted(model.elements.items()):
         etype = element.type
         if isinstance(element, ShellElement):
@@ -215,20 +223,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
                 else:
                     raise NotImplementedError(element)
             else:
-                if etype in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CPLSTN3']:
-                    nnodesi = 3
-                elif etype in ['CTRIA6', 'CTRIAX', 'CTRIAX6', 'CPLSTN6', 'CTRAX6']:
-                    # no a CTRIAX really has 6 nodes because reasons...
-                    nnodesi = 6
-
-                elif etype in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CSHEAR', 'CQUADX4']:
-                    nnodesi = 4
-                elif etype in ['CQUAD8', 'CPLSTN8', 'CQUADX8']:
-                    nnodesi = 8
-                elif etype in ['CQUAD', 'CQUADX']:
-                    nnodesi = 9
-                else:
-                    raise NotImplementedError(element)
+                nnodesi = etype_to_nnodes_map[etype]
 
             ieid = eid_map[eid]
             normals[ieid, :] = normali

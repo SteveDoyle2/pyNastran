@@ -155,7 +155,7 @@ from pyNastran.bdf.cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
 from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
-from pyNastran.bdf.case_control_deck import CaseControlDeck
+from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
 from pyNastran.bdf.bdf_methods import BDFMethods
 from pyNastran.bdf.bdf_interface.get_card import GetCard
 from pyNastran.bdf.bdf_interface.add_card import AddCards
@@ -4014,6 +4014,22 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self.case_control_deck.rsolmap_to_str = self.rsolmap_to_str
 
         return cards_out
+
+    def create_subcases(self, subcase_ids: Union[int, List[int], None]=None) -> Dict[int, Subcase]:
+        """creates a series of subcases"""
+        if subcase_ids is None:
+            subcase_ids = []
+        elif isinstance(subcase_ids, int):
+            subcase_ids = [subcase_ids]
+
+        if self.case_control_deck is None:
+            self.case_control_deck = CaseControlDeck([], log=self.log)
+
+        subcases = {}
+        for subcase_id in subcase_ids:
+            subcase = self.case_control_deck.create_new_subcase(subcase_id)
+            subcases[subcase_id] = subcase
+        return subcases
 
     def _parse_cards_hdf5(self, cards: Dict[str, Any], unused_card_count):
         """creates card objects and adds the parsed cards to the deck"""
