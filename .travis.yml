@@ -32,7 +32,7 @@ matrix:
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio'
       #- LIB='libblas-dev liblapack-dev'
-      #- LIBH5='libhdf5-dev'
+      - LIBH5='libhdf5-dev'
 
   include:
      #--------------------------------------------------------------------------------------------------
@@ -42,7 +42,7 @@ matrix:
       env:
       - NUMPY='numpy scipy matplotlib h5py vtk pyqt5 pandas>=0.25 imageio'
       #- LIB='libblas-dev liblapack-dev'
-      #- LIBH5='libhdf5-dev'
+      - LIBH5='libhdf5-dev'
 
     - name: "Python 3.8 (no vtk/qt)"
       python: '3.8'
@@ -50,7 +50,7 @@ matrix:
       - NUMPY='numpy scipy matplotlib h5py pandas>=0.25'
       - NOGUI='_no_gui'
       #- LIB='libblas-dev liblapack-dev'
-      #- LIBH5='libhdf5-dev'
+      - LIBH5='libhdf5-dev'
 
     - name: "Python 3.7 (PyQt5)"
       python: '3.7'
