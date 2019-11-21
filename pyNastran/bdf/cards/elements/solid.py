@@ -367,6 +367,7 @@ class CHEXA8(SolidElement):
         return faces
 
     def material_coordinate_system(self, xyz=None):
+        """http://www.ipes.dk/Files/Ipes/Filer/nastran_2016_doc_release.pdf"""
         #if normal is None:
             #normal = self.Normal() # k = kmat
 
@@ -391,15 +392,15 @@ class CHEXA8(SolidElement):
 
         #CORDM=-2
         centroid = (x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8) / 8.
-        xe = (x2+x3+x6+x7)/4. - (x1+x4+x8+x5)/4.
+        xe = ((x2+x3+x6+x7) - (x1+x4+x8+x5)) / 4.
         xe /= np.linalg.norm(xe)
-        v = ((x3+x7+x8+x4)/4. - (x1+x2+x6+x5))/4
-        z = np.cross(xe, v)
-        z /= np.linalg.norm(z)
-        raise NotImplementedError('material_coordinate_system')
-        #y = np.cross(z, x)
-        #y /= np.linalg.norm(y)
-        #return centroid, xe, y, z
+        v = ((x3+x7+x8+x4) - (x1+x2+x6+x5)) / 4
+        ze = np.cross(xe, v)
+        ze /= np.linalg.norm(ze)
+
+        ye = np.cross(ze, xe)
+        ye /= np.linalg.norm(ye)
+        return centroid, xe, ye, ze
 
     def _verify(self, xref):
         eid = self.eid
@@ -952,6 +953,39 @@ class CPENTA6(SolidElement):
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
+    def material_coordinate_system(self, xyz=None):
+        """http://www.ipes.dk/Files/Ipes/Filer/nastran_2016_doc_release.pdf"""
+        #if normal is None:
+            #normal = self.Normal() # k = kmat
+
+        if xyz is None:
+            x1 = self.nodes_ref[0].get_position()
+            x2 = self.nodes_ref[1].get_position()
+            x3 = self.nodes_ref[2].get_position()
+            x4 = self.nodes_ref[3].get_position()
+            x5 = self.nodes_ref[4].get_position()
+            x6 = self.nodes_ref[5].get_position()
+        else:
+            x1 = xyz[:, 0]
+            x2 = xyz[:, 1]
+            x3 = xyz[:, 2]
+            x4 = xyz[:, 3]
+            x5 = xyz[:, 4]
+            x6 = xyz[:, 5]
+
+        #CORDM=-2
+        centroid = self.Centroid()
+        origin = (x1 + x4) / 2.
+        xe = (x2 + x3 + x5 + x6) - origin
+        xe /= np.linalg.norm(xe)
+        v = ((x1 + x3 + x4 + x6) - (x1 + x2 + x4 + x5)) / 4.
+        ze = np.cross(xe, v)
+        ze /= np.linalg.norm(ze)
+
+        ye = np.cross(ze, xe)
+        ye /= np.linalg.norm(ye)
+        return centroid, xe, ye, ze
+
     @property
     def faces(self):
         """
@@ -1097,6 +1131,7 @@ class CPENTA6(SolidElement):
         c2 = (n4 + n5 + n6) / 3.
         volume = (area1 + area2) / 2. * norm(c1 - c2)
         return abs(volume)
+        #return volume4(n1, n2, n3, n4) + volume4(n2, n3, n4, n5) + volume4(n2, n4, n5, n6)
 
     def raw_fields(self):
         list_fields = ['CPENTA', self.eid, self.Pid()] + self.node_ids
@@ -2041,6 +2076,34 @@ class CTETRA4(SolidElement):
         msg = ', which is required by CTETRA eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+
+    def material_coordinate_system(self, xyz=None):
+        """http://www.ipes.dk/Files/Ipes/Filer/nastran_2016_doc_release.pdf"""
+        #if normal is None:
+            #normal = self.Normal() # k = kmat
+
+        if xyz is None:
+            x1 = self.nodes_ref[0].get_position()
+            x2 = self.nodes_ref[1].get_position()
+            x3 = self.nodes_ref[2].get_position()
+            x4 = self.nodes_ref[3].get_position()
+        else:
+            x1 = xyz[:, 0]
+            x2 = xyz[:, 1]
+            x3 = xyz[:, 2]
+            x4 = xyz[:, 3]
+
+        #CORDM=-2
+        centroid = (x1 + x2 + x3 + x4) / 4.
+        xe = (x2 + x3 + x4) / 3. - x1
+        xe /= np.linalg.norm(xe)
+        v = ((x1 + x3 + x4) - (x1 + x2 + x4)) / 3.
+        ze = np.cross(xe, v)
+        ze /= np.linalg.norm(ze)
+
+        ye = np.cross(ze, xe)
+        ye /= np.linalg.norm(ye)
+        return centroid, xe, ye, ze
 
     def _verify(self, xref):
         eid = self.eid

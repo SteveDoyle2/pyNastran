@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from pyNastran.bdf.bdf import read_bdf, BDF, BDFCard
+from pyNastran.bdf.bdf import BDF, BDFCard
 from pyNastran.bdf.cards.elements.solid import (
     #CTETRA4, CHEXA8, CPENTA6,
     #CTETRA10, CHEXA20,
@@ -102,17 +102,17 @@ class TestSolids(unittest.TestCase):
         mid = 2
         pid = 4
         nsm = 0.
-        V = 1. / 3.
+        volume = 1. / 3.
         rho = 0.1
-        self.check_solid(model, eid, 'CTETRA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, V)
+        self.check_solid(model, eid, 'CTETRA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, volume)
 
         eid = 9
-        V = 1.0
-        self.check_solid(model, eid, 'CPENTA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, V)
+        volume = 1.0
+        self.check_solid(model, eid, 'CPENTA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, volume)
 
         eid = 7
-        V = 2.0
-        self.check_solid(model, eid, 'CHEXA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, V)
+        volume = 2.0
+        self.check_solid(model, eid, 'CHEXA', pid, 'PSOLID', mid, 'MAT1', nsm, rho, volume)
 
     def test_solid_02(self):
         """tests CHEXA, CTETRA, CPENTA, PLSOLID, MATHP"""
@@ -156,16 +156,16 @@ class TestSolids(unittest.TestCase):
         # CTETRA
         eid = 8
         nsm = 0.
-        V = 1. / 3.
-        self.check_solid(model, eid, 'CTETRA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
+        volume = 1. / 3.
+        self.check_solid(model, eid, 'CTETRA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, volume)
 
         eid = 9
-        V = 1.0
-        self.check_solid(model, eid, 'CPENTA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
+        volume = 1.0
+        self.check_solid(model, eid, 'CPENTA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, volume)
 
         eid = 7
-        V = 2.0
-        self.check_solid(model, eid, 'CHEXA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, V)
+        volume = 2.0
+        self.check_solid(model, eid, 'CHEXA', pid, 'PLSOLID', mid, 'MATHP', nsm, rho, volume)
 
     def test_solid_03(self):
         """checks linear static solid material"""
@@ -567,9 +567,9 @@ class TestSolids(unittest.TestCase):
         assert elem.Mass() > 0, elem.Mass()
         save_load_deck(model)
 
-    def check_solid(self, model, eid, etype, pid, ptype, mid, mtype, nsm, rho, V):
+    def check_solid(self, model, eid, etype, pid, ptype, mid, mtype, nsm, rho, volume):
         """checks that various solid methods work"""
-        mass = rho * V
+        mass = rho * volume
         element = model.elements[eid]
         assert max(element.node_ids) > 0
         assert pid in model.properties, 'pid is missing for\n%s' % str(element)
@@ -579,10 +579,11 @@ class TestSolids(unittest.TestCase):
         self.assertEqual(element.Pid(), pid)
         self.assertEqual(element.pid_ref.mid_ref.type, mtype)
         self.assertEqual(element.Mid(), mid)
-        self.assertEqual(element.Volume(), V)
+        self.assertEqual(element.Volume(), volume)
         self.assertEqual(element.Mass(), mass)
         mass_mp = mass_properties(model, element_ids=eid)[0]
         mass_mp_nsm = mass_properties_nsm(model, element_ids=eid)[0]
+        unused_centroid, unused_xe, unused_ye, unused_ze = element.material_coordinate_system()
         assert np.allclose(mass, mass_mp)
         assert np.allclose(mass, mass_mp_nsm)
 
