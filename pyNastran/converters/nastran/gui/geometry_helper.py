@@ -5,7 +5,6 @@ GUI specific geometry functions that don't involve PyQt/VTK
 this is no longer true...but should be
 """
 from __future__ import annotations
-import sys
 from collections import defaultdict
 from typing import List, TYPE_CHECKING
 
@@ -172,28 +171,16 @@ class NastranGeometryHelper(NastranGuiAttributes):
                               points_list, bar_beam_eids):
         if not node0:
             return
-
+        assert len(points_list), points_list
         points_array = _make_points_array(points_list)
         points = numpy_to_vtk_points(points_array)
         ugrid.SetPoints(points)
 
-        not_update_bars = (
-            not self.gui.settings.nastran_is_3d_bars_update or
-            sys.argv[0].startswith('test_')
-        )
-        if not_update_bars:
-            update_grid_function = None
-            self.gui.create_alternate_vtk_grid(
-                '3d_bars', color=BLUE_FLOAT, opacity=0.2,
-                representation='surface', is_visible=True,
-                follower_function=update_grid_function,
-                ugrid=ugrid,
-            )
-
-        #if node0: # and '3d_bars' not in self.alt_grids:
-
+        gui = self.gui
         def update_grid_function(unused_nid_map, ugrid, points, nodes):  # pragma: no cover
             """custom function to update the 3d bars"""
+            if not gui.settings.nastran_is_3d_bars_update:
+                return
             points_list = []
             node0b = 0
             for eid in bar_beam_eids:
@@ -247,13 +234,12 @@ class NastranGeometryHelper(NastranGuiAttributes):
             ugrid.Modified()
             return
 
-        if points_list:
-            self.gui.create_alternate_vtk_grid(
-                '3d_bars', color=BLUE_FLOAT, opacity=0.2,
-                representation='surface', is_visible=True,
-                follower_function=update_grid_function,
-                ugrid=ugrid,
-            )
+        gui.create_alternate_vtk_grid(
+            '3d_bars', color=BLUE_FLOAT, opacity=0.2,
+            representation='surface', is_visible=True,
+            follower_function=update_grid_function,
+            ugrid=ugrid,
+        )
 
 def _make_points_array(points_list):
     if len(points_list) == 1:
@@ -471,7 +457,8 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
         points_list.append(pointsi)
         node0 += 8
         return node0
-    elif bar_type == 'ROD':
+
+    if bar_type == 'ROD':
         faces, pointsi, dnode = rod_faces(n1, n2, xform, dim1, dim2)
         face_idlist = faces_to_element_facelist(faces, node0)
         node0 += dnode

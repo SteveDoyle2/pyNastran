@@ -226,13 +226,15 @@ class TestNastranGUI(unittest.TestCase):
         assert is_passed == False, f'map_element_centroid_to_node_fringe_result should fail for NodeID\n{obj}'
 
         # map strain energy
-        icase = list(test.result_cases.keys())[-1]
+        keys = list(test.result_cases.keys())
+        assert len(keys) == 169, len(keys)
+        icase = keys[-1]
         obj, (itime, name) = test.result_cases[icase]
         test.icase_fringe = icase
         str(obj)
 
         title = obj.get_title(itime, name)
-        assert title == 'Strain Energy Density', title
+        assert title == 'Strain Energy Density', str(obj)
         is_passed = test.map_element_centroid_to_node_fringe_result(update_limits=True, show_msg=False)
         assert is_passed == True, 'map_element_centroid_to_node_fringe_result failed'
 

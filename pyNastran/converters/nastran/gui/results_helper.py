@@ -173,6 +173,48 @@ class NastranGuiResults(NastranGuiAttributes):
 
         return icase
 
+    def _fill_op2_centroidal_stress(self, cases, model, times, key, icase,
+                                    form_dict, header_dict, keys_map) -> int:
+        for itime, unused_dt in enumerate(times):
+            icase = self._fill_op2_time_centroidal_stress(
+                cases, model, key, icase, itime, form_dict, header_dict, keys_map,
+                is_stress=True)
+        return icase
+
+    def _fill_op2_centroidal_strain(self, cases, model, times, key, icase,
+                                    form_dict, header_dict, keys_map) -> int:
+        for itime, unused_dt in enumerate(times):
+            icase = self._fill_op2_time_centroidal_stress(
+                cases, model, key, icase, itime, form_dict, header_dict, keys_map,
+                is_stress=False)
+        return icase
+
+    def _fill_op2_centroidal_strain_energy(self, cases, model, times, key, icase,
+                                           strain_energy_dict, header_dict, keys_map) -> int:
+        for itime, unused_dt in enumerate(times):
+            icase = self._fill_op2_time_centroidal_strain_energy(
+                cases, model, key, icase, itime,
+                strain_energy_dict, header_dict, keys_map)
+        return icase
+
+    def _fill_op2_centroidal_force(self, cases, model, times, key, icase,
+                                   force_dict, header_dict, keys_map) -> int:
+        for itime, unused_dt in enumerate(times):
+            icase = self._fill_op2_force(
+                cases, model, key, icase, itime,
+                force_dict, header_dict, keys_map)
+        return icase
+
+    def _fill_op2_gpstress(self, cases, model, times, key, icase,
+                           gpstress_dict, header_dict, keys_map) -> int:
+        for itime, unused_dt in enumerate(times):
+            icase = self._fill_op2_time_gpstress(
+                cases, model, key, icase, itime,
+                gpstress_dict, header_dict, keys_map)
+        return icase
+
+    # force
+
     def _fill_op2_time_centroidal_strain_energy(self, cases: Dict[int, GuiResults], model: OP2,
                                                 key, icase: int, itime: int,
                                                 form_dict, header_dict, keys_map) -> int:
@@ -319,7 +361,6 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases[icase] = (sed_res, (subcase_id, 'Strain Energy Density'))
                 form_dict[(key, itime)].append(('Strain Energy Density', icase, []))
                 icase += 1
-
         return icase
 
     def _create_op2_time_centroidal_force_arrays(self, model, nelements, key, itime,
@@ -948,7 +989,9 @@ def _fill_nastran_displacements(cases, model: OP2, key, icase: int,
 
 def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offset,
                                    cases, model: OP2, key, icase: int,
-                                   form_dict, header_dict, keys_map,
+                                   form_dict: Dict[Tuple[Any, Any], str],
+                                   header_dict: Dict[Tuple[Any, Any], str],
+                                   keys_map: Dict[str, Any],
                                    xyz_cid0,
                                    nnodes: int, node_ids, log, dim_max: float=1.0) -> int:
     """helper for ``_fill_nastran_displacements`` to unindent the code a bit"""

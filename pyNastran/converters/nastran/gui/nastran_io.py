@@ -1456,17 +1456,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         if nconm2 == 0:
             return nconm2
-        update_conm2s_function = None
 
         gui = self.gui
-        if not gui.settings.nastran_is_update_conm2:
-            gui.create_alternate_vtk_grid(
-                'conm2', color=ORANGE_FLOAT, line_width=5, opacity=1., point_size=4,
-                follower_function=update_conm2s_function,
-                representation='point')
-            return nconm2
 
         def update_conm2s_function(unused_nid_map, unused_ugrid, points, nodes):
+            if not gui.settings.nastran_is_update_conm2:
+                return
             j2 = 0
             mass_grid = gui.alt_grids['conm2']
             for unused_eid, element in sorted(model.masses.items()):
@@ -6200,50 +6195,39 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             icase = self._fill_grid_point_forces(cases, model, key, icase,
                                                  disp_dict, header_dict, keys_map)
+
+            # stress
+            icase = self._fill_op2_centroidal_stress(
+                cases, model, times, key, icase,
+                stress_dict, header_dict, keys_map)
+
+            # stress
+            icase = self._fill_op2_centroidal_strain(
+                cases, model, times, key, icase,
+                strain_dict, header_dict, keys_map)
+
+            # force
+            icase = self._fill_op2_centroidal_force(
+                cases, model, times, key, icase,
+                force_dict, header_dict, keys_map)
+
+            # strain energy
+            icase = self._fill_op2_centroidal_strain_energy(
+                cases, model, times, key, icase,
+                strain_energy_dict, header_dict, keys_map)
+
+            # force
+            icase = self._fill_op2_gpstress(
+                cases, model, times, key, icase,
+                gpstress_dict, header_dict, keys_map)
+
             ncases = icase - ncases_old
             #print('ncases=%s icase=%s' % (ncases, icase))
             #assert ncases > 0, ncases
 
-            if ncases:
-                # can potentially make a double listing, but we need it
-                # for eigenvector only cases
-                for itime, unused_dt in enumerate(times):
-                    new_key = (key, itime)
-                    key_itime.append(new_key)
-
             for itime, unused_dt in enumerate(times):
-                ncases_old = icase
-                # stress
-                icase = self._fill_op2_stress(
-                    cases, model, key, icase, itime,
-                    stress_dict, header_dict, keys_map)
-
-                # strain
-                icase = self._fill_op2_strain(
-                    cases, model, key, icase, itime,
-                    strain_dict, header_dict, keys_map)
-
-                # force
-                icase = self._fill_op2_force(
-                    cases, model, key, icase, itime,
-                    force_dict, header_dict, keys_map)
-
-                # strain energy
-                icase = self._fill_op2_time_centroidal_strain_energy(
-                    cases, model, key, icase, itime,
-                    strain_energy_dict, header_dict, keys_map)
-
-                # grid point stresses
-                icase = self._fill_op2_time_gpstress(
-                    cases, model, key, icase, itime,
-                    gpstress_dict, header_dict, keys_map)
-
-                ncases = icase - ncases_old
                 new_key = (key, itime)
-                if ncases and new_key not in key_itime:
-                    key_itime.append(new_key)
-            #print('******form_time =', form_time)
-            #print(header)
+                key_itime.append(new_key)
 
         # ----------------------------------------------------------------------
         #print('Key,itime:')
