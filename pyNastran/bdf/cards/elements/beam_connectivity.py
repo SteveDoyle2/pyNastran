@@ -35,11 +35,14 @@ The following shapes aren't supported:
  - DBOX  (will be a shear center issue)
 
 """
+from typing import Tuple
 import numpy as np
 from pyNastran.bdf.cards.aero.utils import elements_from_quad, tri_cap
 
 
-def rod_faces(n1, n2, xform, dim1, dim2): # validated
+def rod_faces(n1: int, n2: int, xform,
+              dim1: Tuple[float, float],
+              dim2: Tuple[float, float]): # validated
     """
     defines points in a circle with triangle based end caps
     """
@@ -82,7 +85,9 @@ def rod_faces(n1, n2, xform, dim1, dim2): # validated
     points = np.vstack(points_list)
     return all_faces, points, points.shape[0]
 
-def tube_faces(n1, n2, xform, dim1, dim2):  # validated
+def tube_faces(n1: int, n2: int, xform,
+               dim1: Tuple[float, float],
+               dim2: Tuple[float, float]):  # validated
     """
     defines a rod with a hole
     """
@@ -146,7 +151,9 @@ def tube_faces(n1, n2, xform, dim1, dim2):  # validated
     points = np.vstack(points_list1 + points_list2)
     return all_faces, points, points.shape[0]
 
-def bar_faces(n1, n2, xform, dim1, dim2):  # validaeted
+def bar_faces(n1: int, n2: int, xform,
+              dim1: Tuple[float, float],
+              dim2: Tuple[float, float]):  # validated
     """
        ^y
        |
@@ -169,7 +176,9 @@ def bar_faces(n1, n2, xform, dim1, dim2):  # validaeted
         points_list.append(pointsi)
     return np.vstack(points_list)
 
-def box_faces(n1, n2, xform, dim1, dim2):  # validated
+def box_faces(n1: int, n2: int, xform,
+              dim1: Tuple[float, float, float, float],
+              dim2: Tuple[float, float, float, float]):  # validated
     """
          ^ y
          |
@@ -229,7 +238,9 @@ def box_faces(n1, n2, xform, dim1, dim2):  # validated
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def i_faces(n1, n2, xform, dim1, dim2):   # validated
+def i_faces(n1: int, n2: int, xform,
+            dim1: Tuple[float, float, float, float, float, float],
+            dim2: Tuple[float, float, float, float, float, float]):   # validated
     """
          ^y
          |
@@ -298,7 +309,9 @@ def i_faces(n1, n2, xform, dim1, dim2):   # validated
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def i1_faces(n1, n2, xform, dim1, dim2):
+def i1_faces(n1: int, n2: int, xform,
+             dim1: Tuple[float, float, float, float],
+             dim2: Tuple[float, float, float, float]):
     """
          ^y
          |
@@ -373,7 +386,9 @@ def i1_faces(n1, n2, xform, dim1, dim2):
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def h_faces(n1, n2, xform, dim1, dim2):
+def h_faces(n1: int, n2: int, xform,
+            dim1: Tuple[float, float, float, float],
+            dim2: Tuple[float, float, float, float]):
     """
             ^y
             |
@@ -441,7 +456,9 @@ def h_faces(n1, n2, xform, dim1, dim2):
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def chan_faces(n1, n2, xform, dim1, dim2):
+def chan_faces(n1: int, n2: int, xform,
+               dim1: Tuple[float, float, float, float],
+               dim2: Tuple[float, float, float, float]):
     """
     ^y
     |  0--------7
@@ -515,7 +532,9 @@ def chan_faces(n1, n2, xform, dim1, dim2):
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def chan1_faces(n1, n2, xform, dim1, dim2):
+def chan1_faces(n1: int, n2: int, xform,
+                dim1: Tuple[float, float, float, float],
+                dim2: Tuple[float, float, float, float]):
     """
     ^y
     |  0--------7      ^ hall
@@ -575,7 +594,9 @@ def chan1_faces(n1, n2, xform, dim1, dim2):
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def z_faces(n1, n2, xform, dim1, dim2):
+def z_faces(n1: int, n2: int, xform,
+            dim1: Tuple[float, float, float, float],
+            dim2: Tuple[float, float, float, float]):
     """
            ^ y
            |
@@ -632,7 +653,9 @@ def z_faces(n1, n2, xform, dim1, dim2):
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def hexa_faces(n1, n2, xform, dim1, dim2):
+def hexa_faces(n1: int, n2: int, xform,
+               dim1: Tuple[float, float, float],
+               dim2: Tuple[float, float, float]):
     """
           ^ y
           |
@@ -678,7 +701,9 @@ def hexa_faces(n1, n2, xform, dim1, dim2):
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def l_faces(n1, n2, xform, dim1, dim2):
+def l_faces(n1: int, n2: int, xform,
+            dim1: Tuple[float, float, float, float],
+            dim2: Tuple[float, float, float, float]):
     """
        ^y
        |
@@ -726,7 +751,9 @@ def l_faces(n1, n2, xform, dim1, dim2):
     ]
     return faces, np.vstack(points_list)
 
-def t_faces(n1, n2, xform, dim1, dim2):  # validated
+def t_faces(n1: int, n2: int, xform,
+            dim1: Tuple[float, float, float, float],
+            dim2: Tuple[float, float, float, float]):  # validated
     """
          ^ y
          |
@@ -789,7 +816,9 @@ def t_faces(n1, n2, xform, dim1, dim2):  # validated
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def t1_faces(n1, n2, xform, dim1, dim2):  # validated
+def t1_faces(n1: int, n2: int, xform,
+             dim1: Tuple[float, float, float, float],
+             dim2: Tuple[float, float, float, float]):  # validated
     """
                  ^ y
                  |
@@ -846,7 +875,9 @@ def t1_faces(n1, n2, xform, dim1, dim2):  # validated
         points_list.append(pointsi)
     return faces, np.vstack(points_list)
 
-def t2_faces(n1, n2, xform, dim1, dim2):  # validated
+def t2_faces(n1: int, n2: int, xform,
+             dim1: Tuple[float, float, float, float],
+             dim2: Tuple[float, float, float, float]):  # validated
     """
          ^y
          |
@@ -901,7 +932,9 @@ def t2_faces(n1, n2, xform, dim1, dim2):  # validated
     return faces, np.vstack(points_list)
 
 
-def hat_faces(n1, n2, xform, dim1, dim2):
+def hat_faces(n1: int, n2: int, xform,
+              dim1: Tuple[float, float],
+              dim2: Tuple[float, float]):
     """
             <--------d3------->
 

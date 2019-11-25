@@ -7,7 +7,7 @@ this is no longer true...but should be
 from __future__ import annotations
 import sys
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import List, TYPE_CHECKING
 
 import numpy as np
 from numpy.linalg import norm
@@ -144,76 +144,7 @@ class NastranGeometryHelper(NastranGuiAttributes):
 
         node0, ugrid, points_list, bar_nids, nid_release_map = _create_bar_types_dict(
             model, bar_types, bar_beam_eids, self.eid_map, self.log, scale, debug=debug)
-
-        if node0: # and '3d_bars' not in self.alt_grids:
-            def update_grid_function(unused_nid_map, ugrid, points, nodes):  # pragma: no cover
-                """custom function to update the 3d bars"""
-                points_list = []
-                node0b = 0
-                for eid in bar_beam_eids:
-                    elem = self.model.elements[eid]
-                    pid_ref = elem.pid_ref
-                    if pid_ref is None:
-                        pid_ref = self.model.Property(elem.pid)
-                    assert not isinstance(pid_ref, integer_types), elem
-
-                    ptype = pid_ref.type
-                    bar_type = _get_bar_type(ptype, pid_ref)
-
-                    #nids = elem.nodes
-                    (nid1, nid2) = elem.node_ids
-                    node1 = model.nodes[nid1]
-                    node2 = model.nodes[nid2]
-
-                    i1, i2 = np.searchsorted(self.node_ids, [nid1, nid2])
-                    n1 = nodes[i1, :]
-                    n2 = nodes[i2, :]
-                    #centroid = (n1 + n2) / 2.
-
-                    i = n2 - n1
-                    Li = norm(i)
-                    ihat = i / Li
-
-                    unused_v, wa, wb, xform = rotate_v_wa_wb(
-                        model, elem,
-                        n1, n2, node1, node2,
-                        ihat, i, eid, Li, model.log)
-                    if wb is None:
-                        # one or more of v, wa, wb are bad
-                        continue
-
-                    ugridi = None
-                    node0b = add_3d_bar_element(
-                        bar_type, ptype, pid_ref,
-                        n1+wa, n2+wb, xform,
-                        ugridi, node0b, points_list, add_to_ugrid=False)
-
-                points_array = _make_points_array(points_list)
-
-                points_array2 = numpy_to_vtk(
-                    num_array=points_array,
-                    deep=1,
-                    array_type=vtk.VTK_FLOAT,
-                )
-                points.SetData(points_array2)
-
-                ugrid.SetPoints(points)
-                points.Modified()
-                ugrid.Modified()
-                return
-
-            if points_list:
-                if not sys.argv[0].startswith('test_'):
-                    update_grid_function = None
-                self.gui.create_alternate_vtk_grid(
-                    '3d_bars', color=BLUE_FLOAT, opacity=0.2,
-                    representation='surface', is_visible=True,
-                    follower_function=update_grid_function,
-                    ugrid=ugrid,
-                )
-                points_array = _make_points_array(points_list)
-                points = numpy_to_vtk_points(points_array)
-                ugrid.SetPoints(points)
+        self._create_bar_yz_update(model, node0, ugrid, points_list, bar_beam_eids)
 
         #print('bar_types =', bar_types)
         for bar_type in list(bar_types):
@@ -235,8 +166,94 @@ class NastranGeometryHelper(NastranGuiAttributes):
                     for eid, line_y, line_z  in zip(eids, lines_bar_y, lines_bar_z):
                         print('eid=%s centroid=%s cy=%s cz=%s' % (
                             eid, line_y[0], line_y[1], line_z[1]))
-
         return bar_nids, bar_types, nid_release_map
+
+    def _create_bar_yz_update(self, model: BDF, node0: int, ugrid,
+                              points_list, bar_beam_eids):
+        if not node0:
+            return
+
+        points_array = _make_points_array(points_list)
+        points = numpy_to_vtk_points(points_array)
+        ugrid.SetPoints(points)
+
+        not_update_bars = (
+            not self.gui.settings.nastran_is_3d_bars_update or
+            sys.argv[0].startswith('test_')
+        )
+        if not_update_bars:
+            update_grid_function = None
+            self.gui.create_alternate_vtk_grid(
+                '3d_bars', color=BLUE_FLOAT, opacity=0.2,
+                representation='surface', is_visible=True,
+                follower_function=update_grid_function,
+                ugrid=ugrid,
+            )
+
+        #if node0: # and '3d_bars' not in self.alt_grids:
+
+        def update_grid_function(unused_nid_map, ugrid, points, nodes):  # pragma: no cover
+            """custom function to update the 3d bars"""
+            points_list = []
+            node0b = 0
+            for eid in bar_beam_eids:
+                elem = self.model.elements[eid]
+                pid_ref = elem.pid_ref
+                if pid_ref is None:
+                    pid_ref = self.model.Property(elem.pid)
+                assert not isinstance(pid_ref, integer_types), elem
+
+                ptype = pid_ref.type
+                bar_type = _get_bar_type(ptype, pid_ref)
+
+                #nids = elem.nodes
+                (nid1, nid2) = elem.node_ids
+                node1 = model.nodes[nid1]
+                node2 = model.nodes[nid2]
+
+                i1, i2 = np.searchsorted(self.node_ids, [nid1, nid2])
+                n1 = nodes[i1, :]
+                n2 = nodes[i2, :]
+                #centroid = (n1 + n2) / 2.
+
+                i = n2 - n1
+                Li = norm(i)
+                ihat = i / Li
+
+                unused_v, wa, wb, xform = rotate_v_wa_wb(
+                    model, elem,
+                    n1, n2, node1, node2,
+                    ihat, i, eid, Li, model.log)
+                if wb is None:
+                    # one or more of v, wa, wb are bad
+                    continue
+
+                ugridi = None
+                node0b = add_3d_bar_element(
+                    bar_type, ptype, pid_ref,
+                    n1+wa, n2+wb, xform,
+                    ugridi, node0b, points_list, add_to_ugrid=False)
+
+            points_array = _make_points_array(points_list)
+            points_array2 = numpy_to_vtk(
+                num_array=points_array,
+                deep=1,
+                array_type=vtk.VTK_FLOAT,
+            )
+            points.SetData(points_array2)
+
+            ugrid.SetPoints(points)
+            points.Modified()
+            ugrid.Modified()
+            return
+
+        if points_list:
+            self.gui.create_alternate_vtk_grid(
+                '3d_bars', color=BLUE_FLOAT, opacity=0.2,
+                representation='surface', is_visible=True,
+                follower_function=update_grid_function,
+                ugrid=ugrid,
+            )
 
 def _make_points_array(points_list):
     if len(points_list) == 1:
@@ -267,37 +284,37 @@ def _get_bar_type(ptype, pid_ref):
         raise NotImplementedError(pid_ref)
     return bar_type
 
-def get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li):
-    """helper method for _get_bar_yz_arrays"""
-    vhat = v / norm(v) # j
-    try:
-        z = np.cross(ihat, vhat) # k
-    except ValueError:
-        msg = 'Invalid vector length\n'
-        msg += 'n1  =%s\n' % str(n1)
-        msg += 'n2  =%s\n' % str(n2)
-        msg += 'nid1=%s\n' % str(nid1)
-        msg += 'nid2=%s\n' % str(nid2)
-        msg += 'i   =%s\n' % str(i)
-        msg += 'Li  =%s\n' % str(Li)
-        msg += 'ihat=%s\n' % str(ihat)
-        msg += 'v   =%s\n' % str(v)
-        msg += 'vhat=%s\n' % str(vhat)
-        msg += 'z=cross(ihat, vhat)'
-        print(msg)
-        raise ValueError(msg)
+#def get_bar_yz_transform(v, ihat, eid, n1, n2, nid1, nid2, i, Li):
+    #"""helper method for _get_bar_yz_arrays"""
+    #vhat = v / norm(v) # j
+    #try:
+        #z = np.cross(ihat, vhat) # k
+    #except ValueError:
+        #msg = 'Invalid vector length\n'
+        #msg += 'n1  =%s\n' % str(n1)
+        #msg += 'n2  =%s\n' % str(n2)
+        #msg += 'nid1=%s\n' % str(nid1)
+        #msg += 'nid2=%s\n' % str(nid2)
+        #msg += 'i   =%s\n' % str(i)
+        #msg += 'Li  =%s\n' % str(Li)
+        #msg += 'ihat=%s\n' % str(ihat)
+        #msg += 'v   =%s\n' % str(v)
+        #msg += 'vhat=%s\n' % str(vhat)
+        #msg += 'z=cross(ihat, vhat)'
+        #print(msg)
+        #raise ValueError(msg)
 
-    zhat = z / norm(z)
-    yhat = np.cross(zhat, ihat) # j
+    #zhat = z / norm(z)
+    #yhat = np.cross(zhat, ihat) # j
 
-    if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
-        print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
-            eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
-    elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
-        print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
-              ' v=%s i=%s n%s=%s n%s=%s' % (
-                  eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
-    return yhat, zhat
+    #if norm(ihat) == 0.0 or norm(yhat) == 0.0 or norm(z) == 0.0:
+        #print('  invalid_orientation - eid=%s yhat=%s zhat=%s v=%s i=%s n%s=%s n%s=%s' % (
+            #eid, yhat, zhat, v, i, nid1, n1, nid2, n2))
+    #elif not np.allclose(norm(yhat), 1.0) or not np.allclose(norm(zhat), 1.0) or Li == 0.0:
+        #print('  length_error        - eid=%s Li=%s Lyhat=%s Lzhat=%s'
+              #' v=%s i=%s n%s=%s n%s=%s' % (
+                  #eid, Li, norm(yhat), norm(zhat), v, i, nid1, n1, nid2, n2))
+    #return yhat, zhat
 
 def get_suport_node_ids(model, suport_id):
     """gets the nodes where SUPORTs and SUPORT1s are defined"""
@@ -427,10 +444,10 @@ def add_3d_bar_element(bar_type, ptype, pid_ref,
                        n1, n2, xform,
                        ugrid, node0, points_list, add_to_ugrid=True):
     """adds a 3d bar element to the unstructured grid"""
-    if ptype in ['PBARL']:
+    if ptype == 'PBARL':
         dim1 = dim2 = pid_ref.dim
         #bar_type = pid_ref.Type
-    elif ptype in ['PBEAML']:
+    elif ptype == 'PBEAML':
         dim1 = pid_ref.dim[0, :]
         dim2 = pid_ref.dim[-1, :]
     else:

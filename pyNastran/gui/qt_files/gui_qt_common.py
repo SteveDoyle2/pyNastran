@@ -423,7 +423,7 @@ class GuiQtCommon(GuiAttributes):
         norm_value = float(max_value - min_value)
 
         vector_size = 3
-        name_tuple = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
+        name_tuple = (vector_size, subcase_id, result_type, label, scale)
         name_str = self._names_storage.get_name_string(name)
         #return name, normi, vector_size, min_value, max_value, norm_value
 
@@ -603,12 +603,6 @@ class GuiQtCommon(GuiAttributes):
         subcase_id = data.subcase_id
         subtitle = data.subtitle
         label = data.label
-        #(
-            #icase, unused_result_type, location, min_value, max_value, unused_norm_value,
-            # unused_data_format, unused_scale, unused_methods,
-            #unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
-            #imin, imax,
-        #) = data
 
         #-----------------------------------
         grid = self.grid
@@ -674,14 +668,7 @@ class GuiQtCommon(GuiAttributes):
 
         if not is_valid:
             return
-        #(
-            #icase, unused_result_type, location,
-            #unused_min_value, unused_max_value, unused_norm_value,
-            #unused_data_format, scale, unused_phase, unused_methods,
-            #unused_nlabels, unused_labelsize, unused_ncolors, unused_colormap,
-            #xyz_nominal, vector_data,
-            #unused_is_checked,
-        #) = data
+
         icase = data.icase
         scale = data.scale
         location = data.location
@@ -810,7 +797,7 @@ class GuiQtCommon(GuiAttributes):
         self.res_widget.set_case_keys(self.case_keys)
         self.log_command('delete_cases(icases_to_delete=%s, ask=%s)' % (icases_to_delete, ask))
 
-    def _get_sidebar_data(self, unused_name):
+    def _get_sidebar_data(self, unused_name: str):
         """
         gets the form for the selected name
 
@@ -955,7 +942,7 @@ class GuiQtCommon(GuiAttributes):
         #norm_value = float(max_value - min_value)
 
         vector_size = 1
-        name = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
+        name = (vector_size, subcase_id, result_type, label, scale)
         if self._names_storage.has_exact_name(name):
             grid_result = None
         else:
@@ -966,7 +953,7 @@ class GuiQtCommon(GuiAttributes):
             grid_result_vector = None
         else:
             vector_size = 3
-            name_vector = (vector_size, subcase_id, result_type, label, min_value, max_value, scale)
+            name_vector = (vector_size, subcase_id, result_type, label, scale)
             if self._names_storage.has_exact_name(name_vector):
                 grid_result_vector = None
             else:

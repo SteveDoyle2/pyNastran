@@ -273,8 +273,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         pass
 
     def create_nastran_tools_menu(self, gui):
-        if 'dev' not in __version__:
-            return
+        #if 'dev' not in __version__:
+            #return
+        return
 
         nastran_tools_menu = gui.menubar.addMenu('Tools')
         gui.nastran_tools_menu = nastran_tools_menu
