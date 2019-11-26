@@ -275,10 +275,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
     def create_nastran_tools_menu(self, gui):
         #if 'dev' not in __version__:
             #return
-        return
-
-        nastran_tools_menu = gui.menubar.addMenu('Tools')
-        gui.nastran_tools_menu = nastran_tools_menu
         tools = [
             #('script', 'Run Python Script...', 'python48.png', None, 'Runs pyNastranGUI in batch mode', self.on_run_script),
             ('shear_moment_torque', 'Shear, Moment, Torque...', 'python48.png', None,
@@ -289,6 +285,9 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             'shear_moment_torque',
             'create_coord',
         )
+
+        nastran_tools_menu = gui.menubar.addMenu('Tools')
+        gui.nastran_tools_menu = nastran_tools_menu
         menu_items = {
             'nastran_tools' : (nastran_tools_menu, items),
         }
@@ -2629,6 +2628,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         points.SetNumberOfPoints(nnodes)
 
         j = 0
+        etype = 3 # vtkLine
         nid_map = self.gui.nid_map
         alt_grid = self.gui.alt_grids[name]
         for nid1, nid2 in lines:
@@ -2643,9 +2643,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 model.log.warning('nid=%s does not exist' % nid2)
                 continue
 
-            if nid1 not in model.nodes:
-                continue
-            if nid2 not in model.nodes:
+            if nid1 not in model.nodes or nid2 not in model.nodes:
                 continue
             node = model.nodes[nid1]
             point = node.get_position()
@@ -2659,7 +2657,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             point_ids = elem.GetPointIds()
             point_ids.SetId(0, j)
             point_ids.SetId(1, j + 1)
-            alt_grid.InsertNextCell(elem.GetCellType(), point_ids)
+            alt_grid.InsertNextCell(etype, point_ids)
             j += 2
         alt_grid.SetPoints(points)
 
@@ -3746,11 +3744,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
     def _build_mcid_vectors(self, model: BDF, nplies: int):
         """creates the shell material coordinate vectors"""
-        #nodes : (nnodes, 3) float list
-            #the nodes
-        #bars : (nbars, 2) int list
-            #the "bars" that represent the x/y axes of the coordinate systems
-
         etype = 3 # vtkLine
 
         nodes, bars = export_mcids_all(model, eids=None, log=None, debug=False)
@@ -3760,12 +3753,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 name = 'element coord'
             else:
                 name = f'mcid ply={iply+1}'
-
-        #for iply in range(nplies):
-            #name = f'mcid ply={iply+1}'
-            #nodes, bars = export_mcids(model, csv_filename=None, eids=None,
-                                       #export_xaxis=True, export_yaxis=False,
-                                       #iply=iply, log=None, debug=False)
 
             nbars = len(barsi)
             if nbars == 0:
@@ -3780,9 +3767,6 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             grid = self.gui.alt_grids[name]
             grid.Allocate(nbars, 1000)
 
-            # drop off the node/element id
-            #nodes_array = np.array(nodes, dtype='float32')[:, 1:]
-            #elements = np.array(bars, dtype='int32')[:, 1:] - 1
             nodes_array = np.array(nodesi, dtype='float32')
             elements = np.array(barsi, dtype='int32')
             assert elements.min() == 0, elements.min()
@@ -6225,9 +6209,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             #print('ncases=%s icase=%s' % (ncases, icase))
             #assert ncases > 0, ncases
 
-            for itime, unused_dt in enumerate(times):
-                new_key = (key, itime)
-                key_itime.append(new_key)
+            if ncases:
+                for itime, unused_dt in enumerate(times):
+                    new_key = (key, itime)
+                    key_itime.append(new_key)
 
         # ----------------------------------------------------------------------
         #print('Key,itime:')

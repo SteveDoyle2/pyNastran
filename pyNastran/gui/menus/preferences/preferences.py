@@ -19,6 +19,8 @@ from qtpy.QtWidgets import (
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
+from pyNastran.gui.gui_objects.settings import (
+    COORD_SCALE, COORD_TEXT_SCALE, ANNOTATION_SIZE, TEXT_SIZE)
 
 
 class PreferencesWindow(PyDialog):
@@ -45,17 +47,17 @@ class PreferencesWindow(PyDialog):
 
         self._updated_preference = False
 
+        self.dim_max = data['dim_max']
         self._default_font_size = data['font_size']
-        self._default_text_size = data['text_size']
-        self._default_annotation_size = 18
-        self._default_coord_scale = 0.05 * 100.
-        self._default_coord_text_scale = 0.5 * 100.
+        self._default_text_size = TEXT_SIZE
+        self._default_annotation_size = ANNOTATION_SIZE
+        self._default_coord_scale = COORD_SCALE * self.dim_max
+        self._default_coord_text_scale = COORD_TEXT_SCALE * self.dim_max
         self._default_clipping_min = data['min_clip']
         self._default_clipping_max = data['max_clip']
         #self._default_annotation_size = data['annotation_size'] # int
         #self.default_magnify = data['magnify']
 
-        self.dim_max = data['dim_max']
         self._use_gradient_background = data['use_gradient_background'] # bool
         self._show_corner_coord = data['show_corner_coord']
         self._annotation_size = data['annotation_size'] # int

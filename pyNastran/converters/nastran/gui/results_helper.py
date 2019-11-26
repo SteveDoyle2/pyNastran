@@ -78,39 +78,6 @@ class NastranGuiResults(NastranGuiAttributes):
             nnodes, log)
         return icase
 
-    def _fill_op2_force(self, cases, model: OP2, key, icase: int, itime: int,
-                        form_dict: Dict[Any, Any],
-                        header_dict: Dict[Any, Any],
-                        keys_map: Dict[Any, Any]) -> int:
-        """creates the force plots"""
-        #assert isinstance(key, int), key
-        assert isinstance(icase, int), icase
-        assert isinstance(form_dict, dict), form_dict
-        icase = self._fill_op2_time_centroidal_force(
-            cases, model, key, icase, itime,
-            form_dict, header_dict, keys_map)
-        return icase
-
-    def _fill_op2_stress(self, cases, model: OP2, key, icase: int, itime: int,
-                         form_dict: Dict[Any, Any],
-                         header_dict: Dict[Any, Any],
-                         keys_map: Dict[Any, Any],
-                         is_stress: bool=True) -> int:
-        """creates the stress plots"""
-        assert isinstance(icase, int), icase
-        assert isinstance(form_dict, dict), form_dict
-        icase = self._fill_op2_time_centroidal_stress(
-            cases, model, key, icase, itime, form_dict, header_dict, keys_map,
-            is_stress=is_stress)
-        return icase
-
-    def _fill_op2_strain(self, cases, model: OP2, key, icase: int, itime: int,
-                         form_dict, header_dict, keys_map) -> int:
-        """creates the strain plots"""
-        return self._fill_op2_stress(cases, model, key, icase, itime,
-                                     form_dict, header_dict, keys_map,
-                                     is_stress=False)
-
     def _fill_op2_time_gpstress(self, cases, model: OP2,
                                 key, icase: int, itime: int,
                                 form_dict, header_dict, keys_map) -> int:
@@ -200,7 +167,7 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_centroidal_force(self, cases, model, times, key, icase,
                                    force_dict, header_dict, keys_map) -> int:
         for itime, unused_dt in enumerate(times):
-            icase = self._fill_op2_force(
+            icase = self._fill_op2_time_centroidal_force(
                 cases, model, key, icase, itime,
                 force_dict, header_dict, keys_map)
         return icase

@@ -18,6 +18,7 @@ defines:
  - repr_settings(settings)
 
 """
+from typing import List, Any
 import numpy as np
 from qtpy import QtGui
 
@@ -33,6 +34,11 @@ ORANGE = (229/255., 92/255., 0.)
 HIGHLIGHT_OPACITY = 0.9
 HIGHLIGHT_POINT_SIZE = 10.
 HIGHLIGHT_LINE_THICKNESS = 5.
+ANNOTATION_SIZE = 18
+FONT_SIZE = 8
+TEXT_SIZE = 14
+COORD_SCALE = 0.05  # in percent of max dimension
+COORD_TEXT_SCALE = 0.5 # percent of nominal
 
 class Settings:
     """storage class for various settings"""
@@ -53,7 +59,7 @@ class Settings:
         self.background_color2 = GREY
         self.annotation_color = BLACK
 
-        self.text_size = 14
+        self.text_size = TEXT_SIZE
         self.text_color = BLACK
         self.highlight_color = ORANGE
         self.highlight_opacity = HIGHLIGHT_OPACITY
@@ -67,13 +73,13 @@ class Settings:
         self.show_error = True
 
         # int
-        self.annotation_size = 18
-        self.font_size = 8
+        self.annotation_size = ANNOTATION_SIZE
+        self.font_size = FONT_SIZE
         self.magnify = 5
 
         # floats
-        self.coord_scale = 0.05  # in percent of max dimension
-        self.coord_text_scale = 0.5 # percent of nominal
+        self.coord_scale = COORD_SCALE
+        self.coord_text_scale = COORD_TEXT_SCALE
         self.coord_linewidth = 2.0
 
         # string
@@ -99,10 +105,10 @@ class Settings:
         self.background_color = GREY
         self.background_color2 = GREY
 
-        self.annotation_size = 18
+        self.annotation_size = ANNOTATION_SIZE
         self.annotation_color = BLACK
 
-        self.text_size = 14
+        self.text_size = TEXT_SIZE
         self.text_color = BLACK
 
         self.highlight_color = ORANGE
@@ -117,12 +123,12 @@ class Settings:
         self.show_error = True
 
         # int
-        self.font_size = 8
+        self.font_size = FONT_SIZE
         self.magnify = 5
 
         # float
-        self.coord_scale = 0.05
-        self.coord_text_scale = 0.5
+        self.coord_scale = COORD_SCALE
+        self.coord_text_scale = COORD_TEXT_SCALE
         self.coord_linewidth = 2.0
 
         # string
@@ -179,16 +185,16 @@ class Settings:
         self._set_setting(settings, setting_keys, ['background_color2'], GREY, auto_type=float)
 
         # scales the coordinate systems
-        self._set_setting(settings, setting_keys, ['coord_scale'], self.coord_scale, auto_type=float)
-        self._set_setting(settings, setting_keys, ['coord_text_scale'], self.coord_text_scale, auto_type=float)
+        self._set_setting(settings, setting_keys, ['coord_scale'], COORD_SCALE, auto_type=float)
+        self._set_setting(settings, setting_keys, ['coord_text_scale'], COORD_TEXT_SCALE, auto_type=float)
 
         # this is for the 3d annotation
         self._set_setting(settings, setting_keys, ['annotation_color', 'labelColor'],
                           BLACK, auto_type=float)
-        self._set_setting(settings, setting_keys, ['annotation_size'], 18, auto_type=int) # int
+        self._set_setting(settings, setting_keys, ['annotation_size'], ANNOTATION_SIZE, auto_type=int) # int
         if isinstance(self.annotation_size, float):
             # throw the float in the trash as it's from an old version of vtk
-            self.annotation_size = 18
+            self.annotation_size = ANNOTATION_SIZE
         elif isinstance(self.annotation_size, int):
             pass
         else:
@@ -199,7 +205,7 @@ class Settings:
         # this is the text in the lower left corner
         self._set_setting(settings, setting_keys, ['text_color', 'textColor'],
                           BLACK, auto_type=float)
-        self._set_setting(settings, setting_keys, ['text_size'], 14, auto_type=int)
+        self._set_setting(settings, setting_keys, ['text_size'], TEXT_SIZE, auto_type=int)
 
         # highlight
         self._set_setting(settings, setting_keys, ['highlight_color'],
@@ -277,8 +283,9 @@ class Settings:
         is_loaded = True
         return is_loaded
 
-    def _set_setting(self, settings, setting_keys, setting_names, default,
-                     save=True, auto_type=None):
+    def _set_setting(self, settings, setting_keys: List[str],
+                     setting_names: List[str], default: Any,
+                     save: bool=True, auto_type=None) -> Any:
         """
         helper method for ``reapply_settings``
         """
@@ -289,7 +296,7 @@ class Settings:
             setattr(self, set_name, value)
         return value
 
-    def save(self, settings, is_testing=False):
+    def save(self, settings, is_testing: bool=False) -> None:
         """saves the settings"""
         if not is_testing:
             settings.setValue('main_window_geometry', self.parent.saveGeometry())
@@ -440,7 +447,7 @@ class Settings:
         for unused_coord_id, axes in self.parent.axes.items():
             axes.SetTotalLength(coord_scale, coord_scale, coord_scale)
             #axes.SetScale(magnify, magnify, magnify)
-            if linewidth:
+            #if linewidth:
                 #xaxis = axes.GetXAxisShaftProperty()
                 #yaxis = axes.GetXAxisShaftProperty()
                 #zaxis = axes.GetXAxisShaftProperty()
@@ -448,7 +455,7 @@ class Settings:
                 #xaxis.SetLineWidth(linewidth)
                 #yaxis.SetLineWidth(linewidth)
                 #zaxis.SetLineWidth(linewidth)
-                print(f'coord_scale coord_id={unused_coord_id} scale={scale} lw={linewidth}')
+            print(f'coord_scale coord_id={unused_coord_id} scale={scale} lw={linewidth}')
 
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
@@ -663,7 +670,7 @@ class Settings:
 
     def __repr__(self):
         msg = '<Settings>\n'
-        for key in object_attributes(self, mode='public', keys_to_skip=None):
+        for key in object_attributes(self, mode='public', keys_to_skip=['parent']):
             value = getattr(self, key)
             if isinstance(value, tuple):
                 value = str(value)

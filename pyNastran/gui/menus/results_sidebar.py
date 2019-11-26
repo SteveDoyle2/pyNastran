@@ -160,7 +160,7 @@ class Sidebar(QWidget):
             a way to add additional widgets to the sidebar
 
         """
-        include_case_spinner = False
+        #include_case_spinner = False
         QWidget.__init__(self)
         self.parent = parent
         self.debug = debug
