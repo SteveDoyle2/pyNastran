@@ -20,7 +20,7 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.gui_objects.settings import (
-    COORD_SCALE, COORD_TEXT_SCALE, ANNOTATION_SIZE, TEXT_SIZE)
+    COORD_SCALE, COORD_TEXT_SCALE, ANNOTATION_SIZE, TEXT_SIZE, FONT_SIZE)
 
 
 class PreferencesWindow(PyDialog):
@@ -48,11 +48,11 @@ class PreferencesWindow(PyDialog):
         self._updated_preference = False
 
         self.dim_max = data['dim_max']
-        self._default_font_size = data['font_size']
+        self._default_font_size = FONT_SIZE
         self._default_text_size = TEXT_SIZE
         self._default_annotation_size = ANNOTATION_SIZE
-        self._default_coord_scale = COORD_SCALE * self.dim_max
-        self._default_coord_text_scale = COORD_TEXT_SCALE * self.dim_max
+        self._default_coord_scale = COORD_SCALE * 100. # * self.dim_max
+        self._default_coord_text_scale = COORD_TEXT_SCALE * 100. # * self.dim_max
         self._default_clipping_min = data['min_clip']
         self._default_clipping_max = data['max_clip']
         #self._default_annotation_size = data['annotation_size'] # int
@@ -63,9 +63,12 @@ class PreferencesWindow(PyDialog):
         self._annotation_size = data['annotation_size'] # int
 
         #self.out_data = data
+
+        # doesn't include dim_max
         self._picker_size = data['picker_size'] * 100.
         self._coord_scale = data['coord_scale'] * 100.
         self._coord_text_scale = data['coord_text_scale'] * 100.
+
         self._magnify = data['magnify']
         self._text_size = data['text_size']
         self._highlight_opacity = data['highlight_opacity']

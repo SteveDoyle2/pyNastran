@@ -13,7 +13,7 @@ from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.gui import font_file
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
-from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points
+from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, update_axis_text_size
 from pyNastran.gui.utils.load_results import load_user_geom
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.femutils.io import loadtxt_nice
@@ -847,10 +847,6 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
     #axes.GetShaftType() # 1
     #axes.GetTotalLength() # (1., 1., 1.)
 
-    xactor = axes.GetXAxisCaptionActor2D()
-    yactor = axes.GetYAxisCaptionActor2D()
-    zactor = axes.GetZAxisCaptionActor2D()
-
     axes.SetUserTransform(transform)
     axes.SetTotalLength(coord_scale, coord_scale, coord_scale)
     if coord_type == 'xyz':
@@ -898,10 +894,12 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
         axes.SetYAxisLabelText(ylabel)
         axes.SetZAxisLabelText(zlabel)
 
-    # this doesn't set the width
-    # this being very large (old=0.1) makes the width constraint inactive
+    update_axis_text_size(axes)
     width = 1.0
     height = 0.25
+    xactor = axes.GetXAxisCaptionActor2D()
+    yactor = axes.GetYAxisCaptionActor2D()
+    zactor = axes.GetZAxisCaptionActor2D()
     for actor_text in [xactor, yactor, zactor]:
         actor_text.SetWidth(coord_text_scale * width)
         actor_text.SetHeight(coord_text_scale * height)

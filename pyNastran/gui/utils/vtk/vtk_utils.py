@@ -342,3 +342,22 @@ def map_element_centroid_to_node_fringe_result(ugrid, location, log):
     point_data.SetActiveScalars('name')
     is_passed = True
     return is_passed, (imin, imax, min_value, max_value)
+
+def update_axis_text_size(axis: vtk.vtkAxes,
+                          coord_text_scale: float,
+                          width: float=1.0, height: float=0.25):
+    """updates the coordinate system text size"""
+    # width doesn't set the width
+    # it being very large (old=0.1) makes the width constraint inactive
+
+    texts = [
+        axis.GetXAxisCaptionActor2D(),
+        axis.GetYAxisCaptionActor2D(),
+        axis.GetZAxisCaptionActor2D(),
+    ]
+    # this doesn't set the width
+    # this being very large (old=0.1) makes the width constraint inactive
+    for text in texts:
+        text.SetWidth(coord_text_scale * width)
+        text.SetHeight(coord_text_scale * height)
+

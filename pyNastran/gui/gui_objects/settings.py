@@ -18,7 +18,7 @@ defines:
  - repr_settings(settings)
 
 """
-from typing import List, Any
+from typing import List, Dict, Any, TYPE_CHECKING
 import numpy as np
 from qtpy import QtGui
 
@@ -26,6 +26,9 @@ from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.gui.gui_objects.coord_properties import CoordProperties
 from pyNastran.gui.gui_objects.utils import get_setting
 from pyNastran.utils import object_attributes
+if TYPE_CHECKING:  # pragma: no cover
+    import vtk
+
 
 BLACK = (0.0, 0.0, 0.0)
 WHITE = (1., 1., 1.)
@@ -445,7 +448,7 @@ class Settings:
         scale = coord_scale * dim_max
 
         for unused_coord_id, axes in self.parent.axes.items():
-            axes.SetTotalLength(coord_scale, coord_scale, coord_scale)
+            axes.SetTotalLength(scale, scale, scale) # was coord_scale
             #axes.SetScale(magnify, magnify, magnify)
             #if linewidth:
                 #xaxis = axes.GetXAxisShaftProperty()
@@ -486,21 +489,8 @@ class Settings:
         if coord_text_scale is None:
             coord_text_scale = self.coord_text_scale
 
-        width = 1.0
-        height = 0.25
-        for unused_coord_id, axes in self.parent.axes.items():
-            #print(f'coord_text_scale coord_id={unused_coord_id} coord_text_scale={coord_text_scale}')
-            texts = [
-                axes.GetXAxisCaptionActor2D(),
-                axes.GetYAxisCaptionActor2D(),
-                axes.GetZAxisCaptionActor2D(),
-            ]
-            # this doesn't set the width
-            # this being very large (old=0.1) makes the width constraint inactive
-            for text in texts:
-                text.SetWidth(coord_text_scale * width)
-                text.SetHeight(coord_text_scale * height)
-
+        update_axes_text_size(self.parent.axes, coord_text_scale,
+                              width=1.0, height=0.25)
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
@@ -677,6 +667,25 @@ class Settings:
             msg += '  %r = %r\n' % (key, value)
         return msg
 
+def update_axes_text_size(axes: Dict[int, vtk.vtkAxes],
+                          coord_text_scale: float,
+                          width: float=1.0, height: float=0.25):
+    """updates the coordinate system text size"""
+    # width doesn't set the width
+    # it being very large (old=0.1) makes the width constraint inactive
+
+    for unused_coord_id, axis in axes.items():
+        #print(f'coord_text_scale coord_id={unused_coord_id} coord_text_scale={coord_text_scale}')
+        texts = [
+            axis.GetXAxisCaptionActor2D(),
+            axis.GetYAxisCaptionActor2D(),
+            axis.GetZAxisCaptionActor2D(),
+        ]
+        # this doesn't set the width
+        # this being very large (old=0.1) makes the width constraint inactive
+        for text in texts:
+            text.SetWidth(coord_text_scale * width)
+            text.SetHeight(coord_text_scale * height)
 
 def isfloat(value):
     """is the value floatable"""
