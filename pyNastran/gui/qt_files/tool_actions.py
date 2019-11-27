@@ -847,6 +847,9 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
     #axes.GetShaftType() # 1
     #axes.GetTotalLength() # (1., 1., 1.)
 
+    yactor = axes.GetYAxisCaptionActor2D()
+    zactor = axes.GetZAxisCaptionActor2D()
+
     axes.SetUserTransform(transform)
     axes.SetTotalLength(coord_scale, coord_scale, coord_scale)
     if coord_type == 'xyz':
@@ -894,15 +897,7 @@ def _set_base_axes(axes: vtk.vtkAxesActor,
         axes.SetYAxisLabelText(ylabel)
         axes.SetZAxisLabelText(zlabel)
 
-    update_axis_text_size(axes)
-    width = 1.0
-    height = 0.25
-    xactor = axes.GetXAxisCaptionActor2D()
-    yactor = axes.GetYAxisCaptionActor2D()
-    zactor = axes.GetZAxisCaptionActor2D()
-    for actor_text in [xactor, yactor, zactor]:
-        actor_text.SetWidth(coord_text_scale * width)
-        actor_text.SetHeight(coord_text_scale * height)
+    update_axis_text_size(axes, coord_text_scale)
 
     xaxis = axes.GetXAxisShaftProperty()
     yaxis = axes.GetYAxisShaftProperty()

@@ -78,26 +78,59 @@ class NastranGuiResults(NastranGuiAttributes):
             nnodes, log)
         return icase
 
-    def _fill_op2_time_gpstress(self, cases, model: OP2,
-                                key, icase: int, itime: int,
+    def _fill_op2_gpstress(self, cases, model: OP2,
+                                times, key, icase: int,
                                 form_dict, header_dict, keys_map) -> int:
-        """
-        Creates the time accurate grid point stress objects
-        """
-        if key in model.grid_point_stresses_volume_direct:
-            case = model.grid_point_stresses_volume_direct[key]
+        """Creates the time accurate grid point stress objects"""
+        if key in model.grid_point_stress_discontinuities:
+            case = model.grid_point_stress_discontinuities[key]
+            self.log.warning('skipping grid_point_stress_discontinuities')
+        if key in model.grid_point_stresses_volume_principal:
+            case = model.grid_point_stresses_volume_principal[key]
+            self.log.warning('skipping grid_point_stresses_volume_principal')
 
-            if case.is_complex:
-                return icase
+        icase = self._fill_op2_grid_point_surface_stresses(
+            cases, model,
+            times, key, icase,
+            form_dict, header_dict, keys_map)
 
+        icase = self._fill_op2_grid_point_stresses_volume_direct(
+            cases, model,
+            times, key, icase,
+            form_dict, header_dict, keys_map)
+        return icase
+
+    def _fill_op2_grid_point_stresses_volume_direct(self, cases, model: OP2,
+                                                    times, key, icase: int,
+                                                    form_dict, header_dict, keys_map) -> int:
+        if key not in model.grid_point_stresses_volume_direct:
+            return icase
+
+        case = model.grid_point_stresses_volume_direct[key]
+        if case.is_complex:
+            return icase
+        nids = self.node_ids
+        nnodes = len(nids)
+
+        keys_map[key] = (case.subtitle, case.label,
+                         case.superelement_adaptivity_index, case.pval_step)
+        subcase_id = key[0]
+
+        nids2 = case.node
+        i = np.searchsorted(nids, nids2)
+        if len(i) != len(np.unique(i)):
+            msg = 'i_gpstress=%s is not unique\n' % str(i)
+            #print('eids = %s\n' % str(list(eids)))
+            #print('eidsi = %s\n' % str(list(eidsi)))
+            raise RuntimeError(msg)
+
+        for itime, unused_dt in enumerate(times):
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
 
             # volume direct
             #['ox', 'oy', 'oz', 'txy', 'tyz', 'txz', 'pressure', 'ovm']
-            nids = self.node_ids
-            nnodes = len(nids)
             ox = np.full(nnodes, np.nan, dtype='float32')
             oy = np.full(nnodes, np.nan, dtype='float32')
             oz = np.full(nnodes, np.nan, dtype='float32')
@@ -106,17 +139,6 @@ class NastranGuiResults(NastranGuiAttributes):
             txz = np.full(nnodes, np.nan, dtype='float32')
             ovm = np.full(nnodes, np.nan, dtype='float32')
 
-            keys_map[key] = (case.subtitle, case.label,
-                             case.superelement_adaptivity_index, case.pval_step)
-            subcase_id = key[0]
-
-            nids2 = case.node
-            i = np.searchsorted(nids, nids2)
-            if len(i) != len(np.unique(i)):
-                msg = 'irod=%s is not unique\n' % str(i)
-                #print('eids = %s\n' % str(list(eids)))
-                #print('eidsi = %s\n' % str(list(eidsi)))
-                raise RuntimeError(msg)
             ox[i] = case.data[itime, :, 0]
             oy[i] = case.data[itime, :, 1]
             oz[i] = case.data[itime, :, 2]
@@ -140,28 +162,104 @@ class NastranGuiResults(NastranGuiAttributes):
 
         return icase
 
-    def _fill_op2_centroidal_stress(self, cases, model, times, key, icase,
-                                    form_dict, header_dict, keys_map) -> int:
-        for itime, unused_dt in enumerate(times):
-            icase = self._fill_op2_time_centroidal_stress(
-                cases, model, key, icase, itime, form_dict, header_dict, keys_map,
-                is_stress=True)
-        return icase
+    def _fill_op2_grid_point_surface_stresses(self, cases, model: OP2,
+                                              times, key, icase: int,
+                                              form_dict, header_dict, keys_map) -> int:
+        if key not in model.grid_point_surface_stresses:
+            return icase
 
-    def _fill_op2_centroidal_strain(self, cases, model, times, key, icase,
-                                    form_dict, header_dict, keys_map) -> int:
-        for itime, unused_dt in enumerate(times):
-            icase = self._fill_op2_time_centroidal_stress(
-                cases, model, key, icase, itime, form_dict, header_dict, keys_map,
-                is_stress=False)
-        return icase
+        #grid_point_surface_stresses[(1, 1, 1, 0, 666, '', '')]
+        #    type=GridPointSurfaceStressesArray nelements=99
+        #    data: [1, nelements, 8] where 8=[nx, ny, txy, angle, majorP, minorP, tmax, ovm]
+        #    node_element.shape = (99, 2)
+        #    location.shape = (99,)
+        #    data.shape = (1, 99, 8)
+        #    sort1
+        #    lsdvmns = [1]
+        case = model.grid_point_surface_stresses[key]
 
-    def _fill_op2_centroidal_strain_energy(self, cases, model, times, key, icase,
-                                           strain_energy_dict, header_dict, keys_map) -> int:
+        if case.is_complex:
+            return icase
+        #print(case.get_stats())
+        eids_all = self.element_ids
+        nelements = len(eids_all)
+        keys_map[key] = (case.subtitle, case.label,
+                         case.superelement_adaptivity_index, case.pval_step)
+        subcase_id = key[0]
+
+
+        eidsi = case.node_element[:, 0]
+        nidsi = case.node_element[:, 1]
+
+        icentroid = np.where(nidsi == 0)[0]
+        eids_res = eidsi[icentroid]
+        assert eids_res.min() > 0, eids_res
+        ueids_res = np.unique(eids_res)
+        #print('eids_res =', eids_res.tolist(), len(eids_res))
+        #print('ueids_res=', ueids_res.tolist(), len(ueids_res))
+
+        i = np.searchsorted(eids_all, ueids_res)
+        ui = np.unique(i)
+        j = np.where(i < len(ui) - 1)[0]
+        i2 = i[j]
+
+        #print('i        =', i.tolist(), len(i))
+        #print('ui       =', ui.tolist(), len(ui))
+        #print('j        =', j.tolist(), len(j))
+        #print('i2       =', i2.tolist(), len(i2))
+        #ueids_res2 = eids_all[i2]
+
+        #ueids_res1 = ueids_res[:len(ui) - 1]
+        #print('ueids_res1 =', ueids_res1.tolist(), len(ueids_res1))
+        #print('ueids_res2 =', ueids_res2.tolist(), len(ueids_res2))
+
+        #eid_exists = ueids_res1 == ueids_res2
+        #print("eid_exists =", eid_exists)
+        #ueids3 = ueids_res1[eid_exists]
+        #print('ueids3=', ueids3, len(ueids3))
+
+        if len(i2) != len(np.unique(i2)):
+            msg = 'i_gpstress=%s is not unique\n' % str(i2)
+            #print('eids = %s\n' % str(list(eids)))
+            #print('eidsi = %s\n' % str(list(eidsi)))
+            raise RuntimeError(msg)
+
         for itime, unused_dt in enumerate(times):
-            icase = self._fill_op2_time_centroidal_strain_energy(
-                cases, model, key, icase, itime,
-                strain_energy_dict, header_dict, keys_map)
+            dt = case._times[itime]
+            header = _get_nastran_header(case, dt, itime)
+            header_dict[(key, itime)] = header
+
+            # [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
+            nx = np.full(nelements, np.nan, dtype='float32')
+            ny = np.full(nelements, np.nan, dtype='float32')
+            txy = np.full(nelements, np.nan, dtype='float32')
+            angle = np.full(nelements, np.nan, dtype='float32')
+            major = np.full(nelements, np.nan, dtype='float32')
+            minor = np.full(nelements, np.nan, dtype='float32')
+            tmax = np.full(nelements, np.nan, dtype='float32')
+            ovm = np.full(nelements, np.nan, dtype='float32')
+
+            nx[i2] = case.data[itime, i2, 0]
+            ny[i2] = case.data[itime, i2, 1]
+            txy[i2] = case.data[itime, i2, 2]
+            angle[i2] = case.data[itime, i2, 3]
+            major[i2] = case.data[itime, i2, 4]
+            minor[i2] = case.data[itime, i2, 5]
+            tmax[i2] = case.data[itime, i2, 6]
+            ovm[i2] = case.data[itime, i2, 7]
+
+            headers = ['nx', 'ny', 'txy', 'majorP', 'minorP', 'tmax', 'ovm']
+            form = [('Surface Stresses', None, [])]
+            formi = form[0][2]
+            form_dict[(key, itime)] = form
+
+            for header, resi in zip(headers, (nx, ny, txy, angle, major, minor, ovm)):
+                ese_res = GuiResult(subcase_id, header=header,
+                                    title=header, data_format='%.3e',
+                                    location='centroid', scalar=resi)
+                cases[icase] = (ese_res, (subcase_id, header))
+                formi.append((header, icase, []))
+                icase += 1
         return icase
 
     def _fill_op2_centroidal_force(self, cases, model, times, key, icase,
@@ -172,18 +270,8 @@ class NastranGuiResults(NastranGuiAttributes):
                 force_dict, header_dict, keys_map)
         return icase
 
-    def _fill_op2_gpstress(self, cases, model, times, key, icase,
-                           gpstress_dict, header_dict, keys_map) -> int:
-        for itime, unused_dt in enumerate(times):
-            icase = self._fill_op2_time_gpstress(
-                cases, model, key, icase, itime,
-                gpstress_dict, header_dict, keys_map)
-        return icase
-
-    # force
-
-    def _fill_op2_time_centroidal_strain_energy(self, cases: Dict[int, GuiResults], model: OP2,
-                                                key, icase: int, itime: int,
+    def _fill_op2_centroidal_strain_energy(self, cases: Dict[int, GuiResults], model: OP2,
+                                                times, key, icase: int,
                                                 form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate strain energy objects"""
         case = None
@@ -250,84 +338,87 @@ class NastranGuiResults(NastranGuiAttributes):
             #modes = [1, 2, 3]
 
         nelements = self.nelements
-
         eids = self.element_ids
-        ese = np.full(nelements, np.nan, dtype='float32')
-        percent = np.full(nelements, np.nan, dtype='float32')
-        strain_energy_density = np.full(nelements, np.nan, dtype='float32')
-        for istrain_energy, is_true in enumerate(has_strain_energy):
-            if not is_true:
-                continue
-            resdict, name, unused_flag = strain_energies[istrain_energy]
-            case = resdict[key]
 
-            dt = case._times[itime]
-            header = _get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label,
-                             case.superelement_adaptivity_index, case.pval_step)
+        for itime, unused_dt in enumerate(times):
+            ese = np.full(nelements, np.nan, dtype='float32')
+            percent = np.full(nelements, np.nan, dtype='float32')
+            strain_energy_density = np.full(nelements, np.nan, dtype='float32')
+            for istrain_energy, is_true in enumerate(has_strain_energy):
+                if not is_true:
+                    continue
+                resdict, name, unused_flag = strain_energies[istrain_energy]
+                case = resdict[key]
 
-            if case.is_complex:
-                continue
-            itotals = np.where(case.element[itime, :] == 100000000)[0]
-            assert len(itotals) == 1, itotals
-            itotal = itotals[0]
+                dt = case._times[itime]
+                header = _get_nastran_header(case, dt, itime)
+                header_dict[(key, itime)] = header
+                keys_map[key] = (case.subtitle, case.label,
+                                 case.superelement_adaptivity_index, case.pval_step)
 
-            eidsi2 = case.element[itime, :itotal]
+                if case.is_complex:
+                    continue
 
-            # find eids2i in eids
-            i = np.searchsorted(eids, eidsi2)
-            #if 0 and name == 'CELAS1':  # pragma: no cover
-                ## check that the elements were mapped correctly
-                #eids_actual = self.element_ids[i]
-                #for eid in eids_actual:
-                    #element = self.model.elements[eid]
-                    #assert element.type == name, element
-                #assert np.all(eids_actual == eidsi2)
+                data = case.data
+                itotals = np.where(case.element[itime, :] == 100000000)[0]
+                assert len(itotals) == 1, itotals
+                itotal = itotals[0]
 
-            if len(i) != len(np.unique(i)):
-                msg = 'Strain Energy i%s=%s is not unique because there are missing elements' % (name, str(i))
-                model.log.warning(msg)
-                continue
+                eidsi2 = case.element[itime, :itotal]
 
-            # verifies the try-except is what we think it is (missing elements)
-            esei = case.data[itime, :itotal, 0]
+                # find eids2i in eids
+                i = np.searchsorted(eids, eidsi2)
+                #if 0 and name == 'CELAS1':  # pragma: no cover
+                    ## check that the elements were mapped correctly
+                    #eids_actual = self.element_ids[i]
+                    #for eid in eids_actual:
+                        #element = self.model.elements[eid]
+                        #assert element.type == name, element
+                    #assert np.all(eids_actual == eidsi2)
 
-            try:
-                ese[i] = esei
-                percent[i] = case.data[itime, :itotal, 1]
-                strain_energy_density[i] = case.data[itime, :itotal, 2]
-            except IndexError:
-                model.log.warning('error reading Strain Energy')
-                continue
+                if len(i) != len(np.unique(i)):
+                    msg = 'Strain Energy i%s=%s is not unique because there are missing elements' % (name, str(i))
+                    model.log.warning(msg)
+                    continue
 
-        # helicopter.dat
-        #CBEAM : 10
-        #CQUAD4 : 11388
-        #CROD : 544
-        #CTRIA3 : 151
-        # nelements = 12093
+                # verifies the try-except is what we think it is (missing elements)
+                esei = data[itime, :itotal, 0]
 
-        if np.any(np.isfinite(ese)):
-            ese_res = GuiResult(subcase_id, header='Strain Energy: ' + header,
-                                title='Strain Energy', data_format='%.3e',
-                                location='centroid', scalar=ese)
-            percent_res = GuiResult(subcase_id, header='Percent of Total: '+ header,
-                                    title='Percent of Total', data_format='%.3f',
-                                    location='centroid', scalar=percent)
-            cases[icase] = (ese_res, (subcase_id, 'Strain Energy'))
-            cases[icase + 1] = (percent_res, (subcase_id, 'Percent'))
+                try:
+                    ese[i] = esei
+                    percent[i] = data[itime, :itotal, 1]
+                    strain_energy_density[i] = data[itime, :itotal, 2]
+                except IndexError:
+                    model.log.warning('error reading Strain Energy')
+                    continue
 
-            form_dict[(key, itime)].append(('Strain Energy', icase, []))
-            form_dict[(key, itime)].append(('Percent', icase + 1, []))
-            icase += 2
-            if np.any(np.isfinite(strain_energy_density)):
-                sed_res = GuiResult(subcase_id, header='Strain Energy Density: ' + header,
-                                    title='Strain Energy Density', data_format='%.3e',
-                                    location='centroid', scalar=strain_energy_density)
-                cases[icase] = (sed_res, (subcase_id, 'Strain Energy Density'))
-                form_dict[(key, itime)].append(('Strain Energy Density', icase, []))
-                icase += 1
+            # helicopter.dat
+            #CBEAM : 10
+            #CQUAD4 : 11388
+            #CROD : 544
+            #CTRIA3 : 151
+            # nelements = 12093
+
+            if np.any(np.isfinite(ese)):
+                ese_res = GuiResult(subcase_id, header='Strain Energy: ' + header,
+                                    title='Strain Energy', data_format='%.3e',
+                                    location='centroid', scalar=ese)
+                percent_res = GuiResult(subcase_id, header='Percent of Total: '+ header,
+                                        title='Percent of Total', data_format='%.3f',
+                                        location='centroid', scalar=percent)
+                cases[icase] = (ese_res, (subcase_id, 'Strain Energy'))
+                cases[icase + 1] = (percent_res, (subcase_id, 'Percent'))
+
+                form_dict[(key, itime)].append(('Strain Energy', icase, []))
+                form_dict[(key, itime)].append(('Percent', icase + 1, []))
+                icase += 2
+                if np.any(np.isfinite(strain_energy_density)):
+                    sed_res = GuiResult(subcase_id, header='Strain Energy Density: ' + header,
+                                        title='Strain Energy Density', data_format='%.3e',
+                                        location='centroid', scalar=strain_energy_density)
+                    cases[icase] = (sed_res, (subcase_id, 'Strain Energy Density'))
+                    form_dict[(key, itime)].append(('Strain Energy Density', icase, []))
+                    icase += 1
         return icase
 
     def _create_op2_time_centroidal_force_arrays(self, model, nelements, key, itime,
@@ -656,6 +747,24 @@ class NastranGuiResults(NastranGuiAttributes):
             cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
             form_dict[(key, itime)].append((word + 'XX', icase, []))
             icase += 1
+        return icase
+
+    def _fill_op2_centroidal_stress(self, cases, model, times, key, icase,
+                                    form_dict, header_dict, keys_map) -> int:
+        """Creates the time accurate stress objects"""
+        for itime, unused_dt in enumerate(times):
+            icase = self._fill_op2_time_centroidal_stress(
+                cases, model, key, icase, itime, form_dict, header_dict, keys_map,
+                is_stress=True)
+        return icase
+
+    def _fill_op2_centroidal_strain(self, cases, model, times, key, icase,
+                                    form_dict, header_dict, keys_map) -> int:
+        """Creates the time accurate strain objects"""
+        for itime, unused_dt in enumerate(times):
+            icase = self._fill_op2_time_centroidal_stress(
+                cases, model, key, icase, itime, form_dict, header_dict, keys_map,
+                is_stress=False)
         return icase
 
     def _fill_op2_time_centroidal_stress(self, cases, model: OP2,

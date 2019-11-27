@@ -1103,11 +1103,12 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 'TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLEST',
                 'MAT1', 'MAT2', 'MAT4', 'MAT5', 'MAT8', 'MAT9', 'MAT10',
                 'MATT1', 'MATT2', 'MATT8',
-                'MATS1',
+                'MATS1', 'MATHP',
 
                 'PLOAD', 'PLOAD1', 'PLOAD2', 'FORCE', 'PLOAD4', 'LOAD',
                 'MAT1', 'PSHEAR', 'PSHELL', 'PTUBE', 'PDAMP',
                 'PELAST', 'PBEND', 'PBEAM', 'PCOMP', 'PCOMPG', 'PBAR', 'PSOLID',
+                'PLPLANE', 'PLSOLID',
                 'PROD', 'PELAS', 'PVISC', 'PBUSH1D', 'PBUSH2D',
                 #'EPOINT',
                 #'CQUADR', 'CTRIAR', 'SPOINT',
@@ -1129,6 +1130,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
                 'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
                 'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7',
+                'CLOAD', 'TABLES1', 'NLPARM', 'GRDSET',
             ]
             potential_elements_found = [key for key in model.card_count if key not in skip_cards]
             etypes = [

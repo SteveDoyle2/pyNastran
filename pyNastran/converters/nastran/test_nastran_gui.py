@@ -868,6 +868,33 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
 
+    def test_gui_ogs(self):
+        """
+        tests ogs.op2:
+         - GridPointSurfaceStressesArray
+        """
+        bdf_filename = os.path.join(MODEL_PATH, 'ogs', 'ogs.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'ogs', 'ogs.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
+
+    def test_gui_bdf_op2_other_23(self):
+        """
+        tests ehbus69.op2:
+         - RealBush1DStressArray
+         - GridPointStressesVolumeDirectArray
+         - GridPointStressesVolumePrincipalArray
+         - GridPointStressesSurfaceDiscontinutiesArray
+        """
+        # TODO: support these results...
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'ehbus69.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'ehbus69.op2')
+        test = NastranGUI()
+        test.load_nastran_geometry(bdf_filename)
+        test.load_nastran_results(op2_filename)
+
+
     def test_gui_zona_model_1(self):
         bdf_filename = os.path.join(MODEL_PATH, 'aero', 'f16_ma41.bdf')
         test = NastranGUI()

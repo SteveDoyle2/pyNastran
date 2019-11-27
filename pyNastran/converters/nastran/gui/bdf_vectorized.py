@@ -279,6 +279,14 @@ def add_vectorized_elements(model, nelements: int, idtype: str, log):
         cell_types_array, cell_offsets_array,
         model.cquad8, cell_type_quad8, nnodesi=8, dimi=2,
         allow0=True, cell_type_allow=cell_type_quad8)
+    ieid0, cell_offset0 = map_elements_vectorized_fill(
+        log,
+        ieid0, cell_offset0,
+        nodes, nids_list,
+        eids_array, pids_array, nnodes_array, dim_array,
+        cell_types_array, cell_offsets_array,
+        model.cquad, cell_type_quad8, nnodesi=8, dimi=2,
+        allow0=True, cell_type_allow=cell_type_quad8)
 
     ieid0, cell_offset0 = map_elements_vectorized_fill(
         log,

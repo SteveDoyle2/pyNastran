@@ -18,6 +18,7 @@ defines:
  - repr_settings(settings)
 
 """
+from __future__ import annotations
 from typing import List, Dict, Any, TYPE_CHECKING
 import numpy as np
 from qtpy import QtGui
@@ -458,7 +459,7 @@ class Settings:
                 #xaxis.SetLineWidth(linewidth)
                 #yaxis.SetLineWidth(linewidth)
                 #zaxis.SetLineWidth(linewidth)
-            print(f'coord_scale coord_id={unused_coord_id} scale={scale} lw={linewidth}')
+            #print(f'coord_scale coord_id={unused_coord_id} scale={scale} lw={linewidth}')
 
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()

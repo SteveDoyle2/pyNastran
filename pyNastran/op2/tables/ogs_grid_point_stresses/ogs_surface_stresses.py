@@ -34,6 +34,13 @@ class GridPointSurfaceStressesArray(ScalarObject):
         self.itotal = 0
         self.ielement = 0
 
+    @property
+    def is_real(self):
+        return True
+    @property
+    def is_complex(self):
+        return False
+
     def build(self):
         """sizes the vectorized attributes of the GridPointStressesArray"""
         if self.is_built:
