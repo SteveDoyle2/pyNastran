@@ -29,10 +29,10 @@ class StressObject:
 
         for element_type, composite_data in self.composite_data_dict.items():
             for key in composite_data:
-                element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
+                element_layer, ueids, data2, vm_word, unused_ntimes, headers = composite_data[key]
                 #all_eids = ueids
 
-                ntimes, neids, nlayers, nresults = data2.shape
+                ntimes, unused_neids, unused_nlayers, unused_nresults = data2.shape
                 #data2[itime, eid, layer, oxx/oyy/...]
                 ieids = np.searchsorted(all_eids, ueids)
                 self.composite_ieids[element_type] = ieids
@@ -48,14 +48,14 @@ class StressObject:
                                  is_element_on: Any, header_dict: Dict[Any, Any]) -> str:
         for element_type, composite_data in self.composite_data_dict.items():
             try:
-                element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
+                element_layer, unused_ueids, data2, vm_word, unused_ntimes, headers = composite_data[key]
             except KeyError:
                 print(composite_data)
                 raise
             for itime2, header in enumerate(headers):
                 header_dict[(key, itime2)] = header
 
-            ntimes, neids, nlayers, nresults = data2.shape
+            ntimes, unused_neids, unused_nlayers, unused_nresults = data2.shape
             #data2[itime, eid, layer, oxx/oyy/...]
 
             ieids = self.composite_ieids[element_type]
@@ -83,16 +83,16 @@ class StressObject:
         nelements2 = 0
         for element_type, composite_data in self.composite_data_dict.items():
             try:
-                element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
+                unused_element_layer, unused_ueids, data2, vm_word, unused_ntimes, headers = composite_data[key]
             except KeyError:
                 print(composite_data)
                 raise
-            ntimesi, neidsi, nlayersi, nresultsi = data2.shape
+            unused_ntimesi, neidsi, nlayersi, unused_nresultsi = data2.shape
             nlayers = max(nlayers, nlayersi)
             nelements2 += neidsi
 
         shape = (nelements2, nlayers)
-        element_ids = np.full(nelements2, np.nan, dtype='float32')
+        unused_element_ids = np.full(nelements2, np.nan, dtype='float32')
         oxx = np.full(shape, np.nan, dtype='float32')
         oyy = np.full(shape, np.nan, dtype='float32')
 
@@ -105,12 +105,12 @@ class StressObject:
         ovm = np.full(shape, np.nan, dtype='float32')
 
         for element_type, composite_data in self.composite_data_dict.items():
-            element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
+            unused_element_layer, unused_ueids, data2, vm_word, unused_ntimes, headers = composite_data[key]
 
             for itime2, header in enumerate(headers):
                 header_dict[(key, itime2)] = header
 
-            ntimes, neids, nlayers, nresults = data2.shape
+            unused_ntimes, unused_neids, nlayers, unused_nresults = data2.shape
             #data2[itime, eid, layer, oxx/oyy/...]
 
             ieids = self.composite_ieids[element_type]
@@ -136,9 +136,9 @@ class StressObject:
                              ):  # pragma: no cover
 
         for element_type, composite_data in self.composite_data_dict.items():
-            element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
+            unused_element_layer, unused_ueids, data2, unused_vm_word, ntimes, unused_headers = composite_data[key]
 
-            ntimes, neids, nlayers, nresults = data2.shape
+            ntimes, neids, unused_nlayers, unused_nresults = data2.shape
             #data2[itime, eid, layer, oxx/oyy/...]
 
             ieids = self.composite_ieids[element_type]
@@ -749,10 +749,12 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
             o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 5]]), axis=0)
             o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 6]]), axis=0)
             ovmi_vstacked = np.vstack([ovmi, case.data[itime, j + inode, 7]])
-            try:
-                ovmi = np.amax(ovmi_vstacked, axis=0)
-            except FloatingPointError:
-                print('ovmi_vstacked:\n%s' % ovmi_vstacked)
+            if np.any(np.isfinite(ovmi_vstacked)):
+                ovmi = np.nanmax(ovmi_vstacked, axis=0)
+            else:
+                print(f'ovmi:\n{ovmi}')
+                print(f'itime={itime} j={j} inode={inode}\ncase.data[itime, j + inode, 7]:\n{case.data[itime, j + inode, 7]}')
+                print(f'ovmi_vstacked:\n{ovmi_vstacked}')
                 raise
             assert len(oxxi) == len(j)
             #print('-------')
