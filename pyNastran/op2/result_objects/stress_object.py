@@ -748,7 +748,12 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
             txyi = np.amax(np.vstack([txyi, case.data[itime, j + inode, 3]]), axis=0)
             o1i = np.amax(np.vstack([o1i, case.data[itime, j + inode, 5]]), axis=0)
             o3i = np.amin(np.vstack([o3i, case.data[itime, j + inode, 6]]), axis=0)
-            ovmi = np.amax(np.vstack([ovmi, case.data[itime, j + inode, 7]]), axis=0)
+            ovmi_vstacked = np.vstack([ovmi, case.data[itime, j + inode, 7]])
+            try:
+                ovmi = np.amax(ovmi_vstacked, axis=0)
+            except FloatingPointError:
+                print('ovmi_vstacked:\n%s' % ovmi_vstacked)
+                raise
             assert len(oxxi) == len(j)
             #print('-------')
 
