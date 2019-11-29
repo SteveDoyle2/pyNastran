@@ -658,7 +658,10 @@ def get_beam_stress_strain(model, key, is_stress, vm_word, itime,
 def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
                             oxx, oyy, txy, max_principal, min_principal, ovm, is_element_on,
                             eids, header_dict, keys_map):
-    """helper method for _fill_op2_time_centroidal_stress"""
+    """
+    helper method for _fill_op2_time_centroidal_stress.  Gets the max/min stress across all
+    layers.
+    """
     if is_stress:
         plates = [
             model.ctria3_stress, model.cquad4_stress,
@@ -720,8 +723,10 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
         ntotal = case.data.shape[1]  # (ndt, ntotal, nresults)
         if nlayers_per_element == 1:
             j = None
+            nj = 2
         else:
             j = np.arange(ntotal)[::nlayers_per_element]
+            nj = len(j)
 
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
         #                                         txy, angle,
@@ -751,11 +756,28 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
             ovmi_vstacked = np.vstack([ovmi, case.data[itime, j + inode, 7]])
             if np.any(np.isfinite(ovmi_vstacked)):
                 ovmi = np.nanmax(ovmi_vstacked, axis=0)
+                #print("---------------")
+                #print(f'ovmi:\n{ovmi}')
+                #print(f'itime={itime} j={j} inode={inode}\ncase.data[itime, j + inode, 7]:\n{case.data[itime, j + inode, 7]}')
+                #print(f'ovmi_vstacked:\n{ovmi_vstacked}')
+                #print('type', type(ovmi))
             else:
-                print(f'ovmi:\n{ovmi}')
-                print(f'itime={itime} j={j} inode={inode}\ncase.data[itime, j + inode, 7]:\n{case.data[itime, j + inode, 7]}')
-                print(f'ovmi_vstacked:\n{ovmi_vstacked}')
-                raise
+                if nj is None:
+                    nj, unused_nlayers = ovmi.shape
+                ovmi = np.full(nj, np.nan, dtype=ovmi.dtype)
+                #print("---------------")
+                #print(f'ovmi:\n{ovmi}')
+                #print(f'itime={itime} j={j} inode={inode}\ncase.data[itime, j + inode, 7]:\n{case.data[itime, j + inode, 7]}')
+                #print(f'ovmi_vstacked:\n{ovmi_vstacked}')
+                #print('type', type(ovmi))
+                #raise
+
+            #print('ovmi', ovmi, ovmi.shape)
+            #print('inode', j, j.shape)
+            #print('inode', inode)
+            #print('ovmi_vstacked.shape', ovmi_vstacked.shape)
+            #print('ovmi2', ovmi2)
+            #aa
             assert len(oxxi) == len(j)
             #print('-------')
 
