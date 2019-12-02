@@ -49,6 +49,35 @@ from pyNastran.utils import print_bad_path
 IS_TESTING = 'test' in sys.argv[0]
 IS_OFFICIAL_RELEASE = 'dev' not in pyNastran.__version__
 
+class GeometryObject:
+    """
+    """
+    def __init__(self, parent):
+        self.gui = parent
+
+    def show(self):
+        pass
+    #def create(self):
+        #"""
+        #Create
+         #- Point
+         #- Line
+         #- Surface
+         #- Solid
+         #- Coord
+        #Modify
+        #Delete
+        #"""
+        #pass
+    #def create_point(self):
+        #pass
+    #def crate_surface(self):
+        #pass
+    #def create_coord(self):
+        #pass
+    #def modify(self):
+        #pass
+
 class GuiAttributes:
     """All methods in this class must not require VTK"""
     def __init__(self, **kwds):
@@ -85,6 +114,7 @@ class GuiAttributes:
             self.cutting_plane_obj = CuttingPlaneObject(self)
             self.shear_moment_torque_obj = ShearMomentTorqueObject(self)
         self.edit_geometry_properties_obj = EditGeometryPropertiesObject(self)
+        self.geometry_obj = GeometryObject(self)
 
         self.min_max_actors = []
 

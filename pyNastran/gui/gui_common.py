@@ -266,6 +266,12 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('surface', 'Surface Model', 'tsolid.png', 's', 'Show Model as a Surface Model', self.on_surface),
                 ('screenshot', 'Take a Screenshot...', 'tcamera.png', 'CTRL+I', 'Take a Screenshot of current view', self.tool_actions.on_take_screenshot),
 
+                # geometry
+                # Geometry:
+                #  - Create
+                #  - Modify
+                ('geometry', 'Geometry', 'geometry.png', None, 'Geometry', self.geometry_obj.show),
+                #
                 # core menus
                 ('legend', 'Modify Legend...', 'legend.png', 'CTRL+L', 'Set Legend', self.legend_obj.set_legend_menu),
                 ('animation', 'Create Animation...', 'animation.png', 'CTRL+A', 'Create Animation', self.legend_obj.set_animation_menu),

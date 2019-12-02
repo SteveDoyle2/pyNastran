@@ -132,6 +132,33 @@ class ViewActions:
         """zoom out"""
         self.zoom(1.0 / 1.1)
 
+    def azimuth(self, azimuth_deg, render=True):
+        """see the gui"""
+        camera = self.GetCamera()
+        camera.Azimuth(-azimuth_deg)
+        camera.Modified()
+        if render:
+            self.vtk_interactor.Render()
+        self.gui.log_command('azimuth(%s)' % azimuth_deg)
+
+    def pitch(self, pitch_deg, render=True):
+        """see the gui"""
+        camera = self.GetCamera()
+        camera.Pitch(-pitch_deg)
+        camera.Modified()
+        if render:
+            self.vtk_interactor.Render()
+        self.gui.log_command('pitch(%s)' % pitch_deg)
+
+    def yaw(self, yaw_deg, render=True):
+        """see the gui"""
+        camera = self.GetCamera()
+        camera.Yaw(-yaw_deg)
+        camera.Modified()
+        if render:
+            self.vtk_interactor.Render()
+        self.gui.log_command('yaw(%s)' % yaw_deg)
+
     def rotate(self, rotate_deg, render=True):
         """see the gui"""
         camera = self.GetCamera()
@@ -141,14 +168,15 @@ class ViewActions:
             self.vtk_interactor.Render()
         self.gui.log_command('rotate(%s)' % rotate_deg)
 
-    def zoom(self, value):
+    def zoom(self, value, render=True):
         camera = self.GetCamera()
         camera.Zoom(value)
         camera.Modified()
-        self.vtk_interactor.Render()
+        if render:
+            self.vtk_interactor.Render()
         self.gui.log_command('zoom(%s)' % value)
 
-    def set_focal_point(self, focal_point):
+    def set_focal_point(self, focal_point, render=True):
         """
         Parameters
         ----------
@@ -162,9 +190,10 @@ class ViewActions:
         # now we can actually modify the camera
         camera.SetFocalPoint(focal_point[0], focal_point[1], focal_point[2])
         camera.OrthogonalizeViewUp()
-        self.vtk_interactor.Render()
+        if render:
+            self.vtk_interactor.Render()
 
-    def on_surface(self):
+    def on_surface(self, render=True):
         """sets the main/toggle actors to surface"""
         if self.is_wireframe:
             self.gui.log_command('on_surface()')
@@ -178,9 +207,10 @@ class ViewActions:
 
                     prop.SetRepresentationToSurface()
             self.is_wireframe = False
-            self.vtk_interactor.Render()
+            if render:
+                self.vtk_interactor.Render()
 
-    def on_wireframe(self):
+    def on_wireframe(self, render=True):
         """sets the main/toggle actors to wirefreme"""
         if not self.is_wireframe:
             self.gui.log_command('on_wireframe()')
@@ -199,7 +229,8 @@ class ViewActions:
                 #prop.GetPointSize()
                 #prop.SetPointSize(5.0)
                 #prop.ShadingOff()
-            self.vtk_interactor.Render()
+            if render:
+                self.vtk_interactor.Render()
             self.is_wireframe = True
 
     #---------------------------------------------------------------------------
