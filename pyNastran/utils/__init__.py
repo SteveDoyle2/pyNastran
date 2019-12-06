@@ -211,6 +211,21 @@ def object_methods(obj: Any, mode: str='public',
     """
     return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
+def object_stats(obj: Any, mode: str='public',
+                 keys_to_skip: Optional[List[str]]=None,
+                 filter_properties: bool=False) -> str:
+    """Prints out an easy to read summary of the object"""
+    msg = '%s:\n' % obj.__class__.__name__
+    attrs = object_attributes(
+        mode=mode, keys_to_skip=keys_to_skip,
+        filter_properties=filter_properties)
+
+    for name in sorted(attrs):
+        #if short and '_ref' in name:
+            #continue
+        value = getattr(obj, name)
+        msg += '  %-6s : %r\n' % (name, value)
+    return msg
 
 def object_attributes(obj: Any, mode: str='public',
                       keys_to_skip: Optional[List[str]]=None,
