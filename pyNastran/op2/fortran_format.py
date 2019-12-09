@@ -25,16 +25,18 @@ class FortranFormat:
         #: stores if the user entered [] for isubcases
         self.is_all_subcases = True
         self.valid_subcases = []
+        #self.op2_reader = OP2Reader()
+        self.IS_TESTING = True
 
-    def show(self, n, types='ifs', endian=None):  # pragma: no cover
+    def show(self, n: int, types: str='ifs', endian=None):  # pragma: no cover
         """Shows binary data"""
         return self.op2_reader.show(n, types=types, endian=endian)
 
-    def show_data(self, data, types='ifs', endian=None):  # pragma: no cover
+    def show_data(self, data, types: str='ifs', endian=None):  # pragma: no cover
         """Shows binary data"""
         return self.op2_reader.show_data(data, types=types, endian=endian)
 
-    def show_ndata(self, n, types='ifs'):  # pragma: no cover
+    def show_ndata(self, n: int, types: str='ifs'):  # pragma: no cover
         self.op2_reader.show_ndata(n, types=types)
 
     #def passer(self, data):

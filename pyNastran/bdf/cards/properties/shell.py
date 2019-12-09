@@ -2403,8 +2403,8 @@ class PSHELL(Property):
             z2 = abs(self.z2)
             t = self.t
             if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
-                msg = ('PSHELL pid=%s midsurface: z1=%s z2=%s t=%s not in range of '
-                       '-1.5t < zi < 1.5t' % (self.pid, self.z1, self.z2, t))
+                msg = (f'PSHELL pid={self.pid} midsurface: z1={self.z1} z2={self.z2} t={t} '
+                       f'not in range of -1.5t < zi < 1.5t')
                 model.log.warning(msg)
 
     def uncross_reference(self) -> None:

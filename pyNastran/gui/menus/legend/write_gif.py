@@ -15,8 +15,13 @@ try:
     IS_IMAGEIO = True
 except ImportError:
     IS_IMAGEIO = False
+
+from pyNastran import is_pynastrangui_exe
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils import remove_files
+
+if is_pynastrangui_exe:  # pragma: no cover
+    assert IS_IMAGEIO, 'imageio is not istalled for the exe'
 
 def setup_animation(scale, istep=None,
                     animate_scale=True, animate_phase=False, animate_time=False,

@@ -631,6 +631,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             model = OP2Geom(make_geom=True, debug=False, log=log,
                             debug_file=None)
             model.clear_results()
+            model.IS_TESTING = False
             model.read_op2(op2_filename=bdf_filename)
         elif ext == '.h5' and IS_H5PY:
             model = BDF(log=log, debug=True)
@@ -3950,7 +3951,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
         for (eid, element) in sorted(elements.items()):
             eid_map[eid] = i
             if i % 5000 == 0 and i > 0:
-                print('  map_elements = %i' % i)
+                print('  map_elements (no quality) = %i' % i)
             etype = element.type
             # if element.Pid() >= 82:
                 # continue
@@ -6002,6 +6003,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             if ext == '.op2':
                 op2_filename = results_filename
                 model = OP2(log=log, debug=True)
+                model.IS_TESTING = False
 
                 if 0:  # pragma: no cover
                     model._results.saved = set()

@@ -102,19 +102,35 @@ class MPT(GeomCommon):
         """
         MAT2(203,2,78) - record 3
         """
-        ntotal = 68  # 17*4
-        s = Struct(self._endian + b'i15fi')
-        nmaterials = (len(data) - n) // ntotal
+        ndatai = len(data) - n
+        if ndatai % 68 == 0:
+            ntotal = 68  # 17*4
+            s = Struct(self._endian + b'i15fi')
+        else:
+            ntotal = (17 + 6) * 4
+            nleftover = ndatai % ntotal
+            s = Struct(self._endian + b'i15fi 6i')
+            self.log.warning(f'unexpected MAT2 format; ndatai={ndatai} ntotal={ntotal} nmaterials={ndatai // ntotal} '
+                             f'leftover={ndatai % ntotal}')
+            assert nleftover == 0, nleftover
+        nmaterials = ndatai // ntotal
+
         nbig_materials = 0
         for unused_i in range(nmaterials):
-            edata = data[n:n+68]
+            edata = data[n:n+ntotal]
             out = s.unpack(edata)
             if self.is_debug_file:
                 self.binary_debug.write('  MAT2=%s\n' % str(out))
-            (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
-             tref, ge, St, Sc, Ss, mcsid) = out
+            if ntotal == 68:
+                (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
+                 tref, ge, St, Sc, Ss, mcsid) = out
+                mat = MAT2.add_op2_data(out)
+            else:
+                (mid, g1, g2, g3, g4, g5, g6, rho, aj1, aj2, aj3,
+                 tref, ge, St, Sc, Ss, mcsid, *blanks) = out
+                mat = MAT2.add_op2_data(out)
+                print(mat)
             #print("MAT2 = ",out)
-            mat = MAT2.add_op2_data(out)
 
             if 0 < mid <= 1e8:  # just a checker for out of range materials
                 self.add_op2_material(mat)
@@ -201,15 +217,19 @@ class MPT(GeomCommon):
         """
         #self.log.info('skipping MAT9')
         #return len(data)
-        #if 1:
-        ntotal = 140 # 35
-        s2 = Struct(self._endian + b'i 30f iiii')
-        #else:  # pragma: no cover
+        ndatai = len(data) - n
+        if ndatai % 140 == 0:
+            s2 = Struct(self._endian + b'i 30f iiii')
+            ntotal = 140
+        else:  # pragma: no cover
+            self.log.warning('unexpected MAT9 format...')
+            ntotal = (35 + 21) * 4 # 35
+            s2 = Struct(self._endian + b'i 30f iiii 21i')
             #ntotal = 56 * 4
             #s1 = Struct(self._endian + b'i 21f 34i')
             #s2 = Struct(self._endian + b'i 21f 34f')
-        nmaterials = (len(data) - n) // ntotal
-        #assert nmaterials % ntotal == 0, self.numwide
+        nmaterials = ndatai // ntotal
+        assert ndatai % ntotal == 0, f'ndatai={ndatai} ntotal={ntotal} nmaterials={nmaterials} leftover={ndatai % ntotal}'
 
         if self.is_debug_file:
             self.binary_debug.write(
@@ -218,24 +238,34 @@ class MPT(GeomCommon):
                 'rho, a1, a2, a3, a4, a5, a6, tref, ge, '
                 'blank1, blank2, blank3, blank4)\n')
         for unused_i in range(nmaterials):
-            #self.show_data(data[n:n+ntotal], types='if')
             out = s2.unpack(data[n:n+ntotal])
             if self.is_debug_file:
                 self.binary_debug.write('    MAT9=%s\n' % str(out))
-            assert len(out) == 35, out
-            #print(out)
-            (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
-             g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
-             rho, a1, a2, a3, a4, a5, a6, tref, ge,
-             blank1, blank2, blank3, blank4) = out
+            if len(out) == 35:
+                #print(out)
+                (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+                 g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
+                 rho, a1, a2, a3, a4, a5, a6, tref, ge,
+                 blank1, blank2, blank3, blank4) = out
+            else:
+                (mid, g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
+                 g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21,
+                 rho, a1, a2, a3, a4, a5, a6, tref, ge,
+                 blank1, blank2, blank3, blank4, *blanks) = out
+                self.show_data(data[n:n+ntotal], types='if')
+                print(blanks)
             assert blank1 == 0, blank1
             data_in = [mid, [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10,
                              g11, g12, g13, g14, g15, g16, g17, g18, g19, g20, g21],
                        rho, [a1, a2, a3, a4, a5, a6],
                        tref, ge]
-            #print(data_in)
             mat = MAT9.add_op2_data(data_in)
-            self.add_op2_material(mat)
+            try:
+                self.add_op2_material(mat)
+            except AssertionError:
+                print(mat)
+                self.card_count['MAT9'] = nmaterials
+                return len(data)
             n += ntotal
         self.card_count['MAT9'] = nmaterials
         return n

@@ -14,7 +14,8 @@ from pyNastran.femutils.coord_transforms import cylindrical_rotation_matrix
 from pyNastran.femutils.matrix3d import (
     dot_n33_33,
     #dot_n33_n33,
-    dot_33_n33, dot_n33_n3)
+    #dot_33_n33,
+    dot_n33_n3)
 
 
 def transform_displacement_to_global(subcase, result, icd_transform, coords, xyz_cid0,
@@ -26,6 +27,7 @@ def transform_displacement_to_global(subcase, result, icd_transform, coords, xyz
     """
     #print('result.name = ', result.class_name)
     data = result.data
+    nnodesi = data.shape[1]
     for cid, inode in icd_transform.items():
         if cid in [-1, 0]:
             continue
@@ -59,8 +61,17 @@ def transform_displacement_to_global(subcase, result, icd_transform, coords, xyz
             #
             #  - ntotal = 5383
             #  data.shape = (101, 8, 6)
-            translation = data[:, inode, :3]
-            rotation = data[:, inode, 3:]
+            try:
+                translation = data[:, inode, :3]
+                rotation = data[:, inode, 3:]
+            except IndexError:
+                log.warning('shape of inode is incorrect')
+                translation = np.full(inode.shape, np.nan, dtype=data.dtype)
+                rotation = np.full(inode.shape, np.nan, dtype=data.dtype)
+                print(data.shape, inode.shape, nnodesi)
+                print(inode[:nnodesi].shape)
+                translation = data[:, inode[:nnodesi], :3]
+                rotation = data[:, inode[:nnodesi], 3:]
             data[:, inode, :3] = translation.dot(cid_transform)
             data[:, inode, 3:] = rotation.dot(cid_transform)
 

@@ -46,7 +46,7 @@ def parse_table_names_from_f06(f06_filename):
 
 def run_lots_of_files(files, make_geom: bool=True, write_bdf: bool=False, write_f06: bool=True,
                       delete_f06: bool=True, delete_op2: bool=True, delete_hdf5: bool=True,
-                      build_pandas: bool=True, write_op2: bool=False,
+                      delete_debug_out: bool=True, build_pandas: bool=True, write_op2: bool=False,
                       write_hdf5: bool=True, debug: bool=True, skip_files: Optional[List[str]]=None,
                       stop_on_failure: bool=False, nstart: int=0, nstop: int=1000000000,
                       short_stats: bool=False, binary_debug: bool=False,
@@ -89,6 +89,7 @@ def run_lots_of_files(files, make_geom: bool=True, write_bdf: bool=False, write_
                                      delete_f06=delete_f06,
                                      delete_op2=delete_op2,
                                      delete_hdf5=delete_hdf5,
+                                     delete_debug_out=delete_debug_out,
                                      build_pandas=build_pandas,
                                      write_hdf5=write_hdf5,
                                      short_stats=short_stats,
@@ -117,6 +118,7 @@ def run_op2(op2_filename: str, make_geom: bool=False,
             is_mag_phase: bool=False, is_sort2: bool=False,
             is_nx: Optional[bool]=None, is_autodesk: Optional[bool]=None,
             delete_f06: bool=False, delete_op2: bool=False, delete_hdf5: bool=False,
+            delete_debug_out: bool=False,
             build_pandas: bool=True,
             subcases: Optional[str]=None, exclude: Optional[str]=None,
             short_stats: bool=False, compare: bool=True,
@@ -233,6 +235,9 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         op2 = OP2Geom(debug=debug, log=log)
         op2_nv = OP2Geom(debug=debug, log=log, debug_file=debug_file)
         op2_bdf = OP2Geom(debug=debug, log=log)
+        op2.IS_TESTING = False
+        op2_nv.IS_TESTING = False
+        op2_bdf.IS_TESTING = False
         if is_nx is None and is_autodesk is None:
             pass
         elif is_nx:
@@ -354,6 +359,9 @@ def run_op2(op2_filename: str, make_geom: bool=False,
             #read_op2(op2_filename2)
             if delete_op2:
                 remove_file(op2_filename2)
+
+        if debug_file is not None and delete_debug_out:
+            os.remove(debug_file)
 
         #table_names_f06 = parse_table_names_from_F06(op2.f06FileName)
         #table_names_op2 = op2.getTableNamesFromOP2()

@@ -2779,7 +2779,7 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
             self._build(ntimes, nelements, ntotal, self._times_dtype)
             setattr(self, name, self._times)
             self.data_code['name'] = self.analysis_method
-            self.data_names[0] = name
+            self.data_names[0] = self.analysis_method
             #print(f'data_names -> {self.data_names}')
 
     def _build(self, ntimes, nelements, ntotal, dtype):

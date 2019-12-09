@@ -76,7 +76,6 @@ from pyNastran.op2.tables.ogpwg import OGPWG
 from pyNastran.op2.fortran_format import FortranFormat
 
 from pyNastran.utils import is_binary_file
-
 """
 ftp://161.24.15.247/Nastran2011/seminar/SEC04-DMAP_MODULES.pdf
 
@@ -239,7 +238,7 @@ INT_PARAMS_1 = [
 ]
 FLOAT_PARAMS_1 = [
     b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
-    b'SIGMA', b'TABS', b'EPPRT', b'AUNITS', b'BOLTFACT', b'LMSCAL',
+    b'SIGMA', b'TABS', b'AUNITS', b'BOLTFACT', b'LMSCAL',
     'DSZERO', b'G', b'GFL', b'LFREQ', b'HFREQ', b'ADPCON',
     b'W3', b'W4', b'W3FL', b'W4FL', b'PREFDB',
     b'EPZERO', b'DSZERO', b'TINY', b'TOLRSC',
@@ -247,6 +246,9 @@ FLOAT_PARAMS_1 = [
     b'LAMLIM', b'BIGER', b'BIGER1', b'BIGER2', b'CLOSE',
     b'EPSBIG', b'EPSMALC', b'EPSMALU', b'HIRES', b'KDIAG', b'MACH', b'VREF',
     b'STIME', b'TESTSE', b'LFREQFL', b'Q', b'ADPCONS', b'AFNORM', b'AFZERO',
+
+    # should this be FLOAT_PARAMS_1???
+    b'EPPRT',
 
     # not defined
     b'PRPA', b'PRPHIVZ', b'PRPJ', b'PRRULV', b'RMAX', b'ADJFRQ', b'ARF',
@@ -257,6 +259,9 @@ FLOAT_PARAMS_2 = [
     b'CM1', b'CM2',
     b'G2', b'G4', b'G5', b'G6', b'G7', b'G8', b'G9', b'G10', b'G12', b'G13',
     b'ALPHA1', b'ALPHA2', b'APPF',
+
+    # should this be FLOAT_PARAMS_1???
+    #b'EPPRT',
 ]
 INT_PARAMS_2 = [b'APPI',]
 DOUBLE_PARAMS_1 = [] # b'Q'
@@ -1177,13 +1182,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             ndata2 = self._read_pvto_4_helper(data, ndata)
         except Exception as e:
             self.log.error(str(e))
-            if 'dev' in __version__:
+            if 'dev' in __version__ and self.IS_TESTING:
                 raise  # only for testing
             self.f.seek(iloc)
             ndata2 = ndata
         return ndata2
 
-    def _read_pvto_4_helper(self, data, ndata):
+    def _read_pvto_4_helper(self, data, ndata: int) -> int:
         """reads PARAM cards"""
         nvalues = ndata // 4
         assert ndata % 4 == 0, ndata
@@ -1195,11 +1200,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         struct2d = Struct(b'dd')
         i = 0
 
-        #print('---------------------------')
+        print('---------------------------')
+        self.show_data(data, types='ifsqL')
         while i < nvalues:
-            #print('*i=%s nvalues=%s' % (i, nvalues))
+            print('---------------------------')
+            print('*i=%s nvalues=%s' % (i, nvalues))
             word = data[i*4:(i+2)*4].rstrip()
-            #print('word=%r' % word)
+            print('word=%r' % word)
             #word = s8.unpack(word)[0]#.decode(self._encoding)
 
             # the first two entries are typically trash, then we can get values
@@ -1236,12 +1243,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 value = structs8.unpack(slot)[0].decode('latin1').rstrip()
                 i += 2
             else:
-                self.show_data(data[i*4:(i+4)*4], types='ifsd')
-                self.show_data(data[i*4+4:i*4+i*4+12], types='ifsd')
+                self.show_data(data[i*4:(i+4)*4], types='ifsdq')
+                self.show_data(data[i*4+4:i*4+i*4+12], types='ifsdq')
                 raise NotImplementedError('%r is not a supported PARAM' % word)
 
             key = word.decode('latin1')
-            #print(key, value)
+            print(key, value, slot)
             self.params[key] = PARAM(key, [value], comment='')
         return nvalues
 
