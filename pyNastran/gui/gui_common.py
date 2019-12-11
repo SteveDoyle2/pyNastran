@@ -1813,7 +1813,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             if not is_valid:
                 return is_valid
 
-            icase = data.icase
+            #icase = data.icase
             result_type = data.result_type
             #location = data.location
             min_value = data.min_value

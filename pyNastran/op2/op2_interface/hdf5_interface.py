@@ -1082,11 +1082,12 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
         'is_curvature', 'is_fiber_distance', 'is_max_shear', 'is_von_mises',
         'is_strain', 'is_stress', 'nnodes_per_element', 'has_von_mises',
     ]
+    filtered_attrs = obj.object_attributes(keys_to_skip=keys_to_skip, filter_properties=True)
 
     #if result_name == 'eigenvectors':
         #debug = True
     for key in h5_result.keys():
-        if key in keys_to_skip:
+        if key not in filtered_attrs:
             continue
         elif result_name == 'grid_point_forces' and key in ['element_name']:
             pass
@@ -1214,7 +1215,7 @@ def _export_subcases(hdf5_file, op2_model):
         for key, obj in result.items():
             #class_name = obj.__class__.__name__
             #print('working on %s' % class_name)
-            obj.object_attributes()
+            obj.object_attributes(filter_properties=True)
             subcase_name = 'Subcase=%s' % str(key)
             if '/' in subcase_name:
                 name = obj.class_name

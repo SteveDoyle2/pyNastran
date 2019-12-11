@@ -58,7 +58,8 @@ def export_to_hdf5(self, group, log):
     """exports the object to HDF5 format"""
     #headers = self.get_headers()
 
-    names = self.object_attributes()
+    # for some reason we can't just not write the properties...
+    names = self.object_attributes(filter_properties=False)
     dynamic_string = [
         'headers', 'data_names', 'words', 'gridtype_str', 'element_data_type', 'location',
         'failure_theory',
