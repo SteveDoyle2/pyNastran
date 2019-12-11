@@ -44,6 +44,17 @@ TEXT_SIZE = 14
 COORD_SCALE = 0.05  # in percent of max dimension
 COORD_TEXT_SCALE = 0.5 # percent of nominal
 
+NASTRAN_BOOL_KEYS = [
+    'nastran_create_coords',
+    'nastran_is_properties',
+    'nastran_is_element_quality',
+    'nastran_is_bar_axes',
+    'nastran_is_3d_bars', 'nastran_is_3d_bars_update',
+    'nastran_is_shell_mcids', 'nastran_is_update_conm2',
+    'nastran_stress', 'nastran_plate_stress', 'nastran_composite_plate_stress',
+    'nastran_strain', 'nastran_plate_strain', 'nastran_composite_plate_strain',
+]
+
 class Settings:
     """storage class for various settings"""
     def __init__(self, parent):
@@ -102,6 +113,14 @@ class Settings:
         self.nastran_is_shell_mcids = True
         self.nastran_is_update_conm2 = True
 
+        self.nastran_stress = True
+        self.nastran_plate_stress = True
+        self.nastran_composite_plate_stress = True
+
+        self.nastran_strain = True
+        self.nastran_plate_strain = True
+        self.nastran_composite_plate_strain = True
+
     def reset_settings(self):
         """helper method for ``setup_gui``"""
         # rgb tuple
@@ -152,6 +171,14 @@ class Settings:
         self.nastran_is_bar_axes = True
         self.nastran_is_shell_mcids = True
         self.nastran_is_update_conm2 = True
+
+        self.nastran_stress = True
+        self.nastran_plate_stress = True
+        self.nastran_composite_plate_stress = True
+
+        self.nastran_strain = True
+        self.nastran_plate_strain = True
+        self.nastran_composite_plate_strain = True
 
     def load(self, settings):
         """helper method for ``setup_gui``"""
@@ -243,25 +270,10 @@ class Settings:
         except (TypeError, AttributeError):
             pass
 
-        #BOOLS = [
-            #'nastran_is_element_quality', 'nastran_is_properties', 'nastran_is_3d_bars',
-        #]
-        self._set_setting(settings, setting_keys, ['nastran_is_element_quality'],
-                          self.nastran_is_element_quality, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['nastran_is_properties'],
-                          self.nastran_is_properties, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['nastran_is_3d_bars'],
-                          self.nastran_is_3d_bars, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['nastran_is_3d_bars_update'],
-                          self.nastran_is_3d_bars_update, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['nastran_create_coords'],
-                          self.nastran_create_coords, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['nastran_is_bar_axes'],
-                          self.nastran_is_bar_axes, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['nastran_is_shell_mcids'],
-                          self.nastran_is_shell_mcids, True, auto_type=bool)
-        self._set_setting(settings, setting_keys, ['nastran_is_update_conm2'],
-                          self.nastran_is_update_conm2, True, auto_type=bool)
+        for key in NASTRAN_BOOL_KEYS:
+            default = getattr(self, key)
+            self._set_setting(settings, setting_keys, [key],
+                              default, save=True, auto_type=bool)
 
         #w = screen_shape.width()
         #h = screen_shape.height()
@@ -336,14 +348,9 @@ class Settings:
         settings.setValue('colormap', self.colormap)
 
         # format-specific
-        settings.setValue('nastran_is_element_quality', self.nastran_is_element_quality)
-        settings.setValue('nastran_is_properties', self.nastran_is_properties)
-        settings.setValue('nastran_is_3d_bars', self.nastran_is_3d_bars)
-        settings.setValue('nastran_is_3d_bars_update', self.nastran_is_3d_bars_update)
-        settings.setValue('nastran_create_coords', self.nastran_create_coords)
-        settings.setValue('nastran_is_bar_axes', self.nastran_is_bar_axes)
-        settings.setValue('nastran_is_shell_mcids', self.nastran_is_shell_mcids)
-        settings.setValue('nastran_is_update_conm2', self.nastran_is_update_conm2)
+        for key in NASTRAN_BOOL_KEYS:
+            value = getattr(self, key)
+            settings.setValue(key, value)
 
 
         #screen_shape = QtGui.QDesktopWidget().screenGeometry()

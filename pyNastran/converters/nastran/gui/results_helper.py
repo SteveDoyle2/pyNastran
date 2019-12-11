@@ -10,13 +10,14 @@ from numpy.linalg import norm  # type: ignore
 
 from pyNastran.gui.gui_objects.gui_result import GuiResult, GuiResultIDs
 from pyNastran.converters.nastran.gui.geometry_helper import NastranGuiAttributes
-from pyNastran.converters.nastran.displacements import (
-    DisplacementResults, ForceTableResults) #, TransientElementResults
+from pyNastran.gui.gui_objects.displacements import (
+    Table, DisplacementResults, ForceTableResults) #, TransientElementResults
 from pyNastran.op2.result_objects.stress_object import (
     _get_nastran_header,
     get_rod_stress_strain,
     get_bar_stress_strain, get_bar100_stress_strain, get_beam_stress_strain,
-    get_plate_stress_strain, get_solid_stress_strain)
+    get_plate_stress_strain, get_solid_stress_strain
+)
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
 if TYPE_CHECKING:
     from pyNastran.op2.op2 import OP2
@@ -260,14 +261,6 @@ class NastranGuiResults(NastranGuiAttributes):
                 cases[icase] = (ese_res, (subcase_id, header))
                 formi.append((header, icase, []))
                 icase += 1
-        return icase
-
-    def _fill_op2_centroidal_force(self, cases, model, times, key, icase,
-                                   force_dict, header_dict, keys_map) -> int:
-        for itime, unused_dt in enumerate(times):
-            icase = self._fill_op2_time_centroidal_force(
-                cases, model, key, icase, itime,
-                force_dict, header_dict, keys_map)
         return icase
 
     def _fill_op2_centroidal_strain_energy(self, cases: Dict[int, GuiResults], model: OP2,
@@ -752,19 +745,66 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_centroidal_stress(self, cases, model, times, key, icase,
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate stress objects"""
+        if self.settings.nastran_stress:
+            for itime, unused_dt in enumerate(times):
+                # shell stress
+                try:
+                    icase = self._fill_op2_time_centroidal_stress(
+                        cases, model, key, icase, itime, form_dict, header_dict, keys_map,
+                        is_stress=True)
+                except IndexError:
+                    self.log.error('problem getting stress...')
+                    break
+
+        eids = self.element_ids
+        if self.settings.nastran_plate_stress:
+            icase = get_plate_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, is_stress=True)
+        if self.settings.nastran_composite_plate_stress:
+            icase = get_composite_plate_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map,
+                self.stress[key].composite_data_dict, is_stress=True)
+        return icase
+
+
+    def _fill_op2_centroidal_force(self, cases, model, times, key, icase,
+                                   force_dict, header_dict, keys_map) -> int:
+        """Creates the time accurate force objects"""
         for itime, unused_dt in enumerate(times):
-            icase = self._fill_op2_time_centroidal_stress(
-                cases, model, key, icase, itime, form_dict, header_dict, keys_map,
-                is_stress=True)
+            try:
+                icase = self._fill_op2_time_centroidal_force(
+                    cases, model, key, icase, itime,
+                    force_dict, header_dict, keys_map)
+            except IndexError:
+                self.log.error('problem getting force...')
+                break
         return icase
 
     def _fill_op2_centroidal_strain(self, cases, model, times, key, icase,
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate strain objects"""
-        for itime, unused_dt in enumerate(times):
-            icase = self._fill_op2_time_centroidal_stress(
-                cases, model, key, icase, itime, form_dict, header_dict, keys_map,
-                is_stress=False)
+        if self.settings.nastran_strain:
+            for itime, unused_dt in enumerate(times):
+                try:
+                    icase = self._fill_op2_time_centroidal_stress(
+                        cases, model, key, icase, itime, form_dict, header_dict, keys_map,
+                        is_stress=False)
+                except IndexError:
+                    self.log.error('problem getting strain...')
+                    break
+
+        eids = self.element_ids
+        if self.settings.nastran_composite_plate_strain:
+            icase = get_plate_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, is_stress=False)
+        if self.settings.nastran_composite_plate_strain:
+            icase = get_composite_plate_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map,
+                self.strain[key].composite_data_dict, is_stress=False)
         return icase
 
     def _fill_op2_time_centroidal_stress(self, cases, model: OP2,
@@ -1342,6 +1382,8 @@ def _get_times(model, key):
                 #is_real, case.nonlinear_factor, case._times))
             if case.nonlinear_factor is not None:
                 times = case._times
+                #print(case)
+                #print(times)
                 is_static = False
             else:
                 is_static = True
@@ -1545,3 +1587,408 @@ def _get_stress_times(model: OP2, isubcase: int) -> Tuple[bool, bool, bool, Any]
             break
             #return is_data, is_static, is_real, times
     return is_data, is_static, is_real, times
+
+def get_plate_stress_strains(eids, cases, model, times, key, icase,
+                             form_dict, header_dict, keys_map, is_stress):
+    """
+    helper method for _fill_op2_time_centroidal_stress.
+    Gets the max/min stress for each layer.
+    """
+    #print("***stress eids=", eids)
+    subcase_id = key[0]
+    if is_stress:
+        plates = [
+            model.ctria3_stress, model.cquad4_stress,
+            model.ctria6_stress, model.cquad8_stress,
+            model.ctriar_stress, model.cquadr_stress,
+        ]
+        word = 'Stress'
+    else:
+        plates = [
+            model.ctria3_strain, model.cquad4_strain,
+            model.ctria6_strain, model.cquad8_strain,
+            model.ctriar_strain, model.cquadr_strain,
+        ]
+        word = 'Strain'
+
+    #titles = []
+    plate_cases = []
+    plates_ieids = []
+    for result in plates:
+        if key not in result:
+            continue
+        case = result[key]
+
+        nnodes_per_element = case.nnodes
+        nlayers_per_element = nnodes_per_element * 2
+        eidsi = case.element_node[::nlayers_per_element, 0]  # ::2 is for layer skipping
+        #print(case.element_name, eidsi)
+        i = np.searchsorted(eids, eidsi)
+        if len(i) != len(np.unique(i)):
+            #print(case.element_node)
+            #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
+            #print('iplate = %s' % i)
+            #print('  eids = %s' % eids)
+            #print('  eidsiA = %s' % case.element_node[:, 0])
+            #print('  eidsiB = %s' % eidsi)
+            msg = 'i%s (plate)=%s is not unique' % (case.element_name, str(i))
+            #msg = 'iplate=%s is not unique' % str(i)
+            model.log.warning(msg)
+            continue
+        if i.max() == len(eids):
+            model.log.error('skipping because lookup is out of range...')
+            continue
+        #print('i =', i, i.max())
+        #print('eids =', eids, len(eids))
+        #print('eidsi =', eidsi, eids)
+        #print(f'------------adding i={i} for {case.element_name}-----------')
+        plate_cases.append(case)
+        plates_ieids.append(i)
+    if not plates_ieids:
+        return icase
+
+    plates_ieids = np.hstack(plates_ieids)
+    ieid_max = len(eids)
+    #print('ieid_max =', ieid_max)
+
+    case = plate_cases[0]
+    case_headers = case.get_headers()
+    #print(case_headers)
+    if is_stress:
+        #sigma = 'σ'
+        method_map = {
+            'fiber_distance' : 'FiberDistance',
+            'oxx' : 'σxx',
+            'oyy' : 'σyy',
+            'txy' : 'τxy',
+            'angle' : 'θ',
+            'omax' : 'σmax',
+            'omin' : 'σmin',
+            'von_mises' : 'σ von Mises',
+        }
+    else:
+        #sigma = 'ϵ'
+        method_map = {
+            'fiber_curvature' : 'FiberCurvature',
+            'fiber_distance' : 'FiberDistance',
+            'exx' : 'ϵxx',
+            'eyy' : 'ϵyy',
+            'exy' : 'ϵxy',
+            'angle' : 'θ',
+            'emax' : 'ϵmax',
+            'emin' : 'ϵmin',
+            'von_mises' : 'ϵ von Mises',
+        }
+    methods = [method_map[headeri] for headeri in case_headers]
+    #if 'Mises' in methods:
+        #methods.append('Max shear')
+    #else:
+        #methods.append(f'{sigma} von Mises')
+
+    #if case.is_von_mises:
+        #vm_word = 'vonMises'
+    #else:
+        #vm_word = 'maxShear'
+
+    #headersi = case.get_headers()
+    #print('headersi =', headersi)
+
+    scalars_array = []
+    for case in plate_cases:
+        if case.is_complex:
+            continue
+
+        ntimes, nnodes_nlayers, nresults = case.data.shape
+        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
+        #                                         txy, angle,
+        #                                         majorP, minorP, ovm]
+
+        keys_map[key] = (case.subtitle, case.label,
+                         case.superelement_adaptivity_index, case.pval_step)
+
+        nnodes_per_element = case.nnodes
+        nelements_nnodes = nnodes_nlayers // 2
+        nelements = nelements_nnodes // nnodes_per_element
+        nlayers = 2
+        scalars = case.data.reshape(ntimes, nelements, nnodes_per_element, nlayers, nresults)
+        scalars_array.append(scalars[:, :, 0, :, :])
+
+    if len(scalars_array) == 0:
+        return icase
+
+    if len(scalars_array) == 1:
+        scalars_array = scalars_array[0]
+    else:
+        scalars_array = np.concatenate(scalars_array, axis=1)
+
+    #titles = []  # legend title
+    headers = [] # sidebar word
+    res = PlateStressStrainTableResults(
+        subcase_id, headers, plates_ieids, ieid_max, scalars_array, methods,
+        data_formats=None,
+        colormap='jet')
+
+    times = case._times
+    for itime, dt in enumerate(times):
+        #dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+
+        formi = []
+        if (key, itime) in form_dict:
+            form_old = form_dict[(key, itime)]
+            form = [
+                ('Combined ' + word, None, form_old),
+            ]
+        form.append(('Plate ' + word, None, formi))
+        # formi = form[0][2]
+        form_dict[(key, itime)] = form
+
+        for ilayer in range(2):
+            layer = f' Layer {ilayer+1}'
+            form_layeri = []
+            formi.append((layer, None, form_layeri))
+            for imethod, method in enumerate(methods):
+                #cases[icase] = (res, (subcase_id, header))
+                cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
+                form_layeri.append((f'{method} ({layer})', icase, []))
+                icase += 1
+    return icase
+
+def get_composite_plate_stress_strains(eids, cases, model, times, key, icase,
+                                       form_dict, header_dict, keys_map,
+                                       composite_data_dict, is_stress):
+    """
+    helper method for _fill_op2_time_centroidal_stress.
+    Gets the stress/strain for each layer.
+    """
+    subcase_id = key[0]
+
+    plates_ieids = []
+    for element_type, composite_data in composite_data_dict.items():
+        try:
+            element_layer, ueids, data2, vm_word, ntimes, headers = composite_data[key]
+        except KeyError:
+            print(composite_data)
+            raise
+
+
+        #print(element_type, ueids)
+        i = np.searchsorted(eids, ueids)
+        if len(i) != len(np.unique(i)):
+            model.log.error(f' duplicate eids for composite {element_type}...i={i} eids={eids} ueids={ueids}')
+            continue
+        plates_ieids.append(i)
+        #for itime2, header in enumerate(headers):
+            #header_dict[(key, itime2)] = header
+            #asdf
+
+    if not plates_ieids:
+        return icase
+
+    case_map = {
+        # is_stress, element_name
+        (True, 'CTRIA3') : model.ctria3_composite_stress,
+        (False, 'CTRIA3') : model.ctria3_composite_strain,
+
+        (True, 'CQUAD4') : model.cquad4_composite_stress,
+        (False, 'CQUAD4') : model.cquad4_composite_strain,
+    }
+    case_dict = case_map[(is_stress, element_type)]
+    case = case_dict[key]
+
+
+    plates_ieids = np.hstack(plates_ieids)
+    ieid_max = len(eids)
+    print('ieid_max =', ieid_max)
+
+    case_headers = case.get_headers()
+    #print('case_headers =', case_headers, vm_word)
+    if is_stress:
+        word = 'Stress'
+        #sigma = 'σ'
+        method_map = {
+            'o11' : 'σ11',
+            'o22' : 'σ22',
+            't12' : 't12',
+            't1z' : 'τ1z',
+            't2z' : 'τ2z',
+            'angle' : 'θ',
+            'major' : 'σ major',
+            'minor' : 'σ minor',
+            'max_shear' : 'MaxShear',
+            #'von_mises' : 'σ von Mises',
+        }
+    else:
+        word = 'Strain'
+        #sigma = 'ϵ'
+        method_map = {
+            'e11' : 'ϵ11',
+            'e22' : 'ϵ22',
+            'e12' : 'ϵ12',
+            'e1z' : 'ϵ1z',
+            'e2z' : 'ϵ2z',
+            'angle' : 'θ',
+            'major' : 'ϵ major',
+            'minor' : 'ϵ minor',
+            'max_shear' : 'MaxShear',
+        }
+    methods = [method_map[headeri] for headeri in case_headers]
+    #methods = case_headers
+
+    #if 'Mises' in methods:
+        #methods.append('Max shear')
+    #else:
+        #methods.append(f'{sigma} von Mises')
+
+    #headersi = case.get_headers()
+    #print('headersi =', headersi)
+    #titles = []
+
+    scalars_array = []
+    for element_type, composite_data in composite_data_dict.items():
+        unused_element_layer, unused_ueids, data2, unused_vm_word, unused_ntimes, unused_headers = composite_data[key]
+        scalars_array.append(data2)
+    if len(scalars_array) == 0:
+        return icase
+
+    if len(scalars_array) == 1:
+        scalars_array = scalars_array[0]
+    else:
+        try:
+            scalars_array = np.concatenate(scalars_array, axis=1)
+        except ValueError:
+            for scalars in scalars_array:
+                print(scalars.shape)
+            raise
+
+
+    #print('scalars_array.shape =', scalars_array.shape)
+    unused_ntimes, unused_nelements, nlayers, unused_nresults = scalars_array.shape
+
+    #titles = []  # legend title
+    headers = [] # sidebar word
+    res = PlateStressStrainTableResults(
+        subcase_id, headers, plates_ieids, ieid_max, scalars_array, methods,
+        data_formats=None,
+        colormap='jet')
+
+    #times = case._times
+    for itime, dt in enumerate(times):
+        #dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+
+        formi = []
+        if (key, itime) in form_dict:
+            form_old = form_dict[(key, itime)]
+            form = [
+                ('Combined ' + word, None, form_old),
+            ]
+        form.append(('Composite Plate ' + word, None, formi))
+        # formi = form[0][2]
+        form_dict[(key, itime)] = form
+
+        form_layers = {}
+        for ilayer in range(nlayers):
+            layer_name = f' Layer {ilayer+1}'
+            form_layeri = []
+            formi.append((layer_name, None, form_layeri))
+            form_layers[layer_name] = form_layeri
+
+        for imethod, method in enumerate(methods):
+            for ilayer in range(nlayers):
+                layer_name = f' Layer {ilayer+1}'
+                form_layeri = form_layers[layer_name]
+                #cases[icase] = (res, (subcase_id, header))
+                cases[icase] = (res, (subcase_id, (itime, ilayer, imethod, header)))
+                form_layeri.append((f'{method} ({layer_name})', icase, []))
+                icase += 1
+    return icase
+
+
+class PlateStressStrainTableResults(Table):
+    def __init__(self, subcase_id, headers, eids, eid_max, scalars,
+                 methods,
+                 data_formats=None,
+                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 set_max_min=False, uname='Geometry'):
+        """this is a centroidal result
+
+        Parameters
+        ----------
+        headers : List[str]
+            the sidebar word
+        titles : List[str]
+            the legend title
+
+        """
+        location = 'centroid'
+        titles = None
+        Table.__init__(
+            self, subcase_id, location, titles, headers, scalars,
+            data_formats=data_formats, nlabels=nlabels,
+            labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap, set_max_min=set_max_min,
+            uname=uname)
+        self.methods = methods
+        self.eids = eids
+        self.eid_max = eid_max
+
+    def finalize(self):
+        from copy import deepcopy
+        self.titles_default = deepcopy(self.titles)
+        self.headers_default = deepcopy(self.headers)
+
+    def get_methods(self, i):
+        return self.methods
+
+    def deflects(self, unused_i, unused_res_name):
+        return False
+
+    def get_default_title(self, i, name):
+        """legend title"""
+        (itime, ilayer, imethod, unused_header) = name
+        return self.methods[imethod]
+
+    def get_title(self, i, name):
+        """legend title"""
+        (itime, ilayer, imethod, unused_header) = name
+        return self.methods[imethod]
+
+    def get_header(self, i, name):
+        """a header shows up in the text"""
+        (itime, ilayer, imethod, header) = name
+        return self.methods[imethod] + ': ' + header
+
+    def get_data_format(self, i, name):
+        return '%.3f'  # TODO: update
+    def get_default_data_format(self, i, name):
+        return '%.3f'  # TODO: update
+    def get_scale(self, i, name):
+        return None
+    def get_default_scale(self, i, name):
+        return None
+
+    def get_scalar(self, i, name):
+        return self.get_result(i, name)
+
+    def get_min_max(self, i, name):
+        scalar = self.get_scalar(i, name)  # TODO: update
+        return np.nanmin(scalar), np.nanmax(scalar)
+
+    def get_default_min_max(self, i, name):
+        scalar = self.get_scalar(i, name)
+        return np.nanmin(scalar), np.nanmax(scalar)
+
+    def get_result(self, i, name):
+        (itime, ilayer, imethod, unused_header) = name
+        scalars = self.scalars[itime, :, ilayer, imethod]
+
+        if len(scalars) == self.eid_max:
+            return scalars
+        data = np.full(self.eid_max, np.nan, dtype=scalars.dtype)
+        #print(f'data.shape={data.shape} eids.shape={self.eids.shape} scalars.shape={scalars.shape}')
+        #print(self.methods)
+        data[self.eids] = scalars
+        return data

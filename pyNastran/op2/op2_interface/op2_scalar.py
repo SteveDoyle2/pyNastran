@@ -1200,13 +1200,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         struct2d = Struct(b'dd')
         i = 0
 
-        print('---------------------------')
-        self.show_data(data, types='ifsqL')
+        #print('---------------------------')
+        #self.show_data(data, types='ifsqL')
         while i < nvalues:
-            print('---------------------------')
-            print('*i=%s nvalues=%s' % (i, nvalues))
+            #print('---------------------------')
+            #print('*i=%s nvalues=%s' % (i, nvalues))
             word = data[i*4:(i+2)*4].rstrip()
-            print('word=%r' % word)
+            #print('word=%r' % word)
             #word = s8.unpack(word)[0]#.decode(self._encoding)
 
             # the first two entries are typically trash, then we can get values
@@ -1248,7 +1248,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 raise NotImplementedError('%r is not a supported PARAM' % word)
 
             key = word.decode('latin1')
-            print(key, value, slot)
+            #print(key, value, slot)
             self.params[key] = PARAM(key, [value], comment='')
         return nvalues
 

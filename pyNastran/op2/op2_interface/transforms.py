@@ -70,6 +70,7 @@ def transform_displacement_to_global(subcase, result, icd_transform, coords, xyz
                 rotation = np.full(inode.shape, np.nan, dtype=data.dtype)
                 print(data.shape, inode.shape, nnodesi)
                 print(inode[:nnodesi].shape)
+                continue
                 translation = data[:, inode[:nnodesi], :3]
                 rotation = data[:, inode[:nnodesi], 3:]
             data[:, inode, :3] = translation.dot(cid_transform)

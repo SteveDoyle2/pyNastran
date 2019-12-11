@@ -80,9 +80,9 @@ from pyNastran.gui.utils.vtk.vtk_utils import (
     get_numpy_idtype_for_vtk, numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
+from pyNastran.gui.gui_objects.displacements import ForceTableResults, ElementalTableResults
 
 
-from ..displacements import ForceTableResults, ElementalTableResults
 from .wildcards import IS_H5PY, GEOM_METHODS_BDF
 from .geometry_helper import NastranGeometryHelper, get_material_arrays, get_suport_node_ids
 from .results_helper import NastranGuiResults, fill_responses, _get_times
@@ -6626,8 +6626,11 @@ def _build_normals_quality(settings: Settings,
             assert xyz_offset.shape[0] == len(offset)
             scales = [1.0]
             subcase_id = 0
+            #methods = ['magnitude', 'x', 'y', 'z']
             offset_xyz_res = ElementalTableResults(
-                subcase_id, titles, headers, xyz_offset, offset, scales)
+                subcase_id, titles, headers, xyz_offset, offset, scales,
+                #methods,
+            )
             offset_xyz_res.save_defaults()
             cases[icase] = (offset_z_res, (0, 'OffsetZ'))
             form_checks.append(('OffsetXYZ', icase, []))

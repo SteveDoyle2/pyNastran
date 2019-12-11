@@ -1080,7 +1080,8 @@ def _apply_hdf5_attributes_to_object(obj, h5_result, result_name, data_code, str
         'class_name', 'headers', 'is_real', 'is_complex',
         'is_sort1', 'is_sort2', 'table_name_str',
         'is_curvature', 'is_fiber_distance', 'is_max_shear', 'is_von_mises',
-        'is_strain', 'is_stress', 'nnodes_per_element', 'has_von_mises']
+        'is_strain', 'is_stress', 'nnodes_per_element', 'has_von_mises',
+    ]
 
     #if result_name == 'eigenvectors':
         #debug = True

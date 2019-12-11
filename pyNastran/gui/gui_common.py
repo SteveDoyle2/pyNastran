@@ -1818,7 +1818,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             #location = data.location
             min_value = data.min_value
             max_value = data.max_value
-            norm_value = data.norm_value
+            #norm_value = data.norm_value
             #imin = data.imin
             #imax = data.imax
             data_format = data.data_format

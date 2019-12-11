@@ -160,8 +160,7 @@ def __object_attr(obj, mode, keys_to_skip, attr_type, filter_properties: bool=Fa
     }
 
     if not mode in test:
-        print('Wrong mode! Accepted modes: public, private, both, all.')
-        return None
+        raise ValueError('Wrong mode! Accepted modes: public, private, both, all.')
     check = test[mode]
 
     out = []

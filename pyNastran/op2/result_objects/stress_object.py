@@ -416,7 +416,12 @@ def get_rod_stress_strain(model, key, is_stress, vm_word, itime,
             model.log.warning('missing %ss' % case.element_name)
             continue
 
-        dt = case._times[itime]
+        try:
+            dt = case._times[itime]
+        except IndexError:
+            print(case)
+            print(f'len(case._times)={len(case._times)} itime={itime}')
+            raise
         header = _get_nastran_header(case, dt, itime)
         header_dict[(key, itime)] = header
         keys_map[key] = (case.subtitle, case.label,
@@ -788,7 +793,6 @@ def get_plate_stress_strain(model, key, is_stress, vm_word, itime,
         min_principal[i] = o3i
         ovm[i] = ovmi
     return vm_word
-
 
 def get_solid_stress_strain(model, key, is_stress, vm_word, itime,
                             oxx, oyy, ozz, txy, tyz, txz,

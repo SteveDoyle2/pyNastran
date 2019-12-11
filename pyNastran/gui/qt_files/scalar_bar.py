@@ -3,6 +3,8 @@ import numpy as np
 import vtk
 
 from pyNastran.gui.utils.colormaps import colormap_dict, RGB_MAPS, HSV_MAPS
+from pyNastran.gui.qt_files.tool_actions import set_vtk_property_to_unicode
+from pyNastran.gui import bi_font_file
 
 
 class ScalarBar:
@@ -32,6 +34,14 @@ class ScalarBar:
     def __init__(self, is_horizontal=False):
         """creates the scalar bar"""
         self.scalar_bar = vtk.vtkScalarBarActor()
+        prop = self.scalar_bar.GetTitleTextProperty()
+        set_vtk_property_to_unicode(prop, bi_font_file)
+
+        # these don't work...you have to change the font file
+        #prop.BoldOn()
+        #prop.ItalicOn()
+        #prop.ShadowOn()
+
         self.color_function = vtk.vtkColorTransferFunction()
         self.color_function.SetNanColor(1., 1., 1.)
 

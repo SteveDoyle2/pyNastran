@@ -27,11 +27,15 @@ IS_MAC = 'darwin' in os.name
 
 font_dirname = ''
 font_file = ''
+bi_font_file = ''
 if IS_WINDOWS:
     font_dirname = r'C:\Windows\Fonts'
     if os.path.exists(font_dirname):
         font_file = os.path.join(font_dirname, 'arial.ttf')
         assert os.path.exists(font_file), os.listdir(font_dirname)
+
+        bi_font_file = os.path.join(font_dirname, 'arialbi.ttf')
+        assert os.path.exists(bi_font_file), os.listdir(font_dirname)
 
 elif IS_LINUX:
     # /etc/fonts/fonts.conf is an xml file that points to one of many font directories
@@ -53,16 +57,26 @@ elif IS_LINUX:
     #
     if os.path.exists(font_dirname):
         font_file = os.path.join(font_dirname, 'DejaVuSans.ttf')
+        # TODO: where is the italics font?
+        bi_font_file = os.path.join(font_dirname, 'DejaVuSans-Bold.ttf')
 
 elif IS_MAC: # pragma: no cover
-    # pulled off a screenshot...
+    # TODO: pulled off a screenshot...not tested...
     font_dirname = '/Library/Fonts'
     assert os.path.exists(font_dirname), font_dirname
     font_file = os.path.join(font_dirname, 'Arial.ttf')
-    assert os.path.exists(font_file), font_file
+    bi_font_file = os.path.join(font_dirname, 'Arialbi.ttf')
+    assert os.path.exists(font_file), os.listdir(font_dirname)
+    assert os.path.exists(bi_font_file), os.listdir(font_dirname)
 
 if font_file and not os.path.exists(font_file):
     print('cant find %s' % font_file)
     #assert os.path.exists(font_file), os.listdir(font_dirname)
     font_file = ''
+
+if bi_font_file and not os.path.exists(bi_font_file):
+    print('cant find %s' % bi_font_file)
+    #assert os.path.exists(font_file), os.listdir(font_dirname)
+    bi_font_file = font_file
+
 del font_dirname, IS_WINDOWS, IS_LINUX, IS_MAC
