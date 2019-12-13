@@ -477,9 +477,7 @@ class F06Writer(OP2_F06_Common):
                     psd_f = trapz(psd, freqs)
                     f2_psd_f = trapz(freqs**2 * psd, freqs)
                     rms = psd_f ** 0.5
-
-                    # TODO: maybe inverted; check
-                    no_crossings = (psd_f / f2_psf_f) ** 0.5 / (2 *pi)
+                    no_crossings = (f2_psd_f / psd_f) ** 0.5  # Hz
 
                     #print('ymin=%s ymax=%s xmin=%s xmax=%s fmin=%s fmax=%s' % (ymin, ymax, xmin, xmax, fmin, fmax))
                     #'0                             X Y - O U T P U T  S U M M A R Y  ( A U T O  O R  P S D F )'
@@ -487,7 +485,7 @@ class F06Writer(OP2_F06_Common):
                     #'    TYPE   TYPE   NO.  PANEL  : GRID ID    VALUE        CROSSINGS   ALL DATA   ALL DATA   ALL DATA     YMIN     ALL DATA     YMAX'
                     #'    PSDF ACCE       0  9400703(  5)    2.879461E+00  8.191217E+02  2.000E+01  2.000E+03  4.476E-06  7.900E+01  1.474E+00  3.980E+01'
                     f06.write('0                                      \n')
-                    f06.write(f'  PSDF {psd_type}       0 {nid:8d}(  {dof})    {rms:8.6E}     {no_crossings:9.6E}  {fmin:9.3E}  {fmax:9.3E}  {ymin:9.3E}  {xmin:9.3E}  {ymax:9.3E}  {xmax:9.3E}\n')
+                    f06.write(f'  PSDF {psd_type}       0 {nid:8d}(  {dof})    {rms:8.6E}  {no_crossings:9.6E}  {fmin:9.3E}  {fmax:9.3E}  {ymin:9.3E}  {xmin:9.3E}  {ymax:9.3E}  {xmax:9.3E}\n')
 
 
         #self._write_f06_time_based(f06, page_stamp)
