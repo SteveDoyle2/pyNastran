@@ -21,6 +21,7 @@ from pyNastran.op2.result_objects.stress_object import (
 from pyNastran.gui.gui_objects.gui_result import GridPointForceResult
 if TYPE_CHECKING:
     from pyNastran.op2.op2 import OP2
+    from pyNastran.gui.gui_objects.settings import Settings
     #from pyNastran.op2.result_objects.design_response import Desvars
 
 GuiResults = Union[GuiResult, GuiResultIDs, GridPointForceResult]
@@ -742,20 +743,24 @@ class NastranGuiResults(NastranGuiAttributes):
             icase += 1
         return icase
 
-    def _fill_op2_centroidal_stress(self, cases, model, times, key, icase,
+    def _fill_op2_centroidal_stress(self, cases, model, times, key, icase_old,
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate stress objects"""
+        icase = icase_old
         if self.settings.nastran_stress:
             for itime, unused_dt in enumerate(times):
                 # shell stress
                 try:
                     icase = self._fill_op2_time_centroidal_stress(
-                        cases, model, key, icase, itime, form_dict, header_dict, keys_map,
+                        cases, model, key, icase_old, itime, form_dict, header_dict, keys_map,
                         is_stress=True)
                 except IndexError:
                     self.log.error('problem getting stress...')
                     break
+            if icase == icase_old:
+                return icase
 
+        #self.settings.nastran_plate_stress
         eids = self.element_ids
         if self.settings.nastran_plate_stress:
             icase = get_plate_stress_strains(
@@ -766,6 +771,21 @@ class NastranGuiResults(NastranGuiAttributes):
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map,
                 self.stress[key].composite_data_dict, is_stress=True)
+
+        if self.settings.nastran_rod_stress:
+            icase = get_rod_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, is_stress=True)
+        if self.settings.nastran_bar_stress:
+            icase = get_bar_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, is_stress=True)
+        if self.settings.nastran_beam_stress:
+            icase = get_beam_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, is_stress=True)
+
+
         return icase
 
 
@@ -785,7 +805,8 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_centroidal_strain(self, cases, model, times, key, icase,
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate strain objects"""
-        if self.settings.nastran_strain:
+        settings = self.settings  # typpe: Settings
+        if settings.nastran_strain:
             for itime, unused_dt in enumerate(times):
                 try:
                     icase = self._fill_op2_time_centroidal_stress(
@@ -796,7 +817,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     break
 
         eids = self.element_ids
-        if self.settings.nastran_composite_plate_strain:
+        if settings.nastran_composite_plate_strain:
             icase = get_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=False)
@@ -805,6 +826,20 @@ class NastranGuiResults(NastranGuiAttributes):
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map,
                 self.strain[key].composite_data_dict, is_stress=False)
+
+        if settings.nastran_rod_strain:
+            icase = get_rod_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, is_stress=False)
+        if settings.nastran_bar_strain:
+            icase = get_bar_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, is_stress=False)
+        if settings.nastran_beam_strain:
+            icase = get_beam_stress_strains(
+                eids, cases, model, times, key, icase,
+                form_dict, header_dict, keys_map, is_stress=False)
+
         return icase
 
     def _fill_op2_time_centroidal_stress(self, cases, model: OP2,
@@ -814,6 +849,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                          keys_map: Dict[Any, Any],
                                          is_stress=True) -> int:
         """Creates the time accurate stress objects"""
+
         #new_cases = True
         #assert isinstance(subcase_id, int), type(subcase_id)
         assert isinstance(icase, int), icase
@@ -924,6 +960,9 @@ class NastranGuiResults(NastranGuiAttributes):
         unused_formis = form0[2]
         subcase_id = key[2]
         header = header_dict[(key, itime)]
+        formi = []
+        form_dict[(key, itime)].append(('Combined ' + word, None, formi))
+
         if is_stress and itime == 0:
             if is_element_on.min() == 0:  # if all elements aren't on
                 print_empty_elements(self.model, eids, is_element_on, self.log_error)
@@ -935,7 +974,7 @@ class NastranGuiResults(NastranGuiAttributes):
                     location='centroid', scalar=is_element_on, mask_value=0, data_format=fmt)
 
                 cases[icase] = (stress_res, (subcase_id, 'Stress - isElementOn'))
-                form_dict[(key, itime)].append(('Stress - IsElementOn', icase, []))
+                formi.append(('Stress - IsElementOn', icase, []))
                 icase += 1
 
         #print('max/min', max_principal.max(), max_principal.min())
@@ -944,70 +983,70 @@ class NastranGuiResults(NastranGuiAttributes):
             oxx_res = GuiResult(subcase_id, header=word + f'XX: {header}', title=word + 'XX',
                                 location='centroid', scalar=oxx, data_format=fmt)
             cases[icase] = (oxx_res, (subcase_id, word + 'XX'))
-            form_dict[(key, itime)].append((word + 'XX', icase, []))
+            formi.append((word + 'XX', icase, []))
             icase += 1
 
         if np.any(np.isfinite(oyy)):
             oyy_res = GuiResult(subcase_id, header=word + f'YY: {header}', title=word + 'YY',
                                 location='centroid', scalar=oyy, data_format=fmt)
             cases[icase] = (oyy_res, (subcase_id, word + 'YY'))
-            form_dict[(key, itime)].append((word + 'YY', icase, []))
+            formi.append((word + 'YY', icase, []))
             icase += 1
 
         if np.any(np.isfinite(ozz)):
             ozz_res = GuiResult(subcase_id, header=word + f'ZZ: {header}', title=word + 'ZZ',
                                 location='centroid', scalar=ozz, data_format=fmt)
             cases[icase] = (ozz_res, (subcase_id, word + 'ZZ'))
-            form_dict[(key, itime)].append((word + 'ZZ', icase, []))
+            formi.append((word + 'ZZ', icase, []))
             icase += 1
 
         if np.any(np.isfinite(txy)):
             oxy_res = GuiResult(subcase_id, header=word + f'XY: {header}', title=word + 'XY',
                                 location='centroid', scalar=txy, data_format=fmt)
             cases[icase] = (oxy_res, (subcase_id, word + 'XY'))
-            form_dict[(key, itime)].append((word + 'XY', icase, []))
+            formi.append((word + 'XY', icase, []))
             icase += 1
 
         if np.any(np.isfinite(tyz)):
             oyz_res = GuiResult(subcase_id, header=word + f'YZ: {header}', title=word + 'YZ',
                                 location='centroid', scalar=tyz, data_format=fmt)
             cases[icase] = (oyz_res, (subcase_id, word + 'YZ'))
-            form_dict[(key, itime)].append((word + 'YZ', icase, []))
+            formi.append((word + 'YZ', icase, []))
             icase += 1
 
         if np.any(np.isfinite(txz)):
             oxz_res = GuiResult(subcase_id, header=word + f'XZ: {header}', title=word + 'XZ',
                                 location='centroid', scalar=txz, data_format=fmt)
             cases[icase] = (oxz_res, (subcase_id, word + 'XZ'))
-            form_dict[(key, itime)].append((word + 'XZ', icase, []))
+            formi.append((word + 'XZ', icase, []))
             icase += 1
 
         if np.any(np.isfinite(max_principal)):
             maxp_res = GuiResult(subcase_id, header=f'MaxPrincipal: {header}', title='MaxPrincipal',
                                  location='centroid', scalar=max_principal, data_format=fmt)
             cases[icase] = (maxp_res, (subcase_id, 'MaxPrincipal'))
-            form_dict[(key, itime)].append(('Max Principal', icase, []))
+            formi.append(('Max Principal', icase, []))
             icase += 1
 
         if np.any(np.isfinite(mid_principal)):
             midp_res = GuiResult(subcase_id, header=f'MidPrincipal: {header}', title='MidPrincipal',
                                  location='centroid', scalar=mid_principal, data_format=fmt)
             cases[icase] = (midp_res, (subcase_id, 'MidPrincipal'))
-            form_dict[(key, itime)].append(('Mid Principal', icase, []))
+            formi.append(('Mid Principal', icase, []))
             icase += 1
 
         if np.any(np.isfinite(min_principal)):
             minp_res = GuiResult(subcase_id, header=f'MinPrincipal: {header}', title='MinPrincipal',
                                  location='centroid', scalar=min_principal, data_format=fmt)
             cases[icase] = (minp_res, (subcase_id, 'MinPrincipal'))
-            form_dict[(key, itime)].append(('Min Principal', icase, []))
+            formi.append(('Min Principal', icase, []))
             icase += 1
 
         if vm_word is not None:
             ovm_res = GuiResult(subcase_id, header=f'{vm_word}: {header}', title=vm_word,
                                 location='centroid', scalar=ovm, data_format=fmt)
             cases[icase] = (ovm_res, (subcase_id, vm_word))
-            form_dict[(key, itime)].append((vm_word, icase, []))
+            formi.append((vm_word, icase, []))
             icase += 1
 
         #, case, header, form0
@@ -1588,6 +1627,504 @@ def _get_stress_times(model: OP2, isubcase: int) -> Tuple[bool, bool, bool, Any]
             #return is_data, is_static, is_real, times
     return is_data, is_static, is_real, times
 
+def get_rod_stress_strains(eids, cases, model, times, key, icase,
+                           form_dict, header_dict, keys_map, is_stress):
+    """
+    helper method for _fill_op2_time_centroidal_stress.
+    """
+    #print("***stress eids=", eids)
+    subcase_id = key[0]
+    if is_stress:
+        rods = [
+            model.crod_stress, model.conrod_stress, model.ctube_stress,
+        ]
+        word = 'Stress'
+    else:
+        rods = [
+            model.crod_strain, model.conrod_strain, model.ctube_strain,
+        ]
+        word = 'Strain'
+
+    #titles = []
+    rod_cases = []
+    rod_ieids = []
+    for result in rods:
+        if key not in result:
+            continue
+        case = result[key]
+
+        eidsi = case.element
+        i = np.searchsorted(eids, eidsi)
+        if len(i) != len(np.unique(i)):
+            #print(case.element_node)
+            #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
+            #print('iplate = %s' % i)
+            #print('  eids = %s' % eids)
+            #print('  eidsiA = %s' % case.element_node[:, 0])
+            #print('  eidsiB = %s' % eidsi)
+            msg = 'i%s (rod)=%s is not unique' % (case.element_name, str(i))
+            #msg = 'iplate=%s is not unique' % str(i)
+            model.log.warning(msg)
+            continue
+        if i.max() == len(eids):
+            model.log.error('skipping because lookup is out of range...')
+            continue
+        #print('i =', i, i.max())
+        #print('eids =', eids, len(eids))
+        #print('eidsi =', eidsi, eids)
+        #print(f'------------adding i={i} for {case.element_name}-----------')
+        rod_cases.append(case)
+        rod_ieids.append(i)
+    if not rod_ieids:
+        return icase
+
+    rod_ieids = np.hstack(rod_ieids)
+    ieid_max = len(eids)
+    #print('ieid_max =', ieid_max)
+
+    case = rod_cases[0]
+    case_headers = case.get_headers()
+    #print(case_headers)
+    if is_stress:
+        #sigma = 'σ'
+        method_map = {
+            'axial' : 'σxx',
+            'torsion' : 'τxy',
+            'SMa' : 'MS_axial',
+            'SMt' : 'MS_torsion',
+            #'omax' : 'σmax',
+            #'omin' : 'σmin',
+            #'von_mises' : 'σ von Mises',
+        }
+    else:
+        #sigma = 'ϵ'
+        method_map = {
+            'axial' : 'ϵxx',
+            'torsion' : 'ϵxy',
+            'SMa' : 'MS_axial',
+            'SMt' : 'MS_torsion',
+            #'emax' : 'ϵmax',
+            #'emin' : 'ϵmin',
+            #'von_mises' : 'ϵ von Mises',
+        }
+    methods = [method_map[headeri] for headeri in case_headers]
+    #if 'Mises' in methods:
+        #methods.append('Max shear')
+    #else:
+        #methods.append(f'{sigma} von Mises')
+
+    #if case.is_von_mises:
+        #vm_word = 'vonMises'
+    #else:
+        #vm_word = 'maxShear'
+
+    #headersi = case.get_headers()
+    #print('headersi =', headersi)
+
+    scalars_array = []
+    for case in rod_cases:
+        if case.is_complex:
+            continue
+
+        ntimes, nelements, nresults = case.data.shape
+        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
+        #                                         txy, angle,
+        #                                         majorP, minorP, ovm]
+
+        keys_map[key] = (case.subtitle, case.label,
+                         case.superelement_adaptivity_index, case.pval_step)
+
+        #nnodes_per_element = case.nnodes
+        #nelements_nnodes = nnodes_nlayers // 2
+        #nelements = nelements_nnodes // nnodes_per_element
+        #nlayers = 2
+        scalars = case.data
+        scalars_array.append(scalars)
+
+    if len(scalars_array) == 0:
+        return icase
+
+    if len(scalars_array) == 1:
+        scalars_array = scalars_array[0]
+    else:
+        scalars_array = np.concatenate(scalars_array, axis=1)
+
+    #titles = []  # legend title
+    headers = [] # sidebar word
+    res = SimpleTableResults(
+        subcase_id, headers, rod_ieids, ieid_max, scalars_array, methods,
+        data_formats=None,
+        colormap='jet', uname='Rod ' + word)
+
+    times = case._times
+    for itime, dt in enumerate(times):
+        #dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+
+        formi = []
+        form = form_dict[(key, itime)]
+        form.append(('Rod ' + word, None, formi))
+        # formi = form[0][2]
+
+        for imethod, method in enumerate(methods):
+            #cases[icase] = (res, (subcase_id, header))
+            cases[icase] = (res, (subcase_id, (itime, imethod, header)))
+            formi.append((method, icase, []))
+            icase += 1
+    return icase
+
+def get_bar_stress_strains(eids, cases, model, times, key, icase,
+                           form_dict, header_dict, keys_map, is_stress):
+    """
+    helper method for _fill_op2_time_centroidal_stress.
+    """
+    #print("***stress eids=", eids)
+    subcase_id = key[0]
+    if is_stress:
+        bars = [model.cbar_stress]
+        word = 'Stress'
+    else:
+        bars = [model.cbar_strain]
+        word = 'Strain'
+
+    #titles = []
+    bar_cases = []
+    bar_ieids = []
+    for result in bars:
+        if key not in result:
+            continue
+        case = result[key]
+
+        eidsi = case.element
+        i = np.searchsorted(eids, eidsi)
+        if len(i) != len(np.unique(i)):
+            #print(case.element_node)
+            #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
+            #print('iplate = %s' % i)
+            #print('  eids = %s' % eids)
+            #print('  eidsiA = %s' % case.element_node[:, 0])
+            #print('  eidsiB = %s' % eidsi)
+            msg = 'i%s (bar)=%s is not unique' % (case.element_name, str(i))
+            #msg = 'iplate=%s is not unique' % str(i)
+            model.log.warning(msg)
+            continue
+        if i.max() == len(eids):
+            model.log.error('skipping because lookup is out of range...')
+            continue
+        #print('i =', i, i.max())
+        #print('eids =', eids, len(eids))
+        #print('eidsi =', eidsi, eids)
+        #print(f'------------adding i={i} for {case.element_name}-----------')
+        bar_cases.append(case)
+        bar_ieids.append(i)
+    if not bar_ieids:
+        return icase
+
+    bar_ieids = np.hstack(bar_ieids)
+    ieid_max = len(eids)
+    #print('ieid_max =', ieid_max)
+
+    case = bar_cases[0]
+    case_headers = case.get_headers()
+    #print(case_headers)
+    if is_stress:
+        #sigma = 'σ'
+        method_map = {
+             's1a' : 'σxx 1A',
+             's2a' : 'σxx 2A',
+             's3a' : 'σxx 3A',
+             's4a' : 'σxx 4A',
+
+             's1b' : 'σxx 1B',
+             's2b' : 'σxx 2B',
+             's3b' : 'σxx 3B',
+             's4b' : 'σxx 4B',
+
+            'axial' : 'σxx',
+            'MS_tension' : 'MS_tension',
+            'MS_compression' : 'MS_compression',
+            'smaxa' : 'σmax A',
+            'smina' : 'σmin A',
+            'smaxb' : 'σmax B',
+            'sminb' : 'σmin B',
+            #'von_mises' : 'σ von Mises',
+        }
+    else:
+        #sigma = 'ϵ'
+        method_map = {
+            'e1a' : 'ϵxx 1A',
+            'e2a' : 'ϵxx 2A',
+            'e3a' : 'ϵxx 3A',
+            'e4a' : 'ϵxx 4A',
+
+            'e1b' : 'ϵxx 1B',
+            'e2b' : 'ϵxx 2B',
+            'e3b' : 'ϵxx 3B',
+            'e4b' : 'ϵxx 4B',
+
+
+            'e1c': 'ϵxx 1C',
+            'e1d': 'ϵxx 1D',
+            'e2c': 'ϵxx 2C',
+            'e2d': 'ϵxx 2D',
+
+           'axial' : 'ϵxx',
+           'MS_tension' : 'MS_tension',
+           'MS_compression' : 'MS_compression',
+           'emaxa' : 'ϵmax A',
+           'emina' : 'ϵmin A',
+           'emaxb' : 'ϵmax B',
+           'eminb' : 'ϵmin B',
+            #'emax' : 'ϵmax',
+            #'emin' : 'ϵmin',
+            #'von_mises' : 'ϵ von Mises',
+        }
+    methods = [method_map[headeri] for headeri in case_headers]
+    #if 'Mises' in methods:
+        #methods.append('Max shear')
+    #else:
+        #methods.append(f'{sigma} von Mises')
+
+    #if case.is_von_mises:
+        #vm_word = 'vonMises'
+    #else:
+        #vm_word = 'maxShear'
+
+    #headersi = case.get_headers()
+    #print('headersi =', headersi)
+
+    scalars_array = []
+    for case in bar_cases:
+        if case.is_complex:
+            continue
+
+        #ntimes, nelements, nresults = case.data.shape
+        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
+        #                                         txy, angle,
+        #                                         majorP, minorP, ovm]
+
+        keys_map[key] = (case.subtitle, case.label,
+                         case.superelement_adaptivity_index, case.pval_step)
+
+        #nnodes_per_element = case.nnodes
+        #nelements_nnodes = nnodes_nlayers // 2
+        #nelements = nelements_nnodes // nnodes_per_element
+        #nlayers = 2
+        scalars = case.data
+        scalars_array.append(scalars)
+
+    if len(scalars_array) == 0:
+        return icase
+
+    if len(scalars_array) == 1:
+        scalars_array = scalars_array[0]
+    else:
+        scalars_array = np.concatenate(scalars_array, axis=1)
+
+    #include_tension_margin = True
+    #include_compression_margin = True
+    itension = methods.index('MS_tension')
+    icompression = methods.index('MS_compression')
+    exclude_tension_margin = np.allclose(np.abs(scalars_array[:, :, itension]).max(), 0.0)
+    exclude_compression_margin = np.allclose(np.abs(scalars_array[:, :, icompression]).max(), 0.0)
+    iresults = list(range(len(methods)))
+    if exclude_compression_margin:
+        methods.pop(icompression)
+        iresults.pop(icompression)
+    if exclude_tension_margin:
+        methods.pop(itension)
+        iresults.pop(itension)
+    if exclude_compression_margin or exclude_compression_margin:
+        scalars_array = scalars_array[:, :, iresults]
+
+    #titles = []  # legend title
+    headers = [] # sidebar word
+    res = SimpleTableResults(
+        subcase_id, headers, bar_ieids, ieid_max, scalars_array, methods,
+        data_formats=None,
+        colormap='jet', uname='Bar ' + word)
+
+    times = case._times
+    for itime, dt in enumerate(times):
+        #dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+
+        formi = []
+        form = form_dict[(key, itime)]
+        form.append(('Bar ' + word, None, formi))
+        # formi = form[0][2]
+
+        for imethod, method in enumerate(methods):
+            #cases[icase] = (res, (subcase_id, header))
+            cases[icase] = (res, (subcase_id, (itime, imethod, header)))
+            formi.append((method, icase, []))
+            icase += 1
+    return icase
+
+def get_beam_stress_strains(eids, cases, model, times, key, icase,
+                            form_dict, header_dict, keys_map, is_stress):
+    """
+    helper method for _fill_op2_time_centroidal_stress.
+    """
+    return icase
+    #print("***stress eids=", eids)
+    subcase_id = key[0]
+    if is_stress:
+        beams = [model.cbeam_stress]
+        word = 'Stress'
+    else:
+        beams = [model.cbeam_strain]
+        word = 'Strain'
+
+    #titles = []
+    beam_cases = []
+    beam_ieids = []
+    for result in beams:
+        if key not in result:
+            continue
+        case = result[key]
+
+        eidsi = np.unique(case.element_node[:, 0])
+        print(eidsi)
+        i = np.searchsorted(eids, eidsi)
+        if len(i) != len(np.unique(i)):
+            #print(case.element_node)
+            #print('element_name=%s nnodes_per_element=%s' % (case.element_name, nnodes_per_element))
+            #print('iplate = %s' % i)
+            #print('  eids = %s' % eids)
+            #print('  eidsiA = %s' % case.element_node[:, 0])
+            #print('  eidsiB = %s' % eidsi)
+            msg = 'i%s (beam)=%s is not unique' % (case.element_name, str(i))
+            #msg = 'iplate=%s is not unique' % str(i)
+            model.log.warning(msg)
+            continue
+        if i.max() == len(eids):
+            model.log.error('skipping because lookup is out of range...')
+            continue
+
+        i2 = np.hstack([i, i + 1]).T.flatten()
+        print('i =', i)
+        print('i2 =', i2)
+        #aa
+        #print('i =', i, i.max())
+        #print('eids =', eids, len(eids))
+        #print('eidsi =', eidsi, eids)
+        #print(f'------------adding i={i} for {case.element_name}-----------')
+        beam_cases.append(case)
+        beam_ieids.append(i2)
+    if not beam_ieids:
+        return icase
+
+    beam_ieids = np.hstack(beam_ieids)
+    #inid_max = len(nids)
+    ieid_max = len(eids)
+    print('ieid_max =', ieid_max)
+
+    case = beam_cases[0]
+    case_headers = case.get_headers()
+    #print(case_headers)
+    if is_stress:
+        #sigma = 'σ'
+        method_map = {
+            'sxc' : 'σxx C',
+            'sxd' : 'σxx D',
+            'sxe' : 'σxx E',
+            'sxf' : 'σxx F',
+            #'torsion' : 'τxy',
+            'MS_tension' : 'MS_tension',
+            'MS_compression' : 'MS_compression',
+            'smax' : 'σmax',
+            'smin' : 'σmin',
+            #'von_mises' : 'σ von Mises',
+        }
+    else:
+        #sigma = 'ϵ'
+        method_map = {
+            'sxc' : 'ϵxx C',
+            'sxd' : 'ϵxx D',
+            'sxe' : 'ϵxx E',
+            'sxf' : 'ϵxx F',
+
+            'exc' : 'ϵxx C',
+            'exd' : 'ϵxx D',
+            'exe' : 'ϵxx E',
+            'exf' : 'ϵxx F',
+            #'torsion' : 'τxy',
+            'MS_tension' : 'MS_tension',
+            'MS_compression' : 'MS_compression',
+            'smax' : 'ϵmax',
+            'smin' : 'ϵmin',
+            #'von_mises' : 'ϵ von Mises',
+        }
+    methods = [method_map[headeri] for headeri in case_headers]
+    #if 'Mises' in methods:
+        #methods.append('Max shear')
+    #else:
+        #methods.append(f'{sigma} von Mises')
+
+    #if case.is_von_mises:
+        #vm_word = 'vonMises'
+    #else:
+        #vm_word = 'maxShear'
+
+    #headersi = case.get_headers()
+    #print('headersi =', headersi)
+
+    scalars_array = []
+    for case in beam_cases:
+        if case.is_complex:
+            continue
+
+        #ntimes, nelements, nresults = case.data.shape
+        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
+        #                                         txy, angle,
+        #                                         majorP, minorP, ovm]
+
+        keys_map[key] = (case.subtitle, case.label,
+                         case.superelement_adaptivity_index, case.pval_step)
+
+        #nnodes_per_element = case.nnodes
+        #nelements_nnodes = nnodes_nlayers // 2
+        #nelements = nelements_nnodes // nnodes_per_element
+        #nlayers = 2
+        scalars = case.data
+        scalars_array.append(scalars)
+
+    if len(scalars_array) == 0:
+        return icase
+
+    if len(scalars_array) == 1:
+        scalars_array = scalars_array[0]
+    else:
+        scalars_array = np.concatenate(scalars_array, axis=1)
+
+    #titles = []  # legend title
+    headers = [] # sidebar word
+    res = SimpleTableResults(
+        subcase_id, headers, beam_ieids, ieid_max, scalars_array, methods,
+        data_formats=None,
+        colormap='jet', location='node', uname='Beam ' + word)
+
+    times = case._times
+    for itime, dt in enumerate(times):
+        #dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+
+        formi = []
+        form = form_dict[(key, itime)]
+        form.append(('Beam ' + word, None, formi))
+        # formi = form[0][2]
+
+        for imethod, method in enumerate(methods):
+            #cases[icase] = (res, (subcase_id, header))
+            cases[icase] = (res, (subcase_id, (itime, imethod, header)))
+            formi.append((method, icase, []))
+            icase += 1
+    return icase
+
 def get_plate_stress_strains(eids, cases, model, times, key, icase,
                              form_dict, header_dict, keys_map, is_stress):
     """
@@ -1723,7 +2260,7 @@ def get_plate_stress_strains(eids, cases, model, times, key, icase,
 
     #titles = []  # legend title
     headers = [] # sidebar word
-    res = PlateStressStrainTableResults(
+    res = LayeredTableResults(
         subcase_id, headers, plates_ieids, ieid_max, scalars_array, methods,
         data_formats=None,
         colormap='jet')
@@ -1735,11 +2272,7 @@ def get_plate_stress_strains(eids, cases, model, times, key, icase,
         header_dict[(key, itime)] = header
 
         formi = []
-        if (key, itime) in form_dict:
-            form_old = form_dict[(key, itime)]
-            form = [
-                ('Combined ' + word, None, form_old),
-            ]
+        form = form_dict[(key, itime)]
         form.append(('Plate ' + word, None, formi))
         # formi = form[0][2]
         form_dict[(key, itime)] = form
@@ -1868,7 +2401,7 @@ def get_composite_plate_stress_strains(eids, cases, model, times, key, icase,
 
     #titles = []  # legend title
     headers = [] # sidebar word
-    res = PlateStressStrainTableResults(
+    res = LayeredTableResults(
         subcase_id, headers, plates_ieids, ieid_max, scalars_array, methods,
         data_formats=None,
         colormap='jet')
@@ -1880,11 +2413,7 @@ def get_composite_plate_stress_strains(eids, cases, model, times, key, icase,
         header_dict[(key, itime)] = header
 
         formi = []
-        if (key, itime) in form_dict:
-            form_old = form_dict[(key, itime)]
-            form = [
-                ('Combined ' + word, None, form_old),
-            ]
+        form = form_dict[(key, itime)]
         form.append(('Composite Plate ' + word, None, formi))
         # formi = form[0][2]
         form_dict[(key, itime)] = form
@@ -1907,7 +2436,7 @@ def get_composite_plate_stress_strains(eids, cases, model, times, key, icase,
     return icase
 
 
-class PlateStressStrainTableResults(Table):
+class LayeredTableResults(Table):
     def __init__(self, subcase_id, headers, eids, eid_max, scalars,
                  methods,
                  data_formats=None,
@@ -1991,4 +2520,95 @@ class PlateStressStrainTableResults(Table):
         #print(f'data.shape={data.shape} eids.shape={self.eids.shape} scalars.shape={scalars.shape}')
         #print(self.methods)
         data[self.eids] = scalars
+        return data
+
+class SimpleTableResults(Table):
+    def __init__(self, subcase_id, headers, eids, eid_max, scalars,
+                 methods,
+                 data_formats=None,
+                 nlabels=None, labelsize=None, ncolors=None, colormap='jet',
+                 location='centroid',
+                 set_max_min=False, uname='Geometry'):
+        """this is a centroidal result
+
+        Parameters
+        ----------
+        headers : List[str]
+            the sidebar word
+        titles : List[str]
+            the legend title
+
+        """
+        titles = None
+        Table.__init__(
+            self, subcase_id, location, titles, headers, scalars,
+            data_formats=data_formats, nlabels=nlabels,
+            labelsize=labelsize, ncolors=ncolors,
+            colormap=colormap, set_max_min=set_max_min,
+            uname=uname)
+        self.methods = methods
+        self.eids = eids
+        self.eid_max = eid_max
+        assert len(eids) == scalars.shape[1], f'len(eids)={len(eids)} scalars.shape={scalars.shape}'
+
+    def finalize(self):
+        from copy import deepcopy
+        self.titles_default = deepcopy(self.titles)
+        self.headers_default = deepcopy(self.headers)
+
+    def get_methods(self, i):
+        return self.methods
+
+    #def deflects(self, unused_i, unused_res_name):
+        #return False
+
+    def get_default_title(self, i, name):
+        """legend title"""
+        (itime, imethod, unused_header) = name
+        return self.methods[imethod]
+
+    def get_title(self, i, name):
+        """legend title"""
+        (itime, imethod, unused_header) = name
+        return self.methods[imethod]
+
+    def get_header(self, i, name):
+        """a header shows up in the text"""
+        (itime, imethod, header) = name
+        return self.methods[imethod] + ': ' + header
+
+    def get_data_format(self, i, name):
+        return '%.3f'  # TODO: update
+    def get_default_data_format(self, i, name):
+        return '%.3f'  # TODO: update
+    def get_scale(self, i, name):
+        return None
+    def get_default_scale(self, i, name):
+        return None
+
+    def get_scalar(self, i, name):
+        return self.get_result(i, name)
+
+    def get_min_max(self, i, name):
+        scalar = self.get_scalar(i, name)  # TODO: update
+        return np.nanmin(scalar), np.nanmax(scalar)
+
+    def get_default_min_max(self, i, name):
+        scalar = self.get_scalar(i, name)
+        return np.nanmin(scalar), np.nanmax(scalar)
+
+    def get_result(self, i, name):
+        #print(i, name)
+        (itime, imethod, unused_header) = name
+        scalars = self.scalars[itime, :, imethod]
+
+        if len(scalars) == self.eid_max:
+            return scalars
+        data = np.full(self.eid_max, np.nan, dtype=scalars.dtype)
+        #print(f'data.shape={data.shape} eids.shape={self.eids.shape} scalars.shape={scalars.shape}')
+        #print(self.methods)
+        try:
+            data[self.eids] = scalars
+        except IndexError:
+            raise RuntimeError(f'{self.uname!r} eids.max()={self.eids.max()} scalars.shape={scalars.shape}')
         return data

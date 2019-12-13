@@ -583,8 +583,7 @@ class Table(GuiResultCommon):
         #dxyz = self._get_complex_displacements_by_phase(i, self.phases[i])
         #return dxyz
 
-    def get_result(self, i, name):
-        aaa
+    #def get_result(self, i, name):
         #if self.is_real:
             #if self.dim == 2:
                 ## single result

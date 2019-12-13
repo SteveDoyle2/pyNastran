@@ -53,6 +53,8 @@ NASTRAN_BOOL_KEYS = [
     'nastran_is_shell_mcids', 'nastran_is_update_conm2',
     'nastran_stress', 'nastran_plate_stress', 'nastran_composite_plate_stress',
     'nastran_strain', 'nastran_plate_strain', 'nastran_composite_plate_strain',
+    'nastran_rod_stress', 'nastran_bar_stress', 'nastran_beam_stress',
+    'nastran_rod_strain', 'nastran_bar_strain', 'nastran_beam_strain',
 ]
 
 class Settings:
@@ -121,6 +123,13 @@ class Settings:
         self.nastran_plate_strain = True
         self.nastran_composite_plate_strain = True
 
+        self.nastran_rod_stress = True
+        self.nastran_bar_stress = True
+        self.nastran_beam_stress = True
+        self.nastran_rod_strain = True
+        self.nastran_bar_strain = True
+        self.nastran_beam_strain = True
+
     def reset_settings(self):
         """helper method for ``setup_gui``"""
         # rgb tuple
@@ -179,6 +188,13 @@ class Settings:
         self.nastran_strain = True
         self.nastran_plate_strain = True
         self.nastran_composite_plate_strain = True
+
+        self.nastran_rod_stress = True
+        self.nastran_bar_stress = True
+        self.nastran_beam_stress = True
+        self.nastran_rod_strain = True
+        self.nastran_bar_strain = True
+        self.nastran_beam_strain = True
 
     def load(self, settings):
         """helper method for ``setup_gui``"""

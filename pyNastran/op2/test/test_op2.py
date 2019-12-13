@@ -270,6 +270,9 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         # have to double write this until ???
         op2_nv = OP2(debug=debug, log=log, debug_file=debug_file)
 
+        op2.IS_TESTING = False
+        op2_nv.IS_TESTING = False
+
         if is_nx is None and is_autodesk is None:
             pass
         elif is_nx:

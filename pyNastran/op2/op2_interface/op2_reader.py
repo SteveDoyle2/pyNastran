@@ -1396,7 +1396,7 @@ class OP2Reader:
             #(FRL, 70, 71, 72)
             subtable_name_raw, = op2.struct_8s.unpack(data[:8])
             subtable_name = subtable_name_raw.strip()
-            assert subtable_name in [b'FRL'], 'subtable_name=%r' % subtable_name
+            assert subtable_name in [b'FRL', b'FRL0'], 'subtable_name=%r' % subtable_name
         elif len(data) == 24:
             #(FRL, 71, 72, 73, 74)
             subtable_name_raw, = op2.struct_8s.unpack(data[:8])
@@ -4135,27 +4135,29 @@ class OP2Reader:
         for typei in types:
             assert typei in 'sifdq lILQ', 'type=%r is invalid' % typei
 
+        data4 = data[:nints * 4]
+        #data8 = data[:ndoubles * 8]
         if 's' in types:
             strings = unpack('%s%is' % (endian, n), data)
             f.write("  strings = %s\n" % str(strings))
         if 'i' in types:
-            ints = unpack('%s%ii' % (endian, nints), data)
+            ints = unpack('%s%ii' % (endian, nints), data4)
             f.write("  ints    = %s\n" % str(ints))
         if 'f' in types:
-            floats = unpack('%s%if' % (endian, nints), data)
+            floats = unpack('%s%if' % (endian, nints), data4)
             f.write("  floats  = %s\n" % str(floats))
         if 'd' in types:
             doubles = unpack('%s%id' % (endian, ndoubles), data[:ndoubles*8])
             f.write("  doubles (float64) = %s\n" % str(doubles))
 
         if 'l' in types:
-            longs = unpack('%s%il' % (endian, nints), data)
+            longs = unpack('%s%il' % (endian, nints), data4)
             f.write("  long  = %s\n" % str(longs))
         if 'I' in types:
-            ints2 = unpack('%s%iI' % (endian, nints), data)
+            ints2 = unpack('%s%iI' % (endian, nints), data4)
             f.write("  unsigned int = %s\n" % str(ints2))
         if 'L' in types:
-            longs2 = unpack('%s%iL' % (endian, nints), data)
+            longs2 = unpack('%s%iL' % (endian, nints), data4)
             f.write("  unsigned long = %s\n" % str(longs2))
         if 'q' in types:
             longs = unpack('%s%iq' % (endian, ndoubles), data[:ndoubles*8])

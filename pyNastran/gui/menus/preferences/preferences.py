@@ -20,7 +20,9 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.menus.menu_utils import eval_float_from_string
 from pyNastran.gui.gui_objects.settings import (
-    COORD_SCALE, COORD_TEXT_SCALE, ANNOTATION_SIZE, TEXT_SIZE, FONT_SIZE)
+    COORD_SCALE, COORD_TEXT_SCALE, ANNOTATION_SIZE, TEXT_SIZE, FONT_SIZE,
+    NASTRAN_BOOL_KEYS,
+)
 
 
 class PreferencesWindow(PyDialog):
@@ -91,6 +93,20 @@ class PreferencesWindow(PyDialog):
         self._nastran_is_bar_axes = data['nastran_is_bar_axes']
         self._nastran_create_coords = data['nastran_create_coords']
         self._nastran_is_shell_mcids = data['nastran_is_shell_mcids']
+
+        self._nastran_stress = data['nastran_stress']
+        self._nastran_plate_stress = data['nastran_plate_stress']
+        self._nastran_composite_plate_stress = data['nastran_composite_plate_stress']
+        self._nastran_strain = data['nastran_strain']
+        self._nastran_plate_strain = data['nastran_plate_strain']
+        self._nastran_composite_plate_strain = data['nastran_composite_plate_strain']
+        self._nastran_rod_stress = data['nastran_rod_stress']
+        self._nastran_bar_stress = data['nastran_bar_stress']
+        self._nastran_beam_stress = data['nastran_beam_stress']
+        self._nastran_rod_strain = data['nastran_rod_strain']
+        self._nastran_bar_strain = data['nastran_bar_strain']
+        self._nastran_beam_strain = data['nastran_beam_strain']
+
 
         self.setWindowTitle('Preferences')
         self.create_widgets()
@@ -247,6 +263,34 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_bar_axes_checkbox.setChecked(self._nastran_is_bar_axes)
         #self.nastran_is_bar_axes_checkbox.setDisabled(True)
 
+        if 0:
+            self.nastran_stress_checkbox = QCheckBox('Stress')
+            self.nastran_plate_stress_checkbox = QCheckBox('Plate Stress')
+            self.nastran_composite_plate_stress_checkbox = QCheckBox('Composite Plate Stress')
+            self.nastran_rod_stress_checkbox = QCheckBox('Rod Stress')
+            self.nastran_bar_stress_checkbox = QCheckBox('Bar Stress')
+            self.nastran_beam_stress_checkbox = QCheckBox('Beam Stress')
+
+            self.nastran_stress_checkbox.setChecked(self._nastran_stress)
+            self.nastran_plate_stress_checkbox.setChecked(self._nastran_plate_stress)
+            self.nastran_composite_plate_stress_checkbox.setChecked(self._nastran_composite_plate_stress)
+            self.nastran_rod_stress_checkbox.setChecked(self._nastran_rod_stress)
+            self.nastran_bar_stress_checkbox.setChecked(self._nastran_bar_stress)
+            self.nastran_beam_stress_checkbox.setChecked(self._nastran_beam_stress)
+
+            self.nastran_strain_checkbox = QCheckBox('Strain')
+            self.nastran_plate_strain_checkbox = QCheckBox('Plate Strain')
+            self.nastran_composite_plate_strain_checkbox = QCheckBox('Composite Plate Strain')
+            self.nastran_rod_strain_checkbox = QCheckBox('Rod Strain')
+            self.nastran_bar_strain_checkbox = QCheckBox('Bar Strain')
+            self.nastran_beam_strain_checkbox = QCheckBox('Beam Strain')
+
+            self.nastran_strain_checkbox.setChecked(self._nastran_strain)
+            self.nastran_plate_strain_checkbox.setChecked(self._nastran_plate_strain)
+            self.nastran_composite_plate_strain_checkbox.setChecked(self._nastran_composite_plate_strain)
+            self.nastran_rod_strain_checkbox.setChecked(self._nastran_rod_strain)
+            self.nastran_bar_strain_checkbox.setChecked(self._nastran_bar_strain)
+            self.nastran_beam_strain_checkbox.setChecked(self._nastran_beam_strain)
 
         #-----------------------------------------------------------------------
         # closing
@@ -481,6 +525,8 @@ class PreferencesWindow(PyDialog):
         self.nastran_is_bar_axes_checkbox.clicked.connect(self.on_nastran_is_bar_axes)
         self.nastran_create_coords_checkbox.clicked.connect(self.on_nastran_create_coords)
         self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
+
+        #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids2)
         #------------------------------------
 
         self.apply_button.clicked.connect(self.on_apply)
@@ -523,6 +569,12 @@ class PreferencesWindow(PyDialog):
         is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
         if self.win_parent is not None:
             self.win_parent.settings.nastran_is_shell_mcids = is_checked
+
+    #def on_nastran_is_shell_mcids2(self):
+        #"""set the nastran properties preferences"""
+        #is_checked = self.nastran_is_shell_mcid_checkbox.isChecked()
+        #if self.win_parent is not None:
+            #self.win_parent.settings.nastran_is_shell_mcids = is_checked
 
     def on_font(self, value=None):
         """update the font for the current window"""
@@ -820,17 +872,11 @@ def main():  # pragma: no cover
         'min_clip' : 0.,
         'max_clip' : 10,
 
-        'nastran_is_element_quality' : True,
-        'nastran_is_properties' : True,
-        'nastran_is_3d_bars' : True,
-        'nastran_is_3d_bars_update' : True,
-        'nastran_is_bar_axes' : True,
-        'nastran_create_coords' : True,
-        'nastran_is_shell_mcids' : True,
-
         'dim_max' : 502.,
 
     }
+    for name in NASTRAN_BOOL_KEYS:
+        data[name] = True
     main_window = PreferencesWindow(data)
     main_window.show()
     # Enter the main loop

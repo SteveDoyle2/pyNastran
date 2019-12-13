@@ -11,6 +11,8 @@ from collections import defaultdict
 from traceback import print_exc
 from typing import Optional, List, Dict, Union
 
+import numpy as np
+
 import pyNastran
 from pyNastran.op2.op2_interface.op2_f06_common import OP2_F06_Common
 from pyNastran.op2.op2_interface.result_set import ResultSet
@@ -436,6 +438,58 @@ class F06Writer(OP2_F06_Common):
         self._write_f06_subcase_based(f06, page_stamp, delete_objects=delete_objects,
                                       is_mag_phase=is_mag_phase, is_sort1=is_sort1,
                                       quiet=quiet, repr_check=repr_check)
+
+        if self.op2_results.psds:
+            from collections import defaultdict
+            psds_subtitle = defaultdict(dict)
+            for (subtitle, analysis_code, nid, dof), psd in self.op2_results.psds.items():
+                psds_subtitle[subtitle][(analysis_code, nid, dof)] = psd
+
+            from scipy.integrate import trapz
+            for subtitle, psds in psds_subtitle.items():
+                f06.write(subtitle + '\n')
+                f06.write('0                             X Y - O U T P U T  S U M M A R Y  ( A U T O  O R  P S D F )\n')
+                f06.write('0 PLOT  CURVE FRAME    CURVE ID./       RMS       NO. POSITIVE   XMIN FOR   XMAX FOR   YMIN FOR    X FOR     YMAX FOR    X FOR*\n')
+                f06.write('  TYPE   TYPE   NO.  PANEL  : GRID ID    VALUE        CROSSINGS   ALL DATA   ALL DATA   ALL DATA     YMIN     ALL DATA     YMAX\n')
+
+                for (analysis_code, nid, dof), psd in psds.items():
+                    if analysis_code == 5:
+                        psd_type = 'ACCE'
+                    else:
+                        psd_type = analysis_code
+
+                    #rms_value = 2.879461E+00
+                    #no_crossings = 2.879461E+00
+                    #no_crossings = np.nan
+                    freqs, psd = psd[:, 0], psd[:, 1]
+                    ymin = psd.min()
+                    ymax = psd.max()
+                    imin = np.where(psd == ymin)[0][0]
+                    imax = np.where(psd == ymax)[0][0]
+                    xmin = freqs[imin]
+                    xmax = freqs[imax]
+                    fmin = freqs.min()
+                    fmax = freqs.max()
+
+                    # If you want the RMS value, this is computed as RMS = SQRT(SUM(PSD*DF)) and,
+                    # where DF is the spectral resolution, where you integarate from Fmin to Fmax,
+                    # i.e. your lowest and highest analysis frequency of interest, respectively.
+                    psd_f = trapz(psd, freqs)
+                    f2_psd_f = trapz(freqs**2 * psd, freqs)
+                    rms = psd_f ** 0.5
+
+                    # TODO: maybe inverted; check
+                    no_crossings = (psd_f / f2_psf_f) ** 0.5 / (2 *pi)
+
+                    #print('ymin=%s ymax=%s xmin=%s xmax=%s fmin=%s fmax=%s' % (ymin, ymax, xmin, xmax, fmin, fmax))
+                    #'0                             X Y - O U T P U T  S U M M A R Y  ( A U T O  O R  P S D F )'
+                    #'0 PLOT  CURVE FRAME    CURVE ID./       RMS       NO. POSITIVE   XMIN FOR   XMAX FOR   YMIN FOR    X FOR     YMAX FOR    X FOR*'
+                    #'    TYPE   TYPE   NO.  PANEL  : GRID ID    VALUE        CROSSINGS   ALL DATA   ALL DATA   ALL DATA     YMIN     ALL DATA     YMAX'
+                    #'    PSDF ACCE       0  9400703(  5)    2.879461E+00  8.191217E+02  2.000E+01  2.000E+03  4.476E-06  7.900E+01  1.474E+00  3.980E+01'
+                    f06.write('0                                      \n')
+                    f06.write(f'  PSDF {psd_type}       0 {nid:8d}(  {dof})    {rms:8.6E}     {no_crossings:9.6E}  {fmin:9.3E}  {fmax:9.3E}  {ymin:9.3E}  {xmin:9.3E}  {ymax:9.3E}  {xmax:9.3E}\n')
+
+
         #self._write_f06_time_based(f06, page_stamp)
         self.write_matrices(f06, matrix_filename, page_stamp, self.page_num, quiet=quiet)
         f06.write(make_end(end_flag, self.end_options))

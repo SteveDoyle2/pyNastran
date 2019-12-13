@@ -16,6 +16,7 @@ class Results:
         self.bgpdt = None
         self.responses = Responses()
 
+        self.psds = {}
         self.ato = AutoCorrelationObjects()
         self.psd = PowerSpectralDensityObjects()
         self.rms = RootMeansSquareObjects()
@@ -61,7 +62,7 @@ class Results:
             self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS,
             self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC,
         ]
-        base = ['eqexin', 'gpdt', 'bgpdt',]
+        base = ['eqexin', 'gpdt', 'bgpdt', 'psds', ]
         for objs in sum_objs:
             base.extend(objs.get_table_types())
         return base

@@ -1,8 +1,5 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
 from pyNastran.gui.menus.preferences.preferences import PreferencesWindow
-if TYPE_CHECKING:
-    from pyNastran.gui.gui_objects.settings import Settings
+from pyNastran.gui.gui_objects.settings import Settings, NASTRAN_BOOL_KEYS
 
 
 class PreferencesObject:
@@ -56,17 +53,12 @@ class PreferencesObject:
             'min_clip' : min_clip,
             'max_clip' : max_clip,
 
-            'nastran_is_element_quality' : settings.nastran_is_element_quality,
-            'nastran_is_properties' : settings.nastran_is_properties,
-            'nastran_is_bar_axes' : settings.nastran_is_bar_axes,
-            'nastran_is_3d_bars' : settings.nastran_is_3d_bars,
-            'nastran_is_3d_bars_update' : settings.nastran_is_3d_bars_update,
-            'nastran_create_coords' : settings.nastran_create_coords,
-            'nastran_is_shell_mcids' : settings.nastran_is_shell_mcids,
-
             'clicked_ok' : False,
             'close' : False,
         }
+        for name in NASTRAN_BOOL_KEYS:
+            data[name] = getattr(settings, name)
+
         if not self._preferences_window_shown:
             self._preferences_window = PreferencesWindow(data, win_parent=self.gui)
             self._preferences_window.show()

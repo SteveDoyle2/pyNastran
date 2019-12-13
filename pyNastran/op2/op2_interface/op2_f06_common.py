@@ -1127,6 +1127,18 @@ def _get_op2_stats(model: OP2, short=False):
     for key, weight in model.grid_point_weight.items():
         msg += weight.get_stats(key, short=short)
 
+    if model.op2_results.psds:
+        msg += f'op2_results.psds:\n'
+        npsds = len(model.op2_results.psds)
+        ipsd = 0
+        msg += f'  # (subtitle, analysis_code, node, dof)\n'
+        for key in model.op2_results.psds:
+            msg += f'  {key}\n'
+            if ipsd == 10:
+                msg += f'  ... npsds={npsds}\n'
+                break
+            ipsd += 1
+
     table_types = model._get_table_types_testing()
 
     if short:
@@ -1160,7 +1172,7 @@ def _get_op2_stats(model: OP2, short=False):
 def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
     """helper for get_op2_stats(...)"""
     msg = []
-    handled_previously = ['params', 'grid_point_weight']
+    handled_previously = ['params', 'grid_point_weight', 'psds']
     no_data_classes = ['RealEigenvalues', 'ComplexEigenvalues', 'BucklingEigenvalues']
     for table_type in table_types:
         #table_type_print = ''
@@ -1203,7 +1215,7 @@ def _get_op2_stats_short(model: OP2, table_types: List[str], log) -> List[str]:
 def _get_op2_stats_full(model: OP2, table_types: List[str], log):
     """helper for get_op2_stats(...)"""
     msg = []
-    handled_previously = ['params', 'grid_point_weight']
+    handled_previously = ['params', 'grid_point_weight', 'psds']
     for table_type in table_types:
         table = model.get_result(table_type)
         if table_type in handled_previously:

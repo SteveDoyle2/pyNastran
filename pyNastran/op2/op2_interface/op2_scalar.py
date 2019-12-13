@@ -611,6 +611,8 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             #b'OQGRMS2' : [self._read_oqg2_3, self._read_oqg_4],  # buggy on isat random
             #b'OQGNO2'  : [self._read_oqg2_3, self._read_oqg_4],  # buggy on isat random
 
+            b'PSDF' : [self._read_psdf_3, self._read_psdf_4],  # MSC NASA/goesr
+
             #=======================
             # MPC Forces
             # these are NX tables
@@ -1721,6 +1723,96 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         if hasattr(self, 'subtable_name'):
             del self.subtable_name
 
+    def _read_psdf_3(self, data, ndata):
+        """reads the PSDF table"""
+        #(50, 2011, 4001, 0, 302130, 3
+        # strip off the title
+        unused_three = self.parse_approach_code(data)
+        self.words = [
+            'approach_code', 'table_code', '???', 'isubcase',
+            '???', '???', '???', 'random_code',
+            'format_code', 'num_wide', '???', '???',
+            'acoustic_flag', '???', '???', '???',
+            '???', '???', '???', '???',
+            '???', '???', 'thermal', '???',
+            '???', 'Title', 'subtitle', 'label'
+        ]
+
+        ## random code
+        self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
+        self._read_title(data)
+
+        # simplifying to see the data better
+        del self.data_code['title']
+        del self.data_code['label']
+        del self.data_code['subtitle']
+        del self.data_code['subtitle_original']
+        del self.data_code['superelement_adaptivity_index']
+        #del self.data_code['pval_step']
+        del self.data_code['table_name']
+
+        del self.data_code['_encoding']
+        del self.data_code['load_as_h5']
+        del self.data_code['h5_file']
+        del self.data_code['is_msc']
+        del self.data_code['pval_step']
+
+        # wrong
+        del self.data_code['isubcase']
+        #del self.data_code['random_code']
+        #del self.data_code['sort_bits']
+        #del self.data_code['device_code']
+        #del self.data_code['sort_code']
+        #del self.data_code['sort_method']
+        #print(self.data_code)
+
+        #aaa
+        #self._read_oug1_3(data, ndata)
+        if self.read_mode == 1:
+            return ndata
+        # just stripping off title
+        #self.show_data(data[:200], types='if')
+
+        #  stripping off zeros
+        #self.show_data(data[:52], types='ifs')
+
+        approach_code, tcode, int3, frame_id, int5, dof, float7, rms_value, float9, int10 = unpack(
+            self._endian + b'6i 2f fi', data[:40])
+        node = int5 // 10
+        #dof = int5 % 10
+        #from pyNastran.op2.op2_interface.op2_codes import TABLE_CODE_MAP
+        #title = self.title
+        #subtitle = self.subtitle
+        #label = self.label
+        #approach_code={iapproach_code}  tcode={tcode} table_code={self.table_code}
+        #print(f'analysis_code={self.analysis_code} '
+              #f'table={TABLE_CODE_MAP[self.table_code]!r} int3={int3} frame_id={frame_id} node={node} dof={dof} '
+              #f'float7={float7} rms_value={rms_value:.5e} float9={float9:.4e} int10={int10}')
+        #print(f'title={title!r} subtitle={subtitle!r} label={label!r}')
+        self.node = node
+        self.dof = dof
+        return ndata
+        #self.show_data(data, types='ifs', endian=None)
+        #aaaa
+
+    def _read_psdf_4(self, data, ndata):
+        """reads the PSDF table"""
+        if self.read_mode == 1:
+            return ndata
+        #self.show_data(data[:100], types='ifs', endian=None)
+        data2 = np.frombuffer(data, dtype=self.fdtype)
+        ndata = len(data2)
+        nfreqs = ndata // 2
+        data2 = data2.reshape(nfreqs, 2)
+        #last2 = data2[-2:, 1]
+        #self.log.warning(f'skipping PSDF; nfreqs={nfreqs} [{last2[0]:.6e},{last2[1]:.6e}] '
+                         #f'ymin={data2[:,1].min():.6e} ymax={data2[:,1].max():.6e}') #  {self.data_code}
+        # self.show_data(), self._read_psdf_4
+        key = (self.label, self.analysis_code, self.node, self.dof)
+        assert key not in self.op2_results.psds
+        self.op2_results.psds[key] = data2
+        del self.node
+        del self.dof
 
 def main():  # pragma: no cover
     """testing pickling"""

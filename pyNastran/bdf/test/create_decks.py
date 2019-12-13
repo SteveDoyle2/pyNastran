@@ -10,6 +10,67 @@ from pyNastran.utils.nastran_utils import run_nastran
 # no files are written if RUN_NASTRAN is False
 RUN_NASTRAN = False
 
+solutions = (
+    'SOL 1',
+    'SOL 3', # modal
+    'SOL 5',
+    'SOL 7',
+    'SOL 8',
+    'SOL 21',
+    'SOL 24',
+    'SOL 25',
+    'SOL 26',
+    'SOL 27',
+    'SOL 28',
+    'SOL 29',
+    'SOL 47',
+    'SOL 48',
+    'SOL 60',
+    'SOL 61',
+    'SOL 62',
+    'SOL 63',
+    'SOL 64',
+    'SOL 66',
+    'SOL 67',
+    'SOL 68',
+    'SOL 74',
+    'SOL 75',
+    'SOL 76',
+    'SOL 81',
+    'SOL 82',
+    'SOL 83',
+    'SOL 88',
+    'SOL 89',
+    'SOL 91',
+    'SOL 99',
+    #'SOL 3',
+    'SOL 100',
+    'SOL USERDMAP',
+    'SOL MAIN',
+    'SOL XXX',
+    'SOL 101', 'SOL STATIC', 'SOL SESTATIC',
+    'SOL 103', 'SOL SEMODES',
+    'SOL 105', 'SOL BUCKLING',
+    'SOL 106', 'SOL NLSTATIC', # nonlinear static
+    'SOL 107', 'SOL SEMFREQ', # direct complex frequency response
+    'SOL 108', 'SOL SEDFREQ', # direct frequency response
+    'SOL 109', 'SOL SEDTRAN', # time linear?
+    'SOL 110', 'SOL SEDCEIG', # modal complex eigenvalue
+    'SOL 111', 'SOL SEMFREQ', # modal frequency response
+    'SOL 112', 'SOL SEMTRAN', # modal transient response
+    'SOL 114',  #
+    'SOL 115',  #
+    'SOL 118',  #
+    'SOL 126',
+    'SOL 129', 'SOL NLTRAN', # time nonlinear
+    'SOL 144', # static aero
+    'SOL 145', # flutter
+    'SOL 146', # gust
+    'SOL 153', 'SOL NLSCSH', # nonlinear thermal
+    'SOL 159', # nonlinear transient thermal
+    'SOL 190', 'SOL DBTRANS',
+    'SOL 200',  # optimization
+)
 def main():
     nastran_path = r'C:\Program Files\Siemens\SimcenterNastran_2019.2\bin\nastran.exe'
     print(sys.argv)
@@ -73,68 +134,7 @@ def update_with_post(fname, dirname):
             while '  ' in line_upper:
                 line_upper = line_upper.replace('  ', ' ')
 
-            if ('SOL 1' in line_upper or
-                'SOL 3' in line_upper or # modal
-                'SOL 5' in line_upper or
-                'SOL 7' in line_upper or
-                'SOL 8' in line_upper or
-                'SOL 21' in line_upper or
-                'SOL 24' in line_upper or
-                'SOL 25' in line_upper or
-                'SOL 26' in line_upper or
-                'SOL 27' in line_upper or
-                'SOL 28' in line_upper or
-                'SOL 29' in line_upper or
-                'SOL 47' in line_upper or
-                'SOL 48' in line_upper or
-                'SOL 60' in line_upper or
-                'SOL 61' in line_upper or
-                'SOL 62' in line_upper or
-                'SOL 63' in line_upper or
-                'SOL 64' in line_upper or
-                'SOL 66' in line_upper or
-                'SOL 67' in line_upper or
-                'SOL 68' in line_upper or
-                'SOL 74' in line_upper or
-                'SOL 75' in line_upper or
-                'SOL 76' in line_upper or
-                'SOL 81' in line_upper or
-                'SOL 82' in line_upper or
-                'SOL 83' in line_upper or
-                'SOL 88' in line_upper or
-                'SOL 89' in line_upper or
-                'SOL 91' in line_upper or
-                'SOL 99' in line_upper or
-                #'SOL 3' in line_upper or
-                'SOL 100'  in line_upper or
-                'SOL USERDMAP' in line_upper or
-                'SOL MAIN' in line_upper or
-                'SOL XXX' in line_upper or
-                'SOL 101' in line_upper or 'SOL STATIC' in line_upper or 'SOL SESTATIC' in line_upper or
-                'SOL 103' in line_upper or 'SOL SEMODES' in line_upper or
-                'SOL 105' in line_upper or 'SOL BUCKLING' in line_upper or
-                'SOL 106' in line_upper or 'SOL NLSTATIC' in line_upper or # nonlinear static
-                'SOL 107' in line_upper or 'SOL SEMFREQ' in line_upper or # direct complex frequency response
-                'SOL 108' in line_upper or 'SOL SEDFREQ' in line_upper or # direct frequency response
-                'SOL 109' in line_upper or 'SOL SEDTRAN' in line_upper or # time linear?
-                'SOL 110' in line_upper or 'SOL SEDCEIG' in line_upper or # modal complex eigenvalue
-                'SOL 111' in line_upper or 'SOL SEMFREQ' in line_upper or # modal frequency response
-                'SOL 112' in line_upper or 'SOL SEMTRAN' in line_upper or # modal transient response
-                'SOL 114' in line_upper or  #
-                'SOL 115' in line_upper or  #
-                'SOL 118' in line_upper or  #
-                'SOL 126' in line_upper or
-                'SOL 129' in line_upper or 'SOL NLTRAN' in line_upper or # time nonlinear
-                #'SOL 112' in line_upper or
-                #'SOL 112' in line_upper or
-                #'SOL 112' in line_upper or
-                'SOL 144' in line_upper or # static aero
-                'SOL 145' in line_upper or # flutter
-                'SOL 146' in line_upper or # gust
-                'SOL 153' in line_upper or 'SOL NLSCSH' in line_upper or # nonlinear thermal
-                'SOL 159' in line_upper or # nonlinear transient thermal
-                'SOL 190' in line_upper or 'SOL DBTRANS' in line_upper or
-                'SOL 200' in line_upper):  # optimization
+            if any(sol in line_upper for sol in solutions):
                 continue
 
             print('%r' % line_upper)
