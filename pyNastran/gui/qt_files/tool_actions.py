@@ -186,6 +186,15 @@ class ToolActions:
         elif isinstance(max_value, str):
             max_msg = 'Max:  %s' % str(max_value)
             min_msg = 'Min:  %s' % str(min_value)
+        elif (isinstance(max_value, float) or
+              hasattr(max_value, 'dtype') and max_value.dtype.name in ['float32']):
+            max_msg = 'Max:  %g' % max_value
+            min_msg = 'Min:  %g' % min_value
+
+        elif hasattr(max_value, 'dtype') and max_value.dtype.name in ['complex64']:
+            raise RuntimeError(f'{max_value.dtype.name} should be a magnitude')
+            #max_msg = 'Max:  %g, %gj' % (max_value.real, max_value.imag)
+            #min_msg = 'Min:  %g, %gj' % (min_value.real, min_value.imag)
         else:
             max_msg = 'Max:  %g' % max_value
             min_msg = 'Min:  %g' % min_value

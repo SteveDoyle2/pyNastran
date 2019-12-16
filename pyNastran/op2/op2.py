@@ -206,6 +206,7 @@ class OP2(OP2_Scalar, OP2Writer):
         skip_results.add('gpdt')
         skip_results.add('bgpdt')
         skip_results.add('eqexin')
+        skip_results.add('psds')
 
         if not self.read_mode == op2_model.read_mode:
             self.log.warning('self.read_mode=%s op2_model.read_mode=%s ... assume True' % (
@@ -587,7 +588,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
         result_types = self.get_table_types()
         for result_type in result_types:
-            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin'] or result_type.startswith('responses.'):
+            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin', 'psds'] or result_type.startswith('responses.'):
                 continue
             result = self.get_result(result_type)
             for obj in result.values():
@@ -627,8 +628,9 @@ class OP2(OP2_Scalar, OP2Writer):
                     raise NotImplementedError()
                     #continue
 
+        skip_pandas = ['params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds']
         for result_type in result_types:
-            if result_type in ['params', 'gpdt', 'bgpdt', 'eqexin', 'grid_point_weight'] or result_type.startswith('responses.'):
+            if result_type in skip_pandas or result_type.startswith('responses.'):
                 #self.log.debug('skipping %s' % result_type)
                 continue
 
@@ -956,8 +958,9 @@ class OP2(OP2_Scalar, OP2Writer):
         """
         keys = []
         table_types = self.get_table_types()
+        skip_tables = ['gpdt', 'bgpdt', 'eqexin', 'grid_point_weight', 'psds']
         for table_type in sorted(table_types):
-            if table_type in ['gpdt', 'bgpdt', 'eqexin', 'grid_point_weight'] or table_type.startswith('responses.'):
+            if table_type in skip_tables or table_type.startswith('responses.'):
                 continue
             result_type_dict = self.get_result(table_type)
             #if result_type_dict is None: # gpdt, eqexin

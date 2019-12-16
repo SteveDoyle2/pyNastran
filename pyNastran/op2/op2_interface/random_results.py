@@ -1,3 +1,5 @@
+import numpy as np
+
 class RandomObjects:
     prefix = ''
     postfix = ''
@@ -145,6 +147,137 @@ class RandomObjects:
 
         ]
         return [self.prefix + table + self.postfix for table in tables]
+
+class PSDObjects():
+    """storage class for the ATO objects"""
+    prefix = 'psds.'
+    postfix = ''
+    def __init__(self):
+        self.displacements = {}
+        self.velocities = {}
+        self.accelerations = {}
+        self.spc_forces = {}
+        self.load_vectors = {}
+        self.force = {}
+        self.stress = {}
+        self.strain = {}
+
+    def get_table_types(self):
+        tables = self._tables()
+        return [self.prefix + table + self.postfix for table in tables]
+
+    def _tables(self):
+        tables = [
+            'displacements', 'velocities', 'accelerations',
+            'spc_forces', 'load_vectors',
+            'force', 'stress', 'strain',
+        ]
+        return tables
+
+    def get_results(self):
+        tables = self._tables()
+        results = {}
+        for table in tables:
+            result = getattr(self, table)
+            if result:
+                results[table] = result
+        return results
+
+    def get_stats(self, short=True):
+        msg = ''
+        psds_dict = self.get_results()
+
+        for result_type, slot in psds_dict.items():
+            npsds = len(slot)
+
+            if short:
+                msg += f'op2_results.psds.{result_type}; n={npsds}\n'
+            else:
+                ipsd = 0
+                msg += f'op2_results.psds.{result_type}:\n'
+                msg += f'  # (subtitle, analysis_code, stress_strain_flag, node, dof)\n'
+                for key in slot:
+                    msg += f'  {key}\n'
+                    if ipsd == 10:
+                        msg += f'  ... npsds={npsds}\n'
+                        break
+                    ipsd += 1
+                msg += '\n'
+        return msg
+
+    def write_f06(self, f06):
+        psd_results = self.get_results()
+        if not psd_results:
+            return
+
+        from collections import defaultdict
+        from scipy.integrate import trapz
+        psds_subtitle = defaultdict(dict)
+        for res_type, psds in psd_results.items():
+            for key, psd in psds.items():
+                (subtitle, nid, dof) = key
+                psds_subtitle[subtitle][(res_type, nid, dof)] = psd
+
+        psd_type_map = {
+            'displacements' : 'DISP',
+            'velocities' : 'VELO',
+            'accelerations' : 'ACCE',
+            'load_vectors' : 'OLOAD',
+            'spc_forces' : 'SPCF',
+            'force' : 'EL FOR',
+            'stress' : 'EL STR',
+            'strain' : 'STRAIN',
+        }
+        import matplotlib.pyplot as plt
+        for subtitle, psds in psds_subtitle.items():
+            f06.write(subtitle + '\n')
+            f06.write('0                             X Y - O U T P U T  S U M M A R Y  ( A U T O  O R  P S D F )\n')
+            f06.write('0 PLOT  CURVE FRAME    CURVE ID./       RMS       NO. POSITIVE   XMIN FOR   XMAX FOR   YMIN FOR    X FOR     YMAX FOR    X FOR*\n')
+            f06.write('  TYPE   TYPE   NO.  PANEL  : GRID ID    VALUE        CROSSINGS   ALL DATA   ALL DATA   ALL DATA     YMIN     ALL DATA     YMAX\n')
+
+            fig = plt.figure(1)
+            for (res_type, nid, dof), psd in psds.items():
+                try:
+                    psd_type = psd_type_map[res_type]
+                except KeyError:
+                    raise NotImplementedError(f'res_type = {res_type}')
+                    #psd_type = analysis_code
+
+                #rms_value = 2.879461E+00
+                #no_crossings = 2.879461E+00
+                #no_crossings = np.nan
+                freqs, psd = psd[:, 0], psd[:, 1]
+                plt.plot(freqs, psd, name=f'(restype,nid,dof)=({res_type}, {nid}, {dof})')
+                ymin = psd.min()
+                ymax = psd.max()
+                imin = np.where(psd == ymin)[0][0]
+                imax = np.where(psd == ymax)[0][0]
+                xmin = freqs[imin]
+                xmax = freqs[imax]
+                fmin = freqs.min()
+                fmax = freqs.max()
+
+                # If you want the RMS value, this is computed as RMS = SQRT(SUM(PSD*DF)) and,
+                # where DF is the spectral resolution, where you integarate from Fmin to Fmax,
+                # i.e. your lowest and highest analysis frequency of interest, respectively.
+                psd_f = trapz(psd, freqs)
+                rms = psd_f ** 0.5
+                if psd_f == 0.0:
+                    # really this is nan, but that's Nastran for you
+                    no_crossings = 0.0
+                else:
+                    f2_psd_f = trapz(freqs**2 * psd, freqs)
+                    no_crossings = (f2_psd_f / psd_f) ** 0.5  # Hz
+
+                #print('ymin=%s ymax=%s xmin=%s xmax=%s fmin=%s fmax=%s' % (ymin, ymax, xmin, xmax, fmin, fmax))
+                #'0                             X Y - O U T P U T  S U M M A R Y  ( A U T O  O R  P S D F )'
+                #'0 PLOT  CURVE FRAME    CURVE ID./       RMS       NO. POSITIVE   XMIN FOR   XMAX FOR   YMIN FOR    X FOR     YMAX FOR    X FOR*'
+                #'    TYPE   TYPE   NO.  PANEL  : GRID ID    VALUE        CROSSINGS   ALL DATA   ALL DATA   ALL DATA     YMIN     ALL DATA     YMAX'
+                #'    PSDF ACCE       0  9400703(  5)    2.879461E+00  8.191217E+02  2.000E+01  2.000E+03  4.476E-06  7.900E+01  1.474E+00  3.980E+01'
+                f06.write('0                                      \n')
+                f06.write(f'  PSDF {psd_type:6s}     0 {nid:8d}( {dof:2d})    {rms:8.6E}  {no_crossings:9.6E}  {fmin:9.3E}  {fmax:9.3E}  {ymin:9.3E}  {xmin:9.3E}  {ymax:9.3E}  {xmax:9.3E}\n')
+            plt.legend()
+        plt.show()
 
 class AutoCorrelationObjects(RandomObjects):
     """storage class for the ATO objects"""

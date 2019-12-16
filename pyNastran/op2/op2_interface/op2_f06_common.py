@@ -1127,17 +1127,7 @@ def _get_op2_stats(model: OP2, short=False):
     for key, weight in model.grid_point_weight.items():
         msg += weight.get_stats(key, short=short)
 
-    if model.op2_results.psds:
-        msg += f'op2_results.psds:\n'
-        npsds = len(model.op2_results.psds)
-        ipsd = 0
-        msg += f'  # (subtitle, analysis_code, node, dof)\n'
-        for key in model.op2_results.psds:
-            msg += f'  {key}\n'
-            if ipsd == 10:
-                msg += f'  ... npsds={npsds}\n'
-                break
-            ipsd += 1
+    msg += model.op2_results.psds.get_stats(short=short)
 
     table_types = model._get_table_types_testing()
 

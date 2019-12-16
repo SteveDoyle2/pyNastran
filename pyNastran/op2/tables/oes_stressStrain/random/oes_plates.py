@@ -159,10 +159,29 @@ class RandomPlateArray(OES_Object):
         import pandas as pd
         headers = self.get_headers()
         column_names, column_values = self._build_dataframe_transient_header()
+        #print(f'column_names = {column_names} column_values={column_values}')
+
+        #print(self.element_node)
         self.data_frame = pd.Panel(self.data, items=column_values,
                                    major_axis=self.element_node, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
+
+        return
+        names = ['ElementID', 'NodeID']
+        ipos = np.where(self.element_node[:, 0] > 0)
+        element_node = [
+            self.element_node[ipos, 0],
+            self.element_node[ipos, 1],
+        ]
+
+        data_frame = self._build_pandas_transient_element_node(
+            column_values, column_names,
+            headers, element_node, self.data[:, ipos, :], from_tuples=False, from_array=True,
+            names=names,
+        )
+        #print(data_frame)
+        #self.dataframe = data_frame
 
     def __eq__(self, table):  # pragma: no cover
         assert self.is_sort1 == table.is_sort1
@@ -245,13 +264,13 @@ class RandomPlateArray(OES_Object):
         #print(self.element_types2, element_type, self.element_types2.dtype)
 
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1]
+        self.data[self.itime, self.itotal, :] = [oxx1, oyy1, txy1]
         self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
         self.fiber_curvature[self.itotal] = fd1
         #self.ielement += 1
         self.itotal += 1
 
-        self.data[self.itime, self.itotal] = [oxx2, oyy2, txy2]
+        self.data[self.itime, self.itotal, :] = [oxx2, oyy2, txy2]
         self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
         self.fiber_curvature[self.itotal] = fd2
         self.itotal += 1
@@ -320,13 +339,13 @@ class RandomPlateArray(OES_Object):
         #print('%s itotal=%s dt=%s eid=%s nid=%-5s oxx=%s' % (self.element_name, self.itotal, dt, eid, nid, oxx1))
 
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
-        self.data[self.itime, self.itotal] = [oxx1, oyy1, txy1, ovm1]
+        self.data[self.itime, self.itotal, :] = [oxx1, oyy1, txy1, ovm1]
         self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
         self.fiber_curvature[self.itotal] = fd1
         #self.ielement += 1
         self.itotal += 1
 
-        self.data[self.itime, self.itotal] = [oxx2, oyy2, txy2, ovm2]
+        self.data[self.itime, self.itotal, :] = [oxx2, oyy2, txy2, ovm2]
         self.element_node[self.itotal, :] = [eid, nid]  # 0 is center
         self.fiber_curvature[self.itotal] = fd2
         self.itotal += 1

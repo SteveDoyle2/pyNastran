@@ -198,8 +198,9 @@ def _write_result_tables(obj: OP2, fop2, fop2_ascii, struct_3i, endian, skips):
         'OGS1',
         'OEFIT',
     ]
+    skip_results = ['gpdt', 'bgpdt', 'eqexin', 'psds']
     for table_type in obj.get_table_types():
-        if table_type in ['gpdt', 'bgpdt', 'eqexin'] or table_type in skips or table_type.startswith('responses.'):
+        if table_type in skip_results or table_type in skips or table_type.startswith('responses.'):
             continue
 
         res_dict = obj.get_result(table_type)

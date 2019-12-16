@@ -295,7 +295,7 @@ class GuiQtCommon(GuiAttributes):
         location = obj.get_location(i, name)
         methods = obj.get_methods(i)
         #scale = obj.get_scale(i, name)
-        #phase = obj.get_phase(i, name)
+        phase = obj.get_phase(i, name)
         label2 = obj.get_header(i, name)
         out = obj.get_nlabels_labelsize_ncolors_colormap(i, name)
         nlabels, labelsize, ncolors, colormap = out
@@ -324,7 +324,7 @@ class GuiQtCommon(GuiAttributes):
         name_str = self._names_storage.get_name_string(name)
         #return name, normi, vector_size, min_value, max_value, norm_value
 
-        grid_result = self.set_grid_values(name_tuple, normi, vector_size)
+        grid_result = self.set_grid_values(name_tuple, normi, vector_size, phase)
 
         data = FringeData(
             icase, result_type, location, min_value, max_value, norm_value,
@@ -946,7 +946,7 @@ class GuiQtCommon(GuiAttributes):
         if self._names_storage.has_exact_name(name):
             grid_result = None
         else:
-            grid_result = self.set_grid_values(name, normi, vector_size)
+            grid_result = self.set_grid_values(name, normi, vector_size, phase)
 
         if vector_size0 == 1:
             name_vector = None
@@ -957,7 +957,7 @@ class GuiQtCommon(GuiAttributes):
             if self._names_storage.has_exact_name(name_vector):
                 grid_result_vector = None
             else:
-                grid_result_vector = self.set_grid_values(name_vector, case, vector_size)
+                grid_result_vector = self.set_grid_values(name_vector, case, vector_size, phase)
 
         self.final_grid_update(icase, name, grid_result,
                                name_vector, grid_result_vector,
@@ -1068,7 +1068,7 @@ class GuiQtCommon(GuiAttributes):
                                 #min_value, max_value, label)
         self.vtk_interactor.Render()
 
-    def set_grid_values(self, name, case, vector_size, is_low_to_high=True):
+    def set_grid_values(self, name, case, vector_size: int, phase: float):
         """
         https://pyscience.wordpress.com/2014/09/06/numpy-to-vtk-converting-your-numpy-arrays-to-vtk-arrays-and-files/
         """
@@ -1083,6 +1083,14 @@ class GuiQtCommon(GuiAttributes):
             data_type = vtk.VTK_INT
             self.grid_mapper.InterpolateScalarsBeforeMappingOn()
         elif issubdtype(case.dtype, np.floating):
+            data_type = vtk.VTK_FLOAT
+            self.grid_mapper.InterpolateScalarsBeforeMappingOff()
+        elif case.dtype.name in ['complex64']:
+            if phase:
+                phaser = np.radians(phase)
+                case = (np.cos(phaser) * case.real + np.sin(phaser) * case.imag).real
+            else:
+                case = case.real
             data_type = vtk.VTK_FLOAT
             self.grid_mapper.InterpolateScalarsBeforeMappingOff()
         else:

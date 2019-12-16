@@ -1776,8 +1776,16 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #  stripping off zeros
         #self.show_data(data[:52], types='ifs')
 
-        approach_code, tcode, int3, frame_id, int5, dof, float7, rms_value, float9, int10 = unpack(
-            self._endian + b'6i 2f fi', data[:40])
+        #self.show_data(data[:40], types='if')
+
+        approach_code, tcode, int3, frame_id, int5, dof, float7, rms_value, float9, int10, stress_strain_flag = unpack(
+            self._endian + b'6i 3f 2i', data[:44])
+        self.stress_strain_flag = stress_strain_flag
+
+        ints = np.frombuffer(data[:200], dtype=self.idtype)
+        if ints[11:].max() > 0:
+            self.log.warning(f'ints11 = {ints[11:].tolist()}')
+
         node = int5 // 10
         #dof = int5 % 10
         #from pyNastran.op2.op2_interface.op2_codes import TABLE_CODE_MAP
@@ -1786,11 +1794,38 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #label = self.label
         #approach_code={iapproach_code}  tcode={tcode} table_code={self.table_code}
         #print(f'analysis_code={self.analysis_code} '
-              #f'table={TABLE_CODE_MAP[self.table_code]!r} int3={int3} frame_id={frame_id} node={node} dof={dof} '
-              #f'float7={float7} rms_value={rms_value:.5e} float9={float9:.4e} int10={int10}')
         #print(f'title={title!r} subtitle={subtitle!r} label={label!r}')
+
+        if (self.analysis_code, self.table_code, self.stress_strain_flag) == (5, 1, 0):
+            word = 'displacements'
+        elif (self.analysis_code, self.table_code, self.stress_strain_flag) == (5, 2, 0):
+            word = 'load_vectors'
+        elif (self.analysis_code, self.table_code, self.stress_strain_flag) == (5, 3, 0):
+            word = 'spc_forces'
+        elif (self.analysis_code, self.table_code, self.stress_strain_flag) == (5, 4, 0):
+            word = 'force'
+
+        elif (self.analysis_code, self.table_code, self.stress_strain_flag) == (5, 5, 0):
+            word = 'stress'
+        elif (self.analysis_code, self.table_code, self.stress_strain_flag) == (5, 5, 2):
+            word = 'strain'
+
+        elif (self.analysis_code, self.table_code, self.stress_strain_flag) == (5, 10, 0):
+            word = 'velocities'
+        elif (self.analysis_code, self.table_code, self.stress_strain_flag) == (5, 11, 0):
+            word = 'accelerations'
+        else:  # pragma: no cover
+            #print(f'table_code={self.table_code} table={TABLE_CODE_MAP[self.table_code]!r}')
+            print(f'analysis_code={self.analysis_code} approach_code={approach_code} tcode={tcode} table_code={self.table_code} '
+                  f'int3={int3} frame_id={frame_id} node={node} dof={dof} '
+                  f'float7={float7} rms_value={rms_value:.5e} float9={float9:.4e} int10={int10} stress_strain_flag={stress_strain_flag}')
+            raise NotImplementedError(f'analysis_code={self.analysis_code} '
+                                      f'table_code={self.table_code} '
+                                      f'stress_strain_flag={self.stress_strain_flag} is not supported')
+
         self.node = node
         self.dof = dof
+        self.word = word
         return ndata
         #self.show_data(data, types='ifs', endian=None)
         #aaaa
@@ -1808,11 +1843,13 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #self.log.warning(f'skipping PSDF; nfreqs={nfreqs} [{last2[0]:.6e},{last2[1]:.6e}] '
                          #f'ymin={data2[:,1].min():.6e} ymax={data2[:,1].max():.6e}') #  {self.data_code}
         # self.show_data(), self._read_psdf_4
-        key = (self.label, self.analysis_code, self.node, self.dof)
-        assert key not in self.op2_results.psds
-        self.op2_results.psds[key] = data2
+        key = (self.label, self.node, self.dof)
+        slot = getattr(self.op2_results.psds, self.word)
+        assert key not in slot, slot
+        slot[key] = data2
         del self.node
         del self.dof
+        del self.word
 
 def main():  # pragma: no cover
     """testing pickling"""

@@ -673,6 +673,8 @@ THERMAL_MAP = {
 TABLE_CODE_MAP = {
     2 : "OPG - Load vector",
     3 : "OQG - SPC Force vector",
+    #4: 'OEF - Element force/flux',
+    #5: 'OES - Element Stress/Strain',
     6 : "LAMA - Eigenvalue summary",
     7 : "OUG - Eigenvector",
     8 : "none - Grid point singularity table (obsolete)",

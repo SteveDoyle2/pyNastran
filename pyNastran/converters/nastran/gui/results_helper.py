@@ -747,7 +747,8 @@ class NastranGuiResults(NastranGuiAttributes):
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate stress objects"""
         icase = icase_old
-        if self.settings.nastran_stress:
+        settings = self.settings
+        if settings.nastran_stress:
             for itime, unused_dt in enumerate(times):
                 # shell stress
                 try:
@@ -762,25 +763,31 @@ class NastranGuiResults(NastranGuiAttributes):
 
         #self.settings.nastran_plate_stress
         eids = self.element_ids
-        if self.settings.nastran_plate_stress:
+        if settings.nastran_plate_stress:
             icase = get_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=True)
-        if self.settings.nastran_composite_plate_stress:
+        icase = get_plate_stress_strains(
+            eids, cases, model, times, key, icase,
+            form_dict, header_dict, keys_map, is_stress=True,
+            prefix='modal_contribution',
+        )
+
+        if settings.nastran_composite_plate_stress:
             icase = get_composite_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map,
                 self.stress[key].composite_data_dict, is_stress=True)
 
-        if self.settings.nastran_rod_stress:
+        if settings.nastran_rod_stress:
             icase = get_rod_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=True)
-        if self.settings.nastran_bar_stress:
+        if settings.nastran_bar_stress:
             icase = get_bar_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=True)
-        if self.settings.nastran_beam_stress:
+        if settings.nastran_beam_stress:
             icase = get_beam_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=True)
@@ -821,6 +828,12 @@ class NastranGuiResults(NastranGuiAttributes):
             icase = get_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=False)
+        icase = get_plate_stress_strains(
+            eids, cases, model, times, key, icase,
+            form_dict, header_dict, keys_map, is_stress=False,
+            prefix='modal_contribution',
+        )
+
         if self.settings.nastran_composite_plate_strain:
             icase = get_composite_plate_stress_strains(
                 eids, cases, model, times, key, icase,
@@ -1356,7 +1369,8 @@ def _get_t123_tnorm(case, nids, nnodes: int, t123_offset: int=0):
     ntimes = case.ntimes
 
     if nnodes != ndata:
-        t123i = np.zeros((ntimes, nnodes, 3), dtype='float32')
+        dtype = t123.dtype.name
+        t123i = np.zeros((ntimes, nnodes, 3), dtype=dtype)
         t123i[:, j, :] = t123
         t123 = t123i
 
@@ -1374,7 +1388,12 @@ def _get_t123_tnorm(case, nids, nnodes: int, t123_offset: int=0):
         try:
             tnorm = norm(t123, axis=1)
         except FloatingPointError:
-            t123 = t123.astype(dtype='float64')
+            dtype_map = {
+                'float32': 'float64',
+                'complex64': 'complex128',
+            }
+            dtype = dtype_map[t123.dtype.name]
+            t123 = t123.astype(dtype=dtype)
             tnorm = norm(t123, axis=1)
 
             #print('skipping %s' % name)
@@ -2126,35 +2145,51 @@ def get_beam_stress_strains(eids, cases, model, times, key, icase,
     return icase
 
 def get_plate_stress_strains(eids, cases, model, times, key, icase,
-                             form_dict, header_dict, keys_map, is_stress):
+                             form_dict, header_dict, keys_map, is_stress,
+                             prefix=''):
     """
     helper method for _fill_op2_time_centroidal_stress.
     Gets the max/min stress for each layer.
     """
     #print("***stress eids=", eids)
     subcase_id = key[0]
+    if prefix == 'modal_contribution':
+        results = model.op2_results.modal_contribution
+        preword = 'Modal Contribution '
+    elif prefix == '':
+        results = model
+        preword = ''
+    else:  # pragma: no cover
+        aa
+        raise NotImplementedError(prefix)
+
+    print(f'preword = {preword}')
     if is_stress:
         plates = [
-            model.ctria3_stress, model.cquad4_stress,
-            model.ctria6_stress, model.cquad8_stress,
-            model.ctriar_stress, model.cquadr_stress,
+            results.ctria3_stress, results.cquad4_stress,
+            results.ctria6_stress, results.cquad8_stress,
+            results.ctriar_stress, results.cquadr_stress,
         ]
-        word = 'Stress'
+        word = preword + 'Stress'
     else:
         plates = [
-            model.ctria3_strain, model.cquad4_strain,
-            model.ctria6_strain, model.cquad8_strain,
-            model.ctriar_strain, model.cquadr_strain,
+            results.ctria3_strain, results.cquad4_strain,
+            results.ctria6_strain, results.cquad8_strain,
+            results.ctriar_strain, results.cquadr_strain,
         ]
-        word = 'Strain'
+        word = preword + 'Strain'
 
     #titles = []
     plate_cases = []
     plates_ieids = []
-    for result in plates:
+    #print('key =', key)
+    for iplate, result in enumerate(plates):
+        #if result:
+        #print(f'keys[{iplate}] = {result.keys()}')
         if key not in result:
             continue
         case = result[key]
+        #print(case)
 
         nnodes_per_element = case.nnodes
         nlayers_per_element = nnodes_per_element * 2
@@ -2232,8 +2267,10 @@ def get_plate_stress_strains(eids, cases, model, times, key, icase,
 
     scalars_array = []
     for case in plate_cases:
-        if case.is_complex:
-            continue
+        #if case.is_complex:
+            #print(f"skipping {case.class_name} because it's complex")
+            #model.log.warning(f"skipping {case.class_name} because it's complex")
+            #continue
 
         ntimes, nnodes_nlayers, nresults = case.data.shape
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
@@ -2502,13 +2539,20 @@ class LayeredTableResults(Table):
     def get_scalar(self, i, name):
         return self.get_result(i, name)
 
-    def get_min_max(self, i, name):
+    def get_magnitude(self, i, name):
         scalar = self.get_scalar(i, name)  # TODO: update
-        return np.nanmin(scalar), np.nanmax(scalar)
+        mag = scalar
+        if scalar.dtype.name in ['complex64']:
+            mag = np.sqrt(scalar.real ** 2 + scalar.imag ** 2)
+        return mag
+
+    def get_min_max(self, i, name):
+        mag = self.get_magnitude(i, name)
+        return np.nanmin(mag), np.nanmax(mag)
 
     def get_default_min_max(self, i, name):
-        scalar = self.get_scalar(i, name)
-        return np.nanmin(scalar), np.nanmax(scalar)
+        mag = self.get_magnitude(i, name)
+        return np.nanmin(mag), np.nanmax(mag)
 
     def get_result(self, i, name):
         (itime, ilayer, imethod, unused_header) = name

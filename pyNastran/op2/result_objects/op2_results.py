@@ -4,6 +4,7 @@ from pyNastran.op2.op2_interface.random_results import (
     ROUGV1, RADEFFM,
     AutoCorrelationObjects, PowerSpectralDensityObjects, RootMeansSquareObjects,
     CumulativeRootMeansSquareObjects, NumberOfCrossingsObjects,
+    PSDObjects,
 )
 from pyNastran.op2.result_objects.design_response import Responses
 
@@ -16,7 +17,7 @@ class Results:
         self.bgpdt = None
         self.responses = Responses()
 
-        self.psds = {}
+        self.psds = PSDObjects()
         self.ato = AutoCorrelationObjects()
         self.psd = PowerSpectralDensityObjects()
         self.rms = RootMeansSquareObjects()

@@ -756,7 +756,12 @@ class BaseElement(ScalarObject):
 
         ntimes, nelements = data.shape[:2]
         nheaders = len(headers)
-        A = data.reshape(ntimes, nelements*nheaders).T
+        try:
+            A = data.reshape(ntimes, nelements*nheaders).T
+        except ValueError:  # pragma: no cover
+            ntotal = ntimes * nelements * nheaders
+            print(f'data.shape={data.shape}; ntimes={ntimes} nelements={nelements} nheaders={nheaders}; ntotal={ntotal}')
+            raise
 
         if names is None:
             names = ['ElementID', 'NodeID', 'Item']

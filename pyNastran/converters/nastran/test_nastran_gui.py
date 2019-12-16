@@ -227,7 +227,7 @@ class TestNastranGUI(unittest.TestCase):
 
         # map strain energy
         keys = list(test.result_cases.keys())
-        assert len(keys) == 535, len(keys)
+        assert len(keys) == 617, len(keys)
         icase = keys[-1]
         obj, (itime, name) = test.result_cases[icase]
         test.icase_fringe = icase
