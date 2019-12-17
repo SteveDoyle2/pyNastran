@@ -101,10 +101,10 @@ class Tetgen:
         """reads a tetgen file"""
         self.nodes = read_nodes(node_filename)
         if dimension_flag == 2:
-            self.log.info('reading the *.smesh')
+            self.log.debug('reading the *.smesh')
             self.tris = self.read_smesh(smesh_filename)
         elif dimension_flag == 3:
-            self.log.info('reading the *.ele')
+            self.log.debug('reading the *.ele')
             self.tets = read_ele(ele_filename)
         else:
             raise RuntimeError('dimension_flag = %r and must be 2 or 3.' % dimension_flag)

@@ -794,14 +794,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=True)
 
-        #icase = get_solid_stress_strains(
-            #eids, cases, model, times, key, icase,
-            #form_dict, header_dict, keys_map, is_stress=True)
-
-        #icase = get_spring_stress_strains(
-            #eids, cases, model, times, key, icase,
-            #form_dict, header_dict, keys_map, is_stress=True)
-
+        icase = get_solid_stress_strains(
+            eids, cases, model, times, key, icase,
+            form_dict, header_dict, keys_map, is_stress=True)
+        icase = get_spring_stress_strains(
+            eids, cases, model, times, key, icase,
+            form_dict, header_dict, keys_map, is_stress=True)
 
         return icase
 
@@ -863,12 +861,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=False)
 
-        #icase = get_solid_stress_strains(
-            #eids, cases, model, times, key, icase,
-            #form_dict, header_dict, keys_map, is_stress=False)
-        #icase = get_spring_stress_strains(
-            #eids, cases, model, times, key, icase,
-            #form_dict, header_dict, keys_map, is_stress=False)
+        icase = get_solid_stress_strains(
+            eids, cases, model, times, key, icase,
+            form_dict, header_dict, keys_map, is_stress=False)
+        icase = get_spring_stress_strains(
+            eids, cases, model, times, key, icase,
+            form_dict, header_dict, keys_map, is_stress=False)
 
         return icase
 
@@ -1096,7 +1094,7 @@ def fill_responses(cases, model: OP2, icase):
             subcase_id = 0
             #eids = des_desvars['eids']
             fractional_mass = des_desvars['fractional_mass']
-            minp_res = GuiResult(subcase_id, header=f'Fractional Mass', title='% Mass',
+            minp_res = GuiResult(subcase_id, header='Fractional Mass', title='% Mass',
                                  location='centroid', scalar=fractional_mass, ) # data_format=fmt
             cases[icase] = (minp_res, (subcase_id, 'Fractional Mass'))
             form_optimization.append(('Fractional Mass', icase, []))
@@ -1756,27 +1754,10 @@ def get_rod_stress_strains(eids, cases, model, times, key, icase,
     #else:
         #vm_word = 'maxShear'
 
-    #headersi = case.get_headers()
-    #print('headersi =', headersi)
-
     scalars_array = []
     for case in rod_cases:
-        #if case.is_complex:
-            #model.log.warning(f'skipping complex Rod {word}')
-            #continue
-
-        #ntimes, nelements, nresults = case.data.shape
-        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
-        #                                         txy, angle,
-        #                                         majorP, minorP, ovm]
-
         keys_map[key] = (case.subtitle, case.label,
                          case.superelement_adaptivity_index, case.pval_step)
-
-        #nnodes_per_element = case.nnodes
-        #nelements_nnodes = nnodes_nlayers // 2
-        #nelements = nelements_nnodes // nnodes_per_element
-        #nlayers = 2
         scalars = case.data
         scalars_array.append(scalars)
 
@@ -1788,7 +1769,6 @@ def get_rod_stress_strains(eids, cases, model, times, key, icase,
     else:
         scalars_array = np.concatenate(scalars_array, axis=1)
 
-    #titles = []  # legend title
     headers = [] # sidebar word
     res = SimpleTableResults(
         subcase_id, headers, rod_ieids, ieid_max, scalars_array, methods,
@@ -2546,12 +2526,6 @@ def get_solid_stress_strains(eids, cases, model, times, key, icase,
             'omin' : 'σmin',
             'omid' : 'σmid',
             'von_mises' : 'σ von Mises',
-
-            #'axial' : 'σxx',
-            #'torsion' : 'τxy',
-            #'SMa' : 'MS_axial',
-            #'SMt' : 'MS_torsion',
-            #'von_mises' : 'σ von Mises',
         }
         data_format = '%.3f'
     else:
@@ -2624,6 +2598,7 @@ def get_solid_stress_strains(eids, cases, model, times, key, icase,
         subcase_id, headers, solid_ieids, ieid_max, scalars_array, methods,
         data_format=data_format,
         colormap='jet', uname='Solid ' + word)
+    return icase
 
     icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
                                         form_dict, header_dict, methods,
@@ -2720,6 +2695,7 @@ def get_spring_stress_strains(eids, cases, model, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Spring ' + word)
 
+    return icase
     icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
                                         form_dict, header_dict, methods,
                                         name='Spring')

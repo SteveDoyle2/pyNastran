@@ -2403,7 +2403,7 @@ class PSHELL(Property):
             z2 = abs(self.z2)
             t = self.t
             if not ((-1.5*t <= z1 <= 1.5*t) or (-1.5*t <= z2 <= 1.5*t)):
-                msg = (f'PSHELL pid={self.pid} midsurface: z1={self.z1} z2={self.z2} t={t} '
+                msg = (f'PSHELL pid={self.pid} midsurface: z1={self.z1:g} z2={self.z2:g} t={t:g} '
                        f'not in range of -1.5t < zi < 1.5t')
                 model.log.warning(msg)
 

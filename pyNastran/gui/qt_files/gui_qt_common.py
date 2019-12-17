@@ -906,7 +906,7 @@ class GuiQtCommon(GuiAttributes):
 
         complex_types = ['complex64']
         if hasattr(max_value, 'dtype') and max_value.dtype.name in complex_types:
-            raise TypeError(min_value)
+            raise TypeError(max_value)
         if hasattr(min_value, 'dtype') and min_value.dtype.name in complex_types:
             raise TypeError(min_value)
 
