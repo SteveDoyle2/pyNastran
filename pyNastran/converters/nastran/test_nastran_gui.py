@@ -16,6 +16,7 @@ from pyNastran.bdf.cards.test.test_aero import get_zona_model
 from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.gui.testing_methods import FakeGUIMethods
 from pyNastran.converters.nastran.gui.nastran_io import NastranIO
+RED = (1., 0., 0.)
 
 
 class NastranGUI(NastranIO, FakeGUIMethods):
@@ -41,7 +42,6 @@ class TestNastranGUI(unittest.TestCase):
         is_loaded = test.settings.load(settings)
         assert is_loaded is True
 
-        RED = (1., 0., 0.)
         test.settings.set_annotation_size_color(size=10, color=None)
         #test.settings.set_annotation_size_color(size=10, color=RED)
 

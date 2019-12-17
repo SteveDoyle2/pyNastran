@@ -473,7 +473,7 @@ class NastranGuiResults(NastranGuiAttributes):
         if key in model.cbar_force:
             found_force = True
             ## CBAR-34
-            case = model.cbar_force[key]
+            case = model.cbar_force[key]  # type: np.ndarray
             if case.is_real:
                 eids = case.element
                 i = np.searchsorted(element_ids, eids)
@@ -749,7 +749,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate stress objects"""
         icase = icase_old
-        settings = self.settings
+        settings = self.settings  # type:  Settings
         if settings.nastran_stress:
             for itime, unused_dt in enumerate(times):
                 # shell stress
@@ -794,13 +794,13 @@ class NastranGuiResults(NastranGuiAttributes):
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=True)
 
-        icase = get_solid_stress_strains(
-            eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, is_stress=True)
+        #icase = get_solid_stress_strains(
+            #eids, cases, model, times, key, icase,
+            #form_dict, header_dict, keys_map, is_stress=True)
 
-        icase = get_spring_stress_strains(
-            eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, is_stress=True)
+        #icase = get_spring_stress_strains(
+            #eids, cases, model, times, key, icase,
+            #form_dict, header_dict, keys_map, is_stress=True)
 
 
         return icase
@@ -822,7 +822,7 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_centroidal_strain(self, cases, model, times, key, icase,
                                     form_dict, header_dict, keys_map) -> int:
         """Creates the time accurate strain objects"""
-        settings = self.settings  # typpe: Settings
+        settings = self.settings  # type: Settings
         if settings.nastran_strain:
             for itime, unused_dt in enumerate(times):
                 try:
@@ -863,12 +863,12 @@ class NastranGuiResults(NastranGuiAttributes):
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map, is_stress=False)
 
-        icase = get_solid_stress_strains(
-            eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, is_stress=False)
-        icase = get_spring_stress_strains(
-            eids, cases, model, times, key, icase,
-            form_dict, header_dict, keys_map, is_stress=False)
+        #icase = get_solid_stress_strains(
+            #eids, cases, model, times, key, icase,
+            #form_dict, header_dict, keys_map, is_stress=False)
+        #icase = get_spring_stress_strains(
+            #eids, cases, model, times, key, icase,
+            #form_dict, header_dict, keys_map, is_stress=False)
 
         return icase
 
@@ -1795,9 +1795,9 @@ def get_rod_stress_strains(eids, cases, model, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Rod ' + word)
 
-    icase = _add_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                 form_dict, header_dict, methods,
-                                 name='Rod')
+    icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+                                        form_dict, header_dict, methods,
+                                        name='Rod')
     return icase
 
 def get_bar_stress_strains(eids, cases, model, times, key, icase,
@@ -1974,9 +1974,9 @@ def get_bar_stress_strains(eids, cases, model, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Bar ' + word)
 
-    icase = _add_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                 form_dict, header_dict, methods,
-                                 name='Bar')
+    icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+                                        form_dict, header_dict, methods,
+                                        name='Bar')
     return icase
 
 def get_beam_stress_strains(eids, cases, model, times, key, icase,
@@ -2164,14 +2164,14 @@ def get_plate_stress_strains(eids, cases, model, times, key, icase,
         plates = [
             results.ctria3_stress, results.cquad4_stress,
             results.ctria6_stress, results.cquad8_stress,
-            results.ctriar_stress, results.cquadr_stress,
+            results.ctriar_stress, results.cquadr_stress, # results.cquad_stress,
         ]
         word = preword + 'Stress'
     else:
         plates = [
             results.ctria3_strain, results.cquad4_strain,
             results.ctria6_strain, results.cquad8_strain,
-            results.ctriar_strain, results.cquadr_strain,
+            results.ctriar_strain, results.cquadr_strain, # results.cquad_strain,
         ]
         word = preword + 'Strain'
 
@@ -2625,27 +2625,29 @@ def get_solid_stress_strains(eids, cases, model, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Solid ' + word)
 
-    icase = _add_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                 form_dict, header_dict, methods,
-                                 name='Solid')
+    icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+                                        form_dict, header_dict, methods,
+                                        name='Solid')
     return icase
 
 def get_spring_stress_strains(eids, cases, model, times, key, icase,
-                              form_dict, header_dict, keys_map, is_stress):
+                              form_dict, header_dict, keys_map, is_stress):  # pragma: no cover
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
-    #print("***stress eids=", eids)
     subcase_id = key[0]
     results = model
     if is_stress:
-        springs = [results.celas1_stress, results.celas2_stress, results.celas3_stress, results.celas4_stress]
+        springs = [
+            results.celas1_stress, results.celas2_stress,
+            results.celas3_stress, results.celas4_stress]
         word = 'Stress'
     else:
-        springs = [results.celas1_strain, results.celas2_strain, results.celas3_strain, results.celas4_strain]
+        springs = [
+            results.celas1_strain, results.celas2_strain,
+            results.celas3_strain, results.celas4_strain]
         word = 'Strain'
 
-    #titles = []
     spring_cases = []
     spring_ieids = []
     for result in springs:
@@ -2653,13 +2655,7 @@ def get_spring_stress_strains(eids, cases, model, times, key, icase,
             continue
         case = result[key]
 
-        #print(case)
-        #nnodes = case.get_nnodes()
-        #all_eidsi = case.element_node[:, 0]
-        #nall_eidsi = len(all_eidsi)
         eidsi = case.element
-        #nelementsi = nall_eidsi // nnodes
-        #eidsi = all_eidsi.reshape(nelementsi, nnodes)[:, 0]
 
         i = np.searchsorted(eids, eidsi)
         if len(i) != len(np.unique(i)):
@@ -2669,17 +2665,13 @@ def get_spring_stress_strains(eids, cases, model, times, key, icase,
             #print('  eids = %s' % eids)
             #print('  eidsiA = %s' % case.element_node[:, 0])
             #print('  eidsiB = %s' % eidsi)
-            msg = 'i%s (gap)=%s is not unique' % (case.element_name, str(i))
+            msg = 'i%s (spring)=%s is not unique' % (case.element_name, str(i))
             #msg = 'iplate=%s is not unique' % str(i)
             model.log.warning(msg)
             continue
         if i.max() == len(eids):
             model.log.error('skipping because lookup is out of range...')
             continue
-        #print('i =', i, i.max())
-        #print('eids =', eids, len(eids))
-        #print('eidsi =', eidsi, eids)
-        #print(f'------------adding i={i} for {case.element_name}-----------')
         spring_cases.append(case)
         spring_ieids.append(i)
     if not spring_ieids:
@@ -2692,83 +2684,25 @@ def get_spring_stress_strains(eids, cases, model, times, key, icase,
     case = spring_cases[0]
     case_headers = case.get_headers()
     if is_stress:
-        #sigma = 'σ'
         method_map = {
             'spring_stress' : 'σxx',
-            #'oyy' : 'σyy',
-            #'ozz' : 'σzz',
-            #'txy' : 'τxy',
-            #'tyz' : 'τyz',
-            #'txz' : 'τxz',
-
-            #'omax' : 'σmax',
-            #'omin' : 'σmin',
-            #'omid' : 'σmid',
-            #'von_mises' : 'σ von Mises',
-
-            #'axial' : 'σxx',
-            #'torsion' : 'τxy',
-            #'SMa' : 'MS_axial',
-            #'SMt' : 'MS_torsion',
-            #'von_mises' : 'σ von Mises',
         }
         data_format = '%.3f'
     else:
-        #sigma = 'ϵ'
         method_map = {
             'spring_strain' : 'ϵxx',
-            #'eyy' : 'ϵyy',
-            #'ezz' : 'ϵzz',
-            #'exy' : 'ϵxy',
-            #'eyz' : 'ϵyz',
-            #'exz' : 'ϵxz',
-
-            #'emax' : 'ϵmax',
-            #'emin' : 'ϵmin',
-            #'emid' : 'ϵmid',
-            #'von_mises' : 'ϵ von Mises',
         }
         data_format = '%.3e'
     methods = [method_map[headeri] for headeri in case_headers]
-    #if 'Mises' in methods:
-        #methods.append('Max shear')
-    #else:
-        #methods.append(f'{sigma} von Mises')
-
-    #if case.is_von_mises:
-        #vm_word = 'vonMises'
-    #else:
-        #vm_word = 'maxShear'
 
     #headersi = case.get_headers()
     #print('headersi =', headersi)
 
     scalars_array = []
     for case in spring_cases:
-        #if case.is_complex:
-            #model.log.warning(f'skipping complex Rod {word}')
-            #continue
-
-        #ntimes, nelements, nresults = case.data.shape
-        #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
-        #                                         txy, angle,
-        #                                         majorP, minorP, ovm]
-
         keys_map[key] = (case.subtitle, case.label,
                          case.superelement_adaptivity_index, case.pval_step)
-
-        #nnodes_per_element = case.nnodes
-        #nelements_nnodes = nnodes_nlayers // 2
-        #nelements = nelements_nnodes // nnodes_per_element
-        #nlayers = 2
-        #nnodes = case.get_nnodes()
         scalars = case.data
-        #print('scalars.shape', scalars.shape)
-        #ntimes, nall, nresults = scalars.shape
-        #nelements = nall // nnodes
-        #scalars_save = scalars.reshape(ntimes, nelements, nnodes, nresults)
-        #scalars_array.append(scalars_save[:, :, 0, :])
-        print(scalars.shape)
         scalars_array.append(scalars)
 
     if len(scalars_array) == 0:
@@ -2780,29 +2714,26 @@ def get_spring_stress_strains(eids, cases, model, times, key, icase,
         scalars_array = np.concatenate(scalars_array, axis=1)
     print('***', scalars_array.shape, methods)
 
-    #titles = []  # legend title
     headers = [] # sidebar word
     res = SimpleTableResults(
         subcase_id, headers, spring_ieids, ieid_max, scalars_array, methods,
         data_format=data_format,
         colormap='jet', uname='Spring ' + word)
 
-    icase = _add_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                 form_dict, header_dict, methods,
-                                 name='Spring')
+    icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+                                        form_dict, header_dict, methods,
+                                        name='Spring')
     return icase
 
-def _add_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                         form_dict, header_dict,
-                         methods, name):
+def _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+                                form_dict, header_dict,
+                                methods, name):
     times = case._times
     nmethods = len(methods)
-    if nmethods == 1:
+    if nmethods == 1 and 0:
         imethod = 0
         method = methods[imethod]
         for itime, dt in enumerate(times):
-            #dt = case._times[itime]
-            print('itime =', itime)
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
 
@@ -2812,7 +2743,6 @@ def _add_methods_to_form(icase, cases, key, subcase_id, word, res, case,
             icase += 1
     else:
         for itime, dt in enumerate(times):
-            #dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
             header_dict[(key, itime)] = header
 

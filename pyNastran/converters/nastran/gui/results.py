@@ -78,11 +78,15 @@ class LayeredTableResults(Table):
 
     def get_min_max(self, i, name):
         mag = self.get_magnitude(i, name)
-        return np.nanmin(mag), np.nanmax(mag)
+        if np.any(np.isfinite(mag)):
+            return np.nanmin(mag), np.nanmax(mag)
+        return np.nan, np.nan
 
     def get_default_min_max(self, i, name):
         mag = self.get_magnitude(i, name)
-        return np.nanmin(mag), np.nanmax(mag)
+        if np.any(np.isfinite(mag)):
+            return np.nanmin(mag), np.nanmax(mag)
+        return np.nan, np.nan
 
     def get_result(self, i, name):
         (itime, ilayer, imethod, unused_header) = name
