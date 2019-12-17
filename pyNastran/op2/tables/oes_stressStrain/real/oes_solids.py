@@ -257,6 +257,9 @@ class RealSolidArray(OES_Object):
         #self.element_node[self.ielement-1, self.inode-1, :] = [eid, node_id]
         self.itotal += 1
 
+    def get_nnodes(self):
+        return self.nnodes_per_element + 1
+
     @property
     def nnodes_per_element(self):
         if self.element_type == 39: # CTETRA

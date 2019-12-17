@@ -119,7 +119,7 @@ NO_THETA = [
     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
     'CBAR', 'CBEAM', 'CBEAM3',
     'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC',
-    'CONROD', 'CROD', 'PLOTEL',
+    'CONROD', 'CROD', 'CTUBE', 'PLOTEL',
     'CHBDYP', 'GENEL',
 ]
 

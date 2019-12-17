@@ -1,3 +1,4 @@
+from typing import Dict, Any
 import numpy as np
 
 class RandomObjects:
@@ -205,18 +206,37 @@ class PSDObjects():
                 msg += '\n'
         return msg
 
-    def write_f06(self, f06):
+    def get_psds_by_subtitles(self) -> Dict[Any, Any]:
         psd_results = self.get_results()
         if not psd_results:
-            return
+            return {}
 
         from collections import defaultdict
-        from scipy.integrate import trapz
         psds_subtitle = defaultdict(dict)
         for res_type, psds in psd_results.items():
             for key, psd in psds.items():
                 (subtitle, nid, dof) = key
                 psds_subtitle[subtitle][(res_type, nid, dof)] = psd
+        return psds_subtitle
+
+    def plot(self):
+        psds_subtitle = self.get_psds_by_subtitles()
+        if not psds_subtitle:
+            return
+
+        import matplotlib.pyplot as plt
+        for subtitle, psds in psds_subtitle.items():
+            fig = plt.figure(1)
+            for (res_type, nid, dof), psd in psds.items():
+                freqs, psd = psd[:, 0], psd[:, 1]
+                plt.plot(freqs, psd, name=f'(restype,nid,dof)=({res_type}, {nid}, {dof})')
+            plt.legend()
+        plt.show()
+
+    def write_f06(self, f06):
+        psds_subtitle = self.get_psds_by_subtitles()
+        if not psds_subtitle:
+            return
 
         psd_type_map = {
             'displacements' : 'DISP',
@@ -228,14 +248,14 @@ class PSDObjects():
             'stress' : 'EL STR',
             'strain' : 'STRAIN',
         }
-        import matplotlib.pyplot as plt
+        from scipy.integrate import trapz
         for subtitle, psds in psds_subtitle.items():
             f06.write(subtitle + '\n')
             f06.write('0                             X Y - O U T P U T  S U M M A R Y  ( A U T O  O R  P S D F )\n')
             f06.write('0 PLOT  CURVE FRAME    CURVE ID./       RMS       NO. POSITIVE   XMIN FOR   XMAX FOR   YMIN FOR    X FOR     YMAX FOR    X FOR*\n')
             f06.write('  TYPE   TYPE   NO.  PANEL  : GRID ID    VALUE        CROSSINGS   ALL DATA   ALL DATA   ALL DATA     YMIN     ALL DATA     YMAX\n')
 
-            fig = plt.figure(1)
+            #fig = plt.figure(1)
             for (res_type, nid, dof), psd in psds.items():
                 try:
                     psd_type = psd_type_map[res_type]
@@ -247,7 +267,7 @@ class PSDObjects():
                 #no_crossings = 2.879461E+00
                 #no_crossings = np.nan
                 freqs, psd = psd[:, 0], psd[:, 1]
-                plt.plot(freqs, psd, name=f'(restype,nid,dof)=({res_type}, {nid}, {dof})')
+                #plt.plot(freqs, psd, name=f'(restype,nid,dof)=({res_type}, {nid}, {dof})')
                 ymin = psd.min()
                 ymax = psd.max()
                 imin = np.where(psd == ymin)[0][0]
@@ -276,8 +296,8 @@ class PSDObjects():
                 #'    PSDF ACCE       0  9400703(  5)    2.879461E+00  8.191217E+02  2.000E+01  2.000E+03  4.476E-06  7.900E+01  1.474E+00  3.980E+01'
                 f06.write('0                                      \n')
                 f06.write(f'  PSDF {psd_type:6s}     0 {nid:8d}( {dof:2d})    {rms:8.6E}  {no_crossings:9.6E}  {fmin:9.3E}  {fmax:9.3E}  {ymin:9.3E}  {xmin:9.3E}  {ymax:9.3E}  {xmax:9.3E}\n')
-            plt.legend()
-        plt.show()
+            #plt.legend()
+        #plt.show()
 
 class AutoCorrelationObjects(RandomObjects):
     """storage class for the ATO objects"""

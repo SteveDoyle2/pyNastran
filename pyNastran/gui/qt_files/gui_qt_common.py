@@ -904,6 +904,12 @@ class GuiQtCommon(GuiAttributes):
             if max_value is None:
                 max_value = max_valuei
 
+        complex_types = ['complex64']
+        if hasattr(max_value, 'dtype') and max_value.dtype.name in complex_types:
+            raise TypeError(min_value)
+        if hasattr(min_value, 'dtype') and min_value.dtype.name in complex_types:
+            raise TypeError(min_value)
+
         subtitle, label = self.get_subtitle_label(subcase_id)
         if label2:
             label += '; ' + label2

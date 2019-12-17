@@ -420,6 +420,10 @@ class Table(GuiResultCommon):
         self.ncolors = ncolors
         self.colormap = colormap
 
+        if data_formats is not None:
+            for data_format in data_formats:
+                assert '%' in data_format, data_formats
+
         self.data_formats = data_formats
         self.titles_default = deepcopy(self.titles)
         self.headers_default = deepcopy(self.headers)
@@ -468,7 +472,14 @@ class Table(GuiResultCommon):
         return self.phases[i]
 
     def get_data_format(self, i, name):
-        return self.data_formats[i]
+        try:
+            return self.data_formats[i]
+        except IndexError:
+            print(f'data_formats = {self.data_formats}')
+            print(str(self))
+            print("ires =", i)
+            print(name)
+            raise
 
     def get_scale(self, i, name):
         return self.scales[i]
@@ -624,7 +635,7 @@ class Table(GuiResultCommon):
         #self.dim = len(self.dxyz.shape)
 
 
-        self.uname = uname
+        #self.uname = uname
         #self.dxyz_norm = norm(dxyz, axis=1)
 
         #self.deflects = deflects
