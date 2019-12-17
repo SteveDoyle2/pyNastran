@@ -22,6 +22,7 @@ MODEL_PATH = os.path.join(ROOT_PATH, '../', 'models')
 class TestReadWriteFiles(unittest.TestCase):
     def test_read_include_dir_2_files(self):
         """tests a model that will write to multiple files"""
+        log = get_logger(log=None, level='info', encoding='utf-8')
         full_path = os.path.join(TEST_PATH)
         model = BDF(log=log, debug=False)
         bdf_filename = 'test_include2.bdf'
@@ -65,6 +66,7 @@ class TestReadWriteFiles(unittest.TestCase):
 
     def test_isat_files(self):
         """read/writes the isat model with the file structure"""
+        log = get_logger(log=None, level='info', encoding='utf-8')
         bdf_filename = os.path.join(MODEL_PATH, 'iSat', 'iSat_launch_100Hz.dat')
         model = read_bdf(bdf_filename, validate=True, xref=False, punch=False,
                          save_file_structure=True, skip_cards=None, read_cards=None,
