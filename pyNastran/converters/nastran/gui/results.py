@@ -1,7 +1,7 @@
 from copy import deepcopy
 import numpy as np
 
-from pyNastran.gui.gui_objects.displacements import Table
+from pyNastran.gui.gui_objects.table import Table
 
 
 class LayeredTableResults(Table):
@@ -9,7 +9,7 @@ class LayeredTableResults(Table):
                  methods,
                  data_formats=None,
                  nlabels=None, labelsize=None, ncolors=None, colormap='jet',
-                 set_max_min=False, uname='Geometry'):
+                 set_max_min=False, uname='LayeredTableResults'):
         """this is a centroidal result
 
         Parameters
@@ -99,6 +99,20 @@ class LayeredTableResults(Table):
         #print(self.methods)
         data[self.eids] = scalars
         return data
+
+    def __repr__(self):
+        """defines str(self)"""
+        msg = f'LayeredTableResults:\n'
+        msg += f'    title={self.titles!r}\n'
+        msg += f'    subcase_id={self.subcase_id}\n'
+        msg += f'    data_type={self.data_type!r}\n'
+        msg += f'    is_real={self.is_real} is_complex={self.is_complex}\n'
+        msg += f'    location={self.location!r}\n'
+        msg += f'    header={self.headers!r}\n'
+        msg += f'    methods={self.methods}\n'
+        msg += f'    data_format={self.data_formats!r}\n'
+        msg += f'    uname={self.uname!r}\n'
+        return msg
 
 
 class SimpleTableResults(Table):
@@ -202,11 +216,28 @@ class SimpleTableResults(Table):
         return data
 
     def get_data_format(self, i, name):
+        (itime, imethod, unused_header) = name
+        ntimes = self.scalars.shape[0]
+        j = ntimes * imethod + itime
         try:
-            return self.data_formats[i]
+            return self.data_formats[j]
         except IndexError:
             print(f'data_formats = {self.data_formats}')
             print(str(self))
             print("ires =", i)
             print(name)
             raise
+
+    def __repr__(self):
+        """defines str(self)"""
+        msg = f'SimpleTableResults:\n'
+        msg += f'    title={self.titles!r}\n'
+        msg += f'    subcase_id={self.subcase_id}\n'
+        msg += f'    data_type={self.data_type!r}\n'
+        msg += f'    is_real={self.is_real} is_complex={self.is_complex}\n'
+        msg += f'    location={self.location!r}\n'
+        msg += f'    header={self.headers!r}\n'
+        msg += f'    methods={self.methods}\n'
+        msg += f'    data_format={self.data_formats!r}\n'
+        msg += f'    uname={self.uname!r}\n'
+        return msg

@@ -348,7 +348,7 @@ class GuiQtCommon(GuiAttributes):
             raise NotImplementedError(location)
         return word, eids_nids
 
-    def _get_disp_data(self, icase, is_disp):
+    def _get_disp_data(self, icase, is_disp, stop_on_failure=False):
         """helper for ``on_disp``"""
         is_valid = False
         failed_data = (None, None, None, None)
@@ -380,7 +380,10 @@ class GuiQtCommon(GuiAttributes):
         result_type = obj.get_title(i, name)
         vector_size = obj.get_vector_size(i, name)
         if vector_size == 1:
-            self.log_error('icase=%r is not a displacement/force' % icase)
+            msg = 'icase=%r is not a displacement/force' % icase
+            self.log_error(msg)
+            if stop_on_failure:
+                raise ValueError(msg)
             return is_valid, failed_data
         location = obj.get_location(i, name)
         if is_disp and location != 'node':
@@ -449,13 +452,14 @@ class GuiQtCommon(GuiAttributes):
         is_valid = True
         return is_valid, (grid_result, name_tuple, name_str, data)
 
-    def on_fringe(self, icase, update_legend_window=True, show_msg=True):
+    def on_fringe(self, icase, update_legend_window=True, show_msg=True,
+                  stop_on_failure=False):
         """
         Sets the icase data to the active fringe
 
         Parameters
         ----------
-        case : int; default=None
+        icase : int; default=None
             selects the icase
             None : defaults to self.icase+1
 
@@ -638,20 +642,24 @@ class GuiQtCommon(GuiAttributes):
         is_valid = True
         return is_valid, data
 
-    def on_disp(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True):
+    def on_disp(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True,
+                stop_on_failure=False):
         """Sets the icase data to the active displacement"""
         is_disp = True
-        self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg)
+        self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg,
+                             stop_on_failure=stop_on_failure)
         self.res_widget.result_case_window.treeView.disp.setChecked(True)
 
-    def on_vector(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True):
+    def on_vector(self, icase, apply_fringe=False, update_legend_window=True, show_msg=True,
+                  stop_on_failure=False):
         """Sets the icase data to the active vector"""
         is_disp = False
-        self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg)
+        self._on_disp_vector(icase, is_disp, apply_fringe, update_legend_window, show_msg=show_msg,
+                             stop_on_failure=stop_on_failure)
         self.res_widget.result_case_window.treeView.vector.setChecked(True)
 
     def _on_disp_vector(self, icase, is_disp, apply_fringe=False,
-                        update_legend_window=True, show_msg=True):
+                        update_legend_window=True, show_msg=True, stop_on_failure=False):
         """
         Sets the icase data to the active displacement/vector
 
@@ -664,7 +672,7 @@ class GuiQtCommon(GuiAttributes):
         """
         self.icase = icase
         is_valid, (unused_grid_result, unused_name, unused_name_str, data) = self._get_disp_data(
-            icase, is_disp)
+            icase, is_disp, stop_on_failure=stop_on_failure)
 
         if not is_valid:
             return

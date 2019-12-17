@@ -611,17 +611,8 @@ class NastranGuiResults(NastranGuiAttributes):
             #num_on = nelements
             num_off = 0
             if itime == 0 and is_element_on.min() == 0.0:
-                ioff = np.where(is_element_on == 0)[0]
-                num_off = len(ioff)
-                print('force_eids_off = %s; n=%s' % (self.element_ids[ioff], num_off))
-                self.log_error('force_eids_off = %s; n=%s' % (self.element_ids[ioff], num_off))
-                force_on_res = GuiResult(subcase_id, header='Force - IsElementOn',
-                                         title='Force\nIsElementOn',
-                                         location='centroid', scalar=is_element_on)
-                cases[icase] = (force_on_res, (subcase_id, 'Force\nIsElementOn'))
-                form_dict[(key, itime)].append(('Force - IsElementOn', icase, []))
-                #num_on -= num_off
-                icase += 1
+                icase = self.save_filtered_forces(key, itime, icase, is_element_on,
+                                                  subcase_id, cases, form_dict)
 
             if fx.min() != fx.max() or rx.min() != rx.max() and not num_off == nelements:
                 # header = _get_nastran_header(case, dt, itime)
@@ -695,6 +686,36 @@ class NastranGuiResults(NastranGuiAttributes):
                 form_dict[(key, itime)].append(('IsBendingZ', icase + 5, []))
                 icase += 6
         return icase
+
+    def save_filtered_forces(self, key, itime, icase, is_element_on, subcase_id, cases, form_dict):
+        ioff = np.where(is_element_on == 0)[0]
+        num_off = len(ioff)
+
+        eids_off = []
+        for eid in self.element_ids[ioff]:
+            element = self.model.elements[eid]
+            if element.type not in ['CTRIA3', 'CQUAD4', 'CHEXA', 'CPENTA', 'CTETRA',
+                                    'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'CSHEAR',
+                                    'CQUADR', 'CTRIAR', 'CQUAD8', 'CTRIA6', 'CVISC',
+                                    'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CTUBE',
+                                    'CONROD', 'CROD']:
+                eids_off.append(eid)
+        for eid in eids_off[:20]:
+            element = self.model.elements[eid]
+            print(element.rstrip())
+
+        if eids_off:
+            print('force_eids_off = %s; n=%s' % (eids_off, num_off))
+            self.log_error('force_eids_off = %s; n=%s' % (eids_off, num_off))
+        force_on_res = GuiResult(subcase_id, header='Force - IsElementOn',
+                                 title='Force\nIsElementOn',
+                                 location='centroid', scalar=is_element_on)
+        cases[icase] = (force_on_res, (subcase_id, 'Force\nIsElementOn'))
+        form_dict[(key, itime)].append(('Force - IsElementOn', icase, []))
+        #num_on -= num_off
+        icase += 1
+        return icase
+
 
     def _fill_op2_time_centroidal_composite_stress(self, cases, model, key, icase: int, itime: int,
                                                    form_dict: Dict[Any, Any],
@@ -1206,7 +1227,7 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
         nastran_res = DisplacementResults(subcase_idi, titles, headers,
                                           xyz_cid0, t123, tnorm,
                                           scales,
-                                          uname='NastranResult')
+                                          uname=name)
 
         #dmax = []
         for itime in range(ntimes):
@@ -1253,7 +1274,7 @@ def _fill_nastran_ith_displacement(result, name: str, deflects: bool, t123_offse
         nastran_res = ForceTableResults(subcase_idi, titles, headers,
                                         t123, tnorm,
                                         scales, #deflects=deflects,
-                                        uname='NastranResult')
+                                        uname=name)
         for itime in range(ntimes):
             dt = case._times[itime]
             header = _get_nastran_header(case, dt, itime)
@@ -1317,18 +1338,18 @@ def _fill_nastran_temperatures(cases, model: OP2, key, icase: int,
 def print_empty_elements(model, element_ids, is_element_on, log_error):
     """prints the first 20 elements that aren't supportedas part of the stress results"""
     ioff = np.where(is_element_on == 0)[0]
+    eids_off = []
+    for eid in element_ids[ioff]:
+        element = model.elements[eid]
+        if element.type not in ['CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CVISC']:
+            eids_off.append(eid)
+
     print('stress_eids_off = %s' % np.array(element_ids[ioff]))
     log_error('stress_eids_off = %s' % element_ids[ioff])
 
-    i = 0
-    imax = 20
-    for eid in element_ids[ioff]:
+    for eid in eids_off[:20]:
         element = model.elements[eid]
-        if element.type not in ['CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4']:
-            print(element.rstrip())
-            i += 1
-            if i == imax:
-                break
+        print(element.rstrip())
     print('-----------------------------------')
 
 
@@ -1666,7 +1687,6 @@ def get_rod_stress_strains(eids, cases, model, times, key, icase,
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
-    #print("***stress eids=", eids)
     subcase_id = key[0]
     if is_stress:
         rods = [
@@ -1964,7 +1984,6 @@ def get_beam_stress_strains(eids, cases, model, times, key, icase,
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
-    return icase
     #print("***stress eids=", eids)
     subcase_id = key[0]
     if is_stress:
@@ -2055,6 +2074,7 @@ def get_beam_stress_strains(eids, cases, model, times, key, icase,
             #'von_mises' : 'ϵ von Mises',
         }
     methods = [method_map[headeri] for headeri in case_headers]
+    return icase
     #if 'Mises' in methods:
         #methods.append('Max shear')
     #else:
@@ -2276,7 +2296,18 @@ def get_plate_stress_strains(eids, cases, model, times, key, icase,
     res = LayeredTableResults(
         subcase_id, headers, plates_ieids, ieid_max, scalars_array, methods,
         data_formats=None,
-        colormap='jet')
+        colormap='jet', uname='Plate ' + word)
+
+    if 'fiber_curvature' in case_headers:
+        layer_names = {
+            0 : 'Layer 1 (Mean)',
+            1 : 'Layer 2 (Slope)',
+        }
+    else:
+        layer_names = {
+            0 : 'Layer 1 (Upper)',
+            1 : 'Layer 2 (Lower)',
+        }
 
     times = case._times
     for itime, dt in enumerate(times):
@@ -2417,7 +2448,7 @@ def get_composite_plate_stress_strains(eids, cases, model, times, key, icase,
     res = LayeredTableResults(
         subcase_id, headers, plates_ieids, ieid_max, scalars_array, methods,
         data_formats=None,
-        colormap='jet')
+        colormap='jet', uname='Composite Plate ' + word)
 
     #times = case._times
     for itime, dt in enumerate(times):
@@ -2654,7 +2685,6 @@ def get_spring_stress_strains(eids, cases, model, times, key, icase,
 
     spring_ieids = np.hstack(spring_ieids)
     ieid_max = len(eids)
-    #print('ieid_max =', ieid_max)
 
     case = spring_cases[0]
     case_headers = case.get_headers()
@@ -2687,7 +2717,6 @@ def get_spring_stress_strains(eids, cases, model, times, key, icase,
         scalars_array = scalars_array[0]
     else:
         scalars_array = np.concatenate(scalars_array, axis=1)
-    print('***', scalars_array.shape, methods)
 
     headers = [] # sidebar word
     res = SimpleTableResults(
@@ -2695,7 +2724,6 @@ def get_spring_stress_strains(eids, cases, model, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Spring ' + word)
 
-    return icase
     icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
                                         form_dict, header_dict, methods,
                                         name='Spring')
@@ -2706,7 +2734,7 @@ def _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
                                 methods, name):
     times = case._times
     nmethods = len(methods)
-    if nmethods == 1 and 0:
+    if nmethods == 1:
         imethod = 0
         method = methods[imethod]
         for itime, dt in enumerate(times):

@@ -443,14 +443,35 @@ class TestNastranGUI(unittest.TestCase):
         test = NastranGUI()
         test.load_nastran_geometry(bdf_filename)
         test.load_nastran_results(op2_filename)
-        test.on_fringe(icase=46)
-        test.on_vector(icase=46) # force_xyz
-        test.on_disp(icase=48) # disp
+
+        idisp = None
+        iforce_xyz = None
+        for key, case_data in test.result_cases.items():
+            case, data = case_data
+            #print(key, case)
+            if idisp is None and case.uname == 'Displacement':
+                idisp = key
+            elif idisp is not None and iforce_xyz is None and case.uname == 'LoadVectors':
+                iforce_xyz = key
+                break
+            elif key > 70:
+                break
+
+        ifringe = len(test.result_cases) - 1 # Strain Energy Density
+        test.on_fringe(icase=ifringe, stop_on_failure=True)
+        with self.assertRaises(ValueError):
+            test.on_vector(icase=ifringe, stop_on_failure=True)
+        with self.assertRaises(ValueError):
+            test.on_disp(icase=ifringe, stop_on_failure=True) # disp
+
+        test.on_fringe(icase=iforce_xyz, stop_on_failure=True)
+        test.on_vector(icase=iforce_xyz, stop_on_failure=True)
+        test.on_disp(icase=idisp, stop_on_failure=True) # disp
         test.on_clear_results()
 
-        test.on_fringe(icase=46)
-        test.on_vector(icase=46) # force_xyz
-        test.on_disp(icase=48) # disp
+        test.on_fringe(icase=iforce_xyz, stop_on_failure=True)
+        test.on_vector(icase=iforce_xyz, stop_on_failure=True) # force_xyz
+        test.on_disp(icase=idisp, stop_on_failure=True) # disp
         test.on_fringe(icase=37, update_legend_window=True, show_msg=True)  # normal
 
     def test_gui_elements_01b(self):
