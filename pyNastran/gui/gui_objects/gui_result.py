@@ -409,7 +409,11 @@ class GuiResult(GuiResultCommon):
                     self.data_type = self.scalar.dtype.str
                     self.data_format = '%.0f'
                     self.scalar[inan] = np.nan
-                    self.min_default = inan_remaining.min()
+                    try:
+                        self.min_default = inan_remaining.min()
+                    except ValueError:  # pragma: no cover
+                        print('inan_remaining =', inan_remaining)
+                        raise
                     self.max_default = inan_remaining.max()
         else:
             # handling VTK NaN oddinty

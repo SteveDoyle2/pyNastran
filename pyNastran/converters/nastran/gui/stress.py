@@ -121,9 +121,9 @@ def get_rod_stress_strains(eids, cases, model: OP2, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Rod ' + word)
 
-    icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                        form_dict, header_dict, methods,
-                                        name='Rod')
+    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+                                       form_dict, header_dict, methods,
+                                       name='Rod')
     return icase
 
 def get_bar_stress_strains(eids, cases, model: OP2, times, key, icase,
@@ -250,10 +250,6 @@ def get_bar_stress_strains(eids, cases, model: OP2, times, key, icase,
 
     scalars_array = []
     for case in bar_cases:
-        if case.is_complex:
-            model.log.warning(f'skipping complex Bar {word}')
-            continue
-
         #ntimes, nelements, nresults = case.data.shape
         #self.data[self.itime, self.itotal, :] = [fd, oxx, oyy,
         #                                         txy, angle,
@@ -277,19 +273,22 @@ def get_bar_stress_strains(eids, cases, model: OP2, times, key, icase,
     else:
         scalars_array = np.concatenate(scalars_array, axis=1)
 
-    #include_tension_margin = True
-    #include_compression_margin = True
-    itension = methods.index('MS_tension')
-    icompression = methods.index('MS_compression')
-    exclude_tension_margin = np.allclose(np.abs(scalars_array[:, :, itension]).max(), 0.0)
-    exclude_compression_margin = np.allclose(np.abs(scalars_array[:, :, icompression]).max(), 0.0)
-    iresults = list(range(len(methods)))
-    if exclude_compression_margin:
-        methods.pop(icompression)
-        iresults.pop(icompression)
-    if exclude_tension_margin:
-        methods.pop(itension)
-        iresults.pop(itension)
+    exclude_tension_margin = False
+    exclude_compression_margin = False
+    if 'MS_tension' in methods:
+        # real
+        itension = methods.index('MS_tension')
+        icompression = methods.index('MS_compression')
+        exclude_tension_margin = np.allclose(np.abs(scalars_array[:, :, itension]).max(), 0.0)
+        exclude_compression_margin = np.allclose(np.abs(scalars_array[:, :, icompression]).max(), 0.0)
+        iresults = list(range(len(methods)))
+        if exclude_compression_margin:
+            methods.pop(icompression)
+            iresults.pop(icompression)
+        if exclude_tension_margin:
+            methods.pop(itension)
+            iresults.pop(itension)
+
     if exclude_compression_margin or exclude_compression_margin:
         scalars_array = scalars_array[:, :, iresults]
 
@@ -300,9 +299,9 @@ def get_bar_stress_strains(eids, cases, model: OP2, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Bar ' + word)
 
-    icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                        form_dict, header_dict, methods,
-                                        name='Bar')
+    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+                                       form_dict, header_dict, methods,
+                                       name='Bar')
     return icase
 
 def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
@@ -958,13 +957,13 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
         colormap='jet', uname='Solid ' + word)
     return icase
 
-    icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                        form_dict, header_dict, methods,
-                                        name='Solid')
+    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+                                       form_dict, header_dict, methods,
+                                       name='Solid')
     return icase
 
 def get_spring_stress_strains(eids, cases, model: OP2, times, key, icase,
-                              form_dict, header_dict, keys_map, is_stress):  # pragma: no cover
+                              form_dict, header_dict, keys_map, is_stress):
     """
     helper method for _fill_op2_time_centroidal_stress.
     """
@@ -1051,14 +1050,14 @@ def get_spring_stress_strains(eids, cases, model: OP2, times, key, icase,
         data_format=data_format,
         colormap='jet', uname='Spring ' + word)
 
-    icase = _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                        form_dict, header_dict, methods,
-                                        name='Spring')
+    icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+                                       form_dict, header_dict, methods,
+                                       name='Spring')
     return icase
 
-def _add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
-                                form_dict, header_dict,
-                                methods, name):
+def add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
+                               form_dict, header_dict,
+                               methods, name):
     times = case._times
     nmethods = len(methods)
     if nmethods == 1:

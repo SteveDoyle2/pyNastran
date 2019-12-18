@@ -146,6 +146,8 @@ class SimpleTableResults(Table):
         self.eids = eids
         self.eid_max = eid_max
         assert len(eids) == scalars.shape[1], f'len(eids)={len(eids)} scalars.shape={scalars.shape}'
+        if self.is_complex:
+            self.phases = np.zeros(len(methods) * ntimes)
 
     def finalize(self):
         self.titles_default = deepcopy(self.titles)
@@ -199,6 +201,12 @@ class SimpleTableResults(Table):
         mag = self.get_magnitude(i, name)
         return np.nanmin(mag), np.nanmax(mag)
 
+    def get_phase(self, i, name):
+        if self.is_real:
+            return None
+        j = self._get_j(i, name)
+        return self.phases[j]
+
     def get_result(self, i, name):
         #print(i, name)
         (itime, imethod, unused_header) = name
@@ -215,10 +223,14 @@ class SimpleTableResults(Table):
             raise RuntimeError(f'{self.uname!r} eids.max()={self.eids.max()} scalars.shape={scalars.shape}')
         return data
 
-    def get_data_format(self, i, name):
+    def _get_j(self, i, name):
         (itime, imethod, unused_header) = name
         ntimes = self.scalars.shape[0]
         j = ntimes * imethod + itime
+        return j
+
+    def get_data_format(self, i, name):
+        j = self._get_j(i, name)
         try:
             return self.data_formats[j]
         except IndexError:

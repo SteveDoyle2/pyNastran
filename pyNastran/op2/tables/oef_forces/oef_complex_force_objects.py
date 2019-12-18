@@ -1225,6 +1225,10 @@ class ComplexPlateForceArray(ComplexForceObject):
         self.ielement += 1
         self.itotal += 1
 
+    @property
+    def nnodes_per_element(self):
+        return 1
+
     def get_stats(self, short=False):
         if not self.is_built:
             return [
@@ -1579,6 +1583,22 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         self.element_node[self.itotal, :] = [eid, nid]
         self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
         self.itotal += 1
+
+    @property
+    def nnodes_per_element(self):
+        if self.element_type == 144:  # CQUAD4
+            nnodes_element = 5
+        elif self.element_type == 64:  # CQUAD8
+            nnodes_element = 5
+        elif self.element_type == 82:  # CQUADR
+            nnodes_element = 5
+        elif self.element_type == 75:  # CTRIA6
+            nnodes_element = 4
+        elif self.element_type == 70:  # CTRIAR
+            nnodes_element = 4
+        else:  # pragma: no cover
+            raise NotImplementedError('element_type=%s element_name=%s' % (self.element_type, self.element_name))
+        return nnodes_element
 
     def get_stats(self, short=False):
         if not self.is_built:

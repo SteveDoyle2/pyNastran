@@ -25,6 +25,7 @@ from .stress import (
     get_bar_stress_strains, get_beam_stress_strains,
     get_plate_stress_strains, get_composite_plate_stress_strains,
     get_solid_stress_strains)
+from .force import get_spring_force, get_bar_force, get_plate_force
 
 if TYPE_CHECKING: # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -430,13 +431,13 @@ class NastranGuiResults(NastranGuiAttributes):
          - thermal_load
         """
         element_ids = self.element_ids
-        fx = np.zeros(nelements, dtype='float32') # axial
-        fy = np.zeros(nelements, dtype='float32') # shear_y
-        fz = np.zeros(nelements, dtype='float32') # shear_z
+        fx = np.full(nelements, np.nan, dtype='float32') # axial
+        fy = np.full(nelements, np.nan, dtype='float32') # shear_y
+        fz = np.full(nelements, np.nan, dtype='float32') # shear_z
 
-        rx = np.zeros(nelements, dtype='float32') # torque
-        ry = np.zeros(nelements, dtype='float32') # bending_y
-        rz = np.zeros(nelements, dtype='float32') # bending_z
+        rx = np.full(nelements, np.nan, dtype='float32') # torque
+        ry = np.full(nelements, np.nan, dtype='float32') # bending_y
+        rz = np.full(nelements, np.nan, dtype='float32') # bending_z
 
         is_element_on = np.zeros(nelements, dtype='float32') # torque
         unused_fmt = '%g'
@@ -619,62 +620,95 @@ class NastranGuiResults(NastranGuiAttributes):
                 icase = self.save_filtered_forces(key, itime, icase, is_element_on,
                                                   subcase_id, cases, form_dict)
 
-            if fx.min() != fx.max() or rx.min() != rx.max() and not num_off == nelements:
+            is_fx = np.any(np.isfinite(fx)) and np.nanmin(fx) != np.nanmax(fx)
+            is_fy = np.any(np.isfinite(fy)) and np.nanmin(fy) != np.nanmax(fy)
+            is_fz = np.any(np.isfinite(fz)) and np.nanmin(fz) != np.nanmax(fz)
+
+            is_rx = np.any(np.isfinite(rx)) and np.nanmin(rx) != np.nanmax(rx)
+            #is_ry = np.any(np.isfinite(ry)) and np.nanmin(ry) != np.nanmax(ry)
+            #is_rz = np.any(np.isfinite(rz)) and np.nanmin(rz) != np.nanmax(rz)
+            if is_fx or is_rx and not num_off == nelements:
                 # header = _get_nastran_header(case, dt, itime)
                 header = header_dict[(key, itime)]
-                fx_res = GuiResult(subcase_id, header=f'Axial: {header}', title='Axial',
-                                   location='centroid', scalar=fx)
-                fy_res = GuiResult(subcase_id, header=f'ShearY: {header}', title='ShearY',
-                                   location='centroid', scalar=fy)
-                fz_res = GuiResult(subcase_id, header=f'ShearZ: {header}', title='ShearZ',
-                                   location='centroid', scalar=fz)
-                mx_res = GuiResult(subcase_id, header=f'Torsion: {header}', title='Torsion',
-                                   location='centroid', scalar=rx)
-                my_res = GuiResult(subcase_id, header=f'BendingY: {header}', title='BendingY',
-                                   location='centroid', scalar=ry)
-                mz_res = GuiResult(subcase_id, header=f'BendingZ: {header}', title='BendingZ',
-                                   location='centroid', scalar=rz)
-                cases[icase] = (fx_res, (subcase_id, 'Axial'))
-                cases[icase + 1] = (fy_res, (subcase_id, 'ShearY'))
-                cases[icase + 2] = (fz_res, (subcase_id, 'ShearZ'))
-                cases[icase + 3] = (mx_res, (subcase_id, 'Torsion'))
-                cases[icase + 4] = (my_res, (subcase_id, 'BendingY'))
-                cases[icase + 5] = (mz_res, (subcase_id, 'BendingZ'))
+                if is_fx:
+                    fx_res = GuiResult(subcase_id, header=f'Axial: {header}', title='Axial',
+                                       location='centroid', scalar=fx)
+                    form_dict[(key, itime)].append(('Axial', icase, []))
+                    cases[icase] = (fx_res, (subcase_id, 'Axial'))
+                    icase += 1
 
-                form_dict[(key, itime)].append(('Axial', icase, []))
-                form_dict[(key, itime)].append(('ShearY', icase + 1, []))
-                form_dict[(key, itime)].append(('ShearZ', icase + 2, []))
-                form_dict[(key, itime)].append(('Torque', icase + 3, []))
-                form_dict[(key, itime)].append(('BendingY', icase + 4, []))
-                form_dict[(key, itime)].append(('BendingZ', icase + 5, []))
-                icase += 6
+                if is_fy:
+                    fy_res = GuiResult(subcase_id, header=f'ShearY: {header}', title='ShearY',
+                                       location='centroid', scalar=fy)
+                    form_dict[(key, itime)].append(('ShearY', icase, []))
+                    cases[icase] = (fy_res, (subcase_id, 'ShearY'))
+                    icase += 1
 
-                is_axial = np.zeros(nelements, dtype='int8')
-                is_shear_y = np.zeros(nelements, dtype='int8')
-                is_shear_z = np.zeros(nelements, dtype='int8')
-                is_torsion = np.zeros(nelements, dtype='int8')
-                is_bending_y = np.zeros(nelements, dtype='int8')
-                is_bending_z = np.zeros(nelements, dtype='int8')
-                is_axial[np.where(np.abs(fx) > 0.0)[0]] = 1
-                is_shear_y[np.where(np.abs(fy) > 0.0)[0]] = 1
-                is_shear_z[np.where(np.abs(fz) > 0.0)[0]] = 1
-                is_torsion[np.where(np.abs(rx) > 0.0)[0]] = 1
-                is_bending_y[np.where(np.abs(ry) > 0.0)[0]] = 1
-                is_bending_z[np.where(np.abs(rz) > 0.0)[0]] = 1
+                if is_fz:
+                    fz_res = GuiResult(subcase_id, header=f'ShearZ: {header}', title='ShearZ',
+                                       location='centroid', scalar=fz)
+                    form_dict[(key, itime)].append(('ShearZ', icase, []))
+                    cases[icase + 2] = (fz_res, (subcase_id, 'ShearZ'))
+                    icase += 1
+
+                if is_rx:
+                    mx_res = GuiResult(subcase_id, header=f'Torsion: {header}', title='Torsion',
+                                       location='centroid', scalar=rx)
+                    my_res = GuiResult(subcase_id, header=f'BendingY: {header}', title='BendingY',
+                                       location='centroid', scalar=ry)
+                    mz_res = GuiResult(subcase_id, header=f'BendingZ: {header}', title='BendingZ',
+                                       location='centroid', scalar=rz)
+
+                    form_dict[(key, itime)].append(('Torsion', icase, []))
+                    form_dict[(key, itime)].append(('BendingY', icase + 1, []))
+                    form_dict[(key, itime)].append(('BendingZ', icase + 2, []))
+                    cases[icase] = (mx_res, (subcase_id, 'Torsion'))
+                    cases[icase + 1] = (my_res, (subcase_id, 'BendingY'))
+                    cases[icase + 2] = (mz_res, (subcase_id, 'BendingZ'))
+                    icase += 3
+
+                is_axial = np.full(nelements, -1, dtype='int8')
+                is_shear_y = np.full(nelements, -1, dtype='int8')
+                is_shear_z = np.full(nelements, -1, dtype='int8')
+                is_torsion = np.full(nelements, -1, dtype='int8')
+                is_bending_y = np.full(nelements, -1, dtype='int8')
+                is_bending_z = np.full(nelements, -1, dtype='int8')
+
+                arrays = [
+                    (is_axial, fx), (is_shear_y, fy), (is_shear_z, fz),
+                    (is_torsion, rx), (is_bending_y, ry), (is_bending_z, rz),
+                ]
+                for is_array, force in arrays:
+                    iany = np.where(is_element_on)
+                    iwhere = np.where(np.abs(force) > 0.0)[0]
+                    is_array[iany] = 0
+                    is_array[iwhere] = 1
+                #is_axial[np.where(np.abs(fx) > 0.0)[0]] = 1
+                #is_shear_y[np.where(np.abs(fy) > 0.0)[0]] = 1
+                #is_shear_z[np.where(np.abs(fz) > 0.0)[0]] = 1
+                #is_torsion[np.where(np.abs(rx) > 0.0)[0]] = 1
+                #is_bending_y[np.where(np.abs(ry) > 0.0)[0]] = 1
+                #is_bending_z[np.where(np.abs(rz) > 0.0)[0]] = 1
                 #is_bending[where(abs(rx) > 0.0)[0]] = 1
 
                 is_fx_res = GuiResult(subcase_id, header='IsAxial', title='IsAxial',
-                                      location='centroid', scalar=is_axial, data_format=fmt)
+                                      location='centroid', scalar=is_axial, data_format=fmt,
+                                      mask_value=-1)
                 is_fy_res = GuiResult(subcase_id, header='IsShearY', title='IsShearY',
-                                      location='centroid', scalar=is_shear_y, data_format=fmt)
+                                      location='centroid', scalar=is_shear_y, data_format=fmt,
+                                      mask_value=-1)
                 is_fz_res = GuiResult(subcase_id, header='IsShearZ', title='IsShearZ',
-                                      location='centroid', scalar=is_shear_z, data_format=fmt)
+                                      location='centroid', scalar=is_shear_z, data_format=fmt,
+                                      mask_value=-1)
                 is_mx_res = GuiResult(subcase_id, header='IsTorsion', title='IsTorsion',
-                                      location='centroid', scalar=is_torsion, data_format=fmt)
+                                      location='centroid', scalar=is_torsion, data_format=fmt,
+                                      mask_value=-1)
                 is_my_res = GuiResult(subcase_id, header='IsBendingY', title='IsBendingY',
-                                      location='centroid', scalar=is_bending_y, data_format=fmt)
+                                      location='centroid', scalar=is_bending_y, data_format=fmt,
+                                      mask_value=-1)
                 is_mz_res = GuiResult(subcase_id, header='IsBendingZ', title='IsBendingZ',
-                                      location='centroid', scalar=is_bending_z, data_format=fmt)
+                                      location='centroid', scalar=is_bending_z, data_format=fmt,
+                                      mask_value=-1)
 
                 cases[icase] = (is_fx_res, (subcase_id, 'IsAxial'))
                 cases[icase + 1] = (is_fy_res, (subcase_id, 'IsShearY'))
@@ -833,14 +867,57 @@ class NastranGuiResults(NastranGuiAttributes):
     def _fill_op2_centroidal_force(self, cases, model, times, key, icase,
                                    force_dict, header_dict, keys_map) -> int:
         """Creates the time accurate force objects"""
-        for itime, unused_dt in enumerate(times):
-            try:
-                icase = self._fill_op2_time_centroidal_force(
-                    cases, model, key, icase, itime,
-                    force_dict, header_dict, keys_map)
-            except IndexError:
-                self.log.error('problem getting force...')
-                break
+
+        settings = self.settings  # type: Settings
+        if settings.nastran_force:
+            for itime, unused_dt in enumerate(times):
+                try:
+                    icase = self._fill_op2_time_centroidal_force(
+                        cases, model, key, icase, itime,
+                        force_dict, header_dict, keys_map)
+                except IndexError:
+                    self.log.error('problem getting force...')
+                    break
+
+        eids = self.element_ids
+        if settings.nastran_bar_force:
+            icase = get_bar_force(
+                eids, cases, model, times, key, icase,
+                force_dict, header_dict, keys_map)
+
+        if settings.nastran_beam_force:
+            #icase = get_beam_force(
+                #eids, cases, model, times, key, icase,
+                #force_dict, header_dict, keys_map)
+            if key in model.cbeam_force:
+                model.log.warning('skipping nastran beam force')
+
+        if settings.nastran_plate_force:
+            icase = get_plate_force(
+                eids, cases, model, times, key, icase,
+                force_dict, header_dict, keys_map)
+            #if key in model.ctria3_force or key in model.cquad4_force:
+                #model.log.warning('skipping nastran plate force')
+
+        if settings.nastran_spring_force:
+            icase = get_spring_force(
+                eids, cases, model, times, key, icase,
+                force_dict, header_dict, keys_map)
+            #if any([key in force for force in
+                    #[model.celas1_force, model.celas2_force,
+                     #model.celas3_force, model.celas4_force]]):
+                #model.log.warning('skipping nastran spring force')
+
+        if settings.nastran_cbush_force:
+            if key in model.cbush_force:
+                model.log.warning('skipping nastran bush force')
+        #if key in model.bush1d_force:
+            #model.log.warning('skipping nastran bush1d force')
+
+        if settings.nastran_gap_force:
+            if key in model.cgap_force:
+                model.log.warning('skipping nastran gap force')
+
         return icase
 
     def _fill_op2_centroidal_strain(self, cases, model, times, key, icase,

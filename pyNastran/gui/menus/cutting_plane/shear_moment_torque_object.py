@@ -129,7 +129,7 @@ class ShearMomentTorqueObject:
                                  method='Z-Axis Projection',
                                  cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
                                  nplanes=20, plane_color=None, plane_opacity=0.5,
-                                 csv_filename=None, show=True):
+                                 csv_filename=None, show=True, stop_on_failure=False):
         """Creates a shear moment torque plot for the active plot result"""
         log = self.gui.log
         if plane_color is None:
@@ -170,6 +170,8 @@ class ShearMomentTorqueObject:
                            comment='')
         except:
             log.error('The coordinate system is invalid; check your cutting plane.')
+            if stop_on_failure:
+                raise
             return None, None
         origin = coord.origin
         beta = coord.beta().T

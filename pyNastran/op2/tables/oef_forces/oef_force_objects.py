@@ -2094,6 +2094,10 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             #self.add_new_transient(dt)
         #self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
 
+    @property
+    def nnodes_per_element(self):
+        return 1
+
     def get_stats(self, short=False):
         if not self.is_built:
             return [

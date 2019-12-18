@@ -51,10 +51,17 @@ NASTRAN_BOOL_KEYS = [
     'nastran_is_bar_axes',
     'nastran_is_3d_bars', 'nastran_is_3d_bars_update',
     'nastran_is_shell_mcids', 'nastran_is_update_conm2',
+
     'nastran_stress', 'nastran_plate_stress', 'nastran_composite_plate_stress',
     'nastran_strain', 'nastran_plate_strain', 'nastran_composite_plate_strain',
     'nastran_rod_stress', 'nastran_bar_stress', 'nastran_beam_stress',
     'nastran_rod_strain', 'nastran_bar_strain', 'nastran_beam_strain',
+    'nastran_spring_stress', 'nastran_solid_stress',
+    'nastran_spring_strain', 'nastran_solid_strain',
+
+    'nastran_force',
+    'nastran_bar_force', 'nastran_beam_force', 'nastran_plate_force',
+    'nastran_spring_force', 'nastran_gap_force', 'nastran_cbush_force',
 ]
 
 class Settings:
@@ -116,19 +123,31 @@ class Settings:
         self.nastran_is_update_conm2 = True
 
         self.nastran_stress = True
-        self.nastran_plate_stress = True
-        self.nastran_composite_plate_stress = True
-
-        self.nastran_strain = True
-        self.nastran_plate_strain = True
-        self.nastran_composite_plate_strain = True
-
+        self.nastran_spring_stress = True
         self.nastran_rod_stress = True
         self.nastran_bar_stress = True
         self.nastran_beam_stress = True
+        self.nastran_plate_stress = True
+        self.nastran_composite_plate_stress = True
+        self.nastran_solid_stress = True
+
+        self.nastran_strain = True
+        self.nastran_spring_strain = True
         self.nastran_rod_strain = True
         self.nastran_bar_strain = True
         self.nastran_beam_strain = True
+        self.nastran_plate_strain = True
+        self.nastran_composite_plate_strain = True
+        self.nastran_solid_strain = True
+
+        self.nastran_force = True
+        self.nastran_spring_force = True
+        self.nastran_cbush_force = True
+        self.nastran_gap_force = True
+        self.nastran_bar_force = True
+        self.nastran_beam_force = True
+        self.nastran_plate_force = True
+
 
     def reset_settings(self):
         """helper method for ``setup_gui``"""
@@ -182,19 +201,30 @@ class Settings:
         self.nastran_is_update_conm2 = True
 
         self.nastran_stress = True
-        self.nastran_plate_stress = True
-        self.nastran_composite_plate_stress = True
-
-        self.nastran_strain = True
-        self.nastran_plate_strain = True
-        self.nastran_composite_plate_strain = True
-
+        self.nastran_spring_stress = True
         self.nastran_rod_stress = True
         self.nastran_bar_stress = True
         self.nastran_beam_stress = True
+        self.nastran_plate_stress = True
+        self.nastran_composite_plate_stress = True
+        self.nastran_solid_stress = True
+
+        self.nastran_strain = True
+        self.nastran_spring_strain = True
         self.nastran_rod_strain = True
         self.nastran_bar_strain = True
         self.nastran_beam_strain = True
+        self.nastran_plate_strain = True
+        self.nastran_composite_plate_strain = True
+        self.nastran_solid_strain = True
+
+        self.nastran_force = True
+        self.nastran_spring_force = True
+        self.nastran_cbush_force = True
+        self.nastran_gap_force = True
+        self.nastran_bar_force = True
+        self.nastran_beam_force = True
+        self.nastran_plate_force = True
 
     def load(self, settings):
         """helper method for ``setup_gui``"""

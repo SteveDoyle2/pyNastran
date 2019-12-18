@@ -117,7 +117,7 @@ class CuttingPlaneObject:
                            cid_p1=0, cid_p2=0, cid_zaxis=0,
                            ytol=1., plane_atol=1e-5,
                            plane_color=None, plane_opacity=0.5,
-                           csv_filename=None, show=True):
+                           csv_filename=None, show=True, stop_on_failure=False):
         """Creates a cutting plane of the aero_model for the active plot result"""
         if plane_color is None:
             plane_color = PURPLE_FLOAT
@@ -134,7 +134,10 @@ class CuttingPlaneObject:
                 xyz_cp, nids, icp_transform,
                 cid=0)
         else:
-            log.error('%r is not supported' % class_name)
+            msg = '%r is not supported' % class_name
+            log.error(msg)
+            if stop_on_failure:
+                raise RuntimeError(msg)
             return
 
         #xyz_min, xyz_max = model.xyz_limits
@@ -166,7 +169,10 @@ class CuttingPlaneObject:
             coord = CORD2R(1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
                            comment='')
         except:
-            log.error('The coordinate system is invalid; check your cutting plane.')
+            msg = 'The coordinate system is invalid; check your cutting plane.'
+            log.error(msg)
+            if stop_on_failure:
+                raise RuntimeError(msg)
             return
         #print(coord)
         origin = coord.origin
@@ -190,22 +196,32 @@ class CuttingPlaneObject:
                 #print(self.gui.plane_actor)
                 #print(dir(self.gui.plane_actor))
                 #plane_actor.VisibilityOff()
-            log.error('No result is selected.')
+            msg = 'No Grid Point Force result is selected.'
+            log.error(msg)
+            if stop_on_failure:
+                raise RuntimeError(msg)
             return
 
-        if hasattr(obj, 'titles'):
-            title = obj.titles[0]
-        elif hasattr(obj, 'title'):
-            title = obj.title
-        else:
-            raise NotImplementedError(obj)
+        try:
+            if hasattr(obj, 'titles'):
+                title = obj.titles[0]
+            elif hasattr(obj, 'title'):
+                title = obj.title
+            else:
+                raise NotImplementedError(obj)
+        except: # pragma: no cover
+            print(f'icase={self.gui.icase_fringe}\n{obj}')
+            raise
 
         plane_actor.VisibilityOn()
         if location == 'centroid':
             if hasattr(model, 'map_centroidal_result'):
                 nodal_result = model.map_centroidal_result(res_scalars)
             else:
-                log.error('Centroidal results are not supported.')
+                msg = 'Centroidal results are not supported.'
+                log.error(msg)
+                if stop_on_failure:
+                    raise RuntimeError(msg)
                 return
             #np.savetxt('Cp_centroid.csv', res_scalars, header='# Cp')
             #np.savetxt('Cp_nodal.csv', nodal_result, header='# Cp')
