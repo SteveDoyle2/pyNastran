@@ -727,6 +727,10 @@ class RealSpringForceArray(RealSpringDamperForceArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealSpringDamperForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
+
     def get_headers(self):
         headers = ['spring_force']
         return headers
@@ -789,6 +793,10 @@ class RealRodForceArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def get_headers(self):
         headers = ['axial', 'torsion']
@@ -1483,6 +1491,10 @@ class RealCShearForceArray(RealForceObject):
 
         #if not is_sort1:
             #raise NotImplementedError('SORT2')
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def _reset_indices(self):
         self.itotal = 0
@@ -4451,6 +4463,10 @@ class RealCBushForceArray(RealForceObject):
 
         #if not is_sort1:
             #raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def _reset_indices(self):
         self.itotal = 0

@@ -1414,6 +1414,9 @@ class OEF(OP2Common):
         10-CONROD
         """
         n = 0
+        if prefix == '' and postfix == '':
+            prefix = 'force.'
+
         obj_real = RealRodForceArray
         obj_complex = ComplexRodForceArray
         if self.element_type == 1: # CROD
@@ -1548,7 +1551,10 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_cbeam(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
-        #2-CBEAM
+        """2-CBEAM"""
+        if prefix == '' and postfix == '':
+            prefix = 'force.'
+
         n = 0
         result_name = prefix + 'cbeam_force' + postfix
         if self._results.is_not_saved(result_name):
@@ -1781,16 +1787,19 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_celas_cdamp(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
-        n = 0
-        # 11-CELAS1
-        # 12-CELAS2
-        # 13-CELAS3
-        # 14-CELAS4
+        """
+        11-CELAS1
+        12-CELAS2
+        13-CELAS3
+        14-CELAS4
 
-        # 20-CDAMP1
-        # 21-CDAMP2
-        # 22-CDAMP3
-        # 23-CDAMP4
+        20-CDAMP1
+        21-CDAMP2
+        22-CDAMP3
+        23-CDAMP4
+
+        """
+        n = 0
         if prefix == '' and postfix == '':
             prefix = 'force.'
         if self.element_type == 11:
@@ -2044,7 +2053,10 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_cbar_34(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
-        # 34-CBAR
+        """34-CBAR"""
+        if prefix == '' and postfix == '':
+            prefix = 'force.'
+
         n = 0
         result_name = prefix + 'cbar_force' + postfix
         if self._results.is_not_saved(result_name):
@@ -2204,9 +2216,15 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_shells_centroidal(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
-        # 33-CQUAD4
-        # 74-CTRIA3
+        """
+        33-CQUAD4
+        74-CTRIA3
+
+        """
         n = 0
+        if prefix == '' and postfix == '':
+            prefix = 'force.'
+
         if self.element_type == 33:
             result_name = prefix + 'cquad4_force' + postfix
         elif self.element_type == 74:
@@ -2340,7 +2358,11 @@ class OEF(OP2Common):
         75-CTRIA6
         82-CQUADR
         144-CQUAD4-bilinear
+
         """
+        if prefix == '' and postfix == '':
+            prefix = 'force.'
+
         n = 0
         if self.element_type == 64:
             result_name = prefix + 'cquad8_force' + postfix

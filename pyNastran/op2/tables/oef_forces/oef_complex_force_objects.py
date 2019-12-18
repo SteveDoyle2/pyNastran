@@ -21,6 +21,10 @@ class ComplexForceObject(ForceObject):
     def is_complex(self):
         return True
 
+    @property
+    def nnodes_per_element(self):
+        return 1
+
 
 class ComplexRodForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -902,6 +906,14 @@ class ComplexViscForceArray(BaseElement):
         else:
             raise NotImplementedError('SORT2')
 
+    @property
+    def is_real(self):
+        return False
+
+    @property
+    def is_complex(self):
+        return True
+
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
@@ -1225,9 +1237,9 @@ class ComplexPlateForceArray(ComplexForceObject):
         self.ielement += 1
         self.itotal += 1
 
-    @property
-    def nnodes_per_element(self):
-        return 1
+    #@property
+    #def nnodes_per_element(self):
+        #return 1
 
     def get_stats(self, short=False):
         if not self.is_built:
@@ -2626,6 +2638,16 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         #else:
             #raise NotImplementedError('SORT2')
 
+    @property
+    def is_real(self):
+        """is the result real?"""
+        return False
+
+    @property
+    def is_complex(self):
+        """is the result complex?"""
+        return True
+
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
@@ -3639,6 +3661,14 @@ class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
     def is_complex(self):
         return True
 
+    @property
+    def nnodes_per_element(self):
+        if self.element_type in [191]:  # VUBEAM
+            nnodes_per_element = 2
+        else:
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        return nnodes_per_element
+
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
@@ -3654,10 +3684,7 @@ class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
 
-        if self.element_type in [191]:  # VUBEAM
-            nnodes_per_element = 2
-        else:
-            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        nnodes_per_element = self.nnodes_per_element
 
         #print('nnodes_per_element[%s, %s] = %s' % (self.isubcase, self.element_type, nnodes_per_element))
         self.nnodes = nnodes_per_element

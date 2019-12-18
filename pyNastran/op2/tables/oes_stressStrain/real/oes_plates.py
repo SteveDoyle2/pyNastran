@@ -26,12 +26,30 @@ class RealPlateArray(OES_Object):
             #raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
+
+    @property
+    def nnodes_per_element(self) -> int:
+        if self.element_type in [33, 74]:
+            nnodes_per_element = 1
+        elif self.element_type == 144:
+            nnodes_per_element = 5
+        elif self.element_type == 64:  # CQUAD8
+            nnodes_per_element = 5
+        elif self.element_type == 82:  # CQUADR
+            nnodes_per_element = 5
+        elif self.element_type == 70:  # CTRIAR
+            nnodes_per_element = 4
+        elif self.element_type == 75:  # CTRIA6
+            nnodes_per_element = 4
+        else:
+            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+        return nnodes_per_element
 
     def _reset_indices(self):
         self.itotal = 0
@@ -56,20 +74,8 @@ class RealPlateArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         #self.names = []
-        if self.element_type in [33, 74]:
-            nnodes_per_element = 1
-        elif self.element_type == 144:
-            nnodes_per_element = 5
-        elif self.element_type == 64:  # CQUAD8
-            nnodes_per_element = 5
-        elif self.element_type == 82:  # CQUADR
-            nnodes_per_element = 5
-        elif self.element_type == 70:  # CTRIAR
-            nnodes_per_element = 4
-        elif self.element_type == 75:  # CTRIA6
-            nnodes_per_element = 4
-        else:
-            raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
+
+        nnodes_per_element = self.nnodes_per_element
 
         #print('nnodes_per_element[%s, %s] = %s' % (
             #self.isubcase, self.element_type, nnodes_per_element))

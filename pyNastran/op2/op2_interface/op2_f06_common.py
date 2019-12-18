@@ -424,29 +424,29 @@ class OP2_F06_Common:
     def ctube_force(self, ctube_force):
         self.op2_results.force.ctube_force = ctube_force
 
-    @conrod_force.setter
+    @cbeam_force.setter
     def cbeam_force(self, cbeam_force):
         self.op2_results.force.cbeam_force = cbeam_force
-    @ctube_force.setter
+    @cbar_force.setter
     def cbar_force(self, cbar_force):
         self.op2_results.force.cbar_force = cbar_force
 
-    @conrod_force.setter
+    @ctria3_force.setter
     def ctria3_force(self, ctria3_force):
         self.op2_results.force.ctria3_force = ctria3_force
-    @ctube_force.setter
+    @ctria6_force.setter
     def ctria6_force(self, ctria6_force):
         self.op2_results.force.ctria6_force = ctria6_force
-    @conrod_force.setter
+    @ctriar_force.setter
     def ctriar_force(self, ctriar_force):
         self.op2_results.force.ctriar_force = ctriar_force
-    @ctube_force.setter
+    @cquad4_force.setter
     def cquad4_force(self, cquad4_force):
         self.op2_results.force.cquad4_force = cquad4_force
-    @conrod_force.setter
+    @cquad8_force.setter
     def cquad8_force(self, cquad8_force):
         self.op2_results.force.cquad8_force = cquad8_force
-    @ctube_force.setter
+    @cquadr_force.setter
     def cquadr_force(self, cquadr_force):
         self.op2_results.force.cquadr_force = cquadr_force
 
@@ -937,7 +937,8 @@ class OP2_F06_Common:
 
             # OES - isotropic CBAR stress/strain
             'cbar_stress', 'cbar_strain',
-            'cbar_force', 'cbar_force_abs', 'cbar_force_nrl', 'cbar_force_srss',
+            #'cbar_force',
+            'cbar_force_abs', 'cbar_force_nrl', 'cbar_force_srss',
 
             'cbar_stress_10nodes', 'cbar_strain_10nodes', 'cbar_force_10nodes',
 

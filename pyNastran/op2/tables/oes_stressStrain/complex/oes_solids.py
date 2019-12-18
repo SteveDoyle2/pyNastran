@@ -62,7 +62,8 @@ class ComplexSolidArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    def get_nnodes(self):
+    @property
+    def nnodes_per_element(self):
         if self.element_type == 39: # CTETRA
             nnodes = 5
         elif self.element_type == 68: # CPENTA
@@ -77,7 +78,7 @@ class ComplexSolidArray(OES_Object):
         """sizes the vectorized attributes of the ComplexSolidArray"""
         #print('ntimes=%s nelements=%s ntotal=%s subtitle=%s' % (
             #self.ntimes, self.nelements, self.ntotal, self.subtitle))
-        nnodes = self.get_nnodes()
+        nnodes = self.nnodes_per_element
 
         #self.names = []
         #self.nelements //= nnodes

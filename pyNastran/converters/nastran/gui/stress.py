@@ -512,7 +512,7 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
         case = result[key]
         #print(case)
 
-        nnodes_per_element = case.nnodes
+        nnodes_per_element = case.nnodes_per_element
         nlayers_per_element = nnodes_per_element * 2
         eidsi = case.element_node[::nlayers_per_element, 0]  # ::2 is for layer skipping
         #print(case.element_name, eidsi)
@@ -601,7 +601,7 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
         keys_map[key] = (case.subtitle, case.label,
                          case.superelement_adaptivity_index, case.pval_step)
 
-        nnodes_per_element = case.nnodes
+        nnodes_per_element = case.nnodes_per_element
         nelements_nnodes = nnodes_nlayers // 2
         nelements = nelements_nnodes // nnodes_per_element
         nlayers = 2
@@ -833,7 +833,7 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
         case = result[key]
 
         #print(case)
-        nnodes = case.get_nnodes()
+        nnodes = case.nnodes_per_element
         all_eidsi = case.element_node[:, 0]
         nall_eidsi = len(all_eidsi)
         nelementsi = nall_eidsi // nnodes
@@ -933,7 +933,7 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
         #nelements_nnodes = nnodes_nlayers // 2
         #nelements = nelements_nnodes // nnodes_per_element
         #nlayers = 2
-        nnodes = case.get_nnodes()
+        nnodes = case.nnodes_per_element
         scalars = case.data
         #print('scalars.shape', scalars.shape)
         ntimes, nall, nresults = scalars.shape

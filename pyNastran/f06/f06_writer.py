@@ -523,10 +523,11 @@ class F06Writer(OP2_F06_Common):
         for isubcase, res_keys in sorted(res_keys_subcase.items()):
             for res_key in res_keys:
                 if isinstance(res_key, tuple):
-                    is_compressed = False
+                    pass
+                    #is_compressed = False
                 else:
                     # int
-                    is_compressed = True
+                    #is_compressed = True
                     isubcase = res_key
 
                 if res_key not in self.eigenvectors:
@@ -571,10 +572,10 @@ class F06Writer(OP2_F06_Common):
 
         for isubcase, res_keys in sorted(res_keys_subcase.items()):
             for res_key in res_keys:
-                if isinstance(res_key, tuple):
-                    is_compressed = False
-                else:
-                    is_compressed = True
+                #if isinstance(res_key, tuple):
+                    #is_compressed = False
+                #else:
+                    #is_compressed = True
 
                 res_length = self._get_result_length(res_types, res_key)
                 if res_length == 0:
@@ -601,17 +602,24 @@ class F06Writer(OP2_F06_Common):
                     if result.nonlinear_factor is not None:
                         header.append('')
                     try:
+                        class_name = result.__class__.__name__
+
                         element_name = ''
                         if hasattr(result, 'element_name'):
                             element_name = ' - ' + result.element_name
+                            is_ignored = 'StrainEnergy' not in class_name and 'GridPointForces' not in class_name
+                            if not hasattr(result, 'nnodes_per_element') and is_ignored:
+                                self.log.error(f'{class_name} is missing nnodes_per_element')
 
-                        class_name = result.__class__.__name__
                         if hasattr(result, 'data'):
                             if not quiet:
                                 print(res_format_vectorized % (
                                     class_name, isubcase, subtitle, element_name))
                         else:
                             print(res_format % (class_name, isubcase, element_name))
+
+                        result.is_complex
+                        result.is_real
 
                         try:
                             self.page_num = result.write_f06(

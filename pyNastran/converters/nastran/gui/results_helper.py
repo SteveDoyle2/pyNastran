@@ -99,177 +99,17 @@ class NastranGuiResults(NastranGuiAttributes):
             case = model.grid_point_stresses_volume_principal[key]
             self.log.warning('skipping grid_point_stresses_volume_principal')
 
-        icase = self._fill_op2_grid_point_surface_stresses(
+        icase = _fill_op2_grid_point_surface_stresses(
+            self.element_ids,
             cases, model,
             times, key, icase,
             form_dict, header_dict, keys_map)
 
-        icase = self._fill_op2_grid_point_stresses_volume_direct(
+        icase = _fill_op2_grid_point_stresses_volume_direct(
+            self.node_ids,
             cases, model,
             times, key, icase,
             form_dict, header_dict, keys_map)
-        return icase
-
-    def _fill_op2_grid_point_stresses_volume_direct(self, cases, model: OP2,
-                                                    times, key, icase: int,
-                                                    form_dict, header_dict, keys_map) -> int:
-        if key not in model.grid_point_stresses_volume_direct:
-            return icase
-
-        case = model.grid_point_stresses_volume_direct[key]
-        if case.is_complex:
-            return icase
-        nids = self.node_ids
-        nnodes = len(nids)
-
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
-        subcase_id = key[0]
-
-        nids2 = case.node
-        i = np.searchsorted(nids, nids2)
-        if len(i) != len(np.unique(i)):
-            msg = 'i_gpstress=%s is not unique\n' % str(i)
-            #print('eids = %s\n' % str(list(eids)))
-            #print('eidsi = %s\n' % str(list(eidsi)))
-            raise RuntimeError(msg)
-
-        for itime, unused_dt in enumerate(times):
-            dt = case._times[itime]
-            header = _get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-
-            # volume direct
-            #['ox', 'oy', 'oz', 'txy', 'tyz', 'txz', 'pressure', 'ovm']
-            ox = np.full(nnodes, np.nan, dtype='float32')
-            oy = np.full(nnodes, np.nan, dtype='float32')
-            oz = np.full(nnodes, np.nan, dtype='float32')
-            txy = np.full(nnodes, np.nan, dtype='float32')
-            tyz = np.full(nnodes, np.nan, dtype='float32')
-            txz = np.full(nnodes, np.nan, dtype='float32')
-            ovm = np.full(nnodes, np.nan, dtype='float32')
-
-            ox[i] = case.data[itime, :, 0]
-            oy[i] = case.data[itime, :, 1]
-            oz[i] = case.data[itime, :, 2]
-            txy[i] = case.data[itime, :, 3]
-            tyz[i] = case.data[itime, :, 4]
-            txz[i] = case.data[itime, :, 5]
-            ovm[i] = case.data[itime, :, 7]
-
-            headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'ovm']
-            form = [('Volume Direct', None, [])]
-            formi = form[0][2]
-            form_dict[(key, itime)] = form
-
-            for header, resi in zip(headers, (ox, oy, oz, txy, tyz, txz, ovm)):
-                ese_res = GuiResult(subcase_id, header=header,
-                                    title=header, data_format='%.3e',
-                                    location='node', scalar=resi)
-                cases[icase] = (ese_res, (subcase_id, header))
-                formi.append((header, icase, []))
-                icase += 1
-
-        return icase
-
-    def _fill_op2_grid_point_surface_stresses(self, cases, model: OP2,
-                                              times, key, icase: int,
-                                              form_dict, header_dict, keys_map) -> int:
-        if key not in model.grid_point_surface_stresses:
-            return icase
-
-        #grid_point_surface_stresses[(1, 1, 1, 0, 666, '', '')]
-        #    type=GridPointSurfaceStressesArray nelements=99
-        #    data: [1, nelements, 8] where 8=[nx, ny, txy, angle, majorP, minorP, tmax, ovm]
-        #    node_element.shape = (99, 2)
-        #    location.shape = (99,)
-        #    data.shape = (1, 99, 8)
-        #    sort1
-        #    lsdvmns = [1]
-        case = model.grid_point_surface_stresses[key]
-
-        if case.is_complex:
-            return icase
-        #print(case.get_stats())
-        eids_all = self.element_ids
-        nelements = len(eids_all)
-        keys_map[key] = (case.subtitle, case.label,
-                         case.superelement_adaptivity_index, case.pval_step)
-        subcase_id = key[0]
-
-
-        eidsi = case.node_element[:, 0]
-        nidsi = case.node_element[:, 1]
-
-        icentroid = np.where(nidsi == 0)[0]
-        eids_res = eidsi[icentroid]
-        assert eids_res.min() > 0, eids_res
-        ueids_res = np.unique(eids_res)
-        #print('eids_res =', eids_res.tolist(), len(eids_res))
-        #print('ueids_res=', ueids_res.tolist(), len(ueids_res))
-
-        i = np.searchsorted(eids_all, ueids_res)
-        ui = np.unique(i)
-        j = np.where(i < len(ui) - 1)[0]
-        i2 = i[j]
-
-        #print('i        =', i.tolist(), len(i))
-        #print('ui       =', ui.tolist(), len(ui))
-        #print('j        =', j.tolist(), len(j))
-        #print('i2       =', i2.tolist(), len(i2))
-        #ueids_res2 = eids_all[i2]
-
-        #ueids_res1 = ueids_res[:len(ui) - 1]
-        #print('ueids_res1 =', ueids_res1.tolist(), len(ueids_res1))
-        #print('ueids_res2 =', ueids_res2.tolist(), len(ueids_res2))
-
-        #eid_exists = ueids_res1 == ueids_res2
-        #print("eid_exists =", eid_exists)
-        #ueids3 = ueids_res1[eid_exists]
-        #print('ueids3=', ueids3, len(ueids3))
-
-        if len(i2) != len(np.unique(i2)):
-            msg = 'i_gpstress=%s is not unique\n' % str(i2)
-            #print('eids = %s\n' % str(list(eids)))
-            #print('eidsi = %s\n' % str(list(eidsi)))
-            raise RuntimeError(msg)
-
-        for itime, unused_dt in enumerate(times):
-            dt = case._times[itime]
-            header = _get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-
-            # [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
-            nx = np.full(nelements, np.nan, dtype='float32')
-            ny = np.full(nelements, np.nan, dtype='float32')
-            txy = np.full(nelements, np.nan, dtype='float32')
-            angle = np.full(nelements, np.nan, dtype='float32')
-            major = np.full(nelements, np.nan, dtype='float32')
-            minor = np.full(nelements, np.nan, dtype='float32')
-            tmax = np.full(nelements, np.nan, dtype='float32')
-            ovm = np.full(nelements, np.nan, dtype='float32')
-
-            nx[i2] = case.data[itime, i2, 0]
-            ny[i2] = case.data[itime, i2, 1]
-            txy[i2] = case.data[itime, i2, 2]
-            angle[i2] = case.data[itime, i2, 3]
-            major[i2] = case.data[itime, i2, 4]
-            minor[i2] = case.data[itime, i2, 5]
-            tmax[i2] = case.data[itime, i2, 6]
-            ovm[i2] = case.data[itime, i2, 7]
-
-            headers = ['nx', 'ny', 'txy', 'majorP', 'minorP', 'tmax', 'ovm']
-            form = [('Surface Stresses', None, [])]
-            formi = form[0][2]
-            form_dict[(key, itime)] = form
-
-            for header, resi in zip(headers, (nx, ny, txy, angle, major, minor, ovm)):
-                ese_res = GuiResult(subcase_id, header=header,
-                                    title=header, data_format='%.3e',
-                                    location='centroid', scalar=resi)
-                cases[icase] = (ese_res, (subcase_id, header))
-                formi.append((header, icase, []))
-                icase += 1
         return icase
 
     def _fill_op2_centroidal_strain_energy(self, cases: Dict[int, GuiResults], model: OP2,
@@ -601,7 +441,7 @@ class NastranGuiResults(NastranGuiAttributes):
                                         header_dict: Dict[Any, Any],
                                         keys_map: Dict[Any, Any]) -> int:
         """
-        Creates the time accurate strain energy objects for the pyNastranGUI
+        Creates the time accurate force objects
         """
         nelements = self.nelements
         out = self._create_op2_time_centroidal_force_arrays(
@@ -1763,3 +1603,164 @@ def _get_stress_times(model: OP2, isubcase: int) -> Tuple[bool, bool, bool, Any]
             break
             #return is_data, is_static, is_real, times
     return is_data, is_static, is_real, times
+
+def _fill_op2_grid_point_surface_stresses(eids_all, cases, model: OP2,
+                                          times, key, icase: int,
+                                          form_dict, header_dict, keys_map) -> int:
+    if key not in model.grid_point_surface_stresses:
+        return icase
+
+    #grid_point_surface_stresses[(1, 1, 1, 0, 666, '', '')]
+    #    type=GridPointSurfaceStressesArray nelements=99
+    #    data: [1, nelements, 8] where 8=[nx, ny, txy, angle, majorP, minorP, tmax, ovm]
+    #    node_element.shape = (99, 2)
+    #    location.shape = (99,)
+    #    data.shape = (1, 99, 8)
+    #    sort1
+    #    lsdvmns = [1]
+    case = model.grid_point_surface_stresses[key]
+
+    if case.is_complex:
+        return icase
+    #print(case.get_stats())
+    #eids_all = self.element_ids
+    nelements = len(eids_all)
+    keys_map[key] = (case.subtitle, case.label,
+                     case.superelement_adaptivity_index, case.pval_step)
+    subcase_id = key[0]
+
+
+    eidsi = case.node_element[:, 0]
+    nidsi = case.node_element[:, 1]
+
+    icentroid = np.where(nidsi == 0)[0]
+    eids_res = eidsi[icentroid]
+    assert eids_res.min() > 0, eids_res
+    ueids_res = np.unique(eids_res)
+    #print('eids_res =', eids_res.tolist(), len(eids_res))
+    #print('ueids_res=', ueids_res.tolist(), len(ueids_res))
+
+    i = np.searchsorted(eids_all, ueids_res)
+    ui = np.unique(i)
+    j = np.where(i < len(ui) - 1)[0]
+    i2 = i[j]
+
+    #print('i        =', i.tolist(), len(i))
+    #print('ui       =', ui.tolist(), len(ui))
+    #print('j        =', j.tolist(), len(j))
+    #print('i2       =', i2.tolist(), len(i2))
+    #ueids_res2 = eids_all[i2]
+
+    #ueids_res1 = ueids_res[:len(ui) - 1]
+    #print('ueids_res1 =', ueids_res1.tolist(), len(ueids_res1))
+    #print('ueids_res2 =', ueids_res2.tolist(), len(ueids_res2))
+
+    #eid_exists = ueids_res1 == ueids_res2
+    #print("eid_exists =", eid_exists)
+    #ueids3 = ueids_res1[eid_exists]
+    #print('ueids3=', ueids3, len(ueids3))
+
+    if len(i2) != len(np.unique(i2)):
+        msg = 'i_gpstress=%s is not unique\n' % str(i2)
+        #print('eids = %s\n' % str(list(eids)))
+        #print('eidsi = %s\n' % str(list(eidsi)))
+        raise RuntimeError(msg)
+
+    for itime, unused_dt in enumerate(times):
+        dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+
+        # [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
+        nx = np.full(nelements, np.nan, dtype='float32')
+        ny = np.full(nelements, np.nan, dtype='float32')
+        txy = np.full(nelements, np.nan, dtype='float32')
+        angle = np.full(nelements, np.nan, dtype='float32')
+        major = np.full(nelements, np.nan, dtype='float32')
+        minor = np.full(nelements, np.nan, dtype='float32')
+        tmax = np.full(nelements, np.nan, dtype='float32')
+        ovm = np.full(nelements, np.nan, dtype='float32')
+
+        nx[i2] = case.data[itime, i2, 0]
+        ny[i2] = case.data[itime, i2, 1]
+        txy[i2] = case.data[itime, i2, 2]
+        angle[i2] = case.data[itime, i2, 3]
+        major[i2] = case.data[itime, i2, 4]
+        minor[i2] = case.data[itime, i2, 5]
+        tmax[i2] = case.data[itime, i2, 6]
+        ovm[i2] = case.data[itime, i2, 7]
+
+        headers = ['nx', 'ny', 'txy', 'majorP', 'minorP', 'tmax', 'ovm']
+        form = [('Surface Stresses', None, [])]
+        formi = form[0][2]
+        form_dict[(key, itime)] = form
+
+        for header, resi in zip(headers, (nx, ny, txy, angle, major, minor, ovm)):
+            ese_res = GuiResult(subcase_id, header=header,
+                                title=header, data_format='%.3e',
+                                location='centroid', scalar=resi)
+            cases[icase] = (ese_res, (subcase_id, header))
+            formi.append((header, icase, []))
+            icase += 1
+    return icase
+
+def _fill_op2_grid_point_stresses_volume_direct(nids, cases, model: OP2,
+                                                times, key, icase: int,
+                                                form_dict, header_dict, keys_map) -> int:
+    if key not in model.grid_point_stresses_volume_direct:
+        return icase
+
+    case = model.grid_point_stresses_volume_direct[key]
+    if case.is_complex:
+        return icase
+    nnodes = len(nids)
+
+    keys_map[key] = (case.subtitle, case.label,
+                     case.superelement_adaptivity_index, case.pval_step)
+    subcase_id = key[0]
+
+    nids2 = case.node
+    i = np.searchsorted(nids, nids2)
+    if len(i) != len(np.unique(i)):
+        msg = 'i_gpstress=%s is not unique\n' % str(i)
+        #print('eids = %s\n' % str(list(eids)))
+        #print('eidsi = %s\n' % str(list(eidsi)))
+        raise RuntimeError(msg)
+
+    for itime, unused_dt in enumerate(times):
+        dt = case._times[itime]
+        header = _get_nastran_header(case, dt, itime)
+        header_dict[(key, itime)] = header
+
+        # volume direct
+        #['ox', 'oy', 'oz', 'txy', 'tyz', 'txz', 'pressure', 'ovm']
+        ox = np.full(nnodes, np.nan, dtype='float32')
+        oy = np.full(nnodes, np.nan, dtype='float32')
+        oz = np.full(nnodes, np.nan, dtype='float32')
+        txy = np.full(nnodes, np.nan, dtype='float32')
+        tyz = np.full(nnodes, np.nan, dtype='float32')
+        txz = np.full(nnodes, np.nan, dtype='float32')
+        ovm = np.full(nnodes, np.nan, dtype='float32')
+
+        ox[i] = case.data[itime, :, 0]
+        oy[i] = case.data[itime, :, 1]
+        oz[i] = case.data[itime, :, 2]
+        txy[i] = case.data[itime, :, 3]
+        tyz[i] = case.data[itime, :, 4]
+        txz[i] = case.data[itime, :, 5]
+        ovm[i] = case.data[itime, :, 7]
+
+        headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz', 'ovm']
+        form = [('Volume Direct', None, [])]
+        formi = form[0][2]
+        form_dict[(key, itime)] = form
+
+        for header, resi in zip(headers, (ox, oy, oz, txy, tyz, txz, ovm)):
+            ese_res = GuiResult(subcase_id, header=header,
+                                title=header, data_format='%.3e',
+                                location='node', scalar=resi)
+            cases[icase] = (ese_res, (subcase_id, header))
+            formi.append((header, icase, []))
+            icase += 1
+    return icase
+

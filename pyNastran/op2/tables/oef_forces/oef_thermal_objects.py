@@ -25,6 +25,16 @@ class Real1DHeatFluxArray(BaseElement):
         if not is_sort1:
             raise NotImplementedError('SORT2')
 
+    @property
+    def is_real(self) -> bool:
+        """is the result real?"""
+        return True
+
+    @property
+    def is_complex(self) -> bool:
+        """is the result complex?"""
+        return False
+
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
@@ -714,6 +724,16 @@ class RealConvHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
         if not is_sort1:
             raise NotImplementedError('SORT2')
 
+    @property
+    def is_real(self) -> bool:
+        """is the result real?"""
+        return True
+
+    @property
+    def is_complex(self) -> bool:
+        """is the result complex?"""
+        return False
+
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
@@ -920,6 +940,16 @@ class RealChbdyHeatFluxArray(BaseElement):  # 107-CHBDYE 108-CHBDYG 109-CHBDYP
 
         if not is_sort1:
             raise NotImplementedError('SORT2')
+
+    @property
+    def is_real(self) -> bool:
+        """is the result real?"""
+        return True
+
+    @property
+    def is_complex(self) -> bool:
+        """is the result complex?"""
+        return False
 
     def _reset_indices(self):
         self.itotal = 0
@@ -1135,11 +1165,13 @@ class RealHeatFluxVUShellArray(BaseElement):
         self.nelements = 0  # result specific
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
+        """is the result real?"""
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
+        """is the result complex?"""
         return False
 
     def data_type(self):

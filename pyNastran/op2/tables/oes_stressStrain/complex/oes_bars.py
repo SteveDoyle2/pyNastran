@@ -29,12 +29,16 @@ class ComplexBarArray(OES_Object):
         self.ielement = 0
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def build(self):
         """sizes the vectorized attributes of the ComplexCBarArray"""

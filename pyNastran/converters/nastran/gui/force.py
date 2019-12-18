@@ -147,6 +147,7 @@ def get_bar_force(eids, cases, model: OP2, times, key, icase,
         'bending_moment_a2' : 'My Bending 2',
         'bending_moment_b1' : 'Mz Bending 1',
         'bending_moment_b2' : 'Mz Bending 2',
+
         # complex
         'bending_moment_1a' : 'My Bending 1',
         'bending_moment_2a' : 'My Bending 2',
@@ -156,14 +157,9 @@ def get_bar_force(eids, cases, model: OP2, times, key, icase,
         'shear2' : 'Fz Shear',
         'axial' : 'Fx',
         'torque' : 'Torque',
-        #'s1a' : 'σxx 1A',
-        #'e1a' : 'ϵxx 1A',
     }
     data_format = '%.3f'
     methods = [method_map[headeri] for headeri in case_headers]
-
-        #headersi = case.get_headers()
-        #print('headersi =', headersi)
 
     scalars_array = []
     for case in bar_cases:

@@ -13,12 +13,16 @@ class ComplexRodArray(OES_Object):
         self.nelements = 0  # result specific
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def _reset_indices(self):
         self.itotal = 0

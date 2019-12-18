@@ -41,7 +41,8 @@ class ComplexTriaxStressArray(OES_Object):
     def is_complex(self) -> bool:
         return True
 
-    def get_nnodes(self) -> int:
+    @property
+    def nnodes_per_element(self) -> int:
         return 1
 
     def _reset_indices(self) -> None:
@@ -52,7 +53,7 @@ class ComplexTriaxStressArray(OES_Object):
         """sizes the vectorized attributes of the ComplexPlateArray"""
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-        nnodes = self.get_nnodes()
+        nnodes = self.nnodes_per_element
 
         #self.names = []
         #self.nelements //= nnodes
@@ -255,18 +256,19 @@ class ComplexPlateArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
 
-    def get_nnodes(self) -> int:
+    @property
+    def nnodes_per_element(self) -> int:
         return get_nnodes(self)
 
-    @property
-    def nnodes(self):
-        return self.get_nnodes()
+    #@property
+    #def nnodes(self):
+        #return self.nnodes_per_element()
 
     def build(self) -> None:
         """sizes the vectorized attributes of the ComplexPlateArray"""
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-        nnodes = self.get_nnodes()
+        nnodes = self.nnodes_per_element
 
         #self.names = []
         #self.nelements //= nnodes
@@ -552,7 +554,7 @@ class ComplexPlateArray(OES_Object):
             self._write_table_header(op2, op2_ascii, date)
             itable = -3
 
-        nnodes = self.get_nnodes()
+        nnodes = self.nnodes_per_element
         #print("nnodes =", self.element_name, nnodes)
         #cen_word_ascii = 'CEN/%i' % nnodes
         #cen_word = b'CEN/%i' % nnodes
