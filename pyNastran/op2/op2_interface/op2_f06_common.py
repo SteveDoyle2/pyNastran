@@ -377,6 +377,79 @@ class OP2_F06_Common:
     @celas4_force.setter
     def cdamp4_force(self, cdamp4_force):
         self.op2_results.force.cdamp4_force = cdamp4_force
+
+    @property
+    def crod_force(self):
+        return self.op2_results.force.crod_force
+    @property
+    def conrod_force(self):
+        return self.op2_results.force.conrod_force
+    @property
+    def ctube_force(self):
+        return self.op2_results.force.ctube_force
+
+    @property
+    def cbeam_force(self):
+        return self.op2_results.force.cbeam_force
+    @property
+    def cbar_force(self):
+        return self.op2_results.force.cbar_force
+
+    @property
+    def ctria3_force(self):
+        return self.op2_results.force.ctria3_force
+    @property
+    def ctria6_force(self):
+        return self.op2_results.force.ctria6_force
+    @property
+    def ctriar_force(self):
+        return self.op2_results.force.ctriar_force
+    @property
+    def cquad4_force(self):
+        return self.op2_results.force.cquad4_force
+    @property
+    def cquad8_force(self):
+        return self.op2_results.force.cquad8_force
+    @property
+    def cquadr_force(self):
+        return self.op2_results.force.cquadr_force
+
+    @crod_force.setter
+    def crod_force(self, crod_force):
+        self.op2_results.force.crod_force = crod_force
+    @conrod_force.setter
+    def conrod_force(self, conrod_force):
+        self.op2_results.force.conrod_force = conrod_force
+    @ctube_force.setter
+    def ctube_force(self, ctube_force):
+        self.op2_results.force.ctube_force = ctube_force
+
+    @conrod_force.setter
+    def cbeam_force(self, cbeam_force):
+        self.op2_results.force.cbeam_force = cbeam_force
+    @ctube_force.setter
+    def cbar_force(self, cbar_force):
+        self.op2_results.force.cbar_force = cbar_force
+
+    @conrod_force.setter
+    def ctria3_force(self, ctria3_force):
+        self.op2_results.force.ctria3_force = ctria3_force
+    @ctube_force.setter
+    def ctria6_force(self, ctria6_force):
+        self.op2_results.force.ctria6_force = ctria6_force
+    @conrod_force.setter
+    def ctriar_force(self, ctriar_force):
+        self.op2_results.force.ctriar_force = ctriar_force
+    @ctube_force.setter
+    def cquad4_force(self, cquad4_force):
+        self.op2_results.force.cquad4_force = cquad4_force
+    @conrod_force.setter
+    def cquad8_force(self, cquad8_force):
+        self.op2_results.force.cquad8_force = cquad8_force
+    @ctube_force.setter
+    def cquadr_force(self, cquadr_force):
+        self.op2_results.force.cquadr_force = cquadr_force
+
     # ------------------------------------------------------------------
 
     def __objects_vector_init__(self):
@@ -393,9 +466,9 @@ class OP2_F06_Common:
         # rods
         self.op2_results = Results()
 
-        self.crod_force = {}
-        self.conrod_force = {}
-        self.ctube_force = {}
+        #self.crod_force = {}
+        #self.conrod_force = {}
+        #self.ctube_force = {}
 
         self.crod_stress = {}
         self.conrod_stress = {}
@@ -437,7 +510,7 @@ class OP2_F06_Common:
         #======================================================================
 
         # bars/beams
-        self.cbar_force = {}
+        #self.cbar_force = {}
         self.cbar_force_abs = {} # thermal=2
         self.cbar_force_srss = {} # thermal=4
         self.cbar_force_nrl = {} # thermal=8
@@ -449,7 +522,7 @@ class OP2_F06_Common:
         self.cbar_stress_10nodes = {}
         self.cbar_strain_10nodes = {}
 
-        self.cbeam_force = {}
+        #self.cbeam_force = {}
         self.cbeam_force_vu = {}
 
         self.cbeam_stress = {}
@@ -462,12 +535,12 @@ class OP2_F06_Common:
 
         #======================================================================
         # shells
-        self.ctria3_force = {}
-        self.ctria6_force = {}
-        self.ctriar_force = {}
-        self.cquad4_force = {}
-        self.cquad8_force = {}
-        self.cquadr_force = {}
+        #self.ctria3_force = {}
+        #self.ctria6_force = {}
+        #self.ctriar_force = {}
+        #self.cquad4_force = {}
+        #self.cquad8_force = {}
+        #self.cquadr_force = {}
 
         self.ctria3_stress = {}
         self.ctria6_stress = {}
@@ -946,14 +1019,15 @@ class OP2_F06_Common:
             'cgap_force',
 
             # rods
-            'crod_force', 'conrod_force', 'ctube_force',
+            #'crod_force', 'conrod_force', 'ctube_force',
 
             # bars/beams
-            'cbeam_force', 'cbeam_force_vu',
+            #'cbeam_force',
+            'cbeam_force_vu',
 
             # shells
-            'cquad4_force', 'cquad8_force', 'cquadr_force',
-            'ctria3_force', 'ctria6_force', 'ctriar_force',
+            #'cquad4_force', 'cquad8_force', 'cquadr_force',
+            #'ctria3_force', 'ctria6_force', 'ctriar_force',
 
             'cshear_force',
 
