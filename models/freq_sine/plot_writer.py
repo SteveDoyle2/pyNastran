@@ -1,5 +1,3 @@
-from pyNastran.op2.op2 import OP2
-from pyNastran.f06.f06_formatting import write_float_12E
 """
 CBUSH          6       3       7       2                               0
 XYPUNCH,ELFORCE/ 6 (2)
@@ -26,6 +24,8 @@ XYPUNCH,ELFORCE/ 5 (6)
 XYPUNCH,ELFORCE/ 5 (7)
 
 """
+from pyNastran.op2.op2 import OP2
+from pyNastran.f06.f06_formatting import write_float_12e
 
 op2 = OP2()
 op2.read_op2('good_sine.op2')
@@ -54,7 +54,7 @@ with open(pch_filename, 'w') as pch_file:
                     data = data.reshape(len(data))
                     for idata, (time, datai) in enumerate(zip(times, data)):
                         msg += '%10i                  %12s        %12s%20i\n' % (
-                            idata + 1, write_float_12E(time), write_float_12E(datai), iline)
+                            idata + 1, write_float_12e(time), write_float_12e(datai), iline)
                         iline += 1
                     pch_file.write(msg)
                     # print(msg)

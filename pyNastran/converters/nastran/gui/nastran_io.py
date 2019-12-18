@@ -9,10 +9,6 @@ from io import StringIO
 from collections import defaultdict, OrderedDict
 from typing import List, Dict, Tuple, Any, TYPE_CHECKING
 
-from pyNastran import __version__
-from pyNastran.op2.result_objects.stress_object import StressObject
-from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
-
 #VTK_TRIANGLE = 5
 #VTK_QUADRATIC_TRIANGLE = 22
 
@@ -52,10 +48,12 @@ from vtk import (vtkTriangle, vtkQuad, vtkTetra, vtkWedge, vtkHexahedron,
                  vtkPyramid) #vtkQuadraticPyramid
 
 #from pyNastran import is_release
+from pyNastran import __version__
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.femutils.nan import (
     isfinite, isfinite_and_greater_than, isfinite_and_nonzero,
     isgreater_int)
+from pyNastran.femutils.utils import duplicates, is_monotonic, underflow_norm
 
 from pyNastran.bdf.bdf import (BDF,
                                CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
@@ -75,9 +73,19 @@ from pyNastran.bdf.mesh_utils.delete_bad_elements import (
     tri_quality, quad_quality, get_min_max_theta)
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids_all
 
+
+from pyNastran.op2.op2 import OP2
+#from pyNastran.f06.f06_formatting import get_key0
+from pyNastran.op2.op2_geom import OP2Geom
+from pyNastran.op2.result_objects.stress_object import StressObject
+
+
 from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from pyNastran.gui.utils.vtk.vtk_utils import (
     get_numpy_idtype_for_vtk, numpy_to_vtk_points, create_vtk_cells_of_constant_element_type)
+from pyNastran.gui.qt_files.colors import (
+    RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
+    YELLOW_FLOAT, ORANGE_FLOAT)
 from pyNastran.gui.errors import NoGeometry, NoSuperelements
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.gui_objects.displacements import ForceTableResults, ElementalTableResults
@@ -94,13 +102,7 @@ from .utils import (
     make_nid_map, store_warning)
 from .menus.setup_model_sidebar import ModelSidebar
 
-from pyNastran.op2.op2 import OP2
-#from pyNastran.f06.f06_formatting import get_key0
-from pyNastran.op2.op2_geom import OP2Geom
 
-from pyNastran.gui.qt_files.colors import (
-    RED_FLOAT, BLUE_FLOAT, GREEN_FLOAT, LIGHT_GREEN_FLOAT, PINK_FLOAT, PURPLE_FLOAT,
-    YELLOW_FLOAT, ORANGE_FLOAT)
 if TYPE_CHECKING:
     from pyNastran.gui.gui_objects.settings import Settings
 
@@ -117,7 +119,7 @@ SIDE_MAP['CHEXA'] = {
 NO_THETA = [
     'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-    'CBAR', 'CBEAM', 'CBEAM3',
+    'CBAR', 'CBEAM', 'CBEAM3', 'CBEND',
     'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CVISC',
     'CONROD', 'CROD', 'CTUBE', 'PLOTEL',
     'CHBDYP', 'GENEL',
