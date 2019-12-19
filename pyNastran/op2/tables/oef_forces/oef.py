@@ -1019,7 +1019,7 @@ class OEF(OP2Common):
                     obj.element_parent_coord_icord[ielement:ielement2, 3] = theta
                 #obj.data[itotal:itotal2, 0] = floats[:, 4]
 
-                ints2 = ints[:, 6:].reshape(nelements * nnodes, 7)
+                #ints2 = ints[:, 6:].reshape(nelements * nnodes, 7)
                 floats2 = floats[:, 6:].reshape(nelements * nnodes, 7)
 
                 #[vugrid]
@@ -1360,10 +1360,11 @@ class OEF(OP2Common):
         elif self.element_type == 69:  # cbend
             n, nelements, ntotal = self._oef_cbend(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type in [76, 77, 78]:
+        elif self.element_type in [76, 77, 78, 79]:
             # 76-HEXPR
             # 77-PENPR
             # 78-TETPR
+            # 79-CPYRAM
             n, nelements, ntotal = self._oef_csolid_pressure(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
         elif self.element_type == 102:  # cbush
@@ -2897,7 +2898,7 @@ class OEF(OP2Common):
         """35-CONEAX"""
         if prefix == '' and postfix == '':
             prefix = 'force.'
-        result_name = prefix + 'coneax_force' + postfix
+        result_name = prefix + 'cconeax_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -3196,6 +3197,8 @@ class OEF(OP2Common):
             result_name = prefix + 'cpenta_pressure_force' + postfix
         elif self.element_type == 78:
             result_name = prefix + 'ctetra_pressure_force' + postfix
+        elif self.element_type == 79:
+            result_name = prefix + 'cpyram_pressure_force' + postfix
         else:
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
@@ -3343,15 +3346,17 @@ class OEF(OP2Common):
 
     def _oef_cbush(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """102-CBUSH"""
-        n = 0
         if prefix == '' and postfix == '':
             prefix = 'force.'
 
         result_name = prefix + 'cbush_force' + postfix
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
         #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
 
+        n = 0
         numwide_real = 7
         if self.format_code in [1, 2] and self.num_wide == 7:  # real/random
             # real - format_code == 1
@@ -3448,7 +3453,7 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
-    def _oef_vu_shell(self, data, ndata, dt, is_magnitude_phase, unused_prefix, unused_postfix):
+    def _oef_vu_shell(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """
         189-VUQUAD
         190-VUTRIA
@@ -3461,11 +3466,11 @@ class OEF(OP2Common):
         if self.element_type in [189]:  # VUQUAD
             nnodes = 4
             etype = 'VUQUAD4'
-            result_name = 'vu_quad_force'
+            result_name = prefix + 'vu_quad_force' + postfix
         elif self.element_type in [190]:  # VUTRIA
             nnodes = 3
             etype = 'VUTRIA3'
-            result_name = 'vu_tria_force'
+            result_name = prefix + 'vu_tria_force' + postfix
         else:
             raise NotImplementedError(self.code_information())
 
@@ -3542,7 +3547,7 @@ class OEF(OP2Common):
                             self.binary_debug.write('%s\n' % (str(out)))
                         (vugrid, mfx, mfy, mfxy, unused_ai, unused_bi, unused_ci, bmx, bmy,
                          bmxy, syz, szx, unused_di) = out
-                        out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
+                        #out2 = (vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
                         obj.add_sort1(dt, eid, parent, coord, icord, theta,
                                       vugrid, mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx)
                         #vugrids.append(vugrid)

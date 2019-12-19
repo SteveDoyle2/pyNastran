@@ -880,12 +880,13 @@ TABLE_OBJ_MAP = {
     'ctetra_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
     'cpenta_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
     'chexa_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
+    'cpyram_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
     'cbeam_force_vu' : (RealCBeamForceVUArray, ComplexCBeamForceVUArray),
 
     'grid_point_surface_stresses' : (GridPointSurfaceStressesArray, ),
     'grid_point_stresses_volume_direct' : (GridPointStressesVolumeDirectArray, ),
     'grid_point_stresses_volume_principal' : (GridPointStressesVolumePrincipalArray, ),
-    'grid_point_stress_discontinuities' : (GridPointStressesSurfaceDiscontinutiesArray, ), ## TODO: fix
+    'grid_point_stress_discontinuities' : (GridPointStressesSurfaceDiscontinutiesArray, ),
 
     # ----------------------------------------------------------
     'crod_thermal_load' :  (Real1DHeatFluxArray, ),

@@ -296,6 +296,11 @@ class StrainEnergy:
         self.celas3_strain_energy = {}
         self.celas4_strain_energy = {}
 
+        self.cdamp1_strain_energy = {}
+        self.cdamp2_strain_energy = {}
+        self.cdamp3_strain_energy = {}
+        self.cdamp4_strain_energy = {}
+
         self.cquad4_strain_energy = {}
         self.cquad8_strain_energy = {}
         self.cquadr_strain_energy = {}
@@ -354,6 +359,9 @@ class StrainEnergy:
             'cbush_strain_energy',
             'celas1_strain_energy', 'celas2_strain_energy',
             'celas3_strain_energy', 'celas4_strain_energy',
+
+            'cdamp1_strain_energy', 'cdamp2_strain_energy',
+            'cdamp3_strain_energy', 'cdamp4_strain_energy',
 
             'cdum8_strain_energy',
             #'chexa8fd_strain_energy'

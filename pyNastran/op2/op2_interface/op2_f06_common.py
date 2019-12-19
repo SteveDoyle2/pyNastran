@@ -70,7 +70,7 @@ class OP2_F06_Common:
         **Example 1**
         >>> self.eigenvectors = get_result('eigenvectors')
 
-        **Example 1**
+        **Example 2**
         >>> self.ato.displacements = get_result('ato.displacements')
 
         """
@@ -391,8 +391,8 @@ class OP2_F06_Common:
     def cbush_force(self):
         return self.op2_results.force.cbush_force
     @property
-    def coneax_force(self):
-        return self.op2_results.force.coneax_force
+    def cconeax_force(self):
+        return self.op2_results.force.cconeax_force
 
     @cgap_force.setter
     def cgap_force(self, cgap_force):
@@ -406,9 +406,9 @@ class OP2_F06_Common:
     @cbush_force.setter
     def cbush_force(self, cbush_force):
         self.op2_results.force.cbush_force = cbush_force
-    @coneax_force.setter
-    def coneax_force(self, coneax_force):
-        self.op2_results.force.coneax_force = coneax_force
+    @cconeax_force.setter
+    def cconeax_force(self, cconeax_force):
+        self.op2_results.force.cconeax_force = cconeax_force
 
     @property
     def cvisc_force(self):
@@ -518,10 +518,6 @@ class OP2_F06_Common:
         # rods
         self.op2_results = Results()
 
-        #self.crod_force = {}
-        #self.conrod_force = {}
-        #self.ctube_force = {}
-
         self.crod_stress = {}
         self.conrod_stress = {}
         self.ctube_stress = {}
@@ -532,10 +528,6 @@ class OP2_F06_Common:
 
         #======================================================================
         # springs
-        #self.celas1_force = {}
-        #self.celas2_force = {}
-        #self.celas3_force = {}
-        #self.celas4_force = {}
         self.celas1_stress = {}
         self.celas2_stress = {}
         self.celas3_stress = {}
@@ -562,7 +554,6 @@ class OP2_F06_Common:
         #======================================================================
 
         # bars/beams
-        #self.cbar_force = {}
         self.cbar_force_abs = {} # thermal=2
         self.cbar_force_srss = {} # thermal=4
         self.cbar_force_nrl = {} # thermal=8
@@ -574,7 +565,6 @@ class OP2_F06_Common:
         self.cbar_stress_10nodes = {}
         self.cbar_strain_10nodes = {}
 
-        #self.cbeam_force = {}
         self.cbeam_force_vu = {}
 
         self.cbeam_stress = {}
@@ -583,16 +573,9 @@ class OP2_F06_Common:
         #======================================================================
         self.cbend_stress = {}
         self.cbend_strain = {}
-        #self.cbend_force = {}
 
         #======================================================================
         # shells
-        #self.ctria3_force = {}
-        #self.ctria6_force = {}
-        #self.ctriar_force = {}
-        #self.cquad4_force = {}
-        #self.cquad8_force = {}
-        #self.cquadr_force = {}
 
         self.ctria3_stress = {}
         self.ctria6_stress = {}
@@ -642,7 +625,6 @@ class OP2_F06_Common:
 
         self.cshear_stress = {}
         self.cshear_strain = {}
-        #self.cshear_force = {}
 
         #: OES - CBEAM 94
         self.nonlinear_cbeam_stress = {}
@@ -739,32 +721,11 @@ class OP2_F06_Common:
         #: OUG - eigenvectors
         self.eigenvectors = {}            # tCode=7 thermal=0
 
-        # OEF - Forces - tCode=4 thermal=0
-        #self.cbush_force = {}
-        #self.coneax_force = {}
-
-        #self.cdamp1_force = {}
-        #self.cdamp2_force = {}
-        #self.cdamp3_force = {}
-        #self.cdamp4_force = {}
-
-        #self.celas1_force = {}
-        #self.celas2_force = {}
-        #self.celas3_force = {}
-        #self.celas4_force = {}
-
-        #self.cgap_force = {}
-
         # solidPressureForces
         self.chexa_pressure_force = {}
         self.cpenta_pressure_force = {}
         self.ctetra_pressure_force = {}
-
-        #self.cvisc_force = {}
-
-        # VU force
-        #self.vu_quad_force = {}
-        #self.vu_tria_force = {}
+        self.cpyram_pressure_force = {}
 
         #OEF - Fluxes - tCode=4 thermal=1
         self.conv_thermal_load = {}
@@ -831,11 +792,7 @@ class OP2_F06_Common:
         self.nonlinear_conrod_stress = {}
         self.nonlinear_conrod_strain = {}
 
-        #: OESNLXR - CTRIA3/CQUAD4 stress
-        #self.nonlinearPlateStress = {}
         #: OESNLXR - CTRIA3/CQUAD4 strain
-        #self.nonlinearPlateStrain = {}
-        #self.hyperelastic_plate_stress = {}
         self.hyperelastic_cquad4_strain = {}
 
         self.nonlinear_cquad4_stress = {}
@@ -1086,6 +1043,7 @@ class OP2_F06_Common:
 
             # solids
             'chexa_pressure_force', 'cpenta_pressure_force', 'ctetra_pressure_force',
+            'cpyram_pressure_force',
 
             # vu
             #'vu_quad_force', 'vu_tria_force',
