@@ -259,10 +259,10 @@ class RealSolidArray(OES_Object):
 
     @property
     def nnodes_per_element(self) -> int:
-        return self._nnodes_per_element + 1
+        return self.nnodes_per_element_no_centroid + 1
 
     @property
-    def _nnodes_per_element(self) -> int:
+    def nnodes_per_element_no_centroid(self) -> int:
         if self.element_type == 39: # CTETRA
             nnodes = 4
         elif self.element_type == 67: # CHEXA
@@ -432,7 +432,7 @@ class RealSolidArray(OES_Object):
         # 21 = 1 node, 3 principal, 6 components, 9 vectors, 2 p/ovm
         #ntotal = ((nnodes * 21) + 1) + (nelements * 4)
 
-        nnodes_expected = self.nnodes_per_element
+        nnodes_expected = self.nnodes_per_element_no_centroid
         ntotali = 4 + 21 * nnodes_expected
         ntotali = self.num_wide
         ntotal = ntotali * nelements

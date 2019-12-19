@@ -34,19 +34,20 @@ class RandomPlateArray(OES_Object):
             #raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return get_nnodes(self)
 
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0
-
-    def get_nnodes(self):
-        return get_nnodes(self)
 
     def build(self):
         """sizes the vectorized attributes of the ComplexPlateArray"""

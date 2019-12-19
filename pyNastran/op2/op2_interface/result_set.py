@@ -95,8 +95,8 @@ class ResultSet:
                 #allowed.sort()
                 #raise RuntimeError('%r is not a valid result to remove\nallowed=[%s]' % (
                     #result, ', '.join(allowed)))
-                raise RuntimeError('%r is not a valid result to remove\n%s' % (
-                    result, self))
+                raise RuntimeError(f'{result!r} is not a valid result to remove\n{self}\n'
+                                   f'{result!r} is not a valid result to remove')
             all_matched_results.extend(matched_results)
         return all_matched_results
 

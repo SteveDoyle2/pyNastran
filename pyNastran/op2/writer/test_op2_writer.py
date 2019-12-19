@@ -184,7 +184,7 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
-            'ctria6_force', 'ctriar_force', 'cshear_force',
+            'force.ctria6_force', 'force.ctriar_force', 'cshear_force',
             'cvisc_force', 'modal_contribution.cshear_stress',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
@@ -207,7 +207,7 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
-            'ctria6_force', 'ctriar_force', 'cshear_force',
+            'force.ctria6_force', 'force.ctriar_force', 'cshear_force',
             'cvisc_force', 'cshear_stress', '*strain_energy',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
@@ -230,7 +230,7 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
-            'ctria6_force', 'ctriar_force', 'cshear_force',
+            'force.ctria6_force', 'force.ctriar_force', 'cshear_force',
             'cvisc_force',
             'cshear_stress',
         ]

@@ -759,6 +759,10 @@ class RealDamperForceArray(RealSpringDamperForceArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealSpringDamperForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
+
     def get_headers(self):
         headers = ['damper_force']
         return headers
@@ -1759,6 +1763,10 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
 
         #if not is_sort1:
             #raise NotImplementedError('SORT2')
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def get_headers(self):
         headers = ['axial', 'torsion']
