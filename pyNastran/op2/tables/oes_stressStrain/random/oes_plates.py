@@ -53,7 +53,7 @@ class RandomPlateArray(OES_Object):
         """sizes the vectorized attributes of the ComplexPlateArray"""
         if not hasattr(self, 'subtitle'):
             self.subtitle = self.data_code['subtitle']
-        nnodes = self.get_nnodes()
+        nnodes = self.nnodes_per_element
 
         #self.names = []
         self.nelements //= nnodes
@@ -280,7 +280,7 @@ class RandomPlateArray(OES_Object):
         #if self.element_name == 'CTRIA3':
         #assert self.element_node.max() == 0, self.element_node
         #print(self.element_node, nid)
-        nnodes = self.get_nnodes()
+        nnodes = self.nnodes_per_element
         itime = self.ielement // nnodes
         inid = self.ielement % nnodes
         itotal = self.itotal

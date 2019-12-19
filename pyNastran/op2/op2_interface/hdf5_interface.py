@@ -321,7 +321,7 @@ TABLE_OBJ_MAP = {
     'rms.cdamp4_force' : (RealDamperForceArray, ),
     'no.cdamp4_force' : (RealDamperForceArray, ),
 
-    'cvisc_force' : (RealViscForceArray, ComplexViscForceArray),
+    'force.cvisc_force' : (RealViscForceArray, ComplexViscForceArray),
     'ato.cvisc_force' : (RealViscForceArray, ),
     'crm.cvisc_force' : (RealViscForceArray, ),
     'psd.cvisc_force' : (RealViscForceArray, ),
@@ -612,14 +612,14 @@ TABLE_OBJ_MAP = {
     'rms.cshear_strain' : (RandomShearStrainArray, ),
     'no.cshear_strain' : (RandomShearStrainArray, ),
 
-    'cshear_force' : (RealCShearForceArray, ComplexCShearForceArray),
+    'force.cshear_force' : (RealCShearForceArray, ComplexCShearForceArray),
     'ato.cshear_force' : (RealCShearForceArray, ),
     'crm.cshear_force' : (RealCShearForceArray, ),
     'psd.cshear_force' : (RealCShearForceArray, ),
     'rms.cshear_force' : (RealCShearForceArray, ),
     'no.cshear_force' : (RealCShearForceArray, ),
 
-    'coneax_force' : (RealConeAxForceArray,),
+    'force.coneax_force' : (RealConeAxForceArray,),
 
     'ctetra_stress' : (RealSolidStressArray, ComplexSolidStressArray),
     'ato.ctetra_stress' : (RandomSolidStressArray, ),
@@ -726,21 +726,21 @@ TABLE_OBJ_MAP = {
     'RAFCONS.cquad4_force' : (RealPlateBilinearForceArray, ),
     'RAFEATC.cquad4_force' : (RealPlateBilinearForceArray, ),
 
-    'cgap_force' : (RealCGapForceArray, None),
+    'force.cgap_force' : (RealCGapForceArray, None),
     'ato.cgap_force' : (RealCGapForceArray, ),
     'crm.cgap_force' : (RealCGapForceArray, ),
     'psd.cgap_force' : (RealCGapForceArray, ),
     'rms.cgap_force' : (RealCGapForceArray, ),
     'no.cgap_force' : (RealCGapForceArray, ),
 
-    'cbend_force' : (RealBendForceArray, ComplexCBendForceArray),
+    'force.cbend_force' : (RealBendForceArray, ComplexCBendForceArray),
     'ato.cbend_force' : (RealBendForceArray, ),
     'crm.cbend_force' : (RealBendForceArray, ),
     'psd.cbend_force' : (RealBendForceArray, ),
     'rms.cbend_force' : (RealBendForceArray, ),
     'no.cbend_force' : (RealBendForceArray, ),
 
-    'cconeax_force' : (RealConeAxForceArray, None),
+    'force.cconeax_force' : (RealConeAxForceArray, None),
 
     'cbush_stress' : (RealBushStressArray, ComplexCBushStressArray),
     'ato.cbush_stress' : (RealBushStressArray, ),
@@ -758,7 +758,7 @@ TABLE_OBJ_MAP = {
     'no.cbush_strain' : (RealBushStrainArray, ),
     'modal_contribution.cbush_strain' : (ComplexCBushStrainArray, ),  # verified
 
-    'cbush_force' : (RealCBushForceArray, ComplexCBushForceArray), # ComplexCBushForceArray
+    'force.cbush_force' : (RealCBushForceArray, ComplexCBushForceArray), # ComplexCBushForceArray
     'ato.cbush_force' : (RealCBushForceArray, ),
     'crm.cbush_force' : (RealCBushForceArray, ),
     'psd.cbush_force' : (RealCBushForceArray, ),
@@ -937,8 +937,8 @@ TABLE_OBJ_MAP = {
     'chbdyg_thermal_load_flux' : (RealChbdyHeatFluxArray, ),
     # ----------------------------------------------------------
 
-    'vu_tria_force' : (RealForceVU2DArray, ComplexForceVU_2DArray),
-    'vu_quad_force' : (RealForceVU2DArray, ComplexForceVU_2DArray),
+    'force.vu_tria_force' : (RealForceVU2DArray, ComplexForceVU_2DArray),
+    'force.vu_quad_force' : (RealForceVU2DArray, ComplexForceVU_2DArray),
 
     'temperatures' : (RealTemperatureArray, ),
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),

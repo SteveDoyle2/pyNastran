@@ -379,6 +379,58 @@ class OP2_F06_Common:
         self.op2_results.force.cdamp4_force = cdamp4_force
 
     @property
+    def cgap_force(self):
+        return self.op2_results.force.cgap_force
+    @property
+    def cshear_force(self):
+        return self.op2_results.force.cshear_force
+    @property
+    def cbend_force(self):
+        return self.op2_results.force.cbend_force
+    @property
+    def cbush_force(self):
+        return self.op2_results.force.cbush_force
+    @property
+    def coneax_force(self):
+        return self.op2_results.force.coneax_force
+
+    @cgap_force.setter
+    def cgap_force(self, cgap_force):
+        self.op2_results.force.cgap_force = cgap_force
+    @cshear_force.setter
+    def cshear_force(self, cshear_force):
+        self.op2_results.force.cshear_force = cshear_force
+    @cbend_force.setter
+    def cbend_force(self, cbend_force):
+        self.op2_results.force.cbend_force = cbend_force
+    @cbush_force.setter
+    def cbush_force(self, cbush_force):
+        self.op2_results.force.cbush_force = cbush_force
+    @coneax_force.setter
+    def coneax_force(self, coneax_force):
+        self.op2_results.force.coneax_force = coneax_force
+
+    @property
+    def cvisc_force(self):
+        return self.op2_results.force.vu_tria_force
+    @property
+    def vu_tria_force(self):
+        return self.op2_results.force.vu_tria_force
+    @property
+    def vu_quad_force(self):
+        return self.op2_results.force.vu_quad_force
+
+    @cvisc_force.setter
+    def cvisc_force(self, cvisc_force):
+        self.op2_results.force.vu_tria_force = cvisc_force
+    @vu_tria_force.setter
+    def vu_tria_force(self, vu_tria_force):
+        self.op2_results.force.vu_tria_force = vu_tria_force
+    @vu_tria_force.setter
+    def vu_quad_force(self, vu_quad_force):
+        self.op2_results.force.vu_quad_force = vu_quad_force
+
+    @property
     def crod_force(self):
         return self.op2_results.force.crod_force
     @property
@@ -531,7 +583,7 @@ class OP2_F06_Common:
         #======================================================================
         self.cbend_stress = {}
         self.cbend_strain = {}
-        self.cbend_force = {}
+        #self.cbend_force = {}
 
         #======================================================================
         # shells
@@ -590,7 +642,7 @@ class OP2_F06_Common:
 
         self.cshear_stress = {}
         self.cshear_strain = {}
-        self.cshear_force = {}
+        #self.cshear_force = {}
 
         #: OES - CBEAM 94
         self.nonlinear_cbeam_stress = {}
@@ -688,8 +740,8 @@ class OP2_F06_Common:
         self.eigenvectors = {}            # tCode=7 thermal=0
 
         # OEF - Forces - tCode=4 thermal=0
-        self.cbush_force = {}
-        self.coneax_force = {}
+        #self.cbush_force = {}
+        #self.coneax_force = {}
 
         #self.cdamp1_force = {}
         #self.cdamp2_force = {}
@@ -701,18 +753,18 @@ class OP2_F06_Common:
         #self.celas3_force = {}
         #self.celas4_force = {}
 
-        self.cgap_force = {}
+        #self.cgap_force = {}
 
         # solidPressureForces
         self.chexa_pressure_force = {}
         self.cpenta_pressure_force = {}
         self.ctetra_pressure_force = {}
 
-        self.cvisc_force = {}
+        #self.cvisc_force = {}
 
         # VU force
-        self.vu_quad_force = {}
-        self.vu_tria_force = {}
+        #self.vu_quad_force = {}
+        #self.vu_tria_force = {}
 
         #OEF - Fluxes - tCode=4 thermal=1
         self.conv_thermal_load = {}
@@ -948,7 +1000,7 @@ class OP2_F06_Common:
             #'nonlinear_cbeam_strain',
 
             # CBEND - isotropic CBEAM stress/strain
-            'cbend_stress', 'cbend_strain', 'cbend_force',
+            'cbend_stress', 'cbend_strain', # 'cbend_force',
 
             # OES - isotropic CTRIA3/CQUAD4 stress/strain
             'ctria3_stress', 'ctriar_stress', 'ctria6_stress',
@@ -1014,10 +1066,10 @@ class OP2_F06_Common:
             # 0d
             #'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
             #'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
-            'cvisc_force',
-            'cbush_force',
-            'coneax_force',
-            'cgap_force',
+            #'cvisc_force',
+            #'cbush_force',
+            #'coneax_force',
+            #'cgap_force',
 
             # rods
             #'crod_force', 'conrod_force', 'ctube_force',
@@ -1030,13 +1082,13 @@ class OP2_F06_Common:
             #'cquad4_force', 'cquad8_force', 'cquadr_force',
             #'ctria3_force', 'ctria6_force', 'ctriar_force',
 
-            'cshear_force',
+            #'cshear_force',
 
             # solids
             'chexa_pressure_force', 'cpenta_pressure_force', 'ctetra_pressure_force',
 
             # vu
-            'vu_quad_force', 'vu_tria_force',
+            #'vu_quad_force', 'vu_tria_force',
 
             #OEF - Fluxes - tCode=4 thermal=1
             'conv_thermal_load',

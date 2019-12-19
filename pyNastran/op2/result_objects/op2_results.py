@@ -259,6 +259,16 @@ class Force:
         self.cquad8_force = {}
         self.cquadr_force = {}
 
+        self.cshear_force = {}
+        self.cvisc_force = {}
+        self.cgap_force = {}
+        self.cbend_force = {}
+        self.cvisc_force = {}
+        self.cconeax_force = {}
+        self.vu_tria_force = {}
+        self.vu_quad_force = {}
+        self.cbush_force = {}
+
     def get_table_types(self):
         tables = [
             # 0d
@@ -268,6 +278,11 @@ class Force:
             'cbar_force', 'cbeam_force',
             'ctria3_force', 'ctria6_force', 'ctriar_force',
             'cquad4_force', 'cquad8_force', 'cquadr_force',
+
+            'cshear_force', 'cvisc_force', 'cgap_force', 'cbend_force',
+            'cconeax_force', 'cbush_force',
+            'vu_tria_force', 'vu_quad_force',
+
         ]
         return ['force.' + table for table in tables]
 

@@ -17,12 +17,16 @@ class RealBushArray(OES_Object):
         #print('RealBushArray.nonlinear_factor =', self.nonlinear_factor)
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
+
+    @property
+    def nnodes_per_elements(self) -> int:
+        return 1
 
     def _reset_indices(self):
         self.itotal = 0
@@ -364,6 +368,7 @@ class RealBushStressArray(RealBushArray, StressObject):
             '                  ELEMENT-ID        STRESS-TX     STRESS-TY     STRESS-TZ    STRESS-RX     STRESS-RY     STRESS-RZ \n',
         ]
         return msg
+
 
 class RealBushStrainArray(RealBushArray, StrainObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

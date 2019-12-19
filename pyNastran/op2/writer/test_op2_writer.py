@@ -184,8 +184,8 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
-            'force.ctria6_force', 'force.ctriar_force', 'cshear_force',
-            'cvisc_force', 'modal_contribution.cshear_stress',
+            'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
+            'force.cvisc_force', 'modal_contribution.cshear_stress',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)
@@ -207,8 +207,8 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
-            'force.ctria6_force', 'force.ctriar_force', 'cshear_force',
-            'cvisc_force', 'cshear_stress', '*strain_energy',
+            'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
+            'force.cvisc_force', 'cshear_stress', '*strain_energy',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)
@@ -230,8 +230,8 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
-            'force.ctria6_force', 'force.ctriar_force', 'cshear_force',
-            'cvisc_force',
+            'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
+            'force.cvisc_force',
             'cshear_stress',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
@@ -254,8 +254,8 @@ class TestOP2Writer(unittest.TestCase):
         #model = os.path.splitext(op2_filename)[0]
 
         exclude_results = [
-            'cshear_force',
-            'cvisc_force', 'cshear_stress', 'grid_point_forces', '*strain_energy',
+            'force.cshear_force', 'force.cvisc_force',
+            'cshear_stress', 'grid_point_forces', '*strain_energy',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)

@@ -17,16 +17,24 @@ class RealBush1DStressArray(OES_Object):
         self.nelements = 0  # result specific
 
     @property
-    def is_stress(self):
+    def is_stress(self) -> bool:
         return True
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
+
+    @property
+    def nnodes_per_elements(self) -> int:
+        if self.element_type == 40:
+            nnodes_per_element = 1
+        else:
+            raise NotImplementedError(self.element_type)
+        return nnodes_per_element
 
     def _reset_indices(self):
         self.itotal = 0
@@ -57,11 +65,6 @@ class RealBush1DStressArray(OES_Object):
         assert self.ntimes > 0, 'ntimes=%s' % self.ntimes
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
-
-        if self.element_type == 40:
-            nnodes_per_element = 1
-        else:
-            raise NotImplementedError(self.element_type)
 
         self.itime = 0
         self.ielement = 0
@@ -174,7 +177,7 @@ class RealBush1DStressArray(OES_Object):
 
         nelements = self.ntotal
         ntimes = self.ntimes
-        ntotal = self.ntotal
+        #ntotal = self.ntotal
         nelements = self.ntotal
 
         msg = []
