@@ -1,5 +1,5 @@
 #pylint disable=C0301
-#from itertools import count
+from abc import abstractmethod
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -2756,7 +2756,12 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
         return itable
 
 
-class RealCBarForceArray(RealForceObject):  # 34-CBAR
+class RealCBarFastForceArray(RealForceObject):
+    """
+    34-CBAR
+    119-CFAST
+
+    """
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
@@ -2910,9 +2915,8 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
-                 '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
-                 '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+        words = self._words()
+
         #msg = []
         #header[1] = ' %s = %10.4E\n' % (self.data_code['name'], dt)
         eids = self.element
@@ -3057,6 +3061,25 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
             new_result = False
         return itable
 
+    @abstractmethod
+    def _words(self):
+        return []
+
+class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
+    """34-CBAR"""
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def _words(self):
+        words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
+                 '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
+                 '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
+        return words
+
+class RealCFastForceArray(RealCBarFastForceArray):  # 34-CBAR
+    """119-CFAST"""
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
 class RealConeAxForceArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):

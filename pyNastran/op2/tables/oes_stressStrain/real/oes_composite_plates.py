@@ -58,6 +58,8 @@ class RealCompositePlateArray(OES_Object):
             nnodes_per_element = 1
         elif self.element_type == 98:  # CTRIA6
             nnodes_per_element = 1
+        elif self.element_type == 233:  # CTRIAR
+            nnodes_per_element = 1
         else:  # pragma: no cover
             msg = 'element_name=%s element_type=%s' %(self.element_name, self.element_type)
             raise NotImplementedError(msg)

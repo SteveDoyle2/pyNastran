@@ -38,6 +38,7 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     FailureIndicesArray,
     RealRodForceArray, RealViscForceArray,
     RealCBarForceArray, RealCBar100ForceArray,
+    RealCFastForceArray,
     RealCBushForceArray,
     RealPlateForceArray,
     RealPlateBilinearForceArray,
@@ -1300,9 +1301,10 @@ class OEF(OP2Common):
             #100-BARS
             n, nelements, ntotal = self._oef_cbar_100(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type in [33, 74]: # centroidal shells
+        elif self.element_type in [33, 74, 227]: # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
+            # 227-CTRIAR? (C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbx102.op2)
             n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
         elif self.element_type in [64, 70, 75, 82, 144]: # bilinear shells
@@ -1313,12 +1315,14 @@ class OEF(OP2Common):
             # 144-CQUAD4-bilinear
             n, nelements, ntotal = self._oef_shells_nodal(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type in [95, 96, 97, 98]: # composites
+        elif self.element_type in [95, 96, 97, 98, 233]: # composites
             # 95 - CQUAD4
             # 96 - CQUAD8
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
-            n, nelements, ntotal = self._oef_shells_composite(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            # 233 - CTRIAR
+            n, nelements, ntotal = self._oef_shells_composite(data, ndata, dt, is_magnitude_phase,
+                                                              prefix, postfix)
 
         elif self.element_type in [39, 67, 68]: # solids
             # 39-CTETRA
@@ -1396,13 +1400,13 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, self.code_information())
             #return ndata
 
-        elif self.element_type in [233, 235]:
-            # 233-TRIARLC
+        elif self.element_type in [119]:
+            # 119-CFAST
+            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
+                                                     prefix, postfix)
+        elif self.element_type in [235]:
             # 235-CQUADR
-            #if self.read_mode == 1:
-                #return ndata
             return self._not_implemented_or_skip(data, ndata, self.code_information())
-            #return ndata
         else:
             return self._not_implemented_or_skip(data, ndata, self.code_information())
 
@@ -2073,13 +2077,21 @@ class OEF(OP2Common):
             prefix = 'force.'
 
         n = 0
-        result_name = prefix + 'cbar_force' + postfix
+        if self.element_type == 34:
+            result_name = prefix + 'cbar_force' + postfix
+            obj_real = RealCBarForceArray
+            obj_complex = ComplexCBarForceArray
+        elif self.element_type == 119:
+            result_name = prefix + 'cfast_force' + postfix
+            obj_real = RealCFastForceArray
+            assert self.num_wide == 9, self.code_information()
+        else:
+            raise NotImplementedError(self.element_type)
+
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
 
-        obj_real = RealCBarForceArray
-        obj_complex = ComplexCBarForceArray
         if self.format_code in [1, 2] and self.num_wide == 9:
             # real - format_code == 1
             # random - format_code == 2
@@ -2234,6 +2246,7 @@ class OEF(OP2Common):
         """
         33-CQUAD4
         74-CTRIA3
+        227-CTRIAR
 
         """
         n = 0
@@ -2244,6 +2257,8 @@ class OEF(OP2Common):
             result_name = prefix + 'cquad4_force' + postfix
         elif self.element_type == 74:
             result_name = prefix + 'ctria3_force' + postfix
+        elif self.element_type == 227:
+            result_name = prefix + 'ctriar_force' + postfix
         else:
             #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             #return self._not_implemented_or_skip(data, ndata, msg)
@@ -2603,6 +2618,7 @@ class OEF(OP2Common):
         96 - CQUAD8
         97 - CTRIA3
         98 - CTRIA6 (composite)
+        233 - CTRIAR
         """
         if self.element_type == 95:
             result_name = prefix + 'cquad4_composite_force' + postfix
@@ -2612,6 +2628,8 @@ class OEF(OP2Common):
             result_name = prefix + 'ctria3_composite_force' + postfix
         elif self.element_type == 98:
             result_name = prefix + 'ctria6_composite_force' + postfix
+        elif self.element_type == 233:
+            result_name = prefix + 'ctriar_composite_force' + postfix
         else:
             raise NotImplementedError(self.code_information())
         if self._results.is_not_saved(result_name):

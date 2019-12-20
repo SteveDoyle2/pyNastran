@@ -223,6 +223,7 @@ class FailureIndices:
         self.cquad8_composite_force = {}
         self.ctria3_composite_force = {}
         self.ctria6_composite_force = {}
+        self.ctriar_composite_force = {}
 
     def get_table_types(self):
         tables = [
@@ -230,6 +231,7 @@ class FailureIndices:
             'cquad8_composite_force',
             'ctria3_composite_force',
             'ctria6_composite_force',
+            'ctriar_composite_force',
         ]
         return ['failure_indices.' + table for table in tables]
 
@@ -268,6 +270,7 @@ class Force:
         self.vu_tria_force = {}
         self.vu_quad_force = {}
         self.cbush_force = {}
+        self.cfast_force = {}
 
     def get_table_types(self):
         tables = [
@@ -280,7 +283,7 @@ class Force:
             'cquad4_force', 'cquad8_force', 'cquadr_force',
 
             'cshear_force', 'cvisc_force', 'cgap_force', 'cbend_force',
-            'cconeax_force', 'cbush_force',
+            'cconeax_force', 'cbush_force', 'cfast_force',
             'vu_tria_force', 'vu_quad_force',
 
         ]

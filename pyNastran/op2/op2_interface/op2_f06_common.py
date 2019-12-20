@@ -809,6 +809,8 @@ class OP2_F06_Common:
         #: OES - GAPNL 86
         self.nonlinear_cgap_stress = {}
 
+        self.nonlinear_cpyram_stress_strain = {}
+
         # OQG - spc/mpc forces
         self.spc_forces = {}  # OQG1, tCode=3?
         self.spc_forces_v = {} # OQGV1
@@ -955,6 +957,7 @@ class OP2_F06_Common:
             'cbeam_stress', 'cbeam_strain',
             'nonlinear_cbeam_stress',
             #'nonlinear_cbeam_strain',
+            'nonlinear_cpyram_stress_strain',
 
             # CBEND - isotropic CBEAM stress/strain
             'cbend_stress', 'cbend_strain', # 'cbend_force',

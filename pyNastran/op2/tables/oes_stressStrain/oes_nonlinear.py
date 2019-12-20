@@ -287,8 +287,8 @@ class RealNonlinearPlateArray(OES_Object):
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
-                self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal)
+            msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i, table_name=%s\n' % (
+                self.__class__.__name__, ntimes, nelements, nnodes, nlayers, ntotal, self.table_name_str)
             ntimes_word = 'ntimes'
         else:
             msgi = '  type=%s nelements=%i nnodes_per_element=%i nlayers=%i ntotal=%i\n' % (
@@ -440,15 +440,14 @@ class RealNonlinearSolidArray(OES_Object):
 
     @property
     def nnodes_per_element(self) -> int:
-        if self.element_type == 85:
-            #etype = 'CTETRANL'
+        if self.element_type == 85:  # CTETRANL
             nnodes_per_element = 5
-        elif self.element_type == 91:
-            #etype = 'CPENTANL'
+        elif self.element_type == 91:  # CPENTANL
             nnodes_per_element = 7
-        elif self.element_type == 93:
-            #etype = 'CHEXANL'
+        elif self.element_type == 93:  # CHEXANL
             nnodes_per_element = 9
+        elif self.element_type == 256:  # CPYRAMNL
+            nnodes_per_element = 6
         else:
             raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
         return nnodes_per_element
@@ -619,8 +618,8 @@ class RealNonlinearSolidArray(OES_Object):
 
         msg = []
         if self.nonlinear_factor not in (None, np.nan):  # transient
-            msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i\n' % (
-                self.__class__.__name__, ntimes, nelements, nnodes, ntotal)
+            msgi = '  type=%s ntimes=%i nelements=%i nnodes_per_element=%i ntotal=%i, table_name=%s\n' % (
+                self.__class__.__name__, ntimes, nelements, nnodes, ntotal, self.table_name_str)
             ntimes_word = 'ntimes'
         else:
             msgi = '  type=%s nelements=%i nnodes_per_element=%i ntotal=%i\n' % (
