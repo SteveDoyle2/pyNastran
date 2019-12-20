@@ -632,9 +632,9 @@ class OP2_F06_Common:
         # bushing
         self.cbush_stress = {}
         self.cbush_strain = {}
-
-        self.nonlinear_cbush_stress = {}  # CBUSH 226
         self.cbush1d_stress_strain = {}
+
+        self.nonlinear_cbush_force_stress_strain = {}  # CBUSH 226
         self.nonlinear_cbush1d_stress_strain = {}
 
         #======================================================================
@@ -978,11 +978,6 @@ class OP2_F06_Common:
             # OES - CSHEAR stress/strain
             'cshear_stress', 'cshear_strain',
 
-            # OES - GAPNL 86
-            'nonlinear_cgap_stress',
-            # OES - CBUSH 226
-            'nonlinear_cbush_stress',
-
             'cplstn3_stress', 'cplstn4_stress', 'cplstn6_stress', 'cplstn8_stress',
             'cplsts3_stress', 'cplsts4_stress', 'cplsts6_stress', 'cplsts8_stress',
 
@@ -1086,7 +1081,7 @@ class OP2_F06_Common:
 
             #'cbush_stress',
             #'cbush_strain',
-            'cbush1d_stress_strain', 'nonlinear_cbush1d_stress_strain',
+            'cbush1d_stress_strain',
 
             # OES - nonlinear CROD/CONROD/CTUBE stress
             'nonlinear_crod_stress', 'nonlinear_crod_strain',
@@ -1094,6 +1089,9 @@ class OP2_F06_Common:
             'nonlinear_conrod_stress', 'nonlinear_conrod_strain',
 
             # OESNLXR - CTRIA3/CQUAD4 stress
+            'nonlinear_cbush_force_stress_strain',
+            'nonlinear_cbush1d_stress_strain',
+            'nonlinear_cgap_stress',
             'nonlinear_cquad4_stress', 'nonlinear_ctria3_stress',
             'nonlinear_cquad4_strain', 'nonlinear_ctria3_strain',
 

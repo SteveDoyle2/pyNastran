@@ -5396,7 +5396,7 @@ class OES(OP2Common):
         n = 0
         if self.is_stress:
             if self.element_type == 226:
-                result_name = prefix + 'cbush_stress' + postfix
+                result_name = prefix + 'cbush_force_stress_strain' + postfix
                 name = 'CBUSHNL-226'
             else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
