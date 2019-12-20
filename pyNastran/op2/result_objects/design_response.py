@@ -210,7 +210,7 @@ class PropertyResponse:
 
     def get_stats(self, short=False):
         if short:
-            return 'responses.%s_response (%s)' % (self.name, self.n)
+            return 'responses.%s_response (%s)\n' % (self.name, self.n)
         else:
             return self.__repr__() + '\n'
 
@@ -231,7 +231,7 @@ class FractionalMassResponse:
 
     def get_stats(self, short=False):
         if short:
-            return 'responses.%s_response (%s)' % (self.name, self.n)
+            return 'responses.%s_response (%s)\n' % (self.name, self.n)
         else:
             return self.__repr__() + '\n'
 
@@ -288,7 +288,7 @@ class DisplacementResponse:
 
     def get_stats(self, short=False):
         if short:
-            return 'responses.%s_response (%s)' % (self.name, self.n)
+            return 'responses.%s_response (%s)\n' % (self.name, self.n)
         else:
             return self.__repr__() + '\n'
 
@@ -345,7 +345,7 @@ class FlutterResponse:
 
     def get_stats(self, short=False):
         if short:
-            return 'responses.%s_response (%s)' % (self.name, self.n)
+            return 'responses.%s_response (%s)\n' % (self.name, self.n)
         else:
             return self.__repr__() + '\n'
 
@@ -387,7 +387,7 @@ class Desvars:
 
     def get_stats(self, short=False):
         if short:
-            return 'responses.desvars\n'
+            return f'responses.desvars ({len(self.internal_id)})\n'
         else:
             return self.__repr__() + '\n'
 

@@ -3957,6 +3957,13 @@ class ComplexForceVU_2DArray(BaseElement):  # 189-VUQUAD,190-VUTRIA
             #assert dt is not None
             #self.add = self.add_sort2
 
+    @property
+    def is_real(self) -> bool:
+        return False
+    @property
+    def is_complex(self) -> bool:
+        return True
+
     def _reset_indices(self):
         self.itotal = 0
         self.ielement = 0

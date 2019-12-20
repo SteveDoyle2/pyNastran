@@ -2767,6 +2767,10 @@ class RealCBarForceArray(RealForceObject):  # 34-CBAR
         #self.ntotal = 0
         self.nelements = 0  # result specific
 
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
+
     def get_headers(self):
         headers = [
             'bending_moment_a1', 'bending_moment_a2',

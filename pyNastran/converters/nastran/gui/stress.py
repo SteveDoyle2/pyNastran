@@ -110,10 +110,7 @@ def get_rod_stress_strains(eids, cases, model: OP2, times, key, icase,
     if len(scalars_array) == 0:
         return icase
 
-    if len(scalars_array) == 1:
-        scalars_array = scalars_array[0]
-    else:
-        scalars_array = np.concatenate(scalars_array, axis=1)
+    scalars_array = concatenate_scalars(scalars_array)
 
     headers = [] # sidebar word
     res = SimpleTableResults(
@@ -268,10 +265,7 @@ def get_bar_stress_strains(eids, cases, model: OP2, times, key, icase,
     if len(scalars_array) == 0:
         return icase
 
-    if len(scalars_array) == 1:
-        scalars_array = scalars_array[0]
-    else:
-        scalars_array = np.concatenate(scalars_array, axis=1)
+    scalars_array = concatenate_scalars(scalars_array)
 
     exclude_tension_margin = False
     exclude_compression_margin = False
@@ -437,10 +431,7 @@ def get_beam_stress_strains(eids, cases, model: OP2, times, key, icase,
     if len(scalars_array) == 0:
         return icase
 
-    if len(scalars_array) == 1:
-        scalars_array = scalars_array[0]
-    else:
-        scalars_array = np.concatenate(scalars_array, axis=1)
+    scalars_array = concatenate_scalars(scalars_array)
 
     #titles = []  # legend title
     headers = [] # sidebar word
@@ -611,10 +602,7 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
     if len(scalars_array) == 0:
         return icase
 
-    if len(scalars_array) == 1:
-        scalars_array = scalars_array[0]
-    else:
-        scalars_array = np.concatenate(scalars_array, axis=1)
+    scalars_array = concatenate_scalars(scalars_array)
 
     #titles = []  # legend title
     headers = [] # sidebar word
@@ -755,16 +743,7 @@ def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icas
     if len(scalars_array) == 0:
         return icase
 
-    if len(scalars_array) == 1:
-        scalars_array = scalars_array[0]
-    else:
-        try:
-            scalars_array = np.concatenate(scalars_array, axis=1)
-        except ValueError:
-            for scalars in scalars_array:
-                print(scalars.shape)
-            raise
-
+    scalars_array = concatenate_scalars(scalars_array)
 
     #print('scalars_array.shape =', scalars_array.shape)
     unused_ntimes, unused_nelements, nlayers, unused_nresults = scalars_array.shape
@@ -944,10 +923,7 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
     if len(scalars_array) == 0:
         return icase
 
-    if len(scalars_array) == 1:
-        scalars_array = scalars_array[0]
-    else:
-        scalars_array = np.concatenate(scalars_array, axis=1)
+    scalars_array = concatenate_scalars(scalars_array)
 
     #titles = []  # legend title
     headers = [] # sidebar word
@@ -955,7 +931,6 @@ def get_solid_stress_strains(eids, cases, model: OP2, times, key, icase,
         subcase_id, headers, solid_ieids, ieid_max, scalars_array, methods,
         data_format=data_format,
         colormap='jet', uname='Solid ' + word)
-    return icase
 
     icase = add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
                                        form_dict, header_dict, methods,
@@ -1039,10 +1014,7 @@ def get_spring_stress_strains(eids, cases, model: OP2, times, key, icase,
     if len(scalars_array) == 0:
         return icase
 
-    if len(scalars_array) == 1:
-        scalars_array = scalars_array[0]
-    else:
-        scalars_array = np.concatenate(scalars_array, axis=1)
+    scalars_array = concatenate_scalars(scalars_array)
 
     headers = [] # sidebar word
     res = SimpleTableResults(
@@ -1087,3 +1059,10 @@ def add_simple_methods_to_form(icase, cases, key, subcase_id, word, res, case,
                 formi.append((method, icase, []))
                 icase += 1
     return icase
+
+def concatenate_scalars(scalars_array):
+    if len(scalars_array) == 1:
+        scalars_array = scalars_array[0]
+    else:
+        scalars_array = np.concatenate(scalars_array, axis=1)
+    return scalars_array

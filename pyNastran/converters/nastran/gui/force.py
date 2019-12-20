@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
 from pyNastran.converters.nastran.gui.results import SimpleTableResults # , LayeredTableResults
-from .stress import add_simple_methods_to_form
+from .stress import add_simple_methods_to_form, concatenate_scalars
 
 if TYPE_CHECKING: # pragma: no cover
     from pyNastran.op2.op2 import OP2
@@ -74,10 +74,7 @@ def get_spring_force(eids, cases, model: OP2, times, key, icase,
     if len(scalars_array) == 0:
         return icase
 
-    if len(scalars_array) == 1:
-        scalars_array = scalars_array[0]
-    else:
-        scalars_array = np.concatenate(scalars_array, axis=1)
+    scalars_array = concatenate_scalars(scalars_array)
 
     headers = [] # sidebar word
     res = SimpleTableResults(
@@ -185,10 +182,7 @@ def get_bar_force(eids, cases, model: OP2, times, key, icase,
     if len(scalars_array) == 0:
         return icase
 
-    if len(scalars_array) == 1:
-        scalars_array = scalars_array[0]
-    else:
-        scalars_array = np.concatenate(scalars_array, axis=1)
+    scalars_array = concatenate_scalars(scalars_array)
 
     #include_tension_margin = True
     #include_compression_margin = True
@@ -315,10 +309,7 @@ def get_plate_force(eids, cases, model: OP2, times, key, icase,
     if len(scalars_array) == 0:
         return icase
 
-    if len(scalars_array) == 1:
-        scalars_array = scalars_array[0]
-    else:
-        scalars_array = np.concatenate(scalars_array, axis=1)
+    scalars_array = concatenate_scalars(scalars_array)
 
     headers = [] # sidebar word
     res = SimpleTableResults(
