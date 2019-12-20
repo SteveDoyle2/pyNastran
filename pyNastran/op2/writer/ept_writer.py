@@ -425,12 +425,18 @@ def write_pbush(name, pids, itable, op2, op2_ascii, obj, endian=b'<',
 
     for pid in sorted(pids):
         prop = obj.properties[pid]
-        (b1, b2, b3, b4, b5, b6) = [
-            bi if bi is not None else 0.0 for bi in prop.Bi]  # damping
-        (k1, k2, k3, k4, k5, k6) = [
-            ki if ki is not None else 0.0 for ki in prop.Ki] # stiffness
-        (g1, g2, g3, g4, g5, g6) = [
-            gi if gi is not None else 0.0 for gi in prop.GEi] # ???
+        (b1, b2, b3, b4, b5, b6) = (0., 0., 0., 0., 0., 0.)
+        (k1, k2, k3, k4, k5, k6) = (0., 0., 0., 0., 0., 0.)
+        (g1, g2, g3, g4, g5, g6) = (0., 0., 0., 0., 0., 0.)
+        if prop.Bi:
+            (b1, b2, b3, b4, b5, b6) = [
+                bi if bi is not None else 0.0 for bi in prop.Bi]  # damping
+        if prop.Ki:
+            (k1, k2, k3, k4, k5, k6) = [
+                ki if ki is not None else 0.0 for ki in prop.Ki] # stiffness
+        if prop.GEi:
+            (g1, g2, g3, g4, g5, g6) = [
+                gi if gi is not None else 0.0 for gi in prop.GEi] # ???
         # TODO: not 100%
         sa = prop.sa if prop.sa is not None else 0.
         st = prop.st if prop.st is not None else 0.

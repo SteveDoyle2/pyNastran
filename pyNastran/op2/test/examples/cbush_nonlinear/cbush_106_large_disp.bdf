@@ -1,0 +1,41 @@
+SOL 106
+CEND
+ECHO = NONE
+SPC = 10
+NLPARM = 1
+DISP(PLOT,SORT1,PHASE) = ALL
+FORCE(PLOT,PRINT) = ALL
+STRESS(PLOT,PRINT) = ALL
+$NLSTRESS(PLOT,PRINT) = ALL
+SUBCASE 101
+   LABEL = X INPUT
+   LOAD = 1
+SUBCASE 102
+   LABEL = Y INPUT
+   LOAD = 2
+SUBCASE 103
+   LABEL = NULL
+   $LOAD = 3
+SUBCASE 104
+   LABEL = Z INPUT
+   LOAD = 4
+BEGIN BULK
+NLPARM         1      10                       5      25      PW      NO+       
++           .001    .001    1.-7       3      25       4      .2      .5+       
++              5                                             20.
+PARAM,PRGPST,NO
+PARAM,LGDISP,1
+PARAM,POST,-1
+SPC1,10,123456,1
+FORCE,1,10,0,1.E9,1.0,0.0,0.0
+FORCE,2,10,0,1.E9,0.0,2.0,0.0
+$FORCE,3,10,0,1.E9,0.0,-1.0,0.0
+FORCE,4,10,0,1.E9,0.0,0.0,1.0
+$ Femap with NX Nastran Property 3 : bush
+PBUSH          3       K1000000.1000000.1000000.    1.+9    1.+9    1.+9                
+$ Femap with NX Nastran Material 1 : ISOTROPIC Material
+MAT1           1    1.+73846154.      .3      .1      0.      0.        
+GRID           1       0      0.      0.      0.       0
+GRID          10       0     25.      0.      0.       0
+CBUSH          6       3       1      10                               0
+ENDDATA

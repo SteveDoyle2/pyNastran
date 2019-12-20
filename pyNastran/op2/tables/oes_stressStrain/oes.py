@@ -1419,7 +1419,6 @@ class OES(OP2Common):
             # 226-BUSHNL
             n, nelements, ntotal = self._oes_cbush_nonlinear(data, ndata, dt, is_magnitude_phase,
                                                              prefix, postfix)
-            return self._not_implemented_or_skip(data, ndata, self.code_information())
         elif self.element_type in [160, 161, 162, 163, 164, 165, 166, 167, 168,
                                    169, 170, 171, 172, 202,
                                    204, 218, 211, 213, 214,

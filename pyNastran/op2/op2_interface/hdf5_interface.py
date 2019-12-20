@@ -78,6 +78,8 @@ from pyNastran.op2.tables.oes_stressStrain.random.oes_solids import RandomSolidS
 from pyNastran.op2.tables.oes_stressStrain.random.oes_shear import RandomShearStressArray, RandomShearStrainArray
 from pyNastran.op2.tables.oes_stressStrain.random.oes_composite_plates import RandomCompositePlateStressArray, RandomCompositePlateStrainArray
 
+from pyNastran.op2.tables.oes_stressStrain.oes_nonlinear_bush import RealNonlinearBushArray
+
 
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
     GridPointSurfaceStressesArray, GridPointStressesVolumeDirectArray, GridPointStressesVolumePrincipalArray,
@@ -748,7 +750,8 @@ TABLE_OBJ_MAP = {
     'psd.cbush_stress' : (RealBushStressArray, ),
     'rms.cbush_stress' : (RealBushStressArray, ),
     'no.cbush_stress' : (RealBushStressArray, ),
-    'modal_contribution.cbush_stress' : (ComplexCBushStressArray, ),  # verified
+    'modal_contribution.cbush_stress' : (ComplexCBushStressArray, ),
+    'nonlinear_cbush_force_stress_strain' : (RealNonlinearBushArray, ),
 
     'cbush_strain' : (RealBushStrainArray, ComplexCBushStrainArray),
     'ato.cbush_strain' : (RealBushStrainArray, ),
@@ -756,7 +759,7 @@ TABLE_OBJ_MAP = {
     'psd.cbush_strain' : (RealBushStrainArray, ),
     'rms.cbush_strain' : (RealBushStrainArray, ),
     'no.cbush_strain' : (RealBushStrainArray, ),
-    'modal_contribution.cbush_strain' : (ComplexCBushStrainArray, ),  # verified
+    'modal_contribution.cbush_strain' : (ComplexCBushStrainArray, ),
 
     'force.cbush_force' : (RealCBushForceArray, ComplexCBushForceArray), # ComplexCBushForceArray
     'ato.cbush_force' : (RealCBushForceArray, ),

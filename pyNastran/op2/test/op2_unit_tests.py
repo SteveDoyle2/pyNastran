@@ -2645,6 +2645,34 @@ class TestOP2(Tester):
         model = read_bdf(bdf_filename, debug=False, log=log)
         save_load_deck(model, run_op2_reader=False)
 
+    def test_bdf_op2_cbush_nonlinear(self):
+        """checks tr1091x.bdf, which tests RealBendForceArray"""
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(OP2_TEST_PATH, 'cbush_nonlinear', 'cbush_106_large_disp.bdf')
+        op2_filename = os.path.join(OP2_TEST_PATH, 'cbush_nonlinear', 'cbush_106_large_disp.op2')
+
+        unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            '', bdf_filename)
+        diff_cards2 = list(set(diff_cards))
+        diff_cards2.sort()
+        assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model.safe_cross_reference()
+
+        save_load_deck(model, run_test_bdf=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
+                write_f06=True, write_op2=True,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
+
     @unittest.expectedFailure
     def test_set_times_01(self):
         """specify the modes to extract"""
