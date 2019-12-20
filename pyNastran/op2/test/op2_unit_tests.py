@@ -1248,14 +1248,14 @@ class TestOP2(Tester):
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=True,
-                write_f06=True, write_op2=False,
+                write_f06=False, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
                 subcases=None, exclude=None, short_stats=False,
                 compare=False, debug=False, binary_debug=True,
                 quiet=True,
                 stop_on_failure=True, dev=False,
-                build_pandas=True, log=log)
+                build_pandas=False, log=log)
 
     def test_bdf_op2_other_26(self):
         """checks tr1091x.bdf, which tests RealBendForceArray"""

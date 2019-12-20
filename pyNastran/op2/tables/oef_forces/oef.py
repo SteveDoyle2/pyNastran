@@ -1393,7 +1393,7 @@ class OEF(OP2Common):
                 pass
             else:
                 raise RuntimeError(self.code_information())
-            return self._not_implemented_or_skip(data, ndata, msg)
+            return self._not_implemented_or_skip(data, ndata, self.code_information())
             #return ndata
 
         elif self.element_type in [233, 235]:
@@ -1401,11 +1401,10 @@ class OEF(OP2Common):
             # 235-CQUADR
             #if self.read_mode == 1:
                 #return ndata
-            return self._not_implemented_or_skip(data, ndata, msg)
+            return self._not_implemented_or_skip(data, ndata, self.code_information())
             #return ndata
         else:
-            msg = self.code_information()
-            return self._not_implemented_or_skip(data, ndata, msg)
+            return self._not_implemented_or_skip(data, ndata, self.code_information())
 
         if nelements is None:
             return n
