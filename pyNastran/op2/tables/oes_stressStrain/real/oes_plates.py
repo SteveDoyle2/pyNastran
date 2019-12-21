@@ -35,7 +35,7 @@ class RealPlateArray(OES_Object):
 
     @property
     def nnodes_per_element(self) -> int:
-        if self.element_type in [33, 74]:
+        if self.element_type in [33, 74, 227, 228]:
             nnodes_per_element = 1
         elif self.element_type == 144:
             nnodes_per_element = 5

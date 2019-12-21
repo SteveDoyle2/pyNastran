@@ -38,7 +38,7 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     FailureIndicesArray,
     RealRodForceArray, RealViscForceArray,
     RealCBarForceArray, RealCBar100ForceArray,
-    RealCFastForceArray,
+    RealCFastForceArray, RealCWeldForceArray,
     RealCBushForceArray,
     RealPlateForceArray,
     RealPlateBilinearForceArray,
@@ -1301,10 +1301,11 @@ class OEF(OP2Common):
             #100-BARS
             n, nelements, ntotal = self._oef_cbar_100(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type in [33, 74, 227]: # centroidal shells
+        elif self.element_type in [33, 74, 227, 228]: # centroidal shells
             # 33-CQUAD4
             # 74-CTRIA3
             # 227-CTRIAR? (C:\MSC.Software\simcenter_nastran_2019.2\tpl_post1\cqrdbx102.op2)
+            # 228-CQUADR
             n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
         elif self.element_type in [64, 70, 75, 82, 144]: # bilinear shells
@@ -1388,19 +1389,8 @@ class OEF(OP2Common):
         elif self.element_type == 191:
             n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type == 228: # CQUADR-NX
-            if self.num_wide == 9:
-                # real
-                pass
-            elif self.num_wide == 17:
-                # complex?
-                pass
-            else:
-                raise RuntimeError(self.code_information())
-            return self._not_implemented_or_skip(data, ndata, self.code_information())
-            #return ndata
-
-        elif self.element_type in [119]:
+        elif self.element_type in [117, 119]:
+            # 117-CWELDC
             # 119-CFAST
             n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
                                                      prefix, postfix)
@@ -2081,6 +2071,10 @@ class OEF(OP2Common):
             result_name = prefix + 'cbar_force' + postfix
             obj_real = RealCBarForceArray
             obj_complex = ComplexCBarForceArray
+        elif self.element_type == 117:
+            result_name = prefix + 'cweld_force' + postfix
+            obj_real = RealCWeldForceArray
+            assert self.num_wide == 9, self.code_information()
         elif self.element_type == 119:
             result_name = prefix + 'cfast_force' + postfix
             obj_real = RealCFastForceArray
@@ -2247,6 +2241,7 @@ class OEF(OP2Common):
         33-CQUAD4
         74-CTRIA3
         227-CTRIAR
+        228-CQUADR
 
         """
         n = 0
@@ -2259,6 +2254,8 @@ class OEF(OP2Common):
             result_name = prefix + 'ctria3_force' + postfix
         elif self.element_type == 227:
             result_name = prefix + 'ctriar_force' + postfix
+        elif self.element_type == 228:
+            result_name = prefix + 'cquadr_force' + postfix
         else:
             #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             #return self._not_implemented_or_skip(data, ndata, msg)

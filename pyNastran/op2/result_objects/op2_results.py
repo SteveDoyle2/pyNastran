@@ -271,6 +271,7 @@ class Force:
         self.vu_quad_force = {}
         self.cbush_force = {}
         self.cfast_force = {}
+        self.cweld_force = {}
 
     def get_table_types(self):
         tables = [
@@ -283,7 +284,7 @@ class Force:
             'cquad4_force', 'cquad8_force', 'cquadr_force',
 
             'cshear_force', 'cvisc_force', 'cgap_force', 'cbend_force',
-            'cconeax_force', 'cbush_force', 'cfast_force',
+            'cconeax_force', 'cbush_force', 'cfast_force', 'cweld_force',
             'vu_tria_force', 'vu_quad_force',
 
         ]

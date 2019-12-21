@@ -542,6 +542,7 @@ class OP2_F06_Common:
         self.ctetra_stress = {}
         self.cpenta_stress = {}
         self.chexa_stress = {}
+        self.cpyram_stress = {}
 
         self.ctetra_strain = {}
         self.cpenta_strain = {}
@@ -975,7 +976,7 @@ class OP2_F06_Common:
             'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress/strain
-            'ctetra_stress', 'chexa_stress', 'cpenta_stress',
+            'ctetra_stress', 'chexa_stress', 'cpenta_stress', 'cpyram_stress',
             'ctetra_strain', 'chexa_strain', 'cpenta_strain',
 
             # OES - CSHEAR stress/strain

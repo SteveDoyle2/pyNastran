@@ -3076,6 +3076,11 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
         return words
 
+class RealCWeldForceArray(RealCBarFastForceArray):  # 34-CBAR
+    """117-CWELD"""
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
 class RealCFastForceArray(RealCBarFastForceArray):  # 34-CBAR
     """119-CFAST"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
