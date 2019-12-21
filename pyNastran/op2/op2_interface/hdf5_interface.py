@@ -94,7 +94,7 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealCBeamForceVUArray, RealCBushForceArray, RealCGapForceArray, RealConeAxForceArray,
     RealCShearForceArray, RealDamperForceArray, RealForceVU2DArray, RealPlateBilinearForceArray,
     RealPlateForceArray, RealRodForceArray, RealSolidPressureForceArray, RealSpringForceArray,
-    RealViscForceArray,
+    RealViscForceArray, RealCWeldForceArray, RealCFastForceArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexCBarForceArray, ComplexCBeamForceArray, ComplexCBeamForceVUArray,
@@ -415,7 +415,7 @@ TABLE_OBJ_MAP = {
     'no.cbar_strain' : (RandomBarStrainArray, ),
     'modal_contribution.cbar_strain' : (RealBarStrainArray, ComplexBarStrainArray, ),
 
-    'force.cbar_force' : (RealCBarForceArray, ComplexCBarForceArray),
+    'force.cbar_force' : (RealCBarForceArray, RealCBar100ForceArray, ComplexCBarForceArray),
     'cbar_force_abs' : (RealCBarForceArray, ),
     'cbar_force_nrl' : (RealCBarForceArray, ),
     'cbar_force_srss' : (RealCBarForceArray, ),
@@ -425,11 +425,13 @@ TABLE_OBJ_MAP = {
     'rms.cbar_force' : (RealCBarForceArray, ),
     'no.cbar_force' : (RealCBarForceArray, ),
 
+    'force.cweld_force': (RealCWeldForceArray, ),
+    'force.cfast_force': (RealCFastForceArray, ),
+
     'nrl.cbar_force' : (RealCBarForceArray, ),
     'RAFCONS.cbar_force' : (RealCBarForceArray, ),
     'RAFEATC.cbar_force' : (RealCBarForceArray, ),
 
-    'cbar_force_10nodes' : (RealCBar100ForceArray, ),
     'cbar_stress_10nodes' : (RealBar10NodesStressArray, ),
     'cbar_strain_10nodes' : (RealBar10NodesStrainArray, ),
 
@@ -574,15 +576,15 @@ TABLE_OBJ_MAP = {
 
     'ctriax_stress' : (RealTriaxStressArray, ComplexTriaxStressArray,),
 
-    'cquad4_composite_stress' : (RealCompositePlateStressArray, None),
-    'ctria3_composite_stress' : (RealCompositePlateStressArray, None),
-    'ctria6_composite_stress' : (RealCompositePlateStressArray, None),
-    'cquad8_composite_stress' : (RealCompositePlateStressArray, None),
+    'cquad4_composite_stress' : (RealCompositePlateStressArray, ),
+    'ctria3_composite_stress' : (RealCompositePlateStressArray, ),
+    'ctria6_composite_stress' : (RealCompositePlateStressArray, ),
+    'cquad8_composite_stress' : (RealCompositePlateStressArray, ),
 
-    'cquad4_composite_strain' : (RealCompositePlateStrainArray, None),
-    'ctria3_composite_strain' : (RealCompositePlateStrainArray, None),
-    'ctria6_composite_strain' : (RealCompositePlateStrainArray, None),
-    'cquad8_composite_strain' : (RealCompositePlateStrainArray, None),
+    'cquad4_composite_strain' : (RealCompositePlateStrainArray, ),
+    'ctria3_composite_strain' : (RealCompositePlateStrainArray, ),
+    'ctria6_composite_strain' : (RealCompositePlateStrainArray, ),
+    'cquad8_composite_strain' : (RealCompositePlateStrainArray, ),
 
     'RAPCONS.cquad4_composite_stress' : (RealCompositePlateStressArray, ),
     'RAPCONS.ctria3_composite_stress' : (RealCompositePlateStressArray, ),
@@ -621,7 +623,7 @@ TABLE_OBJ_MAP = {
     'rms.cshear_force' : (RealCShearForceArray, ),
     'no.cshear_force' : (RealCShearForceArray, ),
 
-    'force.coneax_force' : (RealConeAxForceArray,),
+    'force.coneax_force' : (RealConeAxForceArray, ),
 
     'ctetra_stress' : (RealSolidStressArray, ComplexSolidStressArray),
     'ato.ctetra_stress' : (RandomSolidStressArray, ),
@@ -880,11 +882,11 @@ TABLE_OBJ_MAP = {
 
     'hyperelastic_cquad4_strain' : (HyperelasticQuadArray, ),
 
-    'ctetra_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
-    'cpenta_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
-    'chexa_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
-    'cpyram_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
-    'cbeam_force_vu' : (RealCBeamForceVUArray, ComplexCBeamForceVUArray),
+    'force.ctetra_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
+    'force.cpenta_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
+    'force.chexa_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
+    'force.cpyram_pressure_force' : (RealSolidPressureForceArray, ComplexSolidPressureForceArray,),
+    'force.cbeam_force_vu' : (RealCBeamForceVUArray, ComplexCBeamForceVUArray),
 
     'grid_point_surface_stresses' : (GridPointSurfaceStressesArray, ),
     'grid_point_stresses_volume_direct' : (GridPointStressesVolumeDirectArray, ),
@@ -892,53 +894,55 @@ TABLE_OBJ_MAP = {
     'grid_point_stress_discontinuities' : (GridPointStressesSurfaceDiscontinutiesArray, ),
 
     # ----------------------------------------------------------
-    'crod_thermal_load' :  (Real1DHeatFluxArray, ),
-    'ctube_thermal_load' :  (Real1DHeatFluxArray, ),
-    'conrod_thermal_load' : (Real1DHeatFluxArray, ),
+    'thermal_load.conv_thermal_load' : (RealConvHeatFluxArray,),
 
-    'cbar_thermal_load' :  (Real1DHeatFluxArray, ),
-    'cbeam_thermal_load' : (Real1DHeatFluxArray, ),
-    'cbend_thermal_load' : (Real1DHeatFluxArray, ),
+    'thermal_load.crod_thermal_load' :  (Real1DHeatFluxArray, ),
+    'thermal_load.ctube_thermal_load' :  (Real1DHeatFluxArray, ),
+    'thermal_load.conrod_thermal_load' : (Real1DHeatFluxArray, ),
 
-    'cquad4_thermal_load' : (RealHeatFlux_2D_3DArray, ),
-    'cquad8_thermal_load' : (RealHeatFlux_2D_3DArray, ),
-    'ctria3_thermal_load' : (RealHeatFlux_2D_3DArray, ),
-    'ctria6_thermal_load' : (RealHeatFlux_2D_3DArray, ),
-    'ctriax6_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.cbar_thermal_load' :  (Real1DHeatFluxArray, ),
+    'thermal_load.cbeam_thermal_load' : (Real1DHeatFluxArray, ),
+    'thermal_load.cbend_thermal_load' : (Real1DHeatFluxArray, ),
 
-    'ctetra_thermal_load' : (RealHeatFlux_2D_3DArray, ),
-    'cpenta_thermal_load' : (RealHeatFlux_2D_3DArray, ),
-    'chexa_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.cquad4_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.cquad8_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.ctria3_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.ctria6_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.ctriax6_thermal_load' : (RealHeatFlux_2D_3DArray, ),
 
-    'chbdye_thermal_load' :  (RealChbdyHeatFluxArray, ),
-    'chbdyp_thermal_load' : (RealChbdyHeatFluxArray, ),
-    'chbdyg_thermal_load' : (RealChbdyHeatFluxArray, ),
-    'thermalLoad_VU_3D' : (RealHeatFluxVU3DArray, ),
-    'vu_beam_thermal_load' : (RealHeatFluxVUBeamArray, ),
-    'thermalLoad_VU' : (RealHeatFluxVUShellArray, ),
+    'thermal_load.ctetra_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.cpenta_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.chexa_thermal_load' : (RealHeatFlux_2D_3DArray, ),
+
+    'thermal_load.chbdye_thermal_load' :  (RealChbdyHeatFluxArray, ),
+    'thermal_load.chbdyp_thermal_load' : (RealChbdyHeatFluxArray, ),
+    'thermal_load.chbdyg_thermal_load' : (RealChbdyHeatFluxArray, ),
+    'thermal_load.thermalLoad_VU' : (RealHeatFluxVUShellArray, ),
+    'thermal_load.thermalLoad_VU_3D' : (RealHeatFluxVU3DArray, ),
+    'thermal_load.vu_beam_thermal_load' : (RealHeatFluxVUBeamArray, ),
 
     # ----------------------------------------------------------
-    'crod_thermal_load_flux' :  (Real1DHeatFluxArray, ),
-    'ctube_thermal_load_flux' :  (Real1DHeatFluxArray, ),
-    'conrod_thermal_load_flux' : (Real1DHeatFluxArray, ),
+    'thermal_load.crod_thermal_load_flux' :  (Real1DHeatFluxArray, ),
+    'thermal_load.ctube_thermal_load_flux' :  (Real1DHeatFluxArray, ),
+    'thermal_load.conrod_thermal_load_flux' : (Real1DHeatFluxArray, ),
 
-    'cbar_thermal_load_flux' :  (Real1DHeatFluxArray, ),
-    'cbeam_thermal_load_flux' : (Real1DHeatFluxArray, ),
-    'cbend_thermal_load_flux' : (Real1DHeatFluxArray, ),
+    'thermal_load.cbar_thermal_load_flux' :  (Real1DHeatFluxArray, ),
+    'thermal_load.cbeam_thermal_load_flux' : (Real1DHeatFluxArray, ),
+    'thermal_load.cbend_thermal_load_flux' : (Real1DHeatFluxArray, ),
 
-    'cquad4_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
-    'cquad8_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
-    'ctria3_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
-    'ctria6_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
-    'ctriax6_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.cquad4_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.cquad8_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.ctria3_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.ctria6_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.ctriax6_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
 
-    'ctetra_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
-    'cpenta_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
-    'chexa_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.ctetra_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.cpenta_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
+    'thermal_load.chexa_thermal_load_flux' : (RealHeatFlux_2D_3DArray, ),
 
-    'chbdye_thermal_load_flux' :  (RealChbdyHeatFluxArray, ),
-    'chbdyp_thermal_load_flux' : (RealChbdyHeatFluxArray, ),
-    'chbdyg_thermal_load_flux' : (RealChbdyHeatFluxArray, ),
+    'thermal_load.chbdye_thermal_load_flux' :  (RealChbdyHeatFluxArray, ),
+    'thermal_load.chbdyp_thermal_load_flux' : (RealChbdyHeatFluxArray, ),
+    'thermal_load.chbdyg_thermal_load_flux' : (RealChbdyHeatFluxArray, ),
     # ----------------------------------------------------------
 
     'force.vu_tria_force' : (RealForceVU2DArray, ComplexForceVU_2DArray),
@@ -947,7 +951,6 @@ TABLE_OBJ_MAP = {
     'temperatures' : (RealTemperatureArray, ),
     'thermal_gradient_and_flux' : (RealTemperatureGradientAndFluxArray, ),
     'thermal_load_vectors' : (RealTemperatureVectorArray, ),
-    'conv_thermal_load' : (RealConvHeatFluxArray,),
 }
 
 TABLE_OBJ_KEYS = list(TABLE_OBJ_MAP.keys())

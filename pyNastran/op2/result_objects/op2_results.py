@@ -29,6 +29,7 @@ class Results:
         self.strength_ratio = StrengthRatio()
         self.failure_indices = FailureIndices()
         self.force = Force()
+        self.thermal_load = ThermalLoad()
         self.strain_energy = StrainEnergy()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
 
@@ -54,7 +55,7 @@ class Results:
         """combines all the table_types from all objects and sub-objects"""
         sum_objs = [
             self.responses,
-            self.force, self.strain_energy,
+            self.force, self.thermal_load, self.strain_energy,
             self.ato, self.psd, self.rms, self.no, self.crm,
             self.modal_contribution, self.strength_ratio, self.failure_indices,
             self.solution_set,
@@ -273,22 +274,159 @@ class Force:
         self.cfast_force = {}
         self.cweld_force = {}
 
+        # solidPressureForces
+        self.chexa_pressure_force = {}
+        self.cpenta_pressure_force = {}
+        self.ctetra_pressure_force = {}
+        self.cpyram_pressure_force = {}
+
+
     def get_table_types(self):
         tables = [
             # 0d
             'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
             'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
+            'cvisc_force', 'cgap_force', 'cbush_force', 'cconeax_force',
+
+            # 1d
             'crod_force', 'conrod_force', 'ctube_force',
-            'cbar_force', 'cbeam_force',
+            'cbar_force', 'cbeam_force', 'cbend_force',
+            'cfast_force', 'cweld_force',
+
+            # 2d
             'ctria3_force', 'ctria6_force', 'ctriar_force',
             'cquad4_force', 'cquad8_force', 'cquadr_force',
+            'cshear_force',
 
-            'cshear_force', 'cvisc_force', 'cgap_force', 'cbend_force',
-            'cconeax_force', 'cbush_force', 'cfast_force', 'cweld_force',
+            # solid pressure forces
+            'chexa_pressure_force', 'cpenta_pressure_force',
+            'ctetra_pressure_force', 'cpyram_pressure_force',
+
+            # vu-elements
             'vu_tria_force', 'vu_quad_force',
-
         ]
         return ['force.' + table for table in tables]
+
+
+class ThermalLoad:
+    def __init__(self):
+        #OEF - Fluxes - tCode=4 thermal=1
+        self.conv_thermal_load = {}
+
+        #self.thermalLoad_CHBDY = {}
+        self.chbdye_thermal_load = {}
+        self.chbdyg_thermal_load = {}
+        self.chbdyp_thermal_load = {}
+        self.chbdye_thermal_load_flux = {}
+        self.chbdyg_thermal_load_flux = {}
+        self.chbdyp_thermal_load_flux = {}
+
+        #self.thermalLoad_1D
+        self.crod_thermal_load = {}
+        self.cbeam_thermal_load = {}
+        self.ctube_thermal_load = {}
+        self.conrod_thermal_load = {}
+        self.cbar_thermal_load = {}
+        self.cbend_thermal_load = {}
+        self.crod_thermal_load_flux = {}
+        self.cbeam_thermal_load_flux = {}
+        self.ctube_thermal_load_flux = {}
+        self.conrod_thermal_load_flux = {}
+        self.cbar_thermal_load_flux = {}
+        self.cbend_thermal_load_flux = {}
+
+        #self.thermalLoad_2D_3D
+        self.cquad4_thermal_load = {}
+        self.ctriax6_thermal_load = {}
+        self.cquad8_thermal_load = {}
+        self.ctria3_thermal_load = {}
+        self.ctria6_thermal_load = {}
+        self.ctetra_thermal_load = {}
+        self.chexa_thermal_load = {}
+        self.cpenta_thermal_load = {}
+
+        self.cquad4_thermal_load_flux = {}
+        self.ctriax6_thermal_load_flux = {}
+        self.cquad8_thermal_load_flux = {}
+        self.ctria3_thermal_load_flux = {}
+        self.ctria6_thermal_load_flux = {}
+        self.ctetra_thermal_load_flux = {}
+        self.chexa_thermal_load_flux = {}
+        self.cpenta_thermal_load_flux = {}
+
+        #self.thermalLoad_VU = {}
+        #self.thermalLoad_VU_3D = {}
+        self.vu_beam_thermal_load = {}
+        #self.temperatureForces = {}
+
+    def get_table_types(self):
+        tables = [
+            # flux
+            'chbdye_thermal_load',
+            'chbdyg_thermal_load',
+            'chbdyp_thermal_load',
+            'chbdye_thermal_load_flux',
+            'chbdyg_thermal_load_flux',
+            'chbdyp_thermal_load_flux',
+
+            # 1D
+            'crod_thermal_load',
+            'cbeam_thermal_load',
+            'ctube_thermal_load',
+            'conrod_thermal_load',
+            'cbar_thermal_load',
+            'cbend_thermal_load',
+            'crod_thermal_load_flux',
+            'cbeam_thermal_load_flux',
+            'ctube_thermal_load_flux',
+            'conrod_thermal_load_flux',
+            'cbar_thermal_load_flux',
+            'cbend_thermal_load_flux',
+
+            #self.thermalLoad_2D_3D
+            'cquad4_thermal_load',
+            'ctriax6_thermal_load',
+            'cquad8_thermal_load',
+            'ctria3_thermal_load',
+            'ctria6_thermal_load',
+            'ctetra_thermal_load',
+            'chexa_thermal_load',
+            'cpenta_thermal_load',
+
+            # 2d/3d
+            'cquad4_thermal_load_flux',
+            'ctriax6_thermal_load_flux',
+            'cquad8_thermal_load_flux',
+            'ctria3_thermal_load_flux',
+            'ctria6_thermal_load_flux',
+            'ctetra_thermal_load_flux',
+            'chexa_thermal_load_flux',
+            'cpenta_thermal_load_flux',
+
+            # vu-elements
+            #'thermalLoad_VU'
+            #'thermalLoad_VU_3D'
+            'vu_beam_thermal_load',
+        ]
+        return ['thermal_load.' + table for table in tables]
+
+class Stress:
+    def __init__(self):
+        pass
+
+    def get_table_types(self):
+        tables = [
+        ]
+        return ['stress.' + table for table in tables]
+
+class Strain:
+    def __init__(self):
+        pass
+
+    def get_table_types(self):
+        tables = [
+        ]
+        return ['strain.' + table for table in tables]
 
 class StrainEnergy:
     def __init__(self):

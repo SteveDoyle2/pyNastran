@@ -446,6 +446,9 @@ class OP2_F06_Common:
     @property
     def cbar_force(self):
         return self.op2_results.force.cbar_force
+    @property
+    def cbar_force_10nodes(self):
+        return self.op2_results.force.cbar_force
 
     @property
     def ctria3_force(self):
@@ -482,6 +485,9 @@ class OP2_F06_Common:
     @cbar_force.setter
     def cbar_force(self, cbar_force):
         self.op2_results.force.cbar_force = cbar_force
+    @cbar_force_10nodes.setter
+    def cbar_force_10nodes(self, cbar_force_10nodes):
+        self.op2_results.force.cbar_force = cbar_force_10nodes
 
     @ctria3_force.setter
     def ctria3_force(self, ctria3_force):
@@ -547,6 +553,7 @@ class OP2_F06_Common:
         self.ctetra_strain = {}
         self.cpenta_strain = {}
         self.chexa_strain = {}
+        self.cpyram_strain = {}
 
         self.nonlinear_ctetra_stress_strain = {}
         self.nonlinear_cpenta_stress_strain = {}
@@ -721,61 +728,6 @@ class OP2_F06_Common:
 
         #: OUG - eigenvectors
         self.eigenvectors = {}            # tCode=7 thermal=0
-
-        # solidPressureForces
-        self.chexa_pressure_force = {}
-        self.cpenta_pressure_force = {}
-        self.ctetra_pressure_force = {}
-        self.cpyram_pressure_force = {}
-
-        #OEF - Fluxes - tCode=4 thermal=1
-        self.conv_thermal_load = {}
-
-        #self.thermalLoad_CHBDY = {}
-        self.chbdye_thermal_load = {}
-        self.chbdyg_thermal_load = {}
-        self.chbdyp_thermal_load = {}
-        self.chbdye_thermal_load_flux = {}
-        self.chbdyg_thermal_load_flux = {}
-        self.chbdyp_thermal_load_flux = {}
-
-        #self.thermalLoad_1D
-        self.crod_thermal_load = {}
-        self.cbeam_thermal_load = {}
-        self.ctube_thermal_load = {}
-        self.conrod_thermal_load = {}
-        self.cbar_thermal_load = {}
-        self.cbend_thermal_load = {}
-        self.crod_thermal_load_flux = {}
-        self.cbeam_thermal_load_flux = {}
-        self.ctube_thermal_load_flux = {}
-        self.conrod_thermal_load_flux = {}
-        self.cbar_thermal_load_flux = {}
-        self.cbend_thermal_load_flux = {}
-
-        #self.thermalLoad_2D_3D
-        self.cquad4_thermal_load = {}
-        self.ctriax6_thermal_load = {}
-        self.cquad8_thermal_load = {}
-        self.ctria3_thermal_load = {}
-        self.ctria6_thermal_load = {}
-        self.ctetra_thermal_load = {}
-        self.chexa_thermal_load = {}
-        self.cpenta_thermal_load = {}
-
-        self.cquad4_thermal_load_flux = {}
-        self.ctriax6_thermal_load_flux = {}
-        self.cquad8_thermal_load_flux = {}
-        self.ctria3_thermal_load_flux = {}
-        self.ctria6_thermal_load_flux = {}
-        self.ctetra_thermal_load_flux = {}
-        self.chexa_thermal_load_flux = {}
-        self.cpenta_thermal_load_flux = {}
-
-        self.thermalLoad_VU = {}
-        self.thermalLoad_VU_3D = {}
-        self.vu_beam_thermal_load = {}
-        #self.temperatureForces = {}
 
         # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
 
@@ -977,7 +929,7 @@ class OP2_F06_Common:
 
             # OES - isotropic CTETRA/CHEXA/CPENTA stress/strain
             'ctetra_stress', 'chexa_stress', 'cpenta_stress', 'cpyram_stress',
-            'ctetra_strain', 'chexa_strain', 'cpenta_strain',
+            'ctetra_strain', 'chexa_strain', 'cpenta_strain', 'cpyram_strain',
 
             # OES - CSHEAR stress/strain
             'cshear_stress', 'cshear_strain',
@@ -1041,41 +993,41 @@ class OP2_F06_Common:
             #'cshear_force',
 
             # solids
-            'chexa_pressure_force', 'cpenta_pressure_force', 'ctetra_pressure_force',
-            'cpyram_pressure_force',
+            #'chexa_pressure_force', 'cpenta_pressure_force', 'ctetra_pressure_force',
+            #'cpyram_pressure_force',
 
             # vu
             #'vu_quad_force', 'vu_tria_force',
 
             #OEF - Fluxes - tCode=4 thermal=1
-            'conv_thermal_load',
+            #'conv_thermal_load',
 
             #'thermalLoad_CHBDY',
-            'chbdye_thermal_load', 'chbdye_thermal_load_flux',
-            'chbdyg_thermal_load', 'chbdyg_thermal_load_flux',
-            'chbdyp_thermal_load', 'chbdyp_thermal_load_flux',
+            #'chbdye_thermal_load', 'chbdye_thermal_load_flux',
+            #'chbdyg_thermal_load', 'chbdyg_thermal_load_flux',
+            #'chbdyp_thermal_load', 'chbdyp_thermal_load_flux',
 
             #'thermalLoad_1D',
-            'crod_thermal_load', 'crod_thermal_load_flux',
-            'cbeam_thermal_load', 'cbeam_thermal_load_flux',
-            'ctube_thermal_load', 'ctube_thermal_load_flux',
-            'conrod_thermal_load', 'conrod_thermal_load_flux',
-            'cbar_thermal_load', 'cbar_thermal_load_flux',
-            'cbend_thermal_load', 'cbend_thermal_load_flux',
+            #'crod_thermal_load', 'crod_thermal_load_flux',
+            #'cbeam_thermal_load', 'cbeam_thermal_load_flux',
+            #'ctube_thermal_load', 'ctube_thermal_load_flux',
+            #'conrod_thermal_load', 'conrod_thermal_load_flux',
+            #'cbar_thermal_load', 'cbar_thermal_load_flux',
+            #'cbend_thermal_load', 'cbend_thermal_load_flux',
 
             #'thermalLoad_2D_3D',
-            'cquad4_thermal_load', 'cquad4_thermal_load_flux',
-            'ctriax6_thermal_load', 'ctriax6_thermal_load_flux',
-            'cquad8_thermal_load', 'cquad8_thermal_load_flux',
-            'ctria3_thermal_load', 'ctria3_thermal_load_flux',
-            'ctria6_thermal_load', 'ctria6_thermal_load_flux',
-            'ctetra_thermal_load', 'ctetra_thermal_load_flux',
-            'chexa_thermal_load', 'chexa_thermal_load_flux',
-            'cpenta_thermal_load', 'cpenta_thermal_load_flux',
+            #'cquad4_thermal_load', 'cquad4_thermal_load_flux',
+            #'ctriax6_thermal_load', 'ctriax6_thermal_load_flux',
+            #'cquad8_thermal_load', 'cquad8_thermal_load_flux',
+            #'ctria3_thermal_load', 'ctria3_thermal_load_flux',
+            #'ctria6_thermal_load', 'ctria6_thermal_load_flux',
+            #'ctetra_thermal_load', 'ctetra_thermal_load_flux',
+            #'chexa_thermal_load', 'chexa_thermal_load_flux',
+            #'cpenta_thermal_load', 'cpenta_thermal_load_flux',
 
-            'thermalLoad_VU',
-            'thermalLoad_VU_3D',
-            'vu_beam_thermal_load',
+            #'thermalLoad_VU',
+            #'thermalLoad_VU_3D',
+            #'vu_beam_thermal_load',
             #self.temperatureForces
         ]
         table_types += [

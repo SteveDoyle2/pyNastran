@@ -1402,13 +1402,6 @@ class OES(OP2Common):
             n, nelements, ntotal = self._oes_cbar_100(data, ndata, dt, is_magnitude_phase,
                                                       prefix, postfix)
 
-        elif self.element_type == 101: # AABSF
-            return ndata
-
-        elif self.element_type in [140, 201]:
-            # 140-HEXA8FD, 201-QUAD4FD
-            return ndata
-
         elif self.element_type in [145, 146, 147]:
             n, nelements, ntotal = self._oes_vu_solid(data, ndata, dt, is_magnitude_phase, stress_name, prefix, postfix)
 
@@ -1419,6 +1412,42 @@ class OES(OP2Common):
         elif self.element_type == 189: # VUQUAD
             n, nelements, ntotal = self._oes_vu_quad(data, ndata, dt, is_magnitude_phase,
                                                      prefix, postfix)
+
+        elif self.element_type in [226]:
+            # 226-BUSHNL
+            n, nelements, ntotal = self._oes_cbush_nonlinear(data, ndata, dt, is_magnitude_phase,
+                                                             prefix, postfix)
+        elif self.element_type in [271, 275]:
+            #271 CPLSTN3 Triangle plane strain linear format (Center Only)
+            #272 CPLSTN4 Quadrilateral plane strain linear format (Center and Corners)
+            #273 CPLSTN6 Triangle plane strain linear format (Center and Corners)
+            #274 CPLSTN8 Quadrilateral plane strain linear format (Center and Corners)
+
+            #275 CPLSTS3 Triangle plane stress linear Format (Center Only)
+            #276 CPLSTS4 Quadrilateral plane stress linear format (Center and Corners)
+            #277 CPLSTS6 Triangle plane stress linear format (Center and Corners)
+            #278 CPLSTS8 Quadrilateral plane stress linear format (Center and Corners)
+
+
+            # 271-CPLSTN3
+            # 275-CPLSTS3
+            n, nelements, ntotal = self._oes_plate_stress_34(data, ndata, dt, is_magnitude_phase,
+                                                             stress_name, prefix, postfix)
+
+        elif self.element_type in [276, 277, 278]:
+            # 276-CPLSTS4
+            # 277-CPLSTS6
+            # 278-CPLSTS8
+            n, nelements, ntotal = self._oes_plate_stress_68(data, ndata, dt, is_magnitude_phase,
+                                                             stress_name, prefix, postfix)
+
+
+        elif self.element_type == 101: # AABSF
+            return ndata
+
+        elif self.element_type in [140, 201]:
+            # 140-HEXA8FD, 201-QUAD4FD
+            return ndata
 
         elif self.element_type in [47, 48, 189, 190]:
             # 47-AXIF2
@@ -1433,11 +1462,6 @@ class OES(OP2Common):
             # 50-SLOT3
             # 51-SLOT4
             return ndata
-        elif self.element_type in [226]:
-            # 226-BUSHNL
-            n, nelements, ntotal = self._oes_cbush_nonlinear(data, ndata, dt, is_magnitude_phase,
-                                                             prefix, postfix)
-
         elif self.element_type in [160, 161, 162, 163, 164, 165, 166, 167, 168,
                                    169, 170, 171, 172, 202,
                                    204, 218, 211, 213, 214,
@@ -1473,31 +1497,6 @@ class OES(OP2Common):
             # 235-CQUADR
             return self._not_implemented_or_skip(data, ndata, self.code_information())
             #return ndata
-        #elif self.element_type in [255]:
-            #return ndata
-        elif self.element_type in [271, 275]:
-            #271 CPLSTN3 Triangle plane strain linear format (Center Only)
-            #272 CPLSTN4 Quadrilateral plane strain linear format (Center and Corners)
-            #273 CPLSTN6 Triangle plane strain linear format (Center and Corners)
-            #274 CPLSTN8 Quadrilateral plane strain linear format (Center and Corners)
-
-            #275 CPLSTS3 Triangle plane stress linear Format (Center Only)
-            #276 CPLSTS4 Quadrilateral plane stress linear format (Center and Corners)
-            #277 CPLSTS6 Triangle plane stress linear format (Center and Corners)
-            #278 CPLSTS8 Quadrilateral plane stress linear format (Center and Corners)
-
-
-            # 271-CPLSTN3
-            # 275-CPLSTS3
-            n, nelements, ntotal = self._oes_plate_stress_34(data, ndata, dt, is_magnitude_phase,
-                                                             stress_name, prefix, postfix)
-
-        elif self.element_type in [276, 277, 278]:
-            # 276-CPLSTS4
-            # 277-CPLSTS6
-            # 278-CPLSTS8
-            n, nelements, ntotal = self._oes_plate_stress_68(data, ndata, dt, is_magnitude_phase,
-                                                             stress_name, prefix, postfix)
         else:
             #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             msg = self.code_information()
@@ -3535,7 +3534,8 @@ class OES(OP2Common):
                 obj.ielement = ielement2
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
-                    self.log.debug('vectorize CQUAD4-33 real SORT%s' % self.sort_method)
+                    self.log.debug(f'vectorize {self.element_name}-{self.element_type} real '
+                                   f'SORT{self.sort_method}')
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'16f')
                 cen = 0 # CEN/4
                 for unused_i in range(nelements):

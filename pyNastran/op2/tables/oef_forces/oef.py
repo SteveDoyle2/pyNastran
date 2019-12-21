@@ -93,7 +93,12 @@ class OEF(OP2Common):
         prefix = ''
         postfix = ''
         if self.table_name in [b'OEF1X', b'OEF1', b'OEF2']:
-            pass
+            if self.thermal == 0:
+                prefix = 'force.'
+            elif self.thermal == 1:
+                prefix = 'thermal_load.'
+            else:
+                raise NotImplementedError(self.code_information())
         elif self.table_name in [b'HOEF1']:
             postfix = '_flux'
         #elif self.table_name in ['OESNLXR']:
@@ -685,21 +690,21 @@ class OEF(OP2Common):
         """
         n = 0
         if self.element_type == 33:
-            result_name = 'cquad4_thermal_load' + postfix
+            result_name = prefix + 'cquad4_thermal_load' + postfix
         elif self.element_type == 53:
-            result_name = 'ctriax6_thermal_load' + postfix
+            result_name = prefix + 'ctriax6_thermal_load' + postfix
         elif self.element_type == 64:
-            result_name = 'cquad8_thermal_load' + postfix
+            result_name = prefix + 'cquad8_thermal_load' + postfix
         elif self.element_type == 74:
-            result_name = 'ctria3_thermal_load' + postfix
+            result_name = prefix + 'ctria3_thermal_load' + postfix
         elif self.element_type == 75:
-            result_name = 'ctria6_thermal_load' + postfix
+            result_name = prefix + 'ctria6_thermal_load' + postfix
         elif self.element_type == 39:
-            result_name = 'ctetra_thermal_load' + postfix
+            result_name = prefix + 'ctetra_thermal_load' + postfix
         elif self.element_type == 67:
-            result_name = 'chexa_thermal_load' + postfix
+            result_name = prefix + 'chexa_thermal_load' + postfix
         elif self.element_type == 68:
-            result_name = 'cpenta_thermal_load' + postfix
+            result_name = prefix + 'cpenta_thermal_load' + postfix
         else:
             raise NotImplementedError('element_type=%s element_name=%s' % (
                 self.element_type, self.element_name))
@@ -816,11 +821,11 @@ class OEF(OP2Common):
         n = 0
         #if self.table_name in ['OEF1X']:
         if self.element_type == 107:
-            result_name = 'chbdye_thermal_load' + postfix
+            result_name = prefix + 'chbdye_thermal_load' + postfix
         elif self.element_type == 108:
-            result_name = 'chbdyg_thermal_load' + postfix
+            result_name = prefix + 'chbdyg_thermal_load' + postfix
         elif self.element_type == 109:
-            result_name = 'chbdyp_thermal_load' + postfix
+            result_name = prefix + 'chbdyp_thermal_load' + postfix
         else:
             raise NotImplementedError('element_type=%s element_name=%s' % (
                 self.element_type, self.element_name))
@@ -904,7 +909,7 @@ class OEF(OP2Common):
     def _thermal_conv(self, data, ndata, dt, prefix, postfix):
         n = 0
         # 110-CONV
-        result_name = 'conv_thermal_load' + postfix
+        result_name = prefix + 'conv_thermal_load' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -970,7 +975,7 @@ class OEF(OP2Common):
         """
         n = 0
         if self.format_code == 1 and self.num_wide == 27:  # real
-            result_name = 'thermalLoad_VU' + postfix
+            result_name = prefix + 'thermalLoad_VU' + postfix
             if self._results.is_not_saved(result_name):
                 return ndata, None, None
             self._results._found_result(result_name)
@@ -1075,7 +1080,7 @@ class OEF(OP2Common):
             #msg = self.code_information()
             #return self._not_implemented_or_skip(data, ndata, msg), None, None
 
-        result_name = 'thermalLoad_VU_3D' + postfix
+        result_name = prefix + 'thermalLoad_VU_3D' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -1146,7 +1151,7 @@ class OEF(OP2Common):
         nnodes = 2
         numwide_real = 4 + 7 * nnodes
 
-        result_name = 'vu_beam_thermal_load' + postfix
+        result_name = prefix + 'vu_beam_thermal_load' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -1342,8 +1347,6 @@ class OEF(OP2Common):
 
         elif self.element_type == 53:  # ctriax6
             # 53-CTRIAX6
-            #if self.read_mode == 1:
-                #return ndata
             self._results._found_result('ctriax_force')
             if self.format_code == 1 and self.num_wide == 0:  # real
                 pass
@@ -1389,9 +1392,10 @@ class OEF(OP2Common):
         elif self.element_type == 191:
             n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type in [117, 119]:
+        elif self.element_type in [117, 119, 200]:
             # 117-CWELDC
             # 119-CFAST
+            # 200-CWELD
             n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
                                                      prefix, postfix)
         elif self.element_type in [235]:
@@ -1419,20 +1423,14 @@ class OEF(OP2Common):
         10-CONROD
         """
         n = 0
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
-
         obj_real = RealRodForceArray
         obj_complex = ComplexRodForceArray
         if self.element_type == 1: # CROD
             result_name = prefix + 'crod_force' + postfix
-            slot = self.crod_force
         elif self.element_type == 3:  # CTUBE
             result_name = prefix + 'ctube_force' + postfix
-            slot = self.ctube_force
         elif self.element_type == 10:  # CONROD
             result_name = prefix + 'conrod_force' + postfix
-            slot = self.conrod_force
         else:
             raise NotImplementedError(self.code_information())
             #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
@@ -1558,9 +1556,6 @@ class OEF(OP2Common):
 
     def _oef_cbeam(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """2-CBEAM"""
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
-
         n = 0
         result_name = prefix + 'cbeam_force' + postfix
         if self._results.is_not_saved(result_name):
@@ -1807,8 +1802,6 @@ class OEF(OP2Common):
 
         """
         n = 0
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
         if self.element_type == 11:
             result_name = prefix + 'celas1_force' + postfix
             obj_real = RealSpringForceArray
@@ -1947,8 +1940,6 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_cvisc(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
         result_name = prefix + 'cvisc_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -2063,15 +2054,12 @@ class OEF(OP2Common):
 
     def _oef_cbar_34(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """34-CBAR"""
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
-
         n = 0
         if self.element_type == 34:
             result_name = prefix + 'cbar_force' + postfix
             obj_real = RealCBarForceArray
             obj_complex = ComplexCBarForceArray
-        elif self.element_type == 117:
+        elif self.element_type in [117, 200]:
             result_name = prefix + 'cweld_force' + postfix
             obj_real = RealCWeldForceArray
             assert self.num_wide == 9, self.code_information()
@@ -2085,6 +2073,7 @@ class OEF(OP2Common):
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
+        slot = self.get_result(result_name)
 
         if self.format_code in [1, 2] and self.num_wide == 9:
             # real - format_code == 1
@@ -2123,7 +2112,6 @@ class OEF(OP2Common):
             else:
                 n = oef_cbar_real(self, data, obj, nelements, ntotal)
         elif self.format_code in [2, 3] and self.num_wide == 17: # imag
-            slot = self.cbar_force
 
             # TODO: vectorize
             ntotal = 68  # 17*4
@@ -2183,7 +2171,7 @@ class OEF(OP2Common):
                       prefix, postfix):
         n = 0
         #100-BARS
-        result_name = prefix + 'cbar_force_10nodes' + postfix
+        result_name = prefix + 'cbar_force' + postfix  # _10nodes
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         self._results._found_result(result_name)
@@ -2245,9 +2233,6 @@ class OEF(OP2Common):
 
         """
         n = 0
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
-
         if self.element_type == 33:
             result_name = prefix + 'cquad4_force' + postfix
         elif self.element_type == 74:
@@ -2388,9 +2373,6 @@ class OEF(OP2Common):
         144-CQUAD4-bilinear
 
         """
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
-
         n = 0
         if self.element_type == 64:
             result_name = prefix + 'cquad8_force' + postfix
@@ -2744,8 +2726,6 @@ class OEF(OP2Common):
 
     def _oef_cshear(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """4-CSHEAR"""
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
         result_name = prefix + 'cshear_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -2912,8 +2892,6 @@ class OEF(OP2Common):
     def _oef_cconeax(self, data, ndata, dt, unused_is_magnitude_phase,
                      prefix, postfix):
         """35-CONEAX"""
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
         result_name = prefix + 'cconeax_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -2969,8 +2947,6 @@ class OEF(OP2Common):
     def _oef_cgap(self, data, ndata, dt, unused_is_magnitude_phase,
                   prefix, postfix):
         """38-GAP"""
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
         result_name = prefix + 'cgap_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -3031,8 +3007,6 @@ class OEF(OP2Common):
 
     def _oef_cbend(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """69-CBEND"""
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
         result_name = prefix + 'cbend_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -3362,9 +3336,6 @@ class OEF(OP2Common):
 
     def _oef_cbush(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """102-CBUSH"""
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
-
         result_name = prefix + 'cbush_force' + postfix
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -3476,9 +3447,6 @@ class OEF(OP2Common):
 
         """
         n = 0
-        if prefix == '' and postfix == '':
-            prefix = 'force.'
-
         if self.element_type in [189]:  # VUQUAD
             nnodes = 4
             etype = 'VUQUAD4'
