@@ -318,12 +318,50 @@ class NastranGuiResults(NastranGuiAttributes):
 
         if key in model.cbar_force:
             found_force = True
-            ## CBAR-34
             case = model.cbar_force[key]  # type: np.ndarray
-            if case.is_real:
+            if case.element_type == 34:
+                ## CBAR-34
+                if case.is_real:
+                    eids = case.element
+                    i = np.searchsorted(element_ids, eids)
+                    is_element_on[i] = 1.
+
+                    dt = case._times[itime]
+                    header = _get_nastran_header(case, dt, itime)
+                    header_dict[(key, itime)] = header
+                    keys_map[key] = (case.subtitle, case.label,
+                                     case.superelement_adaptivity_index, case.pval_step)
+
+                    #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
+                    # shear1, shear2, axial, torque]
+                    #fx[i] = case.data[:, :, 6]
+                    #fy[i] = case.data[:, :, 4]
+                    #fz[i] = case.data[:, :, 5]
+
+                    if i.size == 1:
+                        rxi = case.data[itime, :, 7].max()
+                        ryi = np.vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max()
+                        rzi = np.vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max()
+                    else:
+                        rxi = case.data[itime, :, 7]#.max(axis=0)
+                        ryi = np.vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max(axis=0)
+                        rzi = np.vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max(axis=0)
+                        unused_rzv = rzi
+
+                        # rza = array([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
+                        # rzh = hstack([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
+                        # print(rzv.shape, rzv.shape, rzv.shape)
+                    assert rxi.size == i.size, 'rx.size=%s i.size=%s rx=%s' % (rxi.size, i.size, rxi)
+                    assert ryi.size == i.size, 'ry.size=%s i.size=%s ry=%s' % (ryi.size, i.size, ryi)
+                    assert rzi.size == i.size, 'rz.size=%s i.size=%s rz=%s' % (rzi.size, i.size, rzi)
+
+                    rx[i] = rxi
+                    ry[i] = ryi
+                    rz[i] = rzi
+            elif case.element_type == 100:
+                ## CBAR-100
                 eids = case.element
-                i = np.searchsorted(element_ids, eids)
-                is_element_on[i] = 1.
+                ueids = np.unique(eids)
 
                 dt = case._times[itime]
                 header = _get_nastran_header(case, dt, itime)
@@ -331,107 +369,69 @@ class NastranGuiResults(NastranGuiAttributes):
                 keys_map[key] = (case.subtitle, case.label,
                                  case.superelement_adaptivity_index, case.pval_step)
 
-                #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2,
-                # shear1, shear2, axial, torque]
-                #fx[i] = case.data[:, :, 6]
-                #fy[i] = case.data[:, :, 4]
-                #fz[i] = case.data[:, :, 5]
-
-                if i.size == 1:
-                    rxi = case.data[itime, :, 7].max()
-                    ryi = np.vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max()
-                    rzi = np.vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max()
+                j = np.searchsorted(self.element_ids, ueids)
+                di = j[1:-1] - j[0:-2]
+                if len(di) == 0:
+                    # pload1
+                    self.log_error('Error loading CBAR-100 forces; failed slicing element_ids')
                 else:
-                    rxi = case.data[itime, :, 7]#.max(axis=0)
-                    ryi = np.vstack([case.data[itime, :, 0], case.data[itime, :, 2]]).max(axis=0)
-                    rzi = np.vstack([case.data[itime, :, 1], case.data[itime, :, 3]]).max(axis=0)
-                    unused_rzv = rzi
+                    is_element_on[j] = 1.
 
-                    # rza = array([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
-                    # rzh = hstack([case.data[itime, :, 1], case.data[itime, :, 3]])#.max(axis=0)
-                    # print(rzv.shape, rzv.shape, rzv.shape)
-                assert rxi.size == i.size, 'rx.size=%s i.size=%s rx=%s' % (rxi.size, i.size, rxi)
-                assert ryi.size == i.size, 'ry.size=%s i.size=%s ry=%s' % (ryi.size, i.size, ryi)
-                assert rzi.size == i.size, 'rz.size=%s i.size=%s rz=%s' % (rzi.size, i.size, rzi)
+                    if di.max() != 2:
+                        #print('di =', np.unique(di))
+                        # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
+                        ii = 0
+                        unused_eid_old = eids[0]
+                        fxi = defaultdict(list)
+                        fyi = defaultdict(list)
+                        fzi = defaultdict(list)
+                        rxi = defaultdict(list)
+                        ryi = defaultdict(list)
+                        rzi = defaultdict(list)
+                        for ii, eid in enumerate(eids):
+                            fxi[eid].append(case.data[:, ii, 5])
+                            fyi[eid].append(case.data[:, ii, 3])
+                            fzi[eid].append(case.data[:, ii, 4])
 
-                rx[i] = rxi
-                ry[i] = ryi
-                rz[i] = rzi
-
-        if key in model.cbar_force_10nodes:
-            found_force = True
-            ## CBAR-100
-            case = model.cbar_force_10nodes[key]
-            eids = case.element
-            ueids = np.unique(eids)
-
-            dt = case._times[itime]
-            header = _get_nastran_header(case, dt, itime)
-            header_dict[(key, itime)] = header
-            keys_map[key] = (case.subtitle, case.label,
-                             case.superelement_adaptivity_index, case.pval_step)
-
-            j = np.searchsorted(self.element_ids, ueids)
-            di = j[1:-1] - j[0:-2]
-            if len(di) == 0:
-                # pload1
-                self.log_error('Error loading CBAR-100 forces; failed slicing element_ids')
+                            rxi[eid].append(case.data[:, ii, 6])
+                            ryi[eid].append(case.data[:, ii, 1])
+                            rzi[eid].append(case.data[:, ii, 2])
+                            #if eidi == eid_old:
+                            #    fx[ii] = array([case.data[:, j, 5], case.data[:, j, 5]]).max(axis=0)
+                            #else:
+                        for ii, eidi in zip(j, eids[j]):
+                            fx[ii] = max(fxi[eidi])
+                            fy[ii] = max(fyi[eidi])
+                            fz[ii] = max(fyi[eidi])
+                            rx[ii] = max(rxi[eidi])
+                            ry[ii] = max(ryi[eidi])
+                            rz[ii] = max(rzi[eidi])
+                    else:
+                        # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
+                        neids = len(np.unique(eids)) * 2
+                        if len(eids) != len(np.unique(eids)) * 2:
+                            msg = 'CBAR-100 Error: len(eids)=%s neids=%s' % (len(eids), neids)
+                            raise RuntimeError(msg)
+                        fx[i] = np.array(
+                            [case.data[itime, ::-1, 5],
+                             case.data[itime, 1::-1, 5]]).max(axis=0)
+                        fy[i] = np.array(
+                            [case.data[itime, ::-1, 3],
+                             case.data[itime, 1::-1, 3]]).max(axis=0)
+                        fz[i] = np.array(
+                            [case.data[itime, ::-1, 4],
+                             case.data[itime, 1::-1, 4]]).max(axis=0)
+                        rx[i] = np.array(
+                            [case.data[itime, ::-1, 6],
+                             case.data[itime, 1::-1, 6]]).max(axis=0)
+                        ry[i] = np.array(
+                            [case.data[itime, ::-1, 1],
+                             case.data[itime, 1::-1, 1]]).max(axis=0)
+                        rz[i] = np.array(
+                            [case.data[itime, ::-1, 2],
+                             case.data[itime, 1::-1, 2]]).max(axis=0)
             else:
-                is_element_on[j] = 1.
-
-                if di.max() != 2:
-                    #print('di =', np.unique(di))
-                    # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
-                    ii = 0
-                    unused_eid_old = eids[0]
-                    fxi = defaultdict(list)
-                    fyi = defaultdict(list)
-                    fzi = defaultdict(list)
-                    rxi = defaultdict(list)
-                    ryi = defaultdict(list)
-                    rzi = defaultdict(list)
-                    for ii, eid in enumerate(eids):
-                        fxi[eid].append(case.data[:, ii, 5])
-                        fyi[eid].append(case.data[:, ii, 3])
-                        fzi[eid].append(case.data[:, ii, 4])
-
-                        rxi[eid].append(case.data[:, ii, 6])
-                        ryi[eid].append(case.data[:, ii, 1])
-                        rzi[eid].append(case.data[:, ii, 2])
-                        #if eidi == eid_old:
-                        #    fx[ii] = array([case.data[:, j, 5], case.data[:, j, 5]]).max(axis=0)
-                        #else:
-                    for ii, eidi in zip(j, eids[j]):
-                        fx[ii] = max(fxi[eidi])
-                        fy[ii] = max(fyi[eidi])
-                        fz[ii] = max(fyi[eidi])
-                        rx[ii] = max(rxi[eidi])
-                        ry[ii] = max(ryi[eidi])
-                        rz[ii] = max(rzi[eidi])
-                else:
-                    # [station, bending_moment1, bending_moment2, shear1, shear2, axial, torque]
-                    neids = len(np.unique(eids)) * 2
-                    if len(eids) != len(np.unique(eids)) * 2:
-                        msg = 'CBAR-100 Error: len(eids)=%s neids=%s' % (len(eids), neids)
-                        raise RuntimeError(msg)
-                    fx[i] = np.array(
-                        [case.data[itime, ::-1, 5],
-                         case.data[itime, 1::-1, 5]]).max(axis=0)
-                    fy[i] = np.array(
-                        [case.data[itime, ::-1, 3],
-                         case.data[itime, 1::-1, 3]]).max(axis=0)
-                    fz[i] = np.array(
-                        [case.data[itime, ::-1, 4],
-                         case.data[itime, 1::-1, 4]]).max(axis=0)
-                    rx[i] = np.array(
-                        [case.data[itime, ::-1, 6],
-                         case.data[itime, 1::-1, 6]]).max(axis=0)
-                    ry[i] = np.array(
-                        [case.data[itime, ::-1, 1],
-                         case.data[itime, 1::-1, 1]]).max(axis=0)
-                    rz[i] = np.array(
-                        [case.data[itime, ::-1, 2],
-                         case.data[itime, 1::-1, 2]]).max(axis=0)
+                raise NotImplementedError(case)
         return found_force, fx, fy, fz, rx, ry, rz, is_element_on
 
     def _fill_op2_time_centroidal_force(self, cases, model: OP2,

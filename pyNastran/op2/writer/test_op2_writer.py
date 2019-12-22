@@ -279,8 +279,8 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         exclude_results = [
-            'chbdye_thermal_load',
-            'chexa_thermal_load',
+            'thermal_load.chbdye_thermal_load',
+            'thermal_load.chexa_thermal_load',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)
@@ -303,9 +303,9 @@ class TestOP2Writer(unittest.TestCase):
         #debug_file = model + '.debug.out'
 
         exclude_results = [
-            'chbdyg_thermal_load',
-            'crod_thermal_load',
-            'cquad4_thermal_load',
+            'thermal_load.chbdyg_thermal_load',
+            'thermal_load.crod_thermal_load',
+            'thermal_load.cquad4_thermal_load',
         ]
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, debug=True, log=log)
@@ -323,16 +323,16 @@ class TestOP2Writer(unittest.TestCase):
         #op2_filename_debug = os.path.join(folder, 'ofprand1.debug.out')
         #op2_filename_out = os.path.join(folder, 'ofprand1_out.op2')
         #op2_filename_debug_out = os.path.join(folder, 'ofprand1.debug.out')
-        ##debug_file = 'solid_bending.debug.out'
+        #debug_file = 'solid_bending.debug.out'
         #model = os.path.splitext(op2_filename)[0]
-        ##debug_file = model + '.debug.out'
+        #debug_file = model + '.debug.out'
 
         #exclude_results = [
-            ##'chbdyg_thermal_load',
-            ##'crod_thermal_load',
-            ##'cquad4_thermal_load',
-            ##'chbdye_thermal_load',
-            ##'chexa_thermal_load',
+            #'thermal_load.chbdyg_thermal_load',
+            #'thermal_load.crod_thermal_load',
+            #'thermal_load.cquad4_thermal_load',
+            #'thermal_load.chbdye_thermal_load',
+            #'thermal_load.chexa_thermal_load',
         #]
         #op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             #exclude_results=exclude_results,
