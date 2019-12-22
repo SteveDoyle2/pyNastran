@@ -71,6 +71,8 @@ class ComplexSolidArray(OES_Object):
             nnodes = 7
         elif self.element_type == 67: # CHEXA
             nnodes = 9
+        elif self.element_type == 255: # CPYRAM
+            nnodes = 6
         else:
             raise NotImplementedError(self.element_name)
         return nnodes
@@ -421,7 +423,7 @@ class ComplexSolidStressArray(ComplexSolidArray, StressObject):
         ComplexSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz']
         return headers
 
@@ -440,6 +442,8 @@ def _get_msgs(self, is_mag_phase, is_sort1):
         tetra_msg = ['                 C O M P L E X   S T R E S S E S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )', ]
         hexa_msg = ['                 C O M P L E X   S T R E S S E S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )', ]
         penta_msg = ['                 C O M P L E X   S T R E S S E S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )', ]
+        pyram_msg = ['                                      C O M P L E X   S T R E S S E S   I N   C P Y R A M      E L E M E N T S   ', ]
+
     else:
         base_msg = [
             mag_phase,
@@ -449,15 +453,16 @@ def _get_msgs(self, is_mag_phase, is_sort1):
         tetra_msg = ['                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',]
         hexa_msg = ['                 C O M P L E X     S T R A I N S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )',]
         penta_msg = ['                 C O M P L E X     S T R A I N S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )',]
-
+        penta_msg = ['                 C O M P L E X     S T R A I N S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )',]
     tetra_msg += base_msg
     penta_msg += base_msg
     hexa_msg += base_msg
-    return tetra_msg, penta_msg, hexa_msg
+    pyram_msg += base_msg
+    return tetra_msg, penta_msg, hexa_msg, pyram_msg
 
 
 def get_f06_header(self, is_mag_phase=True, is_sort1=True):
-    tetra_msg, penta_msg, hexa_msg = _get_msgs(self, is_mag_phase, is_sort1)
+    tetra_msg, penta_msg, hexa_msg, pyram_msg = _get_msgs(self, is_mag_phase, is_sort1)
 
     if self.element_type == 39:  # CTETRA
         return tetra_msg, 4
@@ -465,6 +470,8 @@ def get_f06_header(self, is_mag_phase=True, is_sort1=True):
         return hexa_msg, 8
     elif self.element_type == 68:  # CPENTA
         return penta_msg, 6
+    elif self.element_type == 255:  # CPYRAM
+        return pyram_msg, 6
     else:
         raise NotImplementedError('complex solid stress/strain name=%r Type=%s' % (self.element_name, self.element_type))
 

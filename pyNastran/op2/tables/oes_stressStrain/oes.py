@@ -282,10 +282,11 @@ class OES(OP2Common):
             98, # TRIA6-nonlinear
             100, # CBAR-100
             228, # CQUADR
+            232, # CQUADR-composite
             243, # CQUADX4
             189, # VUQUAD
             190, # VUTRIA
-            191, #VUBEAM
+            191, # VUBEAM
             256, # CPYRAM
             227, # CTRIAR
             275, # CPLSTS3
@@ -495,9 +496,11 @@ class OES(OP2Common):
                                  69, # CBEND
                                  67, 68, 95, 102,#CHEXA, CPENTA, QUAD4-comp, CBUSH
                                  96, # QUAD8-nonlinear
-                                 #98, # TRIA6-nonlinear
+                                 98, # TRIA6-nonlinear
                                  39, #CTETRA
                                  228, #CQUADR
+                                 232, #CQUADR-composite
+                                 233, #CTRIAR-composite
                                  97]:  # CTRIA3-C
             n = self._read_ostr_4_sort(data, ndata)
         else:
@@ -1311,10 +1314,11 @@ class OES(OP2Common):
         elif self.element_type == 34: # CBAR
             n, nelements, ntotal = self._oes_cbar_34(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type in [39, 67, 68]: # solid stress
+        elif self.element_type in [39, 67, 68, 255]: # solid stress
             # 39-CTETRA
             # 67-CHEXA
             # 68-CPENTA
+            # 255-CPYRAM
             n, nelements, ntotal = self._oes_csolid(data, ndata, dt, is_magnitude_phase, prefix, postfix)
         elif self.element_type in [160, 163, 166,
                                    161, # centroid
@@ -1375,11 +1379,12 @@ class OES(OP2Common):
             # 90-CQUAD4NL
             n, nelements, ntotal = self._oes_shells_nonlinear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type in [95, 96, 97, 98, 233]: # composite shell
+        elif self.element_type in [95, 96, 97, 98, 232, 233]: # composite shell
             # 95 - CQUAD4
             # 96 - CQUAD8
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
+            # 232 - QUADRLC (CQUADR-composite)
             # 233 - TRIARLC (CTRIAR-composite)
             n, nelements, ntotal = self._oes_shells_composite(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
@@ -2651,6 +2656,10 @@ class OES(OP2Common):
                 nnodes_expected = 7
                 result_name = prefix + 'cpenta_stress' + postfix
                 element_name = 'CPENTA6'
+            elif self.element_type == 255:  # CPYRAM
+                nnodes_expected = 6
+                result_name = prefix + 'cpyram_stress' + postfix
+                element_name = 'CPYRAM5'
             else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
         else:
@@ -3328,7 +3337,7 @@ class OES(OP2Common):
                                 obj.add_node_sort1(dt, eid, inode, grid,
                                                    sxx, syy, szz, txy, tyz, txz, ovm)
                         n += 32
-            self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} {word}')
+            self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} {word} csolid2')
         else:  # pragma: no cover
             raise RuntimeError(self.code_information() +
                                '\nnumwide real=%s imag=%s random=%s' % (
@@ -5359,6 +5368,7 @@ class OES(OP2Common):
          - 96 : CQUAD8
          - 97 : CTRIA3
          - 98 : CTRIA6 (composite)
+         - 232 : QUADRLC (CQUADR-composite)
          - 233 : TRIARLC (CTRIAR-composite)
 
         """
@@ -5375,6 +5385,8 @@ class OES(OP2Common):
                 result_name = prefix + 'ctria3_composite_stress' + postfix
             elif self.element_type == 98:  # CTRIA6
                 result_name = prefix + 'ctria6_composite_stress' + postfix
+            elif self.element_type == 232:  # CQUADR
+                result_name = prefix + 'cquadr_composite_stress' + postfix
             elif self.element_type == 233:  # CTRIAR
                 result_name = prefix + 'ctriar_composite_stress' + postfix
             else:  # pragma: no cover
@@ -5391,6 +5403,8 @@ class OES(OP2Common):
                 result_name = prefix + 'ctria3_composite_strain' + postfix
             elif self.element_type == 98:  # CTRIA6
                 result_name = prefix + 'ctria6_composite_strain' + postfix
+            elif self.element_type == 232:  # CQUADR
+                result_name = prefix + 'cquadr_composite_strain' + postfix
             elif self.element_type == 233:  # CTRIAR
                 result_name = prefix + 'ctriar_composite_strain' + postfix
             else:  # pragma: no cover

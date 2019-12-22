@@ -128,7 +128,7 @@ class OP2Reader:
             b'FRL' : self.read_frl,  # frequency response list
             b'SDF' : self.read_sdf,
             b'IBULK' : self.read_ibulk,
-            b'CDDATA' : self.read_ibulk,
+            b'CDDATA' : self.read_cddata,
             b'CMODEXT' : self._read_cmodext,
 
             # element matrices
@@ -1814,6 +1814,122 @@ class OP2Reader:
             marker -= 1
         #print("marker = ", marker)
         unused_marker_end = self.get_marker1(rewind=False)
+
+    def read_cddata(self):
+        """Cambell diagram summary"""
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+
+        self.read_markers([-1])
+        data = self._read_record()
+        #(101, 15, 5, 7, 0, 2, 0)
+        #(101, 118, 4, 7, 0, 2, 0)
+
+        # CDDATA, 2
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        cddata, method = Struct(self._endian + b'8si').unpack(data)
+        assert method == 2, f'CDDATA method={method}'
+
+        marker = -3
+        cddata_list = []
+        while 1:
+            self.read_markers([marker, 1, 0])
+            nfields = self.get_marker1(rewind=True)
+            if nfields == 0:
+                break
+            data = self._read_record()
+            if self.read_mode == 1:
+                marker -= 1
+                continue
+
+            ints = np.frombuffer(data, op2.idtype)
+            nints = len(ints)
+            floats = np.frombuffer(data, op2.fdtype) # .reshape(nints//7, 7)
+
+            # 1 NVAL I Number of values
+            # 2 NCRV I Number of sections/solution (i.e., number of curves)
+            # 3 KEYW I Keyword=10000+(SOLN*10)+DATTYP,
+            # where:
+            #   SOLN=solution number
+            #   DATTYP=1 for list of rotor speeds in user-defined units
+            #   DATTYP=2 for list of eigenfrequencies in the analysis system
+            #   DATTYP=3 for list of Lehr damping values
+            #   DATTYP=4 for list of real part of eigenvalues
+            #   DATTYP=5 for list of imaginary part of eigenvalues
+            #   DATTYP=6 for list of whirl direction codes (2.0=backwards, 3.0=forward, 4.0=linear)
+            #   DATTYP=7 for list of converted frequencies in analysis system
+            #   DATTYP=8 for list of whirl directions codes for converted solution (2.0=backwards, 3.0=forward, 4.0=linear)
+            # 4 VALS(NVAL) RS List of values
+            # Words 1–4 repeat for NCRV curves. For DATTYP≠1, NVAL and NCRV=0
+
+            dict_map = {
+                1: 'RPM',
+                2: 'eigenfreq',
+                3: 'Lehr',
+                4: 'real eig',
+                5: 'imag eig',
+                6: 'whirl_dir',
+                7: 'converted_freq',
+                8: 'whirl_code',
+            }
+            i = 0
+            data_out = {}
+            while i < nints:
+                nvalues = ints[i]
+                #ncurves = ints[i+1]
+                keyword = ints[i+2]  # 10000+(SOLN*10)+DATTYP
+                base = keyword - 10000 # (SOLN*10)+DATTYP
+                #solution = base // 10
+                datatype = base % 10
+                assert datatype in [1, 2, 3, 4, 5, 6, 7, 8], datatype
+                values = floats[i+3:i+3+nvalues]
+                if datatype in [6, 8]:
+                    values = values.astype('int32')
+                #print(f'{nvalues}, {ncurves}, {solution}, {datatype}, {dict_map[datatype]:14s} {values}')
+                data_out[datatype] = values
+                i += 3 + nvalues
+            marker -= 1
+            cddata_list.append(data_out)
+            #import matplotlib.pyplot as plt
+
+            #dict_map = {
+                #1: 'RPM',
+                #2: 'eigenfreq',
+                #3: 'Lehr',
+                #4: 'real eig',
+                #5: 'imag eig',
+                #6: 'whirl_dir',
+                #7: 'converted_freq',
+                #8: 'whirl_code',
+            #}
+
+            #plt.figure(2)
+            #plt.plot(data_out[1], data_out[2]) # RPM vs. eigenfreq
+            #plt.grid(True)
+
+            #plt.figure(3)
+            #plt.plot(data_out[1], data_out[3]) # RPM vs. Lehr
+            #plt.grid(True)
+
+            #plt.figure(4)
+            #plt.plot(data_out[1], data_out[4]) # RPM vs. real_eig
+            #plt.grid(True)
+
+            #plt.figure(5)
+            #plt.plot(data_out[1], data_out[5]) # RPM vs. imag_eig
+            #plt.grid(True)
+
+            #plt.figure(7)
+            #plt.plot(data_out[1], data_out[7]) # RPM vs. converted_freq
+            #plt.grid(True)
+
+            #print('------------------------------------')
+        if self.read_mode == 2:
+            #plt.grid(True)
+            #plt.show()
+            self.op2.op2_results.cddata = cddata_list
+        nfields = self.get_marker1(rewind=False)
 
     def read_stdisp(self):
         """reads the STDISP table"""

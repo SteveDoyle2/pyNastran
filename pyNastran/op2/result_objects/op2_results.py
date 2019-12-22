@@ -15,6 +15,7 @@ class Results:
         self.eqexin = None
         self.gpdt = None
         self.bgpdt = None
+        self.cddata = []
         self.responses = Responses()
 
         self.psds = PSDObjects()
@@ -59,6 +60,8 @@ class Results:
             'force' : self.force,
             'thermal_load' : self.thermal_load,
             'strain_energy' : self.strain_energy,
+            'stress': self.stress,
+            'strain': self.strain,
             #self.ato,
             #self.psd,
             #self.rms,
@@ -250,6 +253,7 @@ class FailureIndices:
     def __init__(self):
         self.cquad4_composite_force = {}
         self.cquad8_composite_force = {}
+        self.cquadr_composite_force = {}
         self.ctria3_composite_force = {}
         self.ctria6_composite_force = {}
         self.ctriar_composite_force = {}
@@ -258,6 +262,7 @@ class FailureIndices:
         tables = [
             'cquad4_composite_force',
             'cquad8_composite_force',
+            'cquadr_composite_force',
             'ctria3_composite_force',
             'ctria6_composite_force',
             'ctriar_composite_force',
@@ -290,17 +295,19 @@ class Force:
         self.cquad8_force = {}
         self.cquadr_force = {}
 
-        self.cshear_force = {}
         self.cvisc_force = {}
         self.cgap_force = {}
-        self.cbend_force = {}
-        self.cvisc_force = {}
-        self.cconeax_force = {}
-        self.vu_tria_force = {}
-        self.vu_quad_force = {}
+        self.cbear_force = {}
         self.cbush_force = {}
         self.cfast_force = {}
         self.cweld_force = {}
+        self.cvisc_force = {}
+
+        self.cbend_force = {}
+        self.cshear_force = {}
+        self.cconeax_force = {}
+        self.vu_tria_force = {}
+        self.vu_quad_force = {}
 
         # solidPressureForces
         self.chexa_pressure_force = {}
@@ -319,7 +326,7 @@ class Force:
             # 1d
             'crod_force', 'conrod_force', 'ctube_force',
             'cbar_force', 'cbeam_force', 'cbend_force',
-            'cfast_force', 'cweld_force',
+            'cfast_force', 'cweld_force', 'cbear_force',
 
             # 2d
             'ctria3_force', 'ctria6_force', 'ctriar_force',

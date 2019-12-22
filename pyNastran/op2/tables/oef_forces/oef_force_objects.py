@@ -4508,7 +4508,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         return page_num - 1
 
 
-class RealCBushForceArray(RealForceObject):
+class RealForceMomentArray(RealForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
@@ -4691,14 +4691,6 @@ class RealCBushForceArray(RealForceObject):
         msg += self.get_data_code()
         return msg
 
-    def get_f06_header(self):
-        msg = [
-            '                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
-            ' \n'
-            '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
-           #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
-        return msg
-
     def get_element_index(self, eids):
         # elements are always sorted; nodes are not
         itot = searchsorted(eids, self.element)  #[0]
@@ -4829,6 +4821,32 @@ class RealCBushForceArray(RealForceObject):
             new_result = False
         return itable
 
+
+
+class RealCBushForceArray(RealForceMomentArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealForceMomentArray(self, data_code, is_sort1, isubcase, dt)
+
+    def get_f06_header(self):
+        msg = [
+            '                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
+            ' \n'
+            '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
+           #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+        return msg
+
+class RealCBushForceArray(RealForceMomentArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+    def get_f06_header(self):
+        asdf
+        #msg = [
+            #'                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
+            #' \n'
+            #'                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
+           #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
+        return msg
 
 class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
     """

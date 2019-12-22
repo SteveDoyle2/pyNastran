@@ -63,6 +63,8 @@ class RealCompositePlateArray(OES_Object):
             nnodes_per_element = 1
         elif self.element_type == 98:  # CTRIA6
             nnodes_per_element = 1
+        elif self.element_type == 232:  # CQUADR
+            nnodes_per_element = 1
         elif self.element_type == 233:  # CTRIAR
             nnodes_per_element = 1
         else:  # pragma: no cover

@@ -1,4 +1,5 @@
 from itertools import cycle
+from abc import abstractmethod
 from typing import List
 
 import numpy as np
@@ -3255,10 +3256,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         return itable
 
 
-class ComplexCBushForceArray(ComplexForceObject):
-    def get_headers(self):
-        headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
-        return headers
+class ComplexForceMomentArray(ComplexForceObject):
 
     def __init__(self, data_code, is_sort1, isubcase, dt):
         ComplexForceObject.__init__(self, data_code, isubcase)
@@ -3270,7 +3268,10 @@ class ComplexCBushForceArray(ComplexForceObject):
         #self.ntotal = 0
         self.itime = 0
         self.nelements = 0  # result specific
-        self.element_type = 'CBUSH'
+
+    def get_headers(self):
+        headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
+        return headers
 
     @property
     def is_real(self):
@@ -3399,7 +3400,7 @@ class ComplexCBushForceArray(ComplexForceObject):
         msg.append('  data: [ntimes, nelements, 6] where 6=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         # msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1, self.is_sort2))
-        msg.append('  CBUSH\n')
+        msg.append(f'  {self.element_name}\n')
         msg += self.get_data_code()
         return msg
 
@@ -3407,11 +3408,7 @@ class ComplexCBushForceArray(ComplexForceObject):
                   page_num=1, is_mag_phase=False, is_sort1=True):
         if header is None:
             header = []
-        #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
 
-        # write the f06
-
-        #is_sort1 = False
         if is_mag_phase:
             mag_phase = '                                                          (MAGNITUDE/PHASE)\n\n'
         else:
@@ -3421,6 +3418,8 @@ class ComplexCBushForceArray(ComplexForceObject):
         name = self.data_code['name']
         if name == 'freq':
             name = 'FREQUENCY'
+        elif name == 'mode':
+            name = 'MODE'
         else:
             raise RuntimeError(name)
 
@@ -3431,8 +3430,9 @@ class ComplexCBushForceArray(ComplexForceObject):
             line2 = '   %26s        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n' % name
 
         # force
+        words = self._words()
         msg_temp = header + [
-            '                         C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n',
+            words,
             mag_phase,
             ' ',
             # line1,
@@ -3604,6 +3604,29 @@ class ComplexCBushForceArray(ComplexForceObject):
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
+
+    @abstractmethod
+    def _words(self) -> str:
+        return ''
+
+class ComplexCBushForceArray(ComplexForceMomentArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        self.element_type = 'CBUSH'
+
+    def _words(self) -> str:
+        words = '                         C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B U S H ) \n'
+        return words
+
+class ComplexCBearForceArray(ComplexForceMomentArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
+        self.element_type = 'CBEAR'
+
+    #def _words(self) -> str:
+        #words = '                        C O M P L E X   F O R C E S   I N   B U S H   E L E M E N T S   ( C B E A R ) \n'
+        #return words
+
 
 class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
     """

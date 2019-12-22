@@ -94,14 +94,14 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealCBeamForceVUArray, RealCBushForceArray, RealCGapForceArray, RealConeAxForceArray,
     RealCShearForceArray, RealDamperForceArray, RealForceVU2DArray, RealPlateBilinearForceArray,
     RealPlateForceArray, RealRodForceArray, RealSolidPressureForceArray, RealSpringForceArray,
-    RealViscForceArray, RealCWeldForceArray, RealCFastForceArray,
+    RealViscForceArray, RealCWeldForceArray, RealCFastForceArray, # RealCBearForceArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexCBarForceArray, ComplexCBeamForceArray, ComplexCBeamForceVUArray,
     ComplexCBendForceArray, ComplexCBushForceArray, ComplexCShearForceArray,
     ComplexDamperForceArray, ComplexPlate2ForceArray, ComplexPlateForceArray,
     ComplexRodForceArray, ComplexSolidPressureForceArray, ComplexSpringForceArray,
-    ComplexViscForceArray, ComplexForceVU_2DArray,
+    ComplexViscForceArray, ComplexForceVU_2DArray, ComplexCBearForceArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_thermal_objects import (
     RealChbdyHeatFluxArray, RealConvHeatFluxArray,
@@ -267,7 +267,7 @@ TABLE_OBJ_MAP = {
     'failure_indices.ctriar_composite_force': (FailureIndicesArray, ),
     'failure_indices.cquad4_composite_force': (FailureIndicesArray, ),
     'failure_indices.cquad8_composite_force': (FailureIndicesArray, ),
-    #'failure_indices.cquadr_composite_force': (FailureIndicesArray, ),
+    'failure_indices.cquadr_composite_force': (FailureIndicesArray, ),
 
     'force.celas1_force' : (RealSpringForceArray, ComplexSpringForceArray),
     'ato.celas1_force' : (RealSpringForceArray, ),
@@ -429,6 +429,7 @@ TABLE_OBJ_MAP = {
 
     'force.cweld_force': (RealCWeldForceArray, ),
     'force.cfast_force': (RealCFastForceArray, ),
+    'force.cbear_force': (ComplexCBearForceArray, ), # RealCBearForceArray
 
     'nrl.cbar_force' : (RealCBarForceArray, ),
     'RAFCONS.cbar_force' : (RealCBarForceArray, ),
@@ -590,7 +591,7 @@ TABLE_OBJ_MAP = {
     'ctria6_composite_strain' : (RealCompositePlateStrainArray, ),
     'ctriar_composite_strain' : (RealCompositePlateStrainArray, ),
     'cquad8_composite_strain' : (RealCompositePlateStrainArray, ),
-    #'cquadr_composite_strain' : (RealCompositePlateStrainArray, ),
+    'cquadr_composite_strain' : (RealCompositePlateStrainArray, ),
 
     'RAPCONS.cquad4_composite_stress' : (RealCompositePlateStressArray, ),
     'RAPCONS.ctria3_composite_stress' : (RealCompositePlateStressArray, ),

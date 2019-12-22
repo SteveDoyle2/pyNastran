@@ -57,6 +57,7 @@ from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexCBarForceArray,
     ComplexCBeamForceArray,
     ComplexCBushForceArray,
+    ComplexCBearForceArray,
     ComplexCShearForceArray,
     ComplexSpringForceArray,
     ComplexDamperForceArray,
@@ -1321,11 +1322,12 @@ class OEF(OP2Common):
             # 144-CQUAD4-bilinear
             n, nelements, ntotal = self._oef_shells_nodal(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type in [95, 96, 97, 98, 233]: # composites
+        elif self.element_type in [95, 96, 97, 98, 232, 233]: # composites
             # 95 - CQUAD4
             # 96 - CQUAD8
             # 97 - CTRIA3
             # 98 - CTRIA6 (composite)
+            # 232 - CQUADR
             # 233 - CTRIAR
             n, nelements, ntotal = self._oef_shells_composite(data, ndata, dt, is_magnitude_phase,
                                                               prefix, postfix)
@@ -1375,7 +1377,9 @@ class OEF(OP2Common):
             # 79-CPYRAM
             n, nelements, ntotal = self._oef_csolid_pressure(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type == 102:  # cbush
+        elif self.element_type in [102, 280]:
+            # 102: cbush
+            # 280: cbear
             n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
         elif self.element_type in [145, 146, 147]:
@@ -2597,6 +2601,7 @@ class OEF(OP2Common):
         96 - CQUAD8
         97 - CTRIA3
         98 - CTRIA6 (composite)
+        232 - CQUADR
         233 - CTRIAR
         """
         if self.element_type == 95:
@@ -2607,6 +2612,8 @@ class OEF(OP2Common):
             result_name = prefix + 'ctria3_composite_force' + postfix
         elif self.element_type == 98:
             result_name = prefix + 'ctria6_composite_force' + postfix
+        elif self.element_type == 232:
+            result_name = prefix + 'cquadr_composite_force' + postfix
         elif self.element_type == 233:
             result_name = prefix + 'ctriar_composite_force' + postfix
         else:
@@ -3335,8 +3342,20 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_cbush(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
-        """102-CBUSH"""
-        result_name = prefix + 'cbush_force' + postfix
+        """
+        102-CBUSH
+        280-CBEAR
+        """
+        if self.element_type == 102:
+            result_name = prefix + 'cbush_force' + postfix
+            complex_obj = ComplexCBushForceArray
+        elif self.element_type == 280:
+            result_name = prefix + 'cbear_force' + postfix
+            assert self.num_wide == 13, self.code_information()
+            complex_obj = ComplexCBearForceArray
+        else:
+            raise NotImplementedError(self.code_information())
+
         if self._results.is_not_saved(result_name):
             return ndata, None, None
         #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
@@ -3395,7 +3414,7 @@ class OEF(OP2Common):
             nelements = ndata // ntotal
             #result_name = prefix + 'cbush_force' + postfix
             auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, ComplexCBushForceArray)
+                nelements, result_name, slot, complex_obj)
             if auto_return:
                 return nelements * self.num_wide * 4, None, None
 
@@ -3622,10 +3641,10 @@ class OEF(OP2Common):
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
-    def _oef_vu_beam(self, data, ndata, dt, is_magnitude_phase, unused_prefix, unused_postfix):
+    def _oef_vu_beam(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """191-VUBEAM"""
         n = 0
-        result_name = 'cbeam_force_vu'
+        result_name = prefix + 'cbeam_force_vu' + postfix
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
 

@@ -53,6 +53,12 @@ commercial program.
 <!---
 ### pyNastran v1.3 has not been released (2019/10/15xx)
 
+With Python 2 now officially dead, it's time for a new killer feature to get the last few people to switch.
+
+There is now support for writing OP2 files!  They're difficult to create from scratch, 
+but modifying an existing one isn't difficult.  This also includes geometry support.
+
+In addition, many new OP2 results have been added.  Modern NX Nastran should work much better.
 
 Programmatics:
  - Supports Python 3.7 and 3.8
@@ -61,38 +67,67 @@ Programmatics:
  - improved testing of old versions of packages
  
 BDF:
- - 383 cards supported (up from 373)
+ - 385 cards supported (up from 373)
  - improved mesh utilities
     - bdf mirror, bdf convert, bdf export_caero_mesh
     - additional `bdf scale`, which takes arbitrary mass, length, time, pressure, or velocity scale factors (3 of 5) to apply a scaling law
  - improved bdf_mirror
  - improved bdf_convert
- - impo
 OP2:
  - OP2 write support
- - fixed pandas deprecation warnings/added support for pandas 0.25 
+ - fixed most pandas deprecation warnings/added support for pandas 0.25 
  - much improved NX 2019.2 support
    - various geometry cards added
    - additional results:
-       - random stress/strain (OESVM1/2, OESVM1C, OSTRVM1/2, OSTRVM2, OESXRM1C, OESXNO1, OESXNO1C)
-       - eigenvectors (BOPHIGF)
-       - grid point forces SORT2 (OGPFB2)
-     - temperature (OTEMP1)
-     - other (XSOP2DIR)
+      - Cambpell diagrams (CDDATA)
+      - eigenvectors (BOPHIGF)
+      - grid point forces SORT2 (OGPFB2)
+      - stress/strain/force
+        - random stress/strain (OESVM1/2, OESVM1C, OSTRVM1/2, OSTRVM2, OESXRM1C, OESXNO1, OESXNO1C)
+        - real/complex stress/strain/force output for centroidal CQUADR/CTRIAR
+        - complex CBEAR forces
+        - nonlinear cbush stress/strain/force
+      - other
+        - XSOP2DIR
+        - PSDs
+        - optimization
+          - convergence table
+          - design variables
+          - weight response
+          - displacement response
+          - stress response
+          - strain response
+          - force response
+          - composite stress response
+          - composite strain response
+          - fractional mass response
+   - reorganized output results to use op2_results object to simply interface
    - some SOL 401/402 results added
      - eigenvalue_fluid (LAMAF, LAMAS)
      - eigenvectors (BOPHIGF, BOPHIGS)
+     - temperature (OTEMP1)
      - solution set
        - results: displacement, velocity, acceleration, eigenvectors:
        - tables: OUXY1, OUXY2, OPHSA
  - supports more PARAM reading
+ - TODO: linear/nonlinear hyperelastic solids
  - TODO: stress transforms.  This is probably a bit of work.
  - TODO: CD transforms for cylindrical/spherical displacement, velocity, acceleration, forces.  This shouldn't be terrible.
 
 GUI:
- - partial custom results many now be loaded
- - much improved ASCII tecplot reader
- - added export result option to right-click menu
+ - overall:
+   - partial custom results many now be loaded
+   - animation now supports complex fringe
+   - map centroidal to nodal option
+   - added export result option to right-click menu
+   - much improved ASCII tecplot reader
+ - nastran:
+   - geometry:
+     - element & material coordinate systems
+   - results
+     - real/complex stress/strain/force results
+       - plate by upper/lower, composite plates by ply, bars, rods, springs, cbush, cdamp
+     - fractional mass response
 
 This should be hidden...
 

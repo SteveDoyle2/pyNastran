@@ -455,6 +455,9 @@ class OP2_F06_Common:
     @property
     def cfast_force(self):
         return self.op2_results.force.cfast_force
+    @property
+    def cbear_force(self):
+        return self.op2_results.force.cbear_force
 
     @property
     def cshear_force(self):
@@ -488,11 +491,14 @@ class OP2_F06_Common:
     def cbush_force(self, cbush_force):
         self.op2_results.force.cbush_force = cbush_force
     @cweld_force.setter
-    def cweld_force(self, cbush_force):
+    def cweld_force(self, cweld_force):
         self.op2_results.force.cweld_force = cweld_force
     @cfast_force.setter
     def cfast_force(self, cfast_force):
         self.op2_results.force.cfast_force = cfast_force
+    @cbear_force.setter
+    def cbear_force(self, cbear_force):
+        self.op2_results.force.cbear_force = cbear_force
 
     @cshear_force.setter
     def cshear_force(self, cshear_force):
@@ -676,11 +682,8 @@ class OP2_F06_Common:
         self.cbar_stress = {}
         self.cbar_strain = {}
 
-        #self.cbar_force_10nodes = {}
         self.cbar_stress_10nodes = {}
         self.cbar_strain_10nodes = {}
-
-        self.cbeam_force_vu = {}
 
         self.cbeam_stress = {}
         self.cbeam_strain = {}
@@ -1068,74 +1071,6 @@ class OP2_F06_Common:
 
             # R1TABRG
             #'response1_table',
-
-            # OEF - Forces - tCode=4 thermal=0
-
-            #'cquad4_composite_force',
-            #'cquad8_composite_force',
-            #'cquadr_composite_force',
-            #'ctria3_composite_force',
-            #'ctria6_composite_force',
-            #'ctriar_composite_force',
-
-            # 0d
-            #'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',
-            #'cdamp1_force', 'cdamp2_force', 'cdamp3_force', 'cdamp4_force',
-            #'cvisc_force',
-            #'cbush_force',
-            #'coneax_force',
-            #'cgap_force',
-
-            # rods
-            #'crod_force', 'conrod_force', 'ctube_force',
-
-            # bars/beams
-            #'cbeam_force',
-            'cbeam_force_vu',
-
-            # shells
-            #'cquad4_force', 'cquad8_force', 'cquadr_force',
-            #'ctria3_force', 'ctria6_force', 'ctriar_force',
-
-            #'cshear_force',
-
-            # solids
-            #'chexa_pressure_force', 'cpenta_pressure_force', 'ctetra_pressure_force',
-            #'cpyram_pressure_force',
-
-            # vu
-            #'vu_quad_force', 'vu_tria_force',
-
-            #OEF - Fluxes - tCode=4 thermal=1
-            #'conv_thermal_load',
-
-            #'thermalLoad_CHBDY',
-            #'chbdye_thermal_load', 'chbdye_thermal_load_flux',
-            #'chbdyg_thermal_load', 'chbdyg_thermal_load_flux',
-            #'chbdyp_thermal_load', 'chbdyp_thermal_load_flux',
-
-            #'thermalLoad_1D',
-            #'crod_thermal_load', 'crod_thermal_load_flux',
-            #'cbeam_thermal_load', 'cbeam_thermal_load_flux',
-            #'ctube_thermal_load', 'ctube_thermal_load_flux',
-            #'conrod_thermal_load', 'conrod_thermal_load_flux',
-            #'cbar_thermal_load', 'cbar_thermal_load_flux',
-            #'cbend_thermal_load', 'cbend_thermal_load_flux',
-
-            #'thermalLoad_2D_3D',
-            #'cquad4_thermal_load', 'cquad4_thermal_load_flux',
-            #'ctriax6_thermal_load', 'ctriax6_thermal_load_flux',
-            #'cquad8_thermal_load', 'cquad8_thermal_load_flux',
-            #'ctria3_thermal_load', 'ctria3_thermal_load_flux',
-            #'ctria6_thermal_load', 'ctria6_thermal_load_flux',
-            #'ctetra_thermal_load', 'ctetra_thermal_load_flux',
-            #'chexa_thermal_load', 'chexa_thermal_load_flux',
-            #'cpenta_thermal_load', 'cpenta_thermal_load_flux',
-
-            #'thermalLoad_VU',
-            #'thermalLoad_VU_3D',
-            #'vu_beam_thermal_load',
-            #self.temperatureForces
         ]
         table_types += [
             # OES - CTRIAX6
