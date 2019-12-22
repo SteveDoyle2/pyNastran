@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -15,12 +16,16 @@ class RandomRodArray(OES_Object):
         self.nelements = 0  # result specific
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def _reset_indices(self):
         self.itotal = 0
@@ -139,7 +144,7 @@ class RandomRodArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [axial, torsion]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

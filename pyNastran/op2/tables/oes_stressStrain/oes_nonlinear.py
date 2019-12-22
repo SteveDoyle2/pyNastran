@@ -5,6 +5,8 @@ defines:
 """
 from math import isnan
 from itertools import count, cycle
+from typing import List
+
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -270,7 +272,7 @@ class RealNonlinearPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -602,7 +604,7 @@ class RealNonlinearSolidArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -676,10 +678,13 @@ class RealNonlinearSolidArray(OES_Object):
                 #'                         1.5626E-03 -4.6877E-04 -4.6877E-04 -1.4569E-19  3.3881E-20   0.0'
                 #'                      1  1.0000E+04 -1.8190E-12  4.5475E-13 -6.3308E-13  7.4789E-13 -4.6225E-13  1.0000E+04   0.0         0.0'
                 #'                         1.5626E-03 -4.6877E-04 -4.6877E-04 -2.5719E-19  3.0383E-19 -1.8779E-19'
-                #'                   N O N L I N E A R   S T R E S S E S   I N   T R I A N G U L A R   E L E M E N T S      ( T R I A 3 )\n'
-                #' \n'
-                #'    ELEMENT      FIBER                        STRESSES/ TOTAL STRAINS                     EQUIVALENT    EFF. STRAIN     EFF. CREEP\n'
-                #'       ID      DISTANCE           X              Y             Z               XY           STRESS    PLASTIC/NLELAST     STRAIN\n'
+            ]
+        elif self.element_type == 256:
+            msg = [
+                '          N O N L I N E A R   S T R E S S E S   I N   P Y R A M I D   S O L I D   E L E M E N T S     ( P Y R A M )\n'
+                ' \n'
+                '  ELEMENT GRID/   POINT                         STRESSES/ TOTAL STRAINS                          EQUIVALENT EFF. STRAIN  EFF. CREEP\n'
+                '     ID   GAUSS     ID       X           Y           Z           XY          YZ          ZX        STRESS   PLAS/NLELAS   STRAIN\n'
             ]
         else:  # pragma: no cover
             raise NotImplementedError('element_name=%s self.element_type=%s' % (self.element_name, self.element_type))

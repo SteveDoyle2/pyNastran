@@ -1,4 +1,6 @@
 from itertools import count
+from typing import List
+
 import numpy as np
 from numpy import zeros
 
@@ -205,7 +207,7 @@ class RealBeamArray(OES_Object):
                                                  smax, smin, mst, msc]
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -518,7 +520,7 @@ class RealNonlinearBeamArray(OES_Object):
         #self.xxb = zeros(self.ntotal, dtype='float32')
         self.data = zeros((self.ntimes, self.ntotal, 5), dtype='float32')
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

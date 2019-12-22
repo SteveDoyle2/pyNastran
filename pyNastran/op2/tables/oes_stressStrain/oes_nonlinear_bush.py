@@ -1,5 +1,5 @@
+from typing import List
 import numpy as np
-#from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
@@ -93,12 +93,12 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
                 headers, self.element, self.data)
         else:
             raise NotImplementedError('transient pandas nonlinear cbush')
-            bbb
-            df1 = pd.DataFrame(self.element).T
-            df1.columns = ['ElementID']
-            df2 = pd.DataFrame(self.data[0])
-            df2.columns = headers
-            self.data_frame = df1.join([df2])
+            #bbb
+            #df1 = pd.DataFrame(self.element).T
+            #df1.columns = ['ElementID']
+            #df2 = pd.DataFrame(self.data[0])
+            #df2.columns = headers
+            #self.data_frame = df1.join([df2])
         #print(self.data_frame)
 
     def __eq__(self, table):  # pragma: no cover
@@ -148,7 +148,7 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
         ]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

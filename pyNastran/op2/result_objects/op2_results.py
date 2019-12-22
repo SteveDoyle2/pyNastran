@@ -30,6 +30,8 @@ class Results:
         self.failure_indices = FailureIndices()
         self.force = Force()
         self.thermal_load = ThermalLoad()
+        self.stress = Stress()
+        self.strain = Strain()
         self.strain_energy = StrainEnergy()
         self.ROUGV1 = ROUGV1()   # relative disp/vel/acc/eigenvectors
 
@@ -51,8 +53,29 @@ class Results:
         self.RAPEATC = RAPEATC() # composite stress
         self.RANEATC = RANEATC() # strain energy
 
-    def get_table_types(self):
-        """combines all the table_types from all objects and sub-objects"""
+    def get_sum_objects_map(self):
+        sum_objs = {
+            'responses' : self.responses,
+            'force' : self.force,
+            'thermal_load' : self.thermal_load,
+            'strain_energy' : self.strain_energy,
+            #self.ato,
+            #self.psd,
+            #self.rms,
+            #self.no,
+            #self.crm,
+            #self.modal_contribution,
+            #self.strength_ratio,
+            #self.failure_indices,
+            #self.solution_set,
+            #self.ROUGV1,
+            #self.RADEFFM,
+            #self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS,
+            #self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC,
+        }
+        return sum_objs
+
+    def get_sum_objects(self):
         sum_objs = [
             self.responses,
             self.force, self.thermal_load, self.strain_energy,
@@ -64,7 +87,12 @@ class Results:
             self.RADCONS, self.RAFCONS, self.RASCONS, self.RAECONS, self.RAGCONS, self.RAPCONS, self.RANCONS,
             self.RADEATC, self.RAFEATC, self.RASEATC, self.RAEEATC, self.RAGEATC, self.RAPEATC, self.RANEATC,
         ]
+        return sum_objs
+
+    def get_table_types(self):
+        """combines all the table_types from all objects and sub-objects"""
         base = ['eqexin', 'gpdt', 'bgpdt', 'psds', ]
+        sum_objs = self.get_sum_objects()
         for objs in sum_objs:
             base.extend(objs.get_table_types())
         return base
@@ -361,6 +389,7 @@ class ThermalLoad:
 
     def get_table_types(self):
         tables = [
+            'conv_thermal_load',
             # flux
             'chbdye_thermal_load',
             'chbdyg_thermal_load',

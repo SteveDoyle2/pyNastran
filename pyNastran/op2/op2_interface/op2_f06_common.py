@@ -145,6 +145,16 @@ class OP2_F06_Common:
         return self.op2_results.strain_energy.celas4_strain_energy
 
     @property
+    def crod_strain_energy(self):
+        return self.op2_results.strain_energy.crod_strain_energy
+    @property
+    def ctube_strain_energy(self):
+        return self.op2_results.strain_energy.crod_strain_energy
+    @property
+    def conrod_strain_energy(self):
+        return self.op2_results.strain_energy.conrod_strain_energy
+
+    @property
     def cquad4_strain_energy(self):
         return self.op2_results.strain_energy.cquad4_strain_energy
     @property
@@ -206,6 +216,8 @@ class OP2_F06_Common:
     def cbend_strain_energy(self):
         return self.op2_results.strain_energy.cbend_strain_energy
 
+    # ------------------------------------------------------
+    # Strain Energy - Getter 2
     @property
     def cgap_strain_energy(self):
         return self.op2_results.strain_energy.cgap_strain_energy
@@ -221,9 +233,6 @@ class OP2_F06_Common:
     @property
     def cdamp4_strain_energy(self):
         return self.op2_results.strain_energy.cdamp4_strain_energy
-    @property
-    def cdum8_strain_energy(self):
-        return self.op2_results.strain_energy.cdum8_strain_energy
     @property
     def cbush_strain_energy(self):
         return self.op2_results.strain_energy.cbush_strain_energy
@@ -242,6 +251,16 @@ class OP2_F06_Common:
     @property
     def cdum8_strain_energy(self):
         return self.op2_results.strain_energy.cdum8_strain_energy
+    @property
+    def rbe1_strain_energy(self):
+        return self.op2_results.strain_energy.rbe1_strain_energy
+    @property
+    def rbe3_strain_energy(self):
+        return self.op2_results.strain_energy.rbe3_strain_energy
+    @property
+    def weldc_strain_energy(self):
+        return self.op2_results.strain_energy.weldc_strain_energy
+
     # ------------------------------------------------------------------
     # Strain Energy - Setter
 
@@ -271,6 +290,52 @@ class OP2_F06_Common:
     @cdamp4_strain_energy.setter
     def cdamp4_strain_energy(self, cdamp4_strain_energy):
         self.op2_results.strain_energy.cdamp4_strain_energy = cdamp4_strain_energy
+
+    @cgap_strain_energy.setter
+    def cgap_strain_energy(self, cgap_strain_energy):
+        self.op2_results.strain_energy.cgap_strain_energy = cgap_strain_energy
+    @cbush_strain_energy.setter
+    def cbush_strain_energy(self, cbush_strain_energy):
+        self.op2_results.strain_energy.cbush_strain_energy = cbush_strain_energy
+
+    @crod_strain_energy.setter
+    def crod_strain_energy(self, crod_strain_energy):
+        self.op2_results.strain_energy.crod_strain_energy = crod_strain_energy
+    @ctube_strain_energy.setter
+    def ctube_strain_energy(self, ctube_strain_energy):
+        self.op2_results.strain_energy.crod_strain_energy = ctube_strain_energy
+    @conrod_strain_energy.setter
+    def conrod_strain_energy(self, conrod_strain_energy):
+        self.op2_results.strain_energy.conrod_strain_energy = conrod_strain_energy
+
+    @cquad4_strain_energy.setter
+    def cquad4_strain_energy(self):
+        self.op2_results.strain_energy.cquad4_strain_energy = cquad4_strain_energy
+    @cquad8_strain_energy.setter
+    def cquad8_strain_energy(self):
+        self.op2_results.strain_energy.cquad8_strain_energy = cquad8_strain_energy
+    @cquadr_strain_energy.setter
+    def cquadr_strain_energy(self):
+        self.op2_results.strain_energy.cquadr_strain_energy = cquadr_strain_energy
+    @cquadx_strain_energy.setter
+    def cquadx_strain_energy(self):
+        self.op2_results.strain_energy.cquadx_strain_energy = cquadx_strain_energy
+
+    @ctetra_strain_energy.setter
+    def ctria3_strain_energy(self, ctria3_strain_energy):
+        self.op2_results.strain_energy.ctria3_strain_energy = ctria3_strain_energy
+    @ctria6_strain_energy.setter
+    def ctria6_strain_energy(self, ctria6_strain_energy):
+        self.op2_results.strain_energy.ctria6_strain_energy = ctria6_strain_energy
+    @ctriar_strain_energy.setter
+    def ctriar_strain_energy(self, ctriar_strain_energy):
+        self.op2_results.strain_energy.ctriar_strain_energy = ctriar_strain_energy
+    @ctetra_strain_energy.setter
+    def ctriax_strain_energy(self, ctriax_strain_energy):
+        self.op2_results.strain_energy.ctriax_strain_energy = ctriax_strain_energy
+    @ctetra_strain_energy.setter
+    def ctriax6_strain_energy(self, ctriax6_strain_energy):
+        self.op2_results.strain_energy.ctriax6_strain_energy = ctriax6_strain_energy
 
     @ctetra_strain_energy.setter
     def ctetra_strain_energy(self, ctetra_strain_energy):
@@ -365,16 +430,16 @@ class OP2_F06_Common:
         #(model.cshear_strain_energy, 'CSHEAR', True),
         #(model.conm2_strain_energy, 'CONM2', False),
 
-    @celas1_force.setter
+    @cdamp1_force.setter
     def cdamp1_force(self, cdamp1_force):
         self.op2_results.force.cdamp1_force = cdamp1_force
-    @celas2_force.setter
+    @cdamp2_force.setter
     def cdamp2_force(self, cdamp2_force):
         self.op2_results.force.cdamp2_force = cdamp2_force
-    @celas3_force.setter
+    @cdamp3_force.setter
     def cdamp3_force(self, cdamp3_force):
         self.op2_results.force.cdamp3_force = cdamp3_force
-    @celas4_force.setter
+    @cdamp4_force.setter
     def cdamp4_force(self, cdamp4_force):
         self.op2_results.force.cdamp4_force = cdamp4_force
 
@@ -382,30 +447,59 @@ class OP2_F06_Common:
     def cgap_force(self):
         return self.op2_results.force.cgap_force
     @property
+    def cbush_force(self):
+        return self.op2_results.force.cbush_force
+    @property
+    def cweld_force(self):
+        return self.op2_results.force.cweld_force
+    @property
+    def cfast_force(self):
+        return self.op2_results.force.cfast_force
+
+    @property
     def cshear_force(self):
         return self.op2_results.force.cshear_force
     @property
     def cbend_force(self):
         return self.op2_results.force.cbend_force
     @property
-    def cbush_force(self):
-        return self.op2_results.force.cbush_force
-    @property
     def cconeax_force(self):
         return self.op2_results.force.cconeax_force
 
+    @property
+    def ctetra_pressure_force(self):
+        return self.op2_results.force.ctetra_pressure_force
+    @property
+    def cpenta_pressure_force(self):
+        return self.op2_results.force.cpenta_pressure_force
+    @property
+    def chexa_pressure_force(self):
+        return self.op2_results.force.chexa_pressure_force
+    @property
+    def cpyram_pressure_force(self):
+        return self.op2_results.force.cpyram_pressure_force
+
+    # --------------------------------------------------
+    # Force - Setter
     @cgap_force.setter
     def cgap_force(self, cgap_force):
         self.op2_results.force.cgap_force = cgap_force
+    @cbush_force.setter
+    def cbush_force(self, cbush_force):
+        self.op2_results.force.cbush_force = cbush_force
+    @cweld_force.setter
+    def cweld_force(self, cbush_force):
+        self.op2_results.force.cweld_force = cweld_force
+    @cfast_force.setter
+    def cfast_force(self, cfast_force):
+        self.op2_results.force.cfast_force = cfast_force
+
     @cshear_force.setter
     def cshear_force(self, cshear_force):
         self.op2_results.force.cshear_force = cshear_force
     @cbend_force.setter
     def cbend_force(self, cbend_force):
         self.op2_results.force.cbend_force = cbend_force
-    @cbush_force.setter
-    def cbush_force(self, cbush_force):
-        self.op2_results.force.cbush_force = cbush_force
     @cconeax_force.setter
     def cconeax_force(self, cconeax_force):
         self.op2_results.force.cconeax_force = cconeax_force
@@ -508,6 +602,19 @@ class OP2_F06_Common:
     def cquadr_force(self, cquadr_force):
         self.op2_results.force.cquadr_force = cquadr_force
 
+    @ctetra_pressure_force.setter
+    def ctetra_pressure_force(self, ctetra_pressure_force):
+        self.op2_results.force.ctetra_pressure_force = ctetra_pressure_force
+    @cpenta_pressure_force.setter
+    def cpenta_pressure_force(self, cpenta_pressure_force):
+        self.op2_results.force.cpenta_pressure_force = cpenta_pressure_force
+    @chexa_pressure_force.setter
+    def chexa_pressure_force(self, chexa_pressure_force):
+        self.op2_results.force.chexa_pressure_force = chexa_pressure_force
+    @cpyram_pressure_force.setter
+    def cpyram_pressure_force(self, cpyram_pressure_force):
+        self.op2_results.force.cpyram_pressure_force = cpyram_pressure_force
+
     # ------------------------------------------------------------------
 
     def __objects_vector_init__(self):
@@ -569,7 +676,7 @@ class OP2_F06_Common:
         self.cbar_stress = {}
         self.cbar_strain = {}
 
-        self.cbar_force_10nodes = {}
+        #self.cbar_force_10nodes = {}
         self.cbar_stress_10nodes = {}
         self.cbar_strain_10nodes = {}
 
@@ -904,7 +1011,7 @@ class OP2_F06_Common:
             #'cbar_force',
             'cbar_force_abs', 'cbar_force_nrl', 'cbar_force_srss',
 
-            'cbar_stress_10nodes', 'cbar_strain_10nodes', 'cbar_force_10nodes',
+            'cbar_stress_10nodes', 'cbar_strain_10nodes', # 'cbar_force_10nodes',
 
             # OES - isotropic CBEAM stress/strain
             'cbeam_stress', 'cbeam_strain',
@@ -1095,14 +1202,40 @@ class OP2_F06_Common:
 
         table_types = self.get_table_types()
         tables = object_attributes(self, 'public', filter_properties=True)
+        tables_with_properties = object_attributes(self, 'public', filter_properties=False)
+        properties = set(tables_with_properties) - set(tables)
+
+        strain_energy = self.op2_results.strain_energy
+        stress = self.op2_results.stress
+        strain = self.op2_results.strain
+        force = self.op2_results.force
+        #thermal_load = self.op2_results.thermal_load
+        #sum_objs = self.get_sum_objects()
+
+        missing_attrs = []
+        sum_objs = [strain_energy, stress, strain, force, ] # thermal_load
+        for obj in sum_objs:
+            for prop_name in obj.get_table_types():
+                sprop_name = prop_name.split('.')[1]
+                if sprop_name not in properties:
+                    missing_attrs.append(prop_name)
+        if missing_attrs:
+            msg = 'missing the following getattr/setattr methods:  \n' + '  \n'.join(missing_attrs)
+            raise RuntimeError(msg)
+        #for prop_name in properties:
+            #if 'strain_energy' in prop_name:
+                #getattr(strain_energy, prop_name)
+            #print(prop_name)
+
         tables = [table for table in tables
                   if isinstance(getattr(self, table), dict)
                   and table not in skipped_attributes]
-        for table in tables:
-            if self.make_geom:
-                break
-            #value = getattr(self, table)
 
+        if self.make_geom:
+            return table_types
+
+        for table in tables:
+            #value = getattr(self, table)
             assert table in table_types, table
         return table_types
 

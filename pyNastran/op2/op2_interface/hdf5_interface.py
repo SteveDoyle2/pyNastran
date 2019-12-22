@@ -264,8 +264,10 @@ TABLE_OBJ_MAP = {
 
     'failure_indices.ctria3_composite_force': (FailureIndicesArray, ),
     'failure_indices.ctria6_composite_force': (FailureIndicesArray, ),
+    'failure_indices.ctriar_composite_force': (FailureIndicesArray, ),
     'failure_indices.cquad4_composite_force': (FailureIndicesArray, ),
     'failure_indices.cquad8_composite_force': (FailureIndicesArray, ),
+    #'failure_indices.cquadr_composite_force': (FailureIndicesArray, ),
 
     'force.celas1_force' : (RealSpringForceArray, ComplexSpringForceArray),
     'ato.celas1_force' : (RealSpringForceArray, ),
@@ -579,12 +581,16 @@ TABLE_OBJ_MAP = {
     'cquad4_composite_stress' : (RealCompositePlateStressArray, ),
     'ctria3_composite_stress' : (RealCompositePlateStressArray, ),
     'ctria6_composite_stress' : (RealCompositePlateStressArray, ),
+    'ctriar_composite_stress' : (RealCompositePlateStressArray, ),
     'cquad8_composite_stress' : (RealCompositePlateStressArray, ),
+    'cquadr_composite_stress' : (RealCompositePlateStressArray, ),
 
     'cquad4_composite_strain' : (RealCompositePlateStrainArray, ),
     'ctria3_composite_strain' : (RealCompositePlateStrainArray, ),
     'ctria6_composite_strain' : (RealCompositePlateStrainArray, ),
+    'ctriar_composite_strain' : (RealCompositePlateStrainArray, ),
     'cquad8_composite_strain' : (RealCompositePlateStrainArray, ),
+    #'cquadr_composite_strain' : (RealCompositePlateStrainArray, ),
 
     'RAPCONS.cquad4_composite_stress' : (RealCompositePlateStressArray, ),
     'RAPCONS.ctria3_composite_stress' : (RealCompositePlateStressArray, ),
@@ -690,7 +696,7 @@ TABLE_OBJ_MAP = {
     'rms.cquad8_force' : (RealPlateBilinearForceArray, ),
     'no.cquad8_force' : (RealPlateBilinearForceArray, ),
 
-    'force.cquadr_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+    'force.cquadr_force' : (RealPlateForceArray, RealPlateBilinearForceArray, ComplexPlate2ForceArray),
     'ato.cquadr_force' : (RealPlateBilinearForceArray, ),
     'crm.cquadr_force' : (RealPlateBilinearForceArray, ),
     'psd.cquadr_force' : (RealPlateBilinearForceArray, ),
@@ -704,7 +710,7 @@ TABLE_OBJ_MAP = {
     'rms.ctria6_force' : (RealPlateBilinearForceArray, ),
     'no.ctria6_force' : (RealPlateBilinearForceArray, ),
 
-    'force.ctriar_force' : (RealPlateBilinearForceArray, ComplexPlate2ForceArray),
+    'force.ctriar_force' : (RealPlateForceArray, RealPlateBilinearForceArray, ComplexPlate2ForceArray),
     'ato.ctriar_force' : (RealPlateBilinearForceArray, ),
     'crm.ctriar_force' : (RealPlateBilinearForceArray, ),
     'psd.ctriar_force' : (RealPlateBilinearForceArray, ),

@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -110,7 +111,7 @@ class ComplexCBush1DArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [tx, ty, tz, rx, ry, rz]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

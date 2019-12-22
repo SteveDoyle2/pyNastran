@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -90,7 +91,7 @@ class GridPointSurfaceStressesArray(ScalarObject):
         self.data[self.itime, self.itotal, :] = [nx, ny, txy, angle, majorP, minorP, tmax, ovm]
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -301,7 +302,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.is_built = True
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -394,7 +395,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.is_built = True
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -587,7 +588,7 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.is_built = True
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

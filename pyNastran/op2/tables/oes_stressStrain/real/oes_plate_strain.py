@@ -1,5 +1,6 @@
 # coding: utf-8
 #pylint disable=C0103
+from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -115,7 +116,7 @@ class RealCPLSTRNPlateArray(OES_Object):
                     raise ValueError(msg)
         return True
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

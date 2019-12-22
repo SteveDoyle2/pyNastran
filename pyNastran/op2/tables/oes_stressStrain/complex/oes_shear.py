@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -28,12 +29,16 @@ class ComplexShearArray(OES_Object):
             raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def _reset_indices(self):
         self.itotal = 0
@@ -137,7 +142,7 @@ class ComplexShearArray(OES_Object):
         #self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -233,10 +238,10 @@ class ComplexShearArray(OES_Object):
         return page_num - 1
 
     @property
-    def headers(self):
+    def headers(self) -> List[str]:
         return self._get_headers()
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return self.headers
 
 class ComplexShearStressArray(ComplexShearArray, StressObject):
@@ -244,7 +249,7 @@ class ComplexShearStressArray(ComplexShearArray, StressObject):
         ComplexShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def _get_headers(self):
+    def _get_headers(self) -> List[str]:
         return ['max_shear', 'avg_shear']
 
 class ComplexShearStrainArray(ComplexShearArray, StrainObject):

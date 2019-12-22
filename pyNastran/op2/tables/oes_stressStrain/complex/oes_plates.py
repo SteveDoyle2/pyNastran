@@ -461,10 +461,9 @@ class ComplexPlateArray(OES_Object):
 
             if self.element_type == 144: # CQUAD4 bilinear
                 self._write_f06_quad4_bilinear_transient(f06_file, itime, 4, is_mag_phase, 'CEN/4')
-            elif self.element_type == 33:  # CQUAD4 linear
-                self._write_f06_tri3_transient(f06_file, itime, 4, is_mag_phase, 'CEN/4')
-            elif self.element_type == 74: # CTRIA3
-                self._write_f06_tri3_transient(f06_file, itime, 3, is_mag_phase, 'CEN/3')
+            elif self.element_type in [33, 74, 227, 228]:
+                # CQUAD4 linear, CTRIA3, CTRIAR linear, CQUADR linear
+                self._write_f06_tri3_transient(f06_file, itime, is_mag_phase)
             elif self.element_type == 64:  #CQUAD8
                 self._write_f06_quad4_bilinear_transient(f06_file, itime, 5, is_mag_phase, 'CEN/8')
             elif self.element_type == 82:  # CQUADR
@@ -480,8 +479,7 @@ class ComplexPlateArray(OES_Object):
             page_num += 1
         return page_num - 1
 
-    def _write_f06_tri3_transient(self, f06_file, itime, unused_n,
-                                  is_magnitude_phase, unused_cen) -> None:
+    def _write_f06_tri3_transient(self, f06_file, itime, is_magnitude_phase) -> None:
         """
         CQUAD4 linear
         CTRIA3
@@ -852,6 +850,12 @@ def _get_plate_msg(self, is_mag_phase=True, is_sort1=True) -> Tuple[List[str], i
     elif self.element_type == 70:  # CTRIAR
         msg += ctriar + mag_real + grid_msg_temp
         is_bilinear = True
+    elif self.element_type == 227:  # CTRIAR
+        msg += ctriar + mag_real + grid_msg_temp
+        is_bilinear = False
+    elif self.element_type == 228:  # CQUADR
+        msg += cquadr + mag_real + grid_msg_temp
+        is_bilinear = False
     else:
         raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))
 
@@ -863,7 +867,7 @@ def get_nnodes(self):
         nnodes = 4 + 1 # centroid
     elif self.element_type in [70, 75]:   #???, CTRIA6
         nnodes = 3 + 1 # centroid
-    elif self.element_type in [144, 74, 33]:  # CTRIA3, CQUAD4 linear
+    elif self.element_type in [74, 33, 227, 228]:  # CTRIA3, CQUAD4 linear, CQUADR linear, CQUADR linear
         nnodes = 1
     else:
         raise NotImplementedError('name=%r type=%s' % (self.element_name, self.element_type))

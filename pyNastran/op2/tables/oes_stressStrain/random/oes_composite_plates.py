@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, unique, ravel
 
@@ -170,7 +171,7 @@ class RandomCompositePlateArray(OES_Object):
         self.data[self.itime, self.itotal, :] = [o11, o22, t12]
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             msg = [
                 '<%s>\n' % self.__class__.__name__,

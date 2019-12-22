@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -158,7 +159,7 @@ class RealRodArray(OES_Object):
         self.data[self.itime, self.ielement, :] = [axial, SMa, torsion, SMt]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

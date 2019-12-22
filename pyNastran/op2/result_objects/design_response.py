@@ -15,7 +15,7 @@ class Responses:
         self.flutter_response = None
         self.fractional_mass_response = None
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> str:
         objects = [
             self.convergence_data,
             self.desvars,

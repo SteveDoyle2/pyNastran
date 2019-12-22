@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import ScalarObject
@@ -27,7 +28,7 @@ class AppliedLoadsVectorArray(ScalarObject):
         #[f1, f2, f3, m1, m2, m3]
         self.data = np.zeros((self.ntimes, self.itotal, 6), dtype=self.data_type())
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, ravel
 
@@ -185,7 +186,7 @@ class RealTriaxArray(OES_Object):
         self.itotal += 1
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

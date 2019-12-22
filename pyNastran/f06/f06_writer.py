@@ -190,10 +190,13 @@ class F06Writer(OP2_F06_Common):
         self.subcase_key = defaultdict(list)
         self.end_options = {}
 
-        self._results = ResultSet(self.get_all_results(), self.log)
+        self._results = ResultSet(
+            self.get_all_results(),
+            self.op2_results.get_sum_objects_map(),
+            self.log)
 
     def get_all_results(self) -> List[str]:
-        all_results = ['stress', 'strain', 'element_forces', 'constraint_forces'] + self.get_table_types()
+        all_results = ['stress', 'strain', 'element_forces', 'constraint_forces', 'thermal_load'] + self.get_table_types()
         return all_results
 
     def clear_results(self) -> None:

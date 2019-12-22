@@ -1,4 +1,5 @@
 from itertools import cycle
+from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -198,7 +199,7 @@ class HyperelasticQuadArray(OES_Object):
         self.data[self.itime, self.itotal, :] = [oxx, oyy, txy, angle, majorP, minorP]
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

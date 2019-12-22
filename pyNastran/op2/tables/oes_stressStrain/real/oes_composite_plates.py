@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 from numpy import zeros, searchsorted, unique, ravel
 
@@ -27,12 +28,16 @@ class RealCompositePlateArray(OES_Object):
             #raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def _reset_indices(self):
         self.itotal = 0
@@ -218,7 +223,7 @@ class RealCompositePlateArray(OES_Object):
         self.data[self.itime, self.itotal, :] = [o11, o22, t12, t1z, t2z, angle, major, minor, ovm]
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             msg = [
                 '<%s>\n' % self.__class__.__name__,
@@ -327,6 +332,17 @@ class RealCompositePlateArray(OES_Object):
                 msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
             else:
                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A 6 )\n'] + words
+        elif self.element_type == 233:  # CTRIAR linear
+            # good
+            if self.is_strain:
+                msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )\n'] + words
+            else:
+                msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )\n'] + words
+        #elif self.element_type == 228:  # CQUADR linear
+            #if self.is_strain:
+                #msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )\n'] + words
+            #else:
+                #msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )\n'] + words
         else:  # pragma: no cover
             msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
             raise NotImplementedError(msg)
@@ -500,11 +516,11 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
         StrainObject.__init__(self, data_code, isubcase)
 
     @property
-    def is_stress(self):
+    def is_stress(self) -> bool:
         return False
 
     @property
-    def is_strain(self):
+    def is_strain(self) -> bool:
         return True
 
     def get_headers(self):

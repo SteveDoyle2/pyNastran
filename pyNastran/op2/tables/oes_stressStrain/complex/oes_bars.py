@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 from numpy import zeros
 
@@ -150,7 +152,7 @@ class ComplexBarArray(OES_Object):
         self.element[self.itotal] = eid
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

@@ -1,4 +1,5 @@
 #pylint: disable=C0301,C0111
+from typing import List
 
 import numpy as np
 from numpy import zeros, concatenate
@@ -212,7 +213,7 @@ class ComplexSolidArray(OES_Object):
         self.element_node[self.itotal, :] = [eid, grid]
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

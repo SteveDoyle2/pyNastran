@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -320,7 +322,7 @@ class RealStrainEnergyArray(BaseElement):
             setattr(self, self.analysis_method + 's', self._times)
         del self.analysis_method
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -900,7 +902,7 @@ class ComplexStrainEnergyArray(BaseElement):
         self.ielement += 1
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

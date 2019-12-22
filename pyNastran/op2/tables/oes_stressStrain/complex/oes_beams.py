@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 from numpy import zeros
 
@@ -148,7 +150,7 @@ class ComplexBeamArray(OES_Object):
         self._times[self.itime] = dt
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

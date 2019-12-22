@@ -30,7 +30,7 @@ class ResultSet:
     It's an interface tool between the code and the results the user requests.
 
     """
-    def __init__(self, allowed_results, unused_log):
+    def __init__(self, allowed_results, results_map, unused_log):
         #self.log = log
         #allowed_results.sort()
         #for a in allowed_results:
@@ -44,12 +44,24 @@ class ResultSet:
 
         # the set of results to be saved
         self.saved = deepcopy(self.allowed)
+        self.results_map = results_map
 
     def is_saved(self, result):
         """checks to see if a result is saved"""
         if result not in self.allowed:
             #print(self.allowed)
-            raise RuntimeError("result=%r is invalid; the name changed or it's a typo" % result)
+            msg = "result=%r is invalid; the name changed or it's a typo\n" % result
+            if '.' in result:
+                base, end = result.split('.', 1)
+                #print(base, end)
+                #print(self.allowed)
+                #print(f'base={base} end={end}')
+                #print(self.results_map)
+                if base in self.results_map:
+                    results_obj = self.results_map[base]
+                    msg += '.  Potential results include:\n' + '\n - '.join(results_obj.get_table_types())
+                    #print(results_obj.get_table_types())
+                raise RuntimeError(msg.rstrip())
         if result in self.saved:
             #self.log.debug('    %s is being read' % result)
             return True

@@ -1,5 +1,7 @@
 #pylint disable=C0301
 from abc import abstractmethod
+from typing import List
+
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
@@ -375,7 +377,7 @@ class FailureIndicesArray(RealForceObject):
         self.data[self.itime, self.ielement, :] = [failure_stress_for_ply, interlaminar_stress, max_value]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -567,7 +569,7 @@ class RealSpringDamperForceArray(RealForceObject):
         self.data[self.itime, self.ielement, :] = [force]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -883,7 +885,7 @@ class RealRodForceArray(RealForceObject):
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1248,7 +1250,7 @@ class RealCBeamForceArray(RealForceObject):
         self.element_node[self.itotal, :] = [eid, nid]
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1652,7 +1654,7 @@ class RealCShearForceArray(RealForceObject):
             shear12, shear23, shear34, shear41]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -1841,7 +1843,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
         self.data[self.itime, self.ielement, :] = [axial, torque]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2118,7 +2120,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def nnodes_per_element(self):
         return 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2165,6 +2167,22 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
                 '      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY\n'
             ]
             nnodes = 4
+        elif 'CTRIAR' in self.element_name:
+            msg = [
+                '                             F O R C E S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'
+                ' \n'
+                '    ELEMENT                - MEMBRANE  FORCES -                        - BENDING  MOMENTS -              - TRANSVERSE SHEAR FORCES -\n'
+                '      ID              FX            FY            FXY             MX            MY            MXY             QX            QY\n'
+            ]
+            nnodes = 3
+        elif 'CQUADR' in self.element_name:
+            msg = [
+                '                          F O R C E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'
+                ' \n'
+                '    ELEMENT                    - MEMBRANE  FORCES -                      - BENDING   MOMENTS -            - TRANSVERSE SHEAR FORCES -\n'
+                '      ID       GRID-ID     FX            FY            FXY           MX            MY            MXY           QX            QY\n'
+            ]
+            nnodes = 4
         else:
             raise NotImplementedError(self.element_name)
         return self.element_name, nnodes, msg
@@ -2196,7 +2214,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             tx = self.data[itime, :, 6]
             ty = self.data[itime, :, 7]
 
-            if self.element_type == 74:
+            if self.element_type in [74, 227, 228]:  # CTRIA3, CTRIAR linear, CQUADR linear
                 for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
                     [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
                         [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])
@@ -2217,7 +2235,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
                     f06_file.write('0 %8i %8s %13s %13s %13s %13s %13s %13s %13s %s\n' % (
                         eid, cen_word, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi))
             else:
-                raise NotImplementedError(self.element_type)
+                raise NotImplementedError(f'element_name={self.element_name} element_type={self.element_type}')
             f06_file.write(page_stamp % page_num)
             page_num += 1
         return page_num - 1
@@ -2470,7 +2488,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
             raise NotImplementedError('element_type=%s element_name=%s' % (self.element_type, self.element_name))
         return nnodes_element
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -2776,7 +2794,7 @@ class RealCBarFastForceArray(RealForceObject):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'bending_moment_a1', 'bending_moment_a2',
             'bending_moment_b1', 'bending_moment_b2',
@@ -2876,7 +2894,7 @@ class RealCBarFastForceArray(RealForceObject):
             shear1, shear2, axial, torque]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -3062,7 +3080,7 @@ class RealCBarFastForceArray(RealForceObject):
         return itable
 
     @abstractmethod
-    def _words(self):
+    def _words(self) -> List[str]:
         return []
 
 class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
@@ -3070,7 +3088,7 @@ class RealCBarForceArray(RealCBarFastForceArray):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-    def _words(self):
+    def _words(self) -> List[str]:
         words = ['                                 F O R C E S   I N   B A R   E L E M E N T S         ( C B A R )\n',
                  '0    ELEMENT         BEND-MOMENT END-A            BEND-MOMENT END-B                - SHEAR -               AXIAL\n',
                  '       ID.         PLANE 1       PLANE 2        PLANE 1       PLANE 2        PLANE 1       PLANE 2         FORCE         TORQUE\n']
@@ -3104,7 +3122,7 @@ class RealConeAxForceArray(RealForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'hopa', 'bmu', 'bmv', 'tm', 'su', 'sv'
         ]
@@ -3201,7 +3219,7 @@ class RealConeAxForceArray(RealForceObject):
         self.data[self.itime, self.ielement, :] = [hopa, bmu, bmv, tm, su, sv]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -3299,7 +3317,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         if not is_sort1:
             raise NotImplementedError('SORT2; code_info=\n%s' % self.code_information())
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'station', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2', 'axial', 'torque'
         ]
@@ -3373,7 +3391,7 @@ class RealCBar100ForceArray(RealForceObject):  # 100-CBAR
         self.data[self.itime, self.ielement, :] = [sd, bm1, bm2, ts1, ts2, af, trq]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             msg = [
                 '<%s>\n' % self.__class__.__name__,
@@ -3703,7 +3721,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         self.data[self.itime, self.ielement, :] = [fx, sfy, sfz, u, v, w, sv, sw]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -3853,7 +3871,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         if self.ielement == self.nelements:
             self.ielement = 0
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -4084,7 +4102,7 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -4401,7 +4419,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         #self.bendingZ[eid] = {}
 
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -4642,7 +4660,7 @@ class RealCBushForceArray(RealForceObject):
         self.data[self.itime, self.ielement, :] = [fx, fy, fz, mx, my, mz]
         self.ielement += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -4922,7 +4940,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
             #self.add_new_transient(dt)
         #self.data[self.itime, self.itotal, :] = [mx, my, mxy, bmx, bmy, bmxy, tx, ty]
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,

@@ -25,6 +25,7 @@ these are used by:
 import copy
 from struct import Struct, pack
 import warnings
+from typing import List
 
 import numpy as np
 #from numpy import float32
@@ -274,7 +275,7 @@ class TableArray(ScalarObject):  # displacement style table
     def data_type(self):
         raise NotImplementedError()
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>; table_name=%r\n' % (self.__class__.__name__, self.table_name),

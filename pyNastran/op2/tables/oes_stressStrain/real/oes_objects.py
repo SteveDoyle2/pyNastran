@@ -47,7 +47,7 @@ class OES_Object(BaseElement):
         assert self.is_sort1 is True, self.is_sort1
 
     @property
-    def is_curvature(self):
+    def is_curvature(self) -> bool:
         if self.is_stress:
             curvature_flag = False
         else:
@@ -60,11 +60,11 @@ class OES_Object(BaseElement):
         return False
 
     @property
-    def is_fiber_distance(self):
+    def is_fiber_distance(self) -> bool:
         return not self.is_curvature
 
     @property
-    def is_von_mises(self):
+    def is_von_mises(self) -> bool:
         return not self.is_max_shear
 
     @property
@@ -238,14 +238,14 @@ class StressObject(OES_Object):
             self.add_new_transient(dt)
 
     @property
-    def is_strain(self):
+    def is_strain(self) -> bool:
         class_name = self.__class__.__name__
         assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
         assert self.stress_bits[1] == 0, 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
         return False
 
     @property
-    def is_stress(self):
+    def is_stress(self) -> bool:
         class_name = self.__class__.__name__
         assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
         assert self.stress_bits[1] == 0, 'class_name=%s scode=%s stress_bits=%s' % (class_name, self.s_code, self.stress_bits)
@@ -269,14 +269,14 @@ class StrainObject(OES_Object):
             self.add_new_transient(dt)
 
     @property
-    def is_strain(self):
+    def is_strain(self) -> bool:
         class_name = self.__class__.__name__
         assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         assert self.stress_bits[1] == 1, 'class_name=%s scode=%s stress_bits=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         return True
 
     @property
-    def is_stress(self):
+    def is_stress(self) -> bool:
         class_name = self.__class__.__name__
         assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         assert self.stress_bits[1] == 1, 'class_name=%s is_stress=False scode=%s stress_bits=%s; element_type=%s element_name=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.element_type, self.element_name, self.table_name)

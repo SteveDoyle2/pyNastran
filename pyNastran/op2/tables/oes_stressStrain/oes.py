@@ -286,6 +286,7 @@ class OES(OP2Common):
             189, # VUQUAD
             190, # VUTRIA
             191, #VUBEAM
+            256, # CPYRAM
             227, # CTRIAR
             275, # CPLSTS3
         ]
@@ -1315,6 +1316,34 @@ class OES(OP2Common):
             # 67-CHEXA
             # 68-CPENTA
             n, nelements, ntotal = self._oes_csolid(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+        elif self.element_type in [160, 163, 166,
+                                   161, # centroid
+                                   165,]:
+            # nonlinear hyperelastic solids
+            # 160-CPENTAFD
+            # 163-CHEXAFD
+            # 166-CTETRAFD
+
+            # centroid??
+            # 161-CTETRAFD
+
+            # many nodes?
+            # 165-CPENTAFD
+            n, nelements, ntotal = self._oes_csolid_linear_hyperelastic(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+        elif self.element_type in [202, 204,
+                                   216, 218, 220, 221]:
+            # nonlinear hyperelastic solids
+            # 202-CHEXAFD
+            # 204-CPENTAFD
+
+            # also nonlinear hyperelastic solid, but somewhat different
+            # 216-TETRAFD
+            # 218-HEXAFD
+            # 220-PENTAFD
+            # 221-TETRAFD
+            n, nelements, ntotal = self._oes_csolid_nonlinear_hyperelastic(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+
         elif self.element_type in [300, 301, 302, 303]: # solid stress
             # 300-CHEXA
             # 301-CPENTA
@@ -1375,12 +1404,6 @@ class OES(OP2Common):
             # NonlinearSpringStress
             n, nelements, ntotal = self._oes_celas_nonlinear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type == 35: # CON
-            return ndata
-        elif self.element_type in [60, 61]:
-            # 60-DUM8
-            # 61-DUM9
-            return ndata
         elif self.element_type == 69:  # cbend
             # 69-CBEND
             n, nelements, ntotal = self._oes_cbend(data, ndata, dt, is_magnitude_phase, prefix, postfix)
@@ -1413,7 +1436,7 @@ class OES(OP2Common):
             n, nelements, ntotal = self._oes_vu_quad(data, ndata, dt, is_magnitude_phase,
                                                      prefix, postfix)
 
-        elif self.element_type in [226]:
+        elif self.element_type == 226:
             # 226-BUSHNL
             n, nelements, ntotal = self._oes_cbush_nonlinear(data, ndata, dt, is_magnitude_phase,
                                                              prefix, postfix)
@@ -1442,16 +1465,25 @@ class OES(OP2Common):
                                                              stress_name, prefix, postfix)
 
 
+        elif self.element_type == 35: # CON
+            return ndata
+
+        elif self.element_type in [60, 61]:
+            # 60-DUM8
+            # 61-DUM9
+            return ndata
+
         elif self.element_type == 101: # AABSF
             return ndata
 
-        elif self.element_type in [140, 201]:
-            # 140-HEXA8FD, 201-QUAD4FD
-            return ndata
+        #elif self.element_type in [140, 201]:
+            ## 140-HEXA8FD, 201-QUAD4FD
+            #return ndata
 
         elif self.element_type in [47, 48, 189, 190]:
             # 47-AXIF2
             # 48-AXIF3
+            # 189-???
             # 190-VUTRIA
             return ndata
         elif self.element_type == 191:
@@ -1462,41 +1494,29 @@ class OES(OP2Common):
             # 50-SLOT3
             # 51-SLOT4
             return ndata
-        elif self.element_type in [160, 161, 162, 163, 164, 165, 166, 167, 168,
-                                   169, 170, 171, 172, 202,
-                                   204, 218, 211, 213, 214,
-                                   216, 217, 219, 220, 221, 222, 223,
+        elif self.element_type in [162, 164, 167, 168,
+                                   169, 170, 171, 172,
+                                   218, 211, 213, 214,
+                                   217, 219, 222, 223,
                                    232, 235]:
-            # 160-PENTA6FD
-            # 161-TETRA4FD
             # 162-TRIA3FD
-            # 163-HEXAFD
             # 164-QUADFD
-            # 165-PENTAFD
-            # 166-TETRAFD
             # 167-TRIAFD
             # 168-TRIAX3FD
             # 169-TRIAXFD
             # 170-QUADX4FD
             # 171-QUADXFD
             # 172-QUADRNL
-            # 202-HEXA8FD
-            # 204-PENTA6FD
             # 211-TRIAFD
             # 213-TRIAXFD
             # 214-QUADX4FD
-            # 216-TETRA4FD
             # 217-TRIA3FD
-            # 218-HEXAFD
             # 219-QUADFD
-            # 220-PENTAFD
-            # 221-TETRAFD
             # 223-QUADXFD
             # 222-TRIAX3FD
             # 232-QUADRLC
             # 235-CQUADR
             return self._not_implemented_or_skip(data, ndata, self.code_information())
-            #return ndata
         else:
             #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
             msg = self.code_information()
@@ -3316,6 +3336,508 @@ class OES(OP2Common):
         assert n == ntotal * nelements, f'n={n} ntotal={ntotal*nelements}'
         return n, nelements, ntotal
 
+    def _oes_csolid_linear_hyperelastic(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
+        """
+        reads stress/strain for element type:
+         - 160 :CPENTAFD
+         - 163 : CHEXAFD
+         - 166 : CTETRAFD
+
+        # centroid??
+         - 161 : CTETRAFD
+
+        # more nodes???
+         - 165 : CPENTAFD
+        """
+        n = 0
+        if self.is_stress:
+            #obj_vector_real = RealSolidStressArray
+            #obj_vector_complex = ComplexSolidStressArray
+            #obj_vector_random = RandomSolidStressArray
+            word = 'stress'
+            if self.element_type == 163:  # CHEXA
+                nnodes_expected = 27
+                result_name = prefix + 'chexa_stress' + postfix
+                element_name = 'CHEXA8'
+                # real=122
+            elif self.element_type == 160:  # CPENTA
+                nnodes_expected = 6
+                result_name = prefix + 'cpenta_stress' + postfix
+                element_name = 'CPENTA6'
+            elif self.element_type == 165:  # CPENTA
+                nnodes_expected = 21
+                result_name = prefix + 'cpenta_stress' + postfix
+                element_name = 'CPENTA6'
+
+            elif self.element_type == 161:  # CTETRA
+                nnodes_expected = 1
+                result_name = prefix + 'ctetra_stress' + postfix
+                element_name = 'CTETRA4'
+            elif self.element_type == 166:  # CTETRA
+                nnodes_expected = 5
+                result_name = prefix + 'ctetra_stress' + postfix
+                element_name = 'CTETRA4'
+            #elif self.element_type == 303:  # CPYRAM
+                #nnodes_expected = 5
+                #result_name = prefix + 'cpyram_stress' + postfix
+                #element_name = 'CPYRAM5'
+            else:  # pragma: no cover
+                raise RuntimeError(self.code_information())
+        else:
+            #obj_vector_real = RealSolidStrainArray
+            #obj_vector_complex = ComplexSolidStrainArray
+            #obj_vector_random = RandomSolidStrainArray
+            word = 'strain'
+            #if self.element_type == 202:  # CHEXA
+                #nnodes_expected = 8
+                #result_name = prefix + 'chexa_strain' + postfix
+                #element_name = 'CHEXA8'
+            #elif self.element_type == 301:  # CPENTA
+                #nnodes_expected = 6
+                #result_name = prefix + 'cpenta_strain' + postfix
+                #element_name = 'CPENTA6'
+            #elif self.element_type == 302:  # CTETRA
+                #nnodes_expected = 4
+                #result_name = prefix + 'ctetra_strain' + postfix
+                #element_name = 'CTETRA4'
+            #elif self.element_type == 303:  # CPYRAM
+                #nnodes_expected = 5
+                #result_name = prefix + 'cpyram_strain' + postfix
+                #element_name = 'CPYRAM5'
+            #else:  # pragma: no cover
+            raise RuntimeError(self.code_information())
+                #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                #return self._not_implemented_or_skip(data, ndata, msg)
+
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
+
+        numwide_real = 2 + 20 * nnodes_expected
+        #numwide_real = 122  # CHEXA
+        #print(self.num_wide, numwide_real)
+        assert numwide_real == self.num_wide, numwide_real
+        #numwide_imag = 4 + (17 - 4) * nnodes_expected
+        #numwide_random = 4 + (11 - 4) * nnodes_expected
+        #numwide_random2 = 18 + 14 * (nnodes_expected - 1)
+        preline1 = '%s-%s' % (self.element_name, self.element_type)
+        preline2 = ' ' * len(preline1)
+
+        #print('nnodes_expected =', nnodes_expected)
+        #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
+        self._data_factor = nnodes_expected
+
+        if self.format_code == 1 and self.num_wide == numwide_real:  # real
+            ntotal = 8 + 80 * nnodes_expected
+            #ntotal = numwide_real * 4
+            nelements = ndata // ntotal
+            assert ndata % ntotal == 0
+            #auto_return, is_vectorized = self._create_oes_object4(
+                #nelements, result_name, slot, obj_vector_real)
+            auto_return = self.read_mode == 1
+            is_vectorized = False
+            if auto_return:
+                return nelements * self.num_wide * 4, None, None
+
+            obj = self.obj
+            if self.use_vector and is_vectorized and self.sort_method == 1 and 0:  # pragma: no cover
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                itotali = obj.itotal + nelements
+                itotal2 = obj.itotal + nelements * nnodes_expected
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    # (eid_device, cid, abcd, nnodes)
+                    ints = frombuffer(data, dtype=self.idtype).copy()
+                    try:
+                        ints1 = ints.reshape(nelements, numwide_real)
+                    except ValueError:
+                        msg = 'ints.shape=%s; size=%s ' % (str(ints.shape), ints.size)
+                        msg += 'nelements=%s numwide_real=%s nelements*numwide=%s' % (
+                            nelements, numwide_real, nelements * numwide_real)
+                        raise ValueError(msg)
+                    eids = ints1[:, 0] // 10
+                    cids = ints1[:, 1]
+                    #nids = ints1[:, 4]
+                    assert eids.min() > 0, eids.min()
+                    obj.element_node[itotal:itotal2, 0] = repeat(eids, nnodes_expected)
+                    ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
+                    grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
+
+                    #print('%s-grid_device=%s' % (self.element_name, grid_device))
+                    unused_grid_device2 = repeat(grid_device, nnodes_expected)
+                    try:
+                        obj.element_node[itotal:itotal2, 1] = grid_device
+                    except ValueError:
+                        msg = '%s; nnodes=%s\n' % (self.element_name, nnodes_expected)
+                        msg += 'itotal=%s itotal2=%s\n' % (itotal, itotal2)
+                        msg += 'grid_device.shape=%s; size=%s\n' % (str(grid_device.shape), grid_device.size)
+                        #msg += 'nids=%s' % nids
+                        raise ValueError(msg)
+                    obj.element_cid[itotal:itotali, 0] = eids
+                    obj.element_cid[itotal:itotali, 1] = cids
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 4:]
+                # 1     9    15   2    10   16  3   11  17   8
+                #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+                #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
+                #(grid_device,
+                    #sxx, sxy, s1, a1, a2, a3, pressure, svm,
+                    #syy, syz, s2, b1, b2, b3,
+                    #szz, sxz, s3, c1, c2, c3)
+                floats1 = floats.reshape(nelements * nnodes_expected, 21)#[:, 1:] # drop grid_device
+
+                # o1/o2/o3 is not max/mid/min.  They are not consistently ordered, so we force it.
+                max_mid_min = np.vstack([
+                    floats1[:, 3],
+                    floats1[:, 11],
+                    floats1[:, 17],
+                ]).T
+                max_mid_min.sort(axis=1)
+                assert max_mid_min.shape == (nelements * nnodes_expected, 3), max_mid_min.shape
+                obj.data[obj.itime, itotal:itotal2, 6:9] = max_mid_min[:, [2, 1, 0]]
+
+                #obj.data[obj.itime, itotal:itotal2, :] = floats1[:, isave]
+                obj.data[obj.itime, itotal:itotal2, :6] = floats1[:, [1, 9, 15, 2, 10, 16]]
+                obj.data[obj.itime, itotal:itotal2, 9] = floats1[:, 8]
+                obj.itotal = itotal2
+                obj.ielement = itotali
+            else:
+                #if is_vectorized and self.use_vector:  # pragma: no cover
+                    #self.log.debug('vectorize CSolid real SORT%s' % self.sort_method)
+
+                #ELTYPE =163 Linear form for hyperelastic 20 node HEXAFD
+                #2 TYPE CHAR4 Gaus
+                #
+                #3 ID I
+                #4 SX RS
+                #5 SXY RS
+                #6 PA RS
+                #7 AX RS
+                #8 AY RS
+                #9 AZ RS
+                #10 PRESSURE RS
+                #11 SY RS
+                #12 SYZ RS
+                #13 PB RS
+                #14 BX RS
+                #15 BY RS
+                #16 BZ RS
+                #17 SZ RS
+                #18 SZX RS
+                #19 PC RS
+                #20 CX RS
+                #21 CY RS
+                #22 CZ RS
+                #Words 3 through 22 repeat 027 times
+                struct1 = Struct(self._endian + self._analysis_code_fmt + b'4s')
+                struct2 = Struct(self._endian + b'i19f')
+                if self.is_debug_file:
+                    #msg = (
+                        #f'{self.element_name}-{self.element_type} nelements={nelements} '
+                        #f'nnodes={nnodes_expected}; '
+                        #'C=[sxx, syy, szz, txy, tyz, txz, pressure, '
+                        #'evol, exx, eyy, ezz, exy, eyz, exz]\n')
+                    self.binary_debug.write(msg)
+
+                for unused_i in range(nelements):
+                    edata = data[n:n+8]
+                    out = struct1.unpack(edata)
+                    (eid_device, unused_abcd, ) = out
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
+
+                    if self.is_debug_file:
+                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+                    #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
+
+                    n += 8
+                    for inode in range(nnodes_expected):  # nodes pts, no centroid
+                        out = struct2.unpack(data[n:n + 80]) # 4*20 = 80
+                        if self.is_debug_file:
+                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+                        #(grid_device, sxx, syy, szz, txy, tyz, txz, pressure,
+                         #evol, exx, eyy, ezz, exy, eyz, exz) = out
+                        #print(out)
+
+                        if self.is_debug_file:
+                            self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+                                eid, grid_device, ', '.join(['%r' % di for di in out])))
+
+                        #grid = grid_device
+                        if 0:
+                            if inode == 0:
+                                #  this is correct, but fails
+                                #element_name = self.element_name + str(nnodes)
+                                obj.add_eid_sort1(element_name, cid, dt, eid, grid,
+                                                  sxx, syy, szz, txy, tyz, txz, ovm)
+                            else:
+                                obj.add_node_sort1(dt, eid, inode, grid,
+                                                   sxx, syy, szz, txy, tyz, txz, ovm)
+                        n += 80
+            self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} linear hyperelastic {word}')
+        else:  # pragma: no cover
+            raise RuntimeError(self.code_information() +
+                               '\nnumwide real=%s imag=%s random=%s' % (
+                                   numwide_real, numwide_imag, numwide_random2))
+        assert n == ntotal * nelements, f'n={n} ntotal={ntotal*nelements}'
+        return n, nelements, ntotal
+
+    def _oes_csolid_nonlinear_hyperelastic(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
+        """
+        reads stress/strain for element type:
+         - 202 : CHEXAFD
+         - 204 : PENTA6FD
+
+                    '   N O N L I N E A R   S T R E S S E S   I N   H Y P E R E L A S T I C   H E X A H E D R O N   E L E M E N T S  ( HEXA8FD )'
+            ' '
+            '  ELEMENT GRID/   POINT                       CAUCHY STRESSES/ LOG STRAINS                        PRESSURE    VOL. STRAIN'
+            '     ID   GAUSS     ID       X           Y           Z           XY          YZ          ZX'
+            '0     401 GRID      401  1.9128E+03  6.2729E+02 -3.4828E+02 -7.5176E+01  7.8259E+00 -2.5001E+02  7.3060E+02  7.3060E-03'
+            '                         6.8270E-01 -6.5437E-04 -1.2874E+00 -3.9645E-02 -2.9882E-03 -5.9975E-02'
+            '                    402  1.1024E+03  1.0686E+03  2.0832E+01 -1.7936E+00 -2.3656E-01 -1.1467E+02  7.3060E+02  7.3060E-03'
+            '                         6.8201E-01  6.4335E-01 -1.2964E+00 -2.7195E-03 -1.0809E-02  6.3608E-02'
+            '                   1402  1.1024E+03  1.0686E+03  2.0832E+01  1.7936E+00  2.3656E-01 -1.1467E+02  7.3060E+02  7.3060E-03'
+            '                         6.8201E-01  6.4335E-01 -1.2964E+00 -2.7195E-03 -1.0809E-02  6.3608E-02'
+            '                   1401  1.9128E+03  6.2729E+02 -3.4828E+02  7.5176E+01 -7.8259E+00 -2.5001E+02  7.3060E+02  7.3060E-03'
+            '                         6.8201E-01  6.4335E-01 -1.2964E+00 -2.7195E-03 -1.0809E-02  6.3608E-02'
+            '                    501  1.9159E+03  6.2332E+02 -3.4744E+02 -7.5730E+01  7.9009E+00 -2.5075E+02  7.3060E+02  7.3060E-03'
+            '                         6.8201E-01  6.4335E-01 -1.2964E+00 -2.7195E-03 -1.0809E-02  6.3608E-02'
+            '                    502  1.1004E+03  1.0667E+03  2.4631E+01 -1.7898E+00 -2.2971E-01 -1.1434E+02  7.3060E+02  7.3060E-03'
+            '                         6.8201E-01  6.4335E-01 -1.2964E+00 -2.7195E-03 -1.0809E-02  6.3608E-02'
+            '                   1502  1.1004E+03  1.0667E+03  2.4631E+01  1.7898E+00  2.2971E-01 -1.1434E+02  7.3060E+02  7.3060E-03'
+            '                         6.8201E-01  6.4335E-01 -1.2964E+00 -2.7195E-03 -1.0809E-02  6.3608E-02'
+            '                   1501  1.9159E+03  6.2332E+02 -3.4744E+02  7.5730E+01 -7.9009E+00 -2.5075E+02  7.3060E+02  7.3060E-03'
+            '                         6.8201E-01  6.4335E-01 -1.2964E+00 -2.7195E-03 -1.0809E-02  6.3608E-02'
+
+          # 216 TETRAFD
+          # 218 HEXAFD
+          # 220 (CPENTA)
+          # 221 (CTETRA)
+          ELEMENT GRID/   POINT                         STRESSES/ TOTAL STRAINS                          EQUIVALENT EFF. STRAIN  EFF. CREEP
+     ID   GAUSS     ID       X           Y           Z           XY          YZ          ZX        STRESS   PLAS/NLELAS   STRAIN
+
+        """
+        n = 0
+        if self.is_stress:
+            #obj_vector_real = RealSolidStressArray
+            #obj_vector_complex = ComplexSolidStressArray
+            #obj_vector_random = RandomSolidStressArray
+            word = 'stress'
+            if self.element_type in [202, 218]:  # CHEXA
+                nnodes_expected = 8
+                result_name = prefix + 'chexa_stress_strain' + postfix
+                element_name = 'CHEXA8'
+                # real=122
+            elif self.element_type in [204, 220]:  # CPENTA
+                nnodes_expected = 6
+                result_name = prefix + 'cpenta_stress_strain' + postfix
+                element_name = 'CPENTA6'
+            elif self.element_type in [216, 221]:  # CTETRA
+                nnodes_expected = 4
+                result_name = prefix + 'ctetra_stress_strain' + postfix
+                element_name = 'CTETRA4'
+            #elif self.element_type == 303:  # CPYRAM
+                #nnodes_expected = 5
+                #result_name = prefix + 'cpyram_stress' + postfix
+                #element_name = 'CPYRAM5'
+            else:  # pragma: no cover
+                raise RuntimeError(self.code_information())
+        else:
+            #obj_vector_real = RealSolidStrainArray
+            #obj_vector_complex = ComplexSolidStrainArray
+            #obj_vector_random = RandomSolidStrainArray
+            word = 'strain'
+            #if self.element_type == 202:  # CHEXA
+                #nnodes_expected = 8
+                #result_name = prefix + 'chexa_strain' + postfix
+                #element_name = 'CHEXA8'
+            #elif self.element_type == 301:  # CPENTA
+                #nnodes_expected = 6
+                #result_name = prefix + 'cpenta_strain' + postfix
+                #element_name = 'CPENTA6'
+            #elif self.element_type == 302:  # CTETRA
+                #nnodes_expected = 4
+                #result_name = prefix + 'ctetra_strain' + postfix
+                #element_name = 'CTETRA4'
+            #elif self.element_type == 303:  # CPYRAM
+                #nnodes_expected = 5
+                #result_name = prefix + 'cpyram_strain' + postfix
+                #element_name = 'CPYRAM5'
+            #else:  # pragma: no cover
+            raise RuntimeError(self.code_information())
+                #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+                #return self._not_implemented_or_skip(data, ndata, msg)
+
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
+        self._results._found_result(result_name)
+        slot = self.get_result(result_name)
+
+        numwide_real = 2 + 15 * nnodes_expected
+        #numwide_real = 122  # CHEXA
+        assert numwide_real == self.num_wide, numwide_real
+        #numwide_imag = 4 + (17 - 4) * nnodes_expected
+        #numwide_random = 4 + (11 - 4) * nnodes_expected
+        #numwide_random2 = 18 + 14 * (nnodes_expected - 1)
+        preline1 = '%s-%s' % (self.element_name, self.element_type)
+        preline2 = ' ' * len(preline1)
+
+        #print('nnodes_expected =', nnodes_expected)
+        #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
+        self._data_factor = nnodes_expected
+
+        if self.format_code == 1 and self.num_wide == numwide_real:  # real
+            ntotal = 8 + 60 * nnodes_expected
+            #ntotal = numwide_real * 4
+            nelements = ndata // ntotal
+            assert ndata % ntotal == 0
+            #auto_return, is_vectorized = self._create_oes_object4(
+                #nelements, result_name, slot, obj_vector_real)
+            auto_return = self.read_mode == 1
+            is_vectorized = False
+            if auto_return:
+                return nelements * self.num_wide * 4, None, None
+
+            obj = self.obj
+            if self.use_vector and is_vectorized and self.sort_method == 1 and 0:  # pragma: no cover
+                n = nelements * 4 * self.num_wide
+                itotal = obj.ielement
+                itotali = obj.itotal + nelements
+                itotal2 = obj.itotal + nelements * nnodes_expected
+                obj._times[obj.itime] = dt
+                if obj.itime == 0:
+                    # (eid_device, cid, abcd, nnodes)
+                    ints = frombuffer(data, dtype=self.idtype).copy()
+                    try:
+                        ints1 = ints.reshape(nelements, numwide_real)
+                    except ValueError:
+                        msg = 'ints.shape=%s; size=%s ' % (str(ints.shape), ints.size)
+                        msg += 'nelements=%s numwide_real=%s nelements*numwide=%s' % (
+                            nelements, numwide_real, nelements * numwide_real)
+                        raise ValueError(msg)
+                    eids = ints1[:, 0] // 10
+                    cids = ints1[:, 1]
+                    #nids = ints1[:, 4]
+                    assert eids.min() > 0, eids.min()
+                    obj.element_node[itotal:itotal2, 0] = repeat(eids, nnodes_expected)
+                    ints2 = ints1[:, 4:].reshape(nelements * nnodes_expected, 21)
+                    grid_device = ints2[:, 0]#.reshape(nelements, nnodes_expected)
+
+                    #print('%s-grid_device=%s' % (self.element_name, grid_device))
+                    unused_grid_device2 = repeat(grid_device, nnodes_expected)
+                    try:
+                        obj.element_node[itotal:itotal2, 1] = grid_device
+                    except ValueError:
+                        msg = '%s; nnodes=%s\n' % (self.element_name, nnodes_expected)
+                        msg += 'itotal=%s itotal2=%s\n' % (itotal, itotal2)
+                        msg += 'grid_device.shape=%s; size=%s\n' % (str(grid_device.shape), grid_device.size)
+                        #msg += 'nids=%s' % nids
+                        raise ValueError(msg)
+                    obj.element_cid[itotal:itotali, 0] = eids
+                    obj.element_cid[itotal:itotali, 1] = cids
+
+                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 4:]
+                # 1     9    15   2    10   16  3   11  17   8
+                #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
+                #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
+                #(grid_device,
+                    #sxx, sxy, s1, a1, a2, a3, pressure, svm,
+                    #syy, syz, s2, b1, b2, b3,
+                    #szz, sxz, s3, c1, c2, c3)
+                floats1 = floats.reshape(nelements * nnodes_expected, 21)#[:, 1:] # drop grid_device
+
+                # o1/o2/o3 is not max/mid/min.  They are not consistently ordered, so we force it.
+                max_mid_min = np.vstack([
+                    floats1[:, 3],
+                    floats1[:, 11],
+                    floats1[:, 17],
+                ]).T
+                max_mid_min.sort(axis=1)
+                assert max_mid_min.shape == (nelements * nnodes_expected, 3), max_mid_min.shape
+                obj.data[obj.itime, itotal:itotal2, 6:9] = max_mid_min[:, [2, 1, 0]]
+
+                #obj.data[obj.itime, itotal:itotal2, :] = floats1[:, isave]
+                obj.data[obj.itime, itotal:itotal2, :6] = floats1[:, [1, 9, 15, 2, 10, 16]]
+                obj.data[obj.itime, itotal:itotal2, 9] = floats1[:, 8]
+                obj.itotal = itotal2
+                obj.ielement = itotali
+            else:
+                #if is_vectorized and self.use_vector:  # pragma: no cover
+                    #self.log.debug('vectorize CSolid real SORT%s' % self.sort_method)
+
+                # 2 TYPE CHAR4 Grid or Gaus
+                #
+                # 3 ID I
+                # 4 SX RS
+                # 5 SY RS
+                # 6 SZ RS
+                # 7 SXY RS
+                # 8 SYZ RS
+                # 9 SZX RS
+                # 10 PRESSURE RS
+                # 11 VOLSTR RS
+                # 12 EX RS
+                # 13 EY RS
+                # 14 EZ RS
+                # 15 EXY RS
+                # 16 EYZ RS
+                # 17 EZX RS
+                # Words 3 through 17 repeat 008 times
+                struct1 = Struct(self._endian + self._analysis_code_fmt + b'4s')
+                struct2 = Struct(self._endian + b'i14f')
+                if self.is_debug_file:
+                    msg = (
+                        f'{self.element_name}-{self.element_type} nelements={nelements} '
+                        f'nnodes={nnodes_expected}; '
+                        'C=[sxx, syy, szz, txy, tyz, txz, pressure, '
+                        'evol, exx, eyy, ezz, exy, eyz, exz]\n')
+                    self.binary_debug.write(msg)
+
+                for unused_i in range(nelements):
+                    edata = data[n:n+8]
+                    out = struct1.unpack(edata)
+                    (eid_device, unused_abcd, ) = out
+                    eid, dt = get_eid_dt_from_eid_device(
+                        eid_device, self.nonlinear_factor, self.sort_method)
+
+                    if self.is_debug_file:
+                        self.binary_debug.write('%s - eid=%i; %s\n' % (preline1, eid, str(out)))
+                    #assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
+
+                    n += 8
+                    for inode in range(nnodes_expected):  # nodes pts, no centroid
+                        out = struct2.unpack(data[n:n + 60]) # 4*15 = 60
+                        if self.is_debug_file:
+                            self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
+                        (grid_device, sxx, syy, szz, txy, tyz, txz, pressure,
+                         evol, exx, eyy, ezz, exy, eyz, exz) = out
+                        #print(out)
+
+                        if self.is_debug_file:
+                            self.binary_debug.write('  eid=%s inode=%i; C=[%s]\n' % (
+                                eid, grid_device, ', '.join(['%r' % di for di in out])))
+
+                        grid = grid_device
+                        if 0:
+                            if inode == 0:
+                                #  this is correct, but fails
+                                #element_name = self.element_name + str(nnodes)
+                                obj.add_eid_sort1(element_name, cid, dt, eid, grid,
+                                                  sxx, syy, szz, txy, tyz, txz, ovm)
+                            else:
+                                obj.add_node_sort1(dt, eid, inode, grid,
+                                                   sxx, syy, szz, txy, tyz, txz, ovm)
+                        n += 60
+            self.log.warning(f'skipping {self.table_name_str}: {self.element_name}-{self.element_type} nonlinear hyperelastic {word}')
+        else:  # pragma: no cover
+            raise RuntimeError(self.code_information() +
+                               '\nnumwide real=%s imag=%s random=%s' % (
+                                   numwide_real, numwide_imag, numwide_random2))
+        assert n == ntotal * nelements, f'n={n} ntotal={ntotal*nelements}'
+        return n, nelements, ntotal
+
     def _oes_csolid_nonlinear(self, data, ndata, dt, unused_is_magnitude_phase,
                               prefix, postfix):
         """
@@ -3476,7 +3998,7 @@ class OES(OP2Common):
                 result_name = prefix + 'cquad4_stress' + postfix
             elif self.element_type == 228:
                 result_name = prefix + 'cquadr_stress' + postfix
-                assert self.num_wide == 17
+                assert self.num_wide in [17, 15], self.code_information()
             else:
                 raise NotImplementedError(self.code_information())
         else:
@@ -3486,7 +4008,7 @@ class OES(OP2Common):
                 result_name = prefix + 'cquad4_strain' + postfix
             elif self.element_type == 228:
                 result_name = prefix + 'cquadr_strain' + postfix
-                assert self.num_wide == 17
+                assert self.num_wide in [17, 15], self.code_information()
             else:
                 raise NotImplementedError(self.code_information())
 

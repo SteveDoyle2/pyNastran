@@ -1,6 +1,7 @@
 # coding: utf-8
 #pylint disable=C0103
 from itertools import count
+from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -245,7 +246,7 @@ class RealPlateArray(OES_Object):
                                                  major_principal, minor_principal, ovm]
         self.itotal += 1
 
-    def get_stats(self, short=False):
+    def get_stats(self, short=False) -> List[str]:
         if not self.is_built:
             return [
                 '<%s>\n' % self.__class__.__name__,
@@ -324,13 +325,15 @@ class RealPlateArray(OES_Object):
             minor_principal = self.data[itime, :, 6]
             ovm = self.data[itime, :, 7]
 
+            is_linear = self.element_type in {33, 74, 227, 228}
+            is_bilinear = self.element_type in {64, 70, 75, 82, 144}
             for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
                  count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, major_principal, minor_principal, ovm):
                 [fdi, oxxi, oyyi, txyi, major, minor, ovmi] = write_floats_13e(
                     [fdi, oxxi, oyyi, txyi, major, minor, ovmi])
                 ilayer = i % 2
                 # tria3
-                if self.element_type in [33, 74]:  # CQUAD4, CTRIA3
+                if is_linear:  # CQUAD4, CTRIA3, CTRIAR linear, CQUADR linear
                     if ilayer == 0:
                         f06_file.write('0  %6i   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (
                             eid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
@@ -338,7 +341,7 @@ class RealPlateArray(OES_Object):
                         f06_file.write('   %6s   %-13s     %-13s  %-13s  %-13s   %8.4f   %-13s   %-13s  %s\n' % (
                             '', fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi))
 
-                elif self.element_type in [64, 70, 75, 82, 144]:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
+                elif is_bilinear:  # CQUAD8, CTRIAR, CTRIA6, CQUADR, CQUAD4
                     # bilinear
                     if nid == 0 and ilayer == 0:  # CEN
                         f06_file.write('0  %8i %8s  %-13s  %-13s %-13s %-13s   %8.4f  %-13s %-13s %s\n' % (
@@ -560,7 +563,6 @@ def _get_plate_msg(self):
         cquad4_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )\n'] + tri_msg_temp
         cquad8_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 8 )\n'] + tri_msg_temp
         cquadr_msg = ['                        S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )\n'] + tri_msg_temp
-
         #cquadr_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D R )        OPTION = BILIN  \n \n'] + quad_msg_temp
         cquad4_bilinear_msg = ['                         S T R E S S E S   I N   Q U A D R I L A T E R A L   E L E M E N T S   ( Q U A D 4 )        OPTION = BILIN  \n \n'] + quad_msg_temp
 
@@ -600,11 +602,16 @@ def _get_plate_msg(self):
         msg = cquad4_msg
         nnodes = 4
         cen = 'CEN/4'
+    #elif self.element_type == 228:
+        #msg = cquadr_msg
+        #nnodes = 4
+        #cen = None # 'CEN/4'
+
     elif self.element_type == 144:
         msg = cquad4_bilinear_msg
         nnodes = 4
         cen = 'CEN/4'
-    elif self.element_type == 82:  # CQUADR
+    elif self.element_type in [82, 228]:  # CQUADR bilinear, CQUADR linear
         msg = cquadr_msg
         nnodes = 4
         cen = 'CEN/4'
@@ -616,7 +623,7 @@ def _get_plate_msg(self):
         msg = ctria6_msg
         nnodes = 3
         cen = 'CEN/6'
-    elif self.element_type == 70:  # CTRIAR
+    elif self.element_type in [70, 227]:  # CTRIAR bilinear, CTRIAR linear
         msg = ctriar_msg
         nnodes = 3
         cen = 'CEN/3'
