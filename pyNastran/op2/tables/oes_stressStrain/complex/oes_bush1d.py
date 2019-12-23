@@ -8,6 +8,7 @@ from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_head
 
 class ComplexCBush1DArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        aaa
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
@@ -194,10 +195,11 @@ class ComplexCBush1DArray(OES_Object):
 
 class ComplexCBush1DStressArray(ComplexCBush1DArray, StressObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        aaa
         ComplexCBush1DArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         return headers
 

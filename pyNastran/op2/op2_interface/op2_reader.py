@@ -90,12 +90,13 @@ class OP2Reader:
         self.load_as_h5 = False
         #: the h5 file object used to reduce memory usage
         self.h5_file = None
+        self.size = 4
 
         self.op2 = op2  # type: OP2
 
         self.mapped_tables = {
             b'GPL' : self.read_gpl,
-            #b'GPLS' : self.read_gpl,
+            b'GPLS' : self.read_gpls,
 
             # GPDT  - Grid point definition table
             b'GPDT' : self.read_gpdt,
@@ -128,6 +129,7 @@ class OP2Reader:
             b'FRL' : self.read_frl,  # frequency response list
             b'SDF' : self.read_sdf,
             b'IBULK' : self.read_ibulk,
+            b'ICASE' : self.read_icase,
             b'CDDATA' : self.read_cddata,
             b'CMODEXT' : self._read_cmodext,
 
@@ -980,7 +982,6 @@ class OP2Reader:
             raise NotImplementedError('nCSTM blocks=%s (not 1 or 2)' % nblocks)
 
         #print(self.op2.coords)
-        #asdf
 
         #while i < len(ints):
             #break
@@ -1083,51 +1084,88 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
 
+        self.read_markers([-2, 1, 0])
+        data, ndata = self._read_record_ndata()
+        if ndata == 8:
+            #self.show_data(data, types='ifs', endian=None)
+            name, = Struct(self._endian + b'8s').unpack(data)
+            print(name, 8)
+        elif ndata == 16:
+            name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
+            #name = name.decode(self._encoding)
+            #print(name, int1, int2, 16)
+        elif ndata == 28:
+            #self.show_data(data)
+            name1, int1, name2, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
+            #print(name1, int1, name2, int2, 28)
+        else:
+            #print('???')
+            #self.show_data(data, types='ifsd')
+            aaa
+
         if 1: # old
-            marker = -2
+            #self.show(200)
+            marker = -3
             while 1:
+                #print('====================')
+                #print(f'***reading {marker}')
                 try:
-                    self.read_markers([marker, 1, 0])
+                    self.read_markers([marker, 1])
                 except FortranMarkerError:
-                    op2.show_ndata(100)
+                    #op2.show_ndata(100)
                     raise
-                nfields = self.get_marker1(rewind=True)
-                if nfields > 0:
-                    unused_data = self._read_record()
-                    #self.show_data(data, types='s', endian=None)
-                elif nfields == 0:
-                    #self.show_ndata(100, types='ifs')
-                    break
+
+                nfields1 = self.get_marker1(rewind=True)
+                if nfields1 == 0:
+                    nfields1 = self.get_marker1(rewind=False)
+                elif nfields1 == 1:
+                    #data, ndata = self._read_record_ndata()
+                    nfields1 = self.read_markers([1])
+
+                    nfields_test = self.get_marker1(rewind=True)
+                    while nfields_test > 0:
+                        nfields = self.get_marker1(rewind=False)
+                        block = self.read_block()
+                        nblock = len(block)
+                        ndouble = (nblock - 4) // 8
+                        fmt = self._endian + b'i%dd' % (ndouble)
+                        #out = Struct(self._endian + b'i 3d').unpack(block)
+                        out = Struct(fmt).unpack(block)
+                        #print(out, nblock)
+                        nfields_test = self.get_marker1(rewind=True)
+                    #print('-------')
+                    #print(f'end of marker={marker}')
+                    marker -= 1
+                    #marker = self.get_marker1(rewind=True)
+                    continue
                 else:
-                    raise RuntimeError('nfields=%s' % nfields)
+                    raise RuntimeError('EXTDB error')
+
+                #op2.show_ndata(100)
+                nfields = self.get_marker1(rewind=True)
+                #print('nfields =', nfields)
+                if nfields == 0:
+                    #print('breaking...')
+                    #self.show(200)
+                    break
+                #elif nfields == 3:
+                    #data = self._read_record()
+                    #self.show(200, types='ifs', endian=None)
+                    #aaa
+                data, ndata = self._read_record_ndata()
+                if ndata == 12:
+                    name, int1, int2 = Struct(self._endian + b'4s 2i').unpack(data)
+                    print(name, int1, int2, 12)
+                    #self.show_data(data)
+                    #self.show_data(data)
+                elif ndata > 99:
+                    pass
+                else:
+                    self.show_data(data)
                 marker -= 1
+                #print('--------------------')
             unused_marker_end = self.get_marker1(rewind=False)
             return
-        marker = -2
-
-        #b'GEOM1   '
-        self.read_markers([marker, 1, 0]) # -2
-        data = self._read_record()
-        marker -= 1
-
-        self.read_markers([marker, 1, 0]) # -3
-        data = self._read_record()
-        marker -= 1
-
-        self.read_markers([marker, 1, 0]) # -4
-        data = self._read_record()
-        marker -= 1
-
-        self.read_markers([marker, 1, 0]) # -5
-        data = self._read_record()
-        marker -= 1
-
-        self.read_markers([marker, 1, 0]) # -6
-        #self.read_markers([0])
-        #data = self._read_record()
-
-        self.show_data(data, types='ifs', endian=None)
-        self.show(200, types='ifs', endian=None)
 
     def read_descyc(self):
         """reads the DESCYC table"""
@@ -1488,6 +1526,39 @@ class OP2Reader:
             unused_nid_seq = np.frombuffer(data, op2.idtype).reshape(nnodes, 2)
         self.read_markers([-5, 1, 0, 0])
 
+    def read_gpls(self):
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        self.log.debug('table_name = %r' % op2.table_name)
+        if self.is_debug_file:
+            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
+
+        self.read_markers([-1])
+        data = self._read_record()  # (101, 139, 0, 0, 0, 0, 0)
+
+        self.read_markers([-2, 1, 0])
+        data = self._read_record()
+        gpl_gpls, method = Struct(self._endian + b'8si').unpack(data)
+        assert gpl_gpls.strip() in [b'GPL', b'GPLS'], gpl_gpls.strip()
+        assert method in [0, 1, 2, 3, 4, 5, 6, 7, 10, 12, 13, 15, 20, 30, 40, 99,
+                          101, 201], f'GPLS method={method}'
+
+        self.read_markers([-3, 1, 0])
+        data = self._read_record()
+        ints = np.frombuffer(data, op2.idtype)
+        #print(ints)
+
+        self.read_markers([-4, 1, 0])
+        data = self._read_record()
+        ints = np.frombuffer(data, op2.idtype)
+        nints = len(ints)
+        ints = ints.reshape(nints//2, 2)
+        #print(ints)
+
+        self.read_markers([-5, 1, 0, 0])
+        #data = self._read_record()
+        #self.show_data(data, types='ifs', endian=None)
+
     def read_table_name(self, table_names):
         assert isinstance(table_names, list), table_names
         data = self._read_record() # GPL
@@ -1683,7 +1754,15 @@ class OP2Reader:
         ## TODO: why is this needed??? (it is, but dmap is not clear)
         data = self._read_record()
         #self.show_data(data, types='i')
-        self.read_markers([-5, 1, 0])
+        isubtable = -5
+        while 1:
+            self.read_markers([isubtable, 1, 0])
+            marker = self.get_nmarkers(1, rewind=True)[0]
+            if marker == 0:
+                break
+            data = self._read_record()
+            isubtable -= 1
+
         self.read_markers([0])
 
     def read_hisadd(self):
@@ -1787,7 +1866,7 @@ class OP2Reader:
         """
         op2 = self.op2
         op2.table_name = self._read_table_name(rewind=False)
-        op2.log.debug('table_name = %r' % op2.table_name)
+        #op2.log.debug('table_name = %r' % op2.table_name)
         if self.is_debug_file:
             self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
         self.read_markers([-1])
@@ -1815,6 +1894,47 @@ class OP2Reader:
         #print("marker = ", marker)
         unused_marker_end = self.get_marker1(rewind=False)
 
+    def read_icase(self):
+        """
+        tested by ???
+
+        read_mode = 1 (array sizing)
+        read_mode = 1 (reading)
+
+        """
+        op2 = self.op2
+        op2.table_name = self._read_table_name(rewind=False)
+        if self.is_debug_file:
+            self.binary_debug.write('read_geom_table - %s\n' % op2.table_name)
+        self.read_markers([-1])
+        if self.is_debug_file:
+            self.binary_debug.write('---markers = [-1]---\n')
+        unused_data = self._read_record()
+
+        unused_markers = self.get_nmarkers(1, rewind=True)
+        marker = -2
+        lines = []
+        while 1:
+            self.read_markers([marker, 1, 0])
+            nfields = self.get_marker1(rewind=True)
+            if nfields > 0:
+                # we're not reading the record because the IBULK
+                # table is literally just an unsorted echo of the
+                # BULK data table in the BDF
+                bline = self._read_record()
+                line = bline.replace(b'\xff', b'').decode(self._encoding).rstrip()
+                #unused_data = self._skip_record()
+            elif nfields == 0:
+                #op2.show_ndata(100, types='ifs')
+                break
+            else:
+                raise RuntimeError('nfields=%s' % nfields)
+            lines.append(line)
+            marker -= 1
+        self._case_control_lines = lines
+        #print("marker = ", marker)
+        unused_marker_end = self.get_marker1(rewind=False)
+
     def read_cddata(self):
         """Cambell diagram summary"""
         op2 = self.op2
@@ -1829,102 +1949,120 @@ class OP2Reader:
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         cddata, method = Struct(self._endian + b'8si').unpack(data)
-        assert method == 2, f'CDDATA method={method}'
 
         marker = -3
         cddata_list = []
-        while 1:
-            self.read_markers([marker, 1, 0])
-            nfields = self.get_marker1(rewind=True)
-            if nfields == 0:
-                break
-            data = self._read_record()
-            if self.read_mode == 1:
+        if method == 1:
+            while 1:
+                #print(f'read marker={marker}...')
+                self.read_markers([marker, 1, 0])
+                nfields = self.get_marker1(rewind=True)
+                if nfields == 0:
+                    break
+                #print(nfields)
+                data, ndata = self._read_record_ndata()
+                if self.read_mode == 1:
+                    marker -= 1
+                    continue
+                #self.show_data(data, types='if', endian=None)
                 marker -= 1
-                continue
+            #self.show(200)
 
-            ints = np.frombuffer(data, op2.idtype)
-            nints = len(ints)
-            floats = np.frombuffer(data, op2.fdtype) # .reshape(nints//7, 7)
+        elif method == 2:
+            while 1:
+                self.read_markers([marker, 1, 0])
+                nfields = self.get_marker1(rewind=True)
+                if nfields == 0:
+                    break
+                data = self._read_record()
+                if self.read_mode == 1:
+                    marker -= 1
+                    continue
 
-            # 1 NVAL I Number of values
-            # 2 NCRV I Number of sections/solution (i.e., number of curves)
-            # 3 KEYW I Keyword=10000+(SOLN*10)+DATTYP,
-            # where:
-            #   SOLN=solution number
-            #   DATTYP=1 for list of rotor speeds in user-defined units
-            #   DATTYP=2 for list of eigenfrequencies in the analysis system
-            #   DATTYP=3 for list of Lehr damping values
-            #   DATTYP=4 for list of real part of eigenvalues
-            #   DATTYP=5 for list of imaginary part of eigenvalues
-            #   DATTYP=6 for list of whirl direction codes (2.0=backwards, 3.0=forward, 4.0=linear)
-            #   DATTYP=7 for list of converted frequencies in analysis system
-            #   DATTYP=8 for list of whirl directions codes for converted solution (2.0=backwards, 3.0=forward, 4.0=linear)
-            # 4 VALS(NVAL) RS List of values
-            # Words 1–4 repeat for NCRV curves. For DATTYP≠1, NVAL and NCRV=0
+                ints = np.frombuffer(data, op2.idtype)
+                nints = len(ints)
+                floats = np.frombuffer(data, op2.fdtype) # .reshape(nints//7, 7)
 
-            dict_map = {
-                1: 'RPM',
-                2: 'eigenfreq',
-                3: 'Lehr',
-                4: 'real eig',
-                5: 'imag eig',
-                6: 'whirl_dir',
-                7: 'converted_freq',
-                8: 'whirl_code',
-            }
-            i = 0
-            data_out = {}
-            while i < nints:
-                nvalues = ints[i]
-                #ncurves = ints[i+1]
-                keyword = ints[i+2]  # 10000+(SOLN*10)+DATTYP
-                base = keyword - 10000 # (SOLN*10)+DATTYP
-                #solution = base // 10
-                datatype = base % 10
-                assert datatype in [1, 2, 3, 4, 5, 6, 7, 8], datatype
-                values = floats[i+3:i+3+nvalues]
-                if datatype in [6, 8]:
-                    values = values.astype('int32')
-                #print(f'{nvalues}, {ncurves}, {solution}, {datatype}, {dict_map[datatype]:14s} {values}')
-                data_out[datatype] = values
-                i += 3 + nvalues
-            marker -= 1
-            cddata_list.append(data_out)
-            #import matplotlib.pyplot as plt
+                # 1 NVAL I Number of values
+                # 2 NCRV I Number of sections/solution (i.e., number of curves)
+                # 3 KEYW I Keyword=10000+(SOLN*10)+DATTYP,
+                # where:
+                #   SOLN=solution number
+                #   DATTYP=1 for list of rotor speeds in user-defined units
+                #   DATTYP=2 for list of eigenfrequencies in the analysis system
+                #   DATTYP=3 for list of Lehr damping values
+                #   DATTYP=4 for list of real part of eigenvalues
+                #   DATTYP=5 for list of imaginary part of eigenvalues
+                #   DATTYP=6 for list of whirl direction codes (2.0=backwards, 3.0=forward, 4.0=linear)
+                #   DATTYP=7 for list of converted frequencies in analysis system
+                #   DATTYP=8 for list of whirl directions codes for converted solution (2.0=backwards, 3.0=forward, 4.0=linear)
+                # 4 VALS(NVAL) RS List of values
+                # Words 1–4 repeat for NCRV curves. For DATTYP≠1, NVAL and NCRV=0
 
-            #dict_map = {
-                #1: 'RPM',
-                #2: 'eigenfreq',
-                #3: 'Lehr',
-                #4: 'real eig',
-                #5: 'imag eig',
-                #6: 'whirl_dir',
-                #7: 'converted_freq',
-                #8: 'whirl_code',
-            #}
+                dict_map = {
+                    1: 'RPM',
+                    2: 'eigenfreq',
+                    3: 'Lehr',
+                    4: 'real eig',
+                    5: 'imag eig',
+                    6: 'whirl_dir',
+                    7: 'converted_freq',
+                    8: 'whirl_code',
+                }
+                i = 0
+                data_out = {}
+                while i < nints:
+                    nvalues = ints[i]
+                    #ncurves = ints[i+1]
+                    keyword = ints[i+2]  # 10000+(SOLN*10)+DATTYP
+                    base = keyword - 10000 # (SOLN*10)+DATTYP
+                    #solution = base // 10
+                    datatype = base % 10
+                    assert datatype in [1, 2, 3, 4, 5, 6, 7, 8], datatype
+                    values = floats[i+3:i+3+nvalues]
+                    if datatype in [6, 8]:
+                        values = values.astype('int32')
+                    #print(f'{nvalues}, {ncurves}, {solution}, {datatype}, {dict_map[datatype]:14s} {values}')
+                    data_out[datatype] = values
+                    i += 3 + nvalues
+                marker -= 1
+                cddata_list.append(data_out)
+                #import matplotlib.pyplot as plt
 
-            #plt.figure(2)
-            #plt.plot(data_out[1], data_out[2]) # RPM vs. eigenfreq
-            #plt.grid(True)
+                #dict_map = {
+                    #1: 'RPM',
+                    #2: 'eigenfreq',
+                    #3: 'Lehr',
+                    #4: 'real eig',
+                    #5: 'imag eig',
+                    #6: 'whirl_dir',
+                    #7: 'converted_freq',
+                    #8: 'whirl_code',
+                #}
 
-            #plt.figure(3)
-            #plt.plot(data_out[1], data_out[3]) # RPM vs. Lehr
-            #plt.grid(True)
+                #plt.figure(2)
+                #plt.plot(data_out[1], data_out[2]) # RPM vs. eigenfreq
+                #plt.grid(True)
 
-            #plt.figure(4)
-            #plt.plot(data_out[1], data_out[4]) # RPM vs. real_eig
-            #plt.grid(True)
+                #plt.figure(3)
+                #plt.plot(data_out[1], data_out[3]) # RPM vs. Lehr
+                #plt.grid(True)
 
-            #plt.figure(5)
-            #plt.plot(data_out[1], data_out[5]) # RPM vs. imag_eig
-            #plt.grid(True)
+                #plt.figure(4)
+                #plt.plot(data_out[1], data_out[4]) # RPM vs. real_eig
+                #plt.grid(True)
 
-            #plt.figure(7)
-            #plt.plot(data_out[1], data_out[7]) # RPM vs. converted_freq
-            #plt.grid(True)
+                #plt.figure(5)
+                #plt.plot(data_out[1], data_out[5]) # RPM vs. imag_eig
+                #plt.grid(True)
+
+                #plt.figure(7)
+                #plt.plot(data_out[1], data_out[7]) # RPM vs. converted_freq
+                #plt.grid(True)
 
             #print('------------------------------------')
+        else:
+            asf
         if self.read_mode == 2:
             #plt.grid(True)
             #plt.show()
@@ -3305,6 +3443,41 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
 
+    def read_markersq(self, markers, macro_rewind=True):
+        """
+        Gets specified markers, where a marker has the form of [4, value, 4].
+        The "marker" corresponds to the value, so 3 markers takes up 9 integers.
+        These are used to indicate position in the file as well as the number
+        of bytes to read.
+
+        Because we're checking the markers vs. what we expect, we just throw
+        the data away.
+
+        Parameters
+        ----------
+        markers : List[int]
+            markers to get; markers = [-10, 1]
+
+        Raises
+        ------
+        FortranMarkerError
+            if the expected table number is not found
+
+        """
+        op2 = self.op2
+        for i, marker in enumerate(markers):
+            #self.log.debug('markers[%i] = %s' % (i, marker))
+            data = self.read_blockq()
+            imarker, = op2.struct_q.unpack(data)
+            if marker != imarker:
+                #self.show_data(data)
+                msg = 'marker=%r imarker=%r; markers=%s; i=%s; table_name=%r; iloc=%s/%s' % (
+                    marker, imarker, markers, i, op2.table_name,
+                    op2.f.tell(), os.path.getsize(op2.op2_filename))
+                raise FortranMarkerError(msg)
+            if self.is_debug_file:
+                self.binary_debug.write('  read_markers -> [8, %i, 8]\n' % marker)
+
     def _skip_table(self, table_name, warn=True):
         """bypasses the next table as quickly as possible"""
         if table_name in ['DIT', 'DITS']:  # tables
@@ -3500,6 +3673,21 @@ class OP2Reader:
         return table_name
 
     def read_block(self):
+        if self.size == 4:
+            return self.read_blocki()
+        else:
+            return self.read_blockq()
+
+    def read_string_block(self):
+        block = self.read_block()
+        if self.size == 4:
+            return block
+
+        nwords = len(block) // 2
+        block2 = b''.join([block[8*i:8*i+4] for i in range(nwords)])
+        return block2
+
+    def read_blocki(self):
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
@@ -3518,6 +3706,29 @@ class OP2Reader:
         data = op2.f.read(4)
         ndata, = op2.struct_i.unpack(data)
 
+        data_out = op2.f.read(ndata)
+        data = op2.f.read(4)
+        op2.n += 8 + ndata
+        return data_out
+
+    def read_blockq(self):
+        """
+        Reads a block following a pattern of:
+            [nbytes, data, nbytes]
+
+        Returns
+        -------
+        data : bytes
+            the data in binary
+
+        Notes
+        -----
+        see read_3_blocks
+
+        """
+        op2 = self.op2
+        data = op2.f.read(4)
+        ndata, = op2.struct_i.unpack(data)
         data_out = op2.f.read(ndata)
         data = op2.f.read(4)
         op2.n += 8 + ndata

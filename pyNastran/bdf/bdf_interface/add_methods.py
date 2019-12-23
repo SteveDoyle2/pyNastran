@@ -1366,8 +1366,10 @@ class AddMethods(BDFAttributes):
     def _add_table_object(self, table):
         """adds a TABLES1, TABLEST object"""
         key = table.tid
-        assert key not in self.tables, '\nTable=\n%s old_table=\n%s' % (
-            table, self.tables[key])
+        if key in self.tables:
+            if not table == self.tables[key]:
+                assert key not in self.tables, '\ntable=\n%s old_table=\n%s' % (
+                    table, self.tables[key])
         assert key > 0
         self.tables[key] = table
         self._type_to_id_map[table.type].append(key)

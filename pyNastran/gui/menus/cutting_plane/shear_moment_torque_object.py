@@ -6,7 +6,8 @@ defines:
 import numpy as np
 
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
-from pyNastran.bdf.mesh_utils.cut_model_by_plane import _p1_p2_zaxis_to_cord2r
+from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
+    get_element_centroids, get_stations)
 
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque import ShearMomentTorqueWindow
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
@@ -126,11 +127,31 @@ class ShearMomentTorqueObject:
 
     def plot_shear_moment_torque(self, model_name, gpforce,
                                  p1, p2, p3, zaxis,
-                                 method='Z-Axis Projection',
-                                 cid_p1=0, cid_p2=0, cid_p3=0, cid_zaxis=0,
-                                 nplanes=20, plane_color=None, plane_opacity=0.5,
+                                 method: str='Z-Axis Projection',
+                                 cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
+                                 nplanes: int=20, plane_color=None, plane_opacity=0.5,
                                  csv_filename=None, show=True, stop_on_failure=False):
-        """Creates a shear moment torque plot for the active plot result"""
+        """
+        Creates a shear moment torque plot for the active plot result
+
+        Parameters
+        ----------
+        model_name : str
+            the name of the model
+        p1: (3,) float ndarray
+            defines the starting point for the shear, moment, torque plot
+        p3: (3,) float ndarray
+            defines the end point for the shear, moment, torque plot
+        p2: (3,) float ndarray
+            defines the XZ plane for the shears/moments
+        zaxis: (3,) float ndarray
+            the direction of the z-axis
+        cid_p1 / cid_p2 / cid_p3
+            the coordinate systems for p1, p2, and p3
+        method : str
+           'CORD2R' : typical CORD2R
+            'Z-Axis Projection' : project p2 on the z-axis
+        """
         log = self.gui.log
         if plane_color is None:
             plane_color = PURPLE_FLOAT
@@ -154,15 +175,10 @@ class ShearMomentTorqueObject:
         dim_max = dxyz.max()
         izero = np.where(dxyz == 0)
         dxyz[izero] = dim_max
-
-        xyz1, xyz2, unused_z_global, i, k, origin, zaxis, xzplane = _p1_p2_zaxis_to_cord2r(
-            model, p1, p2, zaxis,
-            cid_p1=cid_p1, cid_p2=cid_p2, cid_zaxis=cid_zaxis,
-            method=method)
-        xyz3 = model.coords[cid_p3].transform_node_to_global(p3)
-        dx = xyz3[0] - xyz1[0]
-        stations = np.linspace(0., dx, num=nplanes, endpoint=True)
-        x = stations
+        xyz1, xyz2, xyz3, i, k, origin, xzplane, stations = get_stations(
+            model, p1, p2, p3, zaxis,
+            method=method, cid_p1=cid_p1, cid_p2=cid_p2, cid_p3=cid_p3,
+            cid_zaxis=cid_zaxis, nplanes=nplanes)
 
         try:
             # i/j/k vector is nan
@@ -202,13 +218,13 @@ class ShearMomentTorqueObject:
         self.gui.rend.Render()
         self.gui.Render()
 
-        eids, element_centroids_cid0 = get_element_centriods(model)
+        eids, element_centroids_cid0 = get_element_centroids(model)
         force_sum, moment_sum = gpforce.shear_moment_diagram(
             xyz_cid0, eids, nids, icd_transform,
             element_centroids_cid0,
             model.coords, nid_cd, stations, coord,
             idir=0, itime=0, debug=False, log=log)
-        plot_smt(x, force_sum, moment_sum, show=show)
+        plot_smt(stations, force_sum, moment_sum, show=show)
         return force_sum, moment_sum
 
 
@@ -262,16 +278,3 @@ def plot_smt(x, force_sum, moment_sum, show=True):
 
     if show:
         plt.show()
-
-
-def get_element_centriods(model):
-    """gets the element ids and their centroids"""
-    eids = []
-    element_centroids_cid0 = []
-    for eid, elem in sorted(model.elements.items()):
-        eids.append(eid)
-        element_centroids_cid0.append(elem.Centroid())
-
-    eids = np.array(eids, dtype='int32')
-    element_centroids_cid0 = np.array(element_centroids_cid0, dtype='float64')
-    return eids, element_centroids_cid0

@@ -323,12 +323,16 @@ class ComplexCShearForceArray(BaseElement):
             #raise NotImplementedError('SORT2')
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return False
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return True
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def _reset_indices(self):
         self.itotal = 0
@@ -1849,7 +1853,8 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         return itable
 
 
-class ComplexCBarForceArray(ComplexForceObject):
+
+class ComplexCBarWeldForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
@@ -1987,7 +1992,7 @@ class ComplexCBarForceArray(ComplexForceObject):
         msg.append('  data: [ntimes, nelements, 8] where 8=[%s]\n' % str(', '.join(self.get_headers())))
         msg.append('  data.shape = %s\n' % str(self.data.shape).replace('L', ''))
         msg.append('  is_sort1=%s is_sort2=%s\n' % (self.is_sort1, self.is_sort2))
-        msg.append('  CBAR\n')
+        msg.append(f'  {self.element_name}\n')
         msg += self.get_data_code()
         return msg
 
@@ -2198,6 +2203,15 @@ class ComplexCBarForceArray(ComplexForceObject):
             op2_ascii.write('footer = %s\n' % header)
             new_result = False
         return itable
+
+class ComplexCBarForceArray(ComplexCBarWeldForceArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexCBarWeldForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
+class ComplexCWeldForceArray(ComplexCBarWeldForceArray):
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        ComplexCBarWeldForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
+
 
 
 class ComplexCBeamForceArray(ComplexForceObject):
@@ -2426,7 +2440,6 @@ class ComplexCBeamForceArray(ComplexForceObject):
         #msg_temp, nnodes = get_f06_header(self, is_mag_phase, is_sort1)
         #print('write_f06 not implemented for ComplexCBeamForceArray')
         #return page_num
-        #asdf
 
         #is_sort1 = False
         if is_mag_phase:

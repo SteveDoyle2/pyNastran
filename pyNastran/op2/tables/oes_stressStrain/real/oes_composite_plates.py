@@ -340,11 +340,11 @@ class RealCompositePlateArray(OES_Object):
                 msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )\n'] + words
             else:
                 msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( T R I A R )\n'] + words
-        #elif self.element_type == 228:  # CQUADR linear
-            #if self.is_strain:
-                #msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )\n'] + words
-            #else:
-                #msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )\n'] + words
+        elif self.element_type == 232:  # CQUADR linear
+            if self.is_strain:
+                msg = ['                     S T R A I N S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )\n'] + words
+            else:
+                msg = ['                   S T R E S S E S   I N   L A Y E R E D   C O M P O S I T E   E L E M E N T S   ( Q U A D R )\n'] + words
         else:  # pragma: no cover
             msg = 'element_name=%s element_type=%s' % (self.element_name, self.element_type)
             raise NotImplementedError(msg)

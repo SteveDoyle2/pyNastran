@@ -453,7 +453,7 @@ def _get_msgs(self, is_mag_phase, is_sort1):
         tetra_msg = ['                 C O M P L E X     S T R A I N S   I N   T E T R A H E D R O N   E L E M E N T S   ( C T E T R A )',]
         hexa_msg = ['                 C O M P L E X     S T R A I N S   I N   H E X A H E D R O N   E L E M E N T S   ( C H E X A )',]
         penta_msg = ['                 C O M P L E X     S T R A I N S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )',]
-        penta_msg = ['                 C O M P L E X     S T R A I N S   I N   P E N T A H E D R O N   E L E M E N T S   ( C P E N T A )',]
+        pyram_msg = ['                                       C O M P L E X   S T R A I N S   I N   C P Y R A M      E L E M E N T S   ', ]
     tetra_msg += base_msg
     penta_msg += base_msg
     hexa_msg += base_msg

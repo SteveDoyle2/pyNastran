@@ -49,8 +49,9 @@ class ResultSet:
     def is_saved(self, result):
         """checks to see if a result is saved"""
         if result not in self.allowed:
-            #print(self.allowed)
-            msg = "result=%r is invalid; the name changed or it's a typo\n" % result
+            #allowed2 = list(self.allowed)
+            #allowed2.sort()
+            msg = "result=%r is invalid; the name changed or it's a typo.\n" % result
             if '.' in result:
                 base, end = result.split('.', 1)
                 #print(base, end)
@@ -59,7 +60,8 @@ class ResultSet:
                 #print(self.results_map)
                 if base in self.results_map:
                     results_obj = self.results_map[base]
-                    msg += '.  Potential results include:\n' + '\n - '.join(results_obj.get_table_types())
+                    msg += 'Potential results include:\n - ' + '\n - '.join(results_obj.get_table_types())
+                    assert result in results_obj.get_table_types()
                     #print(results_obj.get_table_types())
                 raise RuntimeError(msg.rstrip())
         if result in self.saved:

@@ -1,6 +1,8 @@
 """various OP2 tests"""
 import os
 import unittest
+import getpass
+
 import numpy as np
 from cpylog import get_logger
 
@@ -23,7 +25,7 @@ except ImportError:  # pragma: no cover
 
 
 import pyNastran
-from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.bdf import BDF, read_bdf, CORD2R
 from pyNastran.op2.op2 import OP2, read_op2
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
@@ -1187,7 +1189,7 @@ class TestOP2(Tester):
                        run_mass_properties=False, run_mirror=False)
 
         log = get_logger(level='warning')
-        run_op2(op2_filename, make_geom=False, write_bdf=False, read_bdf=False,
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
@@ -1271,7 +1273,7 @@ class TestOP2(Tester):
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         #model.safe_cross_reference()
 
         #save_load_deck(model, run_renumber=False)
@@ -1301,13 +1303,42 @@ class TestOP2(Tester):
         #diff_cards2.sort()
         #assert len(diff_cards2) == 0, diff_cards2
 
-        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        unused_model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
         #model.safe_cross_reference()
 
         #save_load_deck(model, run_renumber=False)
 
         log = get_logger(level='warning')
         run_op2(op2_filename, make_geom=True, write_bdf=True, read_bdf=False,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=False, log=log)
+
+    def test_bdf_op2_other_28(self):
+        """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""
+        log = get_logger(level='info')
+        bdf_filename = os.path.join(MODEL_PATH, 'other', 'sdr11se_s2dclg.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'other', 'sdr11se_s2dclg.op2')
+
+        #  can't parse replication
+        #unused_fem1, unused_fem2, diff_cards = self.run_bdf(
+            #'', bdf_filename)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        model = read_bdf(bdf_filename, debug=False, log=log, xref=False)
+        model.safe_cross_reference()
+
+        #save_load_deck(model, run_save_load=False)
+
+        log = get_logger(level='warning')
+        run_op2(op2_filename, make_geom=False, write_bdf=True, read_bdf=False,
                 write_f06=True, write_op2=False,
                 is_mag_phase=False,
                 is_sort2=False, is_nx=None, delete_f06=True,
@@ -1346,9 +1377,6 @@ class TestOP2(Tester):
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
         f06_filename = os.path.join(folder, 'solid_bending.test_op2.f06')
-        make_geom = False
-        write_bdf = False
-        write_f06 = True
         debug = False
         #debug_file = 'solid_bending.debug.out'
         model = os.path.splitext(op2_filename)[0]
@@ -1358,17 +1386,14 @@ class TestOP2(Tester):
             os.remove(debug_file)
 
         read_op2(op2_filename, debug=False, log=log)
-        run_op2(op2_filename, write_bdf=write_bdf,
-                write_f06=write_f06,
+        run_op2(op2_filename, write_bdf=False,
+                write_f06=True,
                 debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
                 load_as_h5=False, log=log)
         assert os.path.exists(debug_file), os.listdir(folder)
 
-        make_geom = False
-        write_bdf = False
-        write_f06 = True
-        op2 = run_op2(op2_filename, make_geom=make_geom, write_bdf=write_bdf,
-                      write_f06=write_f06,
+        op2 = run_op2(op2_filename, make_geom=False, write_bdf=False,
+                      write_f06=True,
                       debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
                       build_pandas=True, log=log)[0]
         assert os.path.exists(debug_file), os.listdir(folder)
@@ -1389,6 +1414,74 @@ class TestOP2(Tester):
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
+    @unittest.skipIf(getpass.getuser() != 'sdoyle', "No h5py")
+    def test_op2_bwb(self):  # pragma: no cover
+        log = get_logger(level='warning')
+        folder = os.path.join(MODEL_PATH, 'bwb')
+        op2_filename = os.path.join(folder, 'bwb_saero.op2')
+        op2 = OP2Geom(debug=False, log=log, debug_file=None, mode=None)
+        op2.load_as_h5 = True
+        op2.read_op2(op2_filename=op2_filename, combine=True,
+                     build_dataframe=None, skip_undefined_matrices=False,
+                     encoding=None)
+
+        model = op2
+        model.cross_reference()
+        from pyNastran.bdf.mesh_utils.cut_model_by_plane import get_element_centroids, get_stations
+        gpforce = op2.grid_point_forces[1]
+        out = model.get_xyz_in_coord_array(cid=0)
+        nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = out
+        nids = nid_cp_cd[:, 0]
+        nid_cd = nid_cp_cd[:, [0, 2]]
+        eids, element_centroids_cid0 = get_element_centroids(model)
+        coord_out = model.coords[0]
+
+        #cid_p1 = 0 # start
+        #cid_p3 = 0 # end
+        #cid_p2 = 0 # coord
+        #p1-p2 defines the x-axis
+        #k is defined by the z-axis
+        #p1 = np.array([1354., 0., 0.]) # origin
+        #p2 = np.array([1354., 1245., 0.]) # xaxis
+        #p3 = np.array([1354., 1245., 0.]) # end
+        #zaxis = np.array([0., 0., 1.])
+        #method = 'Z-Axis Projection'
+        #idir = 0
+
+        #p1 = np.array([1354., 0., 0.]) # origin
+        #p2 = np.array([1354., 0., 1.]) # xzplane
+        #p3 = np.array([1354., 1245., 0.]) # end
+        #zaxis = np.array([0., 0., 1.])
+        #method = 'CORD2R'
+        #idir = 1 # x-direction in this rotated system
+
+        # axial
+        p1 = np.array([0., 0., 0.]) # origin
+        p2 = np.array([1600., 0., 0.]) # xaxis
+        p3 = np.array([1600., 0., 0.]) # end
+        zaxis = np.array([0., 0., 1.])
+        method = 'Z-Axis Projection'
+        idir = 0
+
+        xyz1, xyz2, xyz3, i, k, coord_out, stations = get_stations(
+            model, p1, p2, p3, zaxis,
+            method=method, cid_p1=0, cid_p2=0, cid_p3=0,
+            cid_zaxis=0, idir=idir, nplanes=100)
+        print(stations)
+
+        # i/j/k vector is nan
+        print(f'origin: {coord_out.origin}')
+        print(f'zaxis: {coord_out.e2}')
+        print(f'xzplane: {coord_out.e3}')
+
+        force_sum, moment_sum = gpforce.shear_moment_diagram(
+            xyz_cid0, eids, nids, icd_transform,
+            element_centroids_cid0,
+            model.coords, nid_cd, stations, coord_out,
+            idir=idir, itime=0, debug=True, log=model.log)
+        #dd
+        plot_smt(stations, force_sum, moment_sum, show=True)
+
     @unittest.skipIf(not IS_H5PY, "No h5py")
     def test_op2_solid_bending_02(self):
         log = get_logger(level='warning')
@@ -1406,7 +1499,7 @@ class TestOP2(Tester):
         log = get_logger(level='warning')
         folder = os.path.join(MODEL_PATH, 'solid_bending')
         op2_filename = os.path.join(folder, 'solid_bending.op2')
-        #hdf5_filename = os.path.join(folder, 'solid_bending.h5')
+        hdf5_filename = os.path.join(folder, 'solid_bending.h5')
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=False,
             write_f06=True, write_op2=False, write_hdf5=False,
@@ -1419,11 +1512,12 @@ class TestOP2(Tester):
             assert op2.displacements[1].data_frame is not None
 
         op2.print_subcase_key()
-        #if IS_H5PY:  # TODO: broken on old packages test only...
-            #op2.export_hdf5_filename(hdf5_filename)  # fails...
-            #op2b = OP2(debug=False, log=log)
-            #op2b.load_hdf5_filename(hdf5_filename, combine=True)
-            #op2b.print_subcase_key()
+
+        if IS_H5PY:  # TODO: broken on old packages test only...
+            op2.export_hdf5_filename(hdf5_filename)  # fails...
+            op2b = OP2(debug=False, log=log)
+            op2b.load_hdf5_filename(hdf5_filename, combine=True)
+            op2b.print_subcase_key()
 
     def test_op2_solid_shell_bar_01_geom(self):
         """tests reading op2 geometry"""
@@ -2598,8 +2692,8 @@ class TestOP2(Tester):
             op2_filename, make_geom=make_geom,
             write_bdf=write_bdf, read_bdf=None,
             write_f06=write_f06, write_op2=True, write_hdf5=True,
-            is_mag_phase=False, is_sort2=False, is_nx=None, delete_f06=False,
-            build_pandas=False, subcases=None, exclude=None, short_stats=False,
+            is_mag_phase=False, is_sort2=False, is_nx=None, delete_f06=True,
+            build_pandas=True, subcases=None, exclude=None, short_stats=False,
             compare=True, debug=False, log=log, binary_debug=True,
             quiet=True, stop_on_failure=True, dev=False, xref_safe=False,
             post=None, load_as_h5=True)
@@ -2981,6 +3075,63 @@ def _verify_ids(bdf, op2, isubcase=1):
         eids = np.unique(case.element)
         for eid in eids:
             assert eid in out[card_type], 'eid=%s eids=%s card_type=%s'  % (eid, out[card_type], card_type)
+
+def plot_smt(x, force_sum, moment_sum, show=True):
+    """plots the shear, moment, torque plots"""
+    import matplotlib.pyplot as plt
+    plt.close()
+    #f, ax = plt.subplots()
+    # ax = fig.subplots()
+    fig = plt.figure(1)
+    ax = fig.gca()
+    ax.plot(x, force_sum[:, 0], '-*')
+    ax.set_title('X vs. Axial')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Axial')
+    ax.grid(True)
+
+    fig = plt.figure(2)
+    ax = fig.gca()
+    ax.plot(x, force_sum[:, 1], '-*')
+    ax.set_title('X vs. Shear Y')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Shear Y')
+    ax.grid(True)
+
+    fig = plt.figure(3)
+    ax = fig.gca()
+    ax.plot(x, force_sum[:, 2], '-*')
+    ax.set_title('X vs. Shear Z')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Shear Z')
+    ax.grid(True)
+
+    fig = plt.figure(4)
+    ax = fig.gca()
+    ax.plot(x, moment_sum[:, 0], '-*')
+    ax.set_title('X vs. Torque')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Torque')
+    ax.grid(True)
+
+    fig = plt.figure(5)
+    ax = fig.gca()
+    ax.plot(x, moment_sum[:, 1], '-*')
+    ax.set_title('X vs. Moment Y')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Moment Y')
+    ax.grid(True)
+
+    fig = plt.figure(6)
+    ax = fig.gca()
+    ax.plot(x, moment_sum[:, 2], '-*')
+    ax.set_title('X vs. Moment Z')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Moment Z')
+    ax.grid(True)
+
+    if show:
+        plt.show()
 
 if __name__ == '__main__':  # pragma: no cover
     ON_RTD = os.environ.get('READTHEDOCS', None) == 'True'

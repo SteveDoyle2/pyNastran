@@ -81,7 +81,8 @@ class Results:
     def get_sum_objects(self):
         sum_objs = [
             self.responses,
-            self.force, self.thermal_load, self.strain_energy,
+            self.force, self.thermal_load,
+            self.stress, self.strain, self.strain_energy,
             self.ato, self.psd, self.rms, self.no, self.crm,
             self.modal_contribution, self.strength_ratio, self.failure_indices,
             self.solution_set,
@@ -306,6 +307,8 @@ class Force:
         self.cbend_force = {}
         self.cshear_force = {}
         self.cconeax_force = {}
+
+        self.cbeam_force_vu = {}
         self.vu_tria_force = {}
         self.vu_quad_force = {}
 
@@ -338,7 +341,7 @@ class Force:
             'ctetra_pressure_force', 'cpyram_pressure_force',
 
             # vu-elements
-            'vu_tria_force', 'vu_quad_force',
+            'vu_tria_force', 'vu_quad_force', 'cbeam_force_vu',
         ]
         return ['force.' + table for table in tables]
 
@@ -448,19 +451,46 @@ class ThermalLoad:
 
 class Stress:
     def __init__(self):
-        pass
+        self.celas1_stress = {}
+        self.celas2_stress = {}
+        self.celas3_stress = {}
+        self.celas4_stress = {}
+
+        self.ctetra_stress = {}
+        self.cpenta_stress = {}
+        self.chexa_stress = {}
+        self.cpyram_stress = {}
 
     def get_table_types(self):
         tables = [
+            # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress
+            'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
+
+            # OES - isotropic CTETRA/CHEXA/CPENTA stress
+            'ctetra_stress', 'cpenta_stress', 'chexa_stress', 'cpyram_stress',
         ]
         return ['stress.' + table for table in tables]
 
 class Strain:
     def __init__(self):
-        pass
+        self.ctetra_strain = {}
+        self.cpenta_strain = {}
+        self.chexa_strain = {}
+        self.cpyram_strain = {}
+
+        # springs
+        self.celas1_strain = {}
+        self.celas2_strain = {}
+        self.celas3_strain = {}
+        self.celas4_strain = {}
 
     def get_table_types(self):
         tables = [
+            # OES - CELAS1/CELAS2/CELAS3/CELAS4 strain
+            'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
+
+            # OES - isotropic CTETRA/CHEXA/CPENTA strain
+            'ctetra_strain', 'cpenta_strain', 'chexa_strain', 'cpyram_strain',
         ]
         return ['strain.' + table for table in tables]
 

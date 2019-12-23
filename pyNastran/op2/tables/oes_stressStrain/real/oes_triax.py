@@ -21,12 +21,16 @@ class RealTriaxArray(OES_Object):
         self.element_node = None
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
+
+    @property
+    def nnodes_per_element(self) -> int:
+        return 1
 
     def _reset_indices(self):
         self.itotal = 0
@@ -272,11 +276,11 @@ class RealTriaxStressArray(RealTriaxArray, StressObject):
         RealTriaxArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['radial', 'azimuthal', 'axial', 'shear', 'omax', 'oms', 'ovm']
         return headers
 
-    def _get_msgs(self):
+    def _get_msgs(self) -> List[str]:
         if self.element_type == 53:
             pass
         else:
@@ -296,11 +300,11 @@ class RealTriaxStrainArray(RealTriaxArray, StrainObject):
         RealTriaxArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['radial', 'azimuthal', 'axial', 'shear', 'omax', 'oms', 'ovm']
         return headers
 
-    def _get_msgs(self):
+    def _get_msgs(self) -> List[str]:
         if self.element_type == 53:
             pass
         else:

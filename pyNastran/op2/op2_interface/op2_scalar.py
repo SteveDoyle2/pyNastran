@@ -234,7 +234,7 @@ INT_PARAMS_1 = [
     b'SEFINAL', b'SEMAP1', b'SKPLOAD', b'SKPMTRX', b'SOLID1', b'SSG3',
     b'PEDGEP', b'ACMSPROC', b'ACMSSEID', b'ACOUS', b'ACOUSTIC', b'ADJFLG',
     b'ADJLDF', b'AEDBCP', b'AESRNDM', b'ARCSIGNS', b'ATVUSE', b'BADMESH', b'BCHNG',
-    b'BCTABLE', b'ROTCSV', b'ROTGPF',
+    b'BCTABLE', b'ROTCSV', b'ROTGPF', b'BEARDMP', b'BEARFORC', b'BOV',
 ]
 FLOAT_PARAMS_1 = [
     b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
@@ -252,7 +252,7 @@ FLOAT_PARAMS_1 = [
 
     # not defined
     b'PRPA', b'PRPHIVZ', b'PRPJ', b'PRRULV', b'RMAX', b'ADJFRQ', b'ARF',
-    b'ARS',
+    b'ARS', # b'BSHDAMP',
 ]
 FLOAT_PARAMS_2 = [
     b'BETA', b'CB1', b'CB2', b'CK1', b'CK2', b'CK3', b'CK41', b'CK42',
@@ -1182,7 +1182,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         iloc = self.f.tell()
         try:
             ndata2 = self._read_pvto_4_helper(data, ndata)
-        except Exception as e:
+        except NotImplementedError as e:
             self.log.error(str(e))
             if 'dev' in __version__ and self.IS_TESTING:
                 raise  # only for testing
@@ -1245,8 +1245,9 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 value = structs8.unpack(slot)[0].decode('latin1').rstrip()
                 i += 2
             else:
-                self.show_data(data[i*4:(i+4)*4], types='ifsdq')
-                self.show_data(data[i*4+4:i*4+i*4+12], types='ifsdq')
+                self.show_data(data[i*4+12:i*4+i*4+12], types='ifsdq')
+                self.show_data(data[i*4+8:(i+4)*4], types='ifsdq')
+                self.log.error('%r' % word)
                 raise NotImplementedError('%r is not a supported PARAM' % word)
 
             key = word.decode('latin1')
@@ -1474,12 +1475,17 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             flag_data = self.f.read(20)
             self.f.seek(0)
 
-            if unpack(b'>5i', flag_data)[0] == 4:
+            #(8, 3, 0, 8, 24)
+            little_data = unpack(b'<5i', flag_data)
+            big_data = unpack(b'>5i', flag_data)
+            if big_data[0] in [4, 8]:
                 self._uendian = '>'
                 self._endian = b'>'
-            elif unpack(b'<5i', flag_data)[0] == 4:
+                size = big_data[0]
+            elif little_data[0] in [4, 8]:
                 self._uendian = '<'
                 self._endian = b'<'
+                size = little_data[0]
             #elif unpack(b'<ii', flag_data)[0] == 4:
                 #self._endian = b'<'
             else:
@@ -1493,7 +1499,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             self.op2_reader._goto(self.n)
 
         if self.read_mode == 1:
-            self._set_structs()
+            self._set_structs(size)
 
     def _make_tables(self):
         return

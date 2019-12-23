@@ -2048,7 +2048,7 @@ class OP2Common(Op2Codes, F06Writer):
                 is_vectorized = True
         return is_vectorized
 
-    def _set_structs(self):
+    def _set_structs(self, size):
         """
         defines common struct formats
 
@@ -2063,10 +2063,25 @@ class OP2Common(Op2Codes, F06Writer):
 
         #self.sdtype = np.dtype(self._uendian + '4s')
         self.struct_i = Struct(self._endian + b'i')
-        self.struct_3i = Struct(self._endian + b'3i')
-        self.struct_8s = Struct(self._endian + b'8s')
-        self.struct_2i = Struct(self._endian + b'ii')
-        self.struct_8s_i = Struct(self._endian + b'8si')
+        if size == 4:
+            self.struct_q = self.struct_i
+            self.struct_3i = Struct(self._endian + b'3i')
+            self.struct_8s = Struct(self._endian + b'8s')
+            self.struct_2i = Struct(self._endian + b'ii')
+            self.struct_8s_i = Struct(self._endian + b'8si')
+            #self.op2_reader.read_block = self.op2_reader.read_blocki
+            #self.op2_reader.read_markers = self.op2_reader.read_markersi
+        elif size == 8:
+            self.struct_q = Struct(self._endian + b'q')
+            self.struct_3i = Struct(self._endian + b'3q')
+            self.struct_8s = Struct(self._endian + b'8s')
+            self.struct_2i = Struct(self._endian + b'2q')
+            self.struct_8s_i = Struct(self._endian + b'8sq')
+            #self.op2_reader.read_block = self.op2_reader.read_blockq
+            #self.op2_reader.read_markers = self.op2_reader.read_markersq
+        else:
+            NotImplementedError(size)
+        self.op2_reader.size = size
 
     def del_structs(self):
         """deepcopy(OP2) fails on Python 3.6 without doing this"""

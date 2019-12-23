@@ -258,20 +258,20 @@ def create_composite_plates(model, key, is_stress, keys_map):
     if is_stress:
         cplates = [
             ('CTRIA3', model.ctria3_composite_stress),
-            ('CQUAD4', model.cquad4_composite_stress),
             ('CTRIA6', model.ctria6_composite_stress),
+            ('CTRIAR', model.ctriar_composite_stress),
+            ('CQUAD4', model.cquad4_composite_stress),
             ('CQUAD8', model.cquad8_composite_stress),
-            #model.ctriar_composite_stress,
-            #model.cquadr_composite_stress,
+            ('CQUADR', model.cquadr_composite_stress),
         ]
     else:
         cplates = [
             ('CTRIA3', model.ctria3_composite_strain),
-            ('CQUAD4', model.cquad4_composite_strain),
             ('CTRIA6', model.ctria6_composite_strain),
+            ('CTRIAR', model.ctriar_composite_strain),
+            ('CQUAD4', model.cquad4_composite_strain),
             ('CQUAD8', model.cquad8_composite_strain),
-            #model.ctriar_composite_strain,
-            #model.cquadr_composite_strain,
+            ('CQUADR', model.cquadr_composite_strain),
         ]
 
     #[o11, o22, t12, t1z, t2z, angle, major, minor, max_shear]
@@ -309,8 +309,6 @@ def create_composite_plates(model, key, is_stress, keys_map):
             del composite_data_dict[element_type]
         #for case_key in cases_to_delete:
             #del obj_dict[case_key]
-
-
     return composite_data_dict
 
 

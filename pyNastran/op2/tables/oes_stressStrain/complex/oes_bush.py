@@ -11,6 +11,7 @@ from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_head
 
 class ComplexCBushArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
+        write_an_op2
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
         self.nelements = 0  # result specific

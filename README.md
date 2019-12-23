@@ -75,6 +75,12 @@ BDF:
  - improved bdf_convert
 OP2:
  - OP2 write support
+ - reorganized output results to use op2_results object to simply interface
+   - backwards compatibility for stress, strain, forces, strain energy
+   - model.cbar_force -> model.op2_results.force.cbar_force
+   - model.cbar_stress -> model.op2_results.stress.cbar_stress
+   - model.cbar_strain -> model.op2_results.strain.cbar_strain
+   - model.cbar_strain_energy -> model.op2_results.strain_energy.cbar_strain_energy
  - fixed most pandas deprecation warnings/added support for pandas 0.25 
  - much improved NX 2019.2 support
    - various geometry cards added
@@ -86,6 +92,7 @@ OP2:
         - random stress/strain (OESVM1/2, OESVM1C, OSTRVM1/2, OSTRVM2, OESXRM1C, OESXNO1, OESXNO1C)
         - real/complex stress/strain/force output for centroidal CQUADR/CTRIAR
         - complex CBEAR forces
+        - real CFAST, CWELD forces
         - nonlinear cbush stress/strain/force
       - other
         - XSOP2DIR
@@ -101,7 +108,6 @@ OP2:
           - composite stress response
           - composite strain response
           - fractional mass response
-   - reorganized output results to use op2_results object to simply interface
    - some SOL 401/402 results added
      - eigenvalue_fluid (LAMAF, LAMAS)
      - eigenvectors (BOPHIGF, BOPHIGS)
@@ -120,11 +126,16 @@ GUI:
    - animation now supports complex fringe
    - map centroidal to nodal option
    - added export result option to right-click menu
-   - much improved ASCII tecplot reader
+   - legend supports unicode
+   - fixed coordinate system scaling bug
+   - more keyboard shortcuts
+   - min/max node/element id now shown
  - nastran:
    - geometry:
+     - more preferences
      - element & material coordinate systems
    - results
+     - improved result case description
      - real/complex stress/strain/force results
        - plate by upper/lower, composite plates by ply, bars, rods, springs, cbush, cdamp
      - fractional mass response

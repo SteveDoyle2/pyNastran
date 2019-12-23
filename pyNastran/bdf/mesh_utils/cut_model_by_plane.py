@@ -11,7 +11,6 @@ defines:
 """
 from __future__ import annotations
 import os
-import warnings
 from itertools import count
 from typing import Tuple, Union, Any, TYPE_CHECKING
 
@@ -24,11 +23,65 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import Coord
 
-NUMPY_VERSION = np.lib.NumpyVersion(np.__version__)
-if NUMPY_VERSION < '1.13.0':
-    warnings.warn('numpy version=%s required>=1.13.0' % np.__version__)
-    #raise RuntimeError('numpy version=%s required>=1.13.0' % np.__version__)
+def get_element_centroids(model: BDF) -> Tuple[np.array, np.array]:
+    """gets the element ids and their centroids"""
+    eids = []
+    element_centroids_cid0 = []
+    for eid, elem in sorted(model.elements.items()):
+        eids.append(eid)
+        element_centroids_cid0.append(elem.Centroid())
 
+    eids = np.array(eids, dtype='int32')
+    element_centroids_cid0 = np.array(element_centroids_cid0, dtype='float64')
+    return eids, element_centroids_cid0
+
+
+def get_stations(model, p1, p2, p3, zaxis,
+                 method: str='Z-Axis Projection',
+                 cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
+                 idir: int=0, nplanes: int=20):
+    """
+    Gets the axial stations
+
+    Parameters
+    ----------
+    p1: (3,) float ndarray
+        defines the starting point for the shear, moment, torque plot
+    p3: (3,) float ndarray
+        defines the end point for the shear, moment, torque plot
+    p2: (3,) float ndarray
+        defines the XZ plane for the shears/moments
+    zaxis: (3,) float ndarray
+        the direction of the z-axis
+    cid_p1 / cid_p2 / cid_p3
+        the coordinate systems for p1, p2, and p3
+    method : str
+        'Z-Axis Projection'
+           p1-p2 defines the x-axis
+           k is defined by the z-axis
+       'CORD2R' : typical
+    idir : int; default=0
+        the direction of the step direction
+    """
+    # define a local coordinate system
+    xyz1, xyz2, unused_z_global, i, k, origin, zaxis, xzplane = _p1_p2_zaxis_to_cord2r(
+        model, p1, p2, zaxis,
+        cid_p1=cid_p1, cid_p2=cid_p2, cid_zaxis=cid_zaxis,
+        method=method)
+    xyz3 = model.coords[cid_p3].transform_node_to_global(p3)
+
+    from pyNastran.bdf.cards.coordinate_systems import CORD2R
+    coord_out = CORD2R(None, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
+                       comment='')
+    #print(coord_out.get_stats())
+
+    xyz1p = coord_out.transform_node_to_local(xyz1)
+    xyz3p = coord_out.transform_node_to_local(xyz3)
+    dx = xyz3p[idir] - xyz1p[idir]
+    assert abs(dx) > 0., f'dx={dx} xyz1={xyz1} xyz3={xyz3}'
+    stations = np.linspace(0., dx, num=nplanes, endpoint=True)
+
+    return xyz1, xyz2, xyz3, i, k, coord_out, stations
 
 def _setup_faces(bdf_filename: Union[str, BDF]) -> Tuple[Any, Any, Any, Any]:
     """helper method"""
@@ -128,7 +181,7 @@ def export_face_cut(csv_filename: str, geometry_arrays, results_arrays, header: 
             assert geometry_array.shape[1] == 4, geometry_array.shape
             nints = geometry_array2.shape[1]
             nfloats = results_array.shape[1]
-            max_int = geometry_array.max()
+            #max_int = geometry_array.max()
             #len_max_int = len(str(max_int))
             #fmt = ('%%%ii,' % (len_max_int)) * nints + '%19.18e,' * nfloa# ts
             fmt = '%i,' * nints + '%19.18e,' * nfloats
@@ -150,6 +203,10 @@ def _determine_cord2r(origin, zaxis, xzplane):
     return i, k, origin, zaxis, xzplane
 
 def _project_z_axis(p1, p2, z_global):
+    """
+    p1-p2 defines the x-axis
+    k is defined by the z-axis
+    """
     x = p2 - p1
     iprime = x / np.linalg.norm(x)
     k = z_global / np.linalg.norm(z_global)

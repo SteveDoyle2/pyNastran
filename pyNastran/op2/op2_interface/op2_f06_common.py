@@ -519,6 +519,9 @@ class OP2_F06_Common:
     @property
     def vu_quad_force(self):
         return self.op2_results.force.vu_quad_force
+    @property
+    def cbeam_force_vu(self):
+        return self.op2_results.force.cbeam_force_vu
 
     @cvisc_force.setter
     def cvisc_force(self, cvisc_force):
@@ -526,9 +529,12 @@ class OP2_F06_Common:
     @vu_tria_force.setter
     def vu_tria_force(self, vu_tria_force):
         self.op2_results.force.vu_tria_force = vu_tria_force
-    @vu_tria_force.setter
+    @vu_quad_force.setter
     def vu_quad_force(self, vu_quad_force):
         self.op2_results.force.vu_quad_force = vu_quad_force
+    @cbeam_force_vu.setter
+    def cbeam_force_vu(self, cbeam_force_vu):
+        self.op2_results.force.cbeam_force_vu = cbeam_force_vu
 
     @property
     def crod_force(self):
@@ -622,6 +628,114 @@ class OP2_F06_Common:
         self.op2_results.force.cpyram_pressure_force = cpyram_pressure_force
 
     # ------------------------------------------------------------------
+    # Stress - Getter
+    @property
+    def celas1_stress(self):
+        return self.op2_results.stress.celas1_stress
+    @property
+    def celas2_stress(self):
+        return self.op2_results.stress.celas2_stress
+    @property
+    def celas3_stress(self):
+        return self.op2_results.stress.celas3_stress
+    @property
+    def celas4_stress(self):
+        return self.op2_results.stress.celas4_stress
+
+    @property
+    def ctetra_stress(self):
+        return self.op2_results.stress.ctetra_stress
+    @property
+    def cpenta_stress(self):
+        return self.op2_results.stress.cpenta_stress
+    @property
+    def chexa_stress(self):
+        return self.op2_results.stress.chexa_stress
+    @property
+    def cpyram_stress(self):
+        return self.op2_results.stress.cpyram_stress
+    # ------------------------------------------------------------------
+    # Stress - Setter
+    @celas1_stress.setter
+    def celas1_strain(self, celas1_stress):
+        self.op2_results.stress.celas1_stress = celas1_stress
+    @celas2_stress.setter
+    def celas2_stress(self, celas2_stress):
+        self.op2_results.stress.celas2_stress = celas2_stress
+    @celas3_stress.setter
+    def celas3_stress(self, celas3_stress):
+        self.op2_results.stress.celas3_stress = celas3_stress
+    @celas4_stress.setter
+    def celas4_stress(self, celas4_stress):
+        self.op2_results.stress.celas4_stress = celas4_stress
+
+    @ctetra_stress.setter
+    def ctetra_stress(self, ctetra_stress):
+        self.op2_results.stress.ctetra_stress = ctetra_stress
+    @cpenta_stress.setter
+    def cpenta_stress(self, cpenta_stress):
+        self.op2_results.stress.cpenta_stress = cpenta_stress
+    @chexa_stress.setter
+    def chexa_stress(self, chexa_stress):
+        self.op2_results.stress.chexa_stress = chexa_stress
+    @cpyram_stress.setter
+    def cpyram_stress(self, cpyram_stress):
+        self.op2_results.stress.cpyram_stress = cpyram_stress
+    # ------------------------------------------------------------------
+    # Strain - Getter
+    @property
+    def celas1_strain(self):
+        return self.op2_results.strain.celas1_strain
+    @property
+    def celas2_strain(self):
+        return self.op2_results.strain.celas2_strain
+    @property
+    def celas3_strain(self):
+        return self.op2_results.strain.celas3_strain
+    @property
+    def celas4_strain(self):
+        return self.op2_results.strain.celas4_strain
+
+    @property
+    def ctetra_strain(self):
+        return self.op2_results.strain.ctetra_strain
+    @property
+    def cpenta_strain(self):
+        return self.op2_results.strain.cpenta_strain
+    @property
+    def chexa_strain(self):
+        return self.op2_results.strain.chexa_strain
+    @property
+    def cpyram_strain(self):
+        return self.op2_results.strain.cpyram_strain
+
+    # ------------------------------------------------------------------
+    # Strain - Setter
+    @celas1_strain.setter
+    def celas1_strain(self, celas1_strain):
+        self.op2_results.strain.celas1_strain = celas1_strain
+    @celas2_strain.setter
+    def celas2_strain(self, celas2_strain):
+        self.op2_results.strain.celas2_strain = celas2_strain
+    @celas3_strain.setter
+    def celas3_strain(self, celas3_strain):
+        self.op2_results.strain.celas3_strain = celas3_strain
+    @celas4_strain.setter
+    def celas4_strain(self, celas4_strain):
+        self.op2_results.strain.celas4_strain = celas4_strain
+
+    @ctetra_strain.setter
+    def ctetra_strain(self, ctetra_strain):
+        self.op2_results.strain.ctetra_strain = ctetra_strain
+    @cpenta_strain.setter
+    def cpenta_strain(self, cpenta_strain):
+        self.op2_results.strain.cpenta_strain = cpenta_strain
+    @chexa_strain.setter
+    def chexa_strain(self, chexa_strain):
+        self.op2_results.strain.chexa_strain = chexa_strain
+    @cpyram_strain.setter
+    def cpyram_strain(self, cpyram_strain):
+        self.op2_results.strain.cpyram_strain = cpyram_strain
 
     def __objects_vector_init__(self):
         """
@@ -646,27 +760,6 @@ class OP2_F06_Common:
         self.ctube_strain = {}
 
         #======================================================================
-        # springs
-        self.celas1_stress = {}
-        self.celas2_stress = {}
-        self.celas3_stress = {}
-        self.celas4_stress = {}
-
-        self.celas1_strain = {}
-        self.celas2_strain = {}
-        self.celas3_strain = {}
-        self.celas4_strain = {}
-
-        #======================================================================
-        self.ctetra_stress = {}
-        self.cpenta_stress = {}
-        self.chexa_stress = {}
-        self.cpyram_stress = {}
-
-        self.ctetra_strain = {}
-        self.cpenta_strain = {}
-        self.chexa_strain = {}
-        self.cpyram_strain = {}
 
         self.nonlinear_ctetra_stress_strain = {}
         self.nonlinear_cpenta_stress_strain = {}
@@ -1000,11 +1093,6 @@ class OP2_F06_Common:
             'applied_loads',
             'force_vectors',
 
-            # OES - tCode=5 thermal=0 s_code=0,1 (stress/strain)
-            # OES - CELAS1/CELAS2/CELAS3/CELAS4 stress/strain
-            'celas1_stress', 'celas2_stress', 'celas3_stress', 'celas4_stress',
-            'celas1_strain', 'celas2_strain', 'celas3_strain', 'celas4_strain',
-
             # OES - isotropic CROD/CONROD/CTUBE stress/strain
             'crod_stress', 'conrod_stress', 'ctube_stress',
             'crod_strain', 'conrod_strain', 'ctube_strain',
@@ -1036,10 +1124,6 @@ class OP2_F06_Common:
             'ctria3_composite_stress', 'ctria6_composite_stress', 'ctriar_composite_stress',
             'cquad4_composite_strain', 'cquad8_composite_strain', 'cquadr_composite_strain',
             'ctria3_composite_strain', 'ctria6_composite_strain', 'ctriar_composite_strain',
-
-            # OES - isotropic CTETRA/CHEXA/CPENTA stress/strain
-            'ctetra_stress', 'chexa_stress', 'cpenta_stress', 'cpyram_stress',
-            'ctetra_strain', 'chexa_strain', 'cpenta_strain', 'cpyram_strain',
 
             # OES - CSHEAR stress/strain
             'cshear_stress', 'cshear_strain',

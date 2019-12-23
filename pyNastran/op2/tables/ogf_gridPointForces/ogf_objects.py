@@ -416,7 +416,7 @@ class RealGridPointForcesArray(GridPointForces):
                                itime=0, debug=True, log=None):
         """
         Extracts Patran-style freebody loads.  Freebody loads are the
-        extternal loads.
+        external loads.
 
         Parameters
         ----------
@@ -727,6 +727,8 @@ class RealGridPointForcesArray(GridPointForces):
         xyz_coord = xyz_cid0.dot(beta)
         x_centroid = element_centroids_coord[:, idir]
         x_coord = xyz_coord[:, idir]
+        print(f'xmin={x_centroid.min()} xmax={x_centroid.max()} (centroids)')
+        print(f'xmin={x_coord.min()} xmax={x_coord.max()}')
 
         eids = np.unique(eids)
         force_sum = zeros((nstations, 3), dtype='float32')

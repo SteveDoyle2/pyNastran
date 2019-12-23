@@ -3185,6 +3185,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         .. todo:: how are SPOINTs/EPOINTs identified?
 
+        Examples
+        --------
+        >>> out = model.get_xyz_in_coord_array(cid=0)
+        >>> nid_cp_cd, xyz_cid, xyz_cp, icd_transform, icp_transform = out
         """
         icd_transform, icp_transform, xyz_cp, nid_cp_cd = self.get_displacement_index_xyz_cp_cd(
             fdtype=fdtype, idtype=idtype, sort_ids=True)

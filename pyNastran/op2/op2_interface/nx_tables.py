@@ -14,6 +14,7 @@ NX_GEOM_TABLES = [
     b'GEOM1S', b'GEOM2S', b'GEOM3S', b'GEOM4S', b'EPTS', b'MPTS', b'DYNAMICS',
     b'GEOM1VU', b'GEOM2VU',
     b'GEOM1N',
+    b'GEOM1EXA', b'GEOM2EXA', b'GEOM4EXA',
     b'VIEWTB',
     b'R1TABRG',
     b'ERRORN',

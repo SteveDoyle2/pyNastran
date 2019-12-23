@@ -54,7 +54,7 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
 )
 from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexRodForceArray,
-    ComplexCBarForceArray,
+    ComplexCBarForceArray, ComplexCWeldForceArray,
     ComplexCBeamForceArray,
     ComplexCBushForceArray,
     ComplexCBearForceArray,
@@ -672,7 +672,7 @@ class OEF(OP2Common):
                         eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, eType, xgrad, ygrad, zgrad, xflux, yflux, zflux)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
@@ -902,7 +902,7 @@ class OEF(OP2Common):
                             self.binary_debug.write('  %s -> [%s, %s, %s, %s, %s, %s, %s]\n'
                                                     % (eid, eid_device, etype, fapplied, free_conv, force_conv, frad, ftotal))
                         obj.add_sort1(dt, eid, etype, fapplied, free_conv, force_conv, frad, ftotal)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
@@ -962,7 +962,7 @@ class OEF(OP2Common):
                         eid_device, self.nonlinear_factor, self.sort_method)
                     assert cntl_node >= 0, cntl_node
                     obj.add_sort1(dt, eid, cntl_node, free_conv, free_conv_k)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
@@ -1056,7 +1056,7 @@ class OEF(OP2Common):
                         vugrid, xgrad, ygrad, zgrad, xflux, yflux, zflux = out
                         obj.add_sort1(dt, eid, parent, coord, icord, theta,
                                       xgrad, ygrad, zgrad, xflux, yflux, zflux)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
@@ -1141,7 +1141,7 @@ class OEF(OP2Common):
                         grad_fluxes.append(out)
                         n += 28
                     obj.add_sort1(dt, eid, parent, grad_fluxes)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
@@ -1350,13 +1350,14 @@ class OEF(OP2Common):
         elif self.element_type == 53:  # ctriax6
             # 53-CTRIAX6
             self._results._found_result('ctriax_force')
-            if self.format_code == 1 and self.num_wide == 0:  # real
-                pass
+            #if self.format_code == 1 and self.num_wide == 0:  # real
+                #pass
                 #self.create_transient_object(self.ctriax_force, RealCTriaxForce)  # undefined
-            else:
-                msg = self.code_information()
-                return self._not_implemented_or_skip(data, ndata, msg)
-            return ndata
+            #else:  # pragma: no cover
+            raise NotImplementedError(self.code_information())
+                #msg = self.code_information()
+                #return self._not_implemented_or_skip(data, ndata, msg)
+            #return ndata
 
         elif self.element_type == 4:  # cshear
             n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
@@ -1479,12 +1480,6 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                auto_return, is_vectorized = self._create_oes_object4(
-                    nelements, result_name, slot, obj_real)
-                if auto_return:
-                    return nelements * self.num_wide * 4, None, None
-
-                obj = self.obj
                 s = Struct(self._endian + self._analysis_code_fmt + b'ff')  # 3
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -1553,8 +1548,9 @@ class OEF(OP2Common):
 
                     obj.add_sort1(dt, eid, axial, torque)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
+            print(msg)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
 
@@ -2057,7 +2053,11 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _oef_cbar_34(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
-        """34-CBAR"""
+        """
+        34-CBAR
+        117-CWELDC
+
+        """
         n = 0
         if self.element_type == 34:
             result_name = prefix + 'cbar_force' + postfix
@@ -2066,7 +2066,8 @@ class OEF(OP2Common):
         elif self.element_type in [117, 200]:
             result_name = prefix + 'cweld_force' + postfix
             obj_real = RealCWeldForceArray
-            assert self.num_wide == 9, self.code_information()
+            obj_complex = ComplexCWeldForceArray
+            assert self.num_wide in [9, 17], self.code_information()
         elif self.element_type == 119:
             result_name = prefix + 'cfast_force' + postfix
             obj_real = RealCFastForceArray
@@ -2222,7 +2223,7 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, sd, bm1, bm2, ts1, ts2, af, trq)
                     n += 32
         #elif self.format_code in [2, 3] and self.num_wide == 14:  # imag
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             print(msg)
             return self._not_implemented_or_skip(data, ndata, msg)
@@ -2362,7 +2363,7 @@ class OEF(OP2Common):
                         ty = complex(tyr, tyi)
                     obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             print(msg)
             return self._not_implemented_or_skip(data, ndata, msg)
@@ -2588,7 +2589,7 @@ class OEF(OP2Common):
                             self.binary_debug.write('OEF_Plate2 - eid=%i nid=%s out=%s\n' % (
                                 eid, nid, str(out)))
                         obj.add_sort1(dt, eid, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             print(msg)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
@@ -2616,7 +2617,7 @@ class OEF(OP2Common):
             result_name = prefix + 'cquadr_composite_force' + postfix
         elif self.element_type == 233:
             result_name = prefix + 'ctriar_composite_force' + postfix
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(self.code_information())
         if self._results.is_not_saved(result_name):
             return ndata, None, None
@@ -2725,7 +2726,7 @@ class OEF(OP2Common):
                 #else:
                     #obj.add_sort1(dt, eid, o1, o2, t12, t1z, t2z, angle, major, minor, ovm)
                 #n += ntotal
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             print(msg)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
@@ -2891,7 +2892,7 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid,
                                   f41, f21, f12, f32, f23, f43, f34, f14,
                                   kf1, s12, kf2, s23, kf3, s34, kf4, s41)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
@@ -2946,7 +2947,7 @@ class OEF(OP2Common):
                         eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, hopa, bmu, bmv, tm, su, sv)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
@@ -3006,7 +3007,7 @@ class OEF(OP2Common):
                     #eid = obj.add_new_eid_sort1(out)
                     obj.add_sort1(dt, eid, fx, sfy, sfz, u, v, w, sv, sw)
                     n += ntotal
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             print(msg)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
@@ -3176,7 +3177,7 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid,
                                   nid_a, bm1_a, bm2_a, ts1_a, ts2_a, af_a, trq_a,
                                   nid_b, bm1_b, bm2_b, ts1_b, ts2_b, af_b, trq_b)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
@@ -3336,7 +3337,7 @@ class OEF(OP2Common):
                         vz = complex(vzr, vzi)
                     cpressure = complex(pressure, 0.)
                     obj.add_sort1(dt, eid, ename, ax, ay, az, vx, vy, vz, cpressure)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
@@ -3351,7 +3352,7 @@ class OEF(OP2Common):
             complex_obj = ComplexCBushForceArray
         elif self.element_type == 280:
             result_name = prefix + 'cbear_force' + postfix
-            assert self.num_wide == 13, self.code_information()
+            assert self.num_wide in [7, 13], self.code_information()
             complex_obj = ComplexCBearForceArray
         else:
             raise NotImplementedError(self.code_information())
@@ -3453,7 +3454,7 @@ class OEF(OP2Common):
         #elif self.format_code == 2 and self.num_wide == 7:
             #self.log.warning(self.code_information())
             #asdf
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             print(msg)
             return self._not_implemented_or_skip(data, ndata, msg), None, None
@@ -3636,7 +3637,7 @@ class OEF(OP2Common):
                     #data_in = [vugrid,mfxr,mfyr,mfxyr,bmxr,bmyr,bmxyr,syzr,szxr,
                                      #mfxi,mfyi,mfxyi,bmxi,bmyi,bmxyi,syzi,szxi]
                     obj.add_sort1(nnodes, dt, eid, parent, coord, icord, theta, vugrids, forces)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
@@ -3645,6 +3646,8 @@ class OEF(OP2Common):
         """191-VUBEAM"""
         n = 0
         result_name = prefix + 'cbeam_force_vu' + postfix
+        if self._results.is_not_saved(result_name):
+            return ndata, None, None
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
 
@@ -3865,7 +3868,7 @@ class OEF(OP2Common):
 
                         obj._add_sort1(dt, eid, parent, coord, icord,
                                        vugrid, posit, force_x, shear_y, shear_z, torsion, bending_y, bending_z)
-        else:
+        else:  # pragma: no cover
             msg = self.code_information()
             return self._not_implemented_or_skip(data, ndata, msg), None, None
         return n, nelements, ntotal
