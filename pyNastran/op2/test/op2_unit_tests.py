@@ -2306,13 +2306,19 @@ class TestOP2(Tester):
         if os.path.exists(debug_file):
             os.remove(debug_file)
 
+        op2 = OP2()
+        #result_set = op2._result_set
+        assert op2._results.is_not_saved('stress.ctetra_stress') == False
+
         read_op2(op2_filename, debug=debug, log=log)
+
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=make_geom, write_bdf=write_bdf,
             write_f06=write_f06,
             debug=debug, stop_on_failure=True, binary_debug=True, quiet=True,
             build_pandas=True, log=log)
         isubcase = 1
+
         # rod_force = op2.crod_force[isubcase]
         # assert rod_force.nelements == 2, rod_force.nelements
         # assert rod_force.data.shape == (7, 2, 2), rod_force.data.shape
@@ -2351,6 +2357,7 @@ class TestOP2(Tester):
         assert ctria3_stress.nelements == 16, ctria3_stress.nelements  # TODO: 8-wrong
         assert ctria3_stress.data.shape == (21, 16, 8), ctria3_stress.data.shape
 
+        assert len(op2.ctetra_stress) == 1, op2.ctetra_stress
         ctetra_stress = op2.ctetra_stress[isubcase]
         assert ctetra_stress.nelements == 2, ctetra_stress.nelements
         assert ctetra_stress.data.shape == (21, 10, 10), ctetra_stress.data.shape

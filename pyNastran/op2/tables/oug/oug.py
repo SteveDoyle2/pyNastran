@@ -102,7 +102,6 @@ class OUG(OP2Common):
         self._read_title(data)
         self._write_debug_bits()
         #print(self.code_information())
-        #asdf
 
     def _read_otemp1_4(self, data, ndata):
         """SOL 401 table"""

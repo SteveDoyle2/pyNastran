@@ -39,7 +39,7 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealRodForceArray, RealViscForceArray,
     RealCBarForceArray, RealCBar100ForceArray,
     RealCFastForceArray, RealCWeldForceArray,
-    RealCBushForceArray,
+    RealCBushForceArray, RealCBearForceArray,
     RealPlateForceArray,
     RealPlateBilinearForceArray,
     RealSpringForceArray, RealDamperForceArray,
@@ -3349,10 +3349,12 @@ class OEF(OP2Common):
         """
         if self.element_type == 102:
             result_name = prefix + 'cbush_force' + postfix
+            real_obj = RealCBushForceArray
             complex_obj = ComplexCBushForceArray
         elif self.element_type == 280:
             result_name = prefix + 'cbear_force' + postfix
             assert self.num_wide in [7, 13], self.code_information()
+            real_obj = RealCBearForceArray
             complex_obj = ComplexCBearForceArray
         else:
             raise NotImplementedError(self.code_information())
@@ -3372,7 +3374,7 @@ class OEF(OP2Common):
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
-                nelements, result_name, slot, RealCBushForceArray)
+                nelements, result_name, slot, real_obj)
             if auto_return:
                 return nelements * self.num_wide * 4, None, None
 
@@ -3453,7 +3455,6 @@ class OEF(OP2Common):
                 n += ntotal
         #elif self.format_code == 2 and self.num_wide == 7:
             #self.log.warning(self.code_information())
-            #asdf
         else:  # pragma: no cover
             msg = self.code_information()
             print(msg)

@@ -5,6 +5,7 @@ from struct import Struct, unpack
 import numpy as np
 
 from pyNastran import is_release
+from pyNastran.op2.errors import FatalError
 from pyNastran.f06.f06_writer import F06Writer
 from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.utils import (
@@ -2064,7 +2065,7 @@ class OP2Common(Op2Codes, F06Writer):
         #self.sdtype = np.dtype(self._uendian + '4s')
         self.struct_i = Struct(self._endian + b'i')
         if size == 4:
-            self.struct_q = self.struct_i
+            #self.struct_q = self.struct_i
             self.struct_3i = Struct(self._endian + b'3i')
             self.struct_8s = Struct(self._endian + b'8s')
             self.struct_2i = Struct(self._endian + b'ii')
@@ -2072,13 +2073,14 @@ class OP2Common(Op2Codes, F06Writer):
             #self.op2_reader.read_block = self.op2_reader.read_blocki
             #self.op2_reader.read_markers = self.op2_reader.read_markersi
         elif size == 8:
-            self.struct_q = Struct(self._endian + b'q')
+            #self.struct_q = Struct(self._endian + b'q')
             self.struct_3i = Struct(self._endian + b'3q')
             self.struct_8s = Struct(self._endian + b'8s')
             self.struct_2i = Struct(self._endian + b'2q')
             self.struct_8s_i = Struct(self._endian + b'8sq')
             #self.op2_reader.read_block = self.op2_reader.read_blockq
             #self.op2_reader.read_markers = self.op2_reader.read_markersq
+            raise FatalError('64-bit precison is not supported')
         else:
             NotImplementedError(size)
         self.op2_reader.size = size

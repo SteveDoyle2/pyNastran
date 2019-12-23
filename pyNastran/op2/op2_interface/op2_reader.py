@@ -1295,7 +1295,7 @@ class OP2Reader:
         data = self._read_record()
         num, ndesvars, one, zeroa, zerob, zeroc, zerod = Struct(self._endian + b'7i').unpack(data)
         # (101, 3, 1, 0, 0, 0, 0)
-        self.show_data(data)
+        #self.show_data(data)
         self.read_markers([-2, 1, 0])
         data = self._read_record()
         name, = Struct(self._endian + b'8s').unpack(data)

@@ -1676,6 +1676,8 @@ class OES(OP2Common):
         """
         n = 0
         if self.is_stress:
+            if prefix == '' and postfix == '':
+                prefix = 'stress.'
             obj_real = RealSpringStressArray
             obj_complex = ComplexSpringStressArray
             if self.element_type == 11:
@@ -1689,6 +1691,8 @@ class OES(OP2Common):
             else:
                 raise RuntimeError(self.element_type)
         else:
+            if prefix == '' and postfix == '':
+                prefix = 'strain.'
             obj_real = RealSpringStrainArray
             obj_complex = ComplexSpringStrainArray
             if self.element_type == 11:
@@ -2666,6 +2670,8 @@ class OES(OP2Common):
         """
         n = 0
         if self.is_stress:
+            if prefix == '' and postfix == '':
+                prefix = 'stress.'
             obj_vector_real = RealSolidStressArray
             obj_vector_complex = ComplexSolidStressArray
             obj_vector_random = RandomSolidStressArray
@@ -2688,6 +2694,8 @@ class OES(OP2Common):
             else:  # pragma: no cover
                 raise RuntimeError(self.code_information())
         else:
+            if prefix == '' and postfix == '':
+                prefix = 'strain.'
             obj_vector_real = RealSolidStrainArray
             obj_vector_complex = ComplexSolidStrainArray
             obj_vector_random = RandomSolidStrainArray

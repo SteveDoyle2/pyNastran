@@ -4825,7 +4825,7 @@ class RealForceMomentArray(RealForceObject):
 
 class RealCBushForceArray(RealForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        RealForceMomentArray(self, data_code, is_sort1, isubcase, dt)
+        RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def get_f06_header(self):
         msg = [
@@ -4835,16 +4835,16 @@ class RealCBushForceArray(RealForceMomentArray):
            #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
         return msg
 
-class RealCBushForceArray(RealForceMomentArray):
+class RealCBearForceArray(RealForceMomentArray):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     def get_f06_header(self):
         asdf
-        #msg = [
-            #'                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
-            #' \n'
-            #'                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
+        msg = [
+            '                                 F O R C E S   I N   B U S H   E L E M E N T S        ( C B U S H )\n'
+            ' \n'
+            '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
            #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
         return msg
 
