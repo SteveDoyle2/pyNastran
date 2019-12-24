@@ -341,6 +341,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_nx = True
         self.is_msc = False
         self.is_autodesk = False
+        self.is_nasa95 = False
         self.is_optistruct = False
         self._nastran_format = 'nx'
 
@@ -348,6 +349,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_nx = False
         self.is_msc = True
         self.is_autodesk = False
+        self.is_nasa95 = False
         self.is_optistruct = False
         self._nastran_format = 'msc'
 
@@ -355,13 +357,25 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         self.is_nx = False
         self.is_msc = False
         self.is_autodesk = True
+        self.is_nasa95 = False
         self.is_optistruct = False
         self._nastran_format = 'autodesk'
+
+    def set_as_nasa95(self):
+        self.is_nx = False
+        self.is_msc = False
+        self.is_autodesk = False
+        self.is_optistruct = False
+        self.is_nasa95 = True
+        self._nastran_format = 'nasa95'
+        self._read_oes1_loads = self._read_oes1_loads_nasa95
+        self._read_oef1_loads = self._read_oef1_loads_nasa95
 
     def set_as_optistruct(self):
         self.is_nx = False
         self.is_msc = False
         self.is_autodesk = False
+        self.is_nasa95 = False
         self.is_optistruct = True
         self._nastran_format = 'optistruct'
 
@@ -1377,14 +1391,23 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self._create_binary_debug()
         self._setup_op2()
-        self.op2_reader.read_nastran_version(mode)
 
         _op2 = self.op2_reader.op2
-        data = _op2.f.read(4)
-        _op2.f.seek(_op2.n)
-        if len(data) == 0:
-            raise FatalError('There was a Nastran FATAL Error.  Check the F06.\n'
-                             'No tables exist...check for a license issue')
+        is_nasa_nastran = False
+        if is_nasa_nastran:
+            self.show(104, types='ifs', endian=None)
+            self.show(52, types='ifs', endian=None)
+            aa
+            data = _op2.f.read(4)
+            _op2.n += 8
+            _op2.f.seek(_op2.n)
+        else:
+            self.op2_reader.read_nastran_version(mode)
+            data = _op2.f.read(4)
+            _op2.f.seek(_op2.n)
+            if len(data) == 0:
+                raise FatalError('There was a Nastran FATAL Error.  Check the F06.\n'
+                                 'No tables exist...check for a license issue')
 
         #=================
         table_name = self.op2_reader._read_table_name(rewind=True, stop_on_failure=False)
@@ -1482,7 +1505,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 self._uendian = '>'
                 self._endian = b'>'
                 size = big_data[0]
-            elif little_data[0] in [4, 8]:
+            elif little_data[0] in [4, 8] or 1:
                 self._uendian = '<'
                 self._endian = b'<'
                 size = little_data[0]
@@ -1491,6 +1514,11 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             else:
                 # Matrices from test show
                 # (24, 10, 10, 6, 2) before the Matrix Name...
+                print(little_data, big_data)
+                self.show(30, types='ifs', endian='<')
+                self.show(30, types='ifs', endian='>')
+                self.show(12, types='ifs', endian='<')
+                self.show(12, types='ifs', endian='>')
                 #self.show_data(flag_data, types='iqlfsld', endian='<')
                 #print('----------')
                 #self.show_data(flag_data, types='iqlfsld', endian='>')

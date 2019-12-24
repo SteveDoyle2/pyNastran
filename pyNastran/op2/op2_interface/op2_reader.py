@@ -163,7 +163,7 @@ class OP2Reader:
 
             b'XSOP2DIR' : self.read_xsop2dir,
         }
-        #self.op2_skip = OP2Skip(op2)
+
     def read_nastran_version(self, mode):
         """reads the version header"""
         #try:
@@ -221,7 +221,8 @@ class OP2Reader:
             #print('version = %r' % version_str)
 
             if macro_version == 'nastran':
-                mode = self._parse_nastran_version(data, version, self.log)
+                mode = _parse_nastran_version(
+                    data, version, self._encoding, self.op2.log)
             elif macro_version.startswith('IMAT'):
                 assert version.startswith(b'ATA'), version
                 op2._nastran_format = macro_version
@@ -243,6 +244,9 @@ class OP2Reader:
         if op2._nastran_format in ['autodesk']:
             op2.post = -4
             mode = 'autodesk'
+        elif op2._nastran_format in ['nasa95']:
+            op2.post = -4
+            mode = 'nasa95'
 
         elif mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
@@ -250,67 +254,6 @@ class OP2Reader:
         self.log.debug('mode = %r' % mode)
         self.op2.set_mode(mode)
         self.op2.set_table_type()
-
-    def _parse_nastran_version(self, data, version, log):
-        """parses a Nastran version string"""
-        if len(data) == 32:
-            MSC_LONG_VERSION = [
-                b'XXXXXXXX20140',
-                b'XXXXXXXX20141',
-            ]
-            #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
-            #self.show_data(data[16:], types='ifsdqlILQ', endian=None)
-            if data[:16].strip() in MSC_LONG_VERSION:
-                # 'XXXXXXXX20140   0   \x00\x00\x00\x00        '
-                # 'XXXXXXXX20141   0   \x00\x00\x00\x00        '
-                mode = 'msc'
-            else:
-                raise NotImplementedError(data)
-        elif len(data) == 8:
-            mode = self._parse_nastran_version_8(data, version)
-        else:
-            raise NotImplementedError(version)
-        return mode
-
-    def _parse_nastran_version_8(self, data, version):
-        """parses an 8 character version string"""
-        if version.startswith(b'NX'):
-            mode = 'nx'
-            version_str = version[2:].strip().decode(self._encoding)
-            if version_str not in NX_VERSIONS:
-                self.log.warning('nx version=%r is not supported' % version_str)
-        elif version.startswith(b'MODEP'):
-            # TODO: why is this separate?
-            # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
-            #print('found NX table?...')
-            #self.log.warning('Assuming NX Nastran')
-            mode = 'nx'
-        elif version.startswith(b'AEROFREQ'):
-            # TODO: why is this separate?
-            # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-            #print('found MSC table?...')
-            #self.log.warning('Assuming MSC Nastran')
-            mode = 'msc'
-        elif version.startswith(b'AEROTRAN'):
-            # TODO: why is this separate?
-            # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
-            #self.log.warning('Assuming MSC Nastran')
-            mode = 'msc'
-        elif version in [b'V2005R3B']:
-            mode = 'msc'
-        elif version in [b'XXXXXXXX']:
-            #self.log.warning('Assuming MSC Nastran')
-            mode = 'msc'
-        elif version in [b'OS11XXXX', b'OS12.210', b'OS14.210',
-                         b'OS2017.1', b'OS2017.2', b'OS2018.1']:
-            # should this be called optistruct or radioss?
-            mode = 'optistruct'
-        #elif data[:20] == b'XXXXXXXX20141   0   ':
-            #self.set_as_msc()
-            #self.set_table_type()
-        else:
-            raise RuntimeError('unknown version=%r' % version)
-        return mode
 
     def read_xsop2dir(self):
         """
@@ -4389,8 +4332,7 @@ class OP2Reader:
         """
         op2 = self.op2
         assert op2.n == op2.f.tell()
-        nints = n // 4
-        data = op2.f.read(4 * nints)
+        data = op2.f.read(n)
         strings, ints, floats = self.show_data(data, types=types, endian=endian)
         op2.f.seek(op2.n)
         return strings, ints, floats
@@ -4460,7 +4402,7 @@ class OP2Reader:
 
         f.write('\nndata = %s:\n' % n)
         for typei in types:
-            assert typei in 'sifdq lILQ', 'type=%r is invalid' % typei
+            assert typei in 'sifdq lILQ', f'type={typei!r} is invalid; use sifdq lILQ'
 
         data4 = data[:nints * 4]
         #data8 = data[:ndoubles * 8]
@@ -4955,3 +4897,65 @@ def dscmcol_dresp2(nresponses_dresp2, ints, floats):
               #f'subcase={subcase} dflag={dflag} freq/time={freqtime} seid={seid}')
         idata += 6
     return
+
+def _parse_nastran_version(data, version, encoding, log):
+    """parses a Nastran version string"""
+    if len(data) == 32:
+        MSC_LONG_VERSION = [
+            b'XXXXXXXX20140',
+            b'XXXXXXXX20141',
+        ]
+        #self.show_data(data[:16], types='ifsdqlILQ', endian=None)
+        #self.show_data(data[16:], types='ifsdqlILQ', endian=None)
+        if data[:16].strip() in MSC_LONG_VERSION:
+            # 'XXXXXXXX20140   0   \x00\x00\x00\x00        '
+            # 'XXXXXXXX20141   0   \x00\x00\x00\x00        '
+            mode = 'msc'
+        else:
+            raise NotImplementedError(data)
+    elif len(data) == 8:
+        mode = _parse_nastran_version_8(
+            data, version, encoding, log)
+    else:
+        raise NotImplementedError(version)
+    return mode
+
+def _parse_nastran_version_8(data, version, encoding, log):
+    """parses an 8 character version string"""
+    if version.startswith(b'NX'):
+        mode = 'nx'
+        version_str = version[2:].strip().decode(encoding)
+        if version_str not in NX_VERSIONS:
+            log.warning('nx version=%r is not supported' % version_str)
+    elif version.startswith(b'MODEP'):
+        # TODO: why is this separate?
+        # F:\work\pyNastran\pyNastran\master2\pyNastran\bdf\test\nx_spike\out_ac11103.op2
+        #print('found NX table?...')
+        #log.warning('Assuming NX Nastran')
+        mode = 'nx'
+    elif version.startswith(b'AEROFREQ'):
+        # TODO: why is this separate?
+        # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
+        #print('found MSC table?...')
+        #log.warning('Assuming MSC Nastran')
+        mode = 'msc'
+    elif version.startswith(b'AEROTRAN'):
+        # TODO: why is this separate?
+        # C:\Users\Steve\Dropbox\pyNastran_examples\move_tpl\loadf.op2
+        #log.warning('Assuming MSC Nastran')
+        mode = 'msc'
+    elif version in [b'V2005R3B']:
+        mode = 'msc'
+    elif version in [b'XXXXXXXX']:
+        #log.warning('Assuming MSC Nastran')
+        mode = 'msc'
+    elif version in [b'OS11XXXX', b'OS12.210', b'OS14.210',
+                     b'OS2017.1', b'OS2017.2', b'OS2018.1']:
+        # should this be called optistruct or radioss?
+        mode = 'optistruct'
+    #elif data[:20] == b'XXXXXXXX20141   0   ':
+        #self.set_as_msc()
+        #self.set_table_type()
+    else:
+        raise RuntimeError('unknown version=%r' % version)
+    return mode

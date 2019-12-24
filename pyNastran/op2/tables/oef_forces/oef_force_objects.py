@@ -2214,7 +2214,10 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
             tx = self.data[itime, :, 6]
             ty = self.data[itime, :, 7]
 
-            if self.element_type in [74, 227, 228]:  # CTRIA3, CTRIAR linear, CQUADR linear
+            if self.element_type in [74, 83, 227, 228]:
+                # 74, 83 CTRIA3
+                # 227 CTRIAR linear
+                # 228 CQUADR linear
                 for eid, mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi in zip(eids, mx, my, mxy, bmx, bmy, bmxy, tx, ty):
                     [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi] = write_floats_13e(
                         [mxi, myi, mxyi, bmxi, bmyi, bmxyi, txi, tyi])

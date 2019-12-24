@@ -11,7 +11,6 @@ from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_head
 
 class ComplexCBushArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
-        write_an_op2
         OES_Object.__init__(self, data_code, isubcase, apply_data_code=False)
         #self.code = [self.format_code, self.sort_code, self.s_code]
         self.nelements = 0  # result specific
@@ -209,6 +208,7 @@ class ComplexCBushArray(OES_Object):
     def write_op2(self, op2, op2_ascii, itable, new_result, date,
                   is_mag_phase=False, endian='>'):
         """writes an OP2"""
+        # see TestOP2.test_op2_other_01
         import inspect
         from struct import Struct, pack
         frame = inspect.currentframe()

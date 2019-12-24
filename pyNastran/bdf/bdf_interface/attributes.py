@@ -20,6 +20,7 @@ class BDFAttributes:
 
         self.is_nx = False
         self.is_msc = False
+        self.is_nasa95 = False
         self.is_zona = False
         self.save_file_structure = False
         self.is_superelements = False
@@ -30,18 +31,21 @@ class BDFAttributes:
         self._nastran_format = 'msc'
         self.is_nx = False
         self.is_msc = True
+        self.is_nasa95 = False
         self.is_zona = False
 
     def set_as_nx(self):
         self._nastran_format = 'nx'
         self.is_nx = True
         self.is_msc = False
+        self.is_nasa95 = False
         self.is_zona = False
 
     def set_as_zona(self):
         self._nastran_format = 'zona'
         self.is_nx = False
         self.is_msc = False
+        self.is_nasa95 = False
         self.is_zona = True
 
     def __properties__(self):

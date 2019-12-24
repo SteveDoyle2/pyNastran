@@ -36,7 +36,7 @@ class RealPlateArray(OES_Object):
 
     @property
     def nnodes_per_element(self) -> int:
-        if self.element_type in [33, 74, 227, 228]:
+        if self.element_type in [33, 74, 83, 227, 228]:
             nnodes_per_element = 1
         elif self.element_type == 144:
             nnodes_per_element = 5
@@ -325,7 +325,7 @@ class RealPlateArray(OES_Object):
             minor_principal = self.data[itime, :, 6]
             ovm = self.data[itime, :, 7]
 
-            is_linear = self.element_type in {33, 74, 227, 228}
+            is_linear = self.element_type in {33, 74, 227, 228, 83}
             is_bilinear = self.element_type in {64, 70, 75, 82, 144}
             for (i, eid, nid, fdi, oxxi, oyyi, txyi, anglei, major, minor, ovmi) in zip(
                  count(), eids, nids, fiber_dist, oxx, oyy, txy, angle, major_principal, minor_principal, ovm):
@@ -594,7 +594,7 @@ def _get_plate_msg(self):
         ctriar_msg = ['                             S T R A I N S   I N   T R I A N G U L A R   E L E M E N T S   ( T R I A R )\n'] + tri_msg_temp
 
 
-    if self.element_type == 74:
+    if self.element_type in [74, 83]:
         msg = ctria3_msg
         nnodes = 3
         cen = 'CEN/3'
@@ -623,7 +623,9 @@ def _get_plate_msg(self):
         msg = ctria6_msg
         nnodes = 3
         cen = 'CEN/6'
-    elif self.element_type in [70, 227]:  # CTRIAR bilinear, CTRIAR linear
+    elif self.element_type in [70, 227]:
+        # 70: CTRIAR bilinear
+        # 227: CTRIAR linear
         msg = ctriar_msg
         nnodes = 3
         cen = 'CEN/3'

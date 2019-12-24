@@ -307,3 +307,120 @@ BULK_DATA_CARDS = {
     'INCLUDE',  # '='
     'ENDDATA',
 }
+
+NASA_CARDS = {
+    # axisymmetric
+    'CCONEAX', 'AXIC', 'MOMAX', 'PCONEAX', 'POINTAX', 'RINGAX',
+    'CTRAPAX', 'PRESAX', 'PTRIAAX', 'CTRIAAX',
+
+    # fluid
+    'AXIF', 'CFLUID2', 'CFLUID3', 'CFLUID4', 'RINGFL',
+    'BDYLIST', 'FSLIST', 'FLSYM', 'GRIDB',
+    'PRESPT',
+
+    # slot
+    'GRIDF', 'CAXIF2', 'CAXIF3', 'CAXIF4',
+    'GRIDS', 'AXSLOT', 'CSLOT3', 'CSLOT4',
+    'SLBDY',
+
+    # free surface fluid
+    'MATF', 'CFFREE', 'CFLSTR', 'CFHEX2', 'CFWEDGE',
+
+    # 0d
+    'PELAS', 'CELAS2', 'CELAS3', 'CELAS4',
+    'PDAMP', 'CDAMP3',
+    'PMASS', 'CMASS3', 'CMASS4',
+    'CONM2',
+
+
+    # rod
+    'CROD', 'CONROD', 'CBAR', 'BAROR',
+    'CNGRNT', # ???
+
+    'CSHEAR',
+    'CTRIM6',
+    'CTRIARG',
+
+    'CTRIA1', 'CTRIA2', 'CQUAD1', 'CQUAD2',
+    'CTRMEM',
+    'CQDMEM', 'CQDMEM1', 'CQDMEM2',
+    'CTRIA3', 'CQUAD4',
+
+    'CHEXA1', 'CHEXA2', 'CIHEX1', 'CIHEX2', 'CIHEX3',
+    'CWEDGE', 'CTETRA',
+    'GENEL', 'DMI', 'DMIG', 'DTI', 'PLOTEL',
+
+    # rigid
+    'CRIGD1', 'CRIGD2', 'CRIGD3', 'CRIGDR',
+    'PBAR', 'PROD', 'PSHEAR', 'PTUBE',
+    'PTRIM6',
+    'PTRIA1', 'PTRIA2', 'PQUAD1', 'PQUAD2',
+    'PSHELL', 'PCOMP', 'PCOMP1', 'PCOMP2',
+
+    'PTRMEM',
+    'PQDMEM', 'PQDMEM1', 'PQDMEM2',
+    'PIHEX',
+
+    # no idea...
+    'CTRSHL', 'PTRSHL',
+    'CELBOW', 'PELBOW',
+    'CIS2D8', 'PIS2D8',
+    'CTRPLT1', 'PTRPLT1',
+    'CTORDRG', 'PTORDRG',
+    'CPSE2', 'CPSE3', 'PPSE',
+    'CTRAPRG', # ???
+    'SPCFLD', 'REMFLUX', 'CEMLOOP', 'GEMLOOP', 'BFIELD',
+
+    'GRDSET', 'GRID', 'SPOINT', 'EPOINT', 'OMIT', 'OMIT1', 'PARAM',
+    'CORD2R', 'CORD2C', 'CORD2S',
+
+    # materials
+    'MAT1', 'MAT2', 'MAT4', 'MAT6', 'MAT8',
+    'MATT1', 'MATT4', 'MATS1',
+    'TABLEM1', 'TABLEM3',
+    'TABLED1',
+    'TABLES1',
+    'TABDMP1',
+    'TABRND1',
+
+    # static loads
+    'FORCE', 'FORCE1', 'MOMENT', 'PLOAD2', 'PLOAD3', 'PLOAD4',
+    'RFORCE', 'GRAV', 'DEFORM',
+    # thermal load
+    'TEMP', 'TEMPD', 'TEMPRB', 'TEMPP1',
+    'CHBDY', 'PHBDY', 'QBDY1', 'QVOL', 'QVECT',
+    'RADLST', 'RADMTX',
+
+    # dynamic loads
+    'RLOAD1',
+    'TLOAD1', 'TLOAD2',
+    'RANDPS', 'RANDT1',
+    'DLOAD', 'LOADC',
+    'DAREA', 'DAREAS',
+    'DELAY', 'DPHASE',
+    'FREQ', 'FREQ1', 'FREQ2',
+    'PLFACT', # ???
+
+    # aero
+    'SET1',
+    'AEFACT',
+    'MKAERO1', 'MKAERO2',
+    'AERO',
+    'CAERO1',
+    'SPLINE1', 'SPLINE2',
+    'FLUTTER', 'FLFACT',
+    'STREAML1', 'STREAML2',
+
+    # constraints
+    'SPC', 'SPC1', 'SPCD', 'SPCS1', 'SPCADD',
+    'MPC', 'MPCADD', 'MPCS',
+    'TICS', 'TSTEP',
+    'SEQGP',
+    'EIGR', 'EIGB', 'EIGC', 'EIGP',
+    'TIC', 'TF', 'SUPORT',
+
+    # ???
+    'BDYC', 'BDYS1', 'GTRAN', 'TRANS',
+    'CYJOIN',
+    'ENDDATA',
+}

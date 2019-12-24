@@ -546,9 +546,7 @@ class OES(OP2Common):
 
     #@_print_obj_name_on_crash
     def _read_oes_4_sort(self, data, ndata):
-        """
-        Reads OES1 subtable 4
-        """
+        """Reads OES1 subtable 4 for NX/MSC/Autodesk/Optistruct"""
         #if self.num_wide == 146:
             #assert self.num_wide != 146
             #assert ndata != 146, self.code_information()
@@ -1267,10 +1265,74 @@ class OES(OP2Common):
         self.data_code['nonlinear_factor'] = self.nonlinear_factor
         return prefix, postfix
 
+    def _read_oes1_loads_nasa95(self, data, ndata):
+        """Reads OES1 subtable 4 for NASA 95"""
+        prefix, postfix = self.get_oes_prefix_postfix()
+        #self._apply_oes_ato_crm_psd_rms_no('') # TODO: just testing
+        n = 0
+        is_magnitude_phase = self.is_magnitude_phase()
+        dt = self.nonlinear_factor
+
+        if self.is_stress:
+            result_name = 'stress'
+            stress_name = 'STRESS'
+        else:
+            result_name = 'strain'
+            stress_name = 'STRAIN'
+
+        if self._results.is_not_saved(result_name):
+            return ndata
+        if self.element_type in [1, 3, 10]:  # rods
+            # 1-CROD
+            # 3-CTUBE
+            # 10-CONROD
+            n, nelements, ntotal = self._oes_crod(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        #elif self.element_type == 2: # CBEAM
+            #n, nelements, ntotal = self._oes_cbeam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        elif self.element_type == 4: # CSHEAR
+            n, nelements, ntotal = self._oes_cshear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        elif self.element_type in [11, 12, 13, 14]:  # springs
+            # 11-CELAS1
+            # 12-CELAS2
+            # 13-CELAS3
+            # 14-CELAS4
+            n, nelements, ntotal = self._oes_celas(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        elif self.element_type == 34: # CBAR
+            n, nelements, ntotal = self._oes_cbar_34(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        elif self.element_type == 83:
+            # 83: TRIA3
+            n, nelements, ntotal = self._oes_ctria3(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        #elif self.element_type in [64, 70, 75, 82, 144]:  # bilinear plates
+            # 64-CQUAD8
+            # 70-CTRIAR
+            # 75-CTRIA6
+            # 82-CQUADR
+            # 144-CQUAD4-bilinear
+            #n, nelements, ntotal = self._oes_cquad4_144(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+        else:
+            #msg = 'sort1 Type=%s num=%s' % (self.element_name, self.element_type)
+            msg = self.code_information()
+            print(msg)
+            return self._not_implemented_or_skip(data, ndata, msg)
+
+        if nelements is None:
+            return n
+        assert ndata > 0, ndata
+        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
+        #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
+        assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
+        assert self.thermal == 0, "thermal = %%s" % self.thermal
+        assert n > 0, "n = %s result_name=%s" % (n, result_name)
+        return n
+
     def _read_oes1_loads(self, data, ndata):
-        """
-        Reads OES self.thermal=0 stress/strain
-        """
+        """Reads OES self.thermal=0 stress/strain"""
         prefix, postfix = self.get_oes_prefix_postfix()
         #self._apply_oes_ato_crm_psd_rms_no('') # TODO: just testing
         n = 0
@@ -4961,6 +5023,7 @@ class OES(OP2Common):
         """
         reads stress/strain for element type:
          - 74 : CTRIA3-centroidal
+         - 83 : CTRIA3-centroidal  (NASA 95)
          - 227: TRIAR-centroidal
         """
         #print('_oes_ctria3')
@@ -4968,7 +5031,7 @@ class OES(OP2Common):
         if self.is_stress:
             obj_vector_real = RealPlateStressArray
             obj_vector_complex = ComplexPlateStressArray
-            if self.element_type == 74:
+            if self.element_type in [74, 83]:
                 result_name = prefix + 'ctria3_stress' + postfix
             elif self.element_type in [227]:
                 result_name = prefix + 'ctriar_stress' + postfix
@@ -4977,7 +5040,7 @@ class OES(OP2Common):
         else:
             obj_vector_real = RealPlateStrainArray
             obj_vector_complex = ComplexPlateStrainArray
-            if self.element_type == 74:
+            if self.element_type in [74, 83]:
                 result_name = prefix + 'ctria3_strain' + postfix
             elif self.element_type in [227]:
                 result_name = prefix + 'ctriar_strain' + postfix

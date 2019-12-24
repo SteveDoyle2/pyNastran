@@ -647,7 +647,7 @@ def get_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
 
 def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icase,
                                        form_dict, header_dict, keys_map,
-                                       composite_data_dict, is_stress):
+                                       composite_data_dict, log, is_stress=True):
     """
     helper method for _fill_op2_time_centroidal_stress.
     Gets the stress/strain for each layer.
@@ -684,8 +684,17 @@ def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icas
 
         (True, 'CQUAD4') : model.cquad4_composite_stress,
         (False, 'CQUAD4') : model.cquad4_composite_strain,
+
+        (True, 'CTRIAR') : model.ctriar_composite_stress,
+        (False, 'CTRIAR') : model.ctriar_composite_strain,
+        (True, 'CQUADR') : model.cquadr_composite_stress,
+        (False, 'CQUADR') : model.cquadr_composite_strain,
     }
-    case_dict = case_map[(is_stress, element_type)]
+    try:
+        case_dict = case_map[(is_stress, element_type)]
+    except KeyError:
+        log.warning(f'skipping is_stress={is_stress} element_type={element_type}')
+        return icase
     case = case_dict[key]
 
 
@@ -743,7 +752,11 @@ def get_composite_plate_stress_strains(eids, cases, model: OP2, times, key, icas
     if len(scalars_array) == 0:
         return icase
 
-    scalars_array = concatenate_scalars(scalars_array)
+    try:
+        scalars_array = concatenate_scalars(scalars_array)
+    except ValueError:
+        log.error('problem concatenating composite plates')
+        return icase
 
     #print('scalars_array.shape =', scalars_array.shape)
     unused_ntimes, unused_nelements, nlayers, unused_nresults = scalars_array.shape

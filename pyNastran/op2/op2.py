@@ -328,7 +328,7 @@ class OP2(OP2_Scalar, OP2Writer):
 
     def set_mode(self, mode: str) -> None:
         """
-        Sets the mode as 'msc', 'nx', 'autodesk', or 'optistruct'
+        Sets the mode as 'msc', 'nx', 'autodesk', 'nasa95', or 'optistruct'
         """
         if mode.lower() == 'msc':
             self.set_as_msc()
@@ -336,6 +336,8 @@ class OP2(OP2_Scalar, OP2Writer):
             self.set_as_nx()
         elif mode.lower() == 'autodesk':
             self.set_as_autodesk()
+        elif mode.lower() == 'nasa95':
+            self.set_as_nasa95()
         elif mode.lower() == 'optistruct': # radioss,
             self.set_as_optistruct()
         else:

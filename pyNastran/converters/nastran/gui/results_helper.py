@@ -679,7 +679,7 @@ class NastranGuiResults(NastranGuiAttributes):
             icase = get_composite_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map,
-                self.stress[key].composite_data_dict, is_stress=True)
+                self.stress[key].composite_data_dict, self.log, is_stress=True)
 
         if settings.nastran_rod_stress:
             icase = get_rod_stress_strains(
@@ -789,7 +789,7 @@ class NastranGuiResults(NastranGuiAttributes):
             icase = get_composite_plate_stress_strains(
                 eids, cases, model, times, key, icase,
                 form_dict, header_dict, keys_map,
-                self.strain[key].composite_data_dict, is_stress=False)
+                self.strain[key].composite_data_dict, self.log, is_stress=False)
 
         if settings.nastran_rod_strain:
             icase = get_rod_stress_strains(

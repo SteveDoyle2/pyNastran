@@ -1147,6 +1147,7 @@ class OEF(OP2Common):
         return n, nelements, ntotal
 
     def _thermal_vu_beam(self, data, ndata, dt, prefix, postfix):
+        """191-VUBEAM"""
         n = 0
         # TODO: vectorize
         nnodes = 2
@@ -1256,11 +1257,75 @@ class OEF(OP2Common):
             return n
         return new_func
 
+    def _read_oef1_loads_nasa95(self, data, ndata):
+        """Reads the OEF1 table for NASA 95 Nastran"""
+        if self._results.is_not_saved('element_forces'):
+            return ndata
+        prefix, postfix = self.get_oef_prefix_postfix()
+        #print('prefix=%r postfix=%s element_name=%s' % (prefix, postfix, self.element_name))
+        (num_wide_real, num_wide_imag) = self._oef_force_code()
+        if self.is_debug_file:
+            self.binary_debug.write('  num_wide_real = %r\n' % num_wide_real)
+            self.binary_debug.write('  num_wide_imag = %r\n' % num_wide_imag)
+
+        n = 0
+        is_magnitude_phase = self.is_magnitude_phase()
+        dt = self.nonlinear_factor
+
+        if self.element_type in [1, 3, 10]:  # rods
+            n, nelements, ntotal = self._oef_crod(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        elif self.element_type == 2:  # cbeam
+            #2-CBEAM
+            n, nelements, ntotal = self._oef_cbeam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        elif self.element_type in [11, 12, 13, 14,   # springs
+                                   20, 21, 22, 23]:  # dampers
+            # 11-CELAS1
+            # 12-CELAS2
+            # 13-CELAS3
+            # 14-CELAS4
+
+            # 20-CDAMP1
+            # 21-CDAMP2
+            # 22-CDAMP3
+            # 23-CDAMP4
+            n, nelements, ntotal = self._oef_celas_cdamp(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        elif self.element_type == 24:  # CVISC
+            n, nelements, ntotal = self._oef_cvisc(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        elif self.element_type == 34:  # cbar
+            # 34-CBAR
+            n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        elif self.element_type in [83]: # centroidal shells
+            # 33-CQUAD4???
+            # 83-CTRIA3
+            n, nelements, ntotal = self._oef_shells_centroidal(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+        elif self.element_type == 4:  # cshear
+            n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+
+        elif self.element_type == 35:  # cconeax
+            n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+        else:
+            return self._not_implemented_or_skip(data, ndata, self.code_information())
+
+        if nelements is None:
+            return n
+
+        #assert self.thermal == 0, self.thermal
+        assert ndata > 0, ndata
+        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r num_wide=%s' % (
+            nelements, self.element_type, self.element_name, self.num_wide)
+        #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
+        assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
+        assert n > 0, n
+        return n
+
     # @_print_obj_name_on_crash
     def _read_oef1_loads(self, data, ndata):
-        """
-        Reads the OEF1 table; stores the element forces/heat flux.
-        """
+        """Reads the OEF1 table; stores the element forces/heat flux."""
         #self._apply_oef_ato_crm_psd_rms_no('') # TODO: just testing
         if self._results.is_not_saved('element_forces'):
             return ndata
@@ -2240,7 +2305,7 @@ class OEF(OP2Common):
         n = 0
         if self.element_type == 33:
             result_name = prefix + 'cquad4_force' + postfix
-        elif self.element_type == 74:
+        elif self.element_type in [74, 83]:
             result_name = prefix + 'ctria3_force' + postfix
         elif self.element_type == 227:
             result_name = prefix + 'ctriar_force' + postfix
