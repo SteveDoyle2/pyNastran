@@ -240,32 +240,8 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         op2 = OP2Geom(debug=debug, log=log)
         op2_nv = OP2Geom(debug=debug, log=log, debug_file=debug_file)
         op2_bdf = OP2Geom(debug=debug, log=log)
-        op2.IS_TESTING = False
-        op2_nv.IS_TESTING = False
-        op2_bdf.IS_TESTING = False
-        if is_nx is None and is_autodesk is None and is_nasa95:
-            pass
-        elif is_nx:
-            op2.set_as_nx()
-            op2_nv.set_as_nx()
-            op2_bdf.set_as_nx()
-        elif is_autodesk:
-            op2.set_as_autodesk()
-            op2_nv.set_as_autodesk()
-            op2_bdf.set_as_autodesk()
-        elif is_nasa95:
-            op2.set_as_nasa95()
-            op2_nv.set_as_nasa95()
-            op2_bdf.set_as_nasa95()
-        else:
-            op2.set_as_msc()
-            op2_nv.set_as_msc()
-            op2_bdf.set_as_msc()
+        set_versions([op2, op2_nv, op2_bdf], is_nx, is_autodesk, is_nasa95, post)
 
-        if post is not None:
-            op2.post = -4
-            op2_nv.post = -4
-            op2_bdf.post = -4
         if load_as_h5 and IS_HDF5:
             # you can't open the same h5 file twice
             op2.load_as_h5 = load_as_h5
@@ -279,27 +255,7 @@ def run_op2(op2_filename: str, make_geom: bool=False,
         # have to double write this until ???
         op2_nv = OP2(debug=debug, log=log, debug_file=debug_file)
 
-        op2.IS_TESTING = False
-        op2_nv.IS_TESTING = False
-
-        if is_nx is None and is_autodesk is None:
-            pass
-        elif is_nx:
-            op2.set_as_nx()
-            op2_nv.set_as_nx()
-        elif is_autodesk:
-            op2.set_as_autodesk()
-            op2_nv.set_as_autodesk()
-        elif is_nasa95:
-            op2.set_as_nasa95()
-            op2_nv.set_as_nasa95()
-        else:
-            op2.set_as_msc()
-            op2_nv.set_as_msc()
-
-        if post is not None:
-            op2.post = -4
-            op2_nv.post = -4
+        set_versions([op2, op2_nv], is_nx, is_autodesk, is_nasa95, post)
         if load_as_h5 and IS_HDF5:
             # you can't open the same h5 file twice
             op2.load_as_h5 = load_as_h5
@@ -478,7 +434,7 @@ def run_op2(op2_filename: str, make_geom: bool=False,
 def write_op2_as_bdf(op2, op2_bdf, bdf_filename, write_bdf, make_geom, read_bdf, dev,
                      xref_safe=False):
     if write_bdf:
-        assert make_geom, 'make_geom=%s' % make_geom
+        assert make_geom, f'write_bdf=False, but make_geom={make_geom!r}; expected make_geom=True'
         op2._nastran_format = 'msc'
         op2.executive_control_lines = ['CEND\n']
         op2.validate()
@@ -581,6 +537,30 @@ def remove_file(filename):
         os.remove(filename)
     except:
         pass
+
+
+def set_versions(op2s, is_nx, is_autodesk, is_nasa95, post):
+    for op2 in op2s:
+        op2.IS_TESTING = False
+
+    if is_nx is None and is_autodesk is None and is_nasa95 is None:
+        pass
+    elif is_nx:
+        for op2 in op2s:
+            op2.set_as_nx()
+    elif is_autodesk:
+        for op2 in op2s:
+            op2.set_as_autodesk()
+    elif is_nasa95:
+        for op2 in op2s:
+            op2.set_as_nasa95()
+    else:
+        for op2 in op2s:
+            op2.set_as_msc()
+
+    if post is not None:
+        for op2 in op2s:
+            op2.post = -4
 
 def main(argv=None, show_args=True):
     """the interface for test_op2"""

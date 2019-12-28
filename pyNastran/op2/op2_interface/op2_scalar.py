@@ -1391,23 +1391,22 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
         self._create_binary_debug()
         self._setup_op2()
-
         _op2 = self.op2_reader.op2
-        is_nasa_nastran = False
-        if is_nasa_nastran:
-            self.show(104, types='ifs', endian=None)
-            self.show(52, types='ifs', endian=None)
-            aa
-            data = _op2.f.read(4)
-            _op2.n += 8
-            _op2.f.seek(_op2.n)
-        else:
-            self.op2_reader.read_nastran_version(mode)
-            data = _op2.f.read(4)
-            _op2.f.seek(_op2.n)
-            if len(data) == 0:
-                raise FatalError('There was a Nastran FATAL Error.  Check the F06.\n'
-                                 'No tables exist...check for a license issue')
+        #is_nasa_nastran = False
+        #if is_nasa_nastran:
+            #self.show(104, types='ifs', endian=None)
+            #self.show(52, types='ifs', endian=None)
+            #aa
+            #data = _op2.f.read(4)
+            #_op2.n += 8
+            #_op2.f.seek(_op2.n)
+        #else:
+        self.op2_reader.read_nastran_version(mode)
+        data = _op2.f.read(4)
+        _op2.f.seek(_op2.n)
+        if len(data) == 0:
+            raise FatalError('There was a Nastran FATAL Error.  Check the F06.\n'
+                             'No tables exist...check for a license issue')
 
         #=================
         table_name = self.op2_reader._read_table_name(rewind=True, stop_on_failure=False)
@@ -1789,6 +1788,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         del self.data_code['load_as_h5']
         del self.data_code['h5_file']
         del self.data_code['is_msc']
+        #del self.data_code['is_nasa95']
         del self.data_code['pval_step']
 
         # wrong

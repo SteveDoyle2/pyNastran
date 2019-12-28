@@ -1581,6 +1581,7 @@ class OP2Common(Op2Codes, F06Writer):
         self.tCode = tCode
         self.int3 = int3
         self.data_code['is_msc'] = self.is_msc
+        self.data_code['is_nasa95'] = self.is_nasa95
 
         if not hasattr(self, 'subtable_name'):
             self.data_code['subtable_name'] = self.subtable_name

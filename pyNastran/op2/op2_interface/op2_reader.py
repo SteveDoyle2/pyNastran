@@ -241,13 +241,12 @@ class OP2Reader:
                 op2.post = -2
         else:
             raise NotImplementedError(markers)
-        if op2._nastran_format in ['autodesk']:
+        if op2._nastran_format == 'autodesk':
             op2.post = -4
             mode = 'autodesk'
-        elif op2._nastran_format in ['nasa95']:
+        elif op2._nastran_format == 'nasa95':
             op2.post = -4
             mode = 'nasa95'
-
         elif mode is None:
             self.log.warning("No mode was set, assuming 'msc'")
             mode = 'msc'
@@ -3602,9 +3601,9 @@ class OP2Reader:
                     if not is_special_nastran and op2.post != -4:
                         op2.f.seek(op2.n)
                         self.show(1000)
-                        raise FatalError('There was a Nastran FATAL Error.  '
-                                         'Check the F06.\nlast table=%r; post=%s' % (
-                                             op2.table_name, op2.post))
+                        raise FatalError('There was a Nastran FATAL Error.  Check the F06.\n'
+                                         f'last table={op2.table_name!r}; post={op2.post} '
+                                         f'version={self.op2._nastran_format!r}')
                 table_name = None
 
                 # we're done reading, so we're going to ignore the rewind

@@ -843,12 +843,7 @@ class Op2Codes:
             self.element_mapper = NX_ELEMENTS
 
     def get_element_type(self, elem_code):
-        #if self.is_msc:
-            #self.element_mapper = MSC_ELEMENTS
-        #elif self.is_nasa95:
-            #self.element_mapper = NASA95_ELEMENTS
-        #else:
-            #self.element_mapper = NX_ELEMENTS
+        self.set_table_type()
         try:
             etype = self.element_mapper[elem_code]
         except TypeError:
