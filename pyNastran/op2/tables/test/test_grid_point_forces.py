@@ -35,6 +35,7 @@ class TestGridPointForces(unittest.TestCase):
             'table_code' : 1,
             'data_names' : 'cat',
             'device_code' : 1,
+            'size' : 4,
             #'tcode' : 1,
         }
         is_sort1 = True

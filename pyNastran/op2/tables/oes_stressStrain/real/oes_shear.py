@@ -229,7 +229,7 @@ class RealShearStressArray(RealShearArray, StressObject):
         RealShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['max_shear', 'avg_shear', 'margin']
         return headers
 
@@ -248,7 +248,7 @@ class RealShearStrainArray(RealShearArray, StrainObject):
         RealShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['max_shear', 'avg_shear', 'margin']
         return headers
 

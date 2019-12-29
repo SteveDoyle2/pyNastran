@@ -107,6 +107,21 @@ NX_EXTRA_TABLES = [
 ]  # type: List[bytes]
 
 NX_RESULT_TABLES = [
+    # ???
+    b'OSTR1THC',
+    b'OSTR1PLC',
+    b'OSTR1CRC',
+    b'OSTR1PL',
+    b'OSTR1CR',
+    b'OEFIIP',
+    b'OESRIP',
+    b'OESRIS',
+    b'ODAMGCZT',
+    b'ODAMGCZR',
+    b'ODAMGCZD',
+    b'XCASECC',
+    b'RST',
+
     # displacements, velocity, acceleration
     # BOUGV1 - G-set results (displacement, velocity, acceleration, eigenvector)
     #          in the global (CD) frame

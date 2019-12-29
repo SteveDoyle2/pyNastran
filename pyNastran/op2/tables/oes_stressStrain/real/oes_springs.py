@@ -129,9 +129,11 @@ class RealSpringArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
+        float_fmt = 'float32' if self.size == 4 else 'float64'
+        dtype = float_fmt
         if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+            int_fmt = 'int32' if self.size == 4 else 'int64'
+            dtype = int_fmt
         self.build_data(self.ntimes, self.nelements, dtype)
 
     def build_data(self, ntimes, nelements, dtype):
@@ -139,10 +141,13 @@ class RealSpringArray(OES_Object):
         self.ntimes = ntimes
         self.nelements = nelements
         _times = zeros(ntimes, dtype=dtype)
-        element = zeros(nelements, dtype='int32')
+
+        int_fmt = 'int32' if self.size == 4 else 'int64'
+        float_fmt = 'float32' if self.size == 4 else 'float64'
+        element = zeros(nelements, dtype=int_fmt)
 
         #[stress]
-        data = zeros((ntimes, nelements, 1), dtype='float32')
+        data = zeros((ntimes, nelements, 1), dtype=float_fmt)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
@@ -416,7 +421,7 @@ class RealSpringStressArray(RealSpringArray, StressObject):
         RealSpringArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['spring_stress']
         return headers
 
@@ -445,7 +450,7 @@ class RealSpringStrainArray(RealSpringArray, StrainObject):
         RealSpringArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['spring_strain']
         return headers
 
@@ -514,7 +519,7 @@ class RealNonlinearSpringStressArray(OES_Object):
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['force', 'stress']
         return headers
 

@@ -62,7 +62,7 @@ class RealNonlinearPlateArray(OES_Object):
     def is_stress(self):
         return True
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             #[fiber_dist, oxx, oyy, ozz, txy, es, eps, ecs, exx, eyy, ezz, etxy]
             'fiber_distance', 'oxx', 'oyy', 'ozz', 'txy',
@@ -462,7 +462,7 @@ class RealNonlinearSolidArray(OES_Object):
     def is_stress(self):
         return True
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'oxx', 'oyy', 'ozz', 'txy', 'tyz', 'txz',
             'eff_plastic_strain', 'eff_plastic_strain', 'eff_creep_strain',

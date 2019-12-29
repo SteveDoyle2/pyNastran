@@ -52,7 +52,7 @@ from cpylog import get_logger
 
 from pyNastran import is_release, __version__
 from pyNastran.f06.errors import FatalError
-from pyNastran.op2.op2_interface.op2_reader import OP2Reader
+from pyNastran.op2.op2_interface.op2_reader import OP2Reader, mapfmt, reshape_bytes_block
 from pyNastran.bdf.cards.params import PARAM
 
 #============================
@@ -234,7 +234,7 @@ INT_PARAMS_1 = [
     b'SEFINAL', b'SEMAP1', b'SKPLOAD', b'SKPMTRX', b'SOLID1', b'SSG3',
     b'PEDGEP', b'ACMSPROC', b'ACMSSEID', b'ACOUS', b'ACOUSTIC', b'ADJFLG',
     b'ADJLDF', b'AEDBCP', b'AESRNDM', b'ARCSIGNS', b'ATVUSE', b'BADMESH', b'BCHNG',
-    b'BCTABLE', b'ROTCSV', b'ROTGPF', b'BEARDMP', b'BEARFORC', b'BOV',
+    b'BCTABLE', b'ROTCSV', b'ROTGPF', b'BEARDMP', b'BEARFORC', b'BOV', b'OP2FMT',
 ]
 FLOAT_PARAMS_1 = [
     b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
@@ -702,6 +702,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OSTR1C'  : [self._read_oes1_3, self._read_ostr1_4],  # strain - composite
             b'OESTRCP' : [self._read_oes1_3, self._read_ostr1_4],
 
+            b'OSTR1PL' : [self._table_passer, self._table_passer], # ????
+            b'OSTR1THC' : [self._table_passer, self._table_passer], # ????
+            b'OSTR1CR' : [self._table_passer, self._table_passer], # ????
+            #b'OEFIIP'
+            b'XCASECC' : [self._table_passer, self._table_passer], # ????
+
             # special nonlinear tables
             # OESNLBR - Slideline stresses
             # OESNLXD - Nonlinear transient stresses
@@ -764,6 +770,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             b'OUGV2'   : [self._read_oug2_3, self._read_oug_4],  # displacements in nodal frame
             b'ROUGV2'  : [self._read_oug2_3, self._read_oug_4],  # relative OUG
             b'OUXY2'   : [self._read_oug2_3, self._read_oug_4],  # Displacements in SORT2 format for h-set or d-set.
+
+            # modal contribution
+            b'OUGMC1'  : [self._read_oug1_3, self._read_ougmc_4],
+            b'OQGMC1'  : [self._read_oqg1_3, self._read_ougmc_4],
+            b'OESMC1'  : [self._read_oes1_3, self._read_oesmc_4],
+            b'OSTRMC1'  : [self._read_oes1_3, self._read_oesmc_4],
 
             #F:\work\pyNastran\examples\Dropbox\move_tpl\sbuckl2a.op2
             b'OCRUG' : [self._read_oug1_3, self._read_oug_4],  # post-buckling displacement
@@ -1206,14 +1218,21 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _read_pvto_4_helper(self, data, ndata: int) -> int:
         """reads PARAM cards"""
-        nvalues = ndata // 4
-        assert ndata % 4 == 0, ndata
+        xword = (4 * self.factor)
+        nvalues = ndata // xword
+        assert ndata % xword == 0, ndata
 
-        structs8 = Struct(b'8s')
-        #struct2s8 = Struct(b'4s8s')
-        struct2i = Struct(b'ii')
-        struct2f = Struct(b'ff')
-        struct2d = Struct(b'dd')
+        if self.size == 4:
+            structs8 = self.struct_8s
+            #struct2s8 = Struct(b'4s8s')
+            struct2i = self.struct_2i
+            struct2f = Struct(b'ff')
+            struct2d = Struct(b'dd')
+        else:
+            struct2i = self.struct_2q
+            structs8 = self.struct_16s
+            struct2f = Struct(b'dd')
+
         i = 0
 
         #print('---------------------------')
@@ -1221,29 +1240,31 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         while i < nvalues:
             #print('---------------------------')
             #print('*i=%s nvalues=%s' % (i, nvalues))
-            word = data[i*4:(i+2)*4].rstrip()
+            word = data[i*xword:(i+2)*xword].rstrip()
+            if self.size == 8:
+                word = reshape_bytes_block(word)
             #print('word=%r' % word)
             #word = s8.unpack(word)[0]#.decode(self._encoding)
 
             # the first two entries are typically trash, then we can get values
             if word in INT_PARAMS_1:
-                slot = data[(i+2)*4:(i+4)*4]
+                slot = data[(i+2)*xword:(i+4)*xword]
                 value = struct2i.unpack(slot)[1]
                 i += 4
             elif word in FLOAT_PARAMS_1:
-                slot = data[(i+2)*4:(i+4)*4]
+                slot = data[(i+2)*xword:(i+4)*xword]
                 value = struct2f.unpack(slot)[1]
                 i += 4
             elif word in FLOAT_PARAMS_2:
-                slot = data[(i+3)*4:(i+5)*4]
+                slot = data[(i+3)*xword:(i+5)*xword]
                 value = struct2f.unpack(slot)
                 i += 5
             elif word in INT_PARAMS_2:
-                slot = data[(i+3)*4:(i+5)*4]
+                slot = data[(i+3)*xword:(i+5)*xword]
                 value = struct2i.unpack(slot)
                 i += 5
             elif word in DOUBLE_PARAMS_1:
-                slot = data[(i+1)*4:(i+8)*4]
+                slot = data[(i+1)*xword:(i+8)*xword]
                 try:
                     value = struct2d.unpack(slot)[1]
                 except:
@@ -1255,12 +1276,15 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 #aaa
             elif word in STR_PARAMS_1:
                 i += 3
-                slot = data[i*4:(i+2)*4]
-                value = structs8.unpack(slot)[0].decode('latin1').rstrip()
+                slot = data[i*xword:(i+2)*xword]
+                bvalue = structs8.unpack(slot)[0]
+                if self.size == 8:
+                    bvalue = reshape_bytes_block(bvalue)
+                value = bvalue.decode('latin1').rstrip()
                 i += 2
             else:
-                self.show_data(data[i*4+12:i*4+i*4+12], types='ifsdq')
-                self.show_data(data[i*4+8:(i+4)*4], types='ifsdq')
+                self.show_data(data[i*xword+12:i*4+i*4+12], types='ifsdq')
+                self.show_data(data[i*xword+8:(i+4)*4], types='ifsdq')
                 self.log.error('%r' % word)
                 raise NotImplementedError('%r is not a supported PARAM' % word)
 
@@ -1588,6 +1612,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             elif table_name.strip() in self.additional_matrices:
                 op2_reader.read_matrix(table_name)
             else:
+                #self.show(1000, types='ifsq')
                 msg = (
                     'Invalid Table = %r\n\n'
                     'If you have matrices that you want to read, see:\n'

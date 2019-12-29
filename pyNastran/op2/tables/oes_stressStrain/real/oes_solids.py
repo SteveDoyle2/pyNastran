@@ -540,7 +540,7 @@ class RealSolidStressArray(RealSolidArray, StressObject):
         RealSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         if self.is_von_mises:
             von_mises = 'von_mises'
         else:
@@ -554,7 +554,7 @@ class RealSolidStrainArray(RealSolidArray, StrainObject):
         RealSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         if self.is_von_mises:
             von_mises = 'von_mises'
         else:

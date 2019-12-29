@@ -55,7 +55,7 @@ class RealStrainEnergyArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'strain_energy', 'percent', 'strain_energy_density'
         ]
@@ -709,7 +709,7 @@ class ComplexStrainEnergyArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'strain_energy', 'percent', 'strain_energy_density'
         ]

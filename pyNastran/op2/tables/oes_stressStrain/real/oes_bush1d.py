@@ -54,7 +54,7 @@ class RealBush1DStressArray(OES_Object):
         return words
         # raise NotImplementedError('%s needs to implement _get_msgs' % self.__class__.__name__)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['element_force', 'axial_displacement', 'axial_velocity',
                    'axial_stress', 'axial_strain', 'plastic_strain']
         return headers

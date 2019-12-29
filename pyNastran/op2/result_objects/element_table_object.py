@@ -220,14 +220,18 @@ class RealElementTableArray(ElementTableArray):  # displacement style table
         ElementTableArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
     @property
-    def is_real(self):
+    def is_real(self) -> bool:
         return True
 
     @property
-    def is_complex(self):
+    def is_complex(self) -> bool:
         return False
 
-    def data_type(self):
+    @property
+    def nnodes_per_element(self) -> bool:
+        return 1
+
+    def data_type(self) -> str:
         return 'float32'
 
     #def spike():

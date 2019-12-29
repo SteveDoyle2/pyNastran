@@ -481,6 +481,6 @@ class ComplexSolidStrainArray(ComplexSolidArray, StrainObject):
         ComplexSolidArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['exx', 'eyy', 'ezz', 'exy', 'eyz', 'exz']
         return headers

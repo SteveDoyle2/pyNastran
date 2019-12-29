@@ -63,7 +63,7 @@ class TestOpenFoamGUI(unittest.TestCase):
         #test = OpenFoamGUI()
         #test.log = log
         #test.load_openfoam_faces_geometry(face_filename)
-        faces = FaceFile(log=None, debug=False)
+        faces = FaceFile(log=log, debug=False)
         faces.read_face_file(face_filename)
 
         faces.read_face_file(face_filename, ifaces_to_read=[1])

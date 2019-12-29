@@ -16,6 +16,7 @@ FLUX             HOEF1         Element heat flux
 
 """
 from struct import Struct
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 import numpy as np
 from numpy import frombuffer, vstack, sin, cos, radians, array, hstack, zeros
 
@@ -2151,17 +2152,17 @@ class OEF(OP2Common):
             #result_name, is_random = self._apply_oef_ato_crm_psd_rms_no(result_name)
             slot = self.get_result(result_name)
 
-            ntotal = 36  # 9*4
+            ntotal = 36 * self.factor  # 9*4
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             #return nelements * self.num_wide * 4
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2184,18 +2185,19 @@ class OEF(OP2Common):
         elif self.format_code in [2, 3] and self.num_wide == 17: # imag
 
             # TODO: vectorize
-            ntotal = 68  # 17*4
+            ntotal = 68 * self.factor  # 17*4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
-            s = Struct(self._endian + self._analysis_code_fmt + b'16f')
+            fmt = mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size)
+            s = Struct(fmt)
             for unused_i in range(nelements):
-                edata = data[n:n + 68]
+                edata = data[n:n + ntotal]
 
                 out = s.unpack(edata)
                 (eid_device,

@@ -165,7 +165,7 @@ class RealBendArray(OES_Object):
     def headers(self):
         return self._get_headers()
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return self.headers
 
     def write_f06(self, f06_file, header=None, page_stamp='PAGE %s',

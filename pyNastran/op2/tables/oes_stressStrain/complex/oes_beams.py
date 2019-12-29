@@ -432,7 +432,7 @@ class ComplexBeamStressArray(ComplexBeamArray, StressObject):
         ComplexBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['sxc', 'sxd', 'sxe', 'sxf', ]
         return headers
 
@@ -441,6 +441,6 @@ class ComplexBeamStrainArray(ComplexBeamArray, StrainObject):
         ComplexBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['exc', 'exd', 'exe', 'exf', ]
         return headers

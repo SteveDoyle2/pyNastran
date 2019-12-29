@@ -341,7 +341,8 @@ class OP2(OP2_Scalar, OP2Writer):
         elif mode.lower() == 'optistruct': # radioss,
             self.set_as_optistruct()
         else:
-            raise RuntimeError(f"mode='{mode}' and must be in [msc, nx, autodesk, optistruct]")
+            raise RuntimeError(f'mode={mode!r} and must be in [msc, nx, '
+                               f'autodesk, nasa95, optistruct]')
 
     def include_exclude_results(self,
                                 exclude_results: Optional[List[str]]=None,

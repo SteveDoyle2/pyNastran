@@ -885,7 +885,7 @@ class ComplexPlateStressArray(ComplexPlateArray, StressObject):
             headers.append('ovm')
         return headers
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return self._get_headers()
 
 class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
@@ -901,5 +901,5 @@ class ComplexPlateStrainArray(ComplexPlateArray, StrainObject):
             headers.append('evm')
         return headers
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return self._get_headers()

@@ -323,13 +323,13 @@ class TableArray(ScalarObject):  # displacement style table
         return msg
 
     @property
-    def headers(self):
+    def headers(self) -> List[str]:
         return ['t1', 't2', 't3', 'r1', 'r2', 'r3']
 
-    def _get_headers(self):
+    def _get_headers(self) -> List[str]:
         return self.headers
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return self._get_headers()
 
     def _reset_indices(self):
@@ -387,7 +387,8 @@ class TableArray(ScalarObject):  # displacement style table
         self.ntotal = ntotal
 
         _times = np.zeros(ntimes, dtype=float_fmt)
-        node_gridtype = np.zeros((nnodes, 2), dtype='int32')
+        int_fmt = 'int32' if self.size == 4 else 'int64'
+        node_gridtype = np.zeros((nnodes, 2), dtype=int_fmt)
 
         #[t1, t2, t3, r1, r2, r3]
         data = np.zeros((nx, ny, 6), self.data_type())

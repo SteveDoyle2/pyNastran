@@ -18,10 +18,21 @@ import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 from pyNastran.bdf.mesh_utils.cut_edge_model_by_plane import cut_edge_model_by_coord
+from pyNastran.bdf.cards.coordinate_systems import CORD2R
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.coordinate_systems import Coord
+
+def get_nid_cd_xyz_cid0(model: BDF):
+    out = model.get_displacement_index_xyz_cp_cd()
+    icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
+    nids = nid_cp_cd[:, 0]
+    nid_cd = nid_cp_cd[:, [0, 2]]
+    xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
+        xyz_cp, nids, icp_transform,
+        cid=0)
+    return nids, nid_cd, icd_transform, xyz_cid0
 
 def get_element_centroids(model: BDF) -> Tuple[np.array, np.array]:
     """gets the element ids and their centroids"""
@@ -36,7 +47,7 @@ def get_element_centroids(model: BDF) -> Tuple[np.array, np.array]:
     return eids, element_centroids_cid0
 
 
-def get_stations(model, p1, p2, p3, zaxis,
+def get_stations(model: BDF, p1, p2, p3, zaxis,
                  method: str='Z-Axis Projection',
                  cid_p1: int=0, cid_p2: int=0, cid_p3: int=0, cid_zaxis: int=0,
                  idir: int=0, nplanes: int=20):
@@ -70,7 +81,6 @@ def get_stations(model, p1, p2, p3, zaxis,
         method=method)
     xyz3 = model.coords[cid_p3].transform_node_to_global(p3)
 
-    from pyNastran.bdf.cards.coordinate_systems import CORD2R
     coord_out = CORD2R(None, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
                        comment='')
     #print(coord_out.get_stats())
@@ -78,7 +88,9 @@ def get_stations(model, p1, p2, p3, zaxis,
     xyz1p = coord_out.transform_node_to_local(xyz1)
     xyz3p = coord_out.transform_node_to_local(xyz3)
     dx = xyz3p[idir] - xyz1p[idir]
-    assert abs(dx) > 0., f'dx={dx} xyz1={xyz1} xyz3={xyz3}'
+    if abs(dx) == 0.:
+        msg = f'Coincident starting and end points.  dx={dx} xyz1={xyz1} xyz3={xyz3}'
+        raise ValueError(msg)
     stations = np.linspace(0., dx, num=nplanes, endpoint=True)
 
     return xyz1, xyz2, xyz3, i, k, coord_out, stations

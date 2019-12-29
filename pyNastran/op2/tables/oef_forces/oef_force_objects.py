@@ -357,7 +357,7 @@ class FailureIndicesArray(RealForceObject):
             data_frame.columns.names = ['Static']
         self.data_frame = data_frame
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         #headers = ['eid', 'failure_theory', 'ply', 'failure_index_for_ply (direct stress/strain)',
                    #'failure_index_for_bonding (interlaminar stresss)', 'failure_index_for_element', 'flag']
         headers = ['failure_index_for_ply (direct stress/strain)',
@@ -733,7 +733,7 @@ class RealSpringForceArray(RealSpringDamperForceArray):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['spring_force']
         return headers
 
@@ -765,7 +765,7 @@ class RealDamperForceArray(RealSpringDamperForceArray):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['damper_force']
         return headers
 
@@ -804,7 +804,7 @@ class RealRodForceArray(RealForceObject):
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -1306,7 +1306,7 @@ class RealCBeamForceArray(RealForceObject):
             #assert self.is_sort1 is True, str(self)
         return page_num - 1
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
             'axial_force', 'total_torque', 'warping_torque', ]
@@ -1506,7 +1506,7 @@ class RealCShearForceArray(RealForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'force41', 'force21', 'force12', 'force32', 'force23', 'force43',
             'force34', 'force14',
@@ -1770,7 +1770,7 @@ class RealViscForceArray(RealForceObject):  # 24-CVISC
     def nnodes_per_element(self) -> int:
         return 1
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -1999,7 +1999,7 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
     def build(self):
@@ -2363,7 +2363,7 @@ class RealPlateBilinearForceArray(RealForceObject):  # 144-CQUAD4
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
 
     def build(self):
@@ -3620,7 +3620,7 @@ class RealCGapForceArray(RealForceObject):  # 38-CGAP
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'fx', 'sfy', 'sfz', 'u', 'v', 'w', 'sv', 'sw'
         ]
@@ -3802,7 +3802,7 @@ class RealBendForceArray(RealForceObject):  # 69-CBEND
         RealForceObject.__init__(self, data_code, isubcase)
         self.nelements = 0  # result specific
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'bending_moment_1a', 'bending_moment_2a', 'shear_1a', 'shear_2a', 'axial_a', 'torque_a',
             'bending_moment_1b', 'bending_moment_2b', 'shear_1b', 'shear_2b', 'axial_b', 'torque_b',
@@ -4028,7 +4028,7 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'ax', 'ay', 'az', 'vx', 'vy', 'vz', 'pressure'
         ]
@@ -4277,7 +4277,7 @@ class RealCBeamForceVUArray(RealForceObject):  # 191-VUBEAM
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['xxb', 'fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
 
@@ -4533,7 +4533,7 @@ class RealForceMomentArray(RealForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
 
@@ -4869,7 +4869,7 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         self.dt = dt
         self.nelements = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return ['mfx', 'mfy', 'mfxy', 'bmx', 'bmy', 'bmxy', 'syz', 'szx']
 
     def build(self):

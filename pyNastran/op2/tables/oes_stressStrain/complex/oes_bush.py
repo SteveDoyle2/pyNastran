@@ -305,7 +305,7 @@ class ComplexCBushStressArray(ComplexCBushArray, StressObject):
         ComplexCBushArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz']
         return headers
 
@@ -344,7 +344,7 @@ class ComplexCBushStrainArray(ComplexCBushArray, StrainObject):
         ComplexCBushArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['tx', 'ty', 'tz', 'rx', 'ry', 'rz'] # tx, ty, tz, rx, ry, rz
         return headers
 

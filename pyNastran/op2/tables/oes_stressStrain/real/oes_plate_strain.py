@@ -231,7 +231,7 @@ class RealCPLSTRNPlateStressArray(RealCPLSTRNPlateArray, StressObject):
         RealCPLSTRNPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['oxx', 'oyy', 'txy', 'von_mises']
         return headers
 
@@ -241,7 +241,7 @@ class RealCPLSTRNPlateStrainArray(RealCPLSTRNPlateArray, StrainObject):
         RealCPLSTRNPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['exx', 'eyy', 'exy', 'von_mises']
         return headers
 

@@ -622,6 +622,13 @@ NX_ELEMENTS = {
     351 : 'CELAS2 SOL 401',
     352 : 'CBUSH SOL 401',
 
+    #ELTYPE=267 - Composite HEXA element (CHEXAL)
+    #ELTYPE=268 - Composite PENTA element (CPENTAL)
+    355 : 'Composite triangular shell element (CTRIA6); SOL 402?',
+    356 : 'Composite quadrilateral shell element (CQUAD8); SOL 402?',
+    357 : 'Composite triangular shell element (CTRIAR); SOL 402?',
+    358 : 'Composite quadrilateral shell element (CQUADR); SOL 402?',
+
     # SOL 402
     363 : 'CROD SOL 402',
 

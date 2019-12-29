@@ -118,6 +118,7 @@ OP2:
  - supports more PARAM reading
  - TODO: linear/nonlinear hyperelastic solids
  - TODO: stress transforms.  This is probably a bit of work.
+ - TODO: preliminary 64-bit support
  - TODO: CD transforms for cylindrical/spherical displacement, velocity, acceleration, forces.  This shouldn't be terrible.
 
 GUI:
@@ -140,6 +141,9 @@ GUI:
        - plate by upper/lower, composite plates by ply, bars, rods, springs, cbush, cdamp
      - fractional mass response
 
+F06:
+ - KE support for plot_145
+ 
 This should be hidden...
 
 --->

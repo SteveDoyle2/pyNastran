@@ -503,7 +503,7 @@ class RealCompositePlateStressArray(RealCompositePlateArray, StressObject):
     def is_strain(self):
         return False
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         if self.is_von_mises:
             ovm = 'von_mises'
         else:
@@ -525,7 +525,7 @@ class RealCompositePlateStrainArray(RealCompositePlateArray, StrainObject):
     def is_strain(self) -> bool:
         return True
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         if self.is_von_mises:
             ovm = 'von_mises'
         else:

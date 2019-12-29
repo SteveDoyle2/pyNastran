@@ -706,7 +706,7 @@ class RealBeamStressArray(RealBeamArray, StressObject):
         RealBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             #'grid', 'xxb',
             'sxc', 'sxd', 'sxe', 'sxf',
@@ -733,7 +733,7 @@ class RealBeamStrainArray(RealBeamArray, StrainObject):
         RealBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             #'grid', 'xxb',
             'sxc', 'sxd', 'sxe', 'sxf',
@@ -760,7 +760,7 @@ class RealNonlinearBeamStressArray(RealNonlinearBeamArray, StressObject):
         RealNonlinearBeamArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'longitudinal_stress', 'equivalent_stress',
             'total_strain', 'equivalent_plastic_strain', 'equivalent_creep_strain'

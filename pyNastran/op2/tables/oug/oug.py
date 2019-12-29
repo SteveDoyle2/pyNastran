@@ -16,6 +16,7 @@ import numpy as np
 #from pyNastran import is_release
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.op2_interface.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 
 from pyNastran.op2.tables.oug.oug_displacements import (
     RealDisplacementArray, ComplexDisplacementArray)
@@ -144,6 +145,7 @@ class OUG(OP2Common):
             '???', '???', '???', '???',
             '???', '???', 'thermal', '???',
             '???', 'Title', 'subtitle', 'label']
+
 
         ## random code
         self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
@@ -402,6 +404,41 @@ class OUG(OP2Common):
         self._write_debug_bits()
         assert isinstance(self.nonlinear_factor, integer_types), self.nonlinear_factor
 
+    def _read_ougmc_4(self, data, ndata):
+        if self.table_code == 44:   # Displacements
+            if self.table_name in [b'OUGMC1', b'OUGMC2']:
+                assert self.thermal == 0, self.code_information()
+                result_name = 'modal_contribution.displacements'
+            else:
+                raise NotImplementedError(self.code_information())
+        elif self.table_code == 48:   # spc_forces
+            if self.table_name in [b'OQGMC1', b'OQGMC2']:
+                assert self.thermal == 0, self.code_information()
+                result_name = 'modal_contribution.spc_forces'
+            else:
+                raise NotImplementedError(self.code_information())
+        else:
+            raise NotImplementedError(self.code_information())
+
+        n = 0
+        if self.table_name in [b'OUGMC1', b'OQGMC1']:
+            if self.read_mode == 1:
+                return ndata
+            from struct import Struct
+            ntotal = 16 * self.factor  # 4*4
+            nnodes = ndata // ntotal
+            fmt = mapfmt(self._endian + b'i3f', self.size)
+            struct1 = Struct(fmt)
+            for inode in range(nnodes):
+                edata = data[n:n+ntotal]
+                out = struct1.unpack(edata)
+                #print(out)
+                n += ntotal
+            self.log.warning(f'skipping {self.table_name}')
+        else:
+            raise NotImplementedError(self.code_information())
+        return n
+
     def _read_oug_4(self, data, ndata):
         """reads the SORT1 version of table 4 (the data table)"""
         if self.table_code == 1:   # Displacements
@@ -441,6 +478,9 @@ class OUG(OP2Common):
         elif self.table_code == 17:  # acceleration (solution set)
             assert self.table_name in [b'OUXY1', b'OUXY2'], self.table_name
             n = self._read_oug_acceleration(data, ndata)
+        elif self.table_code == 44:   # Displacements
+            assert self.table_name in [b'OUGMC1', b'OUGMC2'], self.table_name
+            n = self._read_oug_displacement(data, ndata, is_cid=False)
         else:
             raise NotImplementedError(self.code_information())
         return n
@@ -493,6 +533,11 @@ class OUG(OP2Common):
 
         elif self.table_name in [b'OUG1', b'OUGV1', b'OUGV2', b'OUGV1PAT', b'BOUGV1']:
             assert self.thermal in [0, 1], self.code_information()
+            # NX THERMAL
+            # 1: heat transfer
+            # 2: axisymmetric Fourier
+            # 3: for cyclic symmetric;
+            # 0: otherwise
             if self.thermal == 0:
                 result_name = 'displacements'
             elif self.thermal == 1:
@@ -533,7 +578,8 @@ class OUG(OP2Common):
         if self.thermal == 0:
             #result_name = 'displacements'
             #storage_obj = self.displacements
-            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2', b'OUG1', b'OCRUG', b'OUGV1PAT', b'OUXY1', b'OUXY2'], self.table_name
+            assert self.table_name in [b'BOUGV1', b'ROUGV1', b'ROUGV2', b'OUGV1', b'OUGV2',
+                                       b'OUG1', b'OCRUG', b'OUGV1PAT', b'OUXY1', b'OUXY2'], self.table_name
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealDisplacementArray, ComplexDisplacementArray,
                                             'node', random_code=self.random_code,
@@ -721,7 +767,12 @@ class OUG(OP2Common):
         """
         table_code = 7
         """
-        assert self.thermal == 0, self.code_information()
+        # NX THERMAL
+        # 1: heat transfer
+        # 2: axisymmetric Fourier
+        # 3: for cyclic symmetric;
+        # 0: otherwise
+        assert self.thermal in [0, 3], self.code_information()
         if self.table_name in [b'OUGV1', b'OUGV2', b'BOUGV1', b'OPHIG', b'BOPHIG', b'OUG1', b'BOPHIGF']:
             self._setup_op2_subcase('VECTOR')
             result_name = 'eigenvectors'
@@ -745,13 +796,19 @@ class OUG(OP2Common):
         else:  # pragma: no cover
             msg = 'eigenvectors; table_name=%s' % self.table_name
             raise NotImplementedError(msg)
-        assert self.thermal == 0, self.code_information()
+        assert self.thermal in [0, 3], self.code_information()
 
         if self._results.is_not_saved(result_name):
             return ndata
         self._results._found_result(result_name)
         storage_obj = self.get_result(result_name)
-        if self.thermal == 0:
+
+        # NX THERMAL
+        # 1: heat transfer
+        # 2: axisymmetric Fourier
+        # 3: for cyclic symmetric;
+        # 0: otherwise
+        if self.thermal in [0, 3]:
             n = self._read_table_vectorized(data, ndata, result_name, storage_obj,
                                             RealEigenvectorArray, ComplexEigenvectorArray,
                                             'node', random_code=self.random_code)

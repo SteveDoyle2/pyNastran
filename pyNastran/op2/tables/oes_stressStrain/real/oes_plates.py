@@ -7,6 +7,7 @@ import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
@@ -93,15 +94,13 @@ class RealPlateArray(OES_Object):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes,
             #self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
 
         _times = np.zeros(self.ntimes, dtype=dtype)
-        element_node = np.zeros((self.ntotal, 2), dtype='int32')
+        element_node = np.zeros((self.ntotal, 2), dtype=idtype)
 
         #[fiber_dist, oxx, oyy, txy, angle, majorP, minorP, ovm]
-        data = np.zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        data = np.zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):
                 #print(key, value)
@@ -521,7 +520,7 @@ class RealPlateStressArray(RealPlateArray, StressObject):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         fiber_dist = 'fiber_distance' if self.is_fiber_distance else 'fiber_curvature'
         ovm = 'von_mises' if self.is_von_mises else 'max_shear'
         headers = [fiber_dist, 'oxx', 'oyy', 'txy', 'angle', 'omax', 'omin', ovm]
@@ -538,7 +537,7 @@ class RealPlateStrainArray(RealPlateArray, StrainObject):
         RealPlateArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         fiber_dist = 'fiber_distance' if self.is_fiber_distance else 'fiber_curvature'
         ovm = 'von_mises' if self.is_von_mises else 'max_shear'
         headers = [fiber_dist, 'exx', 'eyy', 'exy', 'angle', 'emax', 'emin', ovm]

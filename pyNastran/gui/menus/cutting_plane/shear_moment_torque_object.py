@@ -3,15 +3,14 @@ defines:
  - ShearMomentTorqueObject
 
 """
-import numpy as np
-
-from pyNastran.bdf.cards.coordinate_systems import CORD2R
+#from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
-    get_element_centroids, get_stations)
+    get_element_centroids)
 
 from pyNastran.gui.menus.cutting_plane.shear_moment_torque import ShearMomentTorqueWindow
 from pyNastran.gui.qt_files.colors import PURPLE_FLOAT
-
+from pyNastran.op2.tables.ogf_gridPointForces.smt import (
+    get_nid_cd_xyz_cid0, plot_smt, setup_coord_from_plane)
 
 class ShearMomentTorqueObject:
     """wrapper around ShearMomentTorqueWindow"""
@@ -158,37 +157,57 @@ class ShearMomentTorqueObject:
         assert len(plane_color) == 3, plane_color
 
         model = self.gui.models[model_name]
-        out = model.get_displacement_index_xyz_cp_cd()
-        icd_transform, icp_transform, xyz_cp, nid_cp_cd = out
-        nids = nid_cp_cd[:, 0]
-        nid_cd = nid_cp_cd[:, [0, 2]]
-        xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
-            xyz_cp, nids, icp_transform,
-            cid=0)
-
-        #xyz_min, xyz_max = model.xyz_limits
-        xyz_min = xyz_cid0.min(axis=0)
-        xyz_max = xyz_cid0.max(axis=0)
-        assert len(xyz_min) == 3, xyz_min
-
-        dxyz = np.abs(xyz_max - xyz_min)
-        dim_max = dxyz.max()
-        izero = np.where(dxyz == 0)
-        dxyz[izero] = dim_max
-        xyz1, xyz2, xyz3, i, k, origin, xzplane, stations = get_stations(
-            model, p1, p2, p3, zaxis,
-            method=method, cid_p1=cid_p1, cid_p2=cid_p2, cid_p3=cid_p3,
-            cid_zaxis=cid_zaxis, nplanes=nplanes)
-
+        nids, nid_cd, icd_transform, xyz_cid0 = get_nid_cd_xyz_cid0(model)
+        #xyz1, xyz2, xyz3, i, k, origin, xzplane, dim_max, stations
         try:
-            # i/j/k vector is nan
-            coord = CORD2R(1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
-                           comment='')
-        except:
-            log.error('The coordinate system is invalid; check your cutting plane.')
+            xyz1, xyz2, xyz3, i, k, coord_out, dim_max, stations = setup_coord_from_plane(
+                model, xyz_cid0,
+                p1, p2, p3, zaxis,
+                method=method,
+                cid_p1=cid_p1, cid_p2=cid_p2, cid_p3=cid_p3, cid_zaxis=cid_zaxis,
+                nplanes=nplanes,
+            )
+        except ValueError as verror:
+            model.log.error(str(verror))
             if stop_on_failure:
                 raise
-            return None, None
+            return
+        coord = coord_out
+        #try:
+            ## i/j/k vector is nan
+            #coord = CORD2R(1, rid=0, origin=origin, zaxis=zaxis, xzplane=xzplane,
+                           #comment='')
+        #except:
+            #log.error('The coordinate system is invalid; check your cutting plane.')
+            #if stop_on_failure:
+                #raise
+            #return None, None
+        unused_plane_actor, unused_prop = self.create_plane_actor(
+            xyz1, xyz2,
+            coord, i, k, dim_max,
+            plane_color, plane_opacity,
+        )
+        #if 0:
+            #point_actor = self.gui.create_point_actor_from_points(
+                #[xyz1, xyz3], point_size=8, actor_name='smt_points')
+            #prop = point_actor.GetProperty()
+            #prop.SetColor(*plane_color)
+            #prop.SetOpacity(plane_opacity) # 0=transparent, 1=solid
+            #point_actor.VisibilityOn()
+        self.gui.rend.Render()
+        self.gui.Render()
+
+        eids, element_centroids_cid0 = get_element_centroids(model)
+        force_sum, moment_sum = gpforce.shear_moment_diagram(
+            xyz_cid0, eids, nids, icd_transform,
+            element_centroids_cid0,
+            model.coords, nid_cd, stations, coord,
+            idir=0, itime=0, debug=False, log=log)
+        plot_smt(stations, force_sum, moment_sum, show=show)
+        return force_sum, moment_sum
+
+    def create_plane_actor(self, xyz1, xyz2, coord, i, k, dim_max: float,
+                           plane_color, plane_opacity: float):
         origin = coord.origin
         beta = coord.beta().T
 
@@ -207,74 +226,4 @@ class ShearMomentTorqueObject:
         prop.SetColor(*plane_color)
         prop.SetOpacity(plane_opacity) # 0=transparent, 1=solid
         plane_actor.VisibilityOn()
-
-        if 0:
-            point_actor = self.gui.create_point_actor_from_points(
-                [xyz1, xyz3], point_size=8, actor_name='smt_points')
-            prop = point_actor.GetProperty()
-            prop.SetColor(*plane_color)
-            prop.SetOpacity(plane_opacity) # 0=transparent, 1=solid
-            point_actor.VisibilityOn()
-        self.gui.rend.Render()
-        self.gui.Render()
-
-        eids, element_centroids_cid0 = get_element_centroids(model)
-        force_sum, moment_sum = gpforce.shear_moment_diagram(
-            xyz_cid0, eids, nids, icd_transform,
-            element_centroids_cid0,
-            model.coords, nid_cd, stations, coord,
-            idir=0, itime=0, debug=False, log=log)
-        plot_smt(stations, force_sum, moment_sum, show=show)
-        return force_sum, moment_sum
-
-
-def plot_smt(x, force_sum, moment_sum, show=True):
-    """plots the shear, moment, torque plots"""
-    import matplotlib.pyplot as plt
-    plt.close()
-    #f, ax = plt.subplots()
-    # ax = fig.subplots()
-    fig = plt.figure(1)
-    ax = fig.gca()
-    ax.plot(x, force_sum[:, 0], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Axial')
-    ax.grid(True)
-
-    fig = plt.figure(2)
-    ax = fig.gca()
-    ax.plot(x, force_sum[:, 1], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Shear Y')
-    ax.grid(True)
-
-    fig = plt.figure(3)
-    ax = fig.gca()
-    ax.plot(x, force_sum[:, 2], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Shear Z')
-    ax.grid(True)
-
-    fig = plt.figure(4)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 0], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Torque')
-    ax.grid(True)
-
-    fig = plt.figure(5)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 1], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Moment Y')
-    ax.grid(True)
-
-    fig = plt.figure(6)
-    ax = fig.gca()
-    ax.plot(x, moment_sum[:, 2], '-*')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Moment Z')
-    ax.grid(True)
-
-    if show:
-        plt.show()
+        return plane_actor, prop

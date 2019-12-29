@@ -44,7 +44,7 @@ class NonlinearGapStressArray(OES_Object):
         ]
         return msgs
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['compX', 'shearY', 'shearZ', 'axialU', 'shearV', 'shearW', 'slipV', 'slipW']
         return headers
 

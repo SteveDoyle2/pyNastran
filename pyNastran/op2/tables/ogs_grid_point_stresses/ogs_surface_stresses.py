@@ -121,7 +121,7 @@ class GridPointSurfaceStressesArray(ScalarObject):
         msg += self.get_data_code()
         return msg
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['nx', 'ny', 'txy', 'angle', 'majorP', 'minorP', 'tmax', 'ovm']
         return headers
 
@@ -226,7 +226,7 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         self.itime = None
         self._times = None
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'lxa', 'lxb', 'lxc',
             'lya', 'lyb', 'lyc',
@@ -356,7 +356,7 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         self.itime = None
         self._times = None
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['ox', 'oy', 'oz', 'txy', 'tyz', 'txz', 'pressure', 'ovm']
         return headers
 
@@ -548,7 +548,7 @@ class GridPointStressesSurfaceDiscontinutiesArray(ScalarObject): # tCode=35
         #self.node_element = None
         self._times = None
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['oxx', 'oyy', 'ozz', 'txy', 'pressure']
         return headers
 

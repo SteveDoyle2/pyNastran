@@ -1,7 +1,7 @@
 from typing import List
 import numpy as np
 from numpy import zeros, unique, array_equal, empty
-from pyNastran.op2.result_objects.op2_objects import BaseElement
+from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, _eigenvalue_header, write_imag_floats_13e)
 from pyNastran.op2.vector_utils import (
@@ -201,23 +201,20 @@ class RealGridPointForcesArray(GridPointForces):
 
         #print("***name=%s ntimes=%s ntotal=%s" % (
             #self.element_names, self.ntimes, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
 
         assert self.ntotal < 2147483647, self.ntotal # max int
         if self.is_unique:
             assert isinstance(self.ntotal, integer_types), 'ntotal=%r type=%s' % (self.ntotal, type(self.ntotal))
-            self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
+            self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype=idtype)
             self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
         else:
-            self.node_element = zeros((self.ntotal, 2), dtype='int32')
+            self.node_element = zeros((self.ntotal, 2), dtype=idtype)
             self.element_names = empty(self.ntotal, dtype='U8')
 
         #[t1, t2, t3, r1, r2, r3]
-        self.data = zeros((self.ntimes, self.ntotal, 6), dtype='float32')
+        self.data = zeros((self.ntimes, self.ntotal, 6), dtype=fdtype)
 
     def build_dataframe(self):
         """
@@ -727,8 +724,8 @@ class RealGridPointForcesArray(GridPointForces):
         xyz_coord = xyz_cid0.dot(beta)
         x_centroid = element_centroids_coord[:, idir]
         x_coord = xyz_coord[:, idir]
-        print(f'xmin={x_centroid.min()} xmax={x_centroid.max()} (centroids)')
-        print(f'xmin={x_coord.min()} xmax={x_coord.max()}')
+        #print(f'xmin={x_centroid.min()} xmax={x_centroid.max()} (centroids)')
+        #print(f'xmin={x_coord.min()} xmax={x_coord.max()}')
 
         eids = np.unique(eids)
         force_sum = zeros((nstations, 3), dtype='float32')
@@ -1044,7 +1041,7 @@ class RealGridPointForcesArray(GridPointForces):
         ]
         return msg
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
 
@@ -1215,17 +1212,15 @@ class ComplexGridPointForcesArray(GridPointForces):
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_names, self.element_type, nnodes_per_element,
             #self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
 
         self._times = zeros(self.ntimes, dtype=dtype)
 
         if self.is_unique:
-            self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype='int32')
+            self.node_element = zeros((self.ntimes, self.ntotal, 2), dtype=idtype)
             self.element_names = empty((self.ntimes, self.ntotal), dtype='U8')
         else:
-            self.node_element = zeros((self.ntotal, 2), dtype='int32')
+            self.node_element = zeros((self.ntotal, 2), dtype=idtype)
             self.element_names = empty(self.ntotal, dtype='U8')
         #[t1, t2, t3, r1, r2, r3]
         self.data = zeros((self.ntimes, self.ntotal, 6), dtype='complex64')
@@ -1627,7 +1622,7 @@ class ComplexGridPointForcesArray(GridPointForces):
 
         return msg
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['f1', 'f2', 'f3', 'm1', 'm2', 'm3']
         return headers
 

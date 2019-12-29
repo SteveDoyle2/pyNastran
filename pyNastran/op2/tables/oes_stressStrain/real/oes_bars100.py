@@ -283,7 +283,7 @@ class RealBar10NodesStressArray(RealBar10NodesArray, StressObject):
         RealBar10NodesArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         #if self.is_fiber_distance:
             #fiber_dist = 'fiber_distance'
         #else:
@@ -311,7 +311,7 @@ class RealBar10NodesStrainArray(RealBar10NodesArray, StrainObject):
         RealBar10NodesArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         #if self.is_fiber_distance:
             #fiber_dist = 'fiber_distance'
         #else:

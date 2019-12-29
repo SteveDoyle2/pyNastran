@@ -45,7 +45,7 @@ class ComplexRodForceArray(ComplexForceObject):
         else:
             raise NotImplementedError('SORT2')
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial_force', 'torque']
         return headers
 
@@ -338,7 +338,7 @@ class ComplexCShearForceArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'force41', 'force14', 'force21', 'force12', 'force32', 'force23',
             'force43', 'force34', 'kickForce1', 'kickForce2', 'kickForce3',
@@ -613,7 +613,7 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['spring_force']
         return headers
 
@@ -925,7 +925,7 @@ class ComplexViscForceArray(BaseElement):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial_force', 'torque']
         return headers
 
@@ -1140,7 +1140,7 @@ class ComplexPlateForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
         return headers
 
@@ -1476,7 +1476,7 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['mx', 'my', 'mxy', 'bmx', 'bmy', 'bmxy', 'tx', 'ty']
         return headers
 
@@ -1876,7 +1876,7 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['bending_moment_1a', 'bending_moment_2a',
                    'bending_moment_1b', 'bending_moment_2b',
                    'shear1', 'shear2', 'axial', 'torque', ]
@@ -2231,7 +2231,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'sd', 'bending_moment1', 'bending_moment2', 'shear1', 'shear2',
             'axial_force', 'total_torque', 'warping_torque', ]
@@ -2668,7 +2668,7 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'bending_moment_1a', 'bending_moment_2a', 'shear_1a', 'shear_2a', 'axial_a', 'torque_a',
             'bending_moment_1b', 'bending_moment_2b', 'shear_1b', 'shear_2b', 'axial_b', 'torque_b',
@@ -2939,7 +2939,7 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['ax', 'ay', 'az', 'vx', 'vy', 'vz', 'pressure']
         return headers
 
@@ -3282,7 +3282,7 @@ class ComplexForceMomentArray(ComplexForceObject):
         self.itime = 0
         self.nelements = 0  # result specific
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['fx', 'fy', 'fz', 'mx', 'my', 'mz']
         return headers
 
@@ -3711,7 +3711,7 @@ class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
         self.itotal = 0
         self.ielement = 0
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return ['xxb', 'force_x', 'shear_y', 'shear_z', 'torsion', 'bending_y', 'bending_z']
 
     def build(self):
@@ -4066,7 +4066,7 @@ class ComplexForceVU_2DArray(BaseElement):  # 189-VUQUAD,190-VUTRIA
         # shear_yz, shear_xz]
         self.data = zeros((self.ntimes, self.nelements, 8), dtype='complex64')
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = [
             'membrane_x', 'membrane_y', 'membrane_xy',
             'bending_x', 'bending_y', 'bending_xy',

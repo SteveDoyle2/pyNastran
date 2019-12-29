@@ -270,7 +270,7 @@ class ComplexRodStressArray(ComplexRodArray, StressObject):
         ComplexRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -304,7 +304,7 @@ class ComplexRodStrainArray(ComplexRodArray, StrainObject):
         ComplexRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial', 'torsion']
         return headers
 

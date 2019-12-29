@@ -11,6 +11,7 @@ from pyNastran.op2.op2_helper import polar_to_real_imag
 from pyNastran.op2.op2_interface.utils import (
     build_obj, get_superelement_adaptivity_index, update_subtitle_with_adaptivity_index,
     update_label2)
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 from pyNastran.op2.op2_interface.op2_codes import (
     Op2Codes, get_scode_word, get_sort_method_from_table_name)
 
@@ -235,9 +236,54 @@ class OP2Common(Op2Codes, F06Writer):
     def add_data_parameter(self, data, var_name, Type, field_num,
                            apply_nonlinear_factor=True, fix_device_code=False,
                            add_to_dict=True):
+        if self.size == 4:
+            return self.add_data_parameter4(
+                data, var_name, Type, field_num,
+                apply_nonlinear_factor=apply_nonlinear_factor,
+                fix_device_code=fix_device_code,
+                add_to_dict=add_to_dict)
+        return self.add_data_parameter8(
+            data, var_name, Type, field_num,
+            apply_nonlinear_factor=apply_nonlinear_factor,
+            fix_device_code=fix_device_code,
+            add_to_dict=add_to_dict)
+
+    def add_data_parameter8(self, data, var_name, Type, field_num,
+                           apply_nonlinear_factor=True, fix_device_code=False,
+                           add_to_dict=True):
+        assert len(data) == 1168, len(data)
+        datai = data[8 * (field_num - 1) : 8 * (field_num)]
+        assert len(datai) == 8, len(datai)
+        if Type == b'i':
+            Type = b'q'
+        elif Type == b'f':
+            Type = b'd'
+        else:
+            raise NotImplementedError(Type)
+        value = self._unpack_data_parameter(
+            datai, var_name, Type, field_num,
+            apply_nonlinear_factor=apply_nonlinear_factor,
+            fix_device_code=fix_device_code,
+            add_to_dict=add_to_dict)
+        return value
+
+    def add_data_parameter4(self, data, var_name, Type, field_num,
+                           apply_nonlinear_factor=True, fix_device_code=False,
+                           add_to_dict=True):
+        assert len(data) == 584, len(data)
         datai = data[4 * (field_num - 1) : 4 * (field_num)]
         assert len(datai) == 4, len(datai)
         #assert type(self._endian) == type(Type), 'endian=%r Type=%r' % (self._endian, Type)
+        value = self._unpack_data_parameter(
+            datai, var_name, Type, field_num,
+            apply_nonlinear_factor=apply_nonlinear_factor,
+            fix_device_code=fix_device_code,
+            add_to_dict=add_to_dict)
+        return value
+
+    def _unpack_data_parameter(self, datai, var_name, Type, field_num,
+                               apply_nonlinear_factor=True, fix_device_code=False,
+                               add_to_dict=True):
         value, = unpack(self._endian + Type, datai)
         if fix_device_code:
             # was value = (value - self.device_code) // 10
@@ -277,9 +323,18 @@ class OP2Common(Op2Codes, F06Writer):
         self.data_code['nonlinear_factor'] = np.nan
 
     def _read_title_helper(self, data):
-        assert len(data) == 584, len(data)
-        # titleSubtitleLabel
-        title, subtitle, label = unpack(self._endian + b'128s128s128s', data[200:])
+        if self.size == 4:
+            assert len(data) == 584, len(data)
+            # title_subtitle_label
+            title, subtitle, label = unpack(self._endian + b'128s128s128s', data[200:])
+        else:
+            assert len(data) == 1168, len(data)
+            # title_subtitle_label
+            title, subtitle, label = unpack(self._endian + b'256s256s256s', data[400:])
+            title = reshape_bytes_block(title)
+            subtitle = reshape_bytes_block(subtitle)
+            label = reshape_bytes_block(label)
+
         self.title = title.decode(self.encoding).strip()
         subtitle = subtitle.decode(self.encoding)
         subtitle_original = subtitle.strip()
@@ -472,9 +527,17 @@ class OP2Common(Op2Codes, F06Writer):
             self.log.warning('superelement 2 not supported.  This may crash.')
 
         n = 0
-        keys = self.struct_3i.unpack(data[n:n+12])
-        n += 12
-        if len(data) == 12:
+        if self.size == 4:
+            ngeom = 12
+            structi = self.struct_3i
+        else:
+            raise NotImplementedError(self.size)
+            ngeom = 24
+            structi = self.struct_3q
+
+        keys = structi.unpack(data[n:n+ngeom])
+        n += ngeom
+        if len(data) == ngeom:
             #print('*self.istream = %s' % self.istream)
             #print('self.isubtable = %s' % self.isubtable)
             #self.istream -= 1 ## TODO: removed because it doesn't exist???
@@ -565,7 +628,8 @@ class OP2Common(Op2Codes, F06Writer):
 
         #if self.format_code == 1 and self.num_wide == 8:  # real/random
         # real
-        nnodes = ndata // 32  # 8*4
+        ntotal = 32 * self.factor
+        nnodes = ndata // ntotal  # 8*4
         #self.log.debug('  create table_vector')
         auto_return = self._create_table_vector(
             result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
@@ -601,7 +665,8 @@ class OP2Common(Op2Codes, F06Writer):
 
         #if self.format_code == 1 and self.num_wide == 8:  # real/random
         # real
-        nnodes = ndata // 32  # 8*4
+        ntotal = 32 * self.factor
+        nnodes = ndata // ntotal  # 8*4
         self.log.debug('  create table_vector')
         auto_return = self._create_table_vector(
             result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
@@ -630,9 +695,11 @@ class OP2Common(Op2Codes, F06Writer):
         #print('random...%s' % self.isRandomResponse())
         #if not self.isRandomResponse():
         is_vectorized = True
+        factor = self.factor
         if self.format_code == 1 and self.num_wide == 8:  # real/random
             # real
-            nnodes = ndata // 32  # 8*4
+            ntotal = 32 * factor
+            nnodes = ndata // ntotal  # 8*4
             auto_return = self._create_table_vector(
                 result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
             if auto_return:
@@ -654,7 +721,8 @@ class OP2Common(Op2Codes, F06Writer):
                 #n = self._not_implemented_or_skip(data, ndata, msg)
         elif self.format_code in [2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             # complex
-            nnodes = ndata // 56  # 14*4
+            ntotal = 56 * factor
+            nnodes = ndata // ntotal  # 14*4
             if self.is_debug_file:
                 self.binary_debug.write('nnodes=%s' % nnodes)
             auto_return = self._create_table_vector(
@@ -729,9 +797,11 @@ class OP2Common(Op2Codes, F06Writer):
         #print('random...%s' % self.isRandomResponse())
         #if not self.isRandomResponse():
         is_vectorized = True
+        factor = self.factor
         if self.format_code == 1 and self.num_wide == 8:  # real/random
             # real
-            nnodes = ndata // 32  # 8*4
+            ntotal = 32 * factor
+            nnodes = ndata // ntotal  # 8*4
             auto_return = self._create_table_vector(
                 result_name, nnodes, storage_obj, real_vector, is_cid=is_cid)
             if auto_return:
@@ -754,7 +824,8 @@ class OP2Common(Op2Codes, F06Writer):
         elif self.format_code in [2, 3] and self.num_wide == 14:  # real or real/imaginary or mag/phase
             raise NotImplementedError('real/imaginary or mag/phase')
             # complex
-            nnodes = ndata // 56  # 14*4
+            ntotal = 56 * factor
+            nnodes = ndata // ntotal  # 14*4
             if self.is_debug_file:
                 self.binary_debug.write('nnodes=%s' % nnodes)
             auto_return = self._create_table_vector(
@@ -826,8 +897,10 @@ class OP2Common(Op2Codes, F06Writer):
         assert self.obj is not None
         obj = self.obj
 
+        factor = self.factor
+        ntotal = 32 * factor # 32=4*8
         if self.use_vector and is_vectorized:
-            n = nnodes * 4 * 8
+            n = nnodes * ntotal
             itotal2 = obj.itotal + nnodes
             #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
             ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
@@ -855,15 +928,16 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             dt = np.nan
             n = 0
-            s = Struct(self._endian + b'2i6f')
+            fmt = mapfmt(self._endian + b'2i6f', self.size)
+            s = Struct(fmt)
             for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+32])
+                out = s.unpack(data[n:n+ntotal])
                 eid_device, grid_type, tx = out[:3]
                 eid = eid_device // 10
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
                 obj.add_sort1(dt, eid, grid_type, tx)
-                n += 32
+                n += ntotal
         return n
 
     def _read_real_scalar_table_sort1(self, data, is_vectorized, nnodes,
@@ -882,9 +956,10 @@ class OP2Common(Op2Codes, F06Writer):
         #assert self.obj is not None
         dt = self.nonlinear_factor
         obj = self.obj
+        ntotal = 32 * self.factor # 32=4 * 8
         if self.use_vector and is_vectorized:
             itime = obj.itime
-            n = nnodes * 4 * 8
+            n = nnodes * ntotal
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
@@ -903,15 +978,16 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             n = 0
             assert nnodes > 0, nnodes
-            s = Struct(self._endian + b'2i6f')
+            fmt = mapfmt(self._endian + b'2i6f', self.size)
+            s = Struct(fmt)
             for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+32])
+                out = s.unpack(data[n:n+ntotal])
                 eid_device, grid_type, tx = out[:3]
                 eid = eid_device // 10
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
                 obj.add_sort1(dt, eid, grid_type, tx)
-                n += 32
+                n += ntotal
         return n
 
     def _read_real_scalar_table_sort2(self, data, is_vectorized, nnodes, result_name,
@@ -979,12 +1055,13 @@ class OP2Common(Op2Codes, F06Writer):
         assert self.obj is not None
         obj = self.obj
 
+        ntotal = 32 * self.factor # 4 * 8
         if self.use_vector and is_vectorized:
-            n = nnodes * 4 * 8
+            n = nnodes * ntotal
             itotal2 = obj.itotal + nnodes
             #print('ndata=%s n=%s nnodes=%s' % (ndata, n, nnodes))
-            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
-            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 8)
+            floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 8)
             obj._times[obj.itime] = dt
             #self.node_gridtype[self.itotal, :] = [node_id, grid_type]
             #self.data[self.itime, self.itotal, :] = [v1, v2, v3, v4, v5, v6]
@@ -998,15 +1075,16 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             n = 0
             dt = np.nan
-            s = Struct(self._endian + b'2i6f')
+            fmt = mapfmt(self._endian + b'2i6f', self.size)
+            s = Struct(fmt)
             for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+32])
+                out = s.unpack(data[n:n+ntotal])
                 (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
                 eid = eid_device // 10
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
                 obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += 32
+                n += ntotal
         return n
 
     def _read_real_table_sort1(self, data, is_vectorized, nnodes,
@@ -1025,36 +1103,39 @@ class OP2Common(Op2Codes, F06Writer):
         #assert self.obj is not None
         dt = self.nonlinear_factor
         obj = self.obj
+
+        ntotal = 32 * self.factor  # 32=4*8
         if self.use_vector and is_vectorized:
             itime = obj.itime
-            n = nnodes * 4 * 8
+            n = nnodes * ntotal
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+                ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 8)
 
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[itotal:itotal2, 0] = nids
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
 
-            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8)
+            floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 8)
             obj.data[obj.itime, obj.itotal:itotal2, :] = floats[:, 2:].copy()
             obj._times[itime] = dt
             obj.itotal = itotal2
         else:
             n = 0
             assert nnodes > 0, nnodes
-            s = Struct(self._endian + b'2i6f')
+            fmt = mapfmt(self._endian + b'2i6f', self.size)
+            s = Struct(fmt)
             for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+32])
+                out = s.unpack(data[n:n+ntotal])
                 (eid_device, grid_type, tx, ty, tz, rx, ry, rz) = out
                 eid = eid_device // 10
                 if self.is_debug_file:
                     self.binary_debug.write('  %s=%i; %s\n' % (flag, eid, str(out)))
                 obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += 32
+                n += ntotal
         return n
 
     def _read_real_table_sort2(self, data, is_vectorized, nnodes, result_name, flag, is_cid=False):
@@ -1071,9 +1152,10 @@ class OP2Common(Op2Codes, F06Writer):
         #assert self.obj is not None
 
         obj = self.obj
+        ntotal = 32 * self.factor # 4*8
         if self.use_vector and is_vectorized:
             itime = obj.itime
-            n = nnodes * 4 * 8
+            n = nnodes * ntotal
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
@@ -1097,20 +1179,21 @@ class OP2Common(Op2Codes, F06Writer):
             n = 0
             assert nnodes > 0
             flag = self.data_code['analysis_method']
-            structi = Struct(self._endian + self._analysis_code_fmt + b'i6f')
+            fmt = mapfmt(self._endian + self._analysis_code_fmt + b'i6f', self.size)
+            structi = Struct(fmt)
 
             #psds = ('CRM2', 'NO2', 'PSD2', 'RMS2')
             #print('sort_method=%s' % self.sort_method)
             #if self.table_name_str.endswith(psds):
             for unused_inode in range(nnodes):
-                edata = data[n:n+32]
+                edata = data[n:n+ntotal]
                 out = structi.unpack(edata)
                 (dt, grid_type, tx, ty, tz, rx, ry, rz) = out
                 if self.is_debug_file:
                     self.binary_debug.write(
                         f'  nid={nid} {flag}={dt} ({type(dt)}); {str(out)}\n')
                 obj.add_sort2(dt, nid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += 32
+                n += ntotal
         #if self.table_name_str == 'OQMRMS1':
             #print(obj.node_gridtype)
             #print('------------')
@@ -1138,8 +1221,9 @@ class OP2Common(Op2Codes, F06Writer):
 
         n = 0
         obj = self.obj
+        ntotal = 56 * self.factor # 4 * 14
         if self.use_vector and is_vectorized:
-            n = nnodes * 4 * 14
+            n = nnodes * ntotal
             itotal2 = obj.itotal + nnodes
 
             ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
@@ -1162,9 +1246,10 @@ class OP2Common(Op2Codes, F06Writer):
             obj.data[obj.itime, obj.itotal:itotal2, :] = real_imag
             obj.itotal = itotal2
         else:
-            s = Struct(self._endian + b'2i12f')
+            fmt = mapfmt(self._endian + b'2i12f', self.size)
+            s = Struct(fmt)
             for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+56])
+                out = s.unpack(data[n:n+ntotal])
                 (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
                  txi, tyi, tzi, rxi, ryi, rzi) = out
                 eid = eid_device // 10
@@ -1177,7 +1262,7 @@ class OP2Common(Op2Codes, F06Writer):
                 ry = polar_to_real_imag(ryr, ryi)
                 rz = polar_to_real_imag(rzr, rzi)
                 obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += 56
+                n += ntotal
         return n
 
     def _read_complex_table_sort1_imag(self, data, is_vectorized, nnodes,
@@ -1188,13 +1273,14 @@ class OP2Common(Op2Codes, F06Writer):
         dt = self.nonlinear_factor
         obj = self.obj
 
+        ntotal = 56 * self.factor # 4 * 14
         if self.use_vector and is_vectorized:
-            n = nnodes * 4 * 14
+            n = nnodes * ntotal
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
             if obj.itime == 0:
-                ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+                ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 14)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 try:
@@ -1207,7 +1293,7 @@ class OP2Common(Op2Codes, F06Writer):
                     raise ValueError(msg)
                 obj.node_gridtype[itotal:itotal2, 1] = ints[:, 1].copy()
 
-            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
+            floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 14).copy()
             real = floats[:, 2:8]
             imag = floats[:, 8:]
 
@@ -1216,12 +1302,13 @@ class OP2Common(Op2Codes, F06Writer):
             obj.itotal = itotal2
         else:
             n = 0
-            s = Struct(self._endian + b'2i12f')
+            fmt = mapfmt(self._endian + b'2i12f', self.size)
+            s = Struct(fmt)
 
             assert self.obj is not None
             assert nnodes > 0
             for unused_inode in range(nnodes):
-                out = s.unpack(data[n:n+56])
+                out = s.unpack(data[n:n+ntotal])
                 (eid_device, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
                  txi, tyi, tzi, rxi, ryi, rzi) = out
                 eid = eid_device // 10
@@ -1234,7 +1321,7 @@ class OP2Common(Op2Codes, F06Writer):
                 ry = complex(ryr, ryi)
                 rz = complex(rzr, rzi)
                 obj.add_sort1(dt, eid, grid_type, tx, ty, tz, rx, ry, rz)
-                n += 56
+                n += ntotal
         return n
 
     def _check_id(self, eid_device, unused_flag, unused_out):
@@ -1281,9 +1368,10 @@ class OP2Common(Op2Codes, F06Writer):
         #assert ndata % ntotal == 0
 
         obj = self.obj
+        ntotal = 56 * self.factor # 4 * 14
         if self.use_vector and is_vectorized:
             itime = obj.itime
-            n = nnodes * 4 * 14
+            n = nnodes * ntotal
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
@@ -1305,7 +1393,7 @@ class OP2Common(Op2Codes, F06Writer):
             s = Struct(self._endian + self._analysis_code_fmt + b'i12f')
             binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
             for unused_inode in range(nnodes):
-                edata = data[n:n+56]
+                edata = data[n:n+ntotal]
                 out = s.unpack(edata)
                 (freq, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
                  txi, tyi, tzi, rxi, ryi, rzi) = out
@@ -1319,7 +1407,7 @@ class OP2Common(Op2Codes, F06Writer):
                 ry = polar_to_real_imag(ryr, ryi)
                 rz = polar_to_real_imag(rzr, rzi)
                 obj.add_sort2(freq, node_id, grid_type, tx, ty, tz, rx, ry, rz)
-                n += 56
+                n += ntotal
         return n
 
     def _read_complex_table_sort2_imag(self, data, is_vectorized, nnodes, result_name, flag):
@@ -1339,9 +1427,10 @@ class OP2Common(Op2Codes, F06Writer):
         node_id = self.nonlinear_factor
 
         obj = self.obj
+        ntotal = 56 * self.factor # 4 * 14
         if self.use_vector and is_vectorized:
             itime = obj.itime
-            n = nnodes * 4 * 14
+            n = nnodes * ntotal
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
@@ -1367,7 +1456,7 @@ class OP2Common(Op2Codes, F06Writer):
             binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
 
             for unused_inode in range(nnodes):
-                edata = data[n:n+56]
+                edata = data[n:n+ntotal]
                 out = s.unpack(edata)
 
                 (freq, grid_type, txr, tyr, tzr, rxr, ryr, rzr,
@@ -1382,7 +1471,7 @@ class OP2Common(Op2Codes, F06Writer):
                 ry = complex(ryr, ryi)
                 rz = complex(rzr, rzi)
                 obj.add_sort2(freq, node_id, grid_type, tx, ty, tz, rx, ry, rz)
-                n += 56
+                n += ntotal
         return n
 
     def create_transient_object(self, result_name, storage_obj, class_obj,
@@ -1558,7 +1647,22 @@ class OP2Common(Op2Codes, F06Writer):
                 self.table_name, self.table_code, msg, self.code_information())
             raise NotImplementedError(msg)
 
-    def parse_approach_code(self, data):
+    @property
+    def size(self) -> int:
+        return self.op2_reader.size
+
+    @property
+    def factor(self):
+        return self.op2_reader.factor
+
+    def parse_approach_code(self, data: bytes) -> None:
+        if self.size == 4:
+            self.parse_approach_code4(data)
+        else:
+            self.parse_approach_code8(data)
+
+
+    def parse_approach_code4(self, data: bytes) -> None:
         """
         Function  Formula                                                Manual
         ========  =======                                                ======
@@ -1577,9 +1681,17 @@ class OP2Common(Op2Codes, F06Writer):
 
         """
         (approach_code, tCode, int3, isubcase) = unpack(self._endian + b'4i', data[:16])
+        self._set_approach_code(approach_code, tCode, int3, isubcase)
+
+    def parse_approach_code8(self, data: bytes) -> None:
+        (approach_code, tCode, int3, isubcase) = unpack(self._endian + b'4q', data[:32])
+        self._set_approach_code(approach_code, tCode, int3, isubcase)
+
+    def _set_approach_code(self, approach_code: int, tCode: int, int3: int, isubcase: int) -> None:
         self.approach_code = approach_code
         self.tCode = tCode
         self.int3 = int3
+        self.data_code['size'] = self.size
         self.data_code['is_msc'] = self.is_msc
         self.data_code['is_nasa95'] = self.is_nasa95
 
@@ -2065,36 +2177,51 @@ class OP2Common(Op2Codes, F06Writer):
 
         #self.sdtype = np.dtype(self._uendian + '4s')
         self.struct_i = Struct(self._endian + b'i')
+        self.struct_8s = Struct(self._endian + b'8s')
         if size == 4:
-            #self.struct_q = self.struct_i
+            self.idtype8 = self.idtype
+            self.fdtype8 = self.fdtype
             self.struct_3i = Struct(self._endian + b'3i')
-            self.struct_8s = Struct(self._endian + b'8s')
             self.struct_2i = Struct(self._endian + b'ii')
             self.struct_8s_i = Struct(self._endian + b'8si')
-            #self.op2_reader.read_block = self.op2_reader.read_blocki
-            #self.op2_reader.read_markers = self.op2_reader.read_markersi
+            #self.op2_reader.read_block = self.op2_reader.read_block4
+            #self.op2_reader.read_markers = self.op2_reader.read_markers4
         elif size == 8:
-            #self.struct_q = Struct(self._endian + b'q')
-            self.struct_3i = Struct(self._endian + b'3q')
-            self.struct_8s = Struct(self._endian + b'8s')
-            self.struct_2i = Struct(self._endian + b'2q')
-            self.struct_8s_i = Struct(self._endian + b'8sq')
-            #self.op2_reader.read_block = self.op2_reader.read_blockq
-            #self.op2_reader.read_markers = self.op2_reader.read_markersq
-            raise FatalError('64-bit precison is not supported')
+            self.fdtype8 = np.dtype(self._uendian + 'd')
+            self.idtype8 = np.dtype(self._uendian + 'i8')
+            #self.fdtype8 = np.dtype(self._uendian + 'f4')
+            #self.idtype8 = np.dtype(self._uendian + 'i4')
+
+            self.log.warning('64-bit precison is poorly supported')
+            #raise NotImplementedError('64-bit precison is not supported')
+            self.struct_q = Struct(self._endian + b'q')
+            self.struct_16s = Struct(self._endian + b'16s')
+            #self.struct_3i = Struct(self._endian + b'3q')
+            #self.struct_8s = Struct(self._endian + b'8s')
+            self.struct_2q = Struct(self._endian + b'2q')
+            self.struct_16s_q = Struct(self._endian + b'16sq')
+            #self.op2_reader.read_block = self.op2_reader.read_block8
+            #self.op2_reader.read_markers = self.op2_reader.read_markers8
         else:
             NotImplementedError(size)
         self.op2_reader.size = size
+        self.op2_reader.factor = size // 4
 
     def del_structs(self):
         """deepcopy(OP2) fails on Python 3.6 without doing this"""
         del self.fdtype, self.idtype, self.double_dtype, self.long_dtype
-        del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s, self.struct_8s_i
+        if hasattr(self, 'struct_2i'):
+            del self.struct_i, self.struct_2i, self.struct_3i, self.struct_8s, self.struct_8s_i
+        else:
+            del self.struct_i, self.struct_2q, self.struct_16s, self.struct_16s_q
 
 def _cast_nonlinear_factor(value):
     """h5py is picky about it's data types"""
     if isinstance(value, int):
-        value = np.int32(value)
+        try:
+            value = np.int32(value)
+        except OverflowError:
+            value = np.int64(value)
     elif isinstance(value, float):
         value = np.float32(value)
     elif isinstance(value, (np.int32, np.float32)):  # pragma: no cover

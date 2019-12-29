@@ -7,6 +7,7 @@ import numpy as np
 
 from pyNastran import is_release
 from pyNastran.utils import object_attributes, object_methods
+from pyNastran.utils.numpy_utils import integer_types
 
 #from pyNastran.utils import list_print
 from pyNastran.op2.op2_interface.op2_codes import Op2Codes, get_sort_method_from_table_name
@@ -792,3 +793,18 @@ class BaseElement(ScalarObject):
         #data_frame.index.names = ['ElementID', 'NodeID', 'Item']
         #print(data_frame)
         return data_frame
+
+def get_times_dtype(nonlinear_factor, size):
+    dtype = 'float'
+    if isinstance(nonlinear_factor, integer_types):
+        dtype = 'int'
+
+    if size == 4:
+        dtype += '32'
+        fdtype = 'float32'
+        idtype = 'int32'
+    else:
+        dtype += '64'
+        fdtype = 'float64'
+        idtype = 'int64'
+    return dtype, idtype, fdtype

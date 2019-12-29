@@ -23,6 +23,7 @@ from typing import Union
 from numpy import fromstring, frombuffer, radians, sin, cos, vstack, repeat, array
 import numpy as np
 
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.op2_interface.op2_common import OP2Common
 from pyNastran.op2.op2_interface.utils import apply_mag_phase, build_obj
 from pyNastran.op2.op2_helper import polar_to_real_imag
@@ -1258,12 +1259,33 @@ class OES(OP2Common):
             self.format_code = 1
             self.sort_bits[0] = 0 # real
             prefix = 'RAPEATC.'
-
+        elif self.table_name in [b'OESMC1', b'OSTRMC1']:
+            prefix = 'modal_contribution.'
         else:
             raise NotImplementedError(self.table_name)
         self.data_code['sort_bits'] = self.sort_bits
         self.data_code['nonlinear_factor'] = self.nonlinear_factor
         return prefix, postfix
+
+    def _read_oesmc_4(self, data, ndata):
+        n = 0
+        if self.element_type == 1:
+            assert self.num_wide == 4, self.code_information()
+            if self.read_mode == 1:
+                return ndata
+            ntotal = 16 * self.factor # 4*4
+            nelements = ndata // ntotal
+            fmt = mapfmt(self._endian + b'i3f', self.size)
+            struct1 = Struct(fmt)
+            for ielem in range(nelements):
+                edata = data[n:n+ntotal]
+                out = struct1.unpack(edata)
+                #print(out)
+                n += ntotal
+            self.log.warning(f'skipping {self.table_name} with {self.element_name}-{self.element_type}')
+        else:
+            raise NotImplementedError(self.code_information())
+        return n
 
     def _read_oes1_loads_nasa95(self, data, ndata):
         """Reads OES1 subtable 4 for NASA 95"""
@@ -1618,7 +1640,7 @@ class OES(OP2Common):
         assert ndata > 0, ndata
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
-        assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
+        assert self.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
         assert self.thermal == 0, "thermal = %%s" % self.thermal
         assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
@@ -2798,23 +2820,23 @@ class OES(OP2Common):
         #print('numwide real=%s imag=%s random=%s' % (numwide_real, numwide_imag, numwide_random2))
         self._data_factor = nnodes_expected
         if self.format_code == 1 and self.num_wide == numwide_real:  # real
-            ntotal = 16 + 84 * nnodes_expected
+            ntotal = (16 + 84 * nnodes_expected) * self.factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 itotali = obj.itotal + nelements
                 itotal2 = obj.itotal + nelements * nnodes_expected
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
                     # (eid_device, cid, abcd, nnodes)
-                    ints = frombuffer(data, dtype=self.idtype).copy()
+                    ints = frombuffer(data, dtype=self.idtype8).copy()
                     try:
                         ints1 = ints.reshape(nelements, numwide_real)
                     except ValueError:
@@ -2843,7 +2865,7 @@ class OES(OP2Common):
                     obj.element_cid[itotal:itotali, 0] = eids
                     obj.element_cid[itotal:itotali, 1] = cids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 4:]
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, numwide_real)[:, 4:]
                 # 1     9    15   2    10   16  3   11  17   8
                 #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovm]
                 #isave = [1, 9, 15, 2, 10, 16, 3, 11, 17, 8]
@@ -2871,8 +2893,14 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CSolid real SORT%s' % self.sort_method)
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'i4si')
-                struct2 = Struct(self._endian + b'i20f')
+                if self.size == 4:
+                    fmt1 = self._endian + self._analysis_code_fmt + b'i4si'
+                    fmt2 = self._endian + b'i20f'
+                else:
+                    fmt1 = self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'q8sq'
+                    fmt2 = self._endian + b'q20d'
+                struct1 = Struct(fmt1)
+                struct2 = Struct(fmt2)
                 if self.is_debug_file:
                     msg = '%s-%s nelements=%s nnodes=%s; C=[sxx, sxy, s1, a1, a2, a3, pressure, svm,\n' % (
                         self.element_name, self.element_type, nelements, nnodes_expected)
@@ -2880,8 +2908,10 @@ class OES(OP2Common):
                     msg += '                                 szz, sxz, s3, c1, c2, c3]\n'
                     self.binary_debug.write(msg)
 
+                n16 = 16 * self.factor
+                n84 = 84 * self.factor
                 for unused_i in range(nelements):
-                    edata = data[n:n+16]
+                    edata = data[n:n+n16]
                     out = struct1.unpack(edata)
                     (eid_device, cid, unused_abcd, nnodes) = out
                     eid, dt = get_eid_dt_from_eid_device(
@@ -2892,9 +2922,9 @@ class OES(OP2Common):
 
                     assert nnodes < 21, 'print_block(data[n:n+16])'  #self.print_block(data[n:n+16])
 
-                    n += 16
+                    n += n16
                     for inode in range(nnodes_expected):  # nodes pts, +1 for centroid (???)
-                        out = struct2.unpack(data[n:n + 84]) # 4*21 = 84
+                        out = struct2.unpack(data[n:n + n84]) # 4*21 = 84
                         if self.is_debug_file:
                             self.binary_debug.write('%s - %s\n' % (preline2, str(out)))
                         (grid_device,
@@ -2926,7 +2956,7 @@ class OES(OP2Common):
                             obj.add_node_sort1(dt, eid, inode, grid,
                                                sxx, syy, szz, sxy, syz, sxz, s1, s2, s3,
                                                a_cos, b_cos, c_cos, pressure, svm)
-                        n += 84
+                        n += n84
 
         elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # complex
             # TODO: vectorize
@@ -4620,7 +4650,7 @@ class OES(OP2Common):
 
         numwide_real = 17
         if self.format_code == 1 and self.num_wide == 17:  # real
-            ntotal = 68  # 4*17
+            ntotal = 68 * self.factor  # 4*17
             nelements = ndata // ntotal
             nlayers = nelements * 2
             nnodes_expected = 2
@@ -4634,21 +4664,21 @@ class OES(OP2Common):
             obj = self.obj
             assert obj.is_built is True, obj.is_built
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * nnodes_expected
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype)
+                    ints = frombuffer(data, dtype=self.idtype8)
                     ints1 = ints.reshape(nelements, numwide_real)
                     eids = ints1[:, 0] // 10
                     eids = np.vstack([eids, eids]).T.ravel()
                     assert eids.min() > 0, eids.min()
                     obj.element_node[itotal:itotal2, 0] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)[:, 1:]
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, numwide_real)[:, 1:]
 
                 #fd, sx, sy, txy, angle, major, minor, max_shear
                 floats1 = floats.reshape(nelements * nnodes_expected, 8)
@@ -4659,7 +4689,8 @@ class OES(OP2Common):
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug(f'vectorize {self.element_name}-{self.element_type} real '
                                    f'SORT{self.sort_method}')
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'16f')
+                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'16f', self.size)
+                struct1 = Struct(fmt)
                 cen = 0 # CEN/4
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
@@ -4682,7 +4713,7 @@ class OES(OP2Common):
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
             nnodes = 0  # centroid + 4 corner points
-            ntotal = 4 * (15 * (nnodes + 1))
+            ntotal = 4 * (15 * (nnodes + 1)) * self.factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
@@ -4692,7 +4723,7 @@ class OES(OP2Common):
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 nnodes_all = (nnodes + 1)
                 itotal = obj.itotal
                 itotal2 = itotal + 2 * nelements * nnodes_all
@@ -4730,9 +4761,10 @@ class OES(OP2Common):
                 s2 = Struct(self._endian + b'i14f')
 
                 cen = 0 # 'CEN/4'
+                #60
                 for unused_i in range(nelements):
-                    edata = data[n:n+60]  # 4*15=60
-                    n += 60
+                    edata = data[n:n+ntotal]  # 4*15=60
+                    n += ntotal
                     out = s1.unpack(edata)  # 15
                     (eid_device,
                      fd1, sx1r, sx1i, sy1r, sy1i, txy1r, txy1i,
@@ -4762,8 +4794,8 @@ class OES(OP2Common):
                     obj.add_sort1(dt, eid, cen, fd2, sx2, sy2, txy2)
 
                     for unused_inode in range(nnodes):  # nodes pts
-                        edata = data[n:n+60]  # 4*15=60
-                        n += 60
+                        edata = data[n:n+ntotal]  # 4*15=60
+                        n += ntotal
                         out = s2.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('  %s\n' % str(out))
@@ -4802,7 +4834,7 @@ class OES(OP2Common):
             self._results._found_result(result_name)
             slot = self.get_result(result_name)
 
-            ntotal = 36  # 4*9
+            ntotal = 36 * self.factor  # 4*9
             nelements = ndata // ntotal
             nlayers = nelements * 2
             nnodes_expected = 1
@@ -4816,7 +4848,7 @@ class OES(OP2Common):
             obj = self.obj
             assert obj.is_built is True, obj.is_built
             if self.use_vector and is_vectorized:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * 2
 

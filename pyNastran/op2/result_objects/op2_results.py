@@ -117,6 +117,8 @@ class SolutionSet:
 
 class ModalContribution:
     def __init__(self):
+        self.displacements = {}
+
         self.celas1_stress = {}
         self.celas2_stress = {}
         self.celas3_stress = {}
@@ -185,7 +187,7 @@ class ModalContribution:
 
     def get_table_types(self):
         tables = [
-            #'displacements', 'velocities', 'accelerations',
+            'displacements', # 'velocities', 'accelerations',
             #'load_vectors', 'spc_forces', 'mpc_forces',
 
             #'celas1_force', 'celas2_force', 'celas3_force', 'celas4_force',

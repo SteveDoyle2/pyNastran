@@ -248,7 +248,7 @@ class RandomBushStressArray(RandomRodArray, StressObject):
         RandomRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 
@@ -272,7 +272,7 @@ class RandomRodStressArray(RandomRodArray, StressObject):
         RandomRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial', 'torsion']
         return headers
 
@@ -292,7 +292,7 @@ class RandomRodStrainArray(RandomRodArray, StrainObject):
         RandomRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial', 'torsion']
         return headers
 

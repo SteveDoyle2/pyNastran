@@ -39,10 +39,11 @@ class TestOpenVSP_GUI(unittest.TestCase):
         test.on_load_geometry(geometry_filename, geometry_format='degen_geom', raise_error=True)
 
     def test_openvsp_geometry_2(self):
+        log = get_logger(level='warning')
         degen_geom_csv = os.path.join(MODEL_PATH, 'wing_fuse.csv')
         bdf_filename = os.path.join(MODEL_PATH, 'wing_fuse.bdf')
         panair_filename = os.path.join(MODEL_PATH, 'wing_fuse.inp')
-        model = read_degen_geom(degen_geom_csv, log=None, debug=False)
+        model = read_degen_geom(degen_geom_csv, log=log, debug=False)
         model.write_bdf(bdf_filename)
 
         #panair_filename = 'panair.inp'

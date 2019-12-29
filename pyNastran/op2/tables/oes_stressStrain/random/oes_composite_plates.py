@@ -327,7 +327,7 @@ class RandomCompositePlateStressArray(RandomCompositePlateArray, StressObject):
     def is_strain(self):
         return False
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['o11', 'o22', 'txy']
         return headers
 
@@ -345,6 +345,6 @@ class RandomCompositePlateStrainArray(RandomCompositePlateArray, StrainObject):
     def is_strain(self):
         return True
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['e11', 'e22', 'exy']
         return headers

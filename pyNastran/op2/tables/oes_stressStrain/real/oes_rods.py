@@ -350,7 +350,7 @@ class RealBushStressArray(RealRodArray, StressObject):
         RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 
@@ -374,7 +374,7 @@ class RealRodStressArray(RealRodArray, StressObject):
         RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 
@@ -394,7 +394,7 @@ class RealRodStrainArray(RealRodArray, StrainObject):
         RealRodArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['axial', 'SMa', 'torsion', 'SMt']
         return headers
 

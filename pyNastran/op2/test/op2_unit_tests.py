@@ -26,7 +26,7 @@ except ImportError:  # pragma: no cover
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CORD2R
-from pyNastran.op2.op2 import OP2, read_op2, FatalError
+from pyNastran.op2.op2 import OP2, read_op2, FatalError, FortranMarkerError
 from pyNastran.op2.op2_interface.op2_common import get_scode_word
 from pyNastran.op2.op2_geom import OP2Geom, read_op2_geom
 from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
@@ -34,6 +34,7 @@ from pyNastran.op2.test.test_op2 import run_op2, main as test_op2
 from pyNastran.bdf.test.bdf_unit_tests import Tester
 from pyNastran.bdf.cards.test.utils import save_load_deck
 from pyNastran.bdf.bdf_interface.compare_card_content import compare_elements
+from pyNastran.bdf.mesh_utils.cut_model_by_plane import get_element_centroids, get_stations
 
 #from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     #RealPlateBilinearForceArray, RealPlateForceArray)
@@ -1338,7 +1339,7 @@ class TestOP2(Tester):
         #save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
-        with self.assertRaises(FatalError):
+        with self.assertRaises(FortranMarkerError):
             run_op2(op2_filename, make_geom=False, write_bdf=True, read_bdf=False,
                     write_f06=True, write_op2=False,
                     is_mag_phase=False,
@@ -1348,6 +1349,7 @@ class TestOP2(Tester):
                     quiet=True,
                     stop_on_failure=True, dev=False,
                     build_pandas=False, log=log)
+        log.error('failed parsing 64-bit OP2')
 
     def test_op2_nasa_nastran_01(self):
         """checks sdr11se_s2dc.bdf, which tests ComplexCBushStressArray"""
@@ -1444,7 +1446,7 @@ class TestOP2(Tester):
         op2.write_f06(f06_filename)
         os.remove(f06_filename)
 
-    @unittest.skipIf(getpass.getuser() != 'sdoyle', "No h5py")
+    @unittest.skipIf(getpass.getuser() != 'sdoyle', "local test")
     def test_op2_bwb(self):  # pragma: no cover
         log = get_logger(level='warning')
         folder = os.path.join(MODEL_PATH, 'bwb')
@@ -1457,7 +1459,6 @@ class TestOP2(Tester):
 
         model = op2
         model.cross_reference()
-        from pyNastran.bdf.mesh_utils.cut_model_by_plane import get_element_centroids, get_stations
         gpforce = op2.grid_point_forces[1]
         out = model.get_xyz_in_coord_array(cid=0)
         nid_cp_cd, xyz_cid0, xyz_cp, icd_transform, icp_transform = out

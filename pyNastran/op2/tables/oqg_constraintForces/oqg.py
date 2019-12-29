@@ -639,7 +639,6 @@ class OQG(OP2Common):
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
                 #result_name = 'psd.mpc_forces'
             else:
-                print(self.table_code)
                 raise RuntimeError(self.code_information())
         else:
             raise RuntimeError(self.code_information())
@@ -669,7 +668,6 @@ class OQG(OP2Common):
                 #assert self.table_name in [b''], 'self.table_name=%r' % self.table_name
                 #result_name = 'psd.mpc_forces'
             else:
-                print(self.table_code)
                 raise RuntimeError(self.code_information())
         else:
             raise RuntimeError(self.code_information())

@@ -271,7 +271,7 @@ class Subcase:
         if data_code['label']:
             self.add('LABEL', data_code['label'], [], 'STRING-type')
 
-        if table_name in ['OUGV1', 'BOUGV1', 'OUGV2', 'OUG1', 'OUGV1PAT']:
+        if table_name in ['OUGV1', 'BOUGV1', 'OUGV2', 'OUG1', 'OUGV1PAT', 'OUGMC1', 'OUGMC2']:
             if table_code == 1:
                 thermal = data_code['thermal']
                 if thermal == 0:
@@ -286,6 +286,10 @@ class Subcase:
                 self.add('VELOCITY', 'ALL', options, 'STRESS-type')
             elif table_code == 11:
                 self.add('ACCELERATION', 'ALL', options, 'STRESS-type')
+            elif table_code == 44:  # OUGMC1
+                thermal = data_code['thermal']
+                assert thermal == 0, thermal
+                self.add('DISPLACEMENT', 'ALL', options, 'STRESS-type')
             else:
                 self._write_op2_error_msg(log, self.log, msg, data_code)
 

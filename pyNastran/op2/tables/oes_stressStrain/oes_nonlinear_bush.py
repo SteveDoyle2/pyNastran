@@ -43,7 +43,7 @@ class RealNonlinearBushArray(OES_Object): # 226-CBUSHNL
     def _get_msgs(self):
         raise NotImplementedError()
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['fx', 'fy', 'fz', 'otx', 'oty', 'otz', 'etx', 'ety', 'etz',
                    'mx', 'my', 'mz', 'orx', 'ory', 'orz', 'erx', 'ery', 'erz']
         return headers

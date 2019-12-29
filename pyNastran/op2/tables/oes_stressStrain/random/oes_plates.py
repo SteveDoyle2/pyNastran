@@ -611,7 +611,7 @@ class RandomPlateStressArray(RandomPlateArray, StressObject):
             headers.append('ovm')
         return headers
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return self._get_headers()
 
 class RandomPlateStrainArray(RandomPlateArray, StrainObject):
@@ -627,5 +627,5 @@ class RandomPlateStrainArray(RandomPlateArray, StrainObject):
             headers.append('evm')
         return headers
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return self._get_headers()

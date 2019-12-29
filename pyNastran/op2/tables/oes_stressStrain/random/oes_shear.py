@@ -199,7 +199,7 @@ class RandomShearStressArray(RandomShearArray, StressObject):
         RandomShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StressObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['max_shear', 'avg_shear']
         return headers
 
@@ -218,7 +218,7 @@ class RandomShearStrainArray(RandomShearArray, StrainObject):
         RandomShearArray.__init__(self, data_code, is_sort1, isubcase, dt)
         StrainObject.__init__(self, data_code, isubcase)
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         headers = ['max_shear', 'avg_shear']
         return headers
 

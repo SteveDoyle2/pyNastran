@@ -233,25 +233,26 @@ class OGS(OP2Common):
         n = 0
 
         #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-        ntotal = 11 * 4
+        ntotal = 44 * self.factor # 4*11
         nelements = ndata // ntotal
         auto_return, is_vectorized = self._create_oes_object4(
             nelements, result_name, slot, obj_vector_real)
         if auto_return:
-            return nelements * self.num_wide * 4
+            return nelements * ntotal
 
         obj = self.obj
         dt = self.nonlinear_factor
+
         if self.use_vector and is_vectorized:
-            n = nelements * 4 * self.num_wide
+            n = nelements * ntotal
             itotal = obj.ielement
             ielement2 = obj.itotal + nelements
             itotal2 = ielement2
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 11).copy()
+            floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 11).copy()
             obj._times[obj.itime] = dt
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 11).copy()
+                ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 11).copy()
                 nids = ints[:, 0] // 10
                 eids = ints[:, 1]
                 assert nids.min() > 0, nids.min()
@@ -259,17 +260,19 @@ class OGS(OP2Common):
                 obj.node_element[itotal:itotal2, 1] = eids
 
             #[fiber, nx, ny, txy, angle, major, minor, tmax, ovm]
-            strings = frombuffer(data, dtype=self._uendian + 'S4').reshape(nelements, 11)[:, 2].copy()
+            s4 = 'S%i' % self.size
+            strings = frombuffer(data, dtype=self._uendian + s4).reshape(nelements, 11)[:, 2].copy()
             obj.location[itotal:itotal2] = strings
             obj.data[obj.itime, itotal:itotal2, :] = floats[:, 3:]#.copy()
             obj.itotal = itotal2
             obj.ielement = ielement2
             n = ndata
         else:
-            s = Struct(self._endian + b'2i4s8f')
-            nelements = ndata // 44  # 11*4
+            fmt = self._endian + (b'2i4s8f' if self.size == 4 else b'2q8s8d')
+            s = Struct(fmt)
+            nelements = ndata // ntotal  # 11*4
             for unused_i in range(nelements):
-                edata = data[n:n+44]
+                edata = data[n:n+ntotal]
                 out = s.unpack(edata)
                 (nid_device, eid, fiber, nx, ny, txy, angle, major, minor, tmax, ovm) = out
                 nid = nid_device // 10
@@ -277,12 +280,12 @@ class OGS(OP2Common):
                 assert nid > 0, nid
                 self.obj.add_sort1(dt, nid, eid, fiber, nx, ny, txy,
                                    angle, major, minor, tmax, ovm)
-                n += 44
+                n += ntotal
 
         assert ndata > 0, ndata
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
-        assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
+        assert self.num_wide * 4 *self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
         assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
 
@@ -332,8 +335,9 @@ class OGS(OP2Common):
         obj = self.obj
         dt = self.nonlinear_factor
 
+        ntotal = 36 * self.factor
         if self.use_vector and is_vectorized:
-            n = nelements * 4 * self.num_wide
+            n = nelements * ntotal
             itotal = obj.ielement
             ielement2 = obj.itotal + nelements
             itotal2 = ielement2
@@ -354,7 +358,8 @@ class OGS(OP2Common):
             obj.ielement = ielement2
             n = ndata
         else:
-            s = Struct(self._endian + b'i8f')
+            fmt = self._endian + b'i8f'
+            s = Struct(fmt)
             for unused_i in range(nelements):
                 edata = data[n:n+36]
                 out = s.unpack(edata)
@@ -362,7 +367,7 @@ class OGS(OP2Common):
                 nid = nid_device // 10
                 assert nid > 0, nid
                 self.obj.add_sort1(dt, nid, nx, ny, nz, txy, tyz, txz, pressure, ovm)
-                n += 36
+                n += ntotal
         return n
 
 

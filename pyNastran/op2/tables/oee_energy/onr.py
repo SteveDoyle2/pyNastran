@@ -4,6 +4,7 @@ import numpy as np
 
 from pyNastran.op2.tables.oee_energy.oee_objects import RealStrainEnergyArray, ComplexStrainEnergyArray
 from pyNastran.op2.op2_interface.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_reader import mapfmt, reshape_bytes_block
 
 RESULT_NAME_MAP = {
     'BAR' : 'cbar_strain_energy',
@@ -240,7 +241,12 @@ class ONR(OP2Common):
         #element_name, = self.struct_8s.unpack(data[24:32])  # changed on 11/30/2015; was this for a long time...
 
         #self.show_data(data[:28])
-        element_name, = self.struct_8s.unpack(data[20:28])
+        if self.size == 4:
+            element_name, = self.struct_8s.unpack(data[20:28])
+        else:
+            element_name, = self.struct_16s.unpack(data[40:56])
+            element_name = reshape_bytes_block(element_name)
+
         #print("element_name = %s" % (element_name))
         try:
             element_name = element_name.decode('utf-8').strip()  # element name
@@ -453,7 +459,8 @@ class ONR(OP2Common):
         if self.format_code in [1, 2] and self.num_wide == 4:
             assert self.cvalres in [0, 1], self.cvalres
 
-            ntotal = 16
+            assert self.num_wide == 4
+            ntotal = 16 * self.factor  # 4*4=16
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, RealStrainEnergyArray)
@@ -466,7 +473,7 @@ class ONR(OP2Common):
                     #else:
                         #obj.element_name_count[element_name] = nelements
                     #obj.dt_temp = dt
-                return nelements * self.num_wide * 4
+                return nelements * ntotal
             #itime = obj.itime #// obj.nelement_types
 
             obj = self.obj
@@ -479,16 +486,16 @@ class ONR(OP2Common):
                 self.binary_debug.write('  nelements=%i\n' % nelements)
 
             if self.use_vector and self.sort_method == 1: # and self.is_sort1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 ielement = obj.ielement
                 ielement2 = obj.ielement + nelements
                 itotal = obj.itotal
                 itotal2 = obj.itotal + nelements * 4
 
-                floats = np.frombuffer(data, dtype=self.fdtype).reshape(nelements, 4)
+                floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nelements, 4)
                 obj._times[itime] = dt
                 #if obj.itime == 0:
-                ints = np.frombuffer(data, dtype=self.idtype).reshape(nelements, 4)
+                ints = np.frombuffer(data, dtype=self.idtype8).reshape(nelements, 4)
                 eids = ints[:, 0] // 10
                 assert eids.min() > 0, f'etype={self.element_name} isubtable={self.isubtable} eids.min()={eids.min()}'
                 obj.element[itime, ielement:ielement2] = eids
@@ -498,7 +505,8 @@ class ONR(OP2Common):
                 obj.itotal2 = itotal2
                 obj.ielement = ielement2
             else:
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'3f')
+                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'3f', self.size)
+                struct1 = Struct(fmt)
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
 

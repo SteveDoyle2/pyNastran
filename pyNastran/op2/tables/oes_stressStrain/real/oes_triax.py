@@ -30,7 +30,11 @@ class RealTriaxArray(OES_Object):
 
     @property
     def nnodes_per_element(self) -> int:
-        return 1
+        if self.element_type == 53:
+            nnodes_per_element = 1
+        else:
+            raise NotImplementedError(self.element_type)
+        return nnodes_per_element
 
     def _reset_indices(self):
         self.itotal = 0
@@ -53,11 +57,7 @@ class RealTriaxArray(OES_Object):
         assert self.nelements > 0, 'nelements=%s' % self.nelements
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
 
-        if self.element_type == 53:
-            nnodes_per_element = 1
-        else:
-            raise NotImplementedError(self.element_type)
-
+        unused_nnodes_per_element = self.nnodes_per_element
         self.itime = 0
         self.ielement = 0
         self.itotal = 0

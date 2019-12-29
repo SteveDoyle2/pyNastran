@@ -157,7 +157,7 @@ class ScalarTableArray(ScalarObject):  # displacement style table
     def _get_headers(self):
         return self.headers
 
-    def get_headers(self):
+    def get_headers(self) -> List[str]:
         return self._get_headers()
 
     def _reset_indices(self):
