@@ -7,7 +7,7 @@ from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
 from pyNastran.bdf.field_writer_16 import print_field_16
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.cards.base_card import BaseCard
 

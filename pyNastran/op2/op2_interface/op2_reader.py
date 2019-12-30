@@ -62,7 +62,7 @@ from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
 from pyNastran.op2.result_objects.design_response import (
     WeightResponse, DisplacementResponse, StressResponse, StrainResponse, ForceResponse,
     FlutterResponse, FractionalMassResponse, Convergence, Desvars)
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 IS_TESTING = True

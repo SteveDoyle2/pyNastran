@@ -103,7 +103,7 @@ from .utils import (
 from .menus.setup_model_sidebar import ModelSidebar
 
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings
 
 SIDE_MAP = {}

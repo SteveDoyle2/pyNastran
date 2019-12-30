@@ -43,7 +43,7 @@ from pyNastran.op2.op2_interface.op2_scalar import OP2_Scalar
 from pyNastran.op2.op2_interface.transforms import (
     transform_displacement_to_global, transform_gpforce_to_globali)
 from pyNastran.utils import check_path
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from h5py import File as H5File
 
 

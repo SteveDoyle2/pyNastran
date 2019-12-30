@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import vtk
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.qt_files.mouse_actions import MouseActions
 
 class TrackballStyleCamera(vtk.vtkInteractorStyleTrackballCamera):

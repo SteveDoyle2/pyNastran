@@ -4,7 +4,7 @@ import numpy as np
 
 from cpylog import properties as log_properties
 from pyNastran.bdf.cards.elements.shell import ShellElement
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 def get_shell_material_coord(element) -> Tuple[int, float]:

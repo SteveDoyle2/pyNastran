@@ -17,7 +17,7 @@ from pyNastran.gui.utils.vtk.vtk_utils import numpy_to_vtk_points, update_axis_t
 from pyNastran.gui.utils.load_results import load_user_geom
 from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
 from pyNastran.femutils.io import loadtxt_nice
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.gui.gui_objects.settings import Settings
 
 

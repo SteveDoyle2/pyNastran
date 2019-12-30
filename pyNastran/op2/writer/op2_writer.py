@@ -15,7 +15,7 @@ from .geom3_writer import write_geom3
 from .geom4_writer import write_geom4
 from .ept_writer import write_ept
 from .mpt_writer import write_mpt
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
 class TrashWriter:
