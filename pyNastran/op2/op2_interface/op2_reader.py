@@ -1548,54 +1548,45 @@ class OP2Reader:
         #data = self._read_record()
         #self.show_data(data, types='ifs', endian=None)
 
-    def read_table_name(self, table_names: List[bytes]):
+    def read_table_name(self, table_names: List[bytes]) -> str:
         if self.size == 4:
             return self.read_table_name4(table_names)
         return self.read_table_name8(table_names)
 
-    def read_table_name4(self, table_names: List[bytes]):
+    def read_table_name4(self, table_names: List[bytes]) -> str:
         assert isinstance(table_names, list), table_names
-        data = self._read_record() # GPL
-        ndata = len(data)
+        data, ndata = self._read_record_ndata4() # GPL
         if ndata == 8:
             table_name_bytes, = self.op2.struct_8s.unpack(data)
-            table_name_str = table_name_bytes.decode('utf-8').strip()
-            assert table_name_str in table_names, f'actual={table_name_str} allowed={table_names}'
-            #gpl, = op2.struct_8s.unpack(data)
-            #gpl_str = gpl.decode('utf-8').strip()
-            #assert gpl_str == 'GPL', gpl_str
         elif ndata == 12:
             table_name_bytes, zero = self.op2.struct_8s_i.unpack(data)
-            table_name_str = table_name_bytes.decode('utf-8').strip()
-            assert table_name_str in table_names, f'actual={table_name_str} allowed={table_names}'
             assert zero == 0, self.show_data(data)
         else:
             self.show_data(data)
             raise SubTableReadError('cannot read table_name=%r' % table_names)
 
-    def read_table_name8(self, table_names: List[bytes]):
-        assert isinstance(table_names, list), table_names
-        data = self._read_record() # GPL
+        table_name_str = table_name_bytes.decode('utf-8').strip()
+        assert table_name_str in table_names, f'actual={table_name_str} allowed={table_names}'
+        return table_name_str
 
-        ndata = len(data)
+    def read_table_name8(self, table_names: List[bytes]) -> str:
+        assert isinstance(table_names, list), table_names
+        data, ndata = self._read_record_ndata8() # GPL
         if ndata == 16:
             table_name_bytes, = self.op2.struct_16s.unpack(data)
-            table_name_bytes = reshape_bytes_block(table_name_bytes)
-            table_name_str = table_name_bytes.decode('utf-8').strip()
-            assert table_name_str in table_names, f'actual={table_name_str} allowed={table_names}'
-            #gpl, = op2.struct_16s.unpack(data)
-            #gpl_str = gpl.decode('utf-8').strip()
-            #assert gpl_str == 'GPL', gpl_str
         elif ndata == 24:
             table_name_bytes, zero = self.op2.struct_16s_q.unpack(data)
-            table_name_str = table_name_bytes.decode('utf-8').strip()
-            assert table_name_str in table_names, f'actual={table_name_str} allowed={table_names}'
             assert zero == 0, self.show_data(data)
         else:
             print(ndata)
             self.show_data(data, types='ifsq')
             #self.show_data(data[16:], types='ifsq')
             raise SubTableReadError(f'cannot read table_name={table_names}')
+
+        table_name_bytes = reshape_bytes_block(table_name_bytes)
+        table_name_str = table_name_bytes.decode('utf-8').strip()
+        assert table_name_str in table_names, f'actual={table_name_str} allowed={table_names}'
+        return table_name_str
 
     def read_gpdt(self):
         """
@@ -1619,7 +1610,7 @@ class OP2Reader:
 
         self.read_markers([-1])
         header_data = self._read_record()  # (103, 117, 0, 0, 0, 0, 0)
-        ints = np.frombuffer(header_data, op2.idtype)
+        ints = np.frombuffer(header_data, op2.idtype8)
 
         #seid = ints[0] # ??? is this a table number>
         unused_nnodes = ints[1]
@@ -1737,7 +1728,7 @@ class OP2Reader:
 
         self.read_markers([-1])
         header_data = self._read_record()  # (105, 51, 0, 0, 0, 0, 0)
-        ints = np.frombuffer(header_data, op2.idtype)
+        ints = np.frombuffer(header_data, op2.idtype8)
 
         #seid = ints[0] # ??? is this a table number>
         unused_nnodes = ints[1]  # validated
@@ -1752,20 +1743,78 @@ class OP2Reader:
         #print('--------------------')
 
         self.read_3_markers([-3, 1, 0])
-        data = read_record() # cd,x,y,z
-        #self.show_data(data, types='ifqd')
-        xword = 4 * self.factor
-        nvalues = len(data) // xword
 
-        nrows = get_table_size_from_ncolumns('BGPDT', nvalues, 4)
-        ints = np.frombuffer(data, op2.idtype8).reshape(nrows, 4).copy()
-        floats = np.frombuffer(data, op2.fdtype8).reshape(nrows, 4).copy()
-        cd = ints[:, 0]
-        xyz = floats[:, 1:]
-        #print('cd = %s' % cd.tolist())
-        #print('xyz:\n%s' % xyz)
+        #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\s402_sphere_03.op2
+        #GRID 1 0 0.0    0.0 0.0      0
+        #GRID 2 0 0.0    0.0 0.0      0
+        #GRID 3 0 0.0871 0.0 -0.99619 0
+        #D = (0.0, 5e-324,
+        #     5e-324, 3e-322, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.5e-323,
+        #     1e-323, 3e-322, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.4e-323,
+        #     1.5e-323, 3e-322, 0.0, 0.0, 0.0871, 0.0, -0.99619)
+        #L = (0, 1,
+        #     1, 61, 0, 0, 0, 0, 0, 0, 7,
+        #     2, 61, 0, 0, 0, 0, 0, 0, 13,
+        #     3, 61, 0, 0, 0.0871, 0, -0.99619)
 
-        op2.op2_results.bgpdt = BGPDT(cd, xyz)
+        #C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\s402_flxslddriver_05.op2
+        #doubles (float64) = (0.0, 5e-324, 5e-324, 3e-322, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.5e-323, 1e-323, 3e-322, 0.0, 0.0, 10.0, 0.0, 0.0, 0.0, 6.4e-323, 1.5e-323, 3e-322, 0.0, 0.0, 20.0, 0.0, 0.0, 0.0, 9.4e-323, 2e-323, 3e-322, 0.0, 0.0, 30.0, 0.0, 0.0, 0.0, 1.24e-322, 2.5e-323, 3e-322, 0.0, 0.0, 40.0, 0.0, 0.0, 0.0, 1.53e-322, 3e-323, 3e-322, 0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 1.83e-322, 3.5e-323, 3e-322, 0.0, 0.0, 60.0, 0.0, 0.0, 0.0, 2.1e-322, 4e-323, 3e-322, 0.0, 0.0, 70.0, 0.0, 0.0, 0.0, 2.4e-322, 4.4e-323, 3e-322, 0.0, 0.0, 80.0, 0.0, 0.0, 0.0, 2.7e-322, 5e-323, 3e-322, 0.0, 0.0, 90.0, 0.0, 0.0, 0.0, 3e-322, 5.4e-323, 3e-322, 0.0, 0.0, 100.0, 0.0, 0.0, 0.0, 3.3e-322, 6e-323, 3e-322, 0.0, 0.0, 5.0, 0.0, 20.0, 0.0, 3.6e-322, 6.4e-323, 3e-322, 0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 3.9e-322, 7e-323, 3e-322, 0.0, 0.0, 10.0, 0.0, 0.0)
+        #long long (int64) = (
+            #0, 1,
+            #1, 61, 0, 0, 0, 0, 0, 0, 7,
+            #2, 61, 0, 0, 4621819117588971520, 0, 0, 0, 13,
+            #3, 61, 0, 0, 4626322717216342016, 0, 0, 0, 19,
+            #4, 61, 0, 0, 4629137466983448576, 0, 0, 0, 25,
+            #5, 61, 0, 0, 4630826316843712512, 0, 0, 0, 31,
+            #6, 61, 0, 0, 4632233691727265792, 0, 0, 0, 37,
+            #7, 61, 0, 0, 4633641066610819072, 0, 0, 0, 43,
+            #8, 61, 0, 0, 4634626229029306368, 0, 0, 0, 49,
+            #9, 61, 0, 0, 4635329916471083008, 0, 0, 0, 55,
+            #10, 61, 0, 0, 4636033603912859648, 0, 0, 0, 61,
+            #11, 61, 0, 0, 4636737291354636288, 0, 0, 0, 67,
+            #12, 61, 0, 0, 4617315517961601024, 0, 4626322717216342016, 0, 73,
+            #13, 61, 0, 0, 4617315517961601024, 0, 0, 0, 79,
+            #14, 61, 0, 0, 4621819117588971520, 0, 0)
+
+        if self.read_mode == 1:
+            self._skip_record()
+
+        elif self.read_mode == 2:
+            data = read_record() # cd,x,y,z
+            xword = 4 * self.factor
+            nvalues = len(data) // xword
+
+            if self.size == 4:
+                nrows = get_table_size_from_ncolumns('BGPDT', nvalues, 4)
+                ints = np.frombuffer(data, op2.idtype8).reshape(nrows, 4).copy()
+                floats = np.frombuffer(data, op2.fdtype8).reshape(nrows, 4).copy()
+                cd = ints[:, 0]
+                xyz = floats[:, 1:]
+                op2.op2_results.bgpdt = BGPDT(cd, xyz)
+            else:
+                #bad = []
+                #nvalues = len(data) // 4
+                #for i in [2, 3, 6]: # 2-16 checked
+                    #if nvalues % i != 0:
+                        #bad.append(i)
+                #if bad:
+                    #print(nvalues, bad)
+                    #asdf
+                self.show_data(data, types='ifqd')
+                nrows = (nvalues - 2) // 7
+                #print(nrows)
+                ints = np.frombuffer(data, op2.idtype8).copy()
+                floats = np.frombuffer(data, op2.fdtype8).copy()
+                #print(ints)
+                #print(floats)
+                #print(nrows*7, len(floats))
+                #ints = ints[2:].reshape(nrows, 7)
+                #floats = floats[2:].reshape(nrows, 7)
+                #for inti, floati in zip(ints, floats):
+                    #print(inti[:-3], floats[-3:])
+            #print('cd = %s' % cd.tolist())
+            #print('xyz:\n%s' % xyz)
+
         self.read_3_markers([-4, 1, 0])
         marker = self.get_nmarkers(1, rewind=True)[0]
         if marker == 0:

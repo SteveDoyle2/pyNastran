@@ -6,7 +6,7 @@ import numpy as np
 from numpy import zeros, searchsorted, allclose
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
-from pyNastran.op2.result_objects.op2_objects import BaseElement
+from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_12e,
     write_float_13e, # write_float_12e,
@@ -459,21 +459,19 @@ class RealSpringDamperForceArray(RealForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self.build_data(self.ntimes, self.nelements, dtype)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        self.build_data(self.ntimes, self.nelements, dtype, idtype, fdtype)
 
-    def build_data(self, ntimes, nelements, dtype):
+    def build_data(self, ntimes, nelements, dtype, idtype, fdtype):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
 
         self._times = zeros(ntimes, dtype=dtype)
-        self.element = zeros(nelements, dtype='int32')
+        self.element = zeros(nelements, dtype=idtype)
 
         #[force]
-        self.data = zeros((ntimes, nelements, 1), dtype='float32')
+        self.data = zeros((ntimes, nelements, 1), dtype=fdtype)
 
 
     def build_dataframe(self):
@@ -564,6 +562,7 @@ class RealSpringDamperForceArray(RealForceObject):
     def add_sort1(self, dt, eid, force):
         """unvectorized method for adding SORT1 transient data"""
         assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        #print('dt=%s eid=%s' % (dt, eid))
         self._times[self.itime] = dt
         self.element[self.ielement] = eid
         self.data[self.itime, self.ielement, :] = [force]
@@ -2841,14 +2840,12 @@ class RealCBarFastForceArray(RealForceObject):
         self.nelements = nelements
         self.ntotal = ntotal
         #print(f"*ntimes={ntimes} nelements={nelements} ntotal={ntotal} data_names={self.data_names}")
-        #dtype = 'float32'
-        #if isinstance(self.nonlinear_factor, integer_types):
-            #dtype = 'int32'
+        unused_dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(ntimes, dtype=dtype)
-        self.element = zeros(nelements, dtype='int32')
+        self.element = zeros(nelements, dtype=idtype)
 
         #[bending_moment_a1, bending_moment_a2, bending_moment_b1, bending_moment_b2, shear1, shear2, axial, torque]
-        self.data = zeros((ntimes, ntotal, 8), dtype='float32')
+        self.data = zeros((ntimes, ntotal, 8), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -4057,14 +4054,12 @@ class RealSolidPressureForceArray(RealForceObject):  # 77-PENTA_PR,78-TETRA_PR
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element = zeros(self.nelements, dtype=idtype)
 
         #[ax, ay, az, vx, vy, vz, pressure]
-        self.data = zeros((self.ntimes, self.ntotal, 7), dtype='float32')
+        self.data = zeros((self.ntimes, self.ntotal, 7), dtype=fdtype)
 
     def __eq__(self, table):  # pragma: no cover
         self._eq_header(table)

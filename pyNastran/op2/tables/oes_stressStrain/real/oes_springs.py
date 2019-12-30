@@ -4,8 +4,8 @@ from typing import List
 import numpy as np
 from numpy import zeros
 
-from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.utils.numpy_utils import float_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_float_13e, _eigenvalue_header
@@ -141,13 +141,11 @@ class RealSpringArray(OES_Object):
         self.ntimes = ntimes
         self.nelements = nelements
         _times = zeros(ntimes, dtype=dtype)
-
-        int_fmt = 'int32' if self.size == 4 else 'int64'
-        float_fmt = 'float32' if self.size == 4 else 'float64'
-        element = zeros(nelements, dtype=int_fmt)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        element = zeros(nelements, dtype=idtype)
 
         #[stress]
-        data = zeros((ntimes, nelements, 1), dtype=float_fmt)
+        data = zeros((ntimes, nelements, 1), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):

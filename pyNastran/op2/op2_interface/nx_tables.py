@@ -116,6 +116,7 @@ NX_RESULT_TABLES = [
     b'OEFIIP',
     b'OESRIP',
     b'OESRIS',
+    b'ODELBGPD',
     b'ODAMGCZT',
     b'ODAMGCZR',
     b'ODAMGCZD',

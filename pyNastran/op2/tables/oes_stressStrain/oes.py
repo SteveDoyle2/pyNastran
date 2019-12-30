@@ -1638,9 +1638,9 @@ class OES(OP2Common):
         if nelements is None:
             return n
         assert ndata > 0, ndata
-        assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
+        assert nelements > 0, f'nelements={nelements} element_type={self.element_type} element_name={self.element_name!r}'
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
-        assert self.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
+        assert self.num_wide * 4 * self.factor == ntotal, f'numwide*4={self.num_wide*4} ntotal={ntotal} element_name={self.element_name!r}'
         assert self.thermal == 0, "thermal = %%s" % self.thermal
         assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
@@ -1796,7 +1796,7 @@ class OES(OP2Common):
         slot = self.get_result(result_name)
 
         if self.format_code == 1 and self.num_wide == 2:  # real
-            ntotal = 8 # 2 * 4
+            ntotal = 8 * self.factor # 2 * 4
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_real)
@@ -1810,7 +1810,7 @@ class OES(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 2)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 2)
                 obj._times[obj.itime] = dt
                 self.obj_set_element(obj, itotal, itotal2, data, nelements)
 
@@ -1821,7 +1821,8 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CELASx real SORT%s' % self.sort_method)
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'f')
+                fmt1 = mapfmt(self._endian + self._analysis_code_fmt + b'f', self.size)
+                struct1 = Struct(fmt1)
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = struct1.unpack(edata)
@@ -1990,21 +1991,21 @@ class OES(OP2Common):
                     obj.add_sort1(dt, eid, axial, axial_margin, torsion, torsion_margin)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 5: # imag
-            ntotal = 20
+            ntotal = 20 * self.factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 5)
                 obj._times[obj.itime] = dt
                 self.obj_set_element(obj, itotal, itotal2, data, nelements)
 
@@ -2016,7 +2017,8 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CROD imag SORT%s' % self.sort_method)
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'4f')
+                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'4f', self.size)
+                struct1 = Struct(fmt)
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = struct1.unpack(edata)
@@ -2043,19 +2045,19 @@ class OES(OP2Common):
                 #assert eid > 0, eid
                 #n += ntotal
         elif self.format_code == 1 and self.num_wide == 3: # random
-            ntotal = 3 * 4
+            ntotal = 3 * 4 * self.factor
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_random)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CROD random SORT%s' % self.sort_method)
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2111,7 +2113,7 @@ class OES(OP2Common):
         slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 111:  # real
             # TODO: vectorize
-            ntotal = 444 # 44 + 10*40  (11 nodes)
+            ntotal = 444 * self.factor # 44 + 10*40  (11 nodes)
 
             if self.is_stress:
                 obj_vector_real = RealBeamStressArray
@@ -2128,17 +2130,19 @@ class OES(OP2Common):
             obj = self.obj
 
             nnodes = 10  # 11-1
-            ntotal = self.num_wide * 4
+            ntotal = self.num_wide * 4 * self.factor
             nelements = ndata // ntotal
             if self.use_vector and is_vectorized and 0:
                 raise NotImplementedError('CBEAM-2-real not vectorized')
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CBEAM real SORT%s' % self.sort_method)
-                n1 = 44
-                n2 = 40
-                s1 = Struct(self._endian + self._analysis_code_fmt + b'i9f')
-                s2 = Struct(self._endian + b'i9f')
+                n1 = 44 * self.factor
+                n2 = 40 * self.factor
+                fmt1 = mapfmt(self._endian + self._analysis_code_fmt + b'i9f', self.size)
+                fmt2 = mapfmt(self._endian + b'i9f', self.size)
+                s1 = Struct(fmt1)
+                s2 = Struct(fmt2)
                 for unused_i in range(nelements):
                     edata = data[n:n+n1]
                     n += n1
@@ -2162,7 +2166,7 @@ class OES(OP2Common):
         elif self.format_code in [2, 3] and self.num_wide == 111:  # imag and random?
             # definitely complex results for MSC Nastran 2016.1
 
-            ntotal = 444 # 44 + 10*40  (11 nodes)
+            ntotal = 444 * self.factor # 44 + 10*40  (11 nodes)
             nelements = ndata // ntotal
 
             if self.is_stress:
@@ -2493,6 +2497,7 @@ class OES(OP2Common):
         """
         reads stress/strain for element type:
          - 34 : CBAR
+
         """
         #if isinstance(self.nonlinear_factor, float):
             #self.sort_bits[0] = 1 # sort2
@@ -2515,7 +2520,7 @@ class OES(OP2Common):
             else:
                 obj_vector_real = RealBarStrainArray
 
-            ntotal = 16 * 4
+            ntotal = 16 * 4 * self.factor
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
@@ -2544,7 +2549,7 @@ class OES(OP2Common):
                 obj._times[obj.itime] = dt
                 self.obj_set_element(obj, ielement, ielement2, data, nelements)
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 16)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 16)
 
                 #[s1a, s2a, s3a, s4a, axial, smaxa, smina, margin_tension,
                 # s1b, s2b, s3b, s4b,        smaxb, sminb, margin_compression]
@@ -2554,7 +2559,8 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CBAR real SORT%s' % self.sort_method)
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'15f')
+                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'15f', self.size)
+                struct1 = Struct(fmt)
                 for i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = struct1.unpack(edata)
@@ -5478,7 +5484,7 @@ class OES(OP2Common):
         #etype = self.element_name
         #grid_center = 'CEN/%i' % nnodes
         if self.format_code in [1, 2, 3] and self.num_wide == numwide_real:  # real
-            ntotal = 4 * (2 + 17 * nnodes_all)
+            ntotal = 4 * (2 + 17 * nnodes_all) * self.factor
             nelements = ndata // ntotal
             assert ndata % ntotal == 0
             nlayers = 2 * nelements * nnodes_all  # 2 layers per node
@@ -5497,20 +5503,21 @@ class OES(OP2Common):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                n = nelements * self.num_wide * 4
+                ntotal = self.num_wide * 4 * self.factor
+                n = nelements * ntotal
 
                 istart = obj.itotal
                 iend = istart + nlayers
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real)
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, numwide_real)
                     ints1 = ints[:, 2:].reshape(nlayers//2, 17)[:, 0].reshape(nelements, nnodes_all).copy()
                     ints1[:, 0] = 0.
                     nids = ints1.ravel()
 
                     eids = ints[:, 0] // 10
-                    eids2 = array([eids] * (nnodes_all * 2), dtype='int32').T.ravel()
+                    eids2 = array([eids] * (nnodes_all * 2), dtype=self.idtype8).T.ravel()
                     nids2 = vstack([nids, nids]).T.ravel()
                     obj.element_node[istart:iend, 0] = eids2
                     obj.element_node[istart:iend, 1] = nids2
@@ -5521,9 +5528,9 @@ class OES(OP2Common):
                         obj.float_mask = float_mask1
 
                 if obj.nonlinear_factor is not None:
-                    results = frombuffer(data, dtype=self.fdtype)[obj.float_mask].copy()
+                    results = frombuffer(data, dtype=self.fdtype8)[obj.float_mask].copy()
                 else:
-                    floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                    floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, numwide_real)
                     floats1 = floats[:, 2:].reshape(nlayers // 2, 17)
                     results = floats1[:, 1:].reshape(nlayers, 8).copy()
 
@@ -5533,8 +5540,12 @@ class OES(OP2Common):
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CQUAD4-144/CQUAD8... real SORT%s' % self.sort_method)
                 n = 0
-                center_format = self._endian + self._analysis_code_fmt + b'4si16f'
-                node_format = self._endian + b'i16f'
+                if self.size == 4:
+                    center_format = self._endian + self._analysis_code_fmt + b'4si16f'
+                    node_format = self._endian + b'i16f'
+                else:
+                    center_format = self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'8sq16d'
+                    node_format = self._endian + b'q16d'
                 cs = Struct(center_format)
                 ns = Struct(node_format)
 
@@ -5550,8 +5561,10 @@ class OES(OP2Common):
                         '  nelements=%i; nnodes=%i # +1 centroid\n' % (ndata, nelements, nnodes))
 
                 grid_center = 0
+                n76 = 76 * self.factor
+                n68 = 68 * self.factor
                 for unused_i in range(nelements):
-                    edata = data[n:n+76]
+                    edata = data[n:n+n76]
 
                     out = cs.unpack(edata)  # len=17*4
                     # j is the number of nodes, so CQUAD4 -> 4, but we don't need to save it...
@@ -5569,9 +5582,9 @@ class OES(OP2Common):
                                           txy1, angle1, major1, minor1, vm1)
                     obj.add_sort1(dt, eid, grid_center, fd2, sx2, sy2, txy2,
                                   angle2, major2, minor2, vm2)
-                    n += 76
+                    n += n76
                     for inode in range(nnodes):
-                        out = ns.unpack(data[n:n + 68])
+                        out = ns.unpack(data[n:n + n68])
                         (grid,
                          fd1, sx1, sy1, txy1, angle1, major1, minor1, vm1,
                          fd2, sx2, sy2, txy2, angle2, major2, minor2, vm2,) = out
@@ -5588,7 +5601,7 @@ class OES(OP2Common):
                                                txy1, angle1, major1, minor1, vm1)
                         obj.add_sort1(dt, eid, grid, fd2, sx2, sy2,
                                       txy2, angle2, major2, minor2, vm2)
-                        n += 68
+                        n += n68
         elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
             ntotal = numwide_imag * 4
             assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
@@ -7782,7 +7795,7 @@ class OES(OP2Common):
 
     def obj_set_element(self, obj, ielement, ielement2, data, nelements):
         if obj.itime == 0:
-            ints = frombuffer(data, dtype=self.idtype).reshape(nelements, self.num_wide).copy()
+            ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, self.num_wide).copy()
             eids = ints[:, 0] // 10
             assert eids.min() > 0, eids.min()
             obj.element[ielement:ielement2] = eids

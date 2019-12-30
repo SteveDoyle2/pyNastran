@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.result_objects.op2_objects import BaseElement
+from pyNastran.op2.result_objects.op2_objects import BaseElement, get_times_dtype
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_13e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field
 
@@ -86,12 +86,10 @@ class RealStrainEnergyArray(BaseElement):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self.build_data(dtype)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        self.build_data(dtype, idtype, fdtype)
 
-    def build_data(self, dtype):
+    def build_data(self, dtype, idtype, fdtype):
         """actually performs the build step"""
         self._times = np.zeros(self.ntimes, dtype=dtype)
         #self.element = zeros(self.nelements, dtype='int32')
@@ -100,13 +98,13 @@ class RealStrainEnergyArray(BaseElement):
         if self.element_name == 'DMIG':
             self.element = np.zeros((self.ntimes, self.nelements), dtype='|U8')
         else:
-            self.element = np.zeros((self.ntimes, self.nelements), dtype='int32')
+            self.element = np.zeros((self.ntimes, self.nelements), dtype=idtype)
         #self.element_data_type = empty(self.nelements, dtype='|U8')
 
         #[energy, percent, density]
         assert isinstance(self.ntimes, integer_types), self.ntimes
         assert isinstance(self.ntotal, integer_types), self.ntotal
-        self.data = np.zeros((self.ntimes, self.nelements, 3), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.nelements, 3), dtype=fdtype)
 
     def build_dataframe(self):
         """

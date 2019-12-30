@@ -808,3 +808,18 @@ def get_times_dtype(nonlinear_factor, size):
         fdtype = 'float64'
         idtype = 'int64'
     return dtype, idtype, fdtype
+
+def get_complex_times_dtype(nonlinear_factor, size):
+    dtype = 'float'
+    if isinstance(nonlinear_factor, integer_types):
+        dtype = 'int'
+
+    if size == 4:
+        dtype += '32'
+        cfdtype = 'complex64'
+        idtype = 'int32'
+    else:
+        dtype += '64'
+        cfdtype = 'complex128'
+        idtype = 'int64'
+    return dtype, idtype, cfdtype

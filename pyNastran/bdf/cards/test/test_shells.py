@@ -1264,7 +1264,7 @@ class TestShells(unittest.TestCase):
         assert model2.elements[10].rstrip() == 'CTRIA3        10     100       1       2       3       0'
         assert model2.elements[11].rstrip() == 'CQUAD4        11     100       1       2       3       4       0'
 
-    def test_abd(self):
+    def test_abd_1(self):
         """tests some ABD matrix functionality for a PCOMP"""
         log = get_logger(level='warning')
         model = BDF(log=log)
@@ -1330,6 +1330,85 @@ class TestShells(unittest.TestCase):
                 png_filename='lamina.png')
             os.remove('lamina_stiffness.png')
             os.remove('lamina_nu.png')
+
+    def test_abd_2(self):
+        """tests some ABD matrix functionality for a PCOMP"""
+        log = get_logger(level='warning')
+        model = BDF(log=log)
+
+        #--------------------------
+        #PCOMP*              1601                                                *
+        #*                                                                    SYM
+        #*                      2           0.185            45.0             YES
+        #*                      2           0.185            90.0             YES
+        #*                      2           0.185           -45.0             YES
+        #*                      2           0.185             0.0             YES
+        #*                      2           0.185           -45.0             YES
+        #*                      2           0.185            90.0             YES
+        #*                      2           0.185            45.0             YES
+        #*                      2           0.185             0.0             YES
+        thetas = [45., 90., -45., 0., -45., 90., 45.0, 0.]
+        thicknesses = [0.185] * len(thetas)
+        mids = [2] * len(thetas)
+        pid = 2
+        pcomp_sym = model.add_pcomp(
+            pid, mids, thicknesses, thetas=thetas,
+            souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0.,
+            lam='SYM', z0=None, comment='')
+
+        thetas = [45., 90., -45., 0., -45., 90., 45.0, 0.]
+        thetas += thetas[::-1]
+        #print(f'*****thetas = {thetas}')
+        thicknesses = [0.185] * len(thetas)
+        mids = [2] * len(thetas)
+        pid = 3
+        pcomp_asym = model.add_pcomp(
+            pid, mids, thicknesses, thetas=thetas,
+            souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0.,
+            lam=None, z0=None, comment='')
+        mid = 2
+        #MAT8*                  2        179000.0          8110.0           0.317*
+        #*                 4140.0
+        e11 = 179000.
+        e22 = 8110.
+        nu12 = 0.317
+        g12 = 4140.
+        model.add_mat8(mid, e11, e22, nu12, g12=g12, g1z=1e8, g2z=1e8,
+                       rho=0., a1=0., a2=0., tref=0., Xt=0., Xc=None, Yt=0., Yc=None,
+                       S=0., ge=0., F12=0., strn=0., comment='')
+
+        model.pop_parse_errors()
+        model.cross_reference()
+        model.pop_xref_errors()
+        #ABD = pcomp.get_ABD_matrices()
+
+        #print(f'pcomp_sym:\n{pcomp_sym}')
+        ABD2 = pcomp_sym.get_ABD_matrices()
+        is_balanced, is_symmetric = pcomp_sym.is_balanced_symmetric(debug=False)
+        assert is_symmetric
+        A = ABD2[:3, :3]
+        B = ABD2[-3:, :3]
+        D = ABD2[-3:, -3:]
+        #print(ABD2)
+        #print(f'A:\n{A}\n')
+        #print(f'B:\n{B}\n')
+        #print(f'D:\n{D}\n')
+
+        #print('-------------')
+        #print(f'pcomp_asym:\n{pcomp_asym}')
+        ABD3 = pcomp_asym.get_ABD_matrices()
+        is_balanced, is_symmetric = pcomp_asym.is_balanced_symmetric(debug=False)
+        assert is_symmetric
+        A = ABD3[:3, :3]
+        B = ABD3[-3:, :3]
+        D = ABD3[-3:, -3:]
+        #print(ABD3)
+        #print(f'A:\n{A}\n')
+        #print(f'B:\n{B}\n')
+        #print(f'D:\n{D}\n')
+        B = ABD2[:3, -3:]
+        assert np.allclose(0., B.sum()), B
+        assert np.allclose(ABD2, ABD3), ABD2
 
 def make_dvcrel_optimization(model, params, element_type, eid, i=1):
     """makes a series of DVCREL1 and a DESVAR"""

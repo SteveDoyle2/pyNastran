@@ -724,12 +724,13 @@ class OEF(OP2Common):
         slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 9:  # real - 2D
             # [33, 53, 64, 74, 75]
-            ntotal = 36
+            ntotal = 4 * self.num_wide * self.factor
+            ntotal = 36 * self.factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
             obj = self.obj
             #if self.is_debug_file:
                 #self.binary_debug.write('  [cap, element1, element2, ..., cap]\n')
@@ -738,7 +739,7 @@ class OEF(OP2Common):
                 #self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -759,7 +760,11 @@ class OEF(OP2Common):
                 obj.ielement = ielement2
             else:
                 # no zed on this element for some reason...
-                s = Struct(self._endian + self._analysis_code_fmt + b'8s6f')
+                if self.size == 4:
+                    fmt = self._endian + self._analysis_code_fmt + b'8s 6f'
+                else:
+                    fmt = self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'16s 6d'
+                s = Struct(fmt)
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
                     n += ntotal
@@ -771,16 +776,16 @@ class OEF(OP2Common):
 
         elif self.format_code == 1 and self.num_wide == 10:  # real - 3D
             # [39, 67, 68]:  # HEXA,PENTA
-            ntotal = 40
+            ntotal = 40 * self.factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
             obj = self.obj
             assert nelements > 0, 'ndata=%s ntotal=%s' % (ndata, ntotal)
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -1483,7 +1488,7 @@ class OEF(OP2Common):
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r num_wide=%s' % (
             nelements, self.element_type, self.element_name, self.num_wide)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
-        assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
+        assert self.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
         assert n > 0, n
         return n
 
@@ -1513,7 +1518,7 @@ class OEF(OP2Common):
 
         slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 3: # real
-            ntotal = 3 * 4
+            ntotal = 3 * 4 * self.factor
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
@@ -1528,7 +1533,7 @@ class OEF(OP2Common):
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -1546,7 +1551,8 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'ff')  # 3
+                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'ff', self.size)  # 3
+                s = Struct(fmt)
                 for unused_i in range(nelements):
                     edata = data[n:n+ntotal]
                     out = s.unpack(edata)
@@ -1559,13 +1565,13 @@ class OEF(OP2Common):
                     n += ntotal
 
         elif self.format_code in [2, 3] and self.num_wide == 5: # imag
-            ntotal = 5 * 4
+            ntotal = 20 * self.factor  # 5*4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.is_debug_file:
@@ -1575,15 +1581,15 @@ class OEF(OP2Common):
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5).copy()
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 5).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 5)
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 5)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -1595,9 +1601,10 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'4f')  # 5
+                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'4f', self.size)
+                s = Struct(fmt)
                 for unused_i in range(nelements):
-                    edata = data[n:n+20]
+                    edata = data[n:n+ntotal]
 
                     out = s.unpack(edata)
                     if self.is_debug_file:
@@ -1909,7 +1916,7 @@ class OEF(OP2Common):
         self._results._found_result(result_name)
         slot = self.get_result(result_name)
         if self.format_code == 1 and self.num_wide == 2:  # real
-            ntotal = 8 # 2 * 4
+            ntotal = 8 * self.factor # 2 * 4
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_real)
@@ -1918,7 +1925,7 @@ class OEF(OP2Common):
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -1936,9 +1943,10 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'f')  # 2
+                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'f', self.size)
+                s = Struct(fmt)  # 2
                 for unused_i in range(nelements):
-                    edata = data[n:n + 8]
+                    edata = data[n:n + ntotal]
                     out = s.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
@@ -1948,13 +1956,13 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, force)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
-            ntotal = 12  # 3*4
+            ntotal = 12 * self.factor  # 3*4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.is_debug_file:
@@ -1964,15 +1972,15 @@ class OEF(OP2Common):
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 3).copy()
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 3).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 3)
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 3)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -1983,9 +1991,10 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'2f')
+                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'2f', self.size)
+                s = Struct(fmt)
                 for unused_i in range(nelements):
-                    edata = data[n:n + 12]
+                    edata = data[n:n + ntotal]
                     out = s.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_SpringDamper - %s\n' % str(out))
@@ -2016,17 +2025,17 @@ class OEF(OP2Common):
         obj_real = RealViscForceArray
 
         if self.format_code == 1 and self.num_wide == 3: # real
-            ntotal = 12 # 3 * 4
+            ntotal = 12 * self.factor # 3 * 4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2044,9 +2053,10 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'ff')
+                fmt = mapfmt(self._endian + self._analysis_code_fmt + b'ff', self.size)
+                s = Struct(fmt)
                 for unused_i in range(nelements):
-                    edata = data[n:n+12]
+                    edata = data[n:n+ntotal]
 
                     out = s.unpack(edata)
                     if self.is_debug_file:
@@ -2057,13 +2067,13 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, axial, torque)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 5: # complex
-            ntotal = 20  # 5*4
+            ntotal = 20 * self.factor # 5*4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, ComplexViscForceArray)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.is_debug_file:
@@ -2073,7 +2083,7 @@ class OEF(OP2Common):
                 self.binary_debug.write('  nelements=%i; nnodes=1 # centroid\n' % nelements)
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -2167,10 +2177,10 @@ class OEF(OP2Common):
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 9)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 9)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[itotal:itotal2] = eids
@@ -2187,6 +2197,7 @@ class OEF(OP2Common):
             # TODO: vectorize
             ntotal = 68 * self.factor  # 17*4
             nelements = ndata // ntotal
+            assert ndata % ntotal == 0
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_complex)
@@ -2328,23 +2339,23 @@ class OEF(OP2Common):
         if self.format_code in [1, 2] and self.num_wide == 9:
             # real - format_code == 1
             # random - format_code == 2
-            ntotal = 36 # 9*4
+            ntotal = 36 * self.factor # 9*4
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, RealPlateForceArray)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 9)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 9)
                     eids = ints[:, 0] // 10
                     assert eids.min() > 0, eids.min()
                     obj.element[ielement:ielement2] = eids
@@ -2366,17 +2377,17 @@ class OEF(OP2Common):
                     obj.add_sort1(dt, eid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 17:  # imag
-            ntotal = 68
+            ntotal = 68 * self.factor
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, ComplexPlateForceArray)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 itotal = obj.itotal
@@ -2482,15 +2493,15 @@ class OEF(OP2Common):
         if self.format_code == 1 and self.num_wide == numwide_real:  # real
             obj_real = RealPlateBilinearForceArray
 
-            ntotal = 8 + nnodes_all * 36 # centroidal node is the + 1
-            assert ntotal == self.num_wide * 4, 'ntotal=%s numwide=%s' % (ntotal, self.num_wide * 4)
+            ntotal = (8 + nnodes_all * 36) * self.factor # centroidal node is the + 1
+            assert ntotal == self.num_wide * 4 * self.factor, 'ntotal=%s numwide=%s' % (ntotal, self.num_wide * 4)
 
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_real)
             if auto_return:
                 self._data_factor = nnodes_all
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
@@ -2502,7 +2513,7 @@ class OEF(OP2Common):
                 obj._times[obj.itime] = dt
 
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_real).copy()
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, numwide_real).copy()
                     # Nastran makes this a 4 for CQUAD4s instead
                     # of 0 like the bilinear stress element...
                     ints[:, 2] = 0
@@ -2513,16 +2524,25 @@ class OEF(OP2Common):
                     obj.element_node[istart:iend, 0] = eids2
                     obj.element_node[istart:iend, 1] = nids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_real)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, numwide_real)
                 results = floats[:, 2:].reshape(nlayers, 9)[:, 1:].copy()
                 #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
                 obj.data[obj.itime, istart:iend, :] = results
             else:
-                s1 = Struct(self._endian + b'i4si8f')  # 8+36
-                s2 = Struct(self._endian + b'i8f') # 36
+
+                n44 = 44 * self.factor
+                n36 = 36 * self.factor
+                if self.size == 4:
+                    fmt1 = self._endian + b'i4si8f'  # 8+36
+                    fmt2 = self._endian + b'i8f' # 36
+                else:
+                    fmt1 = self._endian + b'q8sq8d'
+                    fmt2 = self._endian + b'q8d'
+                s1 = Struct(fmt1)
+                s2 = Struct(fmt2)
 
                 for unused_i in range(nelements):
-                    edata = data[n:n + 44]
+                    edata = data[n:n + n44]
 
                     out = s1.unpack(edata)
                     if self.is_debug_file:
@@ -2535,38 +2555,38 @@ class OEF(OP2Common):
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
                     obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-                    n += 44
+                    n += n44
                     for unused_j in range(nnodes):
-                        edata = data[n : n + 36]
+                        edata = data[n : n + n36]
                         out = s2.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('    %s\n' % (str(out)))
                         (nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty) = out
                         assert nid > 0, 'nid=%s' % nid
                         obj.add_sort1(dt, eid, term, nid, mx, my, mxy, bmx, bmy, bmxy, tx, ty)
-                        n += 36
+                        n += n36
         elif self.format_code in [2, 3] and self.num_wide == numwide_imag: # complex
-            ntotal = numwide_imag * 4
+            ntotal = numwide_imag * 4 * self.factor
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, ComplexPlate2ForceArray)
             if auto_return:
                 self._data_factor = nnodes_all
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.itotal
                 ielement = obj.ielement
                 ielement2 = obj.ielement + nelements
                 itotal2 = obj.itotal + nelements * nnodes_all
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, numwide_imag)
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_imag).copy()
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, numwide_imag).copy()
                     ints[:, 2] = 0
                     ints2 = ints[:, 2:].reshape(nelements * nnodes_all, 17)
 
@@ -3271,15 +3291,15 @@ class OEF(OP2Common):
 
         self._results._found_result(result_name)
         if self.format_code == 1 and self.num_wide == 10:  # real
-            ntotal = 40
+            ntotal = 40 * self.factor
             nelements = ndata // ntotal
-            nelements = ndata // ntotal
+            #nelements = ndata // ntotal
 
             obj_real = RealSolidPressureForceArray
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             #if self.is_debug_file:
@@ -3293,7 +3313,7 @@ class OEF(OP2Common):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                n = nelements * self.num_wide * 4
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -3311,10 +3331,14 @@ class OEF(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s = Struct(self._endian + self._analysis_code_fmt + b'8s7f')
+                if self.size == 4:
+                    fmt = self._endian + self._analysis_code_fmt + b'8s7f'
+                else:
+                    fmt = self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'16s7d'
+                s = Struct(fmt)
                 for unused_i in range(nelements):
-                    edata = data[n : n + 40]
-                    n += 40
+                    edata = data[n : n + ntotal]
+                    n += ntotal
                     out = s.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('OEF_PentaPressure-%s %s\n' % (self.element_type, str(out)))
@@ -3943,10 +3967,11 @@ class OEF(OP2Common):
 
 def oef_cbar_real(self, data, obj: RealCBarForceArray, nelements, ntotal):
     n = 0
-    s = Struct(self._endian + self._analysis_code_fmt + b'8f')  # 9
+    fmt = mapfmt(self._endian + self._analysis_code_fmt + b'8f', self.size)
+    s = Struct(fmt)
     if self.is_sort1:
         for unused_i in range(nelements):
-            edata = data[n:n + 36]
+            edata = data[n:n + ntotal]
 
             out = s.unpack(edata)
             if self.is_debug_file:
@@ -3959,7 +3984,7 @@ def oef_cbar_real(self, data, obj: RealCBarForceArray, nelements, ntotal):
             n += ntotal
     else:
         for unused_i in range(nelements):
-            edata = data[n:n + 36]
+            edata = data[n:n + ntotal]
 
             out = s.unpack(edata)
             if self.is_debug_file:

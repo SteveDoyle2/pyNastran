@@ -3,6 +3,7 @@ import numpy as np
 from numpy import zeros, searchsorted, allclose
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
 
@@ -58,20 +59,18 @@ class RealRodArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-        self.build_data(self.ntimes, self.nelements, dtype)
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        self.build_data(self.ntimes, self.nelements, dtype, idtype, fdtype)
 
-    def build_data(self, ntimes, nelements, dtype):
+    def build_data(self, ntimes, nelements, dtype, idtype, fdtype):
         """actually performs the build step"""
         self.ntimes = ntimes
         self.nelements = nelements
         _times = zeros(ntimes, dtype=dtype)
-        element = zeros(nelements, dtype='int32')
+        element = zeros(nelements, dtype=idtype)
 
         #[axial, torsion, SMa, SMt]
-        data = zeros((ntimes, nelements, 4), dtype='float32')
+        data = zeros((ntimes, nelements, 4), dtype=fdtype)
 
         if self.load_as_h5:
             #for key, value in sorted(self.data_code.items()):

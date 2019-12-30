@@ -1159,8 +1159,8 @@ class OP2Common(Op2Codes, F06Writer):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
-            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 8).copy()
-            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 8)
+            floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 8).copy()
+            ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 8)
 
             self._set_sort2_time(obj, self._analysis_code_fmt, ints, floats)
         #def _set_sort2_time(self, obj, self._analysis_code_fmt, ints, floats):
@@ -1226,16 +1226,16 @@ class OP2Common(Op2Codes, F06Writer):
             n = nnodes * ntotal
             itotal2 = obj.itotal + nnodes
 
-            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+            ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 14)
             #print('ints[:, 0] =', ints[:, 0], ints[:, 0] // 10)
             if obj.itime == 0:
-                ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+                ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 14)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node_gridtype[obj.itotal:itotal2, 0] = nids
                 obj.node_gridtype[obj.itotal:itotal2, 1] = ints[:, 1].copy()
 
-            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
+            floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 14).copy()
             mag = floats[:, 2:8]
             phase = floats[:, 8:]
             rtheta = np.radians(phase)

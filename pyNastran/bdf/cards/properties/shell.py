@@ -12,8 +12,9 @@ All shell properties are Property objects.
 
 """
 from __future__ import annotations
-import warnings
+import copy
 from itertools import count
+import warnings
 from typing import List, Optional, Union, TYPE_CHECKING
 import numpy as np
 
@@ -973,6 +974,77 @@ class PCOMP(CompositeShellProperty):
             #self.souts[i] = sout
             #i += 1
 
+    def is_balanced_symmetric(self, debug=True):
+        """assumes materials with different mids are unique"""
+        # TODO: balanced is not done
+        is_balanced = None
+        is_symmetric_z = False
+        is_symmetric_thetas = False
+        thetad = self.get_thetas()
+        if debug:  # pragma: no cover
+            print(f'  theta (deg) = {thetad}; n={len(thetad)}')
+            print(f'  nplies = {self.nplies}')
+
+        z0, z1, zmeans = self.get_z0_z1_zmean()
+        nz = len(zmeans)
+        nhalf = nz // 2
+
+        mids = self.get_material_ids()
+        mlow = mids[:nhalf]
+        mhigh = mids[-nhalf:][::-1]
+
+        if self.is_symmetrical:
+            is_symmetric_z = True
+            #is_symmetric_materials = True
+            is_symmetric_thetas = True
+            if debug:  # pragma: no cover
+                print('  symmetric flag')
+        else:
+            zlow = zmeans[:nhalf]
+            zhigh = zmeans[-nhalf:][::-1]
+            if debug:  # pragma: no cover
+                print(f'zlow={zlow}; n={len(zlow)}')
+                print(f'zhigh={zhigh}; n={len(zhigh)}')
+
+            tlow = thetad[:nhalf]
+            thigh = thetad[-nhalf:][::-1]
+
+            # works for even and odd
+            # if the z's are opposite and the thetas are the same
+            # [-1, 0, 1] - symmetric z
+            # [-1, 1] - symmetric z
+            # [0, 45, 90, 90, 45, 0] - symmetric theta
+            # [0, 45, 90, 45, 0] - symmetric theta
+            if np.allclose(-zlow, zhigh):
+                is_symmetric_z = True
+            if np.allclose(tlow, thigh):
+                is_symmetric_thetas = True
+
+        # doesn't handle:
+        #    mids = [2, 3]
+        # where the materials are the same
+        # (you need to look at the properties)
+
+        if np.allclose(mlow, mhigh):
+            is_symmetric_materials = True
+        is_symmetric = (
+            is_symmetric_z and
+            is_symmetric_thetas and
+            is_symmetric_materials
+        )
+        return is_balanced, is_symmetric
+
+    def get_z0_z1_zmean(self):
+        thicknesses = self.get_thicknesses()
+        csum = np.cumsum(thicknesses)
+        z0 = self.z0 + np.hstack([0., csum[:-1]])
+        z1 = self.z0 + csum
+        #dz = z1 - z0
+        #dzsquared = z1 ** 2 - z0 ** 2
+        #zcubed = z1 ** 3 - z0 ** 3
+        zmeans = (z0 + z1) / 2.
+        return z0, z1, zmeans
+
     def get_ABD_matrices(self, theta_offset: float=0.) -> np.ndarray:
         """
         Gets the ABD matrix
@@ -987,15 +1059,11 @@ class PCOMP(CompositeShellProperty):
         thicknesses = self.get_thicknesses()
         thetad = self.get_thetas()
         theta = np.radians(thetad)
+        assert len(mids) == len(thicknesses)
+        assert len(mids) == len(thetad)
+        z0, z1, zmeans = self.get_z0_z1_zmean()
 
-        csum = np.cumsum(thicknesses)
-        z0 = self.z0 + np.hstack([0., csum[:-1]])
-        z1 = self.z0 + csum
-        #dz = z1 - z0
-        #dzsquared = z1 ** 2 - z0 ** 2
-        #zcubed = z1 ** 3 - z0 ** 3
         assert len(z0) == len(z1)
-        zmeans = (z0 + z1) / 2.
         # A11 A12 A16
         # A12 A22 A26
         # A16 A26 A66
@@ -1004,13 +1072,20 @@ class PCOMP(CompositeShellProperty):
         D = np.zeros((3, 3), dtype='float64')
         #Q = np.zeros((3, 3), dtype='float64')
 
-        mids_ref = self.mids_ref
+        mids_ref = copy.deepcopy(self.mids_ref)
+        assert mids_ref is not None, f'The following material hasnt been cross-referenced:\n{self}'
+        if self.is_symmetrical:
+            mids_ref += mids_ref[::-1]
+
+        assert len(mids) == len(mids_ref)
         for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip(mids, mids_ref, theta,
                                                                     thicknesses, zmeans, z0, z1):
             Qbar = self.get_Qbar_matrix(mid_ref, thetai)
             A += Qbar * thickness
-            B += Qbar * thickness * zmean
-            D += Qbar * thickness * (z1i ** 3 - z0i ** 3)
+            #B += Qbar * thickness * zmean
+            #D += Qbar * thickness * (z1i ** 3 - z0i ** 3)
+            B += Qbar * (z1i ** 2 - z0i ** 2)
+            D += Qbar * (z1i ** 3 - z0i ** 3)
             #N += Q * alpha * thickness
             #M += Q * alpha * thickness * zmean
         B /= 2.
@@ -2364,6 +2439,9 @@ class PSHELL(Property):
         Qbar = self.get_Qbar_matrix(self.mid1_ref, theta=0.)
 
         A += Qbar * thickness
+        #B += Qbar * (z1i ** 2 - z0i ** 2)
+        #D += Qbar * (z1i ** 3 - z0i ** 3)
+
         #B += Qbar * thickness * zmean
         #D += Qbar * thickness * (z1i ** 3 - z0i ** 3)
         #N += Qbar * alpha * thickness
