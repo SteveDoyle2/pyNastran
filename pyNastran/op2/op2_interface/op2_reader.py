@@ -283,11 +283,11 @@ class OP2Reader:
         # (101, 14, 0, 0, 0, 0, 0)
         data = self._read_record()
 
-        #self.read_markers([-2, 1, 0])
+        #self.read_3_markers([-2, 1, 0])
         #data = self._read_record()
 
         itable = -2
-        self.read_markers([itable, 1, 0])
+        self.read_3_markers([itable, 1, 0])
         marker = self.get_marker1(rewind=True, macro_rewind=False)
         struct_8s = Struct(self._endian + b'8s')
         while marker != 0:
@@ -295,7 +295,7 @@ class OP2Reader:
             data = self._read_record()
             name = struct_8s.unpack(data)[0]
             self.log.warning(name)
-            self.read_markers([itable, 1, 0])
+            self.read_3_markers([itable, 1, 0])
             marker = self.get_marker1(rewind=True, macro_rewind=False)
         self.read_markers([0])
         #b'XSOP2DIR',
@@ -330,15 +330,15 @@ class OP2Reader:
         assert idata[6] == 0, idata
         #print('----------------------')
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         self.read_table_name(['EQEXIN', 'EQEXINS', 'EQEXNOUT'])
         #print('----------------------')
         # ints
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = self._read_record()
         eqexin1 = np.frombuffer(data, dtype=op2.idtype)
 
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         data = self._read_record()
         eqexin2 = np.frombuffer(data, dtype=op2.idtype)
 
@@ -370,7 +370,7 @@ class OP2Reader:
             assert g == 0, g
         #print('-----------------------')
         #print('record 2')
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
 
         word, = unpack(self._endian + b'8s', data)
@@ -378,7 +378,7 @@ class OP2Reader:
         #self.show_data(data)
         #print('-----------------------')
         #print('record 3')
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = self._read_record()
         #self.show_data(data)
 
@@ -403,7 +403,7 @@ class OP2Reader:
 
         #print('-----------------------')
         #print('record 4')
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         #data = self._read_record()
         #self.show_data(data)
         self.read_markers([0])
@@ -434,7 +434,7 @@ class OP2Reader:
             assert g == 0, g
         #print('-----------------------')
         #print('record 2')
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         if self.read_mode == 2:
             word, = op2.struct_8s.unpack(data)
@@ -442,7 +442,7 @@ class OP2Reader:
         #self.show_data(data)
         #print('-----------------------')
         #print('record 3')
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = self._read_record()
         #self.show_data(data[96:108])
 
@@ -473,7 +473,7 @@ class OP2Reader:
 
         #print('-----------------------')
         #print('record 4')
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         #data = self._read_record()
         #self.show_data(data)
         self.read_markers([0])
@@ -498,13 +498,13 @@ class OP2Reader:
         unused_ints = unpack(self._endian + b'7i', data)
         #print('date?  = (?, month, day, ?, ?, ?) =', ints)
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         name, = unpack(self._endian + b'8s', data)
         name = name.decode('ascii').strip()
         #print('name = %r' % name)
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         matdict = MatrixDict(name)
         itable = -4
         while 1:
@@ -570,7 +570,7 @@ class OP2Reader:
             matdict.add(eltype, numwids, numgrid, dof_per_grid, form,
                         eids, ge, address, sils, xform=xforms)
             #-------------------------------------------------------------------
-            self.read_markers([itable, 1, 0])
+            self.read_3_markers([itable, 1, 0])
             itable -= 1
         self.read_markers([0])
         self.op2.matdicts[name] = matdict
@@ -591,7 +591,7 @@ class OP2Reader:
         # (101, 3, 3, 0, 3, 0, 0)
 
         itable = -2
-        markers = self.read_markers([itable, 1, 0])
+        markers = self.read_3_markers([itable, 1, 0])
         data = self._read_record()
         if self.size == 4:
             destab = op2.struct_8s.unpack(data)[0].rstrip()
@@ -603,7 +603,7 @@ class OP2Reader:
         assert destab == b'DESTAB', destab
 
         itable -= 1
-        markers = self.read_markers([itable, 1, 0])
+        markers = self.read_3_markers([itable, 1, 0])
 
         desvars = []
         while 1:
@@ -660,7 +660,7 @@ class OP2Reader:
             assert np.allclose(desvar[6], 0.0), desvar
             desvars.append(desvar)
             itable -= 1
-            markers = self.read_markers([itable, 1, 0])
+            markers = self.read_3_markers([itable, 1, 0])
 
         self.op2.op2_results.responses.desvars = Desvars(desvars)
         #if self.read_mode == 2:
@@ -806,12 +806,12 @@ class OP2Reader:
             #fdtype = 'float64'
         assert len(data) == 28 * factor, len(data)
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record() # CSTM
         #print(self.show_data(data, types='s'))
         assert len(data) == 8 * factor, len(data)
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
 
         coord_type_map = {
             1 : 'CORD2R',
@@ -1000,17 +1000,17 @@ class OP2Reader:
         self.read_markers([-1])
         data = self._read_record()
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         unused_table_name, = op2.struct_8s.unpack(data)
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = self._read_record()
 
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         data = self._read_record()
 
-        self.read_markers([-5, 1, 0])
+        self.read_3_markers([-5, 1, 0])
 
         itable = -6
         while 1:
@@ -1018,7 +1018,7 @@ class OP2Reader:
             if markers == [0]:
                 break
             data = self._read_record()
-            self.read_markers([itable, 1, 0])
+            self.read_3_markers([itable, 1, 0])
             itable -= 1
 
         #self.show(100)
@@ -1045,7 +1045,7 @@ class OP2Reader:
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
         if ndata == 8:
             #self.show_data(data, types='ifs', endian=None)
@@ -1137,7 +1137,7 @@ class OP2Reader:
         data = self._read_record()
         fmt = mapfmt(self._endian + b'7i', self.size)
         ints = Struct(fmt).unpack(data)
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         if self.size == 4:
             name, = Struct(self._endian + b'8s').unpack(data)
@@ -1146,7 +1146,7 @@ class OP2Reader:
             name = reshape_bytes_block(name)
         assert name == b'DESCYC  ', name
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = self._read_record()
         if self.size == 4:
             design_cycle, design_cycle_type_bytes = Struct(self._endian + b'i8s').unpack(data)
@@ -1201,7 +1201,7 @@ class OP2Reader:
 
         # (101, 11, 10, 3, 4, 0, 0)
         #self.show_data(data)
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
 
         if self.size == 4:
@@ -1211,7 +1211,7 @@ class OP2Reader:
             name = reshape_bytes_block(name)
         assert name == b'DBCOPT  ', name
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = self._read_record()
         #ndata = len(data) // 4
         if self.size == 4:
@@ -1224,7 +1224,7 @@ class OP2Reader:
         #print(f'  objective_function = {objective_function}; n={len(objective_function)}')
         assert len(objective_function) == nopt, f'len(objective_function)={len(objective_function)} nopt={nopt}'
 
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         data = self._read_record()
         approx = np.frombuffer(data, dtype=fdtype).copy()# .tolist()
         napprox_actual = len(approx)
@@ -1235,22 +1235,22 @@ class OP2Reader:
         #assert napprox_actual == napprox, f'napprox_actual={napprox_actual} napprox={napprox}'
         #print(f'  approx = {approx}; n={len(approx)}')
 
-        self.read_markers([-5, 1, 0])
+        self.read_3_markers([-5, 1, 0])
         data = self._read_record()
         max_value_of_constraint = np.frombuffer(data, dtype=fdtype).tolist()
         #print(f'  max_value_of_constraint = {max_va/lue_of_constraint}; n={len(max_value_of_constraint)}')
 
 
-        self.read_markers([-6, 1, 0])
+        self.read_3_markers([-6, 1, 0])
         data = self._read_record()
         desvar_ids = np.frombuffer(data, dtype=idtype).tolist()
         assert len(desvar_ids) == nvars, f'len(desvars)={len(desvars)} nvars={nvars}'
 
-        self.read_markers([-7, 1, 0])
+        self.read_3_markers([-7, 1, 0])
         data = self._read_record()
         cycle_1_values = np.frombuffer(data, dtype=fdtype).tolist()
 
-        self.read_markers([-8, 1, 0])
+        self.read_3_markers([-8, 1, 0])
         marker0 = self.get_marker1(rewind=True)
         if marker0 == 0:
             self.read_markers([0])
@@ -1280,7 +1280,7 @@ class OP2Reader:
         num, ndesvars, one, zeroa, zerob, zeroc, zerod = Struct(fmt).unpack(data)
         # (101, 3, 1, 0, 0, 0, 0)
         #self.show_data(data)
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         if self.size == 4:
             name, = Struct(self._endian + b'8s').unpack(data)
@@ -1289,7 +1289,7 @@ class OP2Reader:
             name = reshape_bytes_block(name)
         assert name == b'DSCMCOL ', name
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = self._read_record()
 
         if self.read_mode == 2:
@@ -1307,7 +1307,7 @@ class OP2Reader:
             # 5 FREQTIME RS Frequency or time step
             # 6 SEID      I Superelement identification number
         #self.show_data(data[4*idata:])
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         nfields = self.get_marker1(rewind=True)
         if nfields == 0:
             self.read_markers([0])
@@ -1358,7 +1358,7 @@ class OP2Reader:
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         ndata = len(data)
         subtable_name_raw, = op2.struct_8s.unpack(data[:8])
@@ -1407,7 +1407,7 @@ class OP2Reader:
         #print(self.show_data(data))
 
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
 
         if len(data) == 12:
@@ -1433,7 +1433,7 @@ class OP2Reader:
             self.show_data(data, types='ifsd')
             raise RuntimeError('bad length...')
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         isubtable = -3
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
@@ -1497,15 +1497,15 @@ class OP2Reader:
         #self.show_data(unused_data)
         #print('--------------------')
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         self.read_table_name(['GPL', 'GPLOUT'])
         #else ndata == 12:  # TestOP2Matrix.test_gpspc
         #print('--------------------')
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         unused_data = read_record() # nids 1-117
 
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         data = read_record()
         if self.read_mode == 2 and self.size == 4:
             # nids 1-117 (column 1) with nid*1000 (column 2)
@@ -1525,19 +1525,19 @@ class OP2Reader:
         self.read_markers([-1])
         data = self._read_record()  # (101, 139, 0, 0, 0, 0, 0)
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         gpl_gpls, method = Struct(self._endian + b'8si').unpack(data)
         assert gpl_gpls.strip() in [b'GPL', b'GPLS'], gpl_gpls.strip()
         assert method in [0, 1, 2, 3, 4, 5, 6, 7, 10, 12, 13, 15, 20, 30, 40, 99,
                           101, 201], f'GPLS method={method}'
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = self._read_record()
         ints = np.frombuffer(data, op2.idtype)
         #print(ints)
 
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         data = self._read_record()
         ints = np.frombuffer(data, op2.idtype)
         nints = len(ints)
@@ -1628,12 +1628,12 @@ class OP2Reader:
             self.binary_debug.write('---markers = [-1]---\n')
         #print('--------------------')
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         self.read_table_name(['GPDT', 'GPDTS'])
 
         #print('--------------------')
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
 
 
         ## TODO: no idea how this works...
@@ -1697,7 +1697,7 @@ class OP2Reader:
             #markers = self.get_nmarkers(1, rewind=False)
             return
 
-        self.read_markers([isubtable, 1, 0])
+        self.read_3_markers([isubtable, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
             #markers = self.get_nmarkers(1, rewind=True)
@@ -1710,7 +1710,7 @@ class OP2Reader:
                 #print('read_mode=%s freqs=%s' % (self.read_mode, freqs.tolist()))
 
             markers = self.get_nmarkers(1, rewind=True)
-            self.read_markers([isubtable, 1, 0])
+            self.read_3_markers([isubtable, 1, 0])
             markers = self.get_nmarkers(1, rewind=True)
             isubtable -= 1
         del isubtable
@@ -1746,12 +1746,12 @@ class OP2Reader:
             self.binary_debug.write('---markers = [-1]---\n')
         #print('--------------------')
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         self.read_table_name(['BGPDT', 'BGPDTS', 'BGPDTOLD', 'BGPDTOUT'])
 
         #print('--------------------')
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = read_record() # cd,x,y,z
         #self.show_data(data, types='ifqd')
         xword = 4 * self.factor
@@ -1766,7 +1766,7 @@ class OP2Reader:
         #print('xyz:\n%s' % xyz)
 
         op2.op2_results.bgpdt = BGPDT(cd, xyz)
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         marker = self.get_nmarkers(1, rewind=True)[0]
         if marker == 0:
             self.read_markers([0])
@@ -1777,7 +1777,7 @@ class OP2Reader:
         #self.show_data(data, types='i')
         isubtable = -5
         while 1:
-            self.read_markers([isubtable, 1, 0])
+            self.read_3_markers([isubtable, 1, 0])
             marker = self.get_nmarkers(1, rewind=True)[0]
             if marker == 0:
                 break
@@ -1795,9 +1795,9 @@ class OP2Reader:
         if self.read_mode == 1:
             self.read_markers([-1])
             self._skip_record()
-            self.read_markers([-2, 1, 0])
+            self.read_3_markers([-2, 1, 0])
             self._skip_record()
-            self.read_markers([-3, 1, 0])
+            self.read_3_markers([-3, 1, 0])
 
             if responses.convergence_data is None:
                 data = self._read_record()
@@ -1824,13 +1824,13 @@ class OP2Reader:
         markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()  # ('HISADD', )
         #print('hisadd data2')
         #self.show_data(data)
 
         #self.log.info('----marker3----')
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = self._read_record()
 
         fmt = mapfmt(self._endian + b'3i3fi', self.size)
@@ -1901,7 +1901,7 @@ class OP2Reader:
         unused_markers = self.get_nmarkers(1, rewind=True)
         marker = -2
         while 1:
-            self.read_markers([marker, 1, 0])
+            self.read_3_markers([marker, 1, 0])
             nfields = self.get_marker1(rewind=True)
             if nfields > 0:
                 # we're not reading the record because the IBULK
@@ -1938,7 +1938,7 @@ class OP2Reader:
         marker = -2
         lines = []
         while 1:
-            self.read_markers([marker, 1, 0])
+            self.read_3_markers([marker, 1, 0])
             nfields = self.get_marker1(rewind=True)
             if nfields > 0:
                 # we're not reading the record because the IBULK
@@ -1969,7 +1969,7 @@ class OP2Reader:
         #(101, 118, 4, 7, 0, 2, 0)
 
         # CDDATA, 2
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         cddata, method = Struct(self._endian + b'8si').unpack(data)
 
@@ -1978,7 +1978,7 @@ class OP2Reader:
         if method == 1:
             while 1:
                 #print(f'read marker={marker}...')
-                self.read_markers([marker, 1, 0])
+                self.read_3_markers([marker, 1, 0])
                 nfields = self.get_marker1(rewind=True)
                 if nfields == 0:
                     break
@@ -1993,7 +1993,7 @@ class OP2Reader:
 
         elif method == 2:
             while 1:
-                self.read_markers([marker, 1, 0])
+                self.read_3_markers([marker, 1, 0])
                 nfields = self.get_marker1(rewind=True)
                 if nfields == 0:
                     break
@@ -2102,11 +2102,11 @@ class OP2Reader:
         data = self._read_record()
         #self.show_data(data, types='ifs', endian=None)
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         assert Struct('8s').unpack(data)[0] == b'STDISP  '
 
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         data = self._read_record()
         a, b1, b2, b3, b4, b5, b6, b7, b8, b9 = Struct('64s 5i 12s 3i').unpack(data)
         #a 345 0 0 0 0 b'DISPSTWING  ' 1 0 123
@@ -2126,7 +2126,7 @@ class OP2Reader:
         #(4.834479701920619e-43, 0.0, 0.0, 0.0, 0.0, 14179176448.0, 881989.1875, 1.35761196e-19, 1.4012e-45, 0.0, 1.72359)
         #self.show_data(data[96:], types='ifs', endian=None)
 
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         self.read_markers([0])
 
     def read_omm2(self):
@@ -2137,7 +2137,7 @@ class OP2Reader:
         self.read_markers([-1])
         data = self._read_record()
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         if len(data) == 28:
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'8s5i', data)
@@ -2166,17 +2166,17 @@ class OP2Reader:
         #self.read_markers([-1])
         #data = self._read_record()
 
-        #self.read_markers([-2, 1, 0])
+        #self.read_3_markers([-2, 1, 0])
         #data = self._read_record()
         #table_name, = op2.struct_8s.unpack(data)
         ##print "table_name = %r" % table_name
 
-        #self.read_markers([-3, 1, 0])
+        #self.read_3_markers([-3, 1, 0])
         #markers = self.get_nmarkers(1, rewind=True)
         #if markers != [-4]:
             #data = self._read_record()
 
-        #self.read_markers([-4, 1, 0])
+        #self.read_3_markers([-4, 1, 0])
         #markers = self.get_nmarkers(1, rewind=True)
         #if markers != [0]:
             #data = self._read_record()
@@ -2184,10 +2184,10 @@ class OP2Reader:
             #self.read_markers([0])
             #return
 
-        #self.read_markers([-5, 1, 0])
+        #self.read_3_markers([-5, 1, 0])
         #data = self._read_record()
 
-        #self.read_markers([-6, 1, 0])
+        #self.read_3_markers([-6, 1, 0])
         #self.read_markers([0])
 
     def _skip_pcompts(self):
@@ -2222,19 +2222,19 @@ class OP2Reader:
         else:  # pragma: no cover
             raise NotImplementedError(table_name)
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         # 'IPCOMPT '
         unused_data = self._read_record()
         #table_name, = op2.struct_8s.unpack(data)
 
         isubtable = -3
-        self.read_markers([isubtable, 1, 0])
+        self.read_3_markers([isubtable, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
 
         if markers != [-4]:
             unused_data = self._read_record()
 
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         markers = self.get_nmarkers(1, rewind=True)
         if markers != [0]: # n4a=0
             #self.show_data(data_header, types='ifsd')
@@ -2266,7 +2266,7 @@ class OP2Reader:
             assert n4a == 0, n4a
             return
 
-        self.read_markers([-5, 1, 0])
+        self.read_3_markers([-5, 1, 0])
         data = self._read_record()
         assert len(data) == n5words * 4, 'n5words=%s len(data)=%s n5words*4=%s'  % (n5words, len(data), n5words*4)
 
@@ -2289,7 +2289,7 @@ class OP2Reader:
             print("j (-5) = %s" % j)
             assert i == len(data), '-5'
 
-        self.read_markers([-6, 1, 0])
+        self.read_3_markers([-6, 1, 0])
         self.read_markers([0])
 
     def read_meff(self):
@@ -2307,11 +2307,11 @@ class OP2Reader:
         markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         unused_data = self._read_record()
 
         for n in [-3, -4, -5, -6, -7, -8]:
-            self.read_markers([n, 1, 1])
+            self.read_3_markers([n, 1, 1])
             markers = self.get_nmarkers(1, rewind=False)
             #print('markers =', markers)
             nbytes = markers[0]*4 + 12
@@ -2342,13 +2342,13 @@ class OP2Reader:
         markers = self.get_nmarkers(1, rewind=True)
         if self.is_debug_file:
             self.binary_debug.write('---marker0 = %s---\n' % markers)
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         unused_data = self._read_record()
         #print('intmod data2')
         #self.show_data(data)
 
         for n in [-3, -4, -5, -6, -7, -8,]:
-            self.read_markers([n, 1, 1])
+            self.read_3_markers([n, 1, 1])
             markers = self.get_nmarkers(1, rewind=False)
             #print('markers =', markers)
             nbytes = markers[0]*4 + 12
@@ -2587,7 +2587,7 @@ class OP2Reader:
         self.read_markers([-1])
         data = self._read_record()
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
         if ndata == 16:
             subtable_name, dummy_a, dummy_b = unpack(self._endian + b'8sii', data)
@@ -2605,7 +2605,7 @@ class OP2Reader:
             msg += 'floats   = %r' % str(floats)
             raise NotImplementedError(msg)
 
-        self.read_markers([-3, 1, 1])
+        self.read_3_markers([-3, 1, 1])
 
         unused_markers0 = self.get_nmarkers(1, rewind=False)
         unused_record = self.read_block()
@@ -2629,11 +2629,11 @@ class OP2Reader:
         unused_data = self._read_record()
         #self.show_data(data)
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         #op2.show_ndata(440, types='if')
         unused_data = self._read_record()
         #print('----')
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         #op2.show_ndata(440, types='if')
         #print('----')
         self.read_markers([0])
@@ -2808,7 +2808,7 @@ class OP2Reader:
                        'nvalues=%s g=%s' % (
                            table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
 
         if len(data) == 16:
@@ -2960,7 +2960,7 @@ class OP2Reader:
         self.read_markers([-1])
         unused_data = self._skip_record()
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         unused_data = self._skip_record()
 
         itable = -3
@@ -3055,7 +3055,7 @@ class OP2Reader:
         self.read_markers([-1])
         data = self._read_record()
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data = self._read_record()
         if self.size == 8:
             data = reshape_bytes_block(data)
@@ -3375,7 +3375,7 @@ class OP2Reader:
         op2.matrices[table_name] = m
         self.log.debug(m)
 
-        self.read_markers([-4, 1, 0])
+        self.read_3_markers([-4, 1, 0])
         data = self._read_record()
 
         if len(data) == 12:
@@ -3919,7 +3919,7 @@ class OP2Reader:
         op2.n += 8 + ndata
         return data_out
 
-    def read_3_blocks(self) -> bytes:
+    def read_3_blocks4(self) -> bytes:
         """
         Reads a block following a pattern of:
             [nbytes, data, nbytes]
@@ -3946,6 +3946,13 @@ class OP2Reader:
         return data_out
 
     def read_3_markers(self, markers, macro_rewind=True) -> None:
+        """Micro-optimizes ``read_markers`` for 3 markers."""
+        if self.size == 4:
+            self.read_3_markers4(markers, macro_rewind=macro_rewind)
+        else:
+            self.read_markers8(markers, macro_rewind=macro_rewind)
+
+    def read_3_markers4(self, markers, macro_rewind=True) -> None:
         """
         Micro-optimizes ``read_markers`` for 3 markers.
 
@@ -3960,14 +3967,17 @@ class OP2Reader:
             if the expected table number is not found
 
         """
+        #data1 = self.read_block4()
+        #data2 = self.read_block4()
+        #data3 = self.read_block4()
+        #data = data1 + data2 + data3
         op2 = self.op2
-        data = self.read_3_blocks()
-        unused_imarkers = op2.struct_3i.unpack(data)
-        for imarker, marker in enumerate(markers):
-            if marker != imarker:
-                msg = 'marker=%r imarker=%r; markers=%s; table_name=%r' % (
-                    marker, imarker, markers, op2.table_name)
-                raise FortranMarkerError(msg)
+        data = self.read_3_blocks4()
+        markers_actual = op2.struct_3i.unpack(data)
+        for imarker, marker, marker_actual in zip(count(), markers, markers_actual):
+            if marker != marker_actual:
+                raise FortranMarkerError(f'imarker={imarker}; markers={markers}; '
+                                         f'marker_actual={markers_actual} table_name={op2.table_name!r}')
             if self.is_debug_file:
                 self.binary_debug.write('  read_markers -> [4, %i, 4]\n' % marker)
 
@@ -4115,7 +4125,7 @@ class OP2Reader:
 
         self.read_markers([-1])
         unused_data = self._skip_record()
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         unused_data = self._skip_record()
         self._skip_subtables()
 
@@ -4123,7 +4133,7 @@ class OP2Reader:
         """skips a set of subtables"""
         op2 = self.op2
         op2.isubtable = -3
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
 
         markers = self.get_nmarkers(1, rewind=True)
         while markers[0] != 0:
@@ -4136,7 +4146,7 @@ class OP2Reader:
                 #data = self._parse_results_table4(data)
 
             op2.isubtable -= 1
-            self.read_markers([op2.isubtable, 1, 0])
+            self.read_3_markers([op2.isubtable, 1, 0])
             markers = self.get_nmarkers(1, rewind=True)
         self.read_markers([0])
 
@@ -4351,7 +4361,7 @@ class OP2Reader:
             #self.binary_debug.write('marker = [4, -1, 4]\n')
         data = self._read_record()
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         if self.is_debug_file:
             self.binary_debug.write('---markers = [-2, 1, 0]---\n')
         data, ndata = self._read_record_ndata()
@@ -4468,7 +4478,7 @@ class OP2Reader:
         self.read_markers([-1])
         data = self._read_record() # length=28
 
-        self.read_markers([-2, 1, 0])
+        self.read_3_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
         if self.size == 4:
             if ndata == 8:
@@ -4503,7 +4513,7 @@ class OP2Reader:
 
         #nstart = op2.n
         op2.isubtable = -3
-        self.read_markers([-3, 1, 0])
+        self.read_3_markers([-3, 1, 0])
         if self.is_debug_file:
             self.binary_debug.write('***isubtable = %i\n' % op2.isubtable)
             self.binary_debug.write('---markers = [-3, 1, 0]---\n')
@@ -4558,7 +4568,7 @@ class OP2Reader:
 
             iloc = op2.f.tell()
             try:
-                self.read_markers([op2.isubtable, 1, 0])
+                self.read_3_markers([op2.isubtable, 1, 0])
                 #self.log.debug('markers=%s' % [op2.isubtable, 1, 0])
             except FortranMarkerError:
                 self.log.error('isubtable=%s' % op2.isubtable)
@@ -4573,7 +4583,7 @@ class OP2Reader:
                 if marker0 < op2.isubtable:
                     raise RuntimeError('marker0 < isubtable; marker0=%s isubtable=%s' % (
                         marker0, op2.isubtable))
-                    #self.read_markers([marker0, 1, 0])
+                    #self.read_3_markers([marker0, 1, 0])
                     ##self.log.debug('markers=%s' % [marker0, 1, 0])
                     #self.show(200)
                     #break
