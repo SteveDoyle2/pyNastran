@@ -2261,8 +2261,8 @@ class AddCards(AddMethods):
                      c1, c2, d1, d2, e1, e2, f1, f2,
                      k1=k1, k2=k2, s1=s1, s2=s2,
                      nsia=nsia, nsib=nsib, cwa=cwa, cwb=cwb,
-                     m1a=m1a, m2a=m2a, m1b=m1b,
-                     m2b=m2b, n1a=n1a, n2a=n2a, n1b=n1b, n2b=n2b, comment=comment)
+                     m1a=m1a, m2a=m2a, m1b=m1b, m2b=m2b,
+                     n1a=n1a, n2a=n2a, n1b=n1b, n2b=n2b, comment=comment)
         self._add_property_object(prop)
         return prop
 

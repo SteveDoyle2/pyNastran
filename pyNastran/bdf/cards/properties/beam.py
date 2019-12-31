@@ -250,17 +250,27 @@ class PBEAM(IntegratedLineProperty):
 
         # A / B - the grid points
         # 1 / 2 - the y/z coords
+
+        assert m1a is not None, m1a
+        assert m2a is not None, m2a
+
         if m1b is None:
             m1b = m1a
         if m2b is None:
             m2b = m2a
+        assert m1b is not None, m1b
+        assert m2b is not None, m2b
 
         # A / B - the grid points
         # 1 / 2 - the y/z coords
+        assert n1a is not None, n1a
+        assert n2a is not None, n2a
         if n1b is None:
             n1b = n1a
         if n2b is None:
             n2b = n2a
+        assert n1b is not None, n1b
+        assert n2b is not None, n2b
 
         nxxb = len(xxb)
         if nsm is None:

@@ -55,7 +55,7 @@ class TestBeams(unittest.TestCase):
             '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
             '              0.      0.     2.5     -5.      0.      0.      0.      0.',
             '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
-            '              0.      0.      0.      0.      .5      .5      0.      0.'
+            '              0.      0.      0.      0.      .5      0.      0.      0.'
         ]
         self._compare(fields, lines_expected)
 
@@ -103,7 +103,7 @@ class TestBeams(unittest.TestCase):
             #'             YES      1.     5.3    56.2    78.6      0.      0.      0.',
             #'              0.      0.     2.5     -5.      0.      0.      0.      0.',
             '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
-            '              0.      0.      0.      0.      .5      .5      0.      0.'
+            '              0.      0.      0.      0.      .5      0.      0.      0.'
         ]
         self._compare(fields, lines_expected)
 
@@ -130,7 +130,7 @@ class TestBeams(unittest.TestCase):
             '             YES      1.     5.3    56.2    78.6      0.      0.      0.',
             '              0.      0.     2.5     -5.      0.      0.      0.      0.',
             '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
-            '              0.      0.      0.      0.      .5      .5      0.      0.',
+            '              0.      0.      0.      0.      .5      0.      0.      0.',
         ]
         self._compare(fields, lines_expected)
 
@@ -152,7 +152,7 @@ class TestBeams(unittest.TestCase):
             'PBEAM         39       6     2.9     3.5    5.97      0.      0.      0.',
             '              0.      0.      2.     -4.      0.      0.      0.      0.',
             '              1.      1.     1.1      0.     2.1     2.1     .21     .21',
-            '              0.      0.      0.      0.      .5      .5      0.      0.',
+            '              0.      0.      0.      0.      .5      0.      0.      0.',
         ]
         self._compare(fields, lines_expected)
 
@@ -710,8 +710,10 @@ class TestBeams(unittest.TestCase):
             e1, e2, f1, f2,
             k1=1., k2=1., s1=0., s2=0.,
             nsia=0., nsib=None, cwa=0., cwb=None,
-            m1a=0., m2a=None, m1b=0., m2b=None,
-            n1a=0., n2a=None, n1b=0., n2b=None,
+            m1a=0., m2a=0., m1b=None, m2b=None,
+            n1a=0., n2a=0., n1b=None, n2b=None,
+            #m1a=0., m2a=None, m1b=0., m2b=None,
+            #n1a=0., n2a=None, n1b=0., n2b=None,
             comment='pbeam')
         #print(pbeam)
         #---------------------------------------------------------------
@@ -803,8 +805,8 @@ class TestBeams(unittest.TestCase):
                                 e1=None, e2=None, f1=None, f2=None,
                                 k1=1., k2=1., s1=0., s2=0.,
                                 nsia=0., nsib=None, cwa=0., cwb=None,
-                                m1a=0., m2a=None, m1b=0., m2b=None,
-                                n1a=0., n2a=None, n1b=0., n2b=None,
+                                m1a=0., m2a=0., m1b=None, m2b=None,
+                                n1a=0., n2a=0., n1b=None, n2b=None,
                                 comment='')
         str(pbeam)
 
@@ -959,10 +961,9 @@ class TestBeams(unittest.TestCase):
                                    s1=0., s2=0.,
                                    nsia=0., nsib=None,
                                    cwa=0., cwb=None,
-                                   m1a=0., m2a=None,
-                                   m1b=0., m2b=None,
-                                   n1a=0., n2a=None,
-                                   n1b=0., n2b=None, comment='')
+                                   m1a=0., m2a=0., m1b=None, m2b=None,
+                                   n1a=0., n2a=0., n1b=None, n2b=None,
+                                   comment='')
 
         nsm = [1., 1.]
         pid_pbeam_nsm = 30
@@ -975,10 +976,11 @@ class TestBeams(unittest.TestCase):
                                    cwa=0., cwb=None,
                                    # cg location at A/B (1.,1.)
                                    m1a=1., m2a=1.,
-                                   m1b=1., m2b=1.,
+                                   m1b=None, m2b=None,
                                    # neutral axis at A/B (0., 0.)
-                                   n1a=0., n2a=None,
-                                   n1b=0., n2b=None, comment='')
+                                   n1a=0., n2a=0.,
+                                   n1b=None, n2b=None,
+                                   comment='')
         eid = 42
         model.add_cbeam(eid, pid_pbeam_nsm, [1, 2], x, g0, offt='GGG', bit=None,
                         pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
@@ -1119,10 +1121,9 @@ class TestBeams(unittest.TestCase):
                                 s1=0., s2=0.,
                                 nsia=0., nsib=None,
                                 cwa=0., cwb=None,
-                                m1a=0., m2a=None,
-                                m1b=0., m2b=None,
-                                n1a=0., n2a=None,
-                                n1b=0., n2b=None, comment='')
+                                m1a=0., m2a=0., m1b=None, m2b=None,
+                                n1a=0., n2a=0., n1b=None, n2b=None,
+                                comment='')
         pbeam.validate()
 
         E = 1.0
