@@ -2206,8 +2206,8 @@ class AddCards(AddMethods):
                   e1=None, e2=None, f1=None, f2=None,
                   k1=1., k2=1., s1=0., s2=0.,
                   nsia=0., nsib=None, cwa=0., cwb=None,
-                  m1a=0., m2a=None, m1b=0., m2b=None,
-                  n1a=0., n2a=None, n1b=0., n2b=None,
+                  m1a=0., m2a=0., m1b=None, m2b=None,
+                  n1a=0., n2a=0., n1b=None, n2b=None,
                   comment=''):
         """
         .. todo:: fix 0th entry of self.so, self.xxb
@@ -2228,7 +2228,7 @@ class AddCards(AddMethods):
             area
         i1, i2, i12, j : List[float]
             moments of inertia
-        nsm : List[float]; default=None -> [0.]*nxxb
+        nsm : List[float]
             nonstructural mass per unit length
         c1/c2, d1/d2, e1/e2, f1/f2 : List[float]; default=None -> [0.]*nxxb
            the y/z locations of the stress recovery points
@@ -2243,15 +2243,15 @@ class AddCards(AddMethods):
             about nsm center of gravity at Point A/B.
         cwa / cwb : float; default=0. / cwa
             warping coefficient for end A/B.
-        m1a / m2a : float; default=0. / m1a
+        m1a / m2a : float; default=0. / 0.
             y/z coordinate of center of gravity of
             nonstructural mass for end A.
-        m1b / m2b : float; default=0. / m1b
+        m1b / m2b : float; default=m1a / m2a
             y/z coordinate of center of gravity of
             nonstructural mass for end B.
-        n1a / n2a : float; default=0. / n1a
+        n1a / n2a : float; default=0. / 0.
             y/z coordinate of neutral axis for end A.
-        n1b / n2b : float; default=0. / n1b
+        n1b / n2b : float; default=n1a / n2a
             y/z coordinate of neutral axis for end B.
         comment : str; default=''
             a comment for the card

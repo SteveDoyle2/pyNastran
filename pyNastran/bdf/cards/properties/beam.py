@@ -180,8 +180,8 @@ class PBEAM(IntegratedLineProperty):
                      e1=None, e2=None, f1=None, f2=None,
                      k1=1., k2=1., s1=0., s2=0.,
                      nsia=0., nsib=None, cwa=0., cwb=None,
-                     m1a=0., m2a=None, m1b=0., m2b=None,
-                     n1a=0., n2a=None, n1b=0., n2b=None,
+                     m1a=0., m2a=0., m1b=None, m2b=None,
+                     n1a=0., n2a=0., n1b=None, n2b=None,
                      comment='')
 
     def __init__(self, pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
@@ -189,8 +189,8 @@ class PBEAM(IntegratedLineProperty):
                  e1=None, e2=None, f1=None, f2=None,
                  k1=1., k2=1., s1=0., s2=0.,
                  nsia=0., nsib=None, cwa=0., cwb=None,
-                 m1a=0., m2a=None, m1b=0., m2b=None,
-                 n1a=0., n2a=None, n1b=0., n2b=None,
+                 m1a=0., m2a=0., m1b=None, m2b=None,
+                 n1a=0., n2a=0., n1b=None, n2b=None,
                  comment=''):
         """
         .. todo:: fix 0th entry of self.so, self.xxb
@@ -226,18 +226,19 @@ class PBEAM(IntegratedLineProperty):
             about nsm center of gravity at Point A/B.
         cwa / cwb : float; default=0. / cwa
             warping coefficient for end A/B.
-        m1a / m2a : float; default=0. / m1a
+        m1a / m2a : float; default=0. / 0.
             y/z coordinate of center of gravity of
             nonstructural mass for end A.
-        m1b / m2b : float; default=0. / m1b
+        m1b / m2b : float; default=m1a / m2a
             y/z coordinate of center of gravity of
             nonstructural mass for end B.
-        n1a / n2a : float; default=0. / n1a
+        n1a / n2a : float; default=0. / 0.
             y/z coordinate of neutral axis for end A.
-        n1b / n2b : float; default=0. / n1b
+        n1b / n2b : float; default=n1a / n2a
             y/z coordinate of neutral axis for end B.
         comment : str; default=''
             a comment for the card
+
         """
         IntegratedLineProperty.__init__(self)
         if comment:
@@ -247,15 +248,19 @@ class PBEAM(IntegratedLineProperty):
         if cwb is None:
             cwb = cwa
 
-        if m2a is None:
-            m2a = m1a
+        # A / B - the grid points
+        # 1 / 2 - the y/z coords
+        if m1b is None:
+            m1b = m1a
         if m2b is None:
-            m2b = m1b
+            m2b = m2a
 
-        if n2a is None:
-            n2a = n1a
+        # A / B - the grid points
+        # 1 / 2 - the y/z coords
+        if n1b is None:
+            n1b = n1a
         if n2b is None:
-            n2b = n1b
+            n2b = n2a
 
         nxxb = len(xxb)
         if nsm is None:
@@ -708,24 +713,24 @@ class PBEAM(IntegratedLineProperty):
         m1a = double_or_blank(card, ifield + 8, 'm1a', 0.0)
         #: z coordinate of center of gravity of
         #: nonstructural mass for end A.
-        m2a = double_or_blank(card, ifield + 9, 'm2a', m1a)
+        m2a = double_or_blank(card, ifield + 9, 'm2a', 0.0)
 
         #: y coordinate of center of gravity of
         #: nonstructural mass for end B.
-        m1b = double_or_blank(card, ifield + 10, 'm1b', 0.0)
+        m1b = double_or_blank(card, ifield + 10, 'm1b', m1a)
         #: z coordinate of center of gravity of
         #: nonstructural mass for end B.
-        m2b = double_or_blank(card, ifield + 11, 'm2b', m1b)
+        m2b = double_or_blank(card, ifield + 11, 'm2b', m2a)
 
         #: y coordinate of neutral axis for end A.
         n1a = double_or_blank(card, ifield + 12, 'n1a', 0.0)
         #: z coordinate of neutral axis for end A.
-        n2a = double_or_blank(card, ifield + 13, 'n2a', n1a)
+        n2a = double_or_blank(card, ifield + 13, 'n2a', 0.0)
 
         #: y coordinate of neutral axis for end B.
-        n1b = double_or_blank(card, ifield + 14, 'n1a', 0.0)
+        n1b = double_or_blank(card, ifield + 14, 'n1a', n1a)
         #: z coordinate of neutral axis for end B.
-        n2b = double_or_blank(card, ifield + 15, 'n2b', n1b)
+        n2b = double_or_blank(card, ifield + 15, 'n2b', n2a)
 
 
         ifield += 16
@@ -1058,15 +1063,17 @@ class PBEAM(IntegratedLineProperty):
         #m2a = self.m2a
         #m1b = self.m1b
         #m2b = self.m2b
+        # Point A/B
+        # Directions 1/2
         m1a = set_blank_if_default(self.m1a, 0.0)
-        m2a = set_blank_if_default(self.m2a, self.m1a)
-        m1b = set_blank_if_default(self.m1b, 0.0)
-        m2b = set_blank_if_default(self.m2b, self.m1b)
+        m2a = set_blank_if_default(self.m2a, 0.0)
+        m1b = set_blank_if_default(self.m1b, self.m1a)
+        m2b = set_blank_if_default(self.m2b, self.m2a)
 
         n1a = set_blank_if_default(self.n1a, 0.0)
-        n2a = set_blank_if_default(self.n2a, self.n1a)
-        n1b = set_blank_if_default(self.n1b, 0.0)
-        n2b = set_blank_if_default(self.n2b, self.n1b)
+        n2a = set_blank_if_default(self.n2a, 0.0)
+        n1b = set_blank_if_default(self.n1b, self.n1a)
+        n2b = set_blank_if_default(self.n2b, self.n2b)
 
         footer = [k1, k2, s1, s2, nsia, nsib, cwa, cwb,
                   m1a, m2a, m1b, m2b, n1a, n2a, n1b, n2b]
