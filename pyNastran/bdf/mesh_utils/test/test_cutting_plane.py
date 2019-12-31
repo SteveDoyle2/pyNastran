@@ -203,8 +203,9 @@ class TestCuttingPlane(unittest.TestCase):
             beam_model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
                                  c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
                                  k1=1., k2=1., s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
-                                 m1a=0., m2a=None, m1b=0., m2b=None,
-                                 n1a=0., n2a=None, n1b=0., n2b=None, comment='')
+                                 m1a=0., m2a=0., m1b=None, m2b=None,
+                                 n1a=0., n2a=0., n1b=None, n2b=None,
+                                 comment='')
         beam_model.write_bdf('equivalent_beam_model.bdf')
 
         X = np.vstack([y, A]).T
