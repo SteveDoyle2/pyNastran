@@ -72,7 +72,7 @@ from pyNastran.bdf.cards.elements.solid import (
 from pyNastran.bdf.mesh_utils.delete_bad_elements import (
     tri_quality, quad_quality, get_min_max_theta)
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids_all
-
+from pyNastran.bdf.mesh_utils.forces_moments import get_load_arrays, get_pressure_array
 
 from pyNastran.op2.op2 import OP2
 #from pyNastran.f06.f06_formatting import get_key0
@@ -5842,8 +5842,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             self.gui.log.warning('LOAD=%s not found' % load_case_id)
             return icase
 
-        is_pressure, pressures = model.get_pressure_array(
-            load_case_id, eids=self.element_ids, stop_on_failure=False)
+        is_pressure, pressures = get_pressure_array(
+            model, load_case_id, eids=self.element_ids, stop_on_failure=False)
         if not is_pressure:
             return icase
 
@@ -5883,8 +5883,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
         try:
             #form = []
-            out = model.get_load_arrays(
-                subcase_id,
+            out = get_load_arrays(
+                model, subcase_id,
                 eid_map=self.eid_map, node_ids=self.node_ids,
                 normals=self.normals, nid_map=self.nid_map,)
             is_loads, is_temperatures, temperature_data, load_data = out

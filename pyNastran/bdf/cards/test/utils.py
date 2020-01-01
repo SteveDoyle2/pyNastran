@@ -12,6 +12,8 @@ from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm, mass_properties_breakdown)
+from pyNastran.bdf.mesh_utils.forces_moments import get_load_arrays, get_pressure_array
+
 from pyNastran.bdf.test.test_bdf import run_bdf as test_bdf
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray
@@ -138,7 +140,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         op2_geom_model.write_op2(op2_filename, post=-1, endian=b'<', skips=None,
                                  nastran_format='nx')
         if run_op2_reader:
-            op2r = read_op2_geom(op2_filename, log=op2_geom_model.log, xref=False)
+            unused_op2_geom = read_op2_geom(op2_filename, log=op2_geom_model.log, xref=False)
         else:
             frame = inspect.currentframe()
             call_frame = inspect.getouterframes(frame, 2)
@@ -206,11 +208,11 @@ def _run_loads(model, nelements, run_loads=True):
         load_ids = list(set(list(model.load_combinations) + list(model.loads)))
         for load_id in sorted(load_ids):
             unused_subcase = model.case_control_deck.add_subcase(load_id)
-            model.get_pressure_array(load_id, eids, stop_on_failure=True)
+            get_pressure_array(model, load_id, eids, stop_on_failure=True)
 
     load_ids = list(set(list(model.load_combinations) + list(model.loads)))
     for subcase_id in model.subcases:
-        model.get_load_arrays(subcase_id, eid_map, node_ids, normals, nid_map=None)
+        get_load_arrays(model, subcase_id, eid_map, node_ids, normals, nid_map=None)
 
     if nsubcases == 0:
         del model.case_control_deck

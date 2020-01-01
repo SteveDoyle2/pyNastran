@@ -41,6 +41,10 @@ from pyNastran.bdf.mesh_utils.export_mcids import export_mcids, export_mcids_all
 from pyNastran.bdf.mesh_utils.extract_bodies import extract_bodies
 from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #, mass_properties_breakdown
+from pyNastran.bdf.mesh_utils.forces_moments import get_temperatures_array
+from pyNastran.bdf.mesh_utils.mpc_dependency import (
+    get_dependent_nid_to_components, get_mpcs)
+
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.bdf_interface.compare_card_content import compare_card_content
 #from pyNastran.bdf.mesh_utils.convert import convert
@@ -611,11 +615,11 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
 
                 # 1. testing that these methods word without xref
                 #fem1._get_rigid()
-                #fem1.get_dependent_nid_to_components()
+                #get_dependent_nid_to_components(fem1)
                 #fem1._get_maps(eids=None, map_names=None,
                                #consider_0d=True, consider_0d_rigid=True,
                                #consider_1d=True, consider_2d=True, consider_3d=True)
-                #fem1.get_dependent_nid_to_components()
+                #get_dependent_nid_to_components(fem1)
 
                 #fem1.uncross_reference()
                 if safe_xref:
@@ -633,11 +637,11 @@ def run_fem1(fem1: BDF, bdf_model: str, out_model: str, mesh_form: str,
                 for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
                     fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
 
-                fem1.get_dependent_nid_to_components()
+                get_dependent_nid_to_components(fem1)
                 fem1._get_maps(eids=None, map_names=None,
                                consider_0d=True, consider_0d_rigid=True,
                                consider_1d=True, consider_2d=True, consider_3d=True)
-                fem1.get_dependent_nid_to_components()
+                get_dependent_nid_to_components(fem1)
                 fem1.get_pid_to_node_ids_and_elements_array(pids=None, etypes=None, idtype='int32',
                                                             msg=' which is required by test_bdf')
                 fem1.get_property_id_to_element_ids_map(msg=' which is required by test_bdf')
@@ -1452,7 +1456,7 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
         else:
             method_ids = list(fem2.methods.keys())
             raise RuntimeError('METHOD = %s not in method_ids=%s' % (method_id, method_ids))
-        allowed_sols = [5, 76, 100, 101, 103, 105, 106, 107, 108, 110, 111,
+        allowed_sols = [3, 5, 76, 100, 101, 103, 105, 106, 107, 108, 110, 111,
                         112, 144, 145, 146, 187, 200]
         ierror = check_sol(sol, subcase, allowed_sols, 'METHOD', log, ierror, nerrors)
 
@@ -1491,16 +1495,16 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
     nid_map = fem2.nid_map
     if 'TEMPERATURE(LOAD)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(LOAD)')[0]
-        fem2._get_temperatures_array(loadcase_id, nid_map=nid_map, dtype='float32')
+        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, dtype='float32')
     if 'TEMPERATURE(BOTH)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(BOTH)')[0]
-        fem2._get_temperatures_array(loadcase_id, nid_map=nid_map, dtype='float32')
+        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, dtype='float32')
     if 'TEMPERATURE(INITIAL)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(INITIAL)')[0]
-        fem2._get_temperatures_array(loadcase_id, nid_map=nid_map, dtype='float32')
+        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, dtype='float32')
     if 'TEMPERATURE(MATERIAL)' in subcase:
         loadcase_id = subcase.get_parameter('TEMPERATURE(MATERIAL)')[0]
-        fem2._get_temperatures_array(loadcase_id, nid_map=nid_map, dtype='float32')
+        get_temperatures_array(fem2, loadcase_id, nid_map=nid_map, dtype='float32')
 
     if 'LOAD' in subcase:
         cid_new = 0
@@ -1543,7 +1547,7 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
 
     if 'MPC' in subcase:
         mpc_id = subcase.get_parameter('MPC')[0]
-        fem2.get_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=False)
+        get_mpcs(fem2, mpc_id, consider_mpcadd=True, stop_on_failure=False)
         fem2.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=False)
         fem2.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True, stop_on_failure=False)
         fem2.get_MPCx_node_ids(mpc_id, consider_mpcadd=True, stop_on_failure=False)

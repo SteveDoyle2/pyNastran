@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from pyNastran.bdf.bdf import BDF, CaseControlDeck
-
+from pyNastran.bdf.mesh_utils.forces_moments import get_load_arrays
 
 class TestBDFInterface(unittest.TestCase):
     def test_get_cards_by_card_types(self):
@@ -112,7 +112,8 @@ class TestBDFInterface(unittest.TestCase):
         #print(model.case_control_deck)
         model.case_control_deck = cc
         subcase = cc.create_new_subcase(subcase_id)
-        out = model.get_load_arrays(subcase_id, eid_map, node_ids, normals, nid_map=None)
+        out = get_load_arrays(model, subcase_id, eid_map, node_ids, normals,
+                              nid_map=None)
         is_loads, is_temperatures, temperature_data, load_data = out
         assert is_loads is False, is_loads
         assert is_temperatures is False, is_temperatures
@@ -130,8 +131,8 @@ class TestBDFInterface(unittest.TestCase):
         subcase.add(key, value, options, param_type)
 
         with self.assertRaises(KeyError):
-            model.get_load_arrays(subcase_id, eid_map, node_ids, normals, nid_map=None,
-                                  stop_on_failure=True)
+            get_load_arrays(model, subcase_id, eid_map, node_ids, normals, nid_map=None,
+                            stop_on_failure=True)
         #is_loads, is_temperatures, temperature_data, load_data = out
         #assert is_loads is False, is_loads
         #assert is_temperatures is False, is_temperatures

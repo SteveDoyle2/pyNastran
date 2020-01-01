@@ -526,11 +526,11 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
 
                 # 1. testing that these methods word without xref
                 #fem1._get_rigid()
-                #fem1.get_dependent_nid_to_components()
+                #get_dependent_nid_to_components(fem1)
                 #fem1._get_maps(eids=None, map_names=None,
                                #consider_0d=True, consider_0d_rigid=True,
                                #consider_1d=True, consider_2d=True, consider_3d=True)
-                #fem1.get_dependent_nid_to_components()
+                #get_dependent_nid_to_components(fem1)
 
                 # 1. testing that these methods work with xref
                 fem1._get_rigid()
@@ -542,11 +542,11 @@ def run_fem1(fem1, bdf_model, out_model, mesh_form, xref, punch, sum_load, size,
                 #for mpc_id in set(list(fem1.mpcadds.keys()) + list(fem1.mpcs.keys())):
                     #fem1.get_reduced_mpcs(mpc_id)
 
-                #fem1.get_dependent_nid_to_components()
+                #get_dependent_nid_to_components(fem1)
                 #fem1._get_maps(eids=None, map_names=None,
                                #consider_0d=True, consider_0d_rigid=True,
                                #consider_1d=True, consider_2d=True, consider_3d=True)
-                #fem1.get_dependent_nid_to_components()
+                #get_dependent_nid_to_components(fem1)
                 #fem1.get_pid_to_node_ids_and_elements_array(pids=None, etypes=None, idtype='int32',
                                                             #msg=' which is required by test_bdf')
                 #fem1.get_property_id_to_element_ids_map(msg=' which is required by test_bdf')

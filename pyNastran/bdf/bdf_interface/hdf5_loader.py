@@ -1,5 +1,7 @@
 """Defines various helper functions for loading a HDF5 BDF file"""
+from __future__ import annotations
 from itertools import count
+from typing import TYPE_CHECKING
 import numpy as np
 import h5py
 
@@ -8,7 +10,8 @@ from pyNastran.bdf.case_control_deck import CaseControlDeck
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 from pyNastran.bdf.bdf_interface.hdf5_exporter import (
     dict_int_obj_attrs, scalar_obj_keys, LIST_OBJ_KEYS)
-
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 dict_attrs = [
     # required
@@ -911,55 +914,91 @@ def hdf5_load_dmigs(model, group, unused_encoding):
 
         class_type = group.attrs['type']
         if class_type == 'DMIG' and name == 'UACCEL':
-            raise NotImplementedError('DMIG UACCEL')
+            _load_dmig_uaccel(model, sub_group)
         elif class_type == 'DMI':
-            ncols = _cast(sub_group['ncols'])
-            nrows = _cast(sub_group['nrows'])
-            #polar = _cast(sub_group['polar'])
-            matrix_form = _cast(sub_group['matrix_form'])
-            tin = _cast(sub_group['tin'])
-            tout = _cast(sub_group['tout'])
-            GCi = _cast(sub_group['GCi'])
-            GCj = _cast(sub_group['GCj'])
-            Real = _cast(sub_group['Real'])
-            Complex = None
-            if 'Complex' in sub_group:
-                Complex = _cast(sub_group['Complex'])
-
-            #ifo = matrix_form
-            form = matrix_form
-            model.add_dmi(name, form, tin, tout, nrows, ncols, GCj, GCi,
-                          Real, Complex=None, comment='')
-
+            _load_dmi(model, name, sub_group)
         else:
-            class_obj = CARD_MAP[class_type]
-            ncols = None
-            if 'ncols' in sub_group:
-                ncols = _cast(sub_group['ncols'])
-            polar = _cast(sub_group['polar'])
-            matrix_form = _cast(sub_group['matrix_form'])
-            tin = _cast(sub_group['tin'])
-            tout = _cast(sub_group['tout'])
-            #dmig_group.create_dataset('tin_dtype', data=dmig.tin_dtype)
-            #dmig_group.create_dataset('tout_dtype', data=dmig.tout_dtype)
-
-            #dmig_group.create_dataset('matrix_type', data=dmig.matrix_type)
-            #dmig_group.create_dataset('is_complex', data=dmig.is_complex)
-            #dmig_group.create_dataset('is_real', data=dmig.is_real)
-            #dmig_group.create_dataset('is_polar', data=dmig.is_polar)
-
-            GCi = _cast(sub_group['GCi'])
-            GCj = _cast(sub_group['GCj'])
-            Real = _cast(sub_group['Real'])
-            Complex = None
-            if 'Complex' in sub_group:
-                Complex = _cast(sub_group['Complex'])
-
-            ifo = matrix_form
-            dmig = class_obj(name, ifo, tin, tout, polar, ncols,
-                             GCj, GCi, Real, Complex=Complex, comment='', finalize=True)
-            model.dmigs[name] = dmig
+            _load_dmig(model, name, sub_group, class_type)
     model.card_count[class_type] = len(keys)
+
+
+def _load_dmig_uaccel(model: BDF, sub_group):
+    """loads the DMIG,UACCEL"""
+    keysi = list(sub_group.keys())
+    tin = _cast(sub_group['tin'])
+    keysi.remove('tin')
+    ncol = None
+    if 'ncol' in keysi:
+        keysi.remove('ncol')
+        ncol = _cast(sub_group['ncol'])
+
+    load_sequences = {}
+    for idi in keysi:
+        lseq = int(idi)
+        sub_groupi = sub_group[idi]
+        dofs = _cast(sub_groupi['dofs'])
+        nids = _cast(sub_groupi['nids'])
+        values = _cast(sub_groupi['values'])
+        load_sequences[lseq] = list([
+            [nid, dof, value] for (nid, dof, value)
+            in zip(nids, dofs, values)])
+    dmig_uaccel = model.add_dmig_uaccel(tin, ncol, load_sequences, comment='')
+    str(dmig_uaccel)
+
+def _load_dmi(model: BDF, name, sub_group):
+    """loads the DMI"""
+    ncols = _cast(sub_group['ncols'])
+    nrows = _cast(sub_group['nrows'])
+    #polar = _cast(sub_group['polar'])
+    matrix_form = _cast(sub_group['matrix_form'])
+    tin = _cast(sub_group['tin'])
+    tout = _cast(sub_group['tout'])
+    GCi = _cast(sub_group['GCi'])
+    GCj = _cast(sub_group['GCj'])
+    Real = _cast(sub_group['Real'])
+    Complex = None
+    if 'Complex' in sub_group:
+        Complex = _cast(sub_group['Complex'])
+        raise NotImplementedError('DMI complex')
+
+    #ifo = matrix_form
+    form = matrix_form
+    model.add_dmi(name, form, tin, tout, nrows, ncols, GCj, GCi,
+                  Real, Complex=None, comment='')
+
+def _load_dmig(model, name, sub_group, class_type):
+    class_obj = CARD_MAP[class_type]
+    ncols = None
+    if 'ncols' in sub_group:
+        ncols = _cast(sub_group['ncols'])
+    polar = _cast(sub_group['polar'])
+    matrix_form = _cast(sub_group['matrix_form'])
+    tin = _cast(sub_group['tin'])
+    tout = _cast(sub_group['tout'])
+    #dmig_group.create_dataset('tin_dtype', data=dmig.tin_dtype)
+    #dmig_group.create_dataset('tout_dtype', data=dmig.tout_dtype)
+
+    #dmig_group.create_dataset('matrix_type', data=dmig.matrix_type)
+    #dmig_group.create_dataset('is_complex', data=dmig.is_complex)
+    #dmig_group.create_dataset('is_real', data=dmig.is_real)
+    #dmig_group.create_dataset('is_polar', data=dmig.is_polar)
+
+    GCi = _cast(sub_group['GCi'])
+    GCj = _cast(sub_group['GCj'])
+    Real = _cast(sub_group['Real'])
+    Complex = None
+    if 'Complex' in sub_group:
+        Complex = _cast(sub_group['Complex'])
+
+    ifo = matrix_form
+    dmig = class_obj(name, ifo, tin, tout, polar, ncols,
+                     GCj, GCi, Real, Complex=Complex, comment='', finalize=True)
+    assert class_type in ['DMIG', 'DMIK', 'DMIJI'], class_type
+    slot_name = class_type.lower() + 's'
+    slot = getattr(model, slot_name)
+    slot[name] = dmig
+    str(dmig)
+    #model.dmigs[name] = dmig
 
 def hdf5_load_dconstrs(model, group, encoding):
     """loads the dconstrs"""

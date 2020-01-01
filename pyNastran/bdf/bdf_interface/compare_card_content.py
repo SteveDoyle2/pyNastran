@@ -6,6 +6,8 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
 from pyNastran.bdf.field_writer_16 import print_field_16
+from pyNastran.bdf.mesh_utils.forces_moments import get_temperatures_array
+from pyNastran.bdf.mesh_utils.mpc_dependency import get_mpcs
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -138,7 +140,7 @@ def compare_card_content(fem1, fem2):
     for key in fem1.loads:
         loads1 = fem1.loads[key]
         loads2 = fem2.loads[key]
-        fem1._get_temperatures_array(key, nid_map)
+        get_temperatures_array(fem1, key, nid_map)
         for (card1, card2) in zip(loads1, loads2):
             assert_fields(card1, card2)
 
@@ -174,13 +176,13 @@ def compare_card_content(fem1, fem2):
         fem1.get_MPCx_node_ids(mpc_id, consider_mpcadd=True)
         fem1.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True)
         fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
-        fem1.get_mpcs(mpc_id)
+        get_mpcs(fem1, mpc_id)
 
     for mpc_id in fem1.mpcs:
         fem1.get_MPCx_node_ids(mpc_id, consider_mpcadd=False)
         fem1.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=False)
         fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=False)
-        fem1.get_mpcs(mpc_id)
+        get_mpcs(fem1, mpc_id)
         #card1 = fem1.mpcs[key]
         #card2 = fem2.mpcs[key]
         #assert_fields(card1, card2)
