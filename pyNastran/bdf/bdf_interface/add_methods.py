@@ -248,7 +248,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[ringfl.type].append(key)
         self._is_axis_symmetric = True
 
-    def _add_ringax_object(self, ringax: RINGAX, allow_overwrites: bool=False) -> None:
+    def _add_ringax_object(self, ringax: Union[RINGAX, POINTAX], allow_overwrites: bool=False) -> None:
         """adds a RINGAX card"""
         key = ringax.nid
         if key in self.ringaxs and not allow_overwrites:
@@ -491,7 +491,7 @@ class AddMethods(BDFAttributes):
     def _add_property_object(self, prop: Union[PELAS, PBUSH, PBUSH1D, PDAMP, PDAMP5, # PBUSH2D,
                                                PFAST, PVISC, PGAP, PRAC2D, PRAC3D, # PWELD
                                                PROD, PTUBE,
-                                               PBAR, PBARL, PBRSECT,
+                                               PBAR, PBARL, PBRSECT, PCONEAX,
                                                PBEAM, PBEAML, PBCOMP, PBMSECT,
                                                PBEND, PBEAM3, PPLANE, PSHEAR,
                                                PSHELL, PCOMP, PCOMPG, PLPLANE,
@@ -666,7 +666,9 @@ class AddMethods(BDFAttributes):
             self.transfer_functions[key] = [tf]
             self._type_to_id_map[tf.type].append(key)
 
-    def _add_structural_material_object(self, material: Union[MAT1, MAT2, MAT8], allow_overwrites: bool=False) -> None:
+    def _add_structural_material_object(self, material: Union[MAT1, MAT2, MAT3, MAT8, MAT9,
+                                                              MAT10, MAT11, MAT3D, MATG],
+                                        allow_overwrites: bool=False) -> None:
         # type: (Any, bool) -> None
         """adds an MAT1, MAT2, MAT8 object"""
         key = material.mid
@@ -678,7 +680,8 @@ class AddMethods(BDFAttributes):
             self.materials[key] = material
             self._type_to_id_map[material.type].append(key)
 
-    def _add_thermal_material_object(self, material: Union[MAT4, MAT5], allow_overwrites: bool=False) -> None:
+    def _add_thermal_material_object(self, material: Union[MAT4, MAT5],
+                                     allow_overwrites: bool=False) -> None:
         # type: (Any, bool) -> None
         """adds an MAT4, MAT5 object"""
         key = material.mid
@@ -690,7 +693,8 @@ class AddMethods(BDFAttributes):
             self.thermal_materials[key] = material
             self._type_to_id_map[material.type].append(key)
 
-    def _add_hyperelastic_material_object(self, material: Union[MATHE, MATHP], allow_overwrites: bool=False) -> None:
+    def _add_hyperelastic_material_object(self, material: Union[MATHE, MATHP],
+                                          allow_overwrites: bool=False) -> None:
         """adds an MATHP, MATHE object"""
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
@@ -771,7 +775,7 @@ class AddMethods(BDFAttributes):
             self.coords[key] = coord
             self._type_to_id_map[coord.type].append(key)
 
-    def _add_load_combination_object(self, load: LOAD) -> None:
+    def _add_load_combination_object(self, load: Union[LOAD, CLOAD]) -> None:
         """adds a load object to a load case"""
         key = load.sid
         if key in self.load_combinations:
@@ -783,7 +787,9 @@ class AddMethods(BDFAttributes):
     def _add_load_object(self, load: Union[FORCE, FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
                                            PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
                                            GRAV, ACCEL, ACCEL1, SPCD, SLOAD,
-                                           QBDY1, QBDY2, QBDY3, QVOL]) -> None:
+                                           QBDY1, QBDY2, QBDY3, QVOL, TEMPAX, PRESAX,
+                                           RFORCE, RFORCE1, LOADCYN, LOADCYH, DEFORM,
+                                           GMLOAD]) -> None:
         """adds a load object to a load case"""
         key = load.sid
         if key in self.loads:
@@ -801,7 +807,7 @@ class AddMethods(BDFAttributes):
             self.dloads[key] = [load]
             self._type_to_id_map[load.type].append(key)
 
-    def _add_dload_entry(self, dload: Union[RFORCE, RFORCE1,
+    def _add_dload_entry(self, dload: Union[ACSRCE, RANDPS, RANDT1,
                                             TLOAD1, TLOAD2, RLOAD1, RLOAD2,
                                             QVECT]) -> None:
         """adds a sub-dload object to a load case"""
@@ -889,7 +895,7 @@ class AddMethods(BDFAttributes):
         self.convection_properties[key] = prop
         self._type_to_id_map[prop.type].append(key)
 
-    def _add_thermal_bc_object(self, bc: Union[CONV, CONVM], key) -> None:
+    def _add_thermal_bc_object(self, bc: Union[CONV, CONVM, RADM], key) -> None:
         assert key > 0
         if key in self.bcs:
             self.bcs[key].append(bc)
@@ -913,7 +919,7 @@ class AddMethods(BDFAttributes):
             self.mpcadds[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
-    def _add_constraint_spc_object(self, constraint: Union[SPC, SPC1, SPCAX]) -> None:
+    def _add_constraint_spc_object(self, constraint: Union[SPC, SPC1, SPCAX, GMSPC]) -> None:
         key = constraint.conid
         if key in self.spcs:
             self.spcs[key].append(constraint)
@@ -938,7 +944,7 @@ class AddMethods(BDFAttributes):
             self.spcoffs[key] = [constraint]
             self._type_to_id_map[constraint.type].append(key)
 
-    def _add_sesuport_object(self, se_suport: SESUPORT) -> None:
+    def _add_sesuport_object(self, se_suport: Union[SESUP, SESUPORT]) -> None:
         """adds an SESUPORT"""
         self._type_to_id_map[se_suport.type].append(len(self.se_suport))
         self.se_suport.append(se_suport)
@@ -1539,7 +1545,7 @@ class AddMethods(BDFAttributes):
         self.random_tables[key] = table
         self._type_to_id_map[table.type].append(key)
 
-    def _add_method_object(self, method: Union[EIGR, EIGRL],
+    def _add_method_object(self, method: Union[EIGR, EIGRL, EIGB],
                            allow_overwrites: bool=False) -> None:
         """adds a EIGR/EIGRL object"""
         key = method.sid
@@ -1551,7 +1557,7 @@ class AddMethods(BDFAttributes):
             self.methods[key] = method
             self._type_to_id_map[method.type].append(key)
 
-    def _add_cmethod_object(self, method: Union[EIGB, EIGC],
+    def _add_cmethod_object(self, method: Union[EIGC, EIGP],
                             allow_overwrites: bool=False) -> None:
         """adds a EIGB/EIGC object"""
         key = method.sid
