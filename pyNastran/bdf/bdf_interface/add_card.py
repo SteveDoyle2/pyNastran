@@ -100,7 +100,7 @@ from pyNastran.bdf.cards.aero.zona import (
     ZONA)
 
 from pyNastran.bdf.cards.optimization import (
-    DCONADD, DCONSTR, DESVAR, DDVAL, DOPTPRM, DLINK,
+    DCONADD, DCONSTR, DESVAR, TOPVAR, DDVAL, DOPTPRM, DLINK,
     DRESP1, DRESP2, DRESP3,
     DVCREL1, DVCREL2,
     DVMREL1, DVMREL2,
@@ -1734,9 +1734,8 @@ class AddCards(AddMethods):
         self._add_property_object(prop)
         return prop
 
-    def add_cbush(self, eid, pid, nids, x, g0, cid=None,
-                  s=0.5, ocid=-1, si=None, comment=''):
-        # type(int, int, List[int], Any, Optional[int], Optional[int], float, int, Optional[List[float]], str) -> CBUSH
+    def add_cbush(self, eid: int, pid: int, nids, x: Optional[List[float]], g0: Optional[int], cid=None,
+                  s: float=0.5, ocid: int=-1, si: Optional[List[float]]=None, comment='') -> CBUSH:
         """
         Creates a CBUSH card
 
@@ -1779,7 +1778,7 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
-    def add_pbush(self, pid, k, b, ge, rcv=None, mass=None, comment=''):
+    def add_pbush(self, pid, k, b, ge, rcv=None, mass=None, comment='') -> PBUSH:
         """
         Creates a PBUSH card, which defines a property for a CBUSH
 
@@ -6412,14 +6411,14 @@ class AddCards(AddMethods):
         self._add_desvar_object(desvar)
         return desvar
 
-    def add_topvar(self, opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2, power=3.0):
+    def add_topvar(self, opt_id, label, ptype, xinit, pid, xlb=0.001, delxv=0.2, power=3.0) -> TOPVAR:
         """adds a TOPVAR"""
         topvar = TOPVAR(opt_id, label, ptype, xinit, pid, xlb=xlb, delxv=delxv, power=power)
         self._add_topvar_object(topvar)
         return topvar
 
     def add_dresp1(self, dresp_id, label, response_type, property_type, region,
-                   atta, attb, atti, validate=True, comment=''):
+                   atta, attb, atti, validate=True, comment='') -> DRESP1:
         """
         Creates a DRESP1 card.
 
@@ -6502,7 +6501,7 @@ class AddCards(AddMethods):
 
     def add_dresp2(self, dresp_id, label, dequation, region, params,
                    method='MIN', c1=1., c2=0.005, c3=10.,
-                   validate=True, comment=''):
+                   validate=True, comment='') -> DRESP2:
         """
         Creates a DRESP2 card.
 
@@ -6563,7 +6562,7 @@ class AddCards(AddMethods):
         return dresp
 
     def add_dresp3(self, dresp_id, label, group, Type, region, params,
-                   validate=True, comment=''):
+                   validate=True, comment='') -> DRESP3:
         """Creates a DRESP3 card"""
         dresp = DRESP3(dresp_id, label, group, Type, region, params,
                        validate=validate, comment=comment)
@@ -6571,7 +6570,7 @@ class AddCards(AddMethods):
         return dresp
 
     def add_dvcrel1(self, oid, Type, eid, cp_name, dvids, coeffs,
-                    cp_min=None, cp_max=1e20, c0=0., validate=True, comment=''):
+                    cp_min=None, cp_max=1e20, c0=0., validate=True, comment='') -> DVCREL1:
         """
         Creates a DVCREL1 card
 
@@ -6608,7 +6607,7 @@ class AddCards(AddMethods):
         return dvcrel
 
     def add_dvcrel2(self, oid, Type, eid, cp_name, deqation, dvids, labels,
-                    cp_min=None, cp_max=1e20, validate=True, comment=''):
+                    cp_min=None, cp_max=1e20, validate=True, comment='') -> DVCREL2:
         """Creates a DVCREL2 card"""
         dvcrel = DVCREL2(oid, Type, eid, cp_name, deqation, dvids, labels,
                          cp_min=cp_min, cp_max=cp_max,
@@ -6617,7 +6616,7 @@ class AddCards(AddMethods):
         return dvcrel
 
     def add_dvprel1(self, oid, prop_type, pid, pname_fid, dvids, coeffs,
-                    p_min=None, p_max=1e20, c0=0.0, validate=True, comment=''):
+                    p_min=None, p_max=1e20, c0=0.0, validate=True, comment='') -> DVPREL1:
         """
         Creates a DVPREL1 card
 
@@ -6655,7 +6654,7 @@ class AddCards(AddMethods):
 
     def add_dvprel2(self, oid, prop_type, pid, pname_fid, deqation,
                     dvids=None, labels=None, p_min=None, p_max=1e20,
-                    validate=True, comment=''):
+                    validate=True, comment='') -> DVPREL2:
         """
         Creates a DVPREL2 card
 
@@ -6695,7 +6694,7 @@ class AddCards(AddMethods):
         return dvprel
 
     def add_dvmrel1(self, oid, mat_type, mid, mp_name, dvids, coeffs,
-                    mp_min=None, mp_max=1e20, c0=0., validate=True, comment=''):
+                    mp_min=None, mp_max=1e20, c0=0., validate=True, comment='') -> DVMREL1:
         """
         Creates a DVMREL1 card
 
@@ -6731,7 +6730,7 @@ class AddCards(AddMethods):
         return dvmrel
 
     def add_dvmrel2(self, oid, mat_type, mid, mp_name, deqation, dvids, labels,
-                    mp_min=None, mp_max=1e20, validate=True, comment=''):
+                    mp_min=None, mp_max=1e20, validate=True, comment='') -> DVMREL2:
         """
         Creates a DVMREL2 card
 
@@ -6771,7 +6770,7 @@ class AddCards(AddMethods):
         self._add_dvmrel_object(dvmrel)
         return dvmrel
 
-    def add_dvgrid(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment=''):
+    def add_dvgrid(self, dvid, nid, dxyz, cid=0, coeff=1.0, comment='') -> DVGRID:
         """
         Creates a DVGRID card
 
@@ -6795,14 +6794,14 @@ class AddCards(AddMethods):
         self._add_dvgrid_object(dvgrid)
         return dvgrid
 
-    def add_ddval(self, oid, ddvals, comment=''):
+    def add_ddval(self, oid, ddvals, comment='') -> DDVAL:
         """Creates a DDVAL card"""
         ddval = DDVAL(oid, ddvals, comment=comment)
         self._add_ddval_object(ddval)
         return ddval
 
     def add_dlink(self, oid, dependent_desvar,
-                  independent_desvars, coeffs, c0=0., cmult=1., comment=''):
+                  independent_desvars, coeffs, c0=0., cmult=1., comment='') -> DLINK:
         """
         Creates a DLINK card, which creates a variable that is a lienar
         ccombination of other design variables
@@ -6831,7 +6830,7 @@ class AddCards(AddMethods):
         return dlink
 
     def add_dconstr(self, oid, dresp_id, lid=-1.e20, uid=1.e20, lowfq=0.,
-                    highfq=1.e20, comment=''):
+                    highfq=1.e20, comment='') -> DCONSTR:
         """
         Creates a DCONSTR card
 
@@ -6854,19 +6853,19 @@ class AddCards(AddMethods):
         self._add_dconstr_object(dconstr)
         return dconstr
 
-    def add_dconadd(self, oid, dconstrs, comment=''):
+    def add_dconadd(self, oid, dconstrs, comment='') -> DCONADD:
         """Creates a DCONADD card"""
         dconadd = DCONADD(oid, dconstrs, comment=comment)
         self._add_dconstr_object(dconadd)
         return dconadd
 
-    def add_doptprm(self, params, comment=''):
+    def add_doptprm(self, params, comment='') -> DOPTPRM:
         """Creates a DOPTPRM card"""
         doptprm = DOPTPRM(params, comment=comment)
         self._add_doptprm_object(doptprm)
         return doptprm
 
-    def add_dscreen(self, rtype, trs=-0.5, nstr=20, comment=''):
+    def add_dscreen(self, rtype, trs=-0.5, nstr=20, comment='') -> DSCREEN:
         """
         Creates a DSCREEN object
 
@@ -6888,7 +6887,7 @@ class AddCards(AddMethods):
         return dscreen
 
     def add_monpnt1(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None,
-                    comment=''):
+                    comment='') -> MONPNT1:
         """
         Creates a MONPNT1 card
 
@@ -6926,7 +6925,7 @@ class AddCards(AddMethods):
         return monitor_point
 
     def add_monpnt2(self, name, label, table, Type, nddl_item, eid,
-                    comment=''):
+                    comment='') -> MONPNT2:
         """Creates a MONPNT2 card"""
         monitor_point = MONPNT2(name, label, table, Type, nddl_item, eid,
                                 comment=comment)
@@ -6934,47 +6933,47 @@ class AddCards(AddMethods):
         return monitor_point
 
     def add_monpnt3(self, name, label, axes, grid_set, elem_set, xyz,
-                    cp=0, cd=None, xflag=None, comment=''):
+                    cp=0, cd=None, xflag=None, comment='') -> MONPNT3:
         """Creates a MONPNT3 card"""
         monitor_point = MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                                 cp=cp, cd=cd, xflag=xflag, comment=comment)
         self._add_monpnt_object(monitor_point)
         return monitor_point
 
-    def add_bsurfs(self, id, eids, g1s, g2s, g3s, comment=''):
+    def add_bsurfs(self, id, eids, g1s, g2s, g3s, comment='') -> BSURFS:
         """Creates a BSURFS card"""
         bsurfs = BSURFS(id, eids, g1s, g2s, g3s, comment=comment)
         self._add_bsurfs_object(bsurfs)
         return bsurfs
 
-    def add_bsurf(self, sid, eids, comment=''):
+    def add_bsurf(self, sid, eids, comment='') -> BSURF:
         """Creates a BSURF card"""
         bsurf = BSURF(sid, eids, comment=comment)
         self._add_bsurf_object(bsurf)
         return bsurf
 
     def add_bctset(self, csid, sids, tids, frictions, min_distances,
-                   max_distances, comment='', sol=101):
+                   max_distances, comment='', sol=101) -> BCTSET:
         """Creates a BCTSET card"""
         bctset = BCTSET(csid, sids, tids, frictions, min_distances,
                         max_distances, comment=comment, sol=sol)
         self._add_bctset_object(bctset)
         return bctset
 
-    def add_bctadd(self, csid, contact_sets, comment=''):
+    def add_bctadd(self, csid, contact_sets, comment='') -> BCTADD:
         """Creates a BCTADD card"""
         bctadd = BCTADD(csid, contact_sets, comment=comment)
         self._add_bctadd_object(bctadd)
         return bctadd
 
-    def add_bctpara(self, csid, params, comment=''):
+    def add_bctpara(self, csid, params, comment='') -> BCTPARA:
         """Creates a BCTPARA card"""
         bctpara = BCTPARA(csid, params, comment=comment)
         self._add_bctpara_object(bctpara)
         return bctpara
 
     def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX',
-                    grid_point=0, comment=''):
+                    grid_point=0, comment='') -> BCRPARA:
         """
         Creates a BCRPARA card
 
@@ -7005,7 +7004,7 @@ class AddCards(AddMethods):
         self._add_bcrpara_object(bcrpara)
         return bcrpara
 
-    def add_tic(self, sid, nodes, components, u0=0., v0=0., comment=''):
+    def add_tic(self, sid, nodes, components, u0=0., v0=0., comment='') -> TIC:
         """
         Creates a TIC card
 
@@ -7029,13 +7028,13 @@ class AddCards(AddMethods):
         self._add_tic_object(tic)
         return tic
 
-    def add_tstep1(self, sid, tend, ninc, nout, comment=''):
+    def add_tstep1(self, sid, tend, ninc, nout, comment='') -> TSTEP1:
         """Creates a TSTEP1 card"""
         tstep1 = TSTEP1(sid, tend, ninc, nout, comment=comment)
         self._add_tstep_object(tstep1)
         return tstep1
 
-    def add_tstep(self, sid, N, DT, NO, comment=''):
+    def add_tstep(self, sid, N, DT, NO, comment='') -> TSTEP:
         """Creates a TSTEP card"""
         tstep = TSTEP(sid, N, DT, NO, comment=comment)
         self._add_tstep_object(tstep)
@@ -7046,7 +7045,7 @@ class AddCards(AddMethods):
                     eps_w=1.e-6, max_div=2, max_qn=10, max_ls=2,
                     fstress=0.2, max_bisect=5, adjust=5, mstep=None,
                     rb=0.6, max_r=32., utol=0.1, rtol_b=20.,
-                    min_iter=None, comment=''):
+                    min_iter=None, comment='') -> TSTEPNL:
         """Creates a TSTEPNL card"""
         tstepnl = TSTEPNL(sid, ndt, dt, no, method=method, kstep=kstep,
                           max_iter=max_iter, conv=conv, eps_u=eps_u, eps_p=eps_p,
@@ -7060,7 +7059,8 @@ class AddCards(AddMethods):
     def add_nlparm(self, nlparm_id, ninc=None, dt=0.0, kmethod='AUTO', kstep=5,
                    max_iter=25, conv='PW', int_out='NO', eps_u=0.01,
                    eps_p=0.01, eps_w=0.01, max_div=3, max_qn=None, max_ls=4,
-                   fstress=0.2, ls_tol=0.5, max_bisect=5, max_r=20., rtol_b=20., comment=''):
+                   fstress=0.2, ls_tol=0.5, max_bisect=5, max_r=20., rtol_b=20.,
+                   comment='') -> NLPARM:
         """Creates an NLPARM card"""
         nlparm = NLPARM(nlparm_id, ninc=ninc, dt=dt, kmethod=kmethod, kstep=kstep,
                         max_iter=max_iter, conv=conv, int_out=int_out, eps_u=eps_u,
@@ -7071,14 +7071,14 @@ class AddCards(AddMethods):
         return nlparm
 
     def add_nlpci(self, nlpci_id, Type='CRIS', minalr=0.25, maxalr=4.,
-                  scale=0., desiter=12, mxinc=20, comment=''):
+                  scale=0., desiter=12, mxinc=20, comment='') -> NLPCI:
         """Creates an NLPCI card"""
         nlpci = NLPCI(nlpci_id, Type=Type, minalr=minalr, maxalr=maxalr,
                       scale=scale, desiter=desiter, mxinc=mxinc, comment=comment)
         self._add_nlpci_object(nlpci)
         return nlpci
 
-    def add_delay(self, sid, nodes, components, delays, comment=''):
+    def add_delay(self, sid, nodes, components, delays, comment='') -> DELAY:
         """
         Creates a DELAY card
 
@@ -7103,7 +7103,7 @@ class AddCards(AddMethods):
         self._add_delay_object(delay)
         return delay
 
-    def add_dphase(self, sid, nodes, components, phase_leads, comment=''):
+    def add_dphase(self, sid, nodes, components, phase_leads, comment='') -> DPHASE:
         """
         Creates a DPHASE card
 
@@ -7128,7 +7128,7 @@ class AddCards(AddMethods):
         self._add_dphase_object(dphase)
         return dphase
 
-    def add_rotorg(self, sid, nids, comment=''):
+    def add_rotorg(self, sid, nids, comment='') -> ROTORG:
         """Creates a ROTORG card"""
         rotor = ROTORG(sid, nids, comment=comment)
         self._add_rotor_object(rotor)
@@ -7138,7 +7138,7 @@ class AddCards(AddMethods):
                    rids, rsets, rspeeds, rcords, w3s, w4s, rforces, brgsets,
                    refsys='ROT', cmout=0.0, runit='RPM', funit='RPM',
                    zstein='NO', orbeps=1.e-6, roprt=0, sync=1, etype=1,
-                   eorder=1.0, threshold=0.02, maxiter=10, comment=''):
+                   eorder=1.0, threshold=0.02, maxiter=10, comment='') -> ROTORD:
         """Creates a ROTORD card"""
         rotor = ROTORD(sid, rstart, rstep, numstep, rids, rsets, rspeeds,
                        rcords, w3s, w4s, rforces,
@@ -7149,33 +7149,34 @@ class AddCards(AddMethods):
         self._add_rotor_object(rotor)
         return rotor
 
-    def add_cmfree(self, eid, s, s2, y, n):
+    def add_cmfree(self, eid, s, s2, y, n) -> None:
         fields = ['CMFREE', eid, s, s2, y, n]
         self.reject_card_lines('CMFREE', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_cfluid2(self, eid, ringfls, rho, b, harmonic):
+    def add_cfluid2(self, eid, ringfls, rho, b, harmonic) -> None:
         fields = ['CFLUID2', eid] + ringfls + [rho, b, harmonic]
         self.reject_card_lines('CFLUID2', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_cfluid3(self, eid, ringfls, rho, b, harmonic):
+    def add_cfluid3(self, eid, ringfls, rho, b, harmonic) -> None:
         fields = ['CFLUID3', eid] + ringfls + [rho, b, harmonic]
         self.reject_card_lines('CFLUID3', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_cfluid4(self, eid, ringfls, rho, b, harmonic):
+    def add_cfluid4(self, eid, ringfls, rho, b, harmonic) -> None:
         fields = ['CFLUID4', eid] + ringfls + [rho, b, harmonic]
         self.reject_card_lines('CFLUID4', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_rgyro(self, sid, asynci, refrot, unit, speed_low, speed_high, speed, comment=''):
+    def add_rgyro(self, sid, asynci, refrot, unit, speed_low, speed_high, speed,
+                  comment='') -> None:
         """Creates an RGYRO card"""
         fields = ['RGYRO', sid, asynci, refrot, unit, speed_low, speed_high, speed]
         self.reject_card_lines('RGYRO', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_rspint(self, rid, grida, gridb, gr, unit, table_id, comment=''):
+    def add_rspint(self, rid, grida, gridb, gr, unit, table_id, comment='') -> None:
         """Creates an RSPINT card"""
         fields = ['RSPINT', rid, grida, gridb, gr, unit, table_id]
         self.reject_card_lines('RSPINT', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_temp(self, sid, temperatures, comment=''):
+    def add_temp(self, sid, temperatures, comment='') -> TEMP:
         """
         Creates a TEMP card
 
@@ -7201,7 +7202,7 @@ class AddCards(AddMethods):
         #self._add_thermal_load_object(temp)
         #return temp
 
-    def add_tempd(self, sid, temperature, comment=''):
+    def add_tempd(self, sid, temperature, comment='') -> TEMPD:
         """
         Creates a TEMPD card
 
@@ -7219,7 +7220,7 @@ class AddCards(AddMethods):
         self._add_tempd_object(tempd)
         return tempd
 
-    def add_qhbdy(self, sid, flag, q0, grids, af=None, comment=''):
+    def add_qhbdy(self, sid, flag, q0, grids, af=None, comment='') -> QHBDY:
         """
         Creates a QHBDY card
 
@@ -7244,19 +7245,19 @@ class AddCards(AddMethods):
         self._add_thermal_load_object(load)
         return load
 
-    def add_qbdy1(self, sid, qflux, eids, comment=''):
+    def add_qbdy1(self, sid, qflux, eids, comment='') -> QBDY1:
         """Creates a QBDY1 card"""
         load = QBDY1(sid, qflux, eids, comment=comment)
         self._add_thermal_load_object(load)
         return load
 
-    def add_qbdy2(self, sid, eid, qfluxs, comment=''):
+    def add_qbdy2(self, sid, eid, qfluxs, comment='') -> QBDY2:
         """Creates a QBDY1 card"""
         load = QBDY2(sid, eid, qfluxs, comment=comment)
         self._add_thermal_load_object(load)
         return load
 
-    def add_qbdy3(self, sid, Q0, cntrlnd, eids, comment=''):
+    def add_qbdy3(self, sid, Q0, cntrlnd, eids, comment='') -> QBDY3:
         """
         Creates a QBDY3 card
 
@@ -7279,14 +7280,14 @@ class AddCards(AddMethods):
         self._add_thermal_load_object(load)
         return load
 
-    def add_qvol(self, sid, qvol, control_point, elements, comment=''):
+    def add_qvol(self, sid, qvol, control_point, elements, comment='') -> QVOL:
         """Creates a QVOL card"""
         load = QVOL(sid, qvol, control_point, elements, comment=comment)
         self._add_load_object(load)
         return load
 
     def add_qvect(self, sid, q0, eids, t_source=None,
-                  ce=0, vector_tableds=None, control_id=0, comment=''):
+                  ce=0, vector_tableds=None, control_id=0, comment='') -> QVECT:
         """
         Creates a QVECT card
 
@@ -7324,7 +7325,7 @@ class AddCards(AddMethods):
 
     def add_chbdyg(self, eid, surface_type, nodes,
                    iview_front=0, iview_back=0,
-                   rad_mid_front=0, rad_mid_back=0, comment=''):
+                   rad_mid_front=0, rad_mid_back=0, comment='') -> CHBDYG:
         """Creates a CHBDYG card"""
         elem = CHBDYG(eid, surface_type, nodes,
                       iview_front=iview_front, iview_back=iview_back,
@@ -7338,7 +7339,7 @@ class AddCards(AddMethods):
                    iview_front=0, iview_back=0,
                    rad_mid_front=0, rad_mid_back=0,
                    e1=None, e2=None, e3=None,
-                   comment=''):
+                   comment='') -> CHBDYP:
         """
         Creates a CHBDYP card
 
@@ -7387,7 +7388,7 @@ class AddCards(AddMethods):
     def add_chbdye(self, eid, eid2, side,
                    iview_front=0, iview_back=0,
                    rad_mid_front=0, rad_mid_back=0,
-                   comment=''):
+                   comment='') -> CHBDYE:
         """
         Creates a CHBDYE card
 
@@ -7418,7 +7419,7 @@ class AddCards(AddMethods):
         self._add_thermal_element_object(elem)
         return elem
 
-    def add_phbdy(self, pid, af=None, d1=None, d2=None, comment=''):
+    def add_phbdy(self, pid, af=None, d1=None, d2=None, comment='') -> PHBDY:
         """
         Creates a PHBDY card
 
@@ -7443,7 +7444,7 @@ class AddCards(AddMethods):
         self._add_phbdy_object(prop)
         return prop
 
-    def add_conv(self, eid, pconid, ta, film_node=0, cntrlnd=0, comment=''):
+    def add_conv(self, eid, pconid, ta, film_node=0, cntrlnd=0, comment='') -> CONV:
         """
         Creates a CONV card
 
@@ -7474,7 +7475,7 @@ class AddCards(AddMethods):
 
     def add_convm(self, eid, pconvm, ta1, film_node=0, cntmdot=0,
                   ta2=None, mdot=1.0,
-                  comment=''):
+                  comment='') -> CONVM:
         """
         Creates a CONVM card
 

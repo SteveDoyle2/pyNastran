@@ -43,6 +43,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (integer,
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
+from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
 from pyNastran.bdf.cards.msgmesh import CGEN
 
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
@@ -92,7 +93,7 @@ from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
-    LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN)
+    LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
@@ -389,7 +390,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'RANDPS', 'RANDT1', # random
 
             ## loads
-            'LOAD', 'CLOAD', 'LSEQ', 'LOADCYN',
+            'LOAD', 'CLOAD', 'LSEQ', 'LOADCYN', 'LOADCYH',
             'SLOAD',
             'FORCE', 'FORCE1', 'FORCE2',
             'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -556,6 +557,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
             #'BNDFIX', 'BNDFIX1',
             #'AEFORCE', 'UXVEC', 'GUST2',
+
+            # cyclic
+            'CYJOIN', 'CYAX',
 
             # other
             'INCLUDE',  # '='
@@ -1900,6 +1904,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PCONEAX' : (PCONEAX, self._add_property_object),
             'AXIC' : (AXIC, self._add_axic_object),
             'AXIF' : (AXIF, self._add_axif_object),
+            'CYAX' : (CYAX, self._add_cyax_object),
 
             'RBAR' : (RBAR, self._add_rigid_element_object),
             'RBAR1' : (RBAR1, self._add_rigid_element_object),
@@ -1980,6 +1985,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'LOAD' : (LOAD, self._add_load_combination_object),
             'CLOAD' : (CLOAD, self._add_load_combination_object),
             'LOADCYN' : (LOADCYN, self._add_load_object),
+            'LOADCYH' : (LOADCYH, self._add_load_object),
 
             'GRAV' : (GRAV, self._add_load_object),
             'ACCEL' : (ACCEL, self._add_load_object),
@@ -2199,6 +2205,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'DAREA' : (DAREA, self._add_darea_object),
             'DPHASE' : (DPHASE, self._add_dphase_object),
             'DELAY' : (DELAY, self._add_delay_object),
+
+            'CYJOIN' : (CYJOIN, self._add_cyjoin_object),
         }
 
         self._card_parser_prepare = {

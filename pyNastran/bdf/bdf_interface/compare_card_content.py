@@ -7,7 +7,8 @@ from pyNastran.bdf.bdf_interface.assign_type import interpret_value
 from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
 from pyNastran.bdf.field_writer_16 import print_field_16
 from pyNastran.bdf.mesh_utils.forces_moments import get_temperatures_array
-from pyNastran.bdf.mesh_utils.mpc_dependency import get_mpcs
+from pyNastran.bdf.mesh_utils.mpc_dependency import (
+    get_mpc_node_ids, get_mpc_node_ids_c1, get_mpcs)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -61,8 +62,8 @@ def assert_fields(card1: BaseCard, card2: BaseCard) -> None:
 def check_length(fem1, fem2, name):
     obj1 = getattr(fem1, name)
     obj2 = getattr(fem2, name)
-    if not len(obj2) == len(obj2):
-        msg = 'len(fem1.%s)=%i len(fem2.%s)=%i' % (name, len(obj2), name, len(obj2))
+    if len(obj1) != len(obj2):
+        msg = f'len(fem1.{name})={len(obj1)} len(fem2.{name})={len(obj2)}'
         raise AssertionError(msg)
 
 
@@ -119,7 +120,8 @@ def compare_materials(fem1: BDF, fem2: BDF) -> None:
 def compare_card_content(fem1, fem2):
     check_obj_names = [
         'params', 'nodes', 'spoints', 'epoints', 'points', 'gridb',
-        'elements', 'rigid_elements', 'nsms', 'nsmadds',
+        #'elements', 'rigid_elements',
+        'nsms', 'nsmadds',
         'properties', 'properties_mass', 'materials', 'creep_materials',
         'loads', 'coords',
         'spcs', 'spcadds', 'spcoffs', 'mpcs', 'mpcadds', 'dareas', 'dphases',
@@ -173,14 +175,14 @@ def compare_card_content(fem1, fem2):
         #assert_fields(card1, card2)
 
     for mpc_id in fem1.mpcadds:
-        fem1.get_MPCx_node_ids(mpc_id, consider_mpcadd=True)
-        fem1.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True)
+        get_mpc_node_ids(fem1, mpc_id, consider_mpcadd=True)
+        get_mpc_node_ids_c1(fem1, mpc_id, consider_mpcadd=True)
         fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=True)
         get_mpcs(fem1, mpc_id)
 
     for mpc_id in fem1.mpcs:
-        fem1.get_MPCx_node_ids(mpc_id, consider_mpcadd=False)
-        fem1.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=False)
+        get_mpc_node_ids(fem1, mpc_id, consider_mpcadd=False)
+        get_mpc_node_ids_c1(fem1, mpc_id, consider_mpcadd=False)
         fem1.get_reduced_mpcs(mpc_id, consider_mpcadd=False)
         get_mpcs(fem1, mpc_id)
         #card1 = fem1.mpcs[key]

@@ -273,8 +273,6 @@ class GEOM3(GeomCommon):
     def _read_loadcyh(self, data, n):
         """LOADCYH"""
         self.log.info('skipping LOADCYH in GEOM3')
-        if self.is_debug_file:
-            self.binary_debug.write('skipping LOADCYH in GEOM3\n')
         return len(data)
 
     def _read_loadcyn(self, data, n):

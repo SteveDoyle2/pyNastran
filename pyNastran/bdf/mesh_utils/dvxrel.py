@@ -1,13 +1,14 @@
+from __future__ import annotations
+from typing import Dict, Any, TYPE_CHECKING
 import numpy as np
-from typing import TYPE_CHECKING
 from pyNastran.bdf.cards.optimization import get_dvprel_key
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
 
-def get_dvprel_ndarrays(model, nelements: int, pids: np.ndarray,
-                        fdtype='float32', idtype='int32'):
+def get_dvprel_ndarrays(model: BDF, nelements: int, pids: np.ndarray,
+                        fdtype: str='float32', idtype: str='int32') -> Dict[str, Any]:
     """
     Creates arrays for dvprel results
 

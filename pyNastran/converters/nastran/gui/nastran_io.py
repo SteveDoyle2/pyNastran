@@ -73,6 +73,7 @@ from pyNastran.bdf.mesh_utils.delete_bad_elements import (
     tri_quality, quad_quality, get_min_max_theta)
 from pyNastran.bdf.mesh_utils.export_mcids import export_mcids_all
 from pyNastran.bdf.mesh_utils.forces_moments import get_load_arrays, get_pressure_array
+from pyNastran.bdf.mesh_utils.mpc_dependency import get_mpc_node_ids
 
 from pyNastran.op2.op2 import OP2
 #from pyNastran.f06.f06_formatting import get_key0
@@ -2223,7 +2224,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 indname += mpc_name
                 linename += mpc_name
 
-            lines = model.get_MPCx_node_ids(mpc_id, stop_on_failure=False)
+            lines = get_mpc_node_ids(model, mpc_id, stop_on_failure=False)
             lines2 = list(lines)
             mpc_names += self._fill_dependent_independent(
                 mpc_id, model, lines2,
@@ -2254,7 +2255,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                         ## TODO: this line seems too loose
                         nmpcs = model.card_count['MPC'] if 'MPC' in model.card_count else 0
                         if nmpcs:
-                            lines = model.get_MPCx_node_ids(mpc_id, stop_on_failure=False)
+                            lines = get_mpc_node_ids(model, mpc_id, stop_on_failure=False)
                             lines2 = list(lines)
                             depname = 'mpc_id=%i_dependent' % mpc_id
                             indname = 'mpc_id=%i_independent' % mpc_id

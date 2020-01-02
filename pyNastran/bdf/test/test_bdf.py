@@ -43,6 +43,7 @@ from pyNastran.bdf.mesh_utils.mass_properties import (
     mass_properties, mass_properties_nsm)  #, mass_properties_breakdown
 from pyNastran.bdf.mesh_utils.forces_moments import get_temperatures_array
 from pyNastran.bdf.mesh_utils.mpc_dependency import (
+    get_mpc_node_ids, get_mpc_node_ids_c1,
     get_dependent_nid_to_components, get_mpcs)
 
 from pyNastran.bdf.cards.dmig import NastranMatrix
@@ -1549,8 +1550,8 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
         mpc_id = subcase.get_parameter('MPC')[0]
         get_mpcs(fem2, mpc_id, consider_mpcadd=True, stop_on_failure=False)
         fem2.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=False)
-        fem2.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True, stop_on_failure=False)
-        fem2.get_MPCx_node_ids(mpc_id, consider_mpcadd=True, stop_on_failure=False)
+        get_mpc_node_ids_c1(fem2, mpc_id, consider_mpcadd=True, stop_on_failure=False)
+        get_mpc_node_ids(fem2, mpc_id, consider_mpcadd=True, stop_on_failure=False)
 
     if 'NSM' in subcase:
         nsm_id = subcase.get_parameter('NSM')[0]

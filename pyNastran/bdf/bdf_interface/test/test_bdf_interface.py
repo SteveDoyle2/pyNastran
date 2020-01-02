@@ -2,6 +2,8 @@ import unittest
 import numpy as np
 from pyNastran.bdf.bdf import BDF, CaseControlDeck
 from pyNastran.bdf.mesh_utils.forces_moments import get_load_arrays
+from pyNastran.bdf.mesh_utils.mpc_dependency import get_mpc_node_ids_c1
+
 
 class TestBDFInterface(unittest.TestCase):
     def test_get_cards_by_card_types(self):
@@ -73,15 +75,15 @@ class TestBDFInterface(unittest.TestCase):
 
         # stop_on_failure stops if the data is formatted improperly
         with self.assertRaises(TypeError):
-            model.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True, stop_on_failure=True)
+            get_mpc_node_ids_c1(model, mpc_id, consider_mpcadd=True, stop_on_failure=True)
         with self.assertRaises(TypeError):
-            model.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True, stop_on_failure=False)
+            get_mpc_node_ids_c1(model, mpc_id, consider_mpcadd=True, stop_on_failure=False)
 
         mpc_id = 5
         with self.assertRaises(KeyError):
-            model.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True, stop_on_failure=True)
+            get_mpc_node_ids_c1(model, mpc_id, consider_mpcadd=True, stop_on_failure=True)
 
-        out = model.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True, stop_on_failure=False)
+        out = get_mpc_node_ids_c1(model, mpc_id, consider_mpcadd=True, stop_on_failure=False)
         independent_node_ids_c1, dependent_node_ids_c1 = out
         assert independent_node_ids_c1 == {}, independent_node_ids_c1
         assert dependent_node_ids_c1 == {}, dependent_node_ids_c1
@@ -93,7 +95,7 @@ class TestBDFInterface(unittest.TestCase):
         mpc = model.add_mpc(mpc_id, nodes, components, coefficients)
         mpc.validate()
         #print(mpc)
-        out = model.get_MPCx_node_ids_c1(mpc_id, consider_mpcadd=True, stop_on_failure=False)
+        out = get_mpc_node_ids_c1(model, mpc_id, consider_mpcadd=True, stop_on_failure=False)
         independent_node_ids_c1, dependent_node_ids_c1 = out
         #print('independent_node_ids_c1 =', independent_node_ids_c1)
         #print('dependent_node_ids_c1 =', dependent_node_ids_c1)

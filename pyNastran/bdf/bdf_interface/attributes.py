@@ -547,6 +547,10 @@ class BDFAttributes:
         self.ringfl = {}  # type: Dict[int, Any]
         self._is_axis_symmetric = False
 
+        # cyclic
+        self.cyax = None  # type: Optional[Any]
+        self.cyjoin = {}
+
         # ------ SOL 144 ------
         #: stores AEROS
         self.aeros = None  # type: Optional[Any]
@@ -667,7 +671,7 @@ class BDFAttributes:
             'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1'],
             'nsmadds' : ['NSMADD'],
             'rigid_elements' : ['RBAR', 'RBAR1', 'RBE1', 'RBE2', 'RBE3', 'RROD', 'RSPLINE', 'RSSCON'],
-            'plotels' : ['PLOTEL',],
+            'plotels' : ['PLOTEL'],
 
             'properties_mass' : ['PMASS'],
             'properties' : [
@@ -683,9 +687,9 @@ class BDFAttributes:
                 'PIHEX', 'PCOMPS',
                 'PCONEAX',
             ],
-            'pdampt' : ['PDAMPT',],
-            'pelast' : ['PELAST',],
-            'pbusht' : ['PBUSHT',],
+            'pdampt' : ['PDAMPT'],
+            'pelast' : ['PELAST'],
+            'pbusht' : ['PBUSHT'],
 
             # materials
             'materials' : ['MAT1', 'MAT2', 'MAT3', 'MAT8', 'MAT9', 'MAT10', 'MAT11',
@@ -742,13 +746,15 @@ class BDFAttributes:
                 'GRAV', 'ACCEL', 'ACCEL1',
                 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
                 'PLOADX1', 'RFORCE', 'RFORCE1', 'SLOAD',
-                'GMLOAD', 'SPCD', 'LOADCYN', 'DEFORM',
+                'GMLOAD', 'SPCD', 'LOADCYN', 'LOADCYH', 'DEFORM',
 
                 # thermal
                 'TEMP', 'TEMPB3', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
                 'QVOL',
                 ],
-            'dloads' : ['DLOAD', ],
+            'cyjoin' : ['CYJOIN'],
+            'cyax' : ['CYAX'],
+            'dloads' : ['DLOAD'],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
             'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
                                'QVECT', 'RANDPS', 'RANDT1'],
@@ -869,16 +875,16 @@ class BDFAttributes:
             'tables_d' : ['TABLED1', 'TABLED2', 'TABLED3', 'TABLED4', 'TABLED5'],
             'tables_m' : ['TABLEM1', 'TABLEM2', 'TABLEM3', 'TABLEM4'],
             'tables_sdamping' : ['TABDMP1'],
-            'random_tables' : ['TABRND1', 'TABRNDG',],
+            'random_tables' : ['TABRND1', 'TABRNDG'],
 
             # initial conditions - sid (set ID)
             ##'TIC',  (in bdf_tables.py)
 
             # methods
-            'methods' : ['EIGB', 'EIGR', 'EIGRL',],
+            'methods' : ['EIGB', 'EIGR', 'EIGRL'],
 
             # cMethods
-            'cMethods' : ['EIGC', 'EIGP',],
+            'cMethods' : ['EIGC', 'EIGP'],
 
             # contact
             'bctparas' : ['BCTPARA'],

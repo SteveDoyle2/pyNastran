@@ -625,7 +625,7 @@ class WriteMesh(BDFAttributes):
                      is_long_ids: Optional[bool]=None) -> None:
         """Writes the load cards sorted by ID"""
         size, is_long_ids = self._write_mesh_long_ids_size(size, is_long_ids)
-        if self.load_combinations or self.loads or self.tempds:
+        if self.load_combinations or self.loads or self.tempds or self.cyjoin:
             bdf_file.write('$LOADS\n')
             for (key, load_combinations) in sorted(self.load_combinations.items()):
                 for load_combination in load_combinations:
@@ -645,6 +645,8 @@ class WriteMesh(BDFAttributes):
                         raise
             for unused_key, tempd in sorted(self.tempds.items()):
                 bdf_file.write(tempd.write_card(size, is_double))
+            for unused_key, cyjoin in sorted(self.cyjoin.items()):
+                bdf_file.write(cyjoin.write_card(size, is_double))
         self._write_dloads(bdf_file, size=size, is_double=is_double, is_long_ids=is_long_ids)
 
     def _write_dloads(self, bdf_file: Any, size: int=8, is_double: bool=False,
@@ -767,6 +769,8 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(ringfl.write_card(size, is_double))
             for unused_nid, gridb in sorted(self.gridb.items()):
                 bdf_file.write(gridb.write_card(size, is_double))
+        if self.cyax:
+            bdf_file.write(self.cyax.write_card(size, is_double))
 
         self._write_grids(bdf_file, size=size, is_double=is_double)
         if self.seqgp:

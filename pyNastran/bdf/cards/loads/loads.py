@@ -9,7 +9,7 @@ All static loads are defined in this file.  This includes:
  * RANDPS
 
 """
-from typing import Any
+#from typing import Any
 import numpy as np
 
 #from pyNastran.bdf.errors import CrossReferenceError
@@ -492,6 +492,132 @@ class LOADCYN(Load):
         card = self.raw_fields()
         return self.comment + print_card_8(card)
 
+
+class LOADCYH(BaseCard):  # Requires LOADSET in case control deck
+    """
+    Harmonic Load Input for Cyclic Symmetry
+    Defines the harmonic coefficients of a static or dynamic load for
+    use in cyclic symmetry analysis.
+
+    +---------+-----+----------+-----+-------+-----+------+------+------+
+    |    1    |  2  |     3    |  4  |   5   |  6  |   7  |   8  |   9  |
+    +=========+=====+==========+=====+=======+=====+======+======+======+
+    | LOADCYH | SID |     S    | HID | HTYPE | S1  |  L1  |  S2  |  L2  |
+    +---------+-----+----------+-----+-------+-----+------+------+------+
+    """
+    type = 'LOADCYH'
+
+    #@classmethod
+    #def _init_from_empty(cls):
+        #return LSEQ(sid, sid, s, hid, htype, s1, l1, s2, l2, comment='')
+
+    def __init__(self, sid, scale, hid, htype, scales, load_ids, comment=''):
+        """
+        Creates a LOADCYH card
+
+        Parameters
+        ----------
+        sid : int
+            loadset id; LOADSET points to this
+        comment : str; default=''
+            a comment for the card
+
+        """
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.scale = scale
+        self.hid = hid
+        self.htype = htype
+        self.scales = scales
+        self.load_ids = load_ids
+        assert htype in {'C', 'S', 'CSTAR', 'SSTAR', 'GRAV', 'RFORCE', None}, htype
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a LOADCYH card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        scale = double(card, 2, 's')
+        hid = integer(card, 3, 'hid')
+        htype = integer_or_blank(card, 4, 'htype')
+        scale1 = double(card, 5, 'scale1')
+        load1 = integer_or_blank(card, 6, 'load1')
+        scale2 = double_or_blank(card, 7, 'scale2')
+        load2 = integer_or_blank(card, 8, 'load2')
+        scales = []
+        load_ids = []
+        if load1 != 0:
+            load_ids.append(load1)
+            scales.append(scale1)
+        if load2 != 0:
+            load_ids.append(load2)
+            scales.append(scale2)
+        assert len(card) <= 7, 'len(LOADCYH card) = %i\ncard=%s' % (len(card), card)
+        return LOADCYH(sid, scale, hid, htype, scales, load_ids, comment=comment)
+
+    @classmethod
+    def add_op2_data(cls, data, comment=''):
+        """
+        Adds an LSEQ card from the OP2
+
+        Parameters
+        ----------
+        data : List[varies]
+            a list of fields defined in OP2 format
+        comment : str; default=''
+            a comment for the card
+
+        """
+        raise NotImplementedError()
+        #sid = data[0]
+        #excite_id = data[1]
+        #lid = data[2]
+        #tid = data[3]
+        #return LSEQ(sid, excite_id, lid, tid, comment=comment)
+
+    def cross_reference(self, model):
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by LOADCYH=%s' % (self.sid)
+
+    def safe_cross_reference(self, model, xref_errors):
+        pass
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+    def get_loads(self):
+        return [self]
+
+    def raw_fields(self):
+        list_fields = ['LOADCYH', self.sid, self.scale, self.hid, self.htype]
+        for scale, load_id in zip(self.scales, self.load_ids):
+            list_fields += [scale, load_id]
+        return list_fields
+
+    def repr_fields(self):
+        return self.raw_fields()
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.raw_fields()
+        return self.comment + print_card_8(card)
 
 class DAREA(BaseCard):
     """
