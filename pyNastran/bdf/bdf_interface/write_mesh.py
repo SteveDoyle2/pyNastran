@@ -557,15 +557,15 @@ class WriteMesh(BDFAttributes):
             large field (16) or small field (8)
 
         """
-        for (unused_name, dmig) in sorted(self.dmigs.items()):
+        for (unused_name, dmig) in sorted(self.dmig.items()):
             bdf_file.write(dmig.write_card(size, is_double))
-        for (unused_name, dmi) in sorted(self.dmis.items()):
+        for (unused_name, dmi) in sorted(self.dmi.items()):
             bdf_file.write(dmi.write_card(size, is_double))
-        for (unused_name, dmij) in sorted(self.dmijs.items()):
+        for (unused_name, dmij) in sorted(self.dmij.items()):
             bdf_file.write(dmij.write_card(size, is_double))
-        for (unused_name, dmiji) in sorted(self.dmijis.items()):
+        for (unused_name, dmiji) in sorted(self.dmiji.items()):
             bdf_file.write(dmiji.write_card(size, is_double))
-        for (unused_name, dmik) in sorted(self.dmiks.items()):
+        for (unused_name, dmik) in sorted(self.dmik.items()):
             bdf_file.write(dmik.write_card(size, is_double))
         for (unused_name, dmiax) in sorted(self.dmiax.items()):
             bdf_file.write(dmiax.write_card(size, is_double))

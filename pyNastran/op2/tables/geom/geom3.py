@@ -9,7 +9,8 @@ from pyNastran.bdf.cards.loads.static_loads import (
     FORCE, FORCE1, FORCE2, GRAV,
     MOMENT, MOMENT1, MOMENT2,
     LOAD, PLOAD, PLOAD1, PLOAD2,  #PLOAD3,
-    PLOAD4, PLOADX1)  # PLOAD3,
+    PLOAD4, )  # PLOAD3,
+from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1 # , PRESAX, TEMPAX, FORCEAX
 from pyNastran.bdf.cards.loads.loads import LSEQ, SLOAD, RFORCE #, DAREA, RANDPS, RFORCE1, LOADCYN
 from pyNastran.bdf.cards.thermal.loads import (
     QBDY1, QBDY2, QBDY3, TEMP, TEMPD, TEMPP1, QVOL, QHBDY)

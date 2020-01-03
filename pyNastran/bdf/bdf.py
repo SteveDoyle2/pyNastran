@@ -723,7 +723,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'nnodes', 'npoints', 'ncoords', 'nelements', 'nproperties',
             'nmaterials', 'ncaeros', 'nid_map',
             'is_bdf_vectorized', 'type_slot_str',
-            'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
+            #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
@@ -4211,7 +4211,7 @@ class BDF(BDF_):
         'nelements', 'element_ids', 'nproperties', 'property_ids',
         'nmaterials', 'material_ids', 'ncoords', 'coord_ids',
         'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map',
-        'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
+        #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
     ]
 
     def __init__(self, debug: Optional[bool]=True, log: Any=None, mode: str='msc') -> None:

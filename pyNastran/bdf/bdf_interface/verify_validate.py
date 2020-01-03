@@ -239,11 +239,11 @@ def validate_bdf(model: BDF) -> None:
 
     _validate_dict_list(model, model.frequencies)
     #------------------------------------------------
-    _validate_dict(model, model.dmis)
-    _validate_dict(model, model.dmigs)
-    _validate_dict(model, model.dmijs)
-    _validate_dict(model, model.dmijis)
-    _validate_dict(model, model.dmiks)
+    _validate_dict(model, model.dmi)
+    _validate_dict(model, model.dmig)
+    _validate_dict(model, model.dmij)
+    _validate_dict(model, model.dmiji)
+    _validate_dict(model, model.dmik)
     #------------------------------------------------
     #model.asets = []
     #model.bsets = []

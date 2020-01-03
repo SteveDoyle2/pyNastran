@@ -47,27 +47,36 @@ dict_int_obj_attrs = [
     #'reject_count',
     'dresps',
 
+    # optimization
+    'dconadds', 'ddvals', 'dequations', 'dscreen',
+    'dvcrels', 'dvmrels', 'dvprels',
+    # aero
     'aecomps', 'aefacts', 'aelists', 'aeparams',
-    'aestats', 'aesurf', 'aesurfs', 'ao_element_flags', 'bconp', 'bcrparas', 'bctadds',
-    'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs', 'cMethods',
+    'aestats', 'aesurf', 'aesurfs',
+    'divergs', 'dlinks',
+    'flfacts', 'paeros',
+
+    # contact
+    'bcrparas', 'bctadds',
+    'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs',
+
+    # other
+    'ao_element_flags', 'bconp', 'cMethods',
     'convection_properties',
-    'csuper', 'csupext', 'dareas',
-    'dconadds', 'ddvals', 'delays', 'dequations', 'divergs', 'dlinks',
+    'dareas',
+    'delays',
     'dmig', 'dmiji', 'dmij', 'dmik', 'dmi', 'dmiax',
     'dphases',
-    'dscreen', 'dti', 'dvcrels', 'dvmrels', 'dvprels',
-    'epoints', 'flfacts',
-    'gridb',
+    'dti',
+    'epoints', 'gridb',
     'nlparms', 'nlpcis',
     'normals',
-    'nxstrats', 'paeros',
+    'nxstrats',
     'pbusht', 'pdampt', 'pelast', 'phbdys', 'points',
     'properties_mass',
     'radcavs', 'radmtx', 'random_tables',
-    'ringaxs', 'ringfl',
     'rotors',
-    'se_sets', 'se_usets', 'sebndry', 'sebulk', 'seconct', 'seelt',
-    'seexcld', 'selabel', 'seload', 'seloc', 'sempln', 'senqset', 'setree', 'sets',
+    'sets',
     'spcoffs',
     'spoints',
     'suport1',
@@ -76,8 +85,19 @@ dict_int_obj_attrs = [
     'tstepnls', 'tsteps',
     'view3ds', 'views',
 
+    # superelements
+    'csuper', 'csupext',
+    'se_sets', 'se_usets', 'sebndry', 'sebulk', 'seconct', 'seelt',
+    'seexcld', 'selabel', 'seload', 'seloc', 'sempln', 'senqset', 'setree',
+
+    # axisymmetric
+    'ringaxs', 'ringfl',
+
     # parametric
     'pset', 'gmcurv', 'feedge', 'feface', 'gmsurf',
+
+    # cyclic
+    'cyjoin',
 ]
 
 scalar_obj_keys = [

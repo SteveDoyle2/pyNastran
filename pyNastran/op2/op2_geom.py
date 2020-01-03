@@ -299,7 +299,7 @@ class OP2Geom(BDF, OP2GeomCommon):
         'is_real', 'is_complex', 'is_random',
         '_sort_method', 'is_sort1', 'is_sort2',
         'matrix_tables', 'table_name_str', 'is_geometry',
-        'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
+        #'dmigs', 'dmijs', 'dmiks', 'dmijis', 'dtis', 'dmis',
     ]
     def __init__(self, make_geom: bool=True,
                  debug: bool=False, log: Any=None,

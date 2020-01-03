@@ -759,15 +759,15 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
         for pid, frequency in sorted(self.frequencies.items()):
             frequency.validate()
         #------------------------------------------------
-        for key, dmi in sorted(self.dmis.items()):
+        for key, dmi in sorted(self.dmi.items()):
             dmi.validate()
-        for key, dmig in sorted(self.dmigs.items()):
+        for key, dmig in sorted(self.dmig.items()):
             dmig.validate()
-        for key, dmij in sorted(self.dmijs.items()):
+        for key, dmij in sorted(self.dmij.items()):
             dmij.validate()
-        for key, dmiji in sorted(self.dmijis.items()):
+        for key, dmiji in sorted(self.dmiji.items()):
             dmiji.validate()
-        for key, dmik in sorted(self.dmiks.items()):
+        for key, dmik in sorted(self.dmik.items()):
             dmik.validate()
         #------------------------------------------------
         #self.asets = []
@@ -998,15 +998,15 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
 
             #if card_name == 'DMIG':
                 ## if field2 == 'UACCEL':  # special DMIG card
-                #card = self.dmigs[name]
+                #card = self.dmig[name]
             #elif card_name == 'DMI':
-                #card = self.dmis[name]
+                #card = self.dmi[name]
             #elif card_name == 'DMIJ':
-                #card = self.dmijs[name]
+                #card = self.dmij[name]
             #elif card_name == 'DMIJI':
-                #card = self.dmijis[name]
+                #card = self.dmiji[name]
             #elif card_name == 'DMIK':
-                #card = self.dmiks[name]
+                #card = self.dmik[name]
             #else:
                 #raise NotImplementedError(card_name)
 
@@ -2473,7 +2473,7 @@ class BDF(AddCard, CrossReference, WriteMesh, GetMethods):
             'dareas', 'dphases', 'nlparms', 'nlpcis', 'tsteps', 'tstepnls',
 
             # direct matrix input - DMIG - dict
-            'dmis', 'dmigs', 'dmijs', 'dmijis', 'dmiks',
+            'dmi', 'dmig', 'dmij', 'dmiji', 'dmik',
             'dequations',
 
             # frequencies - dict

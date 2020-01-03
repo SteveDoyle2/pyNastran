@@ -673,6 +673,10 @@ CARD_MAP = {
     'ROTORG' : ROTORG,
     'ROTORD' : ROTORD,
 
+    # cyclic
+    'CYJOIN': CYJOIN,
+    'CYAX': CYAX,
+
     # parametric
     'PSET' : PSET,
     'PVAL' : PVAL,

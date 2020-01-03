@@ -366,11 +366,11 @@ class BDFAttributes:
 
         # ----------------------------------------------------------------
         #: direct matrix input - DMIG
-        self.dmis = {}
-        self.dmigs = {}
-        self.dmijs = {}
-        self.dmijis = {}
-        self.dmiks = {}
+        self.dmi = {}
+        self.dmig = {}
+        self.dmij = {}
+        self.dmiji = {}
+        self.dmik = {}
         self._dmig_temp = defaultdict(list)
 
         # ----------------------------------------------------------------

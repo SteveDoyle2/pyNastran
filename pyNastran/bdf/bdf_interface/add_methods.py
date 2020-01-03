@@ -135,21 +135,7 @@ class AddMethods(BDFAttributes):
     """defines methods to add card objects to the BDF"""
     def __init__(self) -> None:
         BDFAttributes.__init__(self)
-    @property
-    def dmis(self) -> Dict[str, DMI]:
-        return self.dmi
-    @property
-    def dmigs(self) -> Dict[str, DMIG]:
-        return self.dmig
-    @property
-    def dmiks(self) -> Dict[str, DMIK]:
-        return self.dmik
-    @property
-    def dmijs(self) -> Dict[str, DMIJ]:
-        return self.dmij
-    @property
-    def dmijis(self) -> Dict[str, DMIJI]:
-        return self.dmiji
+
     def _add_dmi_object(self, dmi: DMI, allow_overwrites: bool=False) -> None:
         """adds a DMI object"""
         name = dmi.name

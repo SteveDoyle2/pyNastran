@@ -300,30 +300,30 @@ def compare_card_content(fem1, fem2):
 
 def compare_matrices(fem1, fem2):
     """verifies that the DMIG, DMIJ, DMIJI, and DMIK matrices are the same"""
-    for key in fem1.dmigs:
-        card1 = fem1.dmigs[key]
-        card2 = fem2.dmigs[key]
+    for key in fem1.dmig:
+        card1 = fem1.dmig[key]
+        card2 = fem2.dmig[key]
         assert str(card1) == str(card2)
         #assert_fields(card1, card2)
 
-    #for key in fem1.dmis:
-        #card1 = fem1.dmis[key]
-        #card2 = fem2.dmis[key]
+    #for key in fem1.dmi:
+        #card1 = fem1.dmi[key]
+        #card2 = fem2.dmi[key]
         #assert str(card1) == str(card2)
 
-    for key in fem1.dmijs:
-        card1 = fem1.dmijs[key]
-        card2 = fem2.dmijs[key]
+    for key in fem1.dmij:
+        card1 = fem1.dmij[key]
+        card2 = fem2.dmij[key]
         assert str(card1) == str(card2)
 
-    for key in fem1.dmijis:
-        card1 = fem1.dmijis[key]
-        card2 = fem2.dmijis[key]
+    for key in fem1.dmiji:
+        card1 = fem1.dmiji[key]
+        card2 = fem2.dmiji[key]
         assert str(card1) == str(card2)
 
-    for key in fem1.dmiks:
-        card1 = fem1.dmiks[key]
-        card2 = fem2.dmiks[key]
+    for key in fem1.dmik:
+        card1 = fem1.dmik[key]
+        card2 = fem2.dmik[key]
         assert str(card1) == str(card2)
 
 

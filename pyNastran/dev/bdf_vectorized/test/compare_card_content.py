@@ -196,19 +196,19 @@ def compare_matrices(fem1, fem2):
         #card2 = fem2.dmis[key]
         #assert str(card1) == str(card2)
 
-    for key in fem1.dmijs:
-        card1 = fem1.dmijs[key]
-        card2 = fem2.dmijs[key]
+    for key in fem1.dmij:
+        card1 = fem1.dmij[key]
+        card2 = fem2.dmij[key]
         assert str(card1) == str(card2)
 
-    for key in fem1.dmijis:
-        card1 = fem1.dmijis[key]
-        card2 = fem2.dmijis[key]
+    for key in fem1.dmiji:
+        card1 = fem1.dmiji[key]
+        card2 = fem2.dmiji[key]
         assert str(card1) == str(card2)
 
-    for key in fem1.dmiks:
-        card1 = fem1.dmiks[key]
-        card2 = fem2.dmiks[key]
+    for key in fem1.dmik:
+        card1 = fem1.dmik[key]
+        card2 = fem2.dmik[key]
         assert str(card1) == str(card2)
 
 

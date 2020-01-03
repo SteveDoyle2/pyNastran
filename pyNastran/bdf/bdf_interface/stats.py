@@ -1,8 +1,11 @@
-from typing import List, Set, Dict, Any, Union
+from __future__ import annotations
+from typing import List, Set, Dict, Any, Union, TYPE_CHECKING
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
-def get_bdf_stats(model, return_type='string', word=''):
-    # type: (Any, str, str) -> Union[str, List[str]]
+def get_bdf_stats(model: BDF, return_type: str='string',
+                  word: str='') -> Union[str, List[str]]:
     """
     Print statistics for the BDF
 
@@ -94,12 +97,18 @@ def get_bdf_stats(model, return_type='string', word=''):
         # ???
         'dscreen', 'dti', 'nxstrats', 'radcavs', 'radmtx', 'ringaxs', 'ringfl',
         'tempds', 'spcoffs',
+
+        # cyclic
+        'cyjoin',
+
+        # parametric
+        'feedge', 'feface', 'gmcurv', 'gmsurf', 'pset', 'pval',
     ]
     scalar_attrs = [
         'aero', 'aeros', 'grdset', # handled below
 
         # not handled
-        'axic', 'axif',
+        'axic', 'axif', 'cyax',
         'baror', 'beamor', 'doptprm', 'dtable',
         'zona',
     ]
@@ -111,7 +120,8 @@ def get_bdf_stats(model, return_type='string', word=''):
         'monitor_points',
     ]
     skip_attrs = [
-        'active_filename', 'active_filenames', 'debug', 'log', 'reject_lines',
+        'active_filename', 'active_filenames', 'debug', # 'log',
+        'reject_lines',
         'is_nx', 'is_msc', 'is_bdf_vectorized', 'dumplines', 'values_to_skip',
         'system_command_lines', 'executive_control_lines', 'case_control_lines',
         'case_control_deck',
@@ -121,7 +131,8 @@ def get_bdf_stats(model, return_type='string', word=''):
         'read_includes', 'reject_cards', 'reject_count', 'punch',
         'include_dir', 'include_filenames', 'save_file_structure',
         'rsolmap_to_str', 'nastran_format', 'nid_map', 'bdf_filename',
-        'radset', 'is_zona',
+        'initial_superelement_models',
+        'is_zona', 'is_nasa95', 'type_slot_str',
 
         # handled below
         'mpcadds', 'mpcs', 'spcadds', 'spcs',
@@ -130,13 +141,43 @@ def get_bdf_stats(model, return_type='string', word=''):
         'aero', 'aeros', 'mkaeros',
         'nsmadds', 'nsms',
         'seqgp',
+
+        # unhandled
+        'radset',
+        'dmigs', 'dmijis', 'dmijs', 'dmiks', 'dmis',
+
+
+        # vector
+        'cbar', 'cbeam', 'cbush',
+        'conm2',
+        'cshear', 'cvisc',
+        'conrod', 'ctube', 'crod',
+        'cdamp1', 'cdamp2', 'cdamp3', 'cdamp4',
+        'celas1', 'celas2', 'celas3', 'celas4',
+        'chexa20', 'chexa8', 'cpenta15', 'cpenta6',
+        'cpyram13', 'cpyram5', 'ctetra10', 'ctetra4',
+        'cquad', 'cquad4', 'cquad8', 'cquadr',
+        'ctria3', 'ctria6', 'ctriar',
+        'plotel',
+
+        'dampers', 'elements2',
+        'bars', 'beams', 'bushes', 'rods', 'shears',
+        'shells', 'solids', 'springs',
+
+        'force', 'force1', 'force2', 'grav', 'grid', 'lseq', 'masses2',
+        'moment', 'moment1', 'moment2', 'pload', 'pload1', 'pload2', 'pload4',
+        'sload', 'spcd',
+        'temp', 'tempd',
+
     ] + list_attrs + card_dict_groups + scalar_attrs
-    #missed_attrs = []
-    #for attr in model.object_attributes():
+    missed_attrs = []
+    for attr in model.object_attributes(filter_properties=True,
+                                        keys_to_skip=skip_attrs):
         #if attr in skip_attrs:
             #continue
-        #missed_attrs.append(attr)
-    #assert missed_attrs == [], missed_attrs
+        missed_attrs.append(attr)
+    if model.__class__.__name__ == 'BDF':
+        assert missed_attrs == [], missed_attrs
 
 
     # These are ignored because they're lists
@@ -182,6 +223,14 @@ def get_bdf_stats(model, return_type='string', word=''):
     msg.extend(_get_bdf_stats_loads(model))
 
     # load_combinations / loads: handled below
+    #handled_explicitly = [
+        #'dloads', 'dload_entries',
+        #'spcadds', 'spcs',
+        #'mpcadds', 'mpcs',
+        #'nsmadds', 'nsms',
+        #'aero', 'aeros', 'mkaeros', 'radset',
+        #'seqgp',
+    #]
 
     # dloads
     for (lid, loads) in sorted(model.dloads.items()):
@@ -202,84 +251,18 @@ def get_bdf_stats(model, return_type='string', word=''):
             msg.append('  %-8s %s' % (name + ':', count_name))
         msg.append('')
 
-    # spcs
-    for (spc_id, spcadds) in sorted(model.spcadds.items()):
-        msg.append('bdf.spcadds[%s]' % spc_id)
-        groups_dict = {}
-        for spcadd in spcadds:
-            groups_dict[spcadd.type] = groups_dict.get(spcadd.type, 0) + 1
-        for name, count_name in sorted(groups_dict.items()):
-            msg.append('  %-8s %s' % (name + ':', count_name))
-        msg.append('')
+    _constraint_stats(model, msg)
+    _nsm_stats(model, msg)
 
-    for (spc_id, spcs) in sorted(model.spcs.items()):
-        msg.append('bdf.spcs[%s]' % spc_id)
-        groups_dict = {}
-        for spc in spcs:
-            groups_dict[spc.type] = groups_dict.get(spc.type, 0) + 1
-        for name, count_name in sorted(groups_dict.items()):
-            msg.append('  %-8s %s' % (name + ':', count_name))
-        msg.append('')
-
-    # mpcs
-    for (mpc_id, mpcadds) in sorted(model.mpcadds.items()):
-        msg.append('bdf.mpcadds[%s]' % mpc_id)
-        groups_dict = {}
-        for mpcadd in mpcadds:
-            groups_dict[mpcadd.type] = groups_dict.get(mpcadd.type, 0) + 1
-        for name, count_name in sorted(groups_dict.items()):
-            msg.append('  %-8s %s' % (name + ':', count_name))
-        msg.append('')
-
-    for (mpc_id, mpcs) in sorted(model.mpcs.items()):
-        msg.append('bdf.mpcs[%s]' % mpc_id)
-        groups_dict = {}
-        for mpc in mpcs:
-            groups_dict[mpc.type] = groups_dict.get(mpc.type, 0) + 1
-        for name, count_name in sorted(groups_dict.items()):
-            msg.append('  %-8s %s' % (name + ':', count_name))
-        msg.append('')
-
-    # nsms
-    for (nsm_id, nsmadds) in sorted(model.nsmadds.items()):
-        msg.append('bdf.nsmadds[%s]' % nsm_id)
-        groups_dict = {}
-        for nsmadd in nsmadds:
-            groups_dict[nsmadd.type] = groups_dict.get(nsmadd.type, 0) + 1
-        for name, count_name in sorted(groups_dict.items()):
-            msg.append('  %-8s %s' % (name + ':', count_name))
-        msg.append('')
-
-    for (mpc_id, nsms) in sorted(model.nsms.items()):
-        msg.append('bdf.nsms[%s]' % mpc_id)
-        groups_dict = {}
-        for nsm in nsms:
-            groups_dict[nsm.type] = groups_dict.get(nsm.type, 0) + 1
-        for name, count_name in sorted(groups_dict.items()):
-            msg.append('  %-8s %s' % (name + ':', count_name))
-        msg.append('')
-
-    # aero
-    if model.aero:
-        msg.append('bdf.aero')
-        msg.append('  %-8s 1' % ('AERO:'))
-
-    # aeros
-    if model.aeros:
-        msg.append('bdf:aeros')
-        msg.append('  %-8s 1' % ('AEROS:'))
-
-    #mkaeros
-    if model.mkaeros:
-        msg.append('bdf:mkaeros')
-        msg.append('  %-8s %s' % ('MKAERO:', len(model.mkaeros)))
+    _cyclic_stats(model, msg)
+    _aero_stats(model, msg)
 
     # radset
     if model.radset:
         msg.append('bdf:radset')
         msg.append('  %-8s 1' % ('RADSET:'))
 
-    #mkaeros
+    #seqgp
     if model.seqgp:
         msg.append('bdf:seqgp')
         msg.append('  %-8s 1' % ('SEQGP:'))
@@ -342,8 +325,98 @@ def get_bdf_stats(model, return_type='string', word=''):
         return '\n'.join(msg)
     return msg
 
-def _get_bdf_stats_loads(model):
-    # type: (Any) -> List[str]
+def _constraint_stats(model: BDF, msg: List[str]) -> None:
+    """helper for ``get_bdf_stats(...)``"""
+    # spcs
+    for (spc_id, spcadds) in sorted(model.spcadds.items()):
+        msg.append('bdf.spcadds[%s]' % spc_id)
+        groups_dict = {}
+        for spcadd in spcadds:
+            groups_dict[spcadd.type] = groups_dict.get(spcadd.type, 0) + 1
+        for name, count_name in sorted(groups_dict.items()):
+            msg.append('  %-8s %s' % (name + ':', count_name))
+        msg.append('')
+
+    for (spc_id, spcs) in sorted(model.spcs.items()):
+        msg.append('bdf.spcs[%s]' % spc_id)
+        groups_dict = {}
+        for spc in spcs:
+            groups_dict[spc.type] = groups_dict.get(spc.type, 0) + 1
+        for name, count_name in sorted(groups_dict.items()):
+            msg.append('  %-8s %s' % (name + ':', count_name))
+        msg.append('')
+
+    # mpcs
+    for (mpc_id, mpcadds) in sorted(model.mpcadds.items()):
+        msg.append('bdf.mpcadds[%s]' % mpc_id)
+        groups_dict = {}
+        for mpcadd in mpcadds:
+            groups_dict[mpcadd.type] = groups_dict.get(mpcadd.type, 0) + 1
+        for name, count_name in sorted(groups_dict.items()):
+            msg.append('  %-8s %s' % (name + ':', count_name))
+        msg.append('')
+
+    for (mpc_id, mpcs) in sorted(model.mpcs.items()):
+        msg.append('bdf.mpcs[%s]' % mpc_id)
+        groups_dict = {}
+        for mpc in mpcs:
+            groups_dict[mpc.type] = groups_dict.get(mpc.type, 0) + 1
+        for name, count_name in sorted(groups_dict.items()):
+            msg.append('  %-8s %s' % (name + ':', count_name))
+        msg.append('')
+
+def _cyclic_stats(model: BDF, msg: List[str]) -> None:
+    """helper for ``get_bdf_stats(...)``"""
+    if model.cyax:
+        msg.append('bdf.cyax')
+        msg.append('  %-8s 1' % ('CYAX:'))
+    if model.cyjoin:
+        msg.append('bdf:cyjoin')
+        msg.append('  %-8s %s' % ('CYJOIN:', len(model.cyjoin)))
+
+def _aero_stats(model: BDF, msg: List[str]) -> None:
+    """helper for ``get_bdf_stats(...)``"""
+    if model.aero:
+        msg.append('bdf.aero')
+        msg.append('  %-8s 1' % ('AERO:'))
+
+    # aero
+    if model.aero:
+        msg.append('bdf.aero')
+        msg.append('  %-8s 1' % ('AERO:'))
+
+    # aeros
+    if model.aeros:
+        msg.append('bdf:aeros')
+        msg.append('  %-8s 1' % ('AEROS:'))
+
+    #mkaeros
+    if model.mkaeros:
+        msg.append('bdf:mkaeros')
+        msg.append('  %-8s %s' % ('MKAERO:', len(model.mkaeros)))
+
+def _nsm_stats(model: BDF, msg: List[str]) -> None:
+    """helper for ``get_bdf_stats(...)``"""
+    # nsms
+    for (nsm_id, nsmadds) in sorted(model.nsmadds.items()):
+        msg.append('bdf.nsmadds[%s]' % nsm_id)
+        groups_dict = {}
+        for nsmadd in nsmadds:
+            groups_dict[nsmadd.type] = groups_dict.get(nsmadd.type, 0) + 1
+        for name, count_name in sorted(groups_dict.items()):
+            msg.append('  %-8s %s' % (name + ':', count_name))
+        msg.append('')
+
+    for (mpc_id, nsms) in sorted(model.nsms.items()):
+        msg.append('bdf.nsms[%s]' % mpc_id)
+        groups_dict = {}
+        for nsm in nsms:
+            groups_dict[nsm.type] = groups_dict.get(nsm.type, 0) + 1
+        for name, count_name in sorted(groups_dict.items()):
+            msg.append('  %-8s %s' % (name + ':', count_name))
+        msg.append('')
+
+def _get_bdf_stats_loads(model: BDF) -> List[str]:
     """helper for ``get_bdf_stats(...)``"""
     # loads
     msg = []

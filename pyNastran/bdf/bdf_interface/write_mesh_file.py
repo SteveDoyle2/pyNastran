@@ -384,11 +384,11 @@ class WriteMeshs(WriteMesh):
             large field (16) or small field (8)
 
         """
-        write_bdfs_dict(bdf_files, self.dmigs, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, self.dmis, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, self.dmijs, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, self.dmijis, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, self.dmiks, size, is_double, is_long_ids)
+        write_bdfs_dict(bdf_files, self.dmig, size, is_double, is_long_ids)
+        write_bdfs_dict(bdf_files, self.dmi, size, is_double, is_long_ids)
+        write_bdfs_dict(bdf_files, self.dmij, size, is_double, is_long_ids)
+        write_bdfs_dict(bdf_files, self.dmiji, size, is_double, is_long_ids)
+        write_bdfs_dict(bdf_files, self.dmik, size, is_double, is_long_ids)
 
     def _write_dynamic_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
                             is_long_ids: Optional[bool]=None) -> None:

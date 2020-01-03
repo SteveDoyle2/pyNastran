@@ -1477,7 +1477,7 @@ def _load_cards_from_keys_values(unused_name, values, keys, encoding, unused_log
 
 def _load_class(key, value, card_type, encoding):
     keys_to_read = list(value.keys())
-    class_obj = CARD_MAP[card_type]
+    class_obj = CARD_MAP[card_type]  # see add_card.py ~line 200
     if hasattr(class_obj, '_init_from_empty'):
         class_instance = class_obj._init_from_empty()
     else:

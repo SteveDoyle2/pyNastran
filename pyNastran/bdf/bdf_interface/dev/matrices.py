@@ -6,6 +6,7 @@ defines:
 """
 import numpy as np
 import scipy as sp
+from pyNastran.bdf.mesh_utils.mass_properties import get_sub_eids
 
 def _lambda_1d(v1):
     """
@@ -38,13 +39,6 @@ def triple(A, B):
     .. todo:: not validated
     """
     return np.einsum('ia,aj,ka->ijk', A, B, A)
-
-def get_sub_eids(all_eids, eids):
-    """supports limiting the element/mass ids"""
-    eids = np.array(eids)
-    ieids = np.searchsorted(all_eids, eids)
-    eids2 = eids[all_eids[ieids] == eids]
-    return eids2
 
 def make_mass_matrix(model, reference_point):
     """
@@ -96,7 +90,7 @@ def make_mass_matrix(model, reference_point):
         if etype in no_mass:
             continue
         elif etype in ['CROD', 'CONROD']:
-            eids2 = get_sub_eids(all_eids, eids)
+            eids2 = get_sub_eids(all_eids, eids, etype)
 
             # lumped
             mass_mat = np.ones((2, 2))
@@ -138,7 +132,7 @@ def make_mass_matrix(model, reference_point):
                 #mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CONM2':
             mass_mat = np.zeros((6, 6))
-            eids2 = get_sub_eids(all_eids, eids)
+            eids2 = get_sub_eids(all_eids, eids, etype)
             for eid in eids2:
                 elem = model.masses[eid]
                 massi = elem.Mass()

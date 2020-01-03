@@ -1883,7 +1883,7 @@ def get_matrix_stats(fem1: BDF, unused_fem2: BDF) -> None:
                   % (dmi.type, dmi.name, str(dmi)))
             raise
 
-    for (unused_key, dmij) in sorted(fem1.dmijs.items()):
+    for (unused_key, dmij) in sorted(fem1.dmij.items()):
         try:
             if isinstance(dmij, NastranMatrix):
                 dmij.get_matrix()

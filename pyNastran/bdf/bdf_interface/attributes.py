@@ -1,6 +1,7 @@
 """defines the BDF attributes"""
+from __future__ import annotations
 from collections import defaultdict
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any, Union, TYPE_CHECKING
 from numpy import array  # type: ignore
 
 from pyNastran.utils import object_attributes, object_methods, deprecated
@@ -8,7 +9,8 @@ from pyNastran.utils import object_attributes, object_methods, deprecated
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 #from pyNastran.bdf.cards.constraints import ConstraintObject
 from pyNastran.bdf.cards.aero.zona import ZONA
-
+if TYPE_CHECKING:
+    from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI
 
 class BDFAttributes:
     """defines attributes of the BDF"""
@@ -56,7 +58,9 @@ class BDFAttributes:
                 'nmaterials', 'material_ids', 'ncoords', 'coord_ids',
                 'ncaeros', 'caero_ids', 'wtmass', 'is_bdf_vectorized', 'nid_map']
 
-    def object_attributes(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
+    def object_attributes(self, mode: str='public',
+                          keys_to_skip: Optional[List[str]]=None,
+                          filter_properties: bool=False) -> List[str]:
         """
         List the names of attributes of a class as strings. Returns public
         attributes as default.
@@ -71,6 +75,8 @@ class BDFAttributes:
             * 'all' - all attributes that are defined for the object
         keys_to_skip : List[str]; default=None -> []
             names to not consider to avoid deprecation warnings
+        filter_properties: bool: default=False
+            filters the @property objects
 
         Returns
         -------
@@ -83,11 +89,11 @@ class BDFAttributes:
 
         my_keys_to_skip = [
             #'case_control_deck',
-            'log', 'mpcObject', 'spcObject',
+            'log',
             'node_ids', 'coord_ids', 'element_ids', 'property_ids',
             'material_ids', 'caero_ids', 'is_long_ids',
             'nnodes', 'ncoords', 'nelements', 'nproperties',
-            'nmaterials', 'ncaeros',
+            'nmaterials', 'ncaeros', 'npoints',
 
             'point_ids', 'subcases',
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
@@ -1125,3 +1131,37 @@ class BDFAttributes:
         if key in self.params:
             param = self.params[key]
             param.update_values(*values)
+
+    #--------------------
+    # deprecations
+    @property
+    def dmis(self) -> Dict[str, DMI]:
+        return self.dmi
+    @property
+    def dmigs(self) -> Dict[str, DMIG]:
+        return self.dmig
+    @property
+    def dmiks(self) -> Dict[str, DMIK]:
+        return self.dmik
+    @property
+    def dmijs(self) -> Dict[str, DMIJ]:
+        return self.dmij
+    @property
+    def dmijis(self) -> Dict[str, DMIJI]:
+        return self.dmiji
+
+    @dmis.setter
+    def dmis(self, dmi):
+        self.dmi = dmi
+    @dmigs.setter
+    def dmigs(self, dmig):
+        self.dmig = dmig
+    @dmiks.setter
+    def dmiks(self, dmik):
+        self.dmik = dmik
+    @dmijs.setter
+    def dmijs(self, dmij):
+        self.dmij = dmij
+    @dmijis.setter
+    def dmijis(self, dmiji):
+        self.dmiji = dmiji

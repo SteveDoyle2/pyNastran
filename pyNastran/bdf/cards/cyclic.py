@@ -9,7 +9,7 @@ All cards are BaseCard objects.
 
 #from pyNastran.utils.numpy_utils import integer_types
 #from pyNastran.bdf.field_writer_8 import set_blank_if_default
-from pyNastran.bdf.cards.base_card import BaseCard
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, # integer_or_blank, double, double_or_blank,
     #string_or_blank, blank,
@@ -17,7 +17,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     #components_or_blank,
     #integer_string_or_blank, integer_or_double, #parse_components,
     #modal_components_or_blank,
-    string,
+    string, integer_or_string,
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -65,6 +65,7 @@ class CYAX(BaseCard):
         msg = self.comment + print_card_8(card)
         return msg
 
+
 class CYJOIN(BaseCard):
     """
     CYJOIN SIDE C G1 G2 G3 G4 G5 G6
@@ -77,7 +78,7 @@ class CYJOIN(BaseCard):
         side = 1
         coord = 'R'
         nids = [1, 2]
-        return CYJOIN(side, side, coord, ids, comment='')
+        return CYJOIN(side, coord, nids)
 
     def __init__(self, side, coord, nids, comment=''):
         BaseCard.__init__(self)
@@ -85,7 +86,7 @@ class CYJOIN(BaseCard):
             self.comment = comment
         self.side = side
         self.coord = coord
-        self.nids = nids
+        self.nids = expand_thru(nids)
         assert coord in ['T1', 'T2', 'T3', 'R', 'C', 'S'], coord
 
     def validate(self):
@@ -110,11 +111,11 @@ class CYJOIN(BaseCard):
         """
         side = integer(card, 1, 'side')
         coord = string(card, 2, 'coord')
-        nids = fields(integer, card, 'ID', i=3, j=len(card))
+        nids = fields(integer_or_string, card, 'ID', i=3, j=len(card))
         return CYJOIN(side, coord, nids, comment=comment)
 
     def raw_fields(self):
-        msg = self.comment
+        #msg = self.comment
         self.nids.sort()
         list_fields = ['CYJOIN', self.side, self.coord] + self.nids
         return list_fields

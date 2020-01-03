@@ -15,19 +15,19 @@ class AddCard(BDFAttributes):
     def _add_dmig_object(self, dmig, allow_overwrites=False):
         """adds a DMIG object"""
         name = dmig.name
-        self.dmigs[name] = dmig
+        self.dmig[name] = dmig
         self._type_to_id_map[dmig.type].append(name)
 
     def _add_dmij_object(self, dmij, allow_overwrites=False):
         """adds a DMIJ object"""
         name = dmij.name
-        self.dmijs[name] = dmij
+        self.dmij[name] = dmij
         self._type_to_id_map[dmij.type].append(name)
 
     def _add_dmiji_object(self, dmiji, allow_overwrites=False):
         """adds a DMIJI object"""
         name = dmiji.name
-        self.dmijis[name] = dmiji
+        self.dmiji[name] = dmiji
         self._type_to_id_map[dmiji.type].append(name)
 
     def _add_dmik_object(self, dmik, allow_overwrites=False):
