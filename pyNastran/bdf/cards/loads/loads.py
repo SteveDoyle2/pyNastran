@@ -507,9 +507,15 @@ class LOADCYH(BaseCard):  # Requires LOADSET in case control deck
     """
     type = 'LOADCYH'
 
-    #@classmethod
-    #def _init_from_empty(cls):
-        #return LSEQ(sid, sid, s, hid, htype, s1, l1, s2, l2, comment='')
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        scale = 1.
+        hid = 0
+        htype = 'C'
+        scales = [1.]
+        load_ids = [2]
+        return LOADCYH(sid, scale, hid, htype, scales, load_ids, comment='')
 
     def __init__(self, sid, scale, hid, htype, scales, load_ids, comment=''):
         """

@@ -880,20 +880,112 @@ class TestCoords(unittest.TestCase):
         model.pop_xref_errors()
         self.assertEqual(len(model.coords), 7)
 
+    def test_transform(self):
+        model = BDF(debug=False)
+        log = model.log
+        g1 = 1
+        g2 = 2
+        g3 = 3
+        cord1r = model.add_cord1r(1, g1, g2, g3, comment='')
+        cord1c = model.add_cord1c(2, g1, g2, g3, comment='')
+        cord1s = model.add_cord1s(3, g1, g2, g3, comment='')
+
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [1., 0., 0.]
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0., 0., 1.])
+        model.add_grid(3, [1., 0., 1.])
+
+        cord2r = model.add_cord2r(4, origin, zaxis, xzplane, rid=0, setup=True, comment='')
+        cord2c = model.add_cord2c(5, origin, zaxis, xzplane, rid=0, setup=True, comment='')
+        cord2s = model.add_cord2s(6, origin, zaxis, xzplane, rid=0, setup=True, comment='')
+
+        cord1r.raw_fields()
+        cord1c.raw_fields()
+        cord1s.raw_fields()
+        cord2r.raw_fields()
+        cord2c.raw_fields()
+        cord2s.raw_fields()
+
+        g1 = 11
+        g2 = 12
+        g3 = 13
+        model.add_grid(11, [0., 0., 0.], cp=1)
+        model.add_grid(12, [0., 0., 1.], cp=1)
+        model.add_grid(13, [1., 0., 1.], cp=1)
+
+        cord1r = model.add_cord1r(101, g1, g2, g3, comment='')
+        cord1c = model.add_cord1c(102, g1, g2, g3, comment='')
+        cord1s = model.add_cord1s(103, g1, g2, g3, comment='')
+        cord2r = model.add_cord2r(104, origin, zaxis, xzplane, rid=1, setup=True, comment='')
+        cord2c = model.add_cord2c(105, origin, zaxis, xzplane, rid=1, setup=True, comment='')
+        cord2s = model.add_cord2s(106, origin, zaxis, xzplane, rid=1, setup=True, comment='')
+
+        model.cross_reference()
+        xyz = [0., 0., 0.]
+        p = [xyz]
+        coord_to = cord2s
+        for cid, coord in model.coords.items():
+            if hasattr(coord, 'transform_node_to_global_array'):
+                coord.transform_node_from_local_to_local_array(coord_to, xyz)
+            else:
+                log.warning(f'{coord.type} is missing transform_node_to_global_array')
+
+            if hasattr(coord, 'coord_to_spherical'):
+                coord.coord_to_spherical(xyz)
+            else:
+                log.warning(f'{coord.type} is missing coord_to_spherical')
+
+            if hasattr(coord, 'coord_to_cylindrical'):
+                coord.coord_to_cylindrical(xyz)
+            else:
+                log.warning(f'{coord.type} is missing coord_to_cylindrical')
+
+            coord.global_to_basic(xyz)
+            coord.transform_vector_to_global_array(p)
+            coord.transform_node_to_global(xyz)
+            coord.transform_vector_to_local(xyz)
+            coord.coord_to_xyz_array(xyz)
+            coord.global_to_local
+            coord.local_to_global
+
+    def test_gmcord(self):
+        """tests GMCORD"""
+        cid = 1
+        entity = 'GMCURV'
+        gm_ids = [3, 4]
+        model = BDF(debug=False)
+        gmcord = model.add_gmcord(cid, entity, gm_ids)
+        gmcord.raw_fields()
+        save_load_deck(model, run_convert=False)
+
     def test_cord3g(self):
+        """tests the CORD3G card"""
         cid = 1
         #method_es = 'E313'
         method_es = 'E'
-        method_int = 42
+        method_int = 123
         form = 'EQN'
         thetas = [110, 111, 112]
         rid = 0
 
-        cord3g = CORD3G(cid, method_es, method_int, form, thetas, rid,
-                        comment='cord3g')
-        fields = BDFCard(cord3g.raw_fields())
-        cord3g.repr_fields()
-        cord3g.add_card(fields)
+        cord3g_e = CORD3G(cid, method_es, method_int, form, thetas, rid,
+                          comment='cord3g')
+        fields = BDFCard(cord3g_e.raw_fields())
+        cord3g_e.repr_fields()
+        cord3g_e.add_card(fields)
+        xyz = [0., 0., 0.]
+        cord3g_e.coord3g_transform_to_global(xyz)
+
+        method_es = 'S'
+        cord3g_s = CORD3G(cid, method_es, method_int, form, thetas, rid,
+                          comment='cord3g')
+        fields = BDFCard(cord3g_s.raw_fields())
+        cord3g_s.repr_fields()
+        cord3g_s.add_card(fields)
+        with self.assertRaises(NotImplementedError):  # TODO: add me
+            cord3g_s.coord3g_transform_to_global(xyz)
 
     def test_create_coord_line(self):
         """tests creating a series of coordinate systems down an axis"""

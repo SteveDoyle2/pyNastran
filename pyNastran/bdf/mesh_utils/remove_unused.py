@@ -469,6 +469,11 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                         #pids_used.add(value)
         elif card_type == 'TABRNDG':
             pass
+        elif card_type == 'CYJOIN':
+            for idi in ids:
+                cyjoin = model.cyjoin[idi]
+                nids_used.update(cyjoin.nids)
+
         elif card_type in not_implemented_types:
             model.log.warning(f'skipping {card_type}')
         else:

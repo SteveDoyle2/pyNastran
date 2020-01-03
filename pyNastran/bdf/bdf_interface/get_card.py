@@ -1368,7 +1368,12 @@ class GetCard(GetMethods):
             for nid in sorted(self.spoints):  # SPOINTs
                 nid_to_eids_map[nid] = []
 
+        skip_cards = {
+            'CCONEAX',
+        }
         for (eid, element) in self.elements.items():  # load the mapper
+            if element.type in skip_cards:
+                continue
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.node_ids
@@ -1404,7 +1409,13 @@ class GetCard(GetMethods):
         for nid in self.epoints:
             nid_to_elements_map[nid] = []
 
+        skip_cards = {
+            'CCONEAX',
+        }
         for element in self.elements.values():  # load the mapper
+            if element.type in skip_cards:
+                continue
+
             try:
                 # not supported for 0-D and 1-D elements
                 nids = element.node_ids

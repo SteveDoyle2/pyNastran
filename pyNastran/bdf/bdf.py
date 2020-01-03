@@ -59,7 +59,8 @@ from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RR
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     AXIF, RINGFL,
-    AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
+    AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, )
+from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1, FORCEAX, PRESAX, TEMPAX
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
 from pyNastran.bdf.cards.elements.shell import (
@@ -97,7 +98,7 @@ from pyNastran.bdf.cards.loads.loads import (
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                                    PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
+                                                    PLOAD, PLOAD1, PLOAD2, PLOAD4,
                                                     GMLOAD)
 from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
 
@@ -342,6 +343,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PCONEAX', # property
             'AXIC', # axic
             'AXIF', # axif
+            'FORCEAX', # loads
 
             ## pdampt
             'PDAMPT',
@@ -1987,6 +1989,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'LOADCYN' : (LOADCYN, self._add_load_object),
             'LOADCYH' : (LOADCYH, self._add_load_object),
 
+            # basic static loads
             'GRAV' : (GRAV, self._add_load_object),
             'ACCEL' : (ACCEL, self._add_load_object),
             'ACCEL1' : (ACCEL1, self._add_load_object),
@@ -1994,13 +1997,16 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PLOAD1' : (PLOAD1, self._add_load_object),
             'PLOAD2' : (PLOAD2, self._add_load_object),
             'PLOAD4' : (PLOAD4, self._add_load_object),
-            'PLOADX1' : (PLOADX1, self._add_load_object),
             'RFORCE' : (RFORCE, self._add_load_object),
             'RFORCE1' : (RFORCE1, self._add_load_object),
             'SLOAD' : (SLOAD, self._add_load_object),
             'GMLOAD' : (GMLOAD, self._add_load_object),
             'SPCD' : (SPCD, self._add_load_object),  # enforced displacement
             'QVOL' : (QVOL, self._add_load_object),  # thermal
+
+            # axisymmetric loads
+            'FORCEAX' : (FORCEAX, self._add_load_object),
+            'PLOADX1' : (PLOADX1, self._add_load_object),
             'PRESAX' : (PRESAX, self._add_load_object),  # axisymmetric
 
             'DLOAD' : (DLOAD, self._add_dload_object),
@@ -4524,6 +4530,6 @@ def main():  # pragma: no cover
     model.write_bdf('test.bdf')
 
 
-if __name__ == '__main__':  # pragma: no cover
-    from pyNastran.bdf.test.test_bdf import main
+#if __name__ == '__main__':  # pragma: no cover
+    #from pyNastran.bdf.test.test_bdf import main
     #main()

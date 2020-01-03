@@ -978,6 +978,9 @@ class TOPVAR(BaseCard):
                 raise NotImplementedError(name)
         return list_fields
 
+    def uncross_reference(self):
+        pass
+
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:

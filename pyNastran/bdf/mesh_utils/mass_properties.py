@@ -16,6 +16,10 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import integrate_positive_unit_line
 
 NO_MASS = {
+    # has mass
+    'CCONEAX',
+
+    # no mass
     'GRID', 'PARAM', 'FORCE', 'FORCE1', 'FORCE2', 'MOMENT1', 'MOMENT2', 'LOAD',
     'DVPREL1', 'DVPREL2', 'DVCREL1', 'DVCREL2', 'DVMREL1', 'DVMREL2', 'DCONSTR', 'DESVAR',
     'DEQATN', 'DRESP1', 'DRESP2', 'DRESP3',
@@ -57,6 +61,7 @@ NO_MASS = {
     'DVPREL1', 'DVPREL2', 'DVMREL1', 'DVMREL2', 'DVCREL1', 'DVCREL2',
     'DESVAR', 'DCONADD', 'DRESP1', 'DRESP2', 'DRESP3', 'DEQATN', 'DSCREEN',
     'SUPORT', 'SUPORT1',
+    'CYJOIN',
 }
 
 def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
@@ -553,11 +558,15 @@ def mass_properties_nsm(model, element_ids=None, mass_ids=None, nsm_id=None,
     return mass, cg, inertia
 
 
-def get_sub_eids(all_eids, eids):
+def get_sub_eids(all_eids, eids, etype):
     """supports limiting the element/mass ids"""
     eids = np.array(eids)
     ieids = np.searchsorted(all_eids, eids)
-    eids2 = eids[all_eids[ieids] == eids]
+    try:
+        eids2 = eids[all_eids[ieids] == eids]
+    except IndexError:
+        print(etype, all_eids, ieids, eids)
+        raise
     return eids2
 
 def _get_mass_nsm(model, element_ids, mass_ids,
@@ -570,7 +579,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
     element_ids = set(element_ids)
     mass_ids = set(mass_ids)
     if etype in ['CROD', 'CONROD']:
-        eids2 = get_sub_eids(all_eids, eids)
+        eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
             n1, n2 = elem.node_ids
@@ -596,7 +605,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     elif etype == 'CTUBE':
-        eids2 = get_sub_eids(all_eids, eids)
+        eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
             pid = elem.pid
@@ -615,7 +624,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, massi, mass, cg, I)
     elif etype == 'CBAR':
-        eids2 = get_sub_eids(all_eids, eids)
+        eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
             pid = elem.pid
@@ -656,7 +665,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             eids, mass, cg, I, reference_point)
 
     elif etype == 'CQUAD':
-        eids2 = get_sub_eids(all_eids, eids)
+        eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
             n1, n2, n3, n4 = elem.node_ids[:4]
@@ -684,7 +693,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CSHEAR':
-        eids2 = get_sub_eids(all_eids, eids)
+        eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
             n1, n2, n3, n4 = elem.node_ids
@@ -709,7 +718,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             if eid in element_ids:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     elif etype in ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
-        eids2 = get_sub_eids(all_mass_ids, eids)
+        eids2 = get_sub_eids(all_mass_ids, eids, etype)
         for eid in eids2:
             elem = model.masses[eid]
             m = elem.Mass()
@@ -717,7 +726,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
             if eid in mass_ids:
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
     elif etype == 'CTETRA':
-        eids2 = get_sub_eids(all_eids, eids)
+        eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
             n1, n2, n3, n4 = elem.node_ids[:4]
@@ -734,7 +743,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CPYRAM':
-        eids2 = get_sub_eids(all_eids, eids)
+        eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
             n1, n2, n3, n4, n5 = elem.node_ids[:5]
@@ -762,7 +771,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CPENTA':
-        eids2 = get_sub_eids(all_eids, eids)
+        eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
             n1, n2, n3, n4, n5, n6 = elem.node_ids[:6]
@@ -784,7 +793,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
                 mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
 
     elif etype == 'CHEXA':
-        eids2 = get_sub_eids(all_eids, eids)
+        eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
             n1, n2, n3, n4, n5, n6, n7, n8 = elem.node_ids[:8]
@@ -813,7 +822,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
     elif etype == 'CBEND':
         model.log.info('elem.type=%s mass is innaccurate' % etype)
         #nsm = property_nsms[nsm_id]['PBEND'][pid] + element_nsms[nsm_id][eid]
-        eids2 = get_sub_eids(all_eids, eids)
+        eids2 = get_sub_eids(all_eids, eids, etype, etype)
         for eid in eids2:
             elem = model.elements[eid]
             m = elem.Mass()
@@ -851,7 +860,7 @@ def _mass_catch_all(model, etype, etypes_skipped,
                     element_ids, all_eids, eids,
                     mass, cg, I, reference_point):
     """helper method for ``get_mass_new``"""
-    eids2 = get_sub_eids(all_eids, eids)
+    eids2 = get_sub_eids(all_eids, eids, etype)
     for eid in eids2:
         elem = model.elements[eid]
         #if elem.pid_ref.type in ['PPLANE']:
@@ -877,7 +886,7 @@ def _get_cbeam_mass(model, xyz, element_ids, all_eids,
                     length_eids_pids, lengths, nsm_centroids_length,
                     eids, mass, cg, inertia, reference_point):
     """helper method for ``get_mass_new``"""
-    eids2 = get_sub_eids(all_eids, eids)
+    eids2 = get_sub_eids(all_eids, eids, 'CBEAM')
     for eid in eids2:
         elem = model.elements[eid]
         prop = elem.pid_ref
@@ -1082,7 +1091,7 @@ def _get_tri_mass(model, xyz, element_ids, all_eids,
                   area_eids_pids, areas, nsm_centroids_area,
                   eids, mass, cg, inertia, reference_point):
     """helper method for ``get_mass_new``"""
-    eids2 = get_sub_eids(all_eids, eids)
+    eids2 = get_sub_eids(all_eids, eids, 'tri')
     for eid in eids2:
         elem = model.elements[eid]
         n1, n2, n3 = elem.node_ids[:3]
@@ -1150,7 +1159,7 @@ def _get_quad_mass(model, xyz, element_ids, all_eids,
                    area_eids_pids, areas, nsm_centroids_area,
                    eids, mass, cg, inertia, reference_point):
     """helper method for ``get_mass_new``"""
-    eids2 = get_sub_eids(all_eids, eids)
+    eids2 = get_sub_eids(all_eids, eids, 'quad')
     for eid in eids2:
         elem = model.elements[eid]
         n1, n2, n3, n4 = elem.node_ids[:4]

@@ -243,6 +243,9 @@ class SELOAD(BaseCard):
     def uncross_reference(self) -> None:
         pass
 
+    def safe_cross_reference(self, model, xref_errors):
+        pass
+
     def raw_fields(self):
         list_fields = ['SELOAD', self.lid_s0, self.seid, self.lid_se]
         return list_fields

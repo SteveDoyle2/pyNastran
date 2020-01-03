@@ -56,6 +56,9 @@ def write_geom1(op2, op2_ascii, obj, endian=b'<'):
     if ncoords:
         out = defaultdict(list)
         for cid, coord in obj.coords.items():
+            if coord.type == 'GMCORD':
+                obj.log.warning(f'skipping {coord.type}')
+                continue
             out[coord.type].append(cid)
 
         coord_type_key_map = {

@@ -17,6 +17,7 @@ from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
 from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
 from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
+from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
 from pyNastran.bdf.cards.msgmesh import CGEN
 
 from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
@@ -32,9 +33,11 @@ from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RR
 
 from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
     AXIF, RINGFL,
-    AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, PRESAX, TEMPAX,)
+    AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX)
 from pyNastran.bdf.cards.elements.axisymmetric_shells import (
     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
+from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1, FORCEAX, PRESAX, TEMPAX
+
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
     CTRIA3, CTRIA6, CTRIAR,
@@ -68,11 +71,11 @@ from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
 from pyNastran.bdf.cards.loads.loads import (
-    LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN)
+    LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
 from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
                                                     FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                                    PLOAD, PLOAD1, PLOAD2, PLOAD4, PLOADX1,
+                                                    PLOAD, PLOAD1, PLOAD2, PLOAD4,
                                                     GMLOAD)
 from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
 
@@ -439,6 +442,7 @@ CARD_MAP = {
     'LOAD' : LOAD,
     'CLOAD' : CLOAD,
     'LOADCYN' : LOADCYN,
+    'LOADCYH' : LOADCYH,
 
     'GRAV' : GRAV,
     'ACCEL' : ACCEL,
@@ -448,6 +452,7 @@ CARD_MAP = {
     'PLOAD2' : PLOAD2,
     'PLOAD4' : PLOAD4,
     'PLOADX1' : PLOADX1,
+    'FORCEAX' : FORCEAX,
     'RFORCE' : RFORCE,
     'RFORCE1' : RFORCE1,
     'SLOAD' : SLOAD,
@@ -977,6 +982,12 @@ class AddCards(AddMethods):
 
         """
         coord = CORD1S(cid, g1, g2, g3, comment=comment)
+        self._add_coord_object(coord)
+        return coord
+
+    def add_gmcord(self, cid, entity, gm_ids, comment=''):
+        """Creates a GMCORD card"""
+        coord = GMCORD(cid, entity, gm_ids, comment=comment)
         self._add_coord_object(coord)
         return coord
 
@@ -7835,8 +7846,8 @@ class AddCards(AddMethods):
         self._add_sempln_object(sempln)
         return sempln
 
-    def add_setree(self, seid, ids, comment='') -> SETREE:
-        setree = SETREE(seid, ids, comment=comment)
+    def add_setree(self, seid, seids, comment='') -> SETREE:
+        setree = SETREE(seid, seids, comment=comment)
         self._add_setree_object(setree)
         return setree
 
@@ -7925,3 +7936,13 @@ class AddCards(AddMethods):
         self._add_feface(face, allow_overwrites=False)
         return face
     #----------------------------------------------------------------------------------
+    # cylic
+    def add_cyax(self, nids, comment='') -> CYAX:
+        cyax = CYAX(nids, comment=comment)
+        self._add_cyax_object(cyax)
+        return cyax
+
+    def add_cyjoin(self, side, coord, nids, comment='') -> CYJOIN:
+        cyjoin = CYJOIN(side, coord, nids, comment=comment)
+        self._add_cyjoin_object(cyjoin)
+        return cyjoin

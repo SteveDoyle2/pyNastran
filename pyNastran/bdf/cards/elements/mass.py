@@ -492,7 +492,7 @@ class CMASS2(PointMassElement):
         self.nodes_ref = None
 
     def G1(self):
-        if self.nodes_ref is not None:
+        if self.nodes_ref is not None and self.nodes_ref[0] is not None:
             return self.nodes_ref[0].nid
         return self.nodes[0]
 

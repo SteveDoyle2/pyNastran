@@ -415,6 +415,7 @@ def _material_coordinate_system(element, normal, xyz1, xyz2):
     if element.theta_mcid is None:
         raise NotImplementedError('theta_mcid=%r' % element.theta_mcid)
     if isinstance(element.theta_mcid, integer_types):
+        assert element.theta_mcid_ref is not None, f'mcid={element.theta_mcid} not found for\n{element}'
         i = element.theta_mcid_ref.i
         jmat = np.cross(normal, i) # k x i
         try:
@@ -1175,6 +1176,8 @@ class CTRIA6(TriShell):
         msg = ', which is required by CTRIA6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
         """
@@ -1189,6 +1192,8 @@ class CTRIA6(TriShell):
         msg = ', which is required by CTRIA6 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -1513,6 +1518,8 @@ class CTRIAR(TriShell):
         msg = ', which is required by CTRIAR eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
         """
@@ -1527,6 +1534,8 @@ class CTRIAR(TriShell):
         msg = ', which is required by CTRIAR eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -3669,7 +3678,8 @@ class CQUADR(QuadShell):
         msg = ', which is required by CQUADR eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
-        ## TODO: xref coord
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
         """
@@ -3684,7 +3694,8 @@ class CQUADR(QuadShell):
         msg = ', which is required by CQUADR eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
-        ## TODO: xref coord
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -4433,6 +4444,8 @@ class CQUAD8(QuadShell):
         msg = ', which is required by CQUAD8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.Coord(self.theta_mcid, msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
         """
@@ -4447,6 +4460,8 @@ class CQUAD8(QuadShell):
         msg = ', which is required by CQUAD8 eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if isinstance(self.theta_mcid, integer_types):
+            self.theta_mcid_ref = model.safe_coord(self.theta_mcid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""

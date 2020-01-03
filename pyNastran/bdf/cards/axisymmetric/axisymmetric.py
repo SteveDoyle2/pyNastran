@@ -15,7 +15,6 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.base_card import BaseCard, Element
 
 from pyNastran.bdf.cards.base_card import Property
-from pyNastran.bdf.cards.thermal.loads import ThermalLoad
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -664,8 +663,8 @@ class PCONEAX(Property):
             t2 = blank(card, 7, 't3')
 
         nsm = double_or_blank(card, 8, 'nsm', 0.0)
-        z1 = double(card, 9, 'z1')
-        z2 = double(card, 10, 'z2')
+        z1 = double_or_blank(card, 9, 'z1', None)
+        z2 = double_or_blank(card, 10, 'z2', None)
 
         j = 1
         phi = []
@@ -747,174 +746,4 @@ class PCONEAX(Property):
         card = self.repr_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        return self.comment + print_card_16(card)
-
-
-class PRESAX(BaseCard):
-    """
-    +--------+-----+------+------+------+------+------+
-    |   1    |  2  |   3  |  4   |  5   |   6  |   7  |
-    +========+=====+======+======+======+======+======+
-    | PRESAX | SID |   P  | RID1 | RID2 | PHI1 | PHI2 |
-    +--------+-----+------+------+------+------+------+
-    | PRESAX |  3  | 7.92 |  4   |   3  | 20.6 | 31.4 |
-    +--------+-----+------+------+------+------+------+
-    | PRESAX | 300 |  .1  |  2   |   1  | -90. | +90. |
-    +--------+-----+------+------+------+------+------+
-    """
-    type = 'PRESAX'
-
-    @classmethod
-    def _init_from_empty(cls):
-        sid = 1
-        pressure = 1.
-        rid1 = 1
-        rid2 = 2
-        return PRESAX(sid, pressure, rid1, rid2, phi1=0., phi2=360., comment='')
-
-    def __init__(self, sid, pressure, rid1, rid2, phi1=0., phi2=360., comment=''):
-        if comment:
-            self.comment = comment
-        self.sid = sid
-        self.pressure = pressure
-        self.rid1 = rid1
-        self.rid2 = rid2
-        self.phi1 = phi1
-        self.phi2 = phi2
-
-    @classmethod
-    def add_card(cls, card, comment=''):
-        """
-        Adds a PRESAX card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        comment : str; default=''
-            a comment for the card
-
-        """
-        sid = integer(card, 1, 'sid')
-        pressure = double(card, 2, 'pressure')
-        rid1 = integer(card, 3, 'rid1')
-        rid2 = integer(card, 4, 'rid2')
-        phi1 = double_or_blank(card, 5, 'phi1', 0.)
-        phi2 = double_or_blank(card, 6, 'phi2', 360.)
-        assert len(card) == 7, 'len(PRESAX card) = %i\ncard=%s' % (len(card), card)
-        return PRESAX(sid, pressure, rid1, rid2, phi1, phi2, comment=comment)
-
-    def cross_reference(self, model):
-        pass
-
-    def raw_fields(self):
-        list_fields = ['PRESAX', self.sid, self.pressure, self.rid1, self.rid2,
-                       self.phi1, self.phi2]
-        return list_fields
-
-    def write_card(self, size: int=8, is_double: bool=False) -> str:
-        card = self.repr_fields()
-        msg = self.comment + print_card_8(card)
-        return msg
-
-class TEMPAX(ThermalLoad):
-    """
-    Defines temperature sets for conical shell problems.
-
-    +--------+-----+------+-------+-------+-----+-------+------+----+
-    |    1   |  2  |   3  |   4   |   5   |  6  |   7   |   8  |  9 |
-    +========+=====+======+=======+=======+=====+=======+======+====+
-    | TEMPAX | SID | RID1 |  PHI1 |  T1   | SID | RID2  | PHI2 | T2 |
-    +--------+-----+------+-------+-------+-----+-------+------+----+
-    | TEMPAX |  4  |   7  |  30.0 | 105.3 |     |       |      |    |
-    +--------+-----+------+-------+-------+-----+-------+------+----+
-    """
-    type = 'TEMPAX'
-
-    @classmethod
-    def _init_from_empty(cls):
-        sid = 1
-        ring = 1.
-        phi = 1.
-        temperature = 1.
-        return TEMPAX(sid, ring, phi, temperature, comment='')
-
-    def __init__(self, sid, ring, phi, temperature, comment=''):
-        """
-        Creates a TEMPAX card
-
-        Parameters
-        ----------
-        sid : int
-            Load set identification number
-        temperatures : dict[nid] : temperature
-            nid : int
-                node id
-            temperature : float
-                the nodal temperature
-        comment : str; default=''
-            a comment for the card
-
-        """
-        ThermalLoad.__init__(self)
-        if comment:
-            self.comment = comment
-        #: Load set identification number. (Integer > 0)
-        self.sid = sid
-
-        self.ring = ring
-        self.phi = phi
-        self.temperature = temperature
-
-    @classmethod
-    def add_card(cls, card, icard=0, comment=''):
-        """
-        Adds a TEMPAX card from ``BDF.add_card(...)``
-
-        Parameters
-        ----------
-        card : BDFCard()
-            a BDFCard object
-        icard : int; default=0
-            ???
-        comment : str; default=''
-            a comment for the card
-
-        """
-        istart = 1 + icard * 4
-        sid = integer(card, istart, 'sid')
-        ring = integer(card, istart + 1, 'ring' + str(icard))
-        phi = double(card, istart + 2, 'phi' + str(icard))
-        temperature = double(card, istart + 3, 'T' + str(icard))
-
-        return TEMPAX(sid, ring, phi, temperature, comment=comment)
-
-    def cross_reference(self, model):
-        pass
-
-    def safe_cross_reference(self, model, debug=True):
-        pass
-
-    def uncross_reference(self) -> None:
-        """Removes cross-reference links"""
-        pass
-
-    def raw_fields(self):
-        """Writes the TEMPAX card"""
-        list_fields = ['TEMPAX', self.sid, self.ring, self.phi, self.temperature]
-        return list_fields
-
-    def repr_fields(self):
-        """Writes the TEMP card"""
-        return self.raw_fields()
-
-    def get_loads(self):
-        return [self]
-
-    def write_card(self, size: int=8, is_double: bool=False) -> str:
-        card = self.repr_fields()
-        if size == 8:
-            return self.comment + print_card_8(card)
-        if is_double:
-            return self.comment + print_card_double(card)
         return self.comment + print_card_16(card)

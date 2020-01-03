@@ -76,16 +76,16 @@ class CYJOIN(BaseCard):
     def _init_from_empty(cls):
         side = 1
         coord = 'R'
-        ids = [1, 2]
+        nids = [1, 2]
         return CYJOIN(side, side, coord, ids, comment='')
 
-    def __init__(self, side, coord, ids, comment=''):
+    def __init__(self, side, coord, nids, comment=''):
         BaseCard.__init__(self)
         if comment:
             self.comment = comment
         self.side = side
         self.coord = coord
-        self.ids = ids
+        self.nids = nids
         assert coord in ['T1', 'T2', 'T3', 'R', 'C', 'S'], coord
 
     def validate(self):
@@ -110,13 +110,13 @@ class CYJOIN(BaseCard):
         """
         side = integer(card, 1, 'side')
         coord = string(card, 2, 'coord')
-        ids = fields(integer, card, 'ID', i=3, j=len(card))
-        return CYJOIN(side, coord, ids, comment=comment)
+        nids = fields(integer, card, 'ID', i=3, j=len(card))
+        return CYJOIN(side, coord, nids, comment=comment)
 
     def raw_fields(self):
         msg = self.comment
-        self.ids.sort()
-        list_fields = ['CYJOIN', self.side, self.coord] + self.ids
+        self.nids.sort()
+        list_fields = ['CYJOIN', self.side, self.coord] + self.nids
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

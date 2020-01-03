@@ -1381,7 +1381,7 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
                            ierror: int=0, nerrors: int=100, stop_on_failure: bool=True) -> int:
     """helper method for ``check_case``"""
     log = fem2.log
-    if fem2.sol == 401:
+    if fem2.sol in [401, 402]:
         # TSTEP references a TSTEP1, but not a TSTEP
         # TSTEP1s are stored in tstepnls
         if any(subcase.has_parameter('TIME', 'TSTEP')):

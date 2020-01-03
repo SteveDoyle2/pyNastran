@@ -82,7 +82,7 @@ dict_int_obj_attrs = [
 
 scalar_obj_keys = [
     # required----
-    'aero', 'aeros', 'axic', 'axif', 'baror', 'beamor',
+    'aero', 'aeros', 'axic', 'axif', 'cyax', 'baror', 'beamor',
     'doptprm',
     'dtable', 'grdset', 'radset', 'seqgp',
     'case_control_deck',

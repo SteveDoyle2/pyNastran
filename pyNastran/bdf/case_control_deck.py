@@ -1053,15 +1053,20 @@ class CaseControlDeck:
         return msg
 
 def _split_param(line: str, line_upper: str) -> Tuple[str, str, str]:
+    tabbed_line_upper = line_upper.expandtabs().rstrip()
     """parses a PARAM card"""
-    if ',' in line_upper:
-        sline = line_upper.split(',')
-    elif '\t' in line_upper:
-        sline = line_upper.expandtabs().split()
-    elif ' ' in line_upper:
-        sline = line_upper.split()
+    if ',' in tabbed_line_upper:
+        sline = tabbed_line_upper.split(',')
+    elif '\t' in tabbed_line_upper:
+        sline = tabbed_line_upper.expandtabs().split()
+    elif ' ' in tabbed_line_upper:
+        sline = tabbed_line_upper.split()
     else:
         raise SyntaxError("trying to parse %r..." % line)
+
+    if len(sline) == 2:
+        if ' ' in tabbed_line_upper:
+            sline = tabbed_line_upper.replace(',', ' ').split()
 
     if len(sline) != 3:
         raise SyntaxError("trying to parse %r..." % line)

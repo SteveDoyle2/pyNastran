@@ -659,6 +659,7 @@ class BDFAttributes:
                 'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
                 'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
                 'CQUADX', 'CQUADX4', 'CQUADX8',
+                'CCONEAX',
 
                 'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA', 'CIHEX1', 'CIHEX2',
                 'CSHEAR', 'CVISC', 'CRAC2D', 'CRAC3D',
@@ -745,12 +746,15 @@ class BDFAttributes:
                 'MOMENT', 'MOMENT1', 'MOMENT2',
                 'GRAV', 'ACCEL', 'ACCEL1',
                 'PLOAD', 'PLOAD1', 'PLOAD2', 'PLOAD4',
-                'PLOADX1', 'RFORCE', 'RFORCE1', 'SLOAD',
+                'RFORCE', 'RFORCE1', 'SLOAD',
                 'GMLOAD', 'SPCD', 'LOADCYN', 'LOADCYH', 'DEFORM',
 
                 # thermal
                 'TEMP', 'TEMPB3', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
                 'QVOL',
+
+                # axisymmetric
+                'PLOADX1', 'FORCEAX',
                 ],
             'cyjoin' : ['CYJOIN'],
             'cyax' : ['CYAX'],

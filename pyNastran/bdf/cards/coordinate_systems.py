@@ -36,15 +36,15 @@ from pyNastran.femutils.coord_transforms import (
 
 
 def global_to_basic_rectangular(coord, unused_xyz_global, dtype='float64'):
-    coord_transform = coord.local_to_global()
+    coord_transform = coord.local_to_global
     return coord_transform
     #transform = array([ex, ey, ez], dtype=dtype)
     #return tranform
 
 def _primary_axes(coord):
-    """gets the i,j,k axes from the """
+    """gets the i,j,k axes from the ???"""
     ## TODO: not sure...needs testing
-    coord_transform = coord.transform_node_to_global()
+    coord_transform = coord.beta()
     ex = coord_transform[0, :]
     ey = coord_transform[1, :]
     ez = coord_transform[2, :]
@@ -1333,8 +1333,12 @@ class CylindricalCoord:
         """R-theta-z to rho-theta-phi transform"""
         r, t, z = rtz
         rho = (r**2 + z**2)**0.5
-        theta = np.degrees(acos(z / rho))
+        #if rho == 0.0:
         phi = t
+        if rho > 0:
+            theta = np.degrees(acos(z / rho))
+        else:
+            theta = 0.
         return np.array([rho, theta, phi], dtype='float64')
 
     @staticmethod
@@ -2163,13 +2167,17 @@ class Cord1x(Coord):
 
 
 class GMCORD(BaseCard):
-    """defines the GMCOORD class"""
+    """defines the GMCOORD class
+
+    GMCORD | CID | ENTITY | ID1 | ID2 |
+    GMCORD | 101 | GMCURV |  26 |  44 |
+    """
     type = 'GMCORD'
 
     @classmethod
     def _init_from_empty(cls):
         cid = 1
-        entity = 2
+        entity = 'GMCURV'
         gm_ids = [34]
         return GMCORD(cid, entity, gm_ids, comment='')
 
@@ -2221,7 +2229,7 @@ class GMCORD(BaseCard):
         return self.comment + print_card_8(card)
 
 
-class CORD3G(Coord):  # not done
+class CORD3G(Coord):
     """
     Defines a general coordinate system using three rotational angles as
     functions of coordinate values in the reference coordinate system.
@@ -2281,6 +2289,8 @@ class CORD3G(Coord):  # not done
         # EQN for DEQATN, TABLE for TABLE3D
         assert self.form in ['EQN', 'TABLE']
         assert self.method_es in ['E', 'S'] # Euler / Space-Fixed
+        smethod = str(method_int)
+        assert len(smethod) == 3, f"method='{self.method_es}{method_int}' must be of the form E123 or S123"
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
@@ -2366,12 +2376,12 @@ class CORD3G(Coord):  # not done
                 elif rotation == 3:
                     p = self.rotation_z(ct, st) @ p
                 else:
-                    raise RuntimeError('rotation=%s rotations=%s' % (rotation, rotations))
+                    raise RuntimeError(f'rotation={rotation!r} rotations={rotations!r} method_int={self.method_int}')
         elif self.method_es == 'S':
             raise NotImplementedError("Space-Fixed rotation hasn't been implemented")
         else:
-            msg = 'Invalid method; Use Euler or Space-Fixed.  method_es=%r' % self.method_es
-            raise RuntimeError(msg)
+            raise RuntimeError('Invalid method; Use Euler or Space-Fixed.  '
+                               f'method_es={self.method_es!r}')
         return p
 
     def rotation_x(self, ct, st):

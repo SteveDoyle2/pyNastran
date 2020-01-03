@@ -70,6 +70,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         test_bdf(folder, 'model2.bdf', stop_on_failure=True,
                  punch=punch,
                  quiet=True, log=log_error)
+        os.remove('model2.test_bdf.bdf')
 
     nelements = len(model2.elements) + len(model2.masses)
     nnodes = len(model2.nodes) + len(model2.spoints) + len(model2.epoints)
@@ -87,9 +88,10 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         model3 = model2
 
     if run_save_load_hdf5 and IS_H5PY:
-        model2.export_hdf5_filename('test.h5')
+        hdf5_filename = 'test.h5'
+        model2.export_hdf5_filename(hdf5_filename)
         model4 = BDF(log=model2.log)
-        model4.load_hdf5_filename('test.h5')
+        model4.load_hdf5_filename(hdf5_filename)
         model4.validate()
         bdf_stream = StringIO()
         model4.write_bdf(bdf_stream, encoding=None, size=8, is_double=False,
@@ -102,6 +104,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                     key, model2.card_count, model4.card_count)
                 #raise RuntimeError(msg)
                 model.log.error(msg)
+        os.remove(hdf5_filename)
 
     cross_reference(model3, xref)
     if run_renumber:
@@ -146,6 +149,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
             call_frame = inspect.getouterframes(frame, 2)
             op2_geom_model.log.warning('skipping op2 reader for %s' % call_frame[1][3])
         op2_geom_model.log = bkp_log
+        os.remove(op2_filename)
 
     if run_remove_unused:
         remove_unused(model)

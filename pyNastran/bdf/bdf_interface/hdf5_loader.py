@@ -532,10 +532,6 @@ def hdf5_load_materials(model, group, encoding):
                     G66=0.,
                     rho=rhoi, A=ai, tref=trefi, ge=gei, comment='')
 
-        elif card_type in ['MAT8', 'MAT9']:
-            model.log.warning('skipping materials/%s because its vectorized '
-                              'and needs a loader' % card_type)
-            continue
         else:
             #model.add_mat4(mid, k, cp=0.0, rho=1.0, H=None, mu=None, hgen=1.0,
                            #ref_enthalpy=None, tch=None, tdelta=None, qlat=None, comment='')
@@ -1571,7 +1567,7 @@ def _get_casted_value(value, key_to_cast, encoding):
 def _load_from_class(value, card_type, encoding):
     """generic loader that only requires an ``_init_from_empty`` method"""
     keys_to_read = list(value.keys())
-    class_obj = CARD_MAP[card_type]
+    class_obj = CARD_MAP[card_type]  # see add_card.py ~line 200
     if hasattr(class_obj, '_init_from_empty'):
         class_instance = class_obj._init_from_empty()
     else:
