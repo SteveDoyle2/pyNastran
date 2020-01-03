@@ -5,6 +5,9 @@ defines:
  - BEAMOR
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
@@ -19,6 +22,8 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.utils.mathematics import integrate_positive_unit_line
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class CBEAM(LineElement):
@@ -694,7 +699,7 @@ class CBEAM(LineElement):
             field8 = set_blank_if_default(self.bit, 0.0)
         return field8
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

@@ -921,7 +921,7 @@ class Subcase:
         #print("msg = %r" % (msg))
         return msg
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #"""
         #Method crossReference:
 

@@ -11,7 +11,9 @@ All aero cards are defined in this file.  This includes:
 All cards are BaseCard objects.
 
 """
+from __future__ import annotations
 from itertools import count
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -23,6 +25,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
     fields, string_or_blank, double_string_or_blank, interpret_value)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class Aero(BaseCard):
@@ -178,7 +182,7 @@ class AERO(Aero):
         if msg:
             raise TypeError(msg + str(self))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross refernece aerodynamic coordinate system.
 
@@ -791,7 +795,7 @@ class FLUTTER(BaseCard):
                        imethod, nvalue, omax,
                        epsilon, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

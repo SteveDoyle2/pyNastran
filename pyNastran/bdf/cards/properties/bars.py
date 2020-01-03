@@ -11,8 +11,9 @@ All bars are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
 
 """
+from __future__ import annotations
 from itertools import count
-from typing import List, Tuple, Union, Any
+from typing import List, Tuple, Union, Any, TYPE_CHECKING
 from numpy import pi, array
 import numpy as np
 
@@ -28,6 +29,8 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.bdf_interface.utils import to_fields
 from pyNastran.utils.numpy_utils import float_types
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 def Iyy_beam(b, h):
@@ -1329,7 +1332,7 @@ class PBAR(LineProperty):
         nsm = self.Nsm()
         return rho * A + nsm
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1627,7 +1630,7 @@ class PBARL(LineProperty):
         nsm = data[-1]
         return PBARL(pid, mid, Type, dim, group=group, nsm=nsm, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2114,7 +2117,7 @@ class PBRSECT(LineProperty):
         raise NotImplementedError('not finished...')
         #return PBRSECT(pid, mid, group, beam_type, dim, nsm, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2626,7 +2629,7 @@ class PBEAM3(LineProperty):  # not done, cleanup; MSC specific card
         """
         return self.nsm
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3077,7 +3080,7 @@ class PBEND(LineProperty):
         #raise RuntimeError(self.nsm[0])
         #return self.nsm
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

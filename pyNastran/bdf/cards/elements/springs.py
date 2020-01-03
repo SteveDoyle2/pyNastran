@@ -10,31 +10,22 @@ All spring elements are defined in this file.  This includes:
 All spring elements are SpringElement and Element objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class SpringElement(Element):
     def __init__(self):
         Element.__init__(self)
         self.nodes = [None, None]
-
-    #def Centroid(self):
-        ## same as below, but we ignore the 2nd point it it's None
-        ##p = (self.nodes_ref[1].get_position() + self.nodes_ref[0].get_position()) / 2.
-
-        #p = self.nodes_ref[0].get_position()
-        #if self.nodes_ref[1] is not None:
-            #p += self.nodes_ref[1].get_position()
-            #p /= 2.
-        #return p
-
-    #def center_of_mass(self):
-        #return self.Centroid()
 
     def Mass(self):
         return 0.0
@@ -194,7 +185,7 @@ class CELAS1(SpringElement):
     def K(self):
         return self.pid_ref.k
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -385,7 +376,7 @@ class CELAS2(SpringElement):
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -553,7 +544,7 @@ class CELAS3(SpringElement):
     def K(self):
         return self.pid_ref.k
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -741,7 +732,7 @@ class CELAS4(SpringElement):
     def get_edge_ids(self):
         return []
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

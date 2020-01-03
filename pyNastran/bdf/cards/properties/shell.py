@@ -30,6 +30,7 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, BDFCard, MAT1, MAT8, MAT9
 
+
 class CompositeShellProperty(Property):
     """
     Common class for:
@@ -1621,7 +1622,7 @@ class PLPLANE(Property):
                        stress_strain_output_location=stress_strain_output_location,
                        comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1903,7 +1904,7 @@ class PSHEAR(Property):
         assert isinstance(mid, integer_types), data
         return PSHEAR(pid, mid, t, nsm=nsm, f1=f1, f2=f2, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2457,7 +2458,7 @@ class PSHELL(Property):
         #print(ABD)
         return ABD
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

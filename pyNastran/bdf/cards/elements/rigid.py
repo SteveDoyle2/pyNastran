@@ -13,8 +13,10 @@ All rigid elements are defined in this file.  This includes:
 All rigid elements are RigidElement and Element objects.
 
 """
+from __future__ import annotations
 import warnings
 from itertools import count
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -26,10 +28,12 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     blank, string)
 from pyNastran.bdf.field_writer_16 import print_card_16
 # from pyNastran.bdf.cards.utils import build_table_lines
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class RigidElement(Element):
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
 class RROD(RigidElement):
@@ -157,7 +161,7 @@ class RROD(RigidElement):
             return self.nodes[1]
         return self.nodes_ref[1].nid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -450,7 +454,7 @@ class RBAR(RigidElement):
     def nodes(self):
         return [self.Ga(), self.Gb()]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -601,7 +605,7 @@ class RBAR1(RigidElement):
         """gets the dependent node ids"""
         return [self.Gb()]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -780,7 +784,7 @@ class RBE1(RigidElement):  # maybe not done, needs testing
             i += 2
         return RBE1(eid, Gni, Cni, Gmi, Cmi, alpha=alpha, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1085,7 +1089,7 @@ class RBE2(RigidElement):
         #rbe3 = ['RBE3', eid, ref_node, dof, wf, sDof] + rbe3_nodes
         #return rbe3
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1435,7 +1439,7 @@ class RBE3(RigidElement):
             Gijs.append(gijs)
         return Gijs
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1634,7 +1638,7 @@ class RSPLINE(RigidElement):
         return RSPLINE(eid, independent_nid, dependent_nids, dependent_components,
                        diameter_ratio=diameter_ratio, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1832,7 +1836,7 @@ class RSSCON(RigidElement):
                       shell_grids=shell_grids,
                       comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

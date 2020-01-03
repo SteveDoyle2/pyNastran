@@ -1,4 +1,6 @@
 # pylint: disable=R0902,R0904,R0914,C0111
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -9,13 +11,15 @@ from pyNastran.bdf.cards.base_card import BaseCard, _node_ids
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, integer_or_blank, double_or_blank,
     string, blank, string_or_blank)
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class ThermalCard(BaseCard):
     def __init__(self):
         BaseCard.__init__(self)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         raise NotImplementedError('%s has not defined the cross_reference '
                                   'method' % self.__class__.__name__)
 
@@ -196,7 +200,7 @@ class CHBDYE(ThermalElement):
         return CHBDYE(eid, eid2, side, iviewf, iviewb,
                       radmidf, radmidb, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, xref_errors):
@@ -464,7 +468,7 @@ class CHBDYG(ThermalElement):
         # TODO: not implemented
         return []
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -768,7 +772,7 @@ class CHBDYP(ThermalElement):
     def node_ids(self):
         return _node_ids(self, nodes=self.nodes, allow_empty_nodes=True, msg='')
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1056,7 +1060,7 @@ class PCONV(ThermalProperty):
         return self.gidin
 
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = 'which is required by PCONV pconid=%s' % self.pconid
         self.ce_ref = model.Coord(self.ce, msg)
         if self.gidin is not None:
@@ -1213,7 +1217,7 @@ class PCONVM(ThermalProperty):
         return PCONVM(pconid, mid, coef, form=form, flag=flag,
                       expr=expr, exppi=exppi, exppo=exppo, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     def uncross_reference(self) -> None:
@@ -1355,7 +1359,7 @@ class PHBDY(ThermalProperty):
         assert len(data) == 4, 'data = %s' % data
         return PHBDY(pid, af, d1, d2, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     def uncross_reference(self) -> None:
@@ -1513,7 +1517,7 @@ class CONV(ThermalBC):
 
         return CONV(eid, pconid, ta, film_node, cntrlnd, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1768,7 +1772,7 @@ class CONVM(ThermalBC):
         return CONVM(eid, pconvm_id, ta1, film_node, cntrlnd, ta2, mdot,
                      comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

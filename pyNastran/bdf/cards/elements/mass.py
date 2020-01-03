@@ -12,6 +12,8 @@ All mass elements are defined in this file.  This includes:
 All mass elements are PointMassElement and Element objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -21,6 +23,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank)
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 def is_positive_semi_definite(A, tol=1e-8):
@@ -170,7 +174,7 @@ class CMASS1(PointMassElement):
         assert c1 is None or isinstance(c1, integer_types), 'c1=%r' % c1
         assert c2 is None or isinstance(c2, integer_types), 'c2=%r' % c2
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -458,7 +462,7 @@ class CMASS2(PointMassElement):
     def center_of_mass(self):
         return self.Centroid()
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -627,7 +631,7 @@ class CMASS3(PointMassElement):
     def node_ids(self):
         return [self.S1(), self.S2()]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -775,7 +779,7 @@ class CMASS4(PointMassElement):
             return self.nodes_ref[1].nid
         return self.nodes[1]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1052,7 +1056,7 @@ class CONM1(PointMassElement):
             return self.cid_ref.cid
         return self.cid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1501,7 +1505,7 @@ class CONM2(PointMassElement):
     def center_of_mass(self):
         return self.Centroid()
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

@@ -8,6 +8,9 @@ defines:
 
 """
 # pylint: disable=R0904,R0902,E1101,E1103,C0111,C0302,C0103,W0101
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import numpy as np
 from numpy.linalg import norm
 
@@ -20,6 +23,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class LineElement(Element):  # CBAR, CBEAM, CBEAM3, CBEND
@@ -736,7 +741,7 @@ class CBAR(LineElement):
     def center_of_mass(self):
         return self.Centroid()
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1016,7 +1021,7 @@ class CBEAM3(LineElement):  # was CBAR
         return CBEAM3(eid, pid, [ga, gb, gc], x, g0,
                       wa=wa, wb=wb, wc=wc, tw=tw, s=s, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1616,7 +1621,7 @@ class CBEND(LineElement):
     def _verify(self, xref):
         unused_edges = self.get_edge_ids()
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

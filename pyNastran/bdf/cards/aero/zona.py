@@ -7,8 +7,9 @@ All ZONA aero cards are defined in this file.  This includes:
 All cards are BaseCard objects.
 
 """
+from __future__ import annotations
 from itertools import count
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils import object_attributes, object_methods
@@ -29,6 +30,8 @@ from pyNastran.bdf.cards.aero.dynamic_loads import AERO # MKAERO1,
 from pyNastran.bdf.cards.aero.utils import (
     elements_from_quad, points_elements_from_quad_points, create_ellipse)
 from pyNastran.bdf.cards.coordinate_systems import Coord
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class ZONA:
@@ -480,7 +483,7 @@ class ACOORD(Coord):  # not done
         self.j = np.array([0., 1., 0.])
         self.k = np.array([0., 0., 1.])
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -664,7 +667,7 @@ class AESURFZ(BaseCard):
             #return self.alid2_ref.sid
         #return self.alid2
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -976,7 +979,7 @@ class AEROZ(Aero):
         #if msg:
             #raise TypeError('There are errors on the AEROS card:\n%s%s' % (msg, self))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross refernece aerodynamic coordinate system.
 
@@ -1139,7 +1142,7 @@ class MKAEROZ(BaseCard):
         return MKAEROZ(sid, mach, flt_id, filename, print_flag, freqs,
                        method=method, save=save, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         return
 
     def repr_fields(self):
@@ -1232,7 +1235,7 @@ class PANLST1(Spline):
         assert len(card) == 5, 'len(PANLST1 card) = %i\ncard=%s' % (len(card), card)
         return PANLST1(eid, macro_id, box1, box2, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by PANLST1 eid=%s' % self.eid
         self.caero_ref = model.CAero(self.macro_id, msg=msg)
         self.aero_element_ids = np.arange(self.box1, self.box2)
@@ -1320,7 +1323,7 @@ class PANLST3(Spline):
         assert len(card) > 2, 'len(PANLST3 card) = %i; no panel_groups were defined\ncard=%s' % (len(card), card)
         return PANLST3(eid, panel_groups, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by PANLST3 eid=%s' % self.eid
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         caero_refs = []
@@ -1483,7 +1486,7 @@ class PAFOIL7(BaseCard):
             #return self.lint_ref.sid
         #return self.lint
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1695,7 +1698,7 @@ class BODY7(BaseCard):
             return self.nsb
         return len(self.lsb_ref.fractions) # AEFACT
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2268,7 +2271,7 @@ class SEGMESH(BaseCard):
             return self.pid_ref.pid
         return self.pid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by SEGMESH eid=%s' % self.pid
         idys_ref = []
         idzs_ref = []
@@ -2621,7 +2624,7 @@ class CAERO7(BaseCard):
             #return self.pid_ref.pid
         #return self.pid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3139,7 +3142,7 @@ class TRIM_ZONA(BaseCard):
                 len(self.labels), len(self.uxs), str(self.labels), str(self.uxs))
             raise RuntimeError(msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
         #self.suport = model.suport
         #self.suport1 = model.suport1
@@ -3290,7 +3293,7 @@ class TRIMLNK(BaseCard):
         assert len(card) >= 5, 'len(TRIMLNK card) = %i\ncard=%s' % (len(card), card)
         return TRIMLNK(link_id, sym, coeffs, var_ids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
         #self.suport = model.suport
         #self.suport1 = model.suport1
@@ -3416,7 +3419,7 @@ class TRIMVAR(BaseCard):
                        initial, dcd, dcy, dcl, dcr, dcm,
                        dcn, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
         #self.suport = model.suport
         #self.suport1 = model.suport1
@@ -3581,7 +3584,7 @@ class FLUTTER_ZONA(Spline):
         return FLUTTER_ZONA(sid, sym, fix, nmode, tabdmp, mlist, conmlst, nkstep,
                             comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         return
         #msg = ', which is required by SPLINE1 eid=%s' % self.eid
         #self.setg_ref = model.Set(self.setg, msg=msg)
@@ -3708,7 +3711,7 @@ class SPLINE1_ZONA(Spline):
         return SPLINE1_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
                             comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
         self.setg_ref = model.Set(self.setg, msg=msg)
         self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
@@ -3864,7 +3867,7 @@ class SPLINE2_ZONA(Spline):
         return SPLINE2_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
                             curvature=curvature, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by SPLINE1 eid=%s' % self.eid
         self.setg_ref = model.Set(self.setg, msg=msg)
         self.setg_ref.cross_reference_set(model, 'Node', msg=msg)
@@ -3970,7 +3973,7 @@ class SPLINE3_ZONA(Spline):
         return SPLINE3_ZONA(eid, panlst, setg, model=model, cp=cp, dz=dz, eps=eps,
                             comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by SPLINE3 eid=%s' % self.eid
         self.setg_ref = model.Set(self.setg, msg=msg)
         self.setg_ref.cross_reference_set(model, 'Node', msg=msg)

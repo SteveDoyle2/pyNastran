@@ -11,11 +11,16 @@ All damper elements are defined in this file.  This includes:
 All damper elements are DamperElement and Element objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import Element
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double)
 from pyNastran.bdf.field_writer_8 import print_card_8
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class DamperElement(Element):
@@ -178,7 +183,7 @@ class CDAMP1(LineDamper):
     def B(self):
         return self.pid_ref.b
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -357,7 +362,7 @@ class CDAMP2(LineDamper):
     def B(self):
         return self.b
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -521,7 +526,7 @@ class CDAMP3(LineDamper):
     def B(self):
         return self.pid_ref.b
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -674,7 +679,7 @@ class CDAMP4(LineDamper):
     def B(self):
         return self.b
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -824,7 +829,7 @@ class CDAMP5(LineDamper):
             b = self.B()
             assert isinstance(b, float)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -975,7 +980,7 @@ class CVISC(LineDamper):
         nids = data[2:4]
         return CVISC(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

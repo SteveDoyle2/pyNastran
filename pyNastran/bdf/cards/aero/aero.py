@@ -20,7 +20,7 @@ All cards are BaseCard objects.
 from __future__ import annotations
 from itertools import count
 import math
-from typing import List, Union, Any
+from typing import List, Union, Any, TYPE_CHECKING
 
 import numpy as np
 
@@ -35,6 +35,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class AECOMP(BaseCard):
@@ -135,7 +137,7 @@ class AECOMP(BaseCard):
             j += 1
         return AECOMP(name, list_type, lists, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -300,7 +302,7 @@ class AECOMPL(BaseCard):
             j += 1
         return AECOMPL(name, labels, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model):
@@ -400,7 +402,7 @@ class AEFACT(BaseCard):
         assert len(card) > 2, 'len(AEFACT card) = %i\n%s' % (len(card), card)
         return AEFACT(sid, fractions, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     #def uncross_reference(self):
@@ -684,7 +686,7 @@ class AELIST(BaseCard):
         elements = fields(integer_or_string, card, 'eid', i=2, j=len(card))
         return AELIST(sid, elements, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model):
@@ -805,7 +807,7 @@ class AEPARM(BaseCard):
         assert len(data) == 3, 'data = %s' % data
         return AEPARM(aeparm_id, label, units, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model):
@@ -1034,7 +1036,7 @@ class AESURF(BaseCard):
         #self.deprecated('AESURF.AELIST_id2()', 'AESURF.aelist_id2()', '1.1')
         #return self.aelist_id2()
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1244,7 +1246,7 @@ class AESURFS(BaseCard):
         assert len(data) == 4, 'data = %s' % data
         return AESURFS(aesid, label, list1, list2, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1722,7 +1724,7 @@ class CAERO1(BaseCard):
             return self.pid_ref.pid
         return self.pid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2344,7 +2346,7 @@ class CAERO2(BaseCard):
     def _init_ids(self, dtype='int32'):
         self.box_ids = np.arange(0, self.nboxes, dtype=dtype)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2647,7 +2649,7 @@ class CAERO3(BaseCard):
         return CAERO3(eid, pid, list_w, p1, x12, p4, x43,
                       cp=cp, list_c1=list_c1, list_c2=list_c2, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2986,7 +2988,7 @@ class CAERO4(BaseCard):
         p3 = p4 + np.array([self.x43, 0., 0.])
         return [p1, p2, p3, p4]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3314,7 +3316,7 @@ class CAERO5(BaseCard):
                       cp=cp, nspan=nspan, lspan=lspan, ntheory=ntheory, nthick=nthick,
                       comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3563,7 +3565,7 @@ class PAERO5(BaseCard):
             return self.ltaus_ref.sid
         return self.ltaus
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3724,7 +3726,7 @@ class MONPNT1(BaseCard):
         cd = integer_or_blank(card, 15, 'cd', cp)
         return MONPNT1(name, label, axes, comp, xyz, cp=cp, cd=cd, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3830,7 +3832,7 @@ class MONPNT2(BaseCard):
         eid = integer_or_blank(card, 12, 'eid')
         return MONPNT2(name, label, table, Type, nddl_item, eid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, unused_xref_errors):
@@ -3917,7 +3919,7 @@ class MONPNT3(BaseCard):
         return MONPNT3(name, label, axes, grid_set, elem_set, xyz,
                        cp=cp, cd=cd, xflag=xflag, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4123,7 +4125,7 @@ class PAERO1(BaseCard):
                 #pass
         return PAERO1(pid, caero_body_ids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, xref_errors):
@@ -4372,7 +4374,7 @@ class PAERO2(BaseCard):
                       lrsb=lrsb, lrib=lrib, lth=lth,
                       comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by PAERO2 eid=%s' % self.pid
         if self.lrsb is not None and isinstance(self.lrsb, integer_types):
             self.lrsb_ref = model.AEFact(self.lrsb, msg=msg)
@@ -4580,7 +4582,7 @@ class PAERO3(BaseCard):
             j += 1
         return PAERO3(pid, nbox, ncontrol_surfaces, x, y, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, unused_xref_errors):
@@ -4745,7 +4747,7 @@ class PAERO4(BaseCard):
         return PAERO4(pid, docs, caocs, gapocs,
                       cla=cla, lcla=lcla, circ=circ, lcirc=lcirc, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, xref_errors):
@@ -4936,7 +4938,7 @@ class SPLINE1(Spline):
             return self.setg_ref.sid
         return self.setg
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -5148,7 +5150,7 @@ class SPLINE2(Spline):
         return SPLINE2(eid, caero, id1, id2, setg, dz, dtor, cid,
                        dthx, dthy, usage, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -5437,7 +5439,7 @@ class SPLINE3(Spline):
                        nodes, coeffs, displacement_components, usage,
                        comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by SPLINE3 eid=%s' % self.eid
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.caero_ref = model.CAero(self.caero, msg=msg)
@@ -5652,7 +5654,7 @@ class SPLINE4(Spline):
     def aero_element_ids(self):
         return self.aelist_ref.elements
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -5865,7 +5867,7 @@ class SPLINE5(Spline):
             return self.setg_ref.sid
         return self.setg
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

@@ -307,7 +307,7 @@ class CHEXA8(SolidElement):
         assert len(data) == 10, 'len(data)=%s data=%s' % (len(data), data)
         return CHEXA8(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -637,7 +637,7 @@ class CHEXA20(SolidElement):
         nids = [d if d > 0 else None for d in data[2:]]
         return CHEXA20(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -927,7 +927,7 @@ class CPENTA6(SolidElement):
         assert len(data) == 8, 'len(data)=%s data=%s' % (len(data), data)
         return CPENTA6(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1356,7 +1356,7 @@ class CPENTA15(SolidElement):
         assert len(data) == 17, 'len(data)=%s data=%s' % (len(data), data)
         return CPENTA15(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1565,7 +1565,7 @@ class CPYRAM5(SolidElement):
         nids = [d if d > 0 else None for d in data[2:]]
         return CPYRAM5(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1770,7 +1770,7 @@ class CPYRAM13(SolidElement):
         nids = [d if d > 0 else None for d in data[2:]]
         return CPYRAM13(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2051,7 +2051,7 @@ class CTETRA4(SolidElement):
         assert len(data) == 6, 'len(data)=%s data=%s' % (len(data), data)
         return CTETRA4(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2323,7 +2323,7 @@ class CTETRA10(SolidElement):
         assert len(data) == 12, 'len(data)=%s data=%s' % (len(data), data)
         return CTETRA10(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

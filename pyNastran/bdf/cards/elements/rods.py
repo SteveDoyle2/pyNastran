@@ -1,4 +1,6 @@
 # pylint: disable=C0103
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -8,6 +10,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class RodElement(Element):  # CROD, CONROD, CTUBE
@@ -132,7 +136,7 @@ class CROD(RodElement):
         return CROD(eid, pid, nids, comment=comment)
 
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by CROD eid=%s' % (self.eid)
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
@@ -368,7 +372,7 @@ class CTUBE(RodElement):
         nids = data[2:4]
         return CTUBE(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by CTUBE eid=%s' % (self.eid)
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
@@ -628,7 +632,7 @@ class CONROD(RodElement):
         nsm = data[7]
         return CONROD(eid, mid, nids, A, j, c, nsm, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

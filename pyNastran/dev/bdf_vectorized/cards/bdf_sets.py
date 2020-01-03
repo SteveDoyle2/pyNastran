@@ -44,6 +44,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,
     parse_components, components_or_blank as fcomponents_or_blank,
     fields, string, integer_string_or_blank)
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class Set(BaseCard):
@@ -140,7 +142,7 @@ class ABCQSet(Set):
         components = [data[1]]
         return cls(ids, components, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -214,7 +216,7 @@ class SuperABCQSet(Set):
             components.append(component)
         return cls(seid, ids, components, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -374,7 +376,7 @@ class ABQSet1(Set):
             raise NotImplementedError('thru_flag=%s data=%s' % (thru_flag, data))
         return cls(components, ids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -462,7 +464,7 @@ class SuperABQSet1(Set):
         assert 0 not in nids, 'nids=%s' % (nids.tolist())
         return cls(seid, components, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -937,7 +939,7 @@ class SESET(SetSuper):
             cards.append(card)
         return ''.join(cards)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:

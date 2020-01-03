@@ -822,7 +822,7 @@ def _get_mass_nsm(model, element_ids, mass_ids,
     elif etype == 'CBEND':
         model.log.info('elem.type=%s mass is innaccurate' % etype)
         #nsm = property_nsms[nsm_id]['PBEND'][pid] + element_nsms[nsm_id][eid]
-        eids2 = get_sub_eids(all_eids, eids, etype, etype)
+        eids2 = get_sub_eids(all_eids, eids, etype)
         for eid in eids2:
             elem = model.elements[eid]
             m = elem.Mass()

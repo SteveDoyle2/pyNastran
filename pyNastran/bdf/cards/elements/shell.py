@@ -22,7 +22,8 @@ All tris are TriShell, ShellElement, and Element objects.
 All quads are QuadShell, ShellElement, and Element objects.
 
 """
-from typing import List, Tuple, Union, Any
+from __future__ import annotations
+from typing import List, Tuple, Union, Any, TYPE_CHECKING
 
 import numpy as np
 from numpy import cross, allclose
@@ -36,6 +37,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8, print_field_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
 from pyNastran.bdf.cards.utils import wipe_empty_fields
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 __all__ = ['CTRIA3', 'CTRIA6', 'CSHEAR',
            'CQUAD', 'CQUAD4', 'CQUAD8', 'CQUADR',
@@ -637,7 +640,7 @@ class CTRIA3(TriShell):
         return CTRIA3(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -880,7 +883,7 @@ class CPLSTN3(TriShell):
             theta = 0.0
         return CPLSTN3(eid, pid, nids, theta, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1163,7 +1166,7 @@ class CTRIA6(TriShell):
         return CTRIA6(eid, pid, nids, theta_mcid, zoffset,
                       tflag, t1, t2, t3, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1506,7 +1509,7 @@ class CTRIAR(TriShell):
         return CTRIAR(eid, pid, nids, zoffset=zoffset, theta_mcid=theta_mcid,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1942,7 +1945,7 @@ class CSHEAR(QuadShell):
         nids = data[2:]
         return CSHEAR(eid, pid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2327,7 +2330,7 @@ class CQUAD4(QuadShell):
         return CQUAD4(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, T4, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2860,7 +2863,7 @@ class CPLSTN4(QuadShell):
         assert len(card) <= 8, 'len(CPLSTN4 card) = %i\ncard=%s' % (len(card), card)
         return CPLSTN4(eid, pid, nids, theta, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3020,7 +3023,7 @@ class CPLSTN6(TriShell):
             theta = 0.0
         return CPLSTN6(eid, pid, nids, theta=theta, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3116,7 +3119,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
         assert len(nids) == 6, 'error on CPLSTN6'
         return CPLSTN6(eid, pid, nids, theta, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3355,7 +3358,7 @@ class CPLSTN8(QuadShell):
         #theta = data[10]
         #return CPLSTN8(eid, pid, nids, T1, T2, T3, T4, theta, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3665,7 +3668,7 @@ class CQUADR(QuadShell):
         return CQUADR(eid, pid, nids, theta_mcid, zoffset,
                       tflag, T1, T2, T3, T4, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3889,7 +3892,7 @@ class CPLSTS3(TriShell):
         return CPLSTS3(eid, pid, nids, theta,
                        tflag, T1, T2, T3, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4138,7 +4141,7 @@ class CQUAD(QuadShell):
             raise RuntimeError(f'theta_mcid is defined; data={data}')
         return CQUAD(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4431,7 +4434,7 @@ class CQUAD8(QuadShell):
         return CQUAD8(eid, pid, nids, theta_mcid=theta_mcid, zoffset=zoffset,
                       tflag=tflag, T1=T1, T2=T2, T3=T3, T4=T4, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4658,7 +4661,7 @@ class SNORM(BaseCard):
         assert len(card) <= 6, 'len(SNORM card) = %i\ncard=%s' % (len(card), card)
         return SNORM(nid, normal, cid=cid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

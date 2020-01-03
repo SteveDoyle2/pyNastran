@@ -10,7 +10,9 @@ All trim aero cards are defined in this file.  This includes:
 All cards are BaseCard objects.
 
 """
+from __future__ import annotations
 from itertools import count
+from typing import TYPE_CHECKING
 
 from pyNastran.bdf.cards.aero.dynamic_loads import Aero
 from pyNastran.utils.numpy_utils import integer_types
@@ -20,6 +22,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank,
 )
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class AEROS(Aero):
@@ -147,7 +151,7 @@ class AEROS(Aero):
         if msg:
             raise TypeError('There are errors on the AEROS card:\n%s%s' % (msg, self))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross refernece aerodynamic coordinate system.
 
@@ -330,7 +334,7 @@ class AESTAT(BaseCard):
         assert len(data) == 2, 'data = %s' % data
         return AESTAT(aestat_id, label, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     #def uncross_reference(self) -> None:
@@ -456,7 +460,7 @@ class CSSCHD(Aero):
         lschd = data[4]   # AEFACT
         return CSSCHD(sid, aesid, lalpha, lmach, lschd, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -609,7 +613,7 @@ class DIVERG(BaseCard):
             j += 1
         return DIVERG(sid, nroots, machs, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     #def uncross_reference(self) -> None:
@@ -978,7 +982,7 @@ class TRIM(BaseCard):
                 msg += str(self)
                 raise RuntimeError(msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
         #self.suport = model.suport
         #self.suport1 = model.suport1

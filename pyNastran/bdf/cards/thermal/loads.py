@@ -1,4 +1,6 @@
 # pylint: disable=R0902,R0904,R0914,C0111
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
@@ -11,6 +13,8 @@ from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, integer_or_string,
     integer_double_or_blank, string, fields)
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 #class ThermalLoadDefault(ThermalCard):
@@ -105,7 +109,7 @@ class QVOL(ThermalLoad):
     def get_loads(self):
         return [self]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -278,7 +282,7 @@ class QVECT(ThermalLoad):
     def get_loads(self):
         return [self]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -409,7 +413,7 @@ class QBDY1(ThermalLoad):
     def get_loads(self):
         return [self]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -544,7 +548,7 @@ class QBDY2(ThermalLoad):  # not tested
     def get_loads(self):
         return [self]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -684,7 +688,7 @@ class QBDY3(ThermalLoad):
         eids = list(data[3:])
         return QBDY3(sid, q0, cntrlnd, eids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -896,7 +900,7 @@ class QHBDY(ThermalLoad):
     def get_loads(self):
         return [self]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, xref_errors):
@@ -1046,7 +1050,7 @@ class TEMP(ThermalLoad):
         for (gid, temp) in temp_obj.temperatures.items():
             self.temperatures[gid] = temp
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, debug=True):
@@ -1252,7 +1256,7 @@ class TEMPB3(BaseCard):
                               require_int=True, allow_blanks=False)
         return TEMPB3(sid, eid, t, tpy, tpz, tc, td, te, tf, eids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         self.eid_ref = model.Element(self.eid)
         self.eids_ref = model.Elements(self.eids)
 
@@ -1371,7 +1375,7 @@ class TEMPD(BaseCard):
         for (lid, tempd) in tempd_obj.temperature.items():
             self.temperature[lid] = tempd
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, xref_errors):

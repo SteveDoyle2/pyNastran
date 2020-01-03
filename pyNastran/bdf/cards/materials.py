@@ -17,6 +17,8 @@ All material cards are defined in this file.  This includes:
 All cards are Material objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy import zeros, array
 
@@ -28,6 +30,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string, string_or_blank, integer_or_double, blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 #from functools import wraps
 #def unicode_check(func):
@@ -193,7 +197,7 @@ class CREEP(Material):
         return CREEP(mid, T0, exp, form, tidkp, tidcp, tidcs, thresh, Type,
                      a, b, c, d, e, f, g, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -627,7 +631,7 @@ class MAT1(IsotropicMaterial):
             raise ValueError(msg)
         return E, G, nu
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -976,7 +980,7 @@ class MAT2(AnisotropicMaterial):
     def Rho(self):
         return self.rho
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1275,7 +1279,7 @@ class MAT3(OrthotropicMaterial):
             if [self.mats3_ref, self.matt3_ref] == [None, None]:
                 pass
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1437,7 +1441,7 @@ class MAT4(ThermalMaterial):
     def Rho(self):
         return self.get_density()
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1610,7 +1614,7 @@ class MAT5(ThermalMaterial):  # also AnisotropicMaterial
         return MAT5(mid, kxx=kxx, kxy=kxy, kxz=kxz, kyy=kyy, kyz=kyz, kzz=kzz,
                     cp=cp, rho=rho, hgen=hgen, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1911,7 +1915,7 @@ class MAT8(OrthotropicMaterial):
                     Xt, Xc, Yt, Yc, S, ge, F12, strn,
                     comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2269,7 +2273,7 @@ class MAT9(AnisotropicMaterial):
                     G55, G56, G66, rho, A, tref, ge,
                     comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:
@@ -2497,7 +2501,7 @@ class MAT10(Material):
         ge = data[4]
         return MAT10(mid, bulk, rho, c, ge, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by MAT10 mid=%s' % self.mid
         if self.table_bulk is not None:
             self.table_bulk_ref = model.TableD(self.table_bulk, msg)

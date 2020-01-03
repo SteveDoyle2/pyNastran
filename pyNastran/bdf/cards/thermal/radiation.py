@@ -7,6 +7,8 @@ All set cards are defined in this file.  This includes:
   * VIEW, VIEW3D
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import warnings
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
@@ -19,6 +21,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_or_string, string_or_blank)
 
 from pyNastran.bdf.cards.thermal.thermal import ThermalBC
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class RADM(ThermalBC):
@@ -99,7 +103,7 @@ class RADM(ThermalBC):
         emissivity = data[2:]
         return RADM(radmid, absorb, emissivity, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     def raw_fields(self):
@@ -194,7 +198,7 @@ class RADBC(ThermalBC):
         eids = fields(integer_or_string, card, 'eid', i=4, j=nfields)
         return RADBC(nodamb, famb, cntrlnd, eids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -330,7 +334,7 @@ class VIEW(BaseCard):
         return VIEW(iview, icavity, shade=shade, nbeta=nbeta, ngamma=ngamma,
                     dislin=dislin, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     def raw_fields(self):
@@ -458,7 +462,7 @@ class VIEW3D(BaseCard):
                       error_tol=error_tol, zero_tol=zero_tol, warp_tol=warp_tol,
                       rad_check=rad_check, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     def raw_fields(self):
@@ -575,7 +579,7 @@ class RADCAV(ThermalBC):
         #radmid, absorb = data[:2]
         #emissivity = data[2:]
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     def raw_fields(self):

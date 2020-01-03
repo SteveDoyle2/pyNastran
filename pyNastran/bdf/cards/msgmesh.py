@@ -1,8 +1,13 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.field_writer_8 import print_card_8
 
 from pyNastran.bdf.bdf_interface.assign_type import (
     string, string_or_blank, integer, integer_or_blank, double_or_blank)
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
+
 # EQUIV
 # DELETE
 # ACTIVE
@@ -155,7 +160,7 @@ class CGEN(BaseCard):
     def _verify(self, xref):
         pass
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
     def safe_cross_reference(self, model):
         pass

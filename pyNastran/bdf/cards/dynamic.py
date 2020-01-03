@@ -22,7 +22,10 @@ All dynamic control cards are defined in this file.  This includes:
 All cards are BaseCard objects.
 
 """
+from __future__ import annotations
 from math import log, exp
+from typing import TYPE_CHECKING
+
 import numpy as np
 from numpy import unique, hstack
 
@@ -37,6 +40,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class DELAY(BaseCard):
@@ -294,7 +299,7 @@ class DPHASE(BaseCard):
         self.components += dphase.components
         self.phase_leads += dphase.phase_leads
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1421,7 +1426,7 @@ class ROTORD(BaseCard):
                 assert rset is not None, self.rsets
         #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         self.rspeeds_ref = []
         for rspeed in self.rspeeds:
             if isinstance(rspeed, integer_types):
@@ -1664,7 +1669,7 @@ class ROTORG(BaseCard):
 
         return ROTORG(sid, nids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:
@@ -1731,7 +1736,7 @@ class TF(BaseCard):
         pass
         #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     @classmethod
@@ -2485,7 +2490,7 @@ class TIC(BaseCard):
         self.u0 += tic.u0
         self.v0 += tic.v0
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         self.nodes_ref = model.Nodes(self.nodes)
 
     def safe_cross_reference(self, model, xref_errors):

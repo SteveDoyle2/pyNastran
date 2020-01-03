@@ -1,4 +1,6 @@
+from __future__ import annotations
 from collections import defaultdict
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.femutils.utils import duplicates
@@ -11,6 +13,8 @@ from pyNastran.bdf.field_writer_8 import print_float_8, set_string8_blank_if_def
 from pyNastran.bdf.field_writer_16 import print_float_16, set_string16_blank_if_default
 from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class Nodes:
@@ -398,7 +402,7 @@ class GRIDv:
             self._seid = []
             self.is_current = True
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """does this do anything?"""
         self.make_current()
 

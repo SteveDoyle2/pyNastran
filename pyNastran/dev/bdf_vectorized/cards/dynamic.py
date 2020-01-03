@@ -29,6 +29,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class DELAY(BaseCard):
@@ -93,7 +95,7 @@ class DELAY(BaseCard):
     def get_delay_at_freq(self, freq):
         return self.nodes, self.components, self.delays
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #"""
         #Cross links the card so referenced cards can be extracted directly
 
@@ -199,7 +201,7 @@ class DPHASE(BaseCard):
         self.components += dphase.components
         self.phase_leads += dphase.phase_leads
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #"""
         #Cross links the card so referenced cards can be extracted directly
 
@@ -840,7 +842,7 @@ class TF(BaseCard):
         pass
         #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     @classmethod

@@ -16,7 +16,9 @@ All constraint cards are defined in this file.  This includes:
 The ConstraintObject contain multiple constraints.
 
 """
+from __future__ import annotations
 from itertools import count
+from typing import TYPE_CHECKING
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids, expand_thru
@@ -26,6 +28,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8
 from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class Constraint(BaseCard):
@@ -166,7 +170,7 @@ class SUPORT1(Constraint):
             return self.nodes
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -315,7 +319,7 @@ class SUPORT(Constraint):
             return self.nodes
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -574,7 +578,7 @@ class MPC(Constraint):
         msg = ', which is required by MPC=%s' % self.conid
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -850,7 +854,7 @@ class SPC(Constraint):
         msg = ', which is required by SPC=%s' % (self.conid)
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -938,7 +942,7 @@ class GMSPC(Constraint):
     def add_op2_data(cls, data, comment=''):
         raise NotImplementedError('GMSPC')
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """TODO: xref"""
         #msg = ', which is required by GMSPC=%s' % (self.conid)
         pass
@@ -1045,7 +1049,7 @@ class SPCAX(Constraint):
         #msg = '%s has not implemented data parsing' % cls.type
         #raise NotImplementedError(msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
         #msg = ', which is required by SPCAX=%s' % (self.conid)
         #self.ringax = model.ring[self.ringax]
@@ -1191,7 +1195,7 @@ class SPC1(Constraint):
         msg = ', which is required by SPC1; conid=%s' % self.conid
         return self._node_ids(self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1341,7 +1345,7 @@ class SPCOFF(Constraint):
         msg = ', which is required by SPCOFF'
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1462,7 +1466,7 @@ class SPCOFF1(Constraint):
         msg = ', which is required by SPCOFF1'
         return self._node_ids(self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1595,7 +1599,7 @@ class SPCADD(ConstraintAdd):
     def ids(self):
         return self.spc_ids
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1717,7 +1721,7 @@ class MPCADD(ConstraintAdd):
                 mpc_ids.append(mpc[0].conid)
         return mpc_ids
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

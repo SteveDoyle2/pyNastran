@@ -15,6 +15,9 @@ All superelements are defined in this file.  This includes:
  * SETREE
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import numpy as np
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import (
@@ -26,6 +29,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string, string_or_blank, double_or_blank, integer_string_or_blank,
     exact_string_or_blank,
 )
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class SEBNDRY(BaseCard):
@@ -82,7 +87,7 @@ class SEBNDRY(BaseCard):
         assert len(card) >= 3, 'len(SEBNDRY card) = %i\ncard=%s' % (len(card), card)
         return SEBNDRY(seid_a, seid_b, ids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, xref_errors):
@@ -141,7 +146,7 @@ class SEELT(BaseCard):
         assert len(card) <= 9, 'len(SEELT card) = %i\ncard=%s' % (len(card), card)
         return SEELT(seid, eids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -237,7 +242,7 @@ class SELOAD(BaseCard):
         assert len(card) <= 4, 'len(SELOAD card) = %i\ncard=%s' % (len(card), card)
         return SELOAD(lid_s0, seid, lid_se, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:
@@ -305,7 +310,7 @@ class SEEXCLD(BaseCard):
         assert len(card) >= 3, 'len(SEEXCLD card) = %i\ncard=%s' % (len(card), card)
         return SEEXCLD(seid_a, seid_b, nodes, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, xref_errors):
@@ -371,7 +376,7 @@ class SEMPLN(BaseCard):
         assert len(card) <= 6, 'len(SEMPLN card) = %i\ncard=%s' % (len(card), card)
         return SEMPLN(seid, p1, p2, p3, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -454,7 +459,7 @@ class SELABEL(BaseCard):
                          for ifield in range(2, len(card))])
         return SELABEL(seid, label, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -566,7 +571,7 @@ class SELOC(BaseCard):
         assert len(card) <= 8, 'len(SELOC card) = %i\ncard=%s' % (len(card), card)
         return SELOC(seid, nodes_seid, nodes0, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -709,7 +714,7 @@ class SETREE(BaseCard):
         assert len(card) >= 3, 'len(SETREE card) = %i\ncard=%s' % (len(card), card)
         return SETREE(seid, superelements, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -809,7 +814,7 @@ class CSUPER(BaseCard):
         assert len(card) >= 3, 'len(CSUPER card) = %i\ncard=%s' % (len(card), card)
         return CSUPER(seid, psid, nodes, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -898,7 +903,7 @@ class CSUPEXT(BaseCard):
         assert len(card) <= 9, 'len(CSUPEXT card) = %i\ncard=%s' % (len(card), card)
         return CSUPEXT(seid, nodes, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1024,7 +1029,7 @@ class SEBULK(BaseCard):
         assert self.loc in ['YES', 'NO'], self.loc
         assert self.method in ['AUTO', 'MANUAL'], self.method
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1178,7 +1183,7 @@ class SECONCT(BaseCard):
                 inode += 1
         return SECONCT(seid_a, seid_b, tol, loc, nodes_a, nodes_b, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

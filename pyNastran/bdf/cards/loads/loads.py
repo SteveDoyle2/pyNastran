@@ -9,7 +9,8 @@ All static loads are defined in this file.  This includes:
  * RANDPS
 
 """
-#from typing import Any
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 
 #from pyNastran.bdf.errors import CrossReferenceError
@@ -22,6 +23,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.utils.numpy_utils import integer_types, float_types
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class Load(BaseCard):
@@ -333,7 +336,7 @@ class LSEQ(BaseCard):  # Requires LOADSET in case control deck
         tid = data[3]
         return LSEQ(sid, excite_id, lid, tid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -467,7 +470,7 @@ class LOADCYN(Load):
     def get_loads(self):
         return [self]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:
@@ -591,7 +594,7 @@ class LOADCYH(BaseCard):  # Requires LOADSET in case control deck
         #tid = data[3]
         #return LSEQ(sid, excite_id, lid, tid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -729,7 +732,7 @@ class DAREA(BaseCard):
         self.components += darea.components
         self.scales += darea.scales
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -908,7 +911,7 @@ class SPCD(Load):
         msg = ', which is required by SPCD=%s' % (self.sid)
         return _node_ids(self, nodes=self.nodes_ref, allow_empty_nodes=True, msg=msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1031,7 +1034,7 @@ class DEFORM(Load):
         deformation = data[2]
         return DEFORM(sid, eid, deformation, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1174,7 +1177,7 @@ class SLOAD(Load):
         (sid, nid, scale_factor) = data
         return SLOAD(sid, [nid], [scale_factor], comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1355,7 +1358,7 @@ class RFORCE(Load):
         return RFORCE(sid, nid, scale, [r1, r2, r3], cid=cid, method=method, racc=racc, mb=mb,
                       idrf=0, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1539,7 +1542,7 @@ class RFORCE1(Load):
     def get_loads(self):
         return [self]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

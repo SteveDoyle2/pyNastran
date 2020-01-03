@@ -10,6 +10,8 @@ All beams are Property objects.
 Multi-segment beams are IntegratedLineProperty objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from numpy import pi
 
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
@@ -18,6 +20,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 class PROD(Property):
     """
@@ -187,7 +191,7 @@ class PROD(Property):
         nsm = self.nsm
         return area * rho + nsm
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -379,7 +383,7 @@ class PTUBE(Property):
         """
         return self.nsm
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

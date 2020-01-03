@@ -39,6 +39,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     string_or_blank, integer_or_string, double_string_or_blank,
     interpret_value, parse_components)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class AECOMP(BaseCard):
@@ -765,7 +767,7 @@ class AESURF(BaseCard):
                       crefc, crefs, pllim, pulim, hmllim, hmulim,
                       tqllim, tqulim, comment=comment)
 
-#    def cross_reference(self, model):
+#    def cross_reference(self, model: BDF) -> None:
 #        """
 #        Cross links the card so referenced cards can be extracted directly
 #
@@ -2475,7 +2477,7 @@ class CAERO3(BaseCard):
         return CAERO3(eid, pid, list_w, p1, x12, p4, x43,
                       cp=cp, list_c1=list_c1, list_c2=list_c2, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3078,7 +3080,7 @@ class PAERO5(BaseCard):
     def ltaus_id(self):
         return self.ltaus if isinstance(self.ltaus, integer_types) else self.ltaus_ref.aid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3198,7 +3200,7 @@ class DIVERG(BaseCard):
             j += 1
         return DIVERG(sid, nroots, machs, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #pass
 
     #def uncross_reference(self) -> None:
@@ -3576,7 +3578,7 @@ class FLUTTER(BaseCard):
                        imethod, nvalue, omax,
                        epsilon, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4310,7 +4312,7 @@ class PAERO1(BaseCard):
                 #pass
         return PAERO1(pid, Bi, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model):
@@ -4684,7 +4686,7 @@ class PAERO3(BaseCard):
             j += 1
         return PAERO3(pid, nbox, ncontrol_surfaces, x, y, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:
@@ -4828,7 +4830,7 @@ class PAERO4(BaseCard):
         return PAERO4(pid, docs, caocs, gapocs,
                       cla=cla, lcla=lcla, circ=circ, lcirc=lcirc, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:
@@ -5403,7 +5405,7 @@ class SPLINE3(Spline):
             return self.setg
         return self.setg_ref.sid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ' which is required by SPLINE3 eid=%s' % self.eid
         self.caero = model.CAero(self.CAero(), msg=msg)
         self.caero_ref = self.caero
@@ -5586,7 +5588,7 @@ class SPLINE4(Spline):
     def aero_element_ids(self):
         return self.aelist_ref.elements
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -5756,7 +5758,7 @@ class SPLINE5(Spline):
             return self.setg
         return self.setg_ref.sid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -6104,7 +6106,7 @@ class TRIM(BaseCard):
                     naestat, naesurf, naeparm, ntrim, ntrim_aesurf, naelink, nsuport_dofs, nsuport1_dofs)
                 raise RuntimeError(msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
         #self.suport = model.suport
         #self.suport1 = model.suport1

@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from numpy import array
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -7,6 +9,8 @@ from pyNastran.bdf.bdf_interface.assign_type import integer, double_or_blank, st
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer import print_card
 from pyNastran.bdf.cards.base_card import _format_comment
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class BaseCard:
@@ -74,7 +78,7 @@ class Property_i(BaseCard):
         else:
             return self.mid_ref.mid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

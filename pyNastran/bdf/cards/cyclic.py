@@ -5,6 +5,8 @@ defines:
 All cards are BaseCard objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 #import numpy as np
 
 #from pyNastran.utils.numpy_utils import integer_types
@@ -21,6 +23,9 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 )
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
+
 
 class CYAX(BaseCard):
     """
@@ -93,7 +98,7 @@ class CYJOIN(BaseCard):
         pass
         #assert len(self.grids1) > 0, 'ngrids1=%s\n%s' % (len(self.grids1), str(self))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     @classmethod

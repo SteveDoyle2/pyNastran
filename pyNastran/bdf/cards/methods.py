@@ -11,6 +11,8 @@ All method cards are defined in this file.  This includes:
 All cards are Method objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -19,6 +21,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     interpret_value)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class Method(BaseCard):
@@ -120,7 +124,7 @@ class EIGB(Method):
         return EIGB(sid, method, L1, L2, nep, ndp, ndn, norm, G, C,
                     comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def raw_fields(self):
@@ -543,7 +547,7 @@ class EIGC(Method):
             NDJs.append(integer_or_blank(card, i + 6, 'NDJ' + str(irow), NDJ_default))
         return alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def raw_method(self):
@@ -687,7 +691,7 @@ class EIGP(Method):
         assert len(card) == 8, 'len(EIGP card) = %i\ncard=%s' % (len(card), card)
         return EIGP(sid, alpha1, omega1, m1, alpha2, omega2, m2, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def raw_fields(self):
@@ -848,7 +852,7 @@ class EIGR(Method):
         assert len(card) <= 12, 'len(EIGR card) = %i\ncard=%s' % (len(card), card)
         return EIGR(sid, method, f1, f2, ne, nd, norm, G, C, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def raw_fields(self):
@@ -1033,7 +1037,7 @@ class EIGRL(Method):
                      options, values, comment=comment)
 
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
         #if self.norm is None:
             #if model.is_modal_solution():

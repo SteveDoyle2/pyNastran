@@ -1,12 +1,16 @@
+from __future__ import annotations
 from collections import defaultdict
+from typing import TYPE_CHECKING
 import numpy as np
-from pyNastran.utils.numpy_utils import integer_types
 
+from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double_or_blank, blank,
     integer_double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8, set_blank_if_default
 from pyNastran.bdf.cards.base_card import _format_comment
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class ShellElement:
@@ -113,7 +117,7 @@ class ShellElement:
             #self._cd = []
             self.is_current = True
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """does this do anything?"""
         self.make_current()
 

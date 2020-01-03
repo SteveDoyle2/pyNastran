@@ -36,12 +36,9 @@ The superelement sets start with SE:
 
 """
 from __future__ import annotations
-import typing
-from typing import List, Union, Optional, Any
+from typing import List, Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
-if typing.TYPE_CHECKING:
-    from pyNastran.bdf.bdf import BDF
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.base_card import (
     BaseCard, _node_ids, expand_thru
@@ -53,6 +50,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     parse_components, components_or_blank as fcomponents_or_blank,
     fields, string, integer_string_or_blank,
 )
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class Set(BaseCard):
@@ -241,7 +240,7 @@ class SuperABCQSet(Set):
             components.append(component)
         return cls(seid, ids, components, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -514,7 +513,7 @@ class ABQSet1(Set):
             raise NotImplementedError('thru_flag=%s data=%s' % (thru_flag, data))
         return cls(ids, components, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -627,7 +626,7 @@ class SuperABQSet1(Set):
         assert 0 not in nids, 'nids=%s' % (nids.tolist())
         return cls(seid, nids, components, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -908,7 +907,7 @@ class CSET1(Set):
             id_count += 1
         return CSET1(ids, components, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1465,7 +1464,7 @@ class SESET(SetSuper):
             cards.append(card)
         return ''.join(cards)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:
@@ -1724,7 +1723,7 @@ class RADSET(ABQSet1):
                 cavities.append(cavity)
         return RADSET(cavities, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #"""
         #Cross links the card so referenced cards can be extracted directly
 
@@ -1848,7 +1847,7 @@ class USET(Set):
             assert componenti in '0123456', component
         return USET(name, [nid], [component], comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1965,7 +1964,7 @@ class USET1(ABQSet1):
                 ids.append(idi)
         return USET1(name, ids, components, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

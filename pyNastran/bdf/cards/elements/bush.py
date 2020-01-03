@@ -9,6 +9,8 @@ All bush elements are defined in this file.  This includes:
 All bush elements are BushElement and Element objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -18,6 +20,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_double_or_blank, double_or_blank,
     string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class BushElement(Element):
@@ -365,7 +369,7 @@ class CBUSH(BushElement):
             return self.cid_ref.cid
         return self.cid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -506,7 +510,7 @@ class CBUSH1D(BushElement):
         #raise NotImplementedError(data)
         #return CBUSH1D(eid, pid, [ga, gb], cid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -715,7 +719,7 @@ class CBUSH2D(BushElement):
     def node_ids(self):
         return [self.Ga(), self.Gb()]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

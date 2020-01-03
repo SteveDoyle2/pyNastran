@@ -15,11 +15,16 @@ All cards are Material objects.
 
 """
 #pylint: disable=E1103,C0103,C0111
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class MaterialDependence(BaseCard):
@@ -212,7 +217,7 @@ class MATS1(MaterialDependence):
             #E = self.tid_ref.Value(strain)
         #return E
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -420,7 +425,7 @@ class MATT1(MaterialDependenceThermal):
             E = self.E_table.Value(temperature)
         return E
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -615,7 +620,7 @@ class MATT2(MaterialDependenceThermal):
                      st_table, sc_table, ss_table,
                      comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -784,7 +789,7 @@ class MATT3(MaterialDependenceThermal):
         self.ge_table_ref = None
         self.mid_ref = None
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by MATT3 mid=%s' % self.mid
         self.mid_ref = model.Material(self.mid, msg=msg)
 
@@ -1040,7 +1045,7 @@ class MATT4(MaterialDependenceThermal):
         return MATT4(mid, k_table, cp_table, h_table, mu_table,
                      hgen_table, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1222,7 +1227,7 @@ class MATT5(MaterialDependenceThermal):
                      kyz_table, kzz_table, cp_table, hgen_table,
                      comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1422,7 +1427,7 @@ class MATT8(MaterialDependenceThermal):
                      s_table, ge_table, f12_table,
                      comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1739,7 +1744,7 @@ class MATT9(MaterialDependenceThermal):
                      a1_table, a2_table, a3_table, a4_table, a5_table, a6_table,
                      ge_table, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

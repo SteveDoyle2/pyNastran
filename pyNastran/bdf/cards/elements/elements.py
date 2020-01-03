@@ -12,6 +12,8 @@ All ungrouped elements are defined in this file.  This includes:
 All ungrouped elements are Element objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -22,6 +24,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class CFAST(Element):
@@ -111,7 +115,7 @@ class CFAST(Element):
         return CFAST(eid, pid, Type, ida, idb, gs=gs, ga=ga, gb=gb,
                      xs=xs, ys=ys, zs=zs, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -461,7 +465,7 @@ class CGAP(Element):
                                              'CORD2S'], 'cid=%i self.cid.type=%s' % (
                                                  cid, self.cid_ref.type)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -566,7 +570,7 @@ class CrackElement(Element):
         self.nodes_ref = None
         self.pid_ref = None
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -910,7 +914,7 @@ class PLOTEL(BaseCard):
     def _verify(self, xref):
         pass
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1138,7 +1142,7 @@ class GENEL(BaseCard):
         ud = np.array(ud).reshape(len(ud) // 2, 2)
         return GENEL(eid, ul, ud, k, z, s, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

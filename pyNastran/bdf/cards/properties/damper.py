@@ -10,19 +10,24 @@ All damper properties are defined in this file.  This includes:
 All damper properties are DamperProperty and Property objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default, print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank)
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class DamperProperty(Property):
     def __init__(self):
         Property.__init__(self)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:
@@ -201,7 +206,7 @@ class PDAMP5(DamperProperty):
         assert isinstance(pid, integer_types), 'pid=%r\n%s' % (pid, str(self))
         #assert isinstance(b, float), 'b=%r\n%s' % (b, str(self))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -304,7 +309,7 @@ class PDAMPT(DamperProperty):
         pid = self.Pid()
         assert isinstance(pid, integer_types), 'pid=%r' % pid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -428,7 +433,7 @@ class PVISC(DamperProperty):
         cr = data[2]
         return PVISC(pid, ce, cr, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:

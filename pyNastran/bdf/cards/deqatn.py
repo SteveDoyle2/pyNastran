@@ -5,6 +5,8 @@ Defines the DEQATN class and sub-functions.
 The capitalization of the sub-functions is important.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy import (
     cos, sin, tan, log, log10, mean, exp, sqrt, square, mod, abs, sum,
@@ -14,6 +16,8 @@ from numpy import (
 from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.cards.base_card import BaseCard
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 def pi(num):
     """weird way to multiply π by a number"""
@@ -271,7 +275,7 @@ class DEQATN(BaseCard):  # needs work...
         self.func = func
         self.nargs = nargs
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

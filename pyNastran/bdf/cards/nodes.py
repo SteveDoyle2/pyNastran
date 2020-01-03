@@ -23,8 +23,9 @@ EPOINTs/SPOINTs classes are for multiple degrees of freedom
 (e.g. an SPOINT card).
 
 """
+from __future__ import annotations
 from itertools import count
-from typing import List, Union, Optional, Any
+from typing import List, Union, Optional, Any, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -42,7 +43,8 @@ from pyNastran.bdf.field_writer_16 import print_float_16, print_card_16
 from pyNastran.bdf.field_writer_double import print_scientific_double, print_card_double
 
 #u = str
-from pyNastran.bdf.bdf_interface.typing import BDF, BDFCard, Coord, Element
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf_interface.typing import BDF, BDFCard, Coord, Element
 
 
 class SEQGP(BaseCard):
@@ -104,7 +106,7 @@ class SEQGP(BaseCard):
             seqids.append(seqid)
         return SEQGP(nids, seqids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def append(self, seqgp):
@@ -243,7 +245,7 @@ class XPoint(BaseCard):
                 msg += print_card_8(list_fields)
         return msg
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -425,7 +427,7 @@ class XPoints(BaseCard):
         """Adds more EPOINTs/SPOINTs to this object"""
         self.points = self.points.union(set(sList))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -640,7 +642,7 @@ class GRDSET(BaseCard):
         assert len(card) <= 9, 'len(GRDSET card) = %i\ncard=%s' % (len(card), card)
         return GRDSET(cp, cd, ps, seid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1804,7 +1806,7 @@ class POINT(BaseCard):
             return self.cp
         return self.cp_ref.cid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         # type: (Any) -> None
         """
         Cross links the card so referenced cards can be extracted directly

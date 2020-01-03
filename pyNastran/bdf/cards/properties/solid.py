@@ -126,7 +126,7 @@ class PLSOLID(Property):
         stress_strain = data[3]
         return PLSOLID(pid, mid, stress_strain, ge, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -293,7 +293,7 @@ class PCOMPS(Property):
     def Mids(self):
         return self.mids
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by PSOLID pid=%s' % self.pid
         self.mids_ref = []
         for mid in self.mids:

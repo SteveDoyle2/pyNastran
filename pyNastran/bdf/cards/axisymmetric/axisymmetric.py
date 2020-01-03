@@ -1,10 +1,16 @@
 """
 All axisymmetric shell elements are defined in this file.  This includes:
  * AXIC
- * PRESAX
+ * AXIF
+ * CCONEAX
+ * PCONEAX
+ * POINTAX
+ * RINGFL
+ * RINGAX
 
 """
-from pyNastran.utils.numpy_utils import integer_types
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.bdf.field_writer_8 import (
     set_blank_if_default,
 )
@@ -17,7 +23,9 @@ from pyNastran.bdf.cards.base_card import BaseCard, Element
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.field_writer_double import print_card_double
+
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class AXIC(BaseCard):
@@ -448,7 +456,7 @@ class CCONEAX(Element):
     def _init_from_empty(cls):
         eid = 1
         pid = 1
-        rings = [1]
+        rings = [1, 2]
         return CCONEAX(eid, pid, rings, comment='')
 
     def _update_field_helper(self, n, value):
@@ -482,7 +490,7 @@ class CCONEAX(Element):
         self.pid = pid
         #self.prepare_node_ids(nids)
         self.rings = rings
-        assert len(self.rings) == 2
+        assert len(self.rings) == 2, rings
         self.rings_ref = None
         self.pid_ref = None
         self.rings_ref = None
@@ -521,10 +529,15 @@ class CCONEAX(Element):
             raise NotImplementedError(self.rings_ref)
         return self.rings
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         msg = ', which is required by CCONEAX eid=%s' % (self.eid)
         #self.rings_ref
         self.pid_ref = model.Property(self.pid, msg=msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors):
+        msg = ', which is required by CCONEAX eid=%s' % (self.eid)
+        #self.rings_ref
+        self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -675,7 +688,7 @@ class PCONEAX(Property):
         return PCONEAX(pid, mid1, t1, mid2, i, mid3, t2, nsm, z1, z2, phi,
                        comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

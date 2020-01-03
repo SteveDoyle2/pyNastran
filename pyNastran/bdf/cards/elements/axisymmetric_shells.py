@@ -13,6 +13,8 @@ All tris are TriShell, ShellElement, and Element objects.
 All quads are QuadShell, ShellElement, and Element objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
 
@@ -26,6 +28,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.elements.shell import TriShell, _triangle_area_centroid_normal, _normal
 from pyNastran.bdf.cards.base_card import Element
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 __all__ = ['CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6',
            'CQUADX', 'CQUADX4', 'CQUADX8']
@@ -221,7 +225,7 @@ class CTRAX3(AxisymmetricTri):
         area = 0.5 * norm(np.cross(a, b))
         return area
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -399,7 +403,7 @@ class CTRAX6(AxisymmetricTri):
         area = 0.5 * norm(np.cross(a, b))
         return area
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -593,7 +597,7 @@ class CTRIAX(AxisymmetricTri):
         area = 0.5 * norm(np.cross(a, b))
         return area
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -742,7 +746,7 @@ class CTRIAX6(TriShell):
         nids = [n1, n2, n3, n4, n5, n6]
         return CTRIAX6(eid, mid, nids, theta=theta, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1039,7 +1043,7 @@ class CQUADX(AxisymmetricQuad):
             raise RuntimeError(f'theta_mcid is defined; data={data}')
         return CQUADX(eid, pid, nids, theta_mcid=theta_mcid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1197,7 +1201,7 @@ class CQUADX4(AxisymmetricQuad):
         assert len(card) <= 8, 'len(CQUADX4 card) = %i\ncard=%s' % (len(card), card)
         return CQUADX4(eid, pid, nids, theta=theta, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1346,7 +1350,7 @@ class CQUADX8(AxisymmetricQuad):
         assert len(card) <= 12, 'len(CQUADX8 card) = %i\ncard=%s' % (len(card), card)
         return CQUADX8(eid, pid, nids, theta=theta, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

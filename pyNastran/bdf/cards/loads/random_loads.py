@@ -9,6 +9,9 @@ All static loads are defined in this file.  This includes:
  * RANDPS
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 #from pyNastran.bdf.errors import CrossReferenceError
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -16,6 +19,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class RandomLoad(BaseCard):
@@ -111,7 +116,7 @@ class RANDPS(RandomLoad):
         assert len(card) <= 7, 'len(RANDPS card) = %i\ncard=%s' % (len(card), card)
         return RANDPS(sid, j, k, x, y, tid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -227,7 +232,7 @@ class RANDT1(RandomLoad):
         assert len(card) <= 5, 'len(RANDT1 card) = %i\ncard=%s' % (len(card), card)
         return RANDT1(sid, n, t0, tmax, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

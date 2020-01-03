@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from collections import defaultdict
 from itertools import count
 import numpy as np
@@ -12,6 +14,7 @@ from pyNastran.bdf.field_writer_16 import (
 from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.cards.base_card import _format_comment
 from pyNastran.bdf.cards.base_card import expand_thru
+
 
 class Loads:
     """intializes the Loads"""
@@ -207,7 +210,7 @@ class BaseLoad:
             add_card = True
         return add_card
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """does this do anything?"""
         self.make_current()
 

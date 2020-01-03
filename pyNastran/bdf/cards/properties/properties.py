@@ -8,6 +8,8 @@ All ungrouped properties are defined in this file.  This includes:
  * PCONEAX (not done)
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
@@ -15,6 +17,8 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class PFAST(Property):
@@ -165,7 +169,7 @@ class PFAST(Property):
         assert isinstance(self.Mcid(), integer_types), self.Mcid()
         assert isinstance(self.Mass(), float), self.mass
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -384,7 +388,7 @@ class PGAP(Property):
         pid = self.Pid()
         assert isinstance(pid, int), 'pid=%r\n%s' % (pid, str(self))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:
@@ -513,7 +517,7 @@ class PRAC2D(CrackProperty):
         pid = self.Pid()
         assert isinstance(pid, int)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -600,7 +604,7 @@ class PRAC3D(CrackProperty):
         pid = self.Pid()
         assert isinstance(pid, int)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

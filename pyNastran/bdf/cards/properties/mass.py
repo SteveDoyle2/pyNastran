@@ -8,12 +8,17 @@ All mass properties are defined in this file.  This includes:
 All mass properties are PointProperty and Property objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from pyNastran.bdf.cards.base_card import expand_thru_by, expand_thru, BaseCard, Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_string, double, double_or_blank, string)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.utils.numpy_utils import integer_types, float_types
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class NSMx(Property):
@@ -112,7 +117,7 @@ class NSMx(Property):
         value = data[3]
         return cls(sid, nsm_type, pid_eid, value, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     @property
@@ -242,7 +247,7 @@ class NSM1x(Property):
             ids = card[4:]
         return cls(sid, nsm_type, value, ids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def raw_fields(self):
@@ -520,7 +525,7 @@ class NSMADD(BaseCard):
                 raise TypeError('type=%s; nsm=\n%s' % (type(nsm), nsm))
         return nsm_ids
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -652,7 +657,7 @@ class PMASS(Property):
         mass = data[1]
         return PMASS(pid, mass, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def uncross_reference(self) -> None:

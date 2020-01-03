@@ -630,7 +630,7 @@ class DCONSTR(OptConstraint):
             return self.uid  # int/float
         return self.uid_ref.tid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -816,7 +816,7 @@ class DESVAR(OptConstraint):
                        self.xub, self.delx, self.ddval]
         return list_fields
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1924,7 +1924,7 @@ class DRESP1(OptConstraint):
     def DRespID(self):
         return self.dresp_id
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2555,7 +2555,7 @@ class DRESP2(OptConstraint):
         op2_model.log.info('  deqatn out = %s' % out)
         return out
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2950,7 +2950,7 @@ class DRESP3(OptConstraint):
     def safe_cross_reference(self, model, xref_errors):
         self.cross_reference(model)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3110,7 +3110,7 @@ class DCONADD(OptConstraint):
             dconstrs.append(dconstr)
         return DCONADD(oid, dconstrs, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3407,7 +3407,7 @@ class DVCREL1(DVXREL1):  # similar to DVMREL1
                                               self.element_type, self.cp_name))
             setattr(element, key, value)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3675,7 +3675,7 @@ class DVCREL2(DVXREL2):
         op2_model.log.info('  deqatn out = %s' % out)
         return out
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3936,7 +3936,7 @@ class DVMREL1(DVXREL1):
                 self.mat_type, self.mp_name))
         setattr(mat, key, value)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4265,7 +4265,7 @@ class DVMREL2(DVXREL2):
         return out
         #raise NotImplementedError('\n' + str(self))
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4551,7 +4551,7 @@ class DVPREL1(DVXREL1):
     def OptID(self):
         return self.oid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -4934,7 +4934,7 @@ class DVPREL2(DVXREL2):
         op2_model.log.info('  deqatn out = %s' % out)
         return out
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -5137,7 +5137,7 @@ class DVGRID(BaseCard):
         ]
         return DVGRID(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

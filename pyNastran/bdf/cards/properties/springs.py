@@ -8,11 +8,15 @@ All spring properties are defined in this file.  This includes:
 All spring properties are SpringProperty and Property objects.
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import Property
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class SpringProperty(Property):
@@ -123,7 +127,7 @@ class PELAS(SpringProperty):
         s = data[3]
         return PELAS(pid, k, ge, s, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         #if model.sol in [108, 129]:
         if self.pid in model.pelast:
             self.pelast_ref = model.pelast[self.pid]
@@ -250,7 +254,7 @@ class PELAST(SpringProperty):
         (pid, tkid, tgeid, tknid) = data
         return PELAST(pid, tkid, tgeid, tknid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

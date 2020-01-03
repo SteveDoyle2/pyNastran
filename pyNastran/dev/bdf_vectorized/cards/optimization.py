@@ -15,6 +15,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.utils import build_table_lines
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 def validate_dvcrel(validate, Type, cp_name):
@@ -312,7 +314,7 @@ class DCONSTR(OptConstraint):
         #else:
             #return self.uid_ref.tid
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #"""
         #Cross links the card so referenced cards can be extracted directly
 
@@ -1263,7 +1265,7 @@ class DRESP1(OptConstraint):
     #def DRespID(self):
         #return self.dresp_id
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #"""
         #Cross links the card so referenced cards can be extracted directly
 
@@ -2412,7 +2414,7 @@ class DVCREL2(OptConstraint):
         op2_model.log.info('  deqatn out = %s' % out)
         return out
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2572,7 +2574,7 @@ class DVMREL1(OptConstraint):  # similar to DVPREL1
         return DVMREL1(oid, mat_type, mid, mp_name, dvids, coeffs,
                        mp_min=mp_min, mp_max=mp_max, c0=c0, comment=comment)
 
-    #def cross_reference(self, model):
+    #def cross_reference(self, model: BDF) -> None:
         #"""
         #Cross links the card so referenced cards can be extracted directly
 
@@ -2805,7 +2807,7 @@ class DVMREL2(OptConstraint):
         #dequation_ref = model.DEQATN(self.dequation, msg=msg)
         #return dequation_ref
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3037,7 +3039,7 @@ class DVPREL1(OptConstraint):  # similar to DVMREL1
     #def OptID(self):
         #return self.oid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3352,7 +3354,7 @@ class DVPREL2(OptConstraint):
         op2_model.log.info('  deqatn out = %s' % out)
         return out
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -3461,7 +3463,7 @@ class DVGRID(OptConstraint):
         ]
         return DVGRID(dvid, nid, dxyz, cid=cid, coeff=coeff, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

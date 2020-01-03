@@ -15,6 +15,9 @@ All static loads are defined in this file.  This includes:
  * PLOAD4
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import numpy as np
 from numpy import array, cross, allclose, unique
 from numpy.linalg import norm  # type: ignore
@@ -33,6 +36,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, set_string
 from pyNastran.bdf.field_writer_16 import (
     print_card_16, print_float_16, set_string16_blank_if_default)
 from pyNastran.bdf.field_writer_double import print_card_double, print_scientific_double
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class LOAD(LoadCombination):
@@ -163,7 +168,7 @@ class LOAD(LoadCombination):
                     raise NotImplementedError(msg)
         return (scale_factors, loads)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -246,7 +251,7 @@ class CLOAD(LoadCombination):
         load_ids = [1]
         return cls(sid, scale, scale_factors, load_ids, comment='')
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -447,7 +452,7 @@ class GRAV(BaseCard):
     def get_loads(self):
         return [self]
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -618,7 +623,7 @@ class ACCEL(BaseCard):
             i += 2
         return ACCEL(sid, N, direction, locs, vals, cid=cid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -767,7 +772,7 @@ class ACCEL1(BaseCard):
         nodes = fields(integer_or_string, card, 'node', i=9, j=len(card))
         return ACCEL1(sid, scale, N, nodes, cid=cid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -996,7 +1001,7 @@ class Load0(BaseCard):
         xyz = array(data[4:7])
         return cls(sid, node, mag, xyz, cid=cid, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1204,7 +1209,7 @@ class Load1(BaseCard):
         g2 = data[4]
         return cls(sid, node, mag, g1, g2, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1426,7 +1431,7 @@ class Load2(BaseCard):
         g4 = data[6]
         return cls(sid, node, mag, g1, g2, g3, g4, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1876,7 +1881,7 @@ class GMLOAD(Load):
             #return self.dequation
         #return self.dequation.equation_id
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2049,7 +2054,7 @@ class PLOAD(Load):
             nodes.pop()
         return PLOAD(sid, pressure, nodes, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2253,7 +2258,7 @@ class PLOAD1(Load):
                 self.scale, ', '.join(self.valid_scales))
             raise RuntimeError(msg)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2400,7 +2405,7 @@ class PLOAD2(Load):
         eids = list(data[2:])
         return PLOAD2(sid, pressure, eids, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2783,7 +2788,7 @@ class PLOAD4(Load):
             return self.cid_ref.cid
         return self.cid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

@@ -6,6 +6,8 @@ All axisymmetric loads are defined in this file.  This includes:
  * PLOADX1
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 #import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -17,6 +19,8 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 from pyNastran.bdf.cards.thermal.loads import ThermalLoad
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 
 class FORCEAX(BaseCard):
@@ -103,7 +107,7 @@ class FORCEAX(BaseCard):
         assert len(card) <= 8, 'len(FORCEAX card) = %i\ncard=%s' % (len(card), card)
         return FORCEAX(sid, ring_id, hid, scale, f_rtz, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -278,7 +282,7 @@ class PLOADX1(BaseCard):
         nids = [ga, gb]
         return PLOADX1(sid, eid, pa, nids, pb=pb, theta=theta, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -415,7 +419,7 @@ class PRESAX(BaseCard):
         assert len(card) == 7, 'len(PRESAX card) = %i\ncard=%s' % (len(card), card)
         return PRESAX(sid, pressure, rid1, rid2, phi1, phi2, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def raw_fields(self):
@@ -500,7 +504,7 @@ class TEMPAX(ThermalLoad):
 
         return TEMPAX(sid, ring, phi, temperature, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         pass
 
     def safe_cross_reference(self, model, debug=True):

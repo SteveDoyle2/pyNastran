@@ -11,7 +11,9 @@ All beams are LineProperty objects.
 Multi-segment beams are IntegratedLineProperty objects.
 
 """
+from __future__ import annotations
 from itertools import count
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy import array, unique, argsort, allclose, ndarray
 
@@ -31,6 +33,9 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.cards.base_card import (
     break_word_by_trailing_parentheses_integer_ab, break_word_by_trailing_integer)
 from pyNastran.utils.numpy_utils import integer_types, float_types
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
+
 
 class PBEAM(IntegratedLineProperty):
     """
@@ -931,7 +936,7 @@ class PBEAM(IntegratedLineProperty):
         mass_per_length = integrate_positive_unit_line(self.xxb, mass_per_lengths)
         return mass_per_length
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1611,7 +1616,7 @@ class PBEAML(IntegratedLineProperty):
     #def Mid(self):
     #    return self.mid
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -1839,7 +1844,7 @@ class PBMSECT(LineProperty):
         #raise NotImplementedError('PBMSECT not finished...data=%s' % str(data))
         #return PBMSECT(pid, mid, group, Type, dim, nsm, comment=comment)
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
@@ -2177,7 +2182,7 @@ class PBCOMP(LineProperty):
     def MassPerLength(self):
         return self.nsm + self.mid_ref.Rho() * self.A
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 

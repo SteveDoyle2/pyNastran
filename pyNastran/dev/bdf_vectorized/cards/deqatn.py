@@ -16,6 +16,8 @@ from numpy.linalg import norm  # type: ignore
 
 from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.cards.deqatn import lines_to_eqs
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 def pi(num):
     """weird way to multiply p by a number"""
@@ -228,7 +230,7 @@ class DEQATN(BaseCard):  # needs work...
         self.func = func
         self.nargs = nargs
 
-    def cross_reference(self, model):
+    def cross_reference(self, model: BDF) -> None:
         """
         Cross links the card so referenced cards can be extracted directly
 
