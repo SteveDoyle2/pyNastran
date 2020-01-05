@@ -296,10 +296,16 @@ BULK_DATA_CARDS = {
     'TEMPRB',
     'CONVM',
 
+    # cyclic
+    'CYJOIN', 'CYSYM',
+
+    # acoustic
+    'CHACAB', 'PACABS',
+
     ## ???
-    'ACMODL', 'CHACAB', 'PACABS', 'PANEL', 'SWLDPRM',
+    'ACMODL', 'PANEL', 'SWLDPRM',
     'CWELD', 'PWELD', 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
-    'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
+    'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
     'BNDFIX', 'BNDFIX1',
     'AEFORCE', 'UXVEC', 'GUST2',
 
@@ -419,8 +425,10 @@ NASA_CARDS = {
     'EIGR', 'EIGB', 'EIGC', 'EIGP',
     'TIC', 'TF', 'SUPORT',
 
+    # cyclic
+    'CYJOIN',
+
     # ???
     'BDYC', 'BDYS1', 'GTRAN', 'TRANS',
-    'CYJOIN',
     'ENDDATA',
 }

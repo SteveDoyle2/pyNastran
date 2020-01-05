@@ -102,7 +102,7 @@ if TYPE_CHECKING:  # pragma: no cover
         DVPREL1, DVPREL2,
         DVGRID, DSCREEN)
     from pyNastran.bdf.cards.superelements import (
-        SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
+        RELEASE, SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
         SELABEL, SELOAD, SELOC, SEMPLN, SENQSET, SETREE,
         CSUPER, CSUPEXT,
     )
@@ -305,45 +305,61 @@ class AddMethods(BDFAttributes):
     def _add_setree_object(self, setree: SETREE) -> None:
         key = setree.seid
         self.setree[key] = setree
+        self._type_to_id_map[setree.type].append(key)
     def _add_senqset_object(self, senqset: SENQSET) -> None:
         key = senqset.set_id
         self.senqset[key] = senqset
+        self._type_to_id_map[senqset.type].append(key)
     def _add_sebulk_object(self, sebulk: SEBULK) -> None:
         key = sebulk.seid
         self.sebulk[key] = sebulk
+        self._type_to_id_map[sebulk.type].append(key)
+    def _add_release_object(self, release: RELEASE) -> None:
+        key = release.seid
+        self.release[key] = release
+        self._type_to_id_map[release.type].append(key)
     def _add_sebndry_object(self, sebndry: SEBNDRY) -> None:
         key = (sebndry.seid_a, sebndry.seid_b)
         self.sebndry[key] = sebndry
     def _add_seloc_object(self, seloc: SELOC) -> None:
         key = seloc.seid
         self.seloc[key] = seloc
+        self._type_to_id_map[seloc.type].append(key)
     def _add_sempln_object(self, sempln: SEMPLN) -> None:
         key = sempln.seid
         self.sempln[key] = sempln
+        self._type_to_id_map[sempln.type].append(key)
 
     def _add_seconct_object(self, seconct: SECONCT) -> None:
         key = (seconct.seid_a, seconct.seid_b)
         self.seconct[key] = seconct
+        self._type_to_id_map[seconct.type].append(key)
     def _add_selabel_object(self, selabel: SELABEL) -> None:
         key = selabel.seid
         self.selabel[key] = selabel
+        self._type_to_id_map[selabel.type].append(key)
     def _add_seexcld_object(self, seexcld: SEEXCLD) -> None:
         key = (seexcld.seid_a, seexcld.seid_b)
         self.seexcld[key] = seexcld
+        self._type_to_id_map[seexcld.type].append(key)
 
     def _add_seelt_object(self, seelt: SEELT) -> None:
         #self.seelt.append(seelt)
         key = seelt.seid
         self.seelt[key] = seelt
+        self._type_to_id_map[seelt.type].append(key)
     def _add_seload_object(self, seload: SELOAD) -> None:
         key = seload.seid
         self.seload[key] = seload
+        self._type_to_id_map[seload.type].append(key)
     def _add_csuper_object(self, csuper: CSUPER) -> None:
         key = csuper.seid
         self.csuper[key] = csuper
+        self._type_to_id_map[csuper.type].append(key)
     def _add_csupext_object(self, csupext: CSUPEXT) -> None:
         key = csupext.seid
         self.csupext[key] = csupext
+        self._type_to_id_map[csupext.type].append(key)
 
     def _add_plotel_object(self, elem: PLOTEL, allow_overwrites: bool=False) -> None:
         """adds an PLOTEL object"""
@@ -473,6 +489,9 @@ class AddMethods(BDFAttributes):
     #def add_property(self, prop, allow_overwrites: bool=False) -> None:
         #"""deprecated"""
         #return self._add_property_object(prop, allow_overwrites)
+
+    def _add_acoustic_property_object(self, prop: PACABS) -> None:
+        self._add_property_object(prop)
 
     def _add_property_object(self, prop: Union[PELAS, PBUSH, PBUSH1D, PDAMP, PDAMP5, # PBUSH2D,
                                                PFAST, PVISC, PGAP, PRAC2D, PRAC3D, # PWELD

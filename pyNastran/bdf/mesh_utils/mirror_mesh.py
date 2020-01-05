@@ -369,7 +369,9 @@ def __mirror_elements(model: BDF, mirror_model: BDF,
     generic_types_none = {
         'CHBDYP', 'CRAC2D', 'CRAC3D',
         'CQUADX',
-        'CTRIAX', }
+        'CTRIAX',
+        # acoustic
+        'CHACAB'}
 
     def _set_nodes(element, nodes):
         try:

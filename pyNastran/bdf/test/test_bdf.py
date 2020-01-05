@@ -1131,7 +1131,7 @@ def check_case(sol, subcase, fem2, p0, isubcase, subcases,
     elif sol in [114, 115, 116, 118]:
         # cyclic statics, modes, buckling, frequency
         pass
-    elif sol in [5, 21, 26, 38, 47, 61, 68, 76, 78, 81, 88,
+    elif sol in [5, 21, 26, 38, 47, 61, 63, 68, 76, 78, 81, 88,
                  100, 128, 187, 190,
                  400, 401, 402, 600, 601, 700, 701, 'AEDB2XDB', 'UPWARD']:
         pass

@@ -268,7 +268,7 @@ def _load_minor_attributes(unused_key, group, model, encoding):
                 ## TODO: swap out
                 #model.add_card(card_lines, card_name, comment=comment,
                                #ifile=None, is_list=True, has_none=True)
-                model.reject_card_lines(card_name, card_lines, comment)
+                model.reject_card_lines(card_name, card_lines, comment=comment)
             continue
         elif keyi == 'reject_cards':
             reject_keys = list(sub_group.keys())
@@ -955,12 +955,11 @@ def _load_dmi(model: BDF, name, sub_group):
     Complex = None
     if 'Complex' in sub_group:
         Complex = _cast(sub_group['Complex'])
-        raise NotImplementedError('DMI complex')
 
     #ifo = matrix_form
     form = matrix_form
     model.add_dmi(name, form, tin, tout, nrows, ncols, GCj, GCi,
-                  Real, Complex=None, comment='')
+                  Real, Complex=Complex, comment='')
 
 def _load_dmig(model, name, sub_group, class_type):
     class_obj = CARD_MAP[class_type]

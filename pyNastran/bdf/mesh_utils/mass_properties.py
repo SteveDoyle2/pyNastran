@@ -62,6 +62,9 @@ NO_MASS = {
     'DESVAR', 'DCONADD', 'DRESP1', 'DRESP2', 'DRESP3', 'DEQATN', 'DSCREEN',
     'SUPORT', 'SUPORT1',
     'CYJOIN',
+
+    # acoustic
+    'CHACAB',
 }
 
 def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):

@@ -45,6 +45,7 @@ from pyNastran.bdf.cards.elements.shell import (
     CPLSTS3, #CPLSTS4, CPLSTS6, CPLSTS8,
     SNORM,
 )
+from pyNastran.bdf.cards.elements.acoustic import CHACAB, CAABSF, CHACBR, PACABS
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT #PBUSH2D
@@ -110,7 +111,7 @@ from pyNastran.bdf.cards.optimization import (
     DVPREL1, DVPREL2,
     DVGRID, DSCREEN)
 from pyNastran.bdf.cards.superelements import (
-    SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
+    RELEASE, SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
     SELABEL, SELOAD, SELOC, SEMPLN, SENQSET, SETREE,
     CSUPER, CSUPEXT,
 )
@@ -144,6 +145,7 @@ from pyNastran.utils.numpy_utils import integer_string_types
 CARD_MAP = {
     #'=' : Crash, None),
 
+    'RELEASE' : RELEASE,
     'SETREE' : SETREE,
     'SENQSET' : SENQSET,
     'SEBULK' : SEBULK,
@@ -239,6 +241,13 @@ CARD_MAP = {
     'TEMPD' : TEMPD,
     'TEMPB3' : TEMPB3,
 
+    #acoustic elements
+    'CHACAB' : CHACAB,
+    'CAABSF' : CAABSF,
+    'CHACBR' : CHACBR,
+    'PACABS' : PACABS,
+
+    # rod elements
     'CONROD' : CONROD,
     'CROD' : CROD,
     'PROD' : PROD,
@@ -7785,6 +7794,11 @@ class AddCards(AddMethods):
 
     #---------------------------------------------------------------------
     # superelements.py
+
+    def add_release(self, seid, comp, nids, comment='') -> RELEASE:
+        release = RELEASE(seid, comp, nids, comment=comment)
+        self._add_release_object(release)
+        return release
 
     def add_sebndry(self, seid_a, seid_b, ids, comment='') -> SEBNDRY:
         sebndry = SEBNDRY(seid_a, seid_b, ids, comment=comment)

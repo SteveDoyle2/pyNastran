@@ -106,6 +106,79 @@ class SEBNDRY(BaseCard):
         return self.comment + print_card_8(card)
 
 
+class RELEASE(BaseCard):
+    """
+    Superelement Boundary Grid Point Release
+
+    Defines degrees-of-freedom for superelement exterior grid points
+    that are not connected to the superelement.
+
+    +---------+------+------+------+------+------+------+------+------+
+    |    1    |  2   |  3   |  4   |  5   |  6   |  7   |  8   |  9   |
+    +=========+======+======+======+======+======+======+======+======+
+    | RELEASE | SEID | COMP | GID1 | GID2 | GID3 | GID4 | GID5 | GID6 |
+    +---------+------+------+------+------+------+------+------+------+
+    |         | GID7 | GID8 | etc. |      |      |      |      |      |
+    +---------+------+------+------+------+------+------+------+------+
+    | RELEASE | 400  |  4   |  10  |  20  |  30  |  40  |      |      |
+    +---------+------+------+------+------+------+------+------+------+
+    | RELEASE | 400  | 156  |  30  | THRU |  40  |      |      |      |
+    +---------+------+------+------+------+------+------+------+------+
+    | RELEASE | 400  | 156  | ALL  |      |      |      |      |      |
+    +---------+------+------+------+------+------+------+------+------+
+    """
+    type = 'RELEASE'
+    @classmethod
+    def _init_from_empty(cls):
+        seid = 1
+        comp = 1
+        nids = [10, 20, 30]
+        return SEBNDRY(seid, comp, nids, comment='')
+
+    def __init__(self, seid, comp, nids, comment=''):
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.seid = seid
+        self.comp = comp
+
+        #:  Identifiers of grids points. (Integer > 0)
+        self.nids = expand_thru(nids)
+        self.nids_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        seid = integer(card, 1, 'seid')
+        comp = integer(card, 2, 'comp')
+        nids = []
+        i = 3
+        nfields = len(card)
+        for ifield in range(3, nfields):
+            idi = integer_or_string(card, ifield, 'ID%i' % i)
+            nids.append(idi)
+            i += 1
+        assert len(card) >= 3, 'len(RELEASE card) = %i\ncard=%s' % (len(card), card)
+        return RELEASE(seid, comp, nids, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model, xref_errors):
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def raw_fields(self):
+        list_fields = ['RELEASE', self.seid, self.comp] + self.nids
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
+
+
 class SEELT(BaseCard):
     """
     +-------+------+------+------+------+------+------+------+------+

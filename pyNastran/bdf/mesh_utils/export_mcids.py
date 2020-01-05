@@ -21,8 +21,9 @@ SKIP_ETYPES = {
     'CHBDYE', 'CHBDYP', 'CHBDYG', 'GENEL',
     'CQUADX', 'CTRIAX', 'CQUADX4', 'CQUADX8', 'CTRIAX6',
     'CTRAX3', 'CTRAX6',
-    'CPLSTN3', 'CPLSTN4', 'CPLSTN8', 'CPLSTN6'
-    #'CPLSTN3', 'CPLSTN4', 'CPLSTN8', 'CPLSTN6'
+    'CPLSTN3', 'CPLSTN4', 'CPLSTN8', 'CPLSTN6',
+    #'CPLSTN3', 'CPLSTN4', 'CPLSTN8', 'CPLSTN6',
+    'CHACAB',
 }
 
 def export_mcids(bdf_filename: Union[BDF, str], csv_filename: Optional[str]=None,
@@ -127,7 +128,7 @@ def export_mcids(bdf_filename: Union[BDF, str], csv_filename: Optional[str]=None
                                     export_both_axes, export_xaxis,
                                     consider_property_rotation)
         elif elem.type in SKIP_ETYPES:
-            pass
+            continue
         else:
             raise NotImplementedError(f'element type={elem.type!r} is not supported\n{elem}')
 

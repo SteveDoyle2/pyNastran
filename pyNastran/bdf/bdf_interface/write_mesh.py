@@ -6,6 +6,7 @@ This file defines:
 """
 import sys
 from io import StringIO, IOBase
+from collections import defaultdict, OrderedDict
 from typing import List, Dict, Union, Optional, Tuple, Any, cast
 
 from pyNastran.bdf.field_writer_8 import print_card_8
@@ -76,10 +77,11 @@ class WriteMesh(BDFAttributes):
         #self.log.debug("***writing %s" % fname)
         return out_filename
 
-    def write_bdf(self, out_filename=None, encoding=None,
-                  size=8, is_double=False,
-                  interspersed=False, enddata=None, write_header=True, close=True):
-        # type: (Optional[Union[str, StringIO]], Optional[str], int, bool, bool, Optional[bool], bool, bool) -> None
+    def write_bdf(self, out_filename: Optional[Union[str, StringIO]]=None,
+                  encoding: Optional[str]=None,
+                  size: int=8, is_double: bool=False,
+                  interspersed: bool=False, enddata: Optional[bool]=None,
+                  write_header: bool=True, close: bool=True) -> None:
         """
         Writes the BDF.
 
@@ -948,37 +950,9 @@ class WriteMesh(BDFAttributes):
         is_properties = self.properties or self.pelast or self.pdampt or self.pbusht
         if not is_properties:
             return
-        from collections import defaultdict, OrderedDict
 
-        propertys_class_to_property_types = OrderedDict()
-        # prop_class -> property types
-        propertys_class_to_property_types['spring'] = ['PELAS', 'PELAST']
-        propertys_class_to_property_types['damper'] = ['PDAMP', 'PDAMPT']
-        propertys_class_to_property_types['rod'] = ['PROD', 'PTUBE']
-        propertys_class_to_property_types['bar'] = ['PBAR', 'PBARL', 'PBRSECT']
-        propertys_class_to_property_types['beam'] = ['PBEAM', 'PBEAML', 'PBMSECT']
-        propertys_class_to_property_types['bush'] = ['PBUSH', 'PBUSH1D', 'PBUSH2D']
-        propertys_class_to_property_types['shell'] = ['PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG']
-        propertys_class_to_property_types['solid'] = ['PSOLID']
-
-        property_type_to_property_class = {
-            #'other' : [],
-        }
-        # the inverse of propertys_class_to_property_types
-        for prop_class, prop_types in propertys_class_to_property_types.items():
-            for prop_type in prop_types:
-                property_type_to_property_class[prop_type] = prop_class
-
-        #if is_properties:
-
-        # put each property object into a class (e.g., CQUAD4 -> PCOMP)
-        properties_by_class = defaultdict(list)
-        prop_groups = (self.properties, self.pelast, self.pdampt, self.pbusht)
-        for properties in prop_groups:
-            for unused_pid, prop in properties.items():
-                prop_class = property_type_to_property_class[prop.type]
-                print(prop.type, '->', prop_class)
-                properties_by_class[prop_class].append(prop)
+        out = self._get_properties_by_element_type()
+        propertys_class_to_property_types, property_type_to_property_class, properties_by_class = out
 
         bdf_file.write('$PROPERTIES\n')
         for prop_class, prop_types in propertys_class_to_property_types.items():
@@ -996,6 +970,41 @@ class WriteMesh(BDFAttributes):
             for prop in props:
                 bdf_file.write(prop.write_card(size, is_double))
         bdf_file.write('$' + '-' * 80 + '\n')
+
+    def _get_properties_by_element_type(self) -> Tuple[Dict[str, List[str]],
+                                                       Dict[str, Any],
+                                                       Dict[str, Any]]:
+        """helper for ``_write_properties_by_element_type``"""
+        propertys_class_to_property_types = OrderedDict()
+        # prop_class -> property types
+        propertys_class_to_property_types['spring'] = ['PELAS', 'PELAST']
+        propertys_class_to_property_types['damper'] = ['PDAMP', 'PDAMPT']
+        propertys_class_to_property_types['rod'] = ['PROD', 'PTUBE']
+        propertys_class_to_property_types['bar'] = ['PBAR', 'PBARL', 'PBRSECT']
+        propertys_class_to_property_types['beam'] = ['PBEAM', 'PBEAML', 'PBMSECT']
+        propertys_class_to_property_types['bush'] = ['PBUSH', 'PBUSH1D', 'PBUSH2D']
+        propertys_class_to_property_types['shell'] = ['PSHEAR', 'PSHELL', 'PCOMP', 'PCOMPG']
+        propertys_class_to_property_types['solid'] = ['PSOLID', 'PLSOLID']
+
+        property_type_to_property_class = {
+            #'other' : [],
+        }
+        # the inverse of propertys_class_to_property_types
+        for prop_class, prop_types in propertys_class_to_property_types.items():
+            for prop_type in prop_types:
+                property_type_to_property_class[prop_type] = prop_class
+
+        #if is_properties:
+
+        # put each property object into a class (e.g., CQUAD4 -> PCOMP)
+        properties_by_class = defaultdict(list)
+        prop_groups = (self.properties, self.pelast, self.pdampt, self.pbusht)
+        for properties in prop_groups:
+            for unused_pid, prop in properties.items():
+                prop_class = property_type_to_property_class[prop.type]
+                #print(prop.type, '->', prop_class)
+                properties_by_class[prop_class].append(prop)
+        return propertys_class_to_property_types, property_type_to_property_class, properties_by_class
 
     def _write_rejects(self, bdf_file: Any, size: int=8, is_double: bool=False,
                        is_long_ids: Optional[bool]=None) -> None:
@@ -1144,6 +1153,8 @@ class WriteMesh(BDFAttributes):
             bdf_file.write(senqset.write_card(size, is_double))
         for unused_seid, setree in sorted(self.setree.items()):
             bdf_file.write(setree.write_card(size, is_double))
+        for unused_seid, release in sorted(self.release.items()):
+            bdf_file.write(release.write_card(size, is_double))
 
 
     def _write_tables(self, bdf_file: Any, size: int=8, is_double: bool=False,

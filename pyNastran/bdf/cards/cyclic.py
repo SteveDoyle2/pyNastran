@@ -62,7 +62,7 @@ class CYAX(BaseCard):
         return CYAX(nids, comment=comment)
 
     def raw_fields(self):
-        list_fields = ['CYAX'] + self.nids
+        list_fields = ['CYAX'] + list(self.nids)
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -122,7 +122,8 @@ class CYJOIN(BaseCard):
     def raw_fields(self):
         #msg = self.comment
         self.nids.sort()
-        list_fields = ['CYJOIN', self.side, self.coord] + self.nids
+        nids = list(self.nids)
+        list_fields = ['CYJOIN', self.side, self.coord] + nids
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

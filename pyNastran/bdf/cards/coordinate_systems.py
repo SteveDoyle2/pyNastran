@@ -9,6 +9,9 @@ All coordinate cards are defined in this file.  This includes:
  * CORD2C
  * CORD2S
 
+{ug} = [Tgb]{ub}
+{ub} = [Tbg]{ug}
+
 """
 from __future__ import annotations
 import copy

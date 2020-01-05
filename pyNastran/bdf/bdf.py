@@ -68,6 +68,7 @@ from pyNastran.bdf.cards.elements.shell import (
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, SNORM)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
+from pyNastran.bdf.cards.elements.acoustic import CHACAB, CAABSF, CHACBR, PACABS
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
@@ -127,7 +128,7 @@ from pyNastran.bdf.cards.optimization import (
     DVPREL1, DVPREL2,
     DVGRID, DSCREEN)
 from pyNastran.bdf.cards.superelements import (
-    SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
+    RELEASE, SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
     SELABEL, SELOAD, SELOC, SEMPLN, SENQSET, SETREE,
     CSUPER, CSUPEXT,
 )
@@ -310,6 +311,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
             #'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
             'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
+            'CHACAB', 'CAABSF', 'CHACBR', 'PACABS',
             'SNORM',
 
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
@@ -490,7 +492,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # superelements
             'SETREE', 'SENQSET', 'SEBULK', 'SEBNDRY', 'SEELT', 'SELOC', 'SEMPLN',
             'SECONCT', 'SELABEL', 'SEEXCLD', 'CSUPER', 'CSUPEXT',
-            'SELOAD',
+            'SELOAD', 'RELEASE',
 
             # super-element sets
             'SESET',  ## se_sets
@@ -1713,6 +1715,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SETREE' : (SETREE, self._add_setree_object),
             'SENQSET' : (SENQSET, self._add_senqset_object),
             'SEBULK' : (SEBULK, self._add_sebulk_object),
+            'RELEASE': (RELEASE, self._add_release_object),
             'SEBNDRY' : (SEBNDRY, self._add_sebndry_object),
             'SEELT' : (SEELT, self._add_seelt_object),
             'SELOC' : (SELOC, self._add_seloc_object),
@@ -1723,6 +1726,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CSUPER' : (CSUPER, self._add_csuper_object),
             'CSUPEXT' : (CSUPEXT, self._add_csupext_object),
             'SELOAD' : (SELOAD, self._add_seload_object),
+
+            'CHACAB': (CHACAB, self._add_element_object),
+            'PACABS': (PACABS, self._add_acoustic_property_object),
 
             #'ACMODL' : (Crash, None),
             #'CHACAB' : (Crash, None),
@@ -2305,7 +2311,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     print(line)
             elif show_log:
                 self.log.info('    rejecting card_name = %r' % card_name)
-
+            assert isinstance(show_log, bool), show_log
         self.increase_card_count(card_name)
         self.reject_lines.append([_format_comment(comment)] + card_lines)
 
@@ -3856,7 +3862,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     continue
 
                 if self.is_reject(card_name):
-                    self.reject_card_lines(card_name, card_lines, comment)
+                    self.reject_card_lines(card_name, card_lines, comment=comment)
                 else:
                     self.add_card(card_lines, card_name, comment=comment, ifile=ifile,
                                   is_list=False, has_none=False)

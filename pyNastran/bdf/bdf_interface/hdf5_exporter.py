@@ -89,6 +89,7 @@ dict_int_obj_attrs = [
     'csuper', 'csupext',
     'se_sets', 'se_usets', 'sebndry', 'sebulk', 'seconct', 'seelt',
     'seexcld', 'selabel', 'seload', 'seloc', 'sempln', 'senqset', 'setree',
+    'release',
 
     # axisymmetric
     'ringaxs', 'ringfl',

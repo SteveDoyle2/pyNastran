@@ -396,6 +396,38 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         os.remove('dmi_out.bdf')
         save_load_deck(model2)
 
+    def test_dmi_complex(self):
+        """tests a complex DMI"""
+        #DMI QQQ 0 2 3 3 4 2
+        #DMI QQQ 1 1 1.0 2.0 3.0 0.0 3
+        #5.0 6.0
+        # DMI QQQ 2 2 6.0 7.0 4 8.0 9.0
+        #[QQQ]
+        #1.0 + 2.0i , 0.0 + 0.0i
+        #3.0 + 0.0i , 6.0 + 7.0i
+        #5.0 + 6.0i , 0.0 + 0.0i
+        #0.0 + 0.0i , 8.0 + 9.0i
+        GCj = [1, 1, 1, 1,
+               2, 2, 2, 2]  # col
+        GCi = [1, 2, 3, 4,
+               1, 2, 3, 4] # rows
+        reals = [1., 3., 5., 0.,
+                 0., 6., 0., 8.]
+        complexs = [2., 0., 6., 0.,
+                    0., 7., 0., 9.]
+        model = BDF(debug=True, log=None, mode='msc')
+        name = 'QQQ'
+        form = 2 # square
+        tin = 3
+        tout = 3
+        nrows = 4
+        ncols = 2
+        dmi = model.add_dmi(name, form, tin, tout, nrows, ncols,
+                            GCj, GCi, reals, Complex=complexs, comment='dmi_complex')
+        #print(dmi.get_stats())
+        #print(dmi)
+        matrix, blank, blank = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
+
     def test_dmig_12(self):
         """tests the add card methodwith a real DMIG"""
         model = BDF(debug=False)

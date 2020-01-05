@@ -53,6 +53,9 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
 
         # lines - should be included
         'PBEND', # 'PBEAM3',
+
+        # acoustic
+        'PACABS',
     ]
     bar_properties = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML',
                       'PROD', 'PTUBE', 'PBRSECT', 'PBMSECT', 'PBCOMP',
@@ -138,6 +141,9 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
 
         # lines - should be included
         'PBEND', # 'PBEAM3',
+
+        # acoustic
+        'PACABS',
     ]
     bar_properties = [
         'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBEAM3']
@@ -211,7 +217,7 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
         property_ids, stop_if_no_eids=stop_if_no_volume,
         msg=' which is required by get_volume_breakdown')
 
-    no_volume = [
+    no_volume = {
         'PLPLANE', 'PPLANE', 'PELAS',
         'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
         'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
@@ -220,10 +226,14 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
 
         # lines - should be included
         'PBEND', 'PBEAM3',
-    ]
-    bar_properties = [
+
+
+        # acoustic
+        'PACABS',
+    }
+    bar_properties = {
         'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', # 'PBEAM3'
-    ]
+    }
 
     pids_to_volume = {}
     skipped_eid_pid = set()
@@ -347,7 +357,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
         else:
             mass_type_to_mass[elem.type] += elem.Mass()
 
-    properties_to_skip = [
+    properties_to_skip = {
         'PLPLANE', 'PPLANE', 'PELAS',
         'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
         'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
@@ -356,8 +366,11 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
 
         # lines - should be included
         'PBCOMP', 'PBEND', 'PBEAM3',
-    ]
-    bar_properties = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE']
+
+        # acoustic
+        'PACABS',
+    }
+    bar_properties = {'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE'}
     for pid, eids in pid_eids.items():
         prop = model.properties[pid]
         masses = []

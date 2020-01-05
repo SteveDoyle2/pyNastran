@@ -90,6 +90,12 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'DSCREEN', 'DTI', 'NSMADD',
         'AESURFS', 'CSSCHD',
         'CGEN', 'NXSTRAT',
+
+        # acoustic
+        'PACABS',
+
+        # superelements
+        'SELOC',
     ]
     set_types_simple = [
         'SET1', 'SET3',
@@ -129,6 +135,9 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'CROD', 'CRAC2D', 'CRAC3D',
         'CONROD', 'CCONEAX',
         'CBAR', 'CBEAM', 'CBEND',
+
+        # acoustic
+        'CHACAB',
     }
 
     # could remove some if we look at the rid_trace
@@ -517,7 +526,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
 
 
 def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids_used):
-    if card_type in ['CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA']:
+    if card_type in ['CTETRA', 'CPENTA', 'CPYRAM', 'CHEXA', 'CHACAB']:
         for eid in ids:
             elem = model.elements[eid]
             nids_used.update(elem.node_ids)

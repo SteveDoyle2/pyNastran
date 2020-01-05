@@ -312,6 +312,9 @@ def _convert_elements(model, xyz_scale, time_scale, mass_scale, weight_scale):
         'CTRAX3', 'CTRAX6',
         'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
         'CQUADX4', 'CQUADX8',
+
+        # acoustic
+        'CHACAB',
     }
     skip_masses = {'CMASS1', 'CMASS3'}
 
@@ -479,6 +482,9 @@ def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale):
 
         # TODO: NX-verify
         'PPLANE',
+
+        # acoustic
+        'PACABS',
     }
 
     # we don't need to convert PBUSHT, PELAST, PDAMPT

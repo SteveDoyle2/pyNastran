@@ -1,5 +1,6 @@
 # pylint: disable=R0902,R0904,R0914
 from math import sin, cos, radians, atan2, sqrt, degrees
+from itertools import count
 
 import numpy as np
 from numpy import array, zeros
@@ -380,7 +381,7 @@ class NastranMatrix(BaseCard):
                 shape = (self.ncols, self.ncols)
             else:
                 nrows, ncols = get_row_col_map(
-                    self.GCi, self.GCj, self.matrix_form)[:2]
+                    self, self.GCi, self.GCj, self.matrix_form)[:2]
                 shape = (nrows, ncols)
         elif self.matrix_form in [2, 9]:
             raise NotImplementedError('need to pull the nrows after reading in everything')
@@ -674,93 +675,111 @@ class NastranMatrix(BaseCard):
 
         return msg
 
-def get_row_col_map(GCi, GCj, ifo):
-    rows = {}
-    rows_reversed = {}
-
-    cols = {}
-    cols_reversed = {}
+def get_row_col_map(matrix, GCi, GCj, ifo):
     ndim = len(GCi.shape)
     #print('ndim=%s' % ndim)
     #print('GCj=%s' % GCj)
     #print('GCi=%s' % GCi)
     if ndim == 1:
-        i = 0
-        #nrows = np.unique(GCi)
-        #ncols = np.unique(GCj)
-        for gci in GCi:
-            if gci not in rows:
-                rows[gci] = i
-                rows_reversed[i] = gci
-                i += 1
-
-        if ifo == 6:
-            # symmetric
-            for gcj in GCj:
-                if gcj not in rows:
-                    #print('row.gcj = %s' % str(gcj))
-                    rows[gcj] = i
-                    rows_reversed[i] = gcj
-                    i += 1
-            cols = rows
-            cols_reversed = rows_reversed
-        else:
-            j = 0
-            for gcj in GCj:
-                if gcj not in cols:
-                    cols[gcj] = j
-                    cols_reversed[j] = gcj
-                    j += 1
+        rows, cols, rows_reversed, cols_reversed = _get_row_col_map_1d(matrix, GCi, GCj, ifo)
     else:
-        #print('i0=%s j0=%s' % (i, j))
-        #nrows = len(GCi)
-        #ncols = len(GCj)
-        #rows_array = np.zeros((nrows, 2), dtype='int32')
-        #cols_array = np.zeros((ncols, 2), dtype='int32')
-        #for i, (nid, comp) in enumerate(GCi):
-            ##print('i=%s nid=%s comp=%s nrows=%s rows_array.shape=%s' % (
-                ##i, nid, comp, nrows, str(rows_array.shape)))
-            #rows_array[i, :] = [nid, comp]
-        #print('rows_array = \n%s' % rows_array)
-
-        #for j, (nid, comp) in enumerate(GCj):
-            #cols_array[j, :] = [nid, comp]
-        #print('cols_array = \n%s' % cols_array)
-
-        i = 0
-        for (nid, comp) in GCi:
-            gci = (nid, comp)
-            if gci not in rows:
-                #print('row.gci = %s' % str(gci))
-                rows[gci] = i
-                rows_reversed[i] = gci
-                i += 1
-        if ifo == 6:
-            # symmetric
-            for (nid, comp) in GCj:
-                gcj = (nid, comp)
-                if gcj not in rows:
-                    #print('row.gcj = %s' % str(gcj))
-                    rows[gcj] = i
-                    rows_reversed[i] = gcj
-                    i += 1
-            cols = rows
-            cols_reversed = rows_reversed
-        else:
-            j = 0
-            for (nid, comp) in GCj:
-                gcj = (nid, comp)
-                if gcj not in cols:
-                    #print('col.gcj = %s' % str(gcj))
-                    cols[gcj] = j
-                    cols_reversed[j] = gcj
-                    j += 1
+        rows, cols, rows_reversed, cols_reversed = _get_row_col_map_2d(matrix, GCi, GCj, ifo)
 
     nrows = len(rows)
     ncols = len(cols)
     assert nrows > 0, 'nrows=%s' % nrows
     assert ncols > 0, 'ncols=%s' % ncols
     return nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed
+
+def _get_row_col_map_1d(matrix, GCi, GCj, ifo):
+    """helper for ``get_row_col_map``"""
+    rows = {}
+    rows_reversed = {}
+
+    cols = {}
+    cols_reversed = {}
+    i = 0
+    #nrows = np.unique(GCi)
+    #ncols = np.unique(GCj)
+    for gci in GCi:
+        if gci not in rows:
+            rows[gci] = i
+            rows_reversed[i] = gci
+            i += 1
+
+    if ifo == 6:
+        # symmetric
+        #print(GCj)
+        for gcj in GCj:
+            if gcj not in rows:
+                #print('row.gcj = %s' % str(gcj))
+                rows[gcj] = i
+                rows_reversed[i] = gcj
+                i += 1
+        cols = rows
+        cols_reversed = rows_reversed
+    else:
+        j = 0
+        for gcj in GCj:
+            if gcj not in cols:
+                cols[gcj] = j
+                cols_reversed[j] = gcj
+                j += 1
+    return rows, cols, rows_reversed, cols_reversed
+
+def _get_row_col_map_2d(matrix, GCi, GCj, ifo):
+    """helper for ``get_row_col_map``"""
+    rows = {}
+    rows_reversed = {}
+
+    cols = {}
+    cols_reversed = {}
+    #print('i0=%s j0=%s' % (i, j))
+    #nrows = len(GCi)
+    #ncols = len(GCj)
+    #rows_array = np.zeros((nrows, 2), dtype='int32')
+    #cols_array = np.zeros((ncols, 2), dtype='int32')
+    #for i, (nid, comp) in enumerate(GCi):
+        ##print('i=%s nid=%s comp=%s nrows=%s rows_array.shape=%s' % (
+            ##i, nid, comp, nrows, str(rows_array.shape)))
+        #rows_array[i, :] = [nid, comp]
+    #print('rows_array = \n%s' % rows_array)
+
+    #for j, (nid, comp) in enumerate(GCj):
+        #cols_array[j, :] = [nid, comp]
+    #print('cols_array = \n%s' % cols_array)
+
+    #print(GCi)
+    #print(GCj)
+    i = 0
+    for (nid, comp) in GCi:
+        gci = (nid, comp)
+        if gci not in rows:
+            #print('row.gci = %s' % str(gci))
+            rows[gci] = i
+            rows_reversed[i] = gci
+            i += 1
+    if ifo == 6:
+        # symmetric
+        for (nid, comp) in GCj:
+            gcj = (nid, comp)
+            if gcj not in rows:
+                #print('row.gcj = %s' % str(gcj))
+                rows[gcj] = i
+                rows_reversed[i] = gcj
+                i += 1
+        cols = rows
+        cols_reversed = rows_reversed
+    else:
+        j = 0
+        for (nid, comp) in GCj:
+            gcj = (nid, comp)
+            if gcj not in cols:
+                #print('col.gcj = %s' % str(gcj))
+                cols[gcj] = j
+                cols_reversed[j] = gcj
+                j += 1
+    return rows, cols, rows_reversed, cols_reversed
 
 def _fill_sparse_matrix(self, nrows, ncols):
     """helper method for get_matrix"""
@@ -863,7 +882,6 @@ def _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_s
 
                 msg += '\n'
                 print(msg)
-
                 raise KeyError(msg)
             except IndexError:
                 msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
@@ -894,6 +912,13 @@ def _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmet
                 j = cols[gcj]
                 dense_mat[i, j] = complex(reali, complexi)
                 dense_mat[j, i] = complex(reali, complexi)
+        elif self.matrix_form == 2:  # rectangular
+            assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
+            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                   self.Real, self.Complex):
+                i = rows[gci]
+                j = cols[gcj]
+                dense_mat[i, j] = complex(reali, complexi)
         else:
             for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
                                                    self.Real, self.Complex):
@@ -926,6 +951,48 @@ def _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmet
                 raise RuntimeError(msg)
     return dense_mat
 
+def get_dmi_matrix(matrix, is_sparse=False, apply_symmetry=True):
+    ifo = matrix.ifo
+    GCj = array(matrix.GCj, dtype='int32') - 1
+    GCi = array(matrix.GCi, dtype='int32') - 1
+
+    dtype = matrix.tin_dtype
+    if ifo == 2:
+        # rectangular
+        nrows = matrix.nrows
+        ncols = matrix.ncols
+        # if not is_sparse:
+        M = np.zeros((nrows, ncols), dtype=dtype)
+        if matrix.is_complex:
+            M[GCi, GCj] = matrix.Real + matrix.Complex * 1j
+        else:
+            #for gci, gcj in zip(GCi, GCj):
+                #M[gci, gcj] = 1 # matrix.Real
+            M[GCi, GCj] = matrix.Real
+    else:
+        nrows = matrix.nrows
+        ncols = matrix.ncols
+        if ifo == 6:
+            nrows = max(nrows, ncols)
+            ncols = nrows
+        if matrix.is_complex:
+            data = matrix.Real + matrix.Complex * 1j
+        else:
+            data = matrix.Real
+        M = coo_matrix((data, (GCi, GCj)),
+                       shape=(nrows, ncols), dtype=dtype)
+        if not is_sparse:
+            M = M.toarray()
+    #else:
+        #ifo : int
+        #    matrix shape
+        #    4=Lower Triangular
+        #    5=Upper Triangular
+        #    6=Symmetric
+        #    8=Identity (m=nRows, n=m)
+        #raise RuntimeError(matrix.get_stats())
+    return M, None, None
+
 def get_matrix(self, is_sparse=False, apply_symmetry=True):
     """
     Builds the Matrix
@@ -953,7 +1020,7 @@ def get_matrix(self, is_sparse=False, apply_symmetry=True):
 
     """
     nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed = get_row_col_map(
-        self.GCi, self.GCj, self.matrix_form)
+        self, self.GCi, self.GCj, self.matrix_form)
     #print('rows = ', rows)
     #print('cols = ', cols)
     #print('i=%s j=%s' % (i, j))
@@ -2097,6 +2164,22 @@ class DMI(NastranMatrix):
         i = 0
         fields = [interpret_value(field, card) for field in card[3:]]
         # Complex, starts at A(i1,j)+imag*A(i1,j), goes to A(i2,j) in a column
+        if 0: # pragma: no cover
+            is_real = True
+            gci = None
+            for field in fields:
+                if isinstance(field, integer_types):
+                    gci = field
+                elif isinstance(field, float):
+                    if is_real:
+                        real = field
+                    else:
+                        self.GCj.append(j)
+                        self.GCi.append(gci)
+                        self.Real.append(real)
+                        self.Complex.append(field)
+                    is_real = not is_real
+
         while i < len(fields):
             i1 = fields[i]
             assert isinstance(i1, int), card
@@ -2191,7 +2274,7 @@ class DMI(NastranMatrix):
             list_fields = ['DMI', self.name, gcj]
 
             # will always write the first one
-            gci_last = -1
+            gci_last = -10
             #print('gcis=%s \nreals=%s \ncomplexs=%s' % (
                 #gcis[isort], reals[isort], complexs[isort]))
             if max(gcis) == min(gcis):
@@ -2200,16 +2283,46 @@ class DMI(NastranMatrix):
                     list_fields.extend([reali, complexi])
                 msg += func(list_fields)
             else:
-                for gci, real, complexi in zip(gcis[isort], reals[isort], complexs[isort]):
-                    if gci != gci_last + 1:
+                #print(f'list_fields0 = {list_fields}')
+                for i, gci, reali, complexi in zip(count(), gcis[isort], reals[isort], complexs[isort]):
+                    #print('B', gci, reali, complexi, gci_last)
+                    if gci != gci_last + 1 and i != 0:
                         pass
                     else:
                         list_fields.append(gci)
-                    list_fields.append(real)
+                    list_fields.append(reali)
                     list_fields.append(complexi)
                     gci_last = gci
+                #print(f'list_fields = {list_fields}')
                 msg += func(list_fields)
         return msg
+
+    def get_matrix(self, is_sparse=False, apply_symmetry=True):
+        """
+        Builds the Matrix
+
+        Parameters
+        ----------
+        is_sparse : bool; default=False
+            should the matrix be returned as a sparse matrix.
+            Slower for dense matrices.
+        apply_symmetry : bool; default=True
+            If the matrix is symmetric (ifo=6), returns a symmetric matrix.
+            Supported as there are symmetric matrix routines.
+
+        Returns
+        -------
+        M : numpy.ndarray or scipy.coomatrix
+            the matrix
+        rows : dict[int] = [int, int]
+            dictionary of keys=rowID, values=(Grid,Component) for the matrix
+        cols: dict[int] = [int, int]
+            dictionary of keys=columnID, values=(Grid,Component) for the matrix
+
+        .. warning:: is_sparse=True WILL fail
+
+        """
+        return get_dmi_matrix(self, is_sparse=is_sparse, apply_symmetry=apply_symmetry)
 
     def write_card_16(self):
         """writes the card in single precision"""

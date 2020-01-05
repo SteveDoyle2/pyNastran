@@ -295,9 +295,7 @@ STR_PARAMS_1 = [
 
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
-    """
-    Defines an interface for the Nastran OP2 file.
-    """
+    """Defines an interface for the Nastran OP2 file."""
     @property
     def total_effective_mass_matrix(self):
         """6x6 matrix"""

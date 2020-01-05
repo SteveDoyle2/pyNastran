@@ -92,7 +92,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'sebulk', 'sebndry', 'seconct', 'seelt', 'seexcld',
         'selabel', 'seloc', 'seload', 'sempln', 'senqset',
         'setree',
-        'se_sets', 'se_usets',
+        'se_sets', 'se_usets', 'release',
 
         # ???
         'dscreen', 'dti', 'nxstrats', 'radcavs', 'radmtx', 'ringaxs', 'ringfl',
@@ -132,7 +132,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'include_dir', 'include_filenames', 'save_file_structure',
         'rsolmap_to_str', 'nastran_format', 'nid_map', 'bdf_filename',
         'initial_superelement_models',
-        'is_zona', 'is_nasa95', 'type_slot_str',
+        'is_zona', 'is_nasa95', 'type_slot_str', 'dict_of_vars',
 
         # handled below
         'mpcadds', 'mpcs', 'spcadds', 'spcs',

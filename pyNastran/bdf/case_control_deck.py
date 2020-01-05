@@ -640,9 +640,12 @@ class CaseControlDeck:
         #print('  equals_count = %s' % equals_count)
         if line_upper.startswith('SUBCASE'):
             param_type = split_equal_space(line_upper, 'SUBCASE', 'SUBCASE = 5')
-            key = 'SUBCASE'
+            if ' ' in param_type:
+                # SUBCASE 1 STATIC
+                param_type = param_type.split()[0]
+                self.log.debug(f"key={key!r} param_type={param_type!r} line_upper={line_upper!r}")
 
-            #print("key=%r isubcase=%r" % (key, isubcase))
+            key = 'SUBCASE'
             value = integer(param_type, line_upper)
             #self.isubcase = int(isubcase)
             param_type = 'SUBCASE-type'

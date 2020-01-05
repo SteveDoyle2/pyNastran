@@ -42,10 +42,11 @@ class FORCEAX(BaseCard):
     @classmethod
     def _init_from_empty(cls):
         sid = 1
-        eid = 1
-        pa = 1.
-        nids = [1, 2]
-        return FORCEAX(sid, eid, pa, nids, pb=None, theta=0., comment='')
+        ring_id = 10
+        hid = 0
+        scale = 1.
+        f_rtz = [0., 0., 1.]
+        return FORCEAX(sid, ring_id, hid, scale, f_rtz, comment='')
 
     def __init__(self, sid, ring_id, hid, scale, f_rtz, comment=''):
         """

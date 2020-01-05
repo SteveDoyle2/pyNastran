@@ -18,7 +18,7 @@ from pyNastran.bdf.field_writer_8 import set_blank_if_default
 from pyNastran.bdf.cards.base_card import BaseCard, _node_ids
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, double_or_blank, components_or_blank,
-    string_or_blank)
+    string, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
@@ -496,7 +496,7 @@ class LOADCYN(Load):
         return self.comment + print_card_8(card)
 
 
-class LOADCYH(BaseCard):  # Requires LOADSET in case control deck
+class LOADCYH(BaseCard):
     """
     Harmonic Load Input for Cyclic Symmetry
     Defines the harmonic coefficients of a static or dynamic load for
@@ -558,7 +558,7 @@ class LOADCYH(BaseCard):  # Requires LOADSET in case control deck
         sid = integer(card, 1, 'sid')
         scale = double(card, 2, 's')
         hid = integer(card, 3, 'hid')
-        htype = integer_or_blank(card, 4, 'htype')
+        htype = string(card, 4, 'htype')
         scale1 = double(card, 5, 'scale1')
         load1 = integer_or_blank(card, 6, 'load1')
         scale2 = double_or_blank(card, 7, 'scale2')
