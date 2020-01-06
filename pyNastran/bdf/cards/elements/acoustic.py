@@ -149,22 +149,53 @@ class CAABSF(Element):
 
     Defines a frequency-dependent acoustic absorber element in coupled fluid-structural
     analysis.
-    CAABSF EID PID G1 G2 G3 G4
+
+    +--------+-------+-------+----+----+----+----+
+    |   1    |   2   |   3   |  4 |  5 |  6 | 7  |
+    +========+=======+=======+=====+===+====+====+
+    | CAABSF |  EID  |  PID  | N1 | N2 | N3 | N4 |
+    +--------+-------+-------+----+----+----+----+
     """
     type = 'CAABSF'
+
+    @classmethod
+    def _init_from_empty(cls):
+        eid = 1
+        pid = 1
+        nodes = [1, 2, 3, 4]
+        return CAABSF(eid, pid, nodes, comment='')
+
     def __init__(self, eid, pid, nodes):
         Element.__init__(self)
         self.eid = eid
         self.pid = pid
-        #self.nodes = nodes
         self.prepare_node_ids(nodes)
 
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a CHACAB card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        eid = integer(card, 1, 'eid')
+        pid = integer(card, 2, 'pid')
+        nids = [
+            integer(card, 3, 'nid1'), integer(card, 4, 'nid2'),
+            integer(card, 5, 'nid3'), integer(card, 6, 'nid4'),
+        ]
+        assert len(card) <= 6, 'len(CAABSF card) = %i\ncard=%s' % (len(card), card)
+        return CAABSF(eid, pid, nids, comment=comment)
+
     def raw_fields(self):
-        nodes1 = self.nodes[:12]
-        nodes2 = self.nodes[16:]
-        assert len(nodes1) == 12, len(nodes1)
-        assert len(nodes2) == 4, len(nodes2)
-        return ['CHACBR', self.eid, self.pid, ] + self.nodes
+        nodes1 = self.nodes
+        assert len(nodes1) == 4, len(nodes1)
+        return ['CAABSF', self.eid, self.pid, ] + self.nodes
 
     def write_card(self, size=8, is_double=False):
         fields = self.raw_fields()

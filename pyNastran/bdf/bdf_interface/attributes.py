@@ -676,7 +676,7 @@ class BDFAttributes:
                 'CHBDYE', 'CHBDYG', 'CHBDYP',
 
                 # acoustic
-                'CHACAB',
+                'CHACAB', 'CAABSF', 'CHACBR',
             ],
             'normals' : ['SNORM'],
             'nsms' : ['NSM', 'NSM1', 'NSML', 'NSML1'],

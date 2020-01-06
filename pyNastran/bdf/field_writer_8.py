@@ -4,8 +4,7 @@ from typing import List, Union, Any
 from numpy import float32, isnan
 
 
-def set_string8_blank_if_default(value, default):
-    # type: (Any, Any) -> str
+def set_string8_blank_if_default(value: Any, default: Any) -> str:
     """helper method for writing BDFs"""
     val = set_blank_if_default(value, default)
     if val is None:
@@ -13,8 +12,7 @@ def set_string8_blank_if_default(value, default):
     return '%8s' % val
 
 
-def is_same(value1, value2):
-    # type: (Any, Any) -> bool
+def is_same(value1: Any, value2: Any) -> bool:
     """
     Checks to see if 2 values are the same
 
@@ -27,8 +25,7 @@ def is_same(value1, value2):
     return False
 
 
-def set_blank_if_default(value, default):
-    # type: (Any, Any) -> Union[int, float, str, None]
+def set_blank_if_default(value: Any, default: Any) -> Union[int, float, str, None]:
     """
     Used when setting the output data of a card to clear default values
 
@@ -47,16 +44,14 @@ def set_blank_if_default(value, default):
     return None if is_same(value, default) else value
 
 
-def set_default_if_blank(value, default):
-    # type: (Any, Any) -> Union[int, float, str]
+def set_default_if_blank(value: Any, default: Any) -> Union[int, float, str]:
     """
     Used when initializing a card and the default value isn't set
     Used on PBARL"""
     return default if value is None or value == '' else value
 
 
-def print_scientific_8(value):
-    # type: (float) -> str
+def print_scientific_8(value: float) -> str:
     """
     Prints a value in 8-character scientific notation.
     This is a sub-method and shouldnt typically be called
@@ -92,8 +87,7 @@ def print_scientific_8(value):
     return field
 
 
-def print_float_8(value):
-    # type: (float) -> str
+def print_float_8(value: float) -> str:
     """
     Prints a float in nastran 8-character width syntax using the
     highest precision possbile.
@@ -202,8 +196,7 @@ def print_float_8(value):
     return field
 
 
-#def print_float_or_int_8(value):
-    ## type: (Union[int, float]) -> str
+#def print_float_or_int_8(value: Union[int, float]) - str:
     #"""
     #Prints a 8-character width field
 
@@ -227,8 +220,7 @@ def print_float_8(value):
     #return field
 
 
-def print_field_8(value):
-    # type: (Union[int, float, str, None]) -> str
+def print_field_8(value: Union[int, float, str, None]) -> str:
     """
     Prints a 8-character width field
 
@@ -312,8 +304,7 @@ def print_card_8(fields):
     return out
 
 
-def print_int_card(fields):
-    # type: (List[Union[int]]) -> str
+def print_int_card(fields: List[Union[int]]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.
     All fields (other than the first field) must be integers.
@@ -354,8 +345,7 @@ def print_int_card(fields):
     return out
 
 
-def print_int_card_blocks(fields_blocks):
-    # type: (List[Any]) -> str
+def print_int_card_blocks(fields_blocks: List[Any]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.
     All fields other than the card name must be written in "block" format.

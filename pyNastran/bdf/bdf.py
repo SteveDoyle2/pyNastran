@@ -2871,7 +2871,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             return
 
         if self.echo and not self.force_echo_off:
-            self._echo_card(card, card_obj)
+            _echo_card(card, card_obj)
 
         if card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]
@@ -2921,16 +2921,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:
             self.reject_cards.append(card_obj)
 
-    def _echo_card(self, card, card_obj):
-        """echos a card"""
-        try:
-            print(print_card_8(card_obj).rstrip())
-        except:
-            if card in ['DEQATN']:
-                print(str(card_obj).rstrip())
-            else:
-                print(print_card_16(card_obj).rstrip())
-
     def _add_card_helper(self, card_obj: BDFCard, card: List[str],
                          card_name: str, ifile: int,
                          comment: str='') -> None:
@@ -2959,7 +2949,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             return
 
         if self.echo and not self.force_echo_off:
-            self._echo_card(card, card_obj)
+            _echo_card(card, card_obj)
 
         if card_name in self._card_parser:
             card_class, add_card_function = self._card_parser[card_name]
@@ -4291,6 +4281,17 @@ class BDF(BDF_):
             model._parse_all_cards(superelement_line[iminus:], superelement_ilines)
             self.superelement_models[superelement_id] = model
             self.initial_superelement_models.append(superelement_id)
+
+
+def _echo_card(card, card_obj):
+    """echos a card"""
+    try:
+        print(print_card_8(card_obj).rstrip())
+    except:
+        if card in ['DEQATN']:
+            print(str(card_obj).rstrip())
+        else:
+            print(print_card_16(card_obj).rstrip())
 
 def read_bdf(bdf_filename: Optional[str]=None, validate: bool=True, xref: bool=True, punch: bool=False,
              save_file_structure: bool=False,

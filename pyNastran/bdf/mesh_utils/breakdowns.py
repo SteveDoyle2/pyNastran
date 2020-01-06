@@ -31,7 +31,7 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
     TODO: What about CONRODs?
 
     """
-    skip_elements = [
+    #skip_elements = [
         #'CTRIA3', 'CTRIA6', 'CTRIAR',
         #'CQUAD4', 'CQUAD8',
         #'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -39,8 +39,8 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
         #'CBUSH', 'CBUSH1D', 'CBUSH2D',
         #'CRAC2D', 'CRAC3D',
         #'CBEAM3',
-    ]
-    skip_props = [
+    #]
+    skip_props = {
         'PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
         'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
         'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
@@ -56,10 +56,10 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
 
         # acoustic
         'PACABS',
-    ]
-    bar_properties = ['PBAR', 'PBARL', 'PBEAM', 'PBEAML',
+    }
+    bar_properties = {'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
                       'PROD', 'PTUBE', 'PBRSECT', 'PBMSECT', 'PBCOMP',
-                      'PBEAM3']
+                      'PBEAM3'}
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=stop_if_no_length,
         msg=' which is required by get_length_breakdown')
@@ -129,7 +129,7 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
     #'PCOMPS',
 
     """
-    skip_props = [
+    skip_props = {
         'PSOLID', 'PLPLANE', 'PPLANE', 'PELAS',
         'PDAMP', 'PBUSH', 'PBUSH1D', 'PBUSH2D',
         'PELAST', 'PDAMPT', 'PBUSHT', 'PDAMP5',
@@ -144,9 +144,9 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
 
         # acoustic
         'PACABS',
-    ]
-    bar_properties = [
-        'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBEAM3']
+    }
+    bar_properties = {
+        'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBEAM3'}
 
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=stop_if_no_area,

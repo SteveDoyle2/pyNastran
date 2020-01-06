@@ -492,7 +492,6 @@ class CELAS3(SpringElement):
         #comments = []
         pids = []
         nodes = []
-        components = []
         for eid in eids:
             element = model.elements[eid]
             #comments.append(element.comment)
@@ -554,7 +553,7 @@ class CELAS3(SpringElement):
             the BDF object
         """
         msg = ', which is required by CELAS3 eid=%s' % (self.eid)
-        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.nodes_ref = model.EmptyNodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
     def safe_cross_reference(self, model, xref_errors):
