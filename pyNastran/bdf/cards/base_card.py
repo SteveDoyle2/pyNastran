@@ -488,48 +488,49 @@ class Element(BaseCard):
 
     def prepare_node_ids(self, nids: List[int], allow_empty_nodes: bool=False) -> None:
         """Verifies all node IDs exist and that they're integers"""
-        self.nodes = nids
-        self.validate_node_ids(allow_empty_nodes)
+        #self.nodes = nids
+        nids = self.validate_node_ids(nids, allow_empty_nodes)
         return nids
 
-    def validate_node_ids(self, allow_empty_nodes: bool=False) -> None:
+    def validate_node_ids(self, nodes: List[int], allow_empty_nodes: bool=False) -> None:
         if allow_empty_nodes:
-            # only put valid nodes in here
-            #nids2 = [nid for nid in self.nodes]
-            nids2 = self.nodes
-            if len(nids2) == 0:
+            # verify we have nodes
+            if len(nodes) == 0:
                 msg = '%s requires at least one node id be specified; node_ids=%s' % (
-                    self.type, nids2)
+                    self.type, nodes)
                 raise ValueError(msg)
 
-            #unique_nodes = unique(nids2)
-            #if len(nids2) != len(unique_nodes):
-                #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nids2)
+            #unique_nodes = unique(nodes)
+            #if len(nodes) != len(unique_nodes):
+                #msg = '%s requires that all node ids be unique; node_ids=%s' % (self.type, nodes)
                 #raise IndexError(msg)
 
             # remove 0 nodes
-            nodes = [nid if nid != 0 else None
-                     for nid in self.nodes]
+            nodes2 = [nid if nid != 0 else None
+                     for nid in nodes]
         else:
-            nodes = self.nodes
+            nodes2 = nodes
             #unique_nodes = unique(self.nodes)
             #if len(self.nodes) != len(unique_nodes):
                 #msg = '%s requires that all node ids be unique; node_ids=%s' % (
                     #self.type, self.nodes)
                 #raise IndexError(msg)
 
-        nodes2 = []
-        for nid in nodes:
-            if isinstance(nid, integer_types):
-                nodes2.append(nid)
-            elif nid is None and allow_empty_nodes or np.isnan(nid):
-                nodes2.append(None)
-            else:  # string???
-                #nodes.append(int(nid))
-                msg = 'this element may have missing nodes...\n'
-                msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (self.nodes, type(nid))
-                raise RuntimeError(msg)
-        self.nodes = nodes2
+        #nodes3 = []
+        #for nid in nodes:
+            #if isinstance(nid, integer_types):
+                #nodes3.append(nid)
+            #elif nid is None and allow_empty_nodes or np.isnan(nid):
+                #nodes3.append(None)
+            #else:  # string???
+                #msg = 'this element may have missing nodes...\n'
+                #msg += 'nids=%s allow_empty_nodes=False;\ntype(nid)=%s' % (nodes, type(nid))
+                #raise RuntimeError(msg)
+        #print('nodes', nodes)
+        #print('nodes2', nodes2)
+        #print('nodes3 =', nodes3)
+        #self.nodes = nodes2
+        return nodes2
 
 
 def _format_comment(comment: str) -> str:

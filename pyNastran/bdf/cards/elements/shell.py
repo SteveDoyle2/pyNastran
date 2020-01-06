@@ -1399,7 +1399,7 @@ class CTRIAR(TriShell):
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
-        self.nodes = nids
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=False)
         assert len(self.nodes) == 3
         self.theta_mcid_ref = None  # type: Optional[Any]
 
@@ -1438,8 +1438,8 @@ class CTRIAR(TriShell):
         h5_file.create_dataset('zoffset', data=zoffsets)
         #self.tflag = tflag
 
-    def validate(self):
-        self.validate_node_ids(allow_empty_nodes=False)
+    #def validate(self):
+        #self.validate_node_ids(allow_empty_nodes=False)
 
     @classmethod
     def add_card(cls, card, comment=''):

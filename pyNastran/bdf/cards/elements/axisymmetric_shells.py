@@ -127,7 +127,7 @@ class CTRAX3(AxisymmetricTri):
         #: Property ID
         self.pid = pid
         self.theta = theta
-        self.nodes = nids
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 3, 'error on CTRAX3'
 
     @classmethod
@@ -151,8 +151,8 @@ class CTRAX3(AxisymmetricTri):
         h5_file.create_dataset('nodes', data=nodes)
         h5_file.create_dataset('theta', data=thetas)
 
-    def validate(self):
-        self.validate_node_ids(allow_empty_nodes=True)
+    #def validate(self):
+        #self.validate_node_ids(allow_empty_nodes=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -305,7 +305,7 @@ class CTRAX6(AxisymmetricTri):
         #: Property ID
         self.pid = pid
         self.theta = theta
-        self.nodes = nids
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, f'nids={nids}'
 
     @classmethod
@@ -329,8 +329,8 @@ class CTRAX6(AxisymmetricTri):
         h5_file.create_dataset('nodes', data=nodes)
         h5_file.create_dataset('theta', data=thetas)
 
-    def validate(self):
-        self.validate_node_ids(allow_empty_nodes=True)
+    #def validate(self):
+        #self.validate_node_ids(allow_empty_nodes=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -515,11 +515,11 @@ class CTRIAX(AxisymmetricTri):
         #: Property ID of a PLPLANE or PAXSYMH entry
         self.pid = pid
         self.theta_mcid = theta_mcid
-        self.nodes = nids
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIAX'
 
-    def validate(self):
-        self.validate_node_ids(allow_empty_nodes=True)
+    #def validate(self):
+        #self.validate_node_ids(allow_empty_nodes=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
