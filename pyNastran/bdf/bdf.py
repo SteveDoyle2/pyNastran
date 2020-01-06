@@ -68,7 +68,7 @@ from pyNastran.bdf.cards.elements.shell import (
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, SNORM)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
-from pyNastran.bdf.cards.elements.acoustic import CHACAB, CAABSF, CHACBR, PACABS
+from pyNastran.bdf.cards.elements.acoustic import CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
@@ -311,7 +311,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
             #'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
             'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
-            'CHACAB', 'CAABSF', 'CHACBR', 'PACABS',
+            # acoustic
+            'CHACAB', 'CAABSF', 'CHACBR',
+            'PACABS', 'PAABSF', 'PACBAR',
             'SNORM',
 
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
@@ -1728,7 +1730,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'SELOAD' : (SELOAD, self._add_seload_object),
 
             'CHACAB': (CHACAB, self._add_element_object),
+            'CHACBR': (CHACBR, self._add_element_object),
+            'CAABSF': (CAABSF, self._add_element_object),
             'PACABS': (PACABS, self._add_acoustic_property_object),
+            'PAABSF': (PAABSF, self._add_acoustic_property_object),
+            'PACBAR': (PACBAR, self._add_acoustic_property_object),
 
             #'ACMODL' : (Crash, None),
             #'CHACAB' : (Crash, None),

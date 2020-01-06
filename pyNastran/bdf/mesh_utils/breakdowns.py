@@ -55,7 +55,7 @@ def get_length_breakdown(model, property_ids=None, stop_if_no_length=True):
         'PBEND', # 'PBEAM3',
 
         # acoustic
-        'PACABS',
+        'PACABS', 'PAABSF', 'PACBAR',
     }
     bar_properties = {'PBAR', 'PBARL', 'PBEAM', 'PBEAML',
                       'PROD', 'PTUBE', 'PBRSECT', 'PBMSECT', 'PBCOMP',
@@ -143,7 +143,7 @@ def get_area_breakdown(model, property_ids=None, stop_if_no_area=True, sum_bar_a
         'PBEND', # 'PBEAM3',
 
         # acoustic
-        'PACABS',
+        'PACABS', 'PAABSF', 'PACBAR',
     }
     bar_properties = {
         'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', 'PBEAM3'}
@@ -229,7 +229,7 @@ def get_volume_breakdown(model, property_ids=None, stop_if_no_volume=True):
 
 
         # acoustic
-        'PACABS',
+        'PACABS', 'PAABSF', 'PACBAR',
     }
     bar_properties = {
         'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE', # 'PBEAM3'
@@ -368,7 +368,7 @@ def get_mass_breakdown(model, property_ids=None, stop_if_no_mass=True, detailed=
         'PBCOMP', 'PBEND', 'PBEAM3',
 
         # acoustic
-        'PACABS',
+        'PACABS', 'PAABSF', 'PACBAR',
     }
     bar_properties = {'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE'}
     for pid, eids in pid_eids.items():

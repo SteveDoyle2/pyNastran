@@ -45,7 +45,7 @@ from pyNastran.bdf.cards.elements.shell import (
     CPLSTS3, #CPLSTS4, CPLSTS6, CPLSTS8,
     SNORM,
 )
-from pyNastran.bdf.cards.elements.acoustic import CHACAB, CAABSF, CHACBR, PACABS
+from pyNastran.bdf.cards.elements.acoustic import CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT #PBUSH2D
@@ -246,6 +246,8 @@ CARD_MAP = {
     'CAABSF' : CAABSF,
     'CHACBR' : CHACBR,
     'PACABS' : PACABS,
+    'PAABSF' : PAABSF,
+    'PACBAR' : PACBAR,
 
     # rod elements
     'CONROD' : CONROD,

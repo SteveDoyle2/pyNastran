@@ -1188,7 +1188,7 @@ class GetCard(GetMethods):
             'CTRIA6', 'CQUAD8', 'CQUAD',
             'CTETRA', 'CPENTA', 'CHEXA', 'CPYRAM',
             'CRAC2D', 'CRAC3D', 'CHBDYP', #'CHBDYG',
-            'CHACAB',
+            'CHACAB', 'CAABSF',
         ]
 
         if etypes is None:
@@ -1451,7 +1451,7 @@ class GetCard(GetMethods):
 
         elements_without_properties = {
             'CONROD', 'CONM2', 'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4',
-            'GENEL', 'CHACAB'}
+            'GENEL', 'CHACAB', 'CAABSF', }
         thermal_elements = {'CHBDYP'}
         elements_without_properties.update(thermal_elements)
         skip_elements = elements_without_properties
@@ -1502,7 +1502,7 @@ class GetCard(GetMethods):
 
         properties_without_materials = {
             'PGAP', 'PELAS', 'PVISC', 'PBUSH', 'PDAMP', 'PFAST', 'PBUSH1D',
-            'PACABS',
+            'PACABS', 'PAABSF', 'PACBAR',
         }
 
         for pid in self.property_ids:

@@ -1828,6 +1828,9 @@ def get_element_stats(fem1: BDF, unused_fem2: BDF, quiet: bool=False) -> None:
 
     if fem1.elements:
         fem1.get_elements_nodes_by_property_type()
+    check_mass(fem1, quiet=quiet)
+
+def check_mass(fem1: BDF, quiet: bool=False):
     mass1, cg1, inertia1 = mass_properties(fem1, reference_point=None, sym_axis=None)
     mass2, cg2, inertia2 = mass_properties_nsm(fem1, reference_point=None, sym_axis=None)
     #mass3, cg3, inertia3 = mass_properties_breakdown(fem1)[:3]
@@ -1839,7 +1842,7 @@ def get_element_stats(fem1: BDF, unused_fem2: BDF, quiet: bool=False) -> None:
         print('Ixx=%s, Iyy=%s, Izz=%s \nIxy=%s, Ixz=%s, Iyz=%s' % tuple(inertia1))
     assert np.allclose(mass1, mass2), f'mass1={mass1} mass2={mass2}'
     assert np.allclose(cg1, cg2), f'mass={mass1}\ncg1={cg1} cg2={cg2}'
-    assert np.allclose(inertia1, inertia2, atol=1e-5), f'mass={mass} cg={cg}\ninertia1={inertia1}\ninertia2={inertia2}\ndinertia={inertia1-inertia2}'
+    assert np.allclose(inertia1, inertia2, atol=1e-5), f'mass={mass1} cg={cg1}\ninertia1={inertia1}\ninertia2={inertia2}\ndinertia={inertia1-inertia2}'
 
     for nsm_id in chain(fem1.nsms, fem1.nsmadds):
         mass, unused_cg, unused_inertia = mass_properties_nsm(

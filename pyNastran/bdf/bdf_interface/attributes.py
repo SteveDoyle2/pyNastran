@@ -688,11 +688,14 @@ class BDFAttributes:
             #'properties_acoustic' : ['PACABS'],
             'properties' : [
                 #  acoustic
-                'PACABS',
+                'PACABS', 'PAABSF', 'PACBAR',
+
                 # 0d
                 'PELAS', 'PGAP', 'PFAST',
                 'PBUSH', 'PBUSH1D',
                 'PDAMP', 'PDAMP5',
+
+                # 1d
                 'PROD', 'PBAR', 'PBARL', 'PBEAM', 'PTUBE', 'PBEND', 'PBCOMP', 'PBRSECT', 'PBMSECT',
                 'PBEAML',  # not fully supported
                 'PBEAM3',

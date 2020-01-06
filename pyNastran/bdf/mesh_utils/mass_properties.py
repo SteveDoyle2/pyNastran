@@ -64,7 +64,7 @@ NO_MASS = {
     'CYJOIN',
 
     # acoustic
-    'CHACAB',
+    'CHACAB', 'CAABSF',
 }
 
 def transform_inertia(mass, xyz_cg, xyz_ref, xyz_ref2, I_ref):
@@ -839,6 +839,8 @@ def _get_mass_nsm(model, element_ids, mass_ids,
         mass = _mass_catch_all(model, etype, etypes_skipped,
                                element_ids, all_eids, eids,
                                mass, cg, I, reference_point)
+    elif etype in ['CSUPER', 'CSUPEXT']:
+        pass
     elif etype.startswith('C'):
         model.log.warning('etype=%r should be explicit' % etype)
         #raise RuntimeError('etype=%r should be explicit' % etype) ## TODO: this is temporary
