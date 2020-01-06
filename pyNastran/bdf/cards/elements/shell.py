@@ -549,7 +549,7 @@ class CTRIA3(TriShell):
         self.eid = eid
         self.pid = pid
         assert len(nids) == 3, nids
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         self.zoffset = zoffset
         self.theta_mcid = theta_mcid
         self.tflag = tflag
@@ -818,9 +818,9 @@ class CPLSTN3(TriShell):
         self.eid = eid
         self.pid = pid
         assert len(nids) == 3, nids
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         self.theta = theta
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 3
 
     @classmethod
@@ -1037,7 +1037,7 @@ class CTRIA6(TriShell):
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIA6'
         self.theta_mcid_ref = None  # type: Optional[Any]
 
@@ -1883,7 +1883,7 @@ class CSHEAR(QuadShell):
         self.eid = eid
         #: Property ID
         self.pid = pid
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 4
 
     @classmethod
@@ -2240,7 +2240,7 @@ class CQUAD4(QuadShell):
         #: Property ID
         self.pid = pid
         assert len(nids) == 4, nids
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         self.zoffset = zoffset
         self.theta_mcid = theta_mcid
         self.tflag = tflag
@@ -2814,7 +2814,7 @@ class CPLSTN4(QuadShell):
         #: Property ID
         self.pid = pid
         assert len(nids) == 4, nids
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         self.theta = theta
 
     @classmethod
@@ -2968,7 +2968,7 @@ class CPLSTN6(TriShell):
         self.eid = eid
         self.pid = pid
         self.theta = theta
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CPLSTN6'
 
     @classmethod
@@ -3282,7 +3282,7 @@ class CPLSTN8(QuadShell):
         #: Property ID
         self.pid = pid
         self.theta = theta
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 8
 
     @classmethod
@@ -3561,7 +3561,7 @@ class CQUADR(QuadShell):
         self.T2 = T2
         self.T3 = T3
         self.T4 = T4
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 4, 'CQUADR'
         self.theta_mcid_ref = None  # type: Optional[Any]
 
@@ -3818,13 +3818,13 @@ class CPLSTS3(TriShell):
         self.eid = eid
         self.pid = pid
         assert len(nids) == 3, nids
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         self.theta = theta
         self.tflag = tflag
         self.T1 = T1
         self.T2 = T2
         self.T3 = T3
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 3
 
     def validate(self):
@@ -4056,7 +4056,7 @@ class CQUAD(QuadShell):
         #: Property ID
         self.pid = pid
         self.theta_mcid = theta_mcid
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 9
         self.theta_mcid_ref = None  # type: Optional[Any]
 
@@ -4311,7 +4311,7 @@ class CQUAD8(QuadShell):
         self.tflag = tflag
         self.theta_mcid = theta_mcid
         self.zoffset = zoffset
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 8
         self.theta_mcid_ref = None  # type: Optional[Any]
 

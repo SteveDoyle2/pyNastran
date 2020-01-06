@@ -8,6 +8,7 @@ defines:
  - word, num = break_word_by_trailing_parentheses_integer_ab(pname_fid)
 """
 from __future__ import annotations
+from abc import abstractmethod, abstractproperty, abstractclassmethod
 from typing import List, Tuple, Union, Optional, Any, TYPE_CHECKING
 
 import numpy as np
@@ -42,6 +43,22 @@ class BaseCard:
     def __init__(self) -> None:
         pass
         #ABC.__init__(self)
+
+    #@abstractproperty
+    #def _field_map(self) -> str:
+        #return ''
+
+    @abstractproperty
+    def type(self) -> str:
+        return ''
+
+    @abstractmethod
+    def raw_fields(self):  # pragma: no cover
+        return []
+
+    @abstractclassmethod
+    def add_card(self):  # pragma: no cover
+        return BaseCard()
 
     def __deepcopy__(self, memo_dict):
         #raw_fields = self.repr_fields()
@@ -343,6 +360,12 @@ class Property(BaseCard):
             return self.mid
         return self.mid_ref.mid
 
+    @abstractmethod
+    def cross_reference(self, model: BDF) -> None:
+        pass
+    @abstractmethod
+    def uncross_reference(self) -> None:
+        pass
     def write_card_8(self) -> str:
         return self.write_card()
 
@@ -357,13 +380,13 @@ class Material(BaseCard):
         BaseCard.__init__(self)
 
     @property
-    def TRef(self) -> float:
+    def TRef(self) -> float:  # pramga: no cover
         if not hasattr(self, 'tref'):
             raise AttributeError('%r object has no attribute tref' % self.type)
         return self.tref
 
     @TRef.setter
-    def TRef(self, tref: float) -> None:
+    def TRef(self, tref: float) -> None:  # pramga: no cover
         """sets the self.Tref attributes"""
         if not hasattr(self, 'tref'):
             raise AttributeError('%r object has no attribute tref' % self.type)
@@ -428,8 +451,7 @@ class Element(BaseCard):
             return self.pid
         return self.pid_ref.pid
 
-    def get_node_positions(self, nodes=None) -> np.ndarray:
-        # type (Any) -> np.ndarray
+    def get_node_positions(self, nodes: Any=None) -> np.ndarray:
         """returns the positions of multiple node objects"""
         if nodes is None:
             nodes = self.nodes_ref
@@ -445,8 +467,7 @@ class Element(BaseCard):
                 positions[i, :] = node.get_position()
         return positions
 
-    def get_node_positions_no_xref(self, model, nodes=None) -> np.ndarray:
-        # type (Any, Any) -> np.ndarray
+    def get_node_positions_no_xref(self, model: BDF, nodes: List[Any]=None) -> np.ndarray:
         """returns the positions of multiple node objects"""
         if not nodes:
             nodes = self.nodes
@@ -469,11 +490,13 @@ class Element(BaseCard):
         """Verifies all node IDs exist and that they're integers"""
         self.nodes = nids
         self.validate_node_ids(allow_empty_nodes)
+        return nids
 
     def validate_node_ids(self, allow_empty_nodes: bool=False) -> None:
         if allow_empty_nodes:
             # only put valid nodes in here
-            nids2 = [nid for nid in self.nodes]
+            #nids2 = [nid for nid in self.nodes]
+            nids2 = self.nodes
             if len(nids2) == 0:
                 msg = '%s requires at least one node id be specified; node_ids=%s' % (
                     self.type, nids2)

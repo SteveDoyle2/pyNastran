@@ -83,7 +83,7 @@ class CELAS1(SpringElement):
         #: component number
         self.c1 = c1
         self.c2 = c2
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         self.nodes_ref = None
         self.pid_ref = None
 
@@ -285,7 +285,7 @@ class CELAS2(SpringElement):
         self.ge = ge
         #: stress coefficient
         self.s = s
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         self.nodes_ref = None
         self.pid_ref = None
 
@@ -658,7 +658,7 @@ class CELAS4(SpringElement):
         self.k = k
         #: Scalar point identification numbers
         #self.nodes = nodes
-        self.prepare_node_ids(nodes, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nodes, allow_empty_nodes=True)
         self.nodes_ref = None
 
     @classmethod

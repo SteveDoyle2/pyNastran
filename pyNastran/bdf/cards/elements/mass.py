@@ -110,7 +110,7 @@ class CMASS1(PointMassElement):
         self.pid = pid
         self.c1 = c1
         self.c2 = c2
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         self.nodes_ref = None
         self.pid_ref = None
 

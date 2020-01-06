@@ -488,7 +488,7 @@ class CCONEAX(Element):
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        #self.prepare_node_ids(nids)
+        #self.nodes = self.prepare_node_ids(nids)
         self.rings = rings
         assert len(self.rings) == 2, rings
         self.rings_ref = None

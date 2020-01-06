@@ -637,7 +637,7 @@ class CRAC2D(CrackElement):
         if nnodes < 18:
             nids = nids + [None] * (18-nnodes)
 
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 18, 'eid=%s nnodes=%s' % (self.eid, len(self.nodes))
 
     @classmethod
@@ -746,7 +746,7 @@ class CRAC3D(CrackElement):
         nnodes = len(nids)
         if nnodes < 64:
             nids = nids + [None] * (64-nnodes)
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 64, 'eid=%s nnodes=%s' % (self.eid, len(self.nodes))
 
     @classmethod

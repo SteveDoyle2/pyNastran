@@ -709,7 +709,7 @@ class CTRIAX6(TriShell):
         self.mid = mid
         #: theta
         self.theta = theta
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(nids) == 6, 'error on CTRIAX6'
         self.mid_ref = None
 
@@ -989,7 +989,7 @@ class CQUADX(AxisymmetricQuad):
         #: Property ID
         self.pid = pid
         self.theta_mcid = theta_mcid
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 9
 
     @classmethod
@@ -1155,7 +1155,7 @@ class CQUADX4(AxisymmetricQuad):
         #: Property ID
         self.pid = pid
         self.theta = theta
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 4
 
     @classmethod
@@ -1300,7 +1300,7 @@ class CQUADX8(AxisymmetricQuad):
         #: Property ID
         self.pid = pid
         self.theta = theta
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 8
 
     @classmethod

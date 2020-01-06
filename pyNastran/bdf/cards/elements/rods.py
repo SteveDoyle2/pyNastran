@@ -94,7 +94,7 @@ class CROD(RodElement):
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
         self.nodes_ref = None
         self.pid_ref = None
@@ -331,7 +331,7 @@ class CTUBE(RodElement):
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
         self.nodes_ref = None
         self.pid_ref = None
@@ -583,7 +583,7 @@ class CONROD(RodElement):
         self.j = j
         self.c = c
         self.nsm = nsm
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
         self.nodes_ref = None
         self.mid_ref = None

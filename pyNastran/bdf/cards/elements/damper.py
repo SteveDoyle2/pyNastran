@@ -82,7 +82,7 @@ class CDAMP1(LineDamper):
         self.pid = pid
         self.c1 = c1
         self.c2 = c2
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         self.nodes_ref = None
         self.pid_ref = None
 
@@ -279,7 +279,7 @@ class CDAMP2(LineDamper):
         self.c2 = c2
 
         # CDAMP2 do not have to be unique
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         self.nodes_ref = None
         self.pid = 0
         self.pid_ref = None
@@ -451,7 +451,7 @@ class CDAMP3(LineDamper):
         LineDamper.__init__(self)
         self.eid = eid
         self.pid = pid
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
         self.pid_ref = None
         self.nodes_ref = None
@@ -608,7 +608,7 @@ class CDAMP4(LineDamper):
         self.eid = eid
         self.b = b
         self.nids = nids
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
         self.nodes_ref = None
 
@@ -757,7 +757,7 @@ class CDAMP5(LineDamper):
         self.eid = eid
         #: Property ID
         self.pid = pid
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 2
         self.nodes_ref = None
         self.pid_ref = None
@@ -922,7 +922,7 @@ class CVISC(LineDamper):
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 2
         self.nodes_ref = None
         self.pid_ref = None

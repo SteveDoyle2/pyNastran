@@ -257,7 +257,7 @@ class CHEXA8(SolidElement):
         self.eid = eid
         #: Property ID
         self.pid = pid
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 8
 
     @classmethod
@@ -581,7 +581,7 @@ class CHEXA20(SolidElement):
         nnodes = len(nids)
         if nnodes < 20:
             nids.extend((20 - nnodes) * [None])
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
         assert len(self.nodes) == 20, msg
 
@@ -881,7 +881,7 @@ class CPENTA6(SolidElement):
         self.eid = eid
         #: Property ID
         self.pid = pid
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 6
 
     @classmethod
@@ -1301,7 +1301,7 @@ class CPENTA15(SolidElement):
         nnodes = len(nids)
         if nnodes < 15:
             nids.extend((15 - nnodes) * [None])
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 15
 
     @classmethod
@@ -1524,7 +1524,7 @@ class CPYRAM5(SolidElement):
         self.eid = eid
         #: Property ID
         self.pid = pid
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
         assert len(self.nodes) <= 20, msg
 
@@ -1719,7 +1719,7 @@ class CPYRAM13(SolidElement):
         nnodes = len(nids)
         if nnodes < 13:
             nids.extend((13 - nnodes) * [None])
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         msg = 'len(nids)=%s nids=%s' % (len(nids), nids)
         assert len(self.nodes) == 13, msg
 
@@ -2009,7 +2009,7 @@ class CTETRA4(SolidElement):
         self.eid = eid
         #: Property ID
         self.pid = pid
-        self.prepare_node_ids(nids)
+        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 4
 
     @classmethod
@@ -2275,7 +2275,7 @@ class CTETRA10(SolidElement):
         nnodes = len(nids)
         if nnodes < 10:
             nids.extend((10 - nnodes) * [None])
-        self.prepare_node_ids(nids, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
         assert len(self.nodes) == 10
 
     @classmethod

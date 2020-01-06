@@ -51,7 +51,7 @@ class CHACAB(Element):
         self.eid = eid
         self.pid = pid
         self.nodes_ref = None
-        self.prepare_node_ids(nodes, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nodes, allow_empty_nodes=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -132,7 +132,7 @@ class CHACBR(Element):
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.prepare_node_ids(nodes, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nodes, allow_empty_nodes=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -221,7 +221,7 @@ class CAABSF(Element):
         self.pid = pid
         self.nodes_ref = None
         self.pid_ref = None
-        self.prepare_node_ids(nodes, allow_empty_nodes=True)
+        self.nodes = self.prepare_node_ids(nodes, allow_empty_nodes=True)
 
     @classmethod
     def add_card(cls, card, comment=''):
