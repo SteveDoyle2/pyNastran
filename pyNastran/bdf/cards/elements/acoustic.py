@@ -13,7 +13,7 @@ from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.assign_type import (
     double,
     integer, integer_or_blank, # integer_or_string,
-    #string,
+    string,
     string_or_blank, double_or_blank, # integer_string_or_blank,
     #exact_string_or_blank,
 )
@@ -536,6 +536,222 @@ class PACABS(Element):
         list_fields = [
             'PACABS', self.pid, synth, self.tid_resistance, self.tid_reactance, self.tid_weight,
             None, self.cutfr, self.b, self.k, self.m]
+        return list_fields
+
+    def write_card(self, size=8, is_double=False):
+        fields = self.raw_fields()
+        return print_card_8(fields)
+
+def is_msc(nastran_version: str):
+    return nastran_version == 'msc'
+
+class ACMODL(Element):
+    """
+    NX 2019.2
+    +--------+-------+---------+----------+------+--------+--------+---------+----------+
+    | ACMODL |       |  INFOR  |   FSET   | SSET | NORMAL |        | OVLPANG | SRCHUNIT |
+    +--------+-------+---------+----------+------+--------+--------+---------+----------+
+    |        | INTOL | AREAOP  |   CTYPE  |      |        |        |         |          |
+    +--------+-------+---------+----------+------+--------+--------+---------+----------+
+
+
+    MSC 2016.1
+    +--------+-------+---------+----------+------+--------+--------+---------+----------+
+    | ACMODL | INTER |  INFOR  |   FSET   | SSET | NORMAL | METHOD | SKNEPSG | DSKNEPS  |
+    +--------+-------+---------+----------+------+--------+--------+---------+----------+
+    |        | INTOL | ALLSSET | SRCHUNIT |      |        |        |         |          |
+    +--------+-------+---------+----------+------+--------+--------+---------+----------+
+
+    """
+    type = 'ACMODL'
+
+    #@classmethod
+    #def _init_from_empty(cls):
+        #pid = 1
+        #cutfr = 1.0
+        #b = 1.
+        #k = 1.
+        #m = 1.
+        #return ACMODL(pid, cutfr, b, k, m)
+
+    def __init__(self, infor, fset, sset,
+                 normal=0.5, olvpang=60., search_unit='REL',
+                 intol=0.2, area_op=0, ctype='STRONG',
+                 method='BW',
+                 sk_neps=0.5, dsk_neps=0.75, all_set='NO',
+                 inter='DIFF',
+                 nastran_version='nx', comment=''):
+        """
+        Creates a ACMODL card
+
+        Parameters
+        ----------
+        INFOR : str
+            Defines the meaning of the SID entered on the FSET and SSET fields.
+            {ELEMENTS, PID, SET3}
+        FSET : int; default=None
+            Selects the ID of a SET1 or SET3 entry to define the fluid
+            elements for the interface.  If the ID is entered, the
+            corresponding fluid elements are considered.  If a negative
+            sign is included in front of the ID, the corresponding fluid
+            elements are excluded.  If blank, all fluid elements are considered.
+        SSET : int; default=None
+            Selects the ID of a SET1 or SET3 entry to define the structural
+            elements for the interface.  If the ID is entered, the
+            corresponding structural elements are considered.
+            If a negative sign is included in front of the ID, the
+            corresponding structural elements are excluded.
+            If blank, all structural elements are considered.
+        NORMAL : float; default=0.5
+            Outward normal search distance to detect fluid-structure interface.
+            SRCHUNIT=REL:
+               NORMAL is a ratio of the height of the fluid box in the outward
+               normal direction to the fluid surface to the maximum edge
+               length of the fluid free face.
+            SRCHUNIT=ABS:
+               NORMAL is the outward search distance in the model/absolute units.
+        OVLPANG :float; default=60.0
+            Angular tolerance in degrees used to decide whether a fluid free face
+            and a structural face can be considered as overlapping. If the angle
+            between the normals of the fluid and structural faces exceeds this
+           value, they cannot be coupled. (0.0 < Real ≤ 90.0; Default = 60.0)
+        SRCHUNIT : str; default=REL
+            Search units.
+            ABS: then the model units are absolute.
+            REL : then the relative model units are based on element size.
+        INTOL : float; default=0.2
+            Inward normal search distance to detect fluid-structure interface.
+            SRCHUNIT = REL:
+                INTOL is a ratio of the height of the fluid box in the
+                inward normal direction to the fluid surface to the
+                maximum edge length of the fluid free face.
+            SRCHUNIT = ABS:
+               then INTOL is the inward search distance in the
+               model/absolute units.
+        AREAOP : int; default=0
+            Alternative fluid-structure coupling method selection.
+            0 = The recommended method is used.
+            1 = The RBE3 method is used.
+        CTYPE : str; default='STRONG'
+            Fluid-structure coupling type (only supported by new acoustics
+            method introduced in NX Nastran 11).
+            CTYPE = STRONG:
+                two-way coupling is turned on.
+            CTYPE = WEAK:
+                one-way coupling is turned on. Here, the effect of
+                the fluid on the structure is assumed to be negligible.
+        DSKNEPS : float; default = 0.75
+            Secondary fluid skin growth tolerance
+        INTOL : float; default = 0.5
+            Tolerance of inward normal.
+        ALLSSET : str; default=NO
+           NO then SSET structure is searched and coupled if found.
+           YES then all the structure given by SSET is coupled.
+        SRCHUNIT Search units ; str; default = REL
+            ABS for absolute model units
+            REL for relative model units based on element size
+
+        """
+        if comment:
+            self.comment = comment
+        self.nastran_version = nastran_version
+
+        # NX
+        self.infor = infor
+        self.fset = fset
+        self.sset = sset
+        self.normal = normal
+        self.olvpang = olvpang
+        self.search_unit = search_unit
+        self.intol = intol
+        self.area_op = area_op
+        self.ctype = ctype
+
+        # MSC only
+        self.method = method
+        self.sk_neps = sk_neps
+        self.dsk_neps = dsk_neps
+        self.all_set = all_set
+        self.inter = inter
+
+    @classmethod
+    def add_card(cls, card, nastran_version, comment=''):
+        """
+        Adds a ACMODL card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+        """
+        if is_msc(nastran_version):
+            return cls.add_card_msc(card, comment=comment)
+        return cls.add_card_nx(card, comment=comment)
+
+    @classmethod
+    def add_card_nx(cls, card, comment=''):
+        #
+        infor = string(card, 2, 'infor')
+        fset = integer(card, 3, 'fset')
+        sset = integer(card, 4, 'sset')
+        normal = double_or_blank(card, 5, 'normal', 0.5)
+        #
+        olvpang = double_or_blank(card, 7, 'olvpang', 60.0)
+        search_unit = string_or_blank(card, 8, 'search_unit', 'REL')
+        intol = double_or_blank(card, 9, 'intol', 0.2)
+        area_op = integer_or_blank(card, 10, 'area_op', 0)
+        ctype = string_or_blank(card, 11, 'ctype', 'STRONG')
+        assert len(card) <= 8, 'len(ACMODL card) = %i\ncard=%s' % (len(card), card)
+
+        return ACMODL(infor, fset, sset,
+                      normal=normal, olvpang=olvpang,
+                      search_unit=search_unit, intol=intol,
+                      area_op=area_op, ctype=ctype,
+                      nastran_version='nx', comment=comment)
+
+    @classmethod
+    def add_card_msc(cls, card, comment=''):
+        #print('MSC...ACMODL')
+        inter = string_or_blank(card, 2, 'infor', 'DIFF')
+        infor = string_or_blank(card, 2, 'infor', 'NONE')
+        fset = integer_or_blank(card, 3, 'fset')
+        sset = integer_or_blank(card, 4, 'sset')
+        normal_default = 0.001 if inter == 'INDENT' else 1.0
+        normal = double_or_blank(card, 5, 'normal', normal_default)
+        method = string_or_blank(card, 6, 'method', 'BW') # BW/CP
+        sk_neps = double_or_blank(card, 7, 'sk_neps', 0.5)
+        dsk_neps = double_or_blank(card, 8, 'dsk_neps', 0.75)
+        intol = double_or_blank(card, 9, 'intol', 0.2)
+        all_set = string_or_blank(card, 10, 'all_set', 'NO') #
+        search_unit = string_or_blank(card, 11, 'search_unit', 'REL')
+        assert len(card) <= 12, 'len(ACMODL card) = %i\ncard=%s' % (len(card), card)
+        return ACMODL(infor, fset, sset,
+                      inter=inter, normal=normal, method=method,
+                      sk_neps=sk_neps, dsk_neps=dsk_neps, all_set=all_set,
+                      search_unit=search_unit, intol=intol,
+                      nastran_version='msc',
+                      comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+    def safe_cross_reference(self, model: BDF, xref_error) -> None:
+        pass
+    def uncross_reference(self) -> None:
+        pass
+
+    def raw_fields(self):
+        if is_msc(self.nastran_version):
+            list_fields = ['ACMODL', self.inter, self.infor,
+                           self.fset, self.sset, self.normal, self.method,
+                           self.sk_neps, self.dsk_neps, self.intol,
+                           self.all_set, self.search_unit, ]
+        else:
+            raise NotImplementedError(self.nastran_version)
+            #list_fields = [
+                #'ACMODL', self.pid, synth, self.tid_resistance, self.tid_reactance, self.tid_weight,
+                #None, self.cutfr, self.b, self.k, self.m]
         return list_fields
 
     def write_card(self, size=8, is_double=False):

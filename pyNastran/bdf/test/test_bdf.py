@@ -45,6 +45,7 @@ from pyNastran.bdf.mesh_utils.forces_moments import get_temperatures_array
 from pyNastran.bdf.mesh_utils.mpc_dependency import (
     get_mpc_node_ids, get_mpc_node_ids_c1,
     get_dependent_nid_to_components, get_mpcs)
+from pyNastran.bdf.mesh_utils.loads import get_static_force_vector_from_subcase_id
 
 from pyNastran.bdf.cards.dmig import NastranMatrix
 from pyNastran.bdf.bdf_interface.compare_card_content import compare_card_content
@@ -1512,6 +1513,7 @@ def _check_case_parameters(subcase, fem2: BDF, p0, isubcase: int, sol: int,
         cid_msg = '' if cid_new == 0 else f'(cid={cid_new:d})'
         loadcase_id = subcase.get_parameter('LOAD')[0]
         force, moment = fem2.sum_forces_moments(p0, loadcase_id, cid=cid_new, include_grav=False)
+        unused_fvec = get_static_force_vector_from_subcase_id(fem2, isubcase)
         eids = None
         nids = None
         force2, moment2 = fem2.sum_forces_moments_elements(

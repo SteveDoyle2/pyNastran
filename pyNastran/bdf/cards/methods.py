@@ -315,6 +315,7 @@ class EIGC(Method):
             ksteps = []
         if NJIs is None:
             NJIs = []
+
         self.mblkszs = mblkszs
         self.iblkszs = iblkszs
         self.ksteps = ksteps
@@ -344,11 +345,6 @@ class EIGC(Method):
             omegaAjs = []
         self.alphaAjs = alphaAjs
         self.omegaAjs = omegaAjs
-        #self.alphaBjs = []
-        self.omegaBjs = []
-        #self.LJs = []
-        #self.NEJs = []
-        #self.NDJs = []
 
         #----------
         # ISRR
@@ -359,19 +355,27 @@ class EIGC(Method):
 
     def validate(self):
         assert self.norm in ['MAX', 'POINT'], 'norm=%r' % self.norm
-        assert len(self.alphaAjs) == len(self.omegaAjs), 'alphaAjs=%s omegaAj=%s' % (self.alphaAjs, self.omegaAjs)
+        nalpha_a = len(self.alphaAjs)
+        assert nalpha_a == len(self.omegaAjs), 'alphaAjs=%s omegaAj=%s' % (self.alphaAjs, self.omegaAjs)
         if self.method in ['HESS', 'INV']:
-            assert len(self.alphaAjs) == len(self.alphaBjs), 'alphaAjs=%s alphaBj=%s' % (self.alphaAjs, self.alphaBjs)
-            #assert len(self.alphaAjs) == len(self.omegaBjs), 'alphaAjs=%s omegaBjs=%s' % (self.alphaAjs, self.omegaBjs)
-            assert len(self.alphaAjs) == len(self.LJs), 'alphaAjs=%s LJs=%s' % (self.alphaAjs, self.LJs)
-            assert len(self.alphaAjs) == len(self.NEJs), 'alphaAjs=%s NEJs=%s' % (self.alphaAjs, self.NEJs)
-            assert len(self.alphaAjs) == len(self.NDJs), 'alphaAjs=%s NDJs=%s' % (self.alphaAjs, self.NDJs)
+            assert nalpha_a == len(self.alphaBjs), 'alphaAjs=%s alphaBj=%s' % (self.alphaAjs, self.alphaBjs)
+            #assert nalpha_a == len(self.omegaBjs), 'alphaAjs=%s omegaBjs=%s' % (self.alphaAjs, self.omegaBjs)
+            assert nalpha_a == len(self.LJs), 'alphaAjs=%s LJs=%s' % (self.alphaAjs, self.LJs)
+            assert nalpha_a == len(self.NEJs), 'alphaAjs=%s NEJs=%s' % (self.alphaAjs, self.NEJs)
+            assert nalpha_a == len(self.NDJs), 'alphaAjs=%s NDJs=%s' % (self.alphaAjs, self.NDJs)
         elif self.method == 'CLAN':
-            assert len(self.alphaAjs) == len(self.omegaAjs)
-            assert len(self.alphaAjs) == len(self.mblkszs), 'alphaAjs=%s mblkszs=%s' % (self.alphaAjs, self.mblkszs)
-            assert len(self.alphaAjs) == len(self.iblkszs)
-            assert len(self.alphaAjs) == len(self.ksteps)
-            assert len(self.alphaAjs) == len(self.NJIs)
+            if nalpha_a == len(self.alphaBjs):
+                assert nalpha_a == len(self.alphaBjs), f'nalpha_a={nalpha_a} nalpha_b={nalpha_b}'
+                assert nalpha_a == len(self.omegaBjs), f'nalpha_a={nalpha_a} nomega_b={len(self.omegaBjs)}'
+                assert nalpha_a == len(self.LJs)
+                assert nalpha_a == len(self.NEJs)
+                assert nalpha_a == len(self.NDJs)
+            else:
+                assert nalpha_a == len(self.omegaAjs)
+                assert nalpha_a == len(self.mblkszs), 'alphaAjs=%s mblkszs=%s' % (self.alphaAjs, self.mblkszs)
+                assert nalpha_a == len(self.iblkszs)
+                assert nalpha_a == len(self.ksteps)
+                assert nalpha_a == len(self.NJIs)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -441,7 +445,9 @@ class EIGC(Method):
             #raise RuntimeError(msg)
 
         if method == 'CLAN':
-            alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs = cls._load_clan(nrows, card)
+            out = cls._load_clan(nrows, card)
+            (alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs,
+             alphaBjs, omegaBjs, LJs, NEJs, NDJs) = out
         elif method in ['HESS', 'INV', 'DET']:  # HESS, INV
             alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs = cls._load_hess_inv(
                 nrows, method, card)
@@ -489,6 +495,13 @@ class EIGC(Method):
         iblkszs = []
         ksteps = []
         NJIs = []
+
+        alphaBjs = []
+        omegaBjs = []
+        ljs = []
+        nejs = []
+        ndjs = []
+        is_nej = None
         for irow in range(nrows):
             #NDJ_default = None
             i = 9 + 8 * irow
@@ -496,16 +509,43 @@ class EIGC(Method):
                 double_or_blank(card, i, 'alpha' + str(irow), 0.0))
             omegaAjs.append(
                 double_or_blank(card, i + 1, 'omega' + str(irow), 0.0))
-            mblkszs.append(
-                double_or_blank(card, i + 2, 'mblock' + str(irow), 7))
 
-            iblkszs.append(
-                integer_or_blank(card, i + 3, 'iblksz' + str(irow), 2))
-            ksteps.append(
-                integer_or_blank(card, i + 4, 'kstep' + str(irow), 5))
-            NJIs.append(
-                integer(card, i + 6, 'NJI' + str(irow)))
-        return alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs
+            nej_blank = integer_or_blank(card, i + 6, 'NEJ_blank')
+            if nej_blank is not None:
+                assert is_nej in [True, None], is_nej
+                is_nej = True
+                # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
+                assert isinstance(nej_blank, int), nej_blank
+                alpha_bj = double(card, i + 2, 'alpha_bj' + str(irow))
+                omega_bj = double(card, i + 3, 'omega_bj' + str(irow))
+                lj = double_or_blank(card, i + 4, 'LJ' + str(irow), 1.0)
+                nej = integer_or_blank(card, i + 5, 'NEJ' + str(irow))
+                ndj = integer(card, i + 6, 'NDJ' + str(irow))
+                alphaBjs.append(alpha_bj)
+                omegaBjs.append(omega_bj)
+                ljs.append(lj)
+                nejs.append(nej)
+                ndjs.append(ndj)
+            else:
+                assert is_nej in [False, None], is_nej
+                is_nej = False
+                # ALPHAAJ OMEGAAJ MBLKSZ IBLKSZ KSTEPS blank NJi
+                mblkszs.append(
+                    double_or_blank(card, i + 2, 'mblock' + str(irow), 7))
+
+                # iblkszs is an integer, but entered as a float...
+                iblkszs.append(
+                    double_or_blank(card, i + 3, 'iblksz' + str(irow), 2.0))
+                ksteps.append(
+                    integer_or_blank(card, i + 4, 'kstep' + str(irow), 5))
+                NJIs.append(
+                    integer(card, i + 6, 'NJI' + str(irow)))
+
+        out = (
+            alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs,
+            alphaBjs, omegaBjs, ljs, nejs, ndjs,
+        )
+        return out
 
     @staticmethod
     def _load_hess_inv(nrows, method, card):
@@ -563,22 +603,41 @@ class EIGC(Method):
                 list_fields += [alphaA, omegaA, alphaB, omegaB, Lj, NEj, NDj, None]
 
         elif self.method == 'CLAN':
-            assert len(self.alphaAjs) == len(self.omegaAjs)
-            assert len(self.alphaAjs) == len(self.mblkszs)
-            assert len(self.alphaAjs) == len(self.iblkszs)
-            assert len(self.alphaAjs) == len(self.ksteps)
-            assert len(self.alphaAjs) == len(self.NJIs)
-            for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in zip(
-                    self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
-                    self.ksteps, self.NJIs):
-                alphaA = set_blank_if_default(alphaA, 0.0)
-                omegaA = set_blank_if_default(omegaA, 0.0)
-                mblksz = set_blank_if_default(mblksz, 7)
-                iblksz = set_blank_if_default(iblksz, 2)
-                kstep = set_blank_if_default(kstep, 5)
+            nalpha_a = len(self.alphaAjs)
+            assert nalpha_a == len(self.omegaAjs)
+            if nalpha_a == len(self.alphaBjs):
+                assert nalpha_a == len(self.alphaBjs), f'nalpha_a={nalpha_a} nalpha_b={nalpha_b}'
+                assert nalpha_a == len(self.omegaBjs), f'nalpha_a={nalpha_a} nomega_b={len(self.omegaBjs)}'
+                assert nalpha_a == len(self.LJs)
+                assert nalpha_a == len(self.NEJs)
+                assert nalpha_a == len(self.NDJs)
+                for (alphaA, omegaA, alphaB, omegaB, Lj, Nej, Ndj) in zip(
+                        self.alphaAjs, self.omegaAjs,
+                        self.alphaBjs, self.omegaBjs,
+                        self.LJs, self.NEJs, self.NDJs):
+                    #alphaA = set_blank_if_default(alphaA, 0.0)
+                    #omegaA = set_blank_if_default(omegaA, 0.0)
+                    #mblksz = set_blank_if_default(mblksz, 7)
+                    #iblksz = set_blank_if_default(iblksz, 2)
+                    #kstep = set_blank_if_default(kstep, 5)
+                    list_fields += [alphaA, omegaA, alphaB, omegaB, Lj,
+                                    Nej, Ndj, None]
+            else:
+                assert nalpha_a == len(self.mblkszs)
+                assert nalpha_a == len(self.iblkszs)
+                assert nalpha_a == len(self.ksteps)
+                assert nalpha_a == len(self.NJIs)
+                for (alphaA, omegaA, mblksz, iblksz, kstep, Nj) in zip(
+                        self.alphaAjs, self.omegaAjs, self.mblkszs, self.iblkszs,
+                        self.ksteps, self.NJIs):
+                    alphaA = set_blank_if_default(alphaA, 0.0)
+                    omegaA = set_blank_if_default(omegaA, 0.0)
+                    mblksz = set_blank_if_default(mblksz, 7)
+                    iblksz = set_blank_if_default(iblksz, 2)
+                    kstep = set_blank_if_default(kstep, 5)
 
-                list_fields += [alphaA, omegaA, mblksz, iblksz,
-                                kstep, None, Nj, None]
+                    list_fields += [alphaA, omegaA, mblksz, iblksz,
+                                    kstep, None, Nj, None]
         elif self.method == 'ISRR':
             assert self.shift_r1 is not None, self.get_stats()
             assert len(self.shift_r1) > 0, self.get_stats()

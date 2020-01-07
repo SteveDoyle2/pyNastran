@@ -408,8 +408,8 @@ class WriteMesh(BDFAttributes):
         return write_aero_in_flutter, write_aero_in_gust
 
     def _write_flutter(self, bdf_file: Any, size: int=8, is_double: bool=False,
-                    write_aero_in_flutter: bool=True,
-                    is_long_ids: Optional[bool]=None) -> None:
+                       write_aero_in_flutter: bool=True,
+                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the flutter cards"""
         if (write_aero_in_flutter and self.aero) or self.flfacts or self.flutters or self.mkaeros:
             bdf_file.write('$FLUTTER\n')
@@ -471,6 +471,10 @@ class WriteMesh(BDFAttributes):
         self._write_parametric(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_rejects(bdf_file, size, is_double, is_long_ids=is_long_ids)
         self._write_coords(bdf_file, size, is_double, is_long_ids=is_long_ids)
+
+        if self.acmodl:
+            bdf_file.write(self.acmodl.write_card(size, is_double))
+
 
     def _write_constraints(self, bdf_file: Any, size: int=8, is_double: bool=False,
                            is_long_ids: Optional[bool]=None) -> None:

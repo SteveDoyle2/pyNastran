@@ -1063,6 +1063,11 @@ class AddMethods(BDFAttributes):
         assert self.axif is None, '\naxif=\n%s old=\n%s' % (axif, self.axif)
         self.axif = axif
 
+    def _add_acmodl_object(self, acmodl) -> None:
+        """adds a ACMODL object"""
+        assert self.acmodl is None, self.acmodl
+        self.acmodl = acmodl
+
     def _add_cyax_object(self, cyax: CYAX) -> None:
         """adds an CYAX object"""
         # only one CYAX card allowed

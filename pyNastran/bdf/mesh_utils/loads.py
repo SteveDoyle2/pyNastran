@@ -6,12 +6,17 @@ Defines:
       find the net force/moment on the model for a subset of elements
 
 """
+from __future__ import annotations
+from typing import TYPE_CHECKING
 import numpy as np
 from numpy import array, cross, allclose, mean
 from numpy.linalg import norm  # type: ignore
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.utils import get_xyz_cid0_dict
 from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
+
 
 def isnan(value):
     return value is None or np.isnan(value)
@@ -160,12 +165,12 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
 
         elif load.type == 'GRAV':
             if include_grav:  # this will be super slow
-                g = load.GravityVector() * scale
+                gravity = load.GravityVector() * scale
                 for eid, elem in model.elements.items():
                     centroid = elem.Centroid()
                     mass = elem.Mass()
                     r = centroid - p
-                    f = mass * g
+                    f = mass * gravity
                     m = cross(r, f)
                     F += f
                     M += m
@@ -402,14 +407,16 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
     xyz = get_xyz_cid0_dict(model, xyz_cid0)
 
     unsupported_types = set()
-    shell_elements = [
+    shell_elements = {
         'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR',
-        'CTRIA6', 'CQUAD8', 'CQUAD', 'CSHEAR']
+        'CTRIA6', 'CQUAD8', 'CQUAD', 'CSHEAR'}
+    skip_loads = {'QVOL'}
     for load, scale in zip(loads, scale_factors):
         #if load.type not in ['FORCE1']:
             #continue
         #print(load.type)
-        if load.type == 'FORCE':
+        loadtype = load.type
+        if loadtype == 'FORCE':
             if load.node_id not in nids:
                 continue
             if load.Cid() != 0:
@@ -481,7 +488,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                 continue
             m = load.mag * load.xyz * scale
             M += m
-        elif load.type == 'MOMENT2':
+        elif loadtype == 'MOMENT2':
             not_found_nid = False
             for nid in load.node_ids:
                 if nid not in nids:
@@ -492,7 +499,7 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
             m = load.mag * load.xyz * scale
             M += m
 
-        elif load.type == 'PLOAD':
+        elif loadtype == 'PLOAD':
             nodes = load.node_ids
             nnodes = len(nodes)
             nodesi = 0
@@ -526,10 +533,10 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
             F += f * node_scale
             M += m * node_scale
 
-        elif load.type == 'PLOAD1':
+        elif loadtype == 'PLOAD1':
             _pload1_elements(model, loadcase_id, load, scale, eids, xyz, F, M, p)
 
-        elif load.type == 'PLOAD2':
+        elif loadtype == 'PLOAD2':
             pressure = load.pressure * scale
             for eid in load.element_ids:
                 if eid not in eids:
@@ -545,13 +552,13 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     M += m
                 else:
                     #model.log.warning('case=%s etype=%r loadtype=%r not supported' % (
-                        #loadcase_id, elem.type, load.type))
+                        #loadcase_id, elem.type, loadtype))
                     raise NotImplementedError('case=%s etype=%r loadtype=%r not supported' % (
-                        loadcase_id, elem.type, load.type))
-        elif load.type == 'PLOAD4':
+                        loadcase_id, elem.type, loadtype))
+        elif loadtype == 'PLOAD4':
             _pload4_elements(loadcase_id, load, scale, eids, xyz, F, M, p)
 
-        elif load.type == 'GRAV':
+        elif loadtype == 'GRAV':
             if include_grav:  # this will be super slow
                 g = load.GravityVector() * scale
                 for eid, elem in model.elements.items():
@@ -564,9 +571,11 @@ def sum_forces_moments_elements(model, p0, loadcase_id, eids, nids,
                     m = cross(r, f)
                     F += f
                     M += m
+        elif loadtype in skip_loads:
+            continue
         else:
             # we collect them so we only get one print
-            unsupported_types.add(load.type)
+            unsupported_types.add(loadtype)
 
     for loadtype in unsupported_types:
         model.log.warning('case=%s loadtype=%r not supported' % (loadcase_id, loadtype))
@@ -713,7 +722,7 @@ def _get_pload4_area_centroid_normal_nface(loadcase_id, load, elem, xyz):
         nodes = None
         face_acn = elem.get_face_area_centroid_normal(load.g34_ref.nid, load.g1_ref.nid)
         # TODO: backwards?
-        #face_acn= elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
+        #face_acn = elem.get_face_area_centroid_normal(load.g1_ref.nid, load.g34_ref.nid)
         unused_face, area, face_centroid, normal = face_acn
         nface = 4
 
@@ -957,3 +966,104 @@ def _pload4_helper_line(load, load_dir, elem, scale, pressures, nodes, xyz, p):
     #assert fi.max() >= 0, fi
     #assert mi.max() >= 0, mi
     return fi, mi
+
+
+def get_static_force_vector_from_subcase_id(model: BDF, subcase_id: int):
+    """
+    solves for F in:
+      [K]{x} = {F}
+
+    """
+    load_id, ndof_per_grid, ndof = _get_loadid_ndof(model, subcase_id)
+    if load_id in model.load_combinations:
+        loads = model.load_combinations[load_id]
+        for load in loads:
+            scale = load.scale
+            F = np.zeros([ndof], dtype='float64')
+            for load_id, loads_ref, scalei in zip(load.load_ids, load.load_ids_ref, load.scale_factors):
+                Fi = _Fg_vector_from_loads(
+                    model, loads_ref, ndof_per_grid, ndof)
+                F += Fi * (scale * scalei)
+            # print(load.get_stats())
+    else:
+        loads = model.loads[load_id]
+        F = _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof)
+    return F
+
+
+def _get_loadid_ndof(model: BDF, subcase_id):
+    """helper method for ``get_static_force_vector_from_subcase_id``"""
+    subcase = model.subcases[subcase_id]
+    load_id = None
+    if 'LOAD' in subcase:
+        load_id, unused_options = subcase['LOAD']
+    ndof_per_grid = 6
+    if 'HEAT' in subcase:
+        ndof_per_grid = 1
+    ngrid = model.card_count['GRID']
+    nspoint = model.card_count['SPOINT'] if 'SPOINT' in model.card_count else 0
+    ndof = ngrid * ndof_per_grid + nspoint
+    return load_id, ndof_per_grid, ndof
+
+def _get_dof_map(model):
+    """helper method for ``get_static_force_vector_from_subcase_id``"""
+    dof_map = {}
+    i = 0
+    for nid, node_ref in model.nodes.items():
+        if node_ref.type == 'GRID':
+            for dof in range(1, 7):
+                dof_map[(nid, dof)] = i
+                i += 1
+        elif node_ref.type == 'SPOINT':
+            dof_map[(nid, 0)] = i
+            i += 1
+        else:
+            raise NotImplementedError(node_ref)
+    return dof_map
+
+def _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof, fdtype='float64'):
+    """helper method for ``get_static_force_vector_from_subcase_id``"""
+    dof_map = _get_dof_map(model)
+    Fg = np.zeros([ndof], dtype=fdtype)
+    skipped_load_types = set([])
+    for load in loads:
+        loadtype = load.type
+        if load.type in ['FORCE', 'FORCE1', 'FORCE2',
+                         'MOMENT', 'MOMENT1', 'MOMENT2']:
+            offset = 1 if load.type[0] == 'F' else 4
+            cid = load.cid
+            nid = load.node
+            node_ref = load.node_ref
+            flocal = load.mag * load.xyz
+            ndofi = ndof_per_grid if node_ref.type == 'GRID' else 1
+            assert ndofi == 6, f'GRID must have 6 DOF for structural analysis\n{node_ref}'
+            if cid != 0:
+                cp_ref = node_ref.cp_ref
+                fbasic = cp_ref.transform_force_to_global(flocal)
+                if node_ref.cd != 0:
+                    cd_ref = node_ref.cd_ref
+                    if cd_ref.type[-1] in ['C', 'S']:
+                        xyz_local = node_ref.get_position_wrt(model, node_ref.cd)
+                        str(xyz_local)
+                    Tbg = cd_ref.beta()
+                    Tgb = Tbg.T
+                    fglobal = np.dot(Tgb, fbasic)
+                else:
+                    fglobal = fbasic
+            else:
+                fglobal = flocal
+
+            for dof in range(3):
+                irow = dof_map[(nid, dof+offset)]
+                Fg[irow] += fglobal[dof]
+        elif loadtype == 'SLOAD':
+            for nid, mag in zip(load.nodes, load.mags):
+                irow = dof_map[(nid, 0)]
+                Fg[irow] += mag
+        else:
+            skipped_load_types.add(load.type)
+    if skipped_load_types:
+        skipped_load_types = list(skipped_load_types)
+        skipped_load_types.sort()
+        model.log.debug(f'skipping {skipped_load_types}')
+    return Fg

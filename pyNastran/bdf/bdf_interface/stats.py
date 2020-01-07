@@ -106,9 +106,10 @@ def get_bdf_stats(model: BDF, return_type: str='string',
     ]
     scalar_attrs = [
         'aero', 'aeros', 'grdset', # handled below
+        'axic', 'axif', 'cyax',
 
         # not handled
-        'axic', 'axif', 'cyax',
+        'acmodl',
         'baror', 'beamor', 'doptprm', 'dtable',
         'zona',
     ]

@@ -68,7 +68,8 @@ from pyNastran.bdf.cards.elements.shell import (
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, SNORM)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
-from pyNastran.bdf.cards.elements.acoustic import CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR
+from pyNastran.bdf.cards.elements.acoustic import (
+    CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
 from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
 from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
 from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
@@ -313,7 +314,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
             # acoustic
             'CHACAB', 'CAABSF', 'CHACBR',
-            'PACABS', 'PAABSF', 'PACBAR',
+            'PACABS', 'PAABSF', 'PACBAR', 'ACMODL',
             'SNORM',
 
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
@@ -2273,6 +2274,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'GRDSET' : self._prepare_grdset,
 
             'BCTSET' : self._prepare_bctset,
+            'ACMODL' : self._prepare_acmodl,
         }
 
         new_reject_method = False
@@ -2642,6 +2644,11 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         for coord in coords:
             self._add_coord_object(coord)
         return coords
+
+    def _prepare_acmodl(self, unused_card: List[str], card_obj: BDFCard, comment='') -> None:
+        acmodl = ACMODL.add_card(card_obj, self._nastran_format, comment=comment)
+        self._add_acmodl_object(acmodl)
+
 
     def add_card_ifile(self, ifile: int, card_lines: List[str], card_name: str,
                        comment: str='', is_list: bool=True, has_none: bool=True) -> Any:

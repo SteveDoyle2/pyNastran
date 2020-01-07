@@ -558,6 +558,9 @@ class BDFAttributes:
         self.cyax = None  # type: Optional[CYAX]
         self.cyjoin = {}  # type: Dict[int, CYJOIN]
 
+        # acoustic
+        self.acmodl = None
+
         # ------ SOL 144 ------
         #: stores AEROS
         self.aeros = None  # type: Optional[AEROS]
@@ -642,6 +645,7 @@ class BDFAttributes:
             'ringfl' : ['RINGFL'],
             'axic' : ['AXIC'],
             'axif' : ['AXIF'],
+            'acmodl' : ['ACMODL'],
             'grdset' : ['GRDSET'],
             'gridb' : ['GRIDB'],
             'seqgp' : ['SEQGP'],
