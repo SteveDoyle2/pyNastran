@@ -124,10 +124,48 @@ class TestMethods(unittest.TestCase):
                                 maxset=None, shfscl=None, norm=None,
                                 options=None, values=None, comment='')
         eigrl.raw_fields()
+
+        lines = [
+            'EIGRL          2      0.    800.       6       4',
+            '          NUMS=4',
+        ]
+        model.add_card_lines(lines, 'EIGRL', comment='eigrl')
+        eigrl = model.methods[1]
+        str(eigrl)
+
         model.pop_parse_errors()
         model.validate()
         save_load_deck(model)
 
+    def test_eigc_1(self):
+        """tests the EIGC"""
+        model = BDF(debug=True, log=None, mode='msc')
+        lines = [
+            'EIGC    10      CLAN    MAX                     1.E-12',
+            '                                                        20',
+        ]
+        model.add_card_lines(lines, 'EIGC', comment='', has_none=True)
+        model.pop_parse_errors()
+        eigc = model.cMethods[10]
+        str(eigc)
+
+    def test_eigc_2(self):
+        """tests the EIGC"""
+        model = BDF(debug=True, log=None, mode='msc')
+        lines = [
+            'EIGC    40      CLAN    MAX                     1.E-12',
+            '        0.0     0.0                                     5',
+            '        0.0      5.0                                    5',
+            '        0.0     10.0                                    5',
+            '        5.0      5.0                                    5',
+            '        0.0     20.0                                    5',
+            '        20.0    10.0                                    5',
+            '        10.0    10.0                                    5',
+        ]
+        eigc = model.add_card_lines(lines, 'EIGC', comment='', has_none=True)
+        model.pop_parse_errors()
+        eigc = model.cMethods[40]
+        str(eigc)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

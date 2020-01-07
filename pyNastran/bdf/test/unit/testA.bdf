@@ -89,25 +89,25 @@ PCOMPG   2      -2.885          58.      STRN
          1002    796    5.      .001     YES
          1003    795    .3      45.001   YES
          1004    795    .3      45.001   YES
-PCOMPG  3       -13.            50.     TSAI    20.     0.      
-        1002    3       .5      0.      YES     
-        1003    4       1.      -45.    YES     
-        1004    2       .25     -90.    YES     
-        1005    2       .25     -90.    YES     
-        1006    4       1.      -45.    YES     
-        1007    3       .5      0.      YES     
-        1008    1       .125    45.     YES     
-        1033    5       1.25    -45.    YES     
-        1034    7       5.      -45.    YES     
-        1035    8       10.     -45.    YES     
-        1036    6       2.5     -45.    YES     
-        1073    1       .125    45.     YES     
-        1074    3       .5      0.      YES     
-        1075    4       1.      -45.    YES     
-        1076    2       .25     -90.    YES     
-        1077    2       .25     -90.    YES     
-        1078    4       1.      -45.    YES     
-        1079    3       .5      0.      YES     
+PCOMPG  3       -13.            50.     TSAI    20.     0.
+        1002    3       .5      0.      YES
+        1003    4       1.      -45.    YES
+        1004    2       .25     -90.    YES
+        1005    2       .25     -90.    YES
+        1006    4       1.      -45.    YES
+        1007    3       .5      0.      YES
+        1008    1       .125    45.     YES
+        1033    5       1.25    -45.    YES
+        1034    7       5.      -45.    YES
+        1035    8       10.     -45.    YES
+        1036    6       2.5     -45.    YES
+        1073    1       .125    45.     YES
+        1074    3       .5      0.      YES
+        1075    4       1.      -45.    YES
+        1076    2       .25     -90.    YES
+        1077    2       .25     -90.    YES
+        1078    4       1.      -45.    YES
+        1079    3       .5      0.      YES
 PBCOMP  5       9       12.                                             P51
 +51                                                     5               P52
 +52     0.0     1.633   .125                                            P53
@@ -118,7 +118,7 @@ PBCOMP  5       9       12.                                             P51
 +57     -0.866  -1.1547 .125                                            P58
 +58     -1.2247 0.0     .125                                            P59
 +59     -0.866  1.1547  .125
-$PBARL    6       10              DBOX     
+$PBARL    6       10              DBOX
 $+       5.5     3.0     2.75    1.45    2.4
 $+
 PBARL   9       1               bar
@@ -128,7 +128,7 @@ PBARL    10      1       	rod
 PBARL	11	1		cross
 	.4	.1	.6	.1
 pbeaml	12	1		bar
-	5.0	1.5		no	1.0	4.	1.0	        
+	5.0	1.5		no	1.0	4.	1.0
 PCOMPG   55     -1.65
          1001    2      .275     0.      YES
          1002    2      .275     0.      YES
@@ -168,7 +168,7 @@ pbeaml	102	2		box
 pbush1d, 204, 1.e+5, 1000., , , , , , +pb1
 +pb1, spring, table, 205, , , , , , +pb2
 +pb2, damper, table, 206
-pvisc, 310, 1000.  
+pvisc, 310, 1000.
 $PBEAM   201     1       1.      .0833   .0833           .05             +B5
 $+B5     -.5     -.5     -.5     +.5     +.5     +.5     +.5     -.5     +B6
 $+B6     YESA    .5                                                      +B7
@@ -256,19 +256,7 @@ TLOAD2  310     320             1       0.      .10472  4.77465 -90.
 QBDY3,500,50000.0,,10,THRU,60,BY,10
 PLOAD4       510     101      5.                            THRU     112
 $DYNAMIC
-EIGRL          1      0.    800.       6       4
-          NUMS=4
 EIGB     5      INV     0.0     2.      20      2       2
-EIGC    10      CLAN    MAX                     1.E-12
-                                                        20
-EIGC    40      CLAN    MAX                     1.E-12
-        0.0     0.0                                     5
-        0.0      5.0                                    5
-        0.0     10.0                                    5
-        5.0      5.0                                    5
-        0.0     20.0                                    5
-        20.0    10.0                                    5
-        10.0    10.0                                    5
 NLPARM         1     100            AUTO       1      40       P     ALL+
 +                  0.010                                                +
 +              9
@@ -283,7 +271,7 @@ $THERMAL
 $CHBDYP,21,,,,,110,111
 $OPTIMIZATION
 DCONSTR        1      16-999999.1000000.
-DDVAL	10	0.1	0.5	
+DDVAL	10	0.1	0.5
 	1.0	THRU	100. 	BY	1.0
 DRESP2,1,LBUCK,5,3
 ,DESVAR,101,3,4,5,1,205,209
@@ -314,8 +302,8 @@ DVPREL2,12,     PBAR,   3,      5,      1.0-6,  ,       101,    ,       +
 DOPTPRM,P1,1,P2,15,IPRINT,7
 DOPTPRM APRCOD  2       IPRINT  0       DESMAX  8       DELP    0.50
         DPMIN   0.50    P1      3       P2      4
-DOPTPRM IPRINT  3       DESMAX  15      DELP    0.5	P1	1	
-	P2	15		
+DOPTPRM IPRINT  3       DESMAX  15      DELP    0.5	P1	1
+	P2	15
 $TABLES
 TABLED1        1  LINEAR  LINEAR
               1.      1.      2.      2.      3.      3.    ENDT

@@ -187,7 +187,7 @@ class EIGC(Method):
     @classmethod
     def _init_from_empty(cls):
         sid = 1
-        method = 1
+        method = 'CLAN'
         grid = 1
         component = 1
         epsilon = 0.1
@@ -220,9 +220,9 @@ class EIGC(Method):
              INV  : Inverse Power
              IRAM : Implicitly Restarted Arnoldi method
              ISRR : Iterative Schur-Rayleigh-Ritz method
-             CLAN : Complex Lanczos.  For linear perturbation of ANALYSIS= DCEIG
+             CLAN : Complex Lanczos.  For linear perturbation of ANALYSIS=DCEIG
                     with large displacement, CLAN is recommended.
-             HESS : Upper Hessenberg. For linear perturbation of ANALYSIS= DCEIG
+             HESS : Upper Hessenberg. For linear perturbation of ANALYSIS=DCEIG
                     with large displacement, please don't use HESS.
              ARNO: ???
         norm : str; default='MAX'
@@ -445,17 +445,16 @@ class EIGC(Method):
             #raise RuntimeError(msg)
 
         if method == 'CLAN':
-            out = cls._load_clan(nrows, card)
+            out = _load_clan(nrows, card)
             (alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs,
              alphaBjs, omegaBjs, LJs, NEJs, NDJs) = out
         elif method in ['HESS', 'INV', 'DET']:  # HESS, INV
-            alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs = cls._load_hess_inv(
+            alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs = _load_hess_inv(
                 nrows, method, card)
         elif method == 'ISRR':
-            shift_r1, shift_i1, isrr_flag, nd1 = cls._load_isrr(nrows, card)
+            shift_r1, shift_i1, isrr_flag, nd1 = _load_isrr(nrows, card)
         else:
-            msg = 'invalid EIGC method...method=%r' % method
-            raise RuntimeError(msg)
+            raise RuntimeError(f'invalid EIGC method...method={method!r}')
         #assert card.nfields() < 8, 'card = %s' % card
         return EIGC(sid, method, grid, component, epsilon, neigenvalues,
                     norm, # common
@@ -463,129 +462,6 @@ class EIGC(Method):
                     alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs, # HESS/INV
                     shift_r1, shift_i1, isrr_flag, nd1, # ISRR
                     comment=comment)
-
-    @staticmethod
-    def _load_isrr(nrows, card):
-        """loads the iterative Schur-Rayleigh-Ritz"""
-        shift_r1 = []
-        shift_i1 = []
-        isrr_flag = []
-        nd1 = []
-        for irow in range(nrows):
-            i = 9 + 8 * irow
-            shift_r1i = double_or_blank(card, i, 'SHIFT_R1', 0.0)
-            shift_i1i = double_or_blank(card, i + 1, 'SHIFT_I1', 0.0)
-            #2
-            #3
-            #4
-            isrr_flagi = integer_or_blank(card, i + 5, 'ISRR_FLAG', 0)
-            nd1i = integer(card, i + 6, 'ND1')
-            shift_r1.append(shift_r1i)
-            shift_i1.append(shift_i1i)
-            isrr_flag.append(isrr_flagi)
-            nd1.append(nd1i)
-        return shift_r1, shift_i1, isrr_flag, nd1
-
-    @staticmethod
-    def _load_clan(nrows, card):
-        """loads complex Lanczos"""
-        alphaAjs = []
-        omegaAjs = []
-        mblkszs = []
-        iblkszs = []
-        ksteps = []
-        NJIs = []
-
-        alphaBjs = []
-        omegaBjs = []
-        ljs = []
-        nejs = []
-        ndjs = []
-        is_nej = None
-        for irow in range(nrows):
-            #NDJ_default = None
-            i = 9 + 8 * irow
-            alphaAjs.append(
-                double_or_blank(card, i, 'alpha' + str(irow), 0.0))
-            omegaAjs.append(
-                double_or_blank(card, i + 1, 'omega' + str(irow), 0.0))
-
-            nej_blank = integer_or_blank(card, i + 6, 'NEJ_blank')
-            if nej_blank is not None:
-                assert is_nej in [True, None], is_nej
-                is_nej = True
-                # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
-                assert isinstance(nej_blank, int), nej_blank
-                alpha_bj = double(card, i + 2, 'alpha_bj' + str(irow))
-                omega_bj = double(card, i + 3, 'omega_bj' + str(irow))
-                lj = double_or_blank(card, i + 4, 'LJ' + str(irow), 1.0)
-                nej = integer_or_blank(card, i + 5, 'NEJ' + str(irow))
-                ndj = integer(card, i + 6, 'NDJ' + str(irow))
-                alphaBjs.append(alpha_bj)
-                omegaBjs.append(omega_bj)
-                ljs.append(lj)
-                nejs.append(nej)
-                ndjs.append(ndj)
-            else:
-                assert is_nej in [False, None], is_nej
-                is_nej = False
-                # ALPHAAJ OMEGAAJ MBLKSZ IBLKSZ KSTEPS blank NJi
-                mblkszs.append(
-                    double_or_blank(card, i + 2, 'mblock' + str(irow), 7))
-
-                # iblkszs is an integer, but entered as a float...
-                iblkszs.append(
-                    double_or_blank(card, i + 3, 'iblksz' + str(irow), 2.0))
-                ksteps.append(
-                    integer_or_blank(card, i + 4, 'kstep' + str(irow), 5))
-                NJIs.append(
-                    integer(card, i + 6, 'NJI' + str(irow)))
-
-        out = (
-            alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs,
-            alphaBjs, omegaBjs, ljs, nejs, ndjs,
-        )
-        return out
-
-    @staticmethod
-    def _load_hess_inv(nrows, method, card):
-        """loads inverse power"""
-        alpha_omega_default = None
-        LJ_default = None
-        if method == 'INV':
-            alpha_omega_default = 0.0
-            LJ_default = 1.0
-
-        alphaAjs = []
-        alphaBjs = []
-        omegaAjs = []
-        omegaBjs = []
-        #mblkszs = []
-        #iblkszs = []
-        #ksteps = []
-        LJs = []
-        NEJs = []
-        NDJs = []
-        for irow in range(nrows):
-            NEj = integer_or_blank(card, 9 + 7 * irow + 5, 'NE%s' % str(irow), 0)
-            NDJ_default = None
-            if method == 'INV':
-                NDJ_default = 3 * NEj
-
-            i = 9 + 8 * irow
-            alphaAjs.append(
-                double_or_blank(card, i, 'alphaA' + str(irow), alpha_omega_default))
-            omegaAjs.append(
-                double_or_blank(card, i + 1, 'omegaA' + str(irow), alpha_omega_default))
-            alphaBjs.append(
-                double_or_blank(card, i + 2, 'alphaB' + str(irow), alpha_omega_default))
-            omegaBjs.append(
-                double_or_blank(card, i + 3, 'omegaB' + str(irow), alpha_omega_default))
-            LJs.append(
-                double_or_blank(card, i + 4, 'LJ' + str(irow), LJ_default))
-            NEJs.append(NEj)
-            NDJs.append(integer_or_blank(card, i + 6, 'NDJ' + str(irow), NDJ_default))
-        return alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs
 
     def cross_reference(self, model: BDF) -> None:
         pass
@@ -605,7 +481,7 @@ class EIGC(Method):
         elif self.method == 'CLAN':
             nalpha_a = len(self.alphaAjs)
             assert nalpha_a == len(self.omegaAjs)
-            if nalpha_a == len(self.alphaBjs):
+            if nalpha_a == len(self.alphaBjs):  # pragma:no cover
                 assert nalpha_a == len(self.alphaBjs), f'nalpha_a={nalpha_a} nalpha_b={nalpha_b}'
                 assert nalpha_a == len(self.omegaBjs), f'nalpha_a={nalpha_a} nomega_b={len(self.omegaBjs)}'
                 assert nalpha_a == len(self.LJs)
@@ -646,8 +522,8 @@ class EIGC(Method):
                 list_fields += [shift_r1i, shift_i1i, None, None, None, isrr_flagi, nd1i, None]
 
         else:
-            msg = 'invalid EIGC method...method=%r' % self.method
-            raise RuntimeError(msg)
+            raise RuntimeError(f'invalid EIGC method.  method={self.method!r} '
+                               'expected=[HESS, INV, DET, CLAN, ISRR]')
         return list_fields
 
     def repr_method(self):
@@ -1124,3 +1000,125 @@ class EIGRL(Method):
         if size == 8:
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+
+def _load_isrr(nrows, card):
+    """loads the iterative Schur-Rayleigh-Ritz"""
+    shift_r1 = []
+    shift_i1 = []
+    isrr_flag = []
+    nd1 = []
+    for irow in range(nrows):
+        i = 9 + 8 * irow
+        shift_r1i = double_or_blank(card, i, 'SHIFT_R1', 0.0)
+        shift_i1i = double_or_blank(card, i + 1, 'SHIFT_I1', 0.0)
+        #2
+        #3
+        #4
+        isrr_flagi = integer_or_blank(card, i + 5, 'ISRR_FLAG', 0)
+        nd1i = integer(card, i + 6, 'ND1')
+        shift_r1.append(shift_r1i)
+        shift_i1.append(shift_i1i)
+        isrr_flag.append(isrr_flagi)
+        nd1.append(nd1i)
+    return shift_r1, shift_i1, isrr_flag, nd1
+
+def _load_clan(nrows, card):
+    """loads complex Lanczos"""
+    alphaAjs = []
+    omegaAjs = []
+    mblkszs = []
+    iblkszs = []
+    ksteps = []
+    NJIs = []
+
+    alphaBjs = []
+    omegaBjs = []
+    ljs = []
+    nejs = []
+    ndjs = []
+    is_nej = None
+    for irow in range(nrows):
+        #NDJ_default = None
+        i = 9 + 8 * irow
+        alphaAjs.append(
+            double_or_blank(card, i, 'alpha' + str(irow), 0.0))
+        omegaAjs.append(
+            double_or_blank(card, i + 1, 'omega' + str(irow), 0.0))
+
+        nej_blank = integer_or_blank(card, i + 6, 'NEJ_blank')
+        if nej_blank is not None and 0:  # pragma: no cover
+            assert is_nej in [True, None], is_nej
+            is_nej = True
+            # ALPHAAJ OMEGAAJ ALPHABJ OMEGABJ LJ NEJ NDJ
+            assert isinstance(nej_blank, int), nej_blank
+            alpha_bj = double(card, i + 2, 'alpha_bj' + str(irow))
+            omega_bj = double(card, i + 3, 'omega_bj' + str(irow))
+            lj = double_or_blank(card, i + 4, 'LJ' + str(irow), 1.0)
+            nej = integer_or_blank(card, i + 5, 'NEJ' + str(irow))
+            ndj = integer(card, i + 6, 'NDJ' + str(irow))
+            alphaBjs.append(alpha_bj)
+            omegaBjs.append(omega_bj)
+            ljs.append(lj)
+            nejs.append(nej)
+            ndjs.append(ndj)
+        else:
+            assert is_nej in [False, None], is_nej
+            is_nej = False
+            # ALPHAAJ OMEGAAJ MBLKSZ IBLKSZ KSTEPS blank NJi
+            mblock_size = double_or_blank(card, i + 2, 'mblock' + str(irow), 7)
+
+            # iblkszs is an integer, but entered as a float...
+            iblock_size = double_or_blank(card, i + 3, 'iblksz' + str(irow), 2.0)
+            kstep = integer_or_blank(card, i + 4, 'kstep' + str(irow), 5)
+            nji = integer(card, i + 6, 'NJI' + str(irow))
+
+            mblkszs.append(mblock_size)
+            iblkszs.append(iblock_size)
+            ksteps.append(kstep)
+            NJIs.append(nji)
+
+    out = (
+        alphaAjs, omegaAjs, mblkszs, iblkszs, ksteps, NJIs,
+        alphaBjs, omegaBjs, ljs, nejs, ndjs,
+    )
+    return out
+
+def _load_hess_inv(nrows, method, card):
+    """loads inverse power"""
+    alpha_omega_default = None
+    LJ_default = None
+    if method == 'INV':
+        alpha_omega_default = 0.0
+        LJ_default = 1.0
+
+    alphaAjs = []
+    alphaBjs = []
+    omegaAjs = []
+    omegaBjs = []
+    #mblkszs = []
+    #iblkszs = []
+    #ksteps = []
+    LJs = []
+    NEJs = []
+    NDJs = []
+    for irow in range(nrows):
+        NEj = integer_or_blank(card, 9 + 7 * irow + 5, 'NE%s' % str(irow), 0)
+        NDJ_default = None
+        if method == 'INV':
+            NDJ_default = 3 * NEj
+
+        i = 9 + 8 * irow
+        alphaAjs.append(
+            double_or_blank(card, i, 'alphaA' + str(irow), alpha_omega_default))
+        omegaAjs.append(
+            double_or_blank(card, i + 1, 'omegaA' + str(irow), alpha_omega_default))
+        alphaBjs.append(
+            double_or_blank(card, i + 2, 'alphaB' + str(irow), alpha_omega_default))
+        omegaBjs.append(
+            double_or_blank(card, i + 3, 'omegaB' + str(irow), alpha_omega_default))
+        LJs.append(
+            double_or_blank(card, i + 4, 'LJ' + str(irow), LJ_default))
+        NEJs.append(NEj)
+        NDJs.append(integer_or_blank(card, i + 6, 'NDJ' + str(irow), NDJ_default))
+    return alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs
