@@ -393,7 +393,10 @@ class AddMethods(BDFAttributes):
                                               CTETRA4, CTETRA10, CPENTA6, CPENTA15,
                                               CHEXA8, CHEXA20, CPYRAM5, CPYRAM13,
                                               CTRAX3, CTRAX6,
-                                              CIHEX1, CIHEX2],
+                                              # thermal
+                                              CHBDYE, CHBDYG, CHBDYP,
+                                              # Nastran 95
+                                              CIHEX1, CIHEX2,],
                             allow_overwrites: bool=False) -> None:
         key = elem.eid
         assert key > 0, 'eid=%s must be positive; elem=\n%s' % (key, elem)
@@ -421,7 +424,7 @@ class AddMethods(BDFAttributes):
             self.ao_element_flags[key] = elem_flag
             self._type_to_id_map[elem_flag.type].append(key)
 
-    def _add_doptprm_object(self, doptprm: DOPTPRM, comment='') -> None:
+    def _add_doptprm_object(self, doptprm: DOPTPRM) -> None:
         """adds a DOPTPRM"""
         self.doptprm = doptprm
 
@@ -471,7 +474,7 @@ class AddMethods(BDFAttributes):
         self.rigid_elements[key] = elem
         self._type_to_id_map[elem.type].append(key)
 
-    def _add_thermal_element_object(self, elem) -> None:
+    def _add_thermal_element_object(self, elem: Union[CHBDYE, CHBDYG, CHBDYP]) -> None:
         """same as add_element at the moment..."""
         self._add_element_object(elem)
 
@@ -832,7 +835,7 @@ class AddMethods(BDFAttributes):
             self.load_combinations[key] = [load]
             self._type_to_id_map[load.type].append(key)
 
-    def _add_thermal_load_object(self, load: Union[TEMP, QHBDY, QBDY1, QBDY2, QBDY3]) -> None:
+    def _add_thermal_load_object(self, load: Union[TEMP, TEMPB3, QHBDY, QBDY1, QBDY2, QBDY3]) -> None:
         # same function at the moment...
         key = load.sid
         assert key > 0, 'key=%s; load=%s\n' % (key, load)
@@ -892,7 +895,7 @@ class AddMethods(BDFAttributes):
             self.normals[key] = snorm
             self._type_to_id_map[snorm.type].append(key)
 
-    def _add_convection_property_object(self, prop) -> None:
+    def _add_convection_property_object(self, prop: Union[PCONV, PCONVM]) -> None:
         # type: (Any) -> None
         key = prop.pconid
         assert key > 0, key
@@ -900,7 +903,7 @@ class AddMethods(BDFAttributes):
         self.convection_properties[key] = prop
         self._type_to_id_map[prop.type].append(key)
 
-    def _add_thermal_bc_object(self, bc: Union[CONV, CONVM, RADM], key) -> None:
+    def _add_thermal_bc_object(self, bc: Union[CONV, CONVM, RADM, TEMPBC], key) -> None:
         assert key > 0
         if key in self.bcs:
             self.bcs[key].append(bc)
@@ -1111,7 +1114,7 @@ class AddMethods(BDFAttributes):
         self._type_to_id_map[aelink.type].append(key)
         #assert key not in self.aestats,'\naestat=%s oldAESTAT=\n%s' %(aestat,self.aestats[key])
 
-    def _add_aecomp_object(self, aecomp: AECOMP) -> None:
+    def _add_aecomp_object(self, aecomp: Union[AECOMP, AECOMPL]) -> None:
         """adds an AECOMP object"""
         key = aecomp.name
         assert key not in self.aecomps, '\naecomp=\n%s oldAECOMP=\n%s' % (aecomp, self.aecomps[key])
@@ -1238,7 +1241,7 @@ class AddMethods(BDFAttributes):
         self.flfacts[key] = flfact  # set id...
         self._type_to_id_map[flfact.type].append(key)
 
-    def _add_dconstr_object(self, dconstr: DCONSTR) -> None:
+    def _add_dconstr_object(self, dconstr: [DCONSTR, DCONADD]) -> None:
         """adds a DCONSTR object"""
         #key = (dconstr.oid, dconstr.rid)
         key = dconstr.oid
@@ -1508,7 +1511,7 @@ class AddMethods(BDFAttributes):
         self.se_sets[key] = set_obj
         self._type_to_id_map[set_obj.type].append(key)
 
-    def _add_table_object(self, table: Union[TABLES1, TABLEST]) -> None:
+    def _add_table_object(self, table: Union[TABLEH1, TABLEHT, TABLES1, TABLEST]) -> None:
         """adds a TABLES1, TABLEST object"""
         key = table.tid
         if key in self.tables:

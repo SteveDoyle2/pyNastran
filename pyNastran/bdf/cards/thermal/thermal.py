@@ -425,26 +425,17 @@ class CHBDYG(ThermalElement):
         rad_mid_front = data[4]
         rad_mid_back = data[5]
         nodes = [datai for datai in data[6:14] if datai > 0]
-        #surface_type_int_to_str = {
-            #3 : 'REV',
-            #4 : 'AREA3',
-            #5 : 'AREA4',
-            #8 : 'AREA6',
-            #9 : 'AREA8',
-        #}
-        if surface_type == 3:
-            surface_type = 'REV'
-        elif surface_type == 4:
-            surface_type = 'AREA3'
-        elif surface_type == 5:
-            surface_type = 'AREA4'
-        #elif surface_type == 7: # ???
-            #surface_type = 'AREA6'
-        elif surface_type == 8:
-            surface_type = 'AREA6'
-        elif surface_type == 9:
-            surface_type = 'AREA8'
-        else:
+        surface_type_int_to_str = {
+            3 : 'REV',
+            4 : 'AREA3',
+            5 : 'AREA4',
+            #7: 'AREA6',# ???
+            8 : 'AREA6',
+            9 : 'AREA8',
+        }
+        try:
+            surface_type = surface_type_int_to_str[surface_type]
+        except KeyError:
             raise NotImplementedError('eid=%s surface_type=%r' % (eid, surface_type))
 
         assert surface_type in ['REV', 'AREA3', 'AREA4', 'AREA6', 'AREA8'], 'surface_type=%r data=%s' % (surface_type, data)
@@ -547,9 +538,9 @@ class CHBDYP(ThermalElement):
     def _init_from_empty(cls):
         eid = 1
         pid = 2
-        surface_type = 'AREA3'
+        surface_type = 'POINT'
         g1 = 1
-        g2 = 2
+        g2 = None
         return CHBDYP(eid, pid, surface_type, g1, g2, g0=0, gmid=None, ce=0,
                       iview_front=0, iview_back=0,
                       rad_mid_front=0, rad_mid_back=0,
@@ -655,6 +646,7 @@ class CHBDYP(ThermalElement):
         self.nodes_ref = None
         self.pid_ref = None
         self.ce_ref = None
+        assert surface_type in ['POINT', 'LINE', 'ELCYL', 'FTUBE', 'TUBE'], surface_type
 
     @property
     def Type(self):
@@ -726,24 +718,16 @@ class CHBDYP(ThermalElement):
         #rad_mid_front = data[4]
         #rad_mid_back = data[5]
         #nodes = [datai for datai in data[6:14] if datai > 0]
-        #surface_type_int_to_str = {
-            #1 : 'POINT',
-            #2 : 'LINE',
-            #6 : 'ELCYL',
-            #7 : 'FTUBE',
-            #10 : 'TUBE',
-        #}
-        if surface_type == 1:
-            surface_type = 'POINT'
-        elif surface_type == 2:
-            surface_type = 'LINE'
-        elif surface_type == 6:
-            surface_type = 'ELCYL'
-        elif surface_type == 7:
-            surface_type = 'FTUBE'
-        elif surface_type == 10:
-            surface_type = 'TUBE'
-        else:  # pragma: no cover
+        surface_type_int_to_str = {
+            1 : 'POINT',
+            2 : 'LINE',
+            6 : 'ELCYL',
+            7 : 'FTUBE',
+            10 : 'TUBE',
+        }
+        try:
+            surface_type = surface_type_int_to_str[surface_type]
+        except KeyError:  # pragma: no cover
             raise NotImplementedError('CHBDYP surface_type=%r data=%s' % (surface_type, data))
 
         #assert dislin == 0, 'CHBDYP dislin=%r data=%s' % (dislin, data)
@@ -912,11 +896,11 @@ class PCONV(ThermalProperty):
     @classmethod
     def _init_from_empty(cls):
         pconid = 1
-        mid = 1
-        return PCONV(pconid, mid, form=0, expf=0.0, ftype=0, tid=None,
+        #mid = 1
+        return PCONV(pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
                      chlen=None, gidin=None, ce=0, e1=None, e2=None, e3=None, comment='')
 
-    def __init__(self, pconid, mid, form=0, expf=0.0, ftype=0, tid=None,
+    def __init__(self, pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
                  chlen=None, gidin=None, ce=0,
                  e1=None, e2=None, e3=None, comment=''):
         """
@@ -994,7 +978,7 @@ class PCONV(ThermalProperty):
         self.e2 = e2
         self.e3 = e3
         assert self.pconid > 0
-        assert self.mid > 0
+        assert mid is None or self.mid > 0
         assert self.form in [0, 1, 10, 11, 20, 21]
         self.ce_ref = None
         self.gidin_ref = None
@@ -1013,7 +997,7 @@ class PCONV(ThermalProperty):
 
         """
         pconid = integer(card, 1, 'pconid')
-        mid = integer(card, 2, 'mid')
+        mid = integer_or_blank(card, 2, 'mid')
         form = integer_or_blank(card, 3, 'form', 0)
         expf = double_or_blank(card, 4, 'expf', 0.0)
         ftype = integer_or_blank(card, 5, 'ftype', 0)
@@ -1025,7 +1009,7 @@ class PCONV(ThermalProperty):
         e2 = double_or_blank(card, 13, 'e2')
         e3 = double_or_blank(card, 14, 'e3')
         assert len(card) <= 15, 'len(PCONV card) = %i\ncard=%s' % (len(card), card)
-        return PCONV(pconid, mid,
+        return PCONV(pconid, mid=mid,
                      form=form, expf=expf, ftype=ftype,
                      tid=tid, chlen=chlen, gidin=gidin,
                      ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)

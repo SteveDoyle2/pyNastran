@@ -210,6 +210,84 @@ class TestThermal(unittest.TestCase):
         model2.safe_cross_reference()
         save_load_deck(model, punch=False, run_renumber=False, run_test_bdf=False)
 
+    def test_thermal_2(self):
+        """tests TABLEHT, TABLEH1"""
+        model = BDF(debug=False, log=None, mode='msc')
+        tid = 101
+        x = [1., 2., 3.]
+        y = [10., 20., 30.]
+        model.add_tableh1(tid, x, y, comment='tableh1')
+
+        tid = 101
+        model.add_tableh1(tid, x, y, comment='tableh1')
+
+        tid = 110
+        tableh1 = model.add_tableh1(tid, x, y, comment='tableh1')
+        tableh1.raw_fields()
+
+        tid_tableht = 85
+        x = [10., 25., 40.]
+        y = [101, 102, 110]
+
+        #This table is referenced only by PCONV entries that define
+        #free convection boundary condition properties.
+        tableht = model.add_tableht(tid_tableht, x, y, comment='tableht')
+        tableht.raw_fields()
+
+        pconv_id = 100
+        mid = None
+        pconv = model.add_pconv(pconv_id, mid, form=0, expf=0.0, ftype=0,
+                                tid=tid_tableht, chlen=None, gidin=None,
+                                ce=0, e1=None, e2=None, e3=None, comment='pconv')
+        pconv.raw_fields()
+
+        # Every surface to which free convection is to be applied must
+        # reference a PCONV entry. PCONV is referenced on the CONV Bulk Data entry.
+        eid = 1
+        ta = 1
+        conv = model.add_conv(eid, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+        conv.raw_fields()
+
+        conv = model.add_conv(2, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+        conv = model.add_conv(3, pconv_id, ta, film_node=0, cntrlnd=0, comment='conv')
+
+        # CHBDYG, CHBDYE, or CHBDYP surface element identification number.
+        eid_fem = 1
+        eid_conv = 1
+        side = 3 # TODO: 1-6
+        chbdye = model.add_chbdye(eid_fem, eid_conv, side, iview_front=0, iview_back=0,
+                                  rad_mid_front=0, rad_mid_back=0, comment='chbdye')
+
+        eid_fem = 2
+        nodes = [1, 2, 3]
+        surface_type = 'AREA3'
+        chbdyg = model.add_chbdyg(eid_fem, surface_type, nodes,
+                                  iview_front=0, iview_back=0,
+                                  rad_mid_front=0, rad_mid_back=0, comment='chbdyg')
+
+        eid_fem = 3
+        pid_phybdy = 10
+        g1 = 1
+        g2 = None
+        surface_type = 'POINT'
+        chbdyp = model.add_chbdyp(eid_fem, pid_phybdy, surface_type, g1, g2,
+                                  g0=0, gmid=None, ce=0,
+                                  iview_front=0, iview_back=0,
+                                  rad_mid_front=0, rad_mid_back=0,
+                                  e1=None, e2=None, e3=None, comment='chbdyp')
+        phbdy = model.add_phbdy(pid_phybdy, af=None, d1=None, d2=None, comment='phbdy')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0., 1., 0.])
+
+        chbdye.raw_fields()
+        chbdyg.raw_fields()
+        chbdyp.raw_fields()
+
+        model.validate()
+        save_load_deck(model)
+
+
 
 if __name__ == '__main__':
     unittest.main()

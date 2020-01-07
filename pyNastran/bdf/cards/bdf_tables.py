@@ -1422,7 +1422,8 @@ class TABLEH1(Table):
 
     def __init__(self, tid, x, y, comment=''):
         """
-        Adds a TABLES1 card, which defines a stress dependent material
+        Adds a TABLEH1 card, which defines convection heat transfer coefficient.
+        It's referenced by a TABLEHT.
 
         Parameters
         ----------
@@ -1519,7 +1520,21 @@ class TABLEHT(Table):
         y = [0., 1.]
         return TABLEHT(tid, x, y, comment='')
 
-    def __init__(self, tid, x, y, comment=''):
+    def __init__(self, tid: int, x, y, comment=''):
+        """
+        Adds a TABLEHT card, which a function of two variables for
+        convection heat transfer coefficient.
+
+        Parameters
+        ----------
+        tid : int
+            Table ID
+        x, y : List[float]
+            table values
+        comment : str; default=''
+            a comment for the card
+
+        """
         Table.__init__(self)
         if comment:
             self.comment = comment

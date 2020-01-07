@@ -54,12 +54,11 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     #for nid, node in model.nodes.items():
         #cids_used.update([node.Cp(), node.Cd()])
 
-    skip_cards = [
+    unreferenced_types = {
         'ENDDATA', 'PARAM', 'EIGR', 'EIGRL', 'EIGB', 'EIGP', 'EIGC',
         'SPOINT', 'EPOINT', 'DESVAR',
         'SET1', 'FREQ', 'FREQ1', 'FREQ2',
         'TSTEP', 'TSTEPNL', 'NLPCI',
-        #'LOAD', 'LSEQ', 'DLOAD', 'LOADCYN',
         'NLPARM', 'ROTORG', 'ROTORD',
         'DAREA', 'DEQATN',
         'DMIG', 'DMI', 'DMIJ', 'DMIK', 'DMIJI', 'DMIAX',
@@ -78,9 +77,12 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'BCTPARA', 'BCRPARA', 'BSURF', 'BSURFS', 'BCTADD',
         'BCTSET',
 
+        'TABRNDG', 'TABLEH1',
+    }
+    not_implemented_types = {
         # not checked------------------------------------------
-        'PHBDY', 'CHBDYG', 'CHBDYP', 'CHBDYE', 'RADBC', 'CONV',
-        'QVOL', 'PCONV', 'PCONVM',
+        'PHBDY', 'CHBDYG', 'CHBDYP', 'CHBDYE', 'RADBC', # 'CONV',
+        'QVOL', 'PCONVM', # 'PCONV',
         #'PBCOMP', 'PDAMP5', 'CFAST',
         'AECOMP', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
         'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5',
@@ -96,7 +98,10 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
 
         # superelements
         'SELOC',
-    ]
+
+        # parametric
+        'FEEDGE', 'FEFACE'
+    }
     set_types_simple = [
         'SET1', 'SET3',
     ]
@@ -116,7 +121,6 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'ACCEL', 'PLOADX1', 'SLOAD', 'ACCEL1', 'LOADCYN', 'LOAD', 'CLOAD',
         'LSEQ', 'DLOAD', 'QVECT', 'RADM', 'TEMPAX', 'DEFORM',
     }
-    not_implemented_types = {'FEEDGE', 'FEFACE'}
     masses = {'CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4'}
     elements = {
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
@@ -139,6 +143,9 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         # acoustic
         'CHACAB',
     }
+    tableht_used = set([])
+    tableh1_used = set([])
+    pconv_used = set([])
 
     # could remove some if we look at the rid_trace
     #for cid, coord in model.coords.items():
@@ -183,7 +190,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())
 
-        elif card_type in ['PLOTEL']:
+        elif card_type == 'PLOTEL':
             for eid in ids:
                 elem = model.plotels[eid]
                 nids_used.update(elem.node_ids)
@@ -191,7 +198,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             for pid in ids:
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())
-        elif card_type in ['PDAMP5']:
+        elif card_type == 'PDAMP5':
             for pid in ids:
                 prop = model.properties[pid]
                 mids_thermal_used.add(prop.Mid())
@@ -200,7 +207,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
             for pid in ids:
                 prop = model.properties[pid]
                 mids_used.add(prop.Mid())
-        elif card_type in ['PSHELL']:
+        elif card_type == 'PSHELL':
             for pid in ids:
                 prop = model.properties[pid]
                 mids = [mid for mid in prop.material_ids if mid is not None]
@@ -330,7 +337,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type == 'PBUSHT':
             # tables
             pass
-        elif card_type in ['CBUSH']:
+        elif card_type == 'CBUSH':
             for eid in ids:
                 elem = model.elements[eid]
                 nids_used.update(elem.node_ids)
@@ -355,13 +362,13 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 #if card_type in ['SPLINE1', 'SPLINE2', 'SPLINE4', 'SPLINE5']:
                     #sets_used.add(spline.Set())
 
-        elif card_type in ['CAERO1']:
+        elif card_type == 'CAERO1':
             for eid in ids:
                 caero = model.caeros[eid]
                 # PID, LSPAN, LCHORD
                 cids_used.add(caero.Cp())
 
-        elif card_type in skip_cards:
+        elif card_type in unreferenced_types:
             pass
         elif card_type in set_types_simple:
             # handled based on context in other blocks
@@ -476,13 +483,28 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 #if prop.cores:
                     #for key, value in prop.cores.items():
                         #pids_used.add(value)
-        elif card_type == 'TABRNDG':
-            pass
         elif card_type == 'CYJOIN':
             for idi in ids:
                 cyjoin = model.cyjoin[idi]
                 nids_used.update(cyjoin.nids)
-
+        elif card_type == 'TABLEHT':
+            for idi in ids:
+                table = model.tables[idi]
+                tableh1_ids = table.y.tolist()
+                tableh1_used.update(tableh1_ids)
+                del tableh1_ids
+        elif card_type == 'PCONV':
+            for idi in ids:
+                pconv = model.convection_properties[idi]
+                if pconv.tid is not None:
+                    tableht_used.add(pconv.tid)
+        elif card_type == 'CONV':
+            for idi in ids:
+                bcs = model.bcs[idi]
+                for conv in bcs:
+                    if conv.type != 'CONV':
+                        continue
+                    pconv_used.add(conv.pconid)
         elif card_type in not_implemented_types:
             model.log.warning(f'skipping {card_type}')
         else:
@@ -515,6 +537,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         pids_used, pids_mass_used,
         mids_used,
         spcs_used, mpcs_used,
+        pconv_used, tableht_used, tableh1_used,
         desvars_used,
         remove_nids=remove_nids,
         remove_cids=remove_cids,
@@ -753,9 +776,10 @@ def _store_masses(card_type, model, ids, nids_used, pids_mass_used, cids_used):
     else:
         raise NotImplementedError(card_type)
 
-def _remove(model,
+def _remove(model: BDF,
             nids_used, cids_used,
             pids_used, pids_mass_used, mids_used, spcs_used, mpcs_used,
+            pconv_used, tableht_used, tableh1_used,
             unused_desvars_used,
             remove_nids=True, remove_cids=True,
             remove_pids=True, remove_mids=True,
@@ -767,8 +791,9 @@ def _remove(model,
     pids_mass = set(model.properties_mass.keys())
     cids = set(model.coords.keys())
     mids = set(model.materials.keys())
-    spcs = set(model.spcs.keys())
-    mpcs = set(model.spcadds.keys())
+    spcs = set(model.spcs.keys())  # spcadds?
+    mpcs = set(model.mpcs.keys()) # mpcadds?
+
     nids_to_remove = list(nids - nids_used)
     pids_to_remove = list(pids - pids_used)
     pids_mass_to_remove = list(pids_mass - pids_mass_used)
@@ -831,6 +856,36 @@ def _remove(model,
     #        del model.mpcs[mpc_id]
     #    mpcs_to_remove.sort()
     #    model.log.debug('removed mpcs %s' % mpcs_to_remove)
+    _remove_thermal(model, pconv_used, tableht_used, tableh1_used)
+
+def _remove_thermal(model: BDF, pconv_used, tableht_used, tableh1_used) -> None:
+    pconv = {pid for pid, prop in model.convection_properties.items() if prop.type == 'PCONV'}
+    tableht = {tid for tid, table in model.tables.items() if table.type == 'TABLEHT'}
+    tableh1 = {tid for tid, table in model.tables.items() if table.type == 'TABLEH1'}
+
+    pconv_to_remove = list(pconv - pconv_used)
+    tableht_to_remove = list(tableht - tableht_used)
+    tableh1_to_remove = list(tableh1 - tableh1_used)
+
+    remove_pconv = True
+    if remove_pconv and pconv_to_remove:
+        for pid in pconv_to_remove:
+            del model.convection_properties[pid]
+        pconv_to_remove.sort()
+        model.log.debug('removing convection_properties %s' % pconv_to_remove)
+
+    remove_tableh1 = True
+    remove_tableht = True
+    if remove_tableh1 and tableh1_to_remove:
+        for pid in tableh1_to_remove:
+            del model.tables[pid]
+        tableh1_to_remove.sort()
+        model.log.debug('removing TABLEH1 %s' % tableh1_to_remove)
+    if remove_tableht and tableht_to_remove:
+        for pid in tableht_to_remove:
+            del model.tables[pid]
+        tableht_to_remove.sort()
+        model.log.debug('removing TABLEH1 %s' % tableht_to_remove)
 
 
     return model

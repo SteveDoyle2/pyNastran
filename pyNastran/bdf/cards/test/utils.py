@@ -33,6 +33,8 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
                    run_test_bdf=True, run_op2_writer=True, run_op2_reader=True,
                    op2_log_level: str='warning'):
     """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
+    if os.path.exists('junk.bdf'):
+        os.remove('junk.bdf')
     model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
                             nxref_errors=0, stop_on_xref_error=True)
     model.validate()
@@ -250,3 +252,4 @@ def renumber(bdf_filename, log):
                  debug=False)
     model4 = BDF(debug=False, log=log)
     model4.read_bdf(bdf_filename_out)
+    os.remove('junk.bdf')

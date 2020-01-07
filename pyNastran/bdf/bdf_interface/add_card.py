@@ -6058,6 +6058,16 @@ class AddCards(AddMethods):
         self._add_table_sdamping_object(table)
         return table
 
+    def add_tableht(self, tid: int, x, y, comment: str='') -> TABLEHT:
+        table = TABLEHT(tid, x, y, comment=comment)
+        self._add_table_object(table)
+        return table
+
+    def add_tableh1(self, tid: int, x, y, comment: str='') -> TABLEH1:
+        table = TABLEH1(tid, x, y, comment=comment)
+        self._add_table_object(table)
+        return table
+
     def add_freq(self, sid, freqs, comment='') -> FREQ:
         """
         Creates a FREQ card
@@ -7558,7 +7568,7 @@ class AddCards(AddMethods):
         self._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
         return boundary_condition
 
-    def add_pconv(self, pconid, mid, form=0, expf=0.0, ftype=0, tid=None,
+    def add_pconv(self, pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
                   chlen=None, gidin=None, ce=0,
                   e1=None, e2=None, e3=None,
                   comment='') -> PCONV:
@@ -7569,7 +7579,7 @@ class AddCards(AddMethods):
         ----------
         pconid : int
             Convection property ID
-        mid : int
+        mid : int; default=None
             Material ID
         form : int; default=0
             Type of formula used for free convection
@@ -7596,7 +7606,7 @@ class AddCards(AddMethods):
             a comment for the card
 
         """
-        prop = PCONV(pconid, mid,
+        prop = PCONV(pconid, mid=mid,
                      form=form, expf=expf, ftype=ftype,
                      tid=tid, chlen=chlen, gidin=gidin,
                      ce=ce, e1=e1, e2=e2, e3=e3, comment=comment)

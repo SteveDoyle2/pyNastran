@@ -90,7 +90,7 @@ def write_geom2(op2, op2_ascii, obj, endian=b'<'):
             itable = _write_solid(obj, name, eids, nelements, itable, op2, op2_ascii, endian)
             continue
 
-        elif name in mapper:
+        if name in mapper:
             key, spacki, nfields = mapper[name]
             spack = Struct(endian + spacki)
             #print(name, spacki)
@@ -318,67 +318,166 @@ def _write_solid(model, name, eids, nelements, itable, op2, op2_ascii, endian):
     itable = _write_end_block(nbytes, itable, op2, op2_ascii)
     return itable
 
+def _write_chbdyp(eids, spack, obj, op2, op2_ascii):
+    surface_type_str_to_int = {
+        'POINT' : 1,
+        'LINE' : 2,
+        'ELCYL' : 6,
+        'FTUBE' : 7,
+        'TUBE' : 10,
+        #'AREA3' : ,
+    }
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        pid = elem.pid
+        #print(elem.get_stats())
+        surface_type_int = surface_type_str_to_int[elem.surface_type]
+        #(eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
+         #dislin, ce, e1, e2, e3) = out
+        nids = elem.node_ids
+
+        g2 = 0 if elem.g2 is None else elem.g2
+        dislin = 0 if elem.gmid is None else elem.gmid
+        g0 = 0 if elem.g0 is None else elem.g0
+        e1 = 0. if elem.e1 is None else elem.e1
+        e2 = 0. if elem.e2 is None else elem.e2
+        e3 = 0. if elem.e3 is None else elem.e3
+        data = (eid, pid, surface_type_int, elem.iview_front, elem.iview_back,
+                elem.g1, g2, g0, elem.rad_mid_front, elem.rad_mid_back,
+                dislin, elem.ce, e1, e2, e3)
+        #data = [eid, 0, surface_type_int,
+                #elem.iview_front, elem.iview_back,
+                #elem.rad_mid_front, elem.rad_mid_back, 0] + all_nids
+        assert None not in data, data
+        op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
+        op2.write(spack.pack(*data))
+
+def _write_chbdyg(eids, spack, obj, op2, op2_ascii):
+    surface_type_str_to_int = {
+        'REV' : 3,
+        'AREA3' : 4,
+        'AREA4' : 5,
+        'AREA6' : 8,
+        'AREA8' : 9,
+    }
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        #print(elem.get_stats())
+        nids = elem.node_ids
+        #if None in nids:
+            #nids = [nid if nid is not None else 0 for nid in nids]
+        all_nids = [0] * 8
+        nnodes = len(nids)
+        all_nids[:nnodes] = nids
+        assert None not in nids, nids
+        surface_type_int = surface_type_str_to_int[elem.surface_type]
+        #(eid, unused_blank, Type, iviewf, iviewb, radmidf, radmidb, unused_blank2,
+         #g1, g2, g3, g4, g5, g6, g7, g8) = out
+        data = [eid, 0, surface_type_int,
+                elem.iview_front, elem.iview_back,
+                elem.rad_mid_front, elem.rad_mid_back, 0] + all_nids
+        assert None not in data, data
+        op2_ascii.write('  eid=%s nids=%s\n' % (eid, str(nids)))
+        op2.write(spack.pack(*data))
+
+def _write_cbush(eids, spack, obj, op2, op2_ascii, endian):
+    spacki = Struct(endian + b'4i iii i ifi3f')
+    spackf = Struct(endian + b'4i fff i ifi3f')
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+
+        pid = elem.pid
+        ga, gb = elem.node_ids
+        s = elem.s
+        s1, s2, s3 = elem.si
+        cid = elem.cid
+        ocid = elem.ocid
+        if cid is None:
+            cid = -1
+
+        # not 100%
+        s1 = 0.0 if s1 is None else s1
+        s2 = 0.0 if s2 is None else s2
+        s3 = 0.0 if s3 is None else s3
+
+        if elem.x[0] is None and elem.g0 is None:
+            # Use Element CID below for orientation
+            f = -1
+            data = [eid, pid, ga, gb, 0, 0, 0,
+                    f, cid, s, ocid, s1, s2, s3]
+            assert None not in data, 'CBUSH-1 %s' % (data)
+            op2.write(spacki.pack(*data))
+        elif elem.x[0] is not None:
+            f = 0
+            x1, x2, x3 = elem.x
+            data = [eid, pid, ga, gb, x1, x2, x3,
+                    f, cid, s, ocid, s1, s2, s3]
+            assert None not in data, 'CBUSH-2 %s x=%s' % (data, elem.x)
+            op2.write(spackf.pack(*data))
+        elif elem.g0 is not None:
+            f = 2
+            g0 = elem.g0
+            data = [eid, pid, ga, gb, g0, 0, 0,
+                    f, cid, s, ocid, s1, s2, s3]
+            assert None not in data, 'CBUSH-3 %s' % (data)
+            op2.write(spacki.pack(*data))
+        else:
+            raise RuntimeError('invalid CBUSH')
+
+def _write_cbush1d(eids, spack, obj, op2, op2_ascii, endian):
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        #(eid, pid, g1, g2, cid, unused_a, unused_b, unused_c) = out
+        g1, g2 = elem.node_ids
+        cid = elem.cid
+        if cid is None:
+            cid = -1
+        data = [eid, elem.pid, g1, g2, cid, 0, 0, 0]
+        op2.write(spack.pack(*data))
+
+def _write_cgap(eids, spack, obj, op2, op2_ascii, endian):
+    structf = Struct(endian + b'4i3fii')
+    structi = Struct(endian + b'4i3iii')
+    for eid in sorted(eids):
+        elem = obj.elements[eid]
+        #(eid, pid, ga, gb, x1, x2, x3, f, cid) = out  # f=0,1
+        pid = elem.pid
+        ga, gb = elem.node_ids
+        cid = elem.cid
+        #print(elem.get_stats())
+        if cid is None:
+            cid = -1
+
+        if elem.x[0] is not None and elem.g0 is None:
+            f = 1
+            x1, x2, x3 = elem.x
+            data = [eid, pid, ga, gb, x1, x2, x3, f, cid]
+            op2.write(structf.pack(*data))
+        elif elem.x[0] is None and elem.g0 is None:
+            f = 1
+            data = [eid, pid, ga, gb, 1., 0., 0., f, cid]
+            op2.write(structf.pack(*data))
+        elif elem.x[0] is not None:
+            f = 1
+            x1, x2, x3 = elem.x
+            data = [eid, pid, ga, gb, x1, x2, x3, f, cid]
+            #print('CGAP x; x=%s data=%s' % (elem.x, data))
+            op2.write(structf.pack(*data))
+        else:
+            f = 2
+            g0 = elem.g0
+            data = [eid, pid, ga, gb, g0, 0, 0, f, cid]
+            print('CGAP g0; x=%s gab0=%s data=%s' % (g0, [ga, gb, g0], data))
+            op2.write(structi.pack(*data))
+
 def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
     """writes the GEOM2 elements"""
     op2_ascii.write('GEOM2-%s\n' % name)
     if name == 'CHBDYP':
-        surface_type_str_to_int = {
-            'POINT' : 1,
-            'LINE' : 2,
-            'ELCYL' : 6,
-            'FTUBE' : 7,
-            'TUBE' : 10,
-        }
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
-            pid = elem.pid
-            #print(elem.get_stats())
-            surface_type_int = surface_type_str_to_int[elem.surface_type]
-            #(eid, pid, Type, iviewf, iviewb, g1, g2, g0, radmidf, radmidb,
-             #dislin, ce, e1, e2, e3) = out
-            nids = elem.node_ids
-            dislin = 0 if elem.gmid is None else elem.gmid
-            g0 = 0 if elem.g0 is None else elem.g0
-            e1 = 0. if elem.e1 is None else elem.e1
-            e2 = 0. if elem.e2 is None else elem.e2
-            e3 = 0. if elem.e3 is None else elem.e3
-            data = (eid, pid, surface_type_int, elem.iview_front, elem.iview_back,
-                    elem.g1, elem.g2, g0, elem.rad_mid_front, elem.rad_mid_back,
-                    dislin, elem.ce, e1, e2, e3)
-            #data = [eid, 0, surface_type_int,
-                    #elem.iview_front, elem.iview_back,
-                    #elem.rad_mid_front, elem.rad_mid_back, 0] + all_nids
-            assert None not in data, data
-            op2_ascii.write('  eid=%s pid=%s nids=%s\n' % (eid, pid, str(nids)))
-            op2.write(spack.pack(*data))
-
+        _write_chbdyp(eids, spack, obj, op2, op2_ascii)
     elif name == 'CHBDYG':
-        surface_type_str_to_int = {
-            'REV' : 3,
-            'AREA3' : 4,
-            'AREA4' : 5,
-            'AREA6' : 8,
-            'AREA8' : 9,
-        }
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
-            #print(elem.get_stats())
-            nids = elem.node_ids
-            #if None in nids:
-                #nids = [nid if nid is not None else 0 for nid in nids]
-            all_nids = [0] * 8
-            nnodes = len(nids)
-            all_nids[:nnodes] = nids
-            assert None not in nids, nids
-            surface_type_int = surface_type_str_to_int[elem.surface_type]
-            #(eid, unused_blank, Type, iviewf, iviewb, radmidf, radmidb, unused_blank2,
-             #g1, g2, g3, g4, g5, g6, g7, g8) = out
-            data = [eid, 0, surface_type_int,
-                    elem.iview_front, elem.iview_back,
-                    elem.rad_mid_front, elem.rad_mid_back, 0] + all_nids
-            assert None not in data, data
-            op2_ascii.write('  eid=%s nids=%s\n' % (eid, str(nids)))
-            op2.write(spack.pack(*data))
+        _write_chbdyg(eids, spack, obj, op2, op2_ascii)
+
     elif name == 'PLOTEL':
         for eid in sorted(eids):
             elem = obj.plotels[eid]
@@ -388,92 +487,12 @@ def write_card(name, eids, spack, obj, op2, op2_ascii, endian):
             op2_ascii.write('  eid=%s nids=%s\n' % (eid, str(nids)))
             op2.write(spack.pack(*data))
     elif name == 'CBUSH':
-        spacki = Struct(endian + b'4i iii i ifi3f')
-        spackf = Struct(endian + b'4i fff i ifi3f')
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
+        _write_cbush(eids, spack, obj, op2, op2_ascii, endian)
 
-            pid = elem.pid
-            ga, gb = elem.node_ids
-            s = elem.s
-            s1, s2, s3 = elem.si
-            cid = elem.cid
-            ocid = elem.ocid
-            if cid is None:
-                cid = -1
-
-            # not 100%
-            s1 = 0.0 if s1 is None else s1
-            s2 = 0.0 if s2 is None else s2
-            s3 = 0.0 if s3 is None else s3
-
-            if elem.x[0] is None and elem.g0 is None:
-                # Use Element CID below for orientation
-                f = -1
-                data = [eid, pid, ga, gb, 0, 0, 0,
-                        f, cid, s, ocid, s1, s2, s3]
-                assert None not in data, 'CBUSH-1 %s' % (data)
-                op2.write(spacki.pack(*data))
-            elif elem.x[0] is not None:
-                f = 0
-                x1, x2, x3 = elem.x
-                data = [eid, pid, ga, gb, x1, x2, x3,
-                        f, cid, s, ocid, s1, s2, s3]
-                assert None not in data, 'CBUSH-2 %s x=%s' % (data, elem.x)
-                op2.write(spackf.pack(*data))
-            elif elem.g0 is not None:
-                f = 2
-                g0 = elem.g0
-                data = [eid, pid, ga, gb, g0, 0, 0,
-                        f, cid, s, ocid, s1, s2, s3]
-                assert None not in data, 'CBUSH-3 %s' % (data)
-                op2.write(spacki.pack(*data))
-            else:
-                raise RuntimeError('invalid CBBUSH')
     elif name == 'CBUSH1D':
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
-            #(eid, pid, g1, g2, cid, unused_a, unused_b, unused_c) = out
-            g1, g2 = elem.node_ids
-            cid = elem.cid
-            if cid is None:
-                cid = -1
-            data = [eid, elem.pid, g1, g2, cid, 0, 0, 0]
-            op2.write(spack.pack(*data))
+        _write_cbush1d(eids, spack, obj, op2, op2_ascii, endian)
     elif name == 'CGAP':
-        structf = Struct(endian + b'4i3fii')
-        structi = Struct(endian + b'4i3iii')
-        for eid in sorted(eids):
-            elem = obj.elements[eid]
-            #(eid, pid, ga, gb, x1, x2, x3, f, cid) = out  # f=0,1
-            pid = elem.pid
-            ga, gb = elem.node_ids
-            cid = elem.cid
-            #print(elem.get_stats())
-            if cid is None:
-                cid = -1
-
-            if elem.x[0] is not None and elem.g0 is None:
-                f = 1
-                x1, x2, x3 = elem.x
-                data = [eid, pid, ga, gb, x1, x2, x3, f, cid]
-                op2.write(structf.pack(*data))
-            elif elem.x[0] is None and elem.g0 is None:
-                f = 1
-                data = [eid, pid, ga, gb, 1., 0., 0., f, cid]
-                op2.write(structf.pack(*data))
-            elif elem.x[0] is not None:
-                f = 1
-                x1, x2, x3 = elem.x
-                data = [eid, pid, ga, gb, x1, x2, x3, f, cid]
-                #print('CGAP x; x=%s data=%s' % (elem.x, data))
-                op2.write(structf.pack(*data))
-            else:
-                f = 2
-                g0 = elem.g0
-                data = [eid, pid, ga, gb, g0, 0, 0, f, cid]
-                print('CGAP g0; x=%s gab0=%s data=%s' % (g0, [ga, gb, g0], data))
-                op2.write(structi.pack(*data))
+        _write_cgap(eids, spack, obj, op2, op2_ascii, endian)
 
     elif name in ['CQUAD4', 'CQUADR']:
         for eid in sorted(eids):

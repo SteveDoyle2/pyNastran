@@ -1028,34 +1028,14 @@ def _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof, fdtype='float64'):
     skipped_load_types = set([])
     for load in loads:
         loadtype = load.type
-        if load.type in ['FORCE', 'FORCE1', 'FORCE2',
-                         'MOMENT', 'MOMENT1', 'MOMENT2']:
+        if load.type == 'FORCE1':
+            offset = 1
+            _add_force(Fg, dof_map, load, offset, ndof_per_grid, cid=0)
+        elif load.type in ['FORCE', 'FORCE2',
+                           'MOMENT', 'MOMENT1', 'MOMENT2']:
             offset = 1 if load.type[0] == 'F' else 4
-            cid = load.cid
-            nid = load.node
-            node_ref = load.node_ref
-            flocal = load.mag * load.xyz
-            ndofi = ndof_per_grid if node_ref.type == 'GRID' else 1
-            assert ndofi == 6, f'GRID must have 6 DOF for structural analysis\n{node_ref}'
-            if cid != 0:
-                cp_ref = node_ref.cp_ref
-                fbasic = cp_ref.transform_force_to_global(flocal)
-                if node_ref.cd != 0:
-                    cd_ref = node_ref.cd_ref
-                    if cd_ref.type[-1] in ['C', 'S']:
-                        xyz_local = node_ref.get_position_wrt(model, node_ref.cd)
-                        str(xyz_local)
-                    Tbg = cd_ref.beta()
-                    Tgb = Tbg.T
-                    fglobal = np.dot(Tgb, fbasic)
-                else:
-                    fglobal = fbasic
-            else:
-                fglobal = flocal
+            _add_force(Fg, dof_map, load, offset, ndof_per_grid, cid=load.cid)
 
-            for dof in range(3):
-                irow = dof_map[(nid, dof+offset)]
-                Fg[irow] += fglobal[dof]
         elif loadtype == 'SLOAD':
             for nid, mag in zip(load.nodes, load.mags):
                 irow = dof_map[(nid, 0)]
@@ -1067,3 +1047,31 @@ def _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof, fdtype='float64'):
         skipped_load_types.sort()
         model.log.debug(f'skipping {skipped_load_types}')
     return Fg
+
+def _add_force(Fg, dof_map, load, offset, ndof_per_grid, cid=0):
+    """adds the FORCE/MOMENT loads to Fg"""
+    #cid = load.cid
+    nid = load.node
+    node_ref = load.node_ref
+    flocal = load.mag * load.xyz
+    ndofi = ndof_per_grid if node_ref.type == 'GRID' else 1
+    assert ndofi == 6, f'GRID must have 6 DOF for structural analysis\n{node_ref}'
+    if cid != 0:
+        cp_ref = node_ref.cp_ref
+        fbasic = cp_ref.transform_force_to_global(flocal)
+        if node_ref.cd != 0:
+            cd_ref = node_ref.cd_ref
+            if cd_ref.type[-1] in ['C', 'S']:
+                xyz_local = node_ref.get_position_wrt(model, node_ref.cd)
+                str(xyz_local)
+            Tbg = cd_ref.beta()
+            Tgb = Tbg.T
+            fglobal = np.dot(Tgb, fbasic)
+        else:
+            fglobal = fbasic
+    else:
+        fglobal = flocal
+
+    for dof in range(3):
+        irow = dof_map[(nid, dof+offset)]
+        Fg[irow] += fglobal[dof]
