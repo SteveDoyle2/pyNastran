@@ -94,8 +94,9 @@ class CHACAB(Element):
         return CHACAB(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        msg = f'which is required by CHACAB eid={self.eid}'
-        model.Property(self.pid, msg=msg)
+        #msg = f', which is required by CHACAB eid={self.eid}'
+        #model.Property(self.pid, msg=msg)
+        pass
 
     def safe_cross_reference(self, model: BDF, xref_error) -> None:
         self.cross_reference(model)

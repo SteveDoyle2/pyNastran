@@ -157,15 +157,15 @@ class Coord(BaseCard):
         #"""Gets the reference ID"""
         #return None
 
-    @abstractmethod
-    def xyz_to_coord(self, xyz):
-        return xyz
-    @abstractmethod
-    def coord_to_xyz(self, xyz):
-        return xyz
-    @abstractmethod
-    def coord_to_xyz_array(self, xyz):
-        return xyz
+    #@abstractmethod
+    #def xyz_to_coord(self, xyz):
+        #return xyz
+    #@abstractmethod
+    #def coord_to_xyz(self, xyz):
+        #return xyz
+    #@abstractmethod
+    #def coord_to_xyz_array(self, xyz):
+        #return xyz
 
     def setup_global_cord2x(self):
         """Sets up a global CORD2R, CORD2S, CORD2C"""
@@ -2238,7 +2238,7 @@ class GMCORD(BaseCard):
         return GMCORD(cid, entity, gm_ids, comment=comment)
 
     @staticmethod
-    def cross_reference(self, model: BDF) -> None:
+    def cross_reference(model: BDF) -> None:
         pass
 
     @staticmethod

@@ -2067,7 +2067,7 @@ class PLOAD(Load):
         return self.cross_reference(model)
 
     @staticmethod
-    def uncross_reference(self) -> None:
+    def uncross_reference() -> None:
         """Removes cross-reference links"""
         pass
 

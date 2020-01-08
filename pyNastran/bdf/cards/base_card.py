@@ -360,12 +360,12 @@ class Property(BaseCard):
             return self.mid
         return self.mid_ref.mid
 
-    @abstractmethod
-    def cross_reference(self, model: BDF) -> None:
-        pass
-    @abstractmethod
-    def uncross_reference(self) -> None:
-        pass
+    #@abstractmethod
+    #def cross_reference(self, model: BDF) -> None:
+        #pass
+    #@abstractmethod
+    #def uncross_reference(self) -> None:
+        #pass
     def write_card_8(self) -> str:
         return self.write_card()
 
