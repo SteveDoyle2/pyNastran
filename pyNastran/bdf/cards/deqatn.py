@@ -268,7 +268,6 @@ class DEQATN(BaseCard):  # needs work...
         except SyntaxError:
             print(func_str)
             raise
-        print(func_str)
         #print(locals().keys())
         func = locals()[func_name]
         setattr(self, func_name, func)
