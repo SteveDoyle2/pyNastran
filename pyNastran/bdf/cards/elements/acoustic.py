@@ -50,8 +50,9 @@ class CHACAB(Element):
             self.comment = comment
         self.eid = eid
         self.pid = pid
-        self.nodes_ref = None
         self.nodes = self.prepare_node_ids(nodes, allow_empty_nodes=True)
+        self.nodes_ref = None
+        self.pid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -93,12 +94,18 @@ class CHACAB(Element):
         return CHACAB(eid, pid, nids, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
-        pass
+        msg = f'which is required by CHACAB eid={self.eid}'
+        model.Property(self.pid, msg=msg)
+
     def safe_cross_reference(self, model: BDF, xref_error) -> None:
-        pass
+        self.cross_reference(model)
+
     def uncross_reference(self) -> None:
-        pass
+        self.pid_ref = None
+
     def Pid(self) -> int:
+        if self.pid_ref is not None:
+            return self.pid_ref.pid
         return self.pid
 
     @property
@@ -293,6 +300,7 @@ class PACBAR(Property):
             Resonant stiffness of the sandwich construction.
 
         """
+        super().__init__()
         if comment:
             self.comment = comment
         self.pid = pid
@@ -382,6 +390,7 @@ class PAABSF(Property):
             coefficient. RHO is the media density, and C is the speed of
             sound in the media.
         """
+        super().__init__()
         if comment:
             self.comment = comment
         self.pid = pid
@@ -481,6 +490,7 @@ class PACABS(Element):
 
         ..note:: tables are defined as a function of frequency in cycles/time
         """
+        super().__init__()
         if comment:
             self.comment = comment
         self.pid = pid
@@ -565,16 +575,14 @@ class ACMODL(Element):
     """
     type = 'ACMODL'
 
-    #@classmethod
-    #def _init_from_empty(cls):
-        #pid = 1
-        #cutfr = 1.0
-        #b = 1.
-        #k = 1.
-        #m = 1.
-        #return ACMODL(pid, cutfr, b, k, m)
+    @classmethod
+    def _init_from_empty(cls):
+        infor = 1
+        fset = 1.0
+        sset = 1.
+        return ACMODL(infor, fset, sset)
 
-    def __init__(self, infor, fset, sset,
+    def __init__(self, infor: str, fset: int, sset: int,
                  normal=0.5, olvpang=60., search_unit='REL',
                  intol=0.2, area_op=0, ctype='STRONG',
                  method='BW',
@@ -652,6 +660,7 @@ class ACMODL(Element):
             REL for relative model units based on element size
 
         """
+        super().__init__()
         if comment:
             self.comment = comment
         self.nastran_version = nastran_version

@@ -1026,51 +1026,54 @@ def _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof, fdtype='float64'):
     dof_map = _get_dof_map(model)
     Fg = np.zeros([ndof], dtype=fdtype)
     skipped_load_types = set([])
+    not_static_loads = []
     for load in loads:
         loadtype = load.type
-        if load.type == 'FORCE1':
-            offset = 1
-            _add_force(Fg, dof_map, load, offset, ndof_per_grid, cid=0)
-        elif load.type in ['FORCE', 'FORCE2',
-                           'MOMENT', 'MOMENT1', 'MOMENT2']:
+        if load.type in ['FORCE', 'MOMENT']:
             offset = 1 if load.type[0] == 'F' else 4
-            _add_force(Fg, dof_map, load, offset, ndof_per_grid, cid=load.cid)
+            _add_force(Fg, dof_map, model, load, offset, ndof_per_grid, cid=load.cid)
+        elif load.type in ['FORCE1', 'MOMENT1',
+                           'FORCE2', 'MOMENT2']:
+            offset = 1 if load.type[0] == 'F' else 4
+            _add_force(Fg, dof_map, model, load, offset, ndof_per_grid, cid=0)
 
         elif loadtype == 'SLOAD':
             for nid, mag in zip(load.nodes, load.mags):
                 irow = dof_map[(nid, 0)]
                 Fg[irow] += mag
+        elif loadtype in not_static_loads:
+            continue
         else:
             skipped_load_types.add(load.type)
     if skipped_load_types:
         skipped_load_types = list(skipped_load_types)
         skipped_load_types.sort()
-        model.log.debug(f'skipping {skipped_load_types}')
+        model.log.warning(f'skipping {skipped_load_types} in Fg')
     return Fg
 
-def _add_force(Fg, dof_map, load, offset, ndof_per_grid, cid=0):
+def _add_force(Fg, dof_map, model: BDF, load, offset: int, ndof_per_grid: int, cid: int=0):
     """adds the FORCE/MOMENT loads to Fg"""
     #cid = load.cid
     nid = load.node
     node_ref = load.node_ref
-    flocal = load.mag * load.xyz
     ndofi = ndof_per_grid if node_ref.type == 'GRID' else 1
     assert ndofi == 6, f'GRID must have 6 DOF for structural analysis\n{node_ref}'
     if cid != 0:
-        cp_ref = node_ref.cp_ref
-        fbasic = cp_ref.transform_force_to_global(flocal)
-        if node_ref.cd != 0:
-            cd_ref = node_ref.cd_ref
-            if cd_ref.type[-1] in ['C', 'S']:
-                xyz_local = node_ref.get_position_wrt(model, node_ref.cd)
-                str(xyz_local)
-            Tbg = cd_ref.beta()
-            Tgb = Tbg.T
-            fglobal = np.dot(Tgb, fbasic)
-        else:
-            fglobal = fbasic
+        fbasic = load.to_global()
     else:
-        fglobal = flocal
+        fbasic = load.mag * load.xyz
+
+    if node_ref.cd != cid:
+        model.log.warning(f'differing cid & cd is not supported; cid={cid} cd={node_ref.cd}')
+        cd_ref = node_ref.cd_ref
+        if cd_ref.type[-1] in ['C', 'S']:
+            xyz_local = node_ref.get_position_wrt(model, node_ref.cd)
+            str(xyz_local)
+        Tbg = cd_ref.beta()
+        Tgb = Tbg.T
+        fglobal = np.dot(Tgb, fbasic)
+    else:
+        fglobal = fbasic
 
     for dof in range(3):
         irow = dof_map[(nid, dof+offset)]

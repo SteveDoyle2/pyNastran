@@ -16,6 +16,7 @@ All coordinate cards are defined in this file.  This includes:
 from __future__ import annotations
 import copy
 from math import sqrt, degrees, radians, atan2, acos, sin, cos
+from abc import abstractproperty, abstractmethod
 from typing import Union, TYPE_CHECKING
 import numpy as np
 from numpy.linalg import norm  # type: ignore
@@ -142,6 +143,29 @@ class Coord(BaseCard):
     def Cid(self):
         """Gets the coordinate ID"""
         return self.cid
+
+    @abstractmethod
+    def Rid(self):
+        """Gets the reference ID"""
+        return 0
+    #@abstractproperty
+    #def rid(self):
+        #"""Gets the reference ID"""
+        #return 0
+    #@abstractproperty
+    #def rid_ref(self):
+        #"""Gets the reference ID"""
+        #return None
+
+    @abstractmethod
+    def xyz_to_coord(self, xyz):
+        return xyz
+    @abstractmethod
+    def coord_to_xyz(self, xyz):
+        return xyz
+    @abstractmethod
+    def coord_to_xyz_array(self, xyz):
+        return xyz
 
     def setup_global_cord2x(self):
         """Sets up a global CORD2R, CORD2S, CORD2C"""
@@ -2213,10 +2237,12 @@ class GMCORD(BaseCard):
         ]
         return GMCORD(cid, entity, gm_ids, comment=comment)
 
+    @staticmethod
     def cross_reference(self, model: BDF) -> None:
         pass
 
-    def uncross_reference(self) -> None:
+    @staticmethod
+    def uncross_reference() -> None:
         """Removes cross-reference links"""
         pass
 

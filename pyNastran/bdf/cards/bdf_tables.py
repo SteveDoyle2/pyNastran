@@ -2,21 +2,23 @@
 """
 All table cards are defined in this file.  This includes:
 
-* Table
+* table_d
  * TABLED1 - Dynamic Table = f(Time, Frequency)
  * TABLED2
  * TABLED3
+* table_m
  * TABLEM1 - Material table = f(Temperature)
  * TABLEM2
  * TABLEM3
  * TABLEM4
- * TABLES1 - Material table = f(Stress)
- * TABLEST
- * RandomTable
-   * TABRND1
+*tables
+ * TABLEST - Material table = f(Stress)
+ * TABLES1
+ * TABLEHT - Material table = f(Temperature)
+ * TABLEH1
+*random_tables
+ * TABRND1
  * TABRNDG
-
-All tables have a self.table parameter that is a TableObj
 
 """
 from typing import Any
@@ -27,7 +29,6 @@ from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.field_writer_double import print_card_double
 
 from pyNastran.bdf.cards.base_card import BaseCard
-#from pyNastran.utils.dev import list_print
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
     double_or_string, double_or_blank, integer_or_string)
@@ -1592,14 +1593,14 @@ class TABLEHT(Table):
         return self.raw_fields()
 
 
-class RandomTable(Table):
-    type = 'TABLE??'
+#class RandomTable(Table):
+    #type = 'TABLE??'
 
-    def __init__(self):
-        Table.__init__(self)
+    #def __init__(self):
+        #Table.__init__(self)
 
 
-class TABRND1(RandomTable):
+class TABRND1(Table):
     type = 'TABRND1'
 
     @classmethod
@@ -1610,7 +1611,7 @@ class TABRND1(RandomTable):
         return TABRND1(tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment='')
 
     def __init__(self, tid, x, y, xaxis='LINEAR', yaxis='LINEAR', comment=''):
-        RandomTable.__init__(self)
+        Table.__init__(self)
         if comment:
             self.comment = comment
 
@@ -1685,7 +1686,7 @@ class TABRND1(RandomTable):
         return list_fields
 
 
-class TABRNDG(RandomTable):
+class TABRNDG(Table):
     r"""
     Gust Power Spectral Density
 
@@ -1723,7 +1724,7 @@ class TABRNDG(RandomTable):
             a comment for the card
 
         """
-        RandomTable.__init__(self)
+        Table.__init__(self)
         if comment:
             self.comment = comment
         #: Table identification number. (Integer >0)

@@ -227,8 +227,7 @@ class LOAD(LoadCombination):
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        else:
-            return self.comment + print_card_16(card)
+        return self.comment + print_card_16(card)
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
@@ -327,8 +326,7 @@ class CLOAD(LoadCombination):
         card = self.raw_fields()
         if size == 8:
             return self.comment + print_card_8(card)
-        else:
-            return self.comment + print_card_16(card)
+        return self.comment + print_card_16(card)
 
 class GRAV(BaseCard):
     """
@@ -1616,9 +1614,8 @@ class Load2(BaseCard):
         if not nodes:
             nodes = self.nodes
         if isinstance(nodes[0], integer_types):
-            return [node for node in nodes]
-        else:
-            return [node.nid for node in nodes]
+            return nodes
+        return [node.nid for node in nodes]
 
     def raw_fields(self):
         (node, g1, g2, g3, g4) = self._node_ids([self.node, self.g1, self.g2, self.g3, self.g4])
@@ -2069,6 +2066,7 @@ class PLOAD(Load):
     def safe_cross_reference(self, model, safe_coord):
         return self.cross_reference(model)
 
+    @staticmethod
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
         pass

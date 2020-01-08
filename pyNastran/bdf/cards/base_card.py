@@ -57,7 +57,7 @@ class BaseCard:
         return []
 
     @abstractclassmethod
-    def add_card(self):  # pragma: no cover
+    def add_card(self, card, comment=''):  # pragma: no cover
         return BaseCard()
 
     def __deepcopy__(self, memo_dict):
@@ -507,7 +507,7 @@ class Element(BaseCard):
 
             # remove 0 nodes
             nodes2 = [nid if nid != 0 else None
-                     for nid in nodes]
+                      for nid in nodes]
         else:
             nodes2 = nodes
             #unique_nodes = unique(self.nodes)

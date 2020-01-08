@@ -1,6 +1,7 @@
 """Defines various helper functions for exporting a HDF5 BDF file"""
+from __future__ import annotations
 from collections import defaultdict
-from typing import List, Any
+from typing import List, Any, TYPE_CHECKING
 from io import StringIO
 import numpy as np
 
@@ -8,6 +9,9 @@ from pyNastran.utils.dict_to_h5py import (
     _add_list_tuple, integer_types, float_types, string_types)
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
 from pyNastran.utils import object_attributes
+
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
 
 # dict[key] : [value1, value2, ...]
 dict_int_list_obj_attrs = [
@@ -104,6 +108,7 @@ dict_int_obj_attrs = [
 scalar_obj_keys = [
     # required----
     'aero', 'aeros', 'axic', 'axif', 'cyax', 'baror', 'beamor',
+    'acmodl',
     'doptprm',
     'dtable', 'grdset', 'radset', 'seqgp',
     'case_control_deck',
@@ -169,7 +174,7 @@ LIST_OBJ_KEYS = [  ## TODO: not done
 ]
 
 
-def export_bdf_to_hdf5_file(hdf5_file, model, exporter=None):
+def export_bdf_to_hdf5_file(hdf5_file, model: BDF, exporter=None):
     """
     Converts the BDF objects into hdf5 object
 
@@ -305,7 +310,7 @@ def export_bdf_to_hdf5_file(hdf5_file, model, exporter=None):
     #asd
 
 
-def _export_dconstrs(hdf5_file, model, encoding):
+def _export_dconstrs(hdf5_file, model: BDF, encoding):
     """exports the dconstrs, which includes DCONSTRs and DCONADDs"""
     if model.dconstrs:
         dconstrs_group = hdf5_file.create_group('dconstrs')
@@ -337,7 +342,7 @@ def _export_dconstrs(hdf5_file, model, encoding):
             dconadds0 = dconadds[0]
             dconadds0.export_to_hdf5(dconadd_group, dconadds, encoding)
 
-def _export_scalar_group(hdf5_file, model, encoding):
+def _export_scalar_group(hdf5_file, model: BDF, encoding):
     scalar_group = _export_minor_attributes(hdf5_file, model, encoding)
 
     for key in ['case_control_lines', 'executive_control_lines',
@@ -364,7 +369,7 @@ def _export_scalar_group(hdf5_file, model, encoding):
                           for field in fields]
             reject_group.create_dataset(str(i), data=list_bytes)
 
-def _export_minor_attributes(hdf5_file, model, encoding):
+def _export_minor_attributes(hdf5_file, model: BDF, encoding):
     """
     Minor atributes include:
      - encoding
@@ -418,7 +423,7 @@ def _export_minor_attributes(hdf5_file, model, encoding):
     scalar_group.create_dataset('is_enddata', data='ENDDATA' in model.card_count)
     return scalar_group
 
-def _export_dict_int_obj_attrs(model, hdf5_file, encoding):
+def _export_dict_int_obj_attrs(model: BDF, hdf5_file, encoding):
     unused_cards = set(list(CARD_MAP.keys()))
     for attr in dict_int_obj_attrs:
         dict_obj = getattr(model, attr)
@@ -480,7 +485,7 @@ def _export_dict_int_list_obj_attrs(model, hdf5_file, encoding):
                                              '%s/id=%s/%s' % (attr, spc_id, card_type),
                                              spcs, indices, encoding)
 
-def _export_list_keys(model, hdf5_file, list_keys):
+def _export_list_keys(model: BDF, hdf5_file, list_keys):
     for attr in list_keys:
         #print('list_key: %s' % attr)
         list_obj = getattr(model, attr) # active_filenames
@@ -521,7 +526,7 @@ def _export_list_keys(model, hdf5_file, list_keys):
         #_hdf5_export_object_dict(group, model, attr, list_obj, indices, encoding)
 
 
-def _export_list_obj_keys(model, hdf5_file, list_obj_keys, encoding):
+def _export_list_obj_keys(model: BDF, hdf5_file, list_obj_keys, encoding):
     for attr in list_obj_keys:
         list_obj = getattr(model, attr) # active_filenames
         if not len(list_obj):
@@ -552,7 +557,7 @@ def _export_list_obj_keys(model, hdf5_file, list_obj_keys, encoding):
         _hdf5_export_object_dict(group, model, attr, list_obj, indices, encoding)
 
 
-def _h5_export_class(sub_group: Any, model: Any, key: str, value: Any,
+def _h5_export_class(sub_group: Any, model: BDF, key: str, value: Any,
                      skip_attrs: List[str], encoding: str, debug: bool=True) -> None:
     #model.log.debug('exporting %s to hdf5' % key)
     #sub_groupi = sub_group.create_group('values')
@@ -749,7 +754,7 @@ def _export_list(h5_group, attr, name, values, encoding):
         #h5_group.create_dataset(name, data=values2)
         #raise
 
-def _hdf5_export_elements(hdf5_file, model, encoding):
+def _hdf5_export_elements(hdf5_file, model: BDF, encoding):
     """
     exports the elements to an hdf5_file
 
@@ -805,7 +810,7 @@ def _hdf5_export_elements(hdf5_file, model, encoding):
                 _hdf5_export_object_dict(element_group, model, card_type,
                                          model.elements, eids, encoding)
 
-def _hdf5_export_group(hdf5_file, model, group_name, encoding, debug=False):
+def _hdf5_export_group(hdf5_file, model: BDF, group_name, encoding, debug=False):
     """
     exports the properties to an hdf5_file
     """
@@ -849,7 +854,7 @@ def _hdf5_export_group(hdf5_file, model, group_name, encoding, debug=False):
     #else:
         #model.log.debug('skipping %s to hdf5' % group_name)
 
-def _hdf5_export_object_dict(group, model, name, obj_dict, keys, encoding):
+def _hdf5_export_object_dict(group, model: BDF, name, obj_dict, keys, encoding):
     #i = 0
     skip_attrs = ['comment', '_field_map']
 
