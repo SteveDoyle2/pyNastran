@@ -34,7 +34,7 @@ EXPECTED_HEADER_KEYS_CHECK = [
     'version', 'encoding', 'nnodes', 'nelements',
     'punch', 'dumplines', 'is_superelements', # booleans
 ]
-EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units']
+EXPECTED_HEADER_KEYS_NO_CHECK = ['skip_cards', 'units', 'code-block']
 
 
 def _to_fields_mntpnt1(card_lines: List[str]) -> List[str]:
@@ -242,7 +242,7 @@ def _parse_pynastran_header(line: str) -> Tuple[Optional[str], Optional[str]]:
             msg += 'line=%r' % line
             raise SyntaxError(msg)
         try:
-            key, value = word.strip().split('=')
+            key, value = word.strip().split('=', 1)
         except ValueError:
             msg = (
                 'expected header of the form:\n'

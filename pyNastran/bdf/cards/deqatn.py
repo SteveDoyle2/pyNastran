@@ -236,7 +236,7 @@ class DEQATN(BaseCard):  # needs work...
         # combine the equations into a single organized block
         line0_eq = line0[16:]
         eqs_temp = [line0_eq] + card[1:]
-        eqs_temp2 = [line.replace(';;', ';') for line in eqs_temp]
+        #eqs_temp2 = [line.replace(';;', ';') for line in eqs_temp]
         #for line in eqs_temp2:
             #print(line)
         eqs = lines_to_eqs(eqs_temp)
@@ -268,6 +268,7 @@ class DEQATN(BaseCard):  # needs work...
         except SyntaxError:
             print(func_str)
             raise
+        print(func_str)
         #print(locals().keys())
         func = locals()[func_name]
         setattr(self, func_name, func)

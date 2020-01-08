@@ -3965,16 +3965,24 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #elif key == 'skip_properties'
             elif key == 'units':
                 self.units = [value.strip() for value in value.upper().split(',')]
+            elif key in ['code-block', 'code_block']:
+                value = line.split('=', 1)[1]
+                if not hasattr(self, 'code_block'):
+                    self.code_block = ''
+                    char0 = value.lstrip()[0]
+                    indent = value.index(char0)
+                self.code_block += value[indent:]
             else:
                 raise NotImplementedError(key)
-        return
+
+        if hasattr(self, 'code_block'):
+            exec(self.code_block)
 
 #---------------------------------------------------------------------------------------------------
     # HDF5
-    def _read_bdf_cards(self, bdf_filename=None,
-                        punch=False,
-                        read_includes=True, encoding=None):
-        # type: (Optional[str], bool, bool, Optional[str])
+    def _read_bdf_cards(self, bdf_filename: Optional[str]=None,
+                        punch: bool=False,
+                        read_includes: bool=True, encoding: Optional[str]=None) -> None:
         """
         Read method for the bdf files
 
@@ -3982,10 +3990,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         ----------
         bdf_filename : str / None
             the input bdf (default=None; popup a dialog)
-        #validate : bool; default=True
-            #runs various checks on the BDF
-        #xref :  bool; default=False
-            #should the bdf be cross referenced
         punch : bool; default=False
             indicates whether the file is a punch file
         read_includes : bool; default=True
