@@ -1,6 +1,7 @@
 # pylint: disable=R0902,R0904,R0914
 from math import sin, cos, radians, atan2, sqrt, degrees
 from itertools import count
+from typing import Tuple # , TYPE_CHECKING
 
 import numpy as np
 from numpy import array, zeros
@@ -246,12 +247,7 @@ class NastranMatrix(BaseCard):
         if tout is None:
             tout = 0
 
-        if polar in [None, 0, False]:
-            polar = 0
-        elif polar in [1, True]:
-            polar = 1
-        else:
-            raise ValueError('polar=%r and must be 0 or 1' % polar)
+        polar = _set_polar(polar)
 
         if matrix_form not in [1, 2, 4, 5, 6, 8, 9]:
             msg = (
@@ -549,30 +545,12 @@ class NastranMatrix(BaseCard):
     @property
     def tin_dtype(self):
         """gets the input dtype"""
-        return self._get_dtype(self.tin)
+        return _get_dtype(self.is_complex, self.tin)
 
     @property
     def tout_dtype(self):
         """gets the output dtype"""
-        return self._get_dtype(self.tout)
-
-    def _get_dtype(self, type_flag):
-        if type_flag == 1:
-            dtype = 'float32'
-        elif type_flag == 2:
-            dtype = 'float64'
-        elif type_flag == 3:
-            dtype = 'complex64'
-        elif type_flag == 4:
-            dtype = 'complex128'
-        elif type_flag == 0:
-            if self.is_complex:
-                dtype = 'complex128'
-            else:
-                dtype = 'float64'
-        else:
-            raise RuntimeError("invalid option for matrix format")
-        return dtype
+        return _get_dtype(self.is_complex, self.tout)
 
     def __repr__(self):
         return self.write_card(size=8, is_double=False)
@@ -675,382 +653,6 @@ class NastranMatrix(BaseCard):
 
         return msg
 
-def get_row_col_map(matrix, GCi, GCj, ifo):
-    ndim = len(GCi.shape)
-    #print('ndim=%s' % ndim)
-    #print('GCj=%s' % GCj)
-    #print('GCi=%s' % GCi)
-    if ndim == 1:
-        rows, cols, rows_reversed, cols_reversed = _get_row_col_map_1d(matrix, GCi, GCj, ifo)
-    else:
-        rows, cols, rows_reversed, cols_reversed = _get_row_col_map_2d(matrix, GCi, GCj, ifo)
-
-    nrows = len(rows)
-    ncols = len(cols)
-    assert nrows > 0, 'nrows=%s' % nrows
-    assert ncols > 0, 'ncols=%s' % ncols
-    return nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed
-
-def _get_row_col_map_1d(matrix, GCi, GCj, ifo):
-    """helper for ``get_row_col_map``"""
-    rows = {}
-    rows_reversed = {}
-
-    cols = {}
-    cols_reversed = {}
-    i = 0
-    #nrows = np.unique(GCi)
-    #ncols = np.unique(GCj)
-    for gci in GCi:
-        if gci not in rows:
-            rows[gci] = i
-            rows_reversed[i] = gci
-            i += 1
-
-    if ifo == 6:
-        # symmetric
-        #print(GCj)
-        for gcj in GCj:
-            if gcj not in rows:
-                #print('row.gcj = %s' % str(gcj))
-                rows[gcj] = i
-                rows_reversed[i] = gcj
-                i += 1
-        cols = rows
-        cols_reversed = rows_reversed
-    else:
-        j = 0
-        for gcj in GCj:
-            if gcj not in cols:
-                cols[gcj] = j
-                cols_reversed[j] = gcj
-                j += 1
-    return rows, cols, rows_reversed, cols_reversed
-
-def _get_row_col_map_2d(matrix, GCi, GCj, ifo):
-    """helper for ``get_row_col_map``"""
-    rows = {}
-    rows_reversed = {}
-
-    cols = {}
-    cols_reversed = {}
-    #print('i0=%s j0=%s' % (i, j))
-    #nrows = len(GCi)
-    #ncols = len(GCj)
-    #rows_array = np.zeros((nrows, 2), dtype='int32')
-    #cols_array = np.zeros((ncols, 2), dtype='int32')
-    #for i, (nid, comp) in enumerate(GCi):
-        ##print('i=%s nid=%s comp=%s nrows=%s rows_array.shape=%s' % (
-            ##i, nid, comp, nrows, str(rows_array.shape)))
-        #rows_array[i, :] = [nid, comp]
-    #print('rows_array = \n%s' % rows_array)
-
-    #for j, (nid, comp) in enumerate(GCj):
-        #cols_array[j, :] = [nid, comp]
-    #print('cols_array = \n%s' % cols_array)
-
-    #print(GCi)
-    #print(GCj)
-    i = 0
-    for (nid, comp) in GCi:
-        gci = (nid, comp)
-        if gci not in rows:
-            #print('row.gci = %s' % str(gci))
-            rows[gci] = i
-            rows_reversed[i] = gci
-            i += 1
-    if ifo == 6:
-        # symmetric
-        for (nid, comp) in GCj:
-            gcj = (nid, comp)
-            if gcj not in rows:
-                #print('row.gcj = %s' % str(gcj))
-                rows[gcj] = i
-                rows_reversed[i] = gcj
-                i += 1
-        cols = rows
-        cols_reversed = rows_reversed
-    else:
-        j = 0
-        for (nid, comp) in GCj:
-            gcj = (nid, comp)
-            if gcj not in cols:
-                #print('col.gcj = %s' % str(gcj))
-                cols[gcj] = j
-                cols_reversed[j] = gcj
-                j += 1
-    return rows, cols, rows_reversed, cols_reversed
-
-def _fill_sparse_matrix(self, nrows, ncols):
-    """helper method for get_matrix"""
-    GCj = array(self.GCj, dtype='int32') - 1
-    GCi = array(self.GCi, dtype='int32') - 1
-    reals = array(self.Real, dtype='float32')
-
-    # TODO: matrix size:  is this correct?
-    nrows = max(GCi) + 1
-    ncols = max(GCj) + 1
-
-    dtype = self._get_dtype(self.tin)
-    # TODO: no check for symmetry
-    # TODO: no check for dtype
-    if self.is_complex:
-        complexs = array(self.Complex, dtype='float32')
-        data = array([reals, complexs]).astype(complex)
-    else:
-        data = reals
-
-    if self.matrix_form in [1, 6]:
-        nrows = max(nrows, ncols)
-        ncols = nrows
-
-    #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dtype) # test
-    sparse_matrix = coo_matrix((data, (self.GCi, self.GCj)),
-                               shape=(nrows, ncols), dtype=dtype)
-    #sparse_matrix = coo_matrix( (data,(self.GCi,self.GCj)),shape=(i,j)) # old
-    #sparse_matrix = coo_matrix( (data,(self.GCi,self.GCj)),shape=(nrows,ncols))
-    #print(sparse_matrix.toarray())
-    #print(sparse_matrix)
-    return sparse_matrix
-
-
-def _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry):
-    """helper method for get_matrix"""
-    is_sparse = False
-    if self.is_complex:
-        dense_mat = zeros((nrows, ncols), dtype='complex128')
-        if self.matrix_form == 6 and apply_symmetry:  # symmetric
-            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
-                                                   self.Real, self.Complex):
-                i = rows[(gci[0], gci[1])]
-                j = cols[(gcj[0], gcj[1])]
-                dense_mat[i, j] = complex(reali, complexi)
-                dense_mat[j, i] = complex(reali, complexi)
-        else:
-            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
-                                                   self.Real, self.Complex):
-                i = rows[(gci[0], gci[1])]
-                j = cols[(gcj[0], gcj[1])]
-                dense_mat[i, j] = complex(reali, complexi)
-    else:
-        dense_mat = zeros((nrows, ncols), dtype='float64')
-        if self.matrix_form == 6 and apply_symmetry:  # symmetric
-            try:
-                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                    i = rows[(gci[0], gci[1])]
-                    j = cols[(gcj[0], gcj[1])]
-                    dense_mat[i, j] = reali
-                    dense_mat[j, i] = reali
-            except IndexError:
-                msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
-                       'is_polar=%s ncols=%s M.shape=%s\n' % (
-                           self.name, ndim, i, j, self.matrix_type,
-                           self.is_polar, self.ncols, dense_mat.shape))
-                msg += 'Rows:\n'
-                for i, row in enumerate(rows):
-                    msg += 'i=%s row=%s\n' % (i, row)
-                raise RuntimeError(msg)
-        else:
-            try:
-                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                    i = rows[(gci[0], gci[1])]
-                    j = cols[(gcj[0], gcj[1])]
-                    dense_mat[i, j] = reali
-            except KeyError:
-                msg = ('name=%s ndim=%s gci=%s gcj=%s matrix_type=%s '
-                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n\n' % (
-                           self.name, ndim, str(gci), str(gcj), self.matrix_type,
-                           self.is_polar, is_sparse, self.ncols, dense_mat.shape))
-
-                gci2 = (gci[0], gci[1])
-                gcj2 = (gcj[0], gcj[1])
-                if gci2 in rows:
-                    msg += 'gci/row_key=%s found\n' % str(gci2)
-                else:
-                    msg += 'gci/row_key=%s not found\n' % str(gci2)
-                    msg += 'Rows:\n'
-                    for i, row in enumerate(rows):
-                        msg += '  i=%s row=%s\n' % (i, row)
-
-                if gcj2 in cols:
-                    msg += '\ngcj/col_key=%s found\n' % str(gcj2)
-                else:
-                    msg += '\ngcj/col_key=%s not found\n' % str(gcj2)
-                    msg += 'Cols:\n'
-                    for j, col in enumerate(cols):
-                        msg += '  j=%s row=%s\n' % (j, col)
-
-                msg += '\n'
-                print(msg)
-                raise KeyError(msg)
-            except IndexError:
-                msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
-                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
-                           self.name, ndim, i, j, self.matrix_type,
-                           self.is_polar, is_sparse, self.ncols, dense_mat.shape))
-                msg += 'Rows:\n'
-                for i, row in enumerate(rows):
-                    msg += '  i=%s row=%s\n' % (i, row)
-
-                msg += '\nCols:\n'
-                for j, row in enumerate(cols):
-                    msg += '  j=%s row=%s\n' % (j, col)
-                raise RuntimeError(msg)
-    return dense_mat
-
-
-def _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry):
-    """helper method for get_matrix"""
-    is_sparse = False
-    if self.is_complex:
-        dense_mat = zeros((nrows, ncols), dtype='complex128')
-        if self.matrix_form == 6 and apply_symmetry:  # symmetric
-            assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
-            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
-                                                   self.Real, self.Complex):
-                i = rows[gci]
-                j = cols[gcj]
-                dense_mat[i, j] = complex(reali, complexi)
-                dense_mat[j, i] = complex(reali, complexi)
-        elif self.matrix_form == 2:  # rectangular
-            assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
-            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
-                                                   self.Real, self.Complex):
-                i = rows[gci]
-                j = cols[gcj]
-                dense_mat[i, j] = complex(reali, complexi)
-        else:
-            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
-                                                   self.Real, self.Complex):
-                i = rows[gci]
-                j = cols[gcj]
-    else:
-        #print('nrows=%s ncols=%s' % (nrows, ncols))
-        dense_mat = zeros((nrows, ncols), dtype='float64')
-        if self.matrix_form == 6 and apply_symmetry:  # symmetric
-            assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
-            for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                i = rows[gci]
-                j = cols[gcj]
-                dense_mat[i, j] = reali
-                dense_mat[j, i] = reali
-        else:
-            try:
-                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
-                    i = rows[gci]
-                    j = cols[gcj]
-                    dense_mat[i, j] = reali
-            except IndexError:
-                msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
-                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
-                           self.name, ndim, i, j, self.matrix_type,
-                           self.is_polar, is_sparse, self.ncols, dense_mat.shape))
-                msg += 'Rows:\n'
-                for i, row in enumerate(rows):
-                    msg += '  i=%s row=%s\n' % (i, row)
-                raise RuntimeError(msg)
-    return dense_mat
-
-def get_dmi_matrix(matrix, is_sparse=False, apply_symmetry=True):
-    ifo = matrix.ifo
-    GCj = array(matrix.GCj, dtype='int32') - 1
-    GCi = array(matrix.GCi, dtype='int32') - 1
-
-    dtype = matrix.tin_dtype
-    if ifo == 2:
-        # rectangular
-        nrows = matrix.nrows
-        ncols = matrix.ncols
-        # if not is_sparse:
-        M = np.zeros((nrows, ncols), dtype=dtype)
-        if matrix.is_complex:
-            M[GCi, GCj] = matrix.Real + matrix.Complex * 1j
-        else:
-            #for gci, gcj in zip(GCi, GCj):
-                #M[gci, gcj] = 1 # matrix.Real
-            M[GCi, GCj] = matrix.Real
-    else:
-        nrows = matrix.nrows
-        ncols = matrix.ncols
-        if ifo == 6:
-            nrows = max(nrows, ncols)
-            ncols = nrows
-        if matrix.is_complex:
-            data = matrix.Real + matrix.Complex * 1j
-        else:
-            data = matrix.Real
-        M = coo_matrix((data, (GCi, GCj)),
-                       shape=(nrows, ncols), dtype=dtype)
-        if not is_sparse:
-            M = M.toarray()
-    #else:
-        #ifo : int
-        #    matrix shape
-        #    4=Lower Triangular
-        #    5=Upper Triangular
-        #    6=Symmetric
-        #    8=Identity (m=nRows, n=m)
-        #raise RuntimeError(matrix.get_stats())
-    return M, None, None
-
-def get_matrix(self, is_sparse=False, apply_symmetry=True):
-    """
-    Builds the Matrix
-
-    Parameters
-    ----------
-    is_sparse : bool
-        should the matrix be returned as a sparse matrix (default=True).
-        Slower for dense matrices.
-    apply_symmetry: bool
-        If the matrix is symmetric (matrix_form=6), returns a symmetric matrix.
-        Supported as there are symmetric matrix routines.
-        TODO: unused...
-
-    Returns
-    -------
-    M : ndarray
-        the matrix
-    rows : Dict[(nid, nid)] = float
-        dictionary of keys=rowID,    values=(Grid,Component) for the matrix
-    cols : Dict[](int, int)] = float
-        dictionary of keys=columnID, values=(Grid,Component) for the matrix
-
-    .. warning:: is_sparse=True WILL fail
-
-    """
-    nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed = get_row_col_map(
-        self, self.GCi, self.GCj, self.matrix_form)
-    #print('rows = ', rows)
-    #print('cols = ', cols)
-    #print('i=%s j=%s' % (i, j))
-    #nrows = len(rows2)
-    #ncols = len(cols2)
-
-    #A = ss.lil_matrix((3,3), dtype='d') # double precision
-    #rows = []
-    #cols = []
-    #data = []
-    #for i in range(3):
-       #for j in range(3):
-           #k = float((i+1)*(j+1))
-           #rows.append(i)
-           #cols.append(j)
-           #data.append(k)
-           #A[i,j] = k
-
-    #is_sparse = False
-    if is_sparse:
-        M = _fill_sparse_matrix(self, nrows, ncols)
-    else:
-        if ndim == 1:
-            M = _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
-        else:
-            M = _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
-
-    #print(M)
-    return (M, rows_reversed, cols_reversed)
-
 
 class DMIG_UACCEL(BaseCard):
     """
@@ -1089,7 +691,7 @@ class DMIG_UACCEL(BaseCard):
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding):
-        _export_dmig_to_hdf5(h5_file, model, model.dmigs, encoding)
+        _export_dmig_to_hdf5(h5_file, model, model.dmig, encoding)
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -1231,7 +833,7 @@ class DMIG(NastranMatrix):
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding):
-        _export_dmig_to_hdf5(h5_file, model, model.dmigs, encoding)
+        _export_dmig_to_hdf5(h5_file, model, model.dmig, encoding)
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
@@ -1302,7 +904,7 @@ class DMIAX(BaseCard):
     +-------+------+----+--------+------+--------+-------+----+------+
     |   1   |  2   | 3  |    4   |   5  |   6    |   7   | 8  |  9   |
     +=======+======+====+========+======+========+=======+====+======+
-    | DMlAX | NAME | GJ |   CJ   |  NJ  |        |       |    |      |
+    | DMIAX | NAME | GJ |   CJ   |  NJ  |        |       |    |      |
     +-------+------+----+--------+------+--------+-------+----+------+
     |       |  G1  | C1 |   N1   |  A1  |   B1   |       |    |      |
     +-------+------+----+--------+------+--------+-------+----+------+
@@ -1322,7 +924,7 @@ class DMIAX(BaseCard):
     """
     type = 'DMIAX'
 
-    def __init__(self, name, matrix_form, tin, tout, polar, ncols,
+    def __init__(self, name, matrix_form, tin, tout, ncols,
                  GCNj, GCNi, Real, Complex=None, comment=''):
         """
         Creates a DMIAX card
@@ -1346,9 +948,6 @@ class DMIAX(BaseCard):
             2=Real, Double Precision
             3=Complex, Single Precision
             4=Complex, Double Precision
-        polar : int
-            0: not polar
-            1: polar
         GCNj  : List[(node, dof, harmonic_number)]???
             the jnode, jDOFs
         GCNi  : List[(node, dof, harmonic_number)]???
@@ -1372,13 +971,6 @@ class DMIAX(BaseCard):
         if tout is None:
             tout = 0
 
-        if polar in [None, 0, False]:
-            polar = 0
-        elif polar in [1, True]:
-            polar = 1
-        else:
-            raise ValueError('polar=%r and must be 0 or 1' % polar)
-
         self.name = name
 
         #: ifo/4-Lower Triangular; 5=Upper Triangular; 6=Symmetric; 8=Identity (m=nRows, n=m)
@@ -1391,16 +983,12 @@ class DMIAX(BaseCard):
         #: 0-Set by cell precision
         self.tout = tout
 
-        #: Input format of Ai, Bi. (Integer=blank or 0 indicates real, imaginary format;
-        #: Integer > 0 indicates amplitude, phase format.)
-        self.polar = polar
-
         self.ncols = ncols
         self.GCNj = GCNj
         self.GCNi = GCNi
 
         self.Real = Real
-        if len(Complex) or self.is_complex or self.polar == 1:
+        if len(Complex) or self.is_complex:
             self.Complex = Complex
             if matrix_form not in [1]:  #4, 5, 6, 8
                 msg = (
@@ -1426,10 +1014,14 @@ class DMIAX(BaseCard):
         if self.is_complex:
             self.Complex = np.asarray(self.Complex)
 
+    @classmethod
+    def export_to_hdf5(cls, h5_file, model, encoding):
+        _export_dmiax_to_hdf5(h5_file, model, model.dmiax, encoding)
+
     @property
     def is_real(self):
         """is the matrix real?"""
-        if self.tin == 1:
+        if self.tin in [1, 2]:
             return True
         return False
 
@@ -1443,10 +1035,45 @@ class DMIAX(BaseCard):
         """is the matrix polar (vs real/imag)?"""
         return False
 
+    @property
+    def tin_dtype(self):
+        """gets the input dtype"""
+        return _get_dtype(self.is_complex, self.tin)
+
+    @property
+    def tout_dtype(self):
+        """gets the output dtype"""
+        return _get_dtype(self.is_complex, self.tout)
+
+    @property
+    def matrix_type(self):
+        """gets the matrix type"""
+        if not isinstance(self.matrix_form, integer_types):
+            msg = 'ifo must be an integer; matrix_form=%r type=%s name=%s' % (
+                self.matrix_form, type(self.matrix_form), self.name)
+            raise TypeError(msg)
+        if isinstance(self.matrix_form, bool):
+            msg = 'matrix_form must not be a boolean; matrix_form=%r type=%s name=%s' % (
+                self.matrix_form, type(self.matrix_form), self.name)
+            raise TypeError(msg)
+
+        if self.matrix_form == 1:
+            matrix_type = 'square'
+        #elif self.matrix_form == 6:
+            #matrix_type = 'symmetric'
+        #elif self.matrix_form in [2, 9]:
+            #matrix_type = 'rectangular'
+        else:
+            # technically right, but nulling this will fix bad decks
+            #self.ncols = blank(card, 8, 'matrix_form=%s; ncol' % self.matrix_form)
+            raise NotImplementedError(f'{self.type} matrix_form={self.matrix_form} '
+                                      'is not supported')
+        return matrix_type
+
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a NastranMatrix (DMIG, DMIJ, DMIK, DMIJI) card from ``BDF.add_card(...)``
+        Adds a NastranMatrix (DMIAX) card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -1462,7 +1089,6 @@ class DMIAX(BaseCard):
         matrix_form = integer(card, 3, 'ifo')
         tin = integer(card, 4, 'tin')
         tout = integer_or_blank(card, 5, 'tout', 0)
-        polar = integer_or_blank(card, 6, 'polar', 0)
         if matrix_form == 1: # square
             ncols = integer_or_blank(card, 8, 'matrix_form=%s; ncol' % matrix_form)
         elif matrix_form == 6: # symmetric
@@ -1478,7 +1104,7 @@ class DMIAX(BaseCard):
         GCi = []
         Real = []
         Complex = []
-        return DMIAX(name, matrix_form, tin, tout, polar, ncols,
+        return DMIAX(name, matrix_form, tin, tout, ncols,
                      GCj, GCi, Real, Complex, comment=comment)
 
     def _add_column(self, card, comment=''):
@@ -1488,7 +1114,7 @@ class DMIAX(BaseCard):
             else:
                 self.comment = comment
 
-        _name = string(card, 1, 'name')
+        unused_name = string(card, 1, 'name')
 
         Gj = integer(card, 2, 'Gj')
         # Cj = integer(card, 3, 'Cj')
@@ -1552,14 +1178,14 @@ class DMIAX(BaseCard):
 
     def raw_fields(self):
         list_fields = [
-            'DMIAX', self.name, 0, self.matrix_form, self.tin, self.polar, None, None, self.ncols,
+            'DMIAX', self.name, 0, self.matrix_form, self.tin, None, None, None, self.ncols,
         ]
         k = 0
         if self.is_real:
             for i, GCNj in enumerate(self.GCNj):
                 gj, cj, nj = GCNj
                 list_fields += ['DMIAX', self.name, gj, cj, nj, None, None, None, None]
-                for j, GCNi in enumerate(self.GCNi[i]):
+                for unused_j, GCNi in enumerate(self.GCNi[i]):
                     gi, ci, ni = GCNi
                     reali = self.Real[k]
                     list_fields += [gi, ci, ni, reali, None, None, None, None]
@@ -1568,7 +1194,7 @@ class DMIAX(BaseCard):
             for i, GCNj in enumerate(self.GCNj):
                 gj, cj, nj = GCNj
                 list_fields += ['DMIAX', self.name, gj, cj, nj, None, None, None, None]
-                for j, GCNi in enumerate(self.GCNi[i]):
+                for unused_j, GCNi in enumerate(self.GCNi[i]):
                     gi, ci, ni = GCNi
                     reali = self.Real[k]
                     imagi = self.Complex[k]
@@ -1603,7 +1229,7 @@ class DMIAX(BaseCard):
         msg = '\n$' + '-' * 80
         msg += f'\n$ DMIAX Matrix {self.name}\n'
         list_fields = [
-            'DMIAX', self.name, 0, self.matrix_form, self.tin, self.polar, None, None, self.ncols,
+            'DMIAX', self.name, 0, self.matrix_form, self.tin, None, None, None, self.ncols,
         ]
         msg += func(list_fields)
         k = 0
@@ -1613,7 +1239,7 @@ class DMIAX(BaseCard):
             for i, GCNj in enumerate(self.GCNj):
                 gj, cj, nj = GCNj
                 list_fields = ['DMIAX', self.name, gj, cj, nj, None, None, None, None]
-                for j, GCNi in enumerate(self.GCNi[i]):
+                for unused_j, GCNi in enumerate(self.GCNi[i]):
                     gi, ci, ni = GCNi
                     reali = self.Real[k]
                     list_fields += [gi, ci, ni, reali, None, None, None, None]
@@ -1623,7 +1249,7 @@ class DMIAX(BaseCard):
             for i, GCNj in enumerate(self.GCNj):
                 gj, cj, nj = GCNj
                 list_fields = ['DMIAX', self.name, gj, cj, nj, None, None, None, None]
-                for j, GCNi in enumerate(self.GCNi[i]):
+                for unused_j, GCNi in enumerate(self.GCNi[i]):
                     gi, ci, ni = GCNi
                     reali = self.Real[k]
                     imagi = self.Complex[k]
@@ -1649,7 +1275,8 @@ class DMIJ(NastranMatrix):
 
     """
     type = 'DMIJ'
-    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type',
+                   'tin_dtype', 'tout_dtype']
 
     @classmethod
     def _init_from_empty(cls):
@@ -1734,7 +1361,8 @@ class DMIJI(NastranMatrix):
 
     """
     type = 'DMIJI'
-    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type',
+                   'tin_dtype', 'tout_dtype']
 
     #@classmethod
     #def _init_from_empty(cls):
@@ -1752,7 +1380,7 @@ class DMIJI(NastranMatrix):
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding):
-        _export_dmig_to_hdf5(h5_file, model, model.dmijis, encoding)
+        _export_dmig_to_hdf5(h5_file, model, model.dmiji, encoding)
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
@@ -1831,7 +1459,8 @@ class DMIK(NastranMatrix):
     +------+-------+----+-----+-----+------+-------+----+------+
     """
     type = 'DMIK'
-    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type',
+                   'tin_dtype', 'tout_dtype']
 
     #@classmethod
     #def _init_from_empty(cls):
@@ -1849,7 +1478,7 @@ class DMIK(NastranMatrix):
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding):
-        _export_dmig_to_hdf5(h5_file, model, model.dmiks, encoding)
+        _export_dmig_to_hdf5(h5_file, model, model.dmik, encoding)
 
     def __init__(self, name, ifo, tin, tout, polar, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
@@ -1915,7 +1544,8 @@ class DMI(NastranMatrix):
     +------+-------+------+------+---------+----------+-----------+-----------+------+
     """
     type = 'DMI'
-    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type', 'tin_dtype', 'tout_dtype']
+    _properties = ['shape', 'ifo', 'is_real', 'is_complex', 'is_polar', 'matrix_type',
+                   'tin_dtype', 'tout_dtype']
 
     @classmethod
     def _init_from_empty(cls):
@@ -1928,11 +1558,12 @@ class DMI(NastranMatrix):
         GCj = []
         GCi = []
         Real = []
-        return DMI(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi, Real, Complex=None, comment='', finalize=False)
+        return DMI(name, matrix_form, tin, tout, nrows, ncols, GCj, GCi, Real,
+                   Complex=None, comment='', finalize=False)
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, encoding):
-        _export_dmig_to_hdf5(h5_file, model, model.dmis, encoding)
+        _export_dmig_to_hdf5(h5_file, model, model.dmi, encoding)
 
     def __init__(self, name, matrix_form, tin, tout, nrows, ncols,
                  GCj, GCi, Real, Complex=None, comment='', finalize=True):
@@ -2349,7 +1980,7 @@ class DMI(NastranMatrix):
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         if size == 8:
             return self.write_card_8()
-        elif is_double:
+        if is_double:
             return self.write_card_double()
         return self.write_card_16()
 
@@ -2360,6 +1991,411 @@ class DMI(NastranMatrix):
 
         """
         return self.write_card(size=8, is_double=False)
+
+
+def get_row_col_map(matrix, GCi, GCj, ifo):
+    ndim = len(GCi.shape)
+    #print('ndim=%s' % ndim)
+    #print('GCj=%s' % GCj)
+    #print('GCi=%s' % GCi)
+    if ndim == 1:
+        rows, cols, rows_reversed, cols_reversed = _get_row_col_map_1d(matrix, GCi, GCj, ifo)
+    else:
+        rows, cols, rows_reversed, cols_reversed = _get_row_col_map_2d(matrix, GCi, GCj, ifo)
+
+    nrows = len(rows)
+    ncols = len(cols)
+    assert nrows > 0, 'nrows=%s' % nrows
+    assert ncols > 0, 'ncols=%s' % ncols
+    return nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed
+
+def _get_row_col_map_1d(matrix, GCi, GCj, ifo):
+    """helper for ``get_row_col_map``"""
+    rows = {}
+    rows_reversed = {}
+
+    cols = {}
+    cols_reversed = {}
+    i = 0
+    #nrows = np.unique(GCi)
+    #ncols = np.unique(GCj)
+    for gci in GCi:
+        if gci not in rows:
+            rows[gci] = i
+            rows_reversed[i] = gci
+            i += 1
+
+    if ifo == 6:
+        # symmetric
+        #print(GCj)
+        for gcj in GCj:
+            if gcj not in rows:
+                #print('row.gcj = %s' % str(gcj))
+                rows[gcj] = i
+                rows_reversed[i] = gcj
+                i += 1
+        cols = rows
+        cols_reversed = rows_reversed
+    else:
+        j = 0
+        for gcj in GCj:
+            if gcj not in cols:
+                cols[gcj] = j
+                cols_reversed[j] = gcj
+                j += 1
+    return rows, cols, rows_reversed, cols_reversed
+
+def _get_row_col_map_2d(matrix, GCi, GCj, ifo):
+    """helper for ``get_row_col_map``"""
+    rows = {}
+    rows_reversed = {}
+
+    cols = {}
+    cols_reversed = {}
+    #print('i0=%s j0=%s' % (i, j))
+    #nrows = len(GCi)
+    #ncols = len(GCj)
+    #rows_array = np.zeros((nrows, 2), dtype='int32')
+    #cols_array = np.zeros((ncols, 2), dtype='int32')
+    #for i, (nid, comp) in enumerate(GCi):
+        ##print('i=%s nid=%s comp=%s nrows=%s rows_array.shape=%s' % (
+            ##i, nid, comp, nrows, str(rows_array.shape)))
+        #rows_array[i, :] = [nid, comp]
+    #print('rows_array = \n%s' % rows_array)
+
+    #for j, (nid, comp) in enumerate(GCj):
+        #cols_array[j, :] = [nid, comp]
+    #print('cols_array = \n%s' % cols_array)
+
+    #print(GCi)
+    #print(GCj)
+    i = 0
+    for (nid, comp) in GCi:
+        gci = (nid, comp)
+        if gci not in rows:
+            #print('row.gci = %s' % str(gci))
+            rows[gci] = i
+            rows_reversed[i] = gci
+            i += 1
+    if ifo == 6:
+        # symmetric
+        for (nid, comp) in GCj:
+            gcj = (nid, comp)
+            if gcj not in rows:
+                #print('row.gcj = %s' % str(gcj))
+                rows[gcj] = i
+                rows_reversed[i] = gcj
+                i += 1
+        cols = rows
+        cols_reversed = rows_reversed
+    else:
+        j = 0
+        for (nid, comp) in GCj:
+            gcj = (nid, comp)
+            if gcj not in cols:
+                #print('col.gcj = %s' % str(gcj))
+                cols[gcj] = j
+                cols_reversed[j] = gcj
+                j += 1
+    return rows, cols, rows_reversed, cols_reversed
+
+def _fill_sparse_matrix(matrix, nrows, ncols):
+    """helper method for get_matrix"""
+    GCj = array(matrix.GCj, dtype='int32') - 1
+    GCi = array(matrix.GCi, dtype='int32') - 1
+    reals = array(matrix.Real, dtype='float32')
+
+    # TODO: matrix size:  is this correct?
+    nrows = max(GCi) + 1
+    ncols = max(GCj) + 1
+
+    dtype = _get_dtype(matrix.is_complex, matrix.tin)
+    # TODO: no check for symmetry
+    # TODO: no check for dtype
+    if matrix.is_complex:
+        complexs = array(matrix.Complex, dtype='float32')
+        data = array([reals, complexs]).astype(complex)
+    else:
+        data = reals
+
+    if matrix.matrix_form in [1, 6]:
+        nrows = max(nrows, ncols)
+        ncols = nrows
+
+    #A = coo_matrix( (entries,(rows,cols)),shape=(nrows,ncols),dtype=dtype) # test
+    sparse_matrix = coo_matrix((data, (matrix.GCi, matrix.GCj)),
+                               shape=(nrows, ncols), dtype=dtype)
+    #sparse_matrix = coo_matrix( (data,(matrix.GCi,matrix.GCj)),shape=(i,j)) # old
+    #sparse_matrix = coo_matrix( (data,(matrix.GCi,matrix.GCj)),shape=(nrows,ncols))
+    #print(sparse_matrix.toarray())
+    #print(sparse_matrix)
+    return sparse_matrix
+
+
+def _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry):
+    """helper method for get_matrix"""
+    is_sparse = False
+    if self.is_complex:
+        dense_mat = zeros((nrows, ncols), dtype='complex128')
+        if self.matrix_form == 6 and apply_symmetry:  # symmetric
+            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                   self.Real, self.Complex):
+                i = rows[(gci[0], gci[1])]
+                j = cols[(gcj[0], gcj[1])]
+                dense_mat[i, j] = complex(reali, complexi)
+                dense_mat[j, i] = complex(reali, complexi)
+        else:
+            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                   self.Real, self.Complex):
+                i = rows[(gci[0], gci[1])]
+                j = cols[(gcj[0], gcj[1])]
+                dense_mat[i, j] = complex(reali, complexi)
+    else:
+        dense_mat = zeros((nrows, ncols), dtype='float64')
+        if self.matrix_form == 6 and apply_symmetry:  # symmetric
+            try:
+                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                    i = rows[(gci[0], gci[1])]
+                    j = cols[(gcj[0], gcj[1])]
+                    dense_mat[i, j] = reali
+                    dense_mat[j, i] = reali
+            except IndexError:
+                msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
+                       'is_polar=%s ncols=%s M.shape=%s\n' % (
+                           self.name, ndim, i, j, self.matrix_type,
+                           self.is_polar, self.ncols, dense_mat.shape))
+                msg += 'Rows:\n'
+                for i, row in enumerate(rows):
+                    msg += 'i=%s row=%s\n' % (i, row)
+                raise RuntimeError(msg)
+        else:
+            try:
+                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                    i = rows[(gci[0], gci[1])]
+                    j = cols[(gcj[0], gcj[1])]
+                    dense_mat[i, j] = reali
+            except KeyError:
+                msg = ('name=%s ndim=%s gci=%s gcj=%s matrix_type=%s '
+                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n\n' % (
+                           self.name, ndim, str(gci), str(gcj), self.matrix_type,
+                           self.is_polar, is_sparse, self.ncols, dense_mat.shape))
+
+                gci2 = (gci[0], gci[1])
+                gcj2 = (gcj[0], gcj[1])
+                if gci2 in rows:
+                    msg += 'gci/row_key=%s found\n' % str(gci2)
+                else:
+                    msg += 'gci/row_key=%s not found\n' % str(gci2)
+                    msg += 'Rows:\n'
+                    for i, row in enumerate(rows):
+                        msg += '  i=%s row=%s\n' % (i, row)
+
+                if gcj2 in cols:
+                    msg += '\ngcj/col_key=%s found\n' % str(gcj2)
+                else:
+                    msg += '\ngcj/col_key=%s not found\n' % str(gcj2)
+                    msg += 'Cols:\n'
+                    for j, col in enumerate(cols):
+                        msg += '  j=%s row=%s\n' % (j, col)
+
+                msg += '\n'
+                print(msg)
+                raise KeyError(msg)
+            except IndexError:
+                msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
+                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
+                           self.name, ndim, i, j, self.matrix_type,
+                           self.is_polar, is_sparse, self.ncols, dense_mat.shape))
+                msg += 'Rows:\n'
+                for i, row in enumerate(rows):
+                    msg += '  i=%s row=%s\n' % (i, row)
+
+                msg += '\nCols:\n'
+                for j, row in enumerate(cols):
+                    msg += '  j=%s row=%s\n' % (j, col)
+                raise RuntimeError(msg)
+    return dense_mat
+
+
+def _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry):
+    """helper method for get_matrix"""
+    is_sparse = False
+    if self.is_complex:
+        dense_mat = zeros((nrows, ncols), dtype='complex128')
+        if self.matrix_form == 6 and apply_symmetry:  # symmetric
+            assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
+            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                   self.Real, self.Complex):
+                i = rows[gci]
+                j = cols[gcj]
+                dense_mat[i, j] = complex(reali, complexi)
+                dense_mat[j, i] = complex(reali, complexi)
+        elif self.matrix_form == 2:  # rectangular
+            assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
+            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                   self.Real, self.Complex):
+                i = rows[gci]
+                j = cols[gcj]
+                dense_mat[i, j] = complex(reali, complexi)
+        else:
+            for (gcj, gci, reali, complexi) in zip(self.GCj, self.GCi,
+                                                   self.Real, self.Complex):
+                i = rows[gci]
+                j = cols[gcj]
+    else:
+        #print('nrows=%s ncols=%s' % (nrows, ncols))
+        dense_mat = zeros((nrows, ncols), dtype='float64')
+        if self.matrix_form == 6 and apply_symmetry:  # symmetric
+            assert nrows == ncols, 'nrows=%s ncols=%s' % (nrows, ncols)
+            for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                i = rows[gci]
+                j = cols[gcj]
+                dense_mat[i, j] = reali
+                dense_mat[j, i] = reali
+        else:
+            try:
+                for (gcj, gci, reali) in zip(self.GCj, self.GCi, self.Real):
+                    i = rows[gci]
+                    j = cols[gcj]
+                    dense_mat[i, j] = reali
+            except IndexError:
+                msg = ('name=%s ndim=%s i=%s j=%s matrix_type=%s '
+                       'is_polar=%s is_sparse=%s ncols=%s M.shape=%s\n' % (
+                           self.name, ndim, i, j, self.matrix_type,
+                           self.is_polar, is_sparse, self.ncols, dense_mat.shape))
+                msg += 'Rows:\n'
+                for i, row in enumerate(rows):
+                    msg += '  i=%s row=%s\n' % (i, row)
+                raise RuntimeError(msg)
+    return dense_mat
+
+def get_dmi_matrix(matrix: DMI, is_sparse: bool=False,
+                   apply_symmetry: bool=True) -> Tuple[np.array, None, None]:
+    """
+    Builds the Matrix
+
+    Parameters
+    ----------
+    is_sparse : bool
+        should the matrix be returned as a sparse matrix (default=True).
+        Slower for dense matrices.
+    apply_symmetry: bool
+        If the matrix is symmetric (matrix_form=6), returns a symmetric matrix.
+        Supported as there are symmetric matrix routines.
+        TODO: unused...
+
+    Returns
+    -------
+    M : ndarray
+        the matrix
+    rows : None
+        unused
+    cols : None
+        unused
+
+    .. warning:: is_sparse=True WILL fail
+
+    """
+    ifo = matrix.ifo
+    GCj = array(matrix.GCj, dtype='int32') - 1
+    GCi = array(matrix.GCi, dtype='int32') - 1
+
+    dtype = matrix.tin_dtype
+
+    if matrix.is_complex:
+        data = matrix.Real + matrix.Complex * 1j
+    else:
+        data = matrix.Real
+
+    if ifo == 2:
+        # rectangular
+        nrows = matrix.nrows
+        ncols = matrix.ncols
+
+        M = coo_matrix((data, (GCi, GCj)),
+                       shape=(nrows, ncols), dtype=dtype)
+        if not is_sparse:
+            M = M.toarray()
+
+    else:
+        nrows = matrix.nrows
+        ncols = matrix.ncols
+        if ifo == 6:
+            nrows = max(nrows, ncols)
+            ncols = nrows
+        M = coo_matrix((data, (GCi, GCj)),
+                       shape=(nrows, ncols), dtype=dtype)
+        if not is_sparse:
+            M = M.toarray()
+    #else:
+        #ifo : int
+        #    matrix shape
+        #    4=Lower Triangular
+        #    5=Upper Triangular
+        #    6=Symmetric
+        #    8=Identity (m=nRows, n=m)
+        #raise RuntimeError(matrix.get_stats())
+    return M, None, None
+
+def get_matrix(self, is_sparse=False, apply_symmetry=True):
+    """
+    Builds the Matrix
+
+    Parameters
+    ----------
+    is_sparse : bool
+        should the matrix be returned as a sparse matrix (default=True).
+        Slower for dense matrices.
+    apply_symmetry: bool
+        If the matrix is symmetric (matrix_form=6), returns a symmetric matrix.
+        Supported as there are symmetric matrix routines.
+        TODO: unused...
+
+    Returns
+    -------
+    M : ndarray
+        the matrix
+    rows : Dict[(nid, nid)] = float
+        dictionary of keys=rowID,    values=(Grid,Component) for the matrix
+    cols : Dict[](int, int)] = float
+        dictionary of keys=columnID, values=(Grid,Component) for the matrix
+
+    .. warning:: is_sparse=True WILL fail
+
+    """
+    nrows, ncols, ndim, rows, cols, rows_reversed, cols_reversed = get_row_col_map(
+        self, self.GCi, self.GCj, self.matrix_form)
+    #print('rows = ', rows)
+    #print('cols = ', cols)
+    #print('i=%s j=%s' % (i, j))
+    #nrows = len(rows2)
+    #ncols = len(cols2)
+
+    #A = ss.lil_matrix((3,3), dtype='d') # double precision
+    #rows = []
+    #cols = []
+    #data = []
+    #for i in range(3):
+       #for j in range(3):
+           #k = float((i+1)*(j+1))
+           #rows.append(i)
+           #cols.append(j)
+           #data.append(k)
+           #A[i,j] = k
+
+    #is_sparse = False
+    if is_sparse:
+        M = _fill_sparse_matrix(self, nrows, ncols)
+        return M
+    else:
+        if ndim == 1:
+            M = _fill_dense_column_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
+        else:
+            M = _fill_dense_rectangular_matrix(self, nrows, ncols, ndim, rows, cols, apply_symmetry)
+
+        #print(M)
+        return (M, rows_reversed, cols_reversed)
+
 
 def _export_dmig_to_hdf5(h5_file, model, dict_obj, encoding):
     """export dmigs, dmij, dmiji, dmik, dmi"""
@@ -2414,3 +2450,89 @@ def _export_dmig_to_hdf5(h5_file, model, dict_obj, encoding):
             dmig_group.create_dataset('Real', data=dmig.Real)
             if hasattr(dmig, 'Complex') and dmig.Complex is not None:
                 dmig_group.create_dataset('Complex', data=dmig.Complex)
+
+
+def _export_dmiax_to_hdf5(h5_file, model, dict_obj, encoding):
+    """export dmiax"""
+    for name, dmiax in dict_obj.items():
+        #print(f'exporting {dmiax.type} name={name!r}')
+        dmiax_group = h5_file.create_group(name)
+        dmiax_group.create_dataset('tin', data=dmiax.tin)
+
+        if hasattr(dmiax, 'tout'):
+            dmiax_group.create_dataset('tout', data=dmiax.tout)
+
+        if hasattr(dmiax, 'nrows') and dmiax.nrows is not None:
+            dmiax_group.create_dataset('nrows', data=dmiax.nrows)
+        if dmiax.ncols is not None:
+            dmiax_group.create_dataset('ncols', data=dmiax.ncols)
+        if hasattr(dmiax, 'polar'):
+            dmiax_group.create_dataset('polar', data=dmiax.polar)
+
+        dmiax_group.create_dataset('matrix_form', data=dmiax.matrix_form)
+        dmiax_group.create_dataset('tin_dtype', data=dmiax.tin_dtype)
+        dmiax_group.create_dataset('tout_dtype', data=dmiax.tout_dtype)
+
+        dmiax_group.create_dataset('matrix_type', data=dmiax.matrix_type)
+        dmiax_group.create_dataset('is_complex', data=dmiax.is_complex)
+        dmiax_group.create_dataset('is_real', data=dmiax.is_real)
+        dmiax_group.create_dataset('is_polar', data=dmiax.is_polar)
+
+        gcnj = []
+        j_none_flags = []
+
+        gcni = []
+        i_none_flags = []
+        for j, GCNj in enumerate(dmiax.GCNj):
+            gj, cj, nj = GCNj
+            is_none_flag_j = False
+            if nj is None:
+                nj = 0
+                is_none_flag_j = True
+            j_none_flags.append(is_none_flag_j)
+            gcnj.append((gj, cj, nj))
+            for unused_i, GCNi in enumerate(dmiax.GCNi[j]):
+                gi, ci, ni = GCNi
+                is_none_flag_i = False
+                if ni is None:
+                    ni = 0
+                    is_none_flag_i = True
+                i_none_flags.append(is_none_flag_i)
+                gcni.append((gi, ci, ni, j))
+
+        dmiax_group.create_dataset('GCNi_j', data=gcni)
+        dmiax_group.create_dataset('GCNj', data=gcnj)
+        dmiax_group.create_dataset('i_none_flags', data=i_none_flags)
+        dmiax_group.create_dataset('j_none_flags', data=j_none_flags)
+
+        dmiax_group.create_dataset('Real', data=dmiax.Real)
+        if hasattr(dmiax, 'Complex') and dmiax.Complex is not None:
+            dmiax_group.create_dataset('Complex', data=dmiax.Complex)
+
+def _set_polar(polar):
+    if polar in [None, 0, False]:
+        polar = 0
+    elif polar in [1, True]:
+        polar = 1
+    else:
+        raise ValueError('polar=%r and must be 0 or 1' % polar)
+    return polar
+
+def _get_dtype(is_complex, type_flag):
+    if type_flag == 1:
+        dtype = 'float32'
+    elif type_flag == 2:
+        dtype = 'float64'
+    elif type_flag == 3:
+        dtype = 'complex64'
+    elif type_flag == 4:
+        dtype = 'complex128'
+    elif type_flag == 0:
+        if is_complex:
+            dtype = 'complex128'
+        else:
+            dtype = 'float64'
+    else:
+        raise RuntimeError("invalid option for matrix format")
+    return dtype
+

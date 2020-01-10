@@ -11,12 +11,18 @@ Defines the following contact cards:
  - BSURFS
 
 """
-from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, _node_ids
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_string_or_blank, double_or_blank,
     integer_double_or_blank, string, string_or_blank)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
+if TYPE_CHECKING:  # pragma: no cover
+    from pyNastran.bdf.bdf import BDF
+
 
 class BLSEG(BaseCard):
     """
@@ -47,6 +53,7 @@ class BLSEG(BaseCard):
 
         self.line_id = line_id
         self.nodes = expand_thru_by(nodes)
+        self.nodes_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -73,8 +80,22 @@ class BLSEG(BaseCard):
             i += 1
         return BLSEG(line_id, nodes, comment=comment)
 
+    def cross_reference(self, model: BDF) -> None:
+        msg = f', which is required by BLSEG line_id={self.line_id}'
+        self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+
+    def uncross_reference(self) -> None:
+        msg = f', which is required by BLSEG line_id={self.line_id}'
+        self.nodes = self.node_ids
+        self.nodes_ref = None
+
+    @property
+    def node_ids(self):
+        """returns nodeIDs for repr functions"""
+        return _node_ids(self, nodes=self.nodes_ref, allow_empty_nodes=False, msg='')
+
     def raw_fields(self):
-        list_fields = ['BLSEG', self.line_id] + self.nodes
+        list_fields = ['BLSEG', self.line_id] + self.node_ids
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
@@ -119,6 +140,7 @@ class BCONP(BaseCard):
         self.fric_id = fric_id
         self.ptype = ptype
         self.cid = cid
+        self.cid_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -142,10 +164,24 @@ class BCONP(BaseCard):
         cid = integer_or_blank(card, 8, 'cid', 0)
         return BCONP(contact_id, slave, master, sfac, fric_id, ptype, cid, comment=comment)
 
+    def cross_reference(self, model: BDF) -> None:
+        msg = f', which is required by BCONP line_id={self.contact_id}'
+        #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
+        self.cid_ref = model.Coord(self.cid, msg=msg)
+
+    def uncross_reference(self) -> None:
+        self.cid = self.Cid()
+        self.cid_ref = None
+
+    def Cid(self):
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
+
     def raw_fields(self):
         list_fields = [
             'BCONP', self.contact_id, self.slave, self.master, None, self.sfac,
-            self.fric_id, self.ptype, self.cid]
+            self.fric_id, self.ptype, self.Cid()]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:

@@ -71,5 +71,28 @@ class TestContact(unittest.TestCase):
         bctadd.raw_fields()
         save_load_deck(model)
 
+    def test_contact_3(self):
+        model = BDF(debug=False, log=None, mode='msc')
+        line_id = 1
+        nodes = [2, 3]
+        contact_id = 4
+        master = 5
+        slave = 6
+        sfac = 1.2
+        fric_id = 7
+        ptype = 8
+        cid = 9
+        blseg = model.add_blseg(line_id, nodes, comment='blseg')
+        bconp = model.add_bconp(contact_id, slave, master, sfac, fric_id, ptype, cid, comment='bconp')
+        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(3, [0., 0., 0.])
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1]
+        xzplane = [1., 0., 0.]
+        model.add_cord2r(9, origin, zaxis, xzplane, rid=0, setup=True, comment='')
+        blseg.raw_fields()
+        bconp.raw_fields()
+        save_load_deck(model)
+
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

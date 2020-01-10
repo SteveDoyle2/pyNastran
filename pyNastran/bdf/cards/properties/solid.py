@@ -302,13 +302,24 @@ class PCOMPS(Property):
 
     def uncross_reference(self) -> None:
         """Removes cross-reference links"""
+        self.mids = self.material_ids
         self.mids_ref = None
+
+    @property
+    def material_ids(self):
+        if self.mids_ref is None:
+            return self.mids
+        mids = []
+        for mid_ref in self.mids_ref:
+            mids.append(mid_ref.mid)
+        return mids
 
     def raw_fields(self):
         fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
                   self.nb, self.tref, self.ge, None]
+        mids = self.material_ids
         for glply, mid, t, theta, ft, ift, sout in zip(self.global_ply_ids,
-                                                       self.mids, self.thicknesses, self.thetas,
+                                                       mids, self.thicknesses, self.thetas,
                                                        self.failure_theories,
                                                        self.interlaminar_failure_theories,
                                                        self.souts):
@@ -320,8 +331,9 @@ class PCOMPS(Property):
         #fctn = set_blank_if_default(self.fctn, 'SMECH')
         fields = ['PCOMPS', self.pid, self.cordm, self.psdir, self.sb,
                   self.nb, self.tref, self.ge, None]
+        mids = self.material_ids
         for glply, mid, t, theta, ft, ift, sout in zip(self.global_ply_ids,
-                                                       self.mids, self.thicknesses, self.thetas,
+                                                       mids, self.thicknesses, self.thetas,
                                                        self.failure_theories,
                                                        self.interlaminar_failure_theories,
                                                        self.souts):

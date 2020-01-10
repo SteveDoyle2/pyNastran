@@ -54,6 +54,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     #for nid, node in model.nodes.items():
         #cids_used.update([node.Cp(), node.Cd()])
 
+    # ureferenced types aren't referenced by anything
     unreferenced_types = {
         'ENDDATA', 'PARAM', 'EIGR', 'EIGRL', 'EIGB', 'EIGP', 'EIGC',
         'SPOINT', 'EPOINT', 'DESVAR',
@@ -77,8 +78,10 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'BCTPARA', 'BCRPARA', 'BSURF', 'BSURFS', 'BCTADD',
         'BCTSET',
 
-        'TABRNDG', 'TABLEH1',
+        'TABRNDG', 'DTI', 'TABLEH1',
     }
+
+    # this are things that haven't been referenced yet
     not_implemented_types = {
         # not checked------------------------------------------
         'PHBDY', 'CHBDYG', 'CHBDYP', 'CHBDYE', 'RADBC', # 'CONV',
@@ -92,6 +95,9 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'DSCREEN', 'DTI', 'NSMADD',
         'AESURFS', 'CSSCHD',
         'CGEN', 'NXSTRAT',
+
+        # axisymmetric
+        'FORCEAX',
 
         # acoustic
         'PACABS',
@@ -223,12 +229,12 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 mids = prop.Mids()
                 mids_used.add(prop.Mid())
                 mids_used.update(mids)
-        elif card_type in ['PCOMPS']:
+        elif card_type == 'PCOMPS':
             for pid in ids:
                 prop = model.properties[pid]
                 mids = prop.Mids()
                 mids_used.update(mids)
-                cids_used.update(prop.cordm)
+                cids_used.add(prop.cordm)
 
         elif card_type == 'PCONEAX':
             for pid in ids:
@@ -505,6 +511,24 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                     if conv.type != 'CONV':
                         continue
                     pconv_used.add(conv.pconid)
+        elif card_type == 'BLSEG':
+            for idi in ids:
+                blseg = model.blseg[idi]
+                # line_id
+                nids_used.update(blseg.nodes)
+                # print(blseg.get_stats())
+        elif card_type == 'BCONP':
+            for idi in ids:
+                bconp = model.bconp[idi]
+                # master
+                # slave
+                # ???
+                # print(bconp.get_stats())
+                cids_used.add(bconp.cid)
+        #elif card_type == 'FORCEAX':
+            #pass
+            #ring_id
+            #sid
         elif card_type in not_implemented_types:
             model.log.warning(f'skipping {card_type}')
         else:

@@ -95,9 +95,9 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out, tol,
         xref=xref, node_set=node_set, log=log, debug=debug)
 
     nid_pairs = _nodes_xyz_nids_to_nid_pairs(
-        nodes_xyz, nids, tol, inew,
-        node_set=node_set, neq_max=neq_max, method='old')
-    _eq_nodes_final(nid_pairs, model, tol, node_set=node_set)
+        nodes_xyz, nids, tol, log, inew,
+        node_set=node_set, neq_max=neq_max, method=method, debug=debug)
+    _eq_nodes_final(nid_pairs, model, tol, node_set=node_set, debug=debug)
 
     if bdf_filename_out is not None:
         model.write_bdf(bdf_filename_out, size=size, is_double=is_double)
@@ -280,7 +280,7 @@ def _eq_nodes_find_pairs(nids, slots, ieq, node_set=None):
     return nid_pairs
 
 
-def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
+def _eq_nodes_final(nid_pairs, model, tol, node_set=None, debug=False):
     """apply nodal equivalencing to model"""
     for (nid1, nid2) in nid_pairs:
         node1 = model.nodes[nid1]
@@ -318,24 +318,26 @@ def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
         #skip_nodes.append(nid2)
     return
 
-def _nodes_xyz_nids_to_nid_pairs(nodes_xyz, nids, tol, inew,
-                                 node_set=None, neq_max=4, method='new'):
+def _nodes_xyz_nids_to_nid_pairs(nodes_xyz, nids, tol, log, inew,
+                                 node_set=None, neq_max=4, method='new',
+                                 debug=False):
     """helper for equivalencing"""
     if method == 'new':
         kdt, nid_pairs = _eq_nodes_build_tree(
-            nodes_xyz, nids, tol,
+            nodes_xyz, nids, tol, log,
             inew=inew, node_set=node_set,
-            neq_max=neq_max, method='new')
+            neq_max=neq_max, method='new', debug=debug)
     elif method == 'old':
         kdt, ieq, slots = _eq_nodes_build_tree(
-            nodes_xyz, nids, tol,
+            nodes_xyz, nids, tol, log,
             inew=inew, node_set=node_set,
-            neq_max=neq_max, method='old')
+            neq_max=neq_max, method='old', debug=debug)
         nid_pairs = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)
     return nid_pairs
 
-def _eq_nodes_build_tree(nodes_xyz, nids, tol,
-                         inew=None, node_set=None, neq_max=4, method='new', msg=''):
+def _eq_nodes_build_tree(nodes_xyz, nids, tol, log,
+                         inew=None, node_set=None, neq_max=4, method='new', msg='',
+                         debug=False):
     """
     helper function for `bdf_equivalence_nodes`
 
@@ -400,6 +402,9 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol,
                     nid_pairs.append((nid1, nid2))
         else:
             raise NotImplementedError('node_set')
+        if debug:  # pragma: no cover
+            log.debug(f'nid_pairs          = {nid_pairs}')
+            log.debug(f'nid_pairs_expected = {nid_pairs_expected}')
         return kdt, nid_pairs
     else:
         deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)

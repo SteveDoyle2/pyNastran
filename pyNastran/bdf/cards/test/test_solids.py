@@ -281,6 +281,21 @@ class TestSolids(unittest.TestCase):
         model.add_mat1(mid, E, G, nu, rho=0.1)
         nids = [11, 12, 13, 15]
         model.add_ctetra(eid, pid, nids, comment='ctetra')
+
+        eid2 = eid + 1
+        pid2 = pid + 1
+        model.add_ctetra(eid2, pid2, nids, comment='ctetra')
+
+        global_ply_ids = [1, 2, 3]
+        nlayers = len(global_ply_ids)
+        thicknesses = [0.1] * nlayers
+        mids = [mid] * nlayers
+        thetas = [0.] * nlayers
+        pcomps = model.add_pcomps(pid2, global_ply_ids, mids, thicknesses, thetas,
+                                  cordm=0, psdir=13, sb=None, nb=None, tref=0.0, ge=0.0,
+                                  failure_theories=None, interlaminar_failure_theories=None,
+                                  souts=None, comment='pcomps')
+        pcomps.raw_fields()
         end_checks(model)
 
         model.cross_reference()

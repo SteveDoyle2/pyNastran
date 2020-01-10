@@ -913,6 +913,8 @@ def hdf5_load_dmigs(model, group, unused_encoding):
             _load_dmig_uaccel(model, sub_group)
         elif class_type == 'DMI':
             _load_dmi(model, name, sub_group)
+        elif class_type == 'DMIAX':
+            _load_dmiax(model, name, sub_group)
         else:
             _load_dmig(model, name, sub_group, class_type)
     model.card_count[class_type] = len(keys)
@@ -962,6 +964,7 @@ def _load_dmi(model: BDF, name, sub_group):
                   Real, Complex=Complex, comment='')
 
 def _load_dmig(model, name, sub_group, class_type):
+    """loads the DMIG, DMIJ, DMIJI, DMIK"""
     class_obj = CARD_MAP[class_type]
     ncols = None
     if 'ncols' in sub_group:
@@ -994,6 +997,59 @@ def _load_dmig(model, name, sub_group, class_type):
     slot[name] = dmig
     str(dmig)
     #model.dmigs[name] = dmig
+
+def _load_dmiax(model, name, sub_group):
+    """loads the DMIAX"""
+    class_obj = CARD_MAP['DMIAX']
+    ncols = None
+    if 'ncols' in sub_group:
+        ncols = _cast(sub_group['ncols'])
+    matrix_form = _cast(sub_group['matrix_form'])
+    tin = _cast(sub_group['tin'])
+    tout = _cast(sub_group['tout'])
+
+    gcni = _cast(sub_group['GCNi_j'])
+    gcnj = _cast(sub_group['GCNj'])
+    i_none_flags = _cast(sub_group['i_none_flags'])
+    j_none_flags = _cast(sub_group['j_none_flags'])
+    dmiax_GCNi = []
+    dmiax_GCNj = []
+
+    k = 0
+    for GCNj, is_none_flag_j in zip(gcnj, j_none_flags):
+        gj, cj, nj = GCNj
+        if is_none_flag_j:
+            nj = None
+        dmiax_GCNj.append((gj, cj, nj))
+    del GCNj, is_none_flag_j, nj
+
+    j_old = -1
+    gcni_group = []
+    for GCNi_j, is_none_flag_j in zip(gcni, i_none_flags):
+        gi, ci, ni, j = GCNi_j
+        is_none_flag_i = i_none_flags[k]
+        if is_none_flag_i:
+            ni = None
+        if j != j_old:
+            j_old = j
+            gcni_group = []
+            dmiax_GCNi.append(gcni_group)
+        gcni_group.append((gi, ci, ni))
+    #print('GCNj =', dmiax_GCNj)
+    #print('GCNi =', dmiax_GCNi)
+
+    Real = _cast(sub_group['Real'])
+    Complex = None
+    if 'Complex' in sub_group:
+        Complex = _cast(sub_group['Complex'])
+
+    ifo = matrix_form
+    from pyNastran.bdf.bdf import DMIAX
+    dmiax = DMIAX(name, matrix_form, tin, tout, ncols,
+                  dmiax_GCNj, dmiax_GCNi, Real, Complex=Complex)
+    model.dmiax[name] = dmiax
+    str(dmiax)
+    #print(dmiax)
 
 def hdf5_load_dconstrs(model, group, encoding):
     """loads the dconstrs"""

@@ -778,7 +778,7 @@ class BDFAttributes:
                 'QVOL',
 
                 # axisymmetric
-                'PLOADX1', 'FORCEAX',
+                'PLOADX1', 'FORCEAX', 'PRESAX',
                 ],
             'cyjoin' : ['CYJOIN'],
             'cyax' : ['CYAX'],

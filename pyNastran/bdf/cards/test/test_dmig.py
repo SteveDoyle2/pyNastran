@@ -407,26 +407,46 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         #3.0 + 0.0i , 6.0 + 7.0i
         #5.0 + 6.0i , 0.0 + 0.0i
         #0.0 + 0.0i , 8.0 + 9.0i
-        GCj = [1, 1, 1, 1,
-               2, 2, 2, 2]  # col
-        GCi = [1, 2, 3, 4,
-               1, 2, 3, 4] # rows
+        j = [1, 1, 1, 1,
+             2, 2, 2, 2]  # col
+        i = [1, 2, 3, 4,
+             1, 2, 3, 4] # rows
         reals = [1., 3., 5., 0.,
                  0., 6., 0., 8.]
         complexs = [2., 0., 6., 0.,
                     0., 7., 0., 9.]
         model = BDF(debug=True, log=None, mode='msc')
-        name = 'QQQ'
         form = 2 # square
-        tin = 3
-        tout = 3
         nrows = 4
         ncols = 2
-        dmi = model.add_dmi(name, form, tin, tout, nrows, ncols,
-                            GCj, GCi, reals, Complex=complexs, comment='dmi_complex')
-        #print(dmi.get_stats())
-        #print(dmi)
-        matrix, blank, blank = dmi.get_matrix(is_sparse=False, apply_symmetry=False)
+
+        name = 'QQQR'
+        tin = 1 # real
+        tout = 1 # real
+        dmi_real = model.add_dmi(
+            name, form, tin, tout, nrows, ncols,
+            j, i, reals, Complex=None, comment='dmi_real')
+        str(dmi_real)
+
+        name = 'QQQI'
+        tin = 3 # complex
+        tout = 3 # complex
+        dmi_imag = model.add_dmi(
+            name, form, tin, tout, nrows, ncols,
+            j, i, reals, Complex=complexs, comment='dmi_complex')
+        str(dmi_imag)
+
+        matrix1r, unused_blank, unused_blank = dmi_real.get_matrix(is_sparse=False, apply_symmetry=False)
+        matrix2r, unused_blank, unused_blank = dmi_imag.get_matrix(is_sparse=False, apply_symmetry=False)
+
+        matrix1s, unused_blank, unused_blank = dmi_real.get_matrix(is_sparse=True, apply_symmetry=False)
+        matrix2s, unused_blank, unused_blank = dmi_imag.get_matrix(is_sparse=True, apply_symmetry=False)
+        str(matrix1r)
+        str(matrix1s)
+        str(matrix2r)
+        str(matrix2s)
+        #print(matrix1r)
+        #print(matrix1s)
 
     def test_dmig_12(self):
         """tests the add card methodwith a real DMIG"""
@@ -597,7 +617,7 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         str(uaccel)
         uaccel.tin = 2
         str(uaccel)
-        save_load_deck(model, run_save_load_hdf5=False)
+        save_load_deck(model)
 
 
     def test_dmiax(self):
@@ -607,7 +627,6 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         #ifo = 1  # square
         tin = 1
         tout = None
-        polar = None
         #ncol = None
         #gj = 2
         #cj = 8
@@ -626,29 +645,58 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         for line in lines:
             model.add_card(line, 'DMIAX')
         fill_dmigs(model)
-        str(model.dmigs)
+        str(model.dmiax)
         str(model.get_bdf_stats())
+        str(model.dmiax['B2PP'])
 
-        name = 'B2PPB'
+        name = 'AXREAL1'
         tin = 1
+        tout = 2
         ncols = 3
         GCNj = [(1, 2, 3)]
         GCNi = [[(10, 6, 30)]]
         Real = [0.1]
         matrix_form = 1
-        #load_sequences = {
-            # lseq : [ncx]
-            #10 : [[1001, 4, 1003.0]],
-            #20 : [[1, 2, 3.], [11, 12, 13.], ],
-            #30 : [[1, 2, 3.], [11, 12, 13.], [101, 4, 103.]],
-        #}
-        uaccel = model.add_dmiax(name, matrix_form, tin, tout, polar, ncols,
-                                 GCNj, GCNi, Real, Complex=None, comment='dmiax')
-        uaccel.raw_fields()
-        str(uaccel)
-        #uaccel.tin = 2
-        #str(uaccel)
-        save_load_deck(model, run_save_load_hdf5=False)
+        dmiax_real = model.add_dmiax(name, matrix_form, tin, tout, ncols,
+                                     GCNj, GCNi, Real, Complex=None, comment='dmiax')
+        assert dmiax_real.is_real is True, dmiax_real.is_real
+        assert dmiax_real.is_complex is False, dmiax_real.is_complex
+        assert dmiax_real.is_polar is False, dmiax_real.is_polar
+
+        name = 'AXREAL1'
+        tin = 2
+        tout = 1
+        dmiax_real = model.add_dmiax(name, matrix_form, tin, tout, ncols,
+                                     GCNj, GCNi, Real, Complex=None, comment='dmiax')
+        assert dmiax_real.is_real is True, dmiax_real.is_real
+        assert dmiax_real.is_complex is False, dmiax_real.is_complex
+        assert dmiax_real.is_polar is False, dmiax_real.is_polar
+
+        name = 'AXIMAG1'
+        Complex = [0.2]
+        tin = 3
+        tout = 4
+        dmiax_mag = model.add_dmiax(name, matrix_form, tin, tout, ncols,
+                                    GCNj, GCNi, Real, Complex=Complex, comment='dmiax')
+        assert dmiax_mag.is_real is False, dmiax_mag.is_real
+        assert dmiax_mag.is_complex is True, dmiax_mag.is_complex
+        assert dmiax_mag.is_polar is False, dmiax_mag.is_polar
+
+        name = 'AXIMAG2'
+        Complex = [0.2]
+        tout = 4
+        tin = 3
+        dmiax_imag = model.add_dmiax(name, matrix_form, tin, tout, ncols,
+                                     GCNj, GCNi, Real, Complex=Complex, comment='dmiax')
+        assert dmiax_imag.is_real is False, dmiax_imag.is_real
+        assert dmiax_imag.is_complex is True, dmiax_imag.is_complex
+        assert dmiax_imag.is_polar is False, dmiax_imag.is_polar
+
+        dmiax_real.raw_fields()
+        dmiax_imag.raw_fields()
+        str(dmiax_real)
+        str(dmiax_imag)
+        save_load_deck(model)
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

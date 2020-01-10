@@ -161,7 +161,8 @@ def scale_model(model, xyz_scale, mass_scale, time_scale, weight_scale, gravity_
     if convert_elements:
         _convert_elements(model, xyz_scale, time_scale, mass_scale, weight_scale)
     if convert_properties:
-        _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale)
+        _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale,
+                            temperature_scale)
     if convert_materials:
         _convert_materials(model, xyz_scale, mass_scale, weight_scale, temperature_scale)
 
@@ -442,7 +443,8 @@ def _convert_elements(model, xyz_scale, time_scale, mass_scale, weight_scale):
         else:
             raise NotImplementedError(elem)
 
-def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale):
+def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale,
+                        temperature_scale):
     """
     Converts the properties
 
@@ -506,84 +508,20 @@ def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale):
             #prop.c ???
 
         elif prop_type == 'PBAR':
-            prop.A *= area_scale
-            prop.i1 *= area_moi_scale
-            prop.i2 *= area_moi_scale
-            prop.i12 *= area_moi_scale
-            prop.j *= area_moi_scale
-            prop.nsm *= nsm_bar_scale
-            prop.c1 *= xyz_scale
-            prop.c2 *= xyz_scale
-            prop.d1 *= xyz_scale
-            prop.d2 *= xyz_scale
-            prop.e1 *= xyz_scale
-            prop.e2 *= xyz_scale
-            prop.f1 *= xyz_scale
-            prop.f2 *= xyz_scale
+            _convert_pbar(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale)
 
         elif prop_type == 'PBARL':
             prop.dim = [d * xyz_scale for d in prop.dim]
             prop.nsm *= nsm_bar_scale
 
         elif prop_type == 'PBEAM':
-            prop.A *= area_scale
-            prop.i1 *= area_moi_scale
-            prop.i2 *= area_moi_scale
-            prop.i12 *= area_moi_scale
-            prop.j *= area_moi_scale
-            prop.nsm *= nsm_bar_scale
-            prop.c1 *= xyz_scale
-            prop.c2 *= xyz_scale
-            prop.d1 *= xyz_scale
-            prop.d2 *= xyz_scale
-            prop.e1 *= xyz_scale
-            prop.e2 *= xyz_scale
-            prop.f1 *= xyz_scale
-            prop.f2 *= xyz_scale
-
-            prop.m1a *= xyz_scale
-            prop.m2a *= xyz_scale
-            prop.m1b *= xyz_scale
-            prop.m2b *= xyz_scale
-            prop.n1a *= xyz_scale
-            prop.n2a *= xyz_scale
-            prop.n1b *= xyz_scale
-            prop.n2b *= xyz_scale
+            _convert_pbeam(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale)
 
         elif prop_type == 'PBEAML':
             prop.dim *= xyz_scale
             prop.nsm *= nsm_bar_scale
         elif prop_type == 'PBEAM3':
-            prop.A = [areai * area_scale for areai in prop.A]
-            # cw
-
-            prop.cy = [ci * xyz_scale for ci in prop.cy]
-            prop.cz = [ci * xyz_scale for ci in prop.cz]
-            prop.dy = [ci * xyz_scale for ci in prop.dy]
-            prop.dz = [ci * xyz_scale for ci in prop.dz]
-            prop.ey = [ci * xyz_scale for ci in prop.ey]
-            prop.ez = [ci * xyz_scale for ci in prop.ez]
-            prop.fy = [ci * xyz_scale for ci in prop.fy]
-            prop.fz = [ci * xyz_scale for ci in prop.fz]
-
-            if prop.i1 is not None:
-                prop.i1 = [i1i * area_moi_scale for i1i in prop.i1]
-            if prop.i2 is not None:
-                prop.i2 = [i2i * area_moi_scale for i2i in prop.i2]
-            if prop.i12 is not None:
-                prop.i12 = [i12i * area_moi_scale for i12i in prop.i12]
-            prop.j = [ji * area_moi_scale for ji in prop.j]
-            prop.nsm = [nsmi * nsm_bar_scale for nsmi in prop.nsm]
-
-            #my
-            #mz
-            #nsiy
-            #nsiyz
-            #nsiz
-            #ny
-            #nz
-            # w
-
+            _convert_pbeam3(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale)
         elif prop_type == 'PSHELL':
             prop.t *= xyz_scale
             prop.nsm *= nsm_plate_scale
@@ -609,95 +547,10 @@ def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale):
             prop.nsm *= nsm_bar_scale
 
         elif prop_type == 'PBUSH':
-            # can be length=0
-            #assert len(prop.Ki) == 6, prop.Ki
-            #assert len(prop.Bi) == 6, prop.Bi
-            for var in prop.vars:
-                # TODO: I think this needs to consider rotation
-                if var == 'K':
-                    prop.Ki = [ki*stiffness_scale if ki is not None else None
-                               for ki in prop.Ki]
-                elif var == 'B':
-                    prop.Bi = [bi*velocity_scale if bi is not None else None
-                               for bi in prop.Bi]
-                elif var == 'RCV':
-                    model.log.warning('Skipping RCV for PBUSH %i' % prop.pid)
-                elif var == 'GE':
-                    pass
-                else:  # pragma: no cover
-                    raise NotImplementedError(prop)
-
-            #prop.rcv
-            if prop.mass is not None:
-                prop.mass *= mass_scale
-            #rcv : List[float]; default=None -> (None, None, None, None)
-                #[sa, st, ea, et] = rcv
-                #length(mass_fields) = 4
-            #mass : float; default=None
-                #lumped mass of the CBUSH
-                #This is an MSC only parameter.
+            _convert_pbush(prop, velocity_scale, mass_scale, stiffness_scale)
         elif prop.type == 'PBUSH1D':
-            prop.c *= damping_scale # Viscous damping (force/velocity)
-            prop.k *= stiffness_scale
-            prop.m *= mass_scale
-            prop.sa /= area_scale  # Stress recovery coefficient [1/area]
-            prop.se /= xyz_scale   # Strain recovery coefficient [1/length]
-            spring_tables = set([])
-            damper_tables = set([])
-            for var in prop.vars:
-                if var == 'SHOCKA':
-                    print(prop.get_stats())
-                     # Viscous damping coefficient (force/velocity)
-                    prop.shock_cvc = prop.shock_cvc * damping_scale if prop.shock_cvc is not None else None
-                    prop.shock_cvt = prop.shock_cvt * damping_scale if prop.shock_cvt is not None else None
-                    #shock_exp_vc : 1.0
-                    #shock_exp_vt : 1.0
-                    #shock_idecs : None
-                    #shock_idecsd : None
-                    #shock_idets : None
-                    #shock_idetsd : None
-                    #shock_idts : None
-                    #shock_type : 'TABLE'
-                elif var == 'DAMPER':
-                    if prop.damper_type == 'TABLE':
-                        for key in ('damper_idc', 'damper_idcdv', 'damper_idt', 'damper_idtdv'):
-                            value = getattr(prop, key)
-                            if value is None:
-                                continue
-                            elif isinstance(value, int):
-                                damper_tables.add(value)
-                            else:
-                                raise TypeError('key=%r value=%r' % (key, value))
-                    else:
-                        print(prop.get_stats())
-                        raise NotImplementedError(prop.damper_type)
-                elif var == 'SPRING':
-                    if prop.spring_type == 'TABLE':
-                        for key in ('spring_idc', 'spring_idcdu', 'spring_idt', 'spring_idtdu'):
-                            value = getattr(prop, key)
-                            if value is None:
-                                continue
-                            elif isinstance(value, int):
-                                spring_tables.add(value)
-                            else:
-                                raise TypeError('key=%r value=%r' % (key, value))
-                    else:
-                        raise NotImplementedError(prop.damper_type)
-                else:
-                    print(prop.get_stats())
-                    raise RuntimeError('var=%r\n%s' % (var, str(prop)))
-                if damper_tables:
-                    model.log.warning(f'scale PBUSH1D damper_tables={damper_tables}')
-                if spring_tables:
-                    model.log.warning(f'scale PBUSH1D spring_tables={spring_tables}')
-            #damper_idc : None
-            #damper_idcdv : None
-            #damper_idt : None
-            #damper_idtdv : None
-            #damper_type : None
-            #type   : 'PBUSH1D'
-        elif prop.type in ['PBUSH2D']:
-            model.log.warning('skipping:\n%s' % str(prop))
+            _convert_pbush1d(model, prop, xyz_scale, area_scale,
+                             mass_scale, damping_scale, stiffness_scale)
 
         #elif prop.type == 'PCOMPS':
             #pass
@@ -750,10 +603,180 @@ def _convert_properties(model, xyz_scale, time_scale, mass_scale, weight_scale):
 
             #: transverse stiffness of closed gap
             prop.kt *= stiffness_scale
-        elif prop_type in ['PBEND', 'PBCOMP']:
+
+        elif prop_type in ['PBEND', 'PBCOMP', 'PBUSH2D']:
             model.log.warning('skipping %s convert' % prop_type)
+        elif prop_type == 'PCOMPS':
+            prop.thicknesses *= xyz_scale
+            prop.tref *= temperature_scale
         else:
-            raise NotImplementedError(prop_type)
+            raise NotImplementedError(f'{prop.get_stats()}\n{prop}')
+
+def _convert_pbar(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale):
+    """converts a PBAR"""
+    prop.A *= area_scale
+    prop.i1 *= area_moi_scale
+    prop.i2 *= area_moi_scale
+    prop.i12 *= area_moi_scale
+    prop.j *= area_moi_scale
+    prop.nsm *= nsm_bar_scale
+    prop.c1 *= xyz_scale
+    prop.c2 *= xyz_scale
+    prop.d1 *= xyz_scale
+    prop.d2 *= xyz_scale
+    prop.e1 *= xyz_scale
+    prop.e2 *= xyz_scale
+    prop.f1 *= xyz_scale
+    prop.f2 *= xyz_scale
+
+def _convert_pbeam(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale):
+    """converts a PBEAM"""
+    prop.A *= area_scale
+    prop.i1 *= area_moi_scale
+    prop.i2 *= area_moi_scale
+    prop.i12 *= area_moi_scale
+    prop.j *= area_moi_scale
+    prop.nsm *= nsm_bar_scale
+    prop.c1 *= xyz_scale
+    prop.c2 *= xyz_scale
+    prop.d1 *= xyz_scale
+    prop.d2 *= xyz_scale
+    prop.e1 *= xyz_scale
+    prop.e2 *= xyz_scale
+    prop.f1 *= xyz_scale
+    prop.f2 *= xyz_scale
+
+    prop.m1a *= xyz_scale
+    prop.m2a *= xyz_scale
+    prop.m1b *= xyz_scale
+    prop.m2b *= xyz_scale
+    prop.n1a *= xyz_scale
+    prop.n2a *= xyz_scale
+    prop.n1b *= xyz_scale
+    prop.n2b *= xyz_scale
+
+def _convert_pbeam3(prop, xyz_scale, area_scale, area_moi_scale, nsm_bar_scale):
+    """converts a PBEAM3"""
+    prop.A = [areai * area_scale for areai in prop.A]
+    # cw
+
+    prop.cy = [ci * xyz_scale for ci in prop.cy]
+    prop.cz = [ci * xyz_scale for ci in prop.cz]
+    prop.dy = [ci * xyz_scale for ci in prop.dy]
+    prop.dz = [ci * xyz_scale for ci in prop.dz]
+    prop.ey = [ci * xyz_scale for ci in prop.ey]
+    prop.ez = [ci * xyz_scale for ci in prop.ez]
+    prop.fy = [ci * xyz_scale for ci in prop.fy]
+    prop.fz = [ci * xyz_scale for ci in prop.fz]
+
+    if prop.i1 is not None:
+        prop.i1 = [i1i * area_moi_scale for i1i in prop.i1]
+    if prop.i2 is not None:
+        prop.i2 = [i2i * area_moi_scale for i2i in prop.i2]
+    if prop.i12 is not None:
+        prop.i12 = [i12i * area_moi_scale for i12i in prop.i12]
+    prop.j = [ji * area_moi_scale for ji in prop.j]
+    prop.nsm = [nsmi * nsm_bar_scale for nsmi in prop.nsm]
+
+    #my
+    #mz
+    #nsiy
+    #nsiyz
+    #nsiz
+    #ny
+    #nz
+    # w
+
+def _convert_pbush(prop, velocity_scale, mass_scale, stiffness_scale):
+    # can be length=0
+    #assert len(prop.Ki) == 6, prop.Ki
+    #assert len(prop.Bi) == 6, prop.Bi
+    for var in prop.vars:
+        # TODO: I think this needs to consider rotation
+        if var == 'K':
+            prop.Ki = [ki*stiffness_scale if ki is not None else None
+                       for ki in prop.Ki]
+        elif var == 'B':
+            prop.Bi = [bi*velocity_scale if bi is not None else None
+                       for bi in prop.Bi]
+        elif var == 'RCV':
+            model.log.warning('Skipping RCV for PBUSH %i' % prop.pid)
+        elif var == 'GE':
+            pass
+        else:  # pragma: no cover
+            raise NotImplementedError(prop)
+
+    #prop.rcv
+    if prop.mass is not None:
+        prop.mass *= mass_scale
+    #rcv : List[float]; default=None -> (None, None, None, None)
+        #[sa, st, ea, et] = rcv
+        #length(mass_fields) = 4
+    #mass : float; default=None
+        #lumped mass of the CBUSH
+        #This is an MSC only parameter.
+
+def _convert_pbush1d(model, prop, xyz_scale, area_scale, mass_scale, damping_scale,
+                     stiffness_scale):
+    prop.c *= damping_scale # Viscous damping (force/velocity)
+    prop.k *= stiffness_scale
+    prop.m *= mass_scale
+    prop.sa /= area_scale  # Stress recovery coefficient [1/area]
+    prop.se /= xyz_scale   # Strain recovery coefficient [1/length]
+    spring_tables = set([])
+    damper_tables = set([])
+    for var in prop.vars:
+        if var == 'SHOCKA':
+            print(prop.get_stats())
+             # Viscous damping coefficient (force/velocity)
+            prop.shock_cvc = prop.shock_cvc * damping_scale if prop.shock_cvc is not None else None
+            prop.shock_cvt = prop.shock_cvt * damping_scale if prop.shock_cvt is not None else None
+            #shock_exp_vc : 1.0
+            #shock_exp_vt : 1.0
+            #shock_idecs : None
+            #shock_idecsd : None
+            #shock_idets : None
+            #shock_idetsd : None
+            #shock_idts : None
+            #shock_type : 'TABLE'
+        elif var == 'DAMPER':
+            if prop.damper_type == 'TABLE':
+                for key in ('damper_idc', 'damper_idcdv', 'damper_idt', 'damper_idtdv'):
+                    value = getattr(prop, key)
+                    if value is None:
+                        continue
+                    elif isinstance(value, int):
+                        damper_tables.add(value)
+                    else:
+                        raise TypeError('key=%r value=%r' % (key, value))
+            else:
+                print(prop.get_stats())
+                raise NotImplementedError(prop.damper_type)
+        elif var == 'SPRING':
+            if prop.spring_type == 'TABLE':
+                for key in ('spring_idc', 'spring_idcdu', 'spring_idt', 'spring_idtdu'):
+                    value = getattr(prop, key)
+                    if value is None:
+                        continue
+                    elif isinstance(value, int):
+                        spring_tables.add(value)
+                    else:
+                        raise TypeError('key=%r value=%r' % (key, value))
+            else:
+                raise NotImplementedError(prop.damper_type)
+        else:
+            print(prop.get_stats())
+            raise RuntimeError('var=%r\n%s' % (var, str(prop)))
+        if damper_tables:
+            model.log.warning(f'scale PBUSH1D damper_tables={damper_tables}')
+        if spring_tables:
+            model.log.warning(f'scale PBUSH1D spring_tables={spring_tables}')
+    #damper_idc : None
+    #damper_idcdv : None
+    #damper_idt : None
+    #damper_idtdv : None
+    #damper_type : None
+    #type   : 'PBUSH1D'
 
 def _convert_materials(model, xyz_scale, mass_scale, weight_scale, temperature_scale):
     """
@@ -1085,10 +1108,16 @@ def _convert_loads(model, xyz_scale, time_scale, weight_scale, temperature_scale
                 #temperatures : {1901: 100.0}
                 for nid in load.temperatures:
                     load.temperatures[nid] *= temperature_scale
+            elif load_type == 'FORCEAX':
+                load.f_rtz *= force_scale
             elif load_type in  skip_cards:
                 model.log.warning('skipping %s' % load)
+            elif load_type == 'TEMPAX':
+                load.temperature *= temperature_scale
+            elif load_type == 'PRESAX':
+                load.pressure *= pressure_scale
             else:
-                raise NotImplementedError(load)
+                raise NotImplementedError(f'{load.get_stats()}\n{load}')
 
 def _convert_aero(model, xyz_scale, time_scale, weight_scale):
     """
@@ -1399,7 +1428,7 @@ def _convert_dvprel1(dvprel, xyz_scale, mass_scale, weight_scale):
     elif prop_type == 'PCOMP':
         if var_to_change.startswith('THETA') or var_to_change == 'GE':
             return scale
-        elif var_to_change.startswith('T') or var_to_change == 'Z0':
+        if var_to_change.startswith('T') or var_to_change == 'Z0':
             scale = xyz_scale
         elif var_to_change == 'SB': # Allowable shear stress of the bonding material
             scale = stress_scale

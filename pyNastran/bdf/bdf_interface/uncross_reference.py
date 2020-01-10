@@ -26,6 +26,7 @@ class UnXrefMesh(SafeXrefMesh):
         self._uncross_reference_loads()
         self._uncross_reference_sets()
         self._uncross_reference_optimization()
+        self._uncross_reference_contact()
         self._uncross_reference_superelements()
 
         for super_id, superelement in sorted(self.superelement_models.items()):

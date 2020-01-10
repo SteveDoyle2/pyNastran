@@ -1,11 +1,7 @@
 # coding: utf-8
 # pylint: disable=R0913, R0914, C0103
 """
-Defines a method to add a card that is faster than add_card
-and far less error prone for a user
-
-That said, there are still a few bugs.
-
+Defines a method to add a card that is faster than add_card.
 """
 
 from typing import Optional, List, Dict, Union, Any
@@ -623,6 +619,7 @@ CARD_MAP = {
     'DMIG' : DMIG,
     'DMIJI' : DMIJI,
     'DMIJ' : DMIJ,
+    'DMIAX' : DMIAX,
     'DTI' : DTI,
     'DMIG_UACCEL' : DMIG_UACCEL,
 
@@ -999,7 +996,7 @@ class AddCards(AddMethods):
         self._add_coord_object(coord)
         return coord
 
-    def add_gmcord(self, cid, entity, gm_ids, comment=''):
+    def add_gmcord(self, cid, entity, gm_ids, comment='') -> GMCORD:
         """Creates a GMCORD card"""
         coord = GMCORD(cid, entity, gm_ids, comment=comment)
         self._add_coord_object(coord)
@@ -2715,6 +2712,11 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
+    def add_snorm(self, nid, normal, cid=0, comment='') -> SNORM:
+        snorm = SNORM(nid, normal, cid=cid, comment=comment)
+        self._add_normal_object(snorm)
+        return snorm
+
     def add_pshell(self, pid, mid1=None, t=None, mid2=None, twelveIt3=1.0,
                    mid3=None, tst=0.833333, nsm=0.0,
                    z1=None, z2=None, mid4=None,
@@ -3144,6 +3146,11 @@ class AddCards(AddMethods):
         load = PRESAX(sid, pressure, rid1, rid2, phi1, phi2, comment=comment)
         self._add_load_object(load)
         return load
+
+    def add_forceax(self, sid, ring_id, hid, scale, f_rtz, comment='') -> FORCEAX:
+        forceax = FORCEAX(sid, ring_id, hid, scale, f_rtz, comment=comment)
+        self._add_load_object(forceax)
+        return forceax
 
     def add_ctrax3(self, eid, pid, nids, theta=0., comment='') -> CTRAX3:
         """Creates a CTRAX3 card"""
@@ -3968,7 +3975,7 @@ class AddCards(AddMethods):
         return load
 
     def add_loadcyn(self, sid, scale, segment_id, scales, load_ids,
-                    segment_type=None, comment=''):
+                    segment_type=None, comment='') -> LOADCYN:
         """Creates a LOADCYN card"""
         load = LOADCYN(sid, scale, segment_id, scales, load_ids,
                        segment_type=segment_type, comment=comment)
@@ -5391,11 +5398,11 @@ class AddCards(AddMethods):
         """.. seealso:: ``add_cset``"""
         return self.add_cset(ids, components, comment=comment)
 
-    #def add_omit1(self, ids, components, comment=''):
+    #def add_omit1(self, ids, components, comment='') -> Union[OMIT, OMIT1]:
         #""".. seealso:: ``add_omit``"""
         #return self.add_omit(ids, components, comment=comment)
 
-    #def add_omit(self, ids, components, comment=''):
+    #def add_omit(self, ids, components, comment='') -> Union[OMIT, OMIT1]:
         #"""
         #Creates an OMIT1 card, which defines the degree of freedoms that
         #will be excluded (o-set) from the analysis set (a-set).
@@ -7016,6 +7023,20 @@ class AddCards(AddMethods):
         self._add_bctpara_object(bctpara)
         return bctpara
 
+    def add_blseg(self, line_id, nodes, comment='') -> BLSEG:
+        """Creates a BLSEG card"""
+        blseg = BLSEG(line_id, nodes, comment=comment)
+        self._add_blseg_object(blseg)
+        return blseg
+
+    def add_bconp(self, contact_id, slave, master, sfac, fric_id, ptype, cid,
+                  comment='') -> BCONP:
+        """Creates a BCONP card"""
+        bconp = BCONP(contact_id, slave, master, sfac, fric_id, ptype,
+                      cid, comment=comment)
+        self._add_bconp_object(bconp)
+        return bconp
+
     def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX',
                     grid_point=0, comment='') -> BCRPARA:
         """
@@ -7241,7 +7262,7 @@ class AddCards(AddMethods):
         self._add_thermal_load_object(temp)
         return temp
 
-    #def add_tempp1(self):
+    #def add_tempp1(self) -> TEMPP1:
         #temp = TEMPP1()
         #self._add_thermal_load_object(temp)
         #return temp
@@ -7567,6 +7588,23 @@ class AddCards(AddMethods):
         self._add_thermal_bc_object(boundary_condition, boundary_condition.nodamb)
         return boundary_condition
 
+    def add_view(self, iview, icavity, shade='BOTH', nbeta=1, ngamma=1,
+                 dislin=0.0, comment='') -> VIEW:
+        """Creates a VIEW card"""
+        view = VIEW(iview, icavity, shade=shade, nbeta=nbeta, ngamma=ngamma,
+                    dislin=dislin, comment=comment)
+        self._add_view_object(view)
+        return view
+
+    def add_view3d(self, icavity, gitb=4, gips=4, cier=4, error_tol=0.1,
+                        zero_tol=1e-10, warp_tol=0.01, rad_check=3, comment='') -> VIEW3D:
+        """Creates a VIEW3D card"""
+        view3d = VIEW3D(icavity, gitb=gitb, gips=gips, cier=cier,
+                        error_tol=error_tol, zero_tol=zero_tol, warp_tol=warp_tol,
+                        rad_check=rad_check, comment=comment)
+        self._add_view3d_object(view3d)
+        return view3d
+
     def add_pconv(self, pconid, mid=None, form=0, expf=0.0, ftype=0, tid=None,
                   chlen=None, gidin=None, ce=0,
                   e1=None, e2=None, e3=None,
@@ -7718,13 +7756,13 @@ class AddCards(AddMethods):
         self._add_dmi_object(dmi)
         return dmi
 
-    def add_dmiax(self, name, matrix_form, tin, tout, polar, ncols,
+    def add_dmiax(self, name, matrix_form, tin, tout, ncols,
                   GCNj, GCNi, Real, Complex=None, comment='') -> DMIAX:
         """Creates a DMIAX card"""
-        dmi = DMIAX(name, matrix_form, tin, tout, polar, ncols,
-                    GCNj, GCNi, Real, Complex=Complex, comment=comment)
-        self._add_dmiax_object(dmi)
-        return dmi
+        dmiax = DMIAX(name, matrix_form, tin, tout, ncols,
+                      GCNj, GCNi, Real, Complex=Complex, comment=comment)
+        self._add_dmiax_object(dmiax)
+        return dmiax
 
     def add_dmij(self, name, form, tin, tout, nrows, ncols, GCj, GCi,
                  Real, Complex=None, comment='') -> DMIJ:

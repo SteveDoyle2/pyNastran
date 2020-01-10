@@ -80,7 +80,7 @@ def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol,
         eid = max(model.rigid_elements) + 1
 
     nid_pairs = _nodes_xyz_nids_to_nid_pairs(
-        nodes_xyz, nids, tol, inew,
+        nodes_xyz, nids, tol, model.log, inew,
         node_set=node_set, neq_max=neq_max)
 
     for (nid1, nid2) in nid_pairs:

@@ -8,6 +8,7 @@ Defines:
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from math import radians, sin, cos
 import numpy as np
 from numpy import array, cross, allclose, mean
 from numpy.linalg import norm  # type: ignore
@@ -1051,6 +1052,14 @@ def _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof, fdtype='float64'):
         model.log.warning(f'skipping {skipped_load_types} in Fg')
     return Fg
 
+def _force_to_local(cd_ref, vector):
+    #if cd_ref.type[-1] in ['C', 'S']:
+    return cd_ref.transform_vector_to_local(vector)
+    #else:
+        #print(cd_ref)
+        #asdf
+
+
 def _add_force(Fg, dof_map, model: BDF, load, offset: int, ndof_per_grid: int, cid: int=0):
     """adds the FORCE/MOMENT loads to Fg"""
     #cid = load.cid
@@ -1058,22 +1067,55 @@ def _add_force(Fg, dof_map, model: BDF, load, offset: int, ndof_per_grid: int, c
     node_ref = load.node_ref
     ndofi = ndof_per_grid if node_ref.type == 'GRID' else 1
     assert ndofi == 6, f'GRID must have 6 DOF for structural analysis\n{node_ref}'
-    if cid != 0:
-        fbasic = load.to_global()
-    else:
-        fbasic = load.mag * load.xyz
 
-    if node_ref.cd != cid:
+    if node_ref.cd == cid:
+        fglobal = load.mag * load.xyz
+    elif node_ref.cd != cid:
+        fbasic = load.to_global()
         model.log.warning(f'differing cid & cd is not supported; cid={cid} cd={node_ref.cd}')
         cd_ref = node_ref.cd_ref
-        if cd_ref.type[-1] in ['C', 'S']:
-            xyz_local = node_ref.get_position_wrt(model, node_ref.cd)
-            str(xyz_local)
         Tbg = cd_ref.beta()
-        Tgb = Tbg.T
-        fglobal = np.dot(Tgb, fbasic)
+        fglobal = _force_to_local(cd_ref, fbasic)
+
+        if 0:  # pragma: no cover
+            if cd_ref.type[-1] in ['C', 'S']:
+                ex = Tbg[0, :]
+                ey = Tbg[1, :]
+                ez = Tbg[2, :]
+                xyz_local = node_ref.get_position_wrt(model, node_ref.cd)
+                if cd_ref.type[-1] == 'C':
+                    theta = radians(xyz_local[1])
+                    ct = cos(theta)
+                    st = sin(theta)
+                    T = np.array([
+                        [ct, -st, 0.],
+                        [st, ct, 0.],
+                        [0., 0., 1.],
+                    ])
+                    Tbg = Tbg @ T
+                else:
+                    from pyNastran.bdf.cards.coordinate_systems import CORD2S
+                    rho, thetad, phid = xyz_local
+                    coord = CORD2S.add_ijk(-1, origin=cd_ref.origin, i=ex, j=ey, k=None, rid=0, comment='')
+                    beta = coord.beta()
+                    Tbg = Tbg @ beta
+                    coord.transform_vector_to_local([rho, thetad, phid])
+                    #theta = radians(xyz_local[1])
+                    #phi = radians(xyz_local[2])
+                    #ct = cos(theta)
+                    #st = sin(theta)
+
+                    #cp = cos(phi)
+                    #sp = sin(phi)
+
+                str(xyz_local)
+            else:
+                # rectangular
+                pass
+            Tgb = Tbg.T
+            fglobal = np.dot(Tgb, fbasic)
     else:
-        fglobal = fbasic
+        raise NotImplementedError(f'node_ref.cd={node_ref.cd} cid={cid} load:\n{str(load)}')
 
     for dof in range(3):
         irow = dof_map[(nid, dof+offset)]

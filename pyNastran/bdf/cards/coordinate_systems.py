@@ -67,20 +67,6 @@ def global_to_basic_spherical(coord, xyz_global, dtype='float64'):
     ex, ey, ez = _primary_axes(coord)
 
     rtp = coord.transform_node_to_global(xyz_global)
-    #deg_to_rad = 1. / 57.29577951
-    #cr0 = cos(rtp[0] * deg_to_rad)
-    #cr1 = cos(rtp[1] * deg_to_rad)
-    #sr0 = sin(rtp[0] * deg_to_rad)
-    #sr1 = sin(rtp[1] * deg_to_rad)
-    #
-    #er = ex * cr0 * cr1 + \
-    #     ey * sr0 * sr1 + \
-    #     ez * sr1
-    #et = ex * cr0 * cr1 - \
-    #     ey * sr0 * cr1
-    #ep = ez * cr1 - \
-    #     ex * cr0 * sr1 - \
-    #     ey * sr0 * sr1
     theta = radians(rtp[1])
     phi = radians(rtp[2])
 

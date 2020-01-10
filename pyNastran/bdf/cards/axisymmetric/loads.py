@@ -8,7 +8,7 @@ All axisymmetric loads are defined in this file.  This includes:
 """
 from __future__ import annotations
 from typing import TYPE_CHECKING
-#import numpy as np
+import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.base_card import BaseCard
@@ -76,7 +76,7 @@ class FORCEAX(BaseCard):
         self.ring_id = ring_id
         self.hid = hid
         self.scale = scale
-        self.f_rtz = f_rtz
+        self.f_rtz = np.asarray(f_rtz)
         self.ring_id_ref = None
 
     def validate(self):
@@ -420,7 +420,16 @@ class PRESAX(BaseCard):
         assert len(card) == 7, 'len(PRESAX card) = %i\ncard=%s' % (len(card), card)
         return PRESAX(sid, pressure, rid1, rid2, phi1, phi2, comment=comment)
 
+    def get_loads(self):
+        return [self]
+
     def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
         pass
 
     def raw_fields(self):

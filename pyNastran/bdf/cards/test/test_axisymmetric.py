@@ -48,6 +48,20 @@ class TestAxi(unittest.TestCase):
                         comment='mathp')
         #model.add_mathe(mid, model, bulk, rho, texp, mus, alphas, betas, mooney,
                         #sussbat, aboyce, comment='')
+        sid = 1
+        ring_id = 2
+        hid = 0
+        scale = 3.
+        f_rtz = [0., 1., 2.]
+        forceax = model.add_forceax(sid, ring_id, hid, scale, f_rtz, comment='forceax')
+
+        pressure = 2.0
+        rid1 = 2
+        rid2 = 2
+        presax = model.add_presax(sid, pressure, rid1, rid2, phi1=0., phi2=360., comment='prsax')
+        forceax.raw_fields()
+        presax.raw_fields()
+
         model.validate()
         model._verify_bdf()
         model.cross_reference()
@@ -96,7 +110,7 @@ class TestAxi(unittest.TestCase):
         cconeax.raw_fields()
         pconeax.raw_fields()
         axic.raw_fields()
-        save_load_deck(model, run_convert=False, run_mass_properties=False, run_test_bdf=False)
+        save_load_deck(model, run_mass_properties=False, run_test_bdf=False)
 
 
 if __name__ == '__main__':  # pragma: no cover

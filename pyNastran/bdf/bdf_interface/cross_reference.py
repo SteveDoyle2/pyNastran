@@ -174,6 +174,7 @@ class XrefMesh(BDFAttributes):
             self._cross_reference_optimization()
         if xref_nodes_with_elements:
             self._cross_reference_nodes_with_elements()
+        self._cross_reference_contact()
         self._cross_reference_superelements()
         #self.case_control_deck.cross_reference(self)
         self.pop_xref_errors()
@@ -546,6 +547,24 @@ class XrefMesh(BDFAttributes):
             dvprel.cross_reference(self)
         for unused_key, desvar in self.desvars.items():
             desvar.cross_reference(self)
+
+    def _safe_cross_reference_contact(self) -> None:
+        """cross references the contact objects"""
+        self._cross_reference_contact()
+
+    def _cross_reference_contact(self) -> None:
+        """cross references the contact objects"""
+        for blseg in self.blseg.values():
+            blseg.cross_reference(self)
+        for bconp in self.bconp.values():
+            bconp.cross_reference(self)
+
+    def _uncross_reference_contact(self) -> None:
+        """uncross references the contact objects"""
+        for blseg in self.blseg.values():
+            blseg.uncross_reference()
+        for bconp in self.bconp.values():
+            bconp.uncross_reference()
 
     def _cross_reference_superelements(self) -> None:
         """cross references the superelement objects"""

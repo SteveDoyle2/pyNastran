@@ -79,6 +79,8 @@ class SafeXrefMesh(XrefMesh):
             self._safe_cross_reference_optimization()
         if xref_nodes_with_elements:
             self._cross_reference_nodes_with_elements()
+
+        self._safe_cross_reference_contact()
         self._safe_cross_reference_superelements(create_superelement_geometry)
 
         #pop_xref_errors = False

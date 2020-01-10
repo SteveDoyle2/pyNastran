@@ -646,6 +646,10 @@ def _mirror_loads(model: BDF, nid_offset: int=0, eid_offset: int=0) -> None:
      - TEMP, QVOL, QHBDY, QBDY1, QBDY2, QBDY3
 
     """
+    # unmirrorable loads
+    skip_loads = {
+        'FORCEAX', 'TEMPAX', 'PRESAX',
+    }
     for unused_load_id, loads in model.loads.items():
         for load in loads:
             loads_new = []
@@ -731,6 +735,8 @@ def _mirror_loads(model: BDF, nid_offset: int=0, eid_offset: int=0) -> None:
                 loads_new.append(load)
             elif load_type == 'GRAV':
                 pass
+            elif load_type in skip_loads:
+                continue
             else:  # pragma: no cover
                 model.log.warning('skipping:\n%s' % load.rstrip())
         if loads_new:
