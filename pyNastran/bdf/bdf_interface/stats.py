@@ -133,7 +133,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'include_dir', 'include_filenames', 'save_file_structure',
         'rsolmap_to_str', 'nastran_format', 'nid_map', 'bdf_filename',
         'initial_superelement_models',
-        'is_zona', 'is_nasa95', 'type_slot_str', 'dict_of_vars',
+        'is_zona', 'is_nasa95', 'type_slot_str', 'dict_of_vars', 'code_block',
 
         # handled below
         'mpcadds', 'mpcs', 'spcadds', 'spcs',
