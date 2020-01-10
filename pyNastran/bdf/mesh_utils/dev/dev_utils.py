@@ -25,7 +25,7 @@ from pyNastran.bdf.cards.nodes import GRID
 from pyNastran.bdf.cards.elements.shell import CQUAD4
 from pyNastran.bdf.cards.elements.rigid import RBE3
 from pyNastran.bdf.mesh_utils.bdf_equivalence import (
-    _eq_nodes_setup, _eq_nodes_build_tree, _eq_nodes_find_pairs)
+    _eq_nodes_setup, _nodes_xyz_nids_to_nid_pairs)
 from pyNastran.bdf.mesh_utils.find_closest_nodes import (
     find_closest_nodes, find_closest_nodes_index)
 
@@ -79,11 +79,9 @@ def create_rbe3s_between_close_nodes(bdf_filename, bdf_filename_out, tol,
     if len(model.rigid_elements):
         eid = max(model.rigid_elements) + 1
 
-    ieq, slots = _eq_nodes_build_tree(nodes_xyz, nids, tol,
-                                      inew=inew, node_set=node_set,
-                                      neq_max=neq_max)[1:]
-
-    nid_pairs = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)
+    nid_pairs = _nodes_xyz_nids_to_nid_pairs(
+        nodes_xyz, nids, tol, inew,
+        node_set=node_set, neq_max=neq_max)
 
     for (nid1, nid2) in nid_pairs:
         node1 = model.nodes[nid1]

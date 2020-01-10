@@ -9,6 +9,7 @@ defines:
                                   crash_on_collapse=False, log=None, debug=True)
 
 """
+from itertools import combinations
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
@@ -20,10 +21,6 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 
-if scipy.__version__ < '0.18.1':  # pragma: no cover
-    raise RuntimeError('scipy_version=%r and is less than 0.18.1.  '
-                       'Upgrade your scipy.' % scipy.__version__)
-
 
 def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out, tol,
                           renumber_nodes=False, neq_max=4, xref=True,
@@ -31,7 +28,7 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out, tol,
                           size=8, is_double=False,
                           remove_collapsed_elements=False,
                           avoid_collapsed_elements=False,
-                          crash_on_collapse=False, log=None, debug=True):
+                          crash_on_collapse=False, log=None, debug=True, method='old'):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
@@ -96,11 +93,10 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out, tol,
     nodes_xyz, model, nids, inew = _eq_nodes_setup(
         bdf_filename, tol, renumber_nodes=renumber_nodes,
         xref=xref, node_set=node_set, log=log, debug=debug)
-    ieq, slots = _eq_nodes_build_tree(nodes_xyz, nids, tol,
-                                      inew=inew, node_set=node_set,
-                                      neq_max=neq_max)[1:]
 
-    nid_pairs = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)
+    nid_pairs = _nodes_xyz_nids_to_nid_pairs(
+        nodes_xyz, nids, tol, inew,
+        node_set=node_set, neq_max=neq_max, method='old')
     _eq_nodes_final(nid_pairs, model, tol, node_set=node_set)
 
     if bdf_filename_out is not None:
@@ -322,8 +318,24 @@ def _eq_nodes_final(nid_pairs, model, tol, node_set=None):
         #skip_nodes.append(nid2)
     return
 
+def _nodes_xyz_nids_to_nid_pairs(nodes_xyz, nids, tol, inew,
+                                 node_set=None, neq_max=4, method='new'):
+    """helper for equivalencing"""
+    if method == 'new':
+        kdt, nid_pairs = _eq_nodes_build_tree(
+            nodes_xyz, nids, tol,
+            inew=inew, node_set=node_set,
+            neq_max=neq_max, method='new')
+    elif method == 'old':
+        kdt, ieq, slots = _eq_nodes_build_tree(
+            nodes_xyz, nids, tol,
+            inew=inew, node_set=node_set,
+            neq_max=neq_max, method='old')
+        nid_pairs = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)
+    return nid_pairs
+
 def _eq_nodes_build_tree(nodes_xyz, nids, tol,
-                         inew=None, node_set=None, neq_max=4, msg=''):
+                         inew=None, node_set=None, neq_max=4, method='new', msg=''):
     """
     helper function for `bdf_equivalence_nodes`
 
@@ -354,6 +366,7 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol,
         ???
 
     """
+    nnodes = len(nids)
     if inew is None:
         inew = slice(None)
 
@@ -361,11 +374,37 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol,
     kdt = _get_tree(nodes_xyz, msg=msg)
 
     # check the closest 10 nodes for equality
-    deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
-
+    if method == 'new':
+        deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
+        slots = np.where(ieq[:, :] < nnodes)
+        nid_pairs_expected = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)
+        #print('nid_pairs =', nid_pairs)
+        #print(deq)
+        if inew == slice(None):
+            ieq3 = kdt.query_ball_tree(kdt, tol)
+            nid_pairs = []
+            for pair in ieq3:
+                if len(pair) == 1:
+                    continue
+                # the combinations should be paired with 2 nodes in each group
+                for inid1, inid2 in combinations(pair, 2):
+                    nid1 = nids[inid1]
+                    nid2 = nids[inid2]
+                    if nid1 == nid2:
+                        continue
+                    if node_set is not None:
+                        if nid1 not in node_set and nid2 not in node_set:
+                            continue
+                    if (nid1, nid2) in nid_pairs:
+                        continue
+                    nid_pairs.append((nid1, nid2))
+        else:
+            raise NotImplementedError('node_set')
+        return kdt, nid_pairs
+    else:
+        deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
     if node_set is not None:
         assert len(deq) == len(nids)
-    nnodes = len(nids)
 
     # get the ids of the duplicate nodes
     slots = np.where(ieq[:, :] < nnodes)
