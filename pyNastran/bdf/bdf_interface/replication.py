@@ -10,8 +10,7 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.errors import ReplicationError
 
 
-def to_fields_replication(card_lines):
-    # type: (List[str]) -> List[Optional[str]]
+def to_fields_replication(card_lines: List[str]) -> List[Optional[str]]:
     """
     Converts a series of lines in a card into string versions of the field.
     Handles large, small, and CSV formatted cards.  Same as to_fields, but
@@ -92,7 +91,7 @@ def to_fields_replication(card_lines):
             raise RuntimeError('field=%r has embedded blanks\nfields=%s' % (sfield, fields))
     return wiped_fields
 
-def get_nrepeats(field, old_card, new_card):
+def get_nrepeats(field: str, old_card: List[str], new_card: List[str]) -> int:
     """=4, =(11)"""
     msg = 'field=%r; expected =(1), =2, ...\nold_card=%s\nnew_card=%s' % (
         field, old_card, new_card)
@@ -112,7 +111,7 @@ def get_nrepeats(field, old_card, new_card):
     nrepeats = int(fieldi)
     return nrepeats
 
-def float_replication(field, old_field):
+def float_replication(field: str, old_field: str) -> float:
     """*4., *(11.5)"""
     msg = 'field=%r; expected *(1.), *2., ..., *11.' % field
     assert field[0] == '*', msg
@@ -132,8 +131,7 @@ def float_replication(field, old_field):
     field2 = nfloat + float(old_field)
     return field2
 
-def int_replication(field, old_field):
-    # type: (str, str) -> int
+def int_replication(field: str, old_field: str) -> int:
     """*4, *(11)"""
     msg = 'field=%r; expected *(1), *2, ..., *11' % field
     assert field[0] == '*', msg
@@ -157,7 +155,7 @@ def int_replication(field, old_field):
     field2 = nint + int(old_field)
     return field2
 
-def _field(old_card, ifield):
+def _field(old_card: List[str], ifield: int) -> str:
     """helper for replication"""
     #if isinstance(old_card, list):
     #print(old_card, ifield)
@@ -166,7 +164,7 @@ def _field(old_card, ifield):
         #field2 = old_card.field(ifield)
     return field2
 
-def repeat_cards(old_card, new_card):
+def repeat_cards(old_card: List[str], new_card: List[str]) -> List[List[str]]:
     """helper for replication"""
     card = []
     cards = []
@@ -182,6 +180,10 @@ def repeat_cards(old_card, new_card):
             card.append(field2)
             continue
 
+        #1. Duplication of fields from the preceding entry is accomplished
+        #   by coding the symbol =.
+        #2. Duplication of all trailing fields from the preceding entry is
+        #   accomplished by coding the symbol
         if field == '':
             field2 = field
         elif field == '=':

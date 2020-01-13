@@ -31,7 +31,7 @@ from pyNastran.bdf.cards.base_card import BaseCard, expand_thru
 from pyNastran.bdf.bdf_interface.assign_type import (
     fields, integer, integer_or_blank, double, double_or_blank, string,
     string_or_blank, integer_or_string,
-    interpret_value, parse_components)
+    interpret_value, parse_components, components_or_blank)
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.cards.aero.utils import (
     points_elements_from_quad_points, create_axisymmetric_body)
@@ -3980,6 +3980,165 @@ class MONPNT3(BaseCard):
                 ))
         #card = self.repr_fields()
         return self.comment + msg.rstrip() + '\n'
+
+    def __repr__(self):
+        return self.write_card()
+
+class MONDSP1(BaseCard):
+    """
+    +---------+---------+------+-----+-----+-------+------+----+----+
+    |    1    |    2    |  3   |  4  |  5  |   6   |   7  | 8  | 9  |
+    +=========+=========+======+=====+=====+=======+======+====+====+
+    | MONPNT1 |  NAME   |                   LABEL                   |
+    +---------+---------+------+-----+-----+-------+------+----+----+
+    |         |  AXES   | COMP | CP  |  X  |   Y   |   Z  | CD |    |
+    +---------+---------+------+-----+-----+-------+------+----+----+
+    | MONPNT1 | WING155 |    Wing Integrated Load to Butline 155    |
+    +---------+---------+------+-----+-----+-------+------+----+----+
+    |         |    34   | WING |     | 0.0 | 155.0 | 15.0 |    |    |
+    +---------+---------+------+-----+-----+-------+------+----+----+
+    """
+    type = 'MONDSP1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        name = 'WING'
+        label = 'Wing Integrated Load to Butline'
+        axes = '6'
+        aecomp_name = 'FLAP'
+        xyz = [0., 1., 2.]
+        return MONDSP1(name, label, axes, aecomp_name, xyz, cp=0, cd=None, ind_dof='123', comment='')
+
+    def __init__(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None, ind_dof='123', comment=''):
+        """
+        Creates a MONDSP1 card
+
+        Parameters
+        ----------
+        name : str
+            Character string of up to 8 characters identifying the
+            monitor point
+        label : str
+            A string comprising no more than 56 characters
+            that identifies and labels the monitor point.
+        axes : str
+            components {1,2,3,4,5,6}
+        aecomp_name : str
+            name of the AECOMP/AECOMPL entry
+        xyz : List[float, float, float]; default=None
+            The coordinates in the CP coordinate system about which the
+            loads are to be monitored.
+            None : [0., 0., 0.]
+        cp : int, CORDx; default=0
+           coordinate system of XYZ
+        cd : int; default=None -> cp
+            the coordinate system for load outputs
+        ind_dof : str; default='123'
+            the dofs to map
+        comment : str; default=''
+            a comment for the card
+
+        Notes
+        -----
+        MSC specific card
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        if cd is None:
+            cd = cp
+        xyz = np.asarray(xyz)
+
+        self.name = name
+        self.label = label
+        self.axes = axes
+        self.comp = aecomp_name
+        self.cp = cp
+        self.xyz = xyz
+        self.cd = cd
+        self.ind_dof = ind_dof
+        assert len(xyz) == 3, xyz
+        self.cp_ref = None
+        self.cd_ref = None
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        name = string(card, 1, 'name')
+
+        label_fields = [labeli for labeli in card[2:8] if labeli is not None]
+        label = ''.join(label_fields).strip()
+        assert len(label) <= 56, label
+
+        axes = parse_components(card, 9, 'axes')
+        comp = string(card, 10, 'comp')
+        cp = integer_or_blank(card, 11, 'cp', 0)
+        xyz = [
+            double_or_blank(card, 12, 'x', default=0.0),
+            double_or_blank(card, 13, 'y', default=0.0),
+            double_or_blank(card, 14, 'z', default=0.0),
+        ]
+        cd = integer_or_blank(card, 15, 'cd', cp)
+        ind_dof = components_or_blank(card, 16, 'ind_dof', '123')
+        return MONDSP1(name, label, axes, comp, xyz, cp=cp, cd=cd, ind_dof=ind_dof, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross links the card so referenced cards can be extracted directly
+
+        Parameters
+        ----------
+        model : BDF()
+            the BDF object
+
+        """
+        msg = ', which is required by MONDSP1 name=%s' % self.name
+        self.cp_ref = model.Coord(self.cp, msg=msg)
+        self.cd_ref = model.Coord(self.cd, msg=msg)
+
+    def safe_cross_reference(self, model, xref_errors):
+        msg = ', which is required by MONDSP1 name=%s' % self.name
+        self.cp_ref = model.safe_coord(self.cp, self.name, xref_errors, msg=msg)
+        self.cd_ref = model.safe_coord(self.cd, self.name, xref_errors, msg=msg)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.cp = self.Cp()
+        self.cd = self.Cd()
+        self.cp_ref = None
+        self.cd_ref = None
+
+    def Cp(self):
+        if self.cp_ref is not None:
+            return self.cp_ref.cid
+        return self.cp
+
+    def Cd(self):
+        if self.cd_ref is not None:
+            return self.cd_ref.cid
+        return self.cd
+
+    def raw_fields(self):
+        list_fields = [
+            'MONDSP1', self.name, self.label.strip(), self.axes, self.comp,
+            self.Cp(),] + list(self.xyz) + [self.Cd(), self.ind_dof]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        cp = self.Cp()
+        x, y, z = self.xyz
+        cd = self.Cd()
+
+        # Default = the coordinate system specified by the CP field
+        if cd == cp:
+            cd = ''
+        msg = 'MONDSP1 %-8s%s\n' % (self.name, self.label)
+        msg += '        %-8s%-8s%-8s%-8s%-8s%-8s%-8s%-8s\n' % (
+            self.axes, self.comp, cp,
+            print_float_8(x), print_float_8(y), print_float_8(z),
+            cd, self.ind_dof)
+        #card = self.repr_fields()
+        return self.comment + msg
 
     def __repr__(self):
         return self.write_card()

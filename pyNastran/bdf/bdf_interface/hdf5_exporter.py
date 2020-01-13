@@ -63,6 +63,7 @@ dict_int_obj_attrs = [
     # contact
     'bcrparas', 'bctadds',
     'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs',
+    'bfric',
 
     # other
     'ao_element_flags', 'bconp', 'cMethods',
@@ -108,7 +109,7 @@ dict_int_obj_attrs = [
 scalar_obj_keys = [
     # required----
     'aero', 'aeros', 'axic', 'axif', 'cyax', 'baror', 'beamor',
-    'acmodl',
+    'acmodl', 'modtrak',
     'doptprm',
     'dtable', 'grdset', 'radset', 'seqgp',
     'case_control_deck',

@@ -81,7 +81,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
         'convection_properties',
 
         # contact
-        'bsurf', 'bsurfs', 'blseg',
+        'bsurf', 'bsurfs', 'blseg', 'bfric',
         'bconp', 'bcrparas', 'bctadds', 'bctparas', 'bctsets',
 
         # sets
@@ -106,7 +106,7 @@ def get_bdf_stats(model: BDF, return_type: str='string',
     ]
     scalar_attrs = [
         'aero', 'aeros', 'grdset', # handled below
-        'axic', 'axif', 'cyax',
+        'axic', 'axif', 'cyax', 'modtrak',
 
         # not handled
         'acmodl',

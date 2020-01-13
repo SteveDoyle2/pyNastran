@@ -34,7 +34,7 @@ if TYPE_CHECKING:  # pragma: no cover
         CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
         CTRIA3, CTRIA6, CTRIAR,
         CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
-        CPLSTS3, #CPLSTS4, CPLSTS6, CPLSTS8,
+        CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
         SNORM,
     )
     from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
@@ -78,7 +78,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.material_deps import (
         MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
-    from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
+    from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
     from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
 
     from pyNastran.bdf.cards.aero.aero import (
@@ -128,7 +128,8 @@ if TYPE_CHECKING:  # pragma: no cover
                                                 TABRND1, TABRNDG,
                                                 DTABLE)
     from pyNastran.bdf.cards.contact import (
-        BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
+        BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG,
+        BFRIC)
     from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 class AddMethods(BDFAttributes):
@@ -580,6 +581,12 @@ class AddMethods(BDFAttributes):
         key = blseg.line_id
         self.blseg[key] = blseg
         self._type_to_id_map[blseg.type].append(key)
+
+    def _add_bfric_object(self, bfric: BFRIC) -> None:
+        """adds an BFRIC object"""
+        key = bfric.friction_id
+        self.bfric[key] = bfric
+        self._type_to_id_map[bfric.type].append(key)
 
     def _add_bsurf_object(self, card: BSURF, allow_overwrites: bool=False) -> None:
         """adds an BSURF object"""
@@ -1084,6 +1091,12 @@ class AddMethods(BDFAttributes):
         assert key >= 0
         self.cyjoin[key] = cyjoin
         self._type_to_id_map[cyjoin.type].append(key)
+
+    def _add_modtrak_object(self, modtrak: MODTRAK) -> None:
+        """adds an MODTRAK object"""
+        # only one CYAX card allowed
+        assert self.modtrak is None, '\nmodtrak=\n%s old=\n%s' % (modtrak, self.modtrak)
+        self.modtrak = modtrak
 
     def _add_aefact_object(self, aefact: AEFACT, allow_overwrites: bool=False) -> None:
         """adds an AEFACT object"""

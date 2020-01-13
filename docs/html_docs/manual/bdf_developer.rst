@@ -289,8 +289,8 @@ Cross Referencing is performed by looping over the card objects and calling the
 ``card.cross_reference()`` method.  This will setup all cross-referencing and
 a full list of the status of various cards is listed in ``bdf_crossReferencing.txt``.
 
-:mod:`bdf_write_mesh.py`: Writing the BDF
------------------------------------------
+:mod:`write_mesh.py`: Writing the BDF
+-------------------------------------
 
 The BDF is written by looping through all the objects and calling the
 ``card.write_bdf(size=8/16, is_double=True/False)`` method.

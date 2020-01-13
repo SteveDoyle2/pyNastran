@@ -72,18 +72,30 @@ class TestContact(unittest.TestCase):
         save_load_deck(model)
 
     def test_contact_3(self):
+        """
+        tests:
+         - BLSEG
+         - BCONP -> BFRIC
+        """
         model = BDF(debug=False, log=None, mode='msc')
-        line_id = 1
         nodes = [2, 3]
         contact_id = 4
         master = 5
         slave = 6
         sfac = 1.2
-        fric_id = 7
+        friction_id = 7
         ptype = 8
         cid = 9
-        blseg = model.add_blseg(line_id, nodes, comment='blseg')
-        bconp = model.add_bconp(contact_id, slave, master, sfac, fric_id, ptype, cid, comment='bconp')
+
+        line_id = master
+        model.add_blseg(line_id, nodes, comment='blseg_master')
+
+        line_id = slave
+        blseg = model.add_blseg(line_id, nodes, comment='blseg_slave')
+        bconp = model.add_bconp(contact_id, slave, master, sfac, friction_id, ptype, cid,
+                                comment='bconp')
+        mu1 = 0.2
+        bfric = model.add_bfric(friction_id, mu1, fstiff=None, comment='bfric')
         model.add_grid(2, [0., 0., 0.])
         model.add_grid(3, [0., 0., 0.])
         origin = [0., 0., 0.]

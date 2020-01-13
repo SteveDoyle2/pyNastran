@@ -518,7 +518,7 @@ class WriteMesh(BDFAttributes):
         """Writes the contact cards sorted by ID"""
         is_contact = (self.bcrparas or self.bctadds or self.bctparas
                       or self.bctsets or self.bsurf or self.bsurfs
-                      or self.bconp or self.blseg)
+                      or self.bconp or self.blseg or self.bfric)
         if is_contact:
             bdf_file.write('$CONTACT\n')
             for (unused_id, bcrpara) in sorted(self.bcrparas.items()):
@@ -538,6 +538,8 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(bconp.write_card(size, is_double))
             for (unused_id, blseg) in sorted(self.blseg.items()):
                 bdf_file.write(blseg.write_card(size, is_double))
+            for (unused_id, bfric) in sorted(self.bfric.items()):
+                bdf_file.write(bfric.write_card(size, is_double))
 
     def _write_coords(self, bdf_file: Any, size: int=8, is_double: bool=False,
                       is_long_ids: Optional[bool]=None) -> None:
@@ -842,7 +844,7 @@ class WriteMesh(BDFAttributes):
                            self.dresps or
                            self.dvprels or self.dvmrels or self.dvcrels or self.doptprm or
                            self.dlinks or self.dequations or self.dtable is not None or
-                           self.dvgrids or self.dscreen or self.topvar)
+                           self.dvgrids or self.dscreen or self.topvar or self.modtrak)
         if is_optimization:
             bdf_file.write('$OPTIMIZATION\n')
             for (unused_id, dconadd) in sorted(self.dconadds.items()):
@@ -880,6 +882,8 @@ class WriteMesh(BDFAttributes):
                 bdf_file.write(self.dtable.write_card(size, is_double))
             if self.doptprm is not None:
                 bdf_file.write(self.doptprm.write_card(size, is_double))
+            if self.modtrak is not None:
+                bdf_file.write(self.modtrak.write_card(size, is_double))
 
     def _write_parametric(self, bdf_file: Any, size: int=8, is_double: bool=False,
                           is_long_ids: Optional[bool]=None) -> None:

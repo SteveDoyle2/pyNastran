@@ -9,6 +9,7 @@ Defines the following contact cards:
  - BCTSET
  - BSURF
  - BSURFS
+ - BFRIC
 
 """
 from __future__ import annotations
@@ -17,12 +18,71 @@ from typing import TYPE_CHECKING
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, _node_ids
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_string_or_blank, double_or_blank,
-    integer_double_or_blank, string, string_or_blank)
+    integer_double_or_blank, string, string_or_blank, double)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
+
+class BFRIC(BaseCard):
+    """
+    Slideline Contact Friction
+    Defines frictional properties between two bodies in contact.
+
+    +-------+------+-------+-------+-------+
+    |   1   |   2  |   3   |   4   |   5   |
+    +=======+======+=======+=======+=======+
+    | BFRIC | FID  | FSTIF |       |  MU1  |
+    +-------+------+-------+-------+-------+
+
+    """
+    type = 'BFRIC'
+
+    @classmethod
+    def _init_from_empty(cls):
+        friction_id = 1
+        mu1 = 0.2
+        return BFRIC(friction_id, mu1)
+
+    def __init__(self, friction_id: int, mu1: float, fstiff=None, comment=''):
+        """
+        Creates a BFRIC card, which defines a frictional contact.
+
+        Parameters
+        ----------
+        friction_id : int
+            Friction identification number.
+        mu1 : float
+            Coefficient of static friction.
+        fstiff : float; default=None
+            Frictional stiffness in stick. See Remarks 2 and 3
+            Default=automatically selected by the program.
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.friction_id = friction_id
+        self.fstiff = fstiff
+        self.mu1 = mu1
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        friction_id = integer(card, 1, 'friction_id')
+        fstiff = double_or_blank(card, 2, 'fstiff')
+        #
+        mu1 = double(card, 4, 'mu1')
+        return BFRIC(friction_id, mu1, fstiff=fstiff, comment='')
+
+    def raw_fields(self):
+        list_fields = [
+            'BFRIC', self.friction_id, self.fstiff, None, self.mu1]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        return self.comment + print_card_8(card)
 
 class BLSEG(BaseCard):
     """
@@ -124,12 +184,12 @@ class BCONP(BaseCard):
         slave = 2
         master = 3
         sfac = 4
-        fric_id = 5
+        friction_id = 5
         ptype = 'cat'
         cid = 0
-        return BCONP(contact_id, slave, master, sfac, fric_id, ptype, cid, comment='')
+        return BCONP(contact_id, slave, master, sfac, friction_id, ptype, cid, comment='')
 
-    def __init__(self, contact_id, slave, master, sfac, fric_id, ptype, cid, comment=''):
+    def __init__(self, contact_id, slave, master, sfac, friction_id, ptype, cid, comment=''):
         if comment:
             self.comment = comment
 
@@ -137,10 +197,13 @@ class BCONP(BaseCard):
         self.slave = slave
         self.master = master
         self.sfac = sfac
-        self.fric_id = fric_id
+        self.friction_id = friction_id
         self.ptype = ptype
         self.cid = cid
         self.cid_ref = None
+        self.friction_id_ref = None
+        self.slave_ref = None
+        self.master_ref = None
 
     @classmethod
     def add_card(cls, card, comment=''):
@@ -159,34 +222,59 @@ class BCONP(BaseCard):
         slave = integer(card, 2, 'slave')
         master = integer(card, 3, 'master')
         sfac = double_or_blank(card, 5, 'sfac', 1.0)
-        fric_id = integer_or_blank(card, 6, 'fric_id')
+        friction_id = integer_or_blank(card, 6, 'fric_id')
         ptype = integer_or_blank(card, 7, 'ptype', 1)
         cid = integer_or_blank(card, 8, 'cid', 0)
-        return BCONP(contact_id, slave, master, sfac, fric_id, ptype, cid, comment=comment)
+        return BCONP(contact_id, slave, master, sfac, friction_id, ptype, cid,
+                     comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         msg = f', which is required by BCONP line_id={self.contact_id}'
         #self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.cid_ref = model.Coord(self.cid, msg=msg)
+        if self.friction_id is not None:
+            self.friction_id_ref = model.bfric[self.friction_id]
+        self.slave_ref = model.blseg[self.slave]
+        self.master_ref = model.blseg[self.master]
 
     def uncross_reference(self) -> None:
         self.cid = self.Cid()
+        self.friction_id = self.FrictionId()
         self.cid_ref = None
+        self.friction_id_ref = None
+        self.slave_ref = None
+        self.master_ref = None
 
-    def Cid(self):
+    def Cid(self) -> int:
         if self.cid_ref is not None:
             return self.cid_ref.cid
         return self.cid
 
+    def FrictionId(self) -> int:
+        if self.friction_id_ref is not None:
+            return self.friction_id_ref.friction_id
+        return self.friction_id
+
+    def Slave(self) -> int:
+        if self.slave_ref is not None:
+            return self.slave_ref.line_id
+        return self.slave
+
+    def Master(self) -> int:
+        if self.master_ref is not None:
+            return self.master_ref.line_id
+        return self.master
+
     def raw_fields(self):
         list_fields = [
-            'BCONP', self.contact_id, self.slave, self.master, None, self.sfac,
-            self.fric_id, self.ptype, self.Cid()]
+            'BCONP', self.contact_id, self.Slave(), self.Master(), None, self.sfac,
+            self.FrictionId(), self.ptype, self.Cid()]
         return list_fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         return self.comment + print_card_8(card)
+
 
 class BSURF(BaseCard):
     """
@@ -262,35 +350,6 @@ class BSURF(BaseCard):
     def raw_fields(self):
         fields = ['BSURF', self.sid]
         return fields + list(self.eids)
-
-        #fields = ['BSURF', self.sid, None, None, None, None, None, None, None]
-        ## is this right???
-        #packs = collapse_thru_by(self.eids, get_packs=True)
-
-        #pack = packs[0]
-        #if len(pack) == 3:
-            #minv, maxv, dv = pack
-            #if dv == 1:
-                #fields[2:5] = [minv, 'THRU', maxv]
-            #else:
-                #fields[2:7] = [minv, 'THRU', maxv, 'BY', dv]
-        #else:
-            #fields[3:3+len(pack)] = pack
-
-        #for pack in packs[1:]:
-            ##fields += pack + [None, None, None]
-            #if len(pack) == 3:
-                #minv, maxv, dv = pack
-                #if dv == 1:
-                    #fields += [minv, 'THRU', maxv, None, None, None, None]
-                #else:
-                    #fields += [minv, 'THRU', maxv, 'BY', dv, None, None]
-            #else:
-                #fields += pack + [None] * (8 - len(pack))
-        ##for sid, tid, fric, mind, maxd in zip(self.sids, self.tids, self.frictions,
-        ##                                      self.min_distances, self.max_distances):
-        ##    fields += [sid, tid, fric, mind, maxd, None, None]
-        #return fields
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()

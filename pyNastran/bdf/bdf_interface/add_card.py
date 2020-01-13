@@ -38,7 +38,7 @@ from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
     CTRIA3, CTRIA6, CTRIAR,
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
-    CPLSTS3, #CPLSTS4, CPLSTS6, CPLSTS8,
+    CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
     SNORM,
 )
 from pyNastran.bdf.cards.elements.acoustic import (
@@ -84,14 +84,14 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
 from pyNastran.bdf.cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
-from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
+from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
 
 from pyNastran.bdf.cards.aero.aero import (
     AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    MONPNT1, MONPNT2, MONPNT3,
+    MONPNT1, MONPNT2, MONPNT3, MONDSP1,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
@@ -134,7 +134,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABRND1, TABRNDG,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import (
-    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
+    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG, BFRIC)
 from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.utils.numpy_utils import integer_string_types
@@ -159,7 +159,7 @@ CARD_MAP = {
 
     'BCONP' : BCONP,
     'BLSEG' : BLSEG,
-    #'BFRIC' : Crash, None),
+    'BFRIC' : BFRIC,
 
     #'BGADD', 'BGSET', 'BOLT', 'BOLTFOR'
     #'BGADD' : Crash, None),
@@ -296,9 +296,9 @@ CARD_MAP = {
     'CPLSTN6' : CPLSTN6,
     'CPLSTN8' : CPLSTN8,
     'CPLSTS3' : CPLSTS3,
-    #'CPLSTS4' : CPLSTS4,
-    #'CPLSTS6' : CPLSTS6,
-    #'CPLSTS8' : CPLSTS8,
+    'CPLSTS4' : CPLSTS4,
+    'CPLSTS6' : CPLSTS6,
+    'CPLSTS8' : CPLSTS8,
     'PPLANE' : PPLANE,
 
     'CSHEAR' : CSHEAR,
@@ -557,6 +557,7 @@ CARD_MAP = {
     'MONPNT1' : MONPNT1,
     'MONPNT2' : MONPNT2,
     'MONPNT3' : MONPNT3,
+    'MONDSP1' : MONDSP1,
 
     'NLPARM' : NLPARM,
     'NLPCI' : NLPCI,
@@ -613,6 +614,9 @@ CARD_MAP = {
     'EIGRL' : EIGRL,
     'EIGC' : EIGC,
     'EIGP' : EIGP,
+
+    # modtrak
+    'MODTRAK' : MODTRAK,
 
     'DMI' : DMI,
     'DMIK' : DMIK,
@@ -2915,6 +2919,24 @@ class AddCards(AddMethods):
         self._add_element_object(elem)
         return elem
 
+    def add_cplsts4(self, eid, pid, nids, theta=0.0, comment='') -> CPLSTS4:
+        """Creates a CPLSTS4 card"""
+        elem = CPLSTS4(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_cplsts6(self, eid, pid, nids, theta=0.0, comment='') -> CPLSTS6:
+        """Creates a CPLSTS6 card"""
+        elem = CPLSTS6(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
+    def add_cplsts8(self, eid, pid, nids, theta=0.0, comment='') -> CPLSTS8:
+        """Creates a CPLSTS8 card"""
+        elem = CPLSTS8(eid, pid, nids, theta=theta, comment=comment)
+        self._add_element_object(elem)
+        return elem
+
     def add_ctetra(self, eid, pid, nids, comment='') -> Union[CTETRA4, CTETRA10]:
         """
         Creates a CTETRA4/CTETRA10
@@ -3096,12 +3118,16 @@ class AddCards(AddMethods):
     def add_genel_stiffness(self, eid, ul, ud, k, s=None) -> GENEL:
         """creates a GENEL card using the stiffness (K) approach"""
         assert k is not None
-        return GENEL(eid, ul, ud, k, None, s)
+        genel = GENEL(eid, ul, ud, k, None, s)
+        self._add_element_object(genel)
+        return genel
 
     def add_genel_flexibility(self, eid, ul, ud, z, s=None) -> GENEL:
         """creates a GENEL card using the flexiblity (Z) approach"""
         assert z is not None
-        return GENEL(eid, ul, ud, None, z, s)
+        genel = GENEL(eid, ul, ud, None, z, s)
+        self._add_element_object(genel)
+        return genel
 
     def add_axic(self, nharmonics, comment='') -> AXIC:
         """Creates a AXIC card"""
@@ -3979,6 +4005,13 @@ class AddCards(AddMethods):
         """Creates a LOADCYN card"""
         load = LOADCYN(sid, scale, segment_id, scales, load_ids,
                        segment_type=segment_type, comment=comment)
+        self._add_load_object(load)
+        return load
+
+    def add_loadcyh(self, sid, scale, hid, htype, scales, load_ids,
+                    comment='') -> LOADCYH:
+        """Creates a LOADCYH card"""
+        load = LOADCYH(sid, scale, hid, htype, scales, load_ids, comment='')
         self._add_load_object(load)
         return load
 
@@ -6937,6 +6970,51 @@ class AddCards(AddMethods):
         self._add_dscreen_object(dscreen)
         return dscreen
 
+    def add_modtrak(self) -> MODTRAK:
+        modtrak = MODTRAK()
+        self._add_modtrak_object(modtrak)
+        return modtrak
+
+    def add_mondsp1(self, name, label, axes, aecomp_name, xyz,
+                          cp=0, cd=None, ind_dof='123', comment='') -> MONDSP1:
+        """
+        Creates a MONDSP1 card
+
+        Parameters
+        ----------
+        name : str
+            Character string of up to 8 characters identifying the
+            monitor point
+        label : str
+            A string comprising no more than 56 characters
+            that identifies and labels the monitor point.
+        axes : str
+            components {1,2,3,4,5,6}
+        aecomp_name : str
+            name of the AECOMP/AECOMPL entry
+        xyz : List[float, float, float]; default=None
+            The coordinates in the CP coordinate system about which the
+            loads are to be monitored.
+            None : [0., 0., 0.]
+        cp : int, CORDx; default=0
+           coordinate system of XYZ
+        cd : int; default=None -> cp
+            the coordinate system for load outputs
+        ind_dof : str; default='123'
+            the dofs to map
+        comment : str; default=''
+            a comment for the card
+
+        Notes
+        -----
+        MSC specific card
+
+        """
+        mondsp1 = MONDSP1(name, label, axes, aecomp_name, xyz,
+                          cp=cp, cd=cd, ind_dof=ind_dof, comment=comment)
+        self._add_monpnt_object(mondsp1)
+        return mondsp1
+
     def add_monpnt1(self, name, label, axes, aecomp_name, xyz, cp=0, cd=None,
                     comment='') -> MONPNT1:
         """
@@ -7036,6 +7114,11 @@ class AddCards(AddMethods):
                       cid, comment=comment)
         self._add_bconp_object(bconp)
         return bconp
+
+    def add_bfric(self, friction_id, mu1, fstiff=None, comment=''):
+        bfric = BFRIC(friction_id, mu1, fstiff=fstiff, comment=comment)
+        self._add_bfric_object(bfric)
+        return bfric
 
     def add_bcrpara(self, crid, surf='TOP', offset=None, Type='FLEX',
                     grid_point=0, comment='') -> BCRPARA:
@@ -7576,6 +7659,11 @@ class AddCards(AddMethods):
         self._add_thermal_bc_object(boundary_condition, boundary_condition.eid)
         return boundary_condition
 
+    def tempbc(self, sid, Type, nodes, temps, comment='') -> TEMPBC:
+        tempbc = TEMPBC(sid, Type, nodes, temps, comment=comment)
+        self._add_thermal_bc_object(tempbc, tempbc.eid)
+        return tempbc
+
     def add_radm(self, radmid, absorb, emissivity, comment='') -> RADM:
         """Creates a RADM card"""
         boundary_condition = RADM(radmid, absorb, emissivity, comment=comment)
@@ -7972,7 +8060,7 @@ class AddCards(AddMethods):
     # parametric
     def add_pset(self, idi, poly1, poly2, poly3, cid, typei, typeids, comment='') -> PSET:
         """PSET ID POLY1 POLY2 POLY3 CID SETTYP ID"""
-        pset = PSET(idi, poly1, poly2, poly3, cid, typei, typeids, comment='')
+        pset = PSET(idi, poly1, poly2, poly3, cid, typei, typeids, comment=comment)
         self.pset[idi] = pset
         return pset
 
@@ -8003,7 +8091,7 @@ class AddCards(AddMethods):
         self._add_feface(face, allow_overwrites=False)
         return face
     #----------------------------------------------------------------------------------
-    # cylic
+    # cyclic
     def add_cyax(self, nids, comment='') -> CYAX:
         cyax = CYAX(nids, comment=comment)
         self._add_cyax_object(cyax)
@@ -8013,3 +8101,98 @@ class AddCards(AddMethods):
         cyjoin = CYJOIN(side, coord, nids, comment=comment)
         self._add_cyjoin_object(cyjoin)
         return cyjoin
+
+    #def add_cysym(self, side, coord, nids, comment='') -> CYSYM:
+        #cysym = CYSYM(side, coord, nids, comment=comment)
+        #self._add_cysym_object(cysym)
+        #return cysym
+    # --------------------------------------------------------------------------
+    # acoustic
+    def add_acmodl(self, infor, fset, sset,
+                   normal=0.5, olvpang=60., search_unit='REL', intol=0.2,
+                   area_op=0, ctype='STRONG', method='BW',
+                   sk_neps=0.5, dsk_neps=0.75, all_set='NO', inter='DIFF',
+                   nastran_version='nx', comment='') -> ACMODL:
+        acmodl = ACMODL(infor, fset, sset,
+                        normal=normal, olvpang=olvpang, search_unit=search_unit,
+                        intol=intol, area_op=area_op, ctype=ctype, method=method,
+                        sk_neps=sk_neps, dsk_neps=dsk_neps, all_set=all_set,
+                        inter=inter, nastran_version=nastran_version, comment=comment)
+        self._add_acmodl_object(acmodl)
+        return acmodl
+
+    def add_chacab(self, eid, pid, nodes, comment='') -> CHACAB:
+        chacab = CHACAB(eid, pid, nodes, comment=comment)
+        self._add_element_object(chacab)
+        return chacab
+
+    def add_caabsf(self, eid, pid, nodes, comment='') -> CHACAB:
+        caabsf = CAABSF(eid, pid, nodes, comment=comment)
+        self._add_element_object(caabsf)
+        return caabsf
+
+    def add_chacbr(self, eid, pid, nodes, comment='') -> CHACBR:
+        chacbr = CHACBR(eid, pid, nodes, comment=comment)
+        self._add_element_object(chacbr)
+        return chacbr
+
+    def add_paabsf(self, pid, tzreid=None, tzimid=None,
+                   s=1.0, a=1.0, b=0.0, k=0.0, rhoc=1.0, comment=''):
+        paabsf = PAABSF(pid, tzreid=tzreid, tzimid=tzimid,
+                        s=s, a=a, b=b, k=k, rhoc=rhoc, comment=comment)
+        self._add_acoustic_property_object(paabsf)
+        return paabsf
+
+    def add_pacbar(self, pid, mback, mseptm, freson, kreson, comment='') -> PACBAR:
+        """
+        Creates a PACBAR card
+
+        Parameters
+        ----------
+        pid : int
+            Property identification number. (Integer > 0)
+        mback : float
+            Mass per unit area of the backing material
+        mseptm : float
+            Mass per unit area of the septum material
+        freson : float; default=None
+            Resonant frequency of the sandwich construction in hertz.
+        kreson : float; default=None
+            Resonant stiffness of the sandwich construction.
+
+        """
+        pacbar = PACBAR(pid, mback, mseptm, freson, kreson, comment=comment)
+        self._add_acoustic_property_object(pacbar)
+        return pacbar
+
+    def add_pacabs(self, pid, cutfr, b, k, m,
+                   synth=True, tid_resistance=None, tid_reactance=None,
+                   tid_weight=None, comment='') -> PACBAR:
+        """
+        Creates a PACABS card
+
+        Parameters
+        ----------
+        pid : int
+            Property identification number.
+        synth : bool; default=True
+            Request the calculation of B, K, and M from the tables TIDi below
+        tid_resistance : int; default=None
+            Identification of the TABLEDi entry that defines the resistance.
+        tid_reactance : int; default=None
+            Identification of the TABLEDi entry that defines the reactance.
+        tid_weight : int; default=None
+            Identification of the TABLEDi entry that defines the weighting function.
+        cutfr : float
+            Cutoff frequency for tables referenced above. (Real > 0.0)
+        B, K, M : float
+            Equivalent damping, stiffness and mass values per unit area. (Real > 0.0)
+
+        ..note:: tables are defined as a function of frequency in cycles/time
+        """
+        pacabs = PACABS(pid, cutfr, b, k, m,
+                        synth=synth, tid_resistance=tid_resistance,
+                        tid_reactance=tid_reactance, tid_weight=tid_weight,
+                        comment=comment)
+        self._add_acoustic_property_object(pacabs)
+        return pacabs

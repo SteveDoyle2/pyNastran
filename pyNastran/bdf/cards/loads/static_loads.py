@@ -1274,6 +1274,9 @@ class Load1(BaseCard):
             return self.node_ref.nid
         return self.node
 
+    def to_global(self):
+        return self.scaled_vector
+
     def raw_fields(self):
         list_fields = [self.type, self.sid, self.node_id, self.mag, self.G1(), self.G2()]
         return list_fields

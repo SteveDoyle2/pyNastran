@@ -788,7 +788,7 @@ class CTRIA3(TriShell):
                '                %8s%8s%8s%8s\n' % tuple(data))
         return self.comment + msg.rstrip() + '\n'
 
-class CPLSTN3(TriShell):
+class CPLSTx3(TriShell):
     """
     +---------+-------+-------+----+----+----+-------+
     |    1    |   2   |   3   |  4 |  5 |  6 |   7   |
@@ -827,6 +827,7 @@ class CPLSTN3(TriShell):
     def export_to_hdf5(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""
         #comments = []
+        print('export_to_hdf5', cls.type, h5_file)
         pids = []
         nodes = []
         thetas = []
@@ -856,7 +857,7 @@ class CPLSTN3(TriShell):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a CPLSTN3 card from ``BDF.add_card(...)``
+        Adds a CPLSTx3 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -881,7 +882,7 @@ class CPLSTN3(TriShell):
             assert len(card) <= 14, 'len(CPLSTN3 card) = %i\ncard=%s' % (len(card), card)
         else:
             theta = 0.0
-        return CPLSTN3(eid, pid, nids, theta, comment=comment)
+        return cls(eid, pid, nids, theta, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -893,7 +894,7 @@ class CPLSTN3(TriShell):
             the BDF object
 
         """
-        msg = ', which is required by CPLSTN3 eid=%s' % self.eid
+        msg = f', which is required by {self.type} eid={self.eid}'
         self.nodes_ref = model.Nodes(self.nodes, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
@@ -907,7 +908,7 @@ class CPLSTN3(TriShell):
             the BDF object
 
         """
-        msg = ', which is required by CPLSTN3 eid=%s' % self.eid
+        msg = f', which is required by {self.type} eid={self.eid}'
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
@@ -966,15 +967,19 @@ class CPLSTN3(TriShell):
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
 
     def raw_fields(self):
-        list_fields = (['CPLSTN3', self.eid, self.Pid()] + self.node_ids +
+        list_fields = ([self.type, self.eid, self.Pid()] + self.node_ids +
                        [self.theta])
         return list_fields
 
     def repr_fields(self):
         theta = set_blank_if_default(self.theta, 0.0)
-        list_fields = (['CPLSTN3', self.eid, self.Pid()] + self.node_ids +
+        list_fields = ([self.type, self.eid, self.Pid()] + self.node_ids +
                        [theta])
         return list_fields
+
+
+class CPLSTN3(CPLSTx3):
+    type = 'CPLSTN3'
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
@@ -982,6 +987,14 @@ class CPLSTN3(TriShell):
         msg = ('CPLSTN3 %8i%8i%8i%8i%8i%8s\n' % tuple(data))
         return self.comment + msg
 
+class CPLSTS3(CPLSTx3):
+    type = 'CPLSTS3'
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        nodes = self.node_ids
+        data = [self.eid, self.Pid()] + nodes + [self.theta]
+        msg = ('CPLSTS3 %8i%8i%8i%8i%8i%8s\n' % tuple(data))
+        return self.comment + msg
 
 class CTRIA6(TriShell):
     """
@@ -2780,8 +2793,7 @@ class CQUAD4(QuadShell):
                     return self.comment + msg.rstrip('*\n ') + '\n'
             return self.comment + msg
 
-
-class CPLSTN4(QuadShell):
+class CPLSTx4(QuadShell):
     """
     +---------+-------+-------+----+----+----+----+-------+
     |    1    |   2   |   3   |  4 |  5 |  6 | 7  |   8   |
@@ -2790,7 +2802,6 @@ class CPLSTN4(QuadShell):
     +---------+-------+-------+----+----+----+----+-------+
 
     """
-    type = 'CPLSTN4'
     _field_map = {1: 'eid', 2:'pid', 7:'theta'}
 
     def _update_field_helper(self, n, value):
@@ -2821,6 +2832,7 @@ class CPLSTN4(QuadShell):
     def export_to_hdf5(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""
         #comments = []
+        print('export_to_hdf5', cls.type)
         pids = []
         nodes = []
         thetas = []
@@ -2842,7 +2854,7 @@ class CPLSTN4(QuadShell):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a CPLSTN4 card from ``BDF.add_card(...)``
+        Adds a CPLSTx4 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -2860,8 +2872,8 @@ class CPLSTN4(QuadShell):
                 integer(card, 6, 'n4'),]
 
         theta = double_or_blank(card, 7, 'theta', 0.0)
-        assert len(card) <= 8, 'len(CPLSTN4 card) = %i\ncard=%s' % (len(card), card)
-        return CPLSTN4(eid, pid, nids, theta, comment=comment)
+        assert len(card) <= 8, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
+        return cls(eid, pid, nids, theta, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -2873,7 +2885,7 @@ class CPLSTN4(QuadShell):
             the BDF object
 
         """
-        msg = ', which is required by CPLSTN4 eid=%s' % self.eid
+        msg = f', which is required by {self.type} eid={self.eid}'
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
@@ -2887,7 +2899,7 @@ class CPLSTN4(QuadShell):
             the BDF object
 
         """
-        msg = ', which is required by CPLSTN4 eid=%s' % self.eid
+        msg = f', which is required by {self.type} eid={self.eid}'
         self.nodes_ref = model.Nodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
@@ -2937,20 +2949,37 @@ class CPLSTN4(QuadShell):
             (n1, n2, n3, n4) = self.nodes_ref
             self.nodes_ref = [n1, n4, n3, n2]
 
+    def Mass(self) -> float:
+        return 0.
+
     @property
     def node_ids(self):
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=False)
 
     def raw_fields(self):
-        list_fields = (['CPLSTN4', self.eid, self.Pid()] + self.node_ids +
+        list_fields = ([self.type, self.eid, self.Pid()] + self.node_ids +
                        [self.theta])
         return list_fields
 
     def repr_fields(self):
         theta = set_blank_if_default(self.theta, 0.0)
-        list_fields = (['CPLSTN4', self.eid, self.Pid()] + self.node_ids +
+        list_fields = ([self.type, self.eid, self.Pid()] + self.node_ids +
                        [theta])
         return list_fields
+
+
+class CPLSTS4(CPLSTx4):
+    type = 'CPLSTS4'
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        nodes = self.node_ids
+        data = [self.eid, self.Pid()] + nodes + [print_float_8(self.theta)]
+        msg = ('CPLSTS4 %8i%8i%8i%8i%8i%8i%8s\n' % tuple(data))
+        return self.comment + msg
+
+
+class CPLSTN4(CPLSTx4):
+    type = 'CPLSTN4'
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         nodes = self.node_ids
@@ -2958,8 +2987,8 @@ class CPLSTN4(QuadShell):
         msg = ('CPLSTN4 %8i%8i%8i%8i%8i%8i%8s\n' % tuple(data))
         return self.comment + msg
 
-class CPLSTN6(TriShell):
-    type = 'CPLSTN6'
+
+class CPLSTx6(TriShell):
 
     def __init__(self, eid, pid, nids, theta=0., comment=''):
         TriShell.__init__(self)
@@ -2969,7 +2998,7 @@ class CPLSTN6(TriShell):
         self.pid = pid
         self.theta = theta
         self.nodes = self.prepare_node_ids(nids, allow_empty_nodes=True)
-        assert len(nids) == 6, 'error on CPLSTN6'
+        assert len(nids) == 6, f'error on {self.type}'
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, eids):
@@ -2993,7 +3022,7 @@ class CPLSTN6(TriShell):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a CPLSTN6 card from ``BDF.add_card(...)``
+        Adds a CPLSTx6 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -3018,10 +3047,10 @@ class CPLSTN6(TriShell):
         ]
         if len(card) > 9:
             theta = double_or_blank(card, 9, 'theta', 0.0)
-            assert len(card) <= 15, 'len(CPLSTN6 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 15, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
         else:
             theta = 0.0
-        return CPLSTN6(eid, pid, nids, theta=theta, comment=comment)
+        return cls(eid, pid, nids, theta=theta, comment=comment)
 
     def cross_reference(self, model: BDF) -> None:
         """
@@ -3033,7 +3062,7 @@ class CPLSTN6(TriShell):
             the BDF object
 
         """
-        msg = ', which is required by CPLSTN8 eid=%s' % self.eid
+        msg = f', which is required by {self.type} eid={self.eid}'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
@@ -3047,7 +3076,7 @@ class CPLSTN6(TriShell):
             the BDF object
 
         """
-        msg = ', which is required by CPLSTN8 eid=%s' % self.eid
+        msg = f', which is required by {self.type} eid={self.eid}'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
@@ -3058,27 +3087,34 @@ class CPLSTN6(TriShell):
         self.nodes_ref = None
         self.pid_ref = None
 
+    def Mass(self) -> float:
+        return 0.
+
     @property
     def node_ids(self):
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
-        list_fields = ['CPLSTN6', self.eid, self.Pid()] + self.node_ids + [
+        list_fields = [self.type, self.eid, self.Pid()] + self.node_ids + [
             self.theta]
         return list_fields
 
     def repr_fields(self):
         theta = set_blank_if_default(self.theta, 0.0)
-        list_fields = (['CPLSTN6', self.eid, self.Pid()] + self.node_ids + [
+        list_fields = ([self.type, self.eid, self.Pid()] + self.node_ids + [
             theta])
         return list_fields
-
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8: # to last node
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+class CPLSTS6(CPLSTx6):
+    type = 'CPLSTS6'
+class CPLSTN6(CPLSTx6):
+    type = 'CPLSTN6'
 
 @classmethod
 def export_to_hdf5(cls, h5_file, model, eids):
@@ -3271,8 +3307,7 @@ def export_to_hdf5(cls, h5_file, model, eids):
         return msg
 
 
-class CPLSTN8(QuadShell):
-    type = 'CPLSTN8'
+class CPLSTx8(QuadShell):
     def __init__(self, eid, pid, nids, theta=0., comment=''):
         QuadShell.__init__(self)
         if comment:
@@ -3307,7 +3342,7 @@ class CPLSTN8(QuadShell):
     @classmethod
     def add_card(cls, card, comment=''):
         """
-        Adds a CPLSTN8 card from ``BDF.add_card(...)``
+        Adds a CPLSTx8 card from ``BDF.add_card(...)``
 
         Parameters
         ----------
@@ -3329,15 +3364,15 @@ class CPLSTN8(QuadShell):
                 integer_or_blank(card, 10, 'n8', 0),]
         if len(card) > 11:
             theta = double_or_blank(card, 15, 'theta', 0.0)
-            assert len(card) <= 18, 'len(CPLSTN8 card) = %i\ncard=%s' % (len(card), card)
+            assert len(card) <= 18, 'len(%s card) = %i\ncard=%s' % (self.type, len(card), card)
         else:
             theta = 0.0
-        return CPLSTN8(eid, pid, nids, theta=theta, comment=comment)
+        return cls(eid, pid, nids, theta=theta, comment=comment)
 
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
         #"""
-        #Adds a CPLSTN8 card from the OP2
+        #Adds a CPLSTx8 card from the OP2
 
         #Parameters
         #----------
@@ -3368,7 +3403,7 @@ class CPLSTN8(QuadShell):
             the BDF object
 
         """
-        msg = ', which is required by CPLSTN8 eid=%s' % self.eid
+        msg = f', which is required by {self.type} eid={self.eid}'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.Pid(), msg=msg)
 
@@ -3382,7 +3417,7 @@ class CPLSTN8(QuadShell):
             the BDF object
 
         """
-        msg = ', which is required by CPLSTN8 eid=%s' % self.eid
+        msg = f', which is required by {self.type} eid={self.eid}'
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
 
@@ -3481,18 +3516,21 @@ class CPLSTN8(QuadShell):
         area = 0.5 * norm(cross(a, b))
         return area
 
+    def Mass(self) -> float:
+        return 0.
+
     @property
     def node_ids(self):
         return self._node_ids(nodes=self.nodes_ref, allow_empty_nodes=True)
 
     def raw_fields(self):
-        list_fields = ['CPLSTN8', self.eid, self.Pid()] + self.node_ids + [
+        list_fields = [self.type, self.eid, self.Pid()] + self.node_ids + [
             self.theta]
         return list_fields
 
     def repr_fields(self):
         theta = set_blank_if_default(self.theta, 0.0)
-        list_fields = (['CPLSTN8', self.eid, self.Pid()] + self.node_ids + [
+        list_fields = ([self.type, self.eid, self.Pid()] + self.node_ids + [
             theta])
         return list_fields
 
@@ -3501,6 +3539,13 @@ class CPLSTN8(QuadShell):
         if size == 8: # to last node
             return self.comment + print_card_8(card)
         return self.comment + print_card_16(card)
+
+class CPLSTS8(CPLSTx8):
+    type = 'CPLSTS8'
+
+class CPLSTN8(CPLSTx8):
+    type = 'CPLSTN8'
+
 
 
 class CQUADR(QuadShell):
@@ -3830,6 +3875,8 @@ class CPLSTS3(TriShell):
     def validate(self):
         assert len(set(self.nodes)) == 3, 'nodes=%s; n=%s\n%s' % (self.nodes, len(set(self.nodes)), str(self))
 
+    def Mass(self) -> float:
+        return 0.
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
         #eid = data[0]

@@ -60,6 +60,7 @@ from pyNastran.bdf.bdf import (BDF,
                                CQUAD4, CQUAD8, CQUAD, CQUADR, CSHEAR,
                                CTRIA3, CTRIA6, CTRIAR,
                                CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
+                               CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
                                CTRAX3, CTRIAX6, CTRIAX, #CTRAX6,
                                CQUADX4, CQUADX8, CQUADX,
                                CONM2)
@@ -1432,7 +1433,8 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 self.gui.geometry_actors[grid_name].Modified()
 
         #self.grid_mapper.SetResolveCoincidentTopologyToPolygonOffset()
-        build_map_centroidal_result(model, nid_map)
+        stop_on_failure = IS_TESTING
+        build_map_centroidal_result(model, nid_map, stop_on_failure=stop_on_failure)
 
         if not IS_TESTING:
             self.sidebar_nastran = ModelSidebar(self.gui, nastran_io=self)
@@ -2857,7 +2859,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
             taper_ratioi = np.nan
             min_edge_lengthi = np.nan
             normali = np.nan
-            if etype in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CPLSTN3']:
+            if etype in ['CTRIA3', 'CTRIAR', 'CTRAX3', 'CPLSTN3', 'CPLSTS3']:
                 nids = elem.nodes
                 pid = elem.pid
                 cell_type = cell_type_tri3 # 5
@@ -2874,7 +2876,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 nnodes = 3
                 dim = 2
 
-            elif etype in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CQUADX4']:
+            elif etype in ['CQUAD4', 'CQUADR', 'CPLSTN4', 'CPLSTS4', 'CQUADX4']:
                 nids = elem.nodes
                 pid = elem.pid
                 cell_type = cell_type_quad4 #9
@@ -3967,7 +3969,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
 
             pid = np.nan
 
-            if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3)):
+            if isinstance(element, (CTRIA3, CTRIAR, CTRAX3, CPLSTN3, CPLSTS3)):
                 if isinstance(element, (CTRIA3, CTRIAR)):
                     mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
@@ -3989,7 +3991,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(1, n2)
                 elem.GetPointIds().SetId(2, n3)
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
-            elif isinstance(element, (CTRIA6, CPLSTN6, CTRIAX)):
+            elif isinstance(element, (CTRIA6, CPLSTN6, CPLSTS6, CTRIAX)):
                 # the CTRIAX is a standard 6-noded element
                 if isinstance(element, CTRIA6):
                     mcid, theta = get_shell_material_coord(element)
@@ -4056,7 +4058,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 eid_to_nid_map[eid] = [node_ids[0], node_ids[2], node_ids[4]]
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CQUADX4)):
+            elif isinstance(element, (CQUAD4, CSHEAR, CQUADR, CPLSTN4, CPLSTS4, CQUADX4)):
                 if isinstance(element, (CQUAD4, CQUADR)):
                     mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
@@ -4089,7 +4091,7 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(3, n4)
                 grid.InsertNextCell(9, elem.GetPointIds())
 
-            elif isinstance(element, (CQUAD8, CPLSTN8, CQUADX8)):
+            elif isinstance(element, (CQUAD8, CPLSTN8, CPLSTS8, CQUADX8)):
                 if isinstance(element, CQUAD8):
                     mcid, theta = get_shell_material_coord(element)
                     material_coord[i] = mcid
@@ -4329,10 +4331,10 @@ class NastranIO(NastranGuiResults, NastranGeometryHelper):
                 elem.GetPointIds().SetId(4, nid_map[node_ids[4]])
                 grid.InsertNextCell(elem.GetCellType(), elem.GetPointIds())
 
-            elif etype in ['CBUSH', 'CBUSH1D', 'CFAST',
+            elif etype in {'CBUSH', 'CBUSH1D', 'CFAST',
                            'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                            'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
-                           'CVISC', 'CGAP']:
+                           'CVISC', 'CGAP'}:
 
                 # TODO: verify
                 # CBUSH, CBUSH1D, CFAST, CELAS1, CELAS3

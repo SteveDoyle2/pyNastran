@@ -66,7 +66,9 @@ from pyNastran.bdf.cards.elements.axisymmetric_shells import (
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
     CTRIA3, CTRIA6, CTRIAR,
-    CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8, SNORM)
+    CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
+    CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
+    SNORM)
 from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
 from pyNastran.bdf.cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
@@ -111,13 +113,13 @@ from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
 from pyNastran.bdf.cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
-from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL
+from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
 from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
 from pyNastran.bdf.cards.aero.aero import (
     AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
-    MONPNT1, MONPNT2, MONPNT3,
+    MONPNT1, MONPNT2, MONPNT3, MONDSP1,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
 from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
 from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
@@ -156,7 +158,7 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABRND1, TABRNDG,
                                             DTABLE)
 from pyNastran.bdf.cards.contact import (
-    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG)
+    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG, BFRIC)
 from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
@@ -309,13 +311,15 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CROD', 'CTUBE', 'CBEAM', 'CBEAM3', 'CONROD', 'CBEND', 'BEAMOR',
             'CTRIA3', 'CTRIA6', 'CTRIAR',
             'CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD',
-            'CPLSTN3', 'CPLSTN6', 'CPLSTN4', 'CPLSTN8',
-            #'CPLSTS3', 'CPLSTS6', 'CPLSTS4', 'CPLSTS8',
             'CTRAX3', 'CTRAX6', 'CTRIAX', 'CTRIAX6', 'CQUADX', 'CQUADX4', 'CQUADX8',
+            'SNORM',
+
+            'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8', # plate strain
+            'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8', # plate stress
+
             # acoustic
             'CHACAB', 'CAABSF', 'CHACBR',
             'PACABS', 'PAABSF', 'PACBAR', 'ACMODL',
-            'SNORM',
 
             'CTETRA', 'CPYRAM', 'CPENTA', 'CHEXA',
             'CIHEX1', 'CIHEX2',
@@ -430,7 +434,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', ## caeros
             'PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', ## paeros
 
-            'MONPNT1', 'MONPNT2', 'MONPNT3',  ## monitor_points
+            'MONPNT1', 'MONPNT2', 'MONPNT3', 'MONDSP1', ## monitor_points
             'SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5',  ## splines
             'SPLINE6', 'SPLINE7',
             'TRIM', 'TRIM2',  ## trims
@@ -540,6 +544,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #: cMethods
             'EIGC', 'EIGP',
 
+            # : modtrak
+            'MODTRAK',
+
             #: contact
             'BCTPARA',  ## bctpara
             'BCRPARA',  ## bcrpara
@@ -549,7 +556,8 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BSURFS',  ## bsurfs
             'BCONP', ## bconp
             'BLSEG', ## blseg
-            #'BFRIC',
+            'BFRIC', ## bfric
+
 
 
             'TEMPBC',
@@ -559,7 +567,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'TEMPRB',
             'CONVM',
             ## ???
-            #'ACMODL', 'CHACAB', 'PACABS', 'PANEL', 'SWLDPRM',
+            #'PANEL', 'SWLDPRM',
             #'CWELD', 'PWELD', 'PWSEAM', 'CWSEAM', 'CSEAM', 'PSEAM', 'DVSHAP', 'BNDGRID',
             #'CYSYM', 'CYJOIN', 'MODTRAK', 'DSCONS', 'DVAR', 'DVSET', 'DYNRED',
             #'BNDFIX', 'BNDFIX1',
@@ -1736,26 +1744,23 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'PACABS': (PACABS, self._add_acoustic_property_object),
             'PAABSF': (PAABSF, self._add_acoustic_property_object),
             'PACBAR': (PACBAR, self._add_acoustic_property_object),
-
-            #'ACMODL' : (Crash, None),
-            #'CHACAB' : (Crash, None),
-            #'PACABS' : (Crash, None),
             #'PANEL' : (Crash, None),
 
             'BCONP' : (BCONP, self._add_bconp_object),
             'BLSEG' : (BLSEG, self._add_blseg_object),
-            #'BFRIC' : (Crash, None),
+            'BFRIC' : (BFRIC, self._add_bfric_object),
+            'MODTRAK' : (MODTRAK, self._add_modtrak_object),
 
             #'BGADD', 'BGSET', 'BOLT', 'BOLTFOR'
-            #'BGADD' : (Crash, None),
-            #'BGSET' : (Crash, None),
-            #'BOLT' : (Crash, None),
-            #'BOLTFOR' : (Crash, None),
+            'BGADD' : (Crash, None),
+            'BGSET' : (Crash, None),
+            'BOLT' : (Crash, None),
+            'BOLTFOR' : (Crash, None),
 
             #'CBEAR', 'PBEAR', 'ROTORB',
-            #'CBEAR' : (Crash, None),
-            #'PBEAR' : (Crash, None),
-            #'ROTORB' : (Crash, None),
+            'CBEAR' : (Crash, None),
+            'PBEAR' : (Crash, None),
+            'ROTORB' : (Crash, None),
 
             #'SWLDPRM' : (Crash, None),
 
@@ -1770,8 +1775,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'BNDGRID' : (Crash, None),
 
             #'CYSYM' : (Crash, None),
-            #'CYJOIN' : (Crash, None),
-            #'MODTRAK' : (Crash, None),
             #'TEMPP1' : (Crash, None),
             #'TEMPRB' : (Crash, None),
             #'DSCONS' : (Crash, None),
@@ -1783,7 +1786,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #'AEFORCE' : (Crash, None),
             #'UXVEC' : (Crash, None),
-            #'GUST2' : (Crash, None),
+            'GUST2' : (Crash, None),
 
             #'RADBND' : (Crash, None),
 
@@ -1865,6 +1868,10 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'CPLSTN4' : (CPLSTN4, self._add_element_object),
             'CPLSTN6' : (CPLSTN6, self._add_element_object),
             'CPLSTN8' : (CPLSTN8, self._add_element_object),
+            'CPLSTS3' : (CPLSTS3, self._add_element_object),
+            'CPLSTS4' : (CPLSTS4, self._add_element_object),
+            'CPLSTS6' : (CPLSTS6, self._add_element_object),
+            'CPLSTS8' : (CPLSTS8, self._add_element_object),
             'PPLANE' : (PPLANE, self._add_property_object),
 
             'CSHEAR' : (CSHEAR, self._add_element_object),
@@ -2109,6 +2116,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'MONPNT1' : (MONPNT1, self._add_monpnt_object),
             'MONPNT2' : (MONPNT2, self._add_monpnt_object),
             'MONPNT3' : (MONPNT3, self._add_monpnt_object),
+            'MONDSP1' : (MONDSP1, self._add_monpnt_object),
 
             'NLPARM' : (NLPARM, self._add_nlparm_object),
             'NLPCI' : (NLPCI, self._add_nlpci_object),
@@ -2171,6 +2179,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'BCTPARA' : (BCTPARA, self._add_bctpara_object),
             'BSURF' : (BSURF, self._add_bsurf_object),
             'BSURFS' : (BSURFS, self._add_bsurfs_object),
+            # 'BGADD', 'BGSET', 'BOUTPUT', 'BOLT', 'BOLTFOR', 'BOLTFRC',
+            'BGADD': (Crash, None),
+            'BGSET': (Crash, None),
+            'BOUTPUT': (Crash, None),
+            'BOLT': (Crash, None),
+            'BOLTFOR': (Crash, None),
+            'BOLTFRC': (Crash, None),
 
             'RADCAV' : (RADCAV, self._add_radcav_object), #
             #'RADLST' : (RADLST, self._add_radcav_object), # TestOP2.test_bdf_op2_thermal_02
@@ -2467,7 +2482,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         self._add_deqatn_object(deqatn)
         return deqatn
 
-    def _prepare_dti(self, card_name, card_obj, comment=''):
+    def _prepare_dti(self, unused_card_name, card_obj, comment=''):
         """adds a DTI"""
         #name = string(card_obj, 1, 'name')
         dti = DTI.add_card(card_obj, comment=comment)
@@ -3637,7 +3652,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #old_card, unused_card = self.create_card_object(
                 #card_lines_old, card_name,
                 #is_list=False, has_none=True)
-            #print(old_card)
+            #print(card_lines_old)
             old_card = self._old_card_fields(card_lines_old, card_name, self.log,
                                              is_list=False, has_none=True,
                                              is_dynamic_syntax=self._is_dynamic_syntax)
@@ -3655,7 +3670,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         if old_card[0] == '=':
             #print(dig_str, 'A!!!')
             if dig is False:
-                raise ReplicationError('dig=False...')
+                raise ReplicationError(f'dig=False...old_card=\n{old_card}')
 
             cards2 = self._expand_replication(
                 card_name, icard-1, cards_list, card_lines_old, dig=False)
@@ -3843,7 +3858,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         else:
             for icard, card in enumerate(cards_list):
                 card_name, comment, card_lines, (ifile, unused_iline) = card
-                #print(unused_ifile_iline, card_lines[0])
+                #print(unused_iline, card_lines[0])
                 if card_name is None:
                     msg = 'card_name = %r\n' % card_name
                     msg += 'card_lines = %s' % card_lines

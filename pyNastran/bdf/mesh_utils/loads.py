@@ -180,7 +180,7 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
             unsupported_types.add(load.type)
 
     for load_type in unsupported_types:
-        model.log.debug('case=%s loadtype=%r not supported' % (loadcase_id, load_type))
+        model.log.warning('case=%s loadtype=%r not supported' % (loadcase_id, load_type))
     return (F, M)
 
 def _pload1_elements(model, loadcase_id, load, scale, eids, xyz, F, M, p):
@@ -1001,9 +1001,11 @@ def _get_loadid_ndof(model: BDF, subcase_id):
     ndof_per_grid = 6
     if 'HEAT' in subcase:
         ndof_per_grid = 1
-    ngrid = model.card_count['GRID']
-    nspoint = model.card_count['SPOINT'] if 'SPOINT' in model.card_count else 0
-    ndof = ngrid * ndof_per_grid + nspoint
+    ngrid = model.card_count['GRID'] if 'GRID' in model.card_count else 0
+    nspoint = len(model.spoints) if 'SPOINT' in model.card_count else 0
+    nepoint = len(model.epoints) if 'EPOINT' in model.card_count else 0
+    ndof = ngrid * ndof_per_grid + nspoint + nepoint
+    assert ndof > 0, model.card_count
     return load_id, ndof_per_grid, ndof
 
 def _get_dof_map(model):
@@ -1020,6 +1022,13 @@ def _get_dof_map(model):
             i += 1
         else:
             raise NotImplementedError(node_ref)
+
+    for nid in sorted(model.spoints.keys()):
+        key = (nid, 0)
+        if key not in dof_map:
+            dof_map[key] = i
+            i += 1
+    assert len(dof_map) > 0
     return dof_map
 
 def _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof, fdtype='float64'):
@@ -1040,7 +1049,12 @@ def _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof, fdtype='float64'):
 
         elif loadtype == 'SLOAD':
             for nid, mag in zip(load.nodes, load.mags):
-                irow = dof_map[(nid, 0)]
+                try:
+                    irow = dof_map[(nid, 0)]
+                except KeyError:
+                    print('spoints =', model.spoints)
+                    print('dof_map =', dof_map)
+                    raise
                 Fg[irow] += mag
         elif loadtype in not_static_loads:
             continue
@@ -1081,7 +1095,7 @@ def _add_force(Fg, dof_map, model: BDF, load, offset: int, ndof_per_grid: int, c
             if cd_ref.type[-1] in ['C', 'S']:
                 ex = Tbg[0, :]
                 ey = Tbg[1, :]
-                ez = Tbg[2, :]
+                #ez = Tbg[2, :]
                 xyz_local = node_ref.get_position_wrt(model, node_ref.cd)
                 if cd_ref.type[-1] == 'C':
                     theta = radians(xyz_local[1])

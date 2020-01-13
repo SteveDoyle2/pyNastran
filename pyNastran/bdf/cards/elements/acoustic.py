@@ -475,7 +475,7 @@ class PACABS(Element):
         Parameters
         ----------
         pid : int
-            Property identification number. (Integer > 0)
+            Property identification number.
         synth : bool; default=True
             Request the calculation of B, K, and M from the tables TIDi below
         tid_resistance : int; default=None

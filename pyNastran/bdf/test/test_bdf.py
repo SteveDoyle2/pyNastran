@@ -14,7 +14,9 @@ import warnings
 from itertools import chain
 from typing import List, Any, Optional, Union
 from io import StringIO
+
 import numpy as np
+from cpylog import get_logger2, WarningRedirector
 #warnings.simplefilter('always')
 warnings.simplefilter('default')
 
@@ -162,69 +164,71 @@ def run_lots_of_files(filenames: List[str], folder: str='',
     failed_files = []
     npass = 1
     nfailed = 1
-    for filename in filenames2:
-        abs_filename = os.path.abspath(os.path.join(folder, filename))
-        if folder != '':
-            print("filename = %s" % abs_filename)
-        is_passed = False
-        try:
-            for sizei, is_doublei, posti in size_doubles_post:
-                fem1, fem2, unused_diff_cards2 = run_bdf(
-                    folder, filename, debug=debug,
-                    xref=xref, check=check, punch=punch,
-                    encoding=encoding,
-                    is_folder=True, dynamic_vars={},
-                    nastran=nastran, size=sizei, is_double=is_doublei,
-                    nerrors=0,
-                    post=posti, sum_load=sum_load, dev=dev,
-                    crash_cards=crash_cards,
-                    run_extract_bodies=False, pickle_obj=pickle_obj,
-                    hdf5=write_hdf5, quiet=quiet)
-                del fem1
-                del fem2
-            diff_cards += diff_cards
-            is_passed = True
-        except KeyboardInterrupt:
-            sys.exit('KeyboardInterrupt...sys.exit()')
-        except DisabledCardError:
-            #if dev:
-                #pass
-            raise
-        #except IOError:
-            #pass
-        #except RuntimeError:  # only temporarily uncomment this when running lots of tests
-            #pass
-        #except SyntaxError:  # only temporarily uncomment this when running lots of tests
-            #pass
-
-        #except AttributeError:  # only temporarily uncomment this when running lots of tests
-            #pass
-        #except KeyError:  # only temporarily uncomment this when running lots of tests
-            #pass
-        #except AssertionError:  # only temporarily uncomment this when running lots of tests
-            #pass
-        #except IndexError:  # only temporarily uncomment this when running lots of tests
-            #pass
-        #except ValueError:  # only temporarily uncomment this when running lots of tests
-            #pass
-        except ReplicationError:
-            if not dev:
+    log = get_logger2(log=None, debug=debug, encoding='utf-8')
+    with WarningRedirector(log) as warn:
+        for filename in filenames2:
+            abs_filename = os.path.abspath(os.path.join(folder, filename))
+            if folder != '':
+                print("filename = %s" % abs_filename)
+            is_passed = False
+            try:
+                for sizei, is_doublei, posti in size_doubles_post:
+                    fem1, fem2, unused_diff_cards2 = run_bdf(
+                        folder, filename, debug=debug,
+                        xref=xref, check=check, punch=punch,
+                        encoding=encoding,
+                        is_folder=True, dynamic_vars={},
+                        nastran=nastran, size=sizei, is_double=is_doublei,
+                        nerrors=0,
+                        post=posti, sum_load=sum_load, dev=dev,
+                        crash_cards=crash_cards,
+                        run_extract_bodies=False, pickle_obj=pickle_obj,
+                        hdf5=write_hdf5, quiet=quiet, log=log)
+                    del fem1
+                    del fem2
+                diff_cards += diff_cards
+                is_passed = True
+            except KeyboardInterrupt:
+                sys.exit('KeyboardInterrupt...sys.exit()')
+            except DisabledCardError:
+                #if dev:
+                    #pass
                 raise
-        except SystemExit:
-            sys.exit('sys.exit...')
-        except:
-            traceback.print_exc(file=sys.stdout)
-            #raise
-        print('-' * 80)
+            #except IOError:
+                #pass
+            #except RuntimeError:  # only temporarily uncomment this when running lots of tests
+                #pass
+            #except SyntaxError:  # only temporarily uncomment this when running lots of tests
+                #pass
 
-        if is_passed:
-            sys.stderr.write('%i  %s' % (npass, abs_filename))
-            npass += 1
-        else:
-            sys.stderr.write('*%s ' % nfailed + abs_filename)
-            nfailed += 1
-            failed_files.append(abs_filename)
-        sys.stderr.write('\n')
+            #except AttributeError:  # only temporarily uncomment this when running lots of tests
+                #pass
+            #except KeyError:  # only temporarily uncomment this when running lots of tests
+                #pass
+            #except AssertionError:  # only temporarily uncomment this when running lots of tests
+                #pass
+            #except IndexError:  # only temporarily uncomment this when running lots of tests
+                #pass
+            #except ValueError:  # only temporarily uncomment this when running lots of tests
+                #pass
+            except ReplicationError:
+                if not dev:
+                    raise
+            except SystemExit:
+                sys.exit('sys.exit...')
+            except:
+                traceback.print_exc(file=sys.stdout)
+                #raise
+            print('-' * 80)
+
+            if is_passed:
+                sys.stderr.write('%i  %s' % (npass, abs_filename))
+                npass += 1
+            else:
+                sys.stderr.write('*%s ' % nfailed + abs_filename)
+                nfailed += 1
+                failed_files.append(abs_filename)
+            sys.stderr.write('\n')
 
     print('*' * 80)
     try:

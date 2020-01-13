@@ -128,6 +128,8 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
         'CQUAD4' : 4, 'CQUADR' : 4, 'CPLSTN4' : 4, 'CSHEAR' : 4, 'CQUADX4' : 4,
         'CQUAD8' : 8, 'CPLSTN8' : 8, 'CQUADX8' : 8,
         'CQUAD' : 9, 'CQUADX' : 9,
+        'CPLSTN3': 3, 'CPLSTN4': 4, 'CPLSTN6': 6, 'CPLSTN8': 8,
+        'CPLSTS3': 3, 'CPLSTS4': 4, 'CPLSTS6': 6, 'CPLSTS8': 8,
     }
     for eid, element in sorted(model.elements.items()):
         etype = element.type
@@ -165,9 +167,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
                     z0 = prop.z0
                 elif ptype == 'PLPLANE':
                     z0 = 0.
-                elif ptype == 'PSHEAR':
-                    z0 = np.nan
-                elif ptype in ['PSOLID', 'PLSOLID']:
+                elif ptype in ['PSHEAR', 'PSOLID', 'PLSOLID', 'PPLANE']:
                     z0 = np.nan
                 else:
                     raise NotImplementedError(ptype) # PSHEAR, PCOMPG
@@ -306,7 +306,7 @@ def build_offset_normals_dims(model: BDF, eid_map: Dict[int, int], nelements: in
         #ielement += 1
     return normals, offset, xoffset, yoffset, zoffset, element_dim, nnodes_array
 
-def build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
+def build_map_centroidal_result(model: BDF, nid_map: Dict[int, int], stop_on_failure: bool=True) -> None:
     """
     Sets up map_centroidal_result.  Used for:
      - cutting plane
@@ -316,8 +316,15 @@ def build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
         # test_gui_superelement_1
         _build_map_centroidal_result(model, nid_map)
     except Exception as error:
+        if len(model.superelement_models):
+            model.log.error('superelements not supported in build_map_centroidal_result')
+            model.log.error(str(error))
+            return
         model.log.error('Cannot run build_map_centroidal_result')
         model.log.error(str(error))
+        if stop_on_failure:
+            raise
+        raise
 
 def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
     """
@@ -335,13 +342,17 @@ def _build_map_centroidal_result(model: BDF, nid_map: Dict[int, int]) -> None:
     etypes_all_nodes = {
         'CBEAM', 'CBAR', 'CROD', 'CONROD', 'CTUBE', 'CBEND',
         'CTRIA3', 'CQUAD4', 'CQUADR', 'CTRIAR', 'CSHEAR',
-        'CGAP', 'CFAST', 'CVISC', 'CBUSH', 'CBUSH1D', 'CBUSH2D'}
+        'CGAP', 'CFAST', 'CVISC', 'CBUSH', 'CBUSH1D', 'CBUSH2D',
+        'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',
+        'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',
+    }
 
     springs_dampers = {'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
                        'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4'}
     nnodes_map = {
         'CTRIA6' : (3, 6),
         'CQUAD8' : (4, 8),
+        'CQUAD' : (9, 9),
         'CHEXA' : (8, 20),
         'CTETRA' : (4, 10),
         'CPENTA' : (6, 15),

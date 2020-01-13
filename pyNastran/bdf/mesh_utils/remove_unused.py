@@ -75,10 +75,12 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'FLFACT', 'FLUTTER', 'DLINK', 'DDVAL', 'DIVERG', 'GUST',
         'AELINK', 'AELIST', 'TRIM', 'TRIM2', 'PAERO1', 'AEFACT', 'AESTAT',
 
+        # contact
         'BCTPARA', 'BCRPARA', 'BSURF', 'BSURFS', 'BCTADD',
-        'BCTSET',
+        'BCTSET', 'BFRIC',
 
         'TABRNDG', 'DTI', 'TABLEH1',
+
     }
 
     # this are things that haven't been referenced yet
@@ -115,9 +117,9 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'ASET', 'ASET1', 'BSET', 'BSET1', 'CSET', 'CSET1',
         'QSET', 'QSET1', 'USET', 'USET1', 'OMIT', 'OMIT1',
     }
-    seset_types = {
-        'SESET',
-    }
+    #seset_types = {
+        #'SESET',
+    #}
     load_types = {
         'GRAV', 'RANDPS', 'FORCE', 'FORCE1', 'FORCE2',
         'MOMENT', 'MOMENT1', 'MOMENT2',
@@ -152,6 +154,8 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     tableht_used = set([])
     tableh1_used = set([])
     pconv_used = set([])
+
+    friction_ids_used = set([])
 
     # could remove some if we look at the rid_trace
     #for cid, coord in model.coords.items():
@@ -525,6 +529,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 # ???
                 # print(bconp.get_stats())
                 cids_used.add(bconp.cid)
+                friction_ids_used.add(bconp.friction_id)
         #elif card_type == 'FORCEAX':
             #pass
             #ring_id
@@ -781,7 +786,7 @@ def _store_dresp1(model, ids, nids_used, pids_used):
                     dresp.atta, dresp.attb, dresp.atti))
             raise NotImplementedError(msg)
 
-def _store_masses(card_type, model, ids, nids_used, pids_mass_used, cids_used):
+def _store_masses(card_type, model, ids, nids_used, pids_mass_used, cids_used) -> None:
     """handles masses"""
     if card_type in ['CONM1', 'CONM2']:
         for eid in ids:
@@ -883,6 +888,7 @@ def _remove(model: BDF,
     _remove_thermal(model, pconv_used, tableht_used, tableh1_used)
 
 def _remove_thermal(model: BDF, pconv_used, tableht_used, tableh1_used) -> None:
+    """removes some thermal cards"""
     pconv = {pid for pid, prop in model.convection_properties.items() if prop.type == 'PCONV'}
     tableht = {tid for tid, table in model.tables.items() if table.type == 'TABLEHT'}
     tableh1 = {tid for tid, table in model.tables.items() if table.type == 'TABLEH1'}
@@ -910,6 +916,4 @@ def _remove_thermal(model: BDF, pconv_used, tableht_used, tableh1_used) -> None:
             del model.tables[pid]
         tableht_to_remove.sort()
         model.log.debug('removing TABLEH1 %s' % tableht_to_remove)
-
-
-    return model
+    return

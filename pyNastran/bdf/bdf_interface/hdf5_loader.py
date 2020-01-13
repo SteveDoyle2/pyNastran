@@ -991,7 +991,7 @@ def _load_dmig(model, name, sub_group, class_type):
     ifo = matrix_form
     dmig = class_obj(name, ifo, tin, tout, polar, ncols,
                      GCj, GCi, Real, Complex=Complex, comment='', finalize=True)
-    assert class_type in ['DMIG', 'DMIK', 'DMIJI'], class_type
+    assert class_type in ['DMIG', 'DMIK', 'DMIJ', 'DMIJI'], class_type
     slot_name = class_type.lower() + 's'
     slot = getattr(model, slot_name)
     slot[name] = dmig
@@ -2044,8 +2044,17 @@ def hdf5_load_elements(model, elements_group, encoding):
             for eid, pid, nids, theta in zip(eids, pids, nodes, thetas):
                 model.add_cquadx8(eid, pid, nids, theta=theta, comment='')
 
-        elif card_type in ['CPLSTN3', 'CPLSTN4']:
-            func = model.add_cplstn3 if card_type == 'CPLSTN3' else model.add_cplstn4
+        elif card_type in ['CPLSTN3', 'CPLSTN4',
+                           'CPLSTS3', 'CPLSTS4']:
+            func_map = {
+                'CPLSTN3' : model.add_cplstn3,
+                'CPLSTN4' : model.add_cplstn4,
+                'CPLSTS3' : model.add_cplsts3,
+                'CPLSTS4' : model.add_cplsts4,
+            }
+            func = func_map[card_type]
+            print('elements =', elements)
+            print(elements.keys())
 
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])
@@ -2053,8 +2062,15 @@ def hdf5_load_elements(model, elements_group, encoding):
             nodes = _cast(elements['nodes']).tolist()
             for eid, pid, nids, theta in zip(eids, pids, nodes, thetas):
                 func(eid, pid, nids, theta=theta, comment='')
-        elif card_type in ['CPLSTN6', 'CPLSTN8']:
-            func = model.add_cplstn6 if card_type == 'CPLSTN6' else model.add_cplstn8
+        elif card_type in ['CPLSTN6', 'CPLSTN8',
+                           'CPLSTS6', 'CPLSTS8']:
+            func_map = {
+                'CPLSTN6' : model.add_cplstn6,
+                'CPLSTN8' : model.add_cplstn8,
+                'CPLSTS6' : model.add_cplsts6,
+                'CPLSTS8' : model.add_cplsts8,
+            }
+            func = func_map[card_type]
 
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])

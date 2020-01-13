@@ -1122,3 +1122,34 @@ def _load_hess_inv(nrows, method, card):
         NEJs.append(NEj)
         NDJs.append(integer_or_blank(card, i + 6, 'NDJ' + str(irow), NDJ_default))
     return alphaAjs, omegaAjs, alphaBjs, omegaBjs, LJs, NEJs, NDJs
+
+
+class MODTRAK(BaseCard):
+    """
+    MODTRAK SID LOWRNG HIGHRNG MTFILTER
+    MODTRAK 100   1      26      0.80
+    """
+    def __init__(self, sid, low_range, high_range, mt_filter, comment=''):
+        BaseCard.__init__(self)
+        self.sid = sid
+        self.low_range = low_range
+        self.high_range = high_range
+        self.mt_filter = mt_filter
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        sid = integer(card, 1, 'sid')
+        low_range = integer_or_blank(card, 2, 'low_range', 0)
+        high_range = integer(card, 3, 'high_range')
+        mt_filter = double_or_blank(card, 4, 'mt_filter', 0.9)
+        return MODTRAK(sid, low_range, high_range, mt_filter, comment=comment)
+
+    def raw_fields(self) -> List[Any]:
+        list_fields = ['MODTRAK', self.sid, self.low_range, self.high_range, self.mt_filter]
+        return list_fields
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        fields = self.raw_fields()
+        #if size == 8:
+        return self.comment + print_card_8(fields)
+        #return self.comment + print_card_16(fields)

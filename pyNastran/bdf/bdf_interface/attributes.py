@@ -100,7 +100,8 @@ class BDFAttributes:
             '_card_parser', '_card_parser_b', '_card_parser_prepare',
             'object_methods', 'object_attributes',
         ]
-        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip)
+        return object_attributes(self, mode=mode, keys_to_skip=keys_to_skip+my_keys_to_skip,
+                                 filter_properties=filter_properties)
 
     def object_methods(self, mode: str='public', keys_to_skip: Optional[List[str]]=None) -> List[str]:
         """
@@ -558,6 +559,8 @@ class BDFAttributes:
         self.cyax = None  # type: Optional[CYAX]
         self.cyjoin = {}  # type: Dict[int, CYJOIN]
 
+        self.modtrak = None  # type: Optional[MODTRAK]
+
         # acoustic
         self.acmodl = None
 
@@ -617,6 +620,7 @@ class BDFAttributes:
         self.bsurfs = {}  # type: Dict[int, BSURFS]
         self.bconp = {}  # type: Dict[int, BCONP]
         self.blseg = {}  # type: Dict[int, BLSEG]
+        self.bfric = {}  # type: Dict[int, BFRIC]
 
 
         #--------------------------superelements------------------------------
@@ -782,6 +786,7 @@ class BDFAttributes:
                 ],
             'cyjoin' : ['CYJOIN'],
             'cyax' : ['CYAX'],
+            'modtrak' : ['MODTRAK'],
             'dloads' : ['DLOAD'],
             # stores RLOAD1, RLOAD2, TLOAD1, TLOAD2, and ACSRCE entries.
             'dload_entries' : ['ACSRCE', 'TLOAD1', 'TLOAD2', 'RLOAD1', 'RLOAD2',
@@ -790,7 +795,7 @@ class BDFAttributes:
             # aero cards
             'aero' : ['AERO'],
             'aeros' : ['AEROS'],
-            'gusts' : ['GUST'],
+            'gusts' : ['GUST', 'GUST2'],
             'flutters' : ['FLUTTER'],
             'flfacts' : ['FLFACT'],
             'mkaeros' : ['MKAERO1', 'MKAERO2'],
@@ -804,7 +809,7 @@ class BDFAttributes:
             'aestats' : ['AESTAT'],
             'caeros' : ['CAERO1', 'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5', 'CAERO7', 'BODY7'],
             'paeros' : ['PAERO1', 'PAERO2', 'PAERO3', 'PAERO4', 'PAERO5', 'SEGMESH'],
-            'monitor_points' : ['MONPNT1', 'MONPNT2', 'MONPNT3'],
+            'monitor_points' : ['MONPNT1', 'MONPNT2', 'MONPNT3', 'MONDSP1'],
             'splines' : ['SPLINE1', 'SPLINE2', 'SPLINE3', 'SPLINE4', 'SPLINE5', 'SPLINE6', 'SPLINE7'],
             'panlsts' : ['PANLST1', 'PANLST2', 'PANLST3'],
             'csschds' : ['CSSCHD',],
@@ -923,6 +928,7 @@ class BDFAttributes:
             'bsurfs' : ['BSURFS'],
             'bconp' : ['BCONP'],
             'blseg' : ['BLSEG'],
+            'bfric' : ['BFRIC'],
             'views' : ['VIEW'],
             'view3ds' : ['VIEW3D'],
 
@@ -977,7 +983,9 @@ class BDFAttributes:
                 sublines.append(subline.rstrip(', '))
 
             html_msg.append(dash_plus)
-            for subline in sublines:
+            for isub, subline in enumerate(sublines):
+                if isub > 0:  # adds intermediate dash lines
+                    html_msg.append(dash_plus)
                 html_msg.append(fmt % (card_group, subline))
                 card_group = ''
 
