@@ -499,6 +499,8 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
     unused_local_points_array = np.array(local_points)
     unused_global_points_array = np.array(global_points)
     results_array = np.array(result)
+    #print('*result', result)
+    #print('*results_array', results_array, type(results_array))
 
     #for g in geometry:
         #print(g)
@@ -509,6 +511,7 @@ def slice_faces(nodes, xyz_cid0, xyz_cid, faces, face_eids, nodal_result,
 
     unique_geometry_array, unique_results_array = _unique_face_rows(
         geometry_array, results_array, nodes, skip_cleanup=skip_cleanup)
+    #print('*unique_results_array', unique_results_array, type(unique_results_array))
     return unique_geometry_array, unique_results_array, (rods_elements_array, rod_nids_array, rod_xyzs_array)
 
 def _unique_face_rows(geometry_array, results_array, nodes, skip_cleanup=True):
@@ -673,6 +676,7 @@ def connect_face_rows(geometry_array, results_array, skip_cleanup=True):
 
     geometry, results = iedges_to_geometry_results(
         iedges_all, geometry_array, results_array)
+    #print(results, type(results))
     return iedges_all, geometry, results
 
 def iedges_to_geometry_results(iedges_all, geometry_array, results_array):

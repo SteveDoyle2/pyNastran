@@ -1,4 +1,5 @@
 """defines various GUI unit tests"""
+import os
 import unittest
 
 #from pyNastran.gui.arg_handling import get_inputs
@@ -63,6 +64,7 @@ class TestBDFParsing(unittest.TestCase):
         #args = ['test_bdf', '-h']
         #out = test_bdf_argparse(argv=args)
         #print(out)
+        os.remove('fem.bdf')
 
 
 #def remove_args(dicti, *keys_to_remove):

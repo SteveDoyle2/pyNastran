@@ -392,8 +392,8 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol, log,
                 for inid1, inid2 in combinations(pair, 2):
                     nid1 = nids[inid1]
                     nid2 = nids[inid2]
-                    if nid1 == nid2:
-                        continue
+                    #if nid1 == nid2:
+                        #continue
                     if node_set is not None:
                         if nid1 not in node_set and nid2 not in node_set:
                             continue

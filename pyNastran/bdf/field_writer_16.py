@@ -9,16 +9,14 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.cards.utils import wipe_empty_fields
 from pyNastran.bdf.field_writer_8 import set_blank_if_default
 
-def set_string16_blank_if_default(value, default):
-    # type: (Any, Any) -> str
+def set_string16_blank_if_default(value: Any, default: Any) -> str:
     """helper method for writing BDFs"""
     val = set_blank_if_default(value, default)
     if val is None:
         return '                '
     return '%16s' % val
 
-def print_scientific_16(value):
-    # type: (float) -> str
+def print_scientific_16(value: float) -> str:
     """
     Prints a value in 16-character scientific notation.
     This is a sub-method and shouldnt typically be called
@@ -56,8 +54,7 @@ def print_scientific_16(value):
     return field
 
 
-def print_float_16(value):
-    # type: (float) -> str
+def print_float_16(value: float) -> str:
     """
     Prints a float in nastran 16-character width syntax
     using the highest precision possbile.

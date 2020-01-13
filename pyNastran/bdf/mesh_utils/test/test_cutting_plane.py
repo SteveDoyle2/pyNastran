@@ -275,7 +275,7 @@ class TestCuttingPlane(unittest.TestCase):
         os.remove('cut_face.csv')
         os.remove('plane_face.bdf')
 
-    def test_cut_shell_model_1(self):
+    def test_cut_shell_model_edge_1(self):
         """
         tests:
          - cut_edge_model_by_coord
@@ -312,7 +312,7 @@ class TestCuttingPlane(unittest.TestCase):
         #os.remove('plane_edge.bdf')
         os.remove('plane_face.bdf')
 
-    def test_cut_shell_model_2(self):
+    def test_cut_shell_model_edge_2(self):
         """
         tests:
          - cut_edge_model_by_coord
@@ -355,6 +355,36 @@ class TestCuttingPlane(unittest.TestCase):
         os.remove('cut_face_2.csv')
         #os.remove('plane_edge.bdf')
         os.remove('plane_face.bdf')
+
+    def test_cut_shell_model_face_1(self):
+        """
+        tests:
+         - cut_edge_model_by_coord
+         - cut_face_model_by_coord
+        """
+        tol = 2.
+        coord = CORD2R(1, rid=0, origin=[0.5, 0., 0.], zaxis=[0.5, 0., 1], xzplane=[1.5, 0., 0.],
+                       comment='')
+        model, nodal_result = _cut_shell_model_quads()
+        #-------------------------------------------------------------------------
+        # triangles
+        split_to_trias(model)
+        model.coords[1] = coord
+        model.write_bdf('tris.bdf')
+
+        #print('----------------------------')
+        title = 'result'
+        p1 = None
+        p2 = None
+        zaxis = None
+        #print(nodal_result)
+        with self.assertRaises(TypeError):
+            cut_and_plot_model(title, p1, p2, zaxis,
+                               model, coord, nodal_result, model.log, tol,
+                               plane_atol=1e-5,
+                               csv_filename=None,
+                               invert_yaxis=False,
+                               cut_type='face', plot=IS_MATPLOTLIB, show=False)
 
     def test_connect_face_rows(self):
         """in order"""

@@ -643,6 +643,9 @@ class TestCoords(unittest.TestCase):
         assert np.array_equal(xyz, xyzp1)
         assert np.array_equal(xyz, xyzp2)
 
+        xyz_same = PositionWRT([1., 2., 3.], 100, 100, model)
+        assert np.array_equal(xyz_same, [1., 2., 3.])
+
         xyz_wrt_p1 = PositionWRT(node.xyz, node.cp, 0, model)
         xyz_wrt_p2 = PositionWRT(node.xyz, node.cp_ref, 0, model)
         xyz_wrt = node.get_position_wrt(model, 0)

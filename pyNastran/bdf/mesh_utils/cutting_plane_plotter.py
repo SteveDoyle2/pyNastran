@@ -16,8 +16,7 @@ from pyNastran.bdf.mesh_utils.cut_model_by_plane import (
 
 def cut_and_plot_model(title, p1, p2, zaxis,
                        model, coord, nodal_result,
-                       log,
-                       ytol,
+                       log, ytol,
                        plane_atol=1e-5,
                        csv_filename=None,
                        invert_yaxis=False,
@@ -53,7 +52,7 @@ def cut_and_plot_model(title, p1, p2, zaxis,
         None : don't write a csv
         str : write a csv
     """
-    assert cut_type.lower() in ['edge'], 'cut_type=%r and must be edge' % cut_type
+    #assert cut_type.lower() in ['edge'], 'cut_type=%r and must be edge' % cut_type
 
     cut_type = cut_type.lower()
     if cut_type == 'edge':
@@ -86,14 +85,18 @@ def cut_and_plot_model(title, p1, p2, zaxis,
                                  csv_filename=csv_filename, invert_yaxis=invert_yaxis,
                                  show=show)
     else:  # pragma: no cover
-        raise NotImplementedError('cut_type=%r' % cut_type)
+        raise NotImplementedError(f'cut_type={cut_type!r} and must be [edge, face]')
 
 
 def plot_cutting_plane_faces(title, p1, p2, zaxis,
                              geometry_arrays, result_arrays,
                              csv_filename=None, invert_yaxis=False, show=True):
     """for faces"""
-    local_x = result_arrays[:, 0]
+    try:
+        local_x = result_arrays[:, 0]
+    except TypeError:
+        print('results_arrays', result_arrays)
+        raise
 
     #x = global_points_array[:, 0]
     #y = global_points_array[:, 1]
