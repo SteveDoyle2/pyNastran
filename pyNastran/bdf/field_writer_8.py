@@ -249,8 +249,7 @@ def print_field_8(value: Union[int, float, str, None]) -> str:
     return field
 
 
-def print_card_8(fields):
-    # type: (List[Union[int, float, str, None]]) -> str
+def print_card_8(fields: List[Union[int, float, str, None]]) -> str:
     """
     Prints a nastran-style card with 8-character width fields.
 

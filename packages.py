@@ -181,12 +181,13 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
         import cpylog
         iver = int_version('cpylog', cpylog.__version__)
         all_reqs['cpylog'] = str_version(iver)
-        if iver <= [1, 0, 2]:
-            print("cpylog.__version__ = %r != '1.0.2'" % cpylog.__version__)
-            all_reqs['cpylog'] = '>= 1.0.2'
-            install_requires.append('cpylog >= 1.0.2')
+        required_version_str = '1.3.1'
+        if iver <= [1, 3, 1]:
+            print(f"cpylog.__version__ = {cpylog.__version__!r} != {required_version_str!r}")
+            all_reqs['cpylog'] = f'>= {required_version_str}'
+            install_requires.append(f'cpylog >= {required_version_str}')
     except ImportError:
-        install_requires.append('cpylog >= 1.0.2')  # 1.0.2 used
+        install_requires.append(f'cpylog >= {required_version_str}')  # 1.3.1 used
 
 
     try:
