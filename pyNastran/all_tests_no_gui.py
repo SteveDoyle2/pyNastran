@@ -41,6 +41,11 @@ from pyNastran.gui.test.all_tests import *
     #import pyNastran.gui.gui
 #import pyNastran.gui.gui
 
+try:
+    from pyNastran.dev.solver.test_springs import *
+except ImportError:  # pragma: no cover
+    pass
+
 
 if __name__ == "__main__":  # pragma: no cover
     import unittest

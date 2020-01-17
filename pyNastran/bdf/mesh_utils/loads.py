@@ -16,7 +16,7 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.bdf.utils import get_xyz_cid0_dict
 from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
+    from pyNastran.bdf.bdf import BDF, Subcase
 
 
 def isnan(value):
@@ -991,13 +991,8 @@ def get_static_force_vector_from_subcase_id(model: BDF, subcase_id: int):
         F = _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof)
     return F
 
-
-def _get_loadid_ndof(model: BDF, subcase_id):
-    """helper method for ``get_static_force_vector_from_subcase_id``"""
-    subcase = model.subcases[subcase_id]
-    load_id = None
-    if 'LOAD' in subcase:
-        load_id, unused_options = subcase['LOAD']
+def get_ndof(model: BDF, subcase: Subcase):
+    """gets the size of the DOFs"""
     ndof_per_grid = 6
     if 'HEAT' in subcase:
         ndof_per_grid = 1
@@ -1006,6 +1001,15 @@ def _get_loadid_ndof(model: BDF, subcase_id):
     nepoint = len(model.epoints) if 'EPOINT' in model.card_count else 0
     ndof = ngrid * ndof_per_grid + nspoint + nepoint
     assert ndof > 0, model.card_count
+    return ndof_per_grid, ndof
+
+def _get_loadid_ndof(model: BDF, subcase_id):
+    """helper method for ``get_static_force_vector_from_subcase_id``"""
+    subcase = model.subcases[subcase_id]
+    load_id = None
+    if 'LOAD' in subcase:
+        load_id, unused_options = subcase['LOAD']
+    ndof_per_grid, ndof = get_ndof(model, subcase)
     return load_id, ndof_per_grid, ndof
 
 def _get_dof_map(model):
