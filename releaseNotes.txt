@@ -92,7 +92,7 @@ GUI:
        - For float results, masking is applied and nan corresponds to no color.
     - added mark_elements, mark_elements_by_case
 
------------------------v1.2.2 released 2019/7/x-----------------------
+-----------------------v1.2.2 released 2020/1/x-----------------------
 BDF:
  - bug fixes:
    - Better case control SET parser (can now handle 1,THRU,10,EXCEPT,7,8,
