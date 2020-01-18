@@ -272,7 +272,6 @@ class RBAR(RigidElement):
         self.eid = eid
         self.ga = nids[0]
         self.gb = nids[1]
-        #print(f'cna={cna} cnb={cnb}')
 
         #if cna == '0':
             #cna = ''

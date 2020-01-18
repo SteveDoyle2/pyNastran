@@ -150,17 +150,6 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
         except ImportError:
             install_requires.append('scipy %s' % required_version)  # 1.1.0 used
 
-    #try:
-        #import six
-        #iver = int_version('six', six.__version__)
-        #all_reqs['six'] = str_version(iver)
-        #if iver < [1, 9, 0]:
-            #print("six.__version__ = %r < '1.9.0'" % six.__version__)
-            #all_reqs['six'] = '>= 1.9.0'
-            #install_requires.append('six >= 1.9.0')
-    #except ImportError:
-        #install_requires.append('six >= 1.9.0')  # 1.12.0 used
-
     if is_gui:
         version_check, required_version = vreqs['matplotlib']
         try:

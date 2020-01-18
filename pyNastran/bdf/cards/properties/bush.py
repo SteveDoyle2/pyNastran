@@ -406,7 +406,7 @@ class PBUSH1D(BushingProperty):
             name : str
                 SHOCKA, SPRING, DAMPER, GENER
             values : List[varies]
-                thhe values
+                the values
             SHOCKA:
                 Coefficients of the following force versus
                 velocity/displacement relationship

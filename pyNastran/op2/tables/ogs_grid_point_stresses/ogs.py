@@ -99,7 +99,6 @@ class OGS(OP2Common):
         self._write_debug_bits()
 
     def _read_ogs1_4(self, data, ndata):
-        print(self.code_information())
         if self.table_code == 26:
             # OGS1 - grid point stresses - surface
             assert self.table_name in [b'OGS1'], 'table_name=%s table_code=%s' % (self.table_name, self.table_code)

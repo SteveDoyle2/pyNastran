@@ -725,6 +725,7 @@ class TestMeshUtils(unittest.TestCase):
                       #triangle_intersection(p, v, p0, p1, p2),
                       #quad_intersection(p, v, p0, p1, p3, p2))
 
+
 class TestEquiv(unittest.TestCase):
 
     def test_eq1(self):

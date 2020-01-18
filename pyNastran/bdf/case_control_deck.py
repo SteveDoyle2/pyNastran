@@ -1056,8 +1056,8 @@ class CaseControlDeck:
         return msg
 
 def _split_param(line: str, line_upper: str) -> Tuple[str, str, str]:
-    tabbed_line_upper = line_upper.expandtabs().rstrip()
     """parses a PARAM card"""
+    tabbed_line_upper = line_upper.expandtabs().rstrip()
     if ',' in tabbed_line_upper:
         sline = tabbed_line_upper.split(',')
     elif '\t' in tabbed_line_upper:

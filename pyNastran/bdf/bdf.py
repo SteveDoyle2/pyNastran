@@ -2664,7 +2664,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         acmodl = ACMODL.add_card(card_obj, self._nastran_format, comment=comment)
         self._add_acmodl_object(acmodl)
 
-
     def add_card_ifile(self, ifile: int, card_lines: List[str], card_name: str,
                        comment: str='', is_list: bool=True, has_none: bool=True) -> Any:
         """Same as ``add_card`` except it has an ifile parameter"""

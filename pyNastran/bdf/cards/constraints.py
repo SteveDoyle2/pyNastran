@@ -622,17 +622,9 @@ class MPC(Constraint):
 
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         """see BaseCard.write_card``"""
-        try:
-            if size == 8:
-                return self.write_card_8()
-            return self.write_card_16(is_double)
-        except:  # pragma: no cover
-            fields = self.raw_fields()
-            print('MPC fields = %s' % fields)
-            if size == 8:
-                if size == 8:
-                    return print_card_8(fields)
-                return print_card_16(fields)
+        if size == 8:
+            return self.write_card_8()
+        return self.write_card_16(is_double)
 
     def write_card_8(self):
         msg = 'MPC     %8s' % self.conid
@@ -800,7 +792,6 @@ class SPC(Constraint):
         conid = data[0]
         nodes = [data[1]]
         components_str = sorted(str(data[2]))
-        #components_str = components_str.sort()
         components = int(''.join(components_str))
 
         assert 0 <= components <= 123456, data

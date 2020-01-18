@@ -323,7 +323,6 @@ def _bar_areaL(class_name: str, beam_type: str, dim: List[float],
             beam_type, class_name)
         raise NotImplementedError(msg)
     assert A > 0, 'beam_type=%r dim=%r A=%s\n%s' % (beam_type, dim, A, prop)
-
     return A
 
 def rod_section(class_name, beam_type, dim, prop):

@@ -820,14 +820,12 @@ class CPLSTx3(TriShell):
         assert len(nids) == 3, nids
         self.nodes = self.prepare_node_ids(nids)
         self.theta = theta
-        self.nodes = self.prepare_node_ids(nids)
         assert len(self.nodes) == 3
 
     @classmethod
     def export_to_hdf5(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""
         #comments = []
-        print('export_to_hdf5', cls.type, h5_file)
         pids = []
         nodes = []
         thetas = []
@@ -2793,6 +2791,7 @@ class CQUAD4(QuadShell):
                     return self.comment + msg.rstrip('*\n ') + '\n'
             return self.comment + msg
 
+
 class CPLSTx4(QuadShell):
     """
     +---------+-------+-------+----+----+----+----+-------+
@@ -2832,7 +2831,6 @@ class CPLSTx4(QuadShell):
     def export_to_hdf5(cls, h5_file, model, eids):
         """exports the elements in a vectorized way"""
         #comments = []
-        print('export_to_hdf5', cls.type)
         pids = []
         nodes = []
         thetas = []
@@ -3877,6 +3875,7 @@ class CPLSTS3(TriShell):
 
     def Mass(self) -> float:
         return 0.
+
     #@classmethod
     #def add_op2_data(cls, data, comment=''):
         #eid = data[0]

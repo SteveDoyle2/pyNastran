@@ -1010,7 +1010,6 @@ class WriteMesh(BDFAttributes):
         for properties in prop_groups:
             for unused_pid, prop in properties.items():
                 prop_class = property_type_to_property_class[prop.type]
-                #print(prop.type, '->', prop_class)
                 properties_by_class[prop_class].append(prop)
         return propertys_class_to_property_types, property_type_to_property_class, properties_by_class
 

@@ -38,7 +38,7 @@ class TestSolverSprings(unittest.TestCase):
     def test_conrod(self):
         model = BDF(debug=True, log=None, mode='msc')
         model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
         eid = 1
         pid = 2

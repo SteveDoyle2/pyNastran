@@ -146,7 +146,6 @@ class OUG(OP2Common):
             '???', '???', 'thermal', '???',
             '???', 'Title', 'subtitle', 'label']
 
-
         ## random code
         self.random_code = self.add_data_parameter(data, 'random_code', b'i', 8, False)
 

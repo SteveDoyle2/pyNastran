@@ -48,7 +48,6 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class OP2(OP2_Scalar, OP2Writer):
-#class OP2(OP2_Scalar):
     _properties = ['is_real', 'is_complex', 'is_random',
                    '_sort_method', 'is_sort1', 'is_sort2',
                    'matrix_tables', 'table_name_str']
@@ -1194,7 +1193,6 @@ class OP2(OP2_Scalar, OP2Writer):
                 transform_gpforce_to_globali(subcase, result,
                                              nids_all, nids_transform,
                                              icd_transform, coords, xyz_cid0, self.log)
-
         self.log.debug('-----------')
 
 

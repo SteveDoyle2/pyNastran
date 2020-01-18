@@ -84,8 +84,8 @@ class Solver:
             A = elem.Area()
             E = elem.E()
             #L = elem.Length()
+            print(A, E, L)
             ka = A * E / L
-            #print(A, E, L)
             #print(G, J, L)
             kt = G * J / L
             assert isinstance(ka, float), ka
@@ -103,7 +103,7 @@ class Solver:
         Fb = np.zeros(ndof, dtype='float32')
         if 'LOAD' in subcase:
             load_id, unused_options = subcase['LOAD']
-            print('load_id =', load_id)
+            #print('load_id =', load_id)
             loads, scales, is_grav = model.get_reduced_loads(
                 load_id, scale=1., consider_load_combinations=True,
                 skip_scale_factor0=False, stop_on_failure=True, msg='')
@@ -115,11 +115,11 @@ class Solver:
                 #is there a gravity card
             for load, scale in zip(loads, scales):
                 if load.type == 'SLOAD':
-                    print(load.get_stats())
+                    #print(load.get_stats())
                     for mag, nid in zip(load.mags, load.nodes):
                         i = dof_map[(nid, 1)]  # TODO: wrong...
                         Fb[i] = mag * scale
-        print(subcase)
+        #print(subcase)
         return Fb
 
     def Kbb_to_Kgg(self, Kbb: np.ndarray) -> np.ndarray:
@@ -193,7 +193,7 @@ class Solver:
         # [Kaa]{x} = {F}
         # {x} = [Kaa][F]
         x = np.linalg.solve(Kaa, Fg)
-        print(x)
+        #print(x)
         return x
 
     def run_sol_103(self, subcase: Subcase):
