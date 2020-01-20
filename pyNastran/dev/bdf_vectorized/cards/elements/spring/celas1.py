@@ -1,5 +1,4 @@
-from numpy import dot, array, zeros, unique, searchsorted, transpose, where, arange
-from numpy.linalg import norm  # type: ignore
+from numpy import array, zeros, unique, searchsorted, where, arange
 
 from pyNastran.dev.bdf_vectorized.cards.elements.spring.spring_element import SpringElement
 

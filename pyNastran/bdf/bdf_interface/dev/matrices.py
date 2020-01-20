@@ -89,7 +89,8 @@ def make_mass_matrix(model, reference_point):
     for etype, eids in model._type_to_id_map.items():
         if etype in no_mass:
             continue
-        elif etype in ['CROD', 'CONROD']:
+
+        if etype in ['CROD', 'CONROD']:
             eids2 = get_sub_eids(all_eids, eids, etype)
 
             # lumped
@@ -118,7 +119,7 @@ def make_mass_matrix(model, reference_point):
                 mpl = elem.MassPerLength()
                 massi = mpl * length / 2.
                 Lambda = _lambda_1d(v1)
-                mass_mat2 = np.dot(np.dot(Lambda.T, mass_mat * massi), Lambda)
+                mass_mat2 = (Lambda.T @ mass_mat @ Lambda) * massi
                 assert mass_mat2.shape == (6, 6), mass_mat2
                 mass[i1, i1] = mass_mat2[0, 0]
                 mass[i2, i2] = mass_mat2[1, 1]

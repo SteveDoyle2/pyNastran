@@ -20,48 +20,48 @@ import numpy as np  # type: ignore
 from cpylog import get_logger2
 
 from pyNastran.utils import object_attributes, check_path
-from pyNastran.bdf.utils import parse_patran_syntax
-from pyNastran.bdf.bdf_interface.utils import (
+from .utils import parse_patran_syntax
+from .bdf_interface.utils import (
     _parse_pynastran_header, to_fields, parse_executive_control_deck,
     fill_dmigs, _get_card_name, _parse_dynamic_syntax,
 )
 
-from pyNastran.bdf.bdf_interface.replication import (
+from .bdf_interface.replication import (
     to_fields_replication, get_nrepeats, int_replication, float_replication,
     _field, repeat_cards)
 
-from pyNastran.bdf.field_writer_8 import print_card_8
-from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
+from .field_writer_8 import print_card_8
+from .field_writer_16 import print_card_16, print_field_16
 
-from pyNastran.bdf.cards.base_card import _format_comment
-from pyNastran.bdf.cards.utils import wipe_empty_fields
+from .cards.base_card import _format_comment
+from .cards.utils import wipe_empty_fields
 
-#from pyNastran.bdf.write_path import write_include
-from pyNastran.bdf.bdf_interface.assign_type import (integer,
-                                                     integer_or_string, string)
+#from .write_path import write_include
+from .bdf_interface.assign_type import (integer,
+                                        integer_or_string, string)
 
-from pyNastran.bdf.cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
-from pyNastran.bdf.cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
-from pyNastran.bdf.cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
-from pyNastran.bdf.cards.cyclic import CYAX, CYJOIN
-from pyNastran.bdf.cards.msgmesh import CGEN
+from .cards.elements.elements import CFAST, CGAP, CRAC2D, CRAC3D, PLOTEL, GENEL
+from .cards.properties.properties import PFAST, PGAP, PRAC2D, PRAC3D
+from .cards.properties.solid import PLSOLID, PSOLID, PIHEX, PCOMPS
+from .cards.cyclic import CYAX, CYJOIN
+from .cards.msgmesh import CGEN
 
-from pyNastran.bdf.cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
-from pyNastran.bdf.cards.properties.springs import PELAS, PELAST
+from .cards.elements.springs import CELAS1, CELAS2, CELAS3, CELAS4
+from .cards.properties.springs import PELAS, PELAST
 
-from pyNastran.bdf.cards.elements.solid import (
+from .cards.elements.solid import (
     #CTETRA, CPYRAM, CPENTA, CHEXA,
     CIHEX1, CIHEX2,
     CTETRA4, CPYRAM5, CPENTA6, CHEXA8,
     CTETRA10, CPYRAM13, CPENTA15, CHEXA20,
 )
-from pyNastran.bdf.cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
+from .cards.elements.rigid import RBAR, RBAR1, RBE1, RBE2, RBE3, RROD, RSPLINE, RSSCON
 
-from pyNastran.bdf.cards.axisymmetric.axisymmetric import (
+from .cards.axisymmetric.axisymmetric import (
     AXIF, RINGFL,
     AXIC, RINGAX, POINTAX, CCONEAX, PCONEAX, )
-from pyNastran.bdf.cards.axisymmetric.loads import PLOADX1, FORCEAX, PRESAX, TEMPAX
-from pyNastran.bdf.cards.elements.axisymmetric_shells import (
+from .cards.axisymmetric.loads import PLOADX1, FORCEAX, PRESAX, TEMPAX
+from .cards.elements.axisymmetric_shells import (
     CTRAX3, CTRAX6, CTRIAX, CTRIAX6, CQUADX, CQUADX4, CQUADX8)
 from pyNastran.bdf.cards.elements.shell import (
     CQUAD, CQUAD4, CQUAD8, CQUADR, CSHEAR,
@@ -69,73 +69,73 @@ from pyNastran.bdf.cards.elements.shell import (
     CPLSTN3, CPLSTN4, CPLSTN6, CPLSTN8,
     CPLSTS3, CPLSTS4, CPLSTS6, CPLSTS8,
     SNORM)
-from pyNastran.bdf.cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
-from pyNastran.bdf.cards.elements.acoustic import (
+from .cards.properties.shell import PSHELL, PCOMP, PCOMPG, PSHEAR, PLPLANE, PPLANE
+from .cards.elements.acoustic import (
     CHACAB, CAABSF, CHACBR, PACABS, PAABSF, PACBAR, ACMODL)
-from pyNastran.bdf.cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
-from pyNastran.bdf.cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
-from pyNastran.bdf.cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
-                                                 CDAMP5)
-from pyNastran.bdf.cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
-from pyNastran.bdf.cards.elements.rods import CROD, CONROD, CTUBE
-from pyNastran.bdf.cards.elements.bars import CBAR, BAROR, CBARAO, CBEAM3, CBEND
-from pyNastran.bdf.cards.elements.beam import CBEAM, BEAMOR
-from pyNastran.bdf.cards.properties.rods import PROD, PTUBE
-from pyNastran.bdf.cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
-from pyNastran.bdf.cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
+from .cards.elements.bush import CBUSH, CBUSH1D, CBUSH2D
+from .cards.properties.bush import PBUSH, PBUSH1D, PBUSHT
+from .cards.elements.damper import (CVISC, CDAMP1, CDAMP2, CDAMP3, CDAMP4,
+                                    CDAMP5)
+from .cards.properties.damper import PVISC, PDAMP, PDAMP5, PDAMPT
+from .cards.elements.rods import CROD, CONROD, CTUBE
+from .cards.elements.bars import CBAR, BAROR, CBARAO, CBEAM3, CBEND
+from .cards.elements.beam import CBEAM, BEAMOR
+from .cards.properties.rods import PROD, PTUBE
+from .cards.properties.bars import PBAR, PBARL, PBRSECT, PBEND, PBEAM3
+from .cards.properties.beam import PBEAM, PBEAML, PBCOMP, PBMSECT
 # CMASS5
-from pyNastran.bdf.cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
-from pyNastran.bdf.cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
-from pyNastran.bdf.cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
-                                             MPC, MPCADD, SUPORT1, SUPORT, SESUP,
-                                             GMSPC)
-from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
-                                                    CORD2R, CORD2C, CORD2S, #CORD3G,
-                                                    GMCORD, transform_coords_vectorized,
-                                                    CORDx)
-from pyNastran.bdf.cards.deqatn import DEQATN
-from pyNastran.bdf.cards.dynamic import (
+from .cards.elements.mass import CONM1, CONM2, CMASS1, CMASS2, CMASS3, CMASS4
+from .cards.properties.mass import PMASS, NSM, NSM1, NSML, NSML1, NSMADD
+from .cards.constraints import (SPC, SPCADD, SPCAX, SPC1, SPCOFF, SPCOFF1,
+                                MPC, MPCADD, SUPORT1, SUPORT, SESUP,
+                                GMSPC)
+from .cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
+                                       CORD2R, CORD2C, CORD2S, #CORD3G,
+                                       GMCORD, transform_coords_vectorized,
+                                       CORDx)
+from .cards.deqatn import DEQATN
+from .cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
     TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
-from pyNastran.bdf.cards.loads.loads import (
+from .cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
-from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
-from pyNastran.bdf.cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
-                                                    FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
-                                                    PLOAD, PLOAD1, PLOAD2, PLOAD4,
-                                                    GMLOAD)
-from pyNastran.bdf.cards.loads.random_loads import RANDPS, RANDT1
+from .cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
+from .cards.loads.static_loads import (LOAD, CLOAD, GRAV, ACCEL, ACCEL1, FORCE,
+                                       FORCE1, FORCE2, MOMENT, MOMENT1, MOMENT2,
+                                       PLOAD, PLOAD1, PLOAD2, PLOAD4,
+                                       GMLOAD)
+from .cards.loads.random_loads import RANDPS, RANDT1
 
-from pyNastran.bdf.cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
-                                           MAT8, MAT9, MAT10, MAT11, MAT3D,
-                                           MATG, MATHE, MATHP, CREEP, EQUIV,
-                                           NXSTRAT)
-from pyNastran.bdf.cards.material_deps import (
+from .cards.materials import (MAT1, MAT2, MAT3, MAT4, MAT5,
+                              MAT8, MAT9, MAT10, MAT11, MAT3D,
+                              MATG, MATHE, MATHP, CREEP, EQUIV,
+                              NXSTRAT)
+from .cards.material_deps import (
     MATT1, MATT2, MATT3, MATT4, MATT5, MATT8, MATT9, MATS1)
 
-from pyNastran.bdf.cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
-from pyNastran.bdf.cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
-from pyNastran.bdf.cards.aero.aero import (
+from .cards.methods import EIGB, EIGC, EIGR, EIGP, EIGRL, MODTRAK
+from .cards.nodes import GRID, GRDSET, SPOINTs, EPOINTs, POINT, SEQGP, GRIDB
+from .cards.aero.aero import (
     AECOMP, AECOMPL, AEFACT, AELINK, AELIST, AEPARM, AESURF, AESURFS,
     CAERO1, CAERO2, CAERO3, CAERO4, CAERO5,
     PAERO1, PAERO2, PAERO3, PAERO4, PAERO5,
     MONPNT1, MONPNT2, MONPNT3, MONDSP1,
     SPLINE1, SPLINE2, SPLINE3, SPLINE4, SPLINE5)
-from pyNastran.bdf.cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
-from pyNastran.bdf.cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
-from pyNastran.bdf.cards.optimization import (
+from .cards.aero.static_loads import AESTAT, AEROS, CSSCHD, TRIM, TRIM2, DIVERG
+from .cards.aero.dynamic_loads import AERO, FLFACT, FLUTTER, GUST, MKAERO1, MKAERO2
+from .cards.optimization import (
     DCONADD, DCONSTR, DESVAR, TOPVAR, DDVAL, DOPTPRM, DLINK,
     DRESP1, DRESP2, DRESP3,
     DVCREL1, DVCREL2,
     DVMREL1, DVMREL2,
     DVPREL1, DVPREL2,
     DVGRID, DSCREEN)
-from pyNastran.bdf.cards.superelements import (
+from .cards.superelements import (
     RELEASE, SEBNDRY, SEBULK, SECONCT, SEELT, SEEXCLD,
     SELABEL, SELOAD, SELOC, SEMPLN, SENQSET, SETREE,
     CSUPER, CSUPEXT,
 )
-from pyNastran.bdf.cards.bdf_sets import (
+from .cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
     OMIT, OMIT1,
@@ -145,39 +145,39 @@ from pyNastran.bdf.cards.bdf_sets import (
     SESET, #SEQSEP
     RADSET,
 )
-from pyNastran.bdf.cards.params import PARAM
-from pyNastran.bdf.cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DMIAX
-from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
-                                               QVOL, QVECT)
-from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
-                                                 PHBDY, CONV, CONVM, TEMPBC)
-from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
-from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
-                                            TABLEM1, TABLEM2, TABLEM3, TABLEM4,
-                                            TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
-                                            TABRND1, TABRNDG,
-                                            DTABLE)
-from pyNastran.bdf.cards.contact import (
+from .cards.params import PARAM
+from .cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DMIAX
+from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
+                                  QVOL, QVECT)
+from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
+                                    PHBDY, CONV, CONVM, TEMPBC)
+from .cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
+from .cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
+                               TABLEM1, TABLEM2, TABLEM3, TABLEM4,
+                               TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
+                               TABRND1, TABRNDG,
+                               DTABLE)
+from .cards.contact import (
     BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG, BFRIC)
-from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
+from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
-from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
-from pyNastran.bdf.bdf_methods import BDFMethods
-from pyNastran.bdf.bdf_interface.get_card import GetCard
-from pyNastran.bdf.bdf_interface.add_card import AddCards
-from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
-from pyNastran.bdf.bdf_interface.write_mesh_file import WriteMeshs
-from pyNastran.bdf.bdf_interface.uncross_reference import UnXrefMesh
-from pyNastran.bdf.bdf_interface.verify_validate import verify_bdf, validate_bdf
-from pyNastran.bdf.bdf_interface.stats import get_bdf_stats
+from .case_control_deck import CaseControlDeck, Subcase
+from .bdf_methods import BDFMethods
+from .bdf_interface.get_card import GetCard
+from .bdf_interface.add_card import AddCards
+from .bdf_interface.bdf_card import BDFCard
+from .bdf_interface.write_mesh_file import WriteMeshs
+from .bdf_interface.uncross_reference import UnXrefMesh
+from .bdf_interface.verify_validate import verify_bdf, validate_bdf
+from .bdf_interface.stats import get_bdf_stats
 
-from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
+from .errors import (CrossReferenceError, DuplicateIDsError,
                                   CardParseSyntaxError, UnsupportedCard, DisabledCardError,
                                   SuperelementFlagError, ReplicationError)
-from pyNastran.bdf.bdf_interface.pybdf import (
+from .bdf_interface.pybdf import (
     BDFInputPy, _clean_comment, _clean_comment_bulk, EXECUTIVE_CASE_SPACES)
 
-#from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
+#from .bdf_interface.add_card import CARD_MAP
 
 
 def load_bdf_object(obj_filename:str, xref: bool=True, log=None, debug: bool=True):

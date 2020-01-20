@@ -1,5 +1,6 @@
 import unittest
-from pyNastran.dev.solver.solver import Solver, BDF, CaseControlDeck
+from pyNastran.dev.solver.solver import Solver, BDF
+from pyNastran.bdf.case_control_deck import CaseControlDeck
 
 
 class TestSolverSprings(unittest.TestCase):
@@ -16,7 +17,13 @@ class TestSolverSprings(unittest.TestCase):
         load_id = 2
         spc_id = 3
         model.add_pelas(pid, k, ge=0., s=0., comment='')
-        model.add_sload(load_id, 2, 20.)
+        # model.add_sload(load_id, 2, 20.)
+        fxyz = [1., 0., 0.]
+        model.add_force(load_id, 2, 20., fxyz, cid=0, comment='')
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
         lines = [
             'STRESS(PLOT,PRINT) = ALL',
             'STRAIN(PLOT,PRINT) = ALL',
@@ -41,7 +48,7 @@ class TestSolverSprings(unittest.TestCase):
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
         eid = 1
-        pid = 2
+        #pid = 2
         mid = 3
         E = 3.0e7
         G = None
@@ -53,9 +60,13 @@ class TestSolverSprings(unittest.TestCase):
         load_id = 2
         spc_id = 3
         nid = 2
-        mag = 1,
+        mag = 1.
         fxyz = [1., 0., 0.]
         model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
         lines = [
             'STRESS(PLOT,PRINT) = ALL',
             'STRAIN(PLOT,PRINT) = ALL',

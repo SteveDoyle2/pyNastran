@@ -2524,22 +2524,22 @@ class CQUAD4(QuadShell):
                 #self.mass += self.rho * Jdet
 
                 ##Add to Ae Matrix
-                #self.Ae += np.dot(SZ.T, np.dot(self.Q, SZ)) * Jdet
+                #self.Ae += SZ.T @ self.Q @ SZ * Jdet
 
                 ##Add to Re Matrix
-                #self.Re += np.dot(BN.T, np.dot(self.Q, SZ)) * Jdet
+                #self.Re += BN.T @ self.Q @ SZ * Jdet
 
                 ##Add to Ee Matrix
-                #self.Ee += np.dot(BN.T, np.dot(self.Q, BN)) * Jdet
+                #self.Ee += BN.T @ self.Q @ BN * Jdet
 
                 ##Add to Ce Matrix
-                #self.Ce += np.dot(BN.T, np.dot(self.Q, SN)) * Jdet
+                #self.Ce += BN.T @ self.Q @ SN * Jdet
 
                 ##Add to Le Matrix
-                #self.Le += np.dot(SN.T, np.dot(self.Q, SZ)) * Jdet
+                #self.Le += SN.T @ self.Q @ SZ * Jdet
 
                 ##Add to Me Matrix
-                #self.Me += np.dot(SN.T, np.dot(self.Q, SN)) * Jdet
+                #self.Me += SN.T @ self.Q @ SN * Jdet
 
     #@staticmethod
     #def N(eta, xi):

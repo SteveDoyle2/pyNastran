@@ -87,7 +87,7 @@ def main(bdf_filename, run_first_nastran=True, debug=True):
         #model5 = F06(debug=False)
         #model5.read_f06(out_f06_16)
 
-    out_op2_8 = base + '_8.op2'
+    #out_op2_8 = base + '_8.op2'
     out_op2_16 = base + '_16.op2'
 
     model6 = read_op2(out_op2_16)

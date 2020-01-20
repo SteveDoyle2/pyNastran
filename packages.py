@@ -23,12 +23,6 @@ import sys
 
 # the packages that change requirements based on python version
 REQS = {
-    '3.6' : {
-        # package : (less than check, required)
-        'numpy' : ('1.14', '>=1.14'),
-        'scipy' : ('0.19', '>=0.19'),
-        'matplotlib' : ('2.0', '>=2.0'),
-    },
     '3.7' : {
         'numpy' : ('1.14', '>=1.14'),
         'scipy' : ('1.0', '>=1.0'),
@@ -124,10 +118,10 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
                 print("numpy.__version__ = %r < %s" % (np.__version__, version_check))
                 install_requires.append('numpy %s' % required_version)
                 all_reqs['numpy'] = version_check
-                install_requires.append('numpy %s' % required_version) # was 1.11; ,<1.13.0
+                install_requires.append('numpy %s' % required_version)
         except ImportError:
             all_reqs['numpy'] = required_version
-            install_requires.append('numpy %s' % required_version) # ,<1.13.0; 1.15.1 used
+            install_requires.append('numpy %s' % required_version) # 1.18.1 used
 
     if is_rtd:
         install_requires.append('scipy')
@@ -141,14 +135,15 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
 
             iversion_check = int_version('scipy', version_check)
             #srequired_version = int_version('scipy', required_version)
-            print('scipy %r %r' % (sver, iversion_check))
+            #print('scipy %r %r' % (sver, iversion_check))
+            #print(iver, iversion_check)
             if iver < iversion_check:
                 print("scipy.version.short_version = %r < %r" % (
                     scipy.version.short_version, version_check))
                 all_reqs['scipy'] = required_version
                 install_requires.append('scipy %s' % required_version)
         except ImportError:
-            install_requires.append('scipy %s' % required_version)  # 1.1.0 used
+            install_requires.append('scipy %s' % required_version)  # 1.4.1 used
 
     if is_gui:
         version_check, required_version = vreqs['matplotlib']
@@ -163,7 +158,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
                 all_reqs['matplotlib'] = required_version # '>= 2.1.2'
                 install_requires.append('matplotlib %s' % required_version)
         except ImportError:
-            install_requires.append('matplotlib %s' % required_version)  # was 2.1.2; 2.2.3 used
+            install_requires.append('matplotlib %s' % required_version)  # 3.2.0 used
 
 
     try:
@@ -171,7 +166,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
         iver = int_version('cpylog', cpylog.__version__)
         all_reqs['cpylog'] = str_version(iver)
         required_version_str = '1.3.1'
-        if iver <= [1, 3, 1]:
+        if iver < [1, 3, 1]:
             print(f"cpylog.__version__ = {cpylog.__version__!r} != {required_version_str!r}")
             all_reqs['cpylog'] = f'>= {required_version_str}'
             install_requires.append(f'cpylog >= {required_version_str}')
@@ -202,21 +197,30 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
                 all_reqs['qtpy'] = '>= 1.4.0'
                 install_requires.append('qtpy >= 1.4.0')
         except ImportError:
-            install_requires.append('qtpy >= 1.4.0')  # 1.5.0 used
+            install_requires.append('qtpy >= 1.4.0')  # 1.9.0 used
 
-    if is_rtd:
-        pass
-    elif is_gui:
+        try:
+            import PIL
+            iver = int_version('pillow', PIL.__version__)
+            all_reqs['pillow'] = str_version(iver)
+            if iver < [1, 4, 0]:
+                print("pillow.__version__ = %r > '1.4.0'" % PIL.__version__)
+                all_reqs['pillow'] = 'pillow >=1.4.0'
+                install_requires.append('pillow >= 1.4.0')
+        except ImportError:
+            #print('missing pillow...')
+            install_requires.append('pillow >= 1.4.0')  # 6.2.0 used
+
         try:
             import imageio
             if imageio.__version__ < '2.2.0':
-                #print("imageio.version = %r < '2.2.0'" % imageio.__version__)
+                print("imageio.version = %r < '2.2.0'" % imageio.__version__)
                 all_reqs['imageio'] = '>= 2.2.0'
                 install_requires.append('imageio >= 2.2.0')
             else:
                 all_reqs['imageio'] = imageio.__version__
         except ImportError:
-            install_requires.append('imageio >= 2.2.0')
+            install_requires.append('imageio >= 2.2.0')  # 2.6.1 used
 
 
     #is_windows = 'nt' in os.name

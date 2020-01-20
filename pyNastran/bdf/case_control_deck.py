@@ -57,6 +57,8 @@ class CaseControlDeck:
 
     def __init__(self, lines: List[str], log: Optional[Any]=None) -> None:
         """
+        Creates the CaseControlDeck from a set of lines
+
         Parameters
         ----------
         lines : List[str]
@@ -484,7 +486,7 @@ class CaseControlDeck:
         >>>
 
         """
-        (j, key, value, options, param_type) = self._parse_data_from_user(param)
+        (unused_j, key, value, options, param_type) = self._parse_data_from_user(param)
         self._add_parameter_to_subcase(key, value, options, param_type,
                                        isubcase)
 
