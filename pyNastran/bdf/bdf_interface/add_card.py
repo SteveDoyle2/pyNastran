@@ -2253,7 +2253,7 @@ class AddCards(AddMethods):
             area
         i1, i2, i12, j : List[float]
             moments of inertia
-        nsm : List[float]
+        nsm : List[float]; default=None -> [0.]*nxxb
             nonstructural mass per unit length
         c1/c2, d1/d2, e1/e2, f1/f2 : List[float]; default=None -> [0.]*nxxb
            the y/z locations of the stress recovery points

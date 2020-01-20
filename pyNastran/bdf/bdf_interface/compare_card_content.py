@@ -326,6 +326,11 @@ def compare_matrices(fem1, fem2):
         card2 = fem2.dmik[key]
         assert str(card1) == str(card2)
 
+    for key in fem1.dmiax:
+        card1 = fem1.dmiax[key]
+        card2 = fem2.dmiax[key]
+        assert str(card1) == str(card2)
+
 
 def compare_thermal_content(fem1, fem2):
     """compares thermal cards"""

@@ -273,19 +273,6 @@ class RBAR(RigidElement):
         self.ga = nids[0]
         self.gb = nids[1]
 
-        #if cna == '0':
-            #cna = ''
-        #if cnb == '0':
-            #cnb = ''
-        #if cma == '0':
-            #cma = ''
-        #if cmb == '0':
-            #cmb = ''
-
-        #if (cna, cnb) == ('', ''):
-            #cna = '0'
-            #cnb = '0'
-
         # If both CNA and CNB are blank, then CNA = 123456.
         if (cna, cnb) == ('', ''):
             cna = '123456'

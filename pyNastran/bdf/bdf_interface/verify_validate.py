@@ -129,7 +129,6 @@ def _validate_traceback(model: BDF, obj, unused_error,
     ifailed += 1
     if ifailed > nmax_failed:
         # PY3: raise error from None
-        #reraise(exc_type, exc_value, exc_traceback)
         raise
     return ifailed, exc_type, exc_value, exc_traceback
 
@@ -244,6 +243,7 @@ def validate_bdf(model: BDF) -> None:
     _validate_dict(model, model.dmij)
     _validate_dict(model, model.dmiji)
     _validate_dict(model, model.dmik)
+    _validate_dict(model, model.dmiax)
     #------------------------------------------------
     #model.asets = []
     #model.bsets = []
@@ -328,9 +328,6 @@ def _validate_dict_list(model: BDF, objects_dict: Dict[Any, Any]) -> None:
                     model, obj, error, ifailed, nmax_failed)
 
         if ifailed:
-            #raise exc_type from e
-            #raise exec_value.with_traceback(exc_traceback)
-            #reraise(exc_type, exc_value, exc_traceback)
             raise
 
 def _validate_dict(model: BDF, objects: Dict[Any, Any]) -> None:
@@ -345,7 +342,6 @@ def _validate_dict(model: BDF, objects: Dict[Any, Any]) -> None:
             ifailed, exc_type, exc_value, exc_traceback = _validate_traceback(
                 model, obj, error, ifailed, nmax_failed)
     if ifailed:
-        #reraise(exc_type, exc_value, exc_traceback)
         raise
 
 def _validate_list(model: BDF, objects: List[Any]) -> None:
@@ -360,5 +356,4 @@ def _validate_list(model: BDF, objects: List[Any]) -> None:
             ifailed, exc_type, exc_value, exc_traceback = _validate_traceback(
                 model, obj, error, ifailed, nmax_failed)
     if ifailed:
-        #reraise(exc_type, exc_value, exc_traceback)
         raise

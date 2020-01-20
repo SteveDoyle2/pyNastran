@@ -456,7 +456,6 @@ class PBUSH1D(BushingProperty):
             IDTDV/IDCDV : int
                 dv/dt tension/compression table/eq
 
-
         """
         BushingProperty.__init__(self)
         if comment:

@@ -6,7 +6,6 @@ from collections import OrderedDict
 from math import ceil
 import html
 
-
 import numpy as np
 from cpylog import SimpleLogger
 
@@ -26,26 +25,27 @@ import pyNastran
 # vtk makes poor choices regarding the selection of a backend and has no way
 # to work around it
 #from vtk.qt5.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
-from pyNastran.gui.qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from .qt_files.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from pyNastran.utils import check_path
 from pyNastran.utils.numpy_utils import integer_types
 
-from pyNastran.gui.qt_files.gui_vtk_common import GuiVTKCommon
-from pyNastran.gui.qt_files.scalar_bar import ScalarBar
+from .qt_files.gui_vtk_common import GuiVTKCommon
+from .qt_files.scalar_bar import ScalarBar
 
-from pyNastran.gui.gui_objects.alt_geometry_storage import AltGeometry
-from pyNastran.gui.utils.vtk.animation_callback import AnimationCallback
+from .gui_objects.alt_geometry_storage import AltGeometry
 
-from pyNastran.gui.menus.menus import (
+from .menus.menus import (
     on_set_modify_groups, Group,
     Sidebar,
     ApplicationLogWidget,
     PythonConsoleWidget)
 
-from pyNastran.gui.menus.legend.write_gif import (
+from .menus.legend.write_gif import (
     setup_animation, update_animation_inputs, write_gif, make_two_sided)
-from pyNastran.gui.utils.vtk.base_utils import numpy_to_vtk_idtype
+from .utils.vtk.animation_callback import AnimationCallback
+from .utils.vtk.base_utils import numpy_to_vtk_idtype
+from .utils.html_utils import str_to_html, str_to_html2, get_html_msg
 
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
@@ -692,28 +692,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if 0:
             msg = str_to_html(log_type, filename, lineno, msg)
         else:
-            tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
-            #print('log_type = %s' % log_type)
-            #print('filename = %s' % filename)
-            #print('lineno = %s' % lineno)
-            #print('msg = %s' % msg)
-            #assert isinstance(msg, str), msg
-            msg = html.escape(msg)
-
-            #message colors
-            dark_orange = '#EB9100'
-            colors = {
-                'COMMAND' : 'blue',
-                'ERROR' : 'Crimson',
-                'DEBUG' : dark_orange,
-                'WARNING' : 'purple',
-                'INFO' : 'green',
-            }
-            color = colors[log_type]
-
-            if filename.endswith('.pyc'):
-                filename = filename[:-1]
-            html_msg = get_html_msg(color, tim, log_type, filename, lineno, msg)
+            html_msg = str_to_html2(log_type, filename, lineno, msg)
 
         if self.performance_mode or self.log_widget is None:
             self._log_messages.append(html_msg)
@@ -2213,78 +2192,6 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 continue
             data[group.name] = group
         self.groups = data
-
-#message colors
-DARK_ORANGE = '#EB9100'
-
-COLORS = {
-    'COMMAND' : 'blue',
-    'ERROR' : 'Crimson',
-    'DEBUG' : DARK_ORANGE,
-    'WARNING' : 'purple',
-    'INFO' : 'green',
-}
-
-def str_to_html(log_type, filename, lineno, msg):
-    """
-    converts the message to html
-
-    Parameters
-    ----------
-    color : str
-        the HTML color
-    log_type : str
-        the message type
-    filename : str
-        the filename the message came from
-    lineno : int
-        the line number the message came from
-    message : str
-        the message
-
-    Returns
-    -------
-    html_msg : str
-        the HTML message
-    """
-    tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
-    msg = html.escape(msg)
-
-    #message colors
-    msg = msg.rstrip().replace('\n', '<br>')
-    color = COLORS[log_type]
-    html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
-        color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
-    return html_msg
-
-def get_html_msg(color, tim, log_type, filename, lineno, msg):
-    """
-    converts the message to html
-
-    Parameters
-    ----------
-    color : str
-        the HTML color
-    time : str
-        the time for the message
-    log_type : str
-        the message type
-    filename : str
-        the filename the message came from
-    lineno : int
-        the line number the message came from
-    message : str
-        the message
-
-    Returns
-    -------
-    html_msg : str
-        the HTML message
-    """
-    # log_type, filename, lineno, msg
-    html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
-        color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
-    return html_msg
 
 def populate_sub_qmenu(menu, items, actions):
     sub_menu_name = items[0]

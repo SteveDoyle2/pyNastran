@@ -11,7 +11,6 @@ from collections import defaultdict
 from typing import Optional, TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from io import StringIO
-#from pyNastran.bdf.bdf import BDF
 
 import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8

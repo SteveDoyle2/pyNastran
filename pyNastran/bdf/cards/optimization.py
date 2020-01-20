@@ -1849,8 +1849,6 @@ class DRESP1(OptConstraint):
     def _verify(self, model: BDF, xref):
         if not xref:
             return
-        #properties = {'PSOLID', 'PSHELL', 'PCOMP', 'PBAR', 'PBEAM', 'PSHEAR'}
-
         node_types = {
             'DISP', 'FRDISP', 'PSDDISP', 'RMSDISP', 'TDISP', # 'RFDISP',
             'FRVELO', 'RMSVELO', 'PSDVELO', 'TVELO',

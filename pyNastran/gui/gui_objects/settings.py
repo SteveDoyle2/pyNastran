@@ -524,20 +524,6 @@ class Settings:
         if render:
             self.parent.vtk_interactor.GetRenderWindow().Render()
 
-
-    #def scale_coord_text(self, magnify: float, render=True):
-        #"""internal method for scaling the coordinate system text size"""
-        #for unused_coord_id, axes in self.parent.axes.items():
-            #texts = [
-                #axes.GetXAxisCaptionActor2D(),
-                #axes.GetYAxisCaptionActor2D(),
-                #axes.GetZAxisCaptionActor2D(),
-            #]
-            #for text in texts:
-                #text.SetScale(magnify)
-        #if render:
-            #self.parent.vtk_interactor.GetRenderWindow().Render()
-
     def update_coord_text_scale(self, coord_text_scale=None, render=True):
         """internal method for updating the coordinate system size"""
         if coord_text_scale is None:

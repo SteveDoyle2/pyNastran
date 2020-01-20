@@ -1078,7 +1078,7 @@ class PCOMP(CompositeShellProperty):
         if self.is_symmetrical:
             mids_ref += mids_ref[::-1]
 
-        assert len(mids) == len(mids_ref)
+        assert len(mids) == len(mids_ref), 'mids=%s (%s) mids_ref:\n%s; %s' % (mids, len(mids), mids_ref, len(mids_ref))
         for mid, mid_ref, thetai, thickness, zmean, z0i, z1i in zip(mids, mids_ref, theta,
                                                                     thicknesses, zmeans, z0, z1):
             Qbar = self.get_Qbar_matrix(mid_ref, thetai)

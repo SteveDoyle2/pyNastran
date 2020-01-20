@@ -83,8 +83,6 @@ class SafeXrefMesh(XrefMesh):
         self._safe_cross_reference_contact()
         self._safe_cross_reference_superelements(create_superelement_geometry)
 
-        #pop_xref_errors = False
-        #if pop_xref_errors:
         self.pop_xref_errors()
         for super_id, superelement in sorted(self.superelement_models.items()):
             superelement.safe_cross_reference(

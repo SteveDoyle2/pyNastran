@@ -1,5 +1,5 @@
-"""tests PyBDF"""
 # encoding: utf8
+"""tests PyBDF"""
 # pylint: disable=W0212
 import os
 import sys

@@ -21,8 +21,8 @@ from pyNastran.gui.utils.qt.pydialog import PyDialog, make_combo_box, make_font
 from pyNastran.gui.utils.qt.qpush_button_color import QPushButtonColor
 from pyNastran.gui.utils.qt.dialogs import save_file_dialog
 from pyNastran.gui.utils.qt.checks.qlineedit import check_save_path, check_float
-from pyNastran.gui.utils.wildcards import wildcard_csv
 from pyNastran.gui.menus.cutting_plane.cutting_plane import get_zaxis, _check_color
+from pyNastran.gui.utils.wildcards import wildcard_csv
 
 
 class ShearMomentTorqueWindow(PyDialog):

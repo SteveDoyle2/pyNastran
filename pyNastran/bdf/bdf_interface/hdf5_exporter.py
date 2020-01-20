@@ -61,18 +61,17 @@ dict_int_obj_attrs = [
     'flfacts', 'paeros',
 
     # contact
-    'bcrparas', 'bctadds',
+    'bconp', 'bcrparas', 'bctadds',
     'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs',
     'bfric',
 
     # other
-    'ao_element_flags', 'bconp', 'cMethods',
+    'ao_element_flags', 'cMethods',
     'convection_properties',
     'dareas',
-    'delays',
     'dmig', 'dmiji', 'dmij', 'dmik', 'dmi', 'dmiax',
-    'dphases',
-    'dti',
+    'dti', 
+    'dphases', 'delays',
     'epoints', 'gridb',
     'nlparms', 'nlpcis',
     'normals',

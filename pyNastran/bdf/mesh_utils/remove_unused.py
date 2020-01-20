@@ -133,6 +133,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
     elements = {
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
         'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CDAMP5',
+        'CGAP', 'CBUSH', 'CBUSH1D', 'CBUSH2D', 'CFAST',
         'CVISC',
         'CSHEAR', 'CTUBE',
         'GENEL',
@@ -279,7 +280,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type == 'SPCADD':
             for spcadds in model.spcadds.values():
                 for spcadd in spcadds:
-                    mpcs_used.update(spcadd.spc_ids)
+                    spcs_used.update(spcadd.spc_ids)
         elif card_type in ['SPC1', 'SPC', 'GMSPC', 'SPCAX']:
             for spcs in model.spcs.values():
                 for spc in spcs:
@@ -306,38 +307,6 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type == 'GRID':
             for unused_nid, node in model.nodes.items():
                 cids_used.update([node.Cp(), node.Cd()])
-
-        elif card_type == 'CBEAM3':
-            for eid in ids:
-                elem = model.elements[eid]
-                nids_used.add(elem.Ga())
-                nids_used.add(elem.Gb())
-                if elem.gc is not None:
-                    nids_used.add(elem.gc)
-                pids_used.add(elem.Pid())
-                if elem.g0 is not None:
-                    assert isinstance(elem.g0, int), elem.g0
-
-        elif card_type == 'CFAST':
-            for eid in ids:
-                elem = model.elements[eid]
-                nids_used.update(elem.node_ids)
-                pids_used.add(elem.Pid())
-        elif card_type == 'CGAP':
-            for eid in ids:
-                elem = model.elements[eid]
-                nids_used.update(elem.node_ids)
-                pids_used.add(elem.Pid())
-                if elem.g0 is not None:
-                    assert isinstance(elem.G0(), int), elem.G0()
-                    nids_used.add(elem.G0())
-        elif card_type in ['CBUSH1D', 'CBUSH2D']:
-            for eid in ids:
-                elem = model.elements[eid]
-                nids_used.update(elem.node_ids)
-                pids_used.add(elem.Pid())
-                cids_used.add(elem.Cid())
-
 
         elif card_type in ['PBUSH']:
             pass
@@ -650,6 +619,47 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
             if elem.g0 is not None:
                 assert isinstance(elem.g0, int), elem.g0
                 nids_used.add(elem.g0)
+    elif card_type == 'CBEAM3':
+        for eid in ids:
+            elem = model.elements[eid]
+            nids_used.add(elem.Ga())
+            nids_used.add(elem.Gb())
+            if elem.gc is not None:
+                nids_used.add(elem.gc)
+            pids_used.add(elem.Pid())
+            if elem.g0 is not None:
+                assert isinstance(elem.g0, int), elem.g0
+
+    elif card_type == 'CFAST':
+        for eid in ids:
+            elem = model.elements[eid]
+            nids_used.update(elem.node_ids)
+            pids_used.add(elem.Pid())
+    elif card_type == 'CGAP':
+        for eid in ids:
+            elem = model.elements[eid]
+            nids_used.update(elem.node_ids)
+            pids_used.add(elem.Pid())
+            if elem.g0 is not None:
+                assert isinstance(elem.G0(), int), elem.G0()
+                nids_used.add(elem.G0())
+    elif card_type == 'CBUSH':
+        for eid in ids:
+            elem = model.elements[eid]
+            elem = model.elements[eid]
+            nids_used.update(elem.node_ids)
+            if elem.g0 is not None:
+                assert isinstance(elem.G0(), int), elem.G0()
+                nids_used.add(elem.G0())
+            pids_used.add(elem.Pid())
+            cids_used.add(elem.Cid())
+
+    elif card_type in ['CBUSH1D', 'CBUSH2D']:
+        for eid in ids:
+            elem = model.elements[eid]
+            nids_used.update(elem.node_ids)
+            pids_used.add(elem.Pid())
+            cids_used.add(elem.Cid())
     else:
         raise NotImplementedError(card_type)
 

@@ -244,8 +244,6 @@ class ToolActions:
         show_msg : bool; default=True
             log the command
 
-        TODO: screenshot doesn't work well with the coordinate system text size
-
         """
         fname, flt = self._get_screenshot_filename(fname)
 

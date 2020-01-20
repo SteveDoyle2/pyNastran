@@ -647,7 +647,6 @@ def hdf5_load_pval(model, group, encoding):
             #for value in values:
                 #print(value)
             _put_keys_values_into_dict_list(model, 'pval', adapt_idi, sid, values)
-
             model.card_count[card_type] = len(sid)
 
 def hdf5_load_loads(model, group, encoding):
@@ -1100,7 +1099,7 @@ def _cast_strings(group, encoding):
     return str_list
 
 def hdf5_load_dti(model, group, encoding):
-    """loads the dmigs"""
+    """loads the dti"""
     group_keys = group.keys()
     if len(group_keys) == 0:
         #model.log.warning('skipping loading %s' % group)
@@ -2053,8 +2052,6 @@ def hdf5_load_elements(model, elements_group, encoding):
                 'CPLSTS4' : model.add_cplsts4,
             }
             func = func_map[card_type]
-            print('elements =', elements)
-            print(elements.keys())
 
             eids = _cast(elements['eid'])
             pids = _cast(elements['pid'])

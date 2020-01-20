@@ -33,7 +33,6 @@ class TestDampers(unittest.TestCase):
         assert len(model.properties) == 2, model.properties
         save_load_deck(model)
 
-
     def test_cdamp1_01(self):
         """tests a CDAMP1"""
         log = get_logger(level='warning')
