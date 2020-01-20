@@ -40,39 +40,6 @@ def str_to_html(log_type, filename, lineno, msg):
 
     """
     tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
-    msg = html.escape(msg)
-
-    #message colors
-    msg = msg.rstrip().replace('\n', '<br>')
-    color = COLORS[log_type]
-    html_msg = r'<font color="%s"> %s %s : %s:%i</font> %s <br>' % (
-        color, tim, log_type, filename, lineno, msg.replace('\n', '<br>'))
-    return html_msg
-
-def str_to_html2(log_type, filename, lineno, msg):
-    """
-    converts the message to html
-
-    Parameters
-    ----------
-    color : str
-        the HTML color
-    log_type : str
-        the message type
-    filename : str
-        the filename the message came from
-    lineno : int
-        the line number the message came from
-    message : str
-        the message
-
-    Returns
-    -------
-    html_msg : str
-        the HTML message
-
-    """
-    tim = datetime.datetime.now().strftime('[%Y-%m-%d %H:%M:%S]')
     #print('log_type = %s' % log_type)
     #print('filename = %s' % filename)
     #print('lineno = %s' % lineno)

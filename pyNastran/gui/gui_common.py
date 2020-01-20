@@ -45,7 +45,7 @@ from .menus.legend.write_gif import (
     setup_animation, update_animation_inputs, write_gif, make_two_sided)
 from .utils.vtk.animation_callback import AnimationCallback
 from .utils.vtk.base_utils import numpy_to_vtk_idtype
-from .utils.html_utils import str_to_html, str_to_html2, get_html_msg
+from .utils.html_utils import str_to_html
 
 
 #from pyNastran.gui.menus.multidialog import MultiFileDialog
@@ -689,10 +689,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if log_type in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
             log_type = log_type[4:] # drop the GUI
 
-        if 0:
-            msg = str_to_html(log_type, filename, lineno, msg)
-        else:
-            html_msg = str_to_html2(log_type, filename, lineno, msg)
+        html_msg = str_to_html2(log_type, filename, lineno, msg)
 
         if self.performance_mode or self.log_widget is None:
             self._log_messages.append(html_msg)
