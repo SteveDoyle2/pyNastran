@@ -327,6 +327,7 @@ class NormalResult(GuiResultCommon):
         msg += '    uname=%r\n' % self.uname
         return msg
 
+
 class GuiResult(GuiResultCommon):
     deflects = False
     def __init__(self, subcase_id: int, header: str, title: str, location: str, scalar: Any,

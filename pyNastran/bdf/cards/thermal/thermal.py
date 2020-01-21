@@ -1043,7 +1043,6 @@ class PCONV(ThermalProperty):
             return self.gidin_ref.nid
         return self.gidin
 
-
     def cross_reference(self, model: BDF) -> None:
         msg = 'which is required by PCONV pconid=%s' % self.pconid
         self.ce_ref = model.Coord(self.ce, msg)

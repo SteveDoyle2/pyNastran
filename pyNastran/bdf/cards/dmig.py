@@ -2415,7 +2415,7 @@ def _export_dmig_to_hdf5(h5_file, model, dict_obj, encoding):
             dofs = []
             values = []
             for lseq, ncx in sorted(dmig.load_sequences.items()):
-                lseq_group = load_seq_group = dmig_group.create_group(str(lseq))
+                lseq_group = dmig_group.create_group(str(lseq))
                 #list_fields += [lseq, None, None]
                 for (nid, dof, value) in ncx:
                     nids.append(nid)

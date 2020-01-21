@@ -49,8 +49,6 @@ Solver
 -----------------------v???   released 2019/?/??-----------------------
 BDF:
  - bug fixes:
-   - added AECOMPL, DEFORM to bdf attributes
-   - added RHO to MAT10 updater
  - new cards:
    - DTI besides UNITS are now supported
    - PBEAM3, TEMPB3
@@ -64,13 +62,11 @@ BDF:
      - added PLOTEL, RROD, RBAR, RBAR1, RBE1, AELIST, AESURF support
  - minor enhancements:
    - handling ;; in DEQATN
-   - PBARL & PBEAML DBOX now has defaults for DIM5-DIM10
    - support for SURF cid=None in _get_forces_moments_array
    - added check for number of loads = nscale factors for LOAD
    - more PARAM validation
 - changes:
    - warning on RBAR dof check instead of RuntimeError
-   - more test for PBARL properties
 
 OP2:
  - bug fixes:
@@ -95,6 +91,9 @@ GUI:
 -----------------------v1.2.2 released 2020/1/x-----------------------
 BDF:
  - bug fixes:
+   - PBARL & PBEAML DBOX now has defaults for DIM5-DIM10
+   - added AECOMPL, DEFORM to bdf attributes
+   - added RHO to MAT10 updater
    - Better case control SET parser (can now handle 1,THRU,10,EXCEPT,7,8,
      which doesn't have spaces that makes parsing easier).  It's also orders
      of magnitude faster on large problems.

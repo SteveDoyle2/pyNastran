@@ -55,7 +55,7 @@ class NastranGuiResults(NastranGuiAttributes):
         nastran_res = GridPointForceResult(subcase_id, header, title, grid_point_forces)
 
         itime = 0
-        print('GridPointForceResult', icase)
+
         cases[icase] = (nastran_res, (itime, 'Grid Point Forces'))
         formii = ('Grid Point Forces', icase, [])
         form_dict[(key, itime)].append(formii)
@@ -1275,7 +1275,6 @@ def print_empty_elements(model, element_ids, is_element_on, log_error):
     print('-----------------------------------')
 
 
-
 def _get_t123_tnorm(case, nids, nnodes: int, t123_offset: int=0):
     """
     helper method for _fill_op2_oug_oqg
@@ -1300,6 +1299,7 @@ def _get_t123_tnorm(case, nids, nnodes: int, t123_offset: int=0):
         ???
     ntimes : int
        number of times
+
     """
     assert case.is_sort1, case.is_sort1
 
@@ -1398,8 +1398,6 @@ def _get_times(model, key):
                 #is_real, case.nonlinear_factor, case._times))
             if case.nonlinear_factor is not None:
                 times = case._times
-                #print(case)
-                #print(times)
                 is_static = False
             else:
                 is_static = True

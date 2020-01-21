@@ -7,11 +7,11 @@ Tasks
 -----
  - build docs
    - attach on sourceforge/egg?
- - run bdf tests in py27/36
- - run op2 tests in py27/36
+ - run bdf tests in py37/38
+ - run op2 tests in py37/38
  - tag
  - upload wheel
- - upload py27 gui
+ - upload py37 gui
    - test eigenvector with edges
  - test autoupdate
 

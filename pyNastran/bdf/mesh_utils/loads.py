@@ -183,14 +183,6 @@ def sum_forces_moments(model, p0, loadcase_id, include_grav=False, xyz_cid0=None
         model.log.warning('case=%s loadtype=%r not supported' % (loadcase_id, load_type))
     return (F, M)
 
-def _pload1_elements(model, loadcase_id, load, scale, eids, xyz, F, M, p):
-    """helper method for ``sum_forces_moments_elements``"""
-    #elem = model.elements[load.eid]
-    elem = load.eid_ref
-    if elem.eid not in eids:
-        return
-    _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p)
-
 def _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p):
     """helper method for ``sum_forces_moments``"""
     elem = load.eid_ref
@@ -201,6 +193,14 @@ def _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p):
             loadcase_id, elem.type, load.type))
     else:
         raise RuntimeError('element.type=%r is not a CBAR, CBEAM, or CBEND' % elem.type)
+
+def _pload1_elements(model, loadcase_id, load, scale, eids, xyz, F, M, p):
+    """helper method for ``sum_forces_moments_elements``"""
+    #elem = model.elements[load.eid]
+    elem = load.eid_ref
+    if elem.eid not in eids:
+        return
+    _pload1_total(model, loadcase_id, load, scale, xyz, F, M, p)
 
 def _pload1_bar_beam(model, unused_loadcase_id, load, elem, scale, xyz, F, M, p):
     """

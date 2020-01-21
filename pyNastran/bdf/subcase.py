@@ -1104,6 +1104,7 @@ class Subcase:
         return msg
 
 def _load_hdf5_param(group, key, encoding):
+    import h5py
     from pyNastran.utils.dict_to_h5py import _cast
     #print('-----------------------------------------')
     #print(type(key), key)
