@@ -913,11 +913,7 @@ class Tecplot:
             1-based in ASCII
 
         """
-        #is_points : bool; default=True
-            #write in POINT format vs. BLOCK format
-
         self.log.info('writing tecplot %s' % tecplot_filename)
-
         msg, ivars = self._get_write_header(res_types)
 
         with open(tecplot_filename, 'w') as tecplot_file:

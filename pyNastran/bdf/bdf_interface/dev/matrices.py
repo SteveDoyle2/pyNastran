@@ -40,7 +40,7 @@ def triple(A, B):
     """
     return np.einsum('ia,aj,ka->ijk', A, B, A)
 
-def make_mass_matrix(model, reference_point):
+def make_mass_matrix(model, reference_point, fdtype='float64', idtype='int32'):
     """
     Performs an accurate mass calculation
 
@@ -48,7 +48,7 @@ def make_mass_matrix(model, reference_point):
     ..todo:: doesn't support SPOINTs/EPOINTs
     """
     unused_icd_transform, icp_transform, xyz_cp, nid_cp_cd = model.get_displacement_index_xyz_cp_cd(
-        fdtype='float64', idtype='int32', sort_ids=True)
+        fdtype=fdtype, idtype=idtype, sort_ids=True)
     xyz_cid0 = model.transform_xyzcp_to_xyz_cid(
         xyz_cp, icp_transform, cid=0, in_place=False, atol=1e-6)
 
@@ -94,7 +94,7 @@ def make_mass_matrix(model, reference_point):
             eids2 = get_sub_eids(all_eids, eids, etype)
 
             # lumped
-            mass_mat = np.ones((2, 2))
+            mass_mat = np.ones((2, 2), dtype=fdtype)
             mass_mat[0, 0] = mass_mat[2, 2] = 1.
             #mass_mat[2, 2] = mass_mat[5, 5] = 0.
 
@@ -132,7 +132,7 @@ def make_mass_matrix(model, reference_point):
                 #centroid = (xyz[n1] + xyz[n2]) / 2.
                 #mass = _increment_inertia(centroid, reference_point, m, mass, cg, I)
         elif etype == 'CONM2':
-            mass_mat = np.zeros((6, 6))
+            mass_mat = np.zeros((6, 6), dtype=fdtype)
             eids2 = get_sub_eids(all_eids, eids, etype)
             for eid in eids2:
                 elem = model.masses[eid]

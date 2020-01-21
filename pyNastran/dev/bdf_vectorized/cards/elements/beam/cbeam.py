@@ -1,7 +1,7 @@
 """
 http://www.ce.memphis.edu/7117/notes/presentations/chapter_04b.pdf
 """
-import numpy as np
+#import numpy as np
 from numpy import array, arange, zeros, unique, searchsorted, nan, full
 from numpy.linalg import norm  # type: ignore
 
