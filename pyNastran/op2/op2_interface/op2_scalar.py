@@ -1287,7 +1287,6 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 raise NotImplementedError('%r is not a supported PARAM' % word)
 
             key = word.decode('latin1')
-            #print(key, value, slot)
             self.params[key] = PARAM(key, [value], comment='')
         return nvalues
 

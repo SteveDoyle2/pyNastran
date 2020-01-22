@@ -17,6 +17,7 @@ from pyNastran.bdf.cards.loads.static_loads import update_pload4_vector
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
+
 def get_forces_moments_array(model: BDF, p0, load_case_id : int,
                              eid_map, nnodes, normals, dependents_nodes,
                              nid_map=None, include_grav=False):
@@ -429,7 +430,7 @@ def get_pressure_array(model: BDF, load_case_id, eids, stop_on_failure=True):
             #print(load.object_attributes())
             eids_missing = []
             for elem in load.eids_ref:
-                #elem = self.elements[eid]
+                #elem = model.elements[eid]
                 if isinstance(elem, integer_types):
                     eids_missing.append(elem)
                     # Nastran is NOT OK with missing element ids
@@ -588,8 +589,6 @@ def get_load_arrays(model: BDF, subcase_id, eid_map, node_ids, normals,
 
     """
     subcase = model.subcases[subcase_id]
-
-    #model.log.debug('get_load_arrays')
     if nid_map is None:
         nid_map = model.nid_map
     nnodes = len(node_ids)

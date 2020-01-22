@@ -4821,7 +4821,6 @@ class OP2Reader:
             the big/little endian {>, <}
 
         """
-        #return '', '', ''
         n = len(data)
         nints = n // 4
         ndoubles = n // 8

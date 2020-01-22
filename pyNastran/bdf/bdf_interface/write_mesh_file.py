@@ -389,6 +389,7 @@ class WriteMeshs(WriteMesh):
         write_bdfs_dict(bdf_files, self.dmij, size, is_double, is_long_ids)
         write_bdfs_dict(bdf_files, self.dmiji, size, is_double, is_long_ids)
         write_bdfs_dict(bdf_files, self.dmik, size, is_double, is_long_ids)
+        write_bdfs_dict(bdf_files, self.dmiax, size, is_double, is_long_ids)
 
     def _write_dynamic_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
                             is_long_ids: Optional[bool]=None) -> None:

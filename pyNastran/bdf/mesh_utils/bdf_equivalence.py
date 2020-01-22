@@ -150,7 +150,7 @@ def _eq_nodes_setup(bdf_filename, unused_tol,
 def _get_xyz_cid0(model, nids):
     """gets xyz_cid0"""
     coord_ids = model.coord_ids
-    needs_get_position = True if coord_ids == [0] else False
+    needs_get_position = (coord_ids == [0])
 
     if needs_get_position:
         nodes_xyz = array([model.nodes[nid].get_position()

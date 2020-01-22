@@ -46,9 +46,11 @@ class Solver:
         #_get_loadid_ndof(model, subcase_id)
         nelements = 0
         nelements += _build_kbb_celas1(model, Kbb, dof_map)
+        nelements += _build_kbb_celas2(model, Kbb, dof_map)
         nelements += _build_kbb_conrod(model, Kbb, dof_map)
         nelements += _build_kbb_crod(model, Kbb, dof_map)
         nelements += _build_kbb_ctube(model, Kbb, dof_map)
+        nelements += _build_kbb_cbar(model, Kbb, dof_map)
         assert nelements > 0, nelements
 
         return Kbb, dof_map, ndof
@@ -148,6 +150,23 @@ class Solver:
         t = l + r
         q = Generalized DOFs assigned to component modes and residual vectors
         a = t + q
+        #-------------------------
+        {s} = {sb} + {sg}  # done
+        f =
+        mp  DOFs eliminated by multipoint constraints.
+        mr  DOFs eliminated by multipoint constraints created by the rigid
+            elements using the LGELIM method on the Case Control command RIGID.
+        f = a + o        unconstrained (free) structural DOFs
+        n = f + s        all DOFs not constrained by multipoint constraints
+        ne = n + e       all DOFs not constrained by multipoint constraints plus extra DOFs
+        m = mp + mr      all DOFs eliminated by multipoint constraints
+        g = n + m        all DOFs including scalar DOFs
+        g = n + (mp + mr)
+        g = f + s + (mp + mr)
+        g = f + (sb + sg) + (mp + mr)
+        g = (a + o) + (sb + sg) + (mp + mr)
+        a + o = g - (sb + sg) + (mp + mr)
+        a = g - o - (sb + sg) + (mp + mr)
         """
         fdtype = 'float64'
         log = self.model.log
@@ -202,7 +221,7 @@ class Solver:
         #print(f'Kaa_:\n{Kaa_}')
         #print(f'Fa_: {Fa_}')
         xa_ = np.linalg.solve(Kaa_, Fa_)
-        #print(f'xa_ = {xa_}')
+        log.info(f'xa_ = {xa_}')
 
         xa[ipositive] = xa_
         fdtype = 'float64'
@@ -301,33 +320,54 @@ class Solver:
 
 def _build_kbb_celas1(model: BDF, Kbb, dof_map):
     celas1s = model._type_to_id_map['CELAS1']
-    #celas2s = model._type_to_id_map['CELAS2']
+
     #celas3s = model._type_to_id_map['CELAS3']
     #celas4s = model._type_to_id_map['CELAS4']
 
     for eid in celas1s:
         elem = model.elements[eid]
         ki = elem.K()
-
         #print(elem, ki)
         #print(elem.get_stats())
-        nid1, nid2 = elem.nodes
-        c1, c2 = elem.c1, elem.c2
-        i = dof_map[(nid1, c1)]
-        j = dof_map[(nid2, c2)]
-        k = ki * np.array([[1, -1,],
-                           [-1, 1]])
-        ibe = [
-            (i, 0),
-            (j, 1),
-        ]
-        for ib1, ie1 in ibe:
-            for ib2, ie2 in ibe:
-                Kbb[ib1, ib2] += k[ie1, ie2]
-        #Kbb[j, i] += ki
-        #Kbb[i, j] += ki
-        del i, j, ki, nid1, nid2, c1, c2
+        _build_kbbi_celas12(Kbb, dof_map, elem, ki)
     return len(celas1s)
+
+def _build_kbb_celas2(model: BDF, Kbb, dof_map):
+    celas2s = model._type_to_id_map['CELAS2']
+    for eid in celas2s:
+        elem = model.elements[eid]
+        ki = elem.K()
+        #print(elem, ki)
+        #print(elem.get_stats())
+        _build_kbbi_celas12(Kbb, dof_map, elem, ki)
+    return len(celas2s)
+
+def _build_kbbi_celas12(Kbb, dof_map, elem, ki):
+    nid1, nid2 = elem.nodes
+    c1, c2 = elem.c1, elem.c2
+    i = dof_map[(nid1, c1)]
+    j = dof_map[(nid2, c2)]
+    k = ki * np.array([[1, -1,],
+                       [-1, 1]])
+    ibe = [
+        (i, 0),
+        (j, 1),
+    ]
+    for ib1, ie1 in ibe:
+        for ib2, ie2 in ibe:
+            Kbb[ib1, ib2] += k[ie1, ie2]
+    #Kbb[j, i] += ki
+    #Kbb[i, j] += ki
+    #del i, j, ki, nid1, nid2, c1, c2
+
+def _build_kbb_cbar(model, Kbb, dof_map):
+    cbars = model._type_to_id_map['CBAR']
+    for eid in cbars:
+        elem = model.elements[eid]
+        pid_ref = elem.pid_ref
+        mat = pid_ref.mid_ref
+        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
+    return len(cbars)
 
 def _build_kbb_crod(model, Kbb, dof_map):
     crods = model._type_to_id_map['CROD']
