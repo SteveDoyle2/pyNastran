@@ -147,7 +147,7 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         'CTETRA', 'CHEXA', 'CPENTA', 'CPYRAM',
         'CROD', 'CRAC2D', 'CRAC3D',
         'CONROD', 'CCONEAX',
-        'CBAR', 'CBEAM', 'CBEND',
+        'CBAR', 'CBEAM', 'CBEND', 'CBEAM3',
 
         # acoustic
         'CHACAB',
@@ -316,16 +316,6 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
         elif card_type == 'PBUSHT':
             # tables
             pass
-        elif card_type == 'CBUSH':
-            for eid in ids:
-                elem = model.elements[eid]
-                nids_used.update(elem.node_ids)
-                pids_used.add(elem.Pid())
-                if elem.g0 is not None:
-                    assert isinstance(elem.g0, int), elem.g0
-                    nids_used.add(elem.g0)
-                # TODO: cid
-
         elif card_type == 'AESURF':
             #CID1  | ALID1 | CID2   | ALID2
             for aesurf in model.aesurf.values():
@@ -489,14 +479,14 @@ def remove_unused(bdf_filename, remove_nids=True, remove_cids=True,
                 blseg = model.blseg[idi]
                 # line_id
                 nids_used.update(blseg.nodes)
-                # print(blseg.get_stats())
+                #print(blseg.get_stats())
         elif card_type == 'BCONP':
             for idi in ids:
                 bconp = model.bconp[idi]
                 # master
                 # slave
                 # ???
-                # print(bconp.get_stats())
+                #print(bconp.get_stats())
                 cids_used.add(bconp.cid)
                 friction_ids_used.add(bconp.friction_id)
         #elif card_type == 'FORCEAX':
@@ -629,6 +619,14 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
             pids_used.add(elem.Pid())
             if elem.g0 is not None:
                 assert isinstance(elem.g0, int), elem.g0
+    #elif card_type == 'CBEAM3':
+        #for eid in ids:
+            #elem = model.elements[eid]
+            #nids_used.update(elem.node_ids)
+            #pids_used.add(elem.Pid())
+            #if elem.g0 is not None:
+                #assert isinstance(elem.g0, int), elem.g0
+                #nids_used.add(elem.g0)
 
     elif card_type == 'CFAST':
         for eid in ids:
@@ -641,7 +639,7 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
             nids_used.update(elem.node_ids)
             pids_used.add(elem.Pid())
             if elem.g0 is not None:
-                assert isinstance(elem.G0(), int), elem.G0()
+                assert isinstance(elem.g0, int), elem.g0
                 nids_used.add(elem.G0())
     elif card_type == 'CBUSH':
         for eid in ids:
@@ -649,11 +647,11 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
             elem = model.elements[eid]
             nids_used.update(elem.node_ids)
             if elem.g0 is not None:
-                assert isinstance(elem.G0(), int), elem.G0()
+                assert isinstance(elem.g0, int), elem.g0
                 nids_used.add(elem.G0())
             pids_used.add(elem.Pid())
-            cids_used.add(elem.Cid())
-
+            if elem.cid is not None:
+                cids_used.add(elem.Cid())
     elif card_type in ['CBUSH1D', 'CBUSH2D']:
         for eid in ids:
             elem = model.elements[eid]
@@ -736,7 +734,7 @@ def _store_loads(model, unused_card_type, unused_ids, nids_used, eids_used, cids
                 nids_used.update(load.node_ids)
             elif load.type in ['LOAD', 'LSEQ', 'LOADCYN']:
                 pass
-            elif load.type in ['QVOL']:
+            elif load.type in ['QVOL', 'TEMPRB']:
                 # eids
                 pass
             elif load.type in ['TEMPAX']:

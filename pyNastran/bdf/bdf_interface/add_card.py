@@ -124,7 +124,7 @@ from pyNastran.bdf.cards.bdf_sets import (
 from pyNastran.bdf.cards.params import PARAM
 from pyNastran.bdf.cards.dmig import DMIG, DMIAX, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI
 from pyNastran.bdf.cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
-                                               QVOL, QVECT)
+                                               TEMPRB, QVOL, QVECT)
 from pyNastran.bdf.cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                                  PHBDY, CONV, CONVM, TEMPBC)
 from pyNastran.bdf.cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
@@ -232,6 +232,7 @@ CARD_MAP = {
     'TEMPAX' : TEMPAX,
     'TEMPD' : TEMPD,
     'TEMPB3' : TEMPB3,
+    'TEMPRB' : TEMPRB,
 
     #acoustic elements
     'CHACAB' : CHACAB,

@@ -182,6 +182,7 @@ class CBUSH(BushElement):
         self.ocid = ocid
         self.si = si
         self.nodes_ref = None
+        self.g0_ref = None
         self.pid_ref = None
         self.cid_ref = None
         self.ocid_ref = None
@@ -359,6 +360,11 @@ class CBUSH(BushElement):
             return self.nodes_ref[1].nid
         return self.nodes[1]
 
+    def G0(self):
+        if self.g0_ref is not None:
+            return self.g0_ref.nid
+        return self.g0
+
     def OCid(self):
         if self.ocid_ref is not None:
             return self.ocid_ref.cid
@@ -381,6 +387,8 @@ class CBUSH(BushElement):
         msg = ', which is required by CBUSH eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.Property(self.pid, msg=msg)
+        if self.g0 is not None:
+            self.g0_ref = model.Node(self.g0, msg=msg)
         if self.cid is not None:
             self.cid_ref = model.Coord(self.cid, msg=msg)
         if self.ocid is not None and self.ocid != -1:
@@ -398,6 +406,8 @@ class CBUSH(BushElement):
         msg = ', which is required by CBUSH eid=%s' % self.eid
         self.nodes_ref = model.EmptyNodes(self.node_ids, msg=msg)
         self.pid_ref = model.safe_property(self.pid, self.eid, xref_errors, msg=msg)
+        if self.g0 is not None:
+            self.g0_ref = model.EmptyNode(self.g0, msg=msg)
         if self.cid is not None:
             self.cid_ref = model.safe_coord(self.cid, self.eid, xref_errors, msg=msg)
         if self.ocid is not None and self.ocid != -1:
@@ -409,26 +419,29 @@ class CBUSH(BushElement):
         self.pid = self.Pid()
         self.cid = self.Cid()
         self.gb = self.Gb()
+        self.g0 = self.G0()
         self.cid_ref = None
         self.ga_ref = None
         self.gb_ref = None
+        self.g0_ref = None
         self.pid_ref = None
         self.ocid_ref = None
 
-    def raw_fields(self):
+    def _get_x_g0(self):
         if self.g0 is not None:
-            x = [self.g0, None, None]
+            x = [self.G0(), None, None]
         else:
             x = self.x
+        return x
+
+    def raw_fields(self):
+        x = self._get_x_g0()
         list_fields = (['CBUSH', self.eid, self.Pid(), self.Ga(), self.Gb()] + x +
                        [self.Cid(), self.s, self.ocid] + self.si)
         return list_fields
 
     def repr_fields(self):
-        if self.g0 is not None:
-            x = [self.g0, None, None]
-        else:
-            x = self.x
+        x = self._get_x_g0()
 
         ocid = set_blank_if_default(self.OCid(), -1)
         s = set_blank_if_default(self.s, 0.5)

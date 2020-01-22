@@ -20,7 +20,7 @@ def write_geom3(op2, op2_ascii, obj, endian=b'<', nastran_format='nx'):
 
     # return if no supported cards are found
     cards_to_skip = [
-        'CLOAD',
+        'CLOAD', 'TEMPRB',
     ]
     supported_cards = [
         'FORCE', 'FORCE1', 'FORCE2', 'MOMENT', 'MOMENT1', 'MOMENT2',

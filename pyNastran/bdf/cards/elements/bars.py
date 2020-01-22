@@ -1273,7 +1273,7 @@ class CBEAM3(LineElement):  # was CBAR
 
     @property
     def nodes(self):
-        return [self.Ga(), self.Gb(), self.Gc()]
+        return [self.ga, self.gb, self.gc]
 
     @property
     def node_ids(self):

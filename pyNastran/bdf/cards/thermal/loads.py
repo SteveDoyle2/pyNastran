@@ -929,6 +929,176 @@ class QHBDY(ThermalLoad):
         return self.comment + print_card_16(card)
 
 
+class TEMPRB(ThermalLoad):
+    """
+
+    +--------+-----+----+-------+----+-------+----+----+
+    |    1   |  2  |  3 |   4   |  5 |   6   |  7 |  8 |
+    +========+=====+====+=======+====+=======+====+====+
+    | TEMPRB | SID | G1 |  T1   | G2 |  T2   | G3 | T3 |
+    +--------+-----+----+-------+----+-------+----+----+
+    TEMPRB SID  EID1   TA   TB TP1A TP1B TP2A TP2B
+           TCA   TDA  TEA  TFA  TCB  TDB  TEB TFB
+           EID2 EID3 EID4 EID5 EID6 EID7 -etc.-
+    TEMPRB 200 1 68.0 23.0 0.0 28.0 2.5
+           68.0 91.0 45.0 48.0 80.0 20.0
+           9 10
+    """
+
+    type = 'TEMPRB'
+
+    @classmethod
+    def _init_from_empty(cls):
+        sid = 1
+        eids = [1]
+        ta = 1.0
+        tb = 1.0
+        tp1 = [1.0, 1.0]
+        tp2 = [1.0, 1.0]
+        tai = [1.0, 1.0, 1.0, 1.0]
+        tbi = [1.0, 1.0, 1.0, 1.0]
+        return TEMPRB(sid, ta, tb, tp1, tp2, tai, tbi, eids, comment='')
+
+    #@classmethod
+    #def export_to_hdf5(cls, h5_file, model, loads):
+        #"""exports the loads in a vectorized way"""
+        ##encoding = model._encoding
+        ##comments = []
+        #unused_sid = loads[0].sid
+        ##h5_file.create_dataset('sid', data=sid)
+        #for i, load in enumerate(loads):
+            #sub_group = h5_file.create_group(str(i))
+            ##comments.append(loads.comment)
+
+            #node = []
+            #temp = []
+            #for nid, tempi in load.temperatures.items():
+                #node.append(nid)
+                #temp.append(tempi)
+            #sub_group.create_dataset('node', data=node)
+            #sub_group.create_dataset('temperature', data=temp)
+        #h5_file.create_dataset('_comment', data=comments)
+
+    def __init__(self, sid, ta, tb, tp1, tp2,
+                 tai, tbi, eids, comment=''):
+        """
+        Creates a TEMPRB card
+
+        Parameters
+        ----------
+        sid : int
+            Load set identification number
+        comment : str; default=''
+            a comment for the card
+
+        """
+        ThermalLoad.__init__(self)
+        if comment:
+            self.comment = comment
+        #: Load set identification number. (Integer > 0)
+        self.sid = sid
+
+        # temperatures at end A/B
+        self.ta = ta
+        self.tb = tb
+
+        # gradients at A/B
+        self.tp1 = tp1
+        self.tp2 = tp2
+
+        # temperatures at points C/D/E/F at A/B
+        self.tai = tai
+        self.tbi = tbi
+        self.eids = eids
+
+    @classmethod
+    def add_card(cls, card, comment=''):
+        """
+        Adds a TEMPRB card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+
+        #TEMPRB SID  EID1   TA   TB TP1A TP1B TP2A TP2B
+               #TCA   TDA  TEA  TFA  TCB  TDB  TEB TFB
+               #EID2 EID3 EID4 EID5 EID6 EID7 -etc.-
+        #TEMPRB 200 1 68.0 23.0 0.0 28.0 2.5
+               #68.0 91.0 45.0 48.0 80.0 20.0
+               #9 10
+        eid1 = integer(card, 2, 'EID1')
+        ta = double(card, 3, 'T(A)')
+        tb = double(card, 4, 'T(B)')
+        tp1a = double_or_blank(card, 5, 'TP1(A)')
+        tp1b = double_or_blank(card, 6, 'TP1(B)')
+        tp2a = double_or_blank(card, 7, 'TP2(A)')
+        tp2b = double_or_blank(card, 8, 'TP2(B)')
+        tp1 = [tp1a, tp1b]
+        tp2 = [tp2a, tp2b]
+
+        tca = double(card, 9, 'TC(A)')
+        tda = double(card, 10, 'TD(A)')
+        tea = double(card, 11, 'TE(A)')
+        tfa = double(card, 12, 'TF(A)')
+
+        tcb = double(card, 13, 'TC(B)')
+        tdb = double(card, 14, 'TD(B)')
+        teb = double(card, 15, 'TE(B)')
+        tfb = double(card, 16, 'TF(B)')
+        eids = [eid1]
+
+        nfields = len(card)
+        #assert nfields <= 16, 'len(card)=%i card=%s' % (len(card), card)
+        for ifield in range(17, nfields):
+            eid = integer(card, ifield, f'eid{ifield-15}')
+            eids.append(eid)
+
+        tai = [tca, tda, tea, tfa]
+        tbi = [tcb, tdb, teb, tfb]
+        return TEMPRB(sid, ta, tb, tp1, tp2,
+                      tai, tbi, eids, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model, debug=True):
+        pass
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def raw_fields(self):
+        """Writes the TEMPRB card"""
+        eid = self.eids[0]
+        list_fields = [
+            'TEMPRB', self.sid, eid, self.ta, self.tb,
+            self.tp1[0], self.tp1[1],
+            self.tp2[0], self.tp2[1],
+        ] + self.tai + self.tbi + self.eids[1:]
+        return list_fields
+
+    def repr_fields(self):
+        """Writes the TEMPRB card"""
+        return self.raw_fields()
+
+    def get_loads(self):
+        return [self]
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        if is_double:
+            return self.comment + print_card_double(card)
+        return self.comment + print_card_16(card)
+
 class TEMP(ThermalLoad):
     """
     Defines temperature at grid points for determination of thermal loading,

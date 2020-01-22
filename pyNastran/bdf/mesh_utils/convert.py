@@ -1116,6 +1116,13 @@ def _convert_loads(model, xyz_scale, time_scale, weight_scale, temperature_scale
                 load.temperature *= temperature_scale
             elif load_type == 'PRESAX':
                 load.pressure *= pressure_scale
+            elif load_type == 'TEMPRB':
+                load.ta *= temperature_scale
+                load.tb *= temperature_scale
+                load.tbi = [tempi * temperature_scale for tempi in load.tbi]
+                load.tai = [tempi * temperature_scale for tempi in load.tai]
+                load.tp1 = [tempi * temperature_scale if tempi is not None else tempi for tempi in load.tp1]
+                load.tp2 = [tempi * temperature_scale if tempi is not None else tempi for tempi in load.tp2]
             else:
                 raise NotImplementedError(f'{load.get_stats()}\n{load}')
 

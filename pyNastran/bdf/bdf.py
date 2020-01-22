@@ -148,7 +148,7 @@ from .cards.bdf_sets import (
 from .cards.params import PARAM
 from .cards.dmig import DMIG, DMI, DMIJ, DMIK, DMIJI, DMIG_UACCEL, DTI, DMIAX
 from .cards.thermal.loads import (QBDY1, QBDY2, QBDY3, QHBDY, TEMP, TEMPD, TEMPB3,
-                                  QVOL, QVECT)
+                                  TEMPRB, QVOL, QVECT)
 from .cards.thermal.thermal import (CHBDYE, CHBDYG, CHBDYP, PCONV, PCONVM,
                                     PHBDY, CONV, CONVM, TEMPBC)
 from .cards.thermal.radiation import RADM, RADBC, RADCAV, RADLST, RADMTX, VIEW, VIEW3D
@@ -564,7 +564,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             #'RADMT',
             'RADLST', 'RADMTX', #'RADBND',
             #'TEMPP1',
-            #'TEMPRB',
+            'TEMPRB',
             'CONVM',
             ## ???
             #'PANEL', 'SWLDPRM',
@@ -1776,7 +1776,6 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
             #'CYSYM' : (Crash, None),
             #'TEMPP1' : (Crash, None),
-            #'TEMPRB' : (Crash, None),
             #'DSCONS' : (Crash, None),
             #'DVAR' : (Crash, None),
             #'DVSET' : (Crash, None),
@@ -2052,6 +2051,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             'TOPVAR' : (TOPVAR, self._add_topvar_object),
             # BCTSET
 
+            'TEMPRB' : (TEMPRB, self._add_thermal_load_object),
             'TEMP' : (TEMP, self._add_thermal_load_object),
             'TEMPB3' : (TEMPB3, self._add_thermal_load_object),
             'QBDY1' : (QBDY1, self._add_thermal_load_object),

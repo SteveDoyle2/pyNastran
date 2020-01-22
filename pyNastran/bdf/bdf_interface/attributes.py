@@ -778,8 +778,8 @@ class BDFAttributes:
                 'GMLOAD', 'SPCD', 'LOADCYN', 'LOADCYH', 'DEFORM',
 
                 # thermal
-                'TEMP', 'TEMPB3', 'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY',
-                'QVOL',
+                'TEMP', 'TEMPB3', 'TEMPRB',
+                'QBDY1', 'QBDY2', 'QBDY3', 'QHBDY', 'QVOL',
 
                 # axisymmetric
                 'PLOADX1', 'FORCEAX', 'PRESAX', 'TEMPAX',
