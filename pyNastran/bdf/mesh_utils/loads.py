@@ -7,7 +7,7 @@ Defines:
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Tuple, Dict, TYPE_CHECKING
 from math import radians, sin, cos
 import numpy as np
 from numpy import array, cross, allclose, mean
@@ -991,7 +991,7 @@ def get_static_force_vector_from_subcase_id(model: BDF, subcase_id: int):
         F = _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof)
     return F
 
-def get_ndof(model: BDF, subcase: Subcase):
+def get_ndof(model: BDF, subcase: Subcase) -> Tuple[int, int, int]:
     """gets the size of the DOFs"""
     ndof_per_grid = 6
     if 'HEAT' in subcase:
@@ -1001,31 +1001,36 @@ def get_ndof(model: BDF, subcase: Subcase):
     nepoint = len(model.epoints) if 'EPOINT' in model.card_count else 0
     ndof = ngrid * ndof_per_grid + nspoint + nepoint
     assert ndof > 0, model.card_count
-    return ndof_per_grid, ndof
+    return ngrid, ndof_per_grid, ndof
 
-def _get_loadid_ndof(model: BDF, subcase_id):
+def _get_loadid_ndof(model: BDF, subcase_id) -> Tuple[int, int, int]:
     """helper method for ``get_static_force_vector_from_subcase_id``"""
     subcase = model.subcases[subcase_id]
     load_id = None
     if 'LOAD' in subcase:
         load_id, unused_options = subcase['LOAD']
-    ndof_per_grid, ndof = get_ndof(model, subcase)
+    unused_ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
     return load_id, ndof_per_grid, ndof
 
-def _get_dof_map(model):
+def _get_dof_map(model: BDF) -> Dict[Tuple[int, int], int]:
     """helper method for ``get_static_force_vector_from_subcase_id``"""
-    dof_map = {}
     i = 0
+    dof_map = {}
+    spoints = []
     for nid, node_ref in model.nodes.items():
         if node_ref.type == 'GRID':
             for dof in range(1, 7):
                 dof_map[(nid, dof)] = i
                 i += 1
         elif node_ref.type == 'SPOINT':
-            dof_map[(nid, 0)] = i
-            i += 1
+            spoints.append(node_ref)
+            #dof_map[(nid, 0)] = i
+            #i += 1
         else:
             raise NotImplementedError(node_ref)
+
+    # we want the GRID points to be first
+    assert len(spoints) == 0, spoints
 
     for nid in sorted(model.spoints.keys()):
         key = (nid, 0)
@@ -1035,7 +1040,8 @@ def _get_dof_map(model):
     assert len(dof_map) > 0
     return dof_map
 
-def _Fg_vector_from_loads(model, loads, ndof_per_grid, ndof, fdtype='float64'):
+def _Fg_vector_from_loads(model: BDF, loads, ndof_per_grid: int, ndof: int,
+                          fdtype: str='float64'):
     """helper method for ``get_static_force_vector_from_subcase_id``"""
     dof_map = _get_dof_map(model)
     Fg = np.zeros([ndof], dtype=fdtype)
@@ -1078,7 +1084,8 @@ def _force_to_local(cd_ref, vector):
         #asdf
 
 
-def _add_force(Fg, dof_map, model: BDF, load, offset: int, ndof_per_grid: int, cid: int=0):
+def _add_force(Fg: np.ndarray, dof_map: Dict[Tuple[int, int], int], model: BDF,
+               load, offset: int, ndof_per_grid: int, cid: int=0):
     """adds the FORCE/MOMENT loads to Fg"""
     #cid = load.cid
     nid = load.node

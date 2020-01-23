@@ -888,6 +888,22 @@ class Coord(BaseCard):
 
         .. math:: [\lambda] = [B_{ij}]
 
+        Example
+        -------
+        .. math:: [K] = [T]^T [Ke] [T]
+
+        >>> T = beta_n(1)
+        [a1, a2, a3]
+        [b1, b2, b3]
+        [c1, c2, c3]
+
+        >>> T2 = beta_n(2)
+        [a1, a2, a3, 0, 0, 0]
+        [b1, b2, b3, 0, 0, 0]
+        [c1, c2, c3, 0, 0, 0]
+        [0, 0, 0, a1, a2, a3]
+        [0, 0, 0, b1, b2, b3]
+        [0, 0, 0, c1, c2, c3]
         """
         assert n < 10, 'n=%r' % n
         matrix = self.beta()
@@ -895,6 +911,29 @@ class Coord(BaseCard):
         for i in range(n):
             t[i*3:i*3+2, i*3:i*3+2] = matrix[0:2, 0:2]
         return t
+
+    @staticmethod
+    def _check_square(matrix):
+        nx, ny = matrix.shape
+        assert nx == ny, f'nx={nx} ny={ny}'
+        assert nx % 3 == 0, f'nx={nx} is not a multiple of 3'
+
+    def transform_matrix_to_global(self, matrix):
+        self._check_square(matrix)
+        n = matrix.shape[0] // 3
+        T = self.beta_n(n)
+        matrix_out = T.T @ matrix @ T
+        return matrix_out
+
+    def transform_matrix_to_global_from_element_coord(self, matrix, n,
+                                                      i, j, k):
+        Tlocal = np.vstack([i, j, k])
+        self._check_square(Tlocal)
+        n = matrix.shape[0] // 3
+
+        T = self.beta_n(n) @ Tlocal
+        matrix_out = T.T @ matrix @ T
+        return matrix_out
 
     def repr_fields(self):
         return self.raw_fields()

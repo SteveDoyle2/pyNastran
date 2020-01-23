@@ -1,4 +1,5 @@
 from typing import List, Dict, Tuple, Any
+import copy
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF, Subcase
@@ -8,6 +9,9 @@ class Solver:
     def __init__(self, model: BDF):
         self.model = model
         self.log = model.log
+
+        # the "as solved" a-set displacement (after AUTOSPC is applied)
+        self.xa_ = None
 
     def run(self):
         sol = self.model.sol
@@ -32,12 +36,10 @@ class Solver:
         for card_type, values in self.model._type_to_id_map.items():
             self.model.card_count[card_type] = len(values)
 
-    def build_Kbb(self, subcase: Subcase) -> np.array:
+    def build_Kbb(self, subcase: Subcase, dof_map, ndof) -> np.array:
         model = self.model
-        unused_ndof_per_grid, ndof = get_ndof(model, subcase)
 
         Kbb = np.zeros((ndof, ndof), dtype='float32')
-        dof_map = _get_dof_map(model)
         #print(dof_map)
 
         #crods = model._type_to_id_map['CROD']
@@ -52,8 +54,7 @@ class Solver:
         nelements += _build_kbb_ctube(model, Kbb, dof_map)
         nelements += _build_kbb_cbar(model, Kbb, dof_map)
         assert nelements > 0, nelements
-
-        return Kbb, dof_map, ndof
+        return Kbb
 
     def build_xg(self, dof_map: Dict[Any, int], ndof: int, subcase: Subcase) -> np.ndarray:
         """
@@ -124,7 +125,16 @@ class Solver:
                 nid = load.node
                 self.log.debug(f'FORCE nid={nid} Fxyz={fxyz}')
                 for i, dof in enumerate([1, 2, 3]):
-                    fi = dof_map[(nid, dof)]  # TODO: wrong...
+                    # TODO: wrong because it doesn't handle SPOINTs
+                    fi = dof_map[(nid, dof)]
+                    Fb[fi] = fxyz[i]
+            elif load.type == 'MOMENT':
+                fxyz = load.to_global()
+                nid = load.node
+                self.log.debug(f'MOMENT nid={nid} Fxyz={fxyz}')
+                for i, dof in enumerate([4, 5, 6]):
+                    # TODO: wrong because it doesn't handle SPOINTs
+                    fi = dof_map[(nid, dof)]
                     Fb[fi] = fxyz[i]
             else:
                 print(load.get_stats())
@@ -132,9 +142,27 @@ class Solver:
         #print(subcase)
         return Fb
 
-    def Kbb_to_Kgg(self, Kbb: np.ndarray) -> np.ndarray:
-        """TODO: transform"""
+    def Kbb_to_Kgg(self, Kbb: np.ndarray, ngrid: int, ndof_per_grid: int, inplace=True) -> np.ndarray:
+        """does an in-place transformation"""
+        assert isinstance(Kbb, np.ndarray)
+        model = self.model
+        assert ngrid > 0, model.card_count
+        nids = model._type_to_id_map['GRID']
+
         Kgg = Kbb
+        if not inplace:
+            Kgg = copy.deepcopy(Kgg)
+
+        for i, nid in enumerate(nids):
+            node = model.nodes[nid]
+            if node.cd:
+                model.log.debug(f'node {nid} has a CD={node.cd}')
+                cd_ref = node.cd_ref
+                T = cd_ref.beta_n(n=2)
+                i1 = i * ndof_per_grid
+                i2 = (i+1) * ndof_per_grid
+                Ki = Kbb[i1:i2, i1:i2]
+                Kgg[i1:i2, i1:i2] = T.T @ Ki @ T
         return Kgg
 
     def run_sol_101(self, subcase: Subcase):
@@ -170,13 +198,20 @@ class Solver:
         """
         fdtype = 'float64'
         log = self.model.log
-        Kbb, dof_map, ndof = self.build_Kbb(subcase)
-        Kgg = self.Kbb_to_Kgg(Kbb)
+
+        dof_map = _get_dof_map(self.model)
+        ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
+        Kbb = self.build_Kbb(subcase, dof_map, ndof)
+
+        Kgg = self.Kbb_to_Kgg(Kbb, ngrid, ndof_per_grid, inplace=False)
         del Kbb
 
         gset = np.arange(ndof, dtype='int32')
         sset, xg = self.build_xg(dof_map, ndof, subcase)
         aset = np.setdiff1d(gset, sset) # a = g-s
+
+        self.sset = sset
+        self.aset = aset
 
         Fb = self.build_Fb(dof_map, ndof, subcase)
         Fg = Fb
@@ -186,23 +221,27 @@ class Solver:
 
         # aset - analysis set
         # sset - SPC set
+        #print('aset = ', aset)
+        #print('sset = ', sset)
         xa, xs = partition_vector(xg, [['a', aset], ['s', sset]])
         del xg
         #print(f'xa = {xa}')
         #print(f'xs = {xs}')
         #print(Kgg)
+        self.Kgg = Kgg
         K = partition_matrix(Kgg, [['a', aset], ['s', sset]])
         Kaa = K['aa']
         Kss = K['ss']
         #Kas = K['as']
         Ksa = K['sa']
-            #[Kaa]{xa} + [Kas]{xs} = {Fa}
-            #[Ksa]{xa} + [Kss]{xs} = {Fs}
+
+        self.Kaa = Kaa
+        #[Kaa]{xa} + [Kas]{xs} = {Fa}
+        #[Ksa]{xa} + [Kss]{xs} = {Fs}
 
         #{xa} = [Kaa]^-1 * ({Fa} - [Kas]{xs})
         #{Fs} = [Ksa]{xa} + [Kss]{xs}
 
-        # TODO: apply SPCs
         #print(Kaa)
         #print(Kas)
         #print(Kss)
@@ -218,9 +257,10 @@ class Solver:
         #print(f'Kaa:\n{Kaa}')
         #print(f'Fa: {Fa}')
 
-        #print(f'Kaa_:\n{Kaa_}')
-        #print(f'Fa_: {Fa_}')
+        log.debug(f'Kaa_:\n{Kaa_}')
+        log.debug(f'Fa_: {Fa_}')
         xa_ = np.linalg.solve(Kaa_, Fa_)
+        self.xa_ = xa
         log.info(f'xa_ = {xa_}')
 
         xa[ipositive] = xa_
@@ -251,10 +291,15 @@ class Solver:
         """
         fdtype = 'float64'
         log = self.model.log
-        Kbb, dof_map, ndof = self.build_Kbb(subcase)
+
+        dof_map = _get_dof_map(self.model)
+        ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
+        Kbb = self.build_Kbb(subcase, dof_map, ndof)
+
         Mbb = np.eye(Kbb.shape[0], dtype=fdtype)
-        Kgg = self.Kbb_to_Kgg(Kbb)
-        Mgg = self.Kbb_to_Kgg(Mbb)
+
+        Kgg = self.Kbb_to_Kgg(Kbb, ngrid, ndof_per_grid)
+        Mgg = self.Kbb_to_Kgg(Mbb, ngrid, ndof_per_grid)
         del Kbb, Mgg
 
         gset = np.arange(ndof, dtype='int32')
@@ -317,6 +362,31 @@ class Solver:
         #log.debug(f'Fg = {Fg}')
         return xa_
         #raise NotImplementedError(subcase)
+
+    def run_sol_111(self, subcase: Subcase):
+        """
+        frequency
+        [M]{xdd} + [C]{xd} + [K]{x} = {F}
+        {φ} ([M]s^2 + [C]{s} + [K]) = {F}
+        {φ} ([M]s^2 + [C]{s} + [K]) = {F}
+        {φ} ([M]s^2 + [K]) = {F}
+
+        {d}*sin(wt) ([M]s^2 + [K]) = {0}
+        [M]{xdd} + [K]{x} = {0}
+        x = A*sin(wt)
+        xd = dx/dt = A*w*cos(wt)
+        xdd = -A*w^2 * sin(wt)
+        -w^2[M]{A}*sin(wt) + [K]{A}*sin(wt) = {0}
+        (-w^2[M] + [K]){A} = {0}
+        -w^2[M] + [K] = 0
+        w^2 = [M]^-1 * [K]
+
+        -w^2[M]{A}*sin(wt) + [K]{A}*sin(wt) = {F}sin(wt)
+        (-w^2[M] + [K]){A} = {F}
+        {A} = (-w^2[M] + [K])^-1 * {F}
+        {A} = ([K] - w^2[M])^-1 * {F}
+        """
+        pass
 
 def _build_kbb_celas1(model: BDF, Kbb, dof_map):
     celas1s = model._type_to_id_map['CELAS1']
@@ -410,6 +480,7 @@ def _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat):
     #L = elem.Length()
     k_axial = A * E / L
     k_torsion = G * J / L
+
     assert isinstance(k_axial, float), k_axial
     assert isinstance(k_torsion, float), k_torsion
     #Kbb[i, i] += ki[0, 0]
@@ -418,10 +489,8 @@ def _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat):
     #Kbb[j, j] = ki[1, 1]
     k = np.array([[1., -1.],
                   [-1., 1.]])  # 1D rod
-
     Lambda = _lambda1d(dxyz12, debug=False)
     K = Lambda.T @ k @ Lambda
-
     #i11 = dof_map[(n1, 1)]
     #i12 = dof_map[(n1, 2)]
 
@@ -439,26 +508,26 @@ def _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat):
         K2 = []
     elif k_torsion == 0.0: # axial; 2D or 3D
         K2 = K * k_axial
-        dofs = np.array([
-            i1, i1+1, i1+2,
-            i2, i2+1, i2+2,
-        ], 'int32')
-        n_ijv = [
-            # axial
-            (nid1, 1), (nid1, 2), (nid1, 3),
-            (nid2, 1), (nid2, 2), (nid2, 3),
-        ]
+        #dofs = np.array([
+            #i1, i1+1, i1+2,
+            #i2, i2+1, i2+2,
+        #], 'int32')
+        #n_ijv = [
+            ## axial
+            #(nid1, 1), (nid1, 2), (nid1, 3),
+            #(nid2, 1), (nid2, 2), (nid2, 3),
+        #]
     elif k_axial == 0.0: # torsion; assume 3D
         K2 = K * k_torsion
-        dofs = np.array([
-            i1+3, i1+4, i1+5,
-            i2+3, i2+4, i2+5,
-        ], 'int32')
-        n_ijv = [
-            # torsion
-            (nid1, 4), (nid1, 5), (nid1, 6),
-            (nid2, 4), (nid2, 5), (nid2, 6),
-        ]
+        #dofs = np.array([
+            #i1+3, i1+4, i1+5,
+            #i2+3, i2+4, i2+5,
+        #], 'int32')
+        #n_ijv = [
+            ## torsion
+            #(nid1, 4), (nid1, 5), (nid1, 6),
+            #(nid2, 4), (nid2, 5), (nid2, 6),
+        #]
 
     else:  # axial + torsion; assume 3D
         # u1fx, u1fy, u1fz, u2fx, u2fy, u2fz
@@ -483,11 +552,16 @@ def _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat):
             (nid1, 4), (nid1, 5), (nid1, 6),
             (nid2, 4), (nid2, 5), (nid2, 6),
         ]
-        for dof1, nij1 in zip(dofs, n_ijv):
-            i1 = dof_map[nij1]
-            for dof2, nij2 in zip(dofs, n_ijv):
-                i2 = dof_map[nij2]
-                Kbb[dof1, dof2] = K2[i1, i2]
+    for dof1, nij1 in zip(dofs, n_ijv):
+        i1 = dof_map[nij1]
+        for dof2, nij2 in zip(dofs, n_ijv):
+            i2 = dof_map[nij2]
+            #ki = K2[i1, i2]  #old
+            ki = K2[dof1, dof2]  # new
+            if abs(ki) > 0.:
+                #print(nij1, nij2, f'({i1}, {i2});', (dof1, dof2), ki)
+                #Kbb[dof1, dof2] = ki #  old
+                Kbb[i1, i2] = ki # new
         #print(K2)
     #print(Kbb)
     return

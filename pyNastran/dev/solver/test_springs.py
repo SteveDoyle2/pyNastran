@@ -1,4 +1,5 @@
 import unittest
+import numpy as np
 from pyNastran.dev.solver.solver import Solver, BDF
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
@@ -20,7 +21,8 @@ class TestSolverSprings(unittest.TestCase):
         model.add_pelas(pid, k, ge=0., s=0., comment='')
         # model.add_sload(load_id, 2, 20.)
         fxyz = [1., 0., 0.]
-        model.add_force(load_id, 2, 20., fxyz, cid=0, comment='')
+        mag = 20.
+        model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
 
         components = 123456
         nodes = 1
@@ -30,21 +32,33 @@ class TestSolverSprings(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
-    def test_celas2(self):
+        # F = k * d
+        # d = F / k
+        # 20=1000.*d
+        d = mag / k
+        assert np.allclose(solver.xa_[0], d)
+
+    def test_celas2_cd(self):
         """Tests a CELAS2"""
         model = BDF(debug=True, log=None, mode='msc')
         model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [0., 0., 0.])
+        cd = 100
+        model.add_grid(2, [0., 0., 0.], cd=cd)
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1.]
+        xzplane = [0., 1., 0.]
+        model.add_cord2r(cd, origin, zaxis, xzplane, rid=0, setup=True, comment='')
         nids = [1, 2]
         eid = 1
         k = 1000.
-        model.add_celas2(eid, k, nids, c1=1, c2=1, ge=0., s=0., comment='')
+        model.add_celas2(eid, k, nids, c1=1, c2=2, ge=0., s=0., comment='')
 
         load_id = 2
         spc_id = 3
         # model.add_sload(load_id, 2, 20.)
         fxyz = [1., 0., 0.]
-        model.add_force(load_id, 2, 20., fxyz, cid=0, comment='')
+        mag = 20.
+        model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
 
         components = 123456
         nodes = 1
@@ -53,6 +67,10 @@ class TestSolverSprings(unittest.TestCase):
 
         solver = Solver(model)
         solver.run()
+
+        # F = k * d
+        d = mag / k
+        assert np.allclose(solver.xa_[0], d)
 
     def test_crod(self):
         """Tests a CROD/PROD"""
@@ -117,35 +135,58 @@ class TestSolverSprings(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
+        # F = k * x
+        # x = F / k
+
     def test_conrod(self):
         """Tests a CONROD"""
         model = BDF(debug=True, log=None, mode='msc')
+        L = 1.
         model.add_grid(1, [0., 0., 0.])
-        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(2, [L, 0., 0.])
+
         nids = [1, 2]
         eid = 1
-        #pid = 2
         mid = 3
-        E = 3.0e7
+        E = 200.
         G = None
         nu = 0.3
         model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
-        model.add_conrod(eid, mid, nids, A=1.0, j=2.0, c=0.0, nsm=0.0)
+        A = 1.0
+        J = 2.0
+        model.add_conrod(eid, mid, nids, A=A, j=J, c=0.0, nsm=0.0)
 
         load_id = 2
         spc_id = 3
         nid = 2
-        mag = 1.
+        mag_axial = 10000.
         fxyz = [1., 0., 0.]
-        model.add_force(load_id, nid, mag, fxyz, cid=0)
+        model.add_force(load_id, nid, mag_axial, fxyz, cid=0)
+
+        mag_torsion = 20000.
+        fxyz = [1., 0., 0.]
+        model.add_moment(load_id, nid, mag_torsion, fxyz, cid=0)
 
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
+
+        #nodes = 2
+        #model.add_spc1(spc_id, 23456, nodes, comment='')
         setup_case_control(model)
         solver = Solver(model)
         solver.run()
+
+        # TODO: why is this a torsional result???
+        G = E / (2 * (1 + nu))
+        kaxial = A * E / L
+        ktorsion = G * J / L
+        # F = k * d
+        daxial = mag_axial / kaxial
+        dtorsion = mag_torsion / ktorsion
+        assert np.allclose(solver.xa_[0], daxial), f'daxial={daxial} kaxial={kaxial} xa_={solver.xa_}'
+        assert np.allclose(solver.xa_[3], dtorsion), f'dtorsion={dtorsion} ktorsion={ktorsion} xa_={solver.xa_}'
 
     def test_cbar(self):
         """Tests a CBAR/PBAR"""
