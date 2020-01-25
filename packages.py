@@ -161,11 +161,11 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
             install_requires.append('matplotlib %s' % required_version)  # 3.2.0 used
 
 
+    required_version_str = '1.3.1'
     try:
         import cpylog
         iver = int_version('cpylog', cpylog.__version__)
         all_reqs['cpylog'] = str_version(iver)
-        required_version_str = '1.3.1'
         if iver < [1, 3, 1]:
             print(f"cpylog.__version__ = {cpylog.__version__!r} != {required_version_str!r}")
             all_reqs['cpylog'] = f'>= {required_version_str}'
