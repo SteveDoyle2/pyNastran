@@ -23,7 +23,6 @@ from pyNastran.bdf.mesh_utils.make_half_model import make_symmetric_model
 from pyNastran.bdf.mesh_utils.bdf_merge import bdf_merge
 from pyNastran.bdf.mesh_utils.utils import cmd_line
 
-#from pyNastran.bdf.cards.elements
 from pyNastran.bdf.mesh_utils.mesh import create_structured_cquad4s, create_structured_chexas
 
 PKG_PATH = pyNastran.__path__[0]

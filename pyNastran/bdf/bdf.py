@@ -3297,7 +3297,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         cps_to_check.sort()
         assert 0 in cps_to_check, cps_to_check
 
-
+        nodes = self.nodes
         coord2 = self.coords[cid]
         #assert in_place is False, 'in_place=%s' % in_place
         if in_place:
@@ -3349,9 +3349,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                         coord.e2 = xyz_cid0[i2, :] #: a point on the z-axis
                         coord.e3 = xyz_cid0[i3, :] #: a point on the xz-plane
                     else:
-                        g1_ref = self.nodes[nid1]
-                        g2_ref = self.nodes[nid2]
-                        g3_ref = self.nodes[nid3]
+                        g1_ref = nodes[nid1]
+                        g2_ref = nodes[nid2]
+                        g3_ref = nodes[nid3]
                         coord.e1 = g1_ref.get_position() #: the origin in the local frame
                         coord.e2 = g2_ref.get_position() #: a point on the z-axis
                         coord.e3 = g3_ref.get_position() #: a point on the xz-plane
@@ -3382,13 +3382,13 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                     #coord.e3 = xyz_cid0[i3, :] #: a point on the xz-plane
                     if self.is_bdf_vectorized:
                         i1, i2, i3 = np.searchsorted(nids, coord.node_ids)
-                        cp1 = self.nodes.cp[i1]
-                        cp2 = self.nodes.cp[i2]
-                        cp3 = self.nodes.cp[i3]
+                        cp1 = nodes.cp[i1]
+                        cp2 = nodes.cp[i2]
+                        cp3 = nodes.cp[i3]
                     else:
-                        cp1 = self.nodes[nid1].cp
-                        cp2 = self.nodes[nid2].cp
-                        cp3 = self.nodes[nid3].cp
+                        cp1 = nodes[nid1].cp
+                        cp2 = nodes[nid2].cp
+                        cp3 = nodes[nid3].cp
                     msg += '  g1=%s xyz=%s cp=%s\n' % (nid1, coord.e1, cp1)
                     msg += '  g2=%s xyz=%s cp=%s\n' % (nid2, coord.e2, cp2)
                     msg += '  g3=%s xyz=%s cp=%s\n' % (nid3, coord.e3, cp3)
@@ -3802,8 +3802,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
             # this is the block that actually runs
             self._parse_cards_list(cards_list)
 
-    def _parse_cards_dict(self, cards_dict):
-        # type: (List[List[str]], Dict[str, List[str]]) -> None
+    def _parse_cards_dict(self, cards_dict: Dict[str, List[str]]) -> None:
         """parses the cards that are in dictionary format"""
         if self.save_file_structure:
             raise NotImplementedError('save_file_structure=True is not supported\n%s' % (
@@ -3896,7 +3895,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                 #return False
         #return True
 
-    def _parse_primary_file_header(self, bdf_filename: str) -> None:
+    def _parse_primary_file_header(self, bdf_filename: Union[str, StringIO]) -> None:
         """
         Extract encoding, nastran_format, and punch from the primary BDF.
 
@@ -4038,7 +4037,9 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
                          nastran_format=self.nastran_format,
                          log=self.log, debug=self.debug)
         out = obj.get_lines(bdf_filename, punch=self.punch, make_ilines=True)
-        system_lines, executive_control_lines, case_control_lines, bulk_data_lines, bulk_data_ilines, superelement_lines, superelement_ilines = out
+        (system_lines, executive_control_lines, case_control_lines,
+         bulk_data_lines, bulk_data_ilines,
+         superelement_lines, superelement_ilines) = out
         self._set_pybdf_attributes(obj, save_file_structure=False)
 
         self.system_command_lines = system_lines

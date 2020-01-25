@@ -1345,13 +1345,13 @@ class TEMPB3(BaseCard):
     def _init_from_empty(cls):
         sid = 1
         eid = 1
-        t = [0., 0.]
-        tpy = [0., 0.]
-        tpz = [0., 0.]
-        tc = [0., 0.]
-        td = [0., 0.]
-        te = [0., 0.]
-        tf = [0., 0.]
+        t = [0., 0., 0.]
+        tpy = [0., 0., 0.]
+        tpz = [0., 0., 0.]
+        tc = [0., 0., 0.]
+        td = [0., 0., 0.]
+        te = [0., 0., 0.]
+        tf = [0., 0., 0.]
         eids = [1, 2]
         return TEMPB3(sid, eid, t, tpy, tpz, tc, td, te, tf, eids, comment='')
 

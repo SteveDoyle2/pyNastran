@@ -22,7 +22,6 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
         #bdf_file.write('$ pyNastran: punch=True\n')
         bdf_file.write('CEND\n')
         bdf_file.write('BEGIN BULK\n')
-        #if is_subpanel_model:
 
         _write_properties(model, bdf_file, pid_method=pid_method)
         for caero_eid, caero in sorted(model.caeros.items()):
@@ -36,10 +35,8 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
 
                 #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
                 points, elements = caero.panel_points_elements()
-
                 _write_subpanel_strips(bdf_file, model, caero_eid, points, elements)
 
-                points, elements = caero.panel_points_elements()
                 npoints = points.shape[0]
                 #nelements = elements.shape[0]
                 for ipoint, point in enumerate(points):
@@ -82,6 +79,7 @@ def export_caero_mesh(model: BDF, caero_bdf_filename: str='caero.bdf',
 
 def _write_subpanel_strips(bdf_file, model, caero_eid, points, elements):
     """writes the strips for the subpanels"""
+    #bdf_file.write("$   CAEROID       ID       XLE      YLE      ZLE     CHORD      SPAN\n")
     bdf_file.write('$$ %8s %8s %9s %9s %9s %9s %9s\n' % (
         'CAEROID', 'ID', 'XLE', 'YLE', 'ZLE', 'CHORD', 'SPAN'))
 
@@ -117,6 +115,7 @@ def _get_subpanel_property(model: BDF, caero_id: int, eid: int, pid_method: str=
         pid = caero.pid
     else:  # pragma: no cover
         raise RuntimeError('pid_method={repr(pid_method)} is not [aesurf, caero, paero]')
+
     if pid is None:
         pid = 1
     return pid

@@ -619,14 +619,6 @@ def _store_elements(card_type, model, ids, nids_used, pids_used, mids_used, cids
             pids_used.add(elem.Pid())
             if elem.g0 is not None:
                 assert isinstance(elem.g0, int), elem.g0
-    #elif card_type == 'CBEAM3':
-        #for eid in ids:
-            #elem = model.elements[eid]
-            #nids_used.update(elem.node_ids)
-            #pids_used.add(elem.Pid())
-            #if elem.g0 is not None:
-                #assert isinstance(elem.g0, int), elem.g0
-                #nids_used.add(elem.g0)
 
     elif card_type == 'CFAST':
         for eid in ids:

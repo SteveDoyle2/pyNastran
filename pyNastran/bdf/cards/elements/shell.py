@@ -3225,6 +3225,7 @@ class CPLSTx6(TriShell):
 
 class CPLSTS6(CPLSTx6):
     type = 'CPLSTS6'
+
 class CPLSTN6(CPLSTx6):
     type = 'CPLSTN6'
 

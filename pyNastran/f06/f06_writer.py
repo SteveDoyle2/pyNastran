@@ -49,8 +49,8 @@ def make_f06_header() -> str:
         spaces + '/*                                                                      */\n',
         spaces + '/*              A Python reader/editor/writer for the various           */\n',
         spaces + '/*                        NASTRAN file formats.                         */\n',
-        spaces + '/*                       Copyright (C) 2011-2017                        */\n',
-        spaces + '/*               Steven Doyle, Al Danial, Marcin Garrozik               */\n',
+        spaces + '/*                       Copyright (C) 2011-2020                        */\n',
+        spaces + '/*                             Steven Doyle                             */\n',
         spaces + '/*                                                                      */\n',
         spaces + '/*    This program is free software; you can redistribute it and/or     */\n',
         spaces + '/*    modify it under the terms of the GNU Lesser General Public        */\n',
@@ -453,13 +453,13 @@ class F06Writer(OP2_F06_Common):
         if len(self.matrices):
             if hasattr(self, 'monitor1'):
                 page_num = self.monitor1.write(f06, page_stamp=page_stamp, page_num=page_num)
-                print('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
+                self.log.debug('MONPNT1 from [PMRF, PERF, PFRF, AGRF]')
 
             with open(matrix_filename, 'wb') as mat:
                 for name, matrix in self.matrices.items():
                     if name == 'MP3F':
                         page_num = self.monitor3.write(f06, page_stamp=page_stamp, page_num=page_num)
-                        print('MONPNT3 from MP3F')
+                        self.log.debug('MONPNT3 from MP3F')
                     elif name in ['PMRF', 'PERF', 'PFRF', 'AGRF']:
                         pass
                     else:

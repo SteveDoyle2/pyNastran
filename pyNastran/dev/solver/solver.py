@@ -37,6 +37,7 @@ class Solver:
             self.model.card_count[card_type] = len(values)
 
     def build_Kbb(self, subcase: Subcase, dof_map, ndof) -> np.array:
+        """[K] = d{P}/dx"""
         model = self.model
 
         Kbb = np.zeros((ndof, ndof), dtype='float32')
@@ -181,20 +182,50 @@ class Solver:
         #-------------------------
         {s} = {sb} + {sg}  # done
         f =
-        mp  DOFs eliminated by multipoint constraints.
-        mr  DOFs eliminated by multipoint constraints created by the rigid
-            elements using the LGELIM method on the Case Control command RIGID.
         f = a + o        unconstrained (free) structural DOFs
         n = f + s        all DOFs not constrained by multipoint constraints
         ne = n + e       all DOFs not constrained by multipoint constraints plus extra DOFs
         m = mp + mr      all DOFs eliminated by multipoint constraints
         g = n + m        all DOFs including scalar DOFs
+
+        Per Mystran
+        -----------
+        n = g - m        all DOFs not constrained by multipoint constraints
+        f = n - s        unconstrained (free structural DOFs)
+        a = f - o        ananlysis??? set
+        L = a - r
+
+        My Simplification
+        -----------------
         g = n + (mp + mr)
         g = f + s + (mp + mr)
         g = f + (sb + sg) + (mp + mr)
         g = (a + o) + (sb + sg) + (mp + mr)
         a + o = g - (sb + sg) + (mp + mr)
         a = g - o - (sb + sg) + (mp + mr)
+
+        l = b + c   # left over dofs
+        t = l + r   # total set of DOFs for super
+        a = t + q
+        d = a + e
+        f = a + o
+        n = f + s
+        g = n + m
+        p = g + e
+        ps = p + sa
+        pa = ps + k
+        fe = f + e
+        ne = n + e
+        fr = f - q - r
+        v = o + c + r
+
+        New eqs
+        f = n - s
+        a = f - o
+        t = a - q
+        l = t - r
+        b = l - c ???
+        c = l - b ???
         """
         fdtype = 'float64'
         log = self.model.log
@@ -385,6 +416,11 @@ class Solver:
         (-w^2[M] + [K]){A} = {F}
         {A} = (-w^2[M] + [K])^-1 * {F}
         {A} = ([K] - w^2[M])^-1 * {F}
+
+        {φ}^T[M]{φ}{qdd} + {φ}^T[B]{φ}{qd} {φ}^T[K]{φ}{q} = {φ}^T{P(t)}
+        {qdd} + 2*zeta*w_n{qd} w_n^2{q} = 1/M_n {φ}^T{P(t)}
+        {u_total} = {u_dynamic} + {u_static} = [PHI]{q} + {u_static}
+
         """
         pass
 
@@ -641,6 +677,43 @@ def remove_rows(Kgg: np.ndarray) -> np.ndarray:
     j   Aerodynamic mesh collocation point set (exact physical
         interpretation is dependent on the aerodynamic theory).
 
+
+    Input Sets
+    ----------
+    mp  DOFs eliminated by multipoint constraints.
+    mr  DOFs eliminated by multipoint constraints created by the rigid
+        elements using the LGELIM method on the Case Control command RIGID.
+    g   all DOFs including scalar DOFs
+    o   Omit set
+    s   SPC sets (sb + sg)
+
+    Source of Sets
+    --------------
+    g     6-DOFs per GRID, 1-DOF SPOINTs,
+          Nmodes-DOF EPOINTs (Extra Dynamic/Modal Point; ),
+          nRBE-DOF LPOINTs ("Lagrange" Point; e.g., RBE3),
+          nHarmonic-DOF HPOINTs (Harmonic Point; e.g., RINGFL)
+    m     MPC, MPCADD, RBAR/RBAR1, RBE1/RBE2/RBE3, RROD, RSPLINE,
+          RJOINT, RSSCON, RTRPLT/RTRPLT1, GMBC, GMSPC*
+    r     SUPORT/SUPORT1, SUPAX
+    s     SPC/SPC1, SPCADD, BNDGRID, AUTOSPC
+    sb    SPC/SPC1, SPCADD, SPCAX, FLSYM, GMSPC*, BNDGRID, PARAM,AUTOSPC,YES
+    sz    PARAM,AUTOSPC,YES
+    sg    GRID, GRIDB, GRDSET (PS field)
+    o     OMIT/OMIT1, GRID (SEID field), SESET
+    q     QSET/QSET1
+    sa    CAEROi
+    a     ASET/ASET1, CSUPEXT, superelement exterior DOFs
+    c     CSET/CSET1, BNDREE/BNDFRE1
+    b     BSET/BSET1, BNDFIX/BNDFIX1
+    ap    ACCSPT
+    rv    RVDOF/RVDOF1
+    u1-u6 USET/USET1, SEUSET/SEUSET1
+
+    * placed in the "m" set only if constraints are not specified in
+      the basic coordinate system
+
+
     Set Name         Description
     --------         -----------
     s = sb + sg      all DOFs eliminated by single point constraints
@@ -670,6 +743,12 @@ def remove_rows(Kgg: np.ndarray) -> np.ndarray:
     fl = f – lm      f-set  without Lagrange multiplier DOFs
     ff = fe – lm     fe-set without Lagrange multiplier DOFs
 
+
+    Per MSC Nastran
+    ---------------
+    js = j + sa  the union of j and the re-used s-set (6 dof per grid)
+    ks = k + sa  the union of k and the re-used s-set (6 dof per grid)
+
     [K]{x} = {F}
     a - active
     s - SPC
@@ -686,3 +765,50 @@ def remove_rows(Kgg: np.ndarray) -> np.ndarray:
     ipositive = np.where((col_kgg > 0.) | (row_kgg > 0))[0]
     Kaa = Kgg[ipositive, :][:, ipositive]
     return Kaa, ipositive
+
+def guyan_reduction(matrix, set1, set2):
+    """
+    https://en.wikipedia.org/wiki/Guyan_reduction
+
+    [A11 A12]{d1} = {F1}
+    [A21 A22]{d2} = {0}
+    [A11]{d1} + [A12]{d2} = {F}
+    [A21]{d1} + [A22]{d2} = {0}
+    {d2} = -[A22]^-1[A21]{d1}
+    [A11]{d1} + [A12](-[A22]^-1[A21]{d1}) = {F}
+    ([A11] + ([A12]-[A22]^-1[A21]){d1} = {F}
+
+    (AB)^-1 = B^-1 A^-1
+    (cA)^-1 = A^-1/c
+    (A)^-n = (A^-1)^n
+    (A^-1)^T = (A^T)^-1
+
+    https://math.stackexchange.com/questions/17776/inverse-of-the-sum-of-matrices
+    (A + B)^-1 = A^-1 - 1/(1+g)A^-1 B A^-1; g=trace(B A^-1) where g != -1
+               = A^-1 - A^-1*B*(A+B^-1)
+    (A + B)^-1 = A^-1 + X
+    (A^-1 + X)(A + B) = I
+    A^-1 A + X A + A^-1 B + X B = I
+    X(A + B) = A^-1 B
+    X = -A^-1 B (A^-1 + B)^-1
+    X = -A^-1 B (A^-1 + X)
+    (I + A^-1 B) X = A^-1 B A^-1
+    X = -(I + A^-1 B)^-1 (A^-1 B A^-1)
+    """
+    sets = [
+        ['1', set1],
+        ['2', set2],
+    ]
+    A = partition_matrix(matrix, sets)
+    A11 = A['11']
+    A22 = A['22']
+    A12 = A['12']
+    A21 = A['21']
+    nA11 = A11.shape[0]
+
+    # ([A11] + ([A12]-[A22]^-1[A21]){d1} = {F}
+    A22m1 = np.linalg.inv(A22)
+    A12_A22m1_A21 = np.linalg.multi_dot([A11, A22m1, A21])
+    T = np.vstack([eye(nA11), A22m1 @ A21])
+    return np.linalg.multi_dot([T.T, A, T])
+    return A11 + A12_A22m1_A21
