@@ -1,9 +1,12 @@
 from typing import List, Dict, Tuple, Any
 import copy
+from collections import defaultdict
+from itertools import count
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF, Subcase
-from pyNastran.bdf.mesh_utils.loads import _get_dof_map, _get_loadid_ndof, get_ndof
+from pyNastran.bdf.mesh_utils.loads import _get_dof_map, get_ndof
+
 
 class Solver:
     def __init__(self, model: BDF):
@@ -12,6 +15,10 @@ class Solver:
 
         # the "as solved" a-set displacement (after AUTOSPC is applied)
         self.xa_ = None
+        self.Kaa = None
+        self.Kgg = None
+        self.aset = None
+        self.sset = None
 
     def run(self):
         sol = self.model.sol
@@ -166,6 +173,96 @@ class Solver:
                 Kgg[i1:i2, i1:i2] = T.T @ Ki @ T
         return Kgg
 
+    def get_mpc_constraints(self, subcase: Subcase, dof_map):
+        model = self.model
+        #Fb = np.zeros(ndof, dtype='float32')
+        constraints = []
+        if 'MPC' not in subcase:
+            return constraints
+
+        mpc_id, unused_options = subcase['MPC']
+        mpcs = model.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=True)
+        #print('mpc_id =', mpc_id)
+
+        ieq = 0
+        ieqs = []
+        dofs = []
+        coefficients = []
+        dependents = []
+        independents = []
+        independents_eq = defaultdict(list)
+        for element in model.rigid_elements.values():
+            #etype = element.type
+            #ieq += 1
+            raise NotImplementedError(element.get_stats())
+
+        for mpc in mpcs:
+            mpc_type = mpc.type
+            if mpc_type == 'MPC':
+                # The first degree-of-freedom (G1, C1) in the sequence is defined to
+                # be the dependent DOF.
+                # A dependent DOF assigned by one MPC entry cannot be assigned
+                #  dependent by another MPC entry or by a rigid element.
+
+                #: Component number. (Any one of the Integers 1 through 6 for grid
+                #: points; blank or zero for scalar points.)
+                #self.components = components
+
+                #: Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
+                #self.coefficients = coefficients
+                #mpc.
+                for i, nid, component, coeff in zip(count(), mpc.nodes, mpc.components, mpc.coefficients):
+                    print(ieq, (nid, component), coeff)
+                    assert isinstance(component, int), component
+                    idof = dof_map[(nid, component)]
+                    ieqs.append(i)
+                    dofs.append(idof)
+                    coefficients.append(coeff)
+                    if i == 0:
+                        dependents.append(idof)
+                    else:
+                        independents.append(idof)
+                        independents_eq[ieq].append(idof)
+            else:
+                raise NotImplementedError(mpc.get_stats())
+            ieq += 1
+
+        ieqs = np.array(ieqs, dtype='int32')
+        independents = np.array(independents, dtype='int32')
+        dependents = np.array(dependents, dtype='int32')
+        independents_dependents = np.hstack([independents, dependents])
+        coefficients = np.array(coefficients, dtype='float64')
+        #print(f'ieqs         = {ieqs}')
+        #print(f'dofs         = {dofs}')
+        #print(f'coefficients = {coefficients}')
+        #print(f'dependents   = {dependents}')
+        #print(f'independents = {independents}')
+
+        #remove_dependents()
+        udependents = np.unique(dependents)
+        assert len(udependents) == len(dependents)
+        uindependents = np.unique(independents)
+        dofs = independents + dependents
+        udofs, idofs = np.unique(independents_dependents, return_counts=True)
+
+        while 1:
+            for udof in uindependents:
+                n_dof = np.where(udof == udofs)[0][0]
+                print(f'dof={udof} N={n_dof}')
+                if n_dof == 1:
+                    break
+            else:
+                raise RuntimeError('cannot find a DOF to remove')
+            #np.where(condition)
+
+            break
+        #for udof, in udofs:
+
+        #uindependents, nicount = np.unique(independents, return_counts=True)
+        #print(udofs, idofs)
+        return constraints
+
+
     def run_sol_101(self, subcase: Subcase):
         """
         Runs a SOL 101
@@ -233,6 +330,7 @@ class Solver:
         dof_map = _get_dof_map(self.model)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
         Kbb = self.build_Kbb(subcase, dof_map, ndof)
+        self.get_mpc_constraints(subcase, dof_map)
 
         Kgg = self.Kbb_to_Kgg(Kbb, ngrid, ndof_per_grid, inplace=False)
         del Kbb
@@ -802,13 +900,13 @@ def guyan_reduction(matrix, set1, set2):
     A = partition_matrix(matrix, sets)
     A11 = A['11']
     A22 = A['22']
-    A12 = A['12']
+    #A12 = A['12']
     A21 = A['21']
     nA11 = A11.shape[0]
 
     # ([A11] + ([A12]-[A22]^-1[A21]){d1} = {F}
     A22m1 = np.linalg.inv(A22)
     A12_A22m1_A21 = np.linalg.multi_dot([A11, A22m1, A21])
-    T = np.vstack([eye(nA11), A22m1 @ A21])
+    T = np.vstack([np.eye(nA11), A22m1 @ A21])
     return np.linalg.multi_dot([T.T, A, T])
     return A11 + A12_A22m1_A21

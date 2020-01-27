@@ -103,6 +103,43 @@ class TestSolverSprings(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
+    def test_crod_mpc(self):
+        """Tests a CROD/PROD"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        nids = [1, 2]
+        eid = 1
+        pid = 2
+        mid = 3
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+        model.add_crod(eid, pid, nids)
+        model.add_prod(pid, mid, A=1.0, j=2., c=0., nsm=0.)
+        mpc_id = 10
+        nodes = [2, 3]
+        components = [1, 3]
+        coefficients = [1., -1.]
+        model.add_mpc(mpc_id, nodes, components, coefficients)
+
+        load_id = 2
+        spc_id = 3
+        nid = 3
+        mag = 1.
+        fxyz = [0., 0., 1.]
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_case_control(model, extra_case_lines=['MPC=10'])
+        solver = Solver(model)
+        solver.run()
+
     def test_ctube(self):
         """Tests a CTUBE/PTUBE"""
         model = BDF(debug=True, log=None, mode='msc')
@@ -228,7 +265,7 @@ class TestSolverSprings(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
-def setup_case_control(model):
+def setup_case_control(model, extra_case_lines=None):
     lines = [
         'STRESS(PLOT,PRINT) = ALL',
         'STRAIN(PLOT,PRINT) = ALL',
@@ -240,6 +277,8 @@ def setup_case_control(model):
         '  LOAD = 2',
         '  SPC = 3',
     ]
+    if extra_case_lines is not None:
+        lines += extra_case_lines
     cc = CaseControlDeck(lines, log=model.log)
     model.sol = 101
     model.case_control_deck = cc
