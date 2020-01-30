@@ -111,7 +111,6 @@ class AbaqusIO:
         grid.SetPoints(points)
         grid.Modified()
 
-        # loadCart3dResults - regions/loads
         self.gui.scalar_bar_actor.VisibilityOn()
         self.gui.scalar_bar_actor.Modified()
 
