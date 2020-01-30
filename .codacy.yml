@@ -1,0 +1,44 @@
+engines:
+    coverage:
+        enabled: true
+    metrics:
+        enabled: true
+    duplication:
+        enabled: true
+    prospector:
+        enabled: true
+    pylint:
+        enabled: true
+        python_version: 3
+
+exclude_paths: [
+    'h5Nastran/**',
+    #'doc/**',
+    #'data/**',
+]
+
+#---
+#engines:
+# rubocop:
+#   exclude_paths:
+#     - config/engines.yml
+# duplication:
+#   exclude_paths:
+#     - config/engines.yml
+# metric:
+#   exclude_paths:
+#     - config/engines.yml
+# coverage:
+#   exclude_paths:
+#     - config/engines.yml
+#languages:
+#  css:
+#    extensions:
+#      - '-css.resource'
+#exclude_paths:
+#  - '.bundle/**'
+#  - 'spec/**/*'
+#  - 'benchmarks/**/*'
+#  - '**.min.js'
+#  - '**/tests/**' 
+# https://support.codacy.com/hc/en-us/articles/115002130625-Codacy-Configuration-File
