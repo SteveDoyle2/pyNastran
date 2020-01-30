@@ -1,7 +1,7 @@
 import os
 import unittest
 from pyNastran.bdf.bdf import BDF
-from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.cards.test.utils import save_load_deck, _run_mass_properties, _run_loads, _run_hdf5
 
 
 class TestSuperelements(unittest.TestCase):
@@ -87,6 +87,37 @@ class TestSuperelements(unittest.TestCase):
 
         save_load_deck(model, run_save_load_hdf5=False)
 
+    def test_seexclude(self):
+        model = BDF(debug=False)
+        seid_a = 1
+        seid_b = 2
+        nodes = [10, 11, 12]
+
+        super1 = create_superelement(debug=False)
+        super2 = create_superelement(debug=False)
+        model.superelement_models[seid_a] = super1
+        model.superelement_models[seid_b] = super2
+
+        card_fields = ['SEEXCLUD', seid_a, seid_b, 11, 30]
+        seexcld = model.add_card_fields(card_fields, 'SEEXCLUD', comment='',
+                                        has_none=True)
+
+        seexcld = model.add_seexcld(seid_a, seid_b, nodes, comment='seexclud')
+        seexcld.raw_fields()
+        model.validate()
+
+        nelements = len(model.elements) + len(model.masses)
+        nnodes = len(model.nodes) + len(model.spoints) + len(model.epoints)
+        _run_mass_properties(model, nnodes, nelements, run_mass_properties=True)
+        _run_loads(model, nelements, run_loads=True)
+        #_run_hdf5(model, model.log, run_save_load_hdf5=True)
+
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+
+        #save_load_deck(model, run_save_load_hdf5=False)
+
     def test_superelement_setree(self):
         """tests the SETREE"""
         model = BDF(debug=False)
@@ -105,20 +136,20 @@ class TestSuperelements(unittest.TestCase):
 
 def create_superelement(debug=False):
     """creates a simple bar model"""
-    super1 = BDF(debug=debug)
-    super1.add_grid(10, [0., 0., 0.])
-    super1.add_grid(20, [0., 0., 1.])
-    super1.add_grid(30, [1., 0., 0.])
+    super = BDF(debug=debug)
+    super.add_grid(10, [0., 0., 0.])
+    super.add_grid(20, [0., 0., 1.])
+    super.add_grid(30, [1., 0., 0.])
 
-    super1.add_grid(11, [1., 1., 0.])
-    super1.add_grid(12, [2., 2., 0.])
+    super.add_grid(11, [1., 1., 0.])
+    super.add_grid(12, [2., 2., 0.])
 
     x = [0., 0., 1.]
     g0 = None
-    super1.add_cbar(100, 1000, [11, 12], x, g0)
-    super1.add_pbarl(1000, 2000, 'ROD', [1.,])
-    super1.add_mat1(2000, 3.0e7, None, 0.3)
-    return super1
+    super.add_cbar(100, 1000, [11, 12], x, g0)
+    super.add_pbarl(1000, 2000, 'ROD', [1.,])
+    super.add_mat1(2000, 3.0e7, None, 0.3)
+    return super
 
 if __name__ == '__main__':
     unittest.main()

@@ -89,24 +89,7 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         model2.uncross_reference()
         model3 = model2
 
-    if run_save_load_hdf5 and IS_H5PY:
-        hdf5_filename = 'test.h5'
-        model2.export_hdf5_filename(hdf5_filename)
-        model4 = BDF(log=model2.log)
-        model4.load_hdf5_filename(hdf5_filename)
-        model4.validate()
-        bdf_stream = StringIO()
-        model4.write_bdf(bdf_stream, encoding=None, size=8, is_double=False,
-                         interspersed=False, enddata=None, write_header=True, close=True)
-        for key, unused_value in model2.card_count.items():
-            if key == 'ENDDATA':
-                continue
-            if key not in model4.card_count:
-                msg = 'key=%r was not loaded to hdf5\nexpected=%s\nactual=%s' % (
-                    key, model2.card_count, model4.card_count)
-                #raise RuntimeError(msg)
-                model.log.error(msg)
-        os.remove(hdf5_filename)
+    _run_hdf5(model2, model.log, run_save_load_hdf5=run_save_load_hdf5)
 
     cross_reference(model3, xref)
     if run_renumber:
@@ -157,6 +140,28 @@ def save_load_deck(model, xref='standard', punch=True, run_remove_unused=True,
         remove_unused(model)
 
     return model3
+
+
+def _run_hdf5(model2, log, run_save_load_hdf5=True):
+    """helper method"""
+    if run_save_load_hdf5 and IS_H5PY:
+        hdf5_filename = 'test.h5'
+        model2.export_hdf5_filename(hdf5_filename)
+        model4 = BDF(log=model2.log)
+        model4.load_hdf5_filename(hdf5_filename)
+        model4.validate()
+        bdf_stream = StringIO()
+        model4.write_bdf(bdf_stream, encoding=None, size=8, is_double=False,
+                         interspersed=False, enddata=None, write_header=True, close=True)
+        for key, unused_value in model2.card_count.items():
+            if key == 'ENDDATA':
+                continue
+            if key not in model4.card_count:
+                msg = 'key=%r was not loaded to hdf5\nexpected=%s\nactual=%s' % (
+                    key, model2.card_count, model4.card_count)
+                #raise RuntimeError(msg)
+                log.error(msg)
+        os.remove(hdf5_filename)
 
 def _run_mass_properties(model2, nnodes, nelements, run_mass_properties=True):
     """helper method"""
