@@ -69,7 +69,6 @@ class LaWGS_IO:
         grid.SetPoints(points)
         grid.Modified()
 
-        # loadCart3dResults - regions/loads
         #self.scalar_bar_actor.VisibilityOn()
         #self.scalar_bar_actor.Modified()
 
