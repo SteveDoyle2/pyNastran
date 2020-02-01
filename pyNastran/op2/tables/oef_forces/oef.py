@@ -234,6 +234,7 @@ class OEF(OP2Common):
             98: 9,    # composite CTRIA6 ???
             100: 8,    # BARS
             102: 7,    # CBUSH
+            126: 7,    # CFAST
             144: 2 + (11 - 2) * 5,  # bilinear CQUAD4
             189: 6 + (19 - 6) * 4,  # VUQUAD
             190: 6 + (19 - 6) * 3,  # VUTRIA
@@ -283,6 +284,7 @@ class OEF(OP2Common):
             98: 9,    # composite CTRIA6 ???
             100: 14,   # BARS
             102: 13,   # CBUSH
+            126: 13,  # CFAST
             144: 2 + (19 - 2) * 5,  # bilinear CQUAD4
             189: 6 + (31 - 6) * 4,  # VUQUAD
             190: 6 + (31 - 6) * 3,  # VUTRIA
@@ -1449,8 +1451,9 @@ class OEF(OP2Common):
             # 79-CPYRAM
             n, nelements, ntotal = self._oef_csolid_pressure(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
-        elif self.element_type in [102, 280]:
+        elif self.element_type in [102, 126, 280]:
             # 102: cbush
+            # 126: cfast
             # 280: cbear
             n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
@@ -3436,10 +3439,15 @@ class OEF(OP2Common):
     def _oef_cbush(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """
         102-CBUSH
+        126-CFAST
         280-CBEAR
         """
         if self.element_type == 102:
             result_name = prefix + 'cbush_force' + postfix
+            real_obj = RealCBushForceArray
+            complex_obj = ComplexCBushForceArray
+        elif self.element_type == 126:
+            result_name = prefix + 'cfast_force' + postfix
             real_obj = RealCBushForceArray
             complex_obj = ComplexCBushForceArray
         elif self.element_type == 280:
