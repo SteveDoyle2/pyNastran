@@ -91,6 +91,9 @@ table_name_to_table_code = {
     'OPG1' : 2,
     'BOPG1' : 2,
     #'BOPHIG1' : 5, # ???
+
+    # spc/mpc forces
+    'OQG1' : 3,
 }
 def append_sort1_sort2(data1, data2, to_sort1=True):
     """
@@ -899,11 +902,12 @@ class RealTableArray(TableArray):
                         is_sort1=True, is_random=False, is_msc=True,
                         random_code=0, title='', subtitle='', label=''):
 
-        table_name = 'OUGV1'
+        table_name = table_name
         analysis_code = 1 # static
         data_code = oug_data_code(table_name, analysis_code,
                                   is_sort1=is_sort1, is_random=is_random,
-                                  random_code=random_code, title=title, subtitle=subtitle, label=label,
+                                  random_code=random_code,
+                                  title=title, subtitle=subtitle, label=label,
                                   is_msc=is_msc)
         data_code['lsdvmns'] = [0] # TODO: ???
         data_code['data_names'] = []

@@ -9,9 +9,8 @@ from struct import pack
 
 import numpy as np
 from numpy import (array, zeros, ones, arange,
-                   eye, searchsorted, array_equal, diag, fill_diagonal,
-                   nan, nan_to_num)
-from numpy.linalg import solve, eigh, eig  # type: ignore
+                   searchsorted, diag)
+from numpy.linalg import solve  # type: ignore
 
 from scipy.sparse import dok_matrix  # type: ignore
 from cpylog import get_logger2
@@ -879,7 +878,7 @@ class Solver(OP2):
 
         if case.has_parameter('OLOAD'):
             try:
-                val, options = case.get_parameter('OLOAD')
+                unused_val, options = case.get_parameter('OLOAD')
             except KeyError:
                 self.log.warning('No OLOAD...')
                 #self.log.warning(case)
@@ -1171,8 +1170,6 @@ class Solver(OP2):
             raise NotImplementedError(Type)
 
         data = []
-        i = 0
-
         for (eid, axiali) in zip(eids, axial):
             element = model.Element(eid)
             n1, n2 = element.node_ids
@@ -1204,7 +1201,7 @@ class Solver(OP2):
         is_sort1 = False
         dt = None
         format_code = 1  # ???
-        s_code = None
+        #s_code = None
 
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
@@ -1220,7 +1217,6 @@ class Solver(OP2):
             raise NotImplementedError(element_type)
 
         data = []
-        i = 0
         for (eid, fxi) in zip(eids, fx):
             element = model.Element(eid)
             n1, n2 = element.node_ids
@@ -1246,7 +1242,7 @@ class Solver(OP2):
     def _OEF_f06_header(self, case, element_name):
         analysis_code = 1
         #transient = False
-        is_sort1 = False
+        #is_sort1 = False
         #dt = None
         format_code = 1  # ???
         s_code = None
@@ -1290,7 +1286,6 @@ class Solver(OP2):
             raise NotImplementedError(element_name)
 
         data = []
-        i = 0
         #(elementID,
         #   f12, f14, tau1,
         #   ...) = line
@@ -1385,7 +1380,7 @@ class Solver(OP2):
         #transient = False
         isubcase = case.id
         is_sort1 = True
-        dt = None
+        #dt = None
         format_code = 1  # ???
         s_code = None
 
@@ -1468,7 +1463,7 @@ class Solver(OP2):
 
         is_sort1 = True
         isubcase = case.id
-        dt = None
+        #dt = None
         forces = RealSpringForceArray(data_code, is_sort1, isubcase, dt=None)
 
         ntimes = 1
@@ -1532,7 +1527,7 @@ class Solver(OP2):
         #transient = False
         isubcase = case.id
         is_sort1 = True
-        dt = None
+        #dt = None
         format_code = 1  # ???
         s_code = None
 
@@ -1599,7 +1594,7 @@ class Solver(OP2):
         #transient = False
         isubcase = case.id
         is_sort1 = True
-        dt = None
+        #dt = None
         data_code = {
             'log': self.log, 'analysis_code': analysis_code,
             'device_code': 1, 'sort_code': 0,

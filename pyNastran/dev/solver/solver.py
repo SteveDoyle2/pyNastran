@@ -1,10 +1,17 @@
-from typing import List, Dict, Tuple, Any
 import copy
+from datetime import date
 from collections import defaultdict
 from itertools import count
-import numpy as np
+from typing import List, Dict, Tuple, Union, Any
 
+import numpy as np
+import scipy.sparse as sci_sparse
+
+import pyNastran
 from pyNastran.bdf.bdf import BDF, Subcase
+from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2_interface.hdf5_interface import (
+    RealDisplacementArray, RealSPCForcesArray)
 from pyNastran.bdf.mesh_utils.loads import _get_dof_map, get_ndof
 
 
@@ -12,7 +19,12 @@ class Solver:
     """defines the Nastran knockoff class"""
     def __init__(self, model: BDF):
         self.model = model
+        self.op2 = OP2(log=model.log, mode='nx')
         self.log = model.log
+
+        d = date.today()
+        # the date stamp used in the F06
+        self.op2.date = (d.month, d.day, d.year)
 
         # the "as solved" a-set displacement (after AUTOSPC is applied)
         self.xa_ = None
@@ -20,35 +32,46 @@ class Solver:
         self.Kgg = None
         self.aset = None
         self.sset = None
+        self.f06_filename = 'junk.f06'
 
     def run(self):
-        sol = self.model.sol
+        model = self.model
+        sol = model.sol
         solmap = {
-            101 : self.run_sol_101,
-            103 : self.run_sol_103,
+            101 : self.run_sol_101,  # static
+            103 : self.run_sol_103,  # modes
         }
-        self.model.cross_reference()
+        model.cross_reference()
         self._update_card_count()
 
-        if sol in [101, 103, 105, 107, 109, 111, 112]:
-            for subcase_id, subcase in sorted(self.model.subcases.items()):
-                if subcase_id == 0:
-                    continue
-                self.log.debug(f'subcase_id={subcase_id}')
-                runner = solmap[sol]
-                runner(subcase)
-        else:
-            raise NotImplementedError(sol)
+        title = ''
+        today = None
+        page_stamp = self.op2.make_stamp(title, today)
+        with open(self.f06_filename, 'w') as f06_file:
+            f06_file.write(self.op2.make_f06_header())
+            self.op2._write_summary(f06_file, card_count=model.card_count)
+            f06_file.write('\n')
+            if sol in [101, 103, 105, 107, 109, 111, 112]:
+                for subcase_id, subcase in sorted(model.subcases.items()):
+                    if subcase_id == 0:
+                        continue
+                    self.log.debug(f'subcase_id={subcase_id}')
+                    runner = solmap[sol]
+                    runner(subcase, f06_file, page_stamp,
+                           idtype='int32', fdtype='float64')
+            else:
+                raise NotImplementedError(sol)
 
     def _update_card_count(self):
         for card_type, values in self.model._type_to_id_map.items():
             self.model.card_count[card_type] = len(values)
 
-    def build_Kbb(self, subcase: Subcase, dof_map, ndof) -> np.array:
+    def build_Kbb(self, subcase: Subcase, dof_map, ndof, dtype='float32') -> Tuple[np.array, Any]:
         """[K] = d{P}/dx"""
         model = self.model
 
-        Kbb = np.zeros((ndof, ndof), dtype='float32')
+        Kbb = np.zeros((ndof, ndof), dtype=dtype)
+        Kbbs = sci_sparse.dok_matrix((ndof, ndof), dtype=dtype)
         #print(dof_map)
 
         #crods = model._type_to_id_map['CROD']
@@ -56,14 +79,19 @@ class Solver:
         #print('celas1s =', celas1s)
         #_get_loadid_ndof(model, subcase_id)
         nelements = 0
-        nelements += _build_kbb_celas1(model, Kbb, dof_map)
-        nelements += _build_kbb_celas2(model, Kbb, dof_map)
-        nelements += _build_kbb_conrod(model, Kbb, dof_map)
-        nelements += _build_kbb_crod(model, Kbb, dof_map)
-        nelements += _build_kbb_ctube(model, Kbb, dof_map)
-        nelements += _build_kbb_cbar(model, Kbb, dof_map)
+        nelements += _build_kbb_celas1(model, Kbb, Kbbs, dof_map)
+        nelements += _build_kbb_celas2(model, Kbb, Kbbs, dof_map)
+        nelements += _build_kbb_conrod(model, Kbb, Kbbs, dof_map)
+        nelements += _build_kbb_crod(model, Kbb, Kbbs, dof_map)
+        nelements += _build_kbb_ctube(model, Kbb, Kbbs, dof_map)
+        nelements += _build_kbb_cbar(model, Kbb, Kbbs, dof_map)
         assert nelements > 0, nelements
-        return Kbb
+        Kbbs2 = Kbbs.tocsc()
+        Kbb2 = Kbbs2.toarray()
+        error = np.linalg.norm(Kbb - Kbb2)
+        if error > 1e-12:
+            self.log.warning(f'error = {error}')
+        return Kbb, Kbbs2
 
     def _recover_strain_101(self, xg, dof_map, fdtype='float32'):
         """recovers the strains"""
@@ -182,7 +210,9 @@ class Solver:
 
     def Kbb_to_Kgg(self, Kbb: np.ndarray, ngrid: int, ndof_per_grid: int, inplace=True) -> np.ndarray:
         """does an in-place transformation"""
-        assert isinstance(Kbb, np.ndarray)
+        assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix)), type(Kbb)
+        if not isinstance(Kbb, np.ndarray):
+            Kbb = Kbb.tolil()
         model = self.model
         assert ngrid > 0, model.card_count
         nids = model._type_to_id_map['GRID']
@@ -293,7 +323,8 @@ class Solver:
         return constraints
 
 
-    def run_sol_101(self, subcase: Subcase, fdtype='float64'):
+    def run_sol_101(self, subcase: Subcase, f06_file,
+                    page_stamp, idtype='int32', fdtype='float64'):
         """
         Runs a SOL 101
         SOL 101 Sets
@@ -354,16 +385,32 @@ class Solver:
         b = l - c ???
         c = l - b ???
         """
-        fdtype = 'float64'
+        #basic
+        itime = 0
+        ntimes = 1  # static
+        isubcase = subcase.id
+        title = f'pyNastran {pyNastran.__version__}'
+        subtitle = f'SUBCASE {isubcase}'
+        label = ''
+        if 'TITLE' in subcase:
+            title = subcase.get_parameter('TITLE')
+        if 'SUBTITLE' in subcase:
+            subtitle = subcase.get_parameter('SUBTITLE')
+        if 'LABEL' in subcase:
+            label = subcase.get_parameter('LABEL')
+        #-----------------------------------------------------------------------
+
         log = self.model.log
 
         dof_map = _get_dof_map(self.model)
+        node_gridtype = _get_node_gridtype(self.model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
-        Kbb = self.build_Kbb(subcase, dof_map, ndof)
+        Kbb, Kbbs = self.build_Kbb(subcase, dof_map, ndof)
         self.get_mpc_constraints(subcase, dof_map)
 
         Kgg = self.Kbb_to_Kgg(Kbb, ngrid, ndof_per_grid, inplace=False)
-        del Kbb
+        Kggs = self.Kbb_to_Kgg(Kbbs, ngrid, ndof_per_grid)
+        del Kbb, Kbbs
 
         gset = np.arange(ndof, dtype='int32')
         sset, xg = self.build_xg(dof_map, ndof, subcase)
@@ -393,6 +440,8 @@ class Solver:
         Kss = K['ss']
         #Kas = K['as']
         Ksa = K['sa']
+        Ks = partition_matrix(Kggs, [['a', aset], ['s', sset]])
+        Kaas = Ks['aa']
 
         self.Kaa = Kaa
         #[Kaa]{xa} + [Kas]{xs} = {Fa}
@@ -404,7 +453,8 @@ class Solver:
         #print(Kaa)
         #print(Kas)
         #print(Kss)
-        Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset)
+        Kaas_, ipositive, inegative, sz_set = remove_rows(Kaas, aset, idtype=idtype)
+        Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset, idtype=idtype)
         Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
         #print(f'Fa = {Fa}')
@@ -419,13 +469,18 @@ class Solver:
         log.debug(f'Kaa_:\n{Kaa_}')
         log.debug(f'Fa_: {Fa_}')
         xa_ = np.linalg.solve(Kaa_, Fa_)
+        xas_ = sci_sparse.linalg.spsolve(Kaas_, Fa_)
+        sparse_error = np.linalg.norm(xa_ - xas_)
+        if sparse_error > 1e-12:
+            log.warning(f'sparse_error = {sparse_error}')
+
         self.xa_ = xa
         log.info(f'xa_ = {xa_}')
 
         xa[ipositive] = xa_
         xa[inegative] = 0.
 
-        xg = np.arange(ndof, dtype=fdtype)
+        xg = np.full(ndof, np.nan, dtype=fdtype)
         xg[aset] = xa
         xg[sset] = xs
         Fg[aset] = Fa
@@ -434,12 +489,24 @@ class Solver:
 
         xb = self.xg_to_xb(xg, ngrid, ndof_per_grid)
         Fb = self.xg_to_xb(Fg, ngrid, ndof_per_grid)
-        if 'SPCFORCES' in subcase:
-            #Fs[ipositive] = Fsi
-            log.debug(f'Fg = {Fg}')
-            log.debug(f'Fs = {Fs}')
-        if 'DISPLACEMENT' in subcase:
-            log.debug(f'xg = {xg}')
+
+        log.debug(f'Fs = {Fs}')
+        page_num = 1
+        self._save_spc_forces(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, Fg,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+        self._save_displacment(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, xg,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+
         if 'STRAIN' in subcase:
             self._recover_strain_101(xb, dof_map)
         #if 'STRESS' in subcase:
@@ -448,7 +515,83 @@ class Solver:
         log.debug(f'xa = {xa}')
         return xa_
 
-    def run_sol_103(self, subcase: Subcase):
+    def _save_spc_forces(self, f06_file,
+                         subcase: Subcase, itime: int, ntimes: int,
+                         node_gridtype, Fg,
+                         ngrid: int, ndof_per_grid: int,
+                         title='', subtitle='', label='',
+                         fdtype='float32', page_num=1, page_stamp='PAGE %s') -> int:
+        f06_request_name = 'SPCFORCES'
+        table_name = 'OQG1'
+        #self.log.debug(f'Fg = {Fg}')
+        page_num = self._save_static_table(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, Fg,
+            RealSPCForcesArray, f06_request_name, table_name,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+        return page_num
+
+    def _save_displacment(self, f06_file,
+                         subcase: Subcase, itime: int, ntimes: int,
+                         node_gridtype, xg,
+                         ngrid: int, ndof_per_grid: int,
+                         title='', subtitle='', label='',
+                         fdtype='float32', page_num=1, page_stamp='PAGE %s') -> int:
+        f06_request_name = 'DISPLACEMENT'
+        table_name = 'OUGV1'
+        #self.log.debug(f'xg = {xg}')
+        page_num = self._save_static_table(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, xg,
+            RealDisplacementArray, f06_request_name, table_name,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+        return page_num
+
+    def _save_static_table(self, f06_file,
+                           subcase: Subcase, itime: int, ntimes: int,
+                           node_gridtype, Fg,
+                           obj: Union[RealSPCForcesArray], f06_request_name, table_name,
+                           ngrid: int, ndof_per_grid: int,
+                           title='', subtitle='', label='',
+                           fdtype='float32', page_num=1,
+                           page_stamp='PAGE %s') -> int:
+        if f06_request_name not in subcase:
+            return
+        isubcase = subcase.id
+        self.log.debug(f'saving {f06_request_name} -> {table_name}')
+        unused_nids_write, write_f06, write_op2 = get_plot_request(
+            subcase, f06_request_name)
+        nnodes = node_gridtype.shape[0]
+        data = np.zeros((ntimes, nnodes, 6), dtype=fdtype)
+        ngrid_dofs = ngrid * ndof_per_grid
+        if ndof_per_grid == 6:
+            _fgi = Fg[:ngrid_dofs].reshape(ngrid, ndof_per_grid)
+            data[itime, :ngrid, :] = _fgi
+        else:
+            raise NotImplementedError(ndof_per_grid)
+        data[itime, ngrid:, 0] = Fg[ngrid_dofs:]
+
+        spc_forces = obj.add_static_case(
+            table_name, node_gridtype, data, isubcase,
+            is_sort1=True, is_random=False, is_msc=True,
+            random_code=0, title=title, subtitle=subtitle, label=label)
+        if write_f06:
+            page_num = spc_forces.write_f06(f06_file, header=None,
+                                 page_stamp=page_stamp, page_num=page_num,
+                                 is_mag_phase=False, is_sort1=True)
+            f06_file.write('\n')
+        self.op2.spc_forces[isubcase] = spc_forces
+        return page_num
+
+    def run_sol_103(self, subcase: Subcase, f06_file,
+                    page_stamp,
+                    idtype='int32', fdtype='float64'):
         """
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
         [M]{xdd} + [K]{x} = {F}
@@ -463,12 +606,13 @@ class Solver:
 
         dof_map = _get_dof_map(self.model)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
-        Kbb = self.build_Kbb(subcase, dof_map, ndof)
+        Kbb, Kbbs = self.build_Kbb(subcase, dof_map, ndof)
 
         Mbb = np.eye(Kbb.shape[0], dtype=fdtype)
 
         Kgg = self.Kbb_to_Kgg(Kbb, ngrid, ndof_per_grid)
         Mgg = self.Kbb_to_Kgg(Mbb, ngrid, ndof_per_grid)
+        Kggs = self.Kbb_to_Kgg(Kbbs, ngrid, ndof_per_grid)
         del Kbb, Mgg
 
         gset = np.arange(ndof, dtype='int32')
@@ -489,17 +633,21 @@ class Solver:
         #Kss = K['ss']
         #Kas = K['as']
         #Ksa = K['sa']
+        Ks = partition_matrix(Kggs, [['a', aset], ['s', sset]])
+        Kaas = Ks['aa']
+
             #[Kaa]{xa} + [Kas]{xs} = {Fa}
             #[Ksa]{xa} + [Kss]{xs} = {Fs}
 
         #{xa} = [Kaa]^-1 * ({Fa} - [Kas]{xs})
         #{Fs} = [Ksa]{xa} + [Kss]{xs}
 
-        # TODO: apply SPCs
+        # TODO: apply AUTOSPCs correctly
         #print(Kaa)
         #print(Kas)
         #print(Kss)
         Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset)
+        Kaas_, ipositive, inegative, sz_set = remove_rows(Kaas, aset)
         #Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
         #print(f'Fa = {Fa}')
@@ -532,7 +680,7 @@ class Solver:
         return xa_
         #raise NotImplementedError(subcase)
 
-    def run_sol_111(self, subcase: Subcase):
+    def run_sol_111(self, subcase: Subcase, f06_file, idtype='int32', fdtype='float64'):
         """
         frequency
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
@@ -600,7 +748,7 @@ def _recover_strain_celas2(model: BDF, dof_map, xg, eids, fdtype='float32'):
         strains[ielas] = strain
     return len(celas2s)
 
-def _build_kbb_celas1(model: BDF, Kbb, dof_map):
+def _build_kbb_celas1(model: BDF, Kbb, Kbbs, dof_map):
     """fill the CELAS1 Kbb matrix"""
     celas1s = model._type_to_id_map['CELAS1']
     for eid in celas1s:
@@ -608,10 +756,10 @@ def _build_kbb_celas1(model: BDF, Kbb, dof_map):
         ki = elem.K()
         #print(elem, ki)
         #print(elem.get_stats())
-        _build_kbbi_celas12(Kbb, dof_map, elem, ki)
+        _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki)
     return len(celas1s)
 
-def _build_kbb_celas2(model: BDF, Kbb, dof_map):
+def _build_kbb_celas2(model: BDF, Kbb, Kbbs, dof_map):
     """fill the CELAS2 Kbb matrix"""
     celas2s = model._type_to_id_map['CELAS2']
     #celas3s = model._type_to_id_map['CELAS3']
@@ -621,7 +769,7 @@ def _build_kbb_celas2(model: BDF, Kbb, dof_map):
         ki = elem.K()
         #print(elem, ki)
         #print(elem.get_stats())
-        _build_kbbi_celas12(Kbb, dof_map, elem, ki)
+        _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki)
     return len(celas2s)
 
 def _recover_straini_celas12(xg, dof_map, elem):
@@ -633,7 +781,7 @@ def _recover_straini_celas12(xg, dof_map, elem):
     strain = xg[i] - xg[j]  # TODO: check the sign
     return strain
 
-def _build_kbbi_celas12(Kbb, dof_map, elem, ki):
+def _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki):
     """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes
     c1, c2 = elem.c1, elem.c2
@@ -648,50 +796,51 @@ def _build_kbbi_celas12(Kbb, dof_map, elem, ki):
     for ib1, ie1 in ibe:
         for ib2, ie2 in ibe:
             Kbb[ib1, ib2] += k[ie1, ie2]
+            Kbbs[ib1, ib2] += k[ie1, ie2]
     #Kbb[j, i] += ki
     #Kbb[i, j] += ki
     #del i, j, ki, nid1, nid2, c1, c2
 
-def _build_kbb_cbar(model, Kbb, dof_map):
+def _build_kbb_cbar(model, Kbb, Kbbs, dof_map):
     """fill the CBAR Kbb matrix"""
     cbars = model._type_to_id_map['CBAR']
     for eid in cbars:
         elem = model.elements[eid]
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
-        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
+        _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
     return len(cbars)
 
-def _build_kbb_crod(model, Kbb, dof_map):
+def _build_kbb_crod(model, Kbb, Kbbs, dof_map):
     """fill the CROD Kbb matrix"""
     crods = model._type_to_id_map['CROD']
     for eid in crods:
         elem = model.elements[eid]
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
-        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
+        _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
     return len(crods)
 
-def _build_kbb_ctube(model: BDF, Kbb, dof_map):
+def _build_kbb_ctube(model: BDF, Kbb, Kbbs, dof_map):
     """fill the CTUBE Kbb matrix"""
     ctubes = model._type_to_id_map['CTUBE']
     for eid in ctubes:
         elem = model.elements[eid]
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
-        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
+        _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
     return len(ctubes)
 
-def _build_kbb_conrod(model: BDF, Kbb, dof_map):
+def _build_kbb_conrod(model: BDF, Kbb, Kbbs, dof_map):
     """fill the CONROD Kbb matrix"""
     conrods = model._type_to_id_map['CONROD']
     for eid in conrods:
         elem = model.elements[eid]
         mat = elem.mid_ref
-        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
+        _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
     return len(conrods)
 
-def _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat, fdtype='float64'):
+def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat, fdtype='float64'):
     """fill the ith rod Kbb matrix"""
     nid1, nid2 = elem.nodes
     #mat = elem.mid_ref
@@ -789,6 +938,7 @@ def _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat, fdtype='float64'):
                 #print(nij1, nij2, f'({i1}, {i2});', (dof1, dof2), ki)
                 #Kbb[dof1, dof2] = ki #  old
                 Kbb[i1, i2] = ki # new
+                Kbbs[i1, i2] = ki
         #print(K2)
     #print(Kbb)
     return
@@ -842,7 +992,7 @@ def partition_vector(vector, sets) -> List[np.ndarray]:
     return vectors
 
 
-def remove_rows(Kgg: np.ndarray, aset: np.ndarray) -> np.ndarray:
+def remove_rows(Kgg: np.ndarray, aset: np.ndarray, idtype='int32') -> np.ndarray:
     """
     Applies AUTOSPC to the model (sz)
 
@@ -953,8 +1103,17 @@ def remove_rows(Kgg: np.ndarray, aset: np.ndarray) -> np.ndarray:
     #print(col_kgg)
     #print(row_kgg)
     #izero = np.where((col_kgg == 0.) & (row_kgg == 0))[0]
-    ipositive = np.where((col_kgg > 0.) | (row_kgg > 0))[0]
-    all_rows = np.arange(Kgg.shape[0], dtype='int32')
+    if isinstance(Kgg, np.ndarray):
+        ipositive = np.where((col_kgg > 0.) | (row_kgg > 0))[0]
+    elif isinstance(Kgg, (sci_sparse.csc.csc_matrix, sci_sparse.lil.lil_matrix)):
+        ipositive1 = np.atleast_1d(col_kgg.todense()).nonzero()
+        ipositive2 = np.atleast_1d(row_kgg.todense()).nonzero()
+        ipositive = np.union1d(ipositive1, ipositive2)
+        if isinstance(Kgg, sci_sparse.lil.lil_matrix):
+            Kgg = Kgg.tocsc()
+    else:
+        raise NotImplementedError(type(Kgg))
+    all_rows = np.arange(Kgg.shape[0], dtype=idtype)
     inegative = np.setdiff1d(all_rows, ipositive)
     apositive = aset[ipositive]
     sz_set = np.setdiff1d(aset, apositive)
@@ -1007,3 +1166,46 @@ def guyan_reduction(matrix, set1, set2):
     T = np.vstack([np.eye(nA11), A22m1 @ A21])
     return np.linalg.multi_dot([T.T, A, T])
     #return A11 + A12_A22m1_A21
+
+def _get_node_gridtype(model: BDF, idtype='int32') -> np.ndarray:
+    """
+    Helper method for results post-processing
+
+    Point type (per NX 10; OUG table; p.5-663):
+    =1, GRID Point
+    =2, Scalar Point
+    =3, Extra Point
+    =4, Modal
+    =5, p-elements, 0-DOF
+    -6, p-elements, number of DOF
+
+    """
+    node_gridtype = []
+    for nid, node_ref in sorted(model.nodes.items()):
+        if node_ref.type == 'GRID':
+            node_gridtype.append((nid, 1))
+        elif node_ref.type == 'SPOINT':
+            node_gridtype.append((nid, 2))
+        else:
+            raise NotImplementedError(node_ref)
+    assert len(node_gridtype) > 0
+    #print(node_gridtype)
+    node_gridtype_array = np.array(node_gridtype, dtype=idtype)
+    return node_gridtype_array
+
+def get_plot_request(subcase: Subcase, request: str) -> Tuple[str, bool, bool]:
+    """
+    request = 'SPCFORCES'
+    """
+    value, options = subcase.get_parameter(request)
+    write_f06 = False
+    write_f06 = True
+    if 'PRINT' in options:
+        write_f06 = True
+    if 'PLOT' in options:
+        write_op2 = True
+    if not(write_f06 or write_op2):
+        write_op2 = True
+    nids_write = value
+    return nids_write, write_f06, write_op2
+
