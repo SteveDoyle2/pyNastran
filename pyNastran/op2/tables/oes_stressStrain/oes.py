@@ -5058,7 +5058,7 @@ class OES(OP2Common):
         slot = self.get_result(result_name)
         #print(result_name, self.format_code, self.num_wide)
         if self.format_code in [1, 3] and self.num_wide == 17:  # real
-            ntotal = 68  # 4*17
+            ntotal = 68 * self.factor # 4*17
             nelements = ndata // ntotal
             nlayers = nelements * 2  # 2 layers per node
             auto_return, is_vectorized = self._create_oes_object4(
@@ -5083,7 +5083,7 @@ class OES(OP2Common):
 
                 itime = obj.itime
                 if itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 17)
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 17)
                     eids = ints[:, 0] // 10
                     #ilayers = ints[:, 1]
                     ints2 = ints[:, 1:].reshape(nlayers, 8)
@@ -5093,7 +5093,7 @@ class OES(OP2Common):
                     obj.element_node[itotal+1:iend+1:2, 0] = eids
                     #obj.element_node[itotal:iend, 1] = 0
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 17)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 17)
                 floats1 = floats[:, 1:].reshape(nlayers, 8).copy()
                 obj.data[obj.itime, itotal:iend, :] = floats1
                 obj._times[obj.itime] = dt
@@ -5103,7 +5103,7 @@ class OES(OP2Common):
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CTRIA3 real SORT%s' % self.sort_method)
                 cen = 0 # 'CEN/3'
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'16f')
+                struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'16f', self.size))
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = struct1.unpack(edata)
