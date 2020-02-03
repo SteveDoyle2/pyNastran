@@ -1,6 +1,7 @@
 from struct import Struct
 from numpy import frombuffer
 from pyNastran.op2.op2_interface.op2_common import OP2Common
+from pyNastran.op2.op2_interface.op2_reader import mapfmt
 from pyNastran.op2.tables.ogs_grid_point_stresses.ogs_surface_stresses import (
     GridPointSurfaceStressesArray,
     GridPointStressesVolumeDirectArray, GridPointStressesVolumePrincipalArray,
@@ -160,18 +161,18 @@ class OGS(OP2Common):
         n = 0
 
         #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-        ntotal = 15 * 4
+        ntotal = 60 * self.factor # 15 * 4
         nelements = ndata // ntotal
         assert ndata % ntotal == 0
         auto_return, is_vectorized = self._create_oes_object4(
             nelements, result_name, slot, obj_vector_real)
         if auto_return:
-            return nelements * self.num_wide * 4
+            return nelements * ntotal
 
         obj = self.obj
         dt = self.nonlinear_factor
         if self.use_vector and is_vectorized and 0:
-            n = nelements * 4 * self.num_wide
+            n = nelements * ntotal
             #itotal = obj.ielement
             #ielement2 = obj.itotal + nelements
             #itotal2 = ielement2
@@ -194,22 +195,22 @@ class OGS(OP2Common):
             #obj.ielement = ielement2
             #n = ndata
         else:
-            s = Struct(self._endian + b'i14f')
+            s = Struct(mapfmt(self._endian + b'i14f', self.size))
             #nelements = ndata // 60  # 15*4
             for unused_i in range(nelements):
-                edata = data[n:n+60]
+                edata = data[n:n+ntotal]
                 out = s.unpack(edata)
                 (eid_device, lxa, lxb, lxc, lya, lyb, lyc, lza, lzb, lzc, sa, sb, sc, epr, ovm) = out
                 eid = eid_device // 10
                 assert eid > 0, eid
                 #self.obj.add_sort1(dt, eid, lxa, lxb, lxc, lya, lyb, lyc, lza, lzb, lzc,
                                    #sa, sb, sc, epr, ovm)
-                n += 60
+                n += ntotal
 
         assert ndata > 0, ndata
         assert nelements > 0, 'nelements=%r element_type=%s element_name=%r' % (nelements, self.element_type, self.element_name)
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
-        assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
+        assert self.num_wide * 4 * self.factor == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide * 4, ntotal)
         assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
     #-----------------------------------------------------------------------------------
@@ -324,28 +325,27 @@ class OGS(OP2Common):
         n = 0
 
         #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-        ntotal = 9 * 4
+        ntotal = 36 * self.factor  # 9 * 4
         nelements = ndata // ntotal
-        assert ndata % (nelements * 36) == 0, ndata % (nelements * 36)
+        assert ndata % (nelements * ntotal) == 0, ndata % (nelements * ntotal)
         auto_return, is_vectorized = self._create_oes_object4(
             nelements, result_name, slot, obj_vector_real)
         if auto_return:
-            return nelements * self.num_wide * 4
+            return nelements * ntotal
 
         obj = self.obj
         dt = self.nonlinear_factor
 
-        ntotal = 36 * self.factor
         if self.use_vector and is_vectorized:
             n = nelements * ntotal
             itotal = obj.ielement
             ielement2 = obj.itotal + nelements
             itotal2 = ielement2
 
-            floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 9)#.copy()
+            floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 9)#.copy()
             obj._times[obj.itime] = dt
             if obj.itime == 0:
-                ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 9)
+                ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 9)
                 nids = ints[:, 0] // 10
                 assert nids.min() > 0, nids.min()
                 obj.node[itotal:itotal2] = nids
@@ -358,10 +358,10 @@ class OGS(OP2Common):
             obj.ielement = ielement2
             n = ndata
         else:
-            fmt = self._endian + b'i8f'
+            fmt = mapfmt(self._endian + b'i8f', self.size)
             s = Struct(fmt)
             for unused_i in range(nelements):
-                edata = data[n:n+36]
+                edata = data[n:n+ntotal]
                 out = s.unpack(edata)
                 (nid_device, nx, ny, nz, txy, tyz, txz, pressure, ovm) = out
                 nid = nid_device // 10
@@ -394,19 +394,19 @@ class OGS(OP2Common):
             obj_vector_real = GridPointStressesSurfaceDiscontinutiesArray
 
             #result_name, is_random = self._apply_oes_ato_crm_psd_rms_no(result_name)
-            ntotal = 6 * 4
+            ntotal = 6 * 4 * self.factor
             nelements = ndata // ntotal
-            assert ndata % (nelements * 24) == 0, ndata % (nelements * 24)
+            assert ndata % (nelements * ntotal) == 0, ndata % (nelements * ntotal)
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4
+                return nelements * ntotal
 
             obj = self.obj
             dt = self.nonlinear_factor
 
             if self.use_vector and is_vectorized:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
@@ -425,15 +425,15 @@ class OGS(OP2Common):
                 obj.ielement = ielement2
                 n = ndata
             else:
-                s = Struct(self._endian + b'i5f')
-                nelements = ndata // 24  # 6*4
+                s = Struct(mapfmt(self._endian + b'i5f', self.size))
+                nelements = ndata // ntotal  # 6*4
                 for unused_i in range(nelements):
-                    out = s.unpack(data[n:n+24])
+                    out = s.unpack(data[n:n+ntotal])
                     (nid_device, nx, ny, nz, txy, pressure) = out
                     nid = nid_device // 10
                     assert nid > 0, nid
                     self.obj.add_sort1(dt, nid, nx, ny, nz, txy, pressure)
-                    n += 24
+                    n += ntotal
         else:
             msg = 'only num_wide=11 is allowed  num_wide=%s' % self.num_wide
             raise RuntimeError(msg)

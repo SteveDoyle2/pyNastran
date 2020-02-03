@@ -373,3 +373,110 @@ MSC_TABLE_CONTENT = {
     #54: 'OLMPF2M - ???',
     #55: 'OGMPF2M - ???',
 } # type: Dict[int, str]
+MSC_OEF_REAL_MAPPER = {
+    1: 3,   # CROD
+    2: 1 + (10 - 1) * 11,  # CBEAM
+    3: 3,   # CTUBE
+    4: 17,  # CSHEAR
+    10: 3,  # CONROD
+    11: 2,  # CELAS1
+    12: 2,  # CELAS2
+    13: 2,  # CELAS3
+    14: 2,  # CELAS4
+
+    20: 2,  # CDAMP1
+    21: 2,  # CDAMP2
+    22: 2,  # CDAMP3
+    23: 2,  # CDAMP4
+    24: 3,  # CVISC
+
+    33: 9,  # CQUAD4-centroid
+    34: 9,  # CBAR-34
+    35: 7,  # CCONEAX
+    38: 9,  # CGAP
+    #40: 8,  # CBUSH1D
+
+    64: 2 + (11 - 2) * 5,  # CQUAD8
+    #67: 14,  # CHEXA-acoustic
+    #68: 14,  # CPENTA-acoustic
+    69: 1 + (8 - 1) * 2,   # CBEND
+    70: 2 + (11 - 2) * 4,  # CTRIAR
+    74: 9,  # CTRIA3
+    75: 2 + (11 - 2) * 4,  # CTRIA6
+    #76: 10,  # CHEXA-acoustic/pressure
+    77: 10,  # CPENTA-acoustic/pressure
+    78: 10,  # CTETRA-acoustic/pressure
+
+    82: 2 + (11 - 2) * 5,  # CQUADR
+    #93: 14, # CHEXA-acoustic
+    95: 9, # CQUAD4-composite
+    96: 9, # CQUAD8-composite
+    97: 9, # CTRIA3-composite
+    98: 9, # CTRIA6-composite
+
+    100: 8, # CBAR-100
+    102: 7, # CBUSH
+    #107: 8, # CHBDYE
+    #108: 8, # CHBDYG
+    #109: 8, # CHBDYP
+    #110: 4, # CONV
+    #111: 4, # CONVM
+    117: 9, # WELDC
+    118: 9, # WELDP
+    119: 9, # CSEAM
+
+    144: 2 + (11 - 2) * 5,  # CQUAD4
+    189: 6 + (11 - 6) * 4,  # VUQUAD
+}
+MSC_OEF_IMAG_MAPPER = {
+    1: 5,  # CROD
+    2: 1 + (17 - 1) * 11,  # CBEAM
+    3: 5,   # CTUBE
+    4: 33,  # CSHEAR
+    10: 5,  # CONROD
+
+    11: 3,  # CELAS1
+    12: 3,  # CELAS2
+    13: 3,  # CELAS3
+    14: 3,  # CELAS4
+
+    20: 3,  # CDAMP1
+    21: 3,  # CDAMP2
+    22: 3,  # CDAMP3
+    23: 3,  # CDAMP4
+    24: 5,  # CVISC
+
+    33: 17,  # CQUAD4-centroid
+    34: 17,  # CBAR-34
+    38: 9,   # CGAP
+    #40: 8,  # CBUSH1D
+
+    64: 2 + (19 - 2) * 5,  # CQUAD8
+    #67: 14,  # CHEXA-acoustic
+    #68: 14,  # CPENTA-acoustic
+    69: 1 + (14 - 1) * 2,  # CBEND
+    70: 2 + (19 - 2) * 4,  # CTRIAR
+    74: 17,   # CTRIA3
+    75: 2 + (19 - 2) * 4,  # CTRIA6
+
+    #76: 16,  # CHEXA-acoustic velocity/pressure
+    77: 16,  # CPENTA-acoustic velocity/pressure
+    78: 16,  # CTETRA-acoustic velocity/pressure
+
+    82: 2 + (19 - 2) * 5,  # CQUADR
+    #93: 14, # CHEXA-acoustic
+
+    100: 14, # CBAR-100
+    102: 13, # CBUSH
+    #107: 8, # CHBDYE
+    #108: 8, # CHBDYG
+    #109: 8, # CHBDYP
+    #110: 8, # CONV
+    #111: 4, # CONVM
+    117: 17, # WELDC
+    118: 17, # WELDP
+    119: 17, # CSEAM
+
+    144: 2 + (19 - 2) * 5,  # CQUAD4-bilinear
+    189: 6 + (31 - 6) * 4,  # VUQUAD
+}

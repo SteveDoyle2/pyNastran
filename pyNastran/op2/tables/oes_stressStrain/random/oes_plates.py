@@ -120,9 +120,6 @@ class RandomPlateArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        #dtype = 'float32'
-        #if isinstance(self.nonlinear_factor, integer_types):
-            #dtype = 'int32'
         self.build_data(ntimes, nelements, nlayers, nnodes, ntotal, nx, ny, self._times_dtype)
 
     def build_data(self, ntimes, nelements, nlayers, nnodes, ntotal, nx, ny, dtype):

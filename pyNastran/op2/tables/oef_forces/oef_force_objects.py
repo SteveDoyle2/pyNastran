@@ -2020,14 +2020,12 @@ class RealPlateForceArray(RealForceObject):  # 33-CQUAD4, 74-CTRIA3
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.ntotal, dtype='int32')
+        self.element = zeros(self.ntotal, dtype=idtype)
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -4883,14 +4881,12 @@ class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        self.element_node = zeros((self.ntotal, 2), dtype=idtype)
 
         #[mfx, mfy, mfxy, bmx, bmy, bmxy, syz, szx]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

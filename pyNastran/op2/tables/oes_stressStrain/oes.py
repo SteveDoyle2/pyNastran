@@ -1640,7 +1640,7 @@ class OES(OP2Common):
         assert ndata > 0, ndata
         assert nelements > 0, f'nelements={nelements} element_type={self.element_type} element_name={self.element_name!r}'
         #assert ndata % ntotal == 0, '%s n=%s nwide=%s len=%s ntotal=%s' % (self.element_name, ndata % ntotal, ndata % self.num_wide, ndata, ntotal)
-        assert self.num_wide * 4 * self.factor == ntotal, f'numwide*4={self.num_wide*4} ntotal={ntotal} element_name={self.element_name!r}'
+        assert self.num_wide * 4 * self.factor == ntotal, f'numwide*4={self.num_wide*4} ntotal={ntotal} element_name={self.element_name!r}\n{self.code_information()}'
         assert self.thermal == 0, "thermal = %%s" % self.thermal
         assert n > 0, "n = %s result_name=%s" % (n, result_name)
         return n
@@ -1840,24 +1840,24 @@ class OES(OP2Common):
                     obj.add_sort1(dt, eid, ox)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 3:  # imag
-            ntotal = 12
+            ntotal = 12 * self.factor
             nelements = ndata // ntotal
 
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             assert obj is not None, self.code_information()
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 3).copy()
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 3).copy()
                 obj._times[obj.itime] = dt
                 self.obj_set_element(obj, itotal, itotal2, data, nelements)
 
@@ -1877,7 +1877,7 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CELASx imag SORT%s' % self.sort_method)
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'2f')
+                struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'2f', self.size))
                 for i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = struct1.unpack(edata)
@@ -2179,24 +2179,24 @@ class OES(OP2Common):
                 nlayers, result_name, slot, obj_vector_complex)
             if auto_return:
                 self._data_factor = 11
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
 
             nnodes = 10  # 11-1
-            ntotal = self.num_wide * 4
+            #ntotal = self.num_wide * 4
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * 11
 
                 # chop off eid
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 111)[:, 1:]
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 111)[:, 1:]
                 floats2 = floats.reshape(nelements * 11, 10).copy()
 
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 111)
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 111)
                     eids = ints[:, 0] // 10
                     eids2 = array([eids] * 11, dtype='int32').T.ravel()
 
@@ -2405,21 +2405,21 @@ class OES(OP2Common):
                     n += ntotal
 
         elif self.format_code in [2, 3] and self.num_wide == 5:  # imag
-            ntotal = 20  # 4*5
+            ntotal = 20 * self.factor # 4*5
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.ielement
                 ielement2 = obj.itotal + nelements
                 itotal2 = ielement2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 5).copy()
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 5).copy()
                 obj._times[obj.itime] = dt
                 self.obj_set_element(obj, itotal, itotal2, data, nelements)
 
@@ -2431,7 +2431,7 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CSHEAR imag SORT%s' % self.sort_method)
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'4f')
+                struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'4f', self.size))
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
                     out = struct1.unpack(edata)  # num_wide=5
@@ -2520,7 +2520,7 @@ class OES(OP2Common):
             else:
                 obj_vector_real = RealBarStrainArray
 
-            ntotal = 16 * 4 * self.factor
+            ntotal = 64 * self.factor  # 16*4
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
@@ -2583,7 +2583,7 @@ class OES(OP2Common):
             else:
                 obj_vector_complex = ComplexBarStrainArray
 
-            ntotal = 76
+            ntotal = 76 * self.factor
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
@@ -2599,12 +2599,12 @@ class OES(OP2Common):
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.itotal
                 itotal2 = itotal + nelements
                 ielement2 = itotal2
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 19).copy()
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 19).copy()
                 obj._times[obj.itime] = dt
                 self.obj_set_element(obj, itotal, itotal2, data, nelements)
 
@@ -2618,46 +2618,7 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CBAR imag SORT%s' % self.sort_method)
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'18f')
-                for i in range(nelements):
-                    edata = data[n:n+ntotal]
-                    n += ntotal
-                    out = struct1.unpack(edata)
-                    (eid_device,
-                     s1ar, s2ar, s3ar, s4ar, axialr,
-                     s1ai, s2ai, s3ai, s4ai, axiali,
-                     s1br, s2br, s3br, s4br,
-                     s1bi, s2bi, s3bi, s4bi) = out
-
-                    eid, dt = get_eid_dt_from_eid_device(
-                        eid_device, self.nonlinear_factor, self.sort_method)
-                    if self.is_debug_file:
-                        self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
-                            eid, i, ', '.join(['%r' % di for di in out])))
-                    if is_magnitude_phase:
-                        s1a = polar_to_real_imag(s1ar, s1ai)
-                        s1b = polar_to_real_imag(s1br, s1bi)
-                        s2a = polar_to_real_imag(s2ar, s2ai)
-                        s2b = polar_to_real_imag(s2br, s2bi)
-                        s3a = polar_to_real_imag(s3ar, s3ai)
-                        s3b = polar_to_real_imag(s3br, s3bi)
-                        s4a = polar_to_real_imag(s4ar, s4ai)
-                        s4b = polar_to_real_imag(s4br, s4bi)
-                        axial = polar_to_real_imag(axialr, axiali)
-                    else:
-                        s1a = complex(s1ar, s1ai)
-                        s1b = complex(s1br, s1bi)
-                        s2a = complex(s2ar, s2ai)
-                        s2b = complex(s2br, s2bi)
-                        s3a = complex(s3ar, s3ai)
-                        s3b = complex(s3br, s3bi)
-                        s4a = complex(s4ar, s4ai)
-                        s4b = complex(s4br, s4bi)
-                        axial = complex(axialr, axiali)
-
-                    obj.add_new_eid_sort1(dt, eid,
-                                          s1a, s2a, s3a, s4a, axial,
-                                          s1b, s2b, s3b, s4b)
+                n = oes_cbar_imag(self, data, obj, nelements, ntotal, is_magnitude_phase)
         elif self.format_code == 1 and self.num_wide == 19: # random strain?
             raise RuntimeError(self.code_information())
 
@@ -2965,29 +2926,28 @@ class OES(OP2Common):
                         n += n84
 
         elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # complex
-            # TODO: vectorize
-            ntotal = numwide_imag * 4
+            ntotal = numwide_imag * 4 * self.factor
             nelements = ndata // ntotal
             self.ntotal += nelements * nnodes_expected
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * nnodes_expected
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, numwide_imag)
                 floats1 = floats[:, 4:].reshape(nelements * nnodes_expected, 13).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_imag)
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, numwide_imag)
                     ints1 = ints[:, 4:].reshape(nelements * nnodes_expected, 13)
                     eids = ints[:, 0] // 10
                     cids = ints[:, 1]
@@ -3015,11 +2975,16 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CSolid imag SORT%s' % self.sort_method)
-                s1 = Struct(self._endian + b'2i4si')
-                s2 = Struct(self._endian + b'i12f')
+                if self.size == 4:
+                    s1 = Struct(self._endian + b'2i4si')
+                else:
+                    s1 = Struct(self._endian + b'2q8sq')
+                s2 = Struct(self._endian + mapfmt(b'i12f', self.size))
+                ntotal1 = 16 * self.factor
+                ntotal2 = 52 * self.factor
                 for unused_i in range(nelements):
-                    edata = data[n:n+16]
-                    n += 16
+                    edata = data[n:n+ntotal1]
+                    n += ntotal1
                     out = s1.unpack(edata)
                     (eid_device, cid, ctype, nodef) = out
                     eid, dt = get_eid_dt_from_eid_device(
@@ -3031,8 +2996,8 @@ class OES(OP2Common):
                     #element_name = self.element_name + str(nodef)  # this is correct, but has problems...
                     obj.add_eid_sort1(self.element_type, element_name, dt, eid, cid, ctype, nodef)
                     for inode in range(nnodes_expected):
-                        edata = data[n:n+52]
-                        n += 52
+                        edata = data[n:n+ntotal2]
+                        n += ntotal2
                         out = s2.unpack(edata)
                         (grid,
                          exr, eyr, ezr, etxyr, etyzr, etzxr,
@@ -3660,7 +3625,7 @@ class OES(OP2Common):
                     edata = data[n:n+12]
                     out = struct1.unpack(edata)
                     (eid_device, ply, fiber_location) = out
-                    print(out)
+                    #print(out)
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
 
@@ -3801,7 +3766,7 @@ class OES(OP2Common):
 
         numwide_real = 2 + 20 * nnodes_expected
         #numwide_real = 162  # CHEXA
-        print(self.num_wide, numwide_real)
+        #print(self.num_wide, numwide_real)
         assert numwide_real == self.num_wide, numwide_real
         #numwide_imag = 4 + (17 - 4) * nnodes_expected
         #numwide_random = 4 + (11 - 4) * nnodes_expected
@@ -3920,11 +3885,12 @@ class OES(OP2Common):
                 struct1 = Struct(self._endian + self._analysis_code_fmt + b'4s')
                 struct2 = Struct(self._endian + b'i19f')
                 if self.is_debug_file:
-                    #msg = (
-                        #f'{self.element_name}-{self.element_type} nelements={nelements} '
-                        #f'nnodes={nnodes_expected}; '
-                        #'C=[sxx, syy, szz, txy, tyz, txz, pressure, '
-                        #'evol, exx, eyy, ezz, exy, eyz, exz]\n')
+                    msg = (
+                        f'{self.element_name}-{self.element_type} nelements={nelements} '
+                        f'nnodes={nnodes_expected}; '
+                        'C=[oxx, oxy, pa, ax, ay, az, pressure, '
+                        'oyy, oyz, pb, bx, by, bz, '
+                        'ozz, oxz, pc, cx, cy, cz]\n')
                     self.binary_debug.write(msg)
 
                 for unused_i in range(nelements):
@@ -5156,7 +5122,7 @@ class OES(OP2Common):
                                   angle2, major2, minor2, vm2)
                     n += ntotal
         elif self.format_code in [2, 3] and self.num_wide == 15:  # imag
-            ntotal = 60  # 4*15
+            ntotal = 60 * self.factor # 4*15
             nelements = ndata // ntotal
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_complex)
@@ -5166,17 +5132,17 @@ class OES(OP2Common):
             obj = self.obj
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * 2
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 15)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 15)
                 floats1 = floats[:, 1:].reshape(nelements * 2, 7).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, 15).copy()
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, 15).copy()
                     eids = ints[:, 0] // 10
                     ints[:, 0] = 0
                     unused_ints1 = ints.reshape(nelements, 15)
@@ -5200,7 +5166,7 @@ class OES(OP2Common):
             else:
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CTRIA3 imag SORT%s' % self.sort_method)
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'14f')
+                struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'14f', self.size))
                 cen = 0 # CEN/3
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
@@ -5603,8 +5569,8 @@ class OES(OP2Common):
                                       txy2, angle2, major2, minor2, vm2)
                         n += n68
         elif self.format_code in [2, 3] and self.num_wide == numwide_imag:  # imag
-            ntotal = numwide_imag * 4
-            assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
+            ntotal = numwide_imag * 4 * self.factor
+            #assert self.num_wide * 4 == ntotal, 'numwide*4=%s ntotal=%s' % (self.num_wide*4, ntotal)
             nelements = ndata // ntotal
 
             auto_return, is_vectorized = self._create_oes_object4(
@@ -5615,18 +5581,18 @@ class OES(OP2Common):
             obj = self.obj
 
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * (nnodes_all * 2)
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, numwide_imag)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, numwide_imag)
                 floats1 = floats[:, 2:].reshape(nelements * nnodes_all, 15)
                 floats2 = floats1[:, 1:].reshape(nelements * nnodes_all * 2, 7).copy()
                 obj._times[obj.itime] = dt
                 if obj.itime == 0:
-                    ints = frombuffer(data, dtype=self.idtype).reshape(nelements, numwide_imag).copy()
+                    ints = frombuffer(data, dtype=self.idtype8).reshape(nelements, numwide_imag).copy()
                     ints[:, 2] = 0  # set center node to 0
                     ints1 = ints[:, 2:].reshape(nelements * nnodes_all, 15)
                     eids = ints[:, 0] // 10
@@ -5650,14 +5616,20 @@ class OES(OP2Common):
                 if is_vectorized and self.use_vector:  # pragma: no cover
                     self.log.debug('vectorize CQUAD4-144/CQUAD8... imag SORT%s' % self.sort_method)
                 grid_center = 0
-                s1 = self.struct_2i  # 2
-                s2 = Struct(self._endian + b'i14f') # 15
-                for unused_i in range(nelements):
-                    (eid_device, _) = s1.unpack(data[n:n+8])
-                    n += 8
+                if self.size == 4:
+                    s1 = self.struct_2i  # 2
+                else:
+                    s1 = self.struct_2q  # 2
+                s2 = Struct(self._endian + mapfmt(b'i14f', self.size)) # 15
 
-                    edata = data[n:n+60]  # 4*15
-                    n += 60
+                ntotal1 = 8 * self.factor
+                ntotal2 = 60 * self.factor  # 4*15
+                for unused_i in range(nelements):
+                    (eid_device, _) = s1.unpack(data[n:n+ntotal1])
+                    n += ntotal1
+
+                    edata = data[n:n+ntotal2]
+                    n += ntotal2
                     out = s2.unpack(edata)  # len=15*4
 
                     eid = self._check_id(eid_device, 'element', out)
@@ -5687,8 +5659,8 @@ class OES(OP2Common):
                     obj.add_sort1(dt, eid, grid_center, fd2, sx2, sy2, txy2)
 
                     for unused_node_id in range(nnodes):  # nodes pts
-                        edata = data[n:n + 60]  # 4*15=60
-                        n += 60
+                        edata = data[n:n + ntotal2]
+                        n += ntotal2
                         out = s2.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('%s\n' % (str(out)))
@@ -6323,7 +6295,7 @@ class OES(OP2Common):
                 #obj_vector_complex = ComplexTriaxStrainArray
 
             num_wide = 1 + 4 * 9
-            ntotal = num_wide * 4
+            ntotal = num_wide * 4 * self.factor
             assert num_wide == self.num_wide, num_wide
             nelements = ndata // ntotal  # (1+8*4)*4 = 33*4 = 132
             leftover = ndata % ntotal
@@ -6338,12 +6310,12 @@ class OES(OP2Common):
             is_vectorized = False
             if auto_return:
                 self._data_factor = 4
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             nnodes_all = 4
             if self.use_vector and is_vectorized and 0:
-                n = nelements * 4 * self.num_wide
+                n = nelements * ntotal
                 itotal = obj.itotal
                 itotal2 = itotal + nelements * nnodes_all
                 ielement = obj.ielement
@@ -6374,11 +6346,13 @@ class OES(OP2Common):
                 obj.itotal = itotal2
                 obj.ielement = ielement2
             else:
-                s1 = Struct(self._endian + self._analysis_code_fmt + b'i8f') # 10*4 = 40
-                s2 = Struct(self._endian + b'i8f')  #  9*4 = 36
+                ntotal1 = 40 * self.factor
+                ntotal2 = 36 * self.factor
+                s1 = Struct(self._endian + mapfmt(self._analysis_code_fmt + b'i8f', self.size)) # 10*4 = 40
+                s2 = Struct(self._endian + mapfmt(b'i8f', self.size))  #  9*4 = 36
 
                 for unused_i in range(nelements):
-                    out = s1.unpack(data[n:n + 40])
+                    out = s1.unpack(data[n:n + ntotal1])
                     (eid_device, loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
                     eid, dt = get_eid_dt_from_eid_device(
                         eid_device, self.nonlinear_factor, self.sort_method)
@@ -6398,9 +6372,9 @@ class OES(OP2Common):
                         ss = complex(ssr, ssi)
                     obj.add_new_eid_sort1(dt, eid, loc, rs, azs, As, ss)
 
-                    n += 40
+                    n += ntotal1
                     for unused_j in range(3):
-                        out = s2.unpack(data[n:n + 36])
+                        out = s2.unpack(data[n:n + ntotal2])
                         (loc, rsr, rsi, azsr, azsi, Asr, Asi, ssr, ssi) = out
                         if self.is_debug_file:
                             self.binary_debug.write('    %s\n' % (str(out)))
@@ -6418,7 +6392,7 @@ class OES(OP2Common):
                             As = complex(Asr, Asi)
                             ss = complex(ssr, ssi)
                         obj.add_sort1(dt, eid, loc, rs, azs, As, ss)
-                        n += 36  # 4*8
+                        n += ntotal2  # 4*8
         else:  # pragma: no cover
             msg = self.code_information()
             raise NotImplementedError(msg)
@@ -7193,16 +7167,17 @@ class OES(OP2Common):
             else:
                 raise NotImplementedError('NonlinearGapStrain')
 
-            ntotal = 44  # 4*11
+            ntotal = 44 * self.factor # 4*11
             nelements = ndata // ntotal
+            assert ndata % ntotal == 0
             auto_return, is_vectorized = self._create_oes_object4(
                 nelements, result_name, slot, obj_vector_real)
             if auto_return:
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
 
             obj = self.obj
             if self.use_vector and is_vectorized and self.sort_method == 1:
-                n = nelements * self.num_wide * 4
+                n = nelements * ntotal
 
                 ielement = obj.ielement
                 ielement2 = ielement + nelements
@@ -7215,15 +7190,17 @@ class OES(OP2Common):
                     #eids = ints[:, 0] // 10
                     #obj.element[ielement:ielement2] = eids
 
-                floats = frombuffer(data, dtype=self.fdtype).reshape(nelements, 11)
+                floats = frombuffer(data, dtype=self.fdtype8).reshape(nelements, 11)
                 # skipping [form1, form2]
                 #[cpx, shy, shz, au, shv, shw, slv, slp]
                 obj.data[obj.itime, ielement:ielement2, :] = floats[:, 1:9].copy()
             else:
-                struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f4s4s')
+                if self.size == 4:
+                    struct1 = Struct(self._endian + self._analysis_code_fmt + b'8f4s4s')
+                else:
+                    struct1 = Struct(self._endian + mapfmt(self._analysis_code_fmt, self.size) + b'8d8s8s')
                 for unused_i in range(nelements):
                     edata = data[n:n + ntotal]
-
                     out = struct1.unpack(edata)  # num_wide=25
                     (eid_device, cpx, shy, shz, au, shv, shw, slv, slp, form1, form2) = out
                     eid, dt = get_eid_dt_from_eid_device(
@@ -7486,7 +7463,7 @@ class OES(OP2Common):
             slot = self.get_result(result_name)
             #self.create_transient_object(result_name, slot, obj_vector_real)
 
-            ntotal = 120  # 36+28*3
+            ntotal = 120 * self.factor # 36+28*3
             nelements = ndata // ntotal
 
             #print(self.code_information())
@@ -7496,7 +7473,7 @@ class OES(OP2Common):
 
             if auto_return:
                 self._data_factor = 4  # number of "layers" for an element
-                return nelements * self.num_wide * 4, None, None
+                return nelements * ntotal, None, None
                 #return ndata, None, None
 
             #if self.is_debug_file:
@@ -7512,10 +7489,10 @@ class OES(OP2Common):
                 # self.itotal = 0
                 #self.ntimes = 0
                 #self.nelements = 0
-                n = nelements * self.num_wide * 4
+                n = nelements * ntotal
 
                 istart = obj.itotal
-                iend = istart + nelements*4
+                iend = istart + nelements * 4
                 obj._times[obj.itime] = dt
 
                 #if obj.itime == 0:
@@ -7541,10 +7518,12 @@ class OES(OP2Common):
             else:
                 n = 0
                 # (2 + 7*4)*4 = 30*4 = 120
+                ntotal1 = 36 * self.factor  # 4*9
+                ntotal2 = 28 * self.factor  # 4*7
                 s1 = Struct(self._endian + self._analysis_code_fmt + b'4s i6f')  # 1 + 4+1+6 = 12
                 s2 = Struct(self._endian + b'i6f')
                 for unused_i in range(nelements):
-                    edata = data[n:n+36]  # 4*9
+                    edata = data[n:n+ntotal1]
                     out = s1.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('CQUAD4FD-139A- %s\n' % (str(out)))
@@ -7554,16 +7533,16 @@ class OES(OP2Common):
                         eid_device, self.nonlinear_factor, self.sort_method)
 
                     obj._add_new_eid_sort1(dt, eid, etype, nid, sx, sy, sxy, angle, smj, smi)
-                    n += 36
+                    n += ntotal1
 
                     for unused_i in range(3):  # TODO: why is this not 4?
-                        edata = data[n:n + 28]  # 4*7
+                        edata = data[n:n + ntotal2]
                         out = s2.unpack(edata)
                         if self.is_debug_file:
                             self.binary_debug.write('               %s\n' % (str(out)))
                         (nid, sx, sy, sxy, angle, smj, smi) = out
                         obj._add_sort1(dt, eid, etype, nid, sx, sy, sxy, angle, smj, smi)
-                        n += 28
+                        n += ntotal2
         else:
             msg = 'numwide=%s element_num=%s etype=%s' % (
                 self.num_wide, self.element_type, self.element_name)
@@ -7607,19 +7586,24 @@ class OES(OP2Common):
         numwide_imag = 6 + (33 - 6) * nnodes  # imag???
 
         if self.format_code == 1 and self.num_wide == numwide_real:  # real???
-            ntotal = numwide_real * 4
-            s2 = Struct(self._endian + b'3i4s2i')
-            s3 = Struct(self._endian + b'i16f')
+            ntotal = numwide_real * 4 * self.factor
+            if self.size == 4:
+                s2 = Struct(self._endian + b'3i4s2i')
+            else:
+                s2 = Struct(self._endian + b'3q8s2q')
+            s3 = Struct(mapfmt(self._endian + b'i16f', self.size))
             nelements = ndata // ntotal
+            ntotal1 = 24 * self.factor
+            ntotal2 = 68 * self.factor
             for unused_i in range(nelements):
-                out = s2.unpack(data[n:n + 24])
+                out = s2.unpack(data[n:n + ntotal1])
                 (eid_device, unused_parent, coord, icord, unused_theta, unused_itype) = out
-                n += 24
+                n += ntotal1
                 eid, dt = get_eid_dt_from_eid_device(
                     eid_device, self.nonlinear_factor, self.sort_method)
-                edata = data[n:n + 68]
+                edata = data[n:n + ntotal2]
                 out = s3.unpack(edata)  # len=17*4
-                n += 68
+                n += ntotal2
 
                 if self.is_debug_file:
                     self.binary_debug.write('%s-%s - %s\n' % (etype, self.element_type, str(out)))
@@ -7627,8 +7611,8 @@ class OES(OP2Common):
                 #obj.add_new_node_sort1(dt, eid, parent, coord, icord, theta, itype)
                 #obj.add_new_eid_sort1(eType, dt, eid, parent, coord, icord, theta, itype)
                 for unused_node_id in range(nnodes - 1):  # nodes pts
-                    edata = data[n:n + 68]
-                    n += 68
+                    edata = data[n:n + ntotal2]
+                    n += ntotal2
                     out = s3.unpack(edata)
                     if self.is_debug_file:
                         self.binary_debug.write('              %s\n' % (str(out)))
@@ -8149,4 +8133,49 @@ def oes_quad4_144_random(self, data, obj: Union[RandomPlateStressArray, RandomPl
                               fd1, sx1, sy1, txy1,
                               fd2, sx2, sy2, txy2)
                 n += 36
+    return n
+
+def oes_cbar_imag(self, data, obj: Union[ComplexBarStressArray, ComplexBarStrainArray],
+                  nelements, ntotal, is_magnitude_phase) -> int:
+    n = 0
+    struct1 = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'18f', self.size))
+    for i in range(nelements):
+        edata = data[n:n+ntotal]
+        n += ntotal
+        out = struct1.unpack(edata)
+        (eid_device,
+         s1ar, s2ar, s3ar, s4ar, axialr,
+         s1ai, s2ai, s3ai, s4ai, axiali,
+         s1br, s2br, s3br, s4br,
+         s1bi, s2bi, s3bi, s4bi) = out
+
+        eid, dt = get_eid_dt_from_eid_device(
+            eid_device, self.nonlinear_factor, self.sort_method)
+        if self.is_debug_file:
+            self.binary_debug.write('  eid=%i; C%i=[%s]\n' % (
+                eid, i, ', '.join(['%r' % di for di in out])))
+        if is_magnitude_phase:
+            s1a = polar_to_real_imag(s1ar, s1ai)
+            s1b = polar_to_real_imag(s1br, s1bi)
+            s2a = polar_to_real_imag(s2ar, s2ai)
+            s2b = polar_to_real_imag(s2br, s2bi)
+            s3a = polar_to_real_imag(s3ar, s3ai)
+            s3b = polar_to_real_imag(s3br, s3bi)
+            s4a = polar_to_real_imag(s4ar, s4ai)
+            s4b = polar_to_real_imag(s4br, s4bi)
+            axial = polar_to_real_imag(axialr, axiali)
+        else:
+            s1a = complex(s1ar, s1ai)
+            s1b = complex(s1br, s1bi)
+            s2a = complex(s2ar, s2ai)
+            s2b = complex(s2br, s2bi)
+            s3a = complex(s3ar, s3ai)
+            s3b = complex(s3br, s3bi)
+            s4a = complex(s4ar, s4ai)
+            s4b = complex(s4br, s4bi)
+            axial = complex(axialr, axiali)
+
+        obj.add_new_eid_sort1(dt, eid,
+                              s1a, s2a, s3a, s4a, axial,
+                              s1b, s2b, s3b, s4b)
     return n

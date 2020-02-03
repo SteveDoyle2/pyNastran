@@ -4,6 +4,7 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
@@ -55,23 +56,24 @@ class ComplexBeamArray(OES_Object):
         self.is_built = True
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        self._times = zeros(self.ntimes, dtype)
         #self.element = array(self.nelements, dtype='|S8')
 
         #self.ntotal = self.nelements * nnodes
-        self.element_node = zeros((self.ntotal, 2), 'int32')
+        self.element_node = zeros((self.ntotal, 2), idtype)
         self.sd = zeros(self.ntotal, 'float32')
 
         # the number is messed up because of the offset for the element's properties
-        if self.nelements * nnodes != self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
-                                                                           self.nelements, nnodes,
-                                                                           self.nelements * nnodes,
-                                                                           self.ntotal)
-            raise RuntimeError(msg)
+        #if self.nelements * nnodes != self.ntotal:
+            #msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
+                                                                           #self.nelements, nnodes,
+                                                                           #self.nelements * nnodes,
+                                                                           #self.ntotal)
+            #raise RuntimeError(msg)
 
         #[sxc, sxd, sxe, sxf]
-        self.data = zeros((self.ntimes, self.ntotal, 4), 'complex64')
+        self.data = zeros((self.ntimes, self.ntotal, 4), cfdtype)
 
     def finalize(self):
         #enode_sum = self.element_node.sum(axis=1)

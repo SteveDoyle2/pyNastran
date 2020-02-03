@@ -2,6 +2,7 @@ from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
@@ -67,10 +68,11 @@ class ComplexShearArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = np.zeros(self.ntimes, 'float32')
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        self._times = np.zeros(self.ntimes, dtype=dtype)
         #self.ntotal = self.nelements * nnodes
 
-        self.element = np.zeros(self.nelements, 'int32')
+        self.element = np.zeros(self.nelements, dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
         if self.nelements != self.ntotal:
@@ -80,7 +82,7 @@ class ComplexShearArray(OES_Object):
             raise RuntimeError(msg)
 
         # [max_shear, avg_shear]
-        self.data = np.zeros((self.ntimes, self.ntotal, 2), 'complex64')
+        self.data = np.zeros((self.ntimes, self.ntotal, 2), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
