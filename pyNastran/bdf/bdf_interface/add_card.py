@@ -5356,10 +5356,11 @@ class AddCards(AddMethods):
         -----
         the length of components and ids must be the same
         """
-        if isinstance(components, str):
-            aset = ASET1(ids, components, comment=comment)
-        else:
+        if isinstance(components, list):
             aset = ASET(ids, components, comment=comment)
+        else:
+            assert isinstance(components, str)
+            aset = ASET1(ids, components, comment=comment)
         self._add_aset_object(aset)
         return aset
 

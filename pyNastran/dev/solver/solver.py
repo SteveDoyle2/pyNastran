@@ -19,6 +19,7 @@ class Solver:
     """defines the Nastran knockoff class"""
     def __init__(self, model: BDF):
         self.model = model
+        self.superelement_id = 0
         self.op2 = OP2(log=model.log, mode='nx')
         self.log = model.log
 
@@ -97,8 +98,8 @@ class Solver:
         """recovers the strains"""
         eids = 'ALL'
         nelements = 0
-        nelements += _recover_strain_celas1(self.model, dof_map, xg, eids)
-        nelements += _recover_strain_celas2(self.model, dof_map, xg, eids)
+        nelements += _recover_strain_celas1(self.model, dof_map, xg, eids, fdtype=fdtype)
+        nelements += _recover_strain_celas2(self.model, dof_map, xg, eids, fdtype=fdtype)
         #assert nelements > 0, nelements
 
     def build_xg(self, dof_map: Dict[Any, int], ndof: int, subcase: Subcase) -> np.ndarray:
@@ -123,6 +124,7 @@ class Solver:
         spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
 
         spc_set = []
+        sset = np.zeros(ndof, dtype='bool')
         for spc in spcs:
             if spc.type == 'SPC1':
                 #print(spc.get_stats())
@@ -135,11 +137,12 @@ class Solver:
                             print(spc)
                             print('dof_map =', dof_map)
                             print((nid, dofi))
+                        sset[idof] = True
                         spc_set.append(idof)
                         xspc[idof] = 0.
         spc_set = np.array(spc_set, dtype='int32')
         #print('spc_set =', spc_set, xspc)
-        return spc_set, xspc
+        return spc_set, sset, xspc
 
 
     def build_Fb(self, dof_map: Dict[Any, int], ndof: int, subcase: Subcase) -> np.array:
@@ -322,11 +325,16 @@ class Solver:
         #print(udofs, idofs)
         return constraints
 
-
     def run_sol_101(self, subcase: Subcase, f06_file,
                     page_stamp, idtype='int32', fdtype='float64'):
         """
         Runs a SOL 101
+
+        Analysis (ASET): This set contains all boundary DOFs of the superelement.
+                         It is considered fixed by default.
+        Fixed Boundary (BSET): This subset of the ASET contains all fixed boundary DOFs.
+        Free Boundary  (CSET): This subset of the ASET contains all free boundary DOFs.
+
         SOL 101 Sets
         ------------
         b = DOFs fixed during component mode analysis or dynamic reduction.
@@ -399,12 +407,12 @@ class Solver:
         if 'LABEL' in subcase:
             label = subcase.get_parameter('LABEL')
         #-----------------------------------------------------------------------
+        model = self.model
+        log = model.log
 
-        log = self.model.log
-
-        dof_map = _get_dof_map(self.model)
-        node_gridtype = _get_node_gridtype(self.model, idtype=idtype)
-        ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
+        dof_map = _get_dof_map(model)
+        node_gridtype = _get_node_gridtype(model, idtype=idtype)
+        ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
         Kbb, Kbbs = self.build_Kbb(subcase, dof_map, ndof)
         self.get_mpc_constraints(subcase, dof_map)
 
@@ -412,10 +420,41 @@ class Solver:
         Kggs = self.Kbb_to_Kgg(Kbbs, ngrid, ndof_per_grid)
         del Kbb, Kbbs
 
-        gset = np.arange(ndof, dtype='int32')
-        sset, xg = self.build_xg(dof_map, ndof, subcase)
-        aset = np.setdiff1d(gset, sset) # a = g-s
+        gset = np.arange(ndof, dtype=idtype)
+        gset_b = np.ones(ndof, dtype='bool')
+        sset, sset_b, xg = self.build_xg(dof_map, ndof, subcase)
 
+
+        # Constrained set
+        # sset = sb_set | sg_set
+
+        # free structural DOFs
+        #fset = ~sset; # & ~mset
+        fset_b = gset_b & sset_b # g-b
+        self.log.debug(f'gset_b = {gset_b}')
+        self.log.debug(f'sset_b = {sset_b}')
+        self.log.debug(f'fset_b = {fset_b}')
+        aset, tset = get_residual_structure(model, dof_map, fset_b)
+
+        asetmap = get_aset(model)
+        if asetmap:
+            aset = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype)
+        else:
+            aset = np.setdiff1d(gset, sset) # a = g-s
+
+        # The a-set and o-set are created in the following ways:
+        # 1. If only OMITi entries are present, then the o-set consists
+        #    of DOFs listed explicitly on OMITi entries. The remaining
+        #    f-set DOFs are placed in the b-set, which is a subset of
+        #    the a-set.
+        # 2. If ASETi or QSETi entries are present, then the a-set consists
+        #    of all DOFs listed on ASETi entries and any entries listing its
+        #    subsets, such as QSETi, SUPORTi, CSETi, and BSETi entries.  Any
+        #    OMITi entries are redundant. The remaining f-set DOFs are placed
+        #    in the o-set.
+        # 3. If there are no ASETi, QSETi, or OMITi entries present but there
+        #    are SUPORTi, BSETi, or CSETi entries present, then the entire
+        #    f-set is placed in the a-set and the o-set is not created.
         self.sset = sset
         self.aset = aset
 
@@ -535,11 +574,11 @@ class Solver:
         return page_num
 
     def _save_displacment(self, f06_file,
-                         subcase: Subcase, itime: int, ntimes: int,
-                         node_gridtype, xg,
-                         ngrid: int, ndof_per_grid: int,
-                         title='', subtitle='', label='',
-                         fdtype='float32', page_num=1, page_stamp='PAGE %s') -> int:
+                          subcase: Subcase, itime: int, ntimes: int,
+                          node_gridtype, xg,
+                          ngrid: int, ndof_per_grid: int,
+                          title='', subtitle='', label='',
+                          fdtype='float32', page_num=1, page_stamp='PAGE %s') -> int:
         f06_request_name = 'DISPLACEMENT'
         table_name = 'OUGV1'
         #self.log.debug(f'xg = {xg}')
@@ -582,9 +621,10 @@ class Solver:
             is_sort1=True, is_random=False, is_msc=True,
             random_code=0, title=title, subtitle=subtitle, label=label)
         if write_f06:
-            page_num = spc_forces.write_f06(f06_file, header=None,
-                                 page_stamp=page_stamp, page_num=page_num,
-                                 is_mag_phase=False, is_sort1=True)
+            page_num = spc_forces.write_f06(
+                f06_file, header=None,
+                page_stamp=page_stamp, page_num=page_num,
+                is_mag_phase=False, is_sort1=True)
             f06_file.write('\n')
         self.op2.spc_forces[isubcase] = spc_forces
         return page_num
@@ -601,7 +641,6 @@ class Solver:
         λ^2 = -[M]^-1[K]
         [A][X] = [X]λ^2
         """
-        fdtype = 'float64'
         log = self.model.log
 
         dof_map = _get_dof_map(self.model)
@@ -615,7 +654,7 @@ class Solver:
         Kggs = self.Kbb_to_Kgg(Kbbs, ngrid, ndof_per_grid)
         del Kbb, Mgg
 
-        gset = np.arange(ndof, dtype='int32')
+        gset = np.arange(ndof, dtype=idtype)
         sset, xg = self.build_xg(dof_map, ndof, subcase)
         aset = np.setdiff1d(gset, sset) # a = g-s
 
@@ -646,8 +685,8 @@ class Solver:
         #print(Kaa)
         #print(Kas)
         #print(Kss)
-        Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset)
-        Kaas_, ipositive, inegative, sz_set = remove_rows(Kaas, aset)
+        Kaa_, ipositive, inegative, unused_sz_set = remove_rows(Kaa, aset)
+        Kaas_, ipositive, inegative, unused_sz_set = remove_rows(Kaas, aset)
         #Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
         #print(f'Fa = {Fa}')
@@ -677,6 +716,9 @@ class Solver:
         #log.debug(f'Fs = {Fs}')
         log.debug(f'xg = {xg}')
         #log.debug(f'Fg = {Fg}')
+
+        f06_file
+        page_stamp
         return xa_
         #raise NotImplementedError(subcase)
 
@@ -708,7 +750,10 @@ class Solver:
         {u_total} = {u_dynamic} + {u_static} = [PHI]{q} + {u_static}
 
         """
-        pass
+        str(subcase)
+        str(f06_file)
+        str(fdtype)
+        str(idtype)
 
 def get_ieids_eids(model: BDF, etype, eids_str, idtype='int32', fdtype='float32'):
     """helper for the stress/strain/displacment recovery"""
@@ -1209,3 +1254,215 @@ def get_plot_request(subcase: Subcase, request: str) -> Tuple[str, bool, bool]:
     nids_write = value
     return nids_write, write_f06, write_op2
 
+def get_aset(model: BDF) -> Any:
+    aset_map = set()
+    for aset in model.asets:
+        if aset.type == 'ASET1':
+            comp = aset.components
+            for nid in aset.ids:
+                for compi in comp:
+                    aset_map.add((nid, int(compi)))
+        elif aset.type == 'ASET':
+            for nid, comp in zip(aset.ids, aset.components):
+                for compi in comp:
+                    aset_map.add((nid, int(compi)))
+        else:
+            raise NotImplementedError(aset)
+    return aset_map
+
+def get_bset(model: BDF) -> Any:
+    """creates the b-set"""
+    bset_map = set()
+    for bset in model.bsets:
+        if bset.type == 'BSET1':
+            comp = bset.components
+            for nid in bset.ids:
+                for compi in comp:
+                    bset_map.add((nid, int(compi)))
+        elif bset.type == 'BSET':
+            for nid, comp in zip(bset.ids, bset.components):
+                for compi in comp:
+                    bset_map.add((nid, int(compi)))
+        else:
+            raise NotImplementedError(bset)
+    return bset_map
+
+def get_cset(model: BDF) -> Any:
+    """creates the c-set"""
+    cset_map = set()
+    for cset in model.csets:
+        if cset.type == 'CSET1':
+            comp = cset.components
+            for nid in cset.ids:
+                for compi in comp:
+                    cset_map.add((nid, int(compi)))
+        elif cset.type == 'CSET':
+            for nid, comp in zip(cset.ids, cset.components):
+                for compi in comp:
+                    cset_map.add((nid, int(compi)))
+        else:
+            raise NotImplementedError(cset)
+    return cset_map
+
+def get_omit_set(model: BDF) -> Any:
+    """creates the o-set"""
+    omit_set_map = set()
+    for omit in model.omits:
+        if omit.type == 'OMIT1':
+            comp = omit.components
+            for nid in omit.ids:
+                for compi in comp:
+                    omit_set_map.add((nid, int(compi)))
+        elif omit.type == 'OMIT':
+            for nid, comp in zip(omit.ids, omit.components):
+                for compi in comp:
+                    omit_set_map.add((nid, int(compi)))
+        else:
+            raise NotImplementedError(omit)
+    return omit_set_map
+
+def get_rset(model: BDF) -> Any:
+    """creates the r-set"""
+    rset_map = set()
+    for rset in model.suport:
+        for nid, comp in zip(rset.ids, rset.components):
+            for compi in comp:
+                rset_map.add((nid, int(compi)))
+
+    for suport in model.suport1:
+        comp = suport.components
+        for nid in suport.ids:
+            for compi in comp:
+                rset_map.add((nid, int(compi)))
+    return rset_map
+
+def get_qset(model: BDF) -> Any:
+    """creates the r-set"""
+    qset_map = set()
+    for qset in model.qsets:
+        if qset.type == 'QSET1':
+            comp = qset.components
+            for nid in qset.ids:
+                for compi in comp:
+                    qset_map.add((nid, int(compi)))
+        elif qset.type == 'QSET':
+            for nid, comp in zip(qset.ids, qset.components):
+                for compi in comp:
+                    qset_map.add((nid, int(compi)))
+        else:
+            raise NotImplementedError(qset)
+    return qset_map
+
+def get_residual_structure(model: BDF, dof_map, fset, idtype='int32'):
+    """gets the residual structure dofs"""
+    asetmap = get_aset(model)
+    bsetmap = get_bset(model)
+    csetmap = get_cset(model)
+    rsetmap = get_rset(model)
+    qsetmap = get_qset(model)
+    osetmap = get_omit_set(model)
+    aset = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype, use_ints=False)
+    bset = apply_dof_map_to_set(bsetmap, dof_map, idtype=idtype, use_ints=False)
+    cset = apply_dof_map_to_set(csetmap, dof_map, idtype=idtype, use_ints=False)
+    rset = apply_dof_map_to_set(rsetmap, dof_map, idtype=idtype, use_ints=False)
+    oset = apply_dof_map_to_set(osetmap, dof_map, idtype=idtype, use_ints=False)
+    qset = apply_dof_map_to_set(qsetmap, dof_map, idtype=idtype, use_ints=False)
+
+    ndof = len(dof_map)
+    #print('aset =', aset)
+    #print('qset =', qset)
+    #print('fset =', fset)
+    #print('oset =', oset)
+
+    aqo_set = np.vstack([aset, qset, oset])
+    bcr_set = np.vstack([bset, cset, rset])
+    # The a-set and o-set are created in the following ways:
+    #    1. If only OMITi entries are present, then the o-set consists
+    #       of degrees-of-freedom listed explicitly on OMITi entries.
+    #       The remaining f-set degrees-of-freedom are placed in the
+    #       b-set, which is a subset of the a-set.
+    if np.any(oset) and ~np.any([aset, bset, cset, qset, rset]):
+        # b = f - o
+        bset = np.setdiff1d(fset, oset)
+        aset = bset
+        # 2. If ASETi or QSETi entries are present, then the a-set
+        #    consists of all degrees-of-freedom listed on ASETi entries
+        #    and any entries listing its subsets, such as QSETi, SUPORTi
+        #    CSETi, and BSETi entries. Any OMITi entries are redundant.
+        #    The remaining f-set degrees-of-freedom are placed in the
+        #    o-set.
+    elif np.any([aset, qset]):
+        abcqr_set = np.vstack([aset, bset, cset, qset, rset])
+        #print(abcqr_set)
+        aset = np.sum(abcqr_set, axis=0).astype('bool') # dim=2 -> row
+        if np.any(oset): # check no overlap with O set
+            ao_set = aset | oset
+            if np.any(ao_set):
+                raise RuntimeError('OMITi entries cannot overlap with ASETi entries '
+                                   'or any ASET subsets, such as QSETi, '
+                                   'SUPORTi, CSETi, and BSETi entries.')
+
+        oset = fset & ~aset # assign remaining to O set
+        # 3. If there are no ASETi, QSETi, or OMITi entries present but
+        #    there are SUPORTi, BSETi, or CSETi entries present, then
+        #    the entire f-set is placed in the a-set and the o-set is
+        #    not created.
+    elif (not np.any(aqo_set) and np.any(bcr_set)):
+        aset = fset
+        # 4. There must be at least one explicit ASETi, QSETi, or OMITi
+        #    entry for the o-set to exist, even if the ASETi, QSETi, or
+        #    OMITi entry is redundant. (related to item 3)
+    else:
+        # No model reduction - same as previous option
+        aset = fset
+    # Add ASET to residual structure TSET
+    tset = aset & ~qset
+
+    # Exclusive Degrees-of-freedom sets
+    # ---------------------------------
+    # m  # ([nGdof,1] logical) Degrees-of-freedom eliminated by multiple constraints
+    # sb # ([nGdof,numSID] logical) Degrees-of-freedom eliminated by single-point constraints that are included in boundary conditions
+    # sg # ([nGdof,1] logical) Degrees-of-freedom eliminated by single-point constraints that are specified on the PS field on node entries
+    # o  # ([nGdof,1] logical) Degrees-of-freedom omitted by structural matrix partitioning
+    # q  # ([nGdof,1] logical) Generalized degrees-of-freedom for dynamic reduction or component mode synthesis
+    # r  # ([nGdof,1] logical) Reference degrees-of-freedom used to determine free body motion
+    # c  # ([nGdof,1] logical) Degrees-of-freedom that are free during component mode synthesis or dynamic reduction
+    # b  # ([nGdof,1] logical) Degrees-of-freedom fixed during component mode analysis or dynamic reduction
+    # e  # ([nGdof,1] logical) extra degrees-of-freedom introduced in dynamic analysis
+    # sa # Permanently constrained aerodynamic degrees-of-freedom
+    # k  # Aerodynamic degrees-of-freedom
+
+    # Nonexclusive Degrees-of-freedom sets
+    # ------------------------------------
+    # s  # ([nGdof,numSID] logical) [sb + sg] Degrees-of-freedom eliminated by single point constraints
+    # l  # ([nGdof,1] logical) [b + c] Structural degrees-of-freedom remaining after the reference degrees-of-freedom are removed (degrees-of-freedom left over)
+    #    # ([nGdof,1] logical) [l + r] Total set of physical boundary degrees-of-freedom for superelements
+    #    # ([nGdof,1] logical) [t + q] Set assembled in superelement analysis
+    # d  # ([nGdof,1] logical) [a + e] Set used in dynamic analysis by the direct method
+    #    # ([nGdof,1] logical) [a + o] Unconstrained (free) structural degrees-of-freedom
+    # fe # ([nGdof,1] logical) [f + e] Free structural degrees-of-freedom plus extra degrees-of-freedom
+    #    # ([nGdof,1] logical) [f + s] Degrees-of-freedom not constrained by multipoint constraints
+    # ne % ([nGdof,1] logical) [n + e] Structural degrees-of-freedom not constrained by multipoint constraints plus extra degrees-of-freedom
+    # g = true(nGdof,1) [n + m] All structural degrees-of-freedom including scalar degrees-of-freedom
+    # p = [g + e] Physical degrees-of-freedom
+    # ps = [p + sa] Physical and constrained (SPCi) aerodynamic degrees-of-freedom
+    # pa = [ps + k] Physical set for aerodynamics
+    # fr = [f ? q ? r] Statically independent set minus the statically determinate supports
+    # v = [o + c + r] Set free to vibrate in dynamic reduction and component mode synthesis
+    return aset, tset
+
+def apply_dof_map_to_set(set_map, dof_map, idtype='int32', use_ints=True):
+    """changes a set defined in terms of (nid, comp) into an array of integers"""
+    if use_ints:
+        ndof = len(set_map)
+        aset = np.full(ndof, 0, dtype=idtype)
+        for i, dofi in enumerate(set_map):
+            aset[i] = dof_map[dofi]
+        aset.sort()
+    else:
+        ndof = len(dof_map)
+        aset = np.full(ndof, 0, dtype='bool')
+        for dofi in set_map:
+            i = dof_map[dofi]
+            aset[i] = True
+    return aset
