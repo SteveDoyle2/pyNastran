@@ -13,6 +13,7 @@ import sys
 import getpass
 import inspect
 import warnings
+from abc import abstractmethod
 from typing import List, Optional, Any
 import pyNastran
 
@@ -208,7 +209,7 @@ def object_methods(obj: Any, mode: str='public',
         sorted list of the names of methods of a given type
         or None if the mode is wrong
     """
-    return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
+    return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, (MethodType, abstractmethod)))
 
 def object_stats(obj: Any, mode: str='public',
                  keys_to_skip: Optional[List[str]]=None,
@@ -258,7 +259,7 @@ def object_attributes(obj: Any, mode: str='public',
         #keys_to_skip += obj.__properties__()
     return __object_attr(
         obj, mode, keys_to_skip,
-        lambda x: not isinstance(x, (MethodType, FunctionType)),
+        lambda x: not isinstance(x, (MethodType, FunctionType, abstractmethod)),
         filter_properties=filter_properties,
     )
 
