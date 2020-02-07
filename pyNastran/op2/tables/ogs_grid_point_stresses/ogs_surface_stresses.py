@@ -2,7 +2,7 @@ from typing import List
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.result_objects.op2_objects import ScalarObject
+from pyNastran.op2.result_objects.op2_objects import ScalarObject, get_times_dtype
 from pyNastran.f06.f06_formatting import (
     write_floats_10e, _eigenvalue_header)
 
@@ -57,13 +57,11 @@ class GridPointSurfaceStressesArray(ScalarObject):
         #self.names = []
         self.nelements //= self.ntimes
 
-        self.node_element = np.zeros((self.ntotal, 2), dtype='int32')
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        self.node_element = np.zeros((self.ntotal, 2), dtype=idtype)
         #oxx, oyy, txy, angle, major, minor, ovm
-        self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
         self.location = np.empty(self.ntotal, dtype='U8')
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.is_built = True
@@ -291,13 +289,11 @@ class GridPointStressesVolumePrincipalArray(ScalarObject):
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         self.nelements //= self.ntimes
 
-        self.node = np.zeros(self.ntotal, dtype='int32')
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        self.node = np.zeros(self.ntotal, dtype=idtype)
         #lxa, lxb, lxc, lya, lyb, lyc, lza, lzb, lzc, sa, sb, sc, epr, ovm
-        self.data = np.zeros((self.ntimes, self.ntotal, 14), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 14), dtype=fdtype)
         self.location = np.empty(self.ntotal, dtype='U8')
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
 
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.is_built = True
@@ -384,14 +380,11 @@ class GridPointStressesVolumeDirectArray(ScalarObject):
         assert self.ntotal > 0, 'ntotal=%s' % self.ntotal
         self.nelements //= self.ntimes
 
-        self.node = np.zeros(self.ntotal, dtype='int32')
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
+        self.node = np.zeros(self.ntotal, dtype=idtype)
         #oxx, oyy, txy, angle, major, minor, ovm
-        self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype='float32')
+        self.data = np.zeros((self.ntimes, self.ntotal, 8), dtype=fdtype)
         self.location = np.empty(self.ntotal, dtype='U8')
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-
         self._times = np.zeros(self.ntimes, dtype=dtype)
         self.is_built = True
 

@@ -366,16 +366,14 @@ class ComplexCShearForceArray(BaseElement):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element = zeros(self.nelements, dtype=idtype)
 
         #[force41, force14, force21, force12, force32, force23, force43, force34,
         #kick_force1, kick_force2, kick_force3, kick_force4,
         #shear12, shear23, shear34, shear41]
-        self.data = zeros((self.ntimes, self.ntotal, 16), dtype='complex64')
+        self.data = zeros((self.ntimes, self.ntotal, 16), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1157,14 +1155,12 @@ class ComplexPlateForceArray(ComplexForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element = zeros(self.nelements, dtype=idtype)
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='complex64')
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1496,16 +1492,14 @@ class ComplexPlate2ForceArray(ComplexForceObject):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
 
-        self.element = zeros(self.nelements, dtype='int32')
-        self.element_node = zeros((self.ntotal, 2), dtype='int32')
+        self.element = zeros(self.nelements, dtype=idtype)
+        self.element_node = zeros((self.ntotal, 2), dtype=idtype)
 
         #[mx, my, mxy, bmx, bmy, bmxy, tx, ty]
-        self.data = zeros((self.ntimes, self.ntotal, 8), dtype='complex64')
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""
@@ -1898,17 +1892,18 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
-        self.element = zeros(self.ntotal, 'int32')
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        self._times = zeros(self.ntimes, dtype=dtype)
+        self.element = zeros(self.ntotal, dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
 
-        if not self.nelements * nnodes == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
-                self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
-            raise RuntimeError(msg)
+        #if not self.nelements * nnodes == self.ntotal:
+            #msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                #self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
+            #raise RuntimeError(msg)
         #[bm1a, bm2a, bm1b, bm2b, ts1, ts2, af, trq]
-        self.data = zeros((self.ntimes, self.ntotal, 8), 'complex64')
+        self.data = zeros((self.ntimes, self.ntotal, 8), dtype=cfdtype)
 
 
     def build_dataframe(self):
@@ -2251,18 +2246,19 @@ class ComplexCBeamForceArray(ComplexForceObject):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
-        self.element = zeros(self.ntotal, 'int32')
-        self.element_node = zeros((self.ntotal, 2), 'int32')
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        self._times = zeros(self.ntimes, dtype)
+        self.element = zeros(self.ntotal, idtype)
+        self.element_node = zeros((self.ntotal, 2), idtype)
 
         # the number is messed up because of the offset for the element's properties
 
-        if not self.nelements * nnodes == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
-                self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
-            raise RuntimeError(msg)
+        #if not self.nelements * nnodes == self.ntotal:
+            #msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                #self.ntimes, self.nelements, nnodes, self.nelements * nnodes, self.ntotal)
+            #raise RuntimeError(msg)
         #[sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
-        self.data = zeros((self.ntimes, self.ntotal, 8), 'complex64')
+        self.data = zeros((self.ntimes, self.ntotal, 8), cfdtype)
 
     def finalize(self):
         sd = self.data[0, :, 0].real
@@ -2388,7 +2384,7 @@ class ComplexCBeamForceArray(ComplexForceObject):
 
     def add_sort1(self, dt, eid, nid, sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq):
         """unvectorized method for adding SORT1 transient data"""
-        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s type=%s' % (dt, eid, type(eid))
         self._times[self.itime] = dt
         self.data[self.itime, self.itotal, :] = [sd, bm1, bm2, ts1, ts2, af, ttrq, wtrq]
         self.element[self.itotal] = eid
@@ -3734,15 +3730,13 @@ class ComplexCBeamForceVUArray(BaseElement):  # 191-VUBEAM
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
         self._times = np.zeros(self.ntimes, dtype=dtype)
-        self.element_node = np.zeros((self.ntotal, 2), dtype='int32')
-        self.parent_coord = np.zeros((self.ntotal, 2), dtype='int32')
+        self.element_node = np.zeros((self.ntotal, 2), dtype=idtype)
+        self.parent_coord = np.zeros((self.ntotal, 2), dtype=idtype)
 
         #[xxb, force_x, shear_y, shear_z, torsion, bending_y, bending_z]
-        self.data = np.zeros((self.ntimes, self.ntotal, 7), dtype='complex64')
+        self.data = np.zeros((self.ntimes, self.ntotal, 7), dtype=cfdtype)
 
     #def build_dataframe(self):
         #"""creates a pandas dataframe"""
@@ -4053,15 +4047,13 @@ class ComplexForceVU_2DArray(BaseElement):  # 189-VUQUAD,190-VUTRIA
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element_node = zeros((self.nelements, 2), dtype='int32')
+        self.element_node = zeros((self.nelements, 2), dtype=idtype)
 
         #[membrane_x, membrane_y, membrane_xy, bending_x, bending_y, bending_xy,
         # shear_yz, shear_xz]
-        self.data = zeros((self.ntimes, self.nelements, 8), dtype='complex64')
+        self.data = zeros((self.ntimes, self.nelements, 8), dtype=cfdtype)
 
     def get_headers(self) -> List[str]:
         headers = [

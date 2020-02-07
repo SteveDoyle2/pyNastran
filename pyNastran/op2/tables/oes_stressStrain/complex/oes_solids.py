@@ -4,6 +4,7 @@ from typing import List
 import numpy as np
 from numpy import zeros, concatenate
 
+from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
 
@@ -94,7 +95,8 @@ class ComplexSolidArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        self._times = zeros(self.ntimes, dtype=dtype)
         #self.element_types2 = array(self.nelements, dtype='|S8')
         #self.element_types3 = zeros((self.nelements, 2), dtype='int32')
 
@@ -102,21 +104,21 @@ class ComplexSolidArray(OES_Object):
         #self.ntotal = self.nelements * nnodes
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((self.ntotal, 2), 'int32')
-        self.element_cid = zeros((self.nelements, 2), 'int32')
+        self.element_node = zeros((self.ntotal, 2), dtype=idtype)
+        self.element_cid = zeros((self.nelements, 2), dtype=idtype)
 
         # the number is messed up because of the offset for the element's properties
 
-        if not self.nelements * nnodes == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
-                                                                           self.nelements, nnodes,
-                                                                           self.nelements * nnodes,
-                                                                           self.ntotal)
-            raise RuntimeError(msg)
+        #if not self.nelements * nnodes == self.ntotal:
+            #msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (self.ntimes,
+                                                                           #self.nelements, nnodes,
+                                                                           #self.nelements * nnodes,
+                                                                           #self.ntotal)
+            #raise RuntimeError(msg)
 
         if self.result_flag == 0:
             # [oxx, oyy, ozz, txy, tyz, txz]
-            self.data = zeros((self.ntimes, self.ntotal, 6), 'complex64')
+            self.data = zeros((self.ntimes, self.ntotal, 6), dtype=cfdtype)
         else:
             # oxx
             self.data = zeros((self.ntimes, self.ntotal, 1), 'complex64')

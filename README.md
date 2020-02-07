@@ -254,21 +254,12 @@ This result has been superseeded by 1.2.1.  See release notes for details.
 
 |  Version  | Docs  | Status |
 | :--- 	  | :--- 	  | :--- 	  |
-|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) | [docs](http://pynastran.m4-engineering.com/1.1.0/) | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.1.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
+|  [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran) |  | [![Build Status](https://img.shields.io/travis/SteveDoyle2/pyNastran/v1.1.svg)](https://travis-ci.org/SteveDoyle2/pyNastran) [![Coverage Status](https://img.shields.io/coveralls/SteveDoyle2/pyNastran/v1.1.svg)](https://coveralls.io/github/SteveDoyle2/pyNastran?branch=v1.1) |
 
 It's been roughly a year and ~100 tickets closed since the last version, so it's probably
 time for another release!  I want to thank everybody who helped with this release, especially
 Michael Redmond.  He is working on h5Nastran, which which ties in with pyNastran.  It's not quite
 ready yet, but it offers the possibility of major speedups for large models.
-
-
-Probably the most best thing is the documentation actually builds again.  It was too big
-and took too long, so readthedocs failed.  I'm pleased to announce that the continuing
-problems of up-to-date documentation will hopefully be a thing of the past.  [M4 Engineering](http://www.m4-engineering.com)
-has offered to host the documentation on http://www.pynastran.m4-engineering.com.
-There's still some work to do regarding hosting documentation for older versions and the master,
-but that's hopefully coming soon.  Outside of that, it's the same open-source project
-and will still be on Github.
 
 Regarding features, the focus has again been on robustness and testing.  There has been
 a 10% increase in the testing coverage (the same as v0.8 to v1.0).  There are a few

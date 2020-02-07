@@ -1390,7 +1390,7 @@ class OP2Common(Op2Codes, F06Writer):
             obj.itotal = itotal2
         else:
             n = 0
-            s = Struct(self._endian + self._analysis_code_fmt + b'i12f')
+            s = Struct(mapfmt(self._endian + self._analysis_code_fmt + b'i12f', self.size))
             binary_debug_fmt = '  %s=%s %%s\n' % (flag, flag_type)
             for unused_inode in range(nnodes):
                 edata = data[n:n+ntotal]

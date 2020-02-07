@@ -353,6 +353,8 @@ NX_RESULT_TABLES = [
 
     # random acoustic
     b'OAPPSD2', # Acoustic power for the PSD function - SORT2
+
+    b'OGK1', # gasket
 ]
 
 if len(NX_RESULT_TABLES) != len(np.unique(NX_RESULT_TABLES)):  # pragma: no cover
@@ -469,3 +471,106 @@ NX_TABLE_CONTENT = {
     805 : 'OESXRMS1 - element RMS stresses for random analysis that includes von Mises stress output.',
     905 : 'OESXNO1C - Cumulative Root Mean Square output',
 }  # type: Dict[int, str]
+
+NX_OEF_REAL_MAPPER = {
+    1: 3,    # CROD
+    2: 1 + (10 - 1) * 11,  # CBEAM
+    3: 3,    # CTUBE
+    4: 17,   # CSHEAR
+    10: 3,    # CONROD
+    11: 2,    # CELAS1
+    12: 2,    # CELAS2
+    13: 2,    # CELAS3
+    14: 2,    # CELAS4
+
+    20: 2,    # CDAMP1
+    21: 2,    # CDAMP2
+    22: 2,    # CDAMP3
+    23: 2,    # CDAMP4
+    24: 3,    # CVISC
+
+    33: 9,    # CQUAD4
+    34: 9,    # CBAR
+    35: 7,    # CCONEAX
+    38: 9,    # CGAP
+    40: 8,    # CBUSH1D ???
+    64: 2 + (11 - 2) * 5,  # CQUAD8
+    69: 1 + (8 - 1) * 2,  # CBEND
+    70: 2 + (11 - 2) * 4,  # CTRIAR
+    74: 9,    # CTRIA3
+    75: 2 + (11 - 2) * 4,  # CTRIA6
+
+    #76:  16,   # Acoustic Velocity/Pressure CHEXA ???
+    76: None,  # dummy so it doesnt go into the real results
+    77: 10,   # Acoustic Velocity/Pressure CPENTA
+    78: 10,   # Acoustic Velocity/Pressure CTETRA
+
+    82: 2 + (11 - 2) * 5,  # CQUADR
+    95: 9,    # composite CQUAD4 ???
+    96: 9,    # composite CQUAD8 ???
+    97: 9,    # composite CTRIA3 ???
+    98: 9,    # composite CTRIA6 ???
+    100: 8,    # CBAR-100
+    102: 7,    # CBUSH
+    144: 2 + (11 - 2) * 5,  # bilinear CQUAD4
+    189: 6 + (19 - 6) * 4,  # VUQUAD
+    190: 6 + (19 - 6) * 3,  # VUTRIA
+    191: 4 + (12 - 4) * 2,  # VUBEAM
+    200: 9,    # CWELD
+    232: 9,    # composite CQUADR ???
+    233: 9,    # composite TRIAR ???
+    235: 9,    # punch CQUADR...num_wide in DMAP is wrong...left out first entry...
+    236: 8,    # punch CTRIAR
+}
+NX_OEF_IMAG_MAPPER = {
+    1: 5,    # CROD
+    2: 1 + (17 - 1) * 11,  # CBEAM
+    3: 5,     # CTUBE
+    4: 33,    # CSHEAR
+    10: 5,    # CONROD
+
+    11: 3,    # CELAS1
+    12: 3,    # CELAS2
+    13: 3,    # CELAS3
+    14: 3,    # CELAS4
+
+    20: 3,    # CDAMP1
+    21: 3,    # CDAMP2
+    22: 3,    # CDAMP3
+    23: 3,    # CDAMP4
+    24: 5,    # CVISC
+
+    33: 17,   # CQUAD4-centroid
+    34: 17,   # CBAR-34
+    35: 7,    # CCONEAX # needed to not crash the code...
+    38: 9,    # CGAP
+    40: 8,    # CBUSH1D ???
+
+    64: 2 + (19 - 2) * 5,  # CQUAD8
+    69: 1 + (14 - 1) * 2,  # CBEND
+    70: 2 + (19 - 2) * 4,  # CTRIAR
+    74: 17,   # CTRIA3
+    75: 2 + (19 - 2) * 4,  # CTRIA6
+
+    76: 16,   # Acoustic Velocity/Pressure CHEXA_PR
+    77: 16,   # Acoustic Velocity/Pressure CPENTA_PR
+    78: 16,   # Acoustic Velocity/Pressure CTETRA_PR
+
+    82: 2 + (19 - 2) * 5,  # CQUADR
+    95: 9,    # composite CQUAD4 ???
+    96: 9,    # composite CQUAD8 ???
+    97: 9,    # composite CTRIA3 ???
+    98: 9,    # composite CTRIA6 ???
+    100: 14,   # BARS
+    102: 13,   # CBUSH
+
+    144: 2 + (19 - 2) * 5,  # CQUAD4-bilinear
+    189: 6 + (31 - 6) * 4,  # VUQUAD
+    190: 6 + (31 - 6) * 3,  # VUTRIA
+    191: 4 + (18 - 4) * 2,  # VUBEAM
+    200: 17,   # CWELD
+    232: 9,    # composite CQUADR ???
+    233: 9,    # composite TRIAR ???
+    235: 17,   # punch CQUADR...num_wide in DMAP is wrong...left out first entry...
+    236: 16,   # punch CTRIAR
+}

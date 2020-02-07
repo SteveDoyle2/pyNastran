@@ -5,6 +5,7 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
@@ -285,26 +286,27 @@ class ComplexPlateArray(OES_Object):
         #print('ntotal=%s ntimes=%s nelements=%s' % (self.ntotal, self.ntimes, self.nelements))
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        self._times = zeros(self.ntimes, 'float32')
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
+        self._times = zeros(self.ntimes, dtype=dtype)
         #self.ntotal = self.nelements * nnodes
 
         # TODO: could be more efficient by using nelements for cid
-        self.element_node = zeros((self.ntotal, 2), 'int32')
+        self.element_node = zeros((self.ntotal, 2), dtype=idtype)
         #self.element_cid = zeros((self.nelements, 2), 'int32')
 
         # the number is messed up because of the offset for the element's properties
 
-        if not self.nelements * nnodes * 2 == self.ntotal:
-            msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
-                self.ntimes, self.nelements, nnodes,
-                self.nelements * nnodes, self.ntotal)
-            raise RuntimeError(msg)
+        #if not self.nelements * nnodes * 2 == self.ntotal:
+            #msg = 'ntimes=%s nelements=%s nnodes=%s ne*nn=%s ntotal=%s' % (
+                #self.ntimes, self.nelements, nnodes,
+                #self.nelements * nnodes, self.ntotal)
+            #raise RuntimeError(msg)
 
         self.fiber_curvature = zeros(self.ntotal, 'float32')
 
         if self.has_von_mises:
             # [oxx, oyy, txy, ovm]
-            self.data = zeros((self.ntimes, self.ntotal, 4), 'complex64')
+            self.data = zeros((self.ntimes, self.ntotal, 4), dtype=cfdtype)
         else:
             # [oxx, oyy, txy]
             self.data = zeros((self.ntimes, self.ntotal, 3), 'complex64')

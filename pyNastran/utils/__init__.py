@@ -216,7 +216,7 @@ def object_stats(obj: Any, mode: str='public',
     """Prints out an easy to read summary of the object"""
     msg = '%s:\n' % obj.__class__.__name__
     attrs = object_attributes(
-        mode=mode, keys_to_skip=keys_to_skip,
+        obj, mode=mode, keys_to_skip=keys_to_skip,
         filter_properties=filter_properties)
 
     for name in sorted(attrs):

@@ -9,6 +9,7 @@ from numpy.linalg import eigh  # type: ignore
 
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
+from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
 
 
@@ -114,15 +115,12 @@ class RealSolidArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
-
+        dtype, idtype, fdtype = get_times_dtype(self.nonlinear_factor, self.size)
         _times = zeros(self.ntimes, dtype=dtype)
 
         # TODO: could be more efficient by using nelements for cid
-        element_node = zeros((self.ntotal, 2), dtype='int32')
-        element_cid = zeros((self.nelements, 2), dtype='int32')
+        element_node = zeros((self.ntotal, 2), dtype=idtype)
+        element_cid = zeros((self.nelements, 2), dtype=idtype)
 
         #if self.element_name == 'CTETRA':
             #nnodes = 4
@@ -133,7 +131,7 @@ class RealSolidArray(OES_Object):
         #self.element_node = zeros((self.ntotal, nnodes, 2), 'int32')
 
         #[oxx, oyy, ozz, txy, tyz, txz, o1, o2, o3, ovmShear]
-        data = zeros((self.ntimes, self.ntotal, 10), 'float32')
+        data = zeros((self.ntimes, self.ntotal, 10), fdtype)
         self.nnodes = element_node.shape[0] // self.nelements
         #self.data = zeros((self.ntimes, self.nelements, nnodes+1, 10), 'float32')
 

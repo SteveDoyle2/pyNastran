@@ -3,6 +3,7 @@ import numpy as np
 from numpy import zeros
 
 from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, _eigenvalue_header
@@ -56,14 +57,12 @@ class ComplexSpringDamperArray(OES_Object):
         self.is_built = True
 
         #print("ntimes=%s nelements=%s ntotal=%s" % (self.ntimes, self.nelements, self.ntotal))
-        dtype = 'float32'
-        if isinstance(self.nonlinear_factor, integer_types):
-            dtype = 'int32'
+        dtype, idtype, cfdtype = get_complex_times_dtype(self.nonlinear_factor, self.size)
         self._times = zeros(self.ntimes, dtype=dtype)
-        self.element = zeros(self.nelements, dtype='int32')
+        self.element = zeros(self.nelements, dtype=idtype)
 
         #[spring_stress]
-        self.data = zeros((self.ntimes, self.ntotal, 1), dtype='complex64')
+        self.data = zeros((self.ntimes, self.ntotal, 1), dtype=cfdtype)
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

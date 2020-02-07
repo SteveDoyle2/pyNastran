@@ -1,17 +1,25 @@
 from typing import List, Dict, Tuple, Any
 import copy
+from collections import defaultdict
+from itertools import count
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF, Subcase
-from pyNastran.bdf.mesh_utils.loads import _get_dof_map, _get_loadid_ndof, get_ndof
+from pyNastran.bdf.mesh_utils.loads import _get_dof_map, get_ndof
+
 
 class Solver:
+    """defines the Nastran knockoff class"""
     def __init__(self, model: BDF):
         self.model = model
         self.log = model.log
 
         # the "as solved" a-set displacement (after AUTOSPC is applied)
         self.xa_ = None
+        self.Kaa = None
+        self.Kgg = None
+        self.aset = None
+        self.sset = None
 
     def run(self):
         sol = self.model.sol
@@ -56,6 +64,14 @@ class Solver:
         nelements += _build_kbb_cbar(model, Kbb, dof_map)
         assert nelements > 0, nelements
         return Kbb
+
+    def _recover_strain_101(self, xg, dof_map, fdtype='float32'):
+        """recovers the strains"""
+        eids = 'ALL'
+        nelements = 0
+        nelements += _recover_strain_celas1(self.model, dof_map, xg, eids)
+        nelements += _recover_strain_celas2(self.model, dof_map, xg, eids)
+        #assert nelements > 0, nelements
 
     def build_xg(self, dof_map: Dict[Any, int], ndof: int, subcase: Subcase) -> np.ndarray:
         """
@@ -143,6 +159,27 @@ class Solver:
         #print(subcase)
         return Fb
 
+    def xg_to_xb(self, xg: np.ndarray, ngrid: int, ndof_per_grid: int, inplace=True):
+        assert isinstance(xg, np.ndarray)
+        model = self.model
+
+        xb = xg
+        if not inplace:
+            xb = copy.deepcopy(xb)
+
+        nids = model._type_to_id_map['GRID']
+        for i, nid in enumerate(nids):
+            node = model.nodes[nid]
+            if node.cd:
+                model.log.debug(f'node {nid} has a CD={node.cd}')
+                cd_ref = node.cd_ref
+                T = cd_ref.beta_n(n=2)
+                i1 = i * ndof_per_grid
+                i2 = (i+1) * ndof_per_grid
+                xi = xg[i1:i2]
+                xb[i1:i2] = xi @ T  # TODO: verify the transform; I think it's right
+        return xb
+
     def Kbb_to_Kgg(self, Kbb: np.ndarray, ngrid: int, ndof_per_grid: int, inplace=True) -> np.ndarray:
         """does an in-place transformation"""
         assert isinstance(Kbb, np.ndarray)
@@ -166,7 +203,97 @@ class Solver:
                 Kgg[i1:i2, i1:i2] = T.T @ Ki @ T
         return Kgg
 
-    def run_sol_101(self, subcase: Subcase):
+    def get_mpc_constraints(self, subcase: Subcase, dof_map):
+        model = self.model
+        #Fb = np.zeros(ndof, dtype='float32')
+        constraints = []
+        if 'MPC' not in subcase:
+            return constraints
+
+        mpc_id, unused_options = subcase['MPC']
+        mpcs = model.get_reduced_mpcs(mpc_id, consider_mpcadd=True, stop_on_failure=True)
+        #print('mpc_id =', mpc_id)
+
+        ieq = 0
+        ieqs = []
+        dofs = []
+        coefficients = []
+        dependents = []
+        independents = []
+        independents_eq = defaultdict(list)
+        for element in model.rigid_elements.values():
+            #etype = element.type
+            #ieq += 1
+            raise NotImplementedError(element.get_stats())
+
+        for mpc in mpcs:
+            mpc_type = mpc.type
+            if mpc_type == 'MPC':
+                # The first degree-of-freedom (G1, C1) in the sequence is defined to
+                # be the dependent DOF.
+                # A dependent DOF assigned by one MPC entry cannot be assigned
+                #  dependent by another MPC entry or by a rigid element.
+
+                #: Component number. (Any one of the Integers 1 through 6 for grid
+                #: points; blank or zero for scalar points.)
+                #self.components = components
+
+                #: Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
+                #self.coefficients = coefficients
+                #mpc.
+                for i, nid, component, coeff in zip(count(), mpc.nodes, mpc.components, mpc.coefficients):
+                    self.log.debug(f'ieq={ieq} (g,c)={(nid, component)} coeff={coeff}')
+                    assert isinstance(component, int), component
+                    idof = dof_map[(nid, component)]
+                    ieqs.append(i)
+                    dofs.append(idof)
+                    coefficients.append(coeff)
+                    if i == 0:
+                        dependents.append(idof)
+                    else:
+                        independents.append(idof)
+                        independents_eq[ieq].append(idof)
+            else:
+                raise NotImplementedError(mpc.get_stats())
+            ieq += 1
+
+        ieqs = np.array(ieqs, dtype='int32')
+        independents = np.array(independents, dtype='int32')
+        dependents = np.array(dependents, dtype='int32')
+        independents_dependents = np.hstack([independents, dependents])
+        coefficients = np.array(coefficients, dtype='float64')
+        #print(f'ieqs         = {ieqs}')
+        #print(f'dofs         = {dofs}')
+        #print(f'coefficients = {coefficients}')
+        #print(f'dependents   = {dependents}')
+        #print(f'independents = {independents}')
+
+        #remove_dependents()
+        udependents = np.unique(dependents)
+        assert len(udependents) == len(dependents)
+        uindependents = np.unique(independents)
+        dofs = independents + dependents
+        udofs, idofs = np.unique(independents_dependents, return_counts=True)
+
+        while 1:
+            for udof in uindependents:
+                n_dof = np.where(udof == udofs)[0][0]
+                self.log.debug(f'dof={udof} N={n_dof}')
+                if n_dof == 1:
+                    break
+            else:
+                raise RuntimeError('cannot find a DOF to remove')
+            #np.where(condition)
+
+            break
+        #for udof, in udofs:
+
+        #uindependents, nicount = np.unique(independents, return_counts=True)
+        #print(udofs, idofs)
+        return constraints
+
+
+    def run_sol_101(self, subcase: Subcase, fdtype='float64'):
         """
         Runs a SOL 101
         SOL 101 Sets
@@ -233,6 +360,7 @@ class Solver:
         dof_map = _get_dof_map(self.model)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
         Kbb = self.build_Kbb(subcase, dof_map, ndof)
+        self.get_mpc_constraints(subcase, dof_map)
 
         Kgg = self.Kbb_to_Kgg(Kbb, ngrid, ndof_per_grid, inplace=False)
         del Kbb
@@ -276,7 +404,7 @@ class Solver:
         #print(Kaa)
         #print(Kas)
         #print(Kss)
-        Kaa_, ipositive = remove_rows(Kaa)
+        Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset)
         Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
         #print(f'Fa = {Fa}')
@@ -295,19 +423,29 @@ class Solver:
         log.info(f'xa_ = {xa_}')
 
         xa[ipositive] = xa_
-        fdtype = 'float64'
+        xa[inegative] = 0.
+
         xg = np.arange(ndof, dtype=fdtype)
         xg[aset] = xa
         xg[sset] = xs
-        fspc = Ksa @ xa + Kss @ xs
-        #Fs[ipositive] = Fsi
-
         Fg[aset] = Fa
+        fspc = Ksa @ xa + Kss @ xs
         Fg[sset] = fspc
+
+        xb = self.xg_to_xb(xg, ngrid, ndof_per_grid)
+        Fb = self.xg_to_xb(Fg, ngrid, ndof_per_grid)
+        if 'SPCFORCES' in subcase:
+            #Fs[ipositive] = Fsi
+            log.debug(f'Fg = {Fg}')
+            log.debug(f'Fs = {Fs}')
+        if 'DISPLACEMENT' in subcase:
+            log.debug(f'xg = {xg}')
+        if 'STRAIN' in subcase:
+            self._recover_strain_101(xb, dof_map)
+        #if 'STRESS' in subcase:
+        #Fg[sz_set] = -1
+        #xg[sz_set] = -1
         log.debug(f'xa = {xa}')
-        log.debug(f'Fs = {Fs}')
-        log.debug(f'xg = {xg}')
-        log.debug(f'Fg = {Fg}')
         return xa_
 
     def run_sol_103(self, subcase: Subcase):
@@ -361,7 +499,7 @@ class Solver:
         #print(Kaa)
         #print(Kas)
         #print(Kss)
-        Kaa_, ipositive = remove_rows(Kaa)
+        Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset)
         #Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
         #print(f'Fa = {Fa}')
@@ -424,12 +562,47 @@ class Solver:
         """
         pass
 
-def _build_kbb_celas1(model: BDF, Kbb, dof_map):
-    celas1s = model._type_to_id_map['CELAS1']
+def get_ieids_eids(model: BDF, etype, eids_str, idtype='int32', fdtype='float32'):
+    """helper for the stress/strain/displacment recovery"""
+    eids = model._type_to_id_map[etype]
+    if eids_str == 'ALL':
+        ieids = np.arange(len(eids), dtype=idtype)
+    else:
+        ieids = np.searchsorted(eids_str, eids)
+    empty_array = np.full(len(ieids), np.nan, dtype=fdtype)
+    return ieids, eids, empty_array
 
+def _recover_strain_celas1(model: BDF, dof_map, xg, eids, fdtype='float32'):
+    """
+    recovers static strain
+    TODO: write the OP2/F06
+
+    """
+    ielas, celas1s, strains = get_ieids_eids(model, 'CELAS1', eids, fdtype=fdtype)
+    for ieid, eid in zip(ielas, celas1s):
+        elem = model.elements[eid]
+        strain = _recover_straini_celas12(xg, dof_map, elem)
+        strains[ielas] = strain
+    return len(celas1s)
+
+def _recover_strain_celas2(model: BDF, dof_map, xg, eids, fdtype='float32'):
+    """
+    recovers static strain
+    TODO: write the OP2/F06
+
+    """
+    ielas, celas2s, strains = get_ieids_eids(model, 'CELAS2', eids, fdtype=fdtype)
     #celas3s = model._type_to_id_map['CELAS3']
     #celas4s = model._type_to_id_map['CELAS4']
+    for ieid, eid in zip(ielas, celas2s):
+        elem = model.elements[eid]
+        strain = _recover_straini_celas12(xg, dof_map, elem)
+        strains[ielas] = strain
+    return len(celas2s)
 
+def _build_kbb_celas1(model: BDF, Kbb, dof_map):
+    """fill the CELAS1 Kbb matrix"""
+    celas1s = model._type_to_id_map['CELAS1']
     for eid in celas1s:
         elem = model.elements[eid]
         ki = elem.K()
@@ -439,7 +612,10 @@ def _build_kbb_celas1(model: BDF, Kbb, dof_map):
     return len(celas1s)
 
 def _build_kbb_celas2(model: BDF, Kbb, dof_map):
+    """fill the CELAS2 Kbb matrix"""
     celas2s = model._type_to_id_map['CELAS2']
+    #celas3s = model._type_to_id_map['CELAS3']
+    #celas4s = model._type_to_id_map['CELAS4']
     for eid in celas2s:
         elem = model.elements[eid]
         ki = elem.K()
@@ -448,7 +624,17 @@ def _build_kbb_celas2(model: BDF, Kbb, dof_map):
         _build_kbbi_celas12(Kbb, dof_map, elem, ki)
     return len(celas2s)
 
+def _recover_straini_celas12(xg, dof_map, elem):
+    """get the static strain"""
+    nid1, nid2 = elem.nodes
+    c1, c2 = elem.c1, elem.c2
+    i = dof_map[(nid1, c1)]
+    j = dof_map[(nid2, c2)]
+    strain = xg[i] - xg[j]  # TODO: check the sign
+    return strain
+
 def _build_kbbi_celas12(Kbb, dof_map, elem, ki):
+    """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes
     c1, c2 = elem.c1, elem.c2
     i = dof_map[(nid1, c1)]
@@ -467,6 +653,7 @@ def _build_kbbi_celas12(Kbb, dof_map, elem, ki):
     #del i, j, ki, nid1, nid2, c1, c2
 
 def _build_kbb_cbar(model, Kbb, dof_map):
+    """fill the CBAR Kbb matrix"""
     cbars = model._type_to_id_map['CBAR']
     for eid in cbars:
         elem = model.elements[eid]
@@ -476,6 +663,7 @@ def _build_kbb_cbar(model, Kbb, dof_map):
     return len(cbars)
 
 def _build_kbb_crod(model, Kbb, dof_map):
+    """fill the CROD Kbb matrix"""
     crods = model._type_to_id_map['CROD']
     for eid in crods:
         elem = model.elements[eid]
@@ -485,6 +673,7 @@ def _build_kbb_crod(model, Kbb, dof_map):
     return len(crods)
 
 def _build_kbb_ctube(model: BDF, Kbb, dof_map):
+    """fill the CTUBE Kbb matrix"""
     ctubes = model._type_to_id_map['CTUBE']
     for eid in ctubes:
         elem = model.elements[eid]
@@ -494,6 +683,7 @@ def _build_kbb_ctube(model: BDF, Kbb, dof_map):
     return len(ctubes)
 
 def _build_kbb_conrod(model: BDF, Kbb, dof_map):
+    """fill the CONROD Kbb matrix"""
     conrods = model._type_to_id_map['CONROD']
     for eid in conrods:
         elem = model.elements[eid]
@@ -501,7 +691,8 @@ def _build_kbb_conrod(model: BDF, Kbb, dof_map):
         _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
     return len(conrods)
 
-def _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat):
+def _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat, fdtype='float64'):
+    """fill the ith rod Kbb matrix"""
     nid1, nid2 = elem.nodes
     #mat = elem.mid_ref
     xyz1 = elem.nodes_ref[0].get_position()
@@ -534,7 +725,7 @@ def _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat):
     #i22 = dof_map[(n2, 2)]
 
     nki, nkj = K.shape
-    K2 = np.zeros((nki*2, nkj*2), 'float64')
+    K2 = np.zeros((nki*2, nkj*2), dtype=fdtype)
 
     i1 = 0
     i2 = 3 # dof_map[(n1, 2)]
@@ -651,7 +842,7 @@ def partition_vector(vector, sets) -> List[np.ndarray]:
     return vectors
 
 
-def remove_rows(Kgg: np.ndarray) -> np.ndarray:
+def remove_rows(Kgg: np.ndarray, aset: np.ndarray) -> np.ndarray:
     """
     Applies AUTOSPC to the model (sz)
 
@@ -763,8 +954,12 @@ def remove_rows(Kgg: np.ndarray) -> np.ndarray:
     #print(row_kgg)
     #izero = np.where((col_kgg == 0.) & (row_kgg == 0))[0]
     ipositive = np.where((col_kgg > 0.) | (row_kgg > 0))[0]
+    all_rows = np.arange(Kgg.shape[0], dtype='int32')
+    inegative = np.setdiff1d(all_rows, ipositive)
+    apositive = aset[ipositive]
+    sz_set = np.setdiff1d(aset, apositive)
     Kaa = Kgg[ipositive, :][:, ipositive]
-    return Kaa, ipositive
+    return Kaa, ipositive, inegative, sz_set
 
 def guyan_reduction(matrix, set1, set2):
     """
@@ -802,13 +997,13 @@ def guyan_reduction(matrix, set1, set2):
     A = partition_matrix(matrix, sets)
     A11 = A['11']
     A22 = A['22']
-    A12 = A['12']
+    #A12 = A['12']
     A21 = A['21']
     nA11 = A11.shape[0]
 
     # ([A11] + ([A12]-[A22]^-1[A21]){d1} = {F}
     A22m1 = np.linalg.inv(A22)
-    A12_A22m1_A21 = np.linalg.multi_dot([A11, A22m1, A21])
-    T = np.vstack([eye(nA11), A22m1 @ A21])
+    #A12_A22m1_A21 = np.linalg.multi_dot([A11, A22m1, A21])
+    T = np.vstack([np.eye(nA11), A22m1 @ A21])
     return np.linalg.multi_dot([T.T, A, T])
-    return A11 + A12_A22m1_A21
+    #return A11 + A12_A22m1_A21
