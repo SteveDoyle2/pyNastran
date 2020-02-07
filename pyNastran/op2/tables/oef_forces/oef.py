@@ -1346,15 +1346,6 @@ class OEF(OP2Common):
 
         elif self.element_type == 4:  # cshear
             n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
-        elif self.element_type == 126:  # cfast-msc
-            assert self.is_msc
-            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase, prefix, postfix)
-            #2 FX RS Force x
-            #3 FY RS Force y
-            #4 FZ RS Force z
-            #5 MX RS Moment x
-            #6 MY RS Moment y
-            #7 MZ RS Moment z
 
         elif self.element_type == 35:  # coneax
             n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase, prefix, postfix)
@@ -1391,6 +1382,9 @@ class OEF(OP2Common):
         elif self.element_type == 191:
             n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
+        elif self.element_type == 126 and self.is_msc:
+            # 119-CFAST-MSC
+            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase, prefix, postfix)
         elif self.element_type == 119 and self.is_nx:
             # 119-CFAST-NX
             n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
@@ -2037,8 +2031,7 @@ class OEF(OP2Common):
         """
         34-CBAR
         117-CWELDC
-        119-CFAST-NX
-        126-CFAST-MSC
+        119-CFAST-NX  (126-CFAST-MSC is like the CBUSH)
 
         """
         n = 0
