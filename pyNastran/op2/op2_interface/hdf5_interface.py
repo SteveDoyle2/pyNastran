@@ -94,7 +94,8 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     RealCBeamForceVUArray, RealCBushForceArray, RealCGapForceArray, RealConeAxForceArray,
     RealCShearForceArray, RealDamperForceArray, RealForceVU2DArray, RealPlateBilinearForceArray,
     RealPlateForceArray, RealRodForceArray, RealSolidPressureForceArray, RealSpringForceArray,
-    RealViscForceArray, RealCWeldForceArray, RealCFastForceArray, RealCBearForceArray,
+    RealViscForceArray, RealCWeldForceArray, RealCFastForceArrayNX, RealCFastForceArrayMSC,
+    RealCBearForceArray,
 )
 from pyNastran.op2.tables.oef_forces.oef_complex_force_objects import (
     ComplexCBarForceArray, ComplexCBeamForceArray, ComplexCBeamForceVUArray,
@@ -429,7 +430,7 @@ TABLE_OBJ_MAP = {
     'no.cbar_force' : (RealCBarForceArray, ),
 
     'force.cweld_force': (RealCWeldForceArray, ComplexCWeldForceArray),
-    'force.cfast_force': (RealCFastForceArray, ),
+    'force.cfast_force': (RealCFastForceArrayNX, RealCFastForceArrayMSC),
     'force.cbear_force': (RealCBearForceArray, ComplexCBearForceArray, ),
 
     'nrl.cbar_force' : (RealCBarForceArray, ),

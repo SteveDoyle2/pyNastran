@@ -39,8 +39,8 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     FailureIndicesArray,
     RealRodForceArray, RealViscForceArray,
     RealCBarForceArray, RealCBar100ForceArray,
-    RealCFastForceArray, RealCWeldForceArray,
-    RealCBushForceArray, RealCBearForceArray,
+    RealCFastForceArrayNX, RealCWeldForceArray,
+    RealCFastForceArrayMSC, RealCBushForceArray, RealCBearForceArray,
     RealPlateForceArray,
     RealPlateBilinearForceArray,
     RealSpringForceArray, RealDamperForceArray,
@@ -1432,6 +1432,15 @@ class OEF(OP2Common):
 
         elif self.element_type == 4:  # cshear
             n, nelements, ntotal = self._oef_cshear(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+        elif self.element_type == 126:  # cfast-msc
+            assert self.is_msc
+            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase, prefix, postfix)
+            #2 FX RS Force x
+            #3 FY RS Force y
+            #4 FZ RS Force z
+            #5 MX RS Moment x
+            #6 MY RS Moment y
+            #7 MZ RS Moment z
 
         elif self.element_type == 35:  # coneax
             n, nelements, ntotal = self._oef_cconeax(data, ndata, dt, is_magnitude_phase, prefix, postfix)
@@ -1478,6 +1487,7 @@ class OEF(OP2Common):
             # 235-CQUADR
             return self._not_implemented_or_skip(data, ndata, self.code_information())
         else:
+            asdf
             return self._not_implemented_or_skip(data, ndata, self.code_information())
 
         if nelements is None:
@@ -2132,6 +2142,8 @@ class OEF(OP2Common):
         """
         34-CBAR
         117-CWELDC
+        119-CFAST-NX
+        126-CFAST-MSC
 
         """
         n = 0
@@ -2146,7 +2158,7 @@ class OEF(OP2Common):
             assert self.num_wide in [9, 17], self.code_information()
         elif self.element_type == 119:
             result_name = prefix + 'cfast_force' + postfix
-            obj_real = RealCFastForceArray
+            obj_real = RealCFastForceArrayNX
             assert self.num_wide == 9, self.code_information()
         else:
             raise NotImplementedError(self.element_type)
@@ -3436,12 +3448,17 @@ class OEF(OP2Common):
     def _oef_cbush(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """
         102-CBUSH
+        126-CFAST-MSC
         280-CBEAR
         """
         if self.element_type == 102:
             result_name = prefix + 'cbush_force' + postfix
             real_obj = RealCBushForceArray
             complex_obj = ComplexCBushForceArray
+        elif self.element_type == 126:
+            result_name = prefix + 'cfast_force' + postfix
+            real_obj = RealCFastForceArrayMSC
+            complex_obj = None
         elif self.element_type == 280:
             result_name = prefix + 'cbear_force' + postfix
             assert self.num_wide in [7, 13], self.code_information()
