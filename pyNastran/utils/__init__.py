@@ -167,15 +167,26 @@ def __object_attr(obj, mode, keys_to_skip, attr_type, filter_properties: bool=Fa
     out = []
     obj_type = type(obj)
     for key in dir(obj):
-        if key in keys_to_skip:
+        #if isinstance(key, abstractmethod):  # doesn't work...
+            #print(key, '  abstractmethod')
+        #if isinstance(key, FunctionType):
+            #print(key, '  FunctionType')
+        #if isinstance(key, MethodType):
+            #print(key, '  MethodType')
+
+        if key in keys_to_skip or not check(key):
             continue
+
         try:
+            value = getattr(obj, key)
+            save_value = attr_type(value)
+            if not save_value:
+                continue
             if filter_properties:
-                if check(key) and attr_type(getattr(obj, key)) and not isinstance(getattr(obj_type, key, None), property):
+                if not isinstance(getattr(obj_type, key, None), property):
                     out.append(key)
             else:
-                if check(key) and attr_type(getattr(obj, key)):
-                    out.append(key)
+                out.append(key)
         except:
             pass
     out.sort()
@@ -209,7 +220,7 @@ def object_methods(obj: Any, mode: str='public',
         sorted list of the names of methods of a given type
         or None if the mode is wrong
     """
-    return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, (MethodType, abstractmethod)))
+    return __object_attr(obj, mode, keys_to_skip, lambda x: isinstance(x, MethodType))
 
 def object_stats(obj: Any, mode: str='public',
                  keys_to_skip: Optional[List[str]]=None,
@@ -259,7 +270,7 @@ def object_attributes(obj: Any, mode: str='public',
         #keys_to_skip += obj.__properties__()
     return __object_attr(
         obj, mode, keys_to_skip,
-        lambda x: not isinstance(x, (MethodType, FunctionType, abstractmethod)),
+        lambda x: not isinstance(x, (MethodType, FunctionType)),
         filter_properties=filter_properties,
     )
 
