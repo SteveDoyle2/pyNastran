@@ -2964,10 +2964,9 @@ class TestOP2(Tester):
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
-        WRITE_OP2 = True
         unused_op2, unused_is_passed = run_op2(
             op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
-            write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
             exclude=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
@@ -2975,7 +2974,7 @@ class TestOP2(Tester):
 
         unused_op2, unused_is_passed = run_op2(
             op2_filename2, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
-            write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
             exclude=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
@@ -2988,14 +2987,27 @@ class TestOP2(Tester):
         #bdf_filename = os.path.join(folder, 'rms_tri_oesrmx1.bdf')
         #unused_op2 = read_op2_geom(op2_filename, xref=False, log=log)
 
-        WRITE_OP2 = True
         unused_op2, unused_is_passed = run_op2(
             op2_filename1, make_geom=True, write_bdf=False, read_bdf=None, write_f06=True,
-            write_op2=WRITE_OP2, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
             is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
             exclude=None, short_stats=False, compare=True, debug=False, log=log,
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def _test_msc_cfast(self):
+        """test MSC 126-CFAST"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_2014', 'test_model_cfast.op2')
+        op2_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_2014', 'test_model_cfast.op2')
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=False,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=True)
 
     def test_sol_106(self):
         """tests SOL 106 pandas bug"""
