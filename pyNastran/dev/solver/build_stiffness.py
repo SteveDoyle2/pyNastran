@@ -15,9 +15,6 @@ def build_Kbb(model: BDF, subcase: Subcase, dof_map, ndof, dtype='float32') -> T
     Kbbs = sci_sparse.dok_matrix((ndof, ndof), dtype=dtype)
     #print(dof_map)
 
-    #crods = model._type_to_id_map['CROD']
-    #ctubes = model._type_to_id_map['CTUBE']
-    #print('celas1s =', celas1s)
     #_get_loadid_ndof(model, subcase_id)
     nelements = 0
     nelements += _build_kbb_celas1(model, Kbb, Kbbs, dof_map)
@@ -143,7 +140,7 @@ def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat, fdtype='float64'):
     #Kbb[j, j] = ki[1, 1]
     k = np.array([[1., -1.],
                   [-1., 1.]])  # 1D rod
-    Lambda = _lambda1d(dxyz12, debug=False)
+    Lambda = lambda1d(dxyz12, debug=False)
     K = Lambda.T @ k @ Lambda
     #i11 = dof_map[(n1, 1)]
     #i12 = dof_map[(n1, 2)]
@@ -221,14 +218,12 @@ def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat, fdtype='float64'):
     #print(Kbb)
     return
 
-def _lambda1d(dxyz, debug=True):
+def lambda1d(dxyz, debug=True):
     """
     ::
       3d  [l,m,n,0,0,0]  2x6
           [0,0,0,l,m,n]
     """
-    #R = self.Rmatrix(model,is3D)
-
     #xyz1 = model.Node(n1).get_position()
     #xyz2 = model.Node(n2).get_position()
     #v1 = xyz2 - xyz1
@@ -239,15 +234,11 @@ def _lambda1d(dxyz, debug=True):
         raise ZeroDivisionError(dxyz)
 
     (l, m, n) = dxyz / n
-    #l = 1
-    #m = 2
-    #n = 3
-    Lambda = np.zeros((2, 6), 'd')
+    Lambda = np.zeros((2, 6), dtype='float64')
     Lambda[0, 0] = Lambda[1, 3] = l
     Lambda[0, 1] = Lambda[1, 4] = m
     Lambda[0, 2] = Lambda[1, 5] = n
 
-    #print("R = \n",R)
     #debug = True
     if debug:
         print("Lambda = \n" + str(Lambda))

@@ -23,6 +23,17 @@ SORT2_TABLE_NAME_MAP = {
     'OESNL2' : 'OESNL1',
 }
 
+TABLE_NAME_TO_TABLE_CODE = {
+    # stress
+    'OES1': 5,
+    'OES1X1': 5,
+    'OES2': 5,
+
+    # strain
+    'OSTR1': 5,
+    'OSTR2': 5,
+}
+
 class OES_Object(BaseElement):
     def __init__(self, data_code, isubcase, apply_data_code=True):
         self.element_type = None
@@ -281,3 +292,59 @@ class StrainObject(OES_Object):
         assert self.stress_bits[1] == self.stress_bits[3], 'class_name=%s scode=%s stress_bits=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.table_name)
         assert self.stress_bits[1] == 1, 'class_name=%s is_stress=False scode=%s stress_bits=%s; element_type=%s element_name=%s; table_name=%r' % (class_name, self.s_code, self.stress_bits, self.element_type, self.element_name, self.table_name)
         return False
+
+
+def oes_data_code(table_name, analysis_code,
+                  is_sort1=True, is_random=False,
+                  random_code=0, title='', subtitle='', label='', is_msc=True):
+    sort1_sort_bit = 0 if is_sort1 else 1
+    random_sort_bit = 1 if is_random else 0
+    sort_method = 1 if is_sort1 else 2
+    assert analysis_code != 0, analysis_code
+    #if format_code == 1:
+        #format_word = "Real"
+    #elif format_code == 2:
+        #format_word = "Real/Imaginary"
+    #elif format_code == 3:
+        #format_word = "Magnitude/Phase"
+    #DEVICE_CODE_MAP = {
+        #1 : "Print",
+        #2 : "Plot",
+        #3 : "Print and Plot",
+        #4 : "Punch",
+        #5 : "Print and Punch",
+        #6 : "Plot and Punch",
+        #7 : "Print, Plot, and Punch",
+    #}
+
+    table_code = TABLE_NAME_TO_TABLE_CODE[table_name]
+    sort_code = 1 # TODO: what should this be???
+
+    #table_code = tCode % 1000
+    #sort_code = tCode // 1000
+    tCode = table_code * 1000 + sort_code
+
+    device_code = 2  # Plot
+    approach_code = analysis_code * 10 + device_code
+    #print(f'approach_code={approach_code} analysis_code={analysis_code} device_code={device_code}')
+    data_code = {
+        'nonlinear_factor': None,
+        'approach_code' : approach_code,
+        'analysis_code' : analysis_code,
+        'sort_bits': [0, sort1_sort_bit, random_sort_bit], # real, sort1, random
+        'sort_method' : sort_method,
+        'is_msc': is_msc,
+        #'is_nasa95': is_nasa95,
+        'format_code': 1, # real
+        'table_code': table_code,
+        'tCode': tCode,
+        'table_name': table_name, ## TODO: should this be a string?
+        'device_code' : device_code,
+        'random_code' : random_code,
+        'thermal': 0,
+        'title' : title,
+        'subtitle': subtitle,
+        'label': label,
+        'num_wide' : 8, # displacement-style table
+    }
+    return data_code

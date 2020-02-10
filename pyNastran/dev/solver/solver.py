@@ -11,7 +11,7 @@ import pyNastran
 from pyNastran.bdf.bdf import BDF, Subcase
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_interface.hdf5_interface import (
-    RealDisplacementArray, RealSPCForcesArray)
+    RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray)
 from pyNastran.bdf.mesh_utils.loads import _get_dof_map, get_ndof
 
 from pyNastran.dev.solver.recover_static_strains import recover_strain_101
@@ -490,21 +490,18 @@ class Solver:
         xg[aset] = xa
         xg[sset] = xs
         Fg[aset] = Fa
-        fspc = Ksa @ xa + Kss @ xs
-        Fg[sset] = fspc
+
+        fspc = np.full(ndof, 0., dtype=fdtype)
+        fspci = Ksa @ xa + Kss @ xs
+        Fg[sset] = fspci
+        fspc[sset] = fspci
 
         xb = self.xg_to_xb(xg, ngrid, ndof_per_grid)
         Fb = self.xg_to_xb(Fg, ngrid, ndof_per_grid)
 
         log.debug(f'Fs = {Fs}')
         page_num = 1
-        self._save_spc_forces(
-            f06_file,
-            subcase, itime, ntimes,
-            node_gridtype, Fg,
-            ngrid, ndof_per_grid,
-            title=title, subtitle=subtitle, label=label,
-            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+
         self._save_displacment(
             f06_file,
             subcase, itime, ntimes,
@@ -513,32 +510,34 @@ class Solver:
             title=title, subtitle=subtitle, label=label,
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
 
-        if 'STRAIN' in subcase:
-            recover_strain_101(self.model, xb, dof_map)
-        #if 'STRESS' in subcase:
-        #Fg[sz_set] = -1
-        #xg[sz_set] = -1
-        log.debug(f'xa = {xa}')
-        return xa_
-
-    def _save_spc_forces(self, f06_file,
-                         subcase: Subcase, itime: int, ntimes: int,
-                         node_gridtype, Fg,
-                         ngrid: int, ndof_per_grid: int,
-                         title='', subtitle='', label='',
-                         fdtype='float32', page_num=1, page_stamp='PAGE %s') -> int:
-        f06_request_name = 'SPCFORCES'
-        table_name = 'OQG1'
-        #self.log.debug(f'Fg = {Fg}')
-        page_num = self._save_static_table(
+        self._save_applied_load(
             f06_file,
             subcase, itime, ntimes,
             node_gridtype, Fg,
-            RealSPCForcesArray, f06_request_name, table_name,
             ngrid, ndof_per_grid,
             title=title, subtitle=subtitle, label=label,
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
-        return page_num
+
+        self._save_spc_forces(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, fspc,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+
+        op2 = self.op2
+        if 'STRAIN' in subcase:
+            recover_strain_101(f06_file, op2, self.model, dof_map, isubcase, xb,
+                               title=title, subtitle=subtitle, label=label,
+                               page_stamp=page_stamp)
+        #if 'STRESS' in subcase:
+            #recover_stress_101(self.model, xb, dof_map)
+        #Fg[sz_set] = -1
+        #xg[sz_set] = -1
+        log.debug(f'xa = {xa}')
+        op2.write_op2('junk.op2', post=-1, endian=b'<', skips=None, nastran_format='nx')
+        return xa_
 
     def _save_displacment(self, f06_file,
                           subcase: Subcase, itime: int, ntimes: int,
@@ -554,6 +553,44 @@ class Solver:
             subcase, itime, ntimes,
             node_gridtype, xg,
             RealDisplacementArray, f06_request_name, table_name,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+        return page_num
+
+    def _save_spc_forces(self, f06_file,
+                         subcase: Subcase, itime: int, ntimes: int,
+                         node_gridtype, fspc,
+                         ngrid: int, ndof_per_grid: int,
+                         title='', subtitle='', label='',
+                         fdtype='float32', page_num=1, page_stamp='PAGE %s') -> int:
+        f06_request_name = 'SPCFORCES'
+        table_name = 'OQG1'
+        #self.log.debug(f'Fg = {Fg}')
+        page_num = self._save_static_table(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, fspc,
+            RealSPCForcesArray, f06_request_name, table_name,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+        return page_num
+
+    def _save_applied_load(self, f06_file,
+                           subcase: Subcase, itime: int, ntimes: int,
+                           node_gridtype, Fg,
+                           ngrid: int, ndof_per_grid: int,
+                           title='', subtitle='', label='',
+                           fdtype='float32', page_num=1, page_stamp='PAGE %s') -> int:
+        f06_request_name = 'OLOAD'
+        table_name = 'OPG1'
+        #self.log.debug(f'Fg = {Fg}')
+        page_num = self._save_static_table(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, Fg,
+            RealLoadVectorArray, f06_request_name, table_name,
             ngrid, ndof_per_grid,
             title=title, subtitle=subtitle, label=label,
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)

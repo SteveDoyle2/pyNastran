@@ -320,6 +320,8 @@ def setup_case_control(model, extra_case_lines=None):
         'DISP(PLOT,PRINT) = ALL',
         'GPFORCE(PLOT,PRINT) = ALL',
         'SPCFORCE(PLOT,PRINT) = ALL',
+        'MPCFORCE(PLOT,PRINT) = ALL',
+        'OLOAD(PLOT,PRINT) = ALL',
         'SUBCASE 1',
         '  LOAD = 2',
         '  SPC = 3',

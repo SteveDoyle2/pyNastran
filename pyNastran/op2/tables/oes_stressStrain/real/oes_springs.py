@@ -7,9 +7,15 @@ from numpy import zeros
 from pyNastran.utils.numpy_utils import integer_types, float_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object, oes_data_code)
 from pyNastran.f06.f06_formatting import write_float_13e, _eigenvalue_header
 
+ELEMENT_NAME_TO_ELEMENT_TYPE = {
+    'CELAS1': 11,
+    'CELAS2': 12,
+    'CELAS3': 13,
+    'CELAS4': 14,
+}
 
 class RealSpringArray(OES_Object):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -21,6 +27,47 @@ class RealSpringArray(OES_Object):
         self.itotal = 0
         self.ielement = 0
         self.element = None
+
+    @classmethod
+    def add_static_case(cls, table_name, element_name, element, data, isubcase,
+                        is_sort1=True, is_random=False, is_stress=True, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
+
+        analysis_code = 1 # static
+        data_code = oes_data_code(table_name, analysis_code,
+                                  is_sort1=is_sort1, is_random=is_random,
+                                  random_code=random_code,
+                                  title=title, subtitle=subtitle, label=label,
+                                  is_msc=is_msc)
+        data_code['lsdvmns'] = [0] # TODO: ???
+        data_code['data_names'] = []
+
+        # I'm only sure about the 1s in the strains and the
+        # corresponding 0s in the stresses.
+        if is_stress:
+            data_code['stress_bits'] = [0, 0, 0, 0]
+            data_code['s_code'] = 0
+        else:
+            data_code['stress_bits'] = [0, 1, 0, 1]
+            data_code['s_code'] = 1 # strain?
+
+        element_type = ELEMENT_NAME_TO_ELEMENT_TYPE[element_name]
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
+        data_code['load_set'] = 1
+
+        ntimes = data.shape[0]
+        nnodes = data.shape[1]
+        dt = None
+        obj = cls(data_code, is_sort1, isubcase, dt)
+        obj.element = element
+        obj.data = data
+
+        obj.ntimes = ntimes
+        obj.ntotal = nnodes
+        obj._times = [None]
+        obj.is_built = True
+        return obj
 
     @property
     def is_real(self) -> bool:
