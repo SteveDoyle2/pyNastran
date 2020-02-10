@@ -38,6 +38,9 @@ class TestSolverSpring(unittest.TestCase):
         d = mag / k
         assert np.allclose(solver.xa_[0], d)
 
+        model.sol = 103
+        solver.run()
+
     def test_celas2_cd(self):
         """Tests a CELAS2"""
         model = BDF(debug=True, log=None, mode='msc')

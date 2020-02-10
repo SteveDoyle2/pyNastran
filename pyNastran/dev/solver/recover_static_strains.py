@@ -6,8 +6,7 @@ from pyNastran.dev.solver.build_stiffness import lambda1d
 from pyNastran.op2.op2_interface.hdf5_interface import (
     #RealSpringForceArray,
     RealSpringStrainArray, # RealSpringStressArray,
-    #RealRodForceArray,
-    RealRodStrainArray, # RealRodStressArray,
+    RealRodForceArray, RealRodStrainArray, RealRodStressArray,
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -28,6 +27,40 @@ def get_ieids_eids(model: BDF, etype, eids_str, ncols: int=1, idtype='int32', fd
     shape = (neids, ncols)
     empty_array = np.full(shape, np.nan, dtype=fdtype)
     return neids, ieids, eids, empty_array
+
+def recover_force_101(f06_file, op2,
+                       model: BDF, dof_map, isubcase: int, xb, fdtype: str='float32',
+                       title: str='', subtitle: str='', label: str='',
+                       page_num: int=1, page_stamp: str='PAGE %s'):
+    eid_str = 'ALL'
+    nelements = 0
+    nelements += _recover_force_rod(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CROD', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
+    nelements += _recover_force_rod(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CONROD', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
+
+def recover_stress_101(f06_file, op2,
+                       model: BDF, dof_map, isubcase: int, xb, fdtype: str='float32',
+                       title: str='', subtitle: str='', label: str='',
+                       page_num: int=1, page_stamp: str='PAGE %s'):
+    eid_str = 'ALL'
+    nelements = 0
+    nelements += _recover_stress_rod(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CROD', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
+    nelements += _recover_stress_rod(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CONROD', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
 
 def recover_strain_101(f06_file, op2,
                        model: BDF, dof_map, isubcase: int, xb, fdtype: str='float32',
@@ -56,14 +89,14 @@ def recover_strain_101(f06_file, op2,
         page_num=page_num, page_stamp=page_stamp)
     nelements += _recover_strain_rod(
         f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        'CTUBE', fdtype=fdtype,
-        title=title, subtitle=subtitle, label=label,
-        page_num=page_num, page_stamp=page_stamp)
-    nelements += _recover_strain_rod(
-        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
         'CONROD', fdtype=fdtype,
         title=title, subtitle=subtitle, label=label,
         page_num=page_num, page_stamp=page_stamp)
+    #nelements += _recover_strain_rod(
+        #f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        #'CTUBE', fdtype=fdtype,
+        #title=title, subtitle=subtitle, label=label,
+        #page_num=page_num, page_stamp=page_stamp)
     #assert nelements > 0, nelements
 
 def _recover_strain_celas(f06_file, op2,
@@ -90,7 +123,12 @@ def _recover_strain_celas(f06_file, op2,
         table_name, element_name, eids, data, isubcase, is_stress=False,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
-    op2.celas1_strain[isubcase] = spring_strain
+    if element_name == 'CELAS1':
+        op2.celas1_strain[isubcase] = spring_strain
+    elif element_name == 'CELAS2':
+        op2.celas2_strain[isubcase] = spring_strain
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
     spring_strain.write_f06(f06_file, header=None, page_stamp=page_stamp,
                             page_num=page_num, is_mag_phase=False, is_sort1=True)
     return neids
@@ -108,20 +146,117 @@ def _recover_strain_rod(f06_file, op2,
     neids, irod, eids, strains = get_ieids_eids(model, element_name, eids_str, ncols=4, fdtype=fdtype)
     if not neids:
         return neids
-    for ieid, eid in zip(irod, eids):
-        elem = model.elements[eid]
-        strains[ieid, :] = _recover_straini_rod(xb, dof_map, elem)
+    if element_name == 'CONROD':
+        for ieid, eid in zip(irod, eids):
+            elem = model.elements[eid]
+            strains[ieid, :] = _recover_straini_rod(xb, dof_map, elem, elem)
+    else:
+        for ieid, eid in zip(irod, eids):
+            elem = model.elements[eid]
+            strains[ieid, :] = _recover_straini_rod(xb, dof_map, elem, elem.pid_ref)
 
     data = strains.reshape(1, *strains.shape)
     table_name = 'OSTR1'
-    spring_strain = RealRodStrainArray.add_static_case(
+    strain_obj = RealRodStrainArray.add_static_case(
         table_name, element_name, eids, data, isubcase, is_stress=False,
         is_sort1=True, is_random=False, is_msc=True,
         random_code=0, title=title, subtitle=subtitle, label=label)
-    op2.celas1_strain[isubcase] = spring_strain
-    spring_strain.write_f06(f06_file, header=None, page_stamp=page_stamp,
-                            page_num=page_num, is_mag_phase=False, is_sort1=True)
 
+    if element_name == 'CONROD':
+        op2.conrod_strain[isubcase] = strain_obj
+    elif element_name == 'CROD':
+        op2.crod_strain[isubcase] = strain_obj
+    elif element_name == 'CROD':
+        op2.ctube_strain[isubcase] = strain_obj
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
+
+    strain_obj.write_f06(f06_file, header=None, page_stamp=page_stamp,
+                            page_num=page_num, is_mag_phase=False, is_sort1=True)
+    return neids
+
+def _recover_force_rod(f06_file, op2,
+                        model: BDF, dof_map, isubcase, xb, eids_str,
+                        element_name, fdtype='float32',
+                        title: str='', subtitle: str='', label: str='',
+                        page_num: int=1, page_stamp='PAGE %s') -> None:
+    """
+    recovers static strain
+    TODO: write the OP2/F06
+
+    """
+    neids, irod, eids, forces = get_ieids_eids(model, element_name, eids_str, ncols=2, fdtype=fdtype)
+    if not neids:
+        return neids
+    if element_name == 'CONROD':
+        for ieid, eid in zip(irod, eids):
+            elem = model.elements[eid]
+            forces[ieid, :] = _recover_forcei_rod(xb, dof_map, elem, elem)
+    else:
+        for ieid, eid in zip(irod, eids):
+            elem = model.elements[eid]
+            forces[ieid, :] = _recover_forcei_rod(xb, dof_map, elem, elem.pid_ref)
+
+    data = forces.reshape(1, *forces.shape)
+    table_name = 'OEF1'
+    force_obj = RealRodForceArray.add_static_case(
+        table_name, element_name, eids, data, isubcase,
+        is_sort1=True, is_random=False, is_msc=True,
+        random_code=0, title=title, subtitle=subtitle, label=label)
+
+    if element_name == 'CONROD':
+        op2.conrod_force[isubcase] = force_obj
+    elif element_name == 'CROD':
+        op2.crod_force[isubcase] = force_obj
+    elif element_name == 'CROD':
+        op2.ctube_force[isubcase] = force_obj
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
+
+    force_obj.write_f06(f06_file, header=None, page_stamp=page_stamp,
+                            page_num=page_num, is_mag_phase=False, is_sort1=True)
+    return neids
+
+def _recover_stress_rod(f06_file, op2,
+                        model: BDF, dof_map, isubcase, xb, eids_str,
+                        element_name, fdtype='float32',
+                        title: str='', subtitle: str='', label: str='',
+                        page_num: int=1, page_stamp='PAGE %s') -> None:
+    """
+    recovers static strain
+    TODO: write the OP2/F06
+
+    """
+    neids, irod, eids, stresses = get_ieids_eids(model, element_name, eids_str, ncols=4, fdtype=fdtype)
+    if not neids:
+        return neids
+    if element_name == 'CONROD':
+        for ieid, eid in zip(irod, eids):
+            elem = model.elements[eid]
+            stresses[ieid, :] = _recover_stressi_rod(xb, dof_map, elem, elem)
+    else:
+        for ieid, eid in zip(irod, eids):
+            elem = model.elements[eid]
+            stresses[ieid, :] = _recover_stressi_rod(xb, dof_map, elem, elem.pid_ref)
+
+    data = stresses.reshape(1, *stresses.shape)
+    table_name = 'OSTR1'
+    stress_obj = RealRodStressArray.add_static_case(
+        table_name, element_name, eids, data, isubcase, is_stress=True,
+        is_sort1=True, is_random=False, is_msc=True,
+        random_code=0, title=title, subtitle=subtitle, label=label)
+
+    if element_name == 'CONROD':
+        op2.conrod_stress[isubcase] = stress_obj
+    elif element_name == 'CROD':
+        op2.crod_stress[isubcase] = stress_obj
+    elif element_name == 'CROD':
+        op2.ctube_stress[isubcase] = stress_obj
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
+
+    stress_obj.write_f06(f06_file, header=None, page_stamp=page_stamp,
+                            page_num=page_num, is_mag_phase=False, is_sort1=True)
     return neids
 
 def _recover_straini_celas12(xg, dof_map, elem):
@@ -133,7 +268,128 @@ def _recover_straini_celas12(xg, dof_map, elem):
     strain = xg[i] - xg[j]  # TODO: check the sign
     return strain
 
-def _recover_straini_rod(xb, dof_map, elem):
+def _recover_stressi_rod(xb, dof_map, elem, prop):
+    """get the static stress"""
+    nid1, nid2 = elem.nodes
+
+    # axial
+    i11 = dof_map[(nid1, 1)]
+    i12 = dof_map[(nid1, 2)]
+    i13 = dof_map[(nid1, 3)]
+
+    i21 = dof_map[(nid2, 1)]
+    i22 = dof_map[(nid2, 2)]
+    i23 = dof_map[(nid2, 3)]
+
+    # torsion
+    i14 = dof_map[(nid1, 4)]
+    i15 = dof_map[(nid1, 5)]
+    i16 = dof_map[(nid1, 6)]
+
+    i24 = dof_map[(nid2, 4)]
+    i25 = dof_map[(nid2, 5)]
+    i26 = dof_map[(nid2, 6)]
+
+    q_axial = np.array([
+        xb[i11], xb[i12], xb[i13],
+        xb[i21], xb[i22], xb[i23]
+    ])
+    q_torsion = np.array([
+        xb[i14], xb[i15], xb[i16],
+        xb[i24], xb[i25], xb[i26]
+    ])
+    xyz1 = elem.nodes_ref[0].get_position()
+    xyz2 = elem.nodes_ref[1].get_position()
+    dxyz12 = xyz1 - xyz2
+    Lambda = lambda1d(dxyz12, debug=False)
+
+    u_axial = Lambda @ q_axial
+    u_torsion = Lambda @ q_torsion
+    du_axial = u_axial[0] - u_axial[1]
+    du_torsion = u_torsion[0] - u_torsion[1]
+    #headers = ['axial', 'SMa', 'torsion', 'SMt']
+
+    C = prop.c
+    mat = prop.mid_ref
+
+    L = np.linalg.norm(dxyz12)
+    G = mat.G()
+    #J = elem.J()
+    #A = elem.Area()
+    E = elem.E()
+
+    axial_strain = du_axial / L
+    torsional_strain = du_torsion * C / L
+
+    axial_stress = E * axial_strain
+    torsional_stress = G * torsional_strain
+
+    #axial_force = axial_stress * A
+    #torsional_moment = du_torsion * G * J / L
+
+    return axial_stress, 0., torsional_stress, 0.
+
+def _recover_forcei_rod(xb, dof_map, elem, prop):  # pragma: no cover
+    """get the static force"""
+    nid1, nid2 = elem.nodes
+
+    # axial
+    i11 = dof_map[(nid1, 1)]
+    i12 = dof_map[(nid1, 2)]
+    i13 = dof_map[(nid1, 3)]
+
+    i21 = dof_map[(nid2, 1)]
+    i22 = dof_map[(nid2, 2)]
+    i23 = dof_map[(nid2, 3)]
+
+    # torsion
+    i14 = dof_map[(nid1, 4)]
+    i15 = dof_map[(nid1, 5)]
+    i16 = dof_map[(nid1, 6)]
+
+    i24 = dof_map[(nid2, 4)]
+    i25 = dof_map[(nid2, 5)]
+    i26 = dof_map[(nid2, 6)]
+
+    q_axial = np.array([
+        xb[i11], xb[i12], xb[i13],
+        xb[i21], xb[i22], xb[i23]
+    ])
+    q_torsion = np.array([
+        xb[i14], xb[i15], xb[i16],
+        xb[i24], xb[i25], xb[i26]
+    ])
+    xyz1 = elem.nodes_ref[0].get_position()
+    xyz2 = elem.nodes_ref[1].get_position()
+    dxyz12 = xyz1 - xyz2
+    Lambda = lambda1d(dxyz12, debug=False)
+
+    u_axial = Lambda @ q_axial
+    u_torsion = Lambda @ q_torsion
+    du_axial = u_axial[0] - u_axial[1]
+    du_torsion = u_torsion[0] - u_torsion[1]
+    #headers = ['axial', 'SMa', 'torsion', 'SMt']
+
+    #C = prop.c
+    mat = prop.mid_ref
+
+    L = np.linalg.norm(dxyz12)
+    G = mat.G()
+    J = elem.J()
+    A = elem.Area()
+    E = elem.E()
+
+    axial_strain = du_axial / L
+    #torsional_strain = du_torsion * C / L
+
+    axial_stress = E * axial_strain
+    #torsional_stress = G * torsional_strain
+    axial_force = axial_stress * A
+    torsional_moment = du_torsion * G * J / L
+
+    return axial_force, torsional_moment
+
+def _recover_straini_rod(xb, dof_map, elem, prop):
     """get the static strain"""
     nid1, nid2 = elem.nodes
 
@@ -182,5 +438,14 @@ def _recover_straini_rod(xb, dof_map, elem):
     du_torsion = u_torsion[0] - u_torsion[1]
     #headers = ['axial', 'SMa', 'torsion', 'SMt']
 
-    return du_axial, 0., du_torsion, 0.
+    C = prop.c
 
+    xyz1 = elem.nodes_ref[0].get_position()
+    xyz2 = elem.nodes_ref[1].get_position()
+    dxyz12 = xyz1 - xyz2
+    L = np.linalg.norm(dxyz12)
+
+    axial_strain = du_axial / L
+    torsional_strain = du_torsion * C / L
+
+    return axial_strain, 0., torsional_strain, 0.

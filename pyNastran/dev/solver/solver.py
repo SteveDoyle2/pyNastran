@@ -5,16 +5,19 @@ from itertools import count
 from typing import List, Dict, Tuple, Union, Any
 
 import numpy as np
+import scipy as sp
 import scipy.sparse as sci_sparse
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, Subcase
+from pyNastran.f06.f06_writer import make_end
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_interface.hdf5_interface import (
-    RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray)
+    RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray, RealEigenvalues)
 from pyNastran.bdf.mesh_utils.loads import _get_dof_map, get_ndof
 
-from pyNastran.dev.solver.recover_static_strains import recover_strain_101
+from pyNastran.dev.solver.recover_static_strains import (
+    recover_strain_101, recover_stress_101, recover_force_101)
 from pyNastran.dev.solver.build_stiffness import build_Kbb
 
 class Solver:
@@ -38,6 +41,7 @@ class Solver:
         self.f06_filename = 'junk.f06'
 
     def run(self):
+        page_num = 1
         model = self.model
         sol = model.sol
         solmap = {
@@ -48,8 +52,14 @@ class Solver:
         self._update_card_count()
 
         title = ''
+        title = f'pyNastran {pyNastran.__version__}'
+        for subcase in model.subcases.values():
+            if 'TITLE' in subcase:
+                title = subcase.get_parameter('TITLE')
+                break
+
         today = None
-        page_stamp = self.op2.make_stamp(title, today)
+        page_stamp = self.op2.make_stamp(title, today) # + '\n'
         with open(self.f06_filename, 'w') as f06_file:
             f06_file.write(self.op2.make_f06_header())
             self.op2._write_summary(f06_file, card_count=model.card_count)
@@ -59,11 +69,24 @@ class Solver:
                     if subcase_id == 0:
                         continue
                     self.log.debug(f'subcase_id={subcase_id}')
+                    #isubcase = subcase.id
+                    subtitle = f'SUBCASE {subcase_id}'
+                    label = ''
+                    if 'SUBTITLE' in subcase:
+                        subtitle = subcase.get_parameter('SUBTITLE')
+                    if 'LABEL' in subcase:
+                        label = subcase.get_parameter('LABEL')
+
                     runner = solmap[sol]
-                    runner(subcase, f06_file, page_stamp,
-                           idtype='int32', fdtype='float64')
+                    end_options = runner(
+                        subcase, f06_file, page_stamp,
+                        title=title, subtitle=subtitle, label=label,
+                        page_num=page_num,
+                        idtype='int32', fdtype='float64')
             else:
                 raise NotImplementedError(sol)
+            end_flag = True
+            f06_file.write(make_end(end_flag, end_options))
 
     def _update_card_count(self):
         for card_type, values in self.model._type_to_id_map.items():
@@ -157,52 +180,6 @@ class Solver:
         #print(subcase)
         return Fb
 
-    def xg_to_xb(self, xg: np.ndarray, ngrid: int, ndof_per_grid: int, inplace=True):
-        assert isinstance(xg, np.ndarray)
-        model = self.model
-
-        xb = xg
-        if not inplace:
-            xb = copy.deepcopy(xb)
-
-        nids = model._type_to_id_map['GRID']
-        for i, nid in enumerate(nids):
-            node = model.nodes[nid]
-            if node.cd:
-                model.log.debug(f'node {nid} has a CD={node.cd}')
-                cd_ref = node.cd_ref
-                T = cd_ref.beta_n(n=2)
-                i1 = i * ndof_per_grid
-                i2 = (i+1) * ndof_per_grid
-                xi = xg[i1:i2]
-                xb[i1:i2] = xi @ T  # TODO: verify the transform; I think it's right
-        return xb
-
-    def Kbb_to_Kgg(self, Kbb: np.ndarray, ngrid: int, ndof_per_grid: int, inplace=True) -> np.ndarray:
-        """does an in-place transformation"""
-        assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix)), type(Kbb)
-        if not isinstance(Kbb, np.ndarray):
-            Kbb = Kbb.tolil()
-        model = self.model
-        assert ngrid > 0, model.card_count
-        nids = model._type_to_id_map['GRID']
-
-        Kgg = Kbb
-        if not inplace:
-            Kgg = copy.deepcopy(Kgg)
-
-        for i, nid in enumerate(nids):
-            node = model.nodes[nid]
-            if node.cd:
-                model.log.debug(f'node {nid} has a CD={node.cd}')
-                cd_ref = node.cd_ref
-                T = cd_ref.beta_n(n=2)
-                i1 = i * ndof_per_grid
-                i2 = (i+1) * ndof_per_grid
-                Ki = Kbb[i1:i2, i1:i2]
-                Kgg[i1:i2, i1:i2] = T.T @ Ki @ T
-        return Kgg
-
     def get_mpc_constraints(self, subcase: Subcase, dof_map):
         model = self.model
         #Fb = np.zeros(ndof, dtype='float32')
@@ -293,7 +270,9 @@ class Solver:
         return constraints
 
     def run_sol_101(self, subcase: Subcase, f06_file,
-                    page_stamp, idtype='int32', fdtype='float64'):
+                    page_stamp: str, title: str='', subtitle: str='', label: str='',
+                    page_num: int=1,
+                    idtype='int32', fdtype='float64'):
         """
         Runs a SOL 101
 
@@ -360,19 +339,17 @@ class Solver:
         b = l - c ???
         c = l - b ???
         """
+        end_options = [
+            'SEMG', # STIFFNESS AND MASS MATRIX GENERATION STEP
+            'SEMR', # MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES)
+            'SEKR', # STIFFNESS MATRIX REDUCTION STEP
+            'SELG', # LOAD MATRIX GENERATION STEP
+            'SELR', # LOAD MATRIX REDUCTION STEP
+        ]
         #basic
         itime = 0
         ntimes = 1  # static
         isubcase = subcase.id
-        title = f'pyNastran {pyNastran.__version__}'
-        subtitle = f'SUBCASE {isubcase}'
-        label = ''
-        if 'TITLE' in subcase:
-            title = subcase.get_parameter('TITLE')
-        if 'SUBTITLE' in subcase:
-            subtitle = subcase.get_parameter('SUBTITLE')
-        if 'LABEL' in subcase:
-            label = subcase.get_parameter('LABEL')
         #-----------------------------------------------------------------------
         model = self.model
         log = model.log
@@ -383,8 +360,8 @@ class Solver:
         Kbb, Kbbs = build_Kbb(model, subcase, dof_map, ndof)
         self.get_mpc_constraints(subcase, dof_map)
 
-        Kgg = self.Kbb_to_Kgg(Kbb, ngrid, ndof_per_grid, inplace=False)
-        Kggs = self.Kbb_to_Kgg(Kbbs, ngrid, ndof_per_grid)
+        Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid, inplace=False)
+        Kggs = Kbb_to_Kgg(model, Kbbs, ngrid, ndof_per_grid)
         del Kbb, Kbbs
 
         gset = np.arange(ndof, dtype=idtype)
@@ -429,7 +406,7 @@ class Solver:
         Fg = Fb
         Fa, Fs = partition_vector(Fb, [['a', aset], ['s', sset]])
         del Fb
-        # Mgg = self.build_Mgg(subcase)
+        #Mgg = build_Mgg(model, subcase)
 
         # aset - analysis set
         # sset - SPC set
@@ -450,6 +427,13 @@ class Solver:
         Kaas = Ks['aa']
 
         self.Kaa = Kaa
+
+        #M = partition_matrix(Mgg, [['a', aset], ['s', sset]])
+        #Maa = M['aa']
+        #Kss = K['ss']
+        #Kas = K['as']
+        #Ksa = K['sa']
+        #self.Maa = Maa
         #[Kaa]{xa} + [Kas]{xs} = {Fa}
         #[Ksa]{xa} + [Kss]{xs} = {Fs}
 
@@ -461,6 +445,8 @@ class Solver:
         #print(Kss)
         Kaas_, ipositive, inegative, sz_set = remove_rows(Kaas, aset, idtype=idtype)
         Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset, idtype=idtype)
+        #Maa_ = Maa[ipositive, ipositive]
+
         Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
         #print(f'Fa = {Fa}')
@@ -496,11 +482,10 @@ class Solver:
         Fg[sset] = fspci
         fspc[sset] = fspci
 
-        xb = self.xg_to_xb(xg, ngrid, ndof_per_grid)
-        Fb = self.xg_to_xb(Fg, ngrid, ndof_per_grid)
+        xb = xg_to_xb(model, xg, ngrid, ndof_per_grid)
+        Fb = xg_to_xb(model, Fg, ngrid, ndof_per_grid)
 
         log.debug(f'Fs = {Fs}')
-        page_num = 1
 
         self._save_displacment(
             f06_file,
@@ -527,17 +512,24 @@ class Solver:
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
 
         op2 = self.op2
+        page_stamp += '\n'
         if 'STRAIN' in subcase:
             recover_strain_101(f06_file, op2, self.model, dof_map, isubcase, xb,
                                title=title, subtitle=subtitle, label=label,
                                page_stamp=page_stamp)
-        #if 'STRESS' in subcase:
-            #recover_stress_101(self.model, xb, dof_map)
+        if 'STRESS' in subcase:
+            recover_stress_101(f06_file, op2, self.model, dof_map, isubcase, xb,
+                               title=title, subtitle=subtitle, label=label,
+                               page_stamp=page_stamp)
+        if 'FORCE' in subcase:
+            recover_force_101(f06_file, op2, self.model, dof_map, isubcase, xb,
+                              title=title, subtitle=subtitle, label=label,
+                              page_stamp=page_stamp)
         #Fg[sz_set] = -1
         #xg[sz_set] = -1
         log.debug(f'xa = {xa}')
         op2.write_op2('junk.op2', post=-1, endian=b'<', skips=None, nastran_format='nx')
-        return xa_
+        return end_options
 
     def _save_displacment(self, f06_file,
                           subcase: Subcase, itime: int, ntimes: int,
@@ -634,35 +626,42 @@ class Solver:
         return page_num
 
     def run_sol_103(self, subcase: Subcase, f06_file,
-                    page_stamp,
+                    page_stamp: str, title: str='', subtitle: str='', label: str='',
+                    page_num: int=1,
                     idtype='int32', fdtype='float64'):
         """
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
         [M]{xdd} + [K]{x} = {F}
-        [M]{xdd}λ^2 + [K]{x} = {0}
-        {X}(λ^2 + [M]^-1[K]) = {0}
-        λ^2 + [M]^-1[K] = {0}
-        λ^2 = -[M]^-1[K]
+        -[M]{xdd}λ^2 + [K]{x} = {0}
+        {X}(λ^2 - [M]^-1[K]) = {0}
+        λ^2 - [M]^-1[K] = {0}
+        λ^2 = [M]^-1[K]
         [A][X] = [X]λ^2
         """
-        log = self.model.log
+        end_options = [
+            'SEMR',  # MASS MATRIX REDUCTION STEP (INCLUDES EIGENVALUE SOLUTION FOR MODES)
+            'SEKR',  # STIFFNESS MATRIX REDUCTION STEP
+        ]
+        model = self.model
+        op2 = self.op2
+        log = model.log
+        #write_f06 = True
 
-        dof_map = _get_dof_map(self.model)
+        dof_map = _get_dof_map(model)
+        node_gridtype = _get_node_gridtype(model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
-        Kbb, Kbbs = build_Kbb(self.model, subcase, dof_map, ndof)
+        Kbb, Kbbs = build_Kbb(model, subcase, dof_map, ndof)
 
-        Mbb = np.eye(Kbb.shape[0], dtype=fdtype)
+        Mbb = build_Mgg(model, subcase, ndof, fdtype=fdtype)
 
-        Kgg = self.Kbb_to_Kgg(Kbb, ngrid, ndof_per_grid)
-        Mgg = self.Kbb_to_Kgg(Mbb, ngrid, ndof_per_grid)
-        Kggs = self.Kbb_to_Kgg(Kbbs, ngrid, ndof_per_grid)
-        del Kbb, Mgg
+        Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid)
+        Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
+        Kggs = Kbb_to_Kgg(model, Kbbs, ngrid, ndof_per_grid)
+        del Kbb, Mbb
 
         gset = np.arange(ndof, dtype=idtype)
-        sset, xg = self.build_xg(dof_map, ndof, subcase)
+        sset, sset_b, xg = self.build_xg(dof_map, ndof, subcase)
         aset = np.setdiff1d(gset, sset) # a = g-s
-
-        # Mgg = self.build_Mgg(subcase)
 
         # aset - analysis set
         # sset - SPC set
@@ -671,6 +670,9 @@ class Solver:
         #print(f'xa = {xa}')
         #print(f'xs = {xs}')
         #print(Kgg)
+        M = partition_matrix(Mgg, [['a', aset], ['s', sset]])
+        Maa = M['aa']
+
         K = partition_matrix(Kgg, [['a', aset], ['s', sset]])
         Kaa = K['aa']
         #Kss = K['ss']
@@ -689,8 +691,10 @@ class Solver:
         #print(Kaa)
         #print(Kas)
         #print(Kss)
+        #Maa_, ipositive, inegative, unused_sz_set = remove_rows(Maa, aset)
         Kaa_, ipositive, inegative, unused_sz_set = remove_rows(Kaa, aset)
         Kaas_, ipositive, inegative, unused_sz_set = remove_rows(Kaas, aset)
+        Maa_ = Maa[ipositive, :][:, ipositive]
         #Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
         #print(f'Fa = {Fa}')
@@ -704,13 +708,42 @@ class Solver:
 
         #print(f'Kaa_:\n{Kaa_}')
         #print(f'Fa_: {Fa_}')
-        xa_ = np.linalg.eigh(Kaa_)
-        #print(f'xa_ = {xa_}')
+        #na = Kaa_.shape[0]
+        eigenvalues, xa_ = sp.linalg.eigh(Kaa_, Maa_)
+        nmodes = len(eigenvalues)
+        print(f'eigenvalues = {eigenvalues}')
+        #print(f'xa_ = {xa_} {xa_.shape}')
+        #xa2 = xa_.reshape(nmodes, na, na)
 
-        xa[ipositive] = xa_
+        xg_out = np.full((nmodes, ndof), np.nan, dtype=fdtype)
+        xa_out = np.full((nmodes, len(xa)), np.nan, dtype=fdtype)
+        #xa[ipositive] = xa_
+        xa_out[:, ipositive] = xa_
         xg = np.arange(ndof, dtype=fdtype)
-        xg[aset] = xa
-        xg[sset] = xs
+        #xg[aset] = xa
+        #xg[sset] = xs
+        xg_out[:, aset] = xa
+        xg_out[:, sset] = xs
+
+        isubcase = subcase.id
+        mode_cycles = eigenvalues
+        unused_eigenvalues = RealEigenvalues(title, 'LAMA', nmodes=0)
+        #op2.eigenvalues[title] = eigenvalues
+
+        data = xg_out
+        table_name = 'OUGV1'
+        modes = np.arange(1, nmodes + 1, dtype=idtype)
+        unused_eigenvectors = RealDisplacementArray.add_modal_case(
+            table_name, node_gridtype, data, isubcase, modes, eigenvalues, mode_cycles,
+            is_sort1=True, is_random=False, is_msc=True, random_code=0,
+            title=title, subtitle=subtitle, label=label)
+        #op2.eigenvectors[isubcase] = eigenvectors
+        #if write_f06:
+            #page_num = eigenvectors.write_f06(
+                #f06_file, header=None,
+                #page_stamp=page_stamp, page_num=page_num,
+                #is_mag_phase=False, is_sort1=True)
+            #f06_file.write('\n')
         #fspc = Ksa @ xa + Kss @ xs
         #Fs[ipositive] = Fsi
 
@@ -723,7 +756,8 @@ class Solver:
 
         f06_file
         page_stamp
-        return xa_
+        op2.write_op2('junk.op2', post=-1, endian=b'<', skips=None, nastran_format='nx')
+        return end_options
         #raise NotImplementedError(subcase)
 
     def run_sol_111(self, subcase: Subcase, f06_file, idtype='int32', fdtype='float64'):
@@ -1206,3 +1240,53 @@ def apply_dof_map_to_set(set_map, dof_map, idtype='int32', use_ints=True):
             i = dof_map[dofi]
             aset[i] = True
     return aset
+
+def xg_to_xb(model, xg: np.ndarray, ngrid: int, ndof_per_grid: int, inplace=True):
+    assert isinstance(xg, np.ndarray)
+
+    xb = xg
+    if not inplace:
+        xb = copy.deepcopy(xb)
+
+    nids = model._type_to_id_map['GRID']
+    for i, nid in enumerate(nids):
+        node = model.nodes[nid]
+        if node.cd:
+            model.log.debug(f'node {nid} has a CD={node.cd}')
+            cd_ref = node.cd_ref
+            T = cd_ref.beta_n(n=2)
+            i1 = i * ndof_per_grid
+            i2 = (i+1) * ndof_per_grid
+            xi = xg[i1:i2]
+            xb[i1:i2] = xi @ T  # TODO: verify the transform; I think it's right
+    return xb
+
+
+def Kbb_to_Kgg(model: BDF, Kbb: np.ndarray, ngrid: int, ndof_per_grid: int, inplace=True) -> np.ndarray:
+    """does an in-place transformation"""
+    assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix)), type(Kbb)
+    if not isinstance(Kbb, np.ndarray):
+        Kbb = Kbb.tolil()
+    assert ngrid > 0, model.card_count
+    nids = model._type_to_id_map['GRID']
+
+    Kgg = Kbb
+    if not inplace:
+        Kgg = copy.deepcopy(Kgg)
+
+    for i, nid in enumerate(nids):
+        node = model.nodes[nid]
+        if node.cd:
+            model.log.debug(f'node {nid} has a CD={node.cd}')
+            cd_ref = node.cd_ref
+            T = cd_ref.beta_n(n=2)
+            i1 = i * ndof_per_grid
+            i2 = (i+1) * ndof_per_grid
+            Ki = Kbb[i1:i2, i1:i2]
+            Kgg[i1:i2, i1:i2] = T.T @ Ki @ T
+    return Kgg
+
+def build_Mgg(model: BDF, subcase: Subcase, ndof: int, fdtype='float64'):
+    Mbb = np.eye(ndof, dtype=fdtype)
+    print(Mbb.shape)
+    return Mbb

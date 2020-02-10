@@ -14,7 +14,7 @@ class RealEigenvalues(BaseScalarObject):
     cycle = sqrt(abs(eigenvalue)) / (2. * pi)
     radians = sqrt(abs(eigenvalue))
     """
-    def __init__(self, title, table_name, nmodes=0):
+    def __init__(self, title, table_name: str, nmodes=0):
         #self.modeNumber = []
         BaseScalarObject.__init__(self)
         self.title = title
@@ -229,11 +229,11 @@ class RealEigenvalues(BaseScalarObject):
             #'???', 'Title', 'subtitle', 'label']
         #random_code = self.random_code
         format_code = self.format_code
-        s_code = 0 # self.s_code
+        #s_code = 0 # self.s_code
         #num_wide = self.num_wide
         num_wide = 7
-        acoustic_flag = 0
-        thermal = 0
+        #acoustic_flag = 0
+        #thermal = 0
         title = b'%-128s' % self.title.encode('ascii')
         subtitle = b' '*128
         label = b' '*128
@@ -243,14 +243,14 @@ class RealEigenvalues(BaseScalarObject):
         #subtitle = b'%-128s' % self.subtitle.encode('ascii')
         #label = b'%-128s' % self.label.encode('ascii')
         ftable3 = b'50i 128s 128s 128s'
-        oCode = 0
-        load_set = 0
+        #oCode = 0
+        #load_set = 0
         #print(self.code_information())
 
         #print(title, len(title))
         ftable3 = b'i' * 50 + b'128s 128s 128s'
-        field6 = 0
-        field7 = 0
+        #field6 = 0
+        #field7 = 0
 
         #self.seven = self.add_data_parameter(data, 'seven', b'i', 10, False)  # seven
         #self.residual_flag = self.add_data_parameter(data, 'residual_flag', b'i', 11, False)
@@ -312,7 +312,7 @@ class RealEigenvalues(BaseScalarObject):
         return msg
 
 
-def _write_table_header(table_name, op2_file, fascii, date):
+def _write_table_header(table_name: str, op2_file, fascii, date):
     table_name = '%-8s' % table_name # 'BOUGV1  '
     fascii.write('%s._write_table_header\n' % table_name)
     #get_nmarkers- [4, 0, 4]
@@ -587,11 +587,11 @@ class ComplexEigenvalues(BaseScalarObject):
             #'???', 'Title', 'subtitle', 'label']
         #random_code = self.random_code
         format_code = self.format_code
-        s_code = 0 # self.s_code
+        #s_code = 0 # self.s_code
         #num_wide = self.num_wide
         num_wide = 7
-        acoustic_flag = 0
-        thermal = 0
+        #acoustic_flag = 0
+        #thermal = 0
         title = b'%-128s' % self.title.encode('ascii')
         subtitle = b' '*128
         label = b' '*128
@@ -601,14 +601,14 @@ class ComplexEigenvalues(BaseScalarObject):
         #subtitle = b'%-128s' % self.subtitle.encode('ascii')
         #label = b'%-128s' % self.label.encode('ascii')
         ftable3 = b'50i 128s 128s 128s'
-        oCode = 0
-        load_set = 0
+        #oCode = 0
+        #load_set = 0
         #print(self.code_information())
 
         #print(title, len(title))
         ftable3 = b'i' * 50 + b'128s 128s 128s'
-        field6 = 0
-        field7 = 0
+        #field6 = 0
+        #field7 = 0
 
         #self.seven = self.add_data_parameter(data, 'seven', b'i', 10, False)  # seven
         #self.residual_flag = self.add_data_parameter(data, 'residual_flag', b'i', 11, False)

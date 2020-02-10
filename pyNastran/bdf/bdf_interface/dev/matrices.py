@@ -14,8 +14,6 @@ def _lambda_1d(v1):
       3d  [l,m,n,0,0,0]  2x6
           [0,0,0,l,m,n]
     """
-    #R = self.Rmatrix(model,is3D)
-
     #xyz1 = model.Node(n1).get_position()
     #xyz2 = model.Node(n2).get_position()
     #v1 = xyz2 - xyz1
