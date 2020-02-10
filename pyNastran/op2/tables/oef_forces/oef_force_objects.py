@@ -446,6 +446,53 @@ class RealSpringDamperForceArray(RealForceObject):
         #if not is_sort1:
             #raise NotImplementedError('SORT2')
 
+    @classmethod
+    def add_static_case(cls, table_name, element_name, element, data, isubcase,
+                        is_sort1=True, is_random=False, is_msc=True,
+                        random_code=0, title='', subtitle='', label=''):
+
+        analysis_code = 1 # static
+        data_code = oef_data_code(table_name, analysis_code,
+                                  is_sort1=is_sort1, is_random=is_random,
+                                  random_code=random_code,
+                                  title=title, subtitle=subtitle, label=label,
+                                  is_msc=is_msc)
+        data_code['loadIDs'] = [0] # TODO: ???
+        data_code['data_names'] = []
+
+        # I'm only sure about the 1s in the strains and the
+        # corresponding 0s in the stresses.
+        #if is_stress:
+            #data_code['stress_bits'] = [0, 0, 0, 0]
+            #data_code['s_code'] = 0
+        #else:
+            #data_code['stress_bits'] = [0, 1, 0, 1]
+            #data_code['s_code'] = 1 # strain?
+        element_name_to_element_type = {
+            'CELAS1' : 11,
+            'CELAS2' : 12,
+            'CELAS3' : 13,
+            'CELAS4' : 14,
+        }
+
+        element_type = element_name_to_element_type[element_name]
+        data_code['element_name'] = element_name
+        data_code['element_type'] = element_type
+        #data_code['load_set'] = 1
+
+        ntimes = data.shape[0]
+        nnodes = data.shape[1]
+        dt = None
+        obj = cls(data_code, is_sort1, isubcase, dt)
+        obj.element = element
+        obj.data = data
+
+        obj.ntimes = ntimes
+        obj.ntotal = nnodes
+        obj._times = [None]
+        obj.is_built = True
+        return obj
+
     def build(self):
         """sizes the vectorized attributes of the RealSpringDamperForceArray"""
         #print('ntimes=%s nelements=%s ntotal=%s' % (self.ntimes, self.nelements, self.ntotal))

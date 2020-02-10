@@ -30,6 +30,10 @@ class TestSolverSpring(unittest.TestCase):
         setup_case_control(model)
 
         solver = Solver(model)
+        model.sol = 103
+        solver.run()
+
+        model.sol = 101
         solver.run()
 
         # F = k * d
@@ -37,9 +41,6 @@ class TestSolverSpring(unittest.TestCase):
         # 20=1000.*d
         d = mag / k
         assert np.allclose(solver.xa_[0], d)
-
-        model.sol = 103
-        solver.run()
 
     def test_celas2_cd(self):
         """Tests a CELAS2"""
@@ -78,6 +79,68 @@ class TestSolverSpring(unittest.TestCase):
 
 class TestSolverRod(unittest.TestCase):
     """tests the rods"""
+    def test_crod_axial(self):
+        """Tests a CROD/PROD"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        nids = [1, 2]
+        eid = 1
+        pid = 2
+        mid = 3
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+        model.add_crod(eid, pid, nids)
+        model.add_prod(pid, mid, A=1.0, j=0., c=0., nsm=0.)
+
+        load_id = 2
+        spc_id = 3
+        nid = 2
+        mag = 1.
+        fxyz = [1., 0., 0.]
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_crod_torsion(self):
+        """Tests a CROD/PROD"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        nids = [1, 2]
+        eid = 1
+        pid = 2
+        mid = 3
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+        model.add_crod(eid, pid, nids)
+        model.add_prod(pid, mid, A=0.0, j=2., c=0., nsm=0.)
+
+        load_id = 2
+        spc_id = 3
+        nid = 2
+        mag = 1.
+        fxyz = [1., 0., 0.]
+        model.add_moment(load_id, nid, mag, fxyz, cid=0)
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
     def test_crod(self):
         """Tests a CROD/PROD"""
         model = BDF(debug=True, log=None, mode='msc')

@@ -5,11 +5,12 @@ from typing import Tuple, Any, TYPE_CHECKING
 import numpy as np
 import scipy.sparse as sci_sparse
 
+from .utils import lambda1d
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF, Subcase
+    from pyNastran.bdf.bdf import BDF
 
 
-def build_Kbb(model: BDF, subcase: Subcase, dof_map, ndof, dtype='float32') -> Tuple[np.array, Any]:
+def build_Kbb(model: BDF, dof_map, ndof, dtype='float32') -> Tuple[np.array, Any]:
     """[K] = d{P}/dx"""
     Kbb = np.zeros((ndof, ndof), dtype=dtype)
     Kbbs = sci_sparse.dok_matrix((ndof, ndof), dtype=dtype)
@@ -153,33 +154,28 @@ def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat, fdtype='float64'):
 
     i1 = 0
     i2 = 3 # dof_map[(n1, 2)]
-    if k_axial == 0.0 and k_torsion == 0.0:
-        dofs = []
-        n_ijv = []
-        K2 = []
-    elif k_torsion == 0.0: # axial; 2D or 3D
+    if k_torsion == 0.0: # axial; 2D or 3D
         K2 = K * k_axial
-        #dofs = np.array([
-            #i1, i1+1, i1+2,
-            #i2, i2+1, i2+2,
-        #], 'int32')
-        #n_ijv = [
-            ## axial
-            #(nid1, 1), (nid1, 2), (nid1, 3),
-            #(nid2, 1), (nid2, 2), (nid2, 3),
-        #]
+        n_ijv = [
+            # axial
+            dof_map[(nid1, 1)], dof_map[(nid1, 2)], dof_map[(nid1, 3)],
+            dof_map[(nid2, 1)], dof_map[(nid2, 2)], dof_map[(nid2, 3)],
+        ]
+        dofs = np.array([
+            i1, i1+1, i1+2,
+            i2, i2+1, i2+2,
+        ], dtype='int32')
     elif k_axial == 0.0: # torsion; assume 3D
         K2 = K * k_torsion
-        #dofs = np.array([
-            #i1+3, i1+4, i1+5,
-            #i2+3, i2+4, i2+5,
-        #], 'int32')
-        #n_ijv = [
-            ## torsion
-            #(nid1, 4), (nid1, 5), (nid1, 6),
-            #(nid2, 4), (nid2, 5), (nid2, 6),
-        #]
-
+        n_ijv = [
+            # torsion
+            dof_map[(nid1, 4)], dof_map[(nid1, 5)], dof_map[(nid1, 6)],
+            dof_map[(nid2, 4)], dof_map[(nid2, 5)], dof_map[(nid2, 6)],
+        ]
+        dofs = np.array([
+            i1, i1+1, i1+2,
+            i2, i2+1, i2+2,
+        ], dtype='int32')
     else:  # axial + torsion; assume 3D
         # u1fx, u1fy, u1fz, u2fx, u2fy, u2fz
         K2[:nki, :nki] = K * k_axial
@@ -193,53 +189,23 @@ def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat, fdtype='float64'):
 
             i1+3, i1+4, i1+5,
             i2+3, i2+4, i2+5,
-        ], 'int32')
+        ], dtype='int32')
         n_ijv = [
             # axial
-            (nid1, 1), (nid1, 2), (nid1, 3),
-            (nid2, 1), (nid2, 2), (nid2, 3),
+            dof_map[(nid1, 1)], dof_map[(nid1, 2)], dof_map[(nid1, 3)],
+            dof_map[(nid2, 1)], dof_map[(nid2, 2)], dof_map[(nid2, 3)],
 
             # torsion
-            (nid1, 4), (nid1, 5), (nid1, 6),
-            (nid2, 4), (nid2, 5), (nid2, 6),
+            dof_map[(nid1, 4)], dof_map[(nid1, 5)], dof_map[(nid1, 6)],
+            dof_map[(nid2, 4)], dof_map[(nid2, 5)], dof_map[(nid2, 6)],
         ]
-    for dof1, nij1 in zip(dofs, n_ijv):
-        i1 = dof_map[nij1]
-        for dof2, nij2 in zip(dofs, n_ijv):
-            i2 = dof_map[nij2]
-            #ki = K2[i1, i2]  #old
-            ki = K2[dof1, dof2]  # new
+    for dof1, i1 in zip(dofs, n_ijv):
+        for dof2, i2 in zip(dofs, n_ijv):
+            ki = K2[dof1, dof2]
             if abs(ki) > 0.:
                 #print(nij1, nij2, f'({i1}, {i2});', (dof1, dof2), ki)
-                #Kbb[dof1, dof2] = ki #  old
-                Kbb[i1, i2] = ki # new
+                Kbb[i1, i2] = ki
                 Kbbs[i1, i2] = ki
         #print(K2)
     #print(Kbb)
     return
-
-def lambda1d(dxyz, debug=True):
-    """
-    ::
-      3d  [l,m,n,0,0,0]  2x6
-          [0,0,0,l,m,n]
-    """
-    #xyz1 = model.Node(n1).get_position()
-    #xyz2 = model.Node(n2).get_position()
-    #v1 = xyz2 - xyz1
-    if debug:
-        print("v1=%s" % dxyz)
-    n = np.linalg.norm(dxyz)
-    if n == 0:
-        raise ZeroDivisionError(dxyz)
-
-    (l, m, n) = dxyz / n
-    Lambda = np.zeros((2, 6), dtype='float64')
-    Lambda[0, 0] = Lambda[1, 3] = l
-    Lambda[0, 1] = Lambda[1, 4] = m
-    Lambda[0, 2] = Lambda[1, 5] = n
-
-    #debug = True
-    if debug:
-        print("Lambda = \n" + str(Lambda))
-    return Lambda

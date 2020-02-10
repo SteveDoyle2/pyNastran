@@ -10,14 +10,19 @@ import scipy.sparse as sci_sparse
 
 import pyNastran
 from pyNastran.bdf.bdf import BDF, Subcase
+
 from pyNastran.f06.f06_writer import make_end
+from pyNastran.f06.tables.oload_resultant import Resultant
+
 from pyNastran.op2.op2 import OP2
 from pyNastran.op2.op2_interface.hdf5_interface import (
     RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray, RealEigenvalues)
 from pyNastran.bdf.mesh_utils.loads import _get_dof_map, get_ndof
 
-from pyNastran.dev.solver.recover_static_strains import (
-    recover_strain_101, recover_stress_101, recover_force_101)
+from pyNastran.dev.solver.static_force import recover_force_101
+from pyNastran.dev.solver.static_stress import recover_stress_101
+from pyNastran.dev.solver.static_strain import recover_strain_101
+
 from pyNastran.dev.solver.build_stiffness import build_Kbb
 
 class Solver:
@@ -43,6 +48,7 @@ class Solver:
     def run(self):
         page_num = 1
         model = self.model
+        model.write_bdf('junk.bdf')
         sol = model.sol
         solmap = {
             101 : self.run_sol_101,  # static
@@ -357,7 +363,7 @@ class Solver:
         dof_map = _get_dof_map(model)
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
-        Kbb, Kbbs = build_Kbb(model, subcase, dof_map, ndof)
+        Kbb, Kbbs = build_Kbb(model, dof_map, ndof)
         self.get_mpc_constraints(subcase, dof_map)
 
         Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid, inplace=False)
@@ -375,7 +381,7 @@ class Solver:
         # free structural DOFs
         #fset = ~sset; # & ~mset
         fset_b = gset_b & sset_b # g-b
-        self.log.debug(f'gset_b = {gset_b}')
+        #self.log.debug(f'gset_b = {gset_b}')
         self.log.debug(f'sset_b = {sset_b}')
         self.log.debug(f'fset_b = {fset_b}')
         aset, tset = get_residual_structure(model, dof_map, fset_b)
@@ -403,6 +409,9 @@ class Solver:
         self.aset = aset
 
         Fb = self.build_Fb(dof_map, ndof, subcase)
+        page_num = write_oload(Fb, dof_map, isubcase, ngrid, ndof_per_grid,
+                               f06_file, page_stamp, page_num)
+
         Fg = Fb
         Fa, Fs = partition_vector(Fb, [['a', aset], ['s', sset]])
         del Fb
@@ -417,6 +426,7 @@ class Solver:
         #print(f'xa = {xa}')
         #print(f'xs = {xs}')
         #print(Kgg)
+        assert Kggs.shape == Kgg.shape
         self.Kgg = Kgg
         K = partition_matrix(Kgg, [['a', aset], ['s', sset]])
         Kaa = K['aa']
@@ -425,6 +435,7 @@ class Solver:
         Ksa = K['sa']
         Ks = partition_matrix(Kggs, [['a', aset], ['s', sset]])
         Kaas = Ks['aa']
+        assert Kaa.shape == Kaas.shape
 
         self.Kaa = Kaa
 
@@ -445,7 +456,8 @@ class Solver:
         #print(Kss)
         Kaas_, ipositive, inegative, sz_set = remove_rows(Kaas, aset, idtype=idtype)
         Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset, idtype=idtype)
-        #Maa_ = Maa[ipositive, ipositive]
+        assert Kaas_.shape == Kaa_.shape
+        #Maa_ = Maa[ipositive, :][:, ipositive]
 
         Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
@@ -458,15 +470,18 @@ class Solver:
         #print(f'Kaa:\n{Kaa}')
         #print(f'Fa: {Fa}')
 
+        log.debug(f'Kaas_:\n{Kaas_.todense()}')
         log.debug(f'Kaa_:\n{Kaa_}')
-        log.debug(f'Fa_: {Fa_}')
+        log.debug(f'Fa_: {Fa_} {type(Fa_)}')
         xa_ = np.linalg.solve(Kaa_, Fa_)
         xas_ = sci_sparse.linalg.spsolve(Kaas_, Fa_)
+        #xas_ = np.linalg.solve(Kaas_.todense(), Fa_)
         sparse_error = np.linalg.norm(xa_ - xas_)
         if sparse_error > 1e-12:
             log.warning(f'sparse_error = {sparse_error}')
 
         self.xa_ = xa
+        Fg_oload = Fg.copy()
         log.info(f'xa_ = {xa_}')
 
         xa[ipositive] = xa_
@@ -498,7 +513,7 @@ class Solver:
         self._save_applied_load(
             f06_file,
             subcase, itime, ntimes,
-            node_gridtype, Fg,
+            node_gridtype, Fg_oload,
             ngrid, ndof_per_grid,
             title=title, subtitle=subtitle, label=label,
             fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
@@ -513,6 +528,11 @@ class Solver:
 
         op2 = self.op2
         page_stamp += '\n'
+        if 'FORCE' in subcase:
+            recover_force_101(f06_file, op2, self.model, dof_map, isubcase, xb,
+                              title=title, subtitle=subtitle, label=label,
+                              page_stamp=page_stamp)
+
         if 'STRAIN' in subcase:
             recover_strain_101(f06_file, op2, self.model, dof_map, isubcase, xb,
                                title=title, subtitle=subtitle, label=label,
@@ -521,10 +541,6 @@ class Solver:
             recover_stress_101(f06_file, op2, self.model, dof_map, isubcase, xb,
                                title=title, subtitle=subtitle, label=label,
                                page_stamp=page_stamp)
-        if 'FORCE' in subcase:
-            recover_force_101(f06_file, op2, self.model, dof_map, isubcase, xb,
-                              title=title, subtitle=subtitle, label=label,
-                              page_stamp=page_stamp)
         #Fg[sz_set] = -1
         #xg[sz_set] = -1
         log.debug(f'xa = {xa}')
@@ -650,7 +666,7 @@ class Solver:
         dof_map = _get_dof_map(model)
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
-        Kbb, Kbbs = build_Kbb(model, subcase, dof_map, ndof)
+        Kbb, Kbbs = build_Kbb(model, dof_map, ndof)
 
         Mbb = build_Mgg(model, subcase, ndof, fdtype=fdtype)
 
@@ -754,8 +770,8 @@ class Solver:
         log.debug(f'xg = {xg}')
         #log.debug(f'Fg = {Fg}')
 
-        f06_file
-        page_stamp
+        str(f06_file)
+        str(page_stamp)
         op2.write_op2('junk.op2', post=-1, endian=b'<', skips=None, nastran_format='nx')
         return end_options
         #raise NotImplementedError(subcase)
@@ -925,8 +941,8 @@ def remove_rows(Kgg: np.ndarray, aset: np.ndarray, idtype='int32') -> np.ndarray
     if isinstance(Kgg, np.ndarray):
         ipositive = np.where((col_kgg > 0.) | (row_kgg > 0))[0]
     elif isinstance(Kgg, (sci_sparse.csc.csc_matrix, sci_sparse.lil.lil_matrix)):
-        ipositive1 = np.atleast_1d(col_kgg.todense()).nonzero()
-        ipositive2 = np.atleast_1d(row_kgg.todense()).nonzero()
+        ipositive1 = col_kgg.todense().nonzero()[1]
+        ipositive2 = row_kgg.todense().T.nonzero()[1]
         ipositive = np.union1d(ipositive1, ipositive2)
         if isinstance(Kgg, sci_sparse.lil.lil_matrix):
             Kgg = Kgg.tocsc()
@@ -1285,6 +1301,22 @@ def Kbb_to_Kgg(model: BDF, Kbb: np.ndarray, ngrid: int, ndof_per_grid: int, inpl
             Ki = Kbb[i1:i2, i1:i2]
             Kgg[i1:i2, i1:i2] = T.T @ Ki @ T
     return Kgg
+
+def write_oload(Fb, dof_map, isubcase: int, ngrid: int, ndof_per_grid: int,
+                f06_file, page_stamp: str, page_num: int):
+    fxyz_mxyz = Fb[:ngrid*ndof_per_grid].reshape(ngrid, ndof_per_grid)
+    fxyz_mxyz_sum = fxyz_mxyz.sum(axis=0)
+
+    f06_file.write(
+        ' *** USER INFORMATION MESSAGE 7310 (VECPRN)\n'
+        '     ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.\n'
+        '     RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN '
+        'SUPERELEMENT BASIC SYSTEM COORDINATES.\n'
+    )
+
+    oload = Resultant('OLOAD', fxyz_mxyz_sum, isubcase)
+    page_num = oload.write_f06(f06_file, page_stamp, page_num)
+    return page_num
 
 def build_Mgg(model: BDF, subcase: Subcase, ndof: int, fdtype='float64'):
     Mbb = np.eye(ndof, dtype=fdtype)

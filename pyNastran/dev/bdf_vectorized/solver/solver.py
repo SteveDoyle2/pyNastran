@@ -12,6 +12,7 @@ from numpy import (array, zeros, ones, arange,
                    searchsorted, diag)
 from numpy.linalg import solve  # type: ignore
 
+import scipy
 from scipy.sparse import dok_matrix  # type: ignore
 from cpylog import get_logger2
 
@@ -1611,7 +1612,7 @@ class Solver(OP2):
                         ntimes, nnodes, float_fmt='float32')
         #data = []
 
-        i = 0
+        #i = 0
         #(nodeID, gridType, t1, t2, t3, r1, r2, r3) = line
 
         #grid_type = 0  # SECTOR/HARMONIC/RING POINT; H
@@ -1775,8 +1776,8 @@ class Solver(OP2):
         #self.Us = array(self.Us, 'float64')  # SPC
         #self.Um = array(self.Um, 'float64')  # MPC
 
-        is_spc = False
-        is_mpc = False
+        #is_spc = False
+        #is_mpc = False
         #if 0:
             #zero = array([])
             #MPCgg = zero
@@ -1875,10 +1876,10 @@ class Solver(OP2):
         self.Kgg = zeros((i, i), 'float64')
         self.log.info("Kgg.shape = %s" % str(self.Kgg.shape))
 
-        dof_mapper = []
+        #dof_mapper = []
 
         nnodes = model.grid.n
-        nspoints = model.spoint.n
+        #nspoints = model.spoint.n
         assert nnodes > 0
         self.log.info("nnodes = %s" % nnodes)
         #ndofs = 6 * nnodes + nspoints
@@ -1989,14 +1990,14 @@ class Solver(OP2):
         self.Mgg = zeros((ndofs, ndofs), 'float64')
         self.Mgg_sparse = dok_matrix((ndofs, ndofs), dtype='float64')
 
-        dof_mapper = []
+        #dof_mapper = []
 
         nnodes = model.grid.n
-        nspoints = model.spoint.n
+        #nspoints = model.spoint.n
         assert nnodes > 0, nnodes
 
         i = 0
-        nids = model.grid.node_id
+        #nids = model.grid.node_id
 
         self.positions = {}
         index0s = {}
