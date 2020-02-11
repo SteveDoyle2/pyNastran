@@ -13,7 +13,7 @@ All ungrouped elements are Element objects.
 
 """
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Tuple, Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -170,8 +170,9 @@ class CFAST(Element):
         #return self.Centroid()
 
     def raw_fields(self):
+        gs, xs, ys, zs = self._gs_xyz()
         list_fields = ['CFAST', self.eid, self.Pid(), self.Type, self.ida, self.idb,
-                       self.Gs(), self.Ga(), self.Gb(), self.xs, self.ys, self.zs]
+                       gs, self.Ga(), self.Gb(), xs, ys, zs]
         return list_fields
 
     @property
@@ -182,13 +183,21 @@ class CFAST(Element):
     def get_edge_ids(self):
         return [tuple(sorted(self.node_ids))]
 
+    def _gs_xyz(self) -> Tuple[Optional[int], Optional[float], Optional[float], Optional[float]]:
+        if self.gs is None:
+            out = (self.gs, self.xs, self.ys, self.zs)
+        else:
+            out = (self.Gs(), None, None, None)
+        return out
+
     def Gs(self):
         """Gets the GS node"""
         if isinstance(self.gs, integer_types):
             return self.gs
         elif self.gs is not None:
             return self.gs_ref.nid
-        raise RuntimeError('Gs was not returned from CFAST')
+        # If neither GS nor GA is specified, then (XS, YS, ZS) in basic must be specified.
+        raise RuntimeError(f'Gs was not returned from CFAST\n{self.get_stats()}')
 
     def Ga(self):
         """Gets the GA node"""
@@ -316,6 +325,7 @@ class CGAP(Element):
         self.cid = cid
         self.ga_ref = None
         self.gb_ref = None
+        self.g0_ref = None
         self.cid_ref = None
         self.pid_ref = None
 
@@ -1009,7 +1019,7 @@ class GENEL(BaseCard):
     #pid = 0
     _properties = ['node_ids', 'ul_nodes', 'ud_nodes', 'nodes']
     @classmethod
-    def _init_from_empty(self):
+    def _init_from_empty(cls):
         eid = 1
         ul = None
         ud = None
@@ -1270,12 +1280,13 @@ class GENEL(BaseCard):
 def _get_genel_offset(n_ul):
     """we add to to represent the GENEL,eid fields"""
     n_ul_leftover = n_ul % 8
-    return (8 - n_ul_leftover)
+    return 8 - n_ul_leftover
 
 
 def _read_genel_fields_until_char_blank(card_fields, istart):
     """somewhat loose parser helper function for GENEL"""
     new_fields = []
+    i = 0
     for i, field in enumerate(card_fields[istart:]):
         if field is None:
             break

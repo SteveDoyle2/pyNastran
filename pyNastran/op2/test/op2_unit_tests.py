@@ -2995,11 +2995,15 @@ class TestOP2(Tester):
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
-    def _test_msc_cfast(self):
+    def test_msc_cfast(self):
         """test MSC 126-CFAST"""
         log = get_logger(level='warning')
-        bdf_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_2014', 'test_model_cfast.op2')
-        op2_filename = os.path.join(MODEL_PATH, 'bugs', 'msc_2014', 'test_model_cfast.op2')
+        bdf_filename = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast.op2')
+        model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
+        bdf_filename_out = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast_out.bdf')
+        model.write_bdf(bdf_filename_out)
+        os.remove(bdf_filename_out)
 
         unused_op2, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=False,

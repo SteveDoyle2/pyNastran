@@ -6,6 +6,7 @@ defines the F06Writer class and:
 import os
 import sys
 import copy
+import getpass
 from datetime import date
 from collections import defaultdict
 from traceback import print_exc
@@ -611,7 +612,8 @@ class F06Writer(OP2_F06_Common):
                         if hasattr(result, 'element_name'):
                             element_name = ' - ' + result.element_name
                             is_ignored = 'StrainEnergy' not in class_name and 'GridPointForces' not in class_name
-                            if not hasattr(result, 'nnodes_per_element') and is_ignored:
+                            has_nnodes = not hasattr(result, 'nnodes_per_element')
+                            if has_nnodes and is_ignored and getpass.getuser() == 'sdoyle':
                                 self.log.error(f'{class_name} is missing nnodes_per_element')
 
                         if hasattr(result, 'data'):

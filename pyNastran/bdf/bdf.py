@@ -1119,6 +1119,7 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
 
         #: is this a punch file (no executive control deck)
         self.punch = punch
+        assert not bdf_filename.lower().endswith('.op2'), bdf_filename
 
     def pop_parse_errors(self) -> None:
         """raises an error if there are parsing errors"""
@@ -3921,6 +3922,14 @@ class BDF_(BDFMethods, GetCard, AddCards, WriteMeshs, UnXrefMesh):
         try:
             with open(bdf_filename, 'r') as bdf_file:
                 lines = bdf_file.readlines()
+        except UnicodeDecodeError:
+            with open(bdf_filename, 'r', errors='ignore') as bdf_file:
+                line = bdf_file.readline()
+                iline = 1
+                while line:
+                    self.log.debug(f'Line {iline}: {line.strip()}')
+                    line = bdf_file.readline()
+                    iline += 1
         except (AttributeError, TypeError) as error:
             if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
                 lines = bdf_filename.readlines()
