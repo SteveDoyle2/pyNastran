@@ -3193,7 +3193,7 @@ class RealCWeldForceArray(RealCBarFastForceArray):  # 34-CBAR
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
-class RealCFastForceArray(RealCBarFastForceArray):  # 34-CBAR
+class RealCFastForceArrayNX(RealCBarFastForceArray):  # 34-CBAR
     """119-CFAST"""
     def __init__(self, data_code, is_sort1, isubcase, dt):
         RealCBarFastForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
@@ -4939,6 +4939,11 @@ class RealCBearForceArray(RealForceMomentArray):
             '                  ELEMENT-ID        FORCE-X       FORCE-Y       FORCE-Z      MOMENT-X      MOMENT-Y      MOMENT-Z  \n']
            #'0                        599      0.0           2.000000E+00  3.421458E-14  1.367133E-13 -3.752247E-15  1.000000E+00\n']
         return msg
+
+class RealCFastForceArrayMSC(RealForceMomentArray):
+    """126-CFAST-MSC"""
+    def __init__(self, data_code, is_sort1, isubcase, dt):
+        RealForceMomentArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
 class RealForceVU2DArray(RealForceObject):  # 189-VUQUAD, 190-VUTRIA
     """

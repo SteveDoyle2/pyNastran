@@ -42,8 +42,8 @@ from pyNastran.op2.tables.oef_forces.oef_force_objects import (
     FailureIndicesArray,
     RealRodForceArray, RealViscForceArray,
     RealCBarForceArray, RealCBar100ForceArray,
-    RealCFastForceArray, RealCWeldForceArray,
-    RealCBushForceArray, RealCBearForceArray,
+    RealCFastForceArrayNX, RealCWeldForceArray,
+    RealCFastForceArrayMSC, RealCBushForceArray, RealCBearForceArray,
     RealPlateForceArray,
     RealPlateBilinearForceArray,
     RealSpringForceArray, RealDamperForceArray,
@@ -1382,6 +1382,9 @@ class OEF(OP2Common):
         elif self.element_type == 191:
             n, nelements, ntotal = self._oef_vu_beam(data, ndata, dt, is_magnitude_phase, prefix, postfix)
 
+        elif self.element_type == 126 and self.is_msc:
+            # 119-CFAST-MSC
+            n, nelements, ntotal = self._oef_cbush(data, ndata, dt, is_magnitude_phase, prefix, postfix)
         elif self.element_type == 119 and self.is_nx:
             # 119-CFAST-NX
             n, nelements, ntotal = self._oef_cbar_34(data, ndata, dt, is_magnitude_phase,
@@ -2028,6 +2031,7 @@ class OEF(OP2Common):
         """
         34-CBAR
         117-CWELDC
+        119-CFAST-NX  (126-CFAST-MSC is like the CBUSH)
 
         """
         n = 0
@@ -2042,7 +2046,7 @@ class OEF(OP2Common):
             assert self.num_wide in [9, 17], self.code_information()
         elif self.element_type == 119:
             result_name = prefix + 'cfast_force' + postfix
-            obj_real = RealCFastForceArray
+            obj_real = RealCFastForceArrayNX
             assert self.num_wide == 9, self.code_information()
         else:
             raise NotImplementedError(self.element_type)
@@ -3301,12 +3305,17 @@ class OEF(OP2Common):
     def _oef_cbush(self, data, ndata, dt, is_magnitude_phase, prefix, postfix):
         """
         102-CBUSH
+        126-CFAST-MSC
         280-CBEAR
         """
         if self.element_type == 102:
             result_name = prefix + 'cbush_force' + postfix
             real_obj = RealCBushForceArray
             complex_obj = ComplexCBushForceArray
+        elif self.element_type == 126:
+            result_name = prefix + 'cfast_force' + postfix
+            real_obj = RealCFastForceArrayMSC
+            complex_obj = None
         elif self.element_type == 280:
             result_name = prefix + 'cbear_force' + postfix
             assert self.num_wide in [7, 13], self.code_information()
