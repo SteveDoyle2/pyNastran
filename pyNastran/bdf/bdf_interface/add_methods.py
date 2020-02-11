@@ -1462,27 +1462,32 @@ class AddMethods(BDFAttributes):
     def _add_aset_object(self, set_obj: Union[ASET, ASET1]) -> None:
         """adds an ASET/ASET1 object"""
         self.asets.append(set_obj)
-        self._type_to_id_map[set_obj.type] = True
+        n = len(self._type_to_id_map['ASET'])
+        self._type_to_id_map['ASET'].append(n)
 
     def _add_omit_object(self, set_obj: Union[OMIT, OMIT1]) -> None:
         """adds an OMIT/OMIT1 object"""
         self.omits.append(set_obj)
-        self._type_to_id_map[set_obj.type] = True
+        n = len(self._type_to_id_map['OMIT'])
+        self._type_to_id_map['OMIT'].append(n)
 
     def _add_bset_object(self, set_obj: Union[BSET, BSET1]) -> None:
         """adds an BSET/BSET1 object"""
         self.bsets.append(set_obj)
-        self._type_to_id_map[set_obj.type] = True
+        n = len(self._type_to_id_map['BSET'])
+        self._type_to_id_map['BSET'].append(n)
 
     def _add_cset_object(self, set_obj: Union[CSET, CSET1]) -> None:
         """adds an CSET/USET1 object"""
         self.csets.append(set_obj)
-        self._type_to_id_map[set_obj.type] = True
+        n = len(self._type_to_id_map['CSET'])
+        self._type_to_id_map['CSET'].append(n)
 
     def _add_qset_object(self, set_obj: Union[QSET, QSET1]) -> None:
         """adds an QSET/QSET1 object"""
         self.qsets.append(set_obj)
-        self._type_to_id_map[set_obj.type] = True
+        n = len(self._type_to_id_map['QSET'])
+        self._type_to_id_map['QSET'].append(n)
 
     def _add_uset_object(self, set_obj: Union[USET, USET1]) -> None:
         """adds an USET/USET1 object"""

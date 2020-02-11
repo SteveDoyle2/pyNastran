@@ -1699,7 +1699,7 @@ def test_get_cards_by_card_types(model: BDF) -> None:
         for card in cards:
             msg = 'this should never crash here...card_type=%s card.type=%s' % (
                 card_type, card.type)
-            if card_type != card.type:
+            if card_type != card.type and card_type + '1' != card.type:
                 raise RuntimeError(msg)
 
 

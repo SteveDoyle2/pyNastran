@@ -1,4 +1,4 @@
-from numpy import dot, ndarray, zeros
+from numpy import ndarray, zeros
 
 def partition_sparse(Is, Js, Vs):
     I2 = []
@@ -87,5 +87,5 @@ def triple(A, B):
     """
     assert isinstance(A, ndarray), type(A)
     assert isinstance(A, ndarray), type(B)
-    return dot(A.T, dot(B, A))
+    return A.T @ B @ A
 

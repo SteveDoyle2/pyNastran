@@ -246,9 +246,9 @@ class F06Writer(OP2_F06_Common):
         """If this class is inherited, the F06 Header may be overwritten"""
         return make_f06_header()
 
-    def make_stamp(self, title, today):
+    def make_stamp(self, title, today, build=None):
         """If this class is inherited, the PAGE stamp may be overwritten"""
-        return make_stamp(title, today)
+        return make_stamp(title, today, build=None)
 
     def make_grid_point_singularity_table(self, failed):
         """
@@ -274,7 +274,7 @@ class F06Writer(OP2_F06_Common):
         self.page_num += 1
         return msg
 
-    def _write_summary(self, f06, card_count=None):
+    def _write_summary(self, f06_file, card_count=None):
         """writes the F06 card summary table"""
         summary_header = '                                        M O D E L   S U M M A R Y\n\n'
         summary = ''
@@ -355,11 +355,11 @@ class F06Writer(OP2_F06_Common):
                 summary += ' \n'
 
         if summary:
-            f06.write(summary_header)
-            f06.write(summary)
+            f06_file.write(summary_header)
+            f06_file.write(summary)
 
             page_stamp = self.make_stamp(self.title, self.date)
-            f06.write(page_stamp % self.page_num)
+            f06_file.write(page_stamp % self.page_num)
             self.page_num += 1
 
     def write_f06(self, f06_outname: str, matrix_filename: Optional[str]=None,

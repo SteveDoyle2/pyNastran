@@ -4,7 +4,7 @@ from pyNastran.dev.solver.solver import Solver, BDF
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
 
-class TestSolverSprings(unittest.TestCase):
+class TestSolverSpring(unittest.TestCase):
     def test_celas1(self):
         """Tests a CELAS1/PELAS"""
         model = BDF(debug=True, log=None, mode='msc')
@@ -72,6 +72,9 @@ class TestSolverSprings(unittest.TestCase):
         d = mag / k
         assert np.allclose(solver.xa_[0], d)
 
+
+class TestSolverRod(unittest.TestCase):
+    """tests the rods"""
     def test_crod(self):
         """Tests a CROD/PROD"""
         model = BDF(debug=True, log=None, mode='msc')
@@ -99,6 +102,50 @@ class TestSolverSprings(unittest.TestCase):
         components = 123456
         nodes = 1
         model.add_spc1(spc_id, components, nodes, comment='')
+        setup_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_crod_aset(self):
+        """
+        Tests a CROD/PROD using an ASET
+
+        same answer as ``test_crod``
+        """
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        nids = [1, 2]
+        eid = 1
+        pid = 2
+        mid = 3
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+        model.add_crod(eid, pid, nids)
+        model.add_prod(pid, mid, A=1.0, j=2., c=0., nsm=0.)
+
+        load_id = 2
+        spc_id = 3
+        nid = 2
+        mag = 1.
+        fxyz = [1., 0., 0.]
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+
+        aset_ids = 2
+        aset_components = '456'
+        model.add_aset(aset_ids, aset_components)
+
+        aset_ids = [2, 2]
+        aset_components = ['456', '123']
+        model.add_aset1(aset_ids, aset_components, comment='')
+
         setup_case_control(model)
         solver = Solver(model)
         solver.run()
@@ -273,6 +320,8 @@ def setup_case_control(model, extra_case_lines=None):
         'DISP(PLOT,PRINT) = ALL',
         'GPFORCE(PLOT,PRINT) = ALL',
         'SPCFORCE(PLOT,PRINT) = ALL',
+        'MPCFORCE(PLOT,PRINT) = ALL',
+        'OLOAD(PLOT,PRINT) = ALL',
         'SUBCASE 1',
         '  LOAD = 2',
         '  SPC = 3',

@@ -117,6 +117,8 @@ class ABCQSet(Set):
         if comment:
             self.comment = comment
         #:  Identifiers of grids points. (Integer > 0)
+        if isinstance(ids, int):
+            ids = [ids]
         self.ids = ids
         self.components = components
         self.ids_ref = None

@@ -1,18 +1,33 @@
-from typing import List, Dict, Tuple, Any
 import copy
+from datetime import date
 from collections import defaultdict
 from itertools import count
-import numpy as np
+from typing import List, Dict, Tuple, Union, Any
 
+import numpy as np
+import scipy.sparse as sci_sparse
+
+import pyNastran
 from pyNastran.bdf.bdf import BDF, Subcase
+from pyNastran.op2.op2 import OP2
+from pyNastran.op2.op2_interface.hdf5_interface import (
+    RealDisplacementArray, RealSPCForcesArray, RealLoadVectorArray)
 from pyNastran.bdf.mesh_utils.loads import _get_dof_map, get_ndof
 
+from pyNastran.dev.solver.recover_static_strains import recover_strain_101
+from pyNastran.dev.solver.build_stiffness import build_Kbb
 
 class Solver:
     """defines the Nastran knockoff class"""
     def __init__(self, model: BDF):
         self.model = model
+        self.superelement_id = 0
+        self.op2 = OP2(log=model.log, mode='nx')
         self.log = model.log
+
+        d = date.today()
+        # the date stamp used in the F06
+        self.op2.date = (d.month, d.day, d.year)
 
         # the "as solved" a-set displacement (after AUTOSPC is applied)
         self.xa_ = None
@@ -20,58 +35,39 @@ class Solver:
         self.Kgg = None
         self.aset = None
         self.sset = None
+        self.f06_filename = 'junk.f06'
 
     def run(self):
-        sol = self.model.sol
+        model = self.model
+        sol = model.sol
         solmap = {
-            101 : self.run_sol_101,
-            103 : self.run_sol_103,
+            101 : self.run_sol_101,  # static
+            103 : self.run_sol_103,  # modes
         }
-        self.model.cross_reference()
+        model.cross_reference()
         self._update_card_count()
 
-        if sol in [101, 103, 105, 107, 109, 111, 112]:
-            for subcase_id, subcase in sorted(self.model.subcases.items()):
-                if subcase_id == 0:
-                    continue
-                self.log.debug(f'subcase_id={subcase_id}')
-                runner = solmap[sol]
-                runner(subcase)
-        else:
-            raise NotImplementedError(sol)
+        title = ''
+        today = None
+        page_stamp = self.op2.make_stamp(title, today)
+        with open(self.f06_filename, 'w') as f06_file:
+            f06_file.write(self.op2.make_f06_header())
+            self.op2._write_summary(f06_file, card_count=model.card_count)
+            f06_file.write('\n')
+            if sol in [101, 103, 105, 107, 109, 111, 112]:
+                for subcase_id, subcase in sorted(model.subcases.items()):
+                    if subcase_id == 0:
+                        continue
+                    self.log.debug(f'subcase_id={subcase_id}')
+                    runner = solmap[sol]
+                    runner(subcase, f06_file, page_stamp,
+                           idtype='int32', fdtype='float64')
+            else:
+                raise NotImplementedError(sol)
 
     def _update_card_count(self):
         for card_type, values in self.model._type_to_id_map.items():
             self.model.card_count[card_type] = len(values)
-
-    def build_Kbb(self, subcase: Subcase, dof_map, ndof) -> np.array:
-        """[K] = d{P}/dx"""
-        model = self.model
-
-        Kbb = np.zeros((ndof, ndof), dtype='float32')
-        #print(dof_map)
-
-        #crods = model._type_to_id_map['CROD']
-        #ctubes = model._type_to_id_map['CTUBE']
-        #print('celas1s =', celas1s)
-        #_get_loadid_ndof(model, subcase_id)
-        nelements = 0
-        nelements += _build_kbb_celas1(model, Kbb, dof_map)
-        nelements += _build_kbb_celas2(model, Kbb, dof_map)
-        nelements += _build_kbb_conrod(model, Kbb, dof_map)
-        nelements += _build_kbb_crod(model, Kbb, dof_map)
-        nelements += _build_kbb_ctube(model, Kbb, dof_map)
-        nelements += _build_kbb_cbar(model, Kbb, dof_map)
-        assert nelements > 0, nelements
-        return Kbb
-
-    def _recover_strain_101(self, xg, dof_map, fdtype='float32'):
-        """recovers the strains"""
-        eids = 'ALL'
-        nelements = 0
-        nelements += _recover_strain_celas1(self.model, dof_map, xg, eids)
-        nelements += _recover_strain_celas2(self.model, dof_map, xg, eids)
-        #assert nelements > 0, nelements
 
     def build_xg(self, dof_map: Dict[Any, int], ndof: int, subcase: Subcase) -> np.ndarray:
         """
@@ -95,6 +91,7 @@ class Solver:
         spcs = model.get_reduced_spcs(spc_id, consider_spcadd=True, stop_on_failure=True)
 
         spc_set = []
+        sset = np.zeros(ndof, dtype='bool')
         for spc in spcs:
             if spc.type == 'SPC1':
                 #print(spc.get_stats())
@@ -107,11 +104,12 @@ class Solver:
                             print(spc)
                             print('dof_map =', dof_map)
                             print((nid, dofi))
+                        sset[idof] = True
                         spc_set.append(idof)
                         xspc[idof] = 0.
         spc_set = np.array(spc_set, dtype='int32')
         #print('spc_set =', spc_set, xspc)
-        return spc_set, xspc
+        return spc_set, sset, xspc
 
 
     def build_Fb(self, dof_map: Dict[Any, int], ndof: int, subcase: Subcase) -> np.array:
@@ -182,7 +180,9 @@ class Solver:
 
     def Kbb_to_Kgg(self, Kbb: np.ndarray, ngrid: int, ndof_per_grid: int, inplace=True) -> np.ndarray:
         """does an in-place transformation"""
-        assert isinstance(Kbb, np.ndarray)
+        assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix)), type(Kbb)
+        if not isinstance(Kbb, np.ndarray):
+            Kbb = Kbb.tolil()
         model = self.model
         assert ngrid > 0, model.card_count
         nids = model._type_to_id_map['GRID']
@@ -292,10 +292,16 @@ class Solver:
         #print(udofs, idofs)
         return constraints
 
-
-    def run_sol_101(self, subcase: Subcase, fdtype='float64'):
+    def run_sol_101(self, subcase: Subcase, f06_file,
+                    page_stamp, idtype='int32', fdtype='float64'):
         """
         Runs a SOL 101
+
+        Analysis (ASET): This set contains all boundary DOFs of the superelement.
+                         It is considered fixed by default.
+        Fixed Boundary (BSET): This subset of the ASET contains all fixed boundary DOFs.
+        Free Boundary  (CSET): This subset of the ASET contains all free boundary DOFs.
+
         SOL 101 Sets
         ------------
         b = DOFs fixed during component mode analysis or dynamic reduction.
@@ -354,21 +360,68 @@ class Solver:
         b = l - c ???
         c = l - b ???
         """
-        fdtype = 'float64'
-        log = self.model.log
+        #basic
+        itime = 0
+        ntimes = 1  # static
+        isubcase = subcase.id
+        title = f'pyNastran {pyNastran.__version__}'
+        subtitle = f'SUBCASE {isubcase}'
+        label = ''
+        if 'TITLE' in subcase:
+            title = subcase.get_parameter('TITLE')
+        if 'SUBTITLE' in subcase:
+            subtitle = subcase.get_parameter('SUBTITLE')
+        if 'LABEL' in subcase:
+            label = subcase.get_parameter('LABEL')
+        #-----------------------------------------------------------------------
+        model = self.model
+        log = model.log
 
-        dof_map = _get_dof_map(self.model)
-        ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
-        Kbb = self.build_Kbb(subcase, dof_map, ndof)
+        dof_map = _get_dof_map(model)
+        node_gridtype = _get_node_gridtype(model, idtype=idtype)
+        ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
+        Kbb, Kbbs = build_Kbb(model, subcase, dof_map, ndof)
         self.get_mpc_constraints(subcase, dof_map)
 
         Kgg = self.Kbb_to_Kgg(Kbb, ngrid, ndof_per_grid, inplace=False)
-        del Kbb
+        Kggs = self.Kbb_to_Kgg(Kbbs, ngrid, ndof_per_grid)
+        del Kbb, Kbbs
 
-        gset = np.arange(ndof, dtype='int32')
-        sset, xg = self.build_xg(dof_map, ndof, subcase)
-        aset = np.setdiff1d(gset, sset) # a = g-s
+        gset = np.arange(ndof, dtype=idtype)
+        gset_b = np.ones(ndof, dtype='bool')
+        sset, sset_b, xg = self.build_xg(dof_map, ndof, subcase)
 
+
+        # Constrained set
+        # sset = sb_set | sg_set
+
+        # free structural DOFs
+        #fset = ~sset; # & ~mset
+        fset_b = gset_b & sset_b # g-b
+        self.log.debug(f'gset_b = {gset_b}')
+        self.log.debug(f'sset_b = {sset_b}')
+        self.log.debug(f'fset_b = {fset_b}')
+        aset, tset = get_residual_structure(model, dof_map, fset_b)
+
+        asetmap = get_aset(model)
+        if asetmap:
+            aset = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype)
+        else:
+            aset = np.setdiff1d(gset, sset) # a = g-s
+
+        # The a-set and o-set are created in the following ways:
+        # 1. If only OMITi entries are present, then the o-set consists
+        #    of DOFs listed explicitly on OMITi entries. The remaining
+        #    f-set DOFs are placed in the b-set, which is a subset of
+        #    the a-set.
+        # 2. If ASETi or QSETi entries are present, then the a-set consists
+        #    of all DOFs listed on ASETi entries and any entries listing its
+        #    subsets, such as QSETi, SUPORTi, CSETi, and BSETi entries.  Any
+        #    OMITi entries are redundant. The remaining f-set DOFs are placed
+        #    in the o-set.
+        # 3. If there are no ASETi, QSETi, or OMITi entries present but there
+        #    are SUPORTi, BSETi, or CSETi entries present, then the entire
+        #    f-set is placed in the a-set and the o-set is not created.
         self.sset = sset
         self.aset = aset
 
@@ -393,6 +446,8 @@ class Solver:
         Kss = K['ss']
         #Kas = K['as']
         Ksa = K['sa']
+        Ks = partition_matrix(Kggs, [['a', aset], ['s', sset]])
+        Kaas = Ks['aa']
 
         self.Kaa = Kaa
         #[Kaa]{xa} + [Kas]{xs} = {Fa}
@@ -404,7 +459,8 @@ class Solver:
         #print(Kaa)
         #print(Kas)
         #print(Kss)
-        Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset)
+        Kaas_, ipositive, inegative, sz_set = remove_rows(Kaas, aset, idtype=idtype)
+        Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset, idtype=idtype)
         Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
         #print(f'Fa = {Fa}')
@@ -419,36 +475,167 @@ class Solver:
         log.debug(f'Kaa_:\n{Kaa_}')
         log.debug(f'Fa_: {Fa_}')
         xa_ = np.linalg.solve(Kaa_, Fa_)
+        xas_ = sci_sparse.linalg.spsolve(Kaas_, Fa_)
+        sparse_error = np.linalg.norm(xa_ - xas_)
+        if sparse_error > 1e-12:
+            log.warning(f'sparse_error = {sparse_error}')
+
         self.xa_ = xa
         log.info(f'xa_ = {xa_}')
 
         xa[ipositive] = xa_
         xa[inegative] = 0.
 
-        xg = np.arange(ndof, dtype=fdtype)
+        xg = np.full(ndof, np.nan, dtype=fdtype)
         xg[aset] = xa
         xg[sset] = xs
         Fg[aset] = Fa
-        fspc = Ksa @ xa + Kss @ xs
-        Fg[sset] = fspc
+
+        fspc = np.full(ndof, 0., dtype=fdtype)
+        fspci = Ksa @ xa + Kss @ xs
+        Fg[sset] = fspci
+        fspc[sset] = fspci
 
         xb = self.xg_to_xb(xg, ngrid, ndof_per_grid)
         Fb = self.xg_to_xb(Fg, ngrid, ndof_per_grid)
-        if 'SPCFORCES' in subcase:
-            #Fs[ipositive] = Fsi
-            log.debug(f'Fg = {Fg}')
-            log.debug(f'Fs = {Fs}')
-        if 'DISPLACEMENT' in subcase:
-            log.debug(f'xg = {xg}')
+
+        log.debug(f'Fs = {Fs}')
+        page_num = 1
+
+        self._save_displacment(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, xg,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+
+        self._save_applied_load(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, Fg,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+
+        self._save_spc_forces(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, fspc,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+
+        op2 = self.op2
         if 'STRAIN' in subcase:
-            self._recover_strain_101(xb, dof_map)
+            recover_strain_101(f06_file, op2, self.model, dof_map, isubcase, xb,
+                               title=title, subtitle=subtitle, label=label,
+                               page_stamp=page_stamp)
         #if 'STRESS' in subcase:
+            #recover_stress_101(self.model, xb, dof_map)
         #Fg[sz_set] = -1
         #xg[sz_set] = -1
         log.debug(f'xa = {xa}')
+        op2.write_op2('junk.op2', post=-1, endian=b'<', skips=None, nastran_format='nx')
         return xa_
 
-    def run_sol_103(self, subcase: Subcase):
+    def _save_displacment(self, f06_file,
+                          subcase: Subcase, itime: int, ntimes: int,
+                          node_gridtype, xg,
+                          ngrid: int, ndof_per_grid: int,
+                          title='', subtitle='', label='',
+                          fdtype='float32', page_num=1, page_stamp='PAGE %s') -> int:
+        f06_request_name = 'DISPLACEMENT'
+        table_name = 'OUGV1'
+        #self.log.debug(f'xg = {xg}')
+        page_num = self._save_static_table(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, xg,
+            RealDisplacementArray, f06_request_name, table_name,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+        return page_num
+
+    def _save_spc_forces(self, f06_file,
+                         subcase: Subcase, itime: int, ntimes: int,
+                         node_gridtype, fspc,
+                         ngrid: int, ndof_per_grid: int,
+                         title='', subtitle='', label='',
+                         fdtype='float32', page_num=1, page_stamp='PAGE %s') -> int:
+        f06_request_name = 'SPCFORCES'
+        table_name = 'OQG1'
+        #self.log.debug(f'Fg = {Fg}')
+        page_num = self._save_static_table(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, fspc,
+            RealSPCForcesArray, f06_request_name, table_name,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+        return page_num
+
+    def _save_applied_load(self, f06_file,
+                           subcase: Subcase, itime: int, ntimes: int,
+                           node_gridtype, Fg,
+                           ngrid: int, ndof_per_grid: int,
+                           title='', subtitle='', label='',
+                           fdtype='float32', page_num=1, page_stamp='PAGE %s') -> int:
+        f06_request_name = 'OLOAD'
+        table_name = 'OPG1'
+        #self.log.debug(f'Fg = {Fg}')
+        page_num = self._save_static_table(
+            f06_file,
+            subcase, itime, ntimes,
+            node_gridtype, Fg,
+            RealLoadVectorArray, f06_request_name, table_name,
+            ngrid, ndof_per_grid,
+            title=title, subtitle=subtitle, label=label,
+            fdtype=fdtype, page_num=page_num, page_stamp=page_stamp)
+        return page_num
+
+    def _save_static_table(self, f06_file,
+                           subcase: Subcase, itime: int, ntimes: int,
+                           node_gridtype, Fg,
+                           obj: Union[RealSPCForcesArray], f06_request_name, table_name,
+                           ngrid: int, ndof_per_grid: int,
+                           title='', subtitle='', label='',
+                           fdtype='float32', page_num=1,
+                           page_stamp='PAGE %s') -> int:
+        if f06_request_name not in subcase:
+            return
+        isubcase = subcase.id
+        self.log.debug(f'saving {f06_request_name} -> {table_name}')
+        unused_nids_write, write_f06, write_op2 = get_plot_request(
+            subcase, f06_request_name)
+        nnodes = node_gridtype.shape[0]
+        data = np.zeros((ntimes, nnodes, 6), dtype=fdtype)
+        ngrid_dofs = ngrid * ndof_per_grid
+        if ndof_per_grid == 6:
+            _fgi = Fg[:ngrid_dofs].reshape(ngrid, ndof_per_grid)
+            data[itime, :ngrid, :] = _fgi
+        else:
+            raise NotImplementedError(ndof_per_grid)
+        data[itime, ngrid:, 0] = Fg[ngrid_dofs:]
+
+        spc_forces = obj.add_static_case(
+            table_name, node_gridtype, data, isubcase,
+            is_sort1=True, is_random=False, is_msc=True,
+            random_code=0, title=title, subtitle=subtitle, label=label)
+        if write_f06:
+            page_num = spc_forces.write_f06(
+                f06_file, header=None,
+                page_stamp=page_stamp, page_num=page_num,
+                is_mag_phase=False, is_sort1=True)
+            f06_file.write('\n')
+        self.op2.spc_forces[isubcase] = spc_forces
+        return page_num
+
+    def run_sol_103(self, subcase: Subcase, f06_file,
+                    page_stamp,
+                    idtype='int32', fdtype='float64'):
         """
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
         [M]{xdd} + [K]{x} = {F}
@@ -458,20 +645,20 @@ class Solver:
         λ^2 = -[M]^-1[K]
         [A][X] = [X]λ^2
         """
-        fdtype = 'float64'
         log = self.model.log
 
         dof_map = _get_dof_map(self.model)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
-        Kbb = self.build_Kbb(subcase, dof_map, ndof)
+        Kbb, Kbbs = build_Kbb(self.model, subcase, dof_map, ndof)
 
         Mbb = np.eye(Kbb.shape[0], dtype=fdtype)
 
         Kgg = self.Kbb_to_Kgg(Kbb, ngrid, ndof_per_grid)
         Mgg = self.Kbb_to_Kgg(Mbb, ngrid, ndof_per_grid)
+        Kggs = self.Kbb_to_Kgg(Kbbs, ngrid, ndof_per_grid)
         del Kbb, Mgg
 
-        gset = np.arange(ndof, dtype='int32')
+        gset = np.arange(ndof, dtype=idtype)
         sset, xg = self.build_xg(dof_map, ndof, subcase)
         aset = np.setdiff1d(gset, sset) # a = g-s
 
@@ -489,17 +676,21 @@ class Solver:
         #Kss = K['ss']
         #Kas = K['as']
         #Ksa = K['sa']
+        Ks = partition_matrix(Kggs, [['a', aset], ['s', sset]])
+        Kaas = Ks['aa']
+
             #[Kaa]{xa} + [Kas]{xs} = {Fa}
             #[Ksa]{xa} + [Kss]{xs} = {Fs}
 
         #{xa} = [Kaa]^-1 * ({Fa} - [Kas]{xs})
         #{Fs} = [Ksa]{xa} + [Kss]{xs}
 
-        # TODO: apply SPCs
+        # TODO: apply AUTOSPCs correctly
         #print(Kaa)
         #print(Kas)
         #print(Kss)
-        Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset)
+        Kaa_, ipositive, inegative, unused_sz_set = remove_rows(Kaa, aset)
+        Kaas_, ipositive, inegative, unused_sz_set = remove_rows(Kaas, aset)
         #Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
         #print(f'Fa = {Fa}')
@@ -529,10 +720,13 @@ class Solver:
         #log.debug(f'Fs = {Fs}')
         log.debug(f'xg = {xg}')
         #log.debug(f'Fg = {Fg}')
+
+        f06_file
+        page_stamp
         return xa_
         #raise NotImplementedError(subcase)
 
-    def run_sol_111(self, subcase: Subcase):
+    def run_sol_111(self, subcase: Subcase, f06_file, idtype='int32', fdtype='float64'):
         """
         frequency
         [M]{xdd} + [C]{xd} + [K]{x} = {F}
@@ -560,270 +754,11 @@ class Solver:
         {u_total} = {u_dynamic} + {u_static} = [PHI]{q} + {u_static}
 
         """
-        pass
+        str(subcase)
+        str(f06_file)
+        str(fdtype)
+        str(idtype)
 
-def get_ieids_eids(model: BDF, etype, eids_str, idtype='int32', fdtype='float32'):
-    """helper for the stress/strain/displacment recovery"""
-    eids = model._type_to_id_map[etype]
-    if eids_str == 'ALL':
-        ieids = np.arange(len(eids), dtype=idtype)
-    else:
-        ieids = np.searchsorted(eids_str, eids)
-    empty_array = np.full(len(ieids), np.nan, dtype=fdtype)
-    return ieids, eids, empty_array
-
-def _recover_strain_celas1(model: BDF, dof_map, xg, eids, fdtype='float32'):
-    """
-    recovers static strain
-    TODO: write the OP2/F06
-
-    """
-    ielas, celas1s, strains = get_ieids_eids(model, 'CELAS1', eids, fdtype=fdtype)
-    for ieid, eid in zip(ielas, celas1s):
-        elem = model.elements[eid]
-        strain = _recover_straini_celas12(xg, dof_map, elem)
-        strains[ielas] = strain
-    return len(celas1s)
-
-def _recover_strain_celas2(model: BDF, dof_map, xg, eids, fdtype='float32'):
-    """
-    recovers static strain
-    TODO: write the OP2/F06
-
-    """
-    ielas, celas2s, strains = get_ieids_eids(model, 'CELAS2', eids, fdtype=fdtype)
-    #celas3s = model._type_to_id_map['CELAS3']
-    #celas4s = model._type_to_id_map['CELAS4']
-    for ieid, eid in zip(ielas, celas2s):
-        elem = model.elements[eid]
-        strain = _recover_straini_celas12(xg, dof_map, elem)
-        strains[ielas] = strain
-    return len(celas2s)
-
-def _build_kbb_celas1(model: BDF, Kbb, dof_map):
-    """fill the CELAS1 Kbb matrix"""
-    celas1s = model._type_to_id_map['CELAS1']
-    for eid in celas1s:
-        elem = model.elements[eid]
-        ki = elem.K()
-        #print(elem, ki)
-        #print(elem.get_stats())
-        _build_kbbi_celas12(Kbb, dof_map, elem, ki)
-    return len(celas1s)
-
-def _build_kbb_celas2(model: BDF, Kbb, dof_map):
-    """fill the CELAS2 Kbb matrix"""
-    celas2s = model._type_to_id_map['CELAS2']
-    #celas3s = model._type_to_id_map['CELAS3']
-    #celas4s = model._type_to_id_map['CELAS4']
-    for eid in celas2s:
-        elem = model.elements[eid]
-        ki = elem.K()
-        #print(elem, ki)
-        #print(elem.get_stats())
-        _build_kbbi_celas12(Kbb, dof_map, elem, ki)
-    return len(celas2s)
-
-def _recover_straini_celas12(xg, dof_map, elem):
-    """get the static strain"""
-    nid1, nid2 = elem.nodes
-    c1, c2 = elem.c1, elem.c2
-    i = dof_map[(nid1, c1)]
-    j = dof_map[(nid2, c2)]
-    strain = xg[i] - xg[j]  # TODO: check the sign
-    return strain
-
-def _build_kbbi_celas12(Kbb, dof_map, elem, ki):
-    """fill the CELASx Kbb matrix"""
-    nid1, nid2 = elem.nodes
-    c1, c2 = elem.c1, elem.c2
-    i = dof_map[(nid1, c1)]
-    j = dof_map[(nid2, c2)]
-    k = ki * np.array([[1, -1,],
-                       [-1, 1]])
-    ibe = [
-        (i, 0),
-        (j, 1),
-    ]
-    for ib1, ie1 in ibe:
-        for ib2, ie2 in ibe:
-            Kbb[ib1, ib2] += k[ie1, ie2]
-    #Kbb[j, i] += ki
-    #Kbb[i, j] += ki
-    #del i, j, ki, nid1, nid2, c1, c2
-
-def _build_kbb_cbar(model, Kbb, dof_map):
-    """fill the CBAR Kbb matrix"""
-    cbars = model._type_to_id_map['CBAR']
-    for eid in cbars:
-        elem = model.elements[eid]
-        pid_ref = elem.pid_ref
-        mat = pid_ref.mid_ref
-        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
-    return len(cbars)
-
-def _build_kbb_crod(model, Kbb, dof_map):
-    """fill the CROD Kbb matrix"""
-    crods = model._type_to_id_map['CROD']
-    for eid in crods:
-        elem = model.elements[eid]
-        pid_ref = elem.pid_ref
-        mat = pid_ref.mid_ref
-        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
-    return len(crods)
-
-def _build_kbb_ctube(model: BDF, Kbb, dof_map):
-    """fill the CTUBE Kbb matrix"""
-    ctubes = model._type_to_id_map['CTUBE']
-    for eid in ctubes:
-        elem = model.elements[eid]
-        pid_ref = elem.pid_ref
-        mat = pid_ref.mid_ref
-        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
-    return len(ctubes)
-
-def _build_kbb_conrod(model: BDF, Kbb, dof_map):
-    """fill the CONROD Kbb matrix"""
-    conrods = model._type_to_id_map['CONROD']
-    for eid in conrods:
-        elem = model.elements[eid]
-        mat = elem.mid_ref
-        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
-    return len(conrods)
-
-def _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat, fdtype='float64'):
-    """fill the ith rod Kbb matrix"""
-    nid1, nid2 = elem.nodes
-    #mat = elem.mid_ref
-    xyz1 = elem.nodes_ref[0].get_position()
-    xyz2 = elem.nodes_ref[1].get_position()
-    dxyz12 = xyz1 - xyz2
-    L = np.linalg.norm(dxyz12)
-    E = mat.E
-    G = mat.G()
-    J = elem.J()
-    A = elem.Area()
-    E = elem.E()
-    #L = elem.Length()
-    k_axial = A * E / L
-    k_torsion = G * J / L
-
-    assert isinstance(k_axial, float), k_axial
-    assert isinstance(k_torsion, float), k_torsion
-    #Kbb[i, i] += ki[0, 0]
-    #Kbb[i, j] += ki[0, 1]
-    #Kbb[j, i] = ki[1, 0]
-    #Kbb[j, j] = ki[1, 1]
-    k = np.array([[1., -1.],
-                  [-1., 1.]])  # 1D rod
-    Lambda = _lambda1d(dxyz12, debug=False)
-    K = Lambda.T @ k @ Lambda
-    #i11 = dof_map[(n1, 1)]
-    #i12 = dof_map[(n1, 2)]
-
-    #i21 = dof_map[(n2, 1)]
-    #i22 = dof_map[(n2, 2)]
-
-    nki, nkj = K.shape
-    K2 = np.zeros((nki*2, nkj*2), dtype=fdtype)
-
-    i1 = 0
-    i2 = 3 # dof_map[(n1, 2)]
-    if k_axial == 0.0 and k_torsion == 0.0:
-        dofs = []
-        n_ijv = []
-        K2 = []
-    elif k_torsion == 0.0: # axial; 2D or 3D
-        K2 = K * k_axial
-        #dofs = np.array([
-            #i1, i1+1, i1+2,
-            #i2, i2+1, i2+2,
-        #], 'int32')
-        #n_ijv = [
-            ## axial
-            #(nid1, 1), (nid1, 2), (nid1, 3),
-            #(nid2, 1), (nid2, 2), (nid2, 3),
-        #]
-    elif k_axial == 0.0: # torsion; assume 3D
-        K2 = K * k_torsion
-        #dofs = np.array([
-            #i1+3, i1+4, i1+5,
-            #i2+3, i2+4, i2+5,
-        #], 'int32')
-        #n_ijv = [
-            ## torsion
-            #(nid1, 4), (nid1, 5), (nid1, 6),
-            #(nid2, 4), (nid2, 5), (nid2, 6),
-        #]
-
-    else:  # axial + torsion; assume 3D
-        # u1fx, u1fy, u1fz, u2fx, u2fy, u2fz
-        K2[:nki, :nki] = K * k_axial
-
-        # u1mx, u1my, u1mz, u2mx, u2my, u2mz
-        K2[nki:, nki:] = K * k_torsion
-
-        dofs = np.array([
-            i1, i1+1, i1+2,
-            i2, i2+1, i2+2,
-
-            i1+3, i1+4, i1+5,
-            i2+3, i2+4, i2+5,
-        ], 'int32')
-        n_ijv = [
-            # axial
-            (nid1, 1), (nid1, 2), (nid1, 3),
-            (nid2, 1), (nid2, 2), (nid2, 3),
-
-            # torsion
-            (nid1, 4), (nid1, 5), (nid1, 6),
-            (nid2, 4), (nid2, 5), (nid2, 6),
-        ]
-    for dof1, nij1 in zip(dofs, n_ijv):
-        i1 = dof_map[nij1]
-        for dof2, nij2 in zip(dofs, n_ijv):
-            i2 = dof_map[nij2]
-            #ki = K2[i1, i2]  #old
-            ki = K2[dof1, dof2]  # new
-            if abs(ki) > 0.:
-                #print(nij1, nij2, f'({i1}, {i2});', (dof1, dof2), ki)
-                #Kbb[dof1, dof2] = ki #  old
-                Kbb[i1, i2] = ki # new
-        #print(K2)
-    #print(Kbb)
-    return
-
-def _lambda1d(dxyz, debug=True):
-    """
-    ::
-      3d  [l,m,n,0,0,0]  2x6
-          [0,0,0,l,m,n]
-    """
-    #R = self.Rmatrix(model,is3D)
-
-    #xyz1 = model.Node(n1).get_position()
-    #xyz2 = model.Node(n2).get_position()
-    #v1 = xyz2 - xyz1
-    if debug:
-        print("v1=%s" % dxyz)
-    n = np.linalg.norm(dxyz)
-    if n == 0:
-        raise ZeroDivisionError(dxyz)
-
-    (l, m, n) = dxyz / n
-    #l = 1
-    #m = 2
-    #n = 3
-    Lambda = np.zeros((2, 6), 'd')
-    Lambda[0, 0] = Lambda[1, 3] = l
-    Lambda[0, 1] = Lambda[1, 4] = m
-    Lambda[0, 2] = Lambda[1, 5] = n
-
-    #print("R = \n",R)
-    #debug = True
-    if debug:
-        print("Lambda = \n" + str(Lambda))
-    return Lambda
 
 def partition_matrix(matrix, sets) -> Dict[Tuple[str, str], np.ndarray]:
     """partitions a matrix"""
@@ -842,7 +777,7 @@ def partition_vector(vector, sets) -> List[np.ndarray]:
     return vectors
 
 
-def remove_rows(Kgg: np.ndarray, aset: np.ndarray) -> np.ndarray:
+def remove_rows(Kgg: np.ndarray, aset: np.ndarray, idtype='int32') -> np.ndarray:
     """
     Applies AUTOSPC to the model (sz)
 
@@ -953,8 +888,17 @@ def remove_rows(Kgg: np.ndarray, aset: np.ndarray) -> np.ndarray:
     #print(col_kgg)
     #print(row_kgg)
     #izero = np.where((col_kgg == 0.) & (row_kgg == 0))[0]
-    ipositive = np.where((col_kgg > 0.) | (row_kgg > 0))[0]
-    all_rows = np.arange(Kgg.shape[0], dtype='int32')
+    if isinstance(Kgg, np.ndarray):
+        ipositive = np.where((col_kgg > 0.) | (row_kgg > 0))[0]
+    elif isinstance(Kgg, (sci_sparse.csc.csc_matrix, sci_sparse.lil.lil_matrix)):
+        ipositive1 = np.atleast_1d(col_kgg.todense()).nonzero()
+        ipositive2 = np.atleast_1d(row_kgg.todense()).nonzero()
+        ipositive = np.union1d(ipositive1, ipositive2)
+        if isinstance(Kgg, sci_sparse.lil.lil_matrix):
+            Kgg = Kgg.tocsc()
+    else:
+        raise NotImplementedError(type(Kgg))
+    all_rows = np.arange(Kgg.shape[0], dtype=idtype)
     inegative = np.setdiff1d(all_rows, ipositive)
     apositive = aset[ipositive]
     sz_set = np.setdiff1d(aset, apositive)
@@ -1007,3 +951,258 @@ def guyan_reduction(matrix, set1, set2):
     T = np.vstack([np.eye(nA11), A22m1 @ A21])
     return np.linalg.multi_dot([T.T, A, T])
     #return A11 + A12_A22m1_A21
+
+def _get_node_gridtype(model: BDF, idtype='int32') -> np.ndarray:
+    """
+    Helper method for results post-processing
+
+    Point type (per NX 10; OUG table; p.5-663):
+    =1, GRID Point
+    =2, Scalar Point
+    =3, Extra Point
+    =4, Modal
+    =5, p-elements, 0-DOF
+    -6, p-elements, number of DOF
+
+    """
+    node_gridtype = []
+    for nid, node_ref in sorted(model.nodes.items()):
+        if node_ref.type == 'GRID':
+            node_gridtype.append((nid, 1))
+        elif node_ref.type == 'SPOINT':
+            node_gridtype.append((nid, 2))
+        else:
+            raise NotImplementedError(node_ref)
+    assert len(node_gridtype) > 0
+    #print(node_gridtype)
+    node_gridtype_array = np.array(node_gridtype, dtype=idtype)
+    return node_gridtype_array
+
+def get_plot_request(subcase: Subcase, request: str) -> Tuple[str, bool, bool]:
+    """
+    request = 'SPCFORCES'
+    """
+    value, options = subcase.get_parameter(request)
+    write_f06 = False
+    write_f06 = True
+    if 'PRINT' in options:
+        write_f06 = True
+    if 'PLOT' in options:
+        write_op2 = True
+    if not(write_f06 or write_op2):
+        write_op2 = True
+    nids_write = value
+    return nids_write, write_f06, write_op2
+
+def get_aset(model: BDF) -> Any:
+    aset_map = set()
+    for aset in model.asets:
+        if aset.type == 'ASET1':
+            comp = aset.components
+            for nid in aset.ids:
+                for compi in comp:
+                    aset_map.add((nid, int(compi)))
+        elif aset.type == 'ASET':
+            for nid, comp in zip(aset.ids, aset.components):
+                for compi in comp:
+                    aset_map.add((nid, int(compi)))
+        else:
+            raise NotImplementedError(aset)
+    return aset_map
+
+def get_bset(model: BDF) -> Any:
+    """creates the b-set"""
+    bset_map = set()
+    for bset in model.bsets:
+        if bset.type == 'BSET1':
+            comp = bset.components
+            for nid in bset.ids:
+                for compi in comp:
+                    bset_map.add((nid, int(compi)))
+        elif bset.type == 'BSET':
+            for nid, comp in zip(bset.ids, bset.components):
+                for compi in comp:
+                    bset_map.add((nid, int(compi)))
+        else:
+            raise NotImplementedError(bset)
+    return bset_map
+
+def get_cset(model: BDF) -> Any:
+    """creates the c-set"""
+    cset_map = set()
+    for cset in model.csets:
+        if cset.type == 'CSET1':
+            comp = cset.components
+            for nid in cset.ids:
+                for compi in comp:
+                    cset_map.add((nid, int(compi)))
+        elif cset.type == 'CSET':
+            for nid, comp in zip(cset.ids, cset.components):
+                for compi in comp:
+                    cset_map.add((nid, int(compi)))
+        else:
+            raise NotImplementedError(cset)
+    return cset_map
+
+def get_omit_set(model: BDF) -> Any:
+    """creates the o-set"""
+    omit_set_map = set()
+    for omit in model.omits:
+        if omit.type == 'OMIT1':
+            comp = omit.components
+            for nid in omit.ids:
+                for compi in comp:
+                    omit_set_map.add((nid, int(compi)))
+        elif omit.type == 'OMIT':
+            for nid, comp in zip(omit.ids, omit.components):
+                for compi in comp:
+                    omit_set_map.add((nid, int(compi)))
+        else:
+            raise NotImplementedError(omit)
+    return omit_set_map
+
+def get_rset(model: BDF) -> Any:
+    """creates the r-set"""
+    rset_map = set()
+    for rset in model.suport:
+        for nid, comp in zip(rset.ids, rset.components):
+            for compi in comp:
+                rset_map.add((nid, int(compi)))
+
+    for suport in model.suport1:
+        comp = suport.components
+        for nid in suport.ids:
+            for compi in comp:
+                rset_map.add((nid, int(compi)))
+    return rset_map
+
+def get_qset(model: BDF) -> Any:
+    """creates the r-set"""
+    qset_map = set()
+    for qset in model.qsets:
+        if qset.type == 'QSET1':
+            comp = qset.components
+            for nid in qset.ids:
+                for compi in comp:
+                    qset_map.add((nid, int(compi)))
+        elif qset.type == 'QSET':
+            for nid, comp in zip(qset.ids, qset.components):
+                for compi in comp:
+                    qset_map.add((nid, int(compi)))
+        else:
+            raise NotImplementedError(qset)
+    return qset_map
+
+def get_residual_structure(model: BDF, dof_map, fset, idtype='int32'):
+    """gets the residual structure dofs"""
+    asetmap = get_aset(model)
+    bsetmap = get_bset(model)
+    csetmap = get_cset(model)
+    rsetmap = get_rset(model)
+    qsetmap = get_qset(model)
+    osetmap = get_omit_set(model)
+    aset = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype, use_ints=False)
+    bset = apply_dof_map_to_set(bsetmap, dof_map, idtype=idtype, use_ints=False)
+    cset = apply_dof_map_to_set(csetmap, dof_map, idtype=idtype, use_ints=False)
+    rset = apply_dof_map_to_set(rsetmap, dof_map, idtype=idtype, use_ints=False)
+    oset = apply_dof_map_to_set(osetmap, dof_map, idtype=idtype, use_ints=False)
+    qset = apply_dof_map_to_set(qsetmap, dof_map, idtype=idtype, use_ints=False)
+
+    #ndof = len(dof_map)
+    #print('aset =', aset)
+    #print('qset =', qset)
+    #print('fset =', fset)
+    #print('oset =', oset)
+
+    aqo_set = np.vstack([aset, qset, oset])
+    bcr_set = np.vstack([bset, cset, rset])
+    # The a-set and o-set are created in the following ways:
+    #    1. If only OMITi entries are present, then the o-set consists
+    #       of degrees-of-freedom listed explicitly on OMITi entries.
+    #       The remaining f-set degrees-of-freedom are placed in the
+    #       b-set, which is a subset of the a-set.
+    if np.any(oset) and ~np.any([aset, bset, cset, qset, rset]):
+        # b = f - o
+        bset = np.setdiff1d(fset, oset)
+        aset = bset
+        # 2. If ASETi or QSETi entries are present, then the a-set
+        #    consists of all degrees-of-freedom listed on ASETi entries
+        #    and any entries listing its subsets, such as QSETi, SUPORTi
+        #    CSETi, and BSETi entries. Any OMITi entries are redundant.
+        #    The remaining f-set degrees-of-freedom are placed in the
+        #    o-set.
+    elif np.any([aset, qset]):
+        abcqr_set = np.vstack([aset, bset, cset, qset, rset])
+        #print(abcqr_set)
+        aset = np.sum(abcqr_set, axis=0).astype('bool') # dim=2 -> row
+        if np.any(oset): # check no overlap with O set
+            ao_set = aset | oset
+            if np.any(ao_set):
+                raise RuntimeError('OMITi entries cannot overlap with ASETi entries '
+                                   'or any ASET subsets, such as QSETi, '
+                                   'SUPORTi, CSETi, and BSETi entries.')
+
+        oset = fset & ~aset # assign remaining to O set
+        # 3. If there are no ASETi, QSETi, or OMITi entries present but
+        #    there are SUPORTi, BSETi, or CSETi entries present, then
+        #    the entire f-set is placed in the a-set and the o-set is
+        #    not created.
+    elif (not np.any(aqo_set) and np.any(bcr_set)):
+        aset = fset
+        # 4. There must be at least one explicit ASETi, QSETi, or OMITi
+        #    entry for the o-set to exist, even if the ASETi, QSETi, or
+        #    OMITi entry is redundant. (related to item 3)
+    else:
+        # No model reduction - same as previous option
+        aset = fset
+    # Add ASET to residual structure TSET
+    tset = aset & ~qset
+
+    # Exclusive Degrees-of-freedom sets
+    # ---------------------------------
+    # m  # ([nGdof,1] logical) Degrees-of-freedom eliminated by multiple constraints
+    # sb # ([nGdof,numSID] logical) Degrees-of-freedom eliminated by single-point constraints that are included in boundary conditions
+    # sg # ([nGdof,1] logical) Degrees-of-freedom eliminated by single-point constraints that are specified on the PS field on node entries
+    # o  # ([nGdof,1] logical) Degrees-of-freedom omitted by structural matrix partitioning
+    # q  # ([nGdof,1] logical) Generalized degrees-of-freedom for dynamic reduction or component mode synthesis
+    # r  # ([nGdof,1] logical) Reference degrees-of-freedom used to determine free body motion
+    # c  # ([nGdof,1] logical) Degrees-of-freedom that are free during component mode synthesis or dynamic reduction
+    # b  # ([nGdof,1] logical) Degrees-of-freedom fixed during component mode analysis or dynamic reduction
+    # e  # ([nGdof,1] logical) extra degrees-of-freedom introduced in dynamic analysis
+    # sa # Permanently constrained aerodynamic degrees-of-freedom
+    # k  # Aerodynamic degrees-of-freedom
+
+    # Nonexclusive Degrees-of-freedom sets
+    # ------------------------------------
+    # s  # ([nGdof,numSID] logical) [sb + sg] Degrees-of-freedom eliminated by single point constraints
+    # l  # ([nGdof,1] logical) [b + c] Structural degrees-of-freedom remaining after the reference degrees-of-freedom are removed (degrees-of-freedom left over)
+    #    # ([nGdof,1] logical) [l + r] Total set of physical boundary degrees-of-freedom for superelements
+    #    # ([nGdof,1] logical) [t + q] Set assembled in superelement analysis
+    # d  # ([nGdof,1] logical) [a + e] Set used in dynamic analysis by the direct method
+    #    # ([nGdof,1] logical) [a + o] Unconstrained (free) structural degrees-of-freedom
+    # fe # ([nGdof,1] logical) [f + e] Free structural degrees-of-freedom plus extra degrees-of-freedom
+    #    # ([nGdof,1] logical) [f + s] Degrees-of-freedom not constrained by multipoint constraints
+    # ne % ([nGdof,1] logical) [n + e] Structural degrees-of-freedom not constrained by multipoint constraints plus extra degrees-of-freedom
+    # g = true(nGdof,1) [n + m] All structural degrees-of-freedom including scalar degrees-of-freedom
+    # p = [g + e] Physical degrees-of-freedom
+    # ps = [p + sa] Physical and constrained (SPCi) aerodynamic degrees-of-freedom
+    # pa = [ps + k] Physical set for aerodynamics
+    # fr = [f ? q ? r] Statically independent set minus the statically determinate supports
+    # v = [o + c + r] Set free to vibrate in dynamic reduction and component mode synthesis
+    return aset, tset
+
+def apply_dof_map_to_set(set_map, dof_map, idtype='int32', use_ints=True):
+    """changes a set defined in terms of (nid, comp) into an array of integers"""
+    if use_ints:
+        ndof = len(set_map)
+        aset = np.full(ndof, 0, dtype=idtype)
+        for i, dofi in enumerate(set_map):
+            aset[i] = dof_map[dofi]
+        aset.sort()
+    else:
+        ndof = len(dof_map)
+        aset = np.full(ndof, 0, dtype='bool')
+        for dofi in set_map:
+            i = dof_map[dofi]
+            aset[i] = True
+    return aset
