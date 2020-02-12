@@ -2236,7 +2236,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             #e2 = e2i[ipids, :, :]
             #assert e2.shape[0] == nelementsi
 
-            #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #telem = breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
             # [T^T][e][T]
             #print(e2.shape, telem.shape)
             #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
@@ -2284,7 +2284,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             #assert e2.shape[0] == nelementsi
 
 
-            #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #telem = breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
             # [T^T][e][T]
             #print(e2.shape, telem.shape)
             #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
@@ -2329,7 +2329,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
             # [T^T][e][T]
             #theta_mcid = theta_mcid_dict[etype]
-            #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #telem = breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
             #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
             #exx = eyy = ezz = 1.
             mpa = mass_per_area[ipids]
@@ -2359,7 +2359,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             normal /= ni[:, np.newaxis]
             area = 0.5 * ni
             assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
-            centroid = (p1 + p2 + p3 + p4) / 3.
+            centroid = (p1 + p2 + p3 + p4) / 4.
             #n = _normal(n1 - n3, n2 - n4)
 
             # e2i is (npids,3,3)
@@ -2370,7 +2370,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
             # [T^T][e][T]
             #theta_mcid = theta_mcid_dict[etype]
-            #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #telem = breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
             #exx = eyy = ezz = 1.
             #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
             mpa = mass_per_area[ipids]
@@ -2412,7 +2412,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             normal /= ni[:, np.newaxis]
             area = 0.5 * ni
             assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
-            centroid = (p1 + p2 + p3 + p4) / 3.
+            centroid = (p1 + p2 + p3 + p4) / 4.
 
             # e2i is (npids,3,3)
             # e2 is (nelementsi,3,3)
@@ -2422,7 +2422,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
 
             # [T^T][e][T]
             #theta_mcid = theta_mcid_dict[etype]
-            #telem = _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #telem = breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
             #exx = eyy = ezz = 1.
             #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
             mpa = mass_per_area[ipids]
@@ -2987,82 +2987,6 @@ def _bar_axes(all_nids, xyz_cid0, g0, offt, x, nelements):
     assert np.abs(x).max() > 0., 'x has nan values...only supports GGG'
     return jaxis
 
-
-def _breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2):
-    """calculate the material transformation matrix"""
-    is_mcid = np.array([isinstance(val, integer_types) for val in theta_mcid], dtype='bool')
-    nelements = len(theta_mcid)
-    imcid = np.where(is_mcid)[0]
-    itheta = np.where(~is_mcid)[0]
-    ielem = np.arange(nelements)
-    mcid = np.array(theta_mcid, dtype='int32')[imcid]
-    #thetad = np.array(theta_mcid, dtype='float64')[itheta]
-    #print('  nmcid=%s ntheta=%s' % (len(mcid), len(thetad)))
-    #print('mcid', mcid)
-    #print('thetad', thetad)
-
-    assert nelements > 0, nelements
-    telem = np.zeros((nelements, 3, 3), dtype='float64')
-    if len(imcid):
-        icids = np.searchsorted(cids, mcid)
-        iaxesi = iaxes[icids, :]
-        jmat = np.cross(normal[imcid, :], iaxesi) # k x i
-        ji = np.linalg.norm(jmat, axis=1)[:, np.newaxis]
-        ipos = np.where(ji > 0.)[0]
-        #izero = np.where(ji == 0.)[0]
-        #jmat[izero] = np.nan
-        jmat[ipos] /= ji[ipos]
-        # we do an extra normalization here because
-        # we had to project i onto the elemental plane
-        # unlike in the next block
-        imat = np.cross(jmat, normal[imcid, :])
-        telem[imcid, 0, :] = imat
-        telem[imcid, 1, :] = jmat
-
-    if len(itheta):
-        assert len(p1.shape) == 2, p1.shape
-        assert len(p2.shape) == 2, p1.shape
-        imat = p2[itheta, :] - p1[itheta, :]
-        assert len(imat.shape) == 2, imat.shape
-        ni = np.linalg.norm(imat, axis=1)
-        imat /= ni[:, np.newaxis]
-        jmat = np.cross(normal[itheta, :], imat) # k x i
-        nj = np.linalg.norm(jmat, axis=1)
-        jmat /= nj[:, np.newaxis]
-        telem[itheta, 0, :] = imat
-        telem[itheta, 1, :] = jmat
-    # rotate imat and jmat into the -theta frame?
-    # the next step is to rotate the [S] matrix into the global xyz frame
-
-    #       [ imat ]
-    #[Te] = [ jmat ]
-    #       [normal]
-    # [T] = [ti][ti^T]
-    # [Sbar] = [T_inv][S][T_inv^T]
-    # [Sg] = [Te^T][Sbar][Te]
-    #
-    telem[ielem, 2, :] = normal
-
-    T = np.eye(3, dtype='float64')
-    #K = T
-    K = np.zeros((6, 6), dtype='float64')
-    K[:3, :3] = T
-    K2 = K[:3, 3:]
-    K3 = K[3:, :3]
-    K4 = K[3:, 3:]
-    for i in range(3):
-        i1 = (i + 1) % 3
-        i2 = (i + 2) % 3
-        for j in range(3):
-            j1 = (j + 1) % 3
-            j2 = (j + 2) % 3
-            K2[i, j] = T[i, j1] * T[i, j2]
-            K3[i, j] = T[i1, j] * T[i2, j]
-            K4[i, j] = T[i1, j1] * T[i2, j2] + T[i1, j2] * T[i2, j1]
-    #K2[0, 0] = K2[0, 1]
-    #K2[0, 1] = K2[0, 2]
-    #K2[0, 2] = K2[0, 0]
-    return telem
 
 #def _breakdown_transform_shell(e2, telem):
     #"""helper method for the breakdown"""
