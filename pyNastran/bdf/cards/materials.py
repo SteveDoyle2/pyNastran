@@ -281,7 +281,7 @@ class NXSTRAT(BaseCard):
     def _finalize_hdf5(self, encoding):
         """hdf5 helper function"""
         keys, values = self.params
-        self.params = {key : value for key, value in zip(keys, values)}
+        self.params = dict(zip(keys, values))
 
     def __init__(self, sid, params, comment=''):
         if comment:
@@ -2446,6 +2446,10 @@ class MAT10(Material):
         self.table_rho = table_rho
         self.table_ge = table_ge
         self.table_gamma = table_gamma
+        self.table_bulk_ref = None
+        self.table_rho_ref = None
+        self.table_gamma_ref = None
+        self.table_ge_ref = None
 
     def validate(self):
         assert self.bulk >= 0., self
@@ -3909,7 +3913,7 @@ def get_mat_props_S(mid_ref):
             [      0.,       0.,       0.,    0., 1/g31,    0.],
             [      0.,       0.,       0.,    0.,    0., 1/g12],
         ])
-        denom = 1 - nu12 * nu21
+        #denom = 1 - nu12 * nu21
         #C2 = np.array([
             #[e1, -nu21 * e1, 0.],
             #[nu12 * e2, e2, 0.],

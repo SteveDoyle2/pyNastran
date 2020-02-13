@@ -1046,7 +1046,8 @@ class PCOMP(CompositeShellProperty):
         zmeans = (z0 + z1) / 2.
         return z0, z1, zmeans
 
-    def get_ABD_matrices(self, theta_offset: float=0.) -> np.ndarray:
+    def get_individual_ABD_matrices(
+            self, theta_offset: float=0.) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Gets the ABD matrix
 
@@ -1092,11 +1093,24 @@ class PCOMP(CompositeShellProperty):
         B /= 2.
         D /= 3.
         #M /= 2.
+        return A, B, D
+
+    def get_ABD_matrices(self, theta_offset: float=0.) -> np.ndarray:
+        """
+        Gets the ABD matrix
+
+        Parameters
+        ----------
+        theta_offset : float
+            rotates the ABD matrix; measured in degrees
+
+        """
+        A, B, D = get_individual_ABD_matrices(theta_offset)
         ABD = np.block([
             [A, B],
             [B, D],
         ])
-        np.set_printoptions(linewidth=120, suppress=True)
+        #np.set_printoptions(linewidth=120, suppress=True)
         #print(ABD)
         return ABD
 
@@ -2411,7 +2425,8 @@ class PSHELL(Property):
         Sbar = np.linalg.multi_dot([T.T, S2, T])
         return Sbar
 
-    def get_ABD_matrices(self, theta_offset=0.):
+    def get_individual_ABD_matrices(
+            self, theta_offset: float=0.) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Gets the ABD matrix
 
@@ -2420,6 +2435,8 @@ class PSHELL(Property):
         theta_offset : float
             rotates the ABD matrix; measured in degrees
 
+        http://www2.me.rochester.edu/courses/ME204/nx_help/index.html#uid:id503291
+        Understanding Classical Lamination Theory
         """
         #mids = self.get_material_ids()
         thickness = self.Thickness()
@@ -2435,13 +2452,27 @@ class PSHELL(Property):
         # A16 A26 A66
         A = np.zeros((3, 3), dtype='float64')
         B = np.zeros((3, 3), dtype='float64')
-        D = np.zeros((3, 3), dtype='float64')
+        D = np.zeros((3, 3), dtype='float64') # TODO: 2x2 matrix?
+        z0 = self.z1
+        z1 = self.z2
 
-        Qbar = self.get_Qbar_matrix(self.mid1_ref, theta=0.)
+        if self.mid1_ref:
+            Qbar1 = self.get_Qbar_matrix(self.mid1_ref, theta=0.)
+            A += Qbar1 * thickness
 
-        A += Qbar * thickness
-        #B += Qbar * (z1i ** 2 - z0i ** 2)
-        #D += Qbar * (z1i ** 3 - z0i ** 3)
+        if self.mid2_ref:
+            Qbar2 = self.get_Qbar_matrix(self.mid2_ref, theta=0.)
+            D += Qbar2 * (z1 ** 3 - z0 ** 3) * self.twelveIt3
+        #Qbar3 = self.get_Qbar_matrix(self.mid3_ref, theta=0.)
+        if self.mid4_ref:
+            Qbar4 = self.get_Qbar_matrix(self.mid4_ref, theta=0.)
+            B += Qbar4 * (z1 ** 2 - z0 ** 2)
+
+        ts = self.tst * thickness
+
+        # [N, M, Q].T =   [TG1, T^2 * G4, 0]              * [epsilon0]
+                        # [T^2 * G4, T^3/12 * G2, 0]        [xi]
+                        # [0, 0, Ts * G3]                   [gamma]
 
         #B += Qbar * thickness * zmean
         #D += Qbar * thickness * (z1i ** 3 - z0i ** 3)
@@ -2450,12 +2481,25 @@ class PSHELL(Property):
         #B /= 2.
         #D /= 3.
         #M /= 2.
+        #np.set_printoptions(linewidth=120, suppress=True)
+        #print(ABD)
+        return A, B, D
+
+    def get_ABD_matrices(self, theta_offset=0.) -> np.ndarray:
+        """
+        Gets the ABD matrix
+
+        Parameters
+        ----------
+        theta_offset : float
+            rotates the ABD matrix; measured in degrees
+
+        """
+        A, B, D = self.get_individual_ABD_matrices(theta_offset=theta_offset)
         ABD = np.block([
             [A, B],
             [B, D],
         ])
-        np.set_printoptions(linewidth=120, suppress=True)
-        #print(ABD)
         return ABD
 
     def cross_reference(self, model: BDF) -> None:

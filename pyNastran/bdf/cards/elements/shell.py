@@ -43,7 +43,9 @@ if TYPE_CHECKING:  # pragma: no cover
 __all__ = ['CTRIA3', 'CTRIA6', 'CSHEAR',
            'CQUAD', 'CQUAD4', 'CQUAD8', 'CQUADR',
            'CPLSTN3', 'CPLSTN4', 'CPLSTN6', 'CPLSTN8',
-           '_triangle_area_centroid_normal', '_normal']
+           'CPLSTS3', 'CPLSTS4', 'CPLSTS6', 'CPLSTS8',
+           '_triangle_area_centroid_normal', '_normal',
+           'transform_shell_material_coordinate_system']
 
 def _triangle_area_centroid_normal(nodes, card):
     """
@@ -1062,7 +1064,7 @@ class CTRIA6(TriShell):
         zoffsets = []
         #t123 = []
 
-        element0 = model.elements[eids[0]]
+        #element0 = model.elements[eids[0]]
         neids = len(eids)
         nnodes = 6
         nodes = np.zeros((neids, nnodes), dtype='int32')
@@ -4684,21 +4686,23 @@ class SNORM(BaseCard):
             msg = self.comment + print_card_16(card)
         return msg
 
-def breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2):
+def transform_shell_material_coordinate_system(cids: List[int],
+                                               iaxes, theta_mcid, normal, p1, p2,
+                                               idtype='int32', fdtype='float64'):
     """calculate the material transformation matrix"""
     is_mcid = np.array([isinstance(val, integer_types) for val in theta_mcid], dtype='bool')
     nelements = len(theta_mcid)
     imcid = np.where(is_mcid)[0]
     itheta = np.where(~is_mcid)[0]
     ielem = np.arange(nelements)
-    mcid = np.array(theta_mcid, dtype='int32')[imcid]
+    mcid = np.array(theta_mcid, dtype=idtype)[imcid]
     #thetad = np.array(theta_mcid, dtype='float64')[itheta]
     #print('  nmcid=%s ntheta=%s' % (len(mcid), len(thetad)))
     #print('mcid', mcid)
     #print('thetad', thetad)
 
     assert nelements > 0, nelements
-    telem = np.zeros((nelements, 3, 3), dtype='float64')
+    telem = np.zeros((nelements, 3, 3), dtype=fdtype)
     if len(imcid):
         icids = np.searchsorted(cids, mcid)
         iaxesi = iaxes[icids, :]
@@ -4739,9 +4743,9 @@ def breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2
     #
     telem[ielem, 2, :] = normal
 
-    T = np.eye(3, dtype='float64')
+    T = np.eye(3, dtype=fdtype)
     #K = T
-    K = np.zeros((6, 6), dtype='float64')
+    K = np.zeros((6, 6), dtype=fdtype)
     K[:3, :3] = T
     K2 = K[:3, 3:]
     K3 = K[3:, :3]

@@ -398,5 +398,130 @@ def setup_case_control(model, extra_case_lines=None):
     model.sol = 101
     model.case_control_deck = cc
 
+class TestSolverShell(unittest.TestCase):
+    """tests the shells"""
+    def test_quad4_bad_normal(self):
+        """test that the code crashes with a bad normal"""
+        model = BDF(debug=False, log=None, mode='msc')
+        mid = 3
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        model.add_grid(2, [1., 0., 2.])
+        model.add_grid(4, [0., 0., 2.])
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(5, 5, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_pcomp(5, [mid], [0.1], thetas=None,
+                        souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None, comment='')
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        spc_id = 3
+        load_id = 2
+        components = '123456'
+        nodes = [1, 2]
+        model.add_spc1(spc_id, components, nodes, comment='')
+        model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        setup_case_control(model)
+        solver = Solver(model)
+
+        with self.assertRaises(RuntimeError):
+            # invalid normal vector
+            solver.run()
+
+    def test_quad4_bad_jacobian(self):
+        """
+        Tests that the code crashes with a really terrible CQUAD4
+
+        The Jacobian is defined between [-1, 1]
+        """
+        model = BDF(debug=False, log=None, mode='msc')
+        mid = 3
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [0.5, 100., 0.])
+        model.add_grid(3, [1., 0., 0.])
+        model.add_grid(4, [0.5, 1., 0.])
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(5, 5, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_pcomp(5, [mid], [0.1], thetas=None,
+                        souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None, comment='')
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        spc_id = 3
+        load_id = 2
+        components = '123456'
+        nodes = [1, 2]
+        model.add_spc1(spc_id, components, nodes, comment='')
+        model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        setup_case_control(model)
+        solver = Solver(model)
+        with self.assertRaises(RuntimeError):
+            solver.run()
+
+    def test_quad4_pshell_mat1(self):
+        """Tests a CQUAD4/PSHELL/MAT1"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0., ])
+        model.add_grid(2, [1., 0., 0., ])
+        model.add_grid(3, [1., 0., 2., ])
+        model.add_grid(4, [0., 0., 2., ])
+        mid = 3
+        nids = [1, 2, 3, 4]
+        model.add_cquad4(1, 1, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_cquad4(2, 2, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_cquad4(3, 3, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_cquad4(4, 4, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_cquad4(5, 5, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+
+        model.add_pshell(1, mid1=mid, t=0.3, mid2=None, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None, comment='')
+        model.add_pshell(2, mid1=None, t=0.3, mid2=mid, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None, comment='')
+        model.add_pshell(3, mid1=None, t=0.3, mid2=None, twelveIt3=1.0,
+                         mid3=mid, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None, comment='')
+        model.add_pshell(4, mid1=None, t=0.3, mid2=None, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=mid, comment='')
+        model.add_pcomp(5, [mid], [0.1], thetas=None,
+                        souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None, comment='')
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        spc_id = 3
+        load_id = 2
+        components = '123456'
+        nodes = [1, 2]
+        model.add_spc1(spc_id, components, nodes, comment='')
+        model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        setup_case_control(model)
+        solver = Solver(model)
+        with self.assertRaises(RuntimeError):
+            solver.run()
+
 if __name__ == '__main__':
     unittest.main()

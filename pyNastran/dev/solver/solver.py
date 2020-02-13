@@ -363,7 +363,7 @@ class Solver:
         dof_map = _get_dof_map(model)
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
-        Kbb, Kbbs = build_Kbb(model, dof_map, ndof)
+        Kbb, Kbbs = build_Kbb(model, dof_map, ndof, fdtype='float64')
         self.get_mpc_constraints(subcase, dof_map)
 
         Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid, inplace=False)
@@ -391,7 +391,9 @@ class Solver:
             aset = apply_dof_map_to_set(asetmap, dof_map, idtype=idtype)
         else:
             aset = np.setdiff1d(gset, sset) # a = g-s
-
+        naset = aset.sum()
+        if naset == 0:
+            raise RuntimeError('no residual structure found')
         # The a-set and o-set are created in the following ways:
         # 1. If only OMITi entries are present, then the o-set consists
         #    of DOFs listed explicitly on OMITi entries. The remaining
@@ -457,6 +459,11 @@ class Solver:
         Kaas_, ipositive, inegative, sz_set = remove_rows(Kaas, aset, idtype=idtype)
         Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset, idtype=idtype)
         assert Kaas_.shape == Kaa_.shape
+
+        isolve = ipositive.sum()
+        if isolve == 0:
+            raise RuntimeError('no residual structure found')
+
         #Maa_ = Maa[ipositive, :][:, ipositive]
 
         Fs = np.zeros(ndof, dtype=fdtype)

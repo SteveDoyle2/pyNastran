@@ -1981,6 +1981,7 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
     #[Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
     out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
     nid_cp_cd, xyz_cid0, xyz_cp, unused_icd_transform, unused_icp_transform = out
+    del xyz_cp
     xyz_mean = xyz_cid0.mean(axis=0)
     assert len(xyz_mean) == 3, xyz_mean.shape
     reference_point = np.array([xyz_mean[0], 0., 0.], dtype='float64')
@@ -2076,7 +2077,8 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         etype = elem.type
         if etype in NO_MASS:
             continue
-        elif etype in ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
+
+        if etype in ['CONM1', 'CONM2', 'CMASS1', 'CMASS2', 'CMASS3', 'CMASS4']:
             eids_mass.append(eid)
             m = elem.Mass()
             centroid = elem.Centroid()
@@ -2236,7 +2238,8 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             #e2 = e2i[ipids, :, :]
             #assert e2.shape[0] == nelementsi
 
-            #telem = breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #telem = transform_shell_material_coordinate_system(
+                #cids, iaxes, theta_mcid, normal, p1, p2)
             # [T^T][e][T]
             #print(e2.shape, telem.shape)
             #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
@@ -2284,7 +2287,8 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             #assert e2.shape[0] == nelementsi
 
 
-            #telem = breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
+            #telem = transform_shell_material_coordinate_system(
+                #cids, iaxes, theta_mcid, normal, p1, p2)
             # [T^T][e][T]
             #print(e2.shape, telem.shape)
             #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
@@ -2295,171 +2299,29 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
             nsm = npl * length
 
         elif etype in ['CTRIA3', 'CTRIA6', 'CTRIAR', ]:
-            # no offsets
-            nids2 = nids[:, :3]
-            pids = np.array(pids_dict[etype], dtype='int32')
-            assert len(pids) > 0, pids
-            all_pids = np.array(pids_per_area_dict['shell'], dtype='int32')
-            mass_per_area = np.array(mass_per_area_dict['shell'])
-            nsm_per_area = np.array(nsm_per_area_dict['shell'])
-            thickness = np.array(thickness_dict['shell'])
-            assert len(mass_per_area) > 0, mass_per_area_dict
-
-            ipids = np.searchsorted(all_pids, pids)
-            inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 3)
-            p1 = xyz_cid0[inids[:, 0], :]
-            p2 = xyz_cid0[inids[:, 1], :]
-            p3 = xyz_cid0[inids[:, 2], :]
-
-            # normal is correct; matters for +rotation and offsets
-            v12 = p1 - p2
-            v13 = p1 - p3
-            normal = np.cross(v12, v13)
-            ni = np.linalg.norm(normal, axis=1)
-            normal /= ni[:, np.newaxis]
-            area = 0.5 * ni
-            assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
-            centroid = (p1 + p2 + p3) / 3.
-
-            # e2i is (npids,3,3)
-            # e2 is (nelementsi,3,3)
-            #e2i = np.array(e2_dict['shell'], dtype='float64')
-            #e2 = e2i[ipids, :, :]
-            #assert e2.shape[0] == nelementsi
-
-            # [T^T][e][T]
-            #theta_mcid = theta_mcid_dict[etype]
-            #telem = breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
-            #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
-            #exx = eyy = ezz = 1.
-            mpa = mass_per_area[ipids]
-            npa = nsm_per_area[ipids]
-            mass = mpa * area
-            nsm = npa * area
+            centroid, mass, nsm = _breakdown_tri(
+                xyz_cid0, nids, nelementsi, etype,
+                all_nids, all_pids,
+                pids_dict, pids_per_area_dict,
+                mass_per_area_dict, nsm_per_area_dict, thickness_dict)
         elif etype == 'CSHEAR':
-            pids = np.array(pids_dict[etype], dtype='int32')
-            assert len(pids) > 0, pids
-            all_pids = np.array(pids_per_area_dict['shear'])
-            mass_per_area = np.array(mass_per_area_dict['shear'])
-            nsm_per_area = np.array(nsm_per_area_dict['shear'])
-            thickness = np.array(thickness_dict['shear'])
-            assert len(mass_per_area) > 0, mass_per_area_dict
-            ipids = np.searchsorted(all_pids, pids)
-            inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 4)
-            p1 = xyz_cid0[inids[:, 0], :]
-            p2 = xyz_cid0[inids[:, 1], :]
-            p3 = xyz_cid0[inids[:, 2], :]
-            p4 = xyz_cid0[inids[:, 3], :]
-
-            # normal is correct; matters for +rotation and offsets
-            v13 = p1 - p3
-            v24 = p2 - p4
-            normal = np.cross(v13, v24)
-            ni = np.linalg.norm(normal, axis=1)
-            normal /= ni[:, np.newaxis]
-            area = 0.5 * ni
-            assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
-            centroid = (p1 + p2 + p3 + p4) / 4.
-            #n = _normal(n1 - n3, n2 - n4)
-
-            # e2i is (npids,3,3)
-            # e2 is (nelementsi,3,3)
-            #e2i = np.array(e2_dict['shear'], dtype='float64')
-            #e2 = e2i[ipids, :, :]
-            #assert e2.shape[0] == nelementsi
-
-            # [T^T][e][T]
-            #theta_mcid = theta_mcid_dict[etype]
-            #telem = breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
-            #exx = eyy = ezz = 1.
-            #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
-            mpa = mass_per_area[ipids]
-            npa = nsm_per_area[ipids]
-            mass = mpa * area
-            nsm = npa * area
-
-            # assume the panel is square to calculate w; then multiply by t to get tw
-            tw = thickness[ipids] * np.sqrt(area)
-            assert len(tw) > 0, tw
-            #Ax = tw * norm(cross(xaxis, normal), axis=1)
-            #Ay = tw * norm(cross(yaxis, normal), axis=1)
-            #Az = tw * norm(cross(zaxis, normal), axis=1)
+            centroid, mass, nsm = _breakdown_cshear(
+                xyz_cid0, nids, nelementsi, etype,
+                all_nids, all_pids,
+                pids_dict, pids_per_area_dict,
+                mass_per_area_dict, nsm_per_area_dict, thickness_dict)
         elif etype in ['CQUAD4', 'CQUAD8', 'CQUADR', 'CQUAD']:
-            # no offsets
-            nids2 = nids[:, :4]
-            assert  nids2.shape[0] == nelementsi, nids2.shape
-            pids = np.array(pids_dict[etype], dtype='int32')
-            assert len(pids) > 0, pids
-            all_pids = np.array(pids_per_area_dict['shell'])
-            mass_per_area = np.array(mass_per_area_dict['shell'])
-            nsm_per_area = np.array(nsm_per_area_dict['shell'])
-            thickness = np.array(thickness_dict['shell'])
-            assert len(mass_per_area) > 0, mass_per_area_dict
-            assert len(thickness) > 0, thickness
-
-            ipids = np.searchsorted(all_pids, pids)
-            inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
-            p1 = xyz_cid0[inids[:, 0], :]
-            p2 = xyz_cid0[inids[:, 1], :]
-            p3 = xyz_cid0[inids[:, 2], :]
-            p4 = xyz_cid0[inids[:, 3], :]
-
-            # normal is correct; matters for +rotation and offsets
-            v13 = p1 - p3
-            v24 = p2 - p4
-            normal = np.cross(v13, v24)
-            ni = np.linalg.norm(normal, axis=1)
-            normal /= ni[:, np.newaxis]
-            area = 0.5 * ni
-            assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
-            centroid = (p1 + p2 + p3 + p4) / 4.
-
-            # e2i is (npids,3,3)
-            # e2 is (nelementsi,3,3)
-            #e2i = np.array(e2_dict['shell'], dtype='float64')
-            #e2 = e2i[ipids, :, :]
-            #assert e2.shape[0] == nelementsi
-
-            # [T^T][e][T]
-            #theta_mcid = theta_mcid_dict[etype]
-            #telem = breakdown_material_coordinate_system(cids, iaxes, theta_mcid, normal, p1, p2)
-            #exx = eyy = ezz = 1.
-            #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
-            mpa = mass_per_area[ipids]
-            npa = nsm_per_area[ipids]
-            mass = mpa * area
-            nsm = npa * area
-
-            # assume the panel is square to calculate w; then multiply by t to get tw
-            assert len(area) > 0, area
-            assert len(thickness) > 0, thickness
-            tw = thickness[ipids] * np.sqrt(area)
-            #Ax = tw * norm(cross(xaxis, normal), axis=1)
-            #Ay = tw * norm(cross(yaxis, normal), axis=1)
-            #Az = tw * norm(cross(zaxis, normal), axis=1)
+            centroid, mass, nsm = _breakdown_quad(
+                xyz_cid0, nids, nelementsi, etype,
+                all_nids, all_pids,
+                pids_dict, pids_per_area_dict,
+                mass_per_area_dict, nsm_per_area_dict, thickness_dict)
 
         elif etype == 'CTETRA':
-            nids2 = nids[:, :4]
-            pids = np.array(pids_dict[etype], dtype='int32')
-            assert len(pids) > 0, pids
-            rho = np.array(mass_per_volume_dict['PSOLID']) # rho
-            assert  len(rho) > 0., rho
-
-            inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
-            p1 = xyz_cid0[inids[:, 0], :]
-            p2 = xyz_cid0[inids[:, 1], :]
-            p3 = xyz_cid0[inids[:, 2], :]
-            p4 = xyz_cid0[inids[:, 3], :]
-            centroid = (p1 + p2 + p3 + p4) / 4.
-            a = p1 - p4
-            b = cross(p2 - p4, p3 - p4)
-            #volume = -dot(a, b) / 6.
-            #volume = -np.tensordot(a, b, axes=1)
-            volume = -np.einsum('ij,ij->i', a, b) / 6.
-            mass = rho * volume
-            nsm = np.zeros(nelementsi, dtype='float64')
-            #exx = eyy = ezz = 1.
-            #e2 = None
+            centroid, mass, nsm = _breakdown_tet(
+                xyz_cid0, nids, nelementsi, etype,
+                all_nids,
+                pids_dict, mass_per_volume_dict)
         elif etype == 'CHEXA':
             nids2 = nids[:, :8]
             pids = np.array(pids_dict[etype], dtype='int32')
@@ -2663,6 +2525,195 @@ def mass_properties_breakdown(model, element_ids=None, mass_ids=None, nsm_id=Non
         plot_inertia(total_mass, cg, inertia)
     return total_mass_overall, cg_overall, inertia_overall, mass, cg, inertia
 
+def _breakdown_tri(xyz_cid0, nids, nelementsi, etype,
+                   all_nids, all_pids,
+                   pids_dict, pids_per_area_dict,
+                   mass_per_area_dict, nsm_per_area_dict, thickness_dict):
+    # no offsets
+    nids2 = nids[:, :3]
+    pids = np.array(pids_dict[etype], dtype='int32')
+    assert len(pids) > 0, pids
+    all_pids = np.array(pids_per_area_dict['shell'], dtype='int32')
+    mass_per_area = np.array(mass_per_area_dict['shell'])
+    nsm_per_area = np.array(nsm_per_area_dict['shell'])
+    thickness = np.array(thickness_dict['shell'])
+    assert len(mass_per_area) > 0, mass_per_area_dict
+    assert len(thickness) > 0, thickness
+
+    ipids = np.searchsorted(all_pids, pids)
+    inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 3)
+    p1 = xyz_cid0[inids[:, 0], :]
+    p2 = xyz_cid0[inids[:, 1], :]
+    p3 = xyz_cid0[inids[:, 2], :]
+
+    # normal is correct; matters for +rotation and offsets
+    v12 = p1 - p2
+    v13 = p1 - p3
+    normal = np.cross(v12, v13)
+    ni = np.linalg.norm(normal, axis=1)
+    normal /= ni[:, np.newaxis]
+    area = 0.5 * ni
+    assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
+    centroid = (p1 + p2 + p3) / 3.
+
+    # e2i is (npids,3,3)
+    # e2 is (nelementsi,3,3)
+    #e2i = np.array(e2_dict['shell'], dtype='float64')
+    #e2 = e2i[ipids, :, :]
+    #assert e2.shape[0] == nelementsi
+
+    # [T^T][e][T]
+    #theta_mcid = theta_mcid_dict[etype]
+    #telem = transform_shell_material_coordinate_system(
+        #cids, iaxes, theta_mcid, normal, p1, p2)
+    #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+    #exx = eyy = ezz = 1.
+    mpa = mass_per_area[ipids]
+    npa = nsm_per_area[ipids]
+    mass = mpa * area
+    nsm = npa * area
+    return centroid, mass, nsm
+
+def _breakdown_quad(xyz_cid0, nids, nelementsi, etype,
+                    all_nids, all_pids,
+                    pids_dict, pids_per_area_dict,
+                    mass_per_area_dict, nsm_per_area_dict, thickness_dict):
+    # no offsets
+    nids2 = nids[:, :4]
+    assert  nids2.shape[0] == nelementsi, nids2.shape
+    pids = np.array(pids_dict[etype], dtype='int32')
+    assert len(pids) > 0, pids
+    all_pids = np.array(pids_per_area_dict['shell'])
+    mass_per_area = np.array(mass_per_area_dict['shell'])
+    nsm_per_area = np.array(nsm_per_area_dict['shell'])
+    thickness = np.array(thickness_dict['shell'])
+    assert len(mass_per_area) > 0, mass_per_area_dict
+    assert len(thickness) > 0, thickness
+
+    ipids = np.searchsorted(all_pids, pids)
+    inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
+    p1 = xyz_cid0[inids[:, 0], :]
+    p2 = xyz_cid0[inids[:, 1], :]
+    p3 = xyz_cid0[inids[:, 2], :]
+    p4 = xyz_cid0[inids[:, 3], :]
+
+    # normal is correct; matters for +rotation and offsets
+    v13 = p1 - p3
+    v24 = p2 - p4
+    normal = np.cross(v13, v24)
+    ni = np.linalg.norm(normal, axis=1)
+    normal /= ni[:, np.newaxis]
+    area = 0.5 * ni
+    assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
+    centroid = (p1 + p2 + p3 + p4) / 4.
+
+    # e2i is (npids,3,3)
+    # e2 is (nelementsi,3,3)
+    #e2i = np.array(e2_dict['shell'], dtype='float64')
+    #e2 = e2i[ipids, :, :]
+    #assert e2.shape[0] == nelementsi
+
+    # [T^T][e][T]
+    #theta_mcid = theta_mcid_dict[etype]
+    #telem = transform_shell_material_coordinate_system(
+        #cids, iaxes, theta_mcid, normal, p1, p2)
+    #exx = eyy = ezz = 1.
+    #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+    mpa = mass_per_area[ipids]
+    npa = nsm_per_area[ipids]
+    mass = mpa * area
+    nsm = npa * area
+
+    # assume the panel is square to calculate w; then multiply by t to get tw
+    assert len(area) > 0, area
+    assert len(thickness) > 0, thickness
+    #tw = thickness[ipids] * np.sqrt(area)
+    #Ax = tw * norm(cross(xaxis, normal), axis=1)
+    #Ay = tw * norm(cross(yaxis, normal), axis=1)
+    #Az = tw * norm(cross(zaxis, normal), axis=1)
+    return centroid, mass, nsm
+
+def _breakdown_cshear(xyz_cid0, nids, nelementsi, etype,
+                      all_nids, all_pids,
+                      pids_dict, pids_per_area_dict,
+                      mass_per_area_dict, nsm_per_area_dict, thickness_dict):
+    pids = np.array(pids_dict[etype], dtype='int32')
+    assert len(pids) > 0, pids
+    all_pids = np.array(pids_per_area_dict['shear'])
+    mass_per_area = np.array(mass_per_area_dict['shear'])
+    nsm_per_area = np.array(nsm_per_area_dict['shear'])
+    thickness = np.array(thickness_dict['shear'])
+    assert len(mass_per_area) > 0, mass_per_area_dict
+    ipids = np.searchsorted(all_pids, pids)
+    inids = np.searchsorted(all_nids, nids.ravel()).reshape(nelementsi, 4)
+    p1 = xyz_cid0[inids[:, 0], :]
+    p2 = xyz_cid0[inids[:, 1], :]
+    p3 = xyz_cid0[inids[:, 2], :]
+    p4 = xyz_cid0[inids[:, 3], :]
+
+    # normal is correct; matters for +rotation and offsets
+    v13 = p1 - p3
+    v24 = p2 - p4
+    normal = np.cross(v13, v24)
+    ni = np.linalg.norm(normal, axis=1)
+    normal /= ni[:, np.newaxis]
+    area = 0.5 * ni
+    assert len(area) == nelementsi, 'len(area)=%s nelementsi=%s' % (len(area), nelementsi)
+    centroid = (p1 + p2 + p3 + p4) / 4.
+    #n = _normal(n1 - n3, n2 - n4)
+
+    # e2i is (npids,3,3)
+    # e2 is (nelementsi,3,3)
+    #e2i = np.array(e2_dict['shear'], dtype='float64')
+    #e2 = e2i[ipids, :, :]
+    #assert e2.shape[0] == nelementsi
+
+    # [T^T][e][T]
+    #theta_mcid = theta_mcid_dict[etype]
+    #telem = transform_shell_material_coordinate_system(
+        #cids, iaxes, theta_mcid, normal, p1, p2)
+    #exx = eyy = ezz = 1.
+    #exx, eyy, ezz = _breakdown_transform_shell(e2, telem)
+    mpa = mass_per_area[ipids]
+    npa = nsm_per_area[ipids]
+    mass = mpa * area
+    nsm = npa * area
+
+    # assume the panel is square to calculate w; then multiply by t to get tw
+    tw = thickness[ipids] * np.sqrt(area)
+    assert len(tw) > 0, tw
+    #Ax = tw * norm(cross(xaxis, normal), axis=1)
+    #Ay = tw * norm(cross(yaxis, normal), axis=1)
+    #Az = tw * norm(cross(zaxis, normal), axis=1)
+    return centroid, mass, nsm
+
+def _breakdown_tet(
+        xyz_cid0, nids, nelementsi, etype,
+        all_nids,
+        pids_dict, mass_per_volume_dict):
+    nids2 = nids[:, :4]
+    pids = np.array(pids_dict[etype], dtype='int32')
+    assert len(pids) > 0, pids
+    rho = np.array(mass_per_volume_dict['PSOLID']) # rho
+    assert  len(rho) > 0., rho
+
+    inids = np.searchsorted(all_nids, nids2.ravel()).reshape(nelementsi, 4)
+    p1 = xyz_cid0[inids[:, 0], :]
+    p2 = xyz_cid0[inids[:, 1], :]
+    p3 = xyz_cid0[inids[:, 2], :]
+    p4 = xyz_cid0[inids[:, 3], :]
+    centroid = (p1 + p2 + p3 + p4) / 4.
+    a = p1 - p4
+    b = cross(p2 - p4, p3 - p4)
+    #volume = -dot(a, b) / 6.
+    #volume = -np.tensordot(a, b, axes=1)
+    volume = -np.einsum('ij,ij->i', a, b) / 6.
+    mass = rho * volume
+    nsm = np.zeros(nelementsi, dtype='float64')
+    #exx = eyy = ezz = 1.
+    #e2 = None
+    return centroid, mass, nsm
+
 def plot_inertia(total_mass, cg, inertia):  # pragma: no cover
     ycg = cg[:, 1]
     ixx = inertia[:, 0]
@@ -2721,7 +2772,8 @@ def _breakdown_property_dicts(model):
         ptype = prop.type
         if ptype in NO_MASS:
             continue
-        elif ptype in 'PROD':
+
+        if ptype in 'PROD':
             pids_per_length_dict[ptype].append(pid)
             mid_ref = prop.mid_ref
             #Sei2, unused_Sei3 = get_mat_props_S(mid_ref)
