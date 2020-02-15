@@ -4,7 +4,7 @@ from pyNastran.dev.solver.solver import Solver, BDF
 from pyNastran.bdf.case_control_deck import CaseControlDeck
 
 
-class TestSolverSpring(unittest.TestCase):
+class TestSpring(unittest.TestCase):
     def test_celas1(self):
         """Tests a CELAS1/PELAS"""
         model = BDF(debug=True, log=None, mode='msc')
@@ -77,7 +77,7 @@ class TestSolverSpring(unittest.TestCase):
         assert np.allclose(solver.xa_[0], d)
 
 
-class TestSolverRod(unittest.TestCase):
+class TestRod(unittest.TestCase):
     """tests the rods"""
     def test_crod_axial(self):
         """Tests a CROD/PROD"""
@@ -108,6 +108,7 @@ class TestSolverRod(unittest.TestCase):
         model.add_spc1(spc_id, components, nodes, comment='')
         setup_case_control(model)
         solver = Solver(model)
+        #with self.assertRaises(RuntimeError):
         solver.run()
 
     def test_crod_torsion(self):
@@ -140,6 +141,61 @@ class TestSolverRod(unittest.TestCase):
         setup_case_control(model)
         solver = Solver(model)
         solver.run()
+
+    def test_crod_spcd(self):
+        """Tests a CROD/PROD"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        nids = [1, 2]
+        eid = 1
+        pid = 2
+        mid = 3
+        E = 42.
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+        model.add_crod(eid, pid, nids)
+        model.add_prod(pid, mid, A=1.0, j=0., c=0., nsm=0.)
+
+        load_id = 2
+        spc_id = 3
+        nid = 2
+        mag = 1.
+        fxyz = [0., 0., 0.]
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
+
+        nodes = 1
+        components = 123456
+        #model.add_spc1(spc_id, components, nodes, comment='')
+        model.add_spc(spc_id, nodes, components, 0., comment='')
+
+        #components = 123456
+        #nodes = 1
+        #enforced = 0.1
+        #model.add_spc(spc_id, nodes, components, enforced, comment='')
+        nodes = 2
+        components = 1
+        enforced = 0.1
+        model.add_spcd(load_id, nodes, components, enforced, comment='')
+
+        components = 123456
+        #model.add_spc1(spc_id, components, nodes, comment='')
+        model.add_spc(spc_id, nodes, components, 0., comment='')
+        setup_case_control(model)
+        solver = Solver(model)
+        solver.run()
+        # F = kx
+        dx = enforced
+        k = E
+        F = k * dx
+        assert len(solver.xa_) == 0, solver.xa_
+        assert len(solver.Fa_) == 0, solver.Fa_
+        assert np.allclose(solver.xg[6], dx), solver.xa_
+        assert np.allclose(solver.Fg[6], F), solver.xa_
+        #assert np.allclose(solver.Fa_[0], 0.), solver.Fa_
+
 
     def test_crod(self):
         """Tests a CROD/PROD"""
@@ -335,9 +391,12 @@ class TestSolverRod(unittest.TestCase):
         # F = k * d
         daxial = mag_axial / kaxial
         dtorsion = mag_torsion / ktorsion
+        print(solver.xa_)
         assert np.allclose(solver.xa_[0], daxial), f'daxial={daxial} kaxial={kaxial} xa_={solver.xa_}'
-        assert np.allclose(solver.xa_[3], dtorsion), f'dtorsion={dtorsion} ktorsion={ktorsion} xa_={solver.xa_}'
+        assert np.allclose(solver.xa_[1], dtorsion), f'dtorsion={dtorsion} ktorsion={ktorsion} xa_={solver.xa_}'
 
+class TestBar(unittest.TestCase):
+    """tests the CBARs"""
     def test_cbar(self):
         """Tests a CBAR/PBAR"""
         model = BDF(debug=True, log=None, mode='msc')
@@ -363,7 +422,55 @@ class TestSolverRod(unittest.TestCase):
                        c1=0., c2=0., d1=0., d2=0.,
                        e1=0., e2=0., f1=0., f2=0.,
                        k1=1.e8, k2=1.e8, comment='')
+        load_id = 2
+        spc_id = 3
+        nid = 2
+        mag = 1.
+        fxyz = [1., 0., 0.]
+        model.add_force(load_id, nid, mag, fxyz, cid=0)
 
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_case_control(model)
+        solver = Solver(model)
+        solver.run()
+
+    def test_cbeam(self):
+        """Tests a CBEAM/PBEAM"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        nids = [1, 2]
+        eid = 1
+        pid = 2
+        mid = 3
+        E = 3.0e7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+                       Sc=0.0, Ss=0.0, mcsid=0)
+
+        x = [0., 1., 0.]
+        g0 = None
+        model.add_cbeam(eid, pid, nids, x, g0, offt='GGG', bit=None,
+                        pa=0, pb=0, wa=None, wb=None, sa=0, sb=0, comment='')
+        #beam_type = 'BAR'
+        xxb = [0.]
+        #dims = [[1., 2.]]
+        #model.add_pbeaml(pid, mid, beam_type, xxb, dims,
+                         #so=None, nsm=None, group='MSCBML0', comment='')
+        so = ['YES']
+        area = [1.0]
+        i1 = [1.]
+        i2 = [2.]
+        i12 = [0.]
+        j = [2.]
+        model.add_pbeam(pid, mid, xxb, so, area, i1, i2, i12, j, nsm=None,
+                        c1=None, c2=None, d1=None, d2=None, e1=None, e2=None, f1=None, f2=None,
+                        k1=1., k2=1., s1=0., s2=0., nsia=0., nsib=None, cwa=0., cwb=None,
+                        m1a=0., m2a=0., m1b=None, m2b=None, n1a=0., n2a=0., n1b=None, n2b=None,
+                        comment='')
         load_id = 2
         spc_id = 3
         nid = 2
@@ -398,7 +505,7 @@ def setup_case_control(model, extra_case_lines=None):
     model.sol = 101
     model.case_control_deck = cc
 
-class TestSolverShell(unittest.TestCase):
+class TestShell(unittest.TestCase):
     """tests the shells"""
     def test_quad4_bad_normal(self):
         """test that the code crashes with a bad normal"""

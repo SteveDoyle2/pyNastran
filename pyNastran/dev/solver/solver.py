@@ -136,12 +136,22 @@ class Solver:
                         sset[idof] = True
                         spc_set.append(idof)
                         xspc[idof] = 0.
+            elif spc.type == 'SPC':
+                for nid, components, enforcedi in zip(spc.nodes, spc.components, spc.enforced):
+                    for component in components:
+                        dofi = int(component)
+                        idof = dof_map[(nid, dofi)]
+                        sset[idof] = True
+                        spc_set.append(idof)
+                        xspc[idof] = enforcedi
+            else:
+                raise NotImplementedError(spc)
         spc_set = np.array(spc_set, dtype='int32')
         #print('spc_set =', spc_set, xspc)
         return spc_set, sset, xspc
 
 
-    def build_Fb(self, dof_map: Dict[Any, int], ndof: int, subcase: Subcase) -> np.array:
+    def build_Fb(self, xg, sset_b, dof_map: Dict[Any, int], ndof: int, subcase: Subcase) -> np.array:
         model = self.model
         Fb = np.zeros(ndof, dtype='float32')
         if 'LOAD' not in subcase:
@@ -180,6 +190,15 @@ class Solver:
                     # TODO: wrong because it doesn't handle SPOINTs
                     fi = dof_map[(nid, dof)]
                     Fb[fi] = fxyz[i]
+            elif load.type == 'SPCD':
+                for nid, components, enforced in zip(load.nodes, load.components, load.enforced):
+                    for component in components:
+                        dof = int(component)
+                        fi = dof_map[(nid, dof)]
+                        #print(f'(nid, dof) = ({nid}, {dof}) => {fi}')
+                        xg[fi] = enforced
+                        Fb[fi] = np.nan
+                        sset_b[fi] = True
             else:
                 print(load.get_stats())
                 raise NotImplementedError(load)
@@ -373,7 +392,7 @@ class Solver:
         gset = np.arange(ndof, dtype=idtype)
         gset_b = np.ones(ndof, dtype='bool')
         sset, sset_b, xg = self.build_xg(dof_map, ndof, subcase)
-
+        Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase)
 
         # Constrained set
         # sset = sb_set | sg_set
@@ -382,8 +401,8 @@ class Solver:
         #fset = ~sset; # & ~mset
         fset_b = gset_b & sset_b # g-b
         #self.log.debug(f'gset_b = {gset_b}')
-        self.log.debug(f'sset_b = {sset_b}')
-        self.log.debug(f'fset_b = {fset_b}')
+        #self.log.debug(f'sset_b = {sset_b}')
+        #self.log.debug(f'fset_b = {fset_b}')
         aset, tset = get_residual_structure(model, dof_map, fset_b)
 
         asetmap = get_aset(model)
@@ -392,7 +411,8 @@ class Solver:
         else:
             aset = np.setdiff1d(gset, sset) # a = g-s
         naset = aset.sum()
-        if naset == 0:
+        nsset = sset.sum()
+        if naset == 0 and nsset == 0:
             raise RuntimeError('no residual structure found')
         # The a-set and o-set are created in the following ways:
         # 1. If only OMITi entries are present, then the o-set consists
@@ -407,35 +427,74 @@ class Solver:
         # 3. If there are no ASETi, QSETi, or OMITi entries present but there
         #    are SUPORTi, BSETi, or CSETi entries present, then the entire
         #    f-set is placed in the a-set and the o-set is not created.
-        self.sset = sset
-        self.aset = aset
 
-        Fb = self.build_Fb(dof_map, ndof, subcase)
         page_num = write_oload(Fb, dof_map, isubcase, ngrid, ndof_per_grid,
                                f06_file, page_stamp, page_num)
 
         Fg = Fb
-        Fa, Fs = partition_vector(Fb, [['a', aset], ['s', sset]])
-        del Fb
         #Mgg = build_Mgg(model, subcase)
 
         # aset - analysis set
         # sset - SPC set
         #print('aset = ', aset)
         #print('sset = ', sset)
-        xa, xs = partition_vector(xg, [['a', aset], ['s', sset]])
+
+        # u1 = Kaa^-1 * (F1k - Kas*u2k)
+        abs_xg = np.abs(xg)
+        finite_xg = np.any(np.isfinite(abs_xg))
+        if finite_xg and np.nanmax(abs_xg) > 0.:
+            self.log.info(f'SPCD found')
+            self.log.info(f'  xg = {xg}')
+            self.log.info(f'  Fg = {Fg}')
+            set0 = xg == 0.
+            set0_ = np.where(set0)
+
+            #sset = np.array([])
+            sset = np.setdiff1d(sset, set0_)
+            #self.log.info(f'  set0 = {set0}')
+            self.log.info(f'  set0_ = {set0_}')
+            self.log.info(f'  aset = {aset}')
+            self.log.info(f'  sset = {sset}')
+
+            #self.log.info(f'  Fa_solve = {Fa_solve}')
+            #Fa = Fa.reshape(len(Fa), 1)
+            #xa = Fa.reshape(len(xa), 1)
+            #print(f'Fa.shape = {Fa.shape}')
+            #print(f'xa.shape = {xa.shape}')
+            #print(f'Kas.shape = {Kas.shape}')
+            #Kas_xa = Ksa @ xa
+            #print(f'Kas @ xa.shape = {Kas_xa.shape}')
+            #Fa_solve = Fa - Kas @ xa
+            #Kspc = Kas[ixa, :][:, ixa]
+            #print(Kspc.shape)
+        else:
+            set0 = sset
+            sset = []
+            #self.sset = sset
+        self.sset = sset
+        self.set0 = set0
+        self.aset = aset
+
+        Fa, Fs = partition_vector(Fb, [['a', aset], ['s', sset]])
+        del Fb, Fs
+
+        xa, xs, x0 = partition_vector(xg, [['a', aset], ['s', sset], ['0', set0]])
+        #self.log.info(f'xg = {xg}')
         del xg
-        #print(f'xa = {xa}')
-        #print(f'xs = {xs}')
+        #self.log.info(f'xa = {xa}')
+        #self.log.info(f'xs = {xs}')
+        #self.log.info(f'x0 = {x0}')
+        del x0
+
         #print(Kgg)
         assert Kggs.shape == Kgg.shape
         self.Kgg = Kgg
-        K = partition_matrix(Kgg, [['a', aset], ['s', sset]])
+        K = partition_matrix(Kgg, [['a', aset], ['s', sset], ['0', set0]])
         Kaa = K['aa']
         Kss = K['ss']
         #Kas = K['as']
         Ksa = K['sa']
-        Ks = partition_matrix(Kggs, [['a', aset], ['s', sset]])
+        Ks = partition_matrix(Kggs, [['a', aset], ['s', sset], ['0', set0]])
         Kaas = Ks['aa']
         assert Kaa.shape == Kaas.shape
 
@@ -444,8 +503,10 @@ class Solver:
         #M = partition_matrix(Mgg, [['a', aset], ['s', sset]])
         #Maa = M['aa']
         #Kss = K['ss']
-        #Kas = K['as']
-        #Ksa = K['sa']
+        Kas = K['as']
+        Ksa = K['sa']
+        K0a = K['0a']
+        K0s = K['0s']
         #self.Maa = Maa
         #[Kaa]{xa} + [Kas]{xs} = {Fa}
         #[Ksa]{xa} + [Kss]{xs} = {Fs}
@@ -456,58 +517,77 @@ class Solver:
         #print(Kaa)
         #print(Kas)
         #print(Kss)
-        Kaas_, ipositive, inegative, sz_set = remove_rows(Kaas, aset, idtype=idtype)
-        Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset, idtype=idtype)
-        assert Kaas_.shape == Kaa_.shape
+        Fa_solve = Fa
+        is_sset = len(sset)
+        is_set0 = len(set0)
+        is_aset = len(aset)
+        if is_sset:
+            Fa_solve = Fa - Kas @ xs
+            self.log.info(f'  Fa_solve = {Fa_solve}')
 
-        isolve = ipositive.sum()
-        if isolve == 0:
-            raise RuntimeError('no residual structure found')
-
-        #Maa_ = Maa[ipositive, :][:, ipositive]
-
-        Fs = np.zeros(ndof, dtype=fdtype)
-        #print(f'Fg = {Fg}')
-        #print(f'Fa = {Fa}')
-        #print(f'Fs = {Fs}')
-        Fa_ = Fa[ipositive]
-        # [A]{x} = {b}
-        # [Kaa]{x} = {F}
-        # {x} = [Kaa][F]
-        #print(f'Kaa:\n{Kaa}')
-        #print(f'Fa: {Fa}')
-
-        log.debug(f'Kaas_:\n{Kaas_.todense()}')
-        log.debug(f'Kaa_:\n{Kaa_}')
-        log.debug(f'Fa_: {Fa_} {type(Fa_)}')
-        xa_ = np.linalg.solve(Kaa_, Fa_)
-        xas_ = sci_sparse.linalg.spsolve(Kaas_, Fa_)
-        #xas_ = np.linalg.solve(Kaas_.todense(), Fa_)
-        sparse_error = np.linalg.norm(xa_ - xas_)
-        if sparse_error > 1e-12:
-            log.warning(f'sparse_error = {sparse_error}')
-
-        self.xa_ = xa
         Fg_oload = Fg.copy()
-        log.info(f'xa_ = {xa_}')
+        if is_aset:
+            xa_, ipositive, inegative = solve(Kaa, Kaas, Fa_solve, aset, log, idtype=idtype)
+            Fa_ = Fa[ipositive]
 
-        xa[ipositive] = xa_
-        xa[inegative] = 0.
+            log.info(f'aset_ = {ipositive}')
+            log.info(f'xa_ = {xa_}')
+            log.info(f'Fa_ = {Fa_}')
+
+            xa[ipositive] = xa_
+            xa[inegative] = 0.
+            self.xa_ = xa_
+            self.Fa_ = Fa_
+        else:
+            self.log.warning('A-set is empty; all DOFs are constrained')
+            self.xa_ = []
+            self.Fa_ = []
+
 
         xg = np.full(ndof, np.nan, dtype=fdtype)
+        #print('aset =', aset)
+        #print('sset =', sset)
+        #print('set0 =', set0)
         xg[aset] = xa
         xg[sset] = xs
+        xg[set0] = 0.
         Fg[aset] = Fa
+        #print(xg)
+        self.xg = xg
+        self.Fg = Fg
 
         fspc = np.full(ndof, 0., dtype=fdtype)
-        fspci = Ksa @ xa + Kss @ xs
-        Fg[sset] = fspci
-        fspc[sset] = fspci
+
+        if is_sset:
+            log.info(f'fspc_s recovery')
+            log.debug(f'  aset = {aset}')
+            log.debug(f'  sset = {sset}')
+            log.debug(f'  xa = {xa}')
+            log.debug(f'  xs = {xs}')
+            fspc_s = Ksa @ xa + Kss @ xs
+            log.debug(f'  fspc_s = {fspc_s}')
+            log.debug(f'  Ksa @ xa = {Ksa @ xa}')
+            log.debug(f'  Kss @ xs = {Kss @ xs}')
+            log.debug(f'  sum = {Ksa @ xa + Kss @ xs}')
+            Fg[sset] = fspc_s
+            fspc[sset] = fspc_s
+        if is_set0:
+            log.info(f'fspc_0 recovery')
+            fspc_0 = K0a @ xa + K0s @ xs
+            log.debug(f'  fspc_0 = {fspc_0}')
+            Fg[set0] = fspc_0
+            fspc[set0] = fspc_0
+
+        log.debug(f'xa = {xa}')
+        log.debug(f'xs = {xs}')
+        log.debug(f'fspc = {fspc}')
 
         xb = xg_to_xb(model, xg, ngrid, ndof_per_grid)
         Fb = xg_to_xb(model, Fg, ngrid, ndof_per_grid)
 
-        log.debug(f'Fs = {Fs}')
+        #log.debug(f'Fs = {Fs}')
+        #log.debug(f'Fb = {Fb}')
+        #log.debug(f'xb = {xb}')
 
         self._save_displacment(
             f06_file,
@@ -550,8 +630,8 @@ class Solver:
                                page_stamp=page_stamp)
         #Fg[sz_set] = -1
         #xg[sz_set] = -1
-        log.debug(f'xa = {xa}')
         op2.write_op2('junk.op2', post=-1, endian=b'<', skips=None, nastran_format='nx')
+        self.log.info('finished')
         return end_options
 
     def _save_displacment(self, f06_file,
@@ -622,7 +702,7 @@ class Solver:
         if f06_request_name not in subcase:
             return
         isubcase = subcase.id
-        self.log.debug(f'saving {f06_request_name} -> {table_name}')
+        #self.log.debug(f'saving {f06_request_name} -> {table_name}')
         unused_nids_write, write_f06, write_op2 = get_plot_request(
             subcase, f06_request_name)
         nnodes = node_gridtype.shape[0]
@@ -761,7 +841,10 @@ class Solver:
             is_sort1=True, is_random=False, is_msc=True, random_code=0,
             title=title, subtitle=subtitle, label=label)
         #op2.eigenvectors[isubcase] = eigenvectors
-        #if write_f06:
+
+        write_f06 = True
+        if write_f06:
+            str(page_num)
             #page_num = eigenvectors.write_f06(
                 #f06_file, header=None,
                 #page_stamp=page_stamp, page_num=page_num,
@@ -772,9 +855,9 @@ class Solver:
 
         #Fg[aset] = Fa
         #Fg[sset] = fspc
-        log.debug(f'xa = {xa}')
+        #log.debug(f'xa = {xa}')
         #log.debug(f'Fs = {Fs}')
-        log.debug(f'xg = {xg}')
+        #log.debug(f'xg = {xg}')
         #log.debug(f'Fg = {Fg}')
 
         str(f06_file)
@@ -825,10 +908,13 @@ def partition_matrix(matrix, sets) -> Dict[Tuple[str, str], np.ndarray]:
             matrices[aname + bname] = matrix[aset, :][:, bset]
     return matrices
 
-def partition_vector(vector, sets) -> List[np.ndarray]:
+def partition_vector(vector, sets, fdtype='float64') -> List[np.ndarray]:
     """partitions a vector"""
     vectors = []
     for unused_aname, aset in sets:
+        if len(aset) == 0:
+            vectors.append(np.array([], dtype=fdtype))
+            continue
         vectori = vector[aset]
         vectors.append(vectori)
     return vectors
@@ -1311,6 +1397,8 @@ def Kbb_to_Kgg(model: BDF, Kbb: np.ndarray, ngrid: int, ndof_per_grid: int, inpl
 
 def write_oload(Fb, dof_map, isubcase: int, ngrid: int, ndof_per_grid: int,
                 f06_file, page_stamp: str, page_num: int):
+    str(ngrid)
+    str(dof_map)
     fxyz_mxyz = Fb[:ngrid*ndof_per_grid].reshape(ngrid, ndof_per_grid)
     fxyz_mxyz_sum = fxyz_mxyz.sum(axis=0)
 
@@ -1325,7 +1413,49 @@ def write_oload(Fb, dof_map, isubcase: int, ngrid: int, ndof_per_grid: int,
     page_num = oload.write_f06(f06_file, page_stamp, page_num)
     return page_num
 
+def solve(Kaa, Kaas, Fa_solve, aset, log, idtype='int32'):
+    Kaas_, ipositive, inegative, sz_set = remove_rows(Kaas, aset, idtype=idtype)
+    Kaa_, ipositive, inegative, sz_set = remove_rows(Kaa, aset, idtype=idtype)
+    assert Kaas_.shape == Kaa_.shape
+
+    #if np.linalg.det(Kaa) == 0.:
+        #log.error('singular Kaa')
+
+    isolve = len(ipositive)
+    if isolve == 0:
+        print(ipositive)
+        print(Kaa_)
+        #print(Kaa_)
+        raise RuntimeError('no residual structure found')
+
+    #Maa_ = Maa[ipositive, :][:, ipositive]
+
+    #print(f'Fg = {Fg}')
+    #print(f'Fa = {Fa}')
+    #print(f'Fs = {Fs}')
+
+    Fa_ = Fa_solve[ipositive]
+    log.info(f'Fa_ = {Fa_}')
+    # [A]{x} = {b}
+    # [Kaa]{x} = {F}
+    # {x} = [Kaa][F]
+    #print(f'Kaa:\n{Kaa}')
+    #print(f'Fa: {Fa}')
+
+    log.debug(f'Kaas_:\n{Kaas_.todense()}')
+    log.debug(f'Kaa_:\n{Kaa_}')
+    log.debug(f'Fa_: {Fa_}')
+    xa_ = np.linalg.solve(Kaa_, Fa_)
+    xas_ = sci_sparse.linalg.spsolve(Kaas_, Fa_)
+    #xas_ = np.linalg.solve(Kaas_.todense(), Fa_)
+    sparse_error = np.linalg.norm(xa_ - xas_)
+    if sparse_error > 1e-12:
+        log.warning(f'sparse_error = {sparse_error}')
+    return xa_, ipositive, inegative
+
 def build_Mgg(model: BDF, subcase: Subcase, ndof: int, fdtype='float64'):
     Mbb = np.eye(ndof, dtype=fdtype)
+    str(model)
+    str(subcase)
     print(Mbb.shape)
     return Mbb

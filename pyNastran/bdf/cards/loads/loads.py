@@ -840,10 +840,22 @@ class SPCD(Load):
         if comment:
             self.comment = comment
         self.sid = sid
+        if isinstance(nodes, int):
+            nodes = [nodes]
+        if isinstance(components, str):
+            components = [components]
+        elif isinstance(components, int):
+            components = [str(components)]
+        if isinstance(enforced, float):
+            enforced = [enforced]
         self.nodes = nodes
         self.components = components
         self.enforced = enforced
         self.nodes_ref = None
+        assert isinstance(self.nodes, list), self.nodes
+        assert isinstance(self.components, list), self.components
+        assert isinstance(self.enforced, list), self.enforced
+
 
     @classmethod
     def add_card(cls, card, comment=''):

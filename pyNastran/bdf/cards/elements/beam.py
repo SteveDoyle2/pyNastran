@@ -545,7 +545,7 @@ class CBEAM(LineElement):
         description of the OFFT flag.
 
         is_passed: bool
-        out: (wa, wb, _ihat, jhat, khat)
+        out: (wa, wb, ihat, jhat, khat)
         """
         is_failed = True
         #TODO: not integrated with CBAR yet...

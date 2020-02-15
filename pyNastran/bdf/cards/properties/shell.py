@@ -1105,7 +1105,7 @@ class PCOMP(CompositeShellProperty):
             rotates the ABD matrix; measured in degrees
 
         """
-        A, B, D = get_individual_ABD_matrices(theta_offset)
+        A, B, D = self.get_individual_ABD_matrices(theta_offset)
         ABD = np.block([
             [A, B],
             [B, D],

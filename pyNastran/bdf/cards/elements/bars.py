@@ -835,6 +835,98 @@ class CBAR(LineElement):
         #x3 = set_blank_if_default(self.x[2], 0.0)
         return list(self.x)
 
+    def get_axes(self, model):
+        """
+        Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
+
+        Notes
+        -----
+        :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
+        description of the OFFT flag.
+
+        is_passed: bool
+        out: (wa, wb, ihat, jhat, khat)
+        """
+        is_failed = True
+
+        check_offt(self)
+        is_failed = True
+        ihat = None
+        yhat = None
+        zhat = None
+
+        eid = self.eid
+        (nid1, nid2) = self.node_ids
+        node1 = model.nodes[nid1]
+        node2 = model.nodes[nid2]
+        xyz1 = node1.get_position()
+        xyz2 = node2.get_position()
+
+        elem = model.elements[eid]
+        pid_ref = elem.pid_ref
+        if pid_ref is None:
+            pid_ref = model.Property(elem.pid)
+        assert not isinstance(pid_ref, integer_types), elem
+
+        is_failed, (wa, wb, ihat, yhat, zhat) = self.get_axes_by_nodes(
+            model, pid_ref, node1, node2, xyz1, xyz2, model.log)
+        return is_failed, (wa, wb, ihat, yhat, zhat)
+
+    def get_axes_by_nodes(self, model, pid_ref, node1, node2, xyz1, xyz2, log):
+        """
+        Gets the axes of a CBAR/CBEAM, while respecting the OFFT flag.
+
+        Notes
+        -----
+        :func:`pyNastran.bdf.cards.elements.bars.rotate_v_wa_wb` for a
+        description of the OFFT flag.
+
+        """
+        #TODO: not integrated with CBAR yet...
+
+        is_failed = True
+        eid = self.eid
+        #centroid = (n1 + n2) / 2.
+        #i = n2 - n1
+        #Li = norm(i)
+        #ihat = i / Li
+
+        elem = self
+        #(nid1, nid2) = elem.node_ids
+        #node1 = model.nodes[nid1]
+        #node2 = model.nodes[nid2]
+        #xyz1 = node1.get_position()
+        #xyz2 = node2.get_position()
+
+        # wa/wb are not considered in i_offset
+        # they are considered in ihat
+        i = xyz2 - xyz1
+        Li = norm(i)
+        if Li == 0.:
+            msg = 'xyz1=%s xyz2=%s\n%s' % (xyz1, xyz2, self)
+            raise ValueError(msg)
+        i_offset = i / Li
+
+        unused_v, wa, wb, xform = rotate_v_wa_wb(
+            model, elem,
+            xyz1, xyz2, node1, node2,
+            i_offset, i, eid, Li, log)
+        if wb is None:
+            # one or more of v, wa, wb are bad
+
+            # xform is xform_offset...assuming None
+            ihat = None
+            yhat = None
+            zhat = None
+            return is_failed, (wa, wb, ihat, yhat, zhat)
+
+        ihat = xform[0, :]
+        yhat = xform[1, :]
+        zhat = xform[2, :]
+
+        is_failed = False
+        return is_failed, (wa, wb, ihat, yhat, zhat)
+
     def get_orientation_vector(self, xyz):
         """
         Element offsets are defined in a Cartesian system located at the

@@ -713,6 +713,18 @@ class SPC(Constraint):
         Constraint.__init__(self)
         if comment:
             self.comment = comment
+
+        if isinstance(nodes, int):
+            nodes = [nodes]
+
+        if isinstance(components, str):
+            components = [components]
+        elif isinstance(components, int):
+            components = [str(components)]
+
+        if isinstance(enforced, float):
+            enforced = [enforced]
+
         self.conid = conid
         self.nodes = nodes
         self.components = components

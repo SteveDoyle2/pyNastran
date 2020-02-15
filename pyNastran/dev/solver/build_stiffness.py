@@ -6,11 +6,13 @@ from typing import Tuple, Any, TYPE_CHECKING
 import numpy as np
 import scipy.sparse as sci_sparse
 
-from .utils import lambda1d
 from pyNastran.bdf.cards.elements.shell import transform_shell_material_coordinate_system
+from .utils import lambda1d
+#from pyNastran.bdf.cards.elements.bars import get_bar_vector, get_bar_yz_transform
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF
-    from pyNastran.bdf.cards.elements.shell import CQUAD4
+    from pyNastran.bdf.bdf import BDF, CQUAD4, CBAR # , CBEAM
+    #from pyNastran.bdf.cards.elements.shell import CQUAD4
+
 
 
 def build_Kbb(model: BDF, dof_map, ndof, idtype='int32', fdtype='float32') -> Tuple[np.array, Any]:
@@ -20,6 +22,11 @@ def build_Kbb(model: BDF, dof_map, ndof, idtype='int32', fdtype='float32') -> Tu
     #print(dof_map)
 
     #_get_loadid_ndof(model, subcase_id)
+    out = model.get_xyz_in_coord_array(cid=0, fdtype=fdtype, idtype=idtype)
+    nid_cp_cd, xyz_cid0, xyz_cp, unused_icd_transform, unused_icp_transform = out
+    all_nids = nid_cp_cd[:, 0]
+    del xyz_cp, nid_cp_cd
+
     nelements = 0
     nelements += _build_kbb_celas1(model, Kbb, Kbbs, dof_map)
     nelements += _build_kbb_celas2(model, Kbb, Kbbs, dof_map)
@@ -27,12 +34,8 @@ def build_Kbb(model: BDF, dof_map, ndof, idtype='int32', fdtype='float32') -> Tu
     nelements += _build_kbb_crod(model, Kbb, Kbbs, dof_map)
     nelements += _build_kbb_ctube(model, Kbb, Kbbs, dof_map)
     nelements += _build_kbb_cbar(model, Kbb, Kbbs, dof_map)
-
-    out = model.get_xyz_in_coord_array(cid=0, fdtype=fdtype, idtype=idtype)
-    nid_cp_cd, xyz_cid0, xyz_cp, unused_icd_transform, unused_icp_transform = out
-    all_nids = nid_cp_cd[:, 0]
-    del xyz_cp, nid_cp_cd
-
+    nelements += _build_kbb_cbeam(model, Kbb, Kbbs, dof_map,
+                                  all_nids, xyz_cid0, idtype='int32', fdtype='float64')
     nelements += _build_kbb_cquad4(model, Kbb, Kbbs, dof_map,
                                    all_nids, xyz_cid0, idtype='int32', fdtype='float64')
     assert nelements > 0, nelements
@@ -46,27 +49,27 @@ def build_Kbb(model: BDF, dof_map, ndof, idtype='int32', fdtype='float32') -> Tu
 
 def _build_kbb_celas1(model: BDF, Kbb, Kbbs, dof_map):
     """fill the CELAS1 Kbb matrix"""
-    celas1s = model._type_to_id_map['CELAS1']
-    for eid in celas1s:
+    eids = model._type_to_id_map['CELAS1']
+    for eid in eids:
         elem = model.elements[eid]
         ki = elem.K()
         #print(elem, ki)
         #print(elem.get_stats())
         _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki)
-    return len(celas1s)
+    return len(eids)
 
 def _build_kbb_celas2(model: BDF, Kbb, Kbbs, dof_map):
     """fill the CELAS2 Kbb matrix"""
-    celas2s = model._type_to_id_map['CELAS2']
+    eids = model._type_to_id_map['CELAS2']
     #celas3s = model._type_to_id_map['CELAS3']
     #celas4s = model._type_to_id_map['CELAS4']
-    for eid in celas2s:
+    for eid in eids:
         elem = model.elements[eid]
         ki = elem.K()
         #print(elem, ki)
         #print(elem.get_stats())
         _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki)
-    return len(celas2s)
+    return len(eids)
 
 def _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki):
     """fill the CELASx Kbb matrix"""
@@ -88,25 +91,86 @@ def _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki):
     #Kbb[i, j] += ki
     #del i, j, ki, nid1, nid2, c1, c2
 
-def _build_kbb_cbar(model, Kbb, Kbbs, dof_map):
-    """fill the CBAR Kbb matrix"""
-    cbars = model._type_to_id_map['CBAR']
-    for eid in cbars:
-        elem = model.elements[eid]
+def _build_kbb_cbar(model, Kbb, Kbbs, dof_map, fdtype='float64'):
+    """fill the CBAR Kbb matrix using an Euler-Bernoulli beam"""
+    eids = model._type_to_id_map['CBAR']
+    nelements = len(eids)
+    if nelements == 0:
+        return nelements
+
+    for eid in eids:
+        elem = model.elements[eid]  # type: CBAR
+        nid1, nid2 = elem.nodes
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
-        _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
-    return len(cbars)
+
+        #is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+        #T = np.vstack([ihat, jhat, khat])
+        #z = np.zeros((3, 3), dtype='float64')
+        prop = elem.pid_ref
+        mat = prop.mid_ref
+        I1 = prop.I11()
+        I2 = prop.I22()
+        unused_I12 = prop.I12()
+        #J = prop.J()
+        #E = mat.E()
+        #G = mat.G()
+        z = np.zeros((3, 3), dtype='float64')
+        T = z
+        unused_Teb = np.block([
+            [T, z],
+            [z, T],
+        ])
+        is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+        print(wa, wb)
+        xyz1 = elem.nodes_ref[0].get_position() + wa
+        xyz2 = elem.nodes_ref[1].get_position() + wb
+        dxyz = xyz2 - xyz1
+        L = np.linalg.norm(dxyz)
+        pid_ref = elem.pid_ref
+        mat = pid_ref.mid_ref
+        T = np.vstack([ihat, jhat, khat])
+        z = np.zeros((3, 3), dtype=fdtype)
+        Teb = np.block([
+            [T, z, z, z],
+            [z, T, z, z],
+            [z, z, T, z],
+            [z, z, z, T]
+        ])
+
+        Ke = _beami_stiffness(L, pid_ref, mat, I1, I2)
+        K = Teb.T @ Ke @ Teb
+        dofs = [
+            (nid1, 1), (nid1, 2), (nid1, 3),
+            (nid1, 4), (nid1, 5), (nid1, 6),
+
+            (nid2, 1), (nid2, 2), (nid2, 3),
+            (nid2, 4), (nid2, 5), (nid2, 6),
+        ]
+        n_ijv = [
+            dof_map[(nid1, 1)], dof_map[(nid1, 2)], dof_map[(nid1, 3)],
+            dof_map[(nid1, 4)], dof_map[(nid1, 5)], dof_map[(nid1, 6)],
+
+            dof_map[(nid2, 1)], dof_map[(nid2, 2)], dof_map[(nid2, 3)],
+            dof_map[(nid2, 4)], dof_map[(nid2, 5)], dof_map[(nid2, 6)],
+        ]
+        for unused_dof1, i1 in zip(dofs, n_ijv):
+            for unused_dof2, i2 in zip(dofs, n_ijv):
+                ki = K[i1, i2]
+                if abs(ki) > 0.:
+                    Kbb[i1, i2] = ki
+                    Kbbs[i1, i2] = ki
+    return nelements
 
 def _build_kbb_crod(model, Kbb, Kbbs, dof_map):
     """fill the CROD Kbb matrix"""
-    crods = model._type_to_id_map['CROD']
-    for eid in crods:
+    eids = model._type_to_id_map['CROD']
+    for eid in eids:
         elem = model.elements[eid]
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
         _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
-    return len(crods)
+    return len(eids)
 
 def _build_kbb_ctube(model: BDF, Kbb, Kbbs, dof_map):
     """fill the CTUBE Kbb matrix"""
@@ -120,12 +184,12 @@ def _build_kbb_ctube(model: BDF, Kbb, Kbbs, dof_map):
 
 def _build_kbb_conrod(model: BDF, Kbb, Kbbs, dof_map):
     """fill the CONROD Kbb matrix"""
-    conrods = model._type_to_id_map['CONROD']
-    for eid in conrods:
+    eids = model._type_to_id_map['CONROD']
+    for eid in eids:
         elem = model.elements[eid]
         mat = elem.mid_ref
         _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
-    return len(conrods)
+    return len(eids)
 
 def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat, fdtype='float64'):
     """fill the ith rod Kbb matrix"""
@@ -230,7 +294,7 @@ def _build_kbb_cquad4(model: BDF, Kbb, Kbbs, dof_map,
     eids = np.array(model._type_to_id_map['CQUAD4'], dtype=idtype)
     nelements = len(eids)
     if nelements == 0:
-        return
+        return nelements
 
     eids.sort()
     ncoords = len(model.coords)
@@ -382,7 +446,7 @@ def _build_kbb_cquad4(model: BDF, Kbb, Kbbs, dof_map,
         pid_ref = elem.pid_ref
         #materials = []
         ptype = pid_ref.type
-        if ptype  == 'PSHELL':
+        if ptype == 'PSHELL':
             A, B, D = pid_ref.get_individual_ABD_matrices()
             str((A, B, D))
         elif ptype == 'PCOMP':
@@ -447,6 +511,120 @@ def _build_kbb_cquad4(model: BDF, Kbb, Kbbs, dof_map,
 
     if bad_jacobians:
         raise RuntimeError(f'elements={bad_jacobians} have invalid jacobians')
+    return nelements
 
+def _build_kbb_cbeam(model: BDF, Kbb, Kbbs, dof_map,
+                     all_nids, xyz_cid0, idtype='int32', fdtype='float64'):
+    """TODO: Timoshenko beam"""
+    str(all_nids)
+    str(xyz_cid0)
+    eids = np.array(model._type_to_id_map['CBEAM'], dtype=idtype)
+    nelements = len(eids)
+    if nelements == 0:
+        return nelements
 
-    return len(eids)
+    for eid in eids:
+        elem = model.elements[eid]
+        nid1, nid2 = elem.nodes
+        xyz1 = elem.nodes_ref[0].get_position()
+        xyz2 = elem.nodes_ref[1].get_position()
+        dxyz = xyz2 - xyz1
+        L = np.linalg.norm(dxyz)
+        pid_ref = elem.pid_ref
+        mat = pid_ref.mid_ref
+        is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+        T = np.vstack([ihat, jhat, khat])
+        z = np.zeros((3, 3), dtype=fdtype)
+        Teb = np.block([
+            [T, z, z, z],
+            [z, T, z, z],
+            [z, z, T, z],
+            [z, z, z, T]
+        ])
+        Iy = pid_ref.I11()
+        Iz = pid_ref.I22()
+        Ke = _beami_stiffness(L, pid_ref, mat, Iy, Iz)
+        K = Teb.T @ Ke @ Teb
+        dofs = [
+            (nid1, 1), (nid1, 2), (nid1, 3),
+            (nid1, 4), (nid1, 5), (nid1, 6),
+
+            (nid2, 1), (nid2, 2), (nid2, 3),
+            (nid2, 4), (nid2, 5), (nid2, 6),
+        ]
+        n_ijv = [
+            dof_map[(nid1, 1)], dof_map[(nid1, 2)], dof_map[(nid1, 3)],
+            dof_map[(nid1, 4)], dof_map[(nid1, 5)], dof_map[(nid1, 6)],
+
+            dof_map[(nid2, 1)], dof_map[(nid2, 2)], dof_map[(nid2, 3)],
+            dof_map[(nid2, 4)], dof_map[(nid2, 5)], dof_map[(nid2, 6)],
+        ]
+        for unused_dof1, i1 in zip(dofs, n_ijv):
+            for unused_dof2, i2 in zip(dofs, n_ijv):
+                ki = K[i1, i2]
+                if abs(ki) > 0.:
+                    Kbb[i1, i2] = ki
+                    Kbbs[i1, i2] = ki
+    return nelements
+
+def _beami_stiffness(L, prop, mat, Iy, Iz):
+    """gets the ith Euler-Bernoulli beam stiffness"""
+    E = mat.E()
+    G = mat.G()
+    A = prop.Area()
+    J = prop.J()
+
+    kaxial = E * A / L
+    ktorsion = G * J / L
+    ky = E * Iy / L
+    kz = E * Iz / L
+
+    K = np.zeros((12, 12), dtype='float64')
+    # axial
+    K[0, 0] = K[6, 6] = kaxial
+    K[6, 0] = K[0, 6] = -kaxial
+
+    # torsion
+    K[3, 3] = K[9, 9] = ktorsion
+    K[9, 3] = K[3, 9] = -ktorsion
+
+    #Fx - 0, 6
+    #Fy - 1, 7**
+    #Fz - 2, 8
+    #Mx - 3, 9
+    #My - 4, 10
+    #Mz - 5, 11**
+    # bending z (Fy/1/7, Mz/5/11)
+    #      1     5       7   11
+    # 1  [12  & 6L   & -12 & 6L
+    # 5  [6L  & 4L^2 & -6L & 2L^2
+    # 7  [-12 &-6L   &  12 & -6L
+    # 11 [6L  & 2L^2 & -6L & 4L^2
+    K[1, 1] = K[7, 7] = 12 * kz
+    K[1, 7] = K[1, 7] = -12 * kz
+    K[1, 5] = K[5, 1] = K[11, 1] = K[1, 11] = 6 * L * kz
+
+    K[5, 7] = K[7, 5] = K[7, 11] = K[11, 7] = -6 * L * kz
+    K[5, 11] = K[11, 5] = 2 * L * L * kz
+    K[5, 5] = K[11, 11] = 4 * L * L * kz
+
+    #Fx - 0, 6
+    #Fy - 1, 7
+    #Fz - 2, 8**
+    #Mx - 3, 9
+    #My - 4, 10**
+    #Mz - 5, 11
+    # bending y (Fz/2/8, My/4/10)
+    #      2     4       8   10
+    # 2  [12  & 6L   & -12 & 6L
+    # 4  [6L  & 4L^2 & -6L & 2L^2
+    # 8  [-12 &-6L   &  12 & -6L
+    # 10 [6L  & 2L^2 & -6L & 4L^2
+    K[2, 2] = K[8, 8] = 12 * ky
+    K[2, 8] = K[2, 8] = -12 * ky
+    K[2, 4] = K[4, 2] = K[10, 2] = K[2, 10] = 6 * L * ky
+
+    K[4, 8] = K[8, 4] = K[8, 10] = K[10, 8] = -6 * L * ky
+    K[4, 10] = K[10, 4] = 2 * L * L * ky
+    K[4, 4] = K[10, 10] = 4 * L * L * ky
+    return K
