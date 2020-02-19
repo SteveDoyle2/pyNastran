@@ -205,7 +205,8 @@ class Solver:
         #print(subcase)
         return Fb
 
-    def get_mpc_constraints(self, subcase: Subcase, dof_map):
+    def get_mpc_constraints(self, subcase: Subcase, dof_map, fdtype='float64'):
+        ndof = len(dof_map)
         model = self.model
         #Fb = np.zeros(ndof, dtype='float32')
         constraints = []
@@ -228,9 +229,12 @@ class Solver:
             #ieq += 1
             raise NotImplementedError(element.get_stats())
 
-        for mpc in mpcs:
+        nequations = len(mpcs)
+        Cmpc = sci_sparse.dok_matrix((nequations, ndof), dtype=fdtype)
+        for j, mpc in enumerate(mpcs):
             mpc_type = mpc.type
             if mpc_type == 'MPC':
+                print(mpc)
                 # The first degree-of-freedom (G1, C1) in the sequence is defined to
                 # be the dependent DOF.
                 # A dependent DOF assigned by one MPC entry cannot be assigned
@@ -242,12 +246,14 @@ class Solver:
 
                 #: Coefficient. (Real; Default = 0.0 except A1 must be nonzero.)
                 #self.coefficients = coefficients
-                #mpc.
+
                 for i, nid, component, coeff in zip(count(), mpc.nodes, mpc.components, mpc.coefficients):
                     self.log.debug(f'ieq={ieq} (g,c)={(nid, component)} coeff={coeff}')
                     assert isinstance(component, int), component
                     idof = dof_map[(nid, component)]
                     ieqs.append(i)
+                    Cmpc[j, idof] = coeff
+
                     dofs.append(idof)
                     coefficients.append(coeff)
                     if i == 0:
@@ -259,6 +265,7 @@ class Solver:
                 raise NotImplementedError(mpc.get_stats())
             ieq += 1
 
+        #print(f'Cmpc         = {Cmpc}')
         ieqs = np.array(ieqs, dtype='int32')
         independents = np.array(independents, dtype='int32')
         dependents = np.array(dependents, dtype='int32')
@@ -289,6 +296,16 @@ class Solver:
 
             break
         #for udof, in udofs:
+
+        if nequations:
+            self.log.info(f'Cmpc = {Cmpc}')
+            print('rows:')
+            for row in range(nequations):
+                dense_row = Cmpc[row, :].toarray()
+                abs_row = abs_row = np.abs(dense_row)
+                imax = np.where(dense_row == abs_row.max())[0][0]
+                print(Cmpc[row, :], imax)
+            #self.log.info(constraints)
 
         #uindependents, nicount = np.unique(independents, return_counts=True)
         #print(udofs, idofs)
