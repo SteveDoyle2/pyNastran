@@ -143,7 +143,7 @@ class TestRod(unittest.TestCase):
         solver.run()
 
     def test_crod_spcd(self):
-        """Tests a CROD/PROD"""
+        """Tests a CROD/PROD with an SPCD and no free DOFs"""
         model = BDF(debug=True, log=None, mode='msc')
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
@@ -179,6 +179,9 @@ class TestRod(unittest.TestCase):
         components = 1
         enforced = 0.1
         model.add_spcd(load_id, nodes, components, enforced, comment='')
+
+        components = '1'
+        model.add_spcd(9999999, nodes, components, enforced, comment='')
 
         components = 123456
         #model.add_spc1(spc_id, components, nodes, comment='')

@@ -383,11 +383,13 @@ class Solver:
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
         Kbb, Kbbs = build_Kbb(model, dof_map, ndof, fdtype='float64')
+        Mbb = build_Mgg(model, subcase, dof_map, ndof, fdtype='float64')
         self.get_mpc_constraints(subcase, dof_map)
 
         Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid, inplace=False)
         Kggs = Kbb_to_Kgg(model, Kbbs, ngrid, ndof_per_grid)
-        del Kbb, Kbbs
+        Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid, inplace=False)
+        del Kbb, Kbbs, Mbb
 
         gset = np.arange(ndof, dtype=idtype)
         gset_b = np.ones(ndof, dtype='bool')
@@ -432,7 +434,6 @@ class Solver:
                                f06_file, page_stamp, page_num)
 
         Fg = Fb
-        #Mgg = build_Mgg(model, subcase)
 
         # aset - analysis set
         # sset - SPC set
@@ -1453,9 +1454,61 @@ def solve(Kaa, Kaas, Fa_solve, aset, log, idtype='int32'):
         log.warning(f'sparse_error = {sparse_error}')
     return xa_, ipositive, inegative
 
-def build_Mgg(model: BDF, subcase: Subcase, ndof: int, fdtype='float64'):
+def build_Mgg(model: BDF, subcase: Subcase, dof_map, ndof: int, fdtype='float64'):
     Mbb = np.eye(ndof, dtype=fdtype)
     str(model)
     str(subcase)
     print(Mbb.shape)
+    for eid, elem in model.elements.items():
+        etype = elem.type
+        if etype in ['CROD', 'CONROD', 'CTUBE']:
+            # TODO: verify
+            mass = elem.Mass()
+            nid1, nid2 = elem.nodes
+            i1 = dof_map[(nid1, 1)]
+            j1 = dof_map[(nid2, 1)]
+
+            #i2 = dof_map[(nid1, 4)]
+            #j2 = dof_map[(nid2, 4)]
+            Mbb[i1, i1] = Mbb[i1+1, i1+1] = \
+            Mbb[j1, j1] = Mbb[j1+1, j1+1] = mass / 2
+        elif etype in ['CBAR', 'CBEAM']:
+            # TODO: verify
+            # TODO: add rotary inertia
+            mass = elem.Mass()
+            nid1, nid2 = elem.nodes
+            i1 = dof_map[(nid1, 1)]
+            j1 = dof_map[(nid2, 1)]
+
+            #i2 = dof_map[(nid1, 4)]
+            #j2 = dof_map[(nid2, 4)]
+            Mbb[i1, i1] = Mbb[i1+1, i1+1] = \
+            Mbb[j1, j1] = Mbb[j1+1, j1+1] = mass / 2
+        elif etype == 'CTRIA3':
+            # TODO: verify
+            # TODO: add rotary inertia
+            mass = elem.Mass()
+            nid1, nid2, nid3 = elem.nodes
+            i1 = dof_map[(nid1, 1)]
+            i2 = dof_map[(nid2, 1)]
+            i3 = dof_map[(nid3, 1)]
+            Mbb[i1, i1] = Mbb[i1+1, i1+1] = Mbb[i1+2, i1+2] = \
+            Mbb[i2, i2] = Mbb[i2+1, i2+1] = Mbb[i2+2, i2+2] = \
+            Mbb[i3, i3] = Mbb[i3+1, i3+1] = Mbb[i3+2, i3+2] = mass / 3
+        elif etype == 'CQUAD4':
+            # TODO: verify
+            # TODO: add rotary inertia
+            mass = elem.Mass()
+            nid1, nid2, nid3, nid4 = elem.nodes
+            i1 = dof_map[(nid1, 1)]
+            i2 = dof_map[(nid2, 1)]
+            i3 = dof_map[(nid3, 1)]
+            i4 = dof_map[(nid4, 1)]
+            Mbb[i1, i1] = Mbb[i1+1, i1+1] = Mbb[i1+2, i1+2] = \
+            Mbb[i2, i2] = Mbb[i2+1, i2+1] = Mbb[i2+2, i2+2] = \
+            Mbb[i3, i3] = Mbb[i3+1, i3+1] = Mbb[i3+2, i3+2] = \
+            Mbb[i4, i4] = Mbb[i4+1, i4+1] = Mbb[i4+2, i4+2] = mass / 4
+        else:  # pragma: no cover
+            print(elem.get_stats())
+            raise NotImplementedError(elem)
     return Mbb

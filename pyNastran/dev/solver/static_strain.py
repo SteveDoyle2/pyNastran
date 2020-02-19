@@ -122,7 +122,7 @@ def _recover_strain_rod(f06_file, op2,
         op2.conrod_strain[isubcase] = strain_obj
     elif element_name == 'CROD':
         op2.crod_strain[isubcase] = strain_obj
-    elif element_name == 'CROD':
+    elif element_name == 'CTUBE':
         op2.ctube_strain[isubcase] = strain_obj
     else:  # pragma: no cover
         raise NotImplementedError(element_name)

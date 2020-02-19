@@ -103,7 +103,7 @@ def _recover_force_rod(f06_file, op2,
         op2.conrod_force[isubcase] = force_obj
     elif element_name == 'CROD':
         op2.crod_force[isubcase] = force_obj
-    elif element_name == 'CROD':
+    elif element_name == 'CTUBE':
         op2.ctube_force[isubcase] = force_obj
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
@@ -123,7 +123,7 @@ def _recover_forcei_celas12(xg, dof_map, elem, ki: float):
     force = ki * strain
     return force
 
-def _recover_forcei_rod(xb, dof_map, elem, prop):  # pragma: no cover
+def _recover_forcei_rod(xb, dof_map, elem, prop):
     """get the static rod force"""
     nid1, nid2 = elem.nodes
 
