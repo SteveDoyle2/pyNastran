@@ -28,7 +28,7 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out, tol,
                           size=8, is_double=False,
                           remove_collapsed_elements=False,
                           avoid_collapsed_elements=False,
-                          crash_on_collapse=False, log=None, debug=True, method='old'):
+                          crash_on_collapse=False, log=None, debug=True, method='new'):
     """
     Equivalences nodes; keeps the lower node id; creates two nodes with the same
 
@@ -71,6 +71,9 @@ def bdf_equivalence_nodes(bdf_filename: str, bdf_filename_out, tol,
                  an alternative is to do Patran's method of avoiding collapse)
     debug : bool
         bdf debugging
+    method: str; default='new'
+        'new': doesn't require neq_max; new in v1.3
+        'old': use neq_max; used in v1.2
     log : logger(); default=None
         bdf logging
 

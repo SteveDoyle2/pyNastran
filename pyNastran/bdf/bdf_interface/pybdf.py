@@ -12,6 +12,7 @@ from io import StringIO
 
 import numpy as np
 from cpylog import get_logger2
+from pyNastran.nptyping import NDArrayN2int
 from pyNastran.utils import print_bad_path, _filename
 
 from pyNastran.bdf import BULK_DATA_CARDS, FLAGGED_CARDS
@@ -127,8 +128,9 @@ class BDFInputPy:
                 bulk_data_lines, bulk_data_ilines,
                 superelement_lines, superelement_ilines)
 
-    def _get_lines_zona(self, system_lines: List[str], bulk_data_lines: List[str], bulk_data_ilines: Any,
-                        punch: bool) -> Tuple[List[str], Any, List[str]]:
+    def _get_lines_zona(self, system_lines: List[str], bulk_data_lines: List[str],
+                        bulk_data_ilines: NDArrayN2int,
+                        punch: bool) -> Tuple[List[str], NDArrayN2int, List[str]]:
         """load and update the lines for ZONA"""
         system_lines2 = []
         for system_line in system_lines:
@@ -731,11 +733,13 @@ def _clean_comment(comment: str) -> Optional[str]:
 
 
 def _lines_to_decks(lines: List[str],
-                    ilines: Any,
+                    ilines: NDArrayN2int,
                     punch: Optional[bool],
                     log: Any,
                     keep_enddata: bool=True,
-                    consider_superelements: bool=False) -> Any:
+                    consider_superelements: bool=False) -> Tuple[
+                        List[str], List[str], List[str], List[str], NDArrayN2int,
+                        List[str], List[str], List[str]]:
     """
     Splits the BDF lines into:
      - system lines
@@ -840,7 +844,9 @@ def _lines_to_decks_main(lines: List[str],
                          ilines: Any, log: Any,
                          punch: Optional[bool]=False,
                          keep_enddata: bool=True,
-                         consider_superelements: bool=False) -> Any:
+                         consider_superelements: bool=False) -> Tuple[
+                        List[str], List[str], List[str], List[str], NDArrayN2int,
+                        List[str], List[str], List[str]]:
     """
     Splits the BDF lines into:
      - system lines
@@ -961,7 +967,6 @@ def _lines_to_decks_main(lines: List[str],
                 make_ilines=make_ilines, keep_enddata=keep_enddata)
             break
 
-
         elif flag == 1:
             # I don't think we need to handle the comment because
             # this uses a startswith
@@ -969,7 +974,8 @@ def _lines_to_decks_main(lines: List[str],
                 # case control
                 old_flags.append(flag)
                 if flag != 1:
-                    raise RuntimeError('expected a flag of 1 (executive control deck) when going to the case control deck')
+                    raise RuntimeError('expected a flag of 1 (executive control deck) '
+                                       'when going to the case control deck')
 
                 flag = 2
                 #flag_word = 'case'
@@ -1067,7 +1073,8 @@ def _lines_to_decks_main(lines: List[str],
                 #auxmodel_idi = int(uline.split('=')[1])
                 #auxmodels_to_find.append(auxmodel_idi)
                 if flag != 2:
-                    raise RuntimeError('expected a flag of 2 (case control deck) when going to an SUPER model')
+                    raise RuntimeError('expected a flag of 2 (case control deck) '
+                                       'when going to an SUPER model')
 
                 is_superelement = True
             elif uline.startswith('AUXMODEL'):
@@ -1076,7 +1083,8 @@ def _lines_to_decks_main(lines: List[str],
                 auxmodel_idi = int(uline.split('=')[1])
                 auxmodels_to_find.append(auxmodel_idi)
                 if flag != 2:
-                    raise RuntimeError('expected a flag of 2 (case control deck) when going to an AUXMODEL')
+                    raise RuntimeError('expected a flag of 2 (case control deck) '
+                                       'when going to an AUXMODEL')
                 is_auxmodel = True
             elif uline.startswith('AFPM'):
                 # case control line
@@ -1084,15 +1092,17 @@ def _lines_to_decks_main(lines: List[str],
                 afpm_idi = int(uline.split('=')[1])
                 afpms_to_find.append(afpm_idi)
                 if flag != 2:
-                    raise RuntimeError('expected a flag of 2 (case control deck) when going to an AFPM model')
+                    raise RuntimeError('expected a flag of 2 (case control deck) '
+                                       'when going to an AFPM model')
                 is_afpm = True
 
             #print('%s: %s' % (flag_word, line.rstrip()))
             current_lines.append(line.rstrip())
         elif flag == 3:
             if not(is_auxmodel is True or is_superelement is True or consider_superelements):
-                raise RuntimeError('one must be True: is_auxmodel=%s; is_superelement=%s; consider_superelements=%s' % (
-                    is_auxmodel, is_superelement, consider_superelements))
+                raise RuntimeError(f'one must be True: is_auxmodel={is_auxmodel}; '
+                                   'is_superelement={is_superelement}; '
+                                   'consider_superelements={consider_superelements}')
             #assert is_auxmodel is True or is_superelement is True or consider_superelements
 
             # we have to handle the comment because we could incorrectly
@@ -1153,7 +1163,8 @@ def _bulk_data_lines_extract(lines: List[str],
                              ilines: Any,
                              bulk_data_lines: List[str],
                              i: int,
-                             make_ilines: bool=True, keep_enddata: bool=True) -> Any:
+                             make_ilines: bool=True,
+                             keep_enddata: bool=True) -> NDArrayN2int:
     """grabs the bulk data lines and ilines when we're breaking"""
     if keep_enddata:
         for line in lines[i+1:]:
@@ -1193,7 +1204,7 @@ def _is_begin_bulk(uline: str) -> bool:
         'SUPER' not in uline)
     return is_begin_bulk
 
-def _read_bulk_for_auxmodel(ifile_iline, line, flag, bulk_data_lines,
+def _read_bulk_for_auxmodel(ifile_iline, line, flag: int, bulk_data_lines: List[str],
                             current_lines, current_ilines,
                             old_flags,
                             unused_is_auxmodel, auxmodel_lines, auxmodels_to_find, auxmodels_found,
@@ -1383,7 +1394,9 @@ def _check_valid_deck(flag: int, old_flags: List[int]) -> None:
         raise MissingDeckSections(msg)
     return
 
-def _show_bad_file(self: Any, bdf_filename: Union[str, StringIO], encoding: str, nlines_previous: int=10) -> None:
+def _show_bad_file(self: Any, bdf_filename: Union[str, StringIO],
+                   encoding: str,
+                   nlines_previous: int=10) -> None:
     """
     Prints the 10 lines before the UnicodeDecodeError occurred.
 
@@ -1536,7 +1549,7 @@ def _clean_comment_bulk(comment: str) -> str:
         #print(comment)
     return comment
 
-def _make_ilines(nlines: int, ifile: int) -> np.ndarray:
+def _make_ilines(nlines: int, ifile: int) -> NDArrayN2int:
     """helper method"""
     ilines = np.empty((nlines, 2), dtype='int32')
     ilines[:, 0] = ifile

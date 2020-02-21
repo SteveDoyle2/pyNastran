@@ -30,6 +30,7 @@ class TestVectorized(unittest.TestCase):
         model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
                         interspersed=False, enddata=None,
                         close=True)
+        os.remove(out_filename)
 
     def test_bwb(self):
         """tests bwb"""
@@ -44,6 +45,7 @@ class TestVectorized(unittest.TestCase):
         model.write_bdf(out_filename, encoding=None, size=8, is_double=False,
                         interspersed=False, enddata=None,
                         close=True)
+        os.remove(out_filename)
 
     def test_isat(self):
         """tests isat"""
@@ -168,6 +170,7 @@ class TestVectorized(unittest.TestCase):
         model.write_bdf(out_filename, encoding=None, size=16, is_double=False,
                         interspersed=False, enddata=None,
                         close=True)
+        os.remove(out_filename)
 
 
 if __name__ == '__main__':  # pragma: no cover

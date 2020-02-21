@@ -1,3 +1,4 @@
+import os
 import unittest
 import numpy as np
 from pyNastran.dev.solver.solver import Solver, BDF
@@ -8,6 +9,7 @@ class TestSpring(unittest.TestCase):
     def test_celas1(self):
         """Tests a CELAS1/PELAS"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'celas1.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0., 0., 0.])
         nids = [1, 2]
@@ -41,10 +43,13 @@ class TestSpring(unittest.TestCase):
         # 20=1000.*d
         d = mag / k
         assert np.allclose(solver.xa_[0], d)
+        os.remove(solver.f06_filename)
+        os.remove(solver.op2_filename)
 
     def test_celas2_cd(self):
         """Tests a CELAS2"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'celas2.bdf'
         model.add_grid(1, [0., 0., 0.])
         cd = 100
         model.add_grid(2, [0., 0., 0.], cd=cd)
@@ -82,6 +87,7 @@ class TestRod(unittest.TestCase):
     def test_crod_axial(self):
         """Tests a CROD/PROD"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'crod_axial.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -114,6 +120,7 @@ class TestRod(unittest.TestCase):
     def test_crod_torsion(self):
         """Tests a CROD/PROD"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'crod_torsion.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -145,6 +152,7 @@ class TestRod(unittest.TestCase):
     def test_crod_spcd(self):
         """Tests a CROD/PROD with an SPCD and no free DOFs"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'crod_spcd.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -203,6 +211,7 @@ class TestRod(unittest.TestCase):
     def test_crod(self):
         """Tests a CROD/PROD"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'crod.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -238,6 +247,7 @@ class TestRod(unittest.TestCase):
         same answer as ``test_crod``
         """
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'crod_aset.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -278,6 +288,7 @@ class TestRod(unittest.TestCase):
     def test_crod_mpc(self):
         """Tests a CROD/PROD"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'crod_mpc.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         model.add_grid(3, [1., 0., 0.])
@@ -315,6 +326,7 @@ class TestRod(unittest.TestCase):
     def test_ctube(self):
         """Tests a CTUBE/PTUBE"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'ctube.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -350,6 +362,7 @@ class TestRod(unittest.TestCase):
     def test_conrod(self):
         """Tests a CONROD"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'conrod.bdf'
         L = 1.
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [L, 0., 0.])
@@ -403,6 +416,7 @@ class TestBar(unittest.TestCase):
     def test_cbar(self):
         """Tests a CBAR/PBAR"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'cbar.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -442,6 +456,7 @@ class TestBar(unittest.TestCase):
     def test_cbeam(self):
         """Tests a CBEAM/PBEAM"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'cbeam.bdf'
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [1., 0., 0.])
         nids = [1, 2]
@@ -510,9 +525,10 @@ def setup_case_control(model, extra_case_lines=None):
 
 class TestShell(unittest.TestCase):
     """tests the shells"""
-    def test_quad4_bad_normal(self):
+    def test_cquad4_bad_normal(self):
         """test that the code crashes with a bad normal"""
         model = BDF(debug=False, log=None, mode='msc')
+        model.bdf_filename = 'cquad4_bad_normal.bdf'
         mid = 3
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(3, [1., 0., 0.])
@@ -543,14 +559,16 @@ class TestShell(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             # invalid normal vector
             solver.run()
+        #os.remove(model.bdf_filename)
 
-    def test_quad4_bad_jacobian(self):
+    def test_cquad4_bad_jacobian(self):
         """
         Tests that the code crashes with a really terrible CQUAD4
 
         The Jacobian is defined between [-1, 1]
         """
         model = BDF(debug=False, log=None, mode='msc')
+        model.bdf_filename = 'cquad4_bad_jacobian.bdf'
         mid = 3
         model.add_grid(1, [0., 0., 0.])
         model.add_grid(2, [0.5, 100., 0.])
@@ -579,10 +597,12 @@ class TestShell(unittest.TestCase):
         solver = Solver(model)
         with self.assertRaises(RuntimeError):
             solver.run()
+        #os.remove(model.bdf_filename)
 
-    def test_quad4_pshell_mat1(self):
+    def test_cquad4_pshell_mat1(self):
         """Tests a CQUAD4/PSHELL/MAT1"""
         model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'cquad4_pshell_mat1.bdf'
         model.add_grid(1, [0., 0., 0., ])
         model.add_grid(2, [1., 0., 0., ])
         model.add_grid(3, [1., 0., 2., ])
@@ -632,6 +652,9 @@ class TestShell(unittest.TestCase):
         solver = Solver(model)
         with self.assertRaises(RuntimeError):
             solver.run()
+        #os.remove(model.bdf_filename)
+        #os.remove(solver.f06_filename)
+        #os.remove(solver.op2_filename)
 
 if __name__ == '__main__':
     unittest.main()

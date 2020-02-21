@@ -143,6 +143,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
                 all_reqs['scipy'] = required_version
                 install_requires.append('scipy %s' % required_version)
         except ImportError:
+            all_reqs['scipy'] = required_version
             install_requires.append('scipy %s' % required_version)  # 1.4.1 used
 
     if is_gui:
@@ -155,9 +156,10 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
             if iver < iversion_check:
                 print("matplotlib.__version__ = %r < %r" % (matplotlib.__version__, version_check))
                     #matplotlib.__version__, str_version(iversion_check)))
-                all_reqs['matplotlib'] = required_version # '>= 2.1.2'
+                all_reqs['matplotlib'] = required_version
                 install_requires.append('matplotlib %s' % required_version)
         except ImportError:
+            all_reqs['matplotlib'] = required_version
             install_requires.append('matplotlib %s' % required_version)  # 3.2.0 used
 
 
@@ -171,17 +173,19 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
             all_reqs['cpylog'] = f'>= {required_version_str}'
             install_requires.append(f'cpylog >= {required_version_str}')
     except ImportError:
+        all_reqs['cpylog'] = f'>= {required_version_str}'
         install_requires.append(f'cpylog >= {required_version_str}')  # 1.3.1 used
 
     try:
         import nptyping
-        iver = int_version('nptyping', docopt.__version__)
-        all_reqs['nptyping'] = str_version(iver)
-        if iver < [0, 3, 1]:
-            print("nptyping.__version__ = %r < '0.3.1'" % nptyping.__version__)
-            all_reqs['nptyping'] = '>= 0.7.0'
-            install_requires.append('nptyping >= 0.3.1')
+        #iver = int_version('nptyping', nptyping.__version__)
+        #all_reqs['nptyping'] = str_version(iver)
+        #if iver < [0, 3, 1]:
+            #print("nptyping.__version__ = %r < '0.3.1'" % nptyping.__version__)
+        all_reqs['nptyping'] = '>= 0.3.1'
+        install_requires.append('nptyping >= 0.3.1')
     except ImportError:
+        all_reqs['nptyping'] = '>= 0.3.1'
         install_requires.append('nptyping >= 0.3.1')  # 0.3.1 used
 
     try:
@@ -193,6 +197,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
             all_reqs['docopt-ng'] = '>= 0.7.0'
             install_requires.append('docopt-ng >= 0.7.0')
     except ImportError:
+        all_reqs['docopt-ng'] = '>= 0.7.0'
         install_requires.append('docopt-ng >= 0.7.0')  # 0.7.2 used
 
     if is_rtd:
@@ -207,6 +212,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
                 all_reqs['qtpy'] = '>= 1.4.0'
                 install_requires.append('qtpy >= 1.4.0')
         except ImportError:
+            all_reqs['qtpy'] = '>= 1.4.0'
             install_requires.append('qtpy >= 1.4.0')  # 1.9.0 used
 
         try:
@@ -219,6 +225,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
                 install_requires.append('pillow >= 1.4.0')
         except ImportError:
             #print('missing pillow...')
+            all_reqs['pillow'] = 'pillow >=1.4.0'
             install_requires.append('pillow >= 1.4.0')  # 6.2.0 used
 
         try:
@@ -230,6 +237,7 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
             else:
                 all_reqs['imageio'] = imageio.__version__
         except ImportError:
+            all_reqs['imageio'] = '>= 2.2.0'
             install_requires.append('imageio >= 2.2.0')  # 2.6.1 used
 
 
@@ -261,7 +269,7 @@ def update_version_file():
         data = init_file.read()
 
     data2 = data.replace('is_installed = False', 'is_installed = True')
-    with open(init_filename, 'w') as init_file:
-        data = init_file.write(data2)
+    with open(init_filename, 'w') as init_file_out:
+        data = init_file_out.write(data2)
 
     #__version__ = '1.3.0+%s' % revision

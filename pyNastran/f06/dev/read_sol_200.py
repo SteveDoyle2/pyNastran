@@ -1391,7 +1391,6 @@ def read_sol_200(f06_filename: str):
     log = get_logger(log=None, level='debug', encoding='utf-8')
 
     with open(f06_filename, 'r') as f:
-    #with open('spike.bdf', 'r') as f:
         lines = f.readlines()
 
     nlines = len(lines)

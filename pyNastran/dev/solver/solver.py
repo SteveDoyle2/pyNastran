@@ -1,3 +1,4 @@
+import os
 import copy
 from datetime import date
 from collections import defaultdict
@@ -45,7 +46,10 @@ class Solver:
         self.Kgg = None
         self.aset = None
         self.sset = None
-        self.f06_filename = 'junk.f06'
+
+        base_name = os.path.splitext(model.bdf_filename)[0]
+        self.f06_filename = base_name + '.solver.f06'
+        self.op2_filename = base_name + '.solver.op2'
 
     def run(self):
         page_num = 1
@@ -676,7 +680,7 @@ class Solver:
                                page_stamp=page_stamp)
         #Fg[sz_set] = -1
         #xg[sz_set] = -1
-        op2.write_op2('junk.op2', post=-1, endian=b'<', skips=None, nastran_format='nx')
+        op2.write_op2(self.op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')
         self.log.info('finished')
         return end_options
 
@@ -914,7 +918,7 @@ class Solver:
 
         str(f06_file)
         str(page_stamp)
-        op2.write_op2('junk.op2', post=-1, endian=b'<', skips=None, nastran_format='nx')
+        op2.write_op2(self.op2_filename, post=-1, endian=b'<', skips=None, nastran_format='nx')
         return end_options
         #raise NotImplementedError(subcase)
 

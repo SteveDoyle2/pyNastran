@@ -385,6 +385,7 @@ class TestCuttingPlane(unittest.TestCase):
                                csv_filename=None,
                                invert_yaxis=False,
                                cut_type='face', plot=IS_MATPLOTLIB, show=False)
+        os.remove('tris.bdf')
 
     def test_connect_face_rows(self):
         """in order"""
