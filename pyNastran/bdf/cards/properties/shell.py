@@ -2368,7 +2368,8 @@ class PSHELL(Property):
 
         .. math:: \frac{m}{A} = nsm + \rho t"""
         mid_ref = self.mid_ref
-        rho = mid_ref.Rho()
+        rho = mid_ref.Rho()  # fails if mid1=None and mid2=None
+
         thickness = self.Thickness(tflag=tflag, tscales=tscales)
         try:
             mass_per_area = self.nsm + rho * thickness

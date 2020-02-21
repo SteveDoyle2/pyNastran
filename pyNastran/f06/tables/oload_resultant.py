@@ -4,6 +4,7 @@ Defines:
 
 """
 from numpy import array
+from pyNastran.nptyping import NDArray6float
 
 class Resultant:
     """interface for making the OLOAD Resultant Table"""
@@ -31,7 +32,6 @@ class Resultant:
         #msg += '            ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM WILL BE USED AS REFERENCE LOCATION.\n'
         #msg += '            RESULTANTS ABOUT ORIGIN OF SUPERELEMENT BASIC COORDINATE SYSTEM IN SUPERELEMENT BASIC SYSTEM COORDINATES.\n'
         #msg += '       0                                                  OLOAD    RESULTANT       \n'
-
         msg = ''
         assert len(self.fxyz) > 0, self.fxyz
         for isubcase, fxyz in sorted(self.fxyz.items()):
@@ -40,7 +40,7 @@ class Resultant:
             f06_file.write(''.join(msg))
         return page_num + 1
 
-    def _print_case(self, isubcase, fxyz):
+    def _print_case(self, isubcase, fxyz: NDArray6float):
         """prints a single resultant case"""
         fx, fy, fz, mx, my, mz = fxyz
         msg = '0                                                  %-8s RESULTANT       \n' % self.table_name

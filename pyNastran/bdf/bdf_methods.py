@@ -27,6 +27,7 @@ from pyNastran.bdf.mesh_utils.breakdowns import (
 from pyNastran.bdf.mesh_utils.skin_solid_elements import write_skin_solid_faces
 from pyNastran.bdf.utils import transform_load
 
+from pyNastran.nptyping import NDArray3float
 
 class BDFMethods(BDFAttributes):
     """
@@ -423,7 +424,8 @@ class BDFMethods(BDFAttributes):
                                     eids: List[int], nids: List[int],
                                     cid: int=0,
                                     include_grav: bool=False,
-                                    xyz_cid0: Union[None, Dict[int, np.ndarray]]=None) -> Tuple[np.ndarray, np.ndarray]:
+                                    xyz_cid0: Union[None, Dict[int, NDArray3float]]=None,
+                                    ) -> Tuple[NDArray3float, NDArray3float]:
         """
         Sum the forces/moments based on a list of nodes and elements.
 

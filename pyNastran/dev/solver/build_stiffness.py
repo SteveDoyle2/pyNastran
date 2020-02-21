@@ -1,6 +1,6 @@
 from __future__ import annotations
 from itertools import count
-from typing import Tuple, Any, TYPE_CHECKING
+from typing import Tuple, Dict, Union, Optional, Any, TYPE_CHECKING
 #from typing import List, Dict, Tuple, Union, Any
 
 import numpy as np
@@ -10,12 +10,20 @@ from pyNastran.bdf.cards.elements.shell import transform_shell_material_coordina
 from .utils import lambda1d
 #from pyNastran.bdf.cards.elements.bars import get_bar_vector, get_bar_yz_transform
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.bdf.bdf import BDF, CQUAD4, CBAR # , CBEAM
+    from pyNastran.nptyping import NDArrayNNfloat
+    from pyNastran.bdf.bdf import (
+        BDF,
+        CELAS1, CELAS2,
+        CBAR, PBAR, PBARL, PBEAM, PBEAML, # , CBEAM
+        CQUAD4, MAT1
+    )
     #from pyNastran.bdf.cards.elements.shell import CQUAD4
 
 
+DOF_MAP = Dict[Tuple[int, int], int]
 
-def build_Kbb(model: BDF, dof_map, ndof, idtype='int32', fdtype='float32') -> Tuple[np.array, Any]:
+def build_Kbb(model: BDF, dof_map: DOF_MAP, ndof: int,
+              idtype: str='int32', fdtype: str='float32') -> Tuple[NDArrayNNfloat, Any]:
     """[K] = d{P}/dx"""
     Kbb = np.zeros((ndof, ndof), dtype=fdtype)
     Kbbs = sci_sparse.dok_matrix((ndof, ndof), dtype=fdtype)
@@ -47,7 +55,7 @@ def build_Kbb(model: BDF, dof_map, ndof, idtype='int32', fdtype='float32') -> Tu
     return Kbb, Kbbs2
 
 
-def _build_kbb_celas1(model: BDF, Kbb, Kbbs, dof_map):
+def _build_kbb_celas1(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
     """fill the CELAS1 Kbb matrix"""
     eids = model._type_to_id_map['CELAS1']
     for eid in eids:
@@ -58,7 +66,7 @@ def _build_kbb_celas1(model: BDF, Kbb, Kbbs, dof_map):
         _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki)
     return len(eids)
 
-def _build_kbb_celas2(model: BDF, Kbb, Kbbs, dof_map):
+def _build_kbb_celas2(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> int:
     """fill the CELAS2 Kbb matrix"""
     eids = model._type_to_id_map['CELAS2']
     #celas3s = model._type_to_id_map['CELAS3']
@@ -71,7 +79,8 @@ def _build_kbb_celas2(model: BDF, Kbb, Kbbs, dof_map):
         _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki)
     return len(eids)
 
-def _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki):
+def _build_kbbi_celas12(Kbb: NDArrayNNfloat, Kbbs, dof_map: DOF_MAP,
+                        elem: Union[CELAS1, CELAS2], ki: float) -> None:
     """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes
     c1, c2 = elem.c1, elem.c2
@@ -91,7 +100,7 @@ def _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki):
     #Kbb[i, j] += ki
     #del i, j, ki, nid1, nid2, c1, c2
 
-def _build_kbb_cbar(model, Kbb, Kbbs, dof_map, fdtype='float64'):
+def _build_kbb_cbar(model, Kbb, Kbbs, dof_map: DOF_MAP, fdtype: str='float64') -> int:
     """fill the CBAR Kbb matrix using an Euler-Bernoulli beam"""
     eids = model._type_to_id_map['CBAR']
     nelements = len(eids)
@@ -137,8 +146,9 @@ def _build_kbb_cbar(model, Kbb, Kbbs, dof_map, fdtype='float64'):
             [z, z, T, z],
             [z, z, z, T]
         ])
-
-        Ke = _beami_stiffness(L, pid_ref, mat, I1, I2)
+        k1 = pid_ref.k1
+        k2 = pid_ref.k2
+        Ke = _beami_stiffness(pid_ref, mat, L, I1, I2, k1=k1, k2=k2)
         K = Teb.T @ Ke @ Teb
         dofs = [
             (nid1, 1), (nid1, 2), (nid1, 3),
@@ -162,7 +172,7 @@ def _build_kbb_cbar(model, Kbb, Kbbs, dof_map, fdtype='float64'):
                     Kbbs[i1, i2] = ki
     return nelements
 
-def _build_kbb_crod(model, Kbb, Kbbs, dof_map):
+def _build_kbb_crod(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
     """fill the CROD Kbb matrix"""
     eids = model._type_to_id_map['CROD']
     for eid in eids:
@@ -172,7 +182,7 @@ def _build_kbb_crod(model, Kbb, Kbbs, dof_map):
         _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
     return len(eids)
 
-def _build_kbb_ctube(model: BDF, Kbb, Kbbs, dof_map):
+def _build_kbb_ctube(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
     """fill the CTUBE Kbb matrix"""
     ctubes = model._type_to_id_map['CTUBE']
     for eid in ctubes:
@@ -182,7 +192,7 @@ def _build_kbb_ctube(model: BDF, Kbb, Kbbs, dof_map):
         _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
     return len(ctubes)
 
-def _build_kbb_conrod(model: BDF, Kbb, Kbbs, dof_map):
+def _build_kbb_conrod(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> int:
     """fill the CONROD Kbb matrix"""
     eids = model._type_to_id_map['CONROD']
     for eid in eids:
@@ -191,7 +201,7 @@ def _build_kbb_conrod(model: BDF, Kbb, Kbbs, dof_map):
         _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
     return len(eids)
 
-def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat, fdtype='float64'):
+def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map: DOF_MAP, elem, mat, fdtype='float64') -> None:
     """fill the ith rod Kbb matrix"""
     nid1, nid2 = elem.nodes
     #mat = elem.mid_ref
@@ -285,8 +295,8 @@ def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat, fdtype='float64'):
     #print(Kbb)
     return
 
-def _build_kbb_cquad4(model: BDF, Kbb, Kbbs, dof_map,
-                      all_nids, xyz_cid0, idtype='int32', fdtype='float64'):
+def _build_kbb_cquad4(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP,
+                      all_nids, xyz_cid0, idtype='int32', fdtype='float64') -> int:
     """fill the CQUAD4 Kbb matrix
 
     https://www.sciencedirect.com/topics/engineering/quadrilateral-element
@@ -391,10 +401,10 @@ def _build_kbb_cquad4(model: BDF, Kbb, Kbbs, dof_map,
         #https://math.stackexchange.com/questions/2430691/jacobian-determinant-for-bi-linear-quadrilaterals
         # x, zeta direction = 1 - 2
         # y, eta direction =  2 - 3
-        print(xy1)
-        print(xy2)
-        print(xy3)
-        print(xy4)
+        #print(xy1)
+        #print(xy2)
+        #print(xy3)
+        #print(xy4)
         x1 = xy1[0]
         x2 = xy2[0]
         x3 = xy3[0]
@@ -513,9 +523,9 @@ def _build_kbb_cquad4(model: BDF, Kbb, Kbbs, dof_map,
         raise RuntimeError(f'elements={bad_jacobians} have invalid jacobians')
     return nelements
 
-def _build_kbb_cbeam(model: BDF, Kbb, Kbbs, dof_map,
-                     all_nids, xyz_cid0, idtype='int32', fdtype='float64'):
-    """TODO: Timoshenko beam"""
+def _build_kbb_cbeam(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP,
+                     all_nids, xyz_cid0, idtype='int32', fdtype='float64') -> int:
+    """TODO: Timoshenko beam, warping, I12"""
     str(all_nids)
     str(xyz_cid0)
     eids = np.array(model._type_to_id_map['CBEAM'], dtype=idtype)
@@ -543,7 +553,9 @@ def _build_kbb_cbeam(model: BDF, Kbb, Kbbs, dof_map,
         ])
         Iy = pid_ref.I11()
         Iz = pid_ref.I22()
-        Ke = _beami_stiffness(L, pid_ref, mat, Iy, Iz)
+        k1 = pid_ref.k1
+        k2 = pid_ref.k2
+        Ke = _beami_stiffness(pid_ref, mat, L, Iy, Iz, k1=k1, k2=k2)
         K = Teb.T @ Ke @ Teb
         dofs = [
             (nid1, 1), (nid1, 2), (nid1, 3),
@@ -567,7 +579,11 @@ def _build_kbb_cbeam(model: BDF, Kbb, Kbbs, dof_map,
                     Kbbs[i1, i2] = ki
     return nelements
 
-def _beami_stiffness(L, prop, mat, Iy, Iz):
+def _beami_stiffness(prop: Union[PBAR, PBARL, PBEAM, PBEAML],
+                     mat: MAT1,
+                     L: float, Iy: float, Iz: float,
+                     k1: Optional[float]=None,
+                     k2: Optional[float]=None):
     """gets the ith Euler-Bernoulli beam stiffness"""
     E = mat.E()
     G = mat.G()
@@ -576,8 +592,17 @@ def _beami_stiffness(L, prop, mat, Iy, Iz):
 
     kaxial = E * A / L
     ktorsion = G * J / L
-    ky = E * Iy / L
-    kz = E * Iz / L
+
+    L2 = L * L
+    if k1 is not None:
+        phiy = 12. * E * Iy / (k1 * G * A * L2)
+    if k2 is not None:
+        phiz = 12. * E * Iy / (k2 * G * A * L2)
+
+    phiy = 1.0
+    phiz = 1.0
+    ky = E * Iy / (L * phiy)
+    kz = E * Iz / (L * phiz)
 
     K = np.zeros((12, 12), dtype='float64')
     # axial
@@ -600,13 +625,13 @@ def _beami_stiffness(L, prop, mat, Iy, Iz):
     # 5  [6L  & 4L^2 & -6L & 2L^2
     # 7  [-12 &-6L   &  12 & -6L
     # 11 [6L  & 2L^2 & -6L & 4L^2
-    K[1, 1] = K[7, 7] = 12 * kz
-    K[1, 7] = K[1, 7] = -12 * kz
-    K[1, 5] = K[5, 1] = K[11, 1] = K[1, 11] = 6 * L * kz
+    K[1, 1] = K[7, 7] = 12. * kz
+    K[1, 7] = K[1, 7] = -12. * kz
+    K[1, 5] = K[5, 1] = K[11, 1] = K[1, 11] = 6. * L * kz
 
-    K[5, 7] = K[7, 5] = K[7, 11] = K[11, 7] = -6 * L * kz
-    K[5, 11] = K[11, 5] = 2 * L * L * kz
-    K[5, 5] = K[11, 11] = 4 * L * L * kz
+    K[5, 7] = K[7, 5] = K[7, 11] = K[11, 7] = -6. * L * kz
+    K[5, 11] = K[11, 5] = 2. * L2 * kz * (2 - phiz)
+    K[5, 5] = K[11, 11] = 4. * L2 * kz * (4 + phiz)
 
     #Fx - 0, 6
     #Fy - 1, 7
@@ -620,11 +645,11 @@ def _beami_stiffness(L, prop, mat, Iy, Iz):
     # 4  [6L  & 4L^2 & -6L & 2L^2
     # 8  [-12 &-6L   &  12 & -6L
     # 10 [6L  & 2L^2 & -6L & 4L^2
-    K[2, 2] = K[8, 8] = 12 * ky
-    K[2, 8] = K[2, 8] = -12 * ky
-    K[2, 4] = K[4, 2] = K[10, 2] = K[2, 10] = 6 * L * ky
+    K[2, 2] = K[8, 8] = 12. * ky
+    K[2, 8] = K[2, 8] = -12. * ky
+    K[2, 4] = K[4, 2] = K[10, 2] = K[2, 10] = 6. * L * ky
 
-    K[4, 8] = K[8, 4] = K[8, 10] = K[10, 8] = -6 * L * ky
-    K[4, 10] = K[10, 4] = 2 * L * L * ky
-    K[4, 4] = K[10, 10] = 4 * L * L * ky
+    K[4, 8] = K[8, 4] = K[8, 10] = K[10, 8] = -6. * L * ky
+    K[4, 10] = K[10, 4] = 2. * L * L * ky * (2. - phiy)
+    K[4, 4] = K[10, 10] = 4. * L * L * ky * (4. + phiy)
     return K

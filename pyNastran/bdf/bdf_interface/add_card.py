@@ -7,6 +7,7 @@ Defines a method to add a card that is faster than add_card.
 from typing import Optional, List, Dict, Union, Any
 import numpy as np
 
+from pyNastran.nptyping import NDArray3float
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.bdf_interface.add_methods import AddMethods
 
@@ -717,7 +718,7 @@ class AddCards(AddMethods):
         custom_types['CaseControlDeck'] = CaseControlDeck
         return custom_types
 
-    def add_grid(self, nid: int, xyz: Union[None, List[float], np.ndarray],
+    def add_grid(self, nid: int, xyz: Union[None, List[float], NDArray3float],
                  cp: int=0, cd: int=0, ps: str='', seid: int=0, comment: str='') -> GRID:
         """
         Creates the GRID card
@@ -842,9 +843,9 @@ class AddCards(AddMethods):
         return point
 
     def add_cord2r(self, cid: int,
-                   origin: Optional[Union[List[float], np.ndarray]],
-                   zaxis: Optional[Union[List[float], np.ndarray]],
-                   xzplane: Optional[Union[List[float], np.ndarray]],
+                   origin: Optional[Union[List[float], NDArray3float]],
+                   zaxis: Optional[Union[List[float], NDArray3float]],
+                   xzplane: Optional[Union[List[float], NDArray3float]],
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2R:
         """
         Creates the CORD2R card, which defines a rectangular coordinate
@@ -872,9 +873,9 @@ class AddCards(AddMethods):
         return coord
 
     def add_cord2c(self, cid: int,
-                   origin: Optional[Union[List[float], np.ndarray]],
-                   zaxis: Optional[Union[List[float], np.ndarray]],
-                   xzplane: Optional[Union[List[float], np.ndarray]],
+                   origin: Optional[Union[List[float], NDArray3float]],
+                   zaxis: Optional[Union[List[float], NDArray3float]],
+                   xzplane: Optional[Union[List[float], NDArray3float]],
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2C:
         """
         Creates the CORD2C card, which defines a cylindrical coordinate
@@ -902,9 +903,9 @@ class AddCards(AddMethods):
         return coord
 
     def add_cord2s(self, cid: int,
-                   origin: Optional[Union[List[float], np.ndarray]],
-                   zaxis: Optional[Union[List[float], np.ndarray]],
-                   xzplane: Optional[Union[List[float], np.ndarray]],
+                   origin: Optional[Union[List[float], NDArray3float]],
+                   zaxis: Optional[Union[List[float], NDArray3float]],
+                   xzplane: Optional[Union[List[float], NDArray3float]],
                    rid: int=0, setup: bool=True, comment: str='') -> CORD2S:
         """
         Creates the CORD2C card, which defines a spherical coordinate

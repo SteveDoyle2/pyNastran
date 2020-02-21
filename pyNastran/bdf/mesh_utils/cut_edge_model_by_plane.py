@@ -13,14 +13,21 @@ defines:
 
 """
 from io import StringIO
+from typing import Optional, Tuple, Any
 import numpy as np
+from pyNastran.nptyping import NDArrayNint, NDArrayN2int, NDArray3float, NDArrayN3float
 from pyNastran.bdf.cards.coordinate_systems import CORD2R
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.mesh_utils.internal_utils import get_bdf_model
 
 
-def cut_edge_model_by_coord(bdf_filename, coord, tol,
-                            nodal_result, plane_atol=1e-5, csv_filename=None, header='x, y, z, Cp'):
+def cut_edge_model_by_coord(bdf_filename: str,
+                            coord,
+                            tol: float,
+                            nodal_result,
+                            plane_atol: float=1e-5,
+                            csv_filename: Optional[str]=None,
+                            header: str='x, y, z, Cp') -> Tuple[Any, Any, Any]:
     """
     Cuts a Nastran model with a cutting plane
 
@@ -68,7 +75,7 @@ def cut_edge_model_by_coord(bdf_filename, coord, tol,
         #nodal_result, plane_atol=plane_atol)
     #return local_points_array, global_points_array, result_array
 
-def _setup_edges(bdf_filename):
+def _setup_edges(bdf_filename: str) -> Tuple[NDArrayNint, NDArrayN3float, NDArrayN2int]:
     """helper method"""
     model = get_bdf_model(bdf_filename, xref=False, log=None, debug=False)
     out = model.get_xyz_in_coord_array(cid=0, fdtype='float64', idtype='int32')
@@ -83,13 +90,19 @@ def _setup_edges(bdf_filename):
     edges = edge_to_eid_map.keys()
     return nids, xyz_cid0, edges
 
-def _cut_model(nids, xyz_cp, edges, view_up, p1, p2, tol,
+def _cut_model(nids: NDArrayNint,
+               xyz_cp: NDArrayN3float,
+               edges: NDArrayN2int,
+               view_up: NDArray3float, p1: NDArray3float, p2: NDArray3float,
+               tol: float,
                nodal_result, plane_atol=1e-5, plane_bdf_filename=None):
     """
     Helper method for cut_edge_model_by_axes
 
     Parameters
     ----------
+    nids : (nnodes,) int ndarray
+        the nodes
     edges : (nedges, 2) int ndarray
         the edges
     view_up : (3,) float ndarray
@@ -208,8 +221,8 @@ def _cut_edge_model_by_coord(nids, xyz_cid0, edges, coord, tol,
     #print(coord)
     return local_points_array, global_points_array, result_array
 
-def slice_edges(xyz_cid0, xyz_cid, edges, nodal_result, plane_atol=1e-5,
-                plane_bdf_filename=None):
+def slice_edges(xyz_cid0: NDArrayN3float, xyz_cid: NDArrayN3float, edges, nodal_result, plane_atol=1e-5,
+                plane_bdf_filename: Optional[str]=None) -> Tuple[Any, Any, Any]:
     """
     Slices the shell elements
 

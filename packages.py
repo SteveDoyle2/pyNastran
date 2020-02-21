@@ -173,6 +173,16 @@ def get_package_requirements(is_gui=True, add_vtk_qt=True, python_version=None):
     except ImportError:
         install_requires.append(f'cpylog >= {required_version_str}')  # 1.3.1 used
 
+    try:
+        import nptyping
+        iver = int_version('nptyping', docopt.__version__)
+        all_reqs['nptyping'] = str_version(iver)
+        if iver < [0, 3, 1]:
+            print("nptyping.__version__ = %r < '0.3.1'" % nptyping.__version__)
+            all_reqs['nptyping'] = '>= 0.7.0'
+            install_requires.append('nptyping >= 0.3.1')
+    except ImportError:
+        install_requires.append('nptyping >= 0.3.1')  # 0.3.1 used
 
     try:
         import docopt
