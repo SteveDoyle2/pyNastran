@@ -10,6 +10,7 @@ defines:
 
 """
 from itertools import combinations
+from typing import List, Tuple, Union, Any
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
