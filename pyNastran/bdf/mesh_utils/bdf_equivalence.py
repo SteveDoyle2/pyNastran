@@ -332,17 +332,30 @@ def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
                                  node_set=None, neq_max: int=4, method: str='new',
                                  debug: bool=False) -> None:
     """helper for equivalencing"""
-    if method == 'new':
-        unused_kdt, nid_pairs, null_slots = _eq_nodes_build_tree(
-            nodes_xyz, nids, tol, log,
-            inew=inew, node_set=node_set,
-            neq_max=neq_max, method='new', debug=debug)
-    elif method == 'old':
-        unused_kdt, ieq, slots = _eq_nodes_build_tree(
-            nodes_xyz, nids, tol, log,
-            inew=inew, node_set=node_set,
-            neq_max=neq_max, method='old', debug=debug)
-        nid_pairs = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)
+    unused_kdt, nid_pairs = _eq_nodes_build_tree(
+        nodes_xyz, nids, tol, log,
+        inew=inew, node_set=node_set,
+        neq_max=neq_max, method=method, debug=debug)
+    return nid_pairs
+
+def _nodes_xyz_nids_to_nid_pairs_new(kdt, nids, node_set, tol: float):
+    ieq3 = kdt.query_ball_tree(kdt, tol)
+    nid_pairs = []
+    for pair in ieq3:
+        if len(pair) == 1:
+            continue
+        # the combinations should be paired with 2 nodes in each group
+        for inid1, inid2 in combinations(pair, 2):
+            nid1 = nids[inid1]
+            nid2 = nids[inid2]
+            #if nid1 == nid2:
+                #continue
+            if node_set is not None:
+                if nid1 not in node_set and nid2 not in node_set:
+                    continue
+            if (nid1, nid2) in nid_pairs:
+                continue
+            nid_pairs.append((nid1, nid2))
     return nid_pairs
 
 def _eq_nodes_build_tree(nodes_xyz, nids, tol, log,
@@ -385,29 +398,32 @@ def _eq_nodes_build_tree(nodes_xyz, nids, tol, log,
     assert isinstance(tol, float), 'tol=%r' % tol
     kdt = _get_tree(nodes_xyz, msg=msg)
 
-    is_node_set = inew == slice(None)
+    is_not_node_set = inew is None or inew == slice(None)
 
     # check the closest 10 nodes for equality
-    if method == 'new' and not is_node_set:
+    if method == 'new' and is_not_node_set:
         kdt, nid_pairs = _eq_nodes_build_tree_new(
             kdt, nodes_xyz,
-            nids, nnodes, is_node_set,
+            nids, nnodes, is_not_node_set,
             tol, log,
             inew=inew, node_set=node_set, neq_max=neq_max, msg=msg,
             debug=debug)
-        slots = None
     else:
+        if method == 'new':
+            log.warning(f'setting method to "old" because node_set is specified')
         deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
         if node_set is not None:
             assert len(deq) == len(nids)
 
         # get the ids of the duplicate nodes
         slots = np.where(ieq[:, :] < nnodes)
-    return kdt, ieq, slots
+        nid_pairs = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)
+    assert isinstance(nid_pairs, list), nid_pairs
+    return kdt, nid_pairs
 
 def _eq_nodes_build_tree_new(kdt,
                              nodes_xyz: NDArrayN3float,
-                             nids, nnodes, is_node_set,
+                             nids, nnodes, is_not_node_set: bool,
                              tol: float,
                              log,
                              inew=None, node_set=None, neq_max: int=4, msg: str='',
@@ -415,31 +431,21 @@ def _eq_nodes_build_tree_new(kdt,
     deq, ieq = kdt.query(nodes_xyz[inew, :], k=neq_max, distance_upper_bound=tol)
     slots = np.where(ieq[:, :] < nnodes)
     nid_pairs_expected = _eq_nodes_find_pairs(nids, slots, ieq, node_set=node_set)
-    #print('nid_pairs =', nid_pairs)
-    #print(deq)
-    if is_node_set:
-        ieq3 = kdt.query_ball_tree(kdt, tol)
-        nid_pairs = []
-        for pair in ieq3:
-            if len(pair) == 1:
-                continue
-            # the combinations should be paired with 2 nodes in each group
-            for inid1, inid2 in combinations(pair, 2):
-                nid1 = nids[inid1]
-                nid2 = nids[inid2]
-                #if nid1 == nid2:
-                    #continue
-                if node_set is not None:
-                    if nid1 not in node_set and nid2 not in node_set:
-                        continue
-                if (nid1, nid2) in nid_pairs:
-                    continue
-                nid_pairs.append((nid1, nid2))
+    if is_not_node_set:
+        nid_pairs = _nodes_xyz_nids_to_nid_pairs_new(kdt, nids, node_set, tol)
     else:
-        raise NotImplementedError('node_set')
-    if debug:  # pragma: no cover
-        log.debug(f'nid_pairs          = {nid_pairs}')
-        log.debug(f'nid_pairs_expected = {nid_pairs_expected}')
+        raise NotImplementedError(f'node_set = {node_set}')
+
+    snid_pairs = set(nid_pairs)
+    snid_pairs_expected = set(nid_pairs_expected)
+    diff_bad = snid_pairs - snid_pairs_expected
+    diff_missed = snid_pairs - snid_pairs_expected
+    if debug and len(diff_bad) or len(diff_missed):  # pragma: no cover
+        #log.warning(f'nid_pairs          = {nid_pairs}')
+        #log.warning(f'nid_pairs_expected = {nid_pairs_expected}')
+        log.warning(f'diff_bad = {diff_bad}')
+        log.warning(f'diff_missed = {diff_missed}')
+
     return kdt, nid_pairs
 
 def _get_tree(nodes_xyz, msg=''):
