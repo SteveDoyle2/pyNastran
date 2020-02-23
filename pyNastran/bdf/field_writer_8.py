@@ -116,7 +116,8 @@ def print_float_8(value: float) -> str:
         #elif value < 0.1:
             #field = "%8.7f" % value
         elif value < 1.:
-            field = "%8.7f" % value  # same as before...
+            dummy = "%8.7f" % value  # same as before...
+            field = dummy[1:]
         elif value < 10.:
             field = "%8.6f" % value
         elif value < 100.:
