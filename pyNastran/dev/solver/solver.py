@@ -28,6 +28,7 @@ from pyNastran.dev.solver.static_strain import recover_strain_101
 
 from pyNastran.dev.solver.build_stiffness import build_Kbb, DOF_MAP
 
+
 class Solver:
     """defines the Nastran knockoff class"""
     def __init__(self, model: BDF):
@@ -1541,14 +1542,53 @@ def build_Mbb(model: BDF,
               ndof: int, fdtype='float64') -> NDArrayNNfloat:
     """builds the mass matrix in the basic frame, [Mbb]"""
     log = model.log
-    log.info('starting build_Mgg')
-    Mbb = np.eye(ndof, dtype=fdtype)
+    log.info('starting build_Mbb')
+    #Mbb = np.eye(ndof, dtype=fdtype)
+    Mbb = np.zeros((ndof, ndof), dtype=fdtype)
+    #Mbb = np.eye(ndof, dtype='int32')
     str(model)
     str(subcase)
     no_mass = {
         'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
         'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
     }
+
+    mass_rod_2x2 = np.array([
+        [2, 0, 1, 0],
+        [0, 2, 0, 1],
+        [1, 0, 2, 0],
+        [0, 1, 0, 2],
+    ], dtype='float64') / 3.
+    mass_tri = np.array([
+        [4, 0, 2, 0, 1, 0],
+        [0, 4, 0, 2, 0, 1],
+        [2, 0, 4, 0, 2, 0],
+        [0, 2, 0, 4, 0, 2],
+        [1, 0, 2, 0, 4, 0],
+        [0, 1, 0, 2, 0, 4],
+    ], dtype='float64') / 6.
+    #mass_quad_1x1 = np.array([
+        #[1, 0, 1, 0, 1, 0, 1, 0],
+        #[0, 1, 0, 1, 0, 1, 0, 1],
+        #[1, 0, 1, 0, 1, 0, 1, 0],
+        #[0, 1, 0, 1, 0, 1, 0, 1],
+        #[1, 0, 1, 0, 1, 0, 1, 0],
+        #[0, 1, 0, 1, 0, 1, 0, 1],
+        #[1, 0, 1, 0, 1, 0, 1, 0],
+        #[0, 1, 0, 1, 0, 1, 0, 1],
+    #], dtype='float64') / 36.
+
+    mass_quad_2x2 = np.array([
+        [4, 0, 2, 0, 1, 0, 2, 0],
+        [0, 4, 0, 2, 0, 1, 0, 2],
+        [2, 0, 4, 0, 2, 0, 1, 0],
+        [0, 2, 0, 4, 0, 2, 0, 1],
+        [1, 0, 2, 0, 4, 0, 2, 0],
+        [0, 1, 0, 2, 0, 4, 0, 2],
+        [2, 0, 1, 0, 2, 0, 4, 0],
+        [0, 2, 0, 1, 0, 2, 0, 4],
+    ], dtype='float64') / 36.
+
     for eid, elem in model.elements.items():
         etype = elem.type
         if etype in no_mass:
@@ -1557,29 +1597,44 @@ def build_Mbb(model: BDF,
         if etype in ['CROD', 'CONROD', 'CTUBE']:
             # verified
             mass = elem.Mass()
+            if mass == 0.0:
+                log.warning(f'  no mass for {etype} eid={eid}')
+                continue
+
             nid1, nid2 = elem.nodes
             i1 = dof_map[(nid1, 1)]
             j1 = dof_map[(nid2, 1)]
-            Mbb[i1, i1] = Mbb[i1+1, i1+1] = \
-            Mbb[j1, j1] = Mbb[j1+1, j1+1] = mass / 3
+            ii = [i1, i1 + 1,
+                  j1, j1 + 1]
+            #Mbb[i1, i1] = Mbb[i1+1, i1+1] = \
+            #Mbb[j1, j1] = Mbb[j1+1, j1+1] = mass / 3
 
-            Mbb[i1, j1] = Mbb[j1, i1] = \
-            Mbb[i1+1, j1+1] = Mbb[j1+1, i1+1] = mass / 6
+            #Mbb[i1, j1] = Mbb[j1, i1] = \
+            #Mbb[i1+1, j1+1] = Mbb[j1+1, i1+1] = mass / 6
+            iii, jjj = np.meshgrid(ii, ii)
+            Mbb[iii, jjj] += mass_rod_2x2 * mass
             #ii = [i1, i1 + 1, j1, j1 + 1]
             #print(Mbb[ii, :][:, ii])
         elif etype in ['CBAR', 'CBEAM']:
             # TODO: verify
             # TODO: add rotary inertia
             mass = elem.Mass()
+            if mass == 0.0:
+                log.warning(f'  no mass for {etype} eid={eid}')
+                continue
             nid1, nid2 = elem.nodes
             i1 = dof_map[(nid1, 1)]
             j1 = dof_map[(nid2, 1)]
 
-            Mbb[i1, i1] = Mbb[i1+1, i1+1] = \
-            Mbb[j1, j1] = Mbb[j1+1, j1+1] = mass / 3
+            #Mbb[i1, i1] = Mbb[i1+1, i1+1] = \
+            #Mbb[j1, j1] = Mbb[j1+1, j1+1] = mass / 3
 
-            Mbb[i1, j1] = Mbb[j1, i1] = \
-            Mbb[i1+1, j1+1] = Mbb[j1+1, i1+1] = mass / 6
+            #Mbb[i1, j1] = Mbb[j1, i1] = \
+            #Mbb[i1+1, j1+1] = Mbb[j1+1, i1+1] = mass / 6
+            ii = [i1, i1 + 1,
+                  j1, j1 + 1]
+            iii, jjj = np.meshgrid(ii, ii)
+            Mbb[iii, jjj] += mass_rod_2x2 * mass
         elif etype == 'CTRIA3':
             # TODO: verify
             # TODO: add rotary inertia
@@ -1588,9 +1643,16 @@ def build_Mbb(model: BDF,
             i1 = dof_map[(nid1, 1)]
             i2 = dof_map[(nid2, 1)]
             i3 = dof_map[(nid3, 1)]
-            Mbb[i1, i1] = Mbb[i1+1, i1+1] = Mbb[i1+2, i1+2] = \
-            Mbb[i2, i2] = Mbb[i2+1, i2+1] = Mbb[i2+2, i2+2] = \
-            Mbb[i3, i3] = Mbb[i3+1, i3+1] = Mbb[i3+2, i3+2] = mass / 3
+            ii = [
+                i1, i1 + 1,
+                i2, i2 + 1,
+                i3, i3 + 1,
+            ]
+            iii, jjj = np.meshgrid(ii, ii)
+            Mbb[iii, jjj] += mass_tri * mass
+            #Mbb[i1, i1] = Mbb[i1+1, i1+1] = Mbb[i1+2, i1+2] = \
+            #Mbb[i2, i2] = Mbb[i2+1, i2+1] = Mbb[i2+2, i2+2] = \
+            #Mbb[i3, i3] = Mbb[i3+1, i3+1] = Mbb[i3+2, i3+2] = mass / 3
         elif etype == 'CQUAD4':
             # TODO: verify
             # TODO: add rotary inertia
@@ -1609,12 +1671,89 @@ def build_Mbb(model: BDF,
             i2 = dof_map[(nid2, 1)]
             i3 = dof_map[(nid3, 1)]
             i4 = dof_map[(nid4, 1)]
-            Mbb[i1, i1] = Mbb[i1+1, i1+1] = Mbb[i1+2, i1+2] = \
-            Mbb[i2, i2] = Mbb[i2+1, i2+1] = Mbb[i2+2, i2+2] = \
-            Mbb[i3, i3] = Mbb[i3+1, i3+1] = Mbb[i3+2, i3+2] = \
-            Mbb[i4, i4] = Mbb[i4+1, i4+1] = Mbb[i4+2, i4+2] = mass / 4
+            if mass == 0.:
+                pid_ref = elem.pid_ref
+                ptype = pid_ref.type
+                if ptype == 'PSHELL':
+                    mid_ref = pid_ref.mid_ref
+                    rho = mid_ref.rho
+                    log.warning(f'  no mass for CQUAD4 eid={eid} ptype={ptype} rho={rho}')
+                else:
+                    log.warning(f'  no mass for CQUAD4 eid={eid} ptype={ptype}')
+            else:
+                pid_ref = elem.pid_ref
+                ptype = pid_ref.type
+                log.info(f'  mass={mass} for CQUAD4 eid={eid} ptype={ptype}')
+
+            ii = [
+                i1, i1 + 1,
+                i2, i2 + 1,
+                i3, i3 + 1,
+                i4, i4 + 1,
+            ]
+            iii, jjj = np.meshgrid(ii, ii)
+            Mbb[iii, jjj] += mass_quad_2x2 * mass
+            #if 0:  # pragma: no cover
+                #mass4 = mass / 9. # 4/36
+                #mass2 = mass / 18. # 2/36
+                #mass1 = mass / 36.
+                #print(mass1, mass2, mass4)
+                #Mbb[i1, i1] += mass4
+                #Mbb[i1+1, i1+1] += mass4
+                #Mbb[i2, i2] += mass4
+                #Mbb[i2+1, i2+1] += mass4
+                #Mbb[i3, i3] += mass4
+                #Mbb[i3+1, i3+1] += mass4
+                #Mbb[i4, i4] += mass4
+                #Mbb[i4+1, i4+1] += mass4
+
+                #Mbb[i1, i3] += mass1
+                #Mbb[i1, i2] += mass2
+                #Mbb[i1, i4] += mass2
+                #Mbb[i3, i1] += mass1
+                #Mbb[i2, i1] += mass2
+                #Mbb[i4, i1] += mass2
+
+                #Mbb[i1+1, i3+1] += mass1
+                #Mbb[i1+1, i2+1] += mass1
+                #Mbb[i1+1, i4+1] += mass2
+                #Mbb[i3+1, i1+1] += mass1
+                #Mbb[i2+1, i1+1] += mass2
+                #Mbb[i4+1, i1+1] += mass2
+
+                #Mbb[i2, i4] += mass1
+                #Mbb[i2+1, i4+1] += mass1
+                #Mbb[i2, i3] += mass2
+                #Mbb[i2+1, i3+1] += mass2
+
+                #Mbb[i4, i2] += mass1
+                #Mbb[i4+1, i2+1] += mass1
+                #Mbb[i3, i2] += mass2
+                #Mbb[i3+1, i2+1] += mass2
+
+                #Mbb[i3, i4] += mass2
+                #Mbb[i3+1, i4+1] = mass2
+                #Mbb[i4, i3] += mass2
+                #Mbb[i4+1, i3+1] += mass2
+
+                #Mbb[i2+1, i3+1] = 1
+                #Mbb[i2+1, i2+1] = Mbb[i1+1, i4+1] = 2
+
+                #Mbb[i2, i1+1] = Mbb[i3, i1+1] = Mbb[i4, i1+1] = 1
+                #Mbb[i1, i2+1] = Mbb[i3, i2+1] = Mbb[i4, i2+1] = 1
+                #Mbb[i1, i3+1] = Mbb[i2, i3+1] = Mbb[i4, i3+1] = 1
+                #Mbb[i1, i4+1] = Mbb[i2, i4+1] = Mbb[i3, i4+1] = 1
+                #print(Mbb)
+            #print(Mbb[ii, :][:, ii])
         else:  # pragma: no cover
             print(elem.get_stats())
             raise NotImplementedError(elem)
-    log.info('finished build_Mgg')
+    if Mbb.sum() == 0.0:
+        Mbb = np.eye(ndof, dtype=fdtype)
+        log.error(f'finished build_Mbb; faking mass; M={Mbb.sum()}')
+    else:
+        i = np.arange(0, ndof).reshape(ndof//6, 6)[:, :3].ravel()
+        print(Mbb[i, i])
+        massi = Mbb[i, i].sum()
+        log.info(f'finished build_Mbb; M={massi}')
     return Mbb

@@ -90,6 +90,7 @@ class CaseControlDeck:
             #153 - Non-Linear static coupled with heat transfer
             #159 - Nonlinear Transient coupled with Heat transfer
             #187 - Dynamic Design Analysis Method
+            #190 - DBTRANS Database Transfer
             #200 - Design Optimization and Sensitivity analysis
             #400 - Non-Linear Static and Dynamic (implicit) (MSC.NASTRAN native, supersedes 106, 129, 153 and 159 - part of MSC.NASTRAN)
             #401 - Non-Linear Static (SAMCEF based for NX.NASTRAN)

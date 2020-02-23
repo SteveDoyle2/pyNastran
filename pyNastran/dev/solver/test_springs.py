@@ -607,6 +607,11 @@ class TestShell(unittest.TestCase):
         model.add_grid(2, [1., 0., 0., ])
         model.add_grid(3, [1., 0., 2., ])
         model.add_grid(4, [0., 0., 2., ])
+        area = 2.0
+        nsm_area = 0.0
+        thickness = 0.3
+        rho = 0.1
+        mass = area * (thickness * rho + nsm_area)
         mid = 3
         nids = [1, 2, 3, 4]
         model.add_cquad4(1, 1, nids, theta_mcid=0.0, zoffset=0., tflag=0,
@@ -618,6 +623,75 @@ class TestShell(unittest.TestCase):
         model.add_cquad4(4, 4, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                          T1=None, T2=None, T3=None, T4=None, comment='')
         model.add_cquad4(5, 5, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+
+        model.add_pshell(1, mid1=mid, t=thickness, mid2=None, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None, comment='')
+        model.add_pshell(2, mid1=None, t=thickness, mid2=mid, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None, comment='')
+        model.add_pshell(3, mid1=None, t=thickness, mid2=None, twelveIt3=1.0,
+                         mid3=mid, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=None, comment='')
+        model.add_pshell(4, mid1=None, t=thickness, mid2=None, twelveIt3=1.0,
+                         mid3=None, tst=0.833333, nsm=0.0, z1=None, z2=None,
+                         mid4=mid, comment='')
+        model.add_pcomp(5, [mid], [thickness], thetas=None,
+                        souts=None, nsm=0., sb=0., ft=None, tref=0., ge=0., lam=None, z0=None, comment='')
+
+        E = 1.0E7
+        G = None
+        nu = 0.3
+        model.add_mat1(mid, E, G, nu, rho=1.0, a=0.0, tref=0.0, ge=0.0,
+                       St=0.0, Sc=0.0, Ss=0.0, mcsid=0, comment='')
+        spc_id = 3
+        load_id = 2
+        components = '123456'
+        nodes = [1, 2]
+        model.add_spc1(spc_id, components, nodes, comment='')
+        model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
+        model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')
+
+        setup_case_control(model)
+        solver = Solver(model)
+        #with self.assertRaises(RuntimeError):
+        solver.run()
+        print('total_mass =', mass * 5)
+        #os.remove(model.bdf_filename)
+        #os.remove(solver.f06_filename)
+        #os.remove(solver.op2_filename)
+
+    def test_cquad8_pshell_mat1(self):
+        """Tests a CQUAD8/PSHELL/MAT1"""
+        # 4--7--3
+        # |     |
+        # 8     6
+        # |     |
+        # 1--5--2
+        model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'cquad8_pshell_mat1.bdf'
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 0., 2.])
+        model.add_grid(4, [0., 0., 2.])
+
+        model.add_grid(5, [0.5, 0., 0.])
+        model.add_grid(6, [1., 0., 1.])
+        model.add_grid(7, [0.5, 0., 2.])
+        model.add_grid(8, [0., 0., 1.])
+
+        mid = 3
+        nids = [1, 2, 3, 4, 5, 6, 7, 8]
+        model.add_cquad8(1, 1, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_cquad8(2, 2, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_cquad8(3, 3, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_cquad8(4, 4, nids, theta_mcid=0.0, zoffset=0., tflag=0,
+                         T1=None, T2=None, T3=None, T4=None, comment='')
+        model.add_cquad8(5, 5, nids, theta_mcid=0.0, zoffset=0., tflag=0,
                          T1=None, T2=None, T3=None, T4=None, comment='')
 
         model.add_pshell(1, mid1=mid, t=0.3, mid2=None, twelveIt3=1.0,
@@ -643,7 +717,7 @@ class TestShell(unittest.TestCase):
         spc_id = 3
         load_id = 2
         components = '123456'
-        nodes = [1, 2]
+        nodes = [1, 2, 5]
         model.add_spc1(spc_id, components, nodes, comment='')
         model.add_force(load_id, 3, 1.0, [0., 0., 1.], cid=0, comment='')
         model.add_force(load_id, 4, 1.0, [0., 0., 1.], cid=0, comment='')

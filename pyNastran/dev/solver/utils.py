@@ -1,10 +1,13 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Dict, Tuple, TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
 
+
+
+DOF_MAP = Dict[Tuple[int, int], int]
 
 def get_ieids_eids(model: BDF, etype, eids_str, ncols: int=1,
                    idtype='int32', fdtype='float32'):
