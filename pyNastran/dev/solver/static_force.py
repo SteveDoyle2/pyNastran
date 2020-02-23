@@ -42,6 +42,11 @@ def recover_force_101(f06_file, op2,
         'CONROD', fdtype=fdtype,
         title=title, subtitle=subtitle, label=label,
         page_num=page_num, page_stamp=page_stamp)
+    nelements += _recover_force_rod(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CTUBE', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
 
 def _recover_force_celas(f06_file, op2,
                          model: BDF, dof_map, isubcase, xg, eids_str,
@@ -87,10 +92,16 @@ def _recover_force_rod(f06_file, op2,
         for ieid, eid in zip(irod, eids):
             elem = model.elements[eid]
             forces[ieid, :] = _recover_forcei_rod(xb, dof_map, elem, elem)
-    else:
+    elif element_name == 'CROD':
         for ieid, eid in zip(irod, eids):
             elem = model.elements[eid]
             forces[ieid, :] = _recover_forcei_rod(xb, dof_map, elem, elem.pid_ref)
+    elif element_name == 'CTUBE':
+        for ieid, eid in zip(irod, eids):
+            elem = model.elements[eid]
+            forces[ieid, :] = _recover_forcei_rod(xb, dof_map, elem, elem.pid_ref)
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
 
     data = forces.reshape(1, *forces.shape)
     table_name = 'OEF1'

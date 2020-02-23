@@ -481,7 +481,7 @@ class Solver:
         #    f-set is placed in the a-set and the o-set is not created.
 
         page_num = write_oload(Fb, dof_map, isubcase, ngrid, ndof_per_grid,
-                               f06_file, page_stamp, page_num)
+                               f06_file, page_stamp, page_num, log)
 
         Fg = Fb
 
@@ -871,7 +871,7 @@ class Solver:
         #na = Kaa_.shape[0]
         eigenvalues, xa_ = sp.linalg.eigh(Kaa_, Maa_)
         nmodes = len(eigenvalues)
-        print(f'eigenvalues = {eigenvalues}')
+        model.log.debug(f'eigenvalues = {eigenvalues}')
         #print(f'xa_ = {xa_} {xa_.shape}')
         #xa2 = xa_.reshape(nmodes, na, na)
 
@@ -1477,7 +1477,7 @@ def Kbb_to_Kgg(model: BDF, Kbb: NDArrayNNfloat,
 def write_oload(Fb: NDArrayNfloat,
                 dof_map: DOF_MAP,
                 isubcase: int, ngrid: int, ndof_per_grid: int,
-                f06_file, page_stamp: str, page_num: int) -> int:
+                f06_file, page_stamp: str, page_num: int, log) -> int:
     """writes the OLOAD RESULTANT table"""
     str(ngrid)
     str(dof_map)
@@ -1491,8 +1491,9 @@ def write_oload(Fb: NDArrayNfloat,
         'SUPERELEMENT BASIC SYSTEM COORDINATES.\n'
     )
     oload = Resultant('OLOAD', fxyz_mxyz_sum, isubcase)
+    log.info(f'OLOAD {fxyz_mxyz_sum}')
     page_num = oload.write_f06(f06_file, page_stamp, page_num)
-    return page_num
+    return page_num + 1
 
 def solve(Kaa, Kaas, Fa_solve, aset, log, idtype='int32'):
     """solves [K]{u} = {F}"""
@@ -1753,7 +1754,7 @@ def build_Mbb(model: BDF,
         log.error(f'finished build_Mbb; faking mass; M={Mbb.sum()}')
     else:
         i = np.arange(0, ndof).reshape(ndof//6, 6)[:, :3].ravel()
-        print(Mbb[i, i])
+        #print(Mbb[i, i])
         massi = Mbb[i, i].sum()
-        log.info(f'finished build_Mbb; M={massi}')
+        log.info(f'finished build_Mbb; M={massi:.6g}')
     return Mbb

@@ -97,7 +97,7 @@ class TestRod(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+        model.add_mat1(mid, E, G, nu, rho=0.1, a=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
         model.add_crod(eid, pid, nids)
         model.add_prod(pid, mid, A=1.0, j=0., c=0., nsm=0.)
@@ -130,10 +130,10 @@ class TestRod(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+        model.add_mat1(mid, E, G, nu, rho=0.1, a=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
         model.add_crod(eid, pid, nids)
-        model.add_prod(pid, mid, A=0.0, j=2., c=0., nsm=0.)
+        model.add_prod(pid, mid, A=0.0, j=2., c=0., nsm=1.)
 
         load_id = 2
         spc_id = 3
@@ -162,7 +162,7 @@ class TestRod(unittest.TestCase):
         E = 42.
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+        model.add_mat1(mid, E, G, nu, rho=0.1, a=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
         model.add_crod(eid, pid, nids)
         model.add_prod(pid, mid, A=1.0, j=0., c=0., nsm=0.)
@@ -221,7 +221,7 @@ class TestRod(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+        model.add_mat1(mid, E, G, nu, rho=0.1, a=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
         model.add_crod(eid, pid, nids)
         model.add_prod(pid, mid, A=1.0, j=2., c=0., nsm=0.)
@@ -257,7 +257,7 @@ class TestRod(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+        model.add_mat1(mid, E, G, nu, rho=0.1, a=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
         model.add_crod(eid, pid, nids)
         model.add_prod(pid, mid, A=1.0, j=2., c=0., nsm=0.)
@@ -299,7 +299,7 @@ class TestRod(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+        model.add_mat1(mid, E, G, nu, rho=0.1, a=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
         model.add_crod(eid, pid, nids)
         model.add_prod(pid, mid, A=1.0, j=2., c=0., nsm=0.)
@@ -336,11 +336,12 @@ class TestRod(unittest.TestCase):
         E = 3.0e7
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+        model.add_mat1(mid, E, G, nu, rho=0.1, a=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
         model.add_ctube(eid, pid, nids)
         OD1 = 1.0
-        model.add_ptube(pid, mid, OD1, t=0.1, nsm=0., OD2=None, comment='')
+        t = 0.1
+        model.add_ptube(pid, mid, OD1, t=t, nsm=0., OD2=None, comment='')
 
         load_id = 2
         spc_id = 3
@@ -356,8 +357,16 @@ class TestRod(unittest.TestCase):
         solver = Solver(model)
         solver.run()
 
+        ID = OD1 - 2 * t
         # F = k * x
         # x = F / k
+        L = 1.0
+        A = np.pi * (OD1 ** 2 - ID ** 2) / 4
+        kaxial = A * E / L
+        F = 1.0
+        dx = F / kaxial
+        assert np.allclose(solver.xg[6], dx), f'dx={dx} xg[6]={solver.xg[6]}'
+        assert np.allclose(solver.Fg[6], F), solver.Fg
 
     def test_conrod(self):
         """Tests a CONROD"""
@@ -373,7 +382,7 @@ class TestRod(unittest.TestCase):
         E = 200.
         G = None
         nu = 0.3
-        model.add_mat1(mid, E, G, nu, rho=0.0, a=0.0, tref=0.0, ge=0.0, St=0.0,
+        model.add_mat1(mid, E, G, nu, rho=0.1, a=0.0, tref=0.0, ge=0.0, St=0.0,
                        Sc=0.0, Ss=0.0, mcsid=0)
         A = 1.0
         J = 2.0
@@ -407,9 +416,19 @@ class TestRod(unittest.TestCase):
         # F = k * d
         daxial = mag_axial / kaxial
         dtorsion = mag_torsion / ktorsion
-        print(solver.xa_)
+        #print(solver.xa_)
         assert np.allclose(solver.xa_[0], daxial), f'daxial={daxial} kaxial={kaxial} xa_={solver.xa_}'
         assert np.allclose(solver.xa_[1], dtorsion), f'dtorsion={dtorsion} ktorsion={ktorsion} xa_={solver.xa_}'
+
+        #L = 1.0
+        #A = np.pi * (OD1 ** 2 - ID ** 2) / 4
+        #kaxial = A * E / L
+        F = 1.0
+        #dx = F / kaxial
+        assert np.allclose(solver.xg[6], daxial), f'dx={daxial} xg[6]={solver.xg[6]}'
+        assert np.allclose(solver.xg[9], dtorsion), f'dx={dtorsion} xg[6]={solver.xg[9]}'
+        assert np.allclose(solver.Fg[6], mag_axial), f'F={mag_axial} Fg[6]={solver.Fg[6]}'
+        assert np.allclose(solver.Fg[9], mag_torsion), f'F={mag_torsion} Fg[9]={solver.Fg[9]}'
 
 class TestBar(unittest.TestCase):
     """tests the CBARs"""

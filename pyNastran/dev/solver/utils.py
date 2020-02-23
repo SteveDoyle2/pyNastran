@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Dict, Tuple, TYPE_CHECKING
+from typing import Dict, Tuple, Any, TYPE_CHECKING
 import numpy as np
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -9,8 +9,8 @@ if TYPE_CHECKING:  # pragma: no cover
 
 DOF_MAP = Dict[Tuple[int, int], int]
 
-def get_ieids_eids(model: BDF, etype, eids_str, ncols: int=1,
-                   idtype='int32', fdtype='float32'):
+def get_ieids_eids(model: BDF, etype: str, eids_str, ncols: int=1,
+                   idtype: str='int32', fdtype: str='float32') -> Tuple[int, Any, Any, Any, ANy]:
     """helper for the stress/strain/force/displacment recovery"""
     eids = np.array(model._type_to_id_map[etype], dtype=idtype)
     if len(eids) == 0:

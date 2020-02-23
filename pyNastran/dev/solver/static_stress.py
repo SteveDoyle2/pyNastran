@@ -42,11 +42,11 @@ def recover_stress_101(f06_file, op2,
         'CONROD', fdtype=fdtype,
         title=title, subtitle=subtitle, label=label,
         page_num=page_num, page_stamp=page_stamp)
-    #nelements += _recover_stress_rod(
-        #f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        #'CTUBE', fdtype=fdtype,
-        #title=title, subtitle=subtitle, label=label,
-        #page_num=page_num, page_stamp=page_stamp)
+    nelements += _recover_stress_rod(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CTUBE', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
     #assert nelements > 0, nelements
 
 
@@ -86,6 +86,10 @@ def _recover_stress_celas(f06_file, op2,
         op2.celas1_stress[isubcase] = spring_stress
     elif element_name == 'CELAS2':
         op2.celas2_stress[isubcase] = spring_stress
+    elif element_name == 'CELAS3':
+        op2.celas3_stress[isubcase] = spring_stress
+    elif element_name == 'CELAS4':
+        op2.celas4_stress[isubcase] = spring_stress
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
     spring_stress.write_f06(f06_file, header=None, page_stamp=page_stamp,
@@ -107,10 +111,16 @@ def _recover_stress_rod(f06_file, op2,
         for ieid, eid in zip(irod, eids):
             elem = model.elements[eid]
             stresses[ieid, :] = _recover_stressi_rod(xb, dof_map, elem, elem)
-    else:
+    elif element_name == 'CROD':
         for ieid, eid in zip(irod, eids):
             elem = model.elements[eid]
             stresses[ieid, :] = _recover_stressi_rod(xb, dof_map, elem, elem.pid_ref)
+    elif element_name == 'CTUBE':
+        for ieid, eid in zip(irod, eids):
+            elem = model.elements[eid]
+            stresses[ieid, :] = _recover_stressi_ctube(xb, dof_map, elem, elem.pid_ref)
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
 
     data = stresses.reshape(1, *stresses.shape)
     table_name = 'OSTR1'
@@ -193,6 +203,61 @@ def _recover_stressi_rod(xb, dof_map, elem, prop):
 
     axial_strain = du_axial / L
     torsional_strain = du_torsion * C / L
+
+    axial_stress = E * axial_strain
+    torsional_stress = G * torsional_strain
+
+    return axial_stress, np.nan, torsional_stress, np.nan
+
+def _recover_stressi_ctube(xb, dof_map, elem, prop):
+    """get the static ctube stress"""
+    nid1, nid2 = elem.nodes
+
+    # axial
+    i11 = dof_map[(nid1, 1)]
+    i12 = i11 + 1
+    i13 = i11 + 2
+
+    i21 = dof_map[(nid2, 1)]
+    i22 = i21 + 1
+    i23 = i21 + 2
+
+    # torsion
+    i14 = i11 + 3
+    i15 = i11 + 4
+    i16 = i11 + 5
+
+    i24 = i21 + 3
+    i25 = i21 + 4
+    i26 = i21 + 5
+
+    q_axial = np.array([
+        xb[i11], xb[i12], xb[i13],
+        xb[i21], xb[i22], xb[i23],
+    ])
+    q_torsion = np.array([
+        xb[i14], xb[i15], xb[i16],
+        xb[i24], xb[i25], xb[i26],
+    ])
+    xyz1 = elem.nodes_ref[0].get_position()
+    xyz2 = elem.nodes_ref[1].get_position()
+    dxyz12 = xyz1 - xyz2
+    Lambda = lambda1d(dxyz12, debug=False)
+
+    u_axial = Lambda @ q_axial
+    u_torsion = Lambda @ q_torsion
+    du_axial = u_axial[0] - u_axial[1]
+    du_torsion = u_torsion[0] - u_torsion[1]
+    #headers = ['axial', 'SMa', 'torsion', 'SMt']
+
+    mat = prop.mid_ref
+
+    L = np.linalg.norm(dxyz12)
+    G = mat.G()
+    E = elem.E()
+
+    axial_strain = du_axial / L
+    torsional_strain = du_torsion / L
 
     axial_stress = E * axial_strain
     torsional_stress = G * torsional_strain

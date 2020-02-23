@@ -210,6 +210,7 @@ def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map: DOF_MAP, elem, mat, fdtype='floa
     G = mat.G()
     J = elem.J()
     A = elem.Area()
+    #print(f'A = {A}')
     E = elem.E()
     #L = elem.Length()
     k_axial = A * E / L

@@ -213,7 +213,8 @@ def build_kbb_cquad4(model: BDF,
         jacobian2 = []
         Ki = np.zeros((8, 8), dtype='float64')
         for zi, etai in zs_etas:
-            jacobian2.append(A0 + A1 * zi + A2 * etai)
+            jacobian2i = A0 + A1 * zi + A2 * etai
+            jacobian2.append(jacobian2i)
             N1x = N2x = etai - 1
             N3x = N4x = etai + 1
             N1y = N4y = zi - 1
@@ -234,7 +235,7 @@ def build_kbb_cquad4(model: BDF,
             Ki += (B.T @ A @ B)
             for C in [2*Bmat, D]:
                 Ki += (B.T @ C @ B)
-            Ki *= jacobian
+            Ki *= jacobian2i
 
         if np.abs(Ki).sum() == 0.0:
             if pid_ref.type == 'PSHELL':
@@ -264,11 +265,12 @@ def build_kbb_cquad4(model: BDF,
             #jratio = 1 / jacobian2
 
         #jratio = jacobians.min() / jacobians.max()
+        jratio2 = max(jacobian2) / min(jacobian2)
         if not(0.1 <= jratio <= 10.):
-            model.log.error(f'eid={eid}; |J|={jacobian:.3f}; |J2|={jacobian2}; Jratio={jratio:.3f} J=\n{jmat}')
+            model.log.error(f'eid={eid}; |J|={jacobian:.3f}; |J2|={jacobian2}; Jratio={jratio2:.3f} J=\n{jmat}')
             bad_jacobians.append(eid)
         else:
-            model.log.debug(f'eid={eid}; |J|={jacobian:.3f}; |J2|={jacobian2}; Jratio={jratio:.3f} J=\n{jmat}')
+            model.log.debug(f'eid={eid}; |J|={jacobian:.3f}; |J2|={jacobian2}; Jratio={jratio2:.3f} J=\n{jmat}')
 
     if bad_jacobians:
         raise RuntimeError(f'elements={bad_jacobians} have invalid jacobians')

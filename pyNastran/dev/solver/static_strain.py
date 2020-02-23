@@ -44,11 +44,11 @@ def recover_strain_101(f06_file, op2,
         'CONROD', fdtype=fdtype,
         title=title, subtitle=subtitle, label=label,
         page_num=page_num, page_stamp=page_stamp)
-    #nelements += _recover_strain_rod(
-        #f06_file, op2, model, dof_map, isubcase, xb, eid_str,
-        #'CTUBE', fdtype=fdtype,
-        #title=title, subtitle=subtitle, label=label,
-        #page_num=page_num, page_stamp=page_stamp)
+    nelements += _recover_strain_rod(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CTUBE', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
     #assert nelements > 0, nelements
 
 
@@ -106,10 +106,16 @@ def _recover_strain_rod(f06_file, op2,
         for ieid, eid in zip(irod, eids):
             elem = model.elements[eid]
             strains[ieid, :] = _recover_straini_rod(xb, dof_map, elem, elem)
-    else:
+    elif element_name == 'CROD':
         for ieid, eid in zip(irod, eids):
             elem = model.elements[eid]
             strains[ieid, :] = _recover_straini_rod(xb, dof_map, elem, elem.pid_ref)
+    elif element_name == 'CTUBE':
+        for ieid, eid in zip(irod, eids):
+            elem = model.elements[eid]
+            strains[ieid, :] = _recover_straini_ctube(xb, dof_map, elem, elem.pid_ref)
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
 
     data = strains.reshape(1, *strains.shape)
     table_name = 'OSTR1'
@@ -191,5 +197,56 @@ def _recover_straini_rod(xb, dof_map, elem, prop):
 
     axial_strain = du_axial / L
     torsional_strain = du_torsion * C / L
+
+    return axial_strain, np.nan, torsional_strain, np.nan
+
+def _recover_straini_ctube(xb, dof_map, elem, prop):
+    """get the static ctube strain"""
+    nid1, nid2 = elem.nodes
+
+    # axial
+    i11 = dof_map[(nid1, 1)]
+    i12 = dof_map[(nid1, 2)]
+    i13 = dof_map[(nid1, 3)]
+
+    i21 = dof_map[(nid2, 1)]
+    i22 = dof_map[(nid2, 2)]
+    i23 = dof_map[(nid2, 3)]
+
+    # torsion
+    i14 = dof_map[(nid1, 4)]
+    i15 = dof_map[(nid1, 5)]
+    i16 = dof_map[(nid1, 6)]
+
+    i24 = dof_map[(nid2, 4)]
+    i25 = dof_map[(nid2, 5)]
+    i26 = dof_map[(nid2, 6)]
+
+    q_axial = np.array([
+        xb[i11], xb[i12], xb[i13],
+        xb[i21], xb[i22], xb[i23]
+    ])
+    q_torsion = np.array([
+        xb[i14], xb[i15], xb[i16],
+        xb[i24], xb[i25], xb[i26]
+    ])
+    xyz1 = elem.nodes_ref[0].get_position()
+    xyz2 = elem.nodes_ref[1].get_position()
+    dxyz12 = xyz1 - xyz2
+    Lambda = lambda1d(dxyz12, debug=False)
+
+    u_axial = Lambda @ q_axial
+    u_torsion = Lambda @ q_torsion
+    du_axial = u_axial[0] - u_axial[1]
+    du_torsion = u_torsion[0] - u_torsion[1]
+    #headers = ['axial', 'SMa', 'torsion', 'SMt']
+
+    xyz1 = elem.nodes_ref[0].get_position()
+    xyz2 = elem.nodes_ref[1].get_position()
+    dxyz12 = xyz1 - xyz2
+    L = np.linalg.norm(dxyz12)
+
+    axial_strain = du_axial / L
+    torsional_strain = du_torsion / L
 
     return axial_strain, np.nan, torsional_strain, np.nan
