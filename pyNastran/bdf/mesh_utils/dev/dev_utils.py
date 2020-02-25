@@ -229,7 +229,7 @@ def get_joints(model, pid_sets):
     ]
     """
     nid_sets = defaultdict(set)
-    for eid, elem in model.elements.items():
+    for unused_eid, elem in model.elements.items():
         pid = elem.Pid()
         nid_sets[pid].update(elem.node_ids)
 
@@ -598,7 +598,7 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
     for nid in all_common_nids:
         mapped_nids = map_nid[nid]
         avg_normal_at_node = np.zeros(3, dtype='float64')
-        node = model.nodes[nid]
+        unused_node = model.nodes[nid]
         node_elems = nid.elements
         nelems = len(node_elems)
         for elem in node_elems:
@@ -614,7 +614,7 @@ def create_spar_cap(model, eids, nids, width, nelements=1, symmetric=True, xyz_c
 
         if symmetric:
             mapped_nids2 = map_nid2[nid]
-            for imap, mapped_nid2 in enumerate(mapped_nids2):
+            for unused_imap, mapped_nid2 in enumerate(mapped_nids2):
                 xyzi = xyz[i, :] + avg_normal_at_node * width_array[i]
                 node2 = GRID(mapped_nid2, xyz=xyzi)
                 nodes.append(node2)

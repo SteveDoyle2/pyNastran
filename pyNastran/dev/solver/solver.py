@@ -1554,6 +1554,7 @@ def build_Mbb(model: BDF,
         'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4',
     }
 
+    eye3 = np.eye(3, dtype='float64')
     mass_rod_2x2 = np.array([
         [2, 0, 1, 0],
         [0, 2, 0, 1],
@@ -1589,6 +1590,77 @@ def build_Mbb(model: BDF,
         [2, 0, 1, 0, 2, 0, 4, 0],
         [0, 2, 0, 1, 0, 2, 0, 4],
     ], dtype='float64') / 36.
+
+    mass_total = 0.
+    for eid, elem in model.masses.items():
+        etype = elem.type
+        if etype in no_mass:
+            continue
+
+        if etype == 'CONM1':
+            nid = elem.nid
+            nid_ref = elem.nid_ref
+            if nid_ref.type == 'GRID':
+                i1 = dof_map[(nid, 1)]
+
+                # TODO: support CID
+                if nid_ref.cd != elem.cid:
+                    log.warning(f'  CONM1 eid={eid} nid={nid} CD={nid_ref.cd} to cid={elem.cid} is not supported')
+            else:  # pragma: no cover
+                print(elem.get_stats())
+                raise NotImplementedError(elem)
+            Mbb[i1:i1+6, i1:i1+6] += elem.mass_matrix
+
+        if etype == 'CONM2':
+            mass = elem.Mass()
+            nid = elem.nid
+            nid_ref = elem.nid_ref
+            if nid_ref.type == 'GRID':
+                i1 = dof_map[(nid, 1)]
+                if nid_ref.cd != elem.cid:
+                    log.warning(f'  CONM2 eid={eid} nid={nid} CD={nid_ref.cd} to cid={elem.cid} is not supported')
+                #Mbb[i1, i1] = mass
+                #Mbb[i1+1, i1+1] = mass
+                #Mbb[i1+2, i1+2] = mass
+                # TODO: support CID
+                I11, I21, I22, I31, I32, I33 = elem.I
+                x1, x2, x3 = elem.X
+                mxx = np.array([
+                    [x1 * x1, -x1 * x2, -x1 * x3],
+                    [-x2 * x1, x2 * x2, -x2 * x3],
+                    [-x3 * x1, x3 * x2, x3 * x3],
+                ]) * mass
+                Tr = np.array([
+                    [0, x3, -x2],
+                    [-x3, 0, x1],
+                    [x2, -x1, 0],
+                ], dtype='float64')
+                mx = Tr * mass
+                I = np.array([
+                    [I11, -I21, I31],
+                    [-I21, I22, -I32],
+                    [-I31, -I32, I33],
+                ]) + mxx
+
+                #[mass, 01, 02, 03, mass * X3, -mass * X2]
+                #[10, mass, 12, -mass * X3, 14, mass * X1]
+                #[20, 21, mass, mass * X2, -mass * X1, 25]
+                #[30, -mass * X3, mass * X2,        I11 + mass * X2 * X2 + mass * X3 * X3, -I21 - mass * X2 * X1,                  -I31 - mass * X3 * X1]
+                #[mass * X3, 41, -mass * X1,       -I21 - mass * X2 * X1,                   I22 + mass * X1 * X1 + mass * X3 * X3, -I32 - mass * X3 * X2]
+                #[-mass * X2, mass * X1, 52,       -I31 - mass * X3 * X1,                  -I32 - mass * X3 * X2,                   I33 + mass * X2 * X2 + mass * X1 * X1]
+
+                Mbb[i1:i1+3, i1:i1+3] += eye3 * mass
+                Mbb[i1:i1+3, i1+3:i1+6] += mx
+                Mbb[i1+3:i1+6, i1:i1+3] += mx.T
+                mass_total += mass
+                Mbb[i1+3:i1+6, i1+3:i1+6] += I
+            else:  # pragma: no cover
+                print(elem.get_stats())
+                raise NotImplementedError(elem)
+            del i1
+        else:  # pragma: no cover
+            print(elem.get_stats())
+            raise NotImplementedError(elem)
 
     for eid, elem in model.elements.items():
         etype = elem.type
@@ -1756,5 +1828,77 @@ def build_Mbb(model: BDF,
         i = np.arange(0, ndof).reshape(ndof//6, 6)[:, :3].ravel()
         #print(Mbb[i, i])
         massi = Mbb[i, i].sum()
-        log.info(f'finished build_Mbb; M={massi:.6g}')
+        log.info(f'finished build_Mbb; M={massi:.6g}; mass_total={mass_total:.6g}')
+    grid_point_weight(model, Mbb, dof_map, ndof)
     return Mbb
+
+def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
+    z = np.zeros((3, 3), dtype='float64')
+    nnodes = len(model.nodes)
+    D = np.zeros((6*nnodes, 6), dtype='float64')
+    inid = 0
+    #print(model.nodes)
+    #print(f'D.shape = {D.shape}')
+    for nid, node in sorted(model.nodes.items()):
+        xi, yi, zi = node.get_position()
+        Tr = np.array([
+            [0, zi, -yi],
+            [-zi, 0, xi],
+            [yi, -xi, 0],
+        ], dtype='float64')
+        #print(f'nid={nid}')
+        cd_ref = node.cd_ref
+        Ti = cd_ref.beta()
+        #print(Tr)
+        #print(Ti)
+        TiT_Tr = Ti.T @ Tr
+        d = np.block([
+            [Ti.T, TiT_Tr],
+            [z, Ti.T],
+        ])
+        #print(f'd.shape={d.T.shape}')
+        #print(f'd={d}')
+        #print(f'D[:, {inid*6}:{(inid+1)*6}]')
+        D[inid*6:(inid+1)*6, :] = d.T
+        inid += 1
+
+    # Location Basic System (CP Fields) Mass Global System (CD Fields)
+    # Grid ID xb yb zb xCD yCD zCD
+    # 1       0   0 0  2   3   5
+    # 2       1   0 0  2   3   5
+    # 3       0.5 1 0  2   3   5
+    # 4       0.5 0 1  2   3   5
+    #print(f'Dt.shape = {D.T.shape}')
+    #print(f'Mbb.shape = {Mbb.shape}')
+    #print(f'D.shape = {D.shape}')
+    #print(f'D.T =\n{D.T}')
+    M0 = D.T @ Mbb @ D
+    translation_set, rotation_set = dof_map_to_tr_set(dof_map, ndof)
+    #print('translation_set =', translation_set, len(translation_set))
+    #print('rotation_set =', rotation_set, len(rotation_set))
+    #print(f'M0.shape = {M0.shape}')
+    #Mtt = M0[translation_set, :][:, translation_set]
+    #M0_dict = partition_matrix(M0, [['t', translation_set], ['r', rotation_set]])
+    M0_dict = partition_matrix(M0, [['t', [0, 1, 2]], ['r', [3, 4, 5]]])
+    Mtt = M0_dict['tt']
+    Mrr = M0_dict['rr']
+    #Mrt = M0_dict['rt']
+    Mtr = M0_dict['tr']
+    unused_eigvals, S = np.linalg.eig(Mtt)
+    #unused_eigvals, Q = np.linalg.eig(Mrr)
+    Mt = S.T @ Mtt @ S
+    Mtr = S.T @ Mtr @ S
+    Mr = S.T @ Mrr @ S
+    print(Mt)
+    return Mt, Mtr, Mr
+
+def dof_map_to_tr_set(dof_map, ndof: int) -> Tuple[NDArrayNbool, NDArrayNbool]:
+    """creates the translation/rotation sets"""
+    trans_set = np.zeros(ndof, dtype='bool')
+    rot_set = np.zeros(ndof, dtype='bool')
+    for (nid, dof), idof in dof_map.items():
+        if dof in [0, 1, 2, 3]:
+            trans_set[idof] = True
+        else:
+            rot_set[idof] = True
+    return trans_set, rot_set

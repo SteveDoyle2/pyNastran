@@ -74,5 +74,5 @@ class FakeBDFVectorized(BDF):
 def create_vectorized_numbered(bdf_filename_in, bdf_filename_out, debug=True):
     model = FakeBDFVectorized()
     model.read_bdf(bdf_filename=bdf_filename_in, validate=True, xref=False, punch=False,
-                  read_includes=True, encoding=None)
+                   read_includes=True, encoding=None)
     model.write_bdf(bdf_filename_out)

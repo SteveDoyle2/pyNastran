@@ -10,7 +10,7 @@ defines:
 
 """
 from itertools import combinations
-from typing import List, Tuple, Union, Any
+from typing import List, Tuple, Dict, Union, Optional, Any
 import numpy as np
 from numpy import (array, unique, arange, searchsorted,
                    setdiff1d, intersect1d, asarray)
@@ -166,7 +166,8 @@ def _get_xyz_cid0(model, nids):
                            for nid in nids], dtype='float32')
     return nodes_xyz
 
-def _eq_nodes_setup_node_set(model, node_set, renumber_nodes=False):
+def _eq_nodes_setup_node_set(model: BDF, node_set, renumber_nodes: bool=False,
+                             ) -> Tuple[NDArrayNint, NDArrayNint, Dict[int, int]]:
     """helper function for ``_eq_nodes_setup``"""
     inode = 0
     nid_map = {}
@@ -197,7 +198,8 @@ def _eq_nodes_setup_node_set(model, node_set, renumber_nodes=False):
                     #if nid in node_set], dtype='int32')
     return nids, all_nids, nid_map
 
-def _eq_nodes_setup_node(model, renumber_nodes=False):
+def _eq_nodes_setup_node(model: BDF, renumber_nodes: bool=False,
+                         ) -> Tuple[NDArrayNint, NDArrayNint, Dict[int, int]]:
     """helper function for ``_eq_nodes_setup``"""
     inode = 0
     nid_map = {}
@@ -217,7 +219,11 @@ def _eq_nodes_setup_node(model, renumber_nodes=False):
     all_nids = nids
     return nids, all_nids, nid_map
 
-def _check_for_referenced_nodes(model, node_set, nids, all_nids, nodes_xyz):
+def _check_for_referenced_nodes(model: BDF,
+                                node_set: NDArrayNint,
+                                nids: NDArrayNint,
+                                all_nids: NDArrayNint,
+                                nodes_xyz: NDArrayN3float) -> Optional[NDArrayNint]:
     """helper function for ``_eq_nodes_setup``"""
     if node_set is not None:
         assert nodes_xyz.shape[0] == len(nids)
@@ -328,7 +334,8 @@ def _eq_nodes_final(nid_pairs, model: BDF, tol: float,
 def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
                                  nids: NDArrayNint,
                                  tol: float,
-                                 log, inew,
+                                 log,
+                                 inew: NDArrayNint,
                                  node_set=None, neq_max: int=4, method: str='new',
                                  debug: bool=False) -> None:
     """helper for equivalencing"""
@@ -339,6 +346,9 @@ def _nodes_xyz_nids_to_nid_pairs(nodes_xyz: NDArrayN3float,
     return nid_pairs
 
 def _nodes_xyz_nids_to_nid_pairs_new(kdt, nids, node_set, tol: float):
+    """
+    helper function for `bdf_equivalence_nodes`
+    """
     ieq3 = kdt.query_ball_tree(kdt, tol)
     nid_pairs = []
     for pair in ieq3:

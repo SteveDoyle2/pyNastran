@@ -6,6 +6,51 @@ from pyNastran.bdf.case_control_deck import CaseControlDeck
 
 
 class TestSpring(unittest.TestCase):
+    def test_conm2(self):
+        """Tests a CMASS1/PMASS"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'celas1.bdf'
+        model.add_grid(1, [0., 0., 0.], cd=1)
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [0.5, 1., 0.], cd=3)
+        model.add_grid(4, [0.5, 0., 1.])
+
+        origin = [0., 0., 0.]
+        zaxis = [0., 0., 1]
+        xzplane = [1., 1., 0.]
+        model.add_cord2r(1, origin, zaxis, xzplane, rid=0, setup=True, comment='')
+
+        origin = [0.5, 1., 0.]
+        zaxis = [0., 0., 1]
+        xzplane = [0.5, 2., 0.]
+        model.add_cord2r(3, origin, zaxis, xzplane, rid=0, setup=True, comment='')
+
+        model.add_conm2(1, 1, mass=2.0, cid=0, X=None, I=None, comment='')
+        model.add_conm2(2, 2, mass=3.0, cid=0, X=None, I=None, comment='')
+        model.add_conm2(3, 3, mass=3.0, cid=0, X=None, I=None, comment='')
+        model.add_conm2(4, 4, mass=5.0, cid=0, X=None, I=None, comment='')
+
+        nids = [1, 2]
+        eid = 1
+        k = 1000.
+        model.add_celas2(eid, k, nids, c1=1, c2=2, ge=0., s=0., comment='')
+
+        load_id = 2
+        spc_id = 3
+        # model.add_sload(load_id, 2, 20.)
+        fxyz = [1., 0., 0.]
+        mag = 20.
+        model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
+
+        components = 123456
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_case_control(model)
+
+        solver = Solver(model)
+        model.sol = 101
+        solver.run()
+
     def test_celas1(self):
         """Tests a CELAS1/PELAS"""
         model = BDF(debug=True, log=None, mode='msc')
