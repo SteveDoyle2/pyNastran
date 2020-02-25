@@ -11,7 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.nptyping import NDArrayNNfloat
     from pyNastran.bdf.bdf import (
         BDF,
-        CELAS1, CELAS2,
+        CELAS1, CELAS2, CELAS3, CELAS4,
         CBAR, PBAR, PBARL, PBEAM, PBEAML, # , CBEAM
         MAT1,
     )
@@ -33,6 +33,8 @@ def build_Kbb(model: BDF, dof_map: DOF_MAP, ndof: int,
     nelements = 0
     nelements += _build_kbb_celas1(model, Kbb, Kbbs, dof_map)
     nelements += _build_kbb_celas2(model, Kbb, Kbbs, dof_map)
+    nelements += _build_kbb_celas3(model, Kbb, Kbbs, dof_map)
+    nelements += _build_kbb_celas4(model, Kbb, Kbbs, dof_map)
     nelements += _build_kbb_conrod(model, Kbb, Kbbs, dof_map)
     nelements += _build_kbb_crod(model, Kbb, Kbbs, dof_map)
     nelements += _build_kbb_ctube(model, Kbb, Kbbs, dof_map)
@@ -76,6 +78,28 @@ def _build_kbb_celas2(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> int:
         _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki)
     return len(eids)
 
+def _build_kbb_celas3(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
+    """fill the CELAS3 Kbb matrix"""
+    eids = model._type_to_id_map['CELAS3']
+    for eid in eids:
+        elem = model.elements[eid]
+        ki = elem.K()
+        #print(elem, ki)
+        #print(elem.get_stats())
+        _build_kbbi_celas34(Kbb, Kbbs, dof_map, elem, ki)
+    return len(eids)
+
+def _build_kbb_celas4(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
+    """fill the CELAS4 Kbb matrix"""
+    eids = model._type_to_id_map['CELAS4']
+    for eid in eids:
+        elem = model.elements[eid]
+        ki = elem.K()
+        #print(elem, ki)
+        #print(elem.get_stats())
+        _build_kbbi_celas34(Kbb, Kbbs, dof_map, elem, ki)
+    return len(eids)
+
 def _build_kbbi_celas12(Kbb: NDArrayNNfloat, Kbbs, dof_map: DOF_MAP,
                         elem: Union[CELAS1, CELAS2], ki: float) -> None:
     """fill the CELASx Kbb matrix"""
@@ -83,6 +107,27 @@ def _build_kbbi_celas12(Kbb: NDArrayNNfloat, Kbbs, dof_map: DOF_MAP,
     c1, c2 = elem.c1, elem.c2
     i = dof_map[(nid1, c1)]
     j = dof_map[(nid2, c2)]
+    k = ki * np.array([[1, -1,],
+                       [-1, 1]])
+    ibe = [
+        (i, 0),
+        (j, 1),
+    ]
+    for ib1, ie1 in ibe:
+        for ib2, ie2 in ibe:
+            Kbb[ib1, ib2] += k[ie1, ie2]
+            Kbbs[ib1, ib2] += k[ie1, ie2]
+    #Kbb[j, i] += ki
+    #Kbb[i, j] += ki
+    #del i, j, ki, nid1, nid2, c1, c2
+
+def _build_kbbi_celas34(Kbb: NDArrayNNfloat, Kbbs, dof_map: DOF_MAP,
+                        elem: Union[CELAS1, CELAS2], ki: float) -> None:
+    """fill the CELASx Kbb matrix"""
+    nid1, nid2 = elem.nodes
+    print(dof_map)
+    i = dof_map[(nid1, 0)]
+    j = dof_map[(nid2, 0)]
     k = ki * np.array([[1, -1,],
                        [-1, 1]])
     ibe = [

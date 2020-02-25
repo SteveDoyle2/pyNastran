@@ -278,6 +278,7 @@ STR_PARAMS_1 = [
     b'MESH', b'OPTION', b'PRINT', b'SENAME', b'MECHFIX', b'RMXTRAN', b'FLEXINV',
     b'ADSTAT', b'ACOUT', b'ACSYM', b'ACTYPE', b'ADBX', b'AUTOSEEL',
     b'RDSPARSE',
+    b'SPARSEDR',
 
     # part of param, checkout
     b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',
@@ -1287,10 +1288,12 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 raise NotImplementedError('%r is not a supported PARAM' % word)
 
             key = word.decode('latin1')
-            self.params[key] = PARAM(key, [value], comment='')
+            param = PARAM(key, [value], comment='')
+            self.params[key] = param
+            #print(param.rstrip())
         return nvalues
 
-    def _not_available(self, data, ndata):
+    def _not_available(self, data: bytes, ndata: int):
         """testing function"""
         if ndata > 0:
             raise RuntimeError('this should never be called...'

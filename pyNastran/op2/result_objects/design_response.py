@@ -5,6 +5,7 @@ class Responses:
     def __init__(self):
         self.convergence_data = None
         self.desvars = None
+        self.dscmcol = None
         self.weight_response = None
         self.displacement_response = None
         self.stress_response = None
@@ -19,6 +20,7 @@ class Responses:
         objects = [
             self.convergence_data,
             self.desvars,
+            self.dscmcol,
             self.displacement_response,
             self.weight_response,
             self.stress_response,
@@ -37,7 +39,8 @@ class Responses:
 
     def get_table_types(self):
         tables = [
-            'convergence_data', 'desvars', 'displacement_response', 'weight_response',
+            'convergence_data', 'desvars', 'dscmcol',
+            'displacement_response', 'weight_response',
             'stress_response', 'strain_response', 'force_response',
             'composite_stress_response', 'composite_strain_response', 'flutter_response',
             'fractional_mass_response',
@@ -346,6 +349,51 @@ class FlutterResponse:
     def get_stats(self, short=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
+        else:
+            return self.__repr__() + '\n'
+
+
+class DSCMCOL:
+    def __init__(self, responses):
+        self.responses = responses
+    def __repr__(self):
+        nresponses = len(self.responses)
+        internal_ids = np.zeros(nresponses, dtype='int32')
+        external_ids = np.zeros(nresponses, dtype='int32')
+        response_types = -np.full(nresponses, -1, dtype='int32')
+        names_per_response = {}
+        #internal_ids = [resp['internal_id'] for resp in self.responses.values()]
+        #external_ids = [resp['external_id'] for resp in self.responses.values()]
+        #response_types = [resp['response_type'] for resp in self.responses.values()]
+        is_dresp2 = False
+        for i, respi in self.responses.items():
+            internal_ids[i] = respi['internal_response_id']
+            external_ids[i] = respi['external_response_id']
+            try:
+                response_type = respi['response_type']
+                response_types[i] = response_type
+                name = respi['name']
+                if (response_type, name) not in names_per_response:
+                    names_per_response[(response_type, name)] = list(respi.keys())
+            except KeyError:
+                is_dresp2 = True
+        msg = 'DSCMCOL()\n'
+        msg += f'  nresponses: {nresponses}\n'
+        msg += f'  internal_ids: {internal_ids}\n'
+        msg += f'  external_ids: {external_ids}\n'
+        msg += f'  response_types: {response_types}\n'
+        if names_per_response:
+            msg += '  response_type names:'
+            for (response_type, name), names in names_per_response.items():
+                names.remove('internal_response_id')
+                names.remove('external_response_id')
+                names2 = str(names).replace("'", '')
+                msg += f'    {response_type:2d}: name={name!r}; names={names2}\n'
+        return msg
+
+    def get_stats(self, short=False):
+        if short:
+            return f'responses.dscmcol ({len(self.responses)})\n'
         else:
             return self.__repr__() + '\n'
 

@@ -49,7 +49,7 @@ class EDOM(GeomCommon):
             (504, 5, 246) : ['???', self._read_fake],
             (504, 5, 246) : ['???', self._read_fake],
 
-            (3106, 31, 352) : ['DESVAR', self._read_fake],
+            (3106, 31, 352) : ['DESVAR', self._read_desvar],
             (3206, 32, 353) : ['DLINK', self._read_fake],
             (3306, 33, 354) : ['DVPREL1', self._read_fake],
             (3406, 34, 355) : ['DVPREL2', self._read_fake],
@@ -74,3 +74,35 @@ class EDOM(GeomCommon):
             (6006, 60, 477) : ['???', self._read_fake],
             (7000, 70, 563) : ['DCONSTR/DDVAL?', self._read_fake],
         }
+
+    def _read_desvar(self, data, n):
+        """
+        Word Name  Type  Description
+        1 ID       I     Unique design variable identification number
+        2 LABEL(2) CHAR4 User-supplied name for printing purposes
+        4 XINIT    RS    Initial value
+        5 XLB      RS    Lower bound
+        6 XUB      RS    Upper bound
+        7 DELXV    RS    Fractional change allowed for the design variable
+                         during approximate optimization
+        8 DDVAL    I     ID of a DDVAL entry that provides a set of allowable
+                         discrete values
+        """
+        ntotal = 32  # 8*4
+        from struct import Struct
+        s = Struct(self._endian + b'i8s ffff i')
+        ncards = (len(data) - n) // ntotal
+        for unused_i in range(ncards):
+            edata = data[n:n + ntotal]
+            desvar_id, blabel, xinit, xlb, xub, delx, ddval = s.unpack(edata)
+            label = blabel.decode('ascii')
+            if delx == 0:
+                delx = None
+            if ddval == 0:
+                ddval = None
+            desvar = self.add_desvar(desvar_id, label, xinit, xlb=-1e20, xub=1e20,
+                                     delx=delx, ddval=ddval, comment='')
+            n += ntotal
+            #print(desvar)
+        self.card_count['DESVAR'] = ncards
+        return n

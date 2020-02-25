@@ -126,6 +126,83 @@ class TestSpring(unittest.TestCase):
         d = mag / k
         assert np.allclose(solver.xa_[0], d)
 
+    def test_celas3(self):
+        """Tests a CELAS3/PELAS"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'celas3.bdf'
+        #model.add_grid(1, [0., 0., 0.])
+        #model.add_grid(2, [0., 0., 0.])
+        model.add_spoint([1, 2])
+        nids = [1, 2]
+        eid = 1
+        pid = 2
+        model.add_celas3(eid, pid, nids, comment='')
+        k = 1000.
+
+        load_id = 2
+        spc_id = 3
+        model.add_pelas(pid, k, ge=0., s=0., comment='')
+        # model.add_sload(load_id, 2, 20.)
+        fxyz = [1., 0., 0.]
+        mag = 20.
+        # model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
+        nids = 2
+        mags = mag
+        model.add_sload(load_id, nids, mags, comment='')
+
+        components = 0
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_case_control(model)
+
+        solver = Solver(model)
+        #model.sol = 103
+        #solver.run()
+
+        model.sol = 101
+        solver.run()
+
+        # F = k * d
+        # d = F / k
+        # 20=1000.*d
+        d = mag / k
+        assert np.allclose(solver.xa_[0], d), solver.xa_
+        os.remove(solver.f06_filename)
+        os.remove(solver.op2_filename)
+
+    def test_celas4_cd(self):
+        """Tests a CELAS4"""
+        model = BDF(debug=True, log=None, mode='msc')
+        model.bdf_filename = 'celas4.bdf'
+        model.add_spoint([1, 2])
+        #origin = [0., 0., 0.]
+        #zaxis = [0., 0., 1.]
+        #xzplane = [0., 1., 0.]
+        #model.add_cord2r(cd, origin, zaxis, xzplane, rid=0, setup=True, comment='')
+        nids = [1, 2]
+        eid = 1
+        k = 1000.
+        model.add_celas4(eid, k, nids, comment='')
+
+        load_id = 2
+        spc_id = 3
+        # model.add_sload(load_id, 2, 20.)
+        fxyz = [1., 0., 0.]
+        mag = 20.
+        model.add_sload(load_id, 2, mag)
+
+        components = 0
+        nodes = 1
+        model.add_spc1(spc_id, components, nodes, comment='')
+        setup_case_control(model)
+
+        solver = Solver(model)
+        solver.run()
+
+        # F = k * d
+        d = mag / k
+        assert np.allclose(solver.xa_[0], d)
+
 
 class TestRod(unittest.TestCase):
     """tests the rods"""

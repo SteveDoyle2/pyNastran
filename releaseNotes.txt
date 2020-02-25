@@ -46,7 +46,77 @@ Solver
         solve, calculate responses
    - added D matricies for PSHELL, PCOMP, PSOLID
 
------------------------v???   released 2019/?/??-----------------------
+Solver (New):
+   - not released
+   - rewriting pyNastran solver (SOL 101)
+      - uses case control deck to identify loads/BCs
+      - F06/OP2 output
+      - SOL 101 - Static Displacement
+         - outputs:
+           - OLOAD Resultant
+           - Grid Point Weight Generator (calculated; no table)
+           - Displacement
+           - Applied Load
+           - SPC Forces
+           - Stress
+           - Strain
+           - Element Force
+           - MPC Forces (TODO)
+           - Strain Energy (TODO)
+         - cards:
+           - GRID
+             - CD support - verified for CORDxR
+             - PS support - not verified
+             - SEID support
+           - CORDx
+           - CELAS1/CELAS2
+             - no SPOINTs
+             - stress/strain/force output - verified
+             - stiffness matrix - verified
+           - CELAS3/CELAS4
+             - no GRIDs
+             - no stress/strain/force output
+             - stiffness matrix - verified
+           - CONM1/CONM2
+             - no cid
+             - GRID only
+             - mass matrix - not verified
+           - CROD/CONROD/CTUBE
+             - mass matrix - verified
+             - stiffness matrix - verified
+             - output - verified
+           - constraints:
+             - SPC, SPC1
+           - loads:
+             - LOAD
+             - FORCE/MOMENT
+               - GRID only
+             - SLOAD
+               - SPOINT only
+             - SPCD
+           - CBAR
+             - PBAR/PBARL
+             - stiffness matrix - not verified
+             - no mass matrix
+             - no output
+             - not verified
+           - CBEAM
+             - PBEAM (no PBEAML)
+             - no warping
+             - stiffness matrix - not verified
+             - no mass matrix
+             - no output
+           - PSHELL/PCOMP
+             - CTRIA3
+               - no stiffness matrix
+               - mass matrix - not verified
+             - CQUAD4
+               - mass matrix - not verified
+               - stiffness matrix - not verified
+               - no PSHELL mid3
+               - no output
+
+-----------------------v1.3   released 2020/?/??-----------------------
 BDF:
  - bug fixes:
  - new cards:
@@ -60,6 +130,9 @@ BDF:
    - added inertia for PBARL/L
    - bdf mirror:
      - added PLOTEL, RROD, RBAR, RBAR1, RBE1, AELIST, AESURF support
+   - bdf_equivalence:
+     - method='new' no longer requires neq_max
+     - use method='old' for old behavior (deprecated)
  - minor enhancements:
    - handling ;; in DEQATN
    - support for SURF cid=None in _get_forces_moments_array
@@ -69,12 +142,13 @@ BDF:
    - warning on RBAR dof check instead of RuntimeError
 
 OP2:
- - bug fixes:
-   - more hdf5 results
  - enhancements:
+   - more hdf5 results
    - a few more cards supported in the OP2 geometry reader
    - adding op2 writer (includes geometry support)
    - adding composite failure indicies (OEFIT)
+   - improved sensitivity support (DSCMCOL)
+   - preliminary 64-bit support
 
 GUI:
  - bug fixes:
@@ -129,8 +203,8 @@ OP2:
     - fixed CONVM error (it can be 6 or 7 fields, not only 6)
     - fixed ACCEL key
  - bug fixes:
-    - R1TABRG now stores response_types as strings (instead of bytes for
-      Python 3)
+    - R1TABRG now stores response_types as strings
+      (instead of bytes for Python 3)
     - f06 writer now writes CDAMP3/4 names correctly
 
 GUI:

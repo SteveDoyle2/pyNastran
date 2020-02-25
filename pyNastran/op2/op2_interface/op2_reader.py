@@ -61,7 +61,7 @@ from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
 
 from pyNastran.op2.result_objects.design_response import (
     WeightResponse, DisplacementResponse, StressResponse, StrainResponse, ForceResponse,
-    FlutterResponse, FractionalMassResponse, Convergence, Desvars)
+    FlutterResponse, FractionalMassResponse, Convergence, Desvars, DSCMCOL)
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
@@ -1271,13 +1271,15 @@ class OP2Reader:
         #self.show_ndata(100)
 
     def read_dscmcol(self):
+        """reads the DSCMCOL table, which defines the columns? for the DSCM2 table"""
         op2 = self.op2
         op2.log.debug("table_name = %r" % op2.table_name)
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
         fmt = mapfmt(self._endian + b'7i', self.size)
-        num, ndesvars, one, zeroa, zerob, zeroc, zerod = Struct(fmt).unpack(data)
+        num, ndesvars, one_zero, zeroa, zerob, zeroc, zerod = Struct(fmt).unpack(data)
+        #print(num, ndesvars, one_zero, zeroa, zerob, zeroc, zerod)
         # (101, 3, 1, 0, 0, 0, 0)
         #self.show_data(data)
         self.read_3_markers([-2, 1, 0])
@@ -1292,36 +1294,42 @@ class OP2Reader:
         self.read_3_markers([-3, 1, 0])
         data = self._read_record()
 
+        responses = {}
         if self.read_mode == 2:
             ndata = len(data) // 4
             nresponses_dresp1 = ndata // 9
             ints = np.frombuffer(data, dtype='int32')
             floats = np.frombuffer(data, dtype='float32')
-            dscmcol_dresp1(nresponses_dresp1, ints, floats)
+            dscmcol_dresp1(responses, nresponses_dresp1, ints, floats)
 
-            # Word Name Type Description
-            # 1 IRID      I Internal response identification number
-            # 2 RID       I External response identification number
-            # 3 SUBCASE   I Subcase identification number
-            # 4 DFLAG     I Dynamic response flag (See Note)
-            # 5 FREQTIME RS Frequency or time step
-            # 6 SEID      I Superelement identification number
         #self.show_data(data[4*idata:])
         self.read_3_markers([-4, 1, 0])
         nfields = self.get_marker1(rewind=True)
         if nfields == 0:
+            self._save_dscmcol_response(responses)
             self.read_markers([0])
             return
 
         data = self._read_record()
         if self.read_mode == 2:
+            # read the DRESP2 columns
             ints = np.frombuffer(data, dtype='int32')
             floats = np.frombuffer(data, dtype='float32')
             nresponses_dresp2 = len(ints) // 6
-            dscmcol_dresp2(nresponses_dresp2, ints, floats)
+            dscmcol_dresp2(responses, nresponses_dresp2, ints, floats)
 
+        self._save_dscmcol_response(responses)
         self.read_markers([-5, 1, 0, 0])
 
+    def _save_dscmcol_response(self, responses):
+        """saves the DSCMCOL dictionary"""
+        if self.read_mode == 2:
+            assert len(responses) > 0
+        if responses:
+            assert self.op2.op2_results.responses.dscmcol is None
+            respi = DSCMCOL(responses)
+            str(respi)
+            self.op2.op2_results.responses.dscmcol = respi
 
     def read_fol(self):
         """
@@ -4961,9 +4969,14 @@ def get_table_size_from_ncolumns(table_name, nvalues, ncolumns):
         raise RuntimeError(msg)
     return nrows
 
-def dscmcol_dresp1(nresponses_dresp1, ints, floats):
+def dscmcol_dresp1(responses: Dict[int, Dict[str, Any]],
+                   nresponses_dresp1: int,
+                   ints, floats) -> None:
     """helper for DSCMCOL"""
     idata = 0
+    if nresponses_dresp1 == 0:
+        return
+
     for iresp in range(nresponses_dresp1):
         # Record – Type 1 Responses
         #   1 IRID  I Internal response identification number
@@ -5150,12 +5163,14 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             #   4 UNDEF(5) None
             #   9 SEID I Superelement identification number
             seid = ints[idata+8]
+            response = {'name': 'weight', 'seid': seid}
             #print(f'  seid={seid} (weight)')
         elif response_type == 2:
             # RTYPE=2 Volume
             #   4 UNDEF(5) None
             #   9 SEID I Superelement identification number
             seid = ints[idata+8]
+            response = {'name': 'volume', 'seid': seid}
             #print(f'  seid={seid} (volume)')
 
         elif response_type == 4:
@@ -5169,6 +5184,7 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             # blank
             subcase = ints[idata+5]
             seid = ints[idata+8]
+            response = {'name': 'normal modes', 'mode_num': mode_num, 'subcase': subcase, 'seid': seid}
             #print(f'  mode_num={mode_num} subcase={subcase} seid={seid} (normal modes)')
         elif response_type == 5:
             # RTYPE=5 Static displacement
@@ -5181,6 +5197,8 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             comp = ints[idata+4]
             subcase = ints[idata+5]
             seid = ints[idata+8]
+            response = {'name': 'static displacement', 'grid': grid, 'component': comp,
+                        'subcase': subcase, 'seid': seid}
             #print(f'  grid={grid} comp={comp} subcase={subcase} seid={seid} (static displacement)')
         elif response_type == 6:
             # RTYPE=6 Static stress
@@ -5193,6 +5211,8 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             comp = ints[idata+4]
             subcase = ints[idata+5]
             seid = ints[idata+8]
+            response = {'name': 'static stress', 'eid': eid, 'component': comp,
+                        'subcase': subcase, 'seid': seid}
             #print(f'  eid={eid} comp={comp} subcase={subcase} seid={seid} (static stress)')
         elif response_type == 7:
             # RTYPE=7 Static strain
@@ -5207,6 +5227,8 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             subcase = ints[idata+5]
             view_id = ints[idata+7]
             seid = ints[idata+8]
+            response = {'name': 'static strain', 'eid': eid, 'component': comp,
+                        'subcase': subcase, 'view id': view_id, 'seid': seid}
             #print(f'  eid={eid} comp={comp} subcase={subcase} view_id={view_id} seid={seid} (static strain)')
         elif response_type == 9:
             # RTYPE=9 Composite failure
@@ -5221,6 +5243,8 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             subcase = ints[idata+5]
             ply = ints[idata+7]
             seid = ints[idata+8]
+            response = {'name': 'composite failure', 'eid': eid, 'component': comp,
+                        'subcase': subcase, 'ply': ply, 'seid': seid}
             #print(f'  eid={eid} comp={comp} subcase={subcase} ply={ply} seid={seid} (composite failure)')
         elif response_type == 11:
             # RTYPE=11 Composite strain
@@ -5235,6 +5259,8 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             subcase = ints[idata+5]
             ply = ints[idata+7]
             seid = ints[idata+8]
+            response = {'name': 'composite strain', 'eid': eid, 'component': comp,
+                        'subcase': subcase, 'ply': ply, 'seid': seid}
             #print(f'  eid={eid} comp={comp} subcase={subcase} ply={ply} seid={seid} (composite strain)')
         elif response_type == 15:
             # CEIG
@@ -5243,9 +5269,10 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             seid = ints[idata+8]
             print(ints[idata+4:idata+9])
             print(floats[idata+4:idata+9])
-            print(f'internal_response_id={internal_response_id} '
-                  f'external_response_id={external_response_id} response_type={response_type}')
-            print(f'  mode_num={mode_num} subcase={subcase} seid={seid} (CEIG)')
+            #print(f'internal_response_id={internal_response_id} '
+                  #f'external_response_id={external_response_id} response_type={response_type}')
+            #print(f'  mode_num={mode_num} subcase={subcase} seid={seid} (CEIG)')
+            response = {'name': 'ceig', 'mode_num': mode_num, 'subcase': subcase, 'seid': seid}
 
         elif response_type == 19:
             # RTYPE=19 Equivalent radiated power
@@ -5260,6 +5287,8 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             subcase = ints[idata+5]
             freq = floats[idata+6]
             seid = ints[idata+8]
+            response = {'name': 'equivalent radiated power', 'panel': panel, 'flag': flag,
+                        'subcase': subcase, 'freq': freq, 'seid': seid}
             #print(f'  panel={panel} flag={flag} subcase={subcase} freq={freq} seid={seid} '
                   #'(equivalent radiated power)')
         elif response_type == 20:
@@ -5275,8 +5304,31 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             subcase = ints[idata+5]
             freq = floats[idata+6]
             ply = ints[idata+7]
+            unused_freq8 = floats[idata+7] # also freq despite DMAP saying this is unused...
             seid = ints[idata+8]
-            #print(f'  eid={eid} comp={comp} subcase={subcase} freq={freq} ply={ply} seid={seid} (frequency response displacement)')
+            response = {'name': 'frequency response displacement', 'grid': grid, 'component': comp,
+                        'subcase': subcase, 'ply': ply, 'seid': seid}
+            #print(f'  grid={grid} comp={comp} subcase={subcase} freq={freq} '
+                  #f'ply={ply} seid={seid} (frequency response displacement)')
+        elif response_type == 21:
+            # RTYPE=21 frequency response stress???
+            # 4 GRID    I Grid identification number
+            # 5 COMP    I Displacement component number
+            # 6 SUBCASE I Subcase identification number
+            # 7 FREQ    RS Frequency
+            # 8 UNDEF None
+            # 9 SEID    I Superelement identification number
+            grid = ints[idata+3]
+            comp = ints[idata+4]
+            subcase = ints[idata+5]
+            freq = floats[idata+6]
+            #sixI = ints[idata+6]
+            ply = ints[idata+7]
+            seid = ints[idata+8]
+            response = {'name': 'frequency response stress?', 'grid': grid, 'component': comp,
+                        'subcase': subcase, 'ply': ply, 'seid': seid}
+            #print(f'  grid={grid} comp={comp} subcase={subcase} freq={freq} '
+                  #f'ply={ply} seid={seid} (frequency response stress?)')
         elif response_type == 29:
             # RTYPE=29 PSD displacement
             # 4 GRID    I Grid identification number
@@ -5291,7 +5343,10 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             freq = floats[idata+6]
             randps = ints[idata+7]
             seid = ints[idata+8]
-            #print(f'  grid={grid} comp={comp} subcase={subcase} freq={freq} randps={randps} seid={seid} (PSD displacement)')
+            response = {'name': 'psd displacement', 'grid': grid, 'component': comp,
+                        'subcase': subcase, 'freq': freq, 'randps': randps, 'seid': seid}
+            #print(f'  grid={grid} comp={comp} subcase={subcase} freq={freq} '
+                  #f'randps={randps} seid={seid} (PSD displacement)')
         elif response_type == 31:
             # RTYPE=31 PSD acceleration
             # 4 GRID    I Grid identification number
@@ -5306,25 +5361,54 @@ def dscmcol_dresp1(nresponses_dresp1, ints, floats):
             freq = floats[idata+6]
             randps = ints[idata+7]
             seid = ints[idata+8]
-            #print(f'  grid={grid} comp={comp} subcase={subcase} freq={freq} randps={randps} seid={seid} (PSD acceleration)')
-
+            response = {'name': 'psd acceleration', 'grid': grid, 'component': comp,
+                        'subcase': subcase, 'freq': freq, 'randps': randps, 'seid': seid}
+            #print(f'  grid={grid} comp={comp} subcase={subcase} freq={freq} '
+                  #f'randps={randps} seid={seid} (PSD acceleration)')
         else:  # pragma: no cover
             print(f'internal_response_id={internal_response_id} '
                   f'external_response_id={external_response_id} response_type={response_type}')
             raise NotImplementedError(response_type)
+        response['internal_response_id'] = internal_response_id
+        response['external_response_id'] = external_response_id
+        response['response_type'] = response_type
+        response['iresponse'] = iresp
+        response['response_number'] = 1
+        responses[iresp] = response
         idata += 9
     return
 
-def dscmcol_dresp2(nresponses_dresp2, ints, floats):
+def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
+                   nresponses_dresp2: int,
+                   ints, floats) -> None:
     """helper for DSCMCOL"""
+    if nresponses_dresp2 == 0:
+        return
+    nresponses = len(responses)
+    responses = {}
+
     idata = 0
     for iresp in range(nresponses_dresp2):
+        # Word Name Type Description
+        # 1 IRID      I Internal response identification number
+        # 2 RID       I External response identification number
+        # 3 SUBCASE   I Subcase identification number
+        # 4 DFLAG     I Dynamic response flag (See Note)
+        # 5 FREQTIME RS Frequency or time step
+        # 6 SEID      I Superelement identification number
         internal_response_id = ints[idata]
         external_response_id = ints[idata+1]
         subcase = ints[idata+2]
         dflag = ints[idata+3]
         freqtime = floats[idata+4]
         seid = ints[idata+5]
+        response = {
+            'iresponse': iresp + nresponses,
+            'response_number': 2,
+            'internal_response_id': internal_response_id,
+            'external_response_id': external_response_id,
+            'subcase': subcase, 'dflag': dflag,
+            'freq': freqtime, 'seid': seid}
         #print(f'internal_response_id={internal_response_id} '
               #f'external_response_id={external_response_id} '
               #f'subcase={subcase} dflag={dflag} freq/time={freqtime} seid={seid}')

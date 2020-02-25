@@ -997,9 +997,10 @@ def get_ndof(model: BDF, subcase: Subcase) -> Tuple[int, int, int]:
     if 'HEAT' in subcase:
         ndof_per_grid = 1
     ngrid = model.card_count['GRID'] if 'GRID' in model.card_count else 0
-    nspoint = len(model.spoints) if 'SPOINT' in model.card_count else 0
-    nepoint = len(model.epoints) if 'EPOINT' in model.card_count else 0
+    nspoint = len(model.spoints) # if 'SPOINT' in model.card_count else 0
+    nepoint = len(model.epoints) # if 'EPOINT' in model.card_count else 0
     ndof = ngrid * ndof_per_grid + nspoint + nepoint
+    #print(f'ngrid={ngrid} nspoint={nspoint}')
     assert ndof > 0, model.card_count
     return ngrid, ndof_per_grid, ndof
 
@@ -1017,11 +1018,16 @@ def _get_dof_map(model: BDF) -> Dict[Tuple[int, int], int]:
     i = 0
     dof_map = {}
     spoints = []
+    ps = []
     for nid, node_ref in model.nodes.items():
         if node_ref.type == 'GRID':
             for dof in range(1, 7):
                 dof_map[(nid, dof)] = i
                 i += 1
+            for psi in node_ref.ps:
+                nid_dof = (nid, int(psi))
+                j = dof_map[nid_dof]
+                ps.append(j)
         elif node_ref.type == 'SPOINT':
             spoints.append(node_ref)
             #dof_map[(nid, 0)] = i
@@ -1038,12 +1044,12 @@ def _get_dof_map(model: BDF) -> Dict[Tuple[int, int], int]:
             dof_map[key] = i
             i += 1
     assert len(dof_map) > 0
-    return dof_map
+    return dof_map, ps
 
 def _Fg_vector_from_loads(model: BDF, loads, ndof_per_grid: int, ndof: int,
                           fdtype: str='float64'):
     """helper method for ``get_static_force_vector_from_subcase_id``"""
-    dof_map = _get_dof_map(model)
+    dof_map, unused_ps = _get_dof_map(model)
     Fg = np.zeros([ndof], dtype=fdtype)
     skipped_load_types = set([])
     not_static_loads = []

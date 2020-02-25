@@ -132,18 +132,23 @@ class Solver:
         for spc in spcs:
             if spc.type == 'SPC1':
                 #print(spc.get_stats())
+                dofs_missed = []
                 for dofi in spc.components:
                     dofi = int(dofi)
                     for nid in spc.nodes:
                         try:
                             idof = dof_map[(nid, dofi)]
                         except:
-                            print(spc)
-                            print('dof_map =', dof_map)
-                            print((nid, dofi))
+                            dofs_missed.append((nid, dofi))
+                            continue
                         sset[idof] = True
                         spc_set.append(idof)
                         xspc[idof] = 0.
+                if dofs_missed:
+                    dof_str = ', '.join(str(dofi) for dofi in dofs_missed)
+                    self.log.warning(f'Missing (nid,dof) pairs:')
+                    self.log.warning(f'  {dof_str}\n{spc.rstrip()}')
+                del dofs_missed
             elif spc.type == 'SPC':
                 for nid, components, enforcedi in zip(spc.nodes, spc.components, spc.enforced):
                     for component in components:
@@ -184,14 +189,14 @@ class Solver:
             if load.type == 'SLOAD':
                 #print(load.get_stats())
                 for mag, nid in zip(load.mags, load.nodes):
-                    i = dof_map[(nid, 1)]  # TODO: wrong...
+                    i = dof_map[(nid, 0)]  # TODO: wrong?...doesn't handle GRIDs
                     Fb[i] = mag * scale
             elif load.type == 'FORCE':
                 fxyz = load.to_global()
                 nid = load.node
                 self.log.debug(f'  FORCE nid={nid} Fxyz={fxyz}')
                 for i, dof in enumerate([1, 2, 3]):
-                    # TODO: wrong because it doesn't handle SPOINTs
+                    # TODO: wrong because it doesn't handle SPOINTs?
                     fi = dof_map[(nid, dof)]
                     Fb[fi] = fxyz[i]
             elif load.type == 'MOMENT':
@@ -199,7 +204,7 @@ class Solver:
                 nid = load.node
                 self.log.debug(f'  MOMENT nid={nid} Fxyz={fxyz}')
                 for i, dof in enumerate([4, 5, 6]):
-                    # TODO: wrong because it doesn't handle SPOINTs
+                    # TODO: wrong because it doesn't handle SPOINTs?
                     fi = dof_map[(nid, dof)]
                     Fb[fi] = fxyz[i]
             elif load.type == 'SPCD':
@@ -429,9 +434,12 @@ class Solver:
         model = self.model
         log = model.log
 
-        dof_map = _get_dof_map(model)
+        dof_map, ps = _get_dof_map(model)
+
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
+
+        gset_b = ps_to_sg_set(ndof, ps)
         Kbb, Kbbs = build_Kbb(model, dof_map, ndof, fdtype='float64')
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype='float64')
         self.get_mpc_constraints(subcase, dof_map)
@@ -442,8 +450,12 @@ class Solver:
         del Kbb, Kbbs, Mbb, Mgg
 
         gset = np.arange(ndof, dtype=idtype)
-        gset_b = np.ones(ndof, dtype='bool')
+        #gset_b = np.ones(ndof, dtype='bool')
         sset, sset_b, xg = self.build_xg(dof_map, ndof, subcase)
+        #sset_b = np.union1d(sset_b, sset_g)
+        #print(sset_g)
+        #print(sset_b)
+        #print(sset)
         Fb = self.build_Fb(xg, sset_b, dof_map, ndof, subcase)
 
         # Constrained set
@@ -807,7 +819,7 @@ class Solver:
         #log = model.log
         #write_f06 = True
 
-        dof_map = _get_dof_map(model)
+        dof_map, ps = _get_dof_map(model)
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
         Kbb, Kbbs = build_Kbb(model, dof_map, ndof)
@@ -1188,10 +1200,17 @@ def _get_node_gridtype(model: BDF, idtype: str='int32') -> NDArrayN2int:
     for nid, node_ref in sorted(model.nodes.items()):
         if node_ref.type == 'GRID':
             node_gridtype.append((nid, 1))
-        elif node_ref.type == 'SPOINT':
-            node_gridtype.append((nid, 2))
+        #elif node_ref.type == 'SPOINT':
+            #node_gridtype.append((nid, 2))
         else:
             raise NotImplementedError(node_ref)
+    print(model.spoints)
+
+    spoint_ids = np.array(list(model.spoints.keys()), dtype='int32')
+    spoint_ids.sort()
+    for nid in spoint_ids:
+        node_gridtype.append((nid, 2))
+
     assert len(node_gridtype) > 0
     #print(node_gridtype)
     node_gridtype_array = np.array(node_gridtype, dtype=idtype)
@@ -1455,7 +1474,9 @@ def Kbb_to_Kgg(model: BDF, Kbb: NDArrayNNfloat,
     assert isinstance(Kbb, (np.ndarray, sci_sparse.csc.csc_matrix)), type(Kbb)
     if not isinstance(Kbb, np.ndarray):
         Kbb = Kbb.tolil()
-    assert ngrid > 0, model.card_count
+
+    ndof = Kbb.shape[0]
+    assert ndof > 0, f'ngrid={ngrid} card_count={model.card_count}'
     nids = model._type_to_id_map['GRID']
 
     Kgg = Kbb
@@ -1835,7 +1856,14 @@ def build_Mbb(model: BDF,
 def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
     z = np.zeros((3, 3), dtype='float64')
     nnodes = len(model.nodes)
-    D = np.zeros((6*nnodes, 6), dtype='float64')
+    nspoints = len(model.spoints)
+    #nepoints = len(model.epoints)
+    ndof_grid = 6 * nnodes
+    ndof2 = 6 * nnodes + nspoints
+    #print(f'ndof={ndof} ndof2={ndof2}')
+    D = np.zeros((ndof2, 6), dtype='float64')
+    D[ndof_grid:, 0] = 1
+    #print('D.shape ', D.shape)
     inid = 0
     #print(model.nodes)
     #print(f'D.shape = {D.shape}')
@@ -1902,3 +1930,12 @@ def dof_map_to_tr_set(dof_map, ndof: int) -> Tuple[NDArrayNbool, NDArrayNbool]:
         else:
             rot_set[idof] = True
     return trans_set, rot_set
+
+def ps_to_sg_set(ndof: int, ps: List[int]):
+    """creates the SPC on the GRID (PS-field) set, {sg}"""
+    # all DOFs are initially assumed to be active
+    sg_set = np.ones(ndof, dtype='bool')
+
+    # False means it's constrained
+    sg_set[ps] = False
+    return sg_set
