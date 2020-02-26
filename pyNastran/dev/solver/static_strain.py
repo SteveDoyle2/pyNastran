@@ -31,8 +31,16 @@ def recover_strain_101(f06_file, op2,
         'CELAS2', fdtype=fdtype,
         title=title, subtitle=subtitle, label=label,
         page_num=page_num, page_stamp=page_stamp)
-    #celas3s = model._type_to_id_map['CELAS3']
-    #celas4s = model._type_to_id_map['CELAS4']
+    nelements += _recover_strain_celas(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CELAS3', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
+    nelements += _recover_strain_celas(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CELAS4', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
 
     nelements += _recover_strain_rod(
         f06_file, op2, model, dof_map, isubcase, xb, eid_str,
@@ -50,8 +58,8 @@ def recover_strain_101(f06_file, op2,
         title=title, subtitle=subtitle, label=label,
         page_num=page_num, page_stamp=page_stamp)
     #assert nelements > 0, nelements
-
-
+    if nelements == 0:
+        model.log.warning(f'no strain output...{model.card_count}')
 
 def _recover_strain_celas(f06_file, op2,
                           model: BDF, dof_map, isubcase, xg, eids_str,
@@ -72,6 +80,16 @@ def _recover_strain_celas(f06_file, op2,
             elem = model.elements[eid]
             si = elem.s
             strains[ieid] = _recover_straini_celas12(xg, dof_map, elem, si)
+    elif element_name == 'CELAS3':
+        for ieid, eid in zip(ielas, eids):
+            elem = model.elements[eid]
+            si = elem.pid_ref.s
+            strains[ieid] = _recover_straini_celas34(xg, dof_map, elem, si)
+    elif element_name == 'CELAS4':
+        for ieid, eid in zip(ielas, eids):
+            elem = model.elements[eid]
+            si = 1.0 # TODO: is this right?
+            strains[ieid] = _recover_straini_celas34(xg, dof_map, elem, si)
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
 
@@ -85,6 +103,10 @@ def _recover_strain_celas(f06_file, op2,
         op2.celas1_strain[isubcase] = spring_strain
     elif element_name == 'CELAS2':
         op2.celas2_strain[isubcase] = spring_strain
+    elif element_name == 'CELAS3':
+        op2.celas3_strain[isubcase] = spring_strain
+    elif element_name == 'CELAS4':
+        op2.celas4_strain[isubcase] = spring_strain
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
     spring_strain.write_f06(f06_file, header=None, page_stamp=page_stamp,
@@ -147,27 +169,36 @@ def _recover_straini_celas12(xg, dof_map, elem, si: float):
     # TODO: why is the strain 0?
     return si * strain
 
+def _recover_straini_celas34(xg, dof_map, elem, si: float):
+    """get the static spring strain"""
+    nid1, nid2 = elem.nodes
+    i = dof_map[(nid1, 0)]
+    j = dof_map[(nid2, 0)]
+    strain = xg[j] - xg[i]  # TODO: check the sign
+    # TODO: why is the strain 0?
+    return si * strain
+
 def _recover_straini_rod(xb, dof_map, elem, prop):
     """get the static rod strain"""
     nid1, nid2 = elem.nodes
 
     # axial
     i11 = dof_map[(nid1, 1)]
-    i12 = dof_map[(nid1, 2)]
-    i13 = dof_map[(nid1, 3)]
+    i12 = i11 + 1
+    i13 = i11 + 2
 
     i21 = dof_map[(nid2, 1)]
-    i22 = dof_map[(nid2, 2)]
-    i23 = dof_map[(nid2, 3)]
+    i22 = i21 + 1
+    i23 = i21 + 2
 
     # torsion
-    i14 = dof_map[(nid1, 4)]
-    i15 = dof_map[(nid1, 5)]
-    i16 = dof_map[(nid1, 6)]
+    i14 = i11 + 3
+    i15 = i11 + 4
+    i16 = i11 + 5
 
-    i24 = dof_map[(nid2, 4)]
-    i25 = dof_map[(nid2, 5)]
-    i26 = dof_map[(nid2, 6)]
+    i24 = i21 + 3
+    i25 = i21 + 4
+    i26 = i21 + 5
 
     q_axial = np.array([
         xb[i11], xb[i12], xb[i13],
@@ -206,21 +237,21 @@ def _recover_straini_ctube(xb, dof_map, elem, prop):
 
     # axial
     i11 = dof_map[(nid1, 1)]
-    i12 = dof_map[(nid1, 2)]
-    i13 = dof_map[(nid1, 3)]
+    i12 = i11 + 1
+    i13 = i11 + 2
 
     i21 = dof_map[(nid2, 1)]
-    i22 = dof_map[(nid2, 2)]
-    i23 = dof_map[(nid2, 3)]
+    i22 = i21 + 1
+    i23 = i21 + 2
 
     # torsion
-    i14 = dof_map[(nid1, 4)]
-    i15 = dof_map[(nid1, 5)]
-    i16 = dof_map[(nid1, 6)]
+    i14 = i11 + 3
+    i15 = i11 + 4
+    i16 = i11 + 5
 
-    i24 = dof_map[(nid2, 4)]
-    i25 = dof_map[(nid2, 5)]
-    i26 = dof_map[(nid2, 6)]
+    i24 = i21 + 3
+    i25 = i21 + 4
+    i26 = i21 + 5
 
     q_axial = np.array([
         xb[i11], xb[i12], xb[i13],

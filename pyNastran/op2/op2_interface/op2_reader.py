@@ -58,6 +58,7 @@ from pyNastran.op2.errors import FortranMarkerError, SortCodeError
 from pyNastran.op2.result_objects.gpdt import GPDT, BGPDT
 from pyNastran.op2.result_objects.eqexin import EQEXIN
 from pyNastran.op2.result_objects.matrix import Matrix, MatrixDict
+from pyNastran.op2.result_objects.design_response import DSCMCOL
 
 from pyNastran.op2.result_objects.design_response import (
     WeightResponse, DisplacementResponse, StressResponse, StrainResponse, ForceResponse,
@@ -1326,7 +1327,8 @@ class OP2Reader:
         if self.read_mode == 2:
             assert len(responses) > 0
         if responses:
-            assert self.op2.op2_results.responses.dscmcol is None
+            if self.op2.op2_results.responses.dscmcol is not None:
+                self.log.warning('overwriting DSCMCOL')
             respi = DSCMCOL(responses)
             str(respi)
             self.op2.op2_results.responses.dscmcol = respi
@@ -5385,7 +5387,6 @@ def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
     if nresponses_dresp2 == 0:
         return
     nresponses = len(responses)
-    responses = {}
 
     idata = 0
     for iresp in range(nresponses_dresp2):
@@ -5402,13 +5403,15 @@ def dscmcol_dresp2(responses: Dict[int, Dict[str, Any]],
         dflag = ints[idata+3]
         freqtime = floats[idata+4]
         seid = ints[idata+5]
+        iresp2 = iresp + nresponses
         response = {
-            'iresponse': iresp + nresponses,
+            'iresponse': iresp2,
             'response_number': 2,
             'internal_response_id': internal_response_id,
             'external_response_id': external_response_id,
             'subcase': subcase, 'dflag': dflag,
             'freq': freqtime, 'seid': seid}
+        responses[iresp2] = response
         #print(f'internal_response_id={internal_response_id} '
               #f'external_response_id={external_response_id} '
               #f'subcase={subcase} dflag={dflag} freq/time={freqtime} seid={seid}')

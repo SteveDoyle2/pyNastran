@@ -7627,7 +7627,7 @@ class OES(OP2Common):
                                    #bcx, bcy, bcxy, tyz, tzx,
                                    #dummy6, dummy7, dummy8)
         elif self.num_wide == numwide_imag:
-            ntotal = numwide_imag * 4
+            ntotal = (numwide_imag * 4) * self.factor
             nelements = ndata // ntotal
             n = nelements * ntotal
         else:

@@ -100,8 +100,16 @@ class EDOM(GeomCommon):
                 delx = None
             if ddval == 0:
                 ddval = None
-            desvar = self.add_desvar(desvar_id, label, xinit, xlb=-1e20, xub=1e20,
-                                     delx=delx, ddval=ddval, comment='')
+            if desvar_id not in self.desvars:
+                desvar = self.add_desvar(desvar_id, label, xinit, xlb=xlb, xub=xub,
+                                         delx=delx, ddval=ddval, comment='')
+            else:
+                # duplicate DESVAR
+                desvar_temp = self.add_desvar(1.0, label, xinit, xlb=xlb, xub=xub,
+                                              delx=delx, ddval=ddval, comment='')
+                del self.desvars[1.0]
+                desvar_temp.desvar_id = desvar_id
+                assert desvar_temp == self.desvars[desvar_id]
             n += ntotal
             #print(desvar)
         self.card_count['DESVAR'] = ncards

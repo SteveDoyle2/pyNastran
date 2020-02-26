@@ -31,6 +31,16 @@ def recover_force_101(f06_file, op2,
         'CELAS2', fdtype=fdtype,
         title=title, subtitle=subtitle, label=label,
         page_num=page_num, page_stamp=page_stamp)
+    nelements += _recover_force_celas(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CELAS3', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
+    nelements += _recover_force_celas(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CELAS4', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
 
     nelements += _recover_force_rod(
         f06_file, op2, model, dof_map, isubcase, xb, eid_str,
@@ -47,6 +57,8 @@ def recover_force_101(f06_file, op2,
         'CTUBE', fdtype=fdtype,
         title=title, subtitle=subtitle, label=label,
         page_num=page_num, page_stamp=page_stamp)
+    if nelements == 0:
+        model.log.warning(f'no force output...{model.card_count}')
 
 def _recover_force_celas(f06_file, op2,
                          model: BDF, dof_map, isubcase, xg, eids_str,
@@ -57,11 +69,20 @@ def _recover_force_celas(f06_file, op2,
     neids, ielas, eids, forces = get_ieids_eids(model, element_name, eids_str, fdtype=fdtype)
     if not neids:
         return neids
-    for ieid, eid in zip(ielas, eids):
-        elem = model.elements[eid]
-        ki = elem.K()
-        force = _recover_forcei_celas12(xg, dof_map, elem, ki)
-        forces[ieid] = force
+    if element_name in {'CELAS1', 'CELAS2'}:
+        for ieid, eid in zip(ielas, eids):
+            elem = model.elements[eid]
+            ki = elem.K()
+            force = _recover_forcei_celas12(xg, dof_map, elem, ki)
+            forces[ieid] = force
+    elif element_name in {'CELAS3', 'CELAS4'}:
+        for ieid, eid in zip(ielas, eids):
+            elem = model.elements[eid]
+            ki = elem.K()
+            force = _recover_forcei_celas34(xg, dof_map, elem, ki)
+            forces[ieid] = force
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
 
     data = forces.reshape(1, *forces.shape)
     table_name = 'OEF1'
@@ -73,6 +94,10 @@ def _recover_force_celas(f06_file, op2,
         op2.celas1_force[isubcase] = spring_force
     elif element_name == 'CELAS2':
         op2.celas2_force[isubcase] = spring_force
+    elif element_name == 'CELAS3':
+        op2.celas3_force[isubcase] = spring_force
+    elif element_name == 'CELAS4':
+        op2.celas4_force[isubcase] = spring_force
     else:  # pragma: no cover
         raise NotImplementedError(element_name)
     spring_force.write_f06(f06_file, header=None, page_stamp=page_stamp,
@@ -130,6 +155,17 @@ def _recover_forcei_celas12(xg, dof_map, elem, ki: float):
     c1, c2 = elem.c1, elem.c2
     i = dof_map[(nid1, c1)]
     j = dof_map[(nid2, c2)]
+    strain = xg[j] - xg[i]  # TODO: check the sign
+    force = ki * strain
+    return force
+
+
+def _recover_forcei_celas34(xg, dof_map, elem, ki: float):
+    """get the static spring force"""
+    # F = kx
+    nid1, nid2 = elem.nodes
+    i = dof_map[(nid1, 0)]
+    j = dof_map[(nid2, 0)]
     strain = xg[j] - xg[i]  # TODO: check the sign
     force = ki * strain
     return force

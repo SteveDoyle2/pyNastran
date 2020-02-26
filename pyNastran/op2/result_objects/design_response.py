@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 
 class Responses:
@@ -174,8 +175,7 @@ class WeightResponse:
     def get_stats(self, short=False):
         if short:
             return 'responses.weight_response (%s)\n' % (self.n)
-        else:
-            return self.__repr__() + '\n'
+        return self.__repr__() + '\n'
 
 
 class PropertyResponse:
@@ -214,8 +214,7 @@ class PropertyResponse:
     def get_stats(self, short=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
-        else:
-            return self.__repr__() + '\n'
+        return self.__repr__() + '\n'
 
 class FractionalMassResponse:
     name = 'fractional_mass'
@@ -235,8 +234,7 @@ class FractionalMassResponse:
     def get_stats(self, short=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
-        else:
-            return self.__repr__() + '\n'
+        return self.__repr__() + '\n'
 
     def append(self, internal_id, dresp_id, response_label, region,
                subcase, type_flag, seid):
@@ -292,8 +290,7 @@ class DisplacementResponse:
     def get_stats(self, short=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
-        else:
-            return self.__repr__() + '\n'
+        return self.__repr__() + '\n'
 
     def __repr__(self):
         msg = 'DisplacementResponse()\n'
@@ -349,14 +346,329 @@ class FlutterResponse:
     def get_stats(self, short=False):
         if short:
             return 'responses.%s_response (%s)\n' % (self.name, self.n)
-        else:
-            return self.__repr__() + '\n'
+        return self.__repr__() + '\n'
 
 
 class DSCMCOL:
+    """
+    '                                   -----   IDENTIFICATION OF COLUMNS IN THE DESIGN SENSITIVITY  -----'
+    '                                   -----     MATRIX THAT ARE ASSOCIATED WITH DRESP1  ENTRIES    -----'
+    ''
+    ''
+    '             -----  WEIGHT/VOLUME RESPONSES  -----'
+    '          ------------------------------------------'
+    '            COLUMN         DRESP1         RESPONSE'
+    '              NO.         ENTRY ID          TYPE  '
+    '          ------------------------------------------'
+    '                1               1        WEIGHT  '
+    ''
+    ''
+    '             -----  STATICS RESPONSES  -----'
+    '          ------------------------------------------------------------------------------------------------------------------------'
+    '            COLUMN         DRESP1         RESPONSE        GRID/ELM          VIEW         COMPONENT           SUB             PLY  '
+    '              NO.         ENTRY ID          TYPE             ID            ELM ID            NO.             CASE             NO. '
+    #'            COLUMN         DRESP1         RESPONSE        GRID/ELM          VIEW         COMPONENT           SUB  '
+    #'              NO.         ENTRY ID          TYPE             ID            ELM ID            NO.             CASE '
+    '          ------------------------------------------------------------------------------------------------------------------------'
+    '                2               2        STRESS                 1                               5               1'
+    '                3               2        STRESS                 3                               5               1'
+    '                4           10501        DISP                 100                               1               1'
+    ''
+    ''
+    #'                                                 ---- RETAINED DRESP2 RESPONSES ----'
+    #''
+    #'     ----------------------------------------------------------------------------------------------------------'
+    #'         INTERNAL      DRESP2      RESPONSE     EQUATION         LOWER                             UPPER   '
+    #'            ID           ID         LABEL          ID            BOUND            VALUE            BOUND   '
+    #'     ----------------------------------------------------------------------------------------------------------'
+    #'                3          105     DISPMAG             3      -1.0000E+20       9.4677E-05       2.5000E-04'
+    '                                   -----   IDENTIFICATION OF COLUMNS IN THE DESIGN SENSITIVITY  -----'
+    '                                   -----     MATRIX THAT ARE ASSOCIATED WITH DRESP2  ENTRIES    -----'
+    ''
+    ''
+    '          ----------------------------------------------------------'
+    '            COLUMN         DRESP2           SUB             FREQ/ '
+    '              NO.         ENTRY ID          CASE            TIME  '
+    '          ----------------------------------------------------------'
+    '               96             103               0         0.00000'
+    '               97             104               0         0.00000'
+    '              100             105               1'
+
+
+    """
     def __init__(self, responses):
+        """internal_response_id = iresponse + 1 = column in DSCM2"""
         self.responses = responses
+
+    #def write_f06(self):
+        #msg = [
+            #'                                   -----   IDENTIFICATION OF COLUMNS IN THE DESIGN SENSITIVITY  -----'
+            #'                                   -----     MATRIX THAT ARE ASSOCIATED WITH DRESP1  ENTRIES    -----'
+            #''
+            #''
+            #'             -----  WEIGHT/VOLUME RESPONSES  -----'
+            #'          ------------------------------------------'
+            #'            COLUMN         DRESP1         RESPONSE'
+            #'              NO.         ENTRY ID          TYPE  '
+            #'          ------------------------------------------'
+            #'                1               1        WEIGHT  '
+            #''
+            #''
+            #'             -----  STATICS RESPONSES  -----'
+            #'          ------------------------------------------------------------------------------------------------------------------------'
+            #'            COLUMN         DRESP1         RESPONSE        GRID/ELM          VIEW         COMPONENT           SUB  '
+            #'              NO.         ENTRY ID          TYPE             ID            ELM ID            NO.             CASE '
+            #'          ------------------------------------------------------------------------------------------------------------------------'
+            #'                2               2        STRESS                 1                               5               1'
+            #'                3               2        STRESS                 3                               5               1'
+            #''
+            #''
+            #'             -----  EIGENVALUE RESPONSES  -----'
+            #'          --------------------------------------------------------------------------'
+            #'            COLUMN         DRESP1         RESPONSE          MODE            SUB  '
+            #'              NO.         ENTRY ID          TYPE             NO.            CASE '
+            #'          --------------------------------------------------------------------------'
+            #'                2               4        FREQ                   1               1'
+        #]
+        #return msg
+
+    def get_responses_by_group(self):
+        response_groups_order = [
+            'weight_volume', 'static', 'eigenvalue',
+            '???', 'psd',
+            '2',
+        ]
+        responses_groups = {key: [] for key in response_groups_order}
+
+
+        response_name_to_group = {
+            'weight': 'weight_volume',
+            'volume': 'weight_volume',
+
+            'static stress': 'static',
+            'static displacement': 'static',
+            'static strain': 'static',
+            'composite failure': 'static',
+            'composite strain': 'static',
+
+            'psd displacement': 'psd',
+            'psd acceleration': 'psd',
+
+            'normal modes': 'eigenvalue',
+
+            'equivalent radiated power': '???',
+            'frequency response displacement': '???',
+            'frequency response stress?': '???',
+            'ceig': '???',
+        }
+        response_name_to_f06_response_type = {
+            # weight/volume
+            'weight' : 'WEIGHT',
+            'volume': 'VOLUME',
+            'normal modes': 'FREQ',
+
+            # static
+            'static stress': 'STRESS',
+            'static strain': 'STRAIN',
+            'static displacement': 'DISP',
+            'composite failure': 'CFAILURE',
+            'composite strain': 'CSTRAIN',
+
+            # psd
+            'psd displacement': 'DISP',
+            'psd acceleration': 'ACCE',
+
+            # ???
+            'frequency response displacement': '???',
+            'frequency response stress?': '???',
+            'ceig': '???',
+        }
+
+        for i, respi in self.responses.items():
+            response_number = respi['response_number']
+            if 'name' in respi:
+                name = respi['name']
+                group = response_name_to_group[name]
+                responses_groups[group].append(i)
+                assert response_number == 1, respi
+            else:
+                assert response_number == 2, respi
+                responses_groups['2'].append(i)
+        #print(f'responses_groups = {responses_groups}')
+
+        msg = ''
+        #'                                   -----   IDENTIFICATION OF COLUMNS IN THE DESIGN SENSITIVITY  -----'
+        #'                                   -----     MATRIX THAT ARE ASSOCIATED WITH DRESP1  ENTRIES    -----'
+        #''
+        #''
+        missing_keys = set(list(responses_groups.keys())) - set(response_groups_order)
+        assert len(missing_keys) == 0, missing_keys
+        for group_name in response_groups_order:
+            ids = responses_groups[group_name]
+            if len(ids) == 0:
+                continue
+
+            if group_name == 'weight_volume':
+                msg += (
+                    '             -----  WEIGHT/VOLUME RESPONSES  -----\n'
+                    '          ------------------------------------------\n'
+                    '            COLUMN         DRESP1         RESPONSE\n'
+                    '              NO.         ENTRY ID          TYPE  \n'
+                    '          ------------------------------------------\n')
+                for i in ids:
+                    respi = self.responses[i]
+                    external_id = respi['external_response_id']
+                    name = respi['name']
+                    response_type = response_name_to_f06_response_type[name]
+                    msg += f'         {i+1:8d}        {external_id:8d}        {response_type:8s}\n'
+            elif group_name == 'static':
+                msg += self._write_static(ids, response_name_to_f06_response_type)
+            elif group_name == 'eigenvalue':
+                msg += (
+                    '             -----  EIGENVALUE RESPONSES  -----\n'
+                    '          --------------------------------------------------------------------------\n'
+                    '            COLUMN         DRESP1         RESPONSE          MODE            SUB  \n'
+                    '              NO.         ENTRY ID          TYPE             NO.            CASE \n'
+                    '          --------------------------------------------------------------------------\n'
+                )
+                for i in ids:
+                    respi = self.responses[i]
+                    external_id = respi['external_response_id']
+                    name = respi['name']
+                    mode_num = respi['mode_num']
+                    subcase = respi['subcase']
+                    response_type = response_name_to_f06_response_type[name]
+                    msg += f'         {i+1:8d}        {external_id:8d}    {response_type:8s}            {mode_num:8d}        {subcase:8d}\n'
+            elif group_name == 'psd':
+                msg += self._write_psd(ids, response_name_to_f06_response_type)
+            elif group_name == '2':
+                msg += self._write_dresp2(ids)
+            else:
+                warnings.warn(f'skipping DSCMCOL group_name={group_name}')
+                for i in ids:
+                    respi = self.responses[i]
+                    warnings.warn(str(respi))
+                continue
+            msg += '\n\n'
+        print(msg)
+
+    def _write_static(self, ids, response_name_to_f06_response_type):
+        msg = ''
+        is_composite = False
+        for i in ids:
+            respi = self.responses[i]
+            name = respi['name']
+            if name in ['composite failure', 'composite strain']:
+                is_composite = True
+                break
+
+        msg += (
+            '             -----  STATICS RESPONSES  -----\n'
+            '          ------------------------------------------------------------------------------------------------------------------------\n'
+        )
+        if is_composite:
+            msg += (
+                '            COLUMN         DRESP1         RESPONSE        GRID/ELM          VIEW         COMPONENT           SUB             PLY  \n'
+                '              NO.         ENTRY ID          TYPE             ID            ELM ID            NO.             CASE             NO. \n'
+            )
+        else:
+            msg += (
+                '            COLUMN         DRESP1         RESPONSE        GRID/ELM          VIEW         COMPONENT           SUB  \n'
+                '              NO.         ENTRY ID          TYPE             ID            ELM ID            NO.             CASE \n'
+                #'          ------------------------------------------------------------------------------------------------------------------------\n'
+                #'                2               2        STRESS                 1                               5               1'
+            )
+        msg += '          ------------------------------------------------------------------------------------------------------------------------\n'
+
+        for i in ids:
+            respi = self.responses[i]
+            external_id = respi['external_response_id']
+            name = respi['name']
+            subcase = respi['subcase']
+            comp = respi['component']
+            if name in ['static stress', 'static strain']:
+                eid = respi['eid']
+                response_type = response_name_to_f06_response_type[name]
+                msg += f'         {i+1:8d}        {external_id:8d}        {response_type:8s}        {eid:8d}                        {comp:8d}        {subcase:8d}\n'
+            elif name in ['static displacement']:
+                grid = respi['grid']
+                response_type = response_name_to_f06_response_type[name]
+                msg += f'         {i+1:8d}        {external_id:8d}        {response_type:8s}        {grid:8d}                        {comp:8d}        {subcase:8d}\n'
+            elif name in ['composite failure', 'composite strain']:
+                eid = respi['eid']
+                ply = respi['ply']
+                response_type = response_name_to_f06_response_type[name]
+                msg += f'         {i+1:8d}        {external_id:8d}        {response_type:8s}        {eid:8d}                0       {comp:8d}        {subcase:8d}        {ply:8d}\n'
+                #msg += f'         {i+1:8d}        {external_id:8d}      {response_type:8s}          {eid:8d}                        {comp:8d}        {subcase:8d}\n'
+            else:
+                raise NotImplementedError(respi)
+            return msg
+
+    def _write_psd(self, ids, response_name_to_f06_response_type):
+        msg = ''
+        #is_composite = False
+        #for i in ids:
+            #respi = self.responses[i]
+            #name = respi['name']
+            #if name in ['composite failure', 'composite strain']:
+                #is_composite = True
+                #break
+
+        msg += (
+            '             -----  PSD RESPONSES  -----\n'
+        )
+        msg += (
+            '          ------------------------------------------------------------------------------------------------------------------------\n'
+            '            COLUMN         DRESP1         RESPONSE        GRID/ELM        RANDPS         COMPONENT           SUB             PLY  \n'
+            '              NO.         ENTRY ID          TYPE             ID            ID                NO.             CASE             NO. \n'
+            '          ------------------------------------------------------------------------------------------------------------------------\n'
+        )
+
+        for i in ids:
+            respi = self.responses[i]
+            external_id = respi['external_response_id']
+            name = respi['name']
+            subcase = respi['subcase']
+            comp = respi['component']
+            if name in ['psd displacement', 'psd acceleration']:
+                grid = respi['grid']
+                randps = respi['randps']
+                response_type = response_name_to_f06_response_type[name]
+                msg += f'         {i+1:8d}        {external_id:8d}        {response_type:8s}        {grid:8d}        {randps:8d}        {comp:8d}        {subcase:8d}\n'
+            else:
+                raise RuntimeError(respi)
+        return msg
+
+    def _write_dresp2(self, ids):
+        msg = (
+            '                                   -----   IDENTIFICATION OF COLUMNS IN THE DESIGN SENSITIVITY  -----\n'
+            '                                   -----     MATRIX THAT ARE ASSOCIATED WITH DRESP2  ENTRIES    -----\n'
+            '\n'
+            '\n'
+            '          ----------------------------------------------------------\n'
+            '            COLUMN         DRESP2           SUB             FREQ/ \n'
+            '              NO.         ENTRY ID          CASE            TIME  \n'
+            '          ----------------------------------------------------------\n'
+        )
+        #'               96             103               0         0.00000'
+        #'               97             104               0         0.00000'
+        #'              100             105               1'
+        for i in ids:
+            #{'iresponse': 95, 'response_number': 2, 'internal_response_id': 1, 'external_response_id': 103,
+             #'subcase': 0, 'dflag': 0, 'freq': 0.0, 'seid': 0}
+            respi = self.responses[i]
+            external_id = respi['external_response_id']
+            freq = respi['freq']
+            subcase = respi['subcase']
+            dflag = respi['dflag']
+            if dflag:
+                msg += f'         {i+1:8d}        {external_id:8d}        {subcase:8d}\n'
+            else:
+                msg += f'         {i+1:8d}        {external_id:8d}        {subcase:8d}        {freq:8f}\n'
+        return msg
+
     def __repr__(self):
+        self.get_responses_by_group()
         nresponses = len(self.responses)
         internal_ids = np.zeros(nresponses, dtype='int32')
         external_ids = np.zeros(nresponses, dtype='int32')
@@ -383,7 +695,7 @@ class DSCMCOL:
         msg += f'  external_ids: {external_ids}\n'
         msg += f'  response_types: {response_types}\n'
         if names_per_response:
-            msg += '  response_type names:'
+            msg += '  response_type names:\n'
             for (response_type, name), names in names_per_response.items():
                 names.remove('internal_response_id')
                 names.remove('external_response_id')
@@ -394,8 +706,7 @@ class DSCMCOL:
     def get_stats(self, short=False):
         if short:
             return f'responses.dscmcol ({len(self.responses)})\n'
-        else:
-            return self.__repr__() + '\n'
+        return self.__repr__() + '\n'
 
 
 class Desvars:
@@ -436,8 +747,7 @@ class Desvars:
     def get_stats(self, short=False):
         if short:
             return f'responses.desvars ({len(self.internal_id)})\n'
-        else:
-            return self.__repr__() + '\n'
+        return self.__repr__() + '\n'
 
 
 class Convergence:
@@ -517,5 +827,4 @@ class Convergence:
     def get_stats(self, short=False):
         if short:
             return 'responses.convergence_data (%s, %s)\n' % (self.n, self.ndesign_variables)
-        else:
-            return self.__repr__() + '\n'
+        return self.__repr__() + '\n'

@@ -3552,7 +3552,7 @@ class OEF(OP2Common):
             if self.use_vector and is_vectorized and self.sort_method == 1:
                 raise NotImplementedError()
             else:
-                ntotal = 24 + 100 * nnodes
+                ntotal = (24 + 100 * nnodes) * self.factor
                 if self.size == 4:
                     s1 = Struct(self._endian + b'iii4sii')
                 else:
