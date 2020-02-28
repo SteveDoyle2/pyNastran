@@ -2,6 +2,387 @@ from collections import Counter
 from typing import List, Dict
 import numpy as np
 
+NX_ELEMENTS = {
+    0 : 'GRID',
+    1 : 'CROD',
+    2 : 'CBEAM',
+    3 : 'CTUBE',
+    4 : 'CSHEAR',
+    5 : 'FORCEi/MOMENTi follower',
+    6 : 'CTRIA1-old',
+    7 : 'PLOAD4 follower',
+    8 : 'FLOAD/PLOAD2 follower',
+    9 : 'PLOAD/PLOAD2',
+    10 : 'CONROD',
+    11 : 'CELAS1',
+    12 : 'CELAS2',
+    13 : 'CELAS3',
+    14 : 'CELAS4',
+    15 : 'AEROT3',
+    16 : 'AEROBEAM',
+    17 : 'CTRIA2-old',
+    18 : 'CQUAD2-old',
+    19 : 'CQUAD1-old',
+    20 : 'CDAMP1',
+    21 : 'CDAMP2',
+    22 : 'CDAMP3',
+    23 : 'CDAMP4',
+    24 : 'CVISC',
+    25 : 'CMASS1',
+    26 : 'CMASS2',
+    27 : 'CMASS3',
+    28 : 'CMASS4',
+    29 : 'CONM1',
+
+    30 : 'CONM2',
+    31 : 'PLOTEL',
+    32 : None,
+    33 : 'CQUAD4',
+    34 : 'CBAR-34',
+    35 : 'CCONE',
+    36 : 'CTRIARG-old',
+    37 : 'CTRAPRG-old',
+    38 : 'CGAP',
+    39 : 'CTETRA',
+
+    40 : 'CBUSH1D',
+    41 : 'CHEXA1-old',
+    42 : 'CHEXA2-old',
+    43 : 'CFLUID2',
+    44 : 'CFLUID3',
+    45 : 'CFLUID4',
+    46 : 'FLMASS',
+    47 : 'AXIF2',
+    48 : 'AXIF3',
+    49 : 'AXIF4',
+
+    50 : 'SLOT3',
+    51 : 'SLOT4',
+    52 : 'CHBDYG/CHBDYP',
+    53 : 'CTRIAX6',
+    54 : 'TRIM6-old',
+    55 : 'CDUM3',
+    56 : 'CDUM4',
+    57 : 'CDUM5',
+    58 : 'CDUM6',
+    59 : 'CDUM7',
+
+    60 : 'CDUM8',
+    61 : 'CDUM9',
+    62 : 'CQDMEM1-old',
+    63 : 'CQDMEM2-old',
+    64 : 'CQUAD8',
+    65 : 'CHEX8-old',
+    66 : 'CHEX20-old',
+    67 : 'CHEXA',
+    68 : 'CPENTA',
+    69 : 'CBEND',
+
+    70 : 'CTRIAR',
+    71 : '',
+    72 : 'AEROQ4',
+    73 : 'CFTUBE-old',
+    74 : 'CTRIA3',
+    75 : 'CTRIA6',
+    76 : 'CHEXPR',
+    77 : 'CPENPR',
+    78 : 'CTETPR',
+    79 : 'CPYRAM',
+    80 : '',
+    81 : '',
+    82 : 'CQUADR',
+    83 : 'HACAB',
+    84 : 'HACBR',
+    85 : 'TETRA-nonlinear',
+    86 : 'GAP-nonlinear',
+    87 : 'TUBE-nonlinear',
+    88 : 'TRIA3-nonlinear',
+    89 : 'ROD-nonlinear',
+    90 : 'QUAD4-nonlinear',
+    91 : 'PENTA-nonlinear',
+    92 : 'CONROD-nonlinear',
+    93 : 'HEXA-nonlinear',
+    94 : 'BEAM-nonlinear',
+    95 : 'QUAD4-nonlinear',
+    96 : 'QUAD8-nonlinear',
+    97 : 'TRIA3-nonlinear',
+    98 : 'TRIA6-nonlinear',
+    99 : '',
+    100 : 'CBAR-100',
+    101 : 'AABSF',
+    102 : 'CBUSH',
+    103 : 'CQUADP',
+    104 : 'CTRIAP',
+    105 : 'CBEAMP',
+    106 : 'CDAMP5',
+    107 : 'CHBDYE',
+    108 : 'CHBDYG',
+    109 : 'CHBDYP',
+
+    110 : 'CONV',
+    111 : 'CONVM',
+    112 : 'QBDY3',
+    113 : 'QVECT',
+    114 : 'QVOL',
+    115 : 'RADBC',
+    116 : 'SLIF1D',
+    117 : 'CWELDC',  # unlisted in the main table, used in OEF table
+    118 : 'CWELDP',  # unlisted in the main table, used in OEF table
+    119 : 'CFAST',  # unlisted in the main table, used in OEF table
+    120 : '',
+
+    121 : '',
+    122 : '',
+    123 : '',
+    124 : '',
+    125 : '',
+    126 : '',
+    127 : 'CQUAD',  # unlisted in the main table, used in OEF table
+    128 : 'CQUADX',  # unlisted in the main table, used in OEF table
+    129 : 'RELUC',  # unlisted in the main table, used in OEF table
+    130 : 'RES',  # unlisted in the main table, used in OEF table
+
+    131 : 'TETRAE',  # unlisted in the main table, used in OEF table
+    132 : 'CTRIA',  # unlisted in the main table, used in OEF table
+    133 : 'CTRIAX',  # unlisted in the main table, used in OEF table
+    134 : 'LINEOB',  # unlisted in the main table, used in OEF table
+    135 : 'LINXOB',  # unlisted in the main table, used in OEF table
+    136 : 'QUADOB',  # unlisted in the main table, used in OEF table
+    137 : 'TRIAOB',  # unlisted in the main table, used in OEF table
+    138 : 'LINX',  # unlisted in the main table, used in OEF table
+    139 : 'CQUAD4FD',
+    140 : 'CHEXA8FD',
+
+    141 : 'CHEXAP',
+    142 : 'CPENTAP',
+    143 : 'CTETRAP',
+    144 : 'CQUAD144',
+    145 : 'VUHEXA',
+    146 : 'VUPENTA',
+    147 : 'VUTETRA',
+    148 : 'HEXAM',  # unlisted in the main table, used in OEF table
+    149 : 'PENTAM',  # unlisted in the main table, used in OEF table
+    150 : 'TETRAM',  # unlisted in the main table, used in OEF table
+
+    151 : 'QUADM',  # unlisted in the main table, used in OEF table
+    152 : 'TRIAM',  # unlisted in the main table, used in OEF table
+    153 : 'QUADXM',  # unlisted in the main table, used in OEF table
+    154 : 'TRIAXM',  # unlisted in the main table, used in OEF table
+    155 : 'QUADPW',  # unlisted in the main table, used in OEF table
+    156 : 'TRIAPW',  # unlisted in the main table, used in OEF table
+    157 : 'LINEPW',  # unlisted in the main table, used in OEF table
+    158 : 'QUADOBM',  # unlisted in the main table, used in OEF table
+    159 : 'TRIAOBM',  # unlisted in the main table, used in OEF table
+    160 : 'CPENTA6FD',
+
+    161 : 'CTETRA4FD',
+    162 : 'CTRIA3FD',
+    163 : 'CHEXAFD',
+    164 : 'CQUADFD',
+    165 : 'CPENTAFD',
+    166 : 'CTETRAFD',
+    167 : 'CTRIAFD',
+    168 : 'CTRIAX3FD',
+    169 : 'CTRIAXFD',
+    170 : 'CQUADX4FD',
+
+    171 : 'CQUADXFD',
+    172 : '',
+    173 : '',
+    174 : 'LINEOBM',  # unlisted in the main table, used in OEF table
+    175 : 'LINXOBM',  # unlisted in the main table, used in OEF table
+    176 : 'QUADWGM',  # unlisted in the main table, used in OEF table
+    177 : 'TRIAWGM',  # unlisted in the main table, used in OEF table
+    178 : 'QUADIB',  # unlisted in the main table, used in OEF table
+    179 : 'TRIAIB',  # unlisted in the main table, used in OEF table
+    180 : 'LINEIB',  # unlisted in the main table, used in OEF table
+
+    181 : 'LINXIB',  # unlisted in the main table, used in OEF table
+    182 : 'QUADIBM',  # unlisted in the main table, used in OEF table
+    183 : 'TRIAIBM',  # unlisted in the main table, used in OEF table
+    184 : 'LINEIBM',  # unlisted in the main table, used in OEF table
+    185 : 'LINXIBM',  # unlisted in the main table, used in OEF table
+    186 : 'QUADPWM',  # unlisted in the main table, used in OEF table
+    187 : 'TRIAPWM',  # unlisted in the main table, used in OEF table
+    188 : 'LINEPWM',  # unlisted in the main table, used in OEF table
+    189 : 'VUQUAD',
+    190 : 'VUTRIA',
+
+    191 : 'VUBEAM',
+    192 : 'CVINT',
+    193 : 'QUADFR',  # unlisted in the main table, used in OEF table
+    194 : 'TRIAFR',  # unlisted in the main table, used in OEF table
+    195 : 'LINEFR',  # unlisted in the main table, used in OEF table
+    196 : 'LINXFR',  # unlisted in the main table, used in OEF table
+    197 : 'SFINT',  # TODO: GMINTS-OEF??
+    198 : 'CNVPEL',
+    199 : 'VUHBDY',
+    200 : 'CWELD',
+
+    201 : 'CQUAD4FD',
+    202 : 'CHEXA8FD',
+    203 : 'SLIF1D',
+    204 : 'CPENTA6FD',
+    205 : 'CTETRA4FD',
+    206 : 'CTRIA3FD',
+    207 : 'CHEXAFD',
+    208 : 'CQUADFD',
+    209 : 'CPENTAFD',
+    210 : 'CTETRAFD',
+
+    211 : 'CTRIAFD',
+    212 : 'CTRIAX3FD',
+    213 : 'CTRIAXFD',
+    214 : 'CQUADX4FD',
+    215 : 'CQUADXFD',
+    216 : 'CTETRA4FD',
+    217 : 'CTRIA3FD',
+    218 : 'CHEXAFD',
+    219 : 'CQUADFD',
+    220 : 'CPENTAFD',
+
+    221 : 'CTETRAFD',
+    222 : 'CTRIAX3FD',
+    223 : 'CQUADXFD',
+    224 : 'CELAS1',
+    225 : 'CELAS3',
+    226 : 'CBUSH',
+    227 : 'CTRIAR',
+    228 : 'CQUADR',
+    229 : '',
+    230 : '',
+
+    231 : '',
+    232 : 'CQUADR-composite',
+    233 : 'CTRIAR-composite',
+    234 : '',
+    235 : '',
+    236 : '',
+    237 : '',
+    238 : '',
+    239 : '',
+
+    # per nx 8.5 QRG
+    240 : 'CTRIA6',
+    241 : 'CQUAD8',
+    242 : 'CTRAX3',
+    243 : 'CQUADX4',
+    244 : 'CTRAX6',
+    245 : 'CQUADX8',
+    246 : 'CTRAX3',
+    247 : 'CQUADX4',
+    248 : 'CTRAX6',
+    249 : 'CQUADX8',
+    255 : 'CPYRAM',
+    256 : 'CPYRAM',
+    257 : 'CPYRAMFD',
+    258 : 'CPYRAMFD',
+    259 : 'CTRAX3FD',
+
+    261 : 'CTRAX3FD',
+    262 : 'CQUADX4FD',
+    263 : 'CTRAX6FD',
+    264 : 'QUADX3FD',
+
+    266 : 'QUADX8FD',
+
+    269 : 'CHEXAL',
+    270 : 'CPENTAL',
+    271 : 'CPLSTN3',
+    272 : 'CPLSTN4',
+    273 : 'CPLSTN6',
+    274 : 'CPLSTN3',
+    275 : 'CPLSTS3',
+    276 : 'CPLSTS4',
+    277 : 'CPLSTS6',
+    278 : 'CPLSTS8',
+    # 279
+    280 : 'CBEAR',
+    281 : 'CPLSTN3',
+    282 : 'CPLSTN4',
+    283 : 'CPLSTN6',
+    284 : 'CPLSTN8',
+    285 : 'CPLSTS3',
+    287 : 'CPLSTS6',
+    288 : 'CPLSTS8',
+    289 : 'CPLSTN4',
+    290 : 'CPLSTS4',
+    291 : 'CPLSTN3',
+    292 : 'CPLSTN4',
+    293 : 'CPLSTN6',
+    294 : 'CPLSTS8',
+    295 : 'CPLSTS3',
+    296 : 'CPLSTS4',
+    297 : 'CPLSTS6',
+    298 : 'CPLSTS8',
+
+    300 : 'HEXA',
+    301 : 'PENTA',
+    302 : 'TETRA',
+    303 : 'PYRAM',
+
+    304 : 'HEXAL',
+    305 : 'PENTAL',
+    306 : 'HEXALN',
+    307 : 'CPENTALN',
+
+    312 : 'TRAX3',
+    313 : 'QUADX4',
+    314 : 'TRAX6',
+    315 : 'QUADX8',
+
+    316 : 'PLSTN3',
+    317 : 'PLSTN4',
+    318 : 'PLSTN6',
+    319 : 'PLSTN8',
+
+    320 : 'PLSTS3',
+    321 : 'PLSTS4',
+    322 : 'PLSTS6',
+    323 : 'PLSTS8',
+
+    328 : 'GPLSTN3',
+    329 : 'GPLSTN4',
+    330 : 'GPLSTN6',
+    331 : 'GPLSTN8',
+
+    337 : 'CHOCK3',
+    338 : 'CHOCK4',
+    339 : 'CHOCK6',
+    340 : 'CHOCK8',
+    # SOL 401
+    341 : 'CTRIA3 SOL 401',
+    342 : 'CQUAD4 SOL 401',
+    343 : 'CTRIA6 SOL 401',
+    344 : 'CQUAD8 SOL 401',
+    345 : 'CTRIAR SOL 401',
+    346 : 'CQUADR SOL 401',
+    347 : 'CBAR SOL 401',
+    348 : 'CBEAM SOL 401',
+    349 : 'CBUSH1D SOL 401',
+    350 : 'CELAS1 SOL 401',
+    351 : 'CELAS2 SOL 401',
+    352 : 'CBUSH SOL 401',
+
+    #ELTYPE=267 - Composite HEXA element (CHEXAL)
+    #ELTYPE=268 - Composite PENTA element (CPENTAL)
+    355 : 'Composite triangular shell element (CTRIA6); SOL 402?',
+    356 : 'Composite quadrilateral shell element (CQUAD8); SOL 402?',
+    357 : 'Composite triangular shell element (CTRIAR); SOL 402?',
+    358 : 'Composite quadrilateral shell element (CQUADR); SOL 402?',
+
+    # SOL 402
+    363 : 'CROD SOL 402',
+
+    400 : 'CELAS1 - Basic System',
+    401 : 'CELAS2 - Basic System',
+    402 : 'CDAMP1 - Basic System',
+    403 : 'CDAMP2 - Basic System',
+    404 : 'CBUSH1D - Basic System',
+    405 : 'CBUSH - Basic System',
+    406 : 'CVISC - Basic System',
+}
+
 NX_GEOM_TABLES = [
     b'CASECC',
     b'PVT', b'PVT0', b'PVTS',
