@@ -271,18 +271,20 @@ class DisplacementResponse:
         self.response_label = []
         self.subcase = []
         self.nid = []
+        self.component = []
         self.type_flag = []
         self.seid = []
 
     def append(self, internal_id, dresp_id, response_label, region,
                subcase, type_flag, seid,
-               nid):
+               nid, component):
         self.internal_id.append(internal_id)
         self.dresp_id.append(dresp_id)
         self.region.append(region)
         self.response_label.append(response_label)
         self.subcase.append(subcase)
         self.nid.append(nid)
+        self.component.append(component)
         self.type_flag.append(type_flag)
         self.seid.append(seid)
         self._n += 1
@@ -296,6 +298,7 @@ class DisplacementResponse:
         msg = 'DisplacementResponse()\n'
         msg += '  response_label=%s\n' % np.array(self.response_label)
         msg += '  nid=%s\n' % np.array(self.nid)
+        msg += '  component=%s\n' % np.array(self.component)
         msg += '  internal_id=%s\n' % np.array(self.internal_id)
         msg += '  subcase=%s\n' % np.array(self.subcase)
         msg += '  type_flag=%s\n' % np.array(self.type_flag)

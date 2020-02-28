@@ -996,6 +996,7 @@ class OP2Reader:
         (e.g. TABLED1, TABLEM1).
 
         """
+        asd
         op2 = self.op2
         unused_table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
@@ -1278,8 +1279,8 @@ class OP2Reader:
         op2.table_name = self._read_table_name(rewind=False)
         self.read_markers([-1])
         data = self._read_record()
-        fmt = mapfmt(self._endian + b'7i', self.size)
-        num, ndesvars, one_zero, zeroa, zerob, zeroc, zerod = Struct(fmt).unpack(data)
+        #fmt = mapfmt(self._endian + b'7i', self.size)
+        #num, ndesvars, one_zero, zeroa, zerob, zeroc, zerod = Struct(fmt).unpack(data)
         #print(num, ndesvars, one_zero, zeroa, zerob, zeroc, zerod)
         # (101, 3, 1, 0, 0, 0, 0)
         #self.show_data(data)
@@ -2538,7 +2539,7 @@ class OP2Reader:
                 responses.displacement_response.append(
                     internal_id, dresp_id, response_label, region,
                     subcase, type_flag, seid,
-                    nid)
+                    nid, comp)
             elif response_type == 6:  # STRESS
                 #                              -----   STRESS RESPONSES   -----
                 #  -------------------------------------------------------------------------------------------
@@ -3629,9 +3630,9 @@ class OP2Reader:
 
     def _skip_table(self, table_name, warn=True):
         """bypasses the next table as quickly as possible"""
-        if table_name in ['DIT', 'DITS']:  # tables
-            self._read_dit()
-        elif table_name in ['PCOMPTS', 'PCOMPTS']:
+        #if table_name in ['DIT', 'DITS']:  # tables
+            #self._read_dit()
+        if table_name in ['PCOMPTS', 'PCOMPTS']:
             self._read_pcompts()
         else:
             self._skip_table_helper(warn=warn)

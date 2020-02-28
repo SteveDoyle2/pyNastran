@@ -3013,6 +3013,24 @@ class TestOP2(Tester):
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=True)
 
+    def test_msc_dscmcol(self):
+        """test MSC 126 DSCMCOL-matrix sensitivites"""
+        log = get_logger(level='warning')
+        bdf_filename = os.path.join(MODEL_PATH, 'bugs', 'msc', 'test_model_cfast.bdf')
+        op2_filename = os.path.join(MODEL_PATH, 'bugs', 'msc', 'test_model_cfast.op2')
+        model = read_bdf(bdf_filename, encoding='ascii', debug=False, log=log)
+        bdf_filename_out = os.path.join(MODEL_PATH, 'msc', 'test_model_cfast_out.bdf')
+        model.write_bdf(bdf_filename_out)
+        os.remove(bdf_filename_out)
+
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=False,
+            write_op2=True, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=True, build_pandas=True, subcases=None,
+            exclude=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=True)
+
     def test_sol_106(self):
         """tests SOL 106 pandas bug"""
         log = get_logger(level='warning')
