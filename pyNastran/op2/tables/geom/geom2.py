@@ -427,7 +427,7 @@ class GEOM2(GeomCommon):
 # 1-AEROQ4 (???)
 # AEROT3   (???)
 # 1-BEAMAERO (1701,17,0)
-    def _read_caabsf(self, data, n):
+    def _read_caabsf(self, data: bytes, n: int) -> int:
         """2-CAABSF (2708,27,59)
 
         Word Name Type Description
@@ -444,7 +444,7 @@ class GEOM2(GeomCommon):
 # 4-CAXIF3 (2208,22,225)
 # 5-CAXIF4 (2308,23,226)
 
-    def _read_cbar(self, data, n):
+    def _read_cbar(self, data: bytes, n: int) -> int:
         r"""
         CBAR(2408,24,180) - the marker for Record 8
 
@@ -530,7 +530,7 @@ class GEOM2(GeomCommon):
         self.card_count['CBAR'] = nelements
         return n
 
-    def _read_cbarao(self, data, n):
+    def _read_cbarao(self, data: bytes, n: int) -> int:
         """
         CBARAO(4001,40,275) - the marker for Record 9
 
@@ -562,7 +562,7 @@ class GEOM2(GeomCommon):
         self.card_count['CBARAO'] = nelements
         return n
 
-    def _read_cbeam(self, data, n):
+    def _read_cbeam(self, data: bytes, n: int) -> int:
         """
         CBEAM(5408,54,261) - the marker for Record 10
         """
@@ -626,14 +626,14 @@ class GEOM2(GeomCommon):
         self.card_count['CBEAM'] = nelements
         return n
 
-    def _read_cbeamp(self, data, n):
+    def _read_cbeamp(self, data: bytes, n: int) -> int:
         """
         CBEAMP(11401,114,9016) - the marker for Record 11
         """
         self.log.info('skipping CBEAMP in GEOM2')
         return len(data)
 
-    def _read_cbend(self, data, n):
+    def _read_cbend(self, data: bytes, n: int) -> int:
         """
         CBEND(4601,46,298) - the marker for Record 12
 
@@ -699,7 +699,7 @@ class GEOM2(GeomCommon):
         self.increase_card_count('CBEND', nentries)
         return n
 
-    def _read_cbush(self, data, n):
+    def _read_cbush(self, data: bytes, n: int) -> int:
         """
         CBUSH(2608,26,60) - the marker for Record 13
         """
@@ -740,7 +740,7 @@ class GEOM2(GeomCommon):
         self.card_count['CBUSH'] = nelements
         return n
 
-    def _read_cbush1d(self, data, n):
+    def _read_cbush1d(self, data: bytes, n: int) -> int:
         """
         CBUSH1D(5608,56,218) - the marker for Record 14
 
@@ -771,7 +771,7 @@ class GEOM2(GeomCommon):
             #self.binary_debug.write('skipping CBUSH1D in GEOM2\n')
         #return len(data)
 
-    def _read_ccone(self, data, n):
+    def _read_ccone(self, data: bytes, n: int) -> int:
         """
         CCONE(2315,23,0) - the marker for Record 15
         """
@@ -780,7 +780,7 @@ class GEOM2(GeomCommon):
             self.binary_debug.write('skipping CCONE in GEOM2\n')
         return len(data)
 
-    def _read_cdamp1(self, data, n):
+    def _read_cdamp1(self, data: bytes, n: int) -> int:
         """
         CDAMP1(201,2,69) - the marker for Record 16
         """
@@ -798,7 +798,7 @@ class GEOM2(GeomCommon):
         self.card_count['CDAMP1'] = nelements
         return n
 
-    def _read_cdamp2(self, data, n):
+    def _read_cdamp2(self, data: bytes, n: int) -> int:
         """
         CDAMP2(301,3,70) - the marker for Record 17
         """
@@ -816,7 +816,7 @@ class GEOM2(GeomCommon):
         self.card_count['CDAMP2'] = nelements
         return n
 
-    def _read_cdamp3(self, data, n):
+    def _read_cdamp3(self, data: bytes, n: int) -> int:
         """
         CDAMP3(401,4,71) - the marker for Record 18
         """
@@ -834,7 +834,7 @@ class GEOM2(GeomCommon):
         self.card_count['CDAMP3'] = nelements
         return n
 
-    def _read_cdamp4(self, data, n):
+    def _read_cdamp4(self, data: bytes, n: int) -> int:
         """
         CDAMP4(501,5,72) - the marker for Record 19
         """
@@ -852,7 +852,7 @@ class GEOM2(GeomCommon):
         self.card_count['CDAMP4'] = nelements
         return n
 
-    def _read_cdamp5(self, data, n):
+    def _read_cdamp5(self, data: bytes, n: int) -> int:
         """
         CDAMP5(10608,106,404) - the marker for Record 20
         """
@@ -877,19 +877,19 @@ class GEOM2(GeomCommon):
 # CDUM6
 # CDUM7
 
-    def _read_cdum8(self, data, n):
+    def _read_cdum8(self, data: bytes, n: int) -> int:
         self.log.info('skipping CDUM9 in GEOM2')
         #ints = np.frombuffer(data[n:], dtype='int32').copy()
         #print('CDUM8', ints)
         return n
 
-    def _read_cdum9(self, data, n):
+    def _read_cdum9(self, data: bytes, n: int) -> int:
         self.log.info('skipping CDUM9 in GEOM2')
         #ints = np.frombuffer(data[n:], dtype='int32').copy()
         #print('CDUM9', ints)
         return n
 
-    def _read_celas1(self, data, n):
+    def _read_celas1(self, data: bytes, n: int) -> int:
         """
         CELAS1(601,6,73) - the marker for Record 29
         """
@@ -908,7 +908,7 @@ class GEOM2(GeomCommon):
         self.card_count['CELAS1'] = nelements
         return n
 
-    def _read_celas2(self, data, n):
+    def _read_celas2(self, data: bytes, n: int) -> int:
         """
         CELAS2(701,7,74) - the marker for Record 30
         """
@@ -927,7 +927,7 @@ class GEOM2(GeomCommon):
         self.card_count['CELAS2'] = nelements
         return n
 
-    def _read_celas3(self, data, n):
+    def _read_celas3(self, data: bytes, n: int) -> int:
         """
         CELAS3(801,8,75) - the marker for Record 31
         """
@@ -946,7 +946,7 @@ class GEOM2(GeomCommon):
         self.card_count['CELAS3'] = nelements
         return n
 
-    def _read_celas4(self, data, n):
+    def _read_celas4(self, data: bytes, n: int) -> int:
         """
         CELAS4(901,9,76) - the marker for Record 32
         """
@@ -964,7 +964,7 @@ class GEOM2(GeomCommon):
         self.card_count['CELAS4'] = nelements
         return n
 
-    def _read_cfast(self, data, n):
+    def _read_cfast(self, data: bytes, n: int) -> int:
         """
         CFAST(9801,98,506) - the marker for Record ???
         """
@@ -973,7 +973,7 @@ class GEOM2(GeomCommon):
 
 # CFASTP
 
-    def _read_cfluid2(self, data, n):
+    def _read_cfluid2(self, data: bytes, n: int) -> int:
         """
         CFLUID2(8515,85,209) - the marker for Record 35
 
@@ -997,7 +997,7 @@ class GEOM2(GeomCommon):
         self.card_count['CFLUID2'] = nelements
         return n
 
-    def _read_cfluid3(self, data, n):
+    def _read_cfluid3(self, data: bytes, n: int) -> int:
         """
         CFLUID3(8615,86,210) - the marker for Record 36
 
@@ -1022,7 +1022,7 @@ class GEOM2(GeomCommon):
         self.card_count['CFLUID3'] = nelements
         return n
 
-    def _read_cfluid4(self, data, n):
+    def _read_cfluid4(self, data: bytes, n: int) -> int:
         """
         CFLUID4(8715,87,211) - the marker for Record 37
 
@@ -1048,7 +1048,7 @@ class GEOM2(GeomCommon):
         self.card_count['CFLUID4'] = nelements
         return n
 
-    def _read_cint(self, data, n):
+    def _read_cint(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID    I Element identification number
@@ -1073,7 +1073,7 @@ class GEOM2(GeomCommon):
         #ints = np.frombuffer(data[n:], dtype=self.idtype).copy()
         return len(data)
 
-    def _read_cgap(self, data, n):
+    def _read_cgap(self, data: bytes, n: int) -> int:
         """
         CGAP(1908,19,104) - the marker for Record 39
         """
@@ -1110,11 +1110,11 @@ class GEOM2(GeomCommon):
         self.card_count['CGAP'] = nelements
         return n
 
-    def _read_chacab(self, data, n):
+    def _read_chacab(self, data: bytes, n: int) -> int:
         """CHACAB(8100,81,381)"""
         return self._run_20nodes(data, n, CHACAB)
 
-    def _read_chacbr(self, data, n):
+    def _read_chacbr(self, data: bytes, n: int) -> int:
         """CHACAB(8100,81,381)"""
         return self._run_20nodes(data, n, CHACBR)
 
@@ -1152,7 +1152,7 @@ class GEOM2(GeomCommon):
 
 # CHACBR
 
-    def _read_chbdye(self, data, n):
+    def _read_chbdye(self, data: bytes, n: int) -> int:
         """
         CHBDYE(8308,83,405) - the marker for Record ???
         """
@@ -1173,7 +1173,7 @@ class GEOM2(GeomCommon):
         self.card_count['CHBDYE'] = nelements
         return n
 
-    def _read_chbdyg(self, data, n):
+    def _read_chbdyg(self, data: bytes, n: int) -> int:
         """
         CHBDYG(10808,108,406) - the marker for Record 43
         """
@@ -1196,7 +1196,7 @@ class GEOM2(GeomCommon):
         self.card_count['CHBDYG'] = nelements
         return n
 
-    def _read_chbdyp(self, data, n):
+    def _read_chbdyp(self, data: bytes, n: int) -> int:
         """
         CHBDYP(10908,109,407)
         """
@@ -1226,7 +1226,7 @@ class GEOM2(GeomCommon):
             self._add_element_object(obj)
         #raise RuntimeError('this should be overwritten by the BDF class')
 
-    def _read_chexa(self, data, n):
+    def _read_chexa(self, data: bytes, n: int) -> int:
         """
         CHEXA(7308,73,253) - the marker for Record 45
         """
@@ -1257,7 +1257,7 @@ class GEOM2(GeomCommon):
 # CHEXAFD
 # CHEXAL
 # CHEXP
-    #def _read_chexp(self, data, n):
+    #def _read_chexp(self, data: bytes, n: int) -> int:
         #"""
         #CHEXP(12001,120,9011) - the marker for Record 50
         #"""
@@ -1266,13 +1266,13 @@ class GEOM2(GeomCommon):
             #self.binary_debug.write('skipping CHEXP in GEOM2\n')
         #return len(data)
 
-    def _read_chexpr(self, data, n):
+    def _read_chexpr(self, data: bytes, n: int) -> int:
         """
         CHEXPR(7409,74,9991) - the marker for Record 48
         """
         return self._read_chexa(data, n)
 
-    def _read_cmass1(self, data, n):
+    def _read_cmass1(self, data: bytes, n: int) -> int:
         """
         CMASS1(1001,10,65) - the marker for Record 51
         """
@@ -1290,7 +1290,7 @@ class GEOM2(GeomCommon):
         self.card_count['CMASS1'] = nelements
         return n
 
-    def _read_cmass2(self, data, n):
+    def _read_cmass2(self, data: bytes, n: int) -> int:
         """
         CMASS2(1101,11,66) - the marker for Record 52
         """
@@ -1308,7 +1308,7 @@ class GEOM2(GeomCommon):
         self.card_count['CMASS2'] = nelements
         return n
 
-    def _read_cmass3(self, data, n):
+    def _read_cmass3(self, data: bytes, n: int) -> int:
         """
         CMASS3(1201,12,67) - the marker for Record 53
         """
@@ -1326,7 +1326,7 @@ class GEOM2(GeomCommon):
         self.card_count['CMASS3'] = nelements
         return n
 
-    def _read_cmass4(self, data, n):
+    def _read_cmass4(self, data: bytes, n: int) -> int:
         """
         CMASS4(1301,13,68) - the marker for Record 54
         """
@@ -1342,7 +1342,7 @@ class GEOM2(GeomCommon):
         self.card_count['CMASS4'] = nelements
         return n
 
-    def _read_cmfree(self, data, n):
+    def _read_cmfree(self, data: bytes, n: int) -> int:
         """
         CMFREE(2508,25,0) - the marker for Record 55
 
@@ -1365,7 +1365,7 @@ class GEOM2(GeomCommon):
         self.card_count['CMFREE'] = nelements
         return n
 
-    def _read_conm1(self, data, n):
+    def _read_conm1(self, data: bytes, n: int) -> int:
         """
         CONM1(1401,14,63) - the marker for Record 56
         """
@@ -1384,7 +1384,7 @@ class GEOM2(GeomCommon):
         self.card_count['CONM1'] = nelements
         return n
 
-    def _read_conm2(self, data, n):
+    def _read_conm2(self, data: bytes, n: int) -> int:
         """
         CONM2(1501,15,64) - the marker for Record 57
         """
@@ -1403,7 +1403,7 @@ class GEOM2(GeomCommon):
         self.card_count['CONM2'] = nelements
         return n
 
-    def _read_conrod(self, data, n):
+    def _read_conrod(self, data: bytes, n: int) -> int:
         """
         CONROD(1601,16,47) - the marker for Record 58
         """
@@ -1422,7 +1422,7 @@ class GEOM2(GeomCommon):
         self.card_count['CONROD'] = nelements
         return n
 
-    def _read_conv(self, data, n):
+    def _read_conv(self, data: bytes, n: int) -> int:
         """
         The CONV card is different between MSC and NX Nastran.
         The MSC version is 8 fields longer.
@@ -1488,7 +1488,7 @@ class GEOM2(GeomCommon):
         self.card_count[card_name] = nelements
         return n
 
-    def _read_conv_nx(self, data, n):
+    def _read_conv_nx(self, data: bytes, n: int) -> int:
         """
         CONV(12701,127,408) - the marker for Record 59
         """
@@ -1517,7 +1517,7 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
-    def _read_conv_msc(self, data, n):
+    def _read_conv_msc(self, data: bytes, n: int) -> int:
         """
         CONV(12701,127,408) - the marker for Record 60
         """
@@ -1543,7 +1543,7 @@ class GEOM2(GeomCommon):
             n += ntotal
         return n, elements
 
-    def _read_convm(self, data, n):
+    def _read_convm(self, data: bytes, n: int) -> int:
         """
         CONVM(8908,89,422) - the marker for Record 60
 
@@ -1696,7 +1696,7 @@ class GEOM2(GeomCommon):
             elements.append(elem)
         return elements, n
 
-    def _read_cpyram(self, data, n):
+    def _read_cpyram(self, data: bytes, n: int) -> int:
         """
         CPYRAM(17200,172,1000) - the marker for Record ???
 
@@ -1725,7 +1725,7 @@ class GEOM2(GeomCommon):
 
 # CPENP
 
-    def _read_cpenta(self, data, n):
+    def _read_cpenta(self, data: bytes, n: int) -> int:
         """
         CPENTA(4108,41,280)      - the marker for Record 63
         CPENPR(7509,75,9992)     - the marker for Record 64
@@ -1756,21 +1756,21 @@ class GEOM2(GeomCommon):
 # CQDX4FD
 # CQDX9FD - same as CQDX4FD
 
-    def _read_cquad(self, data, n):
+    def _read_cquad(self, data: bytes, n: int) -> int:
         """CQUAD(9108,91,507)  - the marker for Record 69"""
         return self._run_cquad(data, n, CQUAD)
 
-    def _read_cquad4(self, data, n):
+    def _read_cquad4(self, data: bytes, n: int) -> int:
         """
         CQUAD4(2958,51,177)    - the marker for Record 70
         CQUAD4(13900,139,9989) - the marker for Record 71
         """
         return self._run_cquad4(data, n, CQUAD4)
 
-    def _read_vutria3(self, data, n):
+    def _read_vutria3(self, data: bytes, n: int) -> int:
         return self._run_3nodes(data, n, CTRIA3)
 
-    def _read_vuquad4(self, data, n):
+    def _read_vuquad4(self, data: bytes, n: int) -> int:
         """VUQUAD4(11201,112,9940)"""
         return self._run_4nodes(data, n, CQUAD4)
 
@@ -1916,14 +1916,14 @@ class GEOM2(GeomCommon):
 
 # CQUAD4FD
 
-    def _read_cquad8(self, data, n):
+    def _read_cquad8(self, data: bytes, n: int) -> int:
         """common method for reading CQUAD8s"""
         n = self._read_split_card(data, n,
                                   self._read_cquad8_current, self._read_cquad8_v2001,
                                   'CQUAD8', self.add_op2_element)
         return n
 
-    def _read_cquad8_current(self, data, n):
+    def _read_cquad8_current(self, data: bytes, n: int) -> int:
         """
         CQUAD8(4701,47,326)  - the marker for Record 72
         .. warning:: inconsistent with dmap manual
@@ -1964,7 +1964,7 @@ class GEOM2(GeomCommon):
             n += 68
         return n, elements
 
-    def _read_cquad8_v2001(self, data, n):
+    def _read_cquad8_v2001(self, data: bytes, n: int) -> int:
         """
         CQUAD8(4701,47,326)  - the marker for Record 72
 
@@ -2005,30 +2005,30 @@ class GEOM2(GeomCommon):
 # CQUAD9FD
 # CQUADP
 
-    def _read_cquadr(self, data, n):
+    def _read_cquadr(self, data: bytes, n: int) -> int:
         """CQUADR(8009,80,367)  - the marker for Record 75"""
         return self._run_cquad4(data, n, CQUADR)
 
-    def _read_cquadx(self, data, n):
+    def _read_cquadx(self, data: bytes, n: int) -> int:
         """CQUADX(9008,90,508)  - the marker for Record 76"""
         return self._run_cquad(data, n, CQUADX)
 
-    def _read_crbar(self, data, n):
+    def _read_crbar(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd20c.op2
         self.log.info('skipping RBAR in GEOM2')
         return len(data)
 
-    def _read_crbe1(self, data, n):
+    def _read_crbe1(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\nrgd406a.op2
         self.log.info('skipping RBE1 in GEOM2')
         return len(data)
 
-    def _read_crbe3(self, data, n):
+    def _read_crbe3(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\ngd720a.op2
         self.log.info('skipping RBE3 in GEOM2')
         return len(data)
 
-    def _read_crjoint(self, data, n):
+    def _read_crjoint(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID   I Element identification number
@@ -2043,7 +2043,7 @@ class GEOM2(GeomCommon):
         self.log.info('skipping RJOINT in GEOM2')
         return len(data)
 
-    def _read_crod(self, data, n):
+    def _read_crod(self, data: bytes, n: int) -> int:
         """
         CROD(3001,30,48)    - the marker for Record 81
         """
@@ -2065,7 +2065,7 @@ class GEOM2(GeomCommon):
         self.card_count['CROD'] = nelements
         return n
 
-    def _read_crrod(self, data, n):
+    def _read_crrod(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID    I Element identification number
@@ -2102,7 +2102,7 @@ class GEOM2(GeomCommon):
 
 # CSEAM
 
-    def _read_cshear(self, data, n):
+    def _read_cshear(self, data: bytes, n: int) -> int:
         """
         CSHEAR(3101,31,61)    - the marker for Record 84
         """
@@ -2123,7 +2123,7 @@ class GEOM2(GeomCommon):
 # CSLOT3
 # CSLOT4
 
-    def _read_ctetrap(self, data, n):
+    def _read_ctetrap(self, data: bytes, n: int) -> int:
         """
         CTETP(12201,122,9013)    - the marker for Record 87
         .. todo:: needs work
@@ -2137,6 +2137,7 @@ class GEOM2(GeomCommon):
             if self.is_debug_file:
                 self.binary_debug.write('  CTETP=%s\n' % str(out))
 
+            print(out)
             eid, pid, n1, n2, n3, n4 = out[:6]
             #(eid, pid, n1, n2, n3, n4,
              #e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12,
@@ -2150,11 +2151,13 @@ class GEOM2(GeomCommon):
             #print("f  = ",f)
             #print("b1  = ",b1)
             #print("ee = ",ee)
-            data_in = [eid, pid, n1, n2, n2, n3, n4]
+            data_in = [eid, pid, n1, n2, n3, n4]
             elem = CTETRA4.add_op2_data(data_in)
             self.add_op2_element(elem)
+            n += 108
+        return n
 
-    def _read_ctetra(self, data, n):
+    def _read_ctetra(self, data: bytes, n: int) -> int:
         """
         CTETRA(5508,55,217)      - the marker for Record 88
         CTETPR(7609,76,9993)     - the marker for Record 89
@@ -2185,7 +2188,7 @@ class GEOM2(GeomCommon):
 # CTQUAD - 92
 # CTTRIA - 93
 
-    def _read_ctria3(self, data, n):
+    def _read_ctria3(self, data: bytes, n: int) -> int:
         """
         CTRIA3(5959,59,282)    - the marker for Record 94
         """
@@ -2215,7 +2218,7 @@ class GEOM2(GeomCommon):
 
 # CTRIAFD - 95
 
-    def _read_ctria6(self, data, n):
+    def _read_ctria6(self, data: bytes, n: int) -> int:
         """
         common method for reading CTRIA6
 
@@ -2244,7 +2247,7 @@ class GEOM2(GeomCommon):
                                   'CTRIA6', self.add_op2_element)
         return n
 
-    def _read_ctria3fd(self, data, n):
+    def _read_ctria3fd(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID  I Element identification number
@@ -2277,7 +2280,7 @@ class GEOM2(GeomCommon):
         self.card_count['CTRIA6'] = nelements
         return n
 
-    def _read_ctrix3fd(self, data, n):
+    def _read_ctrix3fd(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID  I Element identification number
@@ -2311,7 +2314,7 @@ class GEOM2(GeomCommon):
         self.card_count['CTRIAX'] = nelements
         return n
 
-    def _read_ctria6fd(self, data, n):
+    def _read_ctria6fd(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID  I Element identification number
@@ -2342,7 +2345,7 @@ class GEOM2(GeomCommon):
         self.card_count['CTRIA6'] = nelements
         return n
 
-    def _read_ctria6_current(self, data, n):
+    def _read_ctria6_current(self, data: bytes, n: int) -> int:
         """
         CTRIA6(4801,48,327) - the marker for Record 96
 
@@ -2379,7 +2382,7 @@ class GEOM2(GeomCommon):
             n += 56
         return n, elements
 
-    def _read_ctria6_v2001(self, data, n):
+    def _read_ctria6_v2001(self, data: bytes, n: int) -> int:
         """
         CTRIA6(4801,48,327) - the marker for Record 96
 
@@ -2414,7 +2417,7 @@ class GEOM2(GeomCommon):
 # CTRIA6FD
 # CTRIAP
 
-    def _read_ctriar(self, data, n):
+    def _read_ctriar(self, data: bytes, n: int) -> int:
         """
         CTRIAR(9200,92,385)    - the marker for Record 99
         """
@@ -2439,7 +2442,7 @@ class GEOM2(GeomCommon):
         self.card_count['CTRIAR'] = nelements
         return n
 
-    #def _read_ctriax_b(self, data, n):  # pragma: no cover
+    #def _read_ctriax_b(self, data: bytes, n: int) -> int:  # pragma: no cover
         #"""
         #CTRIAX  341     11      341     342     343     345     346     349     +TX1
         #+TX1    12
@@ -2463,7 +2466,7 @@ class GEOM2(GeomCommon):
         #self.card_count['CTRIAX'] = nentries
         #return n
 
-    def _read_ctriax(self, data, n):
+    def _read_ctriax(self, data: bytes, n: int) -> int:
         """(10108, 101, 512)"""
         ntotal = 36  # 9*4
         nentries = (len(data) - n) // ntotal
@@ -2481,7 +2484,7 @@ class GEOM2(GeomCommon):
         self.card_count['CTRIAX'] = nentries
         return n
 
-    def _read_ctriax6(self, data, n):  # 101
+    def _read_ctriax6(self, data: bytes, n: int) -> int:  # 101
         """(6108, 61, 107)"""
         ntotal = 44  # 11*4
         nentries = (len(data) - n) // ntotal
@@ -2500,7 +2503,7 @@ class GEOM2(GeomCommon):
 # CTRIX3FD - 102
 # CTRIX6FD - 103
 
-    def _read_gmbndc(self, data, n):
+    def _read_gmbndc(self, data: bytes, n: int) -> int:
         """
         GMBNDC(3201,32,478)
 
@@ -2539,7 +2542,7 @@ class GEOM2(GeomCommon):
         self.card_count['GMBNDC'] = nelements
         return len(data)
 
-    def _read_ctube(self, data, n):
+    def _read_ctube(self, data: bytes, n: int) -> int:
         """
         CTUBE(3701,37,49) - the marker for Record 104
         """
@@ -2557,7 +2560,7 @@ class GEOM2(GeomCommon):
         self.card_count['CTUBE'] = nelements
         return n
 
-    def _read_cvisc(self, data, n):
+    def _read_cvisc(self, data: bytes, n: int) -> int:
         """CVISC(3901,39,50) - the marker for Record 105"""
         struct_4i = Struct(self._endian + b'4i')
         nelements = (len(data) - n) // 16
@@ -2573,7 +2576,7 @@ class GEOM2(GeomCommon):
         self.card_count['CVISC'] = nelements
         return n
 
-    def _read_cweld(self, data, n):
+    def _read_cweld(self, data: bytes, n: int) -> int:
         """
         CWELD(11701,117,559) - Record 106
         same as CFAST
@@ -2583,13 +2586,13 @@ class GEOM2(GeomCommon):
             self.binary_debug.write('skipping CWELD in GEOM2\n')
         return len(data)
 
-    def _read_cweldc(self, data, n):  # 107
+    def _read_cweldc(self, data: bytes, n: int) -> int:  # 107
         self.log.info('skipping CWELDC in GEOM2')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELDC in GEOM2\n')
         return len(data)
 
-    def _read_cweldg(self, data, n):  # 108
+    def _read_cweldg(self, data: bytes, n: int) -> int:  # 108
         self.log.info('skipping CWELDG in GEOM2')
         if self.is_debug_file:
             self.binary_debug.write('skipping CWELDG in GEOM2\n')
@@ -2598,7 +2601,7 @@ class GEOM2(GeomCommon):
 # TDOO: above are checked by DMAP...
 #-------------------------------
 # CWSEAM
-    def _read_genel(self, data, n):
+    def _read_genel(self, data: bytes, n: int) -> int:
         r"""
         Word Name Type Description
         1 EID I Element identification number
@@ -2732,7 +2735,7 @@ class GEOM2(GeomCommon):
 # GMINTC
 # GMINTS
 
-    def _read_plotel(self, data, n):  # 114
+    def _read_plotel(self, data: bytes, n: int) -> int:  # 114
         """(5201, 52, 11)"""
         struct_3i = Struct(self._endian + b'3i')
         ntotal = 12
@@ -2749,7 +2752,7 @@ class GEOM2(GeomCommon):
         self.card_count['PLOTEL'] = nelements
         return n
 
-    def _read_radbc(self, data, n):
+    def _read_radbc(self, data: bytes, n: int) -> int:
         """
         RADBC(12801,128,417)
 
@@ -2780,7 +2783,7 @@ class GEOM2(GeomCommon):
         return n
 
 # RADINT
-    def _read_sint(self, data, n):
+    def _read_sint(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 EID    I Element identification number
@@ -2809,7 +2812,7 @@ class GEOM2(GeomCommon):
         #print(ints.tolist())
         return len(data)
 
-    def _read_spoint(self, data, n):
+    def _read_spoint(self, data: bytes, n: int) -> int:
         """
         (5551,49,105)    - the marker for Record 118
         """
@@ -2822,7 +2825,7 @@ class GEOM2(GeomCommon):
         self.card_count['SPOINT'] = npoints
         return n
 
-    def _read_vubeam(self, data, n):  # 119
+    def _read_vubeam(self, data: bytes, n: int) -> int:  # 119
         deltae = 100000000
         #deltan = 111000000 # 111001002
         def element(eid, pid, nids):
@@ -2846,7 +2849,7 @@ class GEOM2(GeomCommon):
 # VUQUAD4
 # WELDP
 
-    def _read_ctrax3(self, data, n):
+    def _read_ctrax3(self, data: bytes, n: int) -> int:
         """
         RECORD - CTRAX3(6111,61,996)
 
@@ -2872,11 +2875,11 @@ class GEOM2(GeomCommon):
         self.card_count['CTRAX3'] = nelements
         return n
 
-    #def _read_cquadx4(self, data, n):
+    #def _read_cquadx4(self, data: bytes, n: int) -> int:
         #self.log.info('skipping CQUADX4 in GEOM2')
         #return len(data)
 
-    def _read_ctrax6(self, data, n):
+    def _read_ctrax6(self, data: bytes, n: int) -> int:
         """
         RECORD - CTRAX6(6113, 61, 998)
 
@@ -2902,7 +2905,7 @@ class GEOM2(GeomCommon):
         self.card_count['CTRAX6'] = nelements
         return n
 
-    def _read_cquadx8(self, data, n):
+    def _read_cquadx8(self, data: bytes, n: int) -> int:
         """
         RECORD - CQUADX8(6114, 61, 999)
 
@@ -2928,7 +2931,7 @@ class GEOM2(GeomCommon):
         self.card_count['CQUADX8'] = nelements
         return n
 
-    def _read_feface_pval(self, data, n):
+    def _read_feface_pval(self, data: bytes, n: int) -> int:
         r"""
         C:\NASA\m4\formats\git\examples\move_tpl\pshp02.bdf
         ints = (
@@ -2963,7 +2966,7 @@ class GEOM2(GeomCommon):
         #self.show_data(data[12:])
         return len(data)
 
-    def _read_feedge2(self, data, n):
+    def _read_feedge2(self, data: bytes, n: int) -> int:
         """
         (2901, 29, 9601)
 
@@ -3048,7 +3051,7 @@ class GEOM2(GeomCommon):
         self.card_count['FEEDGE'] = nelements
         return n
 
-    def _read_gmbnds(self, data, n):
+    def _read_gmbnds(self, data: bytes, n: int) -> int:
         """
         Word Name Type Description
         1 BID           I Boundary identification number
@@ -3077,12 +3080,12 @@ class GEOM2(GeomCommon):
             i0 = iminus1i + 1
         return len(data)
 
-    def _read_cngret(self, data, n):
+    def _read_cngret(self, data: bytes, n: int) -> int:
         # C:\NASA\m4\formats\git\examples\move_tpl\bpas101.op2
         # C:\NASA\m4\formats\git\examples\move_tpl\pass8.op2
         return len(data)
 
-    def _read_adapt(self, data, n):
+    def _read_adapt(self, data: bytes, n: int) -> int:
         self.log.info('skipping adapt card in GEOM2')
         return len(data)
 

@@ -18,7 +18,7 @@ COLORS = {
 
 def str_to_html(log_type, filename, lineno, msg):
     """
-    converts the message to html
+    Converts the message to html
 
     Parameters
     ----------

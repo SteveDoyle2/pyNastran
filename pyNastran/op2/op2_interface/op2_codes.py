@@ -6,7 +6,7 @@ from pyNastran.op2.op2_interface.msc_tables import MSC_TABLE_CONTENT
 SORT1_TABLES = [b'OSTRMS1C', b'OSTNO1C', b'OES1X', b'OSTR1X',
                 b'OESRMS2', b'OESNO2', b'OESXRMS1',
                 b'OES1C', b'OSTR1C',
-                'OES1C', 'OSTR1C', ]
+                'OES1C', 'OSTR1C', 'OESNLXR']
 SORT2_TABLES = [b'OUGPSD2', b'OUGATO2', b'OESCP',
                 b'OES2C', b'OSTR2C',
                 b'OFMPF2M', b'OLMPF2M', b'OPMPF2M', b'OSMPF2M', b'OGPMPF2M',

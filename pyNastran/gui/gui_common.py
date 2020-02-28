@@ -689,7 +689,7 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
         if log_type in ['GUI ERROR', 'GUI COMMAND', 'GUI DEBUG', 'GUI INFO', 'GUI WARNING']:
             log_type = log_type[4:] # drop the GUI
 
-        html_msg = str_to_html2(log_type, filename, lineno, msg)
+        html_msg = str_to_html(log_type, filename, lineno, msg)
 
         if self.performance_mode or self.log_widget is None:
             self._log_messages.append(html_msg)

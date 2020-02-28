@@ -10,6 +10,7 @@ SORT2_TABLE_NAME_MAP = {
     'OESNO2' : 'OESNO1',
     'OESPSD2' : 'OESPSD1',
     'OESRMS2' : 'OESRMS1',
+    'OESNLXR2' : 'OESNLXR',
 
     'OSTR2' : 'OSTR1',
     'OSTR2C' : 'OSTR1C',

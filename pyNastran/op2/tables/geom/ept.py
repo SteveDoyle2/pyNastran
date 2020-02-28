@@ -117,13 +117,13 @@ class EPT(GeomCommon):
 
 # HGSUPPR
 
-    def _read_nsm(self, data, n):
+    def _read_nsm(self, data: bytes, n: int) -> int:
         """NSM"""
         n = self._read_dual_card(data, n, self._read_nsm_nx, self._read_nsm_msc,
                                  'NSM', self._add_nsm_object)
         return n
 
-    def _read_nsm_msc(self, data, n):
+    def _read_nsm_msc(self, data: bytes, n: int) -> int:
         """
         NSM(3201,32,55) - the marker for Record 2
 
@@ -178,7 +178,7 @@ class EPT(GeomCommon):
             n += 4
         return n, properties
 
-    def _read_nsm_nx(self, data, n):
+    def _read_nsm_nx(self, data: bytes, n: int) -> int:
         """
         NSM(3201,32,55) - the marker for Record 2
 
@@ -281,7 +281,7 @@ class EPT(GeomCommon):
 # PACABS
 # PACBAR
 
-    def _read_pbar(self, data, n):
+    def _read_pbar(self, data: bytes, n: int) -> int:
         """
         PBAR(52,20,181) - the marker for Record 11
         .. warning:: this makes a funny property...
@@ -323,7 +323,7 @@ class EPT(GeomCommon):
         self.card_count['PBAR'] = nentries
         return n
 
-    def _read_pbarl(self, data, n):
+    def _read_pbarl(self, data: bytes, n: int) -> int:
         """
         PBARL(9102,91,52) - the marker for Record 12
         TODO: buggy
@@ -414,7 +414,7 @@ class EPT(GeomCommon):
         #assert len(data) == n
         return n
 
-    def _read_pbcomp(self, data, n):
+    def _read_pbcomp(self, data: bytes, n: int) -> int:
         struct1 = Struct(self._endian + b'2i 12f i')
         struct2 = Struct(self._endian + b'3f 2i')
         nproperties = 0
@@ -473,7 +473,7 @@ class EPT(GeomCommon):
         self.card_count['PBCOMP'] = nproperties
         return n
 
-    def _read_pbeam(self, data, n):
+    def _read_pbeam(self, data: bytes, n: int) -> int:
         """
         PBEAM(5402,54,262) - the marker for Record 14
         .. todo:: add object
@@ -590,7 +590,7 @@ class EPT(GeomCommon):
             self.card_count['PBEAM'] = nproperties
         return n
 
-    def _read_pbeaml(self, data, n):
+    def _read_pbeaml(self, data: bytes, n: int) -> int:
         """
         PBEAML(9202,92,53)
 
@@ -636,13 +636,13 @@ class EPT(GeomCommon):
             self.card_count['PBEAML'] = nproperties
         return len(data)
 
-    def _read_pbend(self, data, n):
+    def _read_pbend(self, data: bytes, n: int) -> int:
         """PBEND"""
         n = self._read_dual_card(data, n, self._read_pbend_nx, self._read_pbend_msc,
                                  'PBEND', self._add_property_object)
         return n
 
-    def _read_pbend_msc(self, data, n):
+    def _read_pbend_msc(self, data: bytes, n: int) -> int:
         """
         PBEND
 
@@ -708,7 +708,7 @@ class EPT(GeomCommon):
             n += ntotal
         return n, properties
 
-    def _read_pbend_nx(self, data, n):
+    def _read_pbend_nx(self, data: bytes, n: int) -> int:
         """
         PBEND
 
@@ -778,7 +778,7 @@ class EPT(GeomCommon):
 # PBMSECT
 # PBRSECT
 
-    def _read_pbush(self, data, n):
+    def _read_pbush(self, data: bytes, n: int) -> int:
         """
         The PBUSH card is different between MSC and NX Nastran.
 
@@ -803,7 +803,7 @@ class EPT(GeomCommon):
                                  'PBUSH', self._add_op2_property)
         return n
 
-    def _read_pbush_nx(self, data, n):
+    def _read_pbush_nx(self, data: bytes, n: int) -> int:
         """PBUSH(1402,14,37) - 18 fields"""
         ntotal = 72
         struct1 = Struct(self._endian + b'i17f')
@@ -825,7 +825,7 @@ class EPT(GeomCommon):
             n += ntotal
         return n, props
 
-    def _read_pbush_msc(self, data, n):
+    def _read_pbush_msc(self, data: bytes, n: int) -> int:
         """PBUSH(1402,14,37) - 23 fields"""
         ntotal = 92  # 23*4
         struct1 = Struct(self._endian + b'i22f')
@@ -846,7 +846,7 @@ class EPT(GeomCommon):
             n += ntotal
         return n, props
 
-    def _read_pbush1d(self, data, n):
+    def _read_pbush1d(self, data: bytes, n: int) -> int:
         """
         Record 18 -- PBUSH1D(3101,31,219)
 
@@ -972,7 +972,7 @@ class EPT(GeomCommon):
         self.card_count['PBUSH1D'] = nentries
         return n
 
-    def _read_pbusht(self, data, n):
+    def _read_pbusht(self, data: bytes, n: int) -> int:
         """reads the PBUSHT"""
         n, props = self._read_pbusht_nx(data, n)
         for prop in props:
@@ -980,7 +980,7 @@ class EPT(GeomCommon):
             self._add_pbusht_object(prop)
         return n
 
-    def _read_pbusht_nx(self, data, n):
+    def _read_pbusht_nx(self, data: bytes, n: int) -> int:
         """
         NX 12 / MSC 2005
         Word Name Type Description
@@ -1011,7 +1011,7 @@ class EPT(GeomCommon):
             n, props = self._read_pbusht_80(data, n)
         return n, props
 
-    def _read_pbusht_80(self, data, n):
+    def _read_pbusht_80(self, data: bytes, n: int) -> int:
         ntotal = 80
         struct1 = Struct(self._endian + b'20i')
         nentries = (len(data) - n) // ntotal
@@ -1040,7 +1040,7 @@ class EPT(GeomCommon):
             n += ntotal
         return n, props
 
-    def _read_pbusht_100(self, data, n):
+    def _read_pbusht_100(self, data: bytes, n: int) -> int:
         props = []
         ntotal = 100
         struct1 = Struct(self._endian + b'25i')
@@ -1063,7 +1063,7 @@ class EPT(GeomCommon):
             n += ntotal
         return n, props
 
-    def _read_pcomp(self, data, n):
+    def _read_pcomp(self, data: bytes, n: int) -> int:
         """
         PCOMP(2706,27,287) - the marker for Record 22
 
@@ -1134,7 +1134,7 @@ class EPT(GeomCommon):
         self.card_count['PCOMP'] = nproperties
         return n
 
-    def _read_pcompg(self, data, n):
+    def _read_pcompg(self, data: bytes, n: int) -> int:
         """
         PCOMP(2706,27,287)
 
@@ -1162,26 +1162,37 @@ class EPT(GeomCommon):
         # lam - SYM, MEM, BEND, SMEAR, SMCORE, None
         lam_map = {
             0 : None,
+            # MEM
+            # BEND
+            # SMEAR
+            # SMCORE
         }
 
         # ft - HILL, HOFF, TSAI, STRN, None
         ft_map = {
             0 : None,
+            # HILL
+            # HOFF
+            3 : 'TSAI',
+            # STRN
         }
         # sout - YES, NO
         sout_map = {
             0 : 'NO',
+            1 : 'YES',
         }
         ndata = len(data)
+        self.show_data(data[:48])
         while n < (ndata - 32):
             out = s1.unpack(data[n:n+32])
             (pid, lam_int, z0, nsm, sb, ft_int, tref, ge) = out
             if self.binary_debug:
-                self.binary_debug.write('PCOMPG pid=%s lam_int=%s z0=%s '
-                                        'nsm=%s sb=%s ft_int=%s tref=%s ge=%s' % tuple(out))
-            #print('PCOMPG pid=%s lam_int=%s z0=%s nsm=%s sb=%s '
-                  #'ft_int=%s tref=%s ge=%s' % tuple(out))
+                self.binary_debug.write(f'PCOMPG pid={pid} lam_int={lam_int} z0={z0} nsm={nsm} '
+                                        f'sb={sb} ft_int={ft_int} tref={tref} ge={ge}')
+            #print(f'PCOMPG pid={pid} lam_int={lam_int} z0={z0} nsm={nsm} sb={sb} '
+                  #f'ft_int={ft_int} tref={tref} ge={ge}')
             assert isinstance(lam_int, int), out
+            assert pid > -1, out
             n += 32
 
             mids = []
@@ -1228,6 +1239,7 @@ class EPT(GeomCommon):
                         global_ply, mid, t, theta, sout_int, sout))
                 n += 20
                 ilayer += 1
+            n += 20
 
             try:
                 ft = ft_map[ft_int]
@@ -1255,20 +1267,20 @@ class EPT(GeomCommon):
 
 # PCOMPA
 
-    def _read_pconeax(self, data, n):
+    def _read_pconeax(self, data: bytes, n: int) -> int:
         """
         (152,19,147) - Record 24
         """
         self.log.info('skipping PCONEAX in EPT')
         return len(data)
 
-    def _read_pconv(self, data, n):
+    def _read_pconv(self, data: bytes, n: int) -> int:
         """common method for reading PCONVs"""
         n = self._read_dual_card(data, n, self._read_pconv_nx, self._read_pconv_msc,
                                  'PCONV', self._add_pconv)
         return n
 
-    def _read_pconv_nx(self, data, n):
+    def _read_pconv_nx(self, data: bytes, n: int) -> int:
         """
         (11001,110,411)- NX version
         """
@@ -1289,7 +1301,7 @@ class EPT(GeomCommon):
             n += ntotal
         return n, props
 
-    def _read_pconv_msc(self, data, n):
+    def _read_pconv_msc(self, data: bytes, n: int) -> int:
         """
         (11001,110,411)- MSC version - Record 25
         """
@@ -1310,7 +1322,7 @@ class EPT(GeomCommon):
             n += ntotal
         return n, props
 
-    def _read_pconvm(self, data, n):
+    def _read_pconvm(self, data: bytes, n: int) -> int:
         """Record 24 -- PCONVM(2902,29,420)
 
         1 PID    I Property identification number
@@ -1337,7 +1349,7 @@ class EPT(GeomCommon):
         self.card_count['PCONVM'] = nentries
         return n
 
-    def _read_pdamp(self, data, n):
+    def _read_pdamp(self, data: bytes, n: int) -> int:
         """
         PDAMP(202,2,45) - the marker for Record ???
         """
@@ -1353,11 +1365,11 @@ class EPT(GeomCommon):
         self.card_count['PDAMP'] = nentries
         return n
 
-    def _read_pdampt(self, data, n):  # 26
+    def _read_pdampt(self, data: bytes, n: int) -> int:  # 26
         self.log.info('skipping PDAMPT in EPT')
         return len(data)
 
-    def _read_pdamp5(self, data, n):  # 26
+    def _read_pdamp5(self, data: bytes, n: int) -> int:  # 26
         self.log.info('skipping PDAMP5 in EPT')
         return len(data)
 
@@ -1371,7 +1383,7 @@ class EPT(GeomCommon):
 # PDUM8
 # PDUM9
 
-    def _read_pelas(self, data, n):
+    def _read_pelas(self, data: bytes, n: int) -> int:
         """PELAS(302,3,46) - the marker for Record 39"""
         struct_i3f = Struct(self._endian + b'i3f')
         ntotal = 16  # 4*4
@@ -1388,7 +1400,7 @@ class EPT(GeomCommon):
         self.card_count['PELAS'] = nproperties
         return n
 
-    def _read_pfast_msc(self, data, n):
+    def _read_pfast_msc(self, data: bytes, n: int) -> int:
         ntotal = 92 # 23*4
         struct1 = Struct(self._endian + b'ifii 4f')
         nproperties = (len(data) - n) // ntotal
@@ -1411,7 +1423,7 @@ class EPT(GeomCommon):
         self.card_count['PFAST'] = nproperties
         return n
 
-    def _read_pfast_nx(self, data, n):
+    def _read_pfast_nx(self, data: bytes, n: int) -> int:
         """
         PFAST(3601,36,55)
         NX only
@@ -1436,7 +1448,7 @@ class EPT(GeomCommon):
         self.card_count['PFAST'] = nproperties
         return n
 
-    def _read_pelast(self, data, n):
+    def _read_pelast(self, data: bytes, n: int) -> int:
         """
         Record 41 -- PELAST(1302,13,34)
 
@@ -1461,7 +1473,7 @@ class EPT(GeomCommon):
         self.card_count['PELAST'] = nproperties
         return n
 
-    def _read_pgap(self, data, n):
+    def _read_pgap(self, data: bytes, n: int) -> int:
         """
         PGAP(2102,21,121) - the marker for Record 42
         """
@@ -1480,7 +1492,7 @@ class EPT(GeomCommon):
         self.card_count['PGAP'] = nproperties
         return n
 
-    def _read_phbdy(self, data, n):
+    def _read_phbdy(self, data: bytes, n: int) -> int:
         """
         PHBDY(2802,28,236) - the marker for Record 43
         """
@@ -1498,15 +1510,15 @@ class EPT(GeomCommon):
         self.card_count['PHBDY'] = nproperties
         return n
 
-    def _read_pintc(self, data, n):
+    def _read_pintc(self, data: bytes, n: int) -> int:
         self.log.info('skipping PINTC in EPT')
         return len(data)
 
-    def _read_pints(self, data, n):
+    def _read_pints(self, data: bytes, n: int) -> int:
         self.log.info('skipping PINTS in EPT')
         return len(data)
 
-    def _read_plplane(self, data, n):
+    def _read_plplane(self, data: bytes, n: int) -> int:
         """
         PLPLANE(4606,46,375)
 
@@ -1541,7 +1553,7 @@ class EPT(GeomCommon):
         self.card_count['PLPLANE'] = nentries
         return n
 
-    def _read_plsolid(self, data, n):
+    def _read_plsolid(self, data: bytes, n: int) -> int:
         """
         MSC 2016
         1 PID I Property identification number
@@ -1571,7 +1583,7 @@ class EPT(GeomCommon):
         self.card_count['PLSOLID'] = nentries
         return n
 
-    def _read_pmass(self, data, n):
+    def _read_pmass(self, data: bytes, n: int) -> int:
         """
         PMASS(402,4,44) - the marker for Record 48
         """
@@ -1588,7 +1600,7 @@ class EPT(GeomCommon):
             n += 8
         return n
 
-    def _read_prod(self, data, n):
+    def _read_prod(self, data: bytes, n: int) -> int:
         """
         PROD(902,9,29) - the marker for Record 49
         """
@@ -1607,7 +1619,7 @@ class EPT(GeomCommon):
         self.card_count['PROD'] = nproperties
         return n
 
-    def _read_pshear(self, data, n):
+    def _read_pshear(self, data: bytes, n: int) -> int:
         """
         PSHEAR(1002,10,42) - the marker for Record 50
         """
@@ -1625,7 +1637,7 @@ class EPT(GeomCommon):
         self.card_count['PSHEAR'] = nproperties
         return n
 
-    def _read_pshell(self, data, n):
+    def _read_pshell(self, data: bytes, n: int) -> int:
         """
         PSHELL(2302,23,283) - the marker for Record 51
         """
@@ -1660,7 +1672,7 @@ class EPT(GeomCommon):
             self.card_count['PSHELL'] = nproperties
         return n
 
-    def _read_psolid(self, data, n):
+    def _read_psolid(self, data: bytes, n: int) -> int:
         """
         PSOLID(2402,24,281) - the marker for Record 52
         """
@@ -1685,7 +1697,7 @@ class EPT(GeomCommon):
 # PTRIA6
 # PTSHELL
 
-    def _read_ptube(self, data, n):
+    def _read_ptube(self, data: bytes, n: int) -> int:
         """
         PTUBE(1602,16,30) - the marker for Record 56
 
@@ -1711,7 +1723,7 @@ class EPT(GeomCommon):
         self.card_count['PTUBE'] = nproperties
         return n
 
-    def _read_pset(self, data, n):
+    def _read_pset(self, data: bytes, n: int) -> int:
         struct_5i4si = Struct(self._endian + b'5i4si')
         nentries = 0
         while  n < len(data):
@@ -1737,7 +1749,7 @@ class EPT(GeomCommon):
         self.card_count['PSET'] = nentries
         return n
 
-    def _read_pval(self, data, n):
+    def _read_pval(self, data: bytes, n: int) -> int:
         """
         PVAL(10201,102,400)
 
@@ -1778,7 +1790,7 @@ class EPT(GeomCommon):
         self.card_count['PVAL'] = nentries
         return n
 
-    def _read_pvisc(self, data, n):
+    def _read_pvisc(self, data: bytes, n: int) -> int:
         """PVISC(1802,18,31) - the marker for Record 39"""
         struct_i2f = Struct(self._endian + b'i2f')
         nproperties = (len(data) - n) // 12
@@ -1796,10 +1808,10 @@ class EPT(GeomCommon):
 
 # PWELD
 # PWSEAM
-    def _read_view(self, data, n):
+    def _read_view(self, data: bytes, n: int) -> int:
         self.log.info('skipping VIEW in EPT')
         return len(data)
 
-    def _read_view3d(self, data, n):
+    def _read_view3d(self, data: bytes, n: int) -> int:
         self.log.info('skipping VIEW3D in EPT')
         return len(data)

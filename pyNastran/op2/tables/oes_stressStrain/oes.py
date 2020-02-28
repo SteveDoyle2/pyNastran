@@ -276,6 +276,9 @@ class OES(OP2Common):
             67, 68, 95, 102, #  #CHEXA, CPENTA, QUAD4-comp, CBUSH
             39, #CTETRA
             86, # GAPNL
+            88, # TRIA3-nonlinear
+            89, # ROD-nonlinear
+            90, # QUAD4-nonlinear
             91, # PENTANL
             93, # HEXANL
             97, # CTRIA3-C
@@ -1115,6 +1118,8 @@ class OES(OP2Common):
         #elif self.table_name in ['OESNLXR']:
             #prefix = 'sideline_'
         elif self.table_name in [b'OESNLXD', b'OESNL1X', b'OESNLXR', b'OESNL2']:
+            prefix = 'nonlinear_'
+        elif self.table_name in [b'OESNLXR2']:
             prefix = 'nonlinear_'
         elif self.table_name == b'OESNLBR':
             prefix = 'sideline_'
