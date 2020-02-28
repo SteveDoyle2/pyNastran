@@ -235,6 +235,14 @@ INT_PARAMS_1 = [
     b'PEDGEP', b'ACMSPROC', b'ACMSSEID', b'ACOUS', b'ACOUSTIC', b'ADJFLG',
     b'ADJLDF', b'AEDBCP', b'AESRNDM', b'ARCSIGNS', b'ATVUSE', b'BADMESH', b'BCHNG',
     b'BCTABLE', b'ROTCSV', b'ROTGPF', b'BEARDMP', b'BEARFORC', b'BOV', b'OP2FMT',
+
+    # ???
+    b'CHKSEC', b'CMSMETH', b'CNTNSUB', b'CNTSCL', b'CNTSTPS', b'CONCHG',
+    b'DBDRPRJ', b'DBDRVER', b'DDAMRUN', b'DESCONX', b'DESEIG', b'DESFINAL',
+    b'DESMAX', b'DESSOLAP', b'DIAGOPT',
+
+    b'DOBUCKL', b'DOF123', b'DOMODES', b'DOSTATIC', b'DOTRIP', b'DRESP', b'DSGNOPTX',
+    b'DSNOKD', b'DYNAMICX', b'EBULK', b'EIGNFREQ', b'ELOOPID',
 ]
 FLOAT_PARAMS_1 = [
     b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
@@ -253,12 +261,25 @@ FLOAT_PARAMS_1 = [
     # not defined
     b'PRPA', b'PRPHIVZ', b'PRPJ', b'PRRULV', b'RMAX', b'ADJFRQ', b'ARF',
     b'ARS', # b'BSHDAMP',
+    b'EPSRC',
+
+    # or integer (not string)
+    b'BSHDMP',
+    b'BSHDMP4',
+    b'CONFAC',
+    b'CP',
+    b'DBCPAE',
+    b'DBCPATH',
+    b'DFREQ', b'DFRSPCF', b'DSTSPCF', b'DTRSPCF',
+    b'DUCTFMAX',
 ]
 FLOAT_PARAMS_2 = [
     b'BETA', b'CB1', b'CB2', b'CK1', b'CK2', b'CK3', b'CK41', b'CK42',
     b'CM1', b'CM2',
     b'G2', b'G4', b'G5', b'G6', b'G7', b'G8', b'G9', b'G10', b'G12', b'G13',
     b'ALPHA1', b'ALPHA2', b'APPF',
+    b'CA1', b'CA2',
+    b'CP1', b'CP2',
 
     # should this be FLOAT_PARAMS_1???
     #b'EPPRT',
@@ -279,6 +300,20 @@ STR_PARAMS_1 = [
     b'ADSTAT', b'ACOUT', b'ACSYM', b'ACTYPE', b'ADBX', b'AUTOSEEL',
     b'RDSPARSE',
     b'SPARSEDR',
+    b'BSHDAMP',
+    b'CORROPT',
+    b'DBACOUS',
+    b'DBALLNOQ',
+    b'DBALLX',
+    b'DBAPI',
+    b'DBAPP',
+    b'DBCNT',
+    b'DBCOVWRT',
+    b'DBDNOPT',
+    b'DBDNR', b'DBDNR1', b'DBDNX', b'DBEXT', b'DBGOA', b'DBMAP',
+    b'DBOFP2X', b'DBOFPX', b'DBRCVX', b'DBSCRR', b'DBUPOPT', b'DBUPR',
+    b'DBUPX', b'DBXSEDR', b'DBXSEDRR', b'DBZUZR', b'DSOR', b'DSOX',
+    b'DVGRDN', b'DYNSPCF', b'EQVSCR',
 
     # part of param, checkout
     b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',
@@ -1290,6 +1325,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             key = word.decode('latin1')
             param = PARAM(key, [value], comment='')
             self.params[key] = param
+            #print(f'{key} = {value}')
             #print(param.rstrip())
         return nvalues
 
@@ -1918,14 +1954,14 @@ def main():  # pragma: no cover
     op2_filename = 'solid_shell_bar.op2'
     op2 = OP2_Scalar()
     op2.read_op2(op2_filename)
-    print(op2.displacements[1])
+    #print(op2.displacements[1])
     dump(op2, pickle_file)
     pickle_file.close()
 
     pickle_file = open(txt_filename, 'r')
     op2 = load(pickle_file)
     pickle_file.close()
-    print(op2.displacements[1])
+    #print(op2.displacements[1])
 
 
     #import sys
