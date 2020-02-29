@@ -18,8 +18,7 @@ if TYPE_CHECKING:  # pragma: no cover
     #from pyNastran.bdf.cards.elements.shell import CQUAD4
 
 def build_kbb_cquad4(model: BDF,
-                     Kbb: NDArrayNNfloat,
-                     Kbbs,
+                     Kbb,
                      dof_map: DOF_MAP,
                      all_nids, xyz_cid0: NDArrayN3float, idtype='int32', fdtype='float64') -> int:
     """fill the CQUAD4 Kbb matrix
@@ -253,7 +252,6 @@ def build_kbb_cquad4(model: BDF,
             for jdof, unused_dof2, i2 in zip(count(), dofs, n_ijv):
                 ki = Ki[idof, jdof]
                 Kbb[i1, i2] += ki
-                Kbbs[i1, i2] += ki
         #print(xy1, xy2, xy3, xy4)
 
         # TODO: The jacobian ratio is the ratio between the min/max values of the
@@ -277,8 +275,7 @@ def build_kbb_cquad4(model: BDF,
     return nelements
 
 def build_kbb_cquad8(model: BDF,
-                     Kbb: NDArrayNNfloat,
-                     Kbbs,
+                     Kbb,
                      dof_map: DOF_MAP,
                      all_nids, xyz_cid0: NDArrayN3float, idtype='int32', fdtype='float64') -> int:
     """fill the CQUAD8 Kbb matrix

@@ -143,7 +143,7 @@ class TestSpring(unittest.TestCase):
         spc_id = 3
         model.add_pelas(pid, k, ge=0., s=0., comment='')
         # model.add_sload(load_id, 2, 20.)
-        fxyz = [1., 0., 0.]
+        #fxyz = [1., 0., 0.]
         mag = 20.
         # model.add_force(load_id, 2, mag, fxyz, cid=0, comment='')
         nids = 2
@@ -187,7 +187,7 @@ class TestSpring(unittest.TestCase):
         load_id = 2
         spc_id = 3
         # model.add_sload(load_id, 2, 20.)
-        fxyz = [1., 0., 0.]
+        #fxyz = [1., 0., 0.]
         mag = 20.
         model.add_sload(load_id, 2, mag)
 
@@ -545,7 +545,7 @@ class TestRod(unittest.TestCase):
         #L = 1.0
         #A = np.pi * (OD1 ** 2 - ID ** 2) / 4
         #kaxial = A * E / L
-        F = 1.0
+        #F = 1.0
         #dx = F / kaxial
         assert np.allclose(solver.xg[6], daxial), f'dx={daxial} xg[6]={solver.xg[6]}'
         assert np.allclose(solver.xg[9], dtorsion), f'dx={dtorsion} xg[6]={solver.xg[9]}'

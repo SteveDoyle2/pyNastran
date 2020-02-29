@@ -140,6 +140,8 @@ class Solver:
                             idof = dof_map[(nid, dofi)]
                         except:
                             dofs_missed.append((nid, dofi))
+                            #print('dof_map =', dof_map)
+                            #print((nid, dofi))
                             continue
                         sset[idof] = True
                         spc_set.append(idof)
@@ -148,6 +150,7 @@ class Solver:
                     dof_str = ', '.join(str(dofi) for dofi in dofs_missed)
                     self.log.warning(f'Missing (nid,dof) pairs:')
                     self.log.warning(f'  {dof_str}\n{spc.rstrip()}')
+                    #=({nid},{dofi}) doesn't exist...skipping
                 del dofs_missed
             elif spc.type == 'SPC':
                 for nid, components, enforcedi in zip(spc.nodes, spc.components, spc.enforced):
@@ -189,14 +192,14 @@ class Solver:
             if load.type == 'SLOAD':
                 #print(load.get_stats())
                 for mag, nid in zip(load.mags, load.nodes):
-                    i = dof_map[(nid, 0)]  # TODO: wrong?...doesn't handle GRIDs
+                    i = dof_map[(nid, 0)]  # TODO: wrong...
                     Fb[i] = mag * scale
             elif load.type == 'FORCE':
                 fxyz = load.to_global()
                 nid = load.node
                 self.log.debug(f'  FORCE nid={nid} Fxyz={fxyz}')
                 for i, dof in enumerate([1, 2, 3]):
-                    # TODO: wrong because it doesn't handle SPOINTs?
+                    # TODO: wrong because it doesn't handle SPOINTs
                     fi = dof_map[(nid, dof)]
                     Fb[fi] = fxyz[i]
             elif load.type == 'MOMENT':
@@ -204,7 +207,7 @@ class Solver:
                 nid = load.node
                 self.log.debug(f'  MOMENT nid={nid} Fxyz={fxyz}')
                 for i, dof in enumerate([4, 5, 6]):
-                    # TODO: wrong because it doesn't handle SPOINTs?
+                    # TODO: wrong because it doesn't handle SPOINTs
                     fi = dof_map[(nid, dof)]
                     Fb[fi] = fxyz[i]
             elif load.type == 'SPCD':
@@ -317,32 +320,33 @@ class Solver:
             break
         #for udof, in udofs:
 
-        if nequations:
-            CmpcI = sci_sparse.dok_matrix((nequations, ndof*2), dtype=fdtype)
-            CmpcI[:, :ndof] = Cmpc
-            for row in range(nequations):
-                CmpcI[row, ndof+row] = 1
-            self.log.info(f'CmpcI = {CmpcI}')
+        assert nequations > 0, 'No MPC equations despite MPCs being found'
 
-            self.log.info(f'Cmpc = {Cmpc}')
-            print('rows:')
-            for row in range(nequations):
-                dense_row = Cmpc[row, :].toarray()
-                abs_row = abs_row = np.abs(dense_row)
-                max_val = abs_row.max()
-                imax = np.where(dense_row == max_val)[0][0]
-                if max_val == 0.:
-                    continue
-                dense_row = CmpcI[row, :].toarray()
-                for row2 in range(row + 1, nequations):
-                    val = CmpcI[row2, imax]
-                    print(row, row2, imax, val)
-                    CmpcI[row2, :] -= dense_row * (val / max_val)
+        CmpcI = sci_sparse.dok_matrix((nequations, ndof*2), dtype=fdtype)
+        CmpcI[:, :ndof] = Cmpc
+        for row in range(nequations):
+            CmpcI[row, ndof+row] = 1
+        self.log.info(f'CmpcI = {CmpcI}')
 
-                print(dense_row)
-                print(f'max={max_val} imax={imax}')
-                print(CmpcI)
-            #self.log.info(constraints)
+        self.log.info(f'Cmpc = {Cmpc}')
+        print('rows:')
+        for row in range(nequations):
+            dense_row = Cmpc[row, :].toarray()
+            abs_row = abs_row = np.abs(dense_row)
+            max_val = abs_row.max()
+            imax = np.where(dense_row == max_val)[0][0]
+            if max_val == 0.:
+                continue
+            dense_row = CmpcI[row, :].toarray()
+            for row2 in range(row + 1, nequations):
+                val = CmpcI[row2, imax]
+                print(row, row2, imax, val)
+                CmpcI[row2, :] -= dense_row * (val / max_val)
+
+            print(dense_row)
+            print(f'max={max_val} imax={imax}')
+            print(CmpcI)
+        #self.log.info(constraints)
 
         #uindependents, nicount = np.unique(independents, return_counts=True)
         #print(udofs, idofs)
@@ -440,14 +444,14 @@ class Solver:
         ngrid, ndof_per_grid, ndof = get_ndof(model, subcase)
 
         gset_b = ps_to_sg_set(ndof, ps)
-        Kbb, Kbbs = build_Kbb(model, dof_map, ndof, fdtype='float64')
-        Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype='float64')
+        Kbb = build_Kbb(model, dof_map, ndof, fdtype=fdtype)
+        Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
         self.get_mpc_constraints(subcase, dof_map)
 
-        Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid, inplace=False)
-        Kggs = Kbb_to_Kgg(model, Kbbs, ngrid, ndof_per_grid)
+        #Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid, inplace=False)
+        Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid)
         Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid, inplace=False)
-        del Kbb, Kbbs, Mbb, Mgg
+        del Kbb, Mbb, Mgg
 
         gset = np.arange(ndof, dtype=idtype)
         #gset_b = np.ones(ndof, dtype='bool')
@@ -550,16 +554,15 @@ class Solver:
         del x0
 
         #print(Kgg)
-        assert Kggs.shape == Kgg.shape
-        self.Kgg = Kgg
+        self.Kgg = Kgg.toarray()
         K = partition_matrix(Kgg, [['a', aset], ['s', sset], ['0', set0]])
         Kaa = K['aa']
         Kss = K['ss']
         #Kas = K['as']
         Ksa = K['sa']
-        Ks = partition_matrix(Kggs, [['a', aset], ['s', sset], ['0', set0]])
-        Kaas = Ks['aa']
-        assert Kaa.shape == Kaas.shape
+        #Ks = partition_matrix(Kggs, [['a', aset], ['s', sset], ['0', set0]])
+        #Kaas = Ks['aa']
+        #assert Kaa.shape == Kaas.shape
 
         self.Kaa = Kaa
 
@@ -590,7 +593,7 @@ class Solver:
 
         Fg_oload = Fg.copy()
         if is_aset:
-            xa_, ipositive, inegative = solve(Kaa, Kaas, Fa_solve, aset, log, idtype=idtype)
+            xa_, ipositive, inegative = solve(Kaa, Fa_solve, aset, log, idtype=idtype)
             Fa_ = Fa[ipositive]
 
             log.info(f'aset_ = {ipositive}')
@@ -822,13 +825,12 @@ class Solver:
         dof_map, ps = _get_dof_map(model)
         node_gridtype = _get_node_gridtype(model, idtype=idtype)
         ngrid, ndof_per_grid, ndof = get_ndof(self.model, subcase)
-        Kbb, Kbbs = build_Kbb(model, dof_map, ndof)
+        Kbb = build_Kbb(model, dof_map, ndof, fdtype=fdtype)
 
         Mbb = build_Mbb(model, subcase, dof_map, ndof, fdtype=fdtype)
 
         Kgg = Kbb_to_Kgg(model, Kbb, ngrid, ndof_per_grid)
         Mgg = Kbb_to_Kgg(model, Mbb, ngrid, ndof_per_grid)
-        Kggs = Kbb_to_Kgg(model, Kbbs, ngrid, ndof_per_grid)
         del Kbb, Mbb
 
         gset = np.arange(ndof, dtype=idtype)
@@ -850,11 +852,9 @@ class Solver:
         #Kss = K['ss']
         #Kas = K['as']
         #Ksa = K['sa']
-        Ks = partition_matrix(Kggs, [['a', aset], ['s', sset]])
-        Kaas = Ks['aa']
 
-            #[Kaa]{xa} + [Kas]{xs} = {Fa}
-            #[Ksa]{xa} + [Kss]{xs} = {Fs}
+        #[Kaa]{xa} + [Kas]{xs} = {Fa}
+        #[Ksa]{xa} + [Kss]{xs} = {Fs}
 
         #{xa} = [Kaa]^-1 * ({Fa} - [Kas]{xs})
         #{Fs} = [Ksa]{xa} + [Kss]{xs}
@@ -865,7 +865,6 @@ class Solver:
         #print(Kss)
         #Maa_, ipositive, inegative, unused_sz_set = remove_rows(Maa, aset)
         Kaa_, ipositive, unused_inegative, unused_sz_set = remove_rows(Kaa, aset)
-        Kaas_, ipositive, unused_inegative, unused_sz_set = remove_rows(Kaas, aset)
         Maa_ = Maa[ipositive, :][:, ipositive]
         #Fs = np.zeros(ndof, dtype=fdtype)
         #print(f'Fg = {Fg}')
@@ -881,7 +880,16 @@ class Solver:
         #print(f'Kaa_:\n{Kaa_}')
         #print(f'Fa_: {Fa_}')
         #na = Kaa_.shape[0]
-        eigenvalues, xa_ = sp.linalg.eigh(Kaa_, Maa_)
+        ndof_ = Kaa_.shape[0]
+        neigenvalues = 10
+        if ndof_ < neigenvalues:
+            eigenvalues, xa_ = sp.linalg.eigh(Kaa_.toarray(), Maa_)
+        else:
+            #If M is specified, solves ``A * x[i] = w[i] * M * x[i]``
+            eigenvalues, xa_ = sp.sparse.linalg.eigsh(
+                Kaa_, k=neigenvalues, M=Maa_,
+                sigma=None, which='LM', v0=None, ncv=None, maxiter=None, tol=0,
+                return_eigenvectors=True, Minv=None, OPinv=None, mode='normal')
         nmodes = len(eigenvalues)
         model.log.debug(f'eigenvalues = {eigenvalues}')
         #print(f'xa_ = {xa_} {xa_.shape}')
@@ -1516,12 +1524,10 @@ def write_oload(Fb: NDArrayNfloat,
     page_num = oload.write_f06(f06_file, page_stamp, page_num)
     return page_num + 1
 
-def solve(Kaa, Kaas, Fa_solve, aset, log, idtype='int32'):
+def solve(Kaa, Fa_solve, aset, log, idtype='int32'):
     """solves [K]{u} = {F}"""
     log.info("starting solve")
-    Kaas_, ipositive, inegative, unused_sz_set = remove_rows(Kaas, aset, idtype=idtype)
     Kaa_, ipositive, inegative, unused_sz_set = remove_rows(Kaa, aset, idtype=idtype)
-    assert Kaas_.shape == Kaa_.shape
 
     #if np.linalg.det(Kaa) == 0.:
         #log.error('singular Kaa')
@@ -1546,17 +1552,17 @@ def solve(Kaa, Kaas, Fa_solve, aset, log, idtype='int32'):
     #print(f'Kaa:\n{Kaa}')
     #print(f'Fa: {Fa}')
 
-    log.debug(f'  Kaas_:\n{Kaas_.todense()}')
+    log.debug(f'  Kaas_:\n{Kaa_.toarray()}')
     log.debug(f'  Kaa_:\n{Kaa_}')
     log.debug(f'  Fa_: {Fa_}')
-    xa_ = np.linalg.solve(Kaa_, Fa_)
-    xas_ = sci_sparse.linalg.spsolve(Kaas_, Fa_)
-    #xas_ = np.linalg.solve(Kaas_.todense(), Fa_)
+    xa_ = np.linalg.solve(Kaa_.toarray(), Fa_)
+    xas_ = sci_sparse.linalg.spsolve(Kaa_, Fa_)
+    #xas_ = np.linalg.solve(Kaas_.toarray(), Fa_)
     sparse_error = np.linalg.norm(xa_ - xas_)
     if sparse_error > 1e-12:
         log.warning(f'  sparse_error = {sparse_error}')
     log.info("finished solve")
-    return xa_, ipositive, inegative
+    return xas_, ipositive, inegative
 
 def build_Mbb(model: BDF,
               subcase: Subcase,

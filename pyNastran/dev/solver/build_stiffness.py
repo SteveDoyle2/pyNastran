@@ -20,8 +20,7 @@ if TYPE_CHECKING:  # pragma: no cover
 def build_Kbb(model: BDF, dof_map: DOF_MAP, ndof: int,
               idtype: str='int32', fdtype: str='float32') -> Tuple[NDArrayNNfloat, Any]:
     """[K] = d{P}/dx"""
-    Kbb = np.zeros((ndof, ndof), dtype=fdtype)
-    Kbbs = sci_sparse.dok_matrix((ndof, ndof), dtype=fdtype)
+    Kbb = sci_sparse.dok_matrix((ndof, ndof), dtype=fdtype)
     #print(dof_map)
 
     #_get_loadid_ndof(model, subcase_id)
@@ -31,30 +30,26 @@ def build_Kbb(model: BDF, dof_map: DOF_MAP, ndof: int,
     del xyz_cp, nid_cp_cd
 
     nelements = 0
-    nelements += _build_kbb_celas1(model, Kbb, Kbbs, dof_map)
-    nelements += _build_kbb_celas2(model, Kbb, Kbbs, dof_map)
-    nelements += _build_kbb_celas3(model, Kbb, Kbbs, dof_map)
-    nelements += _build_kbb_celas4(model, Kbb, Kbbs, dof_map)
-    nelements += _build_kbb_conrod(model, Kbb, Kbbs, dof_map)
-    nelements += _build_kbb_crod(model, Kbb, Kbbs, dof_map)
-    nelements += _build_kbb_ctube(model, Kbb, Kbbs, dof_map)
-    nelements += _build_kbb_cbar(model, Kbb, Kbbs, dof_map)
-    nelements += _build_kbb_cbeam(model, Kbb, Kbbs, dof_map,
+    nelements += _build_kbb_celas1(model, Kbb, dof_map)
+    nelements += _build_kbb_celas2(model, Kbb, dof_map)
+    nelements += _build_kbb_celas3(model, Kbb, dof_map)
+    nelements += _build_kbb_celas4(model, Kbb, dof_map)
+    nelements += _build_kbb_conrod(model, Kbb, dof_map)
+    nelements += _build_kbb_crod(model, Kbb, dof_map)
+    nelements += _build_kbb_ctube(model, Kbb, dof_map)
+    nelements += _build_kbb_cbar(model, Kbb, dof_map)
+    nelements += _build_kbb_cbeam(model, Kbb, dof_map,
                                   all_nids, xyz_cid0, idtype='int32', fdtype='float64')
-    nelements += build_kbb_cquad4(model, Kbb, Kbbs, dof_map,
+    nelements += build_kbb_cquad4(model, Kbb, dof_map,
                                   all_nids, xyz_cid0, idtype='int32', fdtype='float64')
-    nelements += build_kbb_cquad8(model, Kbb, Kbbs, dof_map,
+    nelements += build_kbb_cquad8(model, Kbb, dof_map,
                                   all_nids, xyz_cid0, idtype='int32', fdtype='float64')
     assert nelements > 0, nelements
-    Kbbs2 = Kbbs.tocsc()
-    Kbb2 = Kbbs2.toarray()
-    error = np.linalg.norm(Kbb - Kbb2)
-    if error > 1e-12:
-        model.log.warning(f'error = {error}')
-    return Kbb, Kbbs2
+    Kbb2 = Kbb.tocsc()
+    return Kbb2
 
 
-def _build_kbb_celas1(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
+def _build_kbb_celas1(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
     """fill the CELAS1 Kbb matrix"""
     eids = model._type_to_id_map['CELAS1']
     for eid in eids:
@@ -62,10 +57,10 @@ def _build_kbb_celas1(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
         ki = elem.K()
         #print(elem, ki)
         #print(elem.get_stats())
-        _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki)
+        _build_kbbi_celas12(Kbb, dof_map, elem, ki)
     return len(eids)
 
-def _build_kbb_celas2(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> int:
+def _build_kbb_celas2(model: BDF, Kbb, dof_map: DOF_MAP) -> int:
     """fill the CELAS2 Kbb matrix"""
     eids = model._type_to_id_map['CELAS2']
     #celas3s = model._type_to_id_map['CELAS3']
@@ -75,10 +70,10 @@ def _build_kbb_celas2(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> int:
         ki = elem.K()
         #print(elem, ki)
         #print(elem.get_stats())
-        _build_kbbi_celas12(Kbb, Kbbs, dof_map, elem, ki)
+        _build_kbbi_celas12(Kbb, dof_map, elem, ki)
     return len(eids)
 
-def _build_kbb_celas3(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
+def _build_kbb_celas3(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
     """fill the CELAS3 Kbb matrix"""
     eids = model._type_to_id_map['CELAS3']
     for eid in eids:
@@ -86,10 +81,10 @@ def _build_kbb_celas3(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
         ki = elem.K()
         #print(elem, ki)
         #print(elem.get_stats())
-        _build_kbbi_celas34(Kbb, Kbbs, dof_map, elem, ki)
+        _build_kbbi_celas34(Kbb, dof_map, elem, ki)
     return len(eids)
 
-def _build_kbb_celas4(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
+def _build_kbb_celas4(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
     """fill the CELAS4 Kbb matrix"""
     eids = model._type_to_id_map['CELAS4']
     for eid in eids:
@@ -97,10 +92,10 @@ def _build_kbb_celas4(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
         ki = elem.K()
         #print(elem, ki)
         #print(elem.get_stats())
-        _build_kbbi_celas34(Kbb, Kbbs, dof_map, elem, ki)
+        _build_kbbi_celas34(Kbb, dof_map, elem, ki)
     return len(eids)
 
-def _build_kbbi_celas12(Kbb: NDArrayNNfloat, Kbbs, dof_map: DOF_MAP,
+def _build_kbbi_celas12(Kbb, dof_map: DOF_MAP,
                         elem: Union[CELAS1, CELAS2], ki: float) -> None:
     """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes
@@ -116,12 +111,11 @@ def _build_kbbi_celas12(Kbb: NDArrayNNfloat, Kbbs, dof_map: DOF_MAP,
     for ib1, ie1 in ibe:
         for ib2, ie2 in ibe:
             Kbb[ib1, ib2] += k[ie1, ie2]
-            Kbbs[ib1, ib2] += k[ie1, ie2]
     #Kbb[j, i] += ki
     #Kbb[i, j] += ki
     #del i, j, ki, nid1, nid2, c1, c2
 
-def _build_kbbi_celas34(Kbb: NDArrayNNfloat, Kbbs, dof_map: DOF_MAP,
+def _build_kbbi_celas34(Kbb, dof_map: DOF_MAP,
                         elem: Union[CELAS1, CELAS2], ki: float) -> None:
     """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes
@@ -137,12 +131,11 @@ def _build_kbbi_celas34(Kbb: NDArrayNNfloat, Kbbs, dof_map: DOF_MAP,
     for ib1, ie1 in ibe:
         for ib2, ie2 in ibe:
             Kbb[ib1, ib2] += k[ie1, ie2]
-            Kbbs[ib1, ib2] += k[ie1, ie2]
     #Kbb[j, i] += ki
     #Kbb[i, j] += ki
     #del i, j, ki, nid1, nid2, c1, c2
 
-def _build_kbb_cbar(model, Kbb, Kbbs, dof_map: DOF_MAP, fdtype: str='float64') -> int:
+def _build_kbb_cbar(model, Kbb, dof_map: DOF_MAP, fdtype: str='float64') -> int:
     """fill the CBAR Kbb matrix using an Euler-Bernoulli beam"""
     eids = model._type_to_id_map['CBAR']
     nelements = len(eids)
@@ -210,40 +203,39 @@ def _build_kbb_cbar(model, Kbb, Kbbs, dof_map: DOF_MAP, fdtype: str='float64') -
             for unused_dof2, i2 in zip(dofs, n_ijv):
                 ki = K[i1, i2]
                 if abs(ki) > 0.:
-                    Kbb[i1, i2] = ki
-                    Kbbs[i1, i2] = ki
+                    Kbb[i1, i2] += ki
     return nelements
 
-def _build_kbb_crod(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
+def _build_kbb_crod(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
     """fill the CROD Kbb matrix"""
     eids = model._type_to_id_map['CROD']
     for eid in eids:
         elem = model.elements[eid]
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
-        _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
+        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
     return len(eids)
 
-def _build_kbb_ctube(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> None:
+def _build_kbb_ctube(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
     """fill the CTUBE Kbb matrix"""
     ctubes = model._type_to_id_map['CTUBE']
     for eid in ctubes:
         elem = model.elements[eid]
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
-        _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
+        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
     return len(ctubes)
 
-def _build_kbb_conrod(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP) -> int:
+def _build_kbb_conrod(model: BDF, Kbb, dof_map: DOF_MAP) -> int:
     """fill the CONROD Kbb matrix"""
     eids = model._type_to_id_map['CONROD']
     for eid in eids:
         elem = model.elements[eid]
         mat = elem.mid_ref
-        _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map, elem, mat)
+        _build_kbbi_conrod_crod(Kbb, dof_map, elem, mat)
     return len(eids)
 
-def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map: DOF_MAP, elem, mat, fdtype='float64') -> None:
+def _build_kbbi_conrod_crod(Kbb, dof_map: DOF_MAP, elem, mat, fdtype='float64') -> None:
     """fill the ith rod Kbb matrix"""
     nid1, nid2 = elem.nodes
     #mat = elem.mid_ref
@@ -332,13 +324,12 @@ def _build_kbbi_conrod_crod(Kbb, Kbbs, dof_map: DOF_MAP, elem, mat, fdtype='floa
             ki = K2[dof1, dof2]
             if abs(ki) > 0.:
                 #print(nij1, nij2, f'({i1}, {i2});', (dof1, dof2), ki)
-                Kbb[i1, i2] = ki
-                Kbbs[i1, i2] = ki
+                Kbb[i1, i2] += ki
         #print(K2)
     #print(Kbb)
     return
 
-def _build_kbb_cbeam(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP,
+def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
                      all_nids, xyz_cid0, idtype='int32', fdtype='float64') -> int:
     """TODO: Timoshenko beam, warping, I12"""
     str(all_nids)
@@ -390,8 +381,7 @@ def _build_kbb_cbeam(model: BDF, Kbb, Kbbs, dof_map: DOF_MAP,
             for unused_dof2, i2 in zip(dofs, n_ijv):
                 ki = K[i1, i2]
                 if abs(ki) > 0.:
-                    Kbb[i1, i2] = ki
-                    Kbbs[i1, i2] = ki
+                    Kbb[i1, i2] += ki
     return nelements
 
 def _beami_stiffness(prop: Union[PBAR, PBARL, PBEAM, PBEAML],
