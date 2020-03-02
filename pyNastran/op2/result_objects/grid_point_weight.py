@@ -394,8 +394,6 @@ class GridPointWeight:
         page_num : int
             the new page number
         """
-        if self.reference_point is None:
-            return page_num
         msg = ['                           O U T P U T   F R O M   G R I D   P O I N T   W E I G H T   G E N E R A T O R']
         msg.append('0                                                     REFERENCE POINT =        %i' % self.reference_point)
 

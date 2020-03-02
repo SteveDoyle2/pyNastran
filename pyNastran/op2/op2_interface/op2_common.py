@@ -1375,8 +1375,8 @@ class OP2Common(Op2Codes, F06Writer):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
-            floats =np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
-            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+            floats =np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 14).copy()
+            ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 14)
 
             self._set_sort2_time(obj, self._analysis_code_fmt, ints, floats)
             obj.node_gridtype[itime, 0] = node_id
@@ -1434,8 +1434,8 @@ class OP2Common(Op2Codes, F06Writer):
             itotal = obj.itotal
             itotal2 = itotal + nnodes
 
-            floats = np.frombuffer(data, dtype=self.fdtype).reshape(nnodes, 14).copy()
-            ints = np.frombuffer(data, dtype=self.idtype).reshape(nnodes, 14)
+            floats = np.frombuffer(data, dtype=self.fdtype8).reshape(nnodes, 14).copy()
+            ints = np.frombuffer(data, dtype=self.idtype8).reshape(nnodes, 14)
 
             self._set_sort2_time(obj, self._analysis_code_fmt, ints, floats)
             obj.node_gridtype[itime, 0] = node_id
@@ -1448,7 +1448,8 @@ class OP2Common(Op2Codes, F06Writer):
         else:
             n = 0
             #ntotal = 56  # 14 * 4
-            s = Struct(self._endian + self._analysis_code_fmt + b'i12f')
+            fmt = mapfmt(self._endian + self._analysis_code_fmt + b'i12f', self.size)
+            s = Struct(fmt)
             assert self.obj is not None
             assert nnodes > 0
             #assert ndata % ntotal == 0

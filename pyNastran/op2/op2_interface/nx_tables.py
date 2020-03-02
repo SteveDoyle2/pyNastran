@@ -400,6 +400,9 @@ NX_GEOM_TABLES = [
     b'R1TABRG',
     b'ERRORN',
     b'BGPDTVU', # basic grid point defintion table for a superelement and related to geometry with view-grids added
+
+    # ???
+    b'GEOM1ATV', b'GEOM2ATV', b'EPTATV', b'PTMIC', b'ATVMAP',
 ]  # type: List[bytes]
 
 NX_MATRIX_TABLES = [
@@ -489,6 +492,7 @@ NX_EXTRA_TABLES = [
 
 NX_RESULT_TABLES = [
     # ???
+    b'ATV',
     b'OSTR1THC',
     b'OSTR1PLC',
     b'OSTR1CRC',

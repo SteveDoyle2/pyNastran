@@ -3,8 +3,10 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from pyNastran.dev.solver.utils import lambda1d, get_ieids_eids
+from pyNastran.dev.solver.build_stiffness import ke_cbar
 from pyNastran.op2.op2_interface.hdf5_interface import (
     RealSpringStrainArray, RealRodStrainArray,
+    RealBarStrainArray,
 )
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -57,6 +59,13 @@ def recover_strain_101(f06_file, op2,
         'CTUBE', fdtype=fdtype,
         title=title, subtitle=subtitle, label=label,
         page_num=page_num, page_stamp=page_stamp)
+    nelements += _recover_strain_bar(
+        f06_file, op2, model, dof_map, isubcase, xb, eid_str,
+        'CBAR', fdtype=fdtype,
+        title=title, subtitle=subtitle, label=label,
+        page_num=page_num, page_stamp=page_stamp)
+
+
     #assert nelements > 0, nelements
     if nelements == 0:
         model.log.warning(f'no strain output...{model.card_count}')
@@ -281,3 +290,111 @@ def _recover_straini_ctube(xb, dof_map, elem, prop):
     torsional_strain = du_torsion / L
 
     return axial_strain, np.nan, torsional_strain, np.nan
+
+def _recover_strain_bar(f06_file, op2,
+                        model: BDF, dof_map, isubcase, xb, eids_str,
+                        element_name, fdtype='float32',
+                        title: str='', subtitle: str='', label: str='',
+                        page_num: int=1, page_stamp='PAGE %s') -> None:
+    """recovers static rod strain"""
+    neids, irod, eids, strains = get_ieids_eids(model, element_name, eids_str,
+                                                ncols=4, fdtype=fdtype)
+    if not neids:
+        return neids
+
+    if element_name == 'CBAR':
+        for ieid, eid in zip(irod, eids):
+            elem = model.elements[eid]
+            #[s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+            # s1b, s2b, s3b, s4b,        sminb, sminb, MS_compression] - 15
+            strains[ieid, :] = _recover_straini_cbar(xb, dof_map, elem, elem.pid_ref)
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
+
+    data = strains.reshape(1, *strains.shape)
+    table_name = 'OSTR1'
+
+    strain_obj = RealBarStrainArray.add_static_case(
+        table_name, element_name, eids, data, isubcase, is_stress=False,
+        is_sort1=True, is_random=False, is_msc=True,
+        random_code=0, title=title, subtitle=subtitle, label=label)
+
+    if element_name == 'CBAR':
+        op2.cbar_strain[isubcase] = strain_obj
+    else:  # pragma: no cover
+        raise NotImplementedError(element_name)
+
+    strain_obj.write_f06(f06_file, header=None, page_stamp=page_stamp,
+                         page_num=page_num, is_mag_phase=False, is_sort1=True)
+    return neids
+
+def _recover_straini_cbar(model: BDF, xb, dof_map, elem, prop):
+    """get the static bar strain"""
+    nid1, nid2 = elem.nodes
+
+    # axial
+    i1 = dof_map[(nid1, 1)]
+    j1 = dof_map[(nid2, 1)]
+
+    q_all = np.hstack([
+        xb[i1:i1+6],
+        xb[j1:j1+6],
+    ])
+    #q_axial = np.array([
+        #xb[i11], xb[i12], xb[i13],
+        #xb[i21], xb[i22], xb[i23],
+    #])
+    #q_torsion = np.array([
+        #xb[i14], xb[i15], xb[i16],
+        #xb[i24], xb[i25], xb[i26]
+    #])
+    #{F} = [K]{u}
+
+    elem = model.elements[eid]  # type: CBAR
+    nid1, nid2 = elem.nodes
+    is_passed, K = ke_cbar(model, elem, fdtype=fdtype)
+    assert is_passed
+
+    pid_ref = elem.pid_ref
+    mat = pid_ref.mid_ref
+
+    #is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+    #T = np.vstack([ihat, jhat, khat])
+    #z = np.zeros((3, 3), dtype='float64')
+    prop = elem.pid_ref
+    #mat = prop.mid_ref
+    I1 = prop.I11()
+    I2 = prop.I22()
+    A = prop.A()
+    J = prop.J()
+    unused_I12 = prop.I12()
+
+    F = K @ q_all
+    (Fx1, Fy1, Fz1, Mx1, My1, Mz1,
+    Fx2, Fy2, Fz2, Mx2, My2, Mz2) = F
+    s_axial = Fx1 / A
+    s_torsion = Mx1 / J
+
+    xyz1 = elem.nodes_ref[0].get_position()
+    xyz2 = elem.nodes_ref[1].get_position()
+    #dxyz12 = xyz1 - xyz2
+    #Lambda = lambda1d(dxyz12, debug=False)
+
+    #u_axial = Lambda @ q_axial
+    #u_torsion = Lambda @ q_torsion
+    #du_axial = u_axial[0] - u_axial[1]
+    #du_torsion = u_torsion[0] - u_torsion[1]
+
+    xyz1 = elem.nodes_ref[0].get_position()
+    xyz2 = elem.nodes_ref[1].get_position()
+    dxyz12 = xyz1 - xyz2
+    L = np.linalg.norm(dxyz12)
+
+    axial = du_axial / L
+
+    MS_tension = np.nan
+    MS_compression = np.nan
+    out = (
+        s1a, s2a, s3a, s4a, axial, smaxa, smina, MS_tension,
+        s1b, s2b, s3b, s4b,        sminb, sminb, MS_compression) # 15
+    return out

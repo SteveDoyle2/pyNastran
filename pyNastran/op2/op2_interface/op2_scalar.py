@@ -202,7 +202,7 @@ MATRIX_TABLES = NX_MATRIX_TABLES + MSC_MATRIX_TABLES + AUTODESK_MATRIX_TABLES + 
 
 # TODO: these are weird...
 #   RPOSTS1, MAXRATI, RESCOMP, PDRMSG
-INT_PARAMS_1 = [
+INT_PARAMS_1 = {
     b'POST', b'OPPHIPA', b'OPPHIPB', b'GRDPNT', b'RPOSTS1', b'BAILOUT',
     b'COUPMASS', b'CURV', b'INREL', b'MAXRATI', b'OG',
     b'S1AM', b'S1M', b'DDRMM', b'MAXIT', b'PLTMSG', b'LGDISP', b'NLDISP',
@@ -243,8 +243,51 @@ INT_PARAMS_1 = [
 
     b'DOBUCKL', b'DOF123', b'DOMODES', b'DOSTATIC', b'DOTRIP', b'DRESP', b'DSGNOPTX',
     b'DSNOKD', b'DYNAMICX', b'EBULK', b'EIGNFREQ', b'ELOOPID',
-]
-FLOAT_PARAMS_1 = [
+    b'FDEPCB', b'FLUIDMP', b'FLUIDSE', b'FMODE', b'FREQDEP', b'FREQDEPS',
+    b'GENEL', b'GEOMFLAG', b'GEOMU', b'GKCHNG', b'GLUSET', b'GMCONV', b'GNSTART',
+    b'GOODVER', b'GOPH2', b'GRIDFMP', b'GRIDMP', b'HNNLK', b'ICTASET', b'IFPCHNG',
+    b'INEP', b'INP2FMT', b'INP4FMT', b'INREL0', b'ITAPE', b'ITODENS', b'ITOITCNT',
+    b'ITOMXITR', b'ITONDVAR', b'ITONGHBR', b'ITONOBJF', b'ITOOPITR', b'ITOPALG',
+    b'ITOPALLR', b'ITOPCONV', b'ITOPDIAG', b'ITOPOPT', b'ITORMAS', b'ITOSIMP',
+    b'ITOSIMP1', b'ITOSIMP2', b'IUNIT', b'K4CHNG', b'KCHNG', b'KREDX', b'LANGLES',
+    b'LBEARING', b'LDSTI1', b'LMDYN', b'LMODESFL', b'LMSTAT', b'LNUMROT',
+    b'LOADGENX', b'LOADREDX', b'LOADU', b'LODCHG', b'LROTOR', b'LTOPOPT',
+    b'LUSET', b'LUSETD', b'LUSETS', b'LUSETX', b'MATGENX',
+    b'MAXITER', b'MAXRPM', b'MAXSEIDX', b'MBDIFB', b'MBDIFO', b'MBDLMN',
+    b'MCHNG', b'MDOF', b'MDTRKFLG', b'MELPG', b'MGRID', b'MLTIMSTR', b'MODESX',
+    b'MODETRAK', b'MPIFRHD', b'MPNFLG', b'MREDX', b'MSCOP2', b'NACEXTRA',
+    b'NCNOFFST', b'NDISOFP', b'NDVAR', b'NEWSET', b'NGELS', b'NJ', b'NK',
+    b'NLBEAR', b'NLCBFOR', b'NMLOOP', b'NMSOL', b'NOA', b'NOASET', b'NOCOMP',
+    b'NOFASET', b'NOFGSET', b'NOGENL', b'NOGEOM3', b'NOK4GG', b'NOK4JJ',
+    b'NOKGGX', b'NOKJJX', b'NOLSET', b'NOMGG', b'NOMGGX', b'NOMJJX', b'NOQSET',
+    b'NORADMAT', b'NORBM', b'NOSE', b'NOSIMP', b'NOSSET', b'NOUE', b'NOUP',
+    b'NOYSET', b'NOZSET', b'NQSET', b'NR1OFFST', b'NR2OFFST', b'NR3OFFST',
+    b'NROTORS', b'NSE', b'NSKIP0', b'NSOL', b'NSOLF', b'NUMPAN', b'NX',
+    b'O2E', b'OADPMAX', b'OALTSHP', b'OBJIN', b'ODESMAX', b'ODSFLG', b'OMAXR',
+    b'OP2SE', b'OP4FMT', b'OP4SE', b'OPGEOM', b'OPTIFCS',
+    b'OPTII231', b'OPTII408', b'OPTII411', b'OPTII420', b'OPTIIDMP', b'OPTISNS',
+    b'OTAPE', b'OUNIT1', b'OUNIT2', b'OUNIT2R', b'OUTFMP', b'OUTSMP', b'PANELMP',
+    b'PBCONT', b'PCHNG', b'PITIME', b'PKLLR', b'POSTU', b'PRTMAT', b'PSLGDVX',
+    b'PSLOAD', b'PSORT', b'PVALINIT', b'PVALLAST', b'PVALLIST', b'PYCHNG',
+    b'REFOPT', b'RESLTOPT', b'RESPSENX', b'RGBEAMA', b'RGBEAME', b'RGLCRIT',
+    b'RGSPRGK', b'RMXPANEL', b'ROTPRES', b'ROTPRT', b'RPDFRD', b'RVCHG', b'RVCHG1',
+    b'RVCHG2', b'S1AG', b'SAVERSTL', b'SDSRFLAG', b'SEBULK',
+    b'SEDMP231', b'SEDMP265', b'SEDMP408', b'SEDMP411', b'SEDMP445', b'SEDMPFLG',
+    b'SELDPRS', b'SKIPSE', b'SNDSEIDX', b'SOLFINAL',
+    b'SOLNLX', b'SOLNX', b'SOLVSUB', b'SPLINE', b'STOP0', b'STRUCTMP', b'SWEXIST',
+    b'TORSIN', b'UACCEL', b'UNIQIDS', b'VOL', b'VOLS', b'VUELJUMP', b'VUENEXT',
+    b'VUGJUMP', b'VUGNEXT', b'WGT', b'WGTS', b'WRTMAT',
+    b'XSMALLQ',
+    b'XNTIPS', b'XRESLTOP', b'XSEMEDIA', b'XSEUNIT', b'XTIPSCOL',
+    b'XUPFAC', b'XYUNIT', b'XZCOLLCT', b'Z2XSING',
+    b'ZUZRI1', b'ZUZRI2', b'ZUZRI3', b'ZUZRI4', b'ZUZRI5', b'ZUZRI6', b'ZUZRI7', b'ZUZRI8', b'ZUZRI9', b'ZUZRI10',
+    b'ZUZRL1', b'ZUZRL2', b'ZUZRL3', b'ZUZRL4', b'ZUZRL5', b'ZUZRL6', b'ZUZRL7', b'ZUZRL8', b'ZUZRL9', b'ZUZRL10',
+    b'ZUZRR1', b'ZUZRR2', b'ZUZRR3', b'ZUZRR4', b'ZUZRR5', b'ZUZRR6', b'ZUZRR7', b'ZUZRR8', b'ZUZRR9', b'ZUZRR10',
+
+    # no
+    #b'SEPS', b'SMALLQ', b'FEPS',
+}
+FLOAT_PARAMS_1 = {
     b'K6ROT', b'WTMASS', b'SNORM', b'PATVER', b'MAXRATIO', b'EPSHT',
     b'SIGMA', b'TABS', b'AUNITS', b'BOLTFACT', b'LMSCAL',
     'DSZERO', b'G', b'GFL', b'LFREQ', b'HFREQ', b'ADPCON',
@@ -254,14 +297,18 @@ FLOAT_PARAMS_1 = [
     b'LAMLIM', b'BIGER', b'BIGER1', b'BIGER2', b'CLOSE',
     b'EPSBIG', b'EPSMALC', b'EPSMALU', b'HIRES', b'KDIAG', b'MACH', b'VREF',
     b'STIME', b'TESTSE', b'LFREQFL', b'Q', b'ADPCONS', b'AFNORM', b'AFZERO',
+    b'GE', b'MASSDENS',
 
     # should this be FLOAT_PARAMS_1???
-    b'EPPRT',
+    b'EPPRT', b'HFREQFL',
 
     # not defined
     b'PRPA', b'PRPHIVZ', b'PRPJ', b'PRRULV', b'RMAX', b'ADJFRQ', b'ARF',
     b'ARS', # b'BSHDAMP',
     b'EPSRC',
+
+    # floats - not verified
+    b'THRSHOLD', b'SEPS', b'SMALLQ', b'FEPS',
 
     # or integer (not string)
     b'BSHDMP',
@@ -272,21 +319,27 @@ FLOAT_PARAMS_1 = [
     b'DBCPATH',
     b'DFREQ', b'DFRSPCF', b'DSTSPCF', b'DTRSPCF',
     b'DUCTFMAX',
-]
-FLOAT_PARAMS_2 = [
+    b'EXTBEMI', b'EXTBEMO', b'EXTDONE', b'EXTDRUNT', b'EXTUNIT',
+    b'FZERO', b'LMFACT', b'MPCZERO',
+    b'RESVPGF', b'RESVRAT', b'SWPANGLE',  b'UPFAC', b'UZROLD',
+}
+FLOAT_PARAMS_2 = {
     b'BETA', b'CB1', b'CB2', b'CK1', b'CK2', b'CK3', b'CK41', b'CK42',
     b'CM1', b'CM2',
     b'G2', b'G4', b'G5', b'G6', b'G7', b'G8', b'G9', b'G10', b'G12', b'G13',
-    b'ALPHA1', b'ALPHA2', b'APPF',
+    b'ALPHA1', b'ALPHA2',
     b'CA1', b'CA2',
     b'CP1', b'CP2',
 
     # should this be FLOAT_PARAMS_1???
     #b'EPPRT',
-]
-INT_PARAMS_2 = [b'APPI',]
+}
+INT_PARAMS_2 = {
+    b'LOADFACS',
+    b'ZUZRC1', b'ZUZRC2', b'ZUZRC3', b'ZUZRC4', b'ZUZRC5', b'ZUZRC6', b'ZUZRC7', b'ZUZRC8', b'ZUZRC9', b'ZUZRC10',
+}
 DOUBLE_PARAMS_1 = [] # b'Q'
-STR_PARAMS_1 = [
+STR_PARAMS_1 = {
     b'POSTEXT', b'PRTMAXIM', b'AUTOSPC', b'OGEOM', b'PRGPST',
     b'RESVEC', b'RESVINER', b'ALTRED', b'OGPS', b'OIBULK', b'OMACHPR',
     b'UNITSYS', b'F56', b'OUGCORD', b'OGEM', b'EXTSEOUT',
@@ -313,7 +366,21 @@ STR_PARAMS_1 = [
     b'DBDNR', b'DBDNR1', b'DBDNX', b'DBEXT', b'DBGOA', b'DBMAP',
     b'DBOFP2X', b'DBOFPX', b'DBRCVX', b'DBSCRR', b'DBUPOPT', b'DBUPR',
     b'DBUPX', b'DBXSEDR', b'DBXSEDRR', b'DBZUZR', b'DSOR', b'DSOX',
-    b'DVGRDN', b'DYNSPCF', b'EQVSCR',
+    b'DVGRDN', b'DYNSPCF', b'EQVSCR', b'EXTDROUT',
+    b'FLEXINCR', b'FTL', b'GDAMPF', b'GEOCENT', b'IFPSCR', b'IFPSOPT',
+    b'IFPX', b'IFPXOPT', b'MASTER', b'MODEOUT',
+    b'NXVER', b'OAPP', b'OCMP', b'OEE', b'OEEX', b'OEF', b'OEFX', b'OEPT',
+    b'OES', b'OESE', b'OESX', b'OGPF', b'OMPT', b'OPG', b'OPTIM',  b'OQG',
+    b'OUG', b'OUMU', b'OUTSCR', b'PANAME', b'QSETREM', b'RESVSE', b'RESVSLI',
+    b'RESVSO', b'RSATT', b'SAVEOFP', b'SAVERST', b'SCRATCH', b'SDRPOPT',
+    b'SECOMB0', b'SELRNG', b'SERST', b'SOFTEXIT', b'SOLAPPI', b'SOLTYPI',
+    b'TDB0', b'TDBX', b'UPDTBSH',
+    b'USETSTR1', b'USETSTR2', b'USETSTR3', b'USETSTR4',
+    b'VMOPTSET', b'VUBEAM', b'VUQUAD4', b'VUTRIA3', b'WRN', b'XAUTOSPT',
+    b'XRESVECA', b'XRESVECO', b'XRESVIRA', b'XRESVIRO',
+    b'ZUZRCL1', b'ZUZRCL2', b'ZUZRCL3', b'ZUZRCL4', b'ZUZRCL5', b'ZUZRCL6', b'ZUZRCL7', b'ZUZRCL8', b'ZUZRCL9', b'ZUZRCL10',
+    b'ZUZRCH1', b'ZUZRCH2', b'ZUZRCH3', b'ZUZRCH4', b'ZUZRCH5', b'ZUZRCH6', b'ZUZRCH7', b'ZUZRCH8', b'ZUZRCH9', b'ZUZRCH10',
+    b'APPI', b'APPF',
 
     # part of param, checkout
     b'PRTBGPDT', b'PRTCSTM', b'PRTEQXIN', b'PRTGPDT',
@@ -327,7 +394,7 @@ STR_PARAMS_1 = [
     # TODO: add an option for custom PARAMs
     b'ADB', b'AEDB', b'MREDUC', b'OUTDRM', b'OUTFORM', b'REDMETH', b'DEBUG',
     b'AEDBX', b'AERO', b'AUTOSUP0', b'AXIOPT',
-]
+}
 
 class OP2_Scalar(LAMA, ONR, OGPF,
                  OEF, OES, OGS, OPG, OQG, OUG, OGPWG, FortranFormat):
@@ -1236,7 +1303,7 @@ class OP2_Scalar(LAMA, ONR, OGPF,
 
     def _read_pvto_4(self, data, ndata):
         """reads PARAM cards"""
-        if self.read_mode == 1:
+        if self.read_mode == 2:
             return ndata
 
         iloc = self.f.tell()
@@ -1244,10 +1311,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
             ndata2 = self._read_pvto_4_helper(data, ndata)
         except NotImplementedError as e:
             self.log.error(str(e))
+            #raise  # only for testing
             if 'dev' in __version__ and self.IS_TESTING:
                 raise  # only for testing
             self.f.seek(iloc)
             ndata2 = ndata
+        if 'NXVER' in self.params and not self.is_nx:
+            self.set_as_nx()
+            self.log.debug('found PARAM,NXVER -> setting as NX')
         return ndata2
 
     def _read_pvto_4_helper(self, data, ndata: int) -> int:
@@ -1272,11 +1343,19 @@ class OP2_Scalar(LAMA, ONR, OGPF,
         #print('---------------------------')
         #self.show_data(data, types='ifsqL')
         while i < nvalues:
-            #print('---------------------------')
+            #print('-----------------------------------------------------------')
             #print('*i=%s nvalues=%s' % (i, nvalues))
-            word = data[i*xword:(i+2)*xword].rstrip()
-            if self.size == 8:
-                word = reshape_bytes_block(word)
+            istart = i*xword
+            #self.show_data(data[istart:istart+32], types='sqd')
+            #self.show_data(data[istart:istart+64], types='sqd')
+            if self.size == 4:
+                word = data[istart:(i+2)*xword].rstrip()
+            elif self.size == 8:
+                bword = data[istart:(i+2)*xword]
+                word = reshape_bytes_block(bword).rstrip()
+            else:
+                raise RuntimeError(self.size)
+
             #print('word=%r' % word)
             #word = s8.unpack(word)[0]#.decode(self._encoding)
 
@@ -1317,8 +1396,14 @@ class OP2_Scalar(LAMA, ONR, OGPF,
                 value = bvalue.decode('latin1').rstrip()
                 i += 2
             else:
-                self.show_data(data[i*xword+12:i*4+i*4+12], types='ifsdq')
-                self.show_data(data[i*xword+8:(i+4)*4], types='ifsdq')
+                if self.size == 4:
+                    self.show_data(data[i*xword+12:i*4+i*4+12], types='ifs')
+                    self.show_data(data[i*xword+8:(i+4)*4], types='ifs')
+                else:
+                    self.show_data(data[i*xword+24:i*8+i*8+24], types='sdq')
+                    self.show_data(data[i*xword+16:(i+4)*8], types='sdq')
+                    #print(i*xword+24, i*8+i*8+24)
+                    #print(i*xword+16, (i+4)*8)
                 self.log.error('%r' % word)
                 raise NotImplementedError('%r is not a supported PARAM' % word)
 

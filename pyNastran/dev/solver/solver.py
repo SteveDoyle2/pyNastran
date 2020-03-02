@@ -1469,6 +1469,7 @@ def apply_dof_map_to_set(set_map, dof_map: DOF_MAP, idtype: str='int32', use_int
 def xg_to_xb(model, xg: NDArrayNfloat, ngrid: int, ndof_per_grid: int,
              inplace: bool=True) -> NDArrayNfloat:
     assert isinstance(xg, np.ndarray)
+    str(ngrid)
 
     xb = xg
     if not inplace:
@@ -1876,6 +1877,8 @@ def build_Mbb(model: BDF,
     return Mbb
 
 def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
+    str(dof_map)
+    str(ndof)
     z = np.zeros((3, 3), dtype='float64')
     nnodes = len(model.nodes)
     nspoints = len(model.spoints)
@@ -1895,18 +1898,18 @@ def grid_point_weight(model: BDF, Mbb, dof_map: DOF_MAP, ndof: int):
     else:
         dxyz = model.nodes[reference_point].get_position()
 
-    for nid, node in sorted(model.nodes.items()):
+    for unused_nid, node in sorted(model.nodes.items()):
+        #print(f'nid={nid}')
+
+        # TODO: what about otuput coordinate frames; specifically cylindrical and spherical frames?
         xi, yi, zi = node.get_position() - dxyz
         Tr = np.array([
             [0, zi, -yi],
             [-zi, 0, xi],
             [yi, -xi, 0],
         ], dtype='float64')
-        #print(f'nid={nid}')
         cd_ref = node.cd_ref
         Ti = cd_ref.beta()
-        #print(Tr)
-        #print(Ti)
         TiT_Tr = Ti.T @ Tr
         d = np.block([
             [Ti.T, TiT_Tr],

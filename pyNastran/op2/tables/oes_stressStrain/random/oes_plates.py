@@ -161,12 +161,13 @@ class RandomPlateArray(OES_Object):
         #print(f'column_names = {column_names} column_values={column_values}')
 
         #print(self.element_node)
+        # C:\MSC.Software\simcenter_nastran_2019.2\tpl_post2\psdo7026.op2
         self.data_frame = pd.Panel(self.data, items=column_values,
                                    major_axis=self.element_node, minor_axis=headers).to_frame()
         self.data_frame.columns.names = column_names
         self.data_frame.index.names = ['ElementID', 'Item']
-
         return
+
         names = ['ElementID', 'NodeID']
         ipos = np.where(self.element_node[:, 0] > 0)
         element_node = [

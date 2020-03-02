@@ -290,14 +290,25 @@ class OP2Reader:
         itable = -2
         self.read_3_markers([itable, 1, 0])
         marker = self.get_marker1(rewind=True, macro_rewind=False)
-        struct_8s = Struct(self._endian + b'8s')
-        while marker != 0:
-            itable -= 1
-            data = self._read_record()
-            name = struct_8s.unpack(data)[0]
-            self.log.warning(name)
-            self.read_3_markers([itable, 1, 0])
-            marker = self.get_marker1(rewind=True, macro_rewind=False)
+        if self.size == 4:
+            struct_8s = Struct(self._endian + b'8s')
+            while marker != 0:
+                itable -= 1
+                data = self._read_record()
+                name = struct_8s.unpack(data)[0]
+                self.log.warning(name)
+                self.read_3_markers4([itable, 1, 0])
+                marker = self.get_marker1_4(rewind=True, macro_rewind=False)
+        else:
+            struct_16s = Struct(self._endian + b'16s')
+            while marker != 0:
+                itable -= 1
+                data = self._read_record()
+                name = struct_16s.unpack(data)[0]
+                name = reshape_bytes_block(name)
+                self.log.warning(name)
+                self.read_3_markers([itable, 1, 0])
+                marker = self.get_marker1_8(rewind=True, macro_rewind=False)
         self.read_markers([0])
         #b'XSOP2DIR',
         #b'PVT0    '
@@ -1049,22 +1060,40 @@ class OP2Reader:
 
         self.read_3_markers([-2, 1, 0])
         data, ndata = self._read_record_ndata()
-        if ndata == 8:
-            #self.show_data(data, types='ifs', endian=None)
-            name, = Struct(self._endian + b'8s').unpack(data)
-            #print(name, 8)
-        elif ndata == 16:
-            name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
-            #name = name.decode(self._encoding)
-            #print(name, int1, int2, 16)
-        elif ndata == 28:
-            #self.show_data(data)
-            name1, int1, name2, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
-            #print(name1, int1, name2, int2, 28)
+        if self.size == 4:
+            if ndata == 8:
+                #self.show_data(data, types='ifs', endian=None)
+                name, = Struct(self._endian + b'8s').unpack(data)
+                #print(name, 8)
+            elif ndata == 16:
+                name, int1, int2 = Struct(self._endian + b'8s 2i').unpack(data)
+                #name = name.decode(self._encoding)
+                #print(name, int1, int2, 16)
+            elif ndata == 28:
+                #self.show_data(data)
+                name1, int1, name2, int2 = Struct(self._endian + b'8s i 12s i').unpack(data)
+                #print(name1, int1, name2, int2, 28)
+            else:
+                self.show_data(data, types='ifs')
+                raise NotImplementedError(ndata)
+        elif self.size == 8:
+            if ndata == 16:
+                name, = Struct(self._endian + b'16s').unpack(data)
+                name = reshape_bytes_block(name)
+            elif ndata == 32:
+                name, int1, int2 = Struct(self._endian + b'16s 2q').unpack(data)
+                name = reshape_bytes_block(name)
+            elif ndata == 56:
+                self.show_data(data, types='ifsd')
+                name1, int1, name2, int2 = Struct(self._endian + b'16s q 24s q').unpack(data)
+                name1 = reshape_bytes_block(name1)
+                name2 = reshape_bytes_block(name2)
+            else:
+                self.show_data(data, types='ifsdq')
+                raise NotImplementedError(ndata)
         else:
-            #print('???')
-            #self.show_data(data, types='ifsd')
-            aaa
+            self.show_data(data, types='ifsdq')
+            raise NotImplementedError(ndata)
 
         if 1: # old
             #self.show(200)
@@ -1091,7 +1120,7 @@ class OP2Reader:
                         block = self.read_block()
                         nblock = len(block)
                         ndouble = (nblock - 4) // 8
-                        fmt = self._endian + b'i%dd' % (ndouble)
+                        fmt = mapfmt(self._endian + b'i%dd' % (ndouble), self.size)
                         #out = Struct(self._endian + b'i 3d').unpack(block)
                         out = Struct(fmt).unpack(block)
                         #print(out, nblock)
@@ -1125,7 +1154,8 @@ class OP2Reader:
                 elif ndata > 99:
                     pass
                 else:
-                    self.show_data(data)
+                    self.log.warning(f'EXTDB; ndata={ndata}')
+                    self.show_data(data, types=mapfmt_str('if', self.size))
                 marker -= 1
                 #print('--------------------')
             unused_marker_end = self.get_marker1(rewind=False)
@@ -1812,7 +1842,7 @@ class OP2Reader:
                 #if bad:
                     #print(nvalues, bad)
                     #asdf
-                self.show_data(data, types='ifqd')
+                #self.show_data(data, types='ifqd')
                 nrows = (nvalues - 2) // 7
                 #print(nrows)
                 ints = np.frombuffer(data, op2.idtype8).copy()
@@ -2865,20 +2895,38 @@ class OP2Reader:
                                table_name, matrix_num, form, mrows, ncols,
                                tout, nvalues, g))
             raise RuntimeError('form=%s; allowed=%s' % (form, allowed_forms))
-        self.log.debug('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s '
-                       'nvalues=%s g=%s' % (
-                           table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
+        if self.size == 4:
+            self.log.debug('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s '
+                           'nvalues=%s g=%s' % (
+                               table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
+        else:
+            #if tout == 1:
+                #tout = 2
+            self.log.info('name=%r matrix_num=%s form=%s mrows=%s ncols=%s tout=%s '
+                          'nvalues=%s g=%s' % (
+                              table_name, matrix_num, form, mrows, ncols, tout, nvalues, g))
 
         self.read_3_markers([-2, 1, 0])
         data = self._read_record()
-
-        if len(data) == 16:
-            unused_name, ai, bi = unpack(self._endian + b'8s 2i', data)
-            assert ai == 170, ai
-            assert bi == 170, bi
+        if self.size == 4:
+            if len(data) == 16:
+                unused_name, ai, bi = unpack(self._endian + b'8s 2i', data)
+                assert ai == 170, ai
+                assert bi == 170, bi
+            else:
+                self.log.warning('unexpected matrix length=%s' % len(data))
+                #self.log.warning(self.show_data(data, types='if'))
+        elif self.size == 8:
+            if len(data) == 32:
+                unused_name, ai, bi = unpack(self._endian + b'16s 2q', data)
+                # name isn't mapped
+                assert ai == 170, ai
+                assert bi == 170, bi
+            else:
+                self.log.warning('unexpected matrix length=%s' % len(data))
+                #self.log.warning(self.show_data(data, types='ifsqd', endian=None))
         else:
-            self.log.warning('unexpected matrix length=%s' % len(data))
-            self.log.warning(self.show_data(data, types='if'))
+            raise RuntimeError(self.size)
 
         itable = -3
         unused_j = None
@@ -2908,11 +2956,14 @@ class OP2Reader:
                     #-----------
                     data = self.read_block()
                     if self.size == 8:
-                        self.log.warning('skipping matrix')
+                        #self.log.warning('skipping matrix')
                         #self.show_data(data, types='ifqd')
+                        fmt = mapfmt(fmt, self.size)
+                        #self.log.warning(fmt)
                         #print('***itable=%s nvalues=%s fmt=%r' % (itable, nvalues, fmt))
-                        continue
+                        #continue
                     out = unpack(fmt, data)
+                    #print(out)
                     ii = out[0]
                     values = out[1:]
 
@@ -3139,6 +3190,7 @@ class OP2Reader:
             data = self._read_record()
         else:
             self.read_markers([1])
+            #self.show(340, types='ifqd')
             data = self._read_record()
 
         #self.show(36)
@@ -4460,6 +4512,14 @@ class OP2Reader:
             if self.is_debug_file:
                 self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
+        #elif ndata == 32: # 16*2
+            # (name1, name2, 170, 170)
+            #subtable_name, = op2.struct_16s.unpack(data[:16])
+            #assert len(subtable_name) == 16, len(subtable_name)
+            #subtable_name = reshape_bytes_block(subtable_name)
+            #if self.is_debug_file:
+                #self.binary_debug.write('  recordi = [%r]\n'  % subtable_name)
+                #self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
         elif ndata == 56: # 28*2
             subtable_name, month, day, year, zero, one = unpack(self._endian + b'16s5q', data)
             subtable_name = reshape_bytes_block(subtable_name)
@@ -4469,7 +4529,7 @@ class OP2Reader:
                 self.binary_debug.write('  subtable_name=%r\n' % subtable_name)
             self._print_month(month, day, year, zero, one)
         else:
-            self.show_data(data, types='ifs', endian=None)
+            self.show_data(data, types='ifsqd', endian=None)
             raise NotImplementedError(len(data))
         return subtable_name
 
@@ -4834,6 +4894,8 @@ class OP2Reader:
 
         """
         n = len(data)
+        if n > 2000:
+            n = 2000
         nints = n // 4
         ndoubles = n // 8
         strings = None
@@ -4845,14 +4907,14 @@ class OP2Reader:
             endian = self._uendian
             assert endian is not None, endian
 
-        f.write('\nndata = %s:\n' % n)
+        f.write(f'\nndata = {len(data)}:\n')
         for typei in types:
             assert typei in 'sifdq lILQ', f'type={typei!r} is invalid; use sifdq lILQ'
 
         data4 = data[:nints * 4]
         #data8 = data[:ndoubles * 8]
         if 's' in types:
-            strings = unpack('%s%is' % (endian, n), data)
+            strings = unpack('%s%is' % (endian, n), data[:n])
             f.write("  strings = %s\n" % str(strings))
         if 'i' in types:
             ints = unpack('%s%ii' % (endian, nints), data4)
@@ -5502,6 +5564,11 @@ def mapfmt(fmt: bytes, size: int) -> bytes:
     if size == 4:
         return fmt
     return fmt.replace(b'i', b'q').replace(b'f', b'd')
+
+def mapfmt_str(fmt: bytes, size: int) -> bytes:
+    if size == 4:
+        return fmt
+    return fmt.replace('i', 'q').replace('f', 'd')
 
 def update_op2_datacode(op2, data_code_old):
     op2.data_code = data_code_old

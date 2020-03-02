@@ -88,7 +88,10 @@ class FortranFormat:
 
             #n = op2_reader._skip_record()
             #n = table4_parser(datai, 300000)
-            if self.table_name in [b'R1TABRG', b'ONRGY1']:
+            if self.table_name in {b'R1TABRG', b'ONRGY1', b'PVT', b'PVT0', b'PVTS'}:
+                # these tables are always fully parsed
+                # PVT/PVTS - we want to know what the PARAM cards are,
+                #            so we can determine the NXVER
                 data, ndata = op2_reader._read_record_ndata()
             else:
                 data, ndata = op2_reader._skip_record_ndata()

@@ -118,7 +118,7 @@ def _build_kbbi_celas12(Kbb, dof_map: DOF_MAP,
     #del i, j, ki, nid1, nid2, c1, c2
 
 def _build_kbbi_celas34(Kbb, dof_map: DOF_MAP,
-                        elem: Union[CELAS1, CELAS2], ki: float) -> None:
+                        elem: Union[CELAS3, CELAS4], ki: float) -> None:
     """fill the CELASx Kbb matrix"""
     nid1, nid2 = elem.nodes
     print(dof_map)
@@ -147,66 +147,70 @@ def _build_kbb_cbar(model, Kbb, dof_map: DOF_MAP, fdtype: str='float64') -> int:
     for eid in eids:
         elem = model.elements[eid]  # type: CBAR
         nid1, nid2 = elem.nodes
-        pid_ref = elem.pid_ref
-        mat = pid_ref.mid_ref
+        is_passed, K = ke_cbar(model, elem, fdtype=fdtype)
+        assert is_passed
 
-        #is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
-        #T = np.vstack([ihat, jhat, khat])
-        #z = np.zeros((3, 3), dtype='float64')
-        prop = elem.pid_ref
-        mat = prop.mid_ref
-        I1 = prop.I11()
-        I2 = prop.I22()
-        unused_I12 = prop.I12()
-        #J = prop.J()
-        #E = mat.E()
-        #G = mat.G()
-        z = np.zeros((3, 3), dtype='float64')
-        T = z
-        unused_Teb = np.block([
-            [T, z],
-            [z, T],
-        ])
-        is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
-        print(wa, wb)
-        xyz1 = elem.nodes_ref[0].get_position() + wa
-        xyz2 = elem.nodes_ref[1].get_position() + wb
-        dxyz = xyz2 - xyz1
-        L = np.linalg.norm(dxyz)
-        pid_ref = elem.pid_ref
-        mat = pid_ref.mid_ref
-        T = np.vstack([ihat, jhat, khat])
-        z = np.zeros((3, 3), dtype=fdtype)
-        Teb = np.block([
-            [T, z, z, z],
-            [z, T, z, z],
-            [z, z, T, z],
-            [z, z, z, T]
-        ])
-        k1 = pid_ref.k1
-        k2 = pid_ref.k2
-        Ke = _beami_stiffness(pid_ref, mat, L, I1, I2, k1=k1, k2=k2)
-        K = Teb.T @ Ke @ Teb
-        dofs = [
-            (nid1, 1), (nid1, 2), (nid1, 3),
-            (nid1, 4), (nid1, 5), (nid1, 6),
-
-            (nid2, 1), (nid2, 2), (nid2, 3),
-            (nid2, 4), (nid2, 5), (nid2, 6),
-        ]
+        i1 = dof_map[(nid1, 1)]
+        i2 = dof_map[(nid2, 1)]
         n_ijv = [
-            dof_map[(nid1, 1)], dof_map[(nid1, 2)], dof_map[(nid1, 3)],
-            dof_map[(nid1, 4)], dof_map[(nid1, 5)], dof_map[(nid1, 6)],
+            i1,
+            i1 + 1, i1 + 2,
+            i1 + 3, i1 + 4, i1 + 5,
 
-            dof_map[(nid2, 1)], dof_map[(nid2, 2)], dof_map[(nid2, 3)],
-            dof_map[(nid2, 4)], dof_map[(nid2, 5)], dof_map[(nid2, 6)],
+            i2,
+            i2 + 1, i2 + 2,
+            i2 + 3, i2 + 4, i2 + 5,
         ]
-        for unused_dof1, i1 in zip(dofs, n_ijv):
-            for unused_dof2, i2 in zip(dofs, n_ijv):
+        for i1 in n_ijv:
+            for i2 in n_ijv:
                 ki = K[i1, i2]
                 if abs(ki) > 0.:
                     Kbb[i1, i2] += ki
     return nelements
+
+def ke_cbar(model: BDF, elem: CBAR, fdtype: str='float64'):
+    """get the elemental stiffness matrix in the basic frame"""
+    pid_ref = elem.pid_ref
+    mat = pid_ref.mid_ref
+
+    #is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+    #T = np.vstack([ihat, jhat, khat])
+    #z = np.zeros((3, 3), dtype='float64')
+    prop = elem.pid_ref
+    mat = prop.mid_ref
+    I1 = prop.I11()
+    I2 = prop.I22()
+    unused_I12 = prop.I12()
+    #J = prop.J()
+    #E = mat.E()
+    #G = mat.G()
+    z = np.zeros((3, 3), dtype='float64')
+    T = z
+    unused_Teb = np.block([
+        [T, z],
+        [z, T],
+    ])
+    is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+    #print(wa, wb)
+    xyz1 = elem.nodes_ref[0].get_position() + wa
+    xyz2 = elem.nodes_ref[1].get_position() + wb
+    dxyz = xyz2 - xyz1
+    L = np.linalg.norm(dxyz)
+    pid_ref = elem.pid_ref
+    mat = pid_ref.mid_ref
+    T = np.vstack([ihat, jhat, khat])
+    z = np.zeros((3, 3), dtype=fdtype)
+    Teb = np.block([
+        [T, z, z, z],
+        [z, T, z, z],
+        [z, z, T, z],
+        [z, z, z, T],
+    ])
+    k1 = pid_ref.k1
+    k2 = pid_ref.k2
+    Ke = _beami_stiffness(pid_ref, mat, L, I1, I2, k1=k1, k2=k2)
+    K = Teb.T @ Ke @ Teb
+    return is_passed, K
 
 def _build_kbb_crod(model: BDF, Kbb, dof_map: DOF_MAP) -> None:
     """fill the CROD Kbb matrix"""
@@ -351,13 +355,14 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
         pid_ref = elem.pid_ref
         mat = pid_ref.mid_ref
         is_passed, (wa, wb, ihat, jhat, khat) = elem.get_axes(model)
+        assert is_passed
         T = np.vstack([ihat, jhat, khat])
         z = np.zeros((3, 3), dtype=fdtype)
         Teb = np.block([
             [T, z, z, z],
             [z, T, z, z],
             [z, z, T, z],
-            [z, z, z, T]
+            [z, z, z, T],
         ])
         Iy = pid_ref.I11()
         Iz = pid_ref.I22()
@@ -365,13 +370,6 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
         k2 = pid_ref.k2
         Ke = _beami_stiffness(pid_ref, mat, L, Iy, Iz, k1=k1, k2=k2)
         K = Teb.T @ Ke @ Teb
-        dofs = [
-            (nid1, 1), (nid1, 2), (nid1, 3),
-            (nid1, 4), (nid1, 5), (nid1, 6),
-
-            (nid2, 1), (nid2, 2), (nid2, 3),
-            (nid2, 4), (nid2, 5), (nid2, 6),
-        ]
         n_ijv = [
             dof_map[(nid1, 1)], dof_map[(nid1, 2)], dof_map[(nid1, 3)],
             dof_map[(nid1, 4)], dof_map[(nid1, 5)], dof_map[(nid1, 6)],
@@ -379,8 +377,8 @@ def _build_kbb_cbeam(model: BDF, Kbb, dof_map: DOF_MAP,
             dof_map[(nid2, 1)], dof_map[(nid2, 2)], dof_map[(nid2, 3)],
             dof_map[(nid2, 4)], dof_map[(nid2, 5)], dof_map[(nid2, 6)],
         ]
-        for unused_dof1, i1 in zip(dofs, n_ijv):
-            for unused_dof2, i2 in zip(dofs, n_ijv):
+        for i1 in n_ijv:
+            for i2 in n_ijv:
                 ki = K[i1, i2]
                 if abs(ki) > 0.:
                     Kbb[i1, i2] += ki
